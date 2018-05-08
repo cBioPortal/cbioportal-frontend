@@ -7,6 +7,7 @@ import { observable, computed } from "mobx";
 import _ from "lodash";
 import { annotatePieChartDatum, getPieSliceColors } from "pages/studyView/StudyViewUtils";
 import { ClinicalAttributeDataWithMeta } from "pages/studyView/StudyViewPageStore";
+import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 
 export interface IPieChartProps {
     data: ClinicalAttributeDataWithMeta;
@@ -24,42 +25,43 @@ export class PieChart extends React.Component<IPieChartProps, {}> {
         this.colorSet = getPieSliceColors(props.data.counts);
     }
 
-    private events = [{
-        target: "data",
-        eventHandlers: {
-        onClick: () => {
-            return [
-            {
-                target: "data",
-                mutation: (props:any) => {
-                    this.props.onUserSelection(props.datum.x);
+    private get userEvents(){
+        const self = this;
+        return [{
+            target: "data",
+            eventHandlers: {
+                onClick: () => {
+                    return [
+                        {
+                            target: "data",
+                            mutation: (props:any) => {
+                                self.props.onUserSelection(props.datum.x);
+                            }
+                        }
+                    ];
                 }
             }
-            ];
-        }
-        }
-    }];
+        }];
+    }
 
     @computed get totalCount(){
-        return this.props.data.counts.reduce((acc:number,next)=>{
-        return acc+next.count
-        },0)
+        return _.sumBy(this.props.data.counts, obj=>obj.count)
     }
 
     public render() {
         return (
-        <div className="study-view-pie">
             <VictoryPie
-                containerComponent={<VictoryContainer responsive={false}/>}
+                theme={CBIOPORTAL_VICTORY_THEME}
+                containerComponent={<VictoryContainer responsive={false} className="study-view-pie"/>}
                 width={200}
-                height={175}
+                height={185}
                 labelRadius={30}
                 padding={30}
                 //to hide label if the angle is too small(currently set to 20 degrees)
                 labels={(d:any) => ((d.y*360)/this.totalCount)<20?'':d.y}
                 data={annotatePieChartDatum(this.props.data.counts,this.props.filters,this.colorSet)}
                 dataComponent={<CustomSlice/>}
-                events={this.events}
+                events={this.userEvents}
                 labelComponent={<VictoryLabel/>}
                 style={{
                 data: { fillOpacity: 0.9 },
@@ -68,7 +70,6 @@ export class PieChart extends React.Component<IPieChartProps, {}> {
                 x="value"
                 y="count"
             />
-        </div>
         );
     }
 
