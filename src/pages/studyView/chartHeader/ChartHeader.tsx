@@ -6,7 +6,6 @@ import _ from "lodash";
 import {If} from 'react-if';
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 
-
 export interface IChartHeaderProps {
     clinicalAttribute: ClinicalAttribute;
     showControls:boolean;
@@ -38,11 +37,11 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
 
     public render() {
         return (
-            <main>
-                <section><span>{this.props.clinicalAttribute.displayName}</span></section>
-                <aside>
+            <div className='study-view-chart-header'>
+                <div className='name'><span>{this.props.clinicalAttribute.displayName}</span></div>
+                <div className='controls'>
                     <If condition={this.showChartControls}>
-                        <div role="group" className="btn-group study-view-chart-contorls">
+                        <div role="group" className="btn-group">
                             <If condition={!!this.props.showResetIcon}>
                                 <button className="btn btn-xs" onClick={()=>this.props.handleResetClick()}>
                                     <i className="fa fa-undo" aria-hidden="true" title="Reset filters in chart"></i>
@@ -71,7 +70,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     placement="bottom"
                                     onVisibleChange={this.onVisibleChange}
                                     trigger={['hover', 'focus']}
-                                    overlay={<div role="group" className="btn-group download-button">
+                                    overlay={<div role="group" className="btn-group study-view-chart-download">
                                                 <button className="btn btn-xs">
                                                 DATA
                                                 </button>
@@ -96,8 +95,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             </button>
                         </div>
                     </If>
-                </aside>
-            </main>
+                </div>
+            </div>
         )
     }
 
