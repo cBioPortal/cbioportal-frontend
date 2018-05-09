@@ -19,6 +19,6 @@
     "webdriverio": "4.8.0"
   },
   "devDependencies": {
-    "wdio-visual-regression-service": "^0.8.0"
+    "wdio-visual-regression-service": "^0.9.0"
   }
 }
