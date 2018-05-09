@@ -503,14 +503,14 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", []),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: [],
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any);
+               });
        });
        it("fills a datum w one mutation data correctly", ()=>{
            let data = [
@@ -522,14 +522,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: "missense_rec",
                    disp_germ: false
-               } as any, "missense driver with no germline");
+               },
+               "missense driver with no germline");
 
            data = [{
                mutationType: "in_frame_del",
@@ -539,14 +540,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: "inframe",
                    disp_germ: false
-               } as any, "inframe non-driver");
+               },
+               "inframe non-driver");
 
            data = [{
                mutationType: "truncating",
@@ -556,14 +558,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: "trunc",
                    disp_germ: false
-               } as any, "truncating non-driver");
+               },
+               "truncating non-driver");
 
            data = [{
                mutationType: "fusion",
@@ -573,7 +576,7 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
@@ -581,7 +584,8 @@ describe("DataUtils", ()=>{
                    disp_mut: undefined,
                    disp_fusion: true,
                    disp_germ: undefined
-               } as any, "fusion non-driver");
+               },
+               "fusion non-driver");
        });
 
 
@@ -593,14 +597,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: "amp",
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "amplification");
+               },
+               "amplification");
 
            data = [{
                value: 1,
@@ -609,14 +614,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: "gain",
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "gain");
+               },
+               "gain");
 
            data = [{
                value: -1,
@@ -626,14 +632,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: "hetloss",
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "hetloss");
+               },
+               "hetloss");
 
            data = [{
                value: -2,
@@ -643,14 +650,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: "homdel",
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "homdel");
+               },
+               "homdel");
 
            data = [{
                value: 0,
@@ -659,14 +667,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "diploid");
+               },
+               "diploid");
        });
 
        it("fills a datum w one germline data correctly", ()=>{
@@ -679,14 +688,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: "missense_rec",
                    disp_germ: true
-               } as any, "missense driver with germline");
+               },
+               "missense driver with germline");
 
             data = [{
                mutationType: "missense",
@@ -696,14 +706,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: "missense_rec",
                    disp_germ: false
-               } as any, "missense driver without germline");
+               },
+               "missense driver without germline");
        });
 
        it("fills a datum w one germline and one non-germline data correctly", ()=>{
@@ -721,14 +732,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: "missense_rec",
                    disp_germ: true
-               } as any, "missense driver with germline is stronger than missense passenger");
+               },
+               "missense driver with germline is stronger than missense passenger");
 
            data = [{
                mutationType: "missense",
@@ -744,14 +756,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: "trunc_rec",
                    disp_germ: false
-               } as any, "trunc driver is stronger than missense passenger w germline");
+               },
+               "trunc driver is stronger than missense passenger w germline");
        });
 
        it("fills a datum w one mrna data correctly", ()=>{
@@ -762,14 +775,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: "up",
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "up");
+               },
+               "up");
 
            data = [{
                alterationSubType:"down",
@@ -778,14 +792,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: "down",
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "down");
+               },
+               "down");
        });
        it("fills a datum w one protein data correctly", ()=>{
            let data = [{
@@ -795,14 +810,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: "up",
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "up");
+               },
+               "up");
 
            data = [{
                alterationSubType:"down",
@@ -811,14 +827,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: "down",
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "down");
+               },
+               "down");
        });
        it("fills a datum w two mutation data w correct priority", ()=>{
            let data = [{
@@ -833,14 +850,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: "trunc_rec",
                    disp_germ: false
-               } as any, "truncating driver beats missense driver");
+               },
+               "truncating driver beats missense driver");
 
            data = [{
                mutationType: "missense",
@@ -854,14 +872,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: "missense_rec",
                    disp_germ: false
-               } as any, "missense driver beats truncating non-driver");
+               },
+               "missense driver beats truncating non-driver");
 
            data = [{
                mutationType: "missense",
@@ -875,14 +894,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: "trunc",
                    disp_germ: false
-               } as any, "truncating non-driver beats missense non-driver");
+               },
+               "truncating non-driver beats missense non-driver");
        });
        it("fills a datum w multiple cna data w correct priority", ()=>{
            let data = [{
@@ -895,14 +915,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: "amp",
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "amplification beats gain");
+               },
+               "amplification beats gain");
 
            data = [{
                value: -2,
@@ -914,14 +935,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: "homdel",
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "homdel beats diploid");
+               },
+               "homdel beats diploid");
 
            data = [{
                value: -2,
@@ -936,14 +958,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: "homdel",
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "two homdels beats one amp");
+               },
+               "two homdels beats one amp");
 
            data = [{
                value: -2,
@@ -958,14 +981,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: "amp",
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "two amps beats one homdel");
+               },
+               "two amps beats one homdel");
        });
        it("fills a datum w multiple mrna data w correct priority", ()=>{
            let data = [{
@@ -981,14 +1005,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: "down",
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "two downs beats one up");
+               },
+               "two downs beats one up");
 
            data = [{
                alterationSubType:"up",
@@ -1003,14 +1028,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: "up",
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "two ups beats one down");
+               },
+               "two ups beats one down");
        });
        it("fills a datum w multiple protein data w correct priority", ()=>{
            let data = [{
@@ -1026,14 +1052,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: "down",
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "two downs beats one up");
+               },
+               "two downs beats one up");
 
            data = [{
                alterationSubType:"up",
@@ -1048,14 +1075,15 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: "up",
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "two ups beats one down");
+               },
+               "two ups beats one down");
        });
        it("fills a datum w several data of different types correctly", ()=>{
            let data = [{
@@ -1097,14 +1125,14 @@ describe("DataUtils", ()=>{
            assert.deepEqual(
                fillGeneticTrackDatum({}, "gene", data),
                {
-                   gene:"gene",
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: "homdel",
                    disp_mrna: "up",
                    disp_prot: "down",
                    disp_mut: "trunc_rec",
                    disp_germ: false
-               } as any);
+               });
        });
    });
 
@@ -1220,7 +1248,6 @@ describe("DataUtils", ()=>{
                {sampleId:"sample", studyId:"study"} as Sample,
                [{value: 7}]
            );
-           console.log(partialTrackDatum);
            assert.deepEqual(
                partialTrackDatum,
                {geneset_id:"MY_FAVORITE_GENE_SET-3", study:"study", profile_data:7}
