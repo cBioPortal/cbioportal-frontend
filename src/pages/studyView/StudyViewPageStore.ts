@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import {remoteData} from "../../shared/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import {action, computed, observable, reaction} from "mobx";
+import {action, computed, observable} from "mobx";
 import {
     ClinicalDataCount,
     ClinicalDataEqualityFilter,
@@ -16,7 +16,6 @@ import {
     StudyViewFilter
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {
-    CancerStudy,
     ClinicalAttribute,
     ClinicalData,
     ClinicalDataSingleStudyFilter,
@@ -487,17 +486,17 @@ export class StudyViewPageStore {
         default: {}
     });
 
-    readonly clinicalAttributeData = remoteData<{ [attrId: string]: ClinicalAttributeDataWithMeta }>({
+    readonly clinicalAttributeData = remoteData<{ [attrId: string]: ClinicalDataCount[] }>({
         await: () => [this.sampleAttributesData, this.patientAttributesData],
         invoke: async () => {
 
-            let result: { [attrId: string]: ClinicalAttributeDataWithMeta } = _.reduce(this.sampleAttributesData.result, function (result, value, key) {
-                result[ClinicalDataType.SAMPLE+ '_' + key] = {attributeId: key, clinicalDataType: ClinicalDataType.SAMPLE, counts: value}
+            let result: { [attrId: string]: ClinicalDataCount[] } = _.reduce(this.sampleAttributesData.result, function (result, value, key) {
+                result[ClinicalDataType.SAMPLE+ '_' + key] = value
                 return result;
             }, {} as any)
 
             result = _.reduce(this.patientAttributesData.result, function (result, value, key) {
-                result[ClinicalDataType.PATIENT+ '_' + key] = {attributeId: key, clinicalDataType: ClinicalDataType.PATIENT, counts: value}
+                result[ClinicalDataType.PATIENT+ '_' + key] = value
                 return result;
             }, result);
             return result;
