@@ -102,8 +102,8 @@ export function fillGeneticTrackDatum(
     newDatum:Partial<GeneticTrackDatum>,
     hugoGeneSymbol:string,
     data:AnnotatedExtendedAlteration[]
-):GeneticTrackDatum {
-    newDatum.gene = hugoGeneSymbol;
+): Partial<GeneticTrackDatum> {
+    newDatum.trackLabel = hugoGeneSymbol;
     newDatum.data = data;
 
     let dispFusion = false;
@@ -163,7 +163,7 @@ export function fillGeneticTrackDatum(
     newDatum.disp_mut = selectDisplayValue(dispMutCounts, mutRenderPriority);
     newDatum.disp_germ = newDatum.disp_mut ? dispGermline[newDatum.disp_mut] : undefined;
 
-    return newDatum as GeneticTrackDatum; // return for convenience, even though changes made in place
+    return newDatum; // return for convenience, even though changes made in place
 }
 
 export function makeGeneticTrackData(
