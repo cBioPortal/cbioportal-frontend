@@ -35,6 +35,9 @@
                 color: grey !important;
             }
         }
+        .btn:active:focus {
+            box-shadow: none; 
+        }
         .btn:first-child {
             margin-left: 10px !important;
         }
