@@ -100,10 +100,10 @@ export function selectDisplayValue(counts:{[value:string]:number}, priority:{[va
 
 export function fillGeneticTrackDatum(
     newDatum:Partial<GeneticTrackDatum>,
-    hugoGeneSymbol:string,
+    trackLabel:string,
     data:AnnotatedExtendedAlteration[]
 ): Partial<GeneticTrackDatum> {
-    newDatum.trackLabel = hugoGeneSymbol;
+    newDatum.trackLabel = trackLabel;
     newDatum.data = data;
 
     let dispFusion = false;
