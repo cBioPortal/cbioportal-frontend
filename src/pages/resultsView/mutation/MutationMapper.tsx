@@ -77,8 +77,8 @@ export default class MutationMapper extends React.Component<IMutationMapperProps
         return (
             <div style={{'paddingBottom':10}}>
                 <h4>{hugoGeneSymbol}</h4>
-                <div className={this.props.store.uniprotId.result ? '' : 'invisible'}>
-                    <span data-test="GeneSummaryUniProt">UniProt: </span>
+                <div data-test="GeneSummaryUniProt" className={this.props.store.uniprotId.result ? '' : 'invisible'}>
+                    <span>UniProt: </span>
                     <a
                         href={`http://www.uniprot.org/uniprot/${uniprotId}`}
                         target="_blank"
