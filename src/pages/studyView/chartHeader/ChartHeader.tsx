@@ -14,25 +14,29 @@ export interface IChartHeaderProps {
     showPieIcon?:boolean;
     showSurvivalIcon?:boolean;
     handleResetClick: () => void;
+    handleDownloadDataClick: () => void;
+    handleSVGClick: () => void;
+    handlePDFClick: () => void;
 }
 
 export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
 
+    private handlers:any;
+
+    @observable private isDownloadControlActive:boolean = false;
+
     constructor(props: IChartHeaderProps) {
         super(props);
-        this.onVisibleChange = this.onVisibleChange.bind(this);
-    }
-
-    @observable
-    isDownloadControlActive:boolean = false;
-
-    private onVisibleChange = (visible:boolean) => {
-        this.isDownloadControlActive=visible;
+        this.handlers = {
+            onVisibleChange: action((visible:boolean)=>{
+                this.isDownloadControlActive=visible;
+            })
+        }
     }
 
     @computed
     private get showChartControls(){
-        return this.props.showControls||this.isDownloadControlActive;
+        return this.isDownloadControlActive || this.props.showControls;
     }
 
     public render() {
@@ -68,16 +72,16 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             <button className="btn btn-xs">
                                 <DefaultTooltip
                                     placement="bottom"
-                                    onVisibleChange={this.onVisibleChange}
+                                    onVisibleChange={this.handlers.onVisibleChange}
                                     trigger={['hover', 'focus']}
                                     overlay={<div role="group" className="btn-group study-view-chart-download">
-                                                <button className="btn btn-xs">
+                                                <button className="btn btn-xs" onClick={()=>this.props.handleDownloadDataClick()}>
                                                 DATA
                                                 </button>
-                                                <button className="btn btn-xs" >
+                                                <button className="btn btn-xs" onClick={()=>this.props.handlePDFClick()}>
                                                 PDF
                                                 </button>
-                                                <button className="btn btn-xs">
+                                                <button className="btn btn-xs" onClick={()=>this.props.handleSVGClick()}>
                                                 SVG
                                                 </button>
                                             </div>}

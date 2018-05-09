@@ -5,8 +5,6 @@ import {MutatedGenesTable} from "./table/MutatedGenesTable";
 import {CNAGenesTable} from "./table/CNAGenesTable";
 import {Chart, ChartType} from 'pages/studyView/charts/Chart';
 import SurvivalChart from "../resultsView/survival/SurvivalChart";
-import {getPatientSurvivals} from "../resultsView/SurvivalStoreHelper";
-import {PatientSurvival} from "../../shared/model/PatientSurvival";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import { StudyViewPageStore, ClinicalDataType, SurvivalType } from 'pages/studyView/StudyViewPageStore';
 import { reaction } from 'mobx';
@@ -68,15 +66,14 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                             arrayIndex: number) => {
 
         let attributeUID = (clinicalAttribute.patientAttribute ? "PATIENT_" : "SAMPLE_") + clinicalAttribute.clinicalAttributeId;
-        let filters = this.store.getClinicalDataEqualityFilters(attributeUID)
-        let data = this.store.clinicalAttributeData.result[attributeUID]
         return (<Chart
-            chartType={ChartType.PIE_CHART}
-            clinicalAttribute={clinicalAttribute}
-            onUserSelection={this.onUserSelection}
-            filters={filters}
-            data={data}
-            key={arrayIndex}/>);
+                    chartType={ChartType.PIE_CHART}
+                    clinicalAttribute={clinicalAttribute}
+                    onUserSelection={this.onUserSelection}
+                    filters={this.store.getClinicalDataEqualityFilters(attributeUID)}
+                    data={this.store.clinicalAttributeData.result[attributeUID]}
+                    key={arrayIndex}
+                />);
     };
 
     renderSurvivalPlot = (data: SurvivalType) => {
