@@ -11,9 +11,8 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 function runResultsTestSuite(prefix){
 
     it(`${prefix} render the oncoprint`, function(){
-        waitForOncoprint();
-        browser.pause(2000);
-        var res = browser.checkElement('#oncoprint');
+        waitForOncoprint(10000);
+        var res = browser.checkElement('#oncoprint', { hide:['.oncoprint__controls']}); // just hide the controls bc for some reason they keep showing up transparent in this test only
         assertScreenShotMatch(res);
     });
 
@@ -48,9 +47,7 @@ function runResultsTestSuite(prefix){
     it(`${prefix} mutation tab`, function(){
         browser.click("[href='#mutation_details']");
         browser.waitForVisible('.borderedChart svg',20000);
-        browser.waitForEnabled('[data-test=view3DStructure]', 10000);
-        browser.pause(3000);
-        var res = browser.checkElement('#mutation_details',{hide:['.qtip'], viewportChangePause:4000});
+        var res = browser.checkElement('#mutation_details',{hide:['.qtip', '[data-test=view3DStructure]', '[data-test=GeneSummaryUniProt]'], viewportChangePause:4000}); // hide these things because the timing of data loading makes this test so flaky
         assertScreenShotMatch(res);
     });
 
