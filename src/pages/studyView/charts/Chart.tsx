@@ -1,25 +1,21 @@
 import * as React from "react";
 import styles from "./styles.module.scss";
 import { observer } from "mobx-react";
-import { VictoryPie, VictoryContainer, VictoryLabel } from 'victory';
 import { ClinicalAttribute } from "shared/api/generated/CBioPortalAPI";
-import { ClinicalDataCount } from "shared/api/generated/CBioPortalAPIInternal";
 import { observable, computed, action } from "mobx";
 import _ from "lodash";
-import { PieChart } from "pages/studyView/charts/pieChart/PieChart";
 import {If} from 'react-if';
-import {Button} from 'react-bootstrap';
 import { ChartHeader } from "pages/studyView/chartHeader/ChartHeader";
-import { ClinicalAttributeDataWithMeta, ClinicalDataType } from "pages/studyView/StudyViewPageStore";
+import { ClinicalDataType } from "pages/studyView/StudyViewPageStore";
 import { getClinicalDataType } from "pages/studyView/StudyViewUtils";
+import fileDownload from 'react-file-download';
+import PieChart from "pages/studyView/charts/pieChart/PieChart";
+import svgToPdfDownload from "shared/lib/svgToPdfDownload";
+import { ClinicalDataCount } from "shared/api/generated/CBioPortalAPIInternal";
 
-export interface IChartProps {
-    chartType:ChartType;
-    clinicalAttribute: ClinicalAttribute,
-    data?: ClinicalAttributeDataWithMeta;
-    filters: string[];
-    onUserSelection: (attrId: string, clinicalDataType: ClinicalDataType, value: string[]) => void;
-    key: number;
+export interface AbstractChart {
+    downloadData:()=>string;
+    toSVGDOMNode:()=>Element
 }
 
 export enum ChartType {
@@ -30,72 +26,100 @@ export enum ChartType {
     SCATTER
 }
 
+export interface IChartProps {
+    chartType:ChartType;
+    clinicalAttribute: ClinicalAttribute,
+    data?: ClinicalDataCount[];
+    filters: string[];
+    onUserSelection: (attrId: string, clinicalDataType: ClinicalDataType, value: string[]) => void;
+    key: number;
+}
+
 @observer
 export class Chart extends React.Component<IChartProps, {}> {
 
+    private handlers:any;
+    private plot:AbstractChart;
+
+    @observable mouseInPlot:boolean = false;
+
     constructor(props: IChartProps) {
         super(props);
-        this.currentChartType = props.chartType;
-        this.onUserSelection = this.onUserSelection.bind(this);
-        this.resetFilters = this.resetFilters.bind(this)
-        this.onMouseEnter = this.onMouseEnter.bind(this);
-        this.onMouseLeave = this.onMouseLeave.bind(this);
+        let fileName = props.clinicalAttribute.displayName.replace(/[ \t]/g,'_')
 
+        this.handlers = {
+            ref: (plot:AbstractChart)=>{ 
+                this.plot = plot; 
+            },
+            resetFilters: ()=>{
+                this.props.onUserSelection(
+                    this.props.clinicalAttribute.clinicalAttributeId,
+                    getClinicalDataType(this.props.clinicalAttribute),
+                    []);
+            },
+            onUserSelection: (values:string[])=>{
+                this.props.onUserSelection(
+                    this.props.clinicalAttribute.clinicalAttributeId,
+                    getClinicalDataType(this.props.clinicalAttribute),
+                    values);
+            },
+            onMouseEnterPlot: action(()=>{ this.mouseInPlot = true;}),
+            onMouseLeavePlot: action(()=>{ this.mouseInPlot = false;}),
+            handleDownloadDataClick:()=>{
+                let firstLine = this.props.clinicalAttribute.displayName+'\tCount'
+                fileDownload(firstLine+'\n'+this.plot.downloadData(), fileName);
+            },
+            handleSVGClick:()=>{
+                fileDownload((new XMLSerializer()).serializeToString(this.toSVGDOMNode()), `${fileName}.svg`);
+            },
+            handlePDFClick:()=>{
+                svgToPdfDownload(`${fileName}.pdf`, this.toSVGDOMNode());
+            },
+        };
     }
 
-    private currentChartType:ChartType;
-
-    @action private resetFilters(){
-        this.props.onUserSelection(
-            this.props.clinicalAttribute.clinicalAttributeId,
-            getClinicalDataType(this.props.clinicalAttribute),
-            []);
-    }
-
-    @action private onUserSelection(values : string[]){
-       this.props.onUserSelection(
-            this.props.clinicalAttribute.clinicalAttributeId,
-            getClinicalDataType(this.props.clinicalAttribute),
-            values);
-    }
-
-    @observable mouseInsideBounds:boolean = false;
-
-    onMouseEnter(){
-        this.mouseInsideBounds = true;
-    }
-
-    onMouseLeave(){
-        this.mouseInsideBounds = false;
+    public toSVGDOMNode():Element {
+        if (this.plot) {
+            // Get result of plot
+            return this.plot.toSVGDOMNode();
+        } else {
+            return document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        }
     }
 
     @computed get showPieControlIcon(){
-        return this.props.clinicalAttribute.datatype==='STRING' && this.currentChartType === ChartType.TABLE;
+        return this.props.clinicalAttribute.datatype==='STRING' && this.props.chartType === ChartType.TABLE;
     }
 
     @computed get showTableControlIcon(){
-        return this.currentChartType === ChartType.PIE_CHART && this.props.clinicalAttribute.datatype==='STRING';
+        return this.props.chartType === ChartType.PIE_CHART && this.props.clinicalAttribute.datatype==='STRING';
     }
-    
-
 
     public render() {
         return (
-            <div className={styles.chart} onMouseEnter={this.onMouseEnter}
-            onMouseLeave={this.onMouseLeave}>
+            <div className={styles.chart} onMouseEnter={this.handlers.onMouseEnterPlot}
+            onMouseLeave={this.handlers.onMouseLeavePlot}>
                 <ChartHeader 
                     clinicalAttribute={this.props.clinicalAttribute}
-                    showControls={this.mouseInsideBounds}
+                    showControls={this.mouseInPlot}
                     showResetIcon={this.props.filters.length>0}
-                    handleResetClick={this.resetFilters}
                     showTableIcon={this.showTableControlIcon}
                     showPieIcon={this.showPieControlIcon}
+                    handleResetClick={this.handlers.resetFilters}
+                    handleDownloadDataClick={this.handlers.handleDownloadDataClick}
+                    handleSVGClick={this.handlers.handleSVGClick}
+                    handlePDFClick={this.handlers.handlePDFClick}
                 />
-                {this.props.data &&
-                    <PieChart
-                        onUserSelection={this.onUserSelection}
-                        filters={this.props.filters}
-                        data={this.props.data} />}
+
+                {this.props.data && 
+                    <If condition={this.props.chartType===ChartType.PIE_CHART}>
+                        <PieChart
+                            ref={this.handlers.ref}
+                            onUserSelection={this.handlers.onUserSelection}
+                            filters={this.props.filters}
+                            data={this.props.data} />
+                    </If>
+                }
             </div>
         );
     }

@@ -1,28 +1,29 @@
 import * as React from "react";
 import "./styles.scss";
 import { observer } from "mobx-react";
-import { VictoryPie, VictoryContainer, VictoryLabel, VictoryTooltip, Slice } from 'victory';
-import { ClinicalDataCount } from "shared/api/generated/CBioPortalAPIInternal";
+import { VictoryPie, VictoryContainer, VictoryLabel, Slice } from 'victory';
 import { observable, computed } from "mobx";
 import _ from "lodash";
 import { annotatePieChartDatum, getPieSliceColors } from "pages/studyView/StudyViewUtils";
-import { ClinicalAttributeDataWithMeta } from "pages/studyView/StudyViewPageStore";
 import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
+import { AbstractChart } from "pages/studyView/charts/Chart";
+import { ClinicalDataCount } from "shared/api/generated/CBioPortalAPIInternal";
 
 export interface IPieChartProps {
-    data: ClinicalAttributeDataWithMeta;
+    data: ClinicalDataCount[];
     filters:string[];
     onUserSelection:(values:string[])=>void;
 }
 
 @observer
-export class PieChart extends React.Component<IPieChartProps, {}> {
+export default class PieChart extends React.Component<IPieChartProps, {}> implements AbstractChart{
 
     private colorSet:{[id:string]:string} = {};
+    private svgContainer: any;
 
     constructor(props: IPieChartProps) {
         super(props);
-        this.colorSet = getPieSliceColors(props.data.counts);
+        this.colorSet = getPieSliceColors(props.data);
     }
 
     private get userEvents(){
@@ -50,22 +51,34 @@ export class PieChart extends React.Component<IPieChartProps, {}> {
         }];
     }
 
+    public downloadData() {
+        return this.props.data.map(obj=>obj.value+'\t'+obj.count).join('\n');
+    }
+
+    public toSVGDOMNode():Element {
+        return this.svgContainer.firstChild
+    }
+
     @computed get totalCount(){
-        return _.sumBy(this.props.data.counts, obj=>obj.count)
+        return _.sumBy(this.props.data, obj=>obj.count)
     }
 
     public render() {
         return (
             <VictoryPie
                 theme={CBIOPORTAL_VICTORY_THEME}
-                containerComponent={<VictoryContainer responsive={false} className="study-view-pie"/>}
+                containerComponent={<VictoryContainer 
+                                        responsive={false}
+                                        className="study-view-pie"
+                                        containerRef={(ref: any) => this.svgContainer = ref}
+                                    />}
                 width={200}
                 height={185}
                 labelRadius={30}
                 padding={30}
                 //to hide label if the angle is too small(currently set to 20 degrees)
                 labels={(d:any) => ((d.y*360)/this.totalCount)<20?'':d.y}
-                data={annotatePieChartDatum(this.props.data.counts,this.props.filters,this.colorSet)}
+                data={annotatePieChartDatum(this.props.data,this.props.filters,this.colorSet)}
                 dataComponent={<CustomSlice/>}
                 events={this.userEvents}
                 labelComponent={<VictoryLabel/>}
