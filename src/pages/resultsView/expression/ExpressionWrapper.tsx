@@ -485,11 +485,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     @computed
     get chart() {
         return (
-            <ChartContainer
-                getSVGElement={()=>this.svgContainer}
-                exportFileName="Expression"
 
-            >
                 <VictoryChart
                     height={this.height}
                     width={this.width}
@@ -542,11 +538,11 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     />
 
                 </VictoryChart>
-            </ChartContainer>
         )
     }
 
     render() {
+
         return (
             <div>
                 {this.studySelectionModal}
@@ -624,10 +620,16 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         <If condition={_.size(this.props.data) > 0}>
                             <Then>
                                 <div className="posRelative">
-                                    {
-                                        (this.tooltipModel) && (this.toolTip)
-                                    }
-                                    {this.chart}
+
+                                    <ChartContainer
+                                        getSVGElement={()=>this.svgContainer}
+                                        exportFileName="Expression"
+                                    >
+                                        {(this.tooltipModel) && (this.toolTip)}
+                                        {this.chart}
+                                    </ChartContainer>
+
+
                                 </div>
                             </Then>
                             <Else>

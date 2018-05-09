@@ -8,6 +8,10 @@
   .cbioportal-frontend {
     @import './legacy.scss';
   }
+
+  #cc-plots {
+    visibility:hidden;
+  }
 }
 
 

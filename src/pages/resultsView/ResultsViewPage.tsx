@@ -33,8 +33,6 @@ import oql_parser from "shared/lib/oql/oql-parser.js";
         ctx.fillRect(0, 0, chartInstance.chart.width, chartInstance.chart.height);
     }
 });
-import Oncoprint, {GeneticTrackDatum} from "shared/components/oncoprint/Oncoprint";
-import {QuerySession} from "../../shared/lib/QuerySession";
 import ResultsViewOncoprint from "shared/components/oncoprint/ResultsViewOncoprint";
 import QuerySummary from "./querySummary/QuerySummary";
 import {QueryStore} from "../../shared/components/query/QueryStore";
@@ -200,7 +198,8 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
         // disable the shit out of old ccplots
         (window as any).ccPlots.init = function(){};
-        $("#cc-plots").empty();
+        $("#cc-plots").empty()
+            .css("visibility","visible");
 
         let target = $('<div class="ui-tabs-panel ui-widget-content ui-corner-bottom cbioportal-frontend"></div>').appendTo("#cc-plots");
 
@@ -220,7 +219,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                                                       onRNASeqVersionChange={(version:number)=>store.expressionTabseqVersion=version}
                             />
                         } else {
-                            return <div>loading</div>
+                            return <div><Loader isLoading={true}/></div>
                         }
 
 
