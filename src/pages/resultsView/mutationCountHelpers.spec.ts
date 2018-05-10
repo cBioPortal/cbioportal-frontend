@@ -5,7 +5,7 @@ import {Mutation} from "../../shared/api/generated/CBioPortalAPI";
 
 describe('#countMutations', () => {
 
-    it('filters mutations for types missense and inframe and produces keyed table of position identifiers', () => {
+    it('produces keyed table of position identifiers', () => {
 
         let mutations = [
             {
@@ -113,11 +113,7 @@ describe('#countMutations', () => {
 
         mutations[0].mutationType = "splice";
 
-        const expectedResult_splice = {
-            "3845_12_12": {"entrezGeneId": 3845, "proteinPosStart": 12, "proteinPosEnd": 12}
-        };
-
-        assert.deepEqual(countMutations(mutations), expectedResult_splice, 'splice mutations are counted');
+        assert.deepEqual(countMutations(mutations), expectedResult_missense, 'splice mutations are counted');
 
 
     });
