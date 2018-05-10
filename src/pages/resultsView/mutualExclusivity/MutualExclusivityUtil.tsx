@@ -3,6 +3,7 @@ import { getCumulativePValue } from "../../../shared/lib/FisherExactTestCalculat
 import { MutualExclusivity } from "../../../shared/model/MutualExclusivity";
 import Combinatorics from 'js-combinatorics';
 import Dictionary = _.Dictionary;
+import * as _ from 'lodash';
 
 export function calculateAssociation(logOddsRatio: number): string {
     return logOddsRatio > 0 ? "Co-occurrence" : "Mutual exclusivity";
@@ -55,7 +56,7 @@ export function getMutuallyExclusiveCounts(data: MutualExclusivity[],
     let significantCount = null;
 
     const exclusiveData = data.filter(mutualExclusivity => exclusive(mutualExclusivity.logOddsRatio));
-    const significantData = exclusiveData.filter(mutualExclusivity => mutualExclusivity.pValue < 0.05);
+    const significantData = exclusiveData.filter(mutualExclusivity => mutualExclusivity.adjustedPValue < 0.05);
 
     const exclusiveLength = exclusiveData.length;
     const significantLength = significantData.length;
@@ -105,7 +106,7 @@ export function getData(isSampleAlteredMap: Dictionary<boolean[]>): MutualExclus
             bothCount: counts[3], logOddsRatio, pValue, 
             adjustedPValue: calculateAdjustedPValue(pValue, combinations.length), association });
     });
-    return data;
+    return _.sortBy(data, ["pValue"]);
 }
 
 export function getFilteredData(data: MutualExclusivity[], mutualExclusivityFilter: boolean, coOccurenceFilter: boolean,
@@ -120,7 +121,7 @@ export function getFilteredData(data: MutualExclusivity[], mutualExclusivityFilt
             result = result || mutualExclusivity.logOddsRatio > 0;
         }
         if (significantPairsFilter) {
-            result = result && mutualExclusivity.pValue < 0.05;
+            result = result && mutualExclusivity.adjustedPValue < 0.05;
         }
         return result;
     });
