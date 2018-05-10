@@ -27,6 +27,18 @@ const exampleData = [
         "association": "Mutual exclusivity"
     },
     {
+        "geneA": "TP53",
+        "geneB": "BRAF",
+        "neitherCount": 6,
+        "aNotBCount": 0,
+        "bNotACount": 1,
+        "bothCount": 3,
+        "logOddsRatio": Infinity,
+        "pValue": 0.03333333333333314,
+        "adjustedPValue": 0.19999999999999885,
+        "association": "Co-occurrence"
+    },
+    {
         "geneA": "EGFR",
         "geneB": "TP53",
         "neitherCount": 2,
@@ -72,18 +84,6 @@ const exampleData = [
         "logOddsRatio": 1.791759469228055,
         "pValue": 0.2619047619047609,
         "adjustedPValue": 1,
-        "association": "Co-occurrence"
-    },
-    {
-        "geneA": "TP53",
-        "geneB": "BRAF",
-        "neitherCount": 6,
-        "aNotBCount": 0,
-        "bNotACount": 1,
-        "bothCount": 3,
-        "logOddsRatio": Infinity,
-        "pValue": 0.03333333333333314,
-        "adjustedPValue": 0.19999999999999885,
         "association": "Co-occurrence"
     }
 ];
@@ -242,8 +242,8 @@ describe("MutualExclusivityUtil", () => {
                         "bNotACount": 5,
                         "bothCount": 0,
                         "logOddsRatio": -6.51,
-                        "pValue": 0.04,
-                        "adjustedPValue": 0.08,
+                        "pValue": 0.02,
+                        "adjustedPValue": 0.04,
                         "association": "Mutual exclusivity"
                     },
                     {
@@ -277,8 +277,8 @@ describe("MutualExclusivityUtil", () => {
                     "bNotACount": 5,
                     "bothCount": 0,
                     "logOddsRatio": -6.51,
-                    "pValue": 0.04,
-                    "adjustedPValue": 0.08,
+                    "pValue": 0.02,
+                    "adjustedPValue": 0.04,
                     "association": "Mutual exclusivity"
                 },
                 {
