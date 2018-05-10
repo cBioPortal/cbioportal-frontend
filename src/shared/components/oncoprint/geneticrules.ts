@@ -2,6 +2,9 @@ import * as $ from "jquery";
 import {RuleSetParams} from "oncoprintjs";
 // Feed this in as
 
+// Default grey
+export const DEFAULT_GREY = "rgba(190, 190, 190, 1)";
+
 // Mutation colors
 export const MUT_COLOR_MISSENSE = '#008000';
 export const MUT_COLOR_MISSENSE_PASSENGER = '#53D400';
@@ -14,6 +17,7 @@ export const MUT_COLOR_PROMOTER = '#00B7CE';
 
 export const MRNA_COLOR_UP = "#ff9999";
 export const MRNA_COLOR_DOWN = "#6699cc";
+export const MUT_COLOR_GERMLINE = '#FFFFFF';
 
 export const PROT_COLOR_UP = "#ff3df8";
 export const PROT_COLOR_DOWN = "#00E1FF";
@@ -25,6 +29,7 @@ export const CNA_COLOR_HOMDEL = "#0000ff";
 
 const MUTATION_LEGEND_ORDER = 0;
 const FUSION_LEGEND_ORDER = 1;
+const GERMLINE_LEGEND_ORDER = 2;
 const AMP_LEGEND_ORDER = 10;
 const GAIN_LEGEND_ORDER = 11;
 const HOMDEL_LEGEND_ORDER = 12;
@@ -39,7 +44,7 @@ let non_mutation_rule_params = {
     '*': {
 	shapes: [{
 		'type': 'rectangle',
-		'fill': 'rgba(190, 190, 190, 1)',
+		'fill': DEFAULT_GREY,
 		'z': 1
 	    }],
 	legend_label: "No alterations",
@@ -75,7 +80,7 @@ let non_mutation_rule_params = {
 	    legend_label: 'Gain',
 		legend_order: GAIN_LEGEND_ORDER
 	},
-	// Blue rectangle for deep deletion 
+	// Blue rectangle for deep deletion
 	'homdel': {
 	    shapes: [{
 		    'type': 'rectangle',
@@ -187,12 +192,30 @@ let non_mutation_rule_params = {
 		legend_order: FUSION_LEGEND_ORDER
 	}
     },
+    // germline
+    'disp_germ': {
+        // white stripe in the middle
+        'true': {
+            shapes: [{
+                'type': 'rectangle',
+                'fill': MUT_COLOR_GERMLINE,
+                'x': '0%',
+                'y': '46%',
+                'width': '100%',
+                'height': '8%',
+                'z': 7
+            }],
+            legend_label: 'Germline Mutation',
+            legend_order: GERMLINE_LEGEND_ORDER
+        }
+    }
 };
 
 const base_genetic_rule_set_params = {
 	type: 'gene',
 	legend_label: 'Genetic Alteration',
-	na_legend_label: 'Not profiled'
+	na_legend_label: 'Not profiled',
+	legend_base_color: DEFAULT_GREY
 };
 
 export const genetic_rule_set_same_color_for_all_no_recurrence:RuleSetParams =

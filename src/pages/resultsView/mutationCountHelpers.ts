@@ -5,15 +5,12 @@ import {getSimplifiedMutationType} from "../../shared/lib/oql/accessors";
 export function countMutations(mutations: Mutation[]){
     const mutationPositionIdentifiers:any = {};
     for (const mutation of mutations) {
-        const simplifiedMutationType = getSimplifiedMutationType(mutation.mutationType);
-        if (simplifiedMutationType === "missense" || simplifiedMutationType === "inframe") {
-            const key = mutationCountByPositionKey(mutation);
-            mutationPositionIdentifiers[key] = {
-                entrezGeneId: mutation.entrezGeneId,
-                proteinPosStart: mutation.proteinPosStart,
-                proteinPosEnd: mutation.proteinPosEnd
-            };
-        }
+        const key = mutationCountByPositionKey(mutation);
+        mutationPositionIdentifiers[key] = {
+            entrezGeneId: mutation.entrezGeneId,
+            proteinPosStart: mutation.proteinPosStart,
+            proteinPosEnd: mutation.proteinPosEnd
+        };
     }
     return mutationPositionIdentifiers;
 }
