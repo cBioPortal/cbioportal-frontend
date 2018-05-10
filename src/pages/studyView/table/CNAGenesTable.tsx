@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as _ from "lodash";
-import {CNAGenesData} from "pages/studyView/StudyViewPage";
+import {CNAGenesData} from "pages/studyView/StudyViewPageStore";
 import {default as LazyMobXTable} from "shared/components/lazyMobXTable/LazyMobXTable";
 import {action} from "mobx";
 import {observer} from "mobx-react";
