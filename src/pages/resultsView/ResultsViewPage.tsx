@@ -24,6 +24,7 @@ import OverlappingStudiesWarning from "../../shared/components/overlappingStudie
 import CNSegments from "./cnSegments/CNSegments";
 import './styles.scss';
 import {genes} from "shared/lib/oql/oqlfilter.js";
+import oql_parser from "shared/lib/oql/oql-parser.js";
 
 (Chart as any).plugins.register({
     beforeDraw: function(chartInstance:any) {
@@ -49,7 +50,7 @@ function initStore(queryStore: QueryStore) {
 
     const oqlQuery = serverVars.theQuery;
 
-    const parsedOQL = (window as any).oql_parser.parse(oqlQuery);
+    const parsedOQL = oql_parser.parse(oqlQuery);
 
     const genesetIds = (serverVars.genesetIds.length
         ? serverVars.genesetIds.split(/\s+/)
@@ -103,6 +104,7 @@ function initStore(queryStore: QueryStore) {
     resultsViewPageStore.zScoreThreshold = serverVars.zScoreThreshold;
     resultsViewPageStore.oqlQuery = oqlQuery;
     resultsViewPageStore.queryStore = queryStore;
+    resultsViewPageStore.cohortIdsList = serverVars.cohortIdsList;
 
     return resultsViewPageStore;
 
@@ -143,8 +145,22 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
         // hide mutex tab
         $(document).ready(()=>{
-            if (genes((window as any).serverVars.theQuery).length <= 1) {
+            if (!(window as any).serverVars.theQuery.trim().length || genes((window as any).serverVars.theQuery).length <= 1) {
                 $('a#mutex-result-tab').parent().hide();
+            }
+            //hide gene-specific tabs when we only query gene sets (and no genes are queried)
+            // TODO: this should probably be changed once we have single page
+            // app
+            if (!(window as any).serverVars.theQuery.trim().length || genes((window as any).serverVars.theQuery).length == 0) {
+                $('a#cancer-types-result-tab').parent().hide();
+                $('a#plots-result-tab').parent().hide();
+                $('a#mutation-result-tab').parent().hide();
+                $('a#coexp-result-tab').parent().hide();
+                $('a#enrichments-result-tab').parent().hide();
+                $('a#survival-result-tab').parent().hide();
+                $('a#network-result-tab').parent().hide();
+                $('a#igv-result-tab').parent().hide();
+                $('a#data-download-result-tab').parent().hide();
             }
 
             if (win.cancerStudyIdList !== 'null') {
@@ -152,8 +168,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             } else if (_.includes(['all','null'],win.cancerStudyId) === false) {
                 getGAInstance().event('results view', 'show', { eventLabel: win.cancerStudyId  });
             }
-
-
         });
     }
 
@@ -272,7 +286,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                                     samplesExtendedWithClinicalData={this.resultsViewPageStore.samplesExtendedWithClinicalData.result!}
                                     alterationsByGeneBySampleKey={this.resultsViewPageStore.alterationsByGeneBySampleKey.result!}
                                     studies={this.resultsViewPageStore.studies.result!}
-                                    studyMap={this.resultsViewPageStore.studyMap}
+                                    studyMap={this.resultsViewPageStore.physicalStudySet}
                                   />
                             </div>)
                         } else if (isPending) {

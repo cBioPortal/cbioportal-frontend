@@ -1,18 +1,24 @@
 import {getSimplifiedMutationType} from "shared/lib/oql/accessors";
 import {assert} from "chai";
 import {
-    Gene, GeneMolecularData, GenePanelData, MolecularProfile, Mutation, Patient,
-    Sample
+    Gene, NumericGeneMolecularData, GenePanelData, MolecularProfile, Mutation, Patient,
+    Sample, CancerStudy
 } from "../../shared/api/generated/CBioPortalAPI";
 import {
     annotateMolecularDatum,
     annotateMutationPutativeDriver,
     computeCustomDriverAnnotationReport, computeGenePanelInformation, computePutativeDriverAnnotatedMutations,
     getOncoKbOncogenic,
-    initializeCustomDriverAnnotationSettings
+    initializeCustomDriverAnnotationSettings,
+    getQueriedStudies
 } from "./ResultsViewPageStoreUtils";
 import {observable} from "mobx";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
+import {AnnotatedMutation} from "./ResultsViewPageStore";
+import * as _ from 'lodash';
+import sinon from 'sinon';
+import sessionServiceClient from "shared/api//sessionServiceInstance";
+import { VirtualStudy, VirtualStudyData } from "shared/model/VirtualStudy";
 
 describe("ResultsViewPageStoreUtils", ()=>{
     describe("computeCustomDriverAnnotationReport", ()=>{
@@ -263,7 +269,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
             assert.deepEqual(
                 annotateMutationPutativeDriver(
                     {
-                        mutationType: "in_frame_ins",
+                        mutationType: "asdfasdf",
                     } as Mutation,
                     {
                         hotspots: false,
@@ -276,8 +282,8 @@ describe("ResultsViewPageStoreUtils", ()=>{
                     putativeDriver: true,
                     isHotspot: false,
                     oncoKbOncogenic: "",
-                    simplifiedMutationType: getSimplifiedMutationType("in_frame_ins"),
-                    mutationType: "in_frame_ins",
+                    simplifiedMutationType: getSimplifiedMutationType("asdfasdf"),
+                    mutationType: "asdfasdf",
                 },
                 "tier"
             );
@@ -307,7 +313,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
             assert.deepEqual(
                 annotateMutationPutativeDriver(
                     {
-                        mutationType: "missense",
+                        mutationType: "asdfasdf",
                     } as Mutation,
                     {
                         hotspots: true,
@@ -322,8 +328,8 @@ describe("ResultsViewPageStoreUtils", ()=>{
                     putativeDriver: true,
                     isHotspot: true,
                     oncoKbOncogenic: "oncogenic",
-                    simplifiedMutationType: getSimplifiedMutationType("missense"),
-                    mutationType: "missense",
+                    simplifiedMutationType: getSimplifiedMutationType("asdfasdf"),
+                    mutationType: "asdfasdf",
                 }
             );
         });
@@ -331,7 +337,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
             assert.deepEqual(
                 annotateMutationPutativeDriver(
                     {
-                        mutationType: "missense",
+                        mutationType: "cvzxcv",
                     } as Mutation,
                     {
                         hotspots: false,
@@ -345,8 +351,8 @@ describe("ResultsViewPageStoreUtils", ()=>{
                     putativeDriver: false,
                     isHotspot: false,
                     oncoKbOncogenic: "",
-                    simplifiedMutationType: getSimplifiedMutationType("missense"),
-                    mutationType: "missense",
+                    simplifiedMutationType: getSimplifiedMutationType("cvzxcv"),
+                    mutationType: "cvzxcv",
                 }
             );
         });
@@ -362,14 +368,14 @@ describe("ResultsViewPageStoreUtils", ()=>{
                     [{mutationType:"missense"} as Mutation],
                     ()=>({oncoKb:"", hotspots:true, cbioportalCount:false, cosmicCount:true, customDriverBinary:false}),
                     true
-                ),
+                ) as Partial<AnnotatedMutation>[],
                 [{
                     mutationType:"missense",
                     simplifiedMutationType: getSimplifiedMutationType("missense"),
                     isHotspot: true,
                     oncoKbOncogenic: "",
                     putativeDriver: true
-                }]
+                } as AnnotatedMutation]
             );
         });
         it("annotates a few mutations", ()=>{
@@ -378,7 +384,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
                     [{mutationType:"missense"} as Mutation, {mutationType:"in_frame_del"} as Mutation, {mutationType:"asdf"} as Mutation],
                     ()=>({oncoKb:"", hotspots:true, cbioportalCount:false, cosmicCount:true, customDriverBinary:false}),
                     true
-                ),
+                ) as Partial<AnnotatedMutation>[],
                 [{
                     mutationType:"missense",
                     simplifiedMutationType: getSimplifiedMutationType("missense"),
@@ -419,7 +425,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
                         {oncoKb:"", hotspots:false, cbioportalCount:false, cosmicCount:false, customDriverBinary:false}
                     ),
                     true
-                ),
+                ) as Partial<AnnotatedMutation>[],
                 [{
                     mutationType:"in_frame_del",
                     simplifiedMutationType: getSimplifiedMutationType("in_frame_del"),
@@ -455,115 +461,115 @@ describe("ResultsViewPageStoreUtils", ()=>{
         it("annotates single element correctly in case of Likely Oncogenic", ()=>{
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Likely Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Likely Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:"Likely Oncogenic"}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:"Likely Oncogenic"}
             );
         });
         it("annotates single element correctly in case of Predicted Oncogenic", ()=>{
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Predicted Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Predicted Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:"Predicted Oncogenic"}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:"Predicted Oncogenic"}
             );
         });
         it("annotates single element correctly in case of Oncogenic", ()=>{
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:"Oncogenic"}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:"Oncogenic"}
             );
         });
         it("annotates single element correctly in case of Likely Neutral, Inconclusive, Unknown, asdfasd, undefined, empty", ()=>{
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Likely Neutral"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Likely Neutral"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Inconclusive"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Inconclusive"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Unknown"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Unknown"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"asdfasdf"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"asdfasdf"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:undefined} as any),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:undefined} as any),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:""} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:""} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
         });
         it("annotates non-copy number data with empty string", ()=>{
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"MUTATION_EXTENDED"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"MRNA_EXPRESSION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"PROTEIN_LEVEL"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"FUSION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
         });
     });
@@ -870,6 +876,94 @@ describe("ResultsViewPageStoreUtils", ()=>{
                     }
                 }
             );
+        });
+    });
+    describe("getQueriedStudies", ()=>{
+
+        let physicalStudies = [{
+            studyId: 'physical_study_1',
+        },{
+            studyId: 'physical_study_2',
+        }] as CancerStudy[]
+
+        let virtualStudies = [{
+            studyId: 'virtual_study_1',
+        },{
+            studyId: 'virtual_study_2',
+        }] as CancerStudy[]
+
+        let physicalStudySet:{[id:string]:CancerStudy} = _.keyBy(physicalStudies, study=>study.studyId)
+        let virtualStudySet:{[id:string]:CancerStudy} = _.keyBy(virtualStudies, study=>study.studyId)
+
+        const sharedVirtualStudy: VirtualStudy = {
+                                                    "id": "shared_study",
+                                                    "data": {
+                                                        "name": "Shared Study",
+                                                        "description": "Shared Study",
+                                                        "studies": [
+                                                            {
+                                                                "id": "test_study",
+                                                                "samples": [
+                                                                "sample-01",
+                                                                "sample-02",
+                                                                "sample-03"
+                                                                ]
+                                                            }
+                                                        ],
+                                                    } as VirtualStudyData
+                                                } as VirtualStudy;
+
+        before(()=>{
+            sinon.stub(sessionServiceClient, "getVirtualStudy").callsFake(function fakeFn(id:string) {
+                return new Promise((resolve, reject) => {
+                    if(id === 'shared_study'){
+                        resolve(sharedVirtualStudy);
+                    }
+                    else{
+                        reject()
+                    }
+                });
+            });
+        })
+
+        it("when queried ids is empty", async ()=>{
+            let test = await getQueriedStudies({}, {},[]);
+            assert.deepEqual(test,[]);
+        });
+
+        
+        it("when only physical studies are present", async ()=>{
+            let test = await getQueriedStudies(physicalStudySet, virtualStudySet, ['physical_study_1', 'physical_study_2']);
+            assert.deepEqual(test, _.values(physicalStudySet));
+        });
+
+        it("when only virtual studies are present", async ()=>{
+            let test = await getQueriedStudies(physicalStudySet, virtualStudySet, ['virtual_study_1', 'virtual_study_2']);
+            assert.deepEqual(test,_.values(virtualStudySet));
+        });
+
+        it("when physical and virtual studies are present", async ()=>{
+            let test = await getQueriedStudies(physicalStudySet, virtualStudySet, ['physical_study_1', 'virtual_study_2']);
+            assert.deepEqual(test,[physicalStudySet['physical_study_1'],virtualStudySet['virtual_study_2']]);
+        });
+        
+        it("when virtual study query shared to another user", async ()=>{
+            let test = await getQueriedStudies(physicalStudySet, virtualStudySet, ['shared_study']);
+            assert.deepEqual(test,[{
+                allSampleCount:_.sumBy(sharedVirtualStudy.data.studies, study=>study.samples.length),
+                studyId: sharedVirtualStudy.id,
+                name: sharedVirtualStudy.data.name,
+                description: sharedVirtualStudy.data.description,
+                cancerTypeId: "My Virtual Studies"
+            } as CancerStudy]);
+        });
+
+        //this case is not possible because id in these scenarios are first identified in QueryBuilder.java and
+        //returned to query selector page
+        it("when virtual study query having private study or unknow virtual study id", (done)=>{
+            getQueriedStudies(physicalStudySet, virtualStudySet, ['shared_study1']).catch((error)=>{
+                done();
+            });
         });
     });
 });

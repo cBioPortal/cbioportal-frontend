@@ -4,7 +4,7 @@ import Response = request.Response;
 import {
     default as CBioPortalAPI, MolecularProfile, Mutation, MutationFilter, DiscreteCopyNumberData,
     DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier,
-    ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter, GeneMolecularData, SampleFilter
+    ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter, NumericGeneMolecularData, SampleFilter
 } from "shared/api/generated/CBioPortalAPI";
 import { EnsemblFilter, EnsemblTranscript } from "shared/api/generated/GenomeNexusAPI";
 import {getMyGeneUrl, getUniprotIdUrl} from "shared/api/urls";
@@ -527,9 +527,9 @@ export async function fetchCnaOncoKbData(uniqueSampleKeyToTumorType:{[uniqueSamp
     }
 }
 
-export async function fetchCnaOncoKbDataWithGeneMolecularData(uniqueSampleKeyToTumorType:{[uniqueSampleKey: string]: string},
+export async function fetchCnaOncoKbDataWithNumericGeneMolecularData(uniqueSampleKeyToTumorType:{[uniqueSampleKey: string]: string},
                                          annotatedGenes:{[entrezGeneId:number]:boolean},
-                                         geneMolecularData:MobxPromise<GeneMolecularData[]>,
+                                         geneMolecularData:MobxPromise<NumericGeneMolecularData[]>,
                                           molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile},
                                          client: OncoKbAPI = oncokbClient)
 {
@@ -542,10 +542,10 @@ export async function fetchCnaOncoKbDataWithGeneMolecularData(uniqueSampleKeyToT
             return molecularProfileIdToMolecularProfile[molecularDatum.molecularProfileId].molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION &&
                 !!annotatedGenes[molecularDatum.entrezGeneId];
         });
-        const queryVariants = _.uniqBy(_.map(alterationsToQuery, (datum: GeneMolecularData) => {
+        const queryVariants = _.uniqBy(_.map(alterationsToQuery, (datum: NumericGeneMolecularData) => {
             return generateQueryVariant(datum.entrezGeneId,
                 cancerTypeForOncoKb(datum.uniqueSampleKey, uniqueSampleKeyToTumorType),
-                getAlterationString(parseInt(datum.value, 10)));
+                getAlterationString(datum.value));
         }), (query:Query)=>query.id);
         return queryOncoKbData(queryVariants, uniqueSampleKeyToTumorType, client);
     }
