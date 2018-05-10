@@ -1,0 +1,57 @@
+.study-view-chart-header {
+    display: flex;
+    height:15px;
+    line-height: 15px;
+    span {
+        font-size: 10px;
+        color: #000;
+        font-weight: 700;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        text-align: center;
+    }
+
+    .name {
+        flex-grow: 1;
+        text-align: center !important;
+        overflow:hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+    .controls {
+        flex-shrink: 0;
+        color: grey !important;
+        font-size: 12px;
+        float: right;
+        .btn {
+            border: 0px !important;
+            cursor: pointer !important;
+            background-color: white !important;
+            background-image:none !important;
+            padding: 0px !important;
+            margin: 0 2px !important;
+            &:hover, &:active, &:focus {
+                color: grey !important;
+            }
+        }
+        .btn:active:focus {
+            box-shadow: none; 
+        }
+        .btn:first-child {
+            margin-left: 10px !important;
+        }
+        .fa-arrows:hover {
+            cursor: move;
+        }
+        .fa-undo {
+            color: #2986e2;
+        }
+    }
+}
+  
+.study-view-chart-download {
+    >button {
+        border: 1px solid grey !important;
+    }
+}

@@ -1,20 +1,35 @@
 import * as React from "react";
 import styles from "./styles.module.scss";
-import { StudyViewPageStore, ClinicalAttributeDataWithMeta, ClinicalDataType } from "pages/studyView/StudyViewPage";
 import { observer } from "mobx-react";
-import { VictoryPie, VictoryContainer, VictoryLabel } from 'victory';
 import { ClinicalAttribute } from "shared/api/generated/CBioPortalAPI";
-import { ClinicalDataCount } from "shared/api/generated/CBioPortalAPIInternal";
 import { observable, computed, action } from "mobx";
 import _ from "lodash";
-import { PieChart } from "pages/studyView/charts/pieChart/PieChart";
 import {If} from 'react-if';
-import {Button} from 'react-bootstrap';
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import { ChartHeader } from "pages/studyView/chartHeader/ChartHeader";
+import { ClinicalDataType } from "pages/studyView/StudyViewPageStore";
+import { getClinicalDataType } from "pages/studyView/StudyViewUtils";
+import fileDownload from 'react-file-download';
+import PieChart from "pages/studyView/charts/pieChart/PieChart";
+import svgToPdfDownload from "shared/lib/svgToPdfDownload";
+import { ClinicalDataCount } from "shared/api/generated/CBioPortalAPIInternal";
+
+export interface AbstractChart {
+    downloadData:()=>string;
+    toSVGDOMNode:()=>Element
+}
+
+export enum ChartType {
+    PIE_CHART,
+    BAR_CHART,
+    SURVIVAL,
+    TABLE,
+    SCATTER
+}
 
 export interface IChartProps {
+    chartType:ChartType;
     clinicalAttribute: ClinicalAttribute,
-    data?: ClinicalAttributeDataWithMeta;
+    data?: ClinicalDataCount[];
     filters: string[];
     onUserSelection: (attrId: string, clinicalDataType: ClinicalDataType, value: string[]) => void;
     key: number;
@@ -23,70 +38,88 @@ export interface IChartProps {
 @observer
 export class Chart extends React.Component<IChartProps, {}> {
 
+    private handlers:any;
+    private plot:AbstractChart;
+
+    @observable mouseInPlot:boolean = false;
+
     constructor(props: IChartProps) {
         super(props);
-        this.onUserSelection = this.onUserSelection.bind(this)
-        this.handleFilter = this.handleFilter.bind(this)
-        this.resetFilters = this.resetFilters.bind(this)
+        let fileName = props.clinicalAttribute.displayName.replace(/[ \t]/g,'_')
 
+        this.handlers = {
+            ref: (plot:AbstractChart)=>{ 
+                this.plot = plot; 
+            },
+            resetFilters: ()=>{
+                this.props.onUserSelection(
+                    this.props.clinicalAttribute.clinicalAttributeId,
+                    getClinicalDataType(this.props.clinicalAttribute),
+                    []);
+            },
+            onUserSelection: (values:string[])=>{
+                this.props.onUserSelection(
+                    this.props.clinicalAttribute.clinicalAttributeId,
+                    getClinicalDataType(this.props.clinicalAttribute),
+                    values);
+            },
+            onMouseEnterPlot: action(()=>{ this.mouseInPlot = true;}),
+            onMouseLeavePlot: action(()=>{ this.mouseInPlot = false;}),
+            handleDownloadDataClick:()=>{
+                let firstLine = this.props.clinicalAttribute.displayName+'\tCount'
+                fileDownload(firstLine+'\n'+this.plot.downloadData(), fileName);
+            },
+            handleSVGClick:()=>{
+                fileDownload((new XMLSerializer()).serializeToString(this.toSVGDOMNode()), `${fileName}.svg`);
+            },
+            handlePDFClick:()=>{
+                svgToPdfDownload(`${fileName}.pdf`, this.toSVGDOMNode());
+            },
+        };
     }
 
-    private chartFilterSet = observable.shallowMap<boolean>();
-
-    @computed private get showSelectIcon(){
-        return this.chartFilterSet.keys().length>0;
-    }
-
-    @computed private get showResetIcon(){
-        return this.props.filters.length>0;
-    }
-    private handleFilter(){
-        //TODO: get rid off data variable here
-        if(this.props.data){
-            this.props.onUserSelection(this.props.clinicalAttribute.clinicalAttributeId,
-                                       this.props.data.clinicalDataType,this.chartFilterSet.keys());
-            this.chartFilterSet.clear()
+    public toSVGDOMNode():Element {
+        if (this.plot) {
+            // Get result of plot
+            return this.plot.toSVGDOMNode();
+        } else {
+            return document.createElementNS("http://www.w3.org/2000/svg", "svg");
         }
     }
 
-    @action private resetFilters(){
-        this.chartFilterSet.clear()
-        this.handleFilter()
+    @computed get showPieControlIcon(){
+        return this.props.clinicalAttribute.datatype==='STRING' && this.props.chartType === ChartType.TABLE;
     }
 
-    @action private onUserSelection(value : string){
-        let values = this.chartFilterSet;
-        if(this.chartFilterSet.has(value)){
-            this.chartFilterSet.delete(value);
-        }else{
-            this.chartFilterSet.set(value);
-        }
+    @computed get showTableControlIcon(){
+        return this.props.chartType === ChartType.PIE_CHART && this.props.clinicalAttribute.datatype==='STRING';
     }
 
     public render() {
         return (
-            <div className={styles.chart}>
-                <div className={styles.header}>
-                    <span>{this.props.clinicalAttribute.displayName}</span>
-                </div>
-                {this.props.data && <div className={styles.plot}>
-                    <PieChart
-                        onUserSelection={this.onUserSelection}
-                        filters={this.chartFilterSet.keys()}
-                        data={this.props.data} />
-                </div>}
-                <div className={styles.footer}>
-                    <If condition={this.showResetIcon}>
-                        <button onClick={this.resetFilters} className="btn btn-default btn-xs" style={{height: "20px"}}>
-                            Reset
-                        </button>
+            <div className={styles.chart} onMouseEnter={this.handlers.onMouseEnterPlot}
+            onMouseLeave={this.handlers.onMouseLeavePlot}>
+                <ChartHeader 
+                    clinicalAttribute={this.props.clinicalAttribute}
+                    showControls={this.mouseInPlot}
+                    showResetIcon={this.props.filters.length>0}
+                    showTableIcon={this.showTableControlIcon}
+                    showPieIcon={this.showPieControlIcon}
+                    handleResetClick={this.handlers.resetFilters}
+                    handleDownloadDataClick={this.handlers.handleDownloadDataClick}
+                    handleSVGClick={this.handlers.handleSVGClick}
+                    handlePDFClick={this.handlers.handlePDFClick}
+                />
+
+                {this.props.data && 
+                    <If condition={this.props.chartType===ChartType.PIE_CHART}>
+                        <PieChart
+                            ref={this.handlers.ref}
+                            onUserSelection={this.handlers.onUserSelection}
+                            filters={this.props.filters}
+                            data={this.props.data} />
                     </If>
-                    <If condition={this.showSelectIcon}>
-                        <button onClick={this.handleFilter} className="btn btn-default btn-xs" style={{height: "20px"}}>
-                            Select
-                        </button>
-                    </If>
-                </div>
+                }
             </div>
         );
     }

@@ -1,5 +1,5 @@
 import * as React from "react";
-import {MutatedGenesData} from "pages/studyView/StudyViewPage";
+import {MutatedGenesData} from "pages/studyView/StudyViewPageStore";
 import {default as LazyMobXTable} from "shared/components/lazyMobXTable/LazyMobXTable";
 import {observer} from "mobx-react";
 import styles from "./tables.module.scss";
