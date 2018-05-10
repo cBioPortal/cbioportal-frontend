@@ -8,6 +8,7 @@ import {VictoryChart, VictoryAxis, VictoryScatter, VictoryLegend, VictoryLabel} 
 import jStat from "jStat";
 import ScatterPlotTooltip from "./ScatterPlotTooltip";
 import {dataLengthToPixels, pixelsToDataLength, VictoryAxisStyle} from "./ScatterPlotUtils";
+import ifndef from "../../lib/ifndef";
 
 export interface IBaseScatterPlotData {
     x:number;
@@ -19,11 +20,11 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     data: D[];
     chartWidth:number;
     chartHeight:number;
-    fill?:(d:D)=>string;
-    stroke?:(d:D)=>string;
-    fillOpacity?:(d:D)=>number;
-    strokeWidth?:(d:D)=>number;
-    symbol?: (d:D)=>string; // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
+    fill?:string | ((d:D)=>string);
+    stroke?:string | ((d:D)=>string);
+    fillOpacity?:number | ((d:D)=>number);
+    strokeWidth?:number | ((d:D)=>number);
+    symbol?: string | ((d:D)=>string); // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
     tooltip?:(d:D)=>JSX.Element;
     legendData?:{name:string, symbol:any}[]; // see http://formidable.com/open-source/victory/docs/victory-legend/#data
     correlation?: {
@@ -305,10 +306,10 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                             <VictoryScatter
                                 style={{
                                     data: {
-                                        fill: this.props.fill || "0x000000",
-                                        stroke: this.props.stroke || "0x000000",
-                                        strokeWidth: this.props.strokeWidth || 0,
-                                        fillOpacity: this.props.fillOpacity || 1
+                                        fill: ifndef(this.props.fill, "0x000000"),
+                                        stroke: ifndef(this.props.stroke, "0x000000"),
+                                        strokeWidth: ifndef(this.props.strokeWidth, 0),
+                                        fillOpacity: ifndef(this.props.fillOpacity, 1)
                                     }
                                 }}
                                 size={this.size}

@@ -4,7 +4,7 @@ import {
     ClinicalDataSingleStudyFilter, CancerStudy, PatientIdentifier, Patient, GenePanelData, GenePanelDataFilter,
     SampleList, MutationCountByPosition, MutationMultipleStudyFilter, SampleMolecularIdentifier,
     MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter, PatientFilter,
-    GenePanel, ClinicalAttribute
+    GenePanel, ClinicalAttribute, MutationFilter
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action, reaction, IObservable, IObservableValue, ObservableMap} from "mobx";
@@ -1429,6 +1429,11 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly entrezGeneIdToGene = remoteData<{[entrezGeneId:number]:Gene}>({
+        await: ()=>[this.genes],
+        invoke: ()=>Promise.resolve(_.keyBy(this.genes.result!, gene=>gene.entrezGeneId))
+    });
+
     readonly genesetLinkMap = remoteData<{[genesetId: string]: string}>({
         invoke: async () => {
             if (this.genesetIds && this.genesetIds.length) {
@@ -1895,6 +1900,33 @@ export class ResultsViewPageStore {
             }
         })
     );
+
+    public mutationCache = new MobxPromiseCache<{entrezGeneId:number}, Mutation[]>(
+            q=>({
+                await:()=>[
+                    this.studyToMutationMolecularProfile,
+                    this.studyToDataQueryFilter
+                ],
+                invoke: async()=>{
+                    return _.flatten(await Promise.all(Object.keys(this.studyToMutationMolecularProfile.result!).map(studyId=>{
+                        const molecularProfileId = this.studyToMutationMolecularProfile.result![studyId].molecularProfileId;
+                        const dqf = this.studyToDataQueryFilter.result![studyId];
+                        if (dqf && molecularProfileId) {
+                            return client.fetchMutationsInMolecularProfileUsingPOST({
+                                molecularProfileId,
+                                mutationFilter: {
+                                    entrezGeneIds:[q.entrezGeneId],
+                                    ...dqf
+                                } as MutationFilter,
+                                projection:"DETAILED"
+                            });
+                        } else {
+                            return Promise.resolve([]);
+                        }
+                    })));
+                }
+            })
+        );
 
     public clinicalDataMxPCache = new MobxPromiseCache<ClinicalAttribute, ClinicalData[]>(
         // at some point we'll make this clinicalDataCache and remove what is now clinicalDataCache

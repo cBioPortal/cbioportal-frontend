@@ -9,16 +9,19 @@ import ReactSelect from "react-select";
 import _ from "lodash";
 import {
     getAxisDescription,
-    getAxisLabel, isNumberData, isStringData, logScalePossible,
-    makeAxisDataPromise, makeScatterPlotData, molecularProfileTypeDisplayOrder,
-    molecularProfileTypeToDisplayType, scatterPlotTooltip
+    getAxisLabel, IScatterPlotData, isNumberData, isStringData, logScalePossible, makeCNAPromise,
+    makeAxisDataPromise, makeScatterPlotData, makeScatterPlotPointAppearance, molecularProfileTypeDisplayOrder,
+    molecularProfileTypeToDisplayType, scatterPlotTooltip, scatterPlotLegendData, IStringAxisData
 } from "./PlotsTabUtils";
-import {ClinicalAttribute, MolecularProfile} from "../../../shared/api/generated/CBioPortalAPI";
+import {ClinicalAttribute, MolecularProfile, Mutation} from "../../../shared/api/generated/CBioPortalAPI";
 import Timer = NodeJS.Timer;
 import ScatterPlot from "shared/components/scatterPlot/ScatterPlot";
 import TablePlot from "./TablePlot";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import InfoIcon from "../../../shared/components/InfoIcon";
+import {bind} from "bind-decorator";
+import {remoteData} from "../../../shared/api/remoteData";
+import {MobxPromise} from "mobxpromise";
 
 enum EventKey {
     horz_molecularProfile,
@@ -44,7 +47,14 @@ export enum AxisType {
 
 export enum ViewType {
     MutationType,
-    CopyNumber
+    CopyNumber,
+    None
+}
+
+export enum PlotType {
+    ScatterPlot,
+    BoxPlot,
+    Table
 }
 
 export type AxisMenuSelection = {
@@ -71,7 +81,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @observable geneLock:boolean;
     @observable searchCaseInput:string;
     @observable searchMutationInput:string;
-    @observable viewType:ViewType;
+    @observable _viewType:ViewType;
+
+    @computed get viewType():ViewType {
+        if (!this.sameGeneInBothAxes) {
+            return ViewType.None;
+        } else {
+            return this._viewType;
+        }
+    }
+    set viewType(v:ViewType) {
+        this._viewType = v;
+    }
 
     private searchCaseTimeout:Timer;
     private searchMutationTimeout:Timer;
@@ -82,7 +103,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         this.horzSelection = this.initAxisMenuSelection();
         this.vertSelection = this.initAxisMenuSelection();
 
-        this.geneLock = false;
+        this.geneLock = true;
         this.searchCaseInput = "";
         this.searchMutationInput = "";
         this.viewType = ViewType.MutationType;
@@ -391,6 +412,54 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     }
 
+    @computed get sameGeneInBothAxes() {
+        return (this.horzSelection.axisType === AxisType.molecularProfile) &&
+            (this.vertSelection.axisType === AxisType.molecularProfile) &&
+            (this.horzSelection.entrezGeneId === this.vertSelection.entrezGeneId);
+    }
+
+    @computed get cnaPromise() {
+        if (this.viewType === ViewType.CopyNumber) {
+            return makeCNAPromise(
+                this.horzSelection.entrezGeneId!, // if viewType is CopyNumber, we know a gene is selected and same in both axes
+                this.props.store.studies,
+                this.props.store.molecularProfileIdToMolecularProfile,
+                this.props.store.numericGeneMolecularDataCache
+            );
+        } else {
+            return undefined;
+        }
+    }
+
+    @computed get mutationPromise() {
+        const promises:MobxPromise<Mutation[]>[] = [];
+        if (
+            this.horzSelection.axisType === AxisType.molecularProfile &&
+            this.horzSelection.entrezGeneId !== undefined
+        ) {
+            promises.push(this.props.store.mutationCache.get({
+                entrezGeneId: this.horzSelection.entrezGeneId!
+            }));
+        }
+        if (
+            this.vertSelection.axisType === AxisType.molecularProfile &&
+            this.vertSelection.entrezGeneId !== undefined &&
+            this.vertSelection.entrezGeneId !== this.horzSelection.entrezGeneId
+        ) {
+            promises.push(this.props.store.mutationCache.get({
+                entrezGeneId: this.vertSelection.entrezGeneId!
+            }));
+        }
+        if (promises.length) {
+            return remoteData({
+                await: ()=>promises,
+                invoke:()=>Promise.resolve(_.flatten(promises.map(x=>x.result!)))
+            });
+        } else {
+            return undefined;
+        }
+    }
+
     @computed get horzAxisDataPromise() {
         return makeAxisDataPromise(
             this.horzSelection,
@@ -459,6 +528,48 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             );
         } else {
             return "";
+        }
+    }
+
+    @computed get scatterPlotAppearance() {
+        return makeScatterPlotPointAppearance(this.viewType);
+    }
+
+    @computed get scatterPlotFill() {
+        switch (this.viewType) {
+            case ViewType.CopyNumber:
+                return "#000000";
+            case ViewType.MutationType:
+            case ViewType.None:
+                return (d:IScatterPlotData)=>this.scatterPlotAppearance(d).fill!;
+        }
+    }
+
+    @computed get scatterPlotFillOpacity() {
+        if (this.viewType === ViewType.CopyNumber) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
+
+    @bind
+    private scatterPlotTooltip(d:IScatterPlotData) {
+        return scatterPlotTooltip(d, this.props.store.entrezGeneIdToGene);
+    }
+
+    @bind
+    private scatterPlotStroke(d:IScatterPlotData) {
+        return this.scatterPlotAppearance(d).stroke;
+    }
+
+    @computed get scatterPlotSymbol() {
+        switch (this.viewType) {
+            case ViewType.MutationType:
+                return (d:IScatterPlotData)=>this.scatterPlotAppearance(d).symbol!;
+            case ViewType.CopyNumber:
+            case ViewType.None:
+                return "circle";
         }
     }
 
@@ -576,8 +687,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             placeholder="Protein Change.."
                         />
                     </div>
-                    {(this.horzSelection.axisType === AxisType.molecularProfile) && (this.vertSelection.axisType === AxisType.molecularProfile) &&
-                    (this.horzSelection.entrezGeneId === this.vertSelection.entrezGeneId) && (
+                    {this.sameGeneInBothAxes && (
                         <div>
                             View
                             <div className="radio"><label>
@@ -635,38 +745,107 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         );
     }
 
+    readonly plotType = remoteData({
+        await: ()=>[
+            this.horzAxisDataPromise,
+            this.vertAxisDataPromise
+        ],
+        invoke: ()=>{
+            const horzAxisData = this.horzAxisDataPromise.result;
+            const vertAxisData = this.vertAxisDataPromise.result;
+            if (!horzAxisData || !vertAxisData) {
+                return new Promise<PlotType>(()=>0); // dont resolve
+            } else {
+                if (isStringData(horzAxisData) && isStringData(vertAxisData)) {
+                    return Promise.resolve(PlotType.Table);
+                } else if (isNumberData(horzAxisData) && isNumberData(vertAxisData)) {
+                    return Promise.resolve(PlotType.ScatterPlot);
+                } else {
+                    return Promise.resolve(PlotType.BoxPlot);
+                }
+            }
+        }
+    });
 
+    readonly scatterPlotData = remoteData({
+        await: ()=>{
+            const ret:MobxPromise<any>[] = [
+                this.horzAxisDataPromise,
+                this.vertAxisDataPromise,
+                this.props.store.sampleKeyToSample
+            ];
+            if (this.mutationPromise) {
+                ret.push(this.mutationPromise);
+            }
+            if (this.cnaPromise) {
+                ret.push(this.cnaPromise);
+            }
+            return ret;
+        },
+        invoke: ()=>{
+            const horzAxisData = this.horzAxisDataPromise.result;
+            const vertAxisData = this.vertAxisDataPromise.result;
+            if (!horzAxisData || !vertAxisData) {
+                return new Promise<IScatterPlotData[]>(()=>0); // dont resolve
+            } else {
+                if (isNumberData(horzAxisData) && isNumberData(vertAxisData)) {
+                    return Promise.resolve(makeScatterPlotData(
+                        horzAxisData.data,
+                        vertAxisData.data,
+                        this.props.store.sampleKeyToSample.result!,
+                        this.viewType,
+                        this.mutationPromise ? this.mutationPromise.result! : [],
+                        this.cnaPromise ? this.cnaPromise.result! : []
+                    ));
+                } else {
+                    return Promise.resolve([]);
+                }
+            }
+        }
+    });
 
     private plot() {
-        if (this.horzAxisDataPromise.isPending || this.vertAxisDataPromise.isPending || this.props.store.sampleKeyToSample.isPending) {
-            return <LoadingIndicator isLoading={true}/>
-        } else if (this.horzAxisDataPromise.isComplete && this.vertAxisDataPromise.isComplete && this.props.store.sampleKeyToSample.isComplete) {
-            const horzAxisData = this.horzAxisDataPromise.result!;
-            const vertAxisData = this.vertAxisDataPromise.result!;
-            if (isStringData(horzAxisData) && isStringData(vertAxisData)) {
-                return (
-                    <TablePlot
-                        horzData={horzAxisData.data}
-                        vertData={vertAxisData.data}
-                    />
-                );
-            } else if (isNumberData(horzAxisData) && isNumberData(vertAxisData)) {
-                const data = makeScatterPlotData(horzAxisData.data, vertAxisData.data, this.props.store.sampleKeyToSample.result!);
-                return (
-                    <ScatterPlot
-                        data={data}
-                        chartWidth={300}
-                        chartHeight={300}
-                        tooltip={scatterPlotTooltip}
-                        logX={this.horzSelection.logScale}
-                        logY={this.vertSelection.logScale}
-                    />
-                );
-            } else {
-                return <span>Not implemented yet.</span>
-            }
-        } else {
+        if (this.plotType.isPending || this.horzAxisDataPromise.isPending || this.vertAxisDataPromise.isPending) {
+            return <LoadingIndicator isLoading={true}/>;
+        } else if (this.plotType.isError || this.horzAxisDataPromise.isError || this.vertAxisDataPromise.isError) {
             return <span>Error loading plot data.</span>;
+        } else {
+            // all complete
+            const plotType = this.plotType.result!;
+            switch (plotType) {
+                case PlotType.Table:
+                    return (
+                        <TablePlot
+                            horzData={(this.horzAxisDataPromise.result! as IStringAxisData).data}
+                            vertData={(this.vertAxisDataPromise.result! as IStringAxisData).data}
+                        />
+                    );
+                case PlotType.ScatterPlot:
+                    if (this.scatterPlotData.isComplete) {
+                        return (
+                            <ScatterPlot
+                                data={this.scatterPlotData.result}
+                                chartWidth={300}
+                                chartHeight={300}
+                                tooltip={this.scatterPlotTooltip}
+                                logX={this.horzSelection.logScale}
+                                logY={this.vertSelection.logScale}
+                                fill={this.scatterPlotFill}
+                                stroke={this.scatterPlotStroke}
+                                symbol={this.scatterPlotSymbol}
+                                fillOpacity={this.scatterPlotFillOpacity}
+                                strokeWidth={1}
+                                legendData={scatterPlotLegendData(this.scatterPlotData.result, this.viewType)}
+                            />
+                        );
+                    } else if (this.scatterPlotData.isError) {
+                        return <span>Error loading plot data.</span>;
+                    } else {
+                        return <LoadingIndicator isLoading={true}/>;
+                    }
+                default:
+                    return <span>Not implemented yet</span>
+            }
         }
     }
 

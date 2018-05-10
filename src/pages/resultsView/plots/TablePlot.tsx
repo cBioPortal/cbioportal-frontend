@@ -35,12 +35,12 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
     @computed get tableData():ITableData {
         const caseToCategories:{[caseKey:string]:{ horz?:string, vert?:string }} = {};
         for (const d of this.props.horzData) {
-            caseToCategories[d.uniqueCaseKey] = caseToCategories[d.uniqueCaseKey] || {};
-            caseToCategories[d.uniqueCaseKey].horz = d.value;
+            caseToCategories[d.uniqueSampleKey] = caseToCategories[d.uniqueSampleKey] || {};
+            caseToCategories[d.uniqueSampleKey].horz = d.value;
         }
         for (const d of this.props.vertData) {
-            caseToCategories[d.uniqueCaseKey] = caseToCategories[d.uniqueCaseKey] || {};
-            caseToCategories[d.uniqueCaseKey].vert = d.value;
+            caseToCategories[d.uniqueSampleKey] = caseToCategories[d.uniqueSampleKey] || {};
+            caseToCategories[d.uniqueSampleKey].vert = d.value;
         }
 
         // count by categories
