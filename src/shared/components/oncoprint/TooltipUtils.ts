@@ -110,6 +110,36 @@ export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile
         return $('<div>').addClass(TOOLTIP_DIV_CLASS).append(ret);
     };
 };
+
+export function makeGeneticTrackTooltip_getCoverageInformation(
+    profiled_in: {genePanelId?:string, molecularProfileId:string}[]|undefined,
+    not_profiled_in: {molecularProfileId:string}[]|undefined,
+):{
+    dispGenePanelIds: string[];
+    dispProfiledIn: string[]|undefined;
+    dispNotProfiledIn: string[]|undefined;
+    dispAllProfiled:boolean;
+    dispNotProfiled:boolean;
+} {
+    let dispGenePanelIds:string[] = [];
+    let dispProfiledIn:string[]|undefined = undefined;
+    let dispProfiledInMap:{[molecularProfileId:string]:string} = {};
+    let dispNotProfiledIn:string[]|undefined = undefined;
+    if (profiled_in) {
+        dispGenePanelIds = _.uniq((profiled_in.map(x=>x.genePanelId) as (string|undefined)[]).filter(x=>!!x) as string[]);
+        dispProfiledIn = _.uniq(profiled_in.map(x=>x.molecularProfileId));
+        dispProfiledInMap = _.keyBy(dispProfiledIn);
+    }
+    if (not_profiled_in) {
+        dispNotProfiledIn = not_profiled_in.map(x=>x.molecularProfileId).filter(x=>!dispProfiledInMap[x]); // filter out profiles in profiled_in to avoid confusing tooltip (this occurs e.g. w multiple samples, one profiled one not)
+    }
+    const dispAllProfiled = !!(dispProfiledIn && dispProfiledIn.length && dispNotProfiledIn && !dispNotProfiledIn.length);
+    const dispNotProfiled = !!(dispNotProfiledIn && dispNotProfiledIn.length && dispProfiledIn && !dispProfiledIn.length);
+    return {
+        dispGenePanelIds, dispProfiledIn, dispNotProfiledIn, dispAllProfiled, dispNotProfiled
+    };
+}
+
 export function makeGeneticTrackTooltip(
     link_id?:boolean,
     getMolecularProfileMap?:()=>{[molecularProfileId:string]:MolecularProfile}|undefined
@@ -248,51 +278,45 @@ export function makeGeneticTrackTooltip(
             ret.append('PROT: <b>' + prot.join(", ") + '</b><br>');
         }
         // CoverageInformation
-        if (d.profiled_in) {
-            let genePanelIds = _.uniq(d.profiled_in.map((x:GenePanelData)=>x.genePanelId).filter(x=>!!x));
-            if (genePanelIds.length) {
-                ret.append("Gene Panels: ");
-                for (let i=0; i<genePanelIds.length; i++) {
-                    if (i > 0) {
-                        ret.append(",");
-                    }
-                    ret.append(makeGenePanelPopupLink(genePanelIds[i]));
+        const coverageInformation = makeGeneticTrackTooltip_getCoverageInformation(d.profiled_in, d.not_profiled_in);
+        if (coverageInformation.dispGenePanelIds.length) {
+            ret.append("Gene Panels: ");
+            for (let i=0; i<coverageInformation.dispGenePanelIds.length; i++) {
+                if (i > 0) {
+                    ret.append(",");
                 }
-                ret.append("<br>");
+                ret.append(makeGenePanelPopupLink(coverageInformation.dispGenePanelIds[i]));
             }
-            if (d.not_profiled_in && !d.not_profiled_in.length) {
-                ret.append("Profiled in all selected molecular profiles.");
-                ret.append("<br>");
-            } else if (!d.profiled_in.length) {
-                ret.append('Not profiled in selected molecular profiles.');
-                ret.append('<br>');
-            } else {
-                let profiles = _.uniqBy(d.profiled_in, (x:GenePanelData)=>x.molecularProfileId);
-                if (profiles.length) {
-                    const molecularProfileMap = getMolecularProfileMap && getMolecularProfileMap();
-                    ret.append("Profiled in: "+profiles.map(x=>{
-                        if (molecularProfileMap)
-                            return molecularProfileMap[x.molecularProfileId].name;
-                        else
-                            return x.molecularProfileId;
-                    }).join(", "));
-                    ret.append("<br>");
-                }
-            }
+            ret.append("<br>");
         }
-        if (d.not_profiled_in) {
-            if (!(d.profiled_in && !d.profiled_in.length)) {
-                let profiles = _.uniqBy(d.not_profiled_in, (x:GenePanelData)=>x.molecularProfileId);
-                if (profiles.length) {
-                    const molecularProfileMap = getMolecularProfileMap && getMolecularProfileMap();
-                    ret.append("<span style='color:red; font-weight:bold'>Not profiled in: "+profiles.map(x=>{
-                            if (molecularProfileMap)
-                                return molecularProfileMap[x.molecularProfileId].name;
-                            else
-                                return x.molecularProfileId;
-                        }).join(", ")+"</span>");
-                    ret.append("<br>");
-                }
+        if (coverageInformation.dispAllProfiled) {
+            ret.append("Profiled in all selected molecular profiles.");
+            ret.append("<br>");
+        } else if (coverageInformation.dispNotProfiled) {
+            ret.append('Not profiled in selected molecular profiles.');
+            ret.append('<br>');
+        } else {
+            const molecularProfileMap = getMolecularProfileMap && getMolecularProfileMap();
+
+            if (coverageInformation.dispProfiledIn && coverageInformation.dispProfiledIn.length) {
+                ret.append("Profiled in: "+coverageInformation.dispProfiledIn.map(x=>{
+                        if (molecularProfileMap) {
+                            return molecularProfileMap[x].name;
+                        } else {
+                            return x;
+                        }
+                    }).join(", "));
+                ret.append("<br>");
+            }
+            if (coverageInformation.dispNotProfiledIn && coverageInformation.dispNotProfiledIn.length) {
+                ret.append("<span style='color:red; font-weight:bold'>Not profiled in: "+coverageInformation.dispNotProfiledIn.map(x=>{
+                        if (molecularProfileMap) {
+                            return molecularProfileMap[x].name;
+                        } else {
+                            return x;
+                        }
+                    }).join(", ")+"</span>");
+                ret.append("<br>");
             }
         }
 
