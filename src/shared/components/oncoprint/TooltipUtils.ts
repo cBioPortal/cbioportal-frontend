@@ -1,7 +1,7 @@
 import {getPatientViewUrl, getSampleViewUrl} from "../../api/urls";
 import $ from "jquery";
 import {
-    GeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
+    NumericGeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
     Mutation
 } from "../../api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
@@ -91,10 +91,16 @@ export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile
     return function (d:any) {
         let data_header = '';
         let profile_data = 'N/A';
-        if (genetic_alteration_type === "MRNA_EXPRESSION") {
-            data_header = 'MRNA: ';
-        } else if (genetic_alteration_type === "PROTEIN_LEVEL") {
-            data_header = 'PROT: ';
+        switch(genetic_alteration_type) {
+            case "MRNA_EXPRESSION":
+                data_header = 'MRNA: ';
+                break;
+            case "PROTEIN_LEVEL":
+                data_header = 'PROT: ';
+                break;
+            case "METHYLATION":
+                data_header = 'METHYLATION: ';
+                break;
         }
         if ((d.profile_data !== null) && (typeof d.profile_data !== "undefined")) {
             profile_data = d.profile_data.toFixed(2);
@@ -169,10 +175,16 @@ export function makeGeneticTrackTooltip(
             }
             return ret;
         });
-    };
+    }
+
+    function generateGermlineLabel() {
+        const ret = $('<small style="color: #ff0000">');
+        ret.append('&nbsp;Germline');
+        return ret;
+    }
 
     const disp_cna:{[integerCN:string]:string} = {'-2': 'HOMODELETED', '-1': 'HETLOSS', '1': 'GAIN', '2': 'AMPLIFIED'};
-    return function (d:Pick<GeneticTrackDatum, "data"|"profiled_in"|"sample"|"patient"|"study_id"|"na"|"not_profiled_in">) {
+    return function (d:Pick<GeneticTrackDatum, "data"|"profiled_in"|"sample"|"patient"|"study_id"|"na"|"not_profiled_in"|"disp_germ">) {
         const ret = $('<div>').addClass(TOOLTIP_DIV_CLASS);
         let mutations:any[] = [];
         let cna:any[] = [];
@@ -200,9 +212,9 @@ export function makeGeneticTrackTooltip(
                     (datum.alterationSubType === "fusion" ? fusions : mutations).push(tooltip_datum);
                     break;
                 case "COPY_NUMBER_ALTERATION":
-                    if (disp_cna.hasOwnProperty((datum as GeneMolecularData).value)) {
+                    if (disp_cna.hasOwnProperty((datum as NumericGeneMolecularData).value)) {
                         const tooltip_datum:any = {
-                            cna: disp_cna[(datum as GeneMolecularData).value]
+                            cna: disp_cna[(datum as NumericGeneMolecularData).value]
                         };
                         const oncokb_oncogenic = datum.oncoKbOncogenic;
                         if (oncokb_oncogenic) {
@@ -242,6 +254,9 @@ export function makeGeneticTrackTooltip(
                     ret.append(",");
                 }
                 ret.append(mutations[i]);
+            }
+            if (d.disp_germ) {
+                ret.append(generateGermlineLabel());
             }
             ret.append('<br>');
         }

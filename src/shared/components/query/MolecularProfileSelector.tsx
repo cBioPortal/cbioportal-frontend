@@ -28,7 +28,7 @@ export default class MolecularProfileSelector extends QueryStoreComponent<{}, {}
 {
 	render()
 	{
-		if (!this.store.singleSelectedStudyId)
+		if (this.store.selectableSelectedStudyIds.length !== 1)
 			return null;
 
 		return (

@@ -70,7 +70,7 @@ export function sortSamples(samples: Array<ClinicalDataBySampleId>,
 
     sampleOrder = _.orderBy(sampleOrder, ['eventOrdering', 'sampleTypeIndex', 'naturalSortIndex'], ['asc','asc','asc']);
     let sampleOrderMap = _.fromPairs(sampleOrder.map((so, i) => [so.id, i]));
-    return _.sortBy(samples, (sample) => {
+    return _.sortBy<ClinicalDataBySampleId>(samples, (sample) => {
         return sampleOrderMap[sample.id];
     });
 }

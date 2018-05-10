@@ -66,6 +66,7 @@ export type GeneticTrackDatum = {
     disp_mrna?:string;
     disp_prot?:string;
     disp_fusion?:boolean;
+    disp_germ?:boolean;
 };
 
 export type GeneticTrackSpec = {
@@ -88,10 +89,13 @@ interface IBaseHeatmapTrackSpec {
 export interface IGeneHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     data: IGeneHeatmapTrackDatum[];
     onRemove: () => void;
+    info?: string;
 }
 export interface IGenesetHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     data: IGenesetHeatmapTrackDatum[];
     trackLinkUrl: string | undefined;
+    expansionTrackList: IGeneHeatmapTrackSpec[];
+    expansionCallback: () => void;
 }
 
 export const GENETIC_TRACK_GROUP_INDEX = 1;

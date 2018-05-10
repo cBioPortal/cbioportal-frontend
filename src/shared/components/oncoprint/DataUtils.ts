@@ -6,7 +6,7 @@ import {
 import {
     ClinicalAttribute,
     ClinicalData,
-    GeneMolecularData, GenePanelData, MolecularProfile, Mutation, MutationCount, Patient,
+    NumericGeneMolecularData, GenePanelData, MolecularProfile, Mutation, MutationCount, Patient,
     Sample
 } from "../../api/generated/CBioPortalAPI";
 import {
@@ -22,6 +22,7 @@ import {FractionGenomeAltered, MutationSpectrum} from "../../api/generated/CBioP
 import {SpecialAttribute} from "../../cache/ClinicalDataCache";
 import {OncoprintClinicalAttribute} from "./ResultsViewOncoprint";
 import {CoverageInformation} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
+import { MUTATION_STATUS_GERMLINE } from "shared/constants";
 
 const cnaDataToString:{[integerCNA:string]:string|undefined} = {
     "-2": "homdel",
@@ -110,12 +111,14 @@ export function fillGeneticTrackDatum(
     const dispMrnaCounts:{[mrnaEvent:string]:number} = {};
     const dispProtCounts:{[protEvent:string]:number} = {};
     const dispMutCounts:{[mutType:string]:number} = {};
+    const dispGermline:{[mutType:string]:boolean} = {};
+    const caseInsensitiveGermlineMatch = new RegExp(MUTATION_STATUS_GERMLINE, "i");
 
     for (const event of data) {
         const molecularAlterationType = event.molecularProfileAlterationType;
         switch (molecularAlterationType) {
             case "COPY_NUMBER_ALTERATION":
-                const cnaEvent = cnaDataToString[(event as GeneMolecularData).value];
+                const cnaEvent = cnaDataToString[(event as NumericGeneMolecularData).value];
                 if (cnaEvent) {
                     // not diploid
                     dispCnaCounts[cnaEvent] = dispCnaCounts[cnaEvent] || 0;
@@ -144,6 +147,7 @@ export function fillGeneticTrackDatum(
                     if (event.putativeDriver) {
                         oncoprintMutationType += "_rec";
                     }
+                    dispGermline[oncoprintMutationType] = dispGermline[oncoprintMutationType] || (caseInsensitiveGermlineMatch.test(event.mutationStatus));
                     dispMutCounts[oncoprintMutationType] = dispMutCounts[oncoprintMutationType] || 0;
                     dispMutCounts[oncoprintMutationType] += 1;
                 }
@@ -157,6 +161,7 @@ export function fillGeneticTrackDatum(
     newDatum.disp_mrna = selectDisplayValue(dispMrnaCounts, mrnaRenderPriority);
     newDatum.disp_prot = selectDisplayValue(dispProtCounts, protRenderPriority);
     newDatum.disp_mut = selectDisplayValue(dispMutCounts, mutRenderPriority);
+    newDatum.disp_germ = newDatum.disp_mut ? dispGermline[newDatum.disp_mut] : undefined;
 
     return newDatum as GeneticTrackDatum; // return for convenience, even though changes made in place
 }
@@ -238,9 +243,9 @@ export function makeGeneticTrackData(
 export function fillHeatmapTrackDatum<T extends IBaseHeatmapTrackDatum, K extends keyof T>(
     trackDatum: Partial<T>,
     featureKey: K,
-    featureId: string,
+    featureId: T[K],
     case_:Sample|Patient,
-    data?: {value: string}[]
+    data?: {value: number}[]
 ) {
     trackDatum[featureKey] = featureId;
     trackDatum.study = case_.studyId;
@@ -248,7 +253,7 @@ export function fillHeatmapTrackDatum<T extends IBaseHeatmapTrackDatum, K extend
         trackDatum.profile_data = null;
         trackDatum.na = true;
     } else if (data.length === 1) {
-        trackDatum.profile_data = parseFloat(data[0].value);
+        trackDatum.profile_data = data[0].value;
     } else {
         if (isSample(case_)) {
             throw Error("Unexpectedly received multiple heatmap profile data for one sample");
@@ -256,7 +261,7 @@ export function fillHeatmapTrackDatum<T extends IBaseHeatmapTrackDatum, K extend
             // aggregate samples for this patient by selecting the highest absolute (Z-)score
             trackDatum.profile_data = data.reduce(
                 (maxInAbsVal: number, next) => {
-                    const val = parseFloat(next.value);
+                    const val = next.value;
                     if (Math.abs(val) > Math.abs(maxInAbsVal)) {
                         return val;
                     } else {
@@ -271,15 +276,15 @@ export function fillHeatmapTrackDatum<T extends IBaseHeatmapTrackDatum, K extend
 
 export function makeHeatmapTrackData<T extends IBaseHeatmapTrackDatum, K extends keyof T>(
     featureKey: K,
-    featureId: string,
+    featureId: T[K],
     cases:Sample[]|Patient[],
-    data: {value: string, uniquePatientKey: string, uniqueSampleKey: string}[]
+    data: {value: number, uniquePatientKey: string, uniqueSampleKey: string}[]
 ): T[] {
     if (!cases.length) {
         return [];
     }
     const sampleData = isSampleList(cases);
-    let keyToData:{[uniqueKey:string]:{value: string}[]};
+    let keyToData:{[uniqueKey:string]:{value: number}[]};
     let ret: T[];
     if (isSampleList(cases)) {
         keyToData = _.groupBy(data, d=>d.uniqueSampleKey);

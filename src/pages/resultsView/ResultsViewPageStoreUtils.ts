@@ -1,12 +1,15 @@
+
 import {
-    Gene, GeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
-    Mutation, Patient, Sample
+    Gene, NumericGeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
+    Mutation, Patient, Sample, CancerStudy
 } from "../../shared/api/generated/CBioPortalAPI";
 import {action} from "mobx";
 import {getSimplifiedMutationType} from "../../shared/lib/oql/accessors";
-import {AnnotatedGeneMolecularData, AnnotatedMutation} from "./ResultsViewPageStore";
+import {AnnotatedNumericGeneMolecularData, AnnotatedMutation} from "./ResultsViewPageStore";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import _ from "lodash";
+import sessionServiceClient from "shared/api//sessionServiceInstance";
+import { VirtualStudy } from "shared/model/VirtualStudy";
 
 type CustomDriverAnnotationReport = {
     hasBinary: boolean,
@@ -190,10 +193,10 @@ export function computeGenePanelInformation(
 }
 
 export function annotateMolecularDatum(
-    molecularDatum:GeneMolecularData,
-    getOncoKbCnaAnnotationForOncoprint:(datum:GeneMolecularData)=>IndicatorQueryResp|undefined,
+    molecularDatum:NumericGeneMolecularData,
+    getOncoKbCnaAnnotationForOncoprint:(datum:NumericGeneMolecularData)=>IndicatorQueryResp|undefined,
     molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile}
-):AnnotatedGeneMolecularData {
+):AnnotatedNumericGeneMolecularData {
     let oncogenic = "";
     if (molecularProfileIdToMolecularProfile[molecularDatum.molecularProfileId].molecularAlterationType
         === "COPY_NUMBER_ALTERATION") {
@@ -203,4 +206,38 @@ export function annotateMolecularDatum(
         }
     }
     return Object.assign({oncoKbOncogenic: oncogenic}, molecularDatum);
+}
+
+export async function getQueriedStudies(
+    physicalStudies:{[id:string]:CancerStudy},
+    virtualStudies:{[id:string]:CancerStudy},
+    queriedIds:string[]
+):Promise<CancerStudy[]>{
+    const queriedStudies:CancerStudy[] = [];
+    const cohorts: {[id:string]:CancerStudy} = Object.assign({}, physicalStudies, virtualStudies);
+    //this would mostly contain unauthorized and shared virtual study ids
+    const unknownIds:string[] = []
+    for(const id of queriedIds){
+        if(cohorts[id]){
+            queriedStudies.push(cohorts[id])
+        } else {
+            unknownIds.push(id)
+        }
+    }
+
+    let promises = unknownIds.map(id =>sessionServiceClient.getVirtualStudy(id))
+			
+    let otherVirtualStudies = await Promise.all(promises).then((allData: VirtualStudy[]) => {
+        return allData.map(virtualStudy => {
+            let study = {
+                allSampleCount:_.sumBy(virtualStudy.data.studies, study=>study.samples.length),
+                studyId: virtualStudy.id,
+                name: virtualStudy.data.name,
+                description: virtualStudy.data.description,
+                cancerTypeId: "My Virtual Studies"
+            } as CancerStudy;
+            return study;
+        })
+    });
+    return queriedStudies.concat(otherVirtualStudies);
 }
