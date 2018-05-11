@@ -48,7 +48,6 @@ import GeneMolecularDataCache from "../../shared/cache/GeneMolecularDataCache";
 import GenesetMolecularDataCache from "../../shared/cache/GenesetMolecularDataCache";
 import GenesetCorrelatedGeneCache from "../../shared/cache/GenesetCorrelatedGeneCache";
 import GeneCache from "../../shared/cache/GeneCache";
-import ClinicalDataCache from "../../shared/cache/ClinicalDataCache";
 import {IHotspotIndex} from "../../shared/model/CancerHotspots";
 import {IOncoKbData} from "../../shared/model/OncoKB";
 import {generateQueryVariantId} from "../../shared/lib/OncoKbUtils";
@@ -70,6 +69,8 @@ import {
 import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alterationCountHelpers";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { VirtualStudy } from "shared/model/VirtualStudy";
+import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
+import OncoprintClinicalDataCache from "../../shared/cache/OncoprintClinicalDataCache";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -537,7 +538,7 @@ export class ResultsViewPageStore {
             }
             return computeGenePanelInformation(genePanelData, genePanels, this.samples.result!, this.patients.result!, this.genes.result!);
         }
-    });
+    }, { samples: {}, patients: {} });
 
     readonly sequencedSampleKeys = remoteData<string[]>({
         await:()=>[
@@ -1863,9 +1864,13 @@ export class ResultsViewPageStore {
         return new GeneCache();
     }
 
-    @cached get clinicalDataCache() {
-        return new ClinicalDataCache(this.samples.result, this.patients.result, this.studyToMutationMolecularProfile.result, this.studyIdToStudy.result);
-    }
+    public oncoprintClinicalDataCache = new OncoprintClinicalDataCache(
+        this.samples,
+        this.patients,
+        this.studyToMutationMolecularProfile,
+        this.studyIdToStudy,
+        this.coverageInformation
+    );
 
     @action clearErrors() {
         this.ajaxErrors = [];
