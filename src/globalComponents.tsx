@@ -22,7 +22,7 @@ class GlobalStores {
 };
 
 exposeComponentRenderer('renderRightBar', ()=> {
-    return <RightBar store={GlobalStores.queryStore} />;
+    return <RightBar queryStore={GlobalStores.queryStore} />;
 });
 
 (window as any).formSubmit = formSubmit;
