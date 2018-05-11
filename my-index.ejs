@@ -2,10 +2,14 @@
 <html class="cbioportal-frontend">
 <head>
     <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
-    <title><%= htmlWebpackPlugin.options.title %></title>
+    <link rel="icon" href="images/cbioportal_icon.png"/>
+    <title>cBioPortal for Cancer Genomics</title>
     <script>
+
+        if (window.location.protocol.includes("https")) window.location.href = window.location.href.replace(/^https/,"http");
+
         window.devContext = true;
-        window.defaultRoute = "/study";
+        window.defaultRoute = "/spa";
 
         window.legacySupportFrontendConfig = {
             enableDarwin : false,
@@ -56,6 +60,13 @@
                 'cellline_nci60'
             ];
 
+        if (window.location.host.includes("herokuapp")) {
+            window.legacySupportFrontendConfig.frontendUrl = 'https://'+window.location.host + '/';
+        } else {
+            window.legacySupportFrontendConfig.frontendUrl = '//'+window.location.host + '/';
+        }
+
+        window.legacySupportFrontendConfig.frontendUrl = '//'+window.location.host + '/';
 
         function assignQuickDirty(obj1, obj2){
             for (var k in obj2) {
@@ -78,18 +89,16 @@
         window.frontendConfig.historyType = window.frontendConfig.historyType? window.frontendConfig.historyType : 'memory';
 
 
-
-
-
     </script>
-
     <script src="reactapp/common.bundle.js"></script>
     <link href="reactapp/prefixed-bootstrap.min.css" rel="stylesheet"></link>
 </head>
 <body class="cbioOnePageApp">
-    <span id="reactHeader"></span>
-    <div id="mutations_div_prototype"></div>
-    <div id="clinical_div_prototype"></div>
+
+
+<body class="twoColumn">
+
     <div id="reactRoot"></div>
+
 </body>
 </html>
