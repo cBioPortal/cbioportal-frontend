@@ -19,10 +19,10 @@ import {isMutationCount, isSample, isSampleList} from "../../lib/CBioPortalAPIUt
 import {getSimplifiedMutationType, SimplifiedMutationType} from "../../lib/oql/accessors";
 import _ from "lodash";
 import {FractionGenomeAltered, MutationSpectrum} from "../../api/generated/CBioPortalAPIInternal";
-import {SpecialAttribute} from "../../cache/ClinicalDataCache";
 import {OncoprintClinicalAttribute} from "./ResultsViewOncoprint";
 import {CoverageInformation} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
 import { MUTATION_STATUS_GERMLINE } from "shared/constants";
+import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
 
 const cnaDataToString:{[integerCNA:string]:string|undefined} = {
     "-2": "homdel",
