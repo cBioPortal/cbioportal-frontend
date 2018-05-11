@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { inject, observer } from "mobx-react";
+import { inject, observer, Observer } from "mobx-react";
 import styles from "./styles.module.scss";
 import {MutatedGenesTable} from "./table/MutatedGenesTable";
 import {CNAGenesTable} from "./table/CNAGenesTable";
@@ -9,7 +9,7 @@ import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import { StudyViewPageStore, ClinicalDataType, SurvivalType } from 'pages/studyView/StudyViewPageStore';
 import { reaction } from 'mobx';
 import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
-
+import _ from "lodash";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -22,18 +22,28 @@ export interface IStudyViewPageProps {
 @observer
 export default class StudyViewPage extends React.Component<IStudyViewPageProps, {}> {
 
-    store: StudyViewPageStore;
-    queryInput: HTMLInputElement;
+    private store: StudyViewPageStore;
+    private queryInput: HTMLInputElement;
+    private handlers:any;
 
     constructor(props: IStudyViewPageProps) {
         super();
         this.store = new StudyViewPageStore();
-        this.onUserSelection = this.onUserSelection.bind(this);
-        this.updateGeneFilter = this.updateGeneFilter.bind(this);
-        this.updateCNAGeneFilter = this.updateCNAGeneFilter.bind(this);
+
+        this.handlers = {
+            onUserSelection: (attrId: string, clinicalDataType: ClinicalDataType, values: string[])=> {
+                this.store.updateClinicalDataEqualityFilters(attrId, clinicalDataType, values)
+            },
+            updateGeneFilter:(entrezGeneId: number)=>{
+                this.store.updateGeneFilter(entrezGeneId);
+            },
+            updateCNAGeneFilter:(entrezGeneId: number, alteration: number)=> {
+                this.store.updateCNAGeneFilter(entrezGeneId, alteration);
+            }
+        }
 
         //TODO: this should be done by a module so that it can be reused on other pages
-        const reaction1 = reaction(
+        reaction(
             () => props.routing.location.query,
             query => {
                 if ('studyId' in query) {
@@ -44,33 +54,21 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             },
             {fireImmediately: true}
         );
-
     }
 
-    private onUserSelection(attrId: string,
-                            clinicalDataType: ClinicalDataType,
-                            values: string[]) {
-
-        this.store.updateClinicalDataEqualityFilters(attrId, clinicalDataType, values)
-    }
-
-    private updateGeneFilter(entrezGeneId: number) {
-        this.store.updateGeneFilter(entrezGeneId);
-    }
-
-    private updateCNAGeneFilter(entrezGeneId: number, alteration: number) {
-        this.store.updateCNAGeneFilter(entrezGeneId, alteration);
-    }
-
-    renderAttributeChart = (clinicalAttribute: ClinicalAttribute,
-                            arrayIndex: number) => {
-        return (<ChartContainer
-                    chartType={ChartType.PIE_CHART}
-                    store={this.store}
-                    clinicalAttribute={clinicalAttribute}
-                    onUserSelection={this.onUserSelection}
-                    key={clinicalAttribute.clinicalAttributeId}
-                />);
+    renderAttributeChart = (clinicalAttribute: ClinicalAttribute) => {
+        const data = this.store.allClinicalData.result[clinicalAttribute.clinicalAttributeId];
+        if(_.isEmpty(data)){
+            return null;
+        } else {
+            return (<ChartContainer
+                chartType={ChartType.PIE_CHART}
+                clinicalAttribute={clinicalAttribute}
+                onUserSelection={this.handlers.onUserSelection}
+                key={clinicalAttribute.clinicalAttributeId}
+                data={data}
+            />);
+        }
     };
 
     renderSurvivalPlot = (data: SurvivalType) => {
@@ -121,7 +119,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                 this.store.defaultVisibleAttributes.isComplete &&
                                 (
                                     <div className={styles.flexContainer}>
-                                        {this.store.defaultVisibleAttributes.result.map(this.renderAttributeChart)}
+                                        {this.store.visibleAttributes.map(this.renderAttributeChart)}
                                     </div>
                                 )
                             }
@@ -135,13 +133,13 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     data={mutatedGeneData}
                                     numOfSelectedSamples={100}
                                     filters={this.store.getMutatedGenesTableFilters()}
-                                    toggleSelection={this.updateGeneFilter}
+                                    toggleSelection={this.handlers.updateGeneFilter}
                                 />)}
                                 {(this.store.cnaGeneData.isComplete && <CNAGenesTable
                                     data={cnaGeneData}
                                     numOfSelectedSamples={100}
                                     filters={this.store.getCNAGenesTableFilters()}
-                                    toggleSelection={this.updateCNAGeneFilter}
+                                    toggleSelection={this.handlers.updateCNAGeneFilter}
                                 />)}
                             </div>
                     </MSKTab>
