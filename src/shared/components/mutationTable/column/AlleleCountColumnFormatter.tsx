@@ -19,11 +19,15 @@ export default class AlleleCountColumnFormatter
             sampleToValue[rowDatum.sampleId] = (rowDatum as any)[dataField]; // TODO this is not type safe...
         }
 
-        const samplesWithValue = sampleOrder.filter((sampleId:string) => sampleToValue.hasOwnProperty(sampleId));
+        // exclude samples with invalid count value (undefined || emtpy || lte 0)
+        const samplesWithValue = sampleOrder.filter(sampleId =>
+            sampleToValue[sampleId] && sampleToValue[sampleId] > 0 && sampleToValue[sampleId].toString().length > 0);
 
+        // single value: just add the actual value only
         if (samplesWithValue.length === 1) {
-            values = [sampleToValue[samplesWithValue[0]]];
+            values = [sampleToValue[samplesWithValue[0]].toString()];
         }
+        // multiple value: add sample id and value pairs
         else {
             values = samplesWithValue.map((sampleId:string) => (`${sampleId}: ${sampleToValue[sampleId]}`));
         }
