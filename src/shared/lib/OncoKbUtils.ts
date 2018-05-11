@@ -375,8 +375,9 @@ export function getTumorTypeFromEvidence(evidence:any) {
     var tumorType = _.isObject(evidence.tumorType) ? evidence.tumorType.name : (evidence.subtype || evidence.cancerType);
     var oncoTreeTumorType = '';
 
-    if(_.isObject(evidence.oncoTreeType)) {
-        oncoTreeTumorType = evidence.oncoTreeType.subtype ? evidence.oncoTreeType.subtype : evidence.oncoTreeType.cancerType;
+    if (_.isObject(evidence.oncoTreeType)) {
+        oncoTreeTumorType = evidence.oncoTreeType.name ? evidence.oncoTreeType.name :
+            (evidence.oncoTreeType.mainType ? evidence.oncoTreeType.mainType.name : '');
     }
 
     if(oncoTreeTumorType) {
