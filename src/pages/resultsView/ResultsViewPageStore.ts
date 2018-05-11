@@ -3,7 +3,8 @@ import {
     SampleIdentifier, MolecularProfile, Mutation, NumericGeneMolecularData, MolecularDataFilter, Gene,
     ClinicalDataSingleStudyFilter, CancerStudy, PatientIdentifier, Patient, GenePanelData, GenePanelDataFilter,
     SampleList, MutationCountByPosition, MutationMultipleStudyFilter, SampleMolecularIdentifier,
-    MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter, PatientFilter, GenePanel
+    MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter, PatientFilter,
+    GenePanel, ClinicalAttribute, MutationFilter
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action, reaction, IObservable, IObservableValue, ObservableMap} from "mobx";
@@ -70,6 +71,7 @@ import {
 import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alterationCountHelpers";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { VirtualStudy } from "shared/model/VirtualStudy";
+import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -1171,6 +1173,15 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly patientKeyToSamples = remoteData({
+        await:()=>[
+            this.samples
+        ],
+        invoke: ()=>{
+            return Promise.resolve(_.groupBy(this.samples.result!, sample=>sample.uniquePatientKey));
+        }
+    });
+
     readonly patients = remoteData({
         await: ()=>[
             this.samples
@@ -1416,6 +1427,11 @@ export class ResultsViewPageStore {
         onResult:(genes:Gene[])=>{
             this.geneCache.addData(genes);
         }
+    });
+
+    readonly entrezGeneIdToGene = remoteData<{[entrezGeneId:number]:Gene}>({
+        await: ()=>[this.genes],
+        invoke: ()=>Promise.resolve(_.keyBy(this.genes.result!, gene=>gene.entrezGeneId))
     });
 
     readonly genesetLinkMap = remoteData<{[genesetId: string]: string}>({
@@ -1862,6 +1878,74 @@ export class ResultsViewPageStore {
     @cached get geneCache() {
         return new GeneCache();
     }
+
+    public numericGeneMolecularDataCache = new MobxPromiseCache<{entrezGeneId:number, molecularProfileId:string}, NumericGeneMolecularData[]>(
+        q=>({
+            await: ()=>[
+                this.molecularProfileIdToDataQueryFilter
+            ],
+            invoke: ()=>{
+                const dqf = this.molecularProfileIdToDataQueryFilter.result![q.molecularProfileId];
+                if (dqf) {
+                    return client.fetchAllMolecularDataInMolecularProfileUsingPOST({
+                        molecularProfileId: q.molecularProfileId,
+                        molecularDataFilter: {
+                            entrezGeneIds: [q.entrezGeneId],
+                            ...dqf
+                        } as MolecularDataFilter
+                    });
+                } else {
+                    return Promise.resolve([]);
+                }
+            }
+        })
+    );
+
+    public mutationCache = new MobxPromiseCache<{entrezGeneId:number}, Mutation[]>(
+            q=>({
+                await:()=>[
+                    this.studyToMutationMolecularProfile,
+                    this.studyToDataQueryFilter
+                ],
+                invoke: async()=>{
+                    return _.flatten(await Promise.all(Object.keys(this.studyToMutationMolecularProfile.result!).map(studyId=>{
+                        const molecularProfileId = this.studyToMutationMolecularProfile.result![studyId].molecularProfileId;
+                        const dqf = this.studyToDataQueryFilter.result![studyId];
+                        if (dqf && molecularProfileId) {
+                            return client.fetchMutationsInMolecularProfileUsingPOST({
+                                molecularProfileId,
+                                mutationFilter: {
+                                    entrezGeneIds:[q.entrezGeneId],
+                                    ...dqf
+                                } as MutationFilter,
+                                projection:"DETAILED"
+                            });
+                        } else {
+                            return Promise.resolve([]);
+                        }
+                    })));
+                }
+            })
+        );
+
+    public clinicalDataMxPCache = new MobxPromiseCache<ClinicalAttribute, ClinicalData[]>(
+        // at some point we'll make this clinicalDataCache and remove what is now clinicalDataCache
+        attr=>({
+            await:()=>[
+                this.samples,
+                this.patients
+            ],
+            invoke:()=>client.fetchClinicalDataUsingPOST({
+                clinicalDataType: attr.patientAttribute ? "PATIENT" : "SAMPLE",
+                clinicalDataMultiStudyFilter: {
+                    attributeIds: [attr.clinicalAttributeId],
+                    identifiers: attr.patientAttribute ?
+                        this.patients.result!.map(p=>({entityId:p.patientId, studyId:p.studyId})) :
+                        this.samples.result!.map(s=>({entityId:s.sampleId, studyId:s.studyId}))
+                }
+            })
+        })
+    );
 
     @cached get clinicalDataCache() {
         return new ClinicalDataCache(this.samples.result, this.patients.result, this.studyToMutationMolecularProfile.result, this.studyIdToStudy.result);

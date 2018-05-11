@@ -441,3 +441,9 @@ h3.hr {
   border:1px dashed $borderColor !important;
 }
 
+.rotateCCW90 {
+  transform:rotate(-90deg);
+  -webkit-transform:rotate(-90deg);
+  -moz-transform:rotate(-90deg);
+}
+
