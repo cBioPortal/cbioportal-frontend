@@ -23,6 +23,10 @@ export class TestimonialStore {
         this.testimonialIndex = 0;
         this.testimonials = [
             {
+                cite: 'Clinical pathologist, Karolinska University Hospital',
+                quote: `You did a great service to the cancer research community and by that to the patients that donated the samples!.`
+            },
+            {
                 cite: 'Postdoctoral Fellow, Oregon Health & Science University',
                 quote: `Whenever bench scientists ask me how they can look at TCGA data, I've never
                         had a good answer for them. Now I do. The cBio Portal meets a critical need--it is the
