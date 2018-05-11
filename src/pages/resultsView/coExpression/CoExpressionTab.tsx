@@ -60,7 +60,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
     constructor(props:ICoExpressionTabProps) {
         super(props);
 
-        setWindowVariable("resultsViewCoExpressionTab", this); // for testing
+        //setWindowVariable("resultsViewCoExpressionTab", this); // for testing
 
         this.plotHandlers = {
             onClickLogScale: action(()=>{
@@ -158,7 +158,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
     @bind
     private header() {
         return (
-            <div>
+            <div style={{marginBottom:20}}>
                 {this.dataSetSelector}
             </div>
         );
