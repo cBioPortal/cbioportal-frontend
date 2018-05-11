@@ -29,7 +29,6 @@ function cleanUrl(url) {
     }
 }
 
-
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 
@@ -133,6 +132,7 @@ var config = {
         }),
         new CopyWebpackPlugin([
             {from: './common-dist', to: 'reactapp'},
+            {from: './src/rootImages', to: 'images'},
             {from: './src/pages/resultsView/network', to: 'reactapp/network'},
             {from: './src/globalStyles/prefixed-bootstrap.min.css', to: 'reactapp/prefixed-bootstrap.min.css'},
             {from: './src/shared/legacy/igv.min.js', to: 'reactapp/igv.min.js'},

@@ -41,6 +41,7 @@ interface IResultsViewOncoprintProps {
     divId: string;
     store:ResultsViewPageStore;
     routing:any;
+    isVirtualStudy:boolean;
     addOnBecomeVisibleListener?:(callback:()=>void)=>void;
 }
 
@@ -179,6 +180,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         this.onMouseEnter = this.onMouseEnter.bind(this);
         this.onMouseLeave = this.onMouseLeave.bind(this);
 
+        console.log("THIS SHOULD USE NEW ROUTER")
         this.urlParamsReaction = reaction(
             ()=>[
                 this.columnMode,
@@ -231,7 +233,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.showMinimap;
             },
             get hideHeatmapMenu() {
-                return self.props.store.queryStore.isVirtualStudyQuery;
+                return self.props.isVirtualStudy;
             },
             get sortByMutationType() {
                 return self.sortByMutationType;
@@ -375,7 +377,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     componentWillUnmount() {
-        this.putativeDriverSettingsReaction();
+        if (this.putativeDriverSettingsReaction) this.putativeDriverSettingsReaction();
         this.urlParamsReaction();
     }
 

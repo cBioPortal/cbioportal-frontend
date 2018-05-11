@@ -18,6 +18,13 @@ import browser from 'bowser';
 import './shared/lib/tracking';
 import 'script-loader!raven-js/dist/raven.js';
 import {correctPatientUrl} from "shared/lib/urlCorrection";
+import {CancerStudyQueryUrlParams} from "shared/components/query/QueryStore";
+import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
+import {molecularProfileParams} from "shared/components/query/QueryStoreUtils";
+import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
+import superagentCache from 'superagent-cache';
+
+superagentCache(superagent);
 
 
 if (localStorage.localdev === 'true' || localStorage.localdist === 'true') {
@@ -84,6 +91,7 @@ const routingStore = new ExtendedRoutingStore();
 let history;
 switch (window.defaultRoute) {
     case "/patient":
+    case "/spa":
         // these pages are going to use state of-the-art browser history
         // when refactoring is done, all pages will use this
         history = browserHistory;
@@ -102,13 +110,34 @@ switch (window.defaultRoute) {
 
 const syncedHistory = syncHistoryWithStore(history, routingStore);
 
+function initQueryStore() {
+
+    // lets make query Store since it's used in a lot of places
+    const queryStore = new QueryStore(window, window.location.href);
+
+    queryStore.singlePageAppSubmitRoutine = function(path:string, query:CancerStudyQueryUrlParams) {
+
+        // normalize this
+        query.cancer_study_list = query.cancer_study_list || query.cancer_study_id;
+        delete query.cancer_study_id;
+        window.routingStore.updateRoute(query, "results");
+
+    };
+
+    return queryStore;
+
+}
+
 // lets make query Store since it's used in a lot of places
-const queryStore = new QueryStore(window, window.location.href);
+//const queryStore = initQueryStore();
+
+
+
 
 const stores = {
     // Key can be whatever you want
     routing: routingStore,
-    queryStore
+//    queryStore
     // ...other stores
 };
 
