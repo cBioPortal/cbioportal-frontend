@@ -1,6 +1,6 @@
 import * as React from 'react';
 import BarGraph from "../barGraph/BarGraph";
-import {observer} from "mobx-react";
+import { observer} from "mobx-react";
 import {TypeOfCancer as CancerType} from "../../api/generated/CBioPortalAPI";
 import Testimonials from "../testimonials/Testimonials";
 import {ThreeBounce} from 'better-react-spinkit';
@@ -11,7 +11,7 @@ import { Timeline } from 'react-twitter-widgets';
 
 interface IRightBarProps
 {
-    store:QueryStore;
+    queryStore:QueryStore;
 }
 interface IRightBarState
 {
@@ -29,7 +29,7 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
 
 
     get studyStore() {
-      return this.props.store;
+      return this.props.queryStore;
     }
 
     get logic() { return this.studyStore.studyListLogic; }

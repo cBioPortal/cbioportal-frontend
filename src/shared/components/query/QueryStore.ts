@@ -178,6 +178,8 @@ export class QueryStore
 		);
 	}
 
+	public singlePageAppSubmitRoutine: (path:string, query:CancerStudyQueryUrlParams)=>void;
+
 	@observable studiesHaveChangedSinceInitialization:boolean = false;
 
 	//temporary store to collect deleted studies. 
@@ -1649,8 +1651,11 @@ export class QueryStore
 		let newUrl = buildCBioPortalUrl(urlParams);
 		if (historyUrl != newUrl)
 			window.history.pushState(null, window.document.title, historyUrl);*/
-
-		formSubmit(urlParams.pathname, urlParams.query, undefined, "smart");
+		if (this.singlePageAppSubmitRoutine) {
+			this.singlePageAppSubmitRoutine(urlParams.pathname, urlParams.query);
+		} else {
+            formSubmit(urlParams.pathname, urlParams.query, undefined, "smart");
+        }
 	}
 
 	@action openSummary() {
@@ -1672,7 +1677,11 @@ export class QueryStore
 
 			const urlParams = queryParams(nonProfileParams, profileParams, this.initialQueryParams.pathname);
 
-			formSubmit(urlParams.pathname, urlParams.query);
+            if (this.singlePageAppSubmitRoutine) {
+                this.singlePageAppSubmitRoutine(urlParams.pathname, urlParams.query);
+            } else {
+                formSubmit(urlParams.pathname, urlParams.query);
+            }
 		});
 	}
 

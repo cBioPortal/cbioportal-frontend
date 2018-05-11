@@ -20,6 +20,7 @@ import ResultsViewPage from 'bundle-loader?lazy!babel-loader!./pages/resultsView
 import HomePage from 'bundle-loader?lazy!babel-loader!./pages/home/HomePage';
 import TestimonialsPage from 'pages/staticPages/testimonialsPage/TestimonialsPage';
 import DatasetPage from 'bundle-loader?lazy!babel-loader!./pages/datasetView/DatasetPage';
+import SPA from 'bundle-loader?lazy!babel-loader!./pages/resultsView/SPA';
 import StudyViewPage from 'bundle-loader?lazy!babel-loader!./pages/studyView/StudyViewPage';
 import './globalComponents';
 import {getBasePath} from "shared/api/urls";
@@ -49,8 +50,6 @@ let getBlankPage = function(){
     }
     return <div />
 }
-
-console.log(getBasePath());
 
 export const makeRoutes = (routing) => {
     return (<Route path="/" component={Container}>

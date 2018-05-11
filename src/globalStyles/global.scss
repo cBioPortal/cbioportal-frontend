@@ -1,11 +1,14 @@
 @import './variables.scss';
 @import './custom-icons.scss';
+@import './header.scss';
 
 /* locks scroll bar on to prevent horizontal jump when content render */
 body {
   overflow-y:scroll;
   background:#f5f5f5 !important;
   text-align:left;
+  margin:0;
+  padding:0;
 }
 
 //get rid of blue border around active button
