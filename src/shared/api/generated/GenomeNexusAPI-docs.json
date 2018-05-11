@@ -836,12 +836,17 @@
     "EnsemblGene": {
       "type": "object",
       "required": [
-        "geneId"
+        "geneId",
+        "hugoSymbol"
       ],
       "properties": {
         "geneId": {
           "type": "string",
           "description": "Ensembl gene id"
+        },
+        "hugoSymbol": {
+          "type": "string",
+          "description": "Approved Hugo symbol"
         },
         "synonyms": {
           "type": "array",
@@ -852,7 +857,7 @@
         },
         "previousSymbols": {
           "type": "array",
-          "description": "Hugo symbol synonyms",
+          "description": "Previous Hugo symbols",
           "items": {
             "type": "string"
           }
