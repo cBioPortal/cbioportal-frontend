@@ -43,7 +43,7 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
     private get singleStudyUI() {
         return <div>
-            <h4><StudyLink study={this.props.store.studies.result[0]}/></h4>
+            <h4><StudyLink study={this.props.store.queriedStudies.result[0]}/></h4>
             <span>
                 {(window as any).serverVars.caseSetProperties.case_set_name}&nbsp;
                 (<strong>{this.props.store.samples.result.length}</strong> samples)
@@ -55,7 +55,7 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
     private get multipleStudyUI() {
         return <div>
             <span>
-                Querying {this.props.store.samples.result.length} samples in {this.props.store.studies.result.length} studies
+                Querying {this.props.store.samples.result.length} samples in {this.props.store.queriedStudies.result.length} studies
                  &nbsp;
                  <DefaultTooltip
                      placement='bottom'
@@ -72,7 +72,7 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
         return (<div className="cbioportal-frontend">
                 <ul className="list-unstyled" style={{marginBottom:0}}>
                 {
-                    this.props.store.studies.result.map((study:CancerStudy)=>{
+                    this.props.store.queriedStudies.result.map((study:CancerStudy)=>{
                         return <li><StudyLink href={`study?id=${study.studyId}`} study={study} /></li>
                     })
                 }
@@ -82,10 +82,10 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
     render() {
 
-        if (!this.props.store.totalAlterationStats.isError && !this.props.store.studies.isError) {
+        if (!this.props.store.totalAlterationStats.isError && !this.props.store.queriedStudies.isError) {
 
 
-            const loadingComplete = this.props.store.totalAlterationStats.isComplete && this.props.store.studies.isComplete;
+            const loadingComplete = this.props.store.totalAlterationStats.isComplete && this.props.store.queriedStudies.isComplete;
 
             let alterationPercentage = (loadingComplete) ?
                 (this.props.store.totalAlterationStats.result!.alteredSampleCount / this.props.store.totalAlterationStats.result!.sampleCount * 100) : 0;
@@ -105,7 +105,7 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
 
                             {
-                                (loadingComplete) && ((this.props.store.studies.result.length === 1) ? this.singleStudyUI : this.multipleStudyUI)
+                                (loadingComplete) && ((this.props.store.queriedStudies.result.length === 1) ? this.singleStudyUI : this.multipleStudyUI)
                             }
                         </div>
                         {

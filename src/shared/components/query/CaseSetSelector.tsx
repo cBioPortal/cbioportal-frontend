@@ -60,16 +60,16 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 				textLabel:'User-defined Case List'
 			}
 		];
-		if (this.store.isVirtualCohortQuery) {
+		if (this.store.isVirtualStudyQuery) {
 			ret = [{
 				value: ALL_CASES_LIST_ID,
 				label: (
 					<DefaultTooltip
 						placement="right"
 						mouseEnterDelay={0}
-						overlay={<div className={styles.tooltip}>All cases in the selected cohorts</div>}
+						overlay={<div className={styles.tooltip}>All cases in the selected studies</div>}
 					>
-						<span>All</span>
+						<span>All {`(${this.store.selectableSelectedStudies_totalSampleCount})`}</span>
 					</DefaultTooltip>
 				),
 				textLabel:'All'
@@ -80,13 +80,13 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 
 	render()
 	{
-		if (!this.store.selectedStudyIds.length)
+		if (!this.store.selectableSelectedStudyIds.length)
 			return null;
 		return (
 			<FlexRow padded overflow className={styles.CaseSetSelector} data-test='CaseSetSelector'>
 				<div>
 				<SectionHeader className="sectionLabel"
-							   secondaryComponent={<a href={getStudySummaryUrl(this.store.selectedStudyIds)} target="_blank">To build your own case set, try out our enhanced Study View.</a>}
+							   secondaryComponent={<a href={getStudySummaryUrl(this.store.selectableSelectedStudyIds)} target="_blank">To build your own case set, try out our enhanced Study View.</a>}
 							   promises={[this.store.sampleLists, this.store.asyncCustomCaseSet]}>
 					Select Patient/Case Set:
 				</SectionHeader>

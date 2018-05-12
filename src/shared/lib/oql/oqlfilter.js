@@ -1,4 +1,3 @@
-// Requires parser to be window object, window.oql_parser
 // Heavily dependent on OQL PEGjs specification
 import oql_parser from './oql-parser';
 
@@ -10,7 +9,7 @@ var parseOQLQuery = function (oql_query, opt_default_oql) {
      all 'DATATYPES' lines applied to subsequent lines and removed.
      */
     opt_default_oql = opt_default_oql || "";
-    var parsed = window.oql_parser.parse(oql_query);
+    var parsed = oql_parser.parse(oql_query);
 
     var datatypes_alterations = false;
     for (var i = 0; i < parsed.length; i++) {
@@ -24,7 +23,7 @@ var parseOQLQuery = function (oql_query, opt_default_oql) {
     if (opt_default_oql.length > 0) {
         for (var i = 0; i < parsed.length; i++) {
             if (!parsed[i].alterations) {
-                parsed[i].alterations = window.oql_parser.parse("DUMMYGENE:" + opt_default_oql + ";")[0].alterations;
+                parsed[i].alterations = oql_parser.parse("DUMMYGENE:" + opt_default_oql + ";")[0].alterations;
             }
         }
         ;
@@ -515,7 +514,7 @@ export function genes(oql_query) {
 function isValid (oql_query) {
     var ret = true;
     try {
-        window.oql_parser.parse(oql_query);
+        oql_parser.parse(oql_query);
     } catch (e) {
         ret = false;
     }
