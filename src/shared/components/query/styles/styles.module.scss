@@ -622,6 +622,21 @@ div.GenesetsSelectorWindow {
   }
 }
 
+div.GenesetsVolcanoSelectorWindow {
+  div:global(.modal-dialog) {
+     width: 1200px;
+     height: 500px;
+  }
+  div.GenesetsSelectionArea {
+      padding: 10px 15px;
+  }
+  div.GenesetsFormGroup {
+      class: "form-group";
+      display:"inline-block";
+      padding: "10px 15px";
+  }
+}
+
 span.downloadSubmitExplanation {
 }
 
