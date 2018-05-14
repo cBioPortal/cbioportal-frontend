@@ -64,6 +64,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     }
 
     public render() {
+        //to hide label if the angle is too small(currently set to 20 degrees)
         return (
             <VictoryPie
                 theme={CBIOPORTAL_VICTORY_THEME}
@@ -76,7 +77,6 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                 height={185}
                 labelRadius={30}
                 padding={30}
-                //to hide label if the angle is too small(currently set to 20 degrees)
                 labels={(d:any) => ((d.y*360)/this.totalCount)<20?'':d.y}
                 data={annotatePieChartDatum(this.props.data,this.props.filters,this.colorSet)}
                 dataComponent={<CustomSlice/>}

@@ -126,7 +126,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                 )
                             }
                             {
-                                this.store.survivalPlotData.result.map(this.renderSurvivalPlot)
+                                <div className={styles.flexContainer}>
+                                    {this.store.survivalPlotData.result.map(this.renderSurvivalPlot)}
+                                </div>
                             }
                             <div className={styles.flexContainer}>
                                 {(this.store.mutatedGeneData.isComplete && <MutatedGenesTable

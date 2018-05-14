@@ -39,41 +39,46 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         let numOfSelectedSamples = this.props.numOfSelectedSamples;
         return (
             <div className={styles.table}>
-                <CNAGenesTableComponent
-                    initialItemsPerPage={15}
-                    data={data}
-                    columns={
-                        [
-                            {
-                                name: 'Gene',
-                                render: (data: CopyNumberCountByGene) => <span>{data.hugoGeneSymbol}</span>
-                            },
-                            {
-                                name: 'Cytoband',
-                                render: (data: CopyNumberCountByGene) => <span>{data.cytoband}</span>
-                            },
-                            {
-                                name: 'CNA',
-                                render: (data: CopyNumberCountByGene) =>
-                                    <span>{data.alteration === -2 ? 'DEL' : 'AMP'}</span>
-                            },
-                            {
-                                name: '#',
-                                render: (data: CopyNumberCountByGene) =>
-                                    <LabeledCheckbox
-                                        checked={this.isChecked(data.entrezGeneId, data.alteration)}
-                                        onChange={event => this.props.toggleSelection(data.entrezGeneId, data.alteration)}
-                                    >
-                                        {data.countByEntity}
-                                    </LabeledCheckbox>
-                            },
-                            {
-                                name: 'Freq',
-                                render: (data: CopyNumberCountByGene) => <span>{data.frequency + '%'}</span>
-                            }
-                        ]
-                    }
-                />
+                <div className={styles.title}>CNA Genes</div>
+                <div className={styles.body}>
+                    <CNAGenesTableComponent
+                        className={styles.body}
+                        initialItemsPerPage={10}
+                        showCopyDownload={false}
+                        data={data}
+                        columns={
+                            [
+                                {
+                                    name: 'Gene',
+                                    render: (data: CopyNumberCountByGene) => <span>{data.hugoGeneSymbol}</span>
+                                },
+                                {
+                                    name: 'Cytoband',
+                                    render: (data: CopyNumberCountByGene) => <span>{data.cytoband}</span>
+                                },
+                                {
+                                    name: 'CNA',
+                                    render: (data: CopyNumberCountByGene) =>
+                                        <span>{data.alteration === -2 ? 'DEL' : 'AMP'}</span>
+                                },
+                                {
+                                    name: '#',
+                                    render: (data: CopyNumberCountByGene) =>
+                                        <LabeledCheckbox
+                                            checked={this.isChecked(data.entrezGeneId, data.alteration)}
+                                            onChange={event => this.props.toggleSelection(data.entrezGeneId, data.alteration)}
+                                        >
+                                            {data.countByEntity}
+                                        </LabeledCheckbox>
+                                },
+                                {
+                                    name: 'Freq',
+                                    render: (data: CopyNumberCountByGene) => <span>{data.frequency + '%'}</span>
+                                }
+                            ]
+                        }
+                    />
+                </div>
             </div>
         );
     }

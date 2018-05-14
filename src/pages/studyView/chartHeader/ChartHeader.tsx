@@ -41,7 +41,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
 
     public render() {
         return (
-            <div className='study-view-chart-header'>
+            <div className='studyViewPageChartHeader'>
                 <div className='name'><span>{this.props.clinicalAttribute.displayName}</span></div>
                 <div className='controls'>
                     <If condition={this.showChartControls}>
