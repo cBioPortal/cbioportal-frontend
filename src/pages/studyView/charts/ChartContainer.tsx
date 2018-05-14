@@ -6,12 +6,14 @@ import { observable, computed, action } from "mobx";
 import _ from "lodash";
 import {If} from 'react-if';
 import { ChartHeader } from "pages/studyView/chartHeader/ChartHeader";
-import { ClinicalDataType } from "pages/studyView/StudyViewPageStore";
+import { ClinicalDataType, StudyViewPageStore } from "pages/studyView/StudyViewPageStore";
 import { getClinicalDataType } from "pages/studyView/StudyViewUtils";
 import fileDownload from 'react-file-download';
 import PieChart from "pages/studyView/charts/pieChart/PieChart";
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
-import { ClinicalDataCount } from "shared/api/generated/CBioPortalAPIInternal";
+import { ClinicalDataCount, StudyViewFilter } from "shared/api/generated/CBioPortalAPIInternal";
+import { remoteData } from "shared/api/remoteData";
+import internalClient from "shared/api/cbioportalInternalClientInstance";
 
 export interface AbstractChart {
     downloadData:()=>string;
@@ -26,24 +28,23 @@ export enum ChartType {
     SCATTER
 }
 
-export interface IChartProps {
+export interface IChartContainerProps {
     chartType:ChartType;
     clinicalAttribute: ClinicalAttribute,
-    data?: ClinicalDataCount[];
-    filters: string[];
+    store:StudyViewPageStore,
     onUserSelection: (attrId: string, clinicalDataType: ClinicalDataType, value: string[]) => void;
-    key: number;
 }
 
 @observer
-export class Chart extends React.Component<IChartProps, {}> {
+export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     private handlers:any;
     private plot:AbstractChart;
 
     @observable mouseInPlot:boolean = false;
+    @observable filters:string[] = []
 
-    constructor(props: IChartProps) {
+    constructor(props: IChartContainerProps) {
         super(props);
         let fileName = props.clinicalAttribute.displayName.replace(/[ \t]/g,'_')
 
@@ -51,18 +52,20 @@ export class Chart extends React.Component<IChartProps, {}> {
             ref: (plot:AbstractChart)=>{ 
                 this.plot = plot; 
             },
-            resetFilters: ()=>{
+            resetFilters: action(()=>{
+                this.filters = [];
                 this.props.onUserSelection(
                     this.props.clinicalAttribute.clinicalAttributeId,
                     getClinicalDataType(this.props.clinicalAttribute),
                     []);
-            },
-            onUserSelection: (values:string[])=>{
+            }),
+            onUserSelection: action((values:string[])=>{
+                this.filters = values;
                 this.props.onUserSelection(
                     this.props.clinicalAttribute.clinicalAttributeId,
                     getClinicalDataType(this.props.clinicalAttribute),
                     values);
-            },
+            }),
             onMouseEnterPlot: action(()=>{ this.mouseInPlot = true;}),
             onMouseLeavePlot: action(()=>{ this.mouseInPlot = false;}),
             handleDownloadDataClick:()=>{
@@ -95,32 +98,57 @@ export class Chart extends React.Component<IChartProps, {}> {
         return this.props.chartType === ChartType.PIE_CHART && this.props.clinicalAttribute.datatype==='STRING';
     }
 
+    @computed get isChartVisible(){
+        //check if there is chart implementation is present
+        return this.props.chartType === ChartType.PIE_CHART && this.props.clinicalAttribute.datatype==='STRING';
+    }
+
+    private readonly patientClinicalAttributesData = remoteData<ClinicalDataCount[]>({
+        await: () => [],
+        invoke: async () => {
+            return internalClient.fetchClinicalDataCountsUsingPOST({
+                studyId: this.props.clinicalAttribute.studyId,
+                attributeId:this.props.clinicalAttribute.clinicalAttributeId,
+                clinicalDataType: getClinicalDataType(this.props.clinicalAttribute),
+                studyViewFilter: this.props.store.filters
+            })
+        },
+        default: []
+    });
+
+    @computed get data(){
+        return this.patientClinicalAttributesData.result;
+    }
+
     public render() {
         return (
-            <div className={styles.chart} onMouseEnter={this.handlers.onMouseEnterPlot}
-            onMouseLeave={this.handlers.onMouseLeavePlot}>
-                <ChartHeader 
-                    clinicalAttribute={this.props.clinicalAttribute}
-                    showControls={this.mouseInPlot}
-                    showResetIcon={this.props.filters.length>0}
-                    showTableIcon={this.showTableControlIcon}
-                    showPieIcon={this.showPieControlIcon}
-                    handleResetClick={this.handlers.resetFilters}
-                    handleDownloadDataClick={this.handlers.handleDownloadDataClick}
-                    handleSVGClick={this.handlers.handleSVGClick}
-                    handlePDFClick={this.handlers.handlePDFClick}
-                />
+            <If condition={this.isChartVisible}>
+                <div className={styles.chart}
+                     onMouseEnter={this.handlers.onMouseEnterPlot}
+                     onMouseLeave={this.handlers.onMouseLeavePlot}>
+                    <ChartHeader 
+                        clinicalAttribute={this.props.clinicalAttribute}
+                        showControls={this.mouseInPlot}
+                        showResetIcon={this.filters.length>0}
+                        showTableIcon={this.showTableControlIcon}
+                        showPieIcon={this.showPieControlIcon}
+                        handleResetClick={this.handlers.resetFilters}
+                        handleDownloadDataClick={this.handlers.handleDownloadDataClick}
+                        handleSVGClick={this.handlers.handleSVGClick}
+                        handlePDFClick={this.handlers.handlePDFClick}
+                    />
 
-                {this.props.data && 
-                    <If condition={this.props.chartType===ChartType.PIE_CHART}>
-                        <PieChart
-                            ref={this.handlers.ref}
-                            onUserSelection={this.handlers.onUserSelection}
-                            filters={this.props.filters}
-                            data={this.props.data} />
-                    </If>
-                }
-            </div>
+                    {this.data.length>0 && 
+                        <If condition={this.props.chartType===ChartType.PIE_CHART}>
+                            <PieChart
+                                ref={this.handlers.ref}
+                                onUserSelection={this.handlers.onUserSelection}
+                                filters={this.filters}
+                                data={this.data} />
+                        </If>
+                    }
+                </div>
+            </If>
         );
     }
 

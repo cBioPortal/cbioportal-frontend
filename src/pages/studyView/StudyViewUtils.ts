@@ -82,29 +82,7 @@ export function annotatePieChartDatum(
         });
 }
 
-
-export async function getClinicalCountsData(
-    attributeIds:string[],
-    studyId:string,
-    clinicalDataType:ClinicalDataType,
-    studyViewFilter:StudyViewFilter):Promise<ClinicalAttributeData>{
-
-        let promises = attributeIds.map(attributeId => internalClient.fetchClinicalDataCountsUsingPOST({
-                                        studyId: studyId,
-                                        attributeId:attributeId,
-                                        clinicalDataType: clinicalDataType,
-                                        studyViewFilter: studyViewFilter
-                                    }));
-                
-        return Promise.all(promises).then((allData: ClinicalAttributeData[]) => {
-            return _.reduce(allData, (acc: ClinicalAttributeData, next: ClinicalAttributeData)=>{
-                acc = $.extend({},acc,next)
-                return acc;
-            }, {});
-        });
-}
-
-export function getClinicalDataType(clinicalAttribute: ClinicalAttribute){
+export function getClinicalDataType(clinicalAttribute: ClinicalAttribute): ClinicalDataType{
     return clinicalAttribute.patientAttribute?ClinicalDataType.PATIENT:ClinicalDataType.SAMPLE;
 }
 
