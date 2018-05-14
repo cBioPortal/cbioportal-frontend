@@ -613,6 +613,13 @@ function transitionGeneticTrack(
         // either way, use this one now
         trackIdForRuleSetSharing.genetic = trackId;
 
+        // keep the expansion option on or off as appropriate;
+        // the menu re-renders if tracks are added or removed below
+        if (nextSpec.expansionTrackList && nextSpec.expansionTrackList.length > 0) {
+            oncoprint.disableTrackExpansion(trackId);
+        } else if (nextSpec.expansionCallback) {
+            oncoprint.enableTrackExpansion(trackId);
+        }
         updateExpansionTracks<GeneticTrackSpec, {genetic?: number}>(
             nextSpec, prevSpec,
             getTrackSpecKeyToTrackId,
