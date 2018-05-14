@@ -517,7 +517,6 @@ describe("SurvivalUtil", () => {
                 yDenominator: 2,
                 threshold: 2
             });
-            console.log(result);
             assert.deepEqual(result.altered.numOfCases, 2);
             assert.deepEqual(result.altered.scatter[1], {
                 x: 0.5,
