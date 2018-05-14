@@ -3,7 +3,7 @@ import { inject, observer } from "mobx-react";
 import styles from "./styles.module.scss";
 import {MutatedGenesTable} from "./table/MutatedGenesTable";
 import {CNAGenesTable} from "./table/CNAGenesTable";
-import {Chart, ChartType} from 'pages/studyView/charts/Chart';
+import {ChartContainer, ChartType} from 'pages/studyView/charts/ChartContainer';
 import SurvivalChart from "../resultsView/survival/SurvivalChart";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import { StudyViewPageStore, ClinicalDataType, SurvivalType } from 'pages/studyView/StudyViewPageStore';
@@ -64,15 +64,12 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
     renderAttributeChart = (clinicalAttribute: ClinicalAttribute,
                             arrayIndex: number) => {
-
-        let attributeUID = (clinicalAttribute.patientAttribute ? "PATIENT_" : "SAMPLE_") + clinicalAttribute.clinicalAttributeId;
-        return (<Chart
+        return (<ChartContainer
                     chartType={ChartType.PIE_CHART}
+                    store={this.store}
                     clinicalAttribute={clinicalAttribute}
                     onUserSelection={this.onUserSelection}
-                    filters={this.store.getClinicalDataEqualityFilters(attributeUID)}
-                    data={this.store.clinicalAttributeData.result[attributeUID]}
-                    key={arrayIndex}
+                    key={clinicalAttribute.clinicalAttributeId}
                 />);
     };
 

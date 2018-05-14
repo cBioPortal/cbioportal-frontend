@@ -6,7 +6,7 @@ import { observable, computed } from "mobx";
 import _ from "lodash";
 import { annotatePieChartDatum, getPieSliceColors } from "pages/studyView/StudyViewUtils";
 import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
-import { AbstractChart } from "pages/studyView/charts/Chart";
+import { AbstractChart } from "pages/studyView/charts/ChartContainer";
 import { ClinicalDataCount } from "shared/api/generated/CBioPortalAPIInternal";
 
 export interface IPieChartProps {
