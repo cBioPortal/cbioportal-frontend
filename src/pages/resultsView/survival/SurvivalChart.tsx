@@ -80,8 +80,6 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     @observable tooltipModel: any;
     @observable scatterFilter: any;
     // The denominator should be determined based on the plot width and height.
-    private downSamplingDenominatorX:number = 200;
-    private downSamplingDenominatorY:number = 200;
     private isTooltipHovered: boolean = false;
     private tooltipCounter: number = 0;
     private alteredLegendText = 'Cases with Alteration(s) in Query Gene(s)';
@@ -135,9 +133,15 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         let configurableOpts: StyleOpts = _.merge({}, this.styleOptsDefaultProps, this.props.styleOpts);
         configurableOpts.padding.right = this.props.showLegend ? 300 : configurableOpts.padding.right;
         configurableOpts.legend.x = configurableOpts.width - configurableOpts.padding.right;
-        this.downSamplingDenominatorX = configurableOpts.width - configurableOpts.padding.left - configurableOpts.padding.right;
-        this.downSamplingDenominatorY = configurableOpts.height - configurableOpts.padding.top - configurableOpts.padding.bottom;
         return configurableOpts;
+    }
+
+    @computed
+    get downSamplingDenominators() {
+        return {
+            x: this.styleOpts.width - this.styleOpts.padding.left - this.styleOpts.padding.right,
+            y: this.styleOpts.height - this.styleOpts.padding.top - this.styleOpts.padding.bottom
+        }
     }
 
     @computed
@@ -163,8 +167,8 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     @computed
     get scatterData(): GroupedScatterData {
         return filteringScatterData(this.allScatterData, this.scatterFilter, {
-            xDenominator: this.downSamplingDenominatorX,
-            yDenominator: this.downSamplingDenominatorY,
+            xDenominator: this.downSamplingDenominators.x,
+            yDenominator: this.downSamplingDenominators.y,
             threshold: SURVIVAL_DOWN_SAMPLING_THRESHOLD
         });
     }
