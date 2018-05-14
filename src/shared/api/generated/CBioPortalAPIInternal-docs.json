@@ -920,6 +920,47 @@
         }
       }
     },
+    "/molecular-profiles/{molecularProfileId}/sample-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch sample IDs by study view filter",
+        "operationId": "fetchMolecularProfileSampleCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "molecularProfileId",
+            "in": "path",
+            "description": "Molecular Profile ID e.g. acc_tcga_mutations",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/MolecularProfileSampleCount"
+            }
+          }
+        }
+      }
+    },
     "/molecular-profiles/{molecularProfileId}/variant-counts/fetch": {
       "post": {
         "tags": [
@@ -1021,12 +1062,9 @@
           "200": {
             "description": "OK",
             "schema": {
-              "type": "object",
-              "additionalProperties": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/definitions/ClinicalDataCount"
-                }
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ClinicalDataCount"
               }
             }
           }
@@ -1086,7 +1124,7 @@
         }
       }
     },
-    "/studies/{studyId}/sample-ids/fetch": {
+    "/studies/{studyId}/samples/fetch": {
       "post": {
         "tags": [
           "Study View"
@@ -1852,6 +1890,20 @@
         }
       },
       "title": "Info"
+    },
+    "MolecularProfileSampleCount": {
+      "type": "object",
+      "properties": {
+        "numberOfProfiledSamples": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "numberOfUnprofiledSamples": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "MolecularProfileSampleCount"
     },
     "MrnaPercentile": {
       "type": "object",
