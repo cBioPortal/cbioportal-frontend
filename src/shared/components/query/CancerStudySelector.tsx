@@ -196,9 +196,9 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                             <Observer>
                                 {() => {
 
-                                    const studyLimitReached = (this.store.selectableSelectedStudyIds.length > 20);
+                                    const studyLimitReached = (this.store.selectableSelectedStudyIds.length > 50);
                                     const tooltipMessage = studyLimitReached ?
-                                        <span>Too many studies selected for study summary (limit: 20)</span> :
+                                        <span>Too many studies selected for study summary (limit: 50)</span> :
                                         <span>Open summary of selected studies in a new window.</span>
 
                                     return (

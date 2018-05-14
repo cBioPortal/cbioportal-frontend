@@ -26,6 +26,10 @@
       "description": "Mutation Assessor Controller"
     },
     {
+      "name": "annotation-summary-controller",
+      "description": "Annotation Summary Controller"
+    },
+    {
       "name": "isoform-override-controller",
       "description": "Isoform Override Controller"
     }
@@ -35,6 +39,116 @@
     "https"
   ],
   "paths": {
+    "/annotation/summary": {
+      "post": {
+        "tags": [
+          "annotation-summary-controller"
+        ],
+        "summary": "Retrieves VEP annotation summary for the provided list of variants",
+        "operationId": "fetchVariantAnnotationPOST_1",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "variants",
+            "description": "List of variants. For example [\"X:g.66937331T>A\",\"17:g.41242962_41242963insGA\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "isoformOverrideSource",
+            "in": "query",
+            "description": "Isoform override source. For example uniprot",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Indicates whether to return summary for all transcripts or only for canonical transcript",
+            "required": false,
+            "type": "string",
+            "default": "ALL",
+            "enum": [
+              "ALL",
+              "CANONICAL"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/VariantAnnotationSummary"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/annotation/summary/{variant}": {
+      "get": {
+        "tags": [
+          "annotation-summary-controller"
+        ],
+        "summary": "Retrieves VEP annotation summary for the provided variant",
+        "operationId": "fetchVariantAnnotationSummaryGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "variant",
+            "in": "path",
+            "description": "Variant. For example 17:g.41242962_41242963insGA",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "isoformOverrideSource",
+            "in": "query",
+            "description": "Isoform override source. For example uniprot",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "projection",
+            "in": "query",
+            "description": "Indicates whether to return summary for all transcripts or only for canonical transcript",
+            "required": false,
+            "type": "string",
+            "default": "ALL",
+            "enum": [
+              "ALL",
+              "CANONICAL"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/VariantAnnotationSummary"
+            }
+          }
+        }
+      }
+    },
     "/cancer_hotspots/genomic": {
       "post": {
         "tags": [
@@ -494,6 +608,9 @@
           "type": "string",
           "description": "Display id"
         },
+        "ensemblGeneId": {
+          "type": "string"
+        },
         "info_text": {
           "type": "string",
           "description": "Database info text"
@@ -737,6 +854,98 @@
           "type": "number",
           "format": "double",
           "description": "Variant specificity score"
+        }
+      }
+    },
+    "TranscriptConsequenceSummary": {
+      "type": "object",
+      "required": [
+        "transcriptId"
+      ],
+      "properties": {
+        "codonChange": {
+          "type": "string",
+          "description": "Codon change"
+        },
+        "consequenceTerms": {
+          "type": "string",
+          "description": "Consequence terms (comma separated)"
+        },
+        "entrezGeneId": {
+          "type": "string",
+          "description": "Entrez gene id"
+        },
+        "hgvsc": {
+          "type": "string",
+          "description": "HGVSc"
+        },
+        "hgvsp": {
+          "type": "string",
+          "description": "HGVSp"
+        },
+        "hgvspShort": {
+          "type": "string",
+          "description": "HGVSp short"
+        },
+        "hugoGeneSymbol": {
+          "type": "string",
+          "description": "Hugo gene symbol"
+        },
+        "proteinPosition": {
+          "description": "Protein position (start and end)",
+          "$ref": "#/definitions/IntegerRange"
+        },
+        "refSeq": {
+          "type": "string",
+          "description": "RefSeq id"
+        },
+        "transcriptId": {
+          "type": "string",
+          "description": "Transcript id"
+        },
+        "variantClassification": {
+          "type": "string",
+          "description": "Variant classification"
+        }
+      }
+    },
+    "VariantAnnotationSummary": {
+      "type": "object",
+      "required": [
+        "transcriptConsequences",
+        "variant"
+      ],
+      "properties": {
+        "assemblyName": {
+          "type": "string",
+          "description": "Assembly name"
+        },
+        "canonicalTranscriptId": {
+          "type": "string",
+          "description": "Canonical transcript id"
+        },
+        "genomicLocation": {
+          "description": "Genomic location",
+          "$ref": "#/definitions/GenomicLocation"
+        },
+        "strandSign": {
+          "type": "string",
+          "description": "Strand (- or +)"
+        },
+        "transcriptConsequences": {
+          "type": "array",
+          "description": "List of transcript consequence summaries",
+          "items": {
+            "$ref": "#/definitions/TranscriptConsequenceSummary"
+          }
+        },
+        "variant": {
+          "type": "string",
+          "description": "Variant key"
+        },
+        "variantType": {
+          "type": "string",
+          "description": "Variant type"
         }
       }
     }

@@ -1,10 +1,11 @@
 import * as React from 'react';
 import {observer} from "mobx-react";
+import * as _ from 'lodash';
 import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
 import {DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
 import {Column} from "shared/components/lazyMobXTable/LazyMobXTable";
-import * as _ from 'lodash';
 import MrnaExprColumnFormatter from "shared/components/mutationTable/column/MrnaExprColumnFormatter";
+import {IColumnVisibilityControlsProps} from "shared/components/columnVisibilityControls/ColumnVisibilityControls";
 import CohortColumnFormatter from "./column/CohortColumnFormatter";
 import CnaColumnFormatter from "./column/CnaColumnFormatter";
 import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
@@ -41,6 +42,8 @@ type ICopyNumberTableWrapperProps = {
     gisticData:IGisticData;
     userEmailAddress?:string;
     mrnaExprRankMolecularProfileId?:string;
+    columnVisibility?: {[columnId: string]: boolean};
+    columnVisibilityProps?: IColumnVisibilityControlsProps;
     status:"loading"|"available"|"unavailable";
 };
 
@@ -171,6 +174,8 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
                         itemsLabel="Copy Number Alteration"
                         itemsLabelPlural="Copy Number Alterations"
                         showCountHeader={true}
+                        columnVisibility={this.props.columnVisibility}
+                        columnVisibilityProps={this.props.columnVisibilityProps}
                     />
                 )
             }
