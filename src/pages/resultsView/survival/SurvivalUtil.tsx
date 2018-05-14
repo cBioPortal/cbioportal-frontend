@@ -193,20 +193,17 @@ export function convertScatterDataToDownloadData(patientData: any[]): any[] {
  * @returns {ScatterData[]}
  */
 export function downSampling(data: ScatterData[], opts: DownSamplingOpts): ScatterData[] {
-    let x = data.map(item => item.x);
-    let y = data.map(item => item.y);
+    let xMax = _.maxBy(data, 'x');
+    let xMin = _.minBy(data, 'x');
 
-    let xMax = _.max(x) || 0;
-    let xMin = _.min(x) || 0;
-
-    let yMax = _.max(y) || 0;
-    let yMin = _.min(y) || 0;
+    let yMax = _.maxBy(data, 'y');
+    let yMin = _.minBy(data, 'y');
 
     if (opts.xDenominator <= 0 || opts.yDenominator <= 0)
         return data;
 
-    let timeThreshold = (xMax - xMin) / opts.xDenominator;
-    let survivalRateThreshold = (yMax - yMin) / opts.yDenominator;
+    let timeThreshold = ((xMax ? xMax.x : 0) - (xMin ? xMin.x : 0)) / opts.xDenominator;
+    let survivalRateThreshold = ((yMax ? yMax.y : 0) - (yMin ? yMin.y : 0)) / opts.yDenominator;
     let averageThreshold = Math.hypot(timeThreshold, survivalRateThreshold);
     let lastVisibleDataPoint = {
         x: 0,
@@ -248,18 +245,11 @@ export function downSampling(data: ScatterData[], opts: DownSamplingOpts): Scatt
 
 export function filteringScatterData(allScatterData: GroupedScatterData, filters: SurvivalPlotFilters | undefined, downSamplingOpts: DownSamplingOpts):GroupedScatterData {
     let filteredData = _.cloneDeep(allScatterData);
-    _.forEach(filteredData, (value:SurvivalCurveData, key:string) => {
+    _.forEach(filteredData, (value:SurvivalCurveData) => {
         if (value.numOfCases > downSamplingOpts.threshold) {
             if (filters) {
-                let filteredIndex: number[] = [];
-                _.forEach(value.scatter, (_val, _key) => {
-                    if (_val.x <= filters.x[1] && _val.x >= filters.x[0]
-                        && _val.y <= filters.y[1] && _val.y >= filters.y[0]) {
-                        filteredIndex.push(_key);
-                    }
-                });
-                value.scatter = value.scatter.filter((val, index) => _.includes(filteredIndex, index));
-                value.scatterWithOpacity = value.scatterWithOpacity.filter((val, index) => _.includes(filteredIndex, index));
+                value.scatter = value.scatter.filter((_val) => filterBasedOnCoordinates(filters, _val));
+                value.scatterWithOpacity = value.scatterWithOpacity.filter((_val) => filterBasedOnCoordinates(filters, _val));
             }
             value.scatter = downSampling(value.scatter, downSamplingOpts);
             value.scatterWithOpacity = downSampling(value.scatterWithOpacity, downSamplingOpts);
@@ -267,4 +257,12 @@ export function filteringScatterData(allScatterData: GroupedScatterData, filters
         }
     });
     return filteredData;
+}
+
+function filterBasedOnCoordinates(filters: SurvivalPlotFilters, _val:ScatterData) {
+    if (_val.x <= filters.x[1] && _val.x >= filters.x[0]
+        && _val.y <= filters.y[1] && _val.y >= filters.y[0]) {
+        return true;
+    }
+    return false;
 }
