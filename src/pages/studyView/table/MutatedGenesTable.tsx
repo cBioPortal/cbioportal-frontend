@@ -24,36 +24,40 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         let numOfSelectedSamples = this.props.numOfSelectedSamples;
         return (
             <div className={styles.table}>
-                <MutatedGenesTableComponent
-                    initialItemsPerPage={15}
-                    data={data}
-                    columns={
-                        [
-                            {
-                                name: 'Gene',
-                                render: (data: MutationCountByGene) => <span>{data.hugoGeneSymbol}</span>
-                            },
-                            {
-                                name: '# Mut',
-                                render: (data: MutationCountByGene) => <span>{data.totalCount}</span>
-                            },
-                            {
-                                name: '#',
-                                render: (data: MutationCountByGene) =>
-                                    <LabeledCheckbox
-                                        checked={this.props.filters.indexOf(data.entrezGeneId) !== -1}
-                                        onChange={event => this.props.toggleSelection(data.entrezGeneId)}
-                                    >
-                                        {data.countByEntity}
-                                    </LabeledCheckbox>
-                            },
-                            {
-                                name: 'Freq',
-                                render: (data: MutationCountByGene) => <span>{data.frequency + '%'}</span>
-                            }
-                        ]
-                    }
-                />
+                <div className={styles.title}>Mutated Genes</div>
+                <div className={styles.body}>
+                    <MutatedGenesTableComponent
+                        initialItemsPerPage={10}
+                        showCopyDownload={false}
+                        data={data}
+                        columns={
+                            [
+                                {
+                                    name: 'Gene',
+                                    render: (data: MutationCountByGene) => <span>{data.hugoGeneSymbol}</span>
+                                },
+                                {
+                                    name: '# Mut',
+                                    render: (data: MutationCountByGene) => <span>{data.totalCount}</span>
+                                },
+                                {
+                                    name: '#',
+                                    render: (data: MutationCountByGene) =>
+                                        <LabeledCheckbox
+                                            checked={this.props.filters.indexOf(data.entrezGeneId) !== -1}
+                                            onChange={event => this.props.toggleSelection(data.entrezGeneId)}
+                                        >
+                                            {data.countByEntity}
+                                        </LabeledCheckbox>
+                                },
+                                {
+                                    name: 'Freq',
+                                    render: (data: MutationCountByGene) => <span>{data.frequency + '%'}</span>
+                                }
+                            ]
+                        }
+                    />
+                </div>
             </div>
         );
     }
