@@ -58,8 +58,8 @@ export type GeneticTrackDatum = {
     study_id:string;
     uid:string;
     data:(ExtendedAlteration&AnnotatedMutation)[];
-    coverage?: GenePanelData[];
-    wholeExomeSequenced?:boolean;
+    profiled_in?: GenePanelData[];
+    not_profiled_in?:GenePanelData[];
     na?: boolean;
     disp_mut?:string;
     disp_cna?:string;
@@ -110,6 +110,8 @@ export interface IOncoprintProps {
     heatmapTracks: IGeneHeatmapTrackSpec[];
     divId:string;
     width:number;
+
+    molecularProfileIdToMolecularProfile?:{[molecularProfileId:string]:MolecularProfile};
 
     horzZoomToFitIds?:string[];
 
@@ -181,7 +183,8 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
             }
         }
         if (!this.oncoprint.webgl_unavailable) {
-            transition(props, this.lastTransitionProps || {}, this.oncoprint, ()=>this.trackSpecKeyToTrackId);
+            transition(props, this.lastTransitionProps || {}, this.oncoprint, ()=>this.trackSpecKeyToTrackId,
+                ()=>this.props.molecularProfileIdToMolecularProfile);
             this.lastTransitionProps = _.clone(props);
         }
     }

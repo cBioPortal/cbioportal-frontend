@@ -69,7 +69,7 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 						mouseEnterDelay={0}
 						overlay={<div className={styles.tooltip}>All cases in the selected studies</div>}
 					>
-						<span>All</span>
+						<span>All {`(${this.store.selectableSelectedStudies_totalSampleCount})`}</span>
 					</DefaultTooltip>
 				),
 				textLabel:'All'
