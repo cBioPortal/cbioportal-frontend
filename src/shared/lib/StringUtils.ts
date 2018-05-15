@@ -30,3 +30,23 @@ export function stringListToIndexSet(alos:ReadonlyArray<string>):{[s:string]:num
         return map;
     }, {});
 }
+
+/**
+ * Unquote a string wrapped with single or double quotes.
+ *
+ * @param {string} str  input string wrapped with single or double quotes
+ */
+export function unquote(str: string): string
+{
+    return str.replace(/(^")|(^')|("$)|('$)/g, '');
+}
+
+/**
+ * Replaces escaped tab ("\\t") and new line ("\\n") substrings with actual tab ("\t") and new line ("\n") characters.
+ *
+ * @param {string} str  input string with "\\t" and "\\n" substrings
+ */
+export function unescapeTabDelimited(str: string): string
+{
+    return str.replace(/\\t/g, "\t").replace(/\\n/g, "\n");
+}
