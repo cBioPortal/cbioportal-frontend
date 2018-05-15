@@ -1,5 +1,5 @@
 import * as React from "react";
-import "./styles.scss";
+import styles from "./styles.scss";
 import { observer } from "mobx-react";
 import { VictoryPie, VictoryContainer, VictoryLabel, Slice } from 'victory';
 import { observable, computed } from "mobx";
@@ -68,12 +68,11 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         return (
             <VictoryPie
                 theme={CBIOPORTAL_VICTORY_THEME}
-                containerComponent={<VictoryContainer 
+                containerComponent={<VictoryContainer
                                         responsive={false}
-                                        className="study-view-pie"
                                         containerRef={(ref: any) => this.svgContainer = ref}
                                     />}
-                width={200}
+                width={190}
                 height={185}
                 labelRadius={30}
                 padding={30}
