@@ -7,8 +7,8 @@ import Timer = NodeJS.Timer;
 import {VictoryChart, VictoryAxis, VictoryScatter, VictoryLegend, VictoryLabel} from "victory";
 import jStat from "jStat";
 import ScatterPlotTooltip from "./ScatterPlotTooltip";
-import {tickFormat, VictoryAxisStyle} from "./ScatterPlotUtils";
 import ifndef from "shared/lib/ifndef";
+import {tickFormatNumeral} from "./TickUtils";
 
 export interface IBaseScatterPlotData {
     x:number;
@@ -276,9 +276,12 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         }
     }
 
-    @bind
-    private size(d:D, active:boolean) {
-        return (active || !!(this.props.highlight && this.props.highlight(d)) ? 6 : 3);
+    @computed get size() {
+        const highlight = this.props.highlight;
+        // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
+        return (d:D, active:boolean)=>{
+            return (active || !!(highlight && highlight(d)) ? 6 : 3);
+        };
     }
     
     private tickFormat(t:number, ticks:number[], logScale:boolean) {
@@ -286,7 +289,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
             t = this.invLogScale(t);
             ticks = ticks.map(x=>this.invLogScale(x));
         }
-        return tickFormat(t, ticks);
+        return tickFormatNumeral(t, ticks);
     }
 
     @bind
@@ -333,7 +336,6 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                             >
                                 {this.title}
                                 {this.legend}
-                                {this.correlationInfo}
                                 <VictoryAxis
                                     domain={this.plotDomain.x}
                                     orientation="bottom"
@@ -361,7 +363,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                                             fill: ifndef(this.props.fill, "0x000000"),
                                             stroke: ifndef(this.props.stroke, "0x000000"),
                                             strokeWidth: ifndef(this.props.strokeWidth, 0),
-                                            fillOpacity: ifndef(this.props.fillOpacity, 1)
+                                            fillOpacity: ifndef(this.props.fillOpacity, 1),
                                         }
                                     }}
                                     size={this.size}
@@ -372,6 +374,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                                     y={this.y}
                                 />
                             </VictoryChart>
+                            {this.correlationInfo}
                         </g>
                     </svg>
                 </div>
