@@ -96,13 +96,14 @@ export function selectDisplayValue(counts:{[value:string]:number}, priority:{[va
     } else {
         return undefined;
     }
-};
+}
 
 export function fillGeneticTrackDatum(
+    // must already have all non-disp* fields except trackLabel and data
     newDatum:Partial<GeneticTrackDatum>,
     trackLabel:string,
     data:AnnotatedExtendedAlteration[]
-): Partial<GeneticTrackDatum> {
+): GeneticTrackDatum {
     newDatum.trackLabel = trackLabel;
     newDatum.data = data;
 
@@ -163,7 +164,7 @@ export function fillGeneticTrackDatum(
     newDatum.disp_mut = selectDisplayValue(dispMutCounts, mutRenderPriority);
     newDatum.disp_germ = newDatum.disp_mut ? dispGermline[newDatum.disp_mut] : undefined;
 
-    return newDatum; // return for convenience, even though changes made in place
+    return newDatum as GeneticTrackDatum; // return for convenience, even though changes made in place
 }
 
 export function makeGeneticTrackData(
@@ -218,12 +219,11 @@ export function makeGeneticTrackData(
             );
             newDatum.not_profiled_in = newDatum.not_profiled_in.concat(sampleSequencingInfo.notProfiledAllGenes).filter(p=>!!_selectedMolecularProfiles[p.molecularProfileId]); // filter out coverage information about non-selected profiles
 
-            _.assign(newDatum, fillGeneticTrackDatum(
-                {},
+            ret.push(fillGeneticTrackDatum(
+                newDatum,
                 geneSymbolArray.join(' / '),
                 caseAggregatedAlterationData[sample.uniqueSampleKey]
             ));
-            ret.push(newDatum as GeneticTrackDatum);
         }
     } else {
         // case: Patients
@@ -248,12 +248,11 @@ export function makeGeneticTrackData(
             );
             newDatum.not_profiled_in = newDatum.not_profiled_in.concat(patientSequencingInfo.notProfiledAllGenes).filter(p=>!!_selectedMolecularProfiles[p.molecularProfileId]); // filter out coverage information about non-selected profiles
 
-            _.assign(newDatum, fillGeneticTrackDatum(
-                {},
+            ret.push(fillGeneticTrackDatum(
+                newDatum,
                 geneSymbolArray.join(' / '),
                 caseAggregatedAlterationData[patient.uniquePatientKey]
             ));
-            ret.push(newDatum as GeneticTrackDatum);
         }
     }
     return ret;
