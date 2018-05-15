@@ -90,7 +90,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                            showTable={false}
                            showLegend={false}
                            styleOpts={{
-                               width: 500,
+                               width: 450,
                                height: 300
                            }}
                            fileName="Overall_Survival"/>
