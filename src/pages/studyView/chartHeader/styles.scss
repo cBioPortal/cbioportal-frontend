@@ -1,4 +1,4 @@
-.study-view-chart-header {
+.studyViewPageChartHeader {
     display: flex;
     height:15px;
     line-height: 15px;
@@ -11,47 +11,47 @@
         text-overflow: ellipsis;
         text-align: center;
     }
-
     .name {
         flex-grow: 1;
-        text-align: center !important;
+        text-align: center;
         overflow:hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
+        padding: 0 5px;
     }
     .controls {
         flex-shrink: 0;
-        color: grey !important;
-        font-size: 12px;
+        color: grey;
         float: right;
         .btn {
-            border: 0px !important;
-            cursor: pointer !important;
-            background-color: white !important;
-            background-image:none !important;
-            padding: 0px !important;
-            margin: 0 2px !important;
+            border: 0px;
+            cursor: pointer;
+            background-color: white;
+            background-image:none;
+            padding: 0px;
+            margin: 0 3px;
+            font-size: 11px;
             &:hover, &:active, &:focus {
-                color: grey !important;
+                color: grey;
             }
         }
         .btn:active:focus {
             box-shadow: none; 
         }
         .btn:first-child {
-            margin-left: 10px !important;
+            margin-left: 10px;
         }
         .fa-arrows:hover {
             cursor: move;
         }
         .fa-undo {
-            color: #2986e2;
+            color: $brand-primary;
         }
     }
 }
   
 .study-view-chart-download {
     >button {
-        border: 1px solid grey !important;
+        border: 1px solid grey;
     }
 }
