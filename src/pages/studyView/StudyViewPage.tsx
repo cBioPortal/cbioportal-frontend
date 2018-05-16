@@ -90,7 +90,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                            showTable={false}
                            showLegend={false}
                            styleOpts={{
-                               width: 500,
+                               width: 450,
                                height: 300
                            }}
                            fileName="Overall_Survival"/>
@@ -126,7 +126,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                 )
                             }
                             {
-                                this.store.survivalPlotData.result.map(this.renderSurvivalPlot)
+                                <div className={styles.flexContainer}>
+                                    {this.store.survivalPlotData.result.map(this.renderSurvivalPlot)}
+                                </div>
                             }
                             <div className={styles.flexContainer}>
                                 {(this.store.mutatedGeneData.isComplete && <MutatedGenesTable

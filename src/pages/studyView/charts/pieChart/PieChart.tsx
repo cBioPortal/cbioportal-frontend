@@ -1,5 +1,5 @@
 import * as React from "react";
-import "./styles.scss";
+import styles from "./styles.scss";
 import { observer } from "mobx-react";
 import { VictoryPie, VictoryContainer, VictoryLabel, Slice } from 'victory';
 import { observable, computed } from "mobx";
@@ -64,19 +64,18 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     }
 
     public render() {
+        //to hide label if the angle is too small(currently set to 20 degrees)
         return (
             <VictoryPie
                 theme={CBIOPORTAL_VICTORY_THEME}
-                containerComponent={<VictoryContainer 
+                containerComponent={<VictoryContainer
                                         responsive={false}
-                                        className="study-view-pie"
                                         containerRef={(ref: any) => this.svgContainer = ref}
                                     />}
-                width={200}
+                width={190}
                 height={185}
                 labelRadius={30}
                 padding={30}
-                //to hide label if the angle is too small(currently set to 20 degrees)
                 labels={(d:any) => ((d.y*360)/this.totalCount)<20?'':d.y}
                 data={annotatePieChartDatum(this.props.data,this.props.filters,this.colorSet)}
                 dataComponent={<CustomSlice/>}
