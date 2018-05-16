@@ -212,7 +212,7 @@ export default class AnnotationColumnFormatter
     {
         let geneSymbol: string = mutation.gene.hugoGeneSymbol;
         let trialMatchEntry = null;
-        //Only search for matching Civic variants if the gene mutation exists in the Civic API
+        //Only search for matching Trial variants if the gene mutation exists in the Trial API
         if (trialMatchVariants[geneSymbol] && trialMatchVariants[geneSymbol][mutation.proteinChange]) {
             let geneVariants: {[name: string]: ITrialMatchVariantData} = {[mutation.proteinChange]: trialMatchVariants[geneSymbol][mutation.proteinChange]};
             let geneEntry: ITrialMatchGeneData = trialMatchGenes[geneSymbol];
