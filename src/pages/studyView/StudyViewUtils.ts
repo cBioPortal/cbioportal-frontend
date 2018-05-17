@@ -98,3 +98,35 @@ export function getPieSliceColors(data: ClinicalDataCount[]):{[id:string]:string
         return result;
     }, {});
 }
+
+export async function getClinicalCountsData(
+    attributeIds: string[],
+    studyId: string,
+    clinicalDataType: ClinicalDataType,
+    studyViewFilter: StudyViewFilter): Promise<{ [id: string]: ClinicalDataCount[] }> {
+
+    let promises = attributeIds.map(attributeId => internalClient.fetchClinicalDataCountsUsingPOST({
+        studyId: studyId,
+        attributeId: attributeId,
+        clinicalDataType: clinicalDataType,
+        studyViewFilter: studyViewFilter
+    }).then((data) => {
+        return Promise.resolve({
+            attributeId: attributeId,
+            counts: data
+        })
+    }).catch(() => {
+        //TODO: how to handle if api fails
+        return Promise.resolve({
+            attributeId: attributeId,
+            counts: [] as ClinicalDataCount[]
+        })
+    }));
+
+    return Promise.all(promises).then((allData: { attributeId: string; counts: ClinicalDataCount[]; }[]) => {
+        return _.reduce(allData, (acc, next) => {
+            acc[next.attributeId] = next.counts
+            return acc
+        }, {} as any)
+    });
+}
