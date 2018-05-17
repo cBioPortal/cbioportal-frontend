@@ -24,6 +24,7 @@ import {
 } from 'shared/api/generated/CBioPortalAPI';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
+import { getClinicalCountsData } from 'pages/studyView/StudyViewUtils';
 
 
 export enum ClinicalDataType {
@@ -31,12 +32,11 @@ export enum ClinicalDataType {
     PATIENT = "PATIENT"
 }
 export type ClinicalAttributeData = { [attrId: string]: ClinicalDataCount[] };
-export type ClinicalAttributeDataWithMeta = { attributeId: string, clinicalDataType: ClinicalDataType, counts: ClinicalDataCount[] };
 export type MutatedGenesData = MutationCountByGene[];
 export type CNAGenesData = CopyNumberCountByGene[];
 export type SurvivalType = {
     id: string,
-    associatedAttrs: string[],
+    associatedAttrs: ['OS_STATUS', 'OS_MONTHS']|['DFS_STATUS', 'DFS_MONTHS'],
     filter: string[],
     alteredGroup: PatientSurvival[]
     unalteredGroup: PatientSurvival[]
@@ -59,6 +59,16 @@ export class StudyViewPageStore {
 
     @observable private _cnaGeneFilter: CopyNumberGeneFilter;
 
+    private _previousQueriedSampleAttributesId:string[] = [];
+
+    private _previousQueriedPatientAttributesId:string[] = [];
+
+    private _previousFilters:StudyViewFilter = {} as any;
+
+    private _attributeChartVisibility = observable.map<boolean>();
+
+    private _loadedInitially = false;
+
     @action
     updateClinicalDataEqualityFilters(attributeId: string,
                                       clinicalDataType: ClinicalDataType,
@@ -75,15 +85,16 @@ export class StudyViewPageStore {
             this._clinicalDataEqualityFilterSet.set(id, clinicalDataEqualityFilter);
 
         } else {
-            this._clinicalDataEqualityFilterSet.delete(id)
+            this._clinicalDataEqualityFilterSet.delete(id);
         }
     }
 
     @action
     updateGeneFilter(entrezGeneId: number) {
-        let mutatedGeneFilter = this._mutatedGeneFilter
+        let mutatedGeneFilter = this._mutatedGeneFilter;
         if (!mutatedGeneFilter) {
-            mutatedGeneFilter = {molecularProfileId: this.mutationProfileId, entrezGeneIds: []}
+            //TODO: all elements instead of one
+            mutatedGeneFilter = {molecularProfileId: this.mutationProfileIds[0], entrezGeneIds: []};
         }
         let _index = mutatedGeneFilter.entrezGeneIds.indexOf(entrezGeneId);
         if (_index === -1) {
@@ -91,16 +102,17 @@ export class StudyViewPageStore {
         } else {
             mutatedGeneFilter.entrezGeneIds.splice(_index, 1);
         }
-        this._mutatedGeneFilter = mutatedGeneFilter
+        this._mutatedGeneFilter = mutatedGeneFilter;
     }
 
     @action
     updateCNAGeneFilter(entrezGeneId: number, alteration: number) {
         let _cnaGeneFilter = this._cnaGeneFilter;
         if (!_cnaGeneFilter) {
+             //TODO: all elements instead of one
             _cnaGeneFilter = {
                 alterations: [],
-                molecularProfileId: this.cnaProfileId
+                molecularProfileId: this.cnaProfileIds[0]
             }
         }
         var _index = -1;
@@ -121,6 +133,10 @@ export class StudyViewPageStore {
         this._cnaGeneFilter = _cnaGeneFilter;
     }
 
+    @action hideChart(attributeId: string) {
+        this._attributeChartVisibility.set(attributeId, false);
+    }
+
     @computed
     get filters() {
         let filters: StudyViewFilter = {} as any;
@@ -128,7 +144,7 @@ export class StudyViewPageStore {
 
         //checking for empty since the api throws error when the clinicalDataEqualityFilter array is empty
         if (clinicalDataEqualityFilter.length > 0) {
-            filters.clinicalDataEqualityFilters = clinicalDataEqualityFilter
+            filters.clinicalDataEqualityFilters = clinicalDataEqualityFilter;
         }
 
         if (this._mutatedGeneFilter && this._mutatedGeneFilter.entrezGeneIds.length > 0) {
@@ -140,11 +156,6 @@ export class StudyViewPageStore {
         }
 
         return filters;
-    }
-
-    public getClinicalDataEqualityFilters(id: string): string[] {
-        let clinicalDataEqualityFilter = this._clinicalDataEqualityFilterSet.get(id)
-        return clinicalDataEqualityFilter ? clinicalDataEqualityFilter.values : [];
     }
 
     public getMutatedGenesTableFilters(): number[] {
@@ -178,27 +189,19 @@ export class StudyViewPageStore {
     });
 
     @computed
-    get mutationProfileId(): string {
-        var i;
-        let molecularProfiles = this.molecularProfiles.result
-        for (i = 0; i < molecularProfiles.length; i++) {
-            if (molecularProfiles[i].molecularAlterationType === "MUTATION_EXTENDED") {
-                return molecularProfiles[i].molecularProfileId
-            }
-        }
-        return '';
+    get mutationProfileIds() {
+        return this.molecularProfiles
+            .result
+            .filter(profile=> profile.molecularAlterationType === "MUTATION_EXTENDED")
+            .map(profile=>profile.molecularProfileId);
     }
 
     @computed
-    get cnaProfileId(): string {
-        var i;
-        let molecularProfiles = this.molecularProfiles.result
-        for (i = 0; i < molecularProfiles.length; i++) {
-            if (molecularProfiles[i].molecularAlterationType === "COPY_NUMBER_ALTERATION" && molecularProfiles[i].datatype === "DISCRETE") {
-                return molecularProfiles[i].molecularProfileId
-            }
-        }
-        return '';
+    get cnaProfileIds() {
+        return this.molecularProfiles
+            .result
+            .filter(profile=> profile.molecularAlterationType === "COPY_NUMBER_ALTERATION" && profile.datatype === "DISCRETE")
+            .map(profile=>profile.molecularProfileId);
     }
 
     readonly clinicalAttributes = remoteData({
@@ -207,8 +210,59 @@ export class StudyViewPageStore {
                 studyId: this.studyId
             })
         },
-        default: []
+        default: [],
+        onResult:(attributes:ClinicalAttribute[])=>{
+            attributes.forEach(attribute=>{
+                this._attributeChartVisibility.set(attribute.clinicalAttributeId,false);
+            })
+        }
     });
+
+    readonly clinicalAttributeSet = remoteData<{[id:string]:ClinicalAttribute}>({
+        await: () => [this.clinicalAttributes],
+        invoke: () => Promise.resolve(_.keyBy(this.clinicalAttributes.result, x=>x.clinicalAttributeId))
+    },{});
+
+    @computed get visibleAttributes(){
+        const attributes = this.clinicalAttributeSet.result
+        return _.reduce(this._attributeChartVisibility.toJS(),(acc:ClinicalAttribute[],next,key)=>{
+            if(next && attributes[key]){
+                acc.push(attributes[key])
+            }
+            return acc;
+        },[])
+    }
+
+    @computed get querySampleAttributeIds() {
+        const attributeIds = this.visibleAttributes
+        .filter(attribute => !attribute.patientAttribute)
+        .map(attribute => attribute.clinicalAttributeId);
+
+        //update ids when the chart is added or when the filters is updated
+        if(!this._loadedInitially ||
+            attributeIds.length > this._previousQueriedSampleAttributesId.length ||
+            (JSON.stringify(this.filters) !== JSON.stringify(this._previousFilters))){
+
+            return attributeIds;
+        } else {
+            return this._previousQueriedSampleAttributesId
+        }
+    }
+
+    @computed get queryPatientAttributeIds() {
+        const attributeIds = this.visibleAttributes
+        .filter(attribute => attribute.patientAttribute)
+        .map(attribute => attribute.clinicalAttributeId);
+
+        //update ids when the chart is added or when the filters is updated
+        if(!this._loadedInitially ||
+            attributeIds.length > this._previousQueriedPatientAttributesId.length ||
+            (JSON.stringify(this.filters) !== JSON.stringify(this._previousFilters))){
+            return attributeIds;
+        } else {
+            return this._previousQueriedPatientAttributesId
+        }
+    }
 
     //TODO:cleanup
     readonly defaultVisibleAttributes = remoteData({
@@ -239,13 +293,63 @@ export class StudyViewPageStore {
                     }
                 }
             });
-            return filterAttributes
+            return filterAttributes;
         },
-        default: []
+        default: [],
+        onResult:(attributes:ClinicalAttribute[])=>{
+            attributes.forEach(attribute=>{
+                this._attributeChartVisibility.set(attribute.clinicalAttributeId,true);
+            })
+        }
     });
 
-    readonly allSamples = remoteData<Sample[]>({
-        await: () => [this.molecularProfiles],
+    readonly sampleAttributesData = remoteData<{[id:string]:ClinicalDataCount[]}>({
+        invoke: async () => {
+            return getClinicalCountsData(
+                this.querySampleAttributeIds,
+                this.studyId,
+                ClinicalDataType.SAMPLE,
+                this.filters);
+        },
+        default: {}
+    });
+
+    readonly patientAttributesData = remoteData<{[id:string]:ClinicalDataCount[]}>({
+        invoke: async () => {
+            return getClinicalCountsData(
+                this.queryPatientAttributeIds,
+                this.studyId,
+                ClinicalDataType.PATIENT,
+                this.filters);
+        },
+        default: {}
+    });
+
+    readonly allClinicalData = remoteData<{ [id: string]: ClinicalDataCount[] }>({
+        await: () => [this.sampleAttributesData, this.patientAttributesData],
+        invoke: async () => {
+            return { ...this.patientAttributesData.result, ...this.sampleAttributesData.result }
+        },
+        default: {},
+        onResult: ((data) => {
+            //update previous query params
+            this._previousQueriedPatientAttributesId = this.queryPatientAttributeIds;
+            this._previousQueriedSampleAttributesId = this.querySampleAttributeIds;
+            this._previousFilters = this.filters;
+
+            //hide charts when categories <2 and >10 initially when the page is loaded
+            if (!this._loadedInitially) {
+                _.each(data, (obj, key) => {
+                    if (obj.length < 2 || obj.length > 10) {
+                        this.hideChart(key);
+                    }
+                })
+                this._loadedInitially = true;
+            }
+        })
+    });
+
+    private readonly samples = remoteData<Sample[]>({
         invoke: () => {
             return internalClient.fetchSampleIdsUsingPOST({
                 studyId: this.studyId,
@@ -253,26 +357,9 @@ export class StudyViewPageStore {
             })
         },
         default: []
-    });
-
-    readonly allPatients = remoteData<Patient[]>({
-        await: () => [this.allSamples],
-        invoke: async () => {
-            return this.allSamples.result.map(sample => this.getPatientBySample(sample));
-        },
-        default: []
-    });
-
-    readonly allPatientIds = remoteData<string[]>({
-        await: () => [this.allPatients],
-        invoke: async () => {
-            return this.allPatients.result.map(patient => patient.patientId);
-        },
-        default: []
-    });
+    })
 
     readonly selectedSamples = remoteData<Sample[]>({
-        await: () => [this.molecularProfiles],
         invoke: () => {
             return internalClient.fetchSampleIdsUsingPOST({
                 studyId: this.studyId,
@@ -282,30 +369,66 @@ export class StudyViewPageStore {
         default: []
     });
 
+    readonly patientIds = remoteData<string[]>({
+        await: () => [this.samples],
+        invoke: async () => {
+            return _.uniq(this.samples.result.map(sample => sample.patientId));
+        },
+        default: []
+    });
+
     readonly selectedPatientIds = remoteData<string[]>({
         await: () => [this.selectedSamples],
         invoke: async () => {
-            return this.selectedSamples.result.map(sample => sample.patientId);
+            return _.uniq(this.selectedSamples.result.map(sample => sample.patientId));
         },
         default: []
     });
 
     readonly unSelectedPatientIds = remoteData<string[]>({
-        await: () => [this.selectedPatientIds],
+        await: () => [this.patientIds, this.selectedPatientIds],
         invoke: async () => {
-            return this.allPatientIds.result.filter(patientId => !_.includes(this.selectedPatientIds.result, patientId));
+            return this.patientIds.result.filter(patientId => !_.includes(this.selectedPatientIds.result, patientId));
         },
         default: []
     });
 
-    @computed
-    get hasSurvivalPlots() {
+    readonly mutatedGeneData = remoteData<MutatedGenesData>({
+        invoke: async () => {
+            if(!_.isEmpty(this.mutationProfileIds)){
+                //TDOD: get data for all profiles
+                return internalClient.fetchMutatedGenesUsingPOST({
+                    molecularProfileId: this.mutationProfileIds[0],
+                    studyViewFilter: this.filters
+                });
+            } else{
+                return [];
+            } 
+        },
+        default: []
+    });
 
-        let toReturn = {os_survival: false, dfs_survival: false};
+    readonly cnaGeneData = remoteData<CNAGenesData>({
+        invoke: async () => {
+            if(!_.isEmpty(this.cnaProfileIds)){
+                //TDOD: get data for all profiles
+                return internalClient.fetchCNAGenesUsingPOST({
+                    molecularProfileId: this.cnaProfileIds[0],
+                    studyViewFilter: this.filters
+                });
+            } else{
+                return [];
+            }
+        },
+        default: []
+    });
+
+   @computed private get survivalPlots(){
         let osStatusFlag = false;
         let osMonthsFlag = false;
         let dfsStatusFlag = false;
         let dfsMonthsFlag = false;
+        let survivalTypes: SurvivalType[] = [];
 
         this.clinicalAttributes.result.forEach(obj => {
             if (obj.clinicalAttributeId === 'OS_STATUS') {
@@ -320,86 +443,60 @@ export class StudyViewPageStore {
         });
 
         if (osStatusFlag && osMonthsFlag) {
-            toReturn.os_survival = true;
+            survivalTypes.push({
+                id: 'os_survival',
+                associatedAttrs: ['OS_STATUS', 'OS_MONTHS'],
+                filter: ['DECEASED'],
+                alteredGroup: [],
+                unalteredGroup: []
+            });
+
         }
         if (dfsStatusFlag && dfsMonthsFlag) {
-            toReturn.dfs_survival = true;
+            survivalTypes.push({
+                id: 'dfs_survival',
+                associatedAttrs: ['DFS_STATUS', 'DFS_MONTHS'],
+                filter: ['Recurred/Progressed', 'Recurred'],
+                alteredGroup: [],
+                unalteredGroup: []
+            });
         }
-        return toReturn
+
+        return survivalTypes;
     }
 
     readonly survivalPlotData = remoteData<SurvivalType[]>({
-        await: () => [this.clinicalAttributes, this.survivalData, this.selectedPatientIds, this.unSelectedPatientIds],
+        await: () => [this.survivalData, this.selectedPatientIds, this.unSelectedPatientIds],
         invoke: async () => {
 
-            let survivalTypes: SurvivalType[] = [];
-
-            if (this.hasSurvivalPlots.os_survival) {
-                survivalTypes.push({
-                    id: 'os_survival',
-                    associatedAttrs: ['OS_STATUS', 'OS_MONTHS'],
-                    filter: ['DECEASED'],
-                    alteredGroup: [],
-                    unalteredGroup: []
-                })
-            }
-            if (this.hasSurvivalPlots.dfs_survival) {
-                survivalTypes.push({
-                    id: 'dfs_survival',
-                    associatedAttrs: ['DFS_STATUS', 'DFS_MONTHS'],
-                    filter: ['Recurred/Progressed', 'Recurred'],
-                    alteredGroup: [],
-                    unalteredGroup: []
-                })
-            }
-            survivalTypes.forEach(survivalType => {
-                survivalType.alteredGroup = getPatientSurvivals(
-                    _.groupBy(this.survivalData.result, 'patientId'),
-                    this.selectedPatientIds.result!, survivalType.associatedAttrs[0], survivalType.associatedAttrs[1], s => survivalType.filter.indexOf(s) !== -1);
-                survivalType.unalteredGroup = getPatientSurvivals(
-                    _.groupBy(this.survivalData.result, 'patientId'),
-                    this.unSelectedPatientIds.result!, survivalType.associatedAttrs[0], survivalType.associatedAttrs[1], s => survivalType.filter.indexOf(s) !== -1);
+            return this.survivalPlots.map(obj => {
+                obj.alteredGroup = getPatientSurvivals(
+                    this.survivalData.result,
+                    this.selectedPatientIds.result!, obj.associatedAttrs[0], obj.associatedAttrs[1], s => obj.filter.indexOf(s) !== -1);
+                obj.unalteredGroup = getPatientSurvivals(
+                    this.survivalData.result,
+                    this.unSelectedPatientIds.result!, obj.associatedAttrs[0], obj.associatedAttrs[1], s => obj.filter.indexOf(s) !== -1);
+                return obj
             });
-            return survivalTypes;
         },
         default: []
     });
 
-    readonly mutatedGeneData = remoteData<MutatedGenesData>({
-        await: () => [this.molecularProfiles],
-        invoke: () => {
-            return internalClient.fetchMutatedGenesUsingPOST({
-                molecularProfileId: this.mutationProfileId,
-                studyViewFilter: this.filters
-            })
-        },
-        default: []
-    });
-
-    readonly cnaGeneData = remoteData<CNAGenesData>({
-        await: () => [this.molecularProfiles],
-        invoke: () => {
-            return internalClient.fetchCNAGenesUsingPOST({
-                molecularProfileId: this.cnaProfileId,
-                studyViewFilter: this.filters
-            })
-        },
-        default: []
-    });
-
-    readonly survivalData = remoteData<ClinicalData[]>({
-        await: () => [this.molecularProfiles, this.allPatientIds],
-        invoke: () => {
+    readonly survivalData = remoteData<{[id:string]:ClinicalData[]}>({
+        await: () => [this.patientIds],
+        invoke: async () => {
             const filter: ClinicalDataSingleStudyFilter = {
-                attributeIds: ["OS_STATUS", "OS_MONTHS", "DFS_STATUS", "DFS_MONTHS"],
-                ids: this.allPatientIds.result
+                attributeIds: _.flatten(this.survivalPlots.map(obj=>obj.associatedAttrs)),
+                ids: this.patientIds.result
             };
-            return defaultClient.fetchAllClinicalDataInStudyUsingPOST({
+            let data = await defaultClient.fetchAllClinicalDataInStudyUsingPOST({
                 studyId: this.studyId,
                 clinicalDataSingleStudyFilter: filter,
                 clinicalDataType: "PATIENT"
             })
+
+            return _.groupBy(data, 'patientId')
         },
-        default: []
+        default: {}
     });
 }
