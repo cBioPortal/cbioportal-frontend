@@ -10,6 +10,7 @@ import { StudyViewPageStore, ClinicalDataType, SurvivalType } from 'pages/studyV
 import { reaction } from 'mobx';
 import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
 import _ from "lodash";
+import { getClinicalDataType } from 'pages/studyView/StudyViewUtils';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -57,18 +58,16 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     }
 
     renderAttributeChart = (clinicalAttribute: ClinicalAttribute) => {
-        const data = this.store.allClinicalData.result[clinicalAttribute.clinicalAttributeId];
-        if(_.isEmpty(data)){
-            return null;
-        } else {
-            return (<ChartContainer
-                chartType={ChartType.PIE_CHART}
-                clinicalAttribute={clinicalAttribute}
-                onUserSelection={this.handlers.onUserSelection}
-                key={clinicalAttribute.clinicalAttributeId}
-                data={data}
-            />);
-        }
+        const data = this.store.clinicalAttributePromises[clinicalAttribute.clinicalAttributeId];
+        const filters = this.store.getClinicalDataEqualityFilters(clinicalAttribute)
+        return (<ChartContainer
+            chartType={ChartType.PIE_CHART}
+            clinicalAttribute={clinicalAttribute}
+            onUserSelection={this.handlers.onUserSelection}
+            key={clinicalAttribute.clinicalAttributeId}
+            promise={data}
+            filters={filters}
+        />)
     };
 
     renderSurvivalPlot = (data: SurvivalType) => {
@@ -116,7 +115,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
                     <MSKTab key={0} id="summaryTab" linkText="Summary">
                             {
-                                this.store.defaultVisibleAttributes.isComplete &&
+                                this.store.defaultVisibleAttributes.isComplete && this.store.initialized &&
                                 (
                                     <div className={styles.flexContainer}>
                                         {this.store.visibleAttributes.map(this.renderAttributeChart)}
