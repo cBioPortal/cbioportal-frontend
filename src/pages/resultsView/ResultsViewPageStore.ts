@@ -64,11 +64,10 @@ import {
     annotateMolecularDatum, getOncoKbOncogenic,
     computeCustomDriverAnnotationReport, computePutativeDriverAnnotatedMutations,
     initializeCustomDriverAnnotationSettings, computeGenePanelInformation,
-    getQueriedStudies, CoverageInformation
+    fetchQueriedStudies, CoverageInformation
 } from "./ResultsViewPageStoreUtils";
 import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alterationCountHelpers";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
-import { VirtualStudy } from "shared/model/VirtualStudy";
 import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
 import OncoprintClinicalDataCache from "../../shared/cache/OncoprintClinicalDataCache";
 
@@ -1228,33 +1227,16 @@ export class ResultsViewPageStore {
         }
     }, []);
     
-    //user saved virtual studies
-    private readonly virtualStudies = remoteData(sessionServiceClient.getUserVirtualStudies(), []);
-    
-    private readonly virtualStudyIdToStudy = remoteData({
-        await: ()=>[this.virtualStudies],
-        invoke: async ()=>{
-            return _.keyBy(
-                this.virtualStudies.result.map(virtualStudy=>{
-                    let study = {
-                        allSampleCount:_.sumBy(virtualStudy.data.studies, study=>study.samples.length),
-                        studyId: virtualStudy.id,
-                        name: virtualStudy.data.name,
-                        description: virtualStudy.data.description,
-                        cancerTypeId: "My Virtual Studies"
-                    } as CancerStudy;
-                    return study;
-                }), x =>x.studyId);
-        }
-    },{});
-
     //this is only required to show study name and description on the results page
+    //CancerStudy objects for all the cohortIds
     readonly queriedStudies = remoteData({
-		await: ()=>[this.studyIdToStudy, this.virtualStudyIdToStudy],
+        await: ()=>[this.studyIdToStudy],
 		invoke: async ()=>{
-            return getQueriedStudies(this.studyIdToStudy.result,
-                                     this.virtualStudyIdToStudy.result,
-                                     this.cohortIdsList);
+            if(!_.isEmpty(this.cohortIdsList)){
+                return fetchQueriedStudies(this.studyIdToStudy.result, this.cohortIdsList);
+            } else {
+                return []
+            }
 		},
 		default: [],
     });
