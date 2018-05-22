@@ -236,6 +236,10 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                                 searchTextOptions = [this.store.searchText].concat(searchTextOptions as string[]);
                             let searchTimeout: number | null = null;
 
+                            const optionsWithSortKeys = searchTextOptions.map((name,i)=>{
+                                return { value: name, sortKey: i }
+                            });
+
                             return (
                                 <div style={{display: 'flex', alignItems: 'center'}}>
                                     {
@@ -253,7 +257,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                                         )
                                     }
                                     <Autosuggest
-                                        datalist={searchTextOptions}
+                                        datalist={optionsWithSortKeys}
                                         ref={(el: React.Component<any, any>) => this.autosuggest = el}
                                         placeholder="Search..."
                                         bsSize="small"
