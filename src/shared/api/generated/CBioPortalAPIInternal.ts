@@ -1573,17 +1573,12 @@ export default class CBioPortalAPIInternal {
     fetchFractionGenomeAlteredUsingPOSTURL(parameters: {
         'studyId': string,
         'fractionGenomeAlteredFilter': FractionGenomeAlteredFilter,
-        'cutoff' ? : number,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/studies/{studyId}/fraction-genome-altered/fetch';
 
         path = path.replace('{studyId}', parameters['studyId'] + '');
-
-        if (parameters['cutoff'] !== undefined) {
-            queryParameters['cutoff'] = parameters['cutoff'];
-        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -1601,12 +1596,10 @@ export default class CBioPortalAPIInternal {
      * @name CBioPortalAPIInternal#fetchFractionGenomeAlteredUsingPOST
      * @param {string} studyId - Study ID e.g. acc_tcga
      * @param {} fractionGenomeAlteredFilter - List of Sample IDs/Sample List ID
-     * @param {number} cutoff - Cutoff
      */
     fetchFractionGenomeAlteredUsingPOST(parameters: {
             'studyId': string,
             'fractionGenomeAlteredFilter': FractionGenomeAlteredFilter,
-            'cutoff' ? : number,
             $queryParameters ? : any,
             $domain ? : string
         }): Promise < Array < FractionGenomeAltered >
@@ -1637,10 +1630,6 @@ export default class CBioPortalAPIInternal {
                 if (parameters['fractionGenomeAlteredFilter'] === undefined) {
                     reject(new Error('Missing required  parameter: fractionGenomeAlteredFilter'));
                     return;
-                }
-
-                if (parameters['cutoff'] !== undefined) {
-                    queryParameters['cutoff'] = parameters['cutoff'];
                 }
 
                 if (parameters.$queryParameters) {
