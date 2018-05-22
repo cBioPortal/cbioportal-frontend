@@ -14,6 +14,7 @@ import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 import { ClinicalDataCount, StudyViewFilter } from "shared/api/generated/CBioPortalAPIInternal";
 import { remoteData } from "shared/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
+import MobxPromise from "mobxpromise";
 
 export interface AbstractChart {
     downloadData:()=>string;
@@ -32,7 +33,8 @@ export interface IChartContainerProps {
     chartType:ChartType;
     clinicalAttribute: ClinicalAttribute;
     onUserSelection: (attrId: string, clinicalDataType: ClinicalDataType, value: string[]) => void;
-    data:ClinicalDataCount[]
+    promise:MobxPromise<ClinicalDataCount[]>
+    filters:string[];
 }
 
 @observer
@@ -42,7 +44,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     private plot:AbstractChart;
 
     @observable mouseInPlot:boolean = false;
-    @observable filters:string[] = []
     
     constructor(props: IChartContainerProps) {
         super(props);
@@ -53,14 +54,12 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 this.plot = plot; 
             },
             resetFilters: action(()=>{
-                this.filters = [];
                 this.props.onUserSelection(
                     this.props.clinicalAttribute.clinicalAttributeId,
                     getClinicalDataType(this.props.clinicalAttribute),
                     []);
             }),
             onUserSelection: action((values:string[])=>{
-                this.filters = values;
                 this.props.onUserSelection(
                     this.props.clinicalAttribute.clinicalAttributeId,
                     getClinicalDataType(this.props.clinicalAttribute),
@@ -103,6 +102,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         return this.props.chartType === ChartType.PIE_CHART && this.props.clinicalAttribute.datatype==='STRING';
     }
 
+    @computed get data(){
+        return this.props.promise.result
+    }
+
     public render() {
         
         return (
@@ -113,17 +116,17 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     <ChartHeader 
                         clinicalAttribute={this.props.clinicalAttribute}
                         showControls={this.mouseInPlot}
-                        showResetIcon={this.filters.length>0}
+                        showResetIcon={this.props.filters.length>0}
                         handleResetClick={this.handlers.resetFilters}
                     />
 
-                    {this.props.data && this.props.data.length>0 && 
+                    {this.data && this.data.length>0 && 
                         <If condition={this.props.chartType===ChartType.PIE_CHART}>
                             <PieChart
                                 ref={this.handlers.ref}
                                 onUserSelection={this.handlers.onUserSelection}
-                                filters={this.filters}
-                                data={this.props.data} />
+                                filters={this.props.filters}
+                                data={this.data} />
                         </If>
                     }
                 </div>
