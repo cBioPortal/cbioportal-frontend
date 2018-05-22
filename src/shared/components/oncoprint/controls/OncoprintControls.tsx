@@ -19,10 +19,10 @@ import 'react-rangeslider/lib/index.css';
 import EditableSpan from "shared/components/editableSpan/EditableSpan";
 import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
 import './styles.scss';
-import {SpecialAttribute} from "../../../cache/ClinicalDataCache";
 import ErrorIcon from "../../ErrorIcon";
 const CheckedSelect = require("react-select-checked").CheckedSelect;
 import classNames from "classnames";
+import {SpecialAttribute} from "../../../cache/OncoprintClinicalDataCache";
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?:(type:"sample"|"patient")=>void,

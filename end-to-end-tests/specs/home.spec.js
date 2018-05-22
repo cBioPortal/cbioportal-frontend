@@ -877,6 +877,13 @@ describe('oncoprint', function() {
 
             waitForOncoprint(10000);
 
+            // first get rid of the Profiled track
+            var profiledElements = getNthTrackOptionsElements(5);
+            profiledElements.button.click();
+            browser.waitForVisible(profiledElements.dropdown_selector, 1000); // wait for menu to appear
+            profiledElements.dropdown.$('li:nth-child(3)').click(); // Click Remove Track
+            browser.pause(100); // give time to take effect
+
             assert.equal(
                 browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
                 "VENHQS0wNi0wMjEzOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDE0OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI0OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU0OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI4OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU2OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg4OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjIxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDAxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDAzOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDEwOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDExOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDMzOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM0OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM3OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQ2OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU1OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU4OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDc0OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDc1OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDgwOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDgzOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg5OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE0OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMwOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg0OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTkwOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTk1OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTk3OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA2OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjM3OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjQxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDcxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA2OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDUyOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDYwOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDk5OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTAyOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM4OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTczOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc0OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg3OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA5OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjE0OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg1OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA3OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQzOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU3OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjEwOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI5OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDA5OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDIxOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI3OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDI4OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDM4OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQzOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDQ3OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDU3OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDY0OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDY5OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMDg2OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTA3OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTEzOmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE1OmdibV90Y2dhX3B1Yg,VENHQS0wMi0wMTE2OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTIyOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI0OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI1OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTI2OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMyOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTMzOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM3OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTM5OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ1OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ3OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTQ4OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU0OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTU4OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY2OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY4OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTY5OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTcxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc2OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTc4OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg1OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMTg5OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjAxOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjA4OmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjExOmdibV90Y2dhX3B1Yg,VENHQS0wNi0wMjE5OmdibV90Y2dhX3B1Yg",
@@ -899,6 +906,7 @@ describe('oncoprint', function() {
             $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').click(); // go to patient mode
 
             waitForOncoprint(10000);
+
 
             var overallSurvivalElements = getNthTrackOptionsElements(4);
             overallSurvivalElements.button.click();
@@ -1013,6 +1021,14 @@ describe('oncoprint', function() {
             $('.alert-warning').$('button.close').click(); // close dev mode notification so it doesnt intercept clicks
 
             waitForOncoprint(10000);
+
+            // first get rid of the Profiled track
+            var profiledElements = getNthTrackOptionsElements(5);
+            profiledElements.button.click();
+            browser.waitForVisible(profiledElements.dropdown_selector, 1000); // wait for menu to appear
+            profiledElements.dropdown.$('li:nth-child(3)').click(); // Click Remove Track
+            browser.pause(100); // give time to take effect
+
             browser.scroll(0,1000);//scroll down
 
             // Sort heatmap tracks
