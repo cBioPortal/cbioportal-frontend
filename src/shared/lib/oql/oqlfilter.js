@@ -269,6 +269,7 @@ var isDatumWantedByFUSIONCommand = function(alt_cmd, datum, accessors) {
         return 0;
     } else {
         datum.alterationType = 'FUSION';
+        datum.alterationSubType = "";
         return 1;
     }
 };

@@ -99,7 +99,7 @@ export default class accessors {
 
     public mut_type(d: Mutation) {
         if (this.molecularAlterationType(d.molecularProfileId) === 'MUTATION_EXTENDED') {
-            if (d.mutationType === "fusion") {
+            if (d.mutationType && d.mutationType.toLowerCase() === "fusion") {
                 return null;
             } else if (d.proteinChange && d.proteinChange.toLowerCase() === "promoter") {
                 return "promoter";

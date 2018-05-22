@@ -28,6 +28,8 @@ export type EnsemblFilter = {
 export type EnsemblGene = {
     'geneId': string
 
+        'hugoSymbol': string
+
         'synonyms': Array < string >
 
         'previousSymbols': Array < string >
