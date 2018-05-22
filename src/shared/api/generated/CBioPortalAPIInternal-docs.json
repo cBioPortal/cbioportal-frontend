@@ -904,15 +904,6 @@
             "schema": {
               "$ref": "#/definitions/FractionGenomeAlteredFilter"
             }
-          },
-          {
-            "name": "cutoff",
-            "in": "query",
-            "description": "Cutoff",
-            "required": false,
-            "type": "number",
-            "default": 0.2,
-            "format": "double"
           }
         ],
         "responses": {

@@ -21,8 +21,8 @@ function patientViewAnchorTag(study_id:string, patient_id:string) {
     return `<a href="${getPatientViewUrl(study_id, patient_id)}" target="_blank">${patient_id}</a>`;
 };
 
-function makeGenePanelPopupLink(gene_panel_id:string) {
-    let anchor = $(`<a href="#" oncontextmenu="return false;">${gene_panel_id}</a>`);
+function makeGenePanelPopupLink(gene_panel_id:string, profiled:boolean) {
+    let anchor = $(`<a href="#" ${!profiled ? 'style="color:red;"': ""} oncontextmenu="return false;">${gene_panel_id}</a>`);
     anchor.ready(()=>{
         anchor.click(function() {
             client.getGenePanelUsingGET({ genePanelId: gene_panel_id }).then((panel:GenePanel)=>{
@@ -113,30 +113,35 @@ export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile
 
 export function makeGeneticTrackTooltip_getCoverageInformation(
     profiled_in: {genePanelId?:string, molecularProfileId:string}[]|undefined,
-    not_profiled_in: {molecularProfileId:string}[]|undefined,
+    not_profiled_in: {genePanelId?:string, molecularProfileId:string}[]|undefined,
 ):{
-    dispGenePanelIds: string[];
+    dispProfiledGenePanelIds: string[];
+    dispNotProfiledGenePanelIds: string[];
     dispProfiledIn: string[]|undefined;
     dispNotProfiledIn: string[]|undefined;
     dispAllProfiled:boolean;
     dispNotProfiled:boolean;
 } {
-    let dispGenePanelIds:string[] = [];
+    let dispProfiledGenePanelIds:string[] = [];
+    let dispProfiledGenePanelIdsMap:{[genePanelId:string]:string} = {};
     let dispProfiledIn:string[]|undefined = undefined;
     let dispProfiledInMap:{[molecularProfileId:string]:string} = {};
     let dispNotProfiledIn:string[]|undefined = undefined;
+    let dispNotProfiledGenePanelIds:string[] = [];
     if (profiled_in) {
-        dispGenePanelIds = _.uniq((profiled_in.map(x=>x.genePanelId) as (string|undefined)[]).filter(x=>!!x) as string[]);
+        dispProfiledGenePanelIds = _.uniq((profiled_in.map(x=>x.genePanelId) as (string|undefined)[]).filter(x=>!!x) as string[]);
         dispProfiledIn = _.uniq(profiled_in.map(x=>x.molecularProfileId));
         dispProfiledInMap = _.keyBy(dispProfiledIn);
+        dispProfiledGenePanelIdsMap = _.keyBy(dispProfiledGenePanelIds);
     }
     if (not_profiled_in) {
-        dispNotProfiledIn = not_profiled_in.map(x=>x.molecularProfileId).filter(x=>!dispProfiledInMap[x]); // filter out profiles in profiled_in to avoid confusing tooltip (this occurs e.g. w multiple samples, one profiled one not)
+        dispNotProfiledIn = _.uniq(not_profiled_in.map(x=>x.molecularProfileId)).filter(x=>!dispProfiledInMap[x]); // filter out profiles in profiled_in to avoid confusing tooltip (this occurs e.g. w multiple samples, one profiled one not)
+        dispNotProfiledGenePanelIds = _.uniq(not_profiled_in.map(x=>x.genePanelId)).filter(x=>(!!x && !dispProfiledGenePanelIdsMap[x])) as string[] ;
     }
     const dispAllProfiled = !!(dispProfiledIn && dispProfiledIn.length && dispNotProfiledIn && !dispNotProfiledIn.length);
     const dispNotProfiled = !!(dispNotProfiledIn && dispNotProfiledIn.length && dispProfiledIn && !dispProfiledIn.length);
     return {
-        dispGenePanelIds, dispProfiledIn, dispNotProfiledIn, dispAllProfiled, dispNotProfiled
+        dispProfiledGenePanelIds, dispNotProfiledGenePanelIds, dispProfiledIn, dispNotProfiledIn, dispAllProfiled, dispNotProfiled
     };
 }
 
@@ -279,13 +284,22 @@ export function makeGeneticTrackTooltip(
         }
         // CoverageInformation
         const coverageInformation = makeGeneticTrackTooltip_getCoverageInformation(d.profiled_in, d.not_profiled_in);
-        if (coverageInformation.dispGenePanelIds.length) {
+        if (coverageInformation.dispProfiledGenePanelIds.length || coverageInformation.dispNotProfiledGenePanelIds.length) {
             ret.append("Gene Panels: ");
-            for (let i=0; i<coverageInformation.dispGenePanelIds.length; i++) {
-                if (i > 0) {
+            let needsCommaFirst = false;
+            for (let i=0; i<coverageInformation.dispProfiledGenePanelIds.length; i++) {
+                if (needsCommaFirst) {
                     ret.append(",");
                 }
-                ret.append(makeGenePanelPopupLink(coverageInformation.dispGenePanelIds[i]));
+                needsCommaFirst = true;
+                ret.append(makeGenePanelPopupLink(coverageInformation.dispProfiledGenePanelIds[i], true));
+            }
+            for (let i=0; i<coverageInformation.dispNotProfiledGenePanelIds.length; i++) {
+                if (needsCommaFirst) {
+                    ret.append(",");
+                }
+                needsCommaFirst = true;
+                ret.append(makeGenePanelPopupLink(coverageInformation.dispNotProfiledGenePanelIds[i], false));
             }
             ret.append("<br>");
         }

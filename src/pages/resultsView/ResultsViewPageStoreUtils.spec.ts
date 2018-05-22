@@ -10,7 +10,7 @@ import {
     computeCustomDriverAnnotationReport, computeGenePanelInformation, computePutativeDriverAnnotatedMutations,
     getOncoKbOncogenic,
     initializeCustomDriverAnnotationSettings,
-    getQueriedStudies
+    fetchQueriedStudies
 } from "./ResultsViewPageStoreUtils";
 import {observable} from "mobx";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
@@ -19,6 +19,7 @@ import * as _ from 'lodash';
 import sinon from 'sinon';
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { VirtualStudy, VirtualStudyData } from "shared/model/VirtualStudy";
+import client from "shared/api/cbioportalClientInstance";
 
 describe("ResultsViewPageStoreUtils", ()=>{
     describe("computeCustomDriverAnnotationReport", ()=>{
@@ -880,88 +881,101 @@ describe("ResultsViewPageStoreUtils", ()=>{
     });
     describe("getQueriedStudies", ()=>{
 
-        let physicalStudies = [{
-            studyId: 'physical_study_1',
-        },{
-            studyId: 'physical_study_2',
-        }] as CancerStudy[]
+        const virtualStudy: VirtualStudy = {
+            "id": "shared_study",
+            "data": {
+                "name": "Shared Study",
+                "description": "Shared Study",
+                "studies": [
+                    {
+                        "id": "test_study",
+                        "samples": [
+                        "sample-01",
+                        "sample-02",
+                        "sample-03"
+                        ]
+                    }
+                ],
+            } as VirtualStudyData
+        } as VirtualStudy;
 
-        let virtualStudies = [{
-            studyId: 'virtual_study_1',
-        },{
-            studyId: 'virtual_study_2',
-        }] as CancerStudy[]
+        let physicalStudies: { [id: string]: CancerStudy } = {
+            'physical_study_1': {
+                studyId: 'physical_study_1',
+            } as CancerStudy,
+            'physical_study_2': {
+                studyId: 'physical_study_2',
+            } as CancerStudy
+        };
 
-        let physicalStudySet:{[id:string]:CancerStudy} = _.keyBy(physicalStudies, study=>study.studyId)
-        let virtualStudySet:{[id:string]:CancerStudy} = _.keyBy(virtualStudies, study=>study.studyId)
-
-        const sharedVirtualStudy: VirtualStudy = {
-                                                    "id": "shared_study",
-                                                    "data": {
-                                                        "name": "Shared Study",
-                                                        "description": "Shared Study",
-                                                        "studies": [
-                                                            {
-                                                                "id": "test_study",
-                                                                "samples": [
-                                                                "sample-01",
-                                                                "sample-02",
-                                                                "sample-03"
-                                                                ]
-                                                            }
-                                                        ],
-                                                    } as VirtualStudyData
-                                                } as VirtualStudy;
+        let virtualStudies: { [id: string]: VirtualStudy } = {
+            'virtual_study_1': $.extend({},virtualStudy,{"id": "virtual_study_1"}) as VirtualStudy,
+            'virtual_study_2': $.extend({},virtualStudy,{"id": "virtual_study_2"}) as VirtualStudy
+        };
 
         before(()=>{
             sinon.stub(sessionServiceClient, "getVirtualStudy").callsFake(function fakeFn(id:string) {
                 return new Promise((resolve, reject) => {
-                    if(id === 'shared_study'){
-                        resolve(sharedVirtualStudy);
+                    let obj = virtualStudies[id]
+                    if(_.isUndefined(obj)){
+                        reject()
                     }
                     else{
-                        reject()
+                        resolve(obj);
                     }
                 });
             });
+
+            sinon.stub(client, "fetchStudiesUsingPOST").callsFake(function fakeFn(parameters: {
+                'studyIds': Array < string > ,
+                'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META"
+            }) {
+                return new Promise((resolve, reject) => {
+                    resolve(_.reduce(parameters.studyIds,(acc:CancerStudy[],next)=>{
+                        let obj = physicalStudies[next]
+                        if(!_.isUndefined(obj)){
+                            acc.push(obj)
+                        }
+                        return acc
+                    },[]))
+                });
+            });
         })
+        after(() => {
+            (sessionServiceClient.getVirtualStudy as sinon.SinonStub).restore();
+            (client.fetchStudiesUsingPOST as sinon.SinonStub).restore();
+        });
 
         it("when queried ids is empty", async ()=>{
-            let test = await getQueriedStudies({}, {},[]);
+            let test = await fetchQueriedStudies({},[]);
             assert.deepEqual(test,[]);
         });
 
         
         it("when only physical studies are present", async ()=>{
-            let test = await getQueriedStudies(physicalStudySet, virtualStudySet, ['physical_study_1', 'physical_study_2']);
-            assert.deepEqual(test, _.values(physicalStudySet));
+            let test = await fetchQueriedStudies(physicalStudies,['physical_study_1', 'physical_study_2']);
+            assert.deepEqual(_.map(test,obj=>obj.studyId), ['physical_study_1', 'physical_study_2']);
         });
 
         it("when only virtual studies are present", async ()=>{
-            let test = await getQueriedStudies(physicalStudySet, virtualStudySet, ['virtual_study_1', 'virtual_study_2']);
-            assert.deepEqual(test,_.values(virtualStudySet));
+            let test = await fetchQueriedStudies({},['virtual_study_1', 'virtual_study_2']);
+            assert.deepEqual(_.map(test,obj=>obj.studyId), ['virtual_study_1', 'virtual_study_2']);
         });
 
         it("when physical and virtual studies are present", async ()=>{
-            let test = await getQueriedStudies(physicalStudySet, virtualStudySet, ['physical_study_1', 'virtual_study_2']);
-            assert.deepEqual(test,[physicalStudySet['physical_study_1'],virtualStudySet['virtual_study_2']]);
-        });
-        
-        it("when virtual study query shared to another user", async ()=>{
-            let test = await getQueriedStudies(physicalStudySet, virtualStudySet, ['shared_study']);
-            assert.deepEqual(test,[{
-                allSampleCount:_.sumBy(sharedVirtualStudy.data.studies, study=>study.samples.length),
-                studyId: sharedVirtualStudy.id,
-                name: sharedVirtualStudy.data.name,
-                description: sharedVirtualStudy.data.description,
-                cancerTypeId: "My Virtual Studies"
-            } as CancerStudy]);
+            let test = await fetchQueriedStudies(physicalStudies, ['physical_study_1', 'virtual_study_2']);
+            assert.deepEqual(_.map(test,obj=>obj.studyId), ['physical_study_1', 'virtual_study_2']);
         });
 
+        it("when there only a subset of studies in studySampleMap compared to queriedIds", async ()=>{
+            let test = await fetchQueriedStudies({ 'physical_study_1': { studyId: 'physical_study_1'} as CancerStudy},['physical_study_1','physical_study_2']);
+            assert.deepEqual(_.map(test,obj=>obj.studyId), ['physical_study_1', 'physical_study_2']);
+        });
+        
         //this case is not possible because id in these scenarios are first identified in QueryBuilder.java and
         //returned to query selector page
         it("when virtual study query having private study or unknow virtual study id", (done)=>{
-            getQueriedStudies(physicalStudySet, virtualStudySet, ['shared_study1']).catch((error)=>{
+            fetchQueriedStudies({},['shared_study1']).catch((error)=>{
                 done();
             });
         });
