@@ -48,7 +48,6 @@ import GeneMolecularDataCache from "../../shared/cache/GeneMolecularDataCache";
 import GenesetMolecularDataCache from "../../shared/cache/GenesetMolecularDataCache";
 import GenesetCorrelatedGeneCache from "../../shared/cache/GenesetCorrelatedGeneCache";
 import GeneCache from "../../shared/cache/GeneCache";
-import ClinicalDataCache from "../../shared/cache/ClinicalDataCache";
 import {IHotspotIndex} from "../../shared/model/CancerHotspots";
 import {IOncoKbData} from "../../shared/model/OncoKB";
 import {generateQueryVariantId} from "../../shared/lib/OncoKbUtils";
@@ -65,12 +64,13 @@ import {
     annotateMolecularDatum, getOncoKbOncogenic,
     computeCustomDriverAnnotationReport, computePutativeDriverAnnotatedMutations,
     initializeCustomDriverAnnotationSettings, computeGenePanelInformation,
-    getQueriedStudies, CoverageInformation
+    fetchQueriedStudies, CoverageInformation
 } from "./ResultsViewPageStoreUtils";
 import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alterationCountHelpers";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { VirtualStudy } from "shared/model/VirtualStudy";
 import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
+import OncoprintClinicalDataCache from "../../shared/cache/OncoprintClinicalDataCache";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -538,7 +538,7 @@ export class ResultsViewPageStore {
             }
             return computeGenePanelInformation(genePanelData, genePanels, this.samples.result!, this.patients.result!, this.genes.result!);
         }
-    });
+    }, { samples: {}, patients: {} });
 
     readonly sequencedSampleKeys = remoteData<string[]>({
         await:()=>[
@@ -1228,33 +1228,16 @@ export class ResultsViewPageStore {
         }
     }, []);
     
-    //user saved virtual studies
-    private readonly virtualStudies = remoteData(sessionServiceClient.getUserVirtualStudies(), []);
-    
-    private readonly virtualStudyIdToStudy = remoteData({
-        await: ()=>[this.virtualStudies],
-        invoke: async ()=>{
-            return _.keyBy(
-                this.virtualStudies.result.map(virtualStudy=>{
-                    let study = {
-                        allSampleCount:_.sumBy(virtualStudy.data.studies, study=>study.samples.length),
-                        studyId: virtualStudy.id,
-                        name: virtualStudy.data.name,
-                        description: virtualStudy.data.description,
-                        cancerTypeId: "My Virtual Studies"
-                    } as CancerStudy;
-                    return study;
-                }), x =>x.studyId);
-        }
-    },{});
-
     //this is only required to show study name and description on the results page
+    //CancerStudy objects for all the cohortIds
     readonly queriedStudies = remoteData({
-		await: ()=>[this.studyIdToStudy, this.virtualStudyIdToStudy],
+        await: ()=>[this.studyIdToStudy],
 		invoke: async ()=>{
-            return getQueriedStudies(this.studyIdToStudy.result,
-                                     this.virtualStudyIdToStudy.result,
-                                     this.cohortIdsList);
+            if(!_.isEmpty(this.cohortIdsList)){
+                return fetchQueriedStudies(this.studyIdToStudy.result, this.cohortIdsList);
+            } else {
+                return []
+            }
 		},
 		default: [],
     });
@@ -1886,9 +1869,13 @@ export class ResultsViewPageStore {
         })
     );
 
-    @cached get clinicalDataCache() {
-        return new ClinicalDataCache(this.samples.result, this.patients.result, this.studyToMutationMolecularProfile.result, this.studyIdToStudy.result);
-    }
+    public oncoprintClinicalDataCache = new OncoprintClinicalDataCache(
+        this.samples,
+        this.patients,
+        this.studyToMutationMolecularProfile,
+        this.studyIdToStudy,
+        this.coverageInformation
+    );
 
     @action clearErrors() {
         this.ajaxErrors = [];

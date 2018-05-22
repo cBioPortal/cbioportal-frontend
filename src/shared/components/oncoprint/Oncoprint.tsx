@@ -24,6 +24,7 @@ export type ClinicalTrackSpec = {
     label: string;
     description: string;
     data: ClinicalTrackDatum[];
+    na_legend_label?:string;
 } & ({
     datatype: "counts";
     countsCategoryLabels:string[];

@@ -558,6 +558,7 @@ function transitionClinicalTrack(
         const rule_set_params:any = getClinicalTrackRuleSetParams(nextSpec);
         rule_set_params.legend_label = nextSpec.label;
         rule_set_params.exclude_from_legend = !nextProps.showClinicalTrackLegends;
+        rule_set_params.na_legend_label = nextSpec.na_legend_label;
         const clinicalTrackParams = {
             rule_set_params,
             data: nextSpec.data,
