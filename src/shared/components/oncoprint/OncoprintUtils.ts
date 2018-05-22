@@ -28,11 +28,11 @@ import ResultsViewOncoprint from "./ResultsViewOncoprint";
 import _ from "lodash";
 import {action, runInAction} from "mobx";
 import {MobxPromise} from "mobxpromise";
-import {SpecialAttribute} from "shared/cache/ClinicalDataCache";
 import GenesetCorrelatedGeneCache from "shared/cache/GenesetCorrelatedGeneCache";
 import Spec = Mocha.reporters.Spec;
 import {OQLLineFilterOutput} from "../../lib/oql/oqlfilter";
 import {ClinicalAttribute} from "../../api/generated/CBioPortalAPI";
+import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
 
 interface IGenesetExpansionMap {
         [genesetTrackKey: string]: IGeneHeatmapTrackSpec[];
@@ -293,11 +293,20 @@ export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
 
 export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sampleMode:boolean) {
     return remoteData<ClinicalTrackSpec[]>({
-        await:()=>[
-            oncoprint.props.store.samples,
-            oncoprint.props.store.patients,
-            oncoprint.clinicalAttributesById
-        ],
+        await:()=>{
+            let ret:MobxPromise<any>[] = [
+                oncoprint.props.store.samples,
+                oncoprint.props.store.patients,
+                oncoprint.clinicalAttributesById
+            ];
+            if (oncoprint.clinicalAttributesById.isComplete) {
+                const attributes = oncoprint.selectedClinicalAttributeIds.keys().map(attrId=>{
+                    return oncoprint.clinicalAttributesById.result[attrId];
+                }).filter(x=>!!x);
+                ret = ret.concat(oncoprint.props.store.oncoprintClinicalDataCache.getAll(attributes));
+            }
+            return ret;
+        },
         invoke: async()=>{
             if (oncoprint.selectedClinicalAttributeIds.keys().length === 0) {
                 return [];
@@ -305,9 +314,8 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
             const attributes = oncoprint.selectedClinicalAttributeIds.keys().map(attrId=>{
                 return oncoprint.clinicalAttributesById.result![attrId];
             }).filter(x=>!!x);
-            await oncoprint.props.store.clinicalDataCache.getPromise(attributes, true);
             return attributes.map((attribute:ClinicalAttribute)=>{
-                const data = oncoprint.props.store.clinicalDataCache.get(attribute)!.data!;
+                const data = oncoprint.props.store.oncoprintClinicalDataCache.get(attribute).result!;
                 const ret:Partial<ClinicalTrackSpec> = {
                     key: oncoprint.clinicalAttributeIdToTrackKey(attribute.clinicalAttributeId),
                     label: attribute.displayName,
@@ -331,6 +339,9 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
                     ret.datatype = "counts";
                     (ret as any).countsCategoryLabels = ["C>A", "C>G", "C>T", "T>A", "T>C", "T>G"];
                     (ret as any).countsCategoryFills = ['#3D6EB1', '#8EBFDC', '#DFF1F8', '#FCE08E', '#F78F5E', '#D62B23'];
+                }
+                if (attribute.clinicalAttributeId.indexOf(SpecialAttribute.Profiled) === 0) {
+                    ret.na_legend_label = "No";
                 }
                 return ret as ClinicalTrackSpec;
             });
