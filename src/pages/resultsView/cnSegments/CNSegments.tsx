@@ -3,8 +3,10 @@ import $ from 'jquery';
 import {observer} from "mobx-react";
 import {MSKTabs, MSKTab} from "../../../shared/components/MSKTabs/MSKTabs";
 import {Gene, Sample} from "../../../shared/api/generated/CBioPortalAPI";
+import {unescapeTabDelimited, unquote} from "shared/lib/StringUtils";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import {observable} from "mobx";
+import fileDownload from 'react-file-download';
 
 interface CNSegmentsIframeProps {
     sampleIds:string[];
@@ -46,32 +48,32 @@ class CNASegmentIframe extends React.Component<CNSegmentsIframeProps,{}>{
         
     }
 
-    downloadSegmentData(){
+    downloadSegmentData() {
             const self = this;
-            var xhr = new XMLHttpRequest(),
-                sendData = `cancerStudyId=${self.props.studyId}&sampleIds=${self.props.sampleIds.join(',')}`;
+            const xhr = new XMLHttpRequest();
+            const sendData = `cancerStudyId=${self.props.studyId}&sampleIds=${self.props.sampleIds.join(',')}`;
+
             xhr.onreadystatechange = function() {
-                var a:any;
                 if (xhr.readyState === 4 && xhr.status === 200) {
-                    // Making a downloadable link
-                    a = document.createElement('a');
-                    a.href = window.URL.createObjectURL(xhr.response);
-                    a.download = self.props.studyId + '_segments.seg';
-                    a.style.display = 'none';
-                    document.body.appendChild(a);
-                    //triger download
-                    a.click();
-                    setTimeout(function(){
-                       $(a).remove();
-                    },200);
+                    const reader = new FileReader();
+
+                    reader.addEventListener('loadend', (e: any) => {
+                        // seems like the downloaded string is wrapped with quotes,
+                        // also it contains "\\n", "\\t", instead of "\n", and "\t"
+                        const text = unescapeTabDelimited(unquote(e.srcElement.result));
+                        fileDownload(text, self.props.studyId + '_segments.seg');
+                    });
+
+                    // this will fire a "loadend" event
+                    reader.readAsText(xhr.response);
                 }
             };
+
             // Post data to URL which handles post request
             xhr.open("POST", "api-legacy/segmentfile");
             xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
             xhr.responseType = 'blob';
             xhr.send(sendData);
-
     }
     
     componentDidMount(){
