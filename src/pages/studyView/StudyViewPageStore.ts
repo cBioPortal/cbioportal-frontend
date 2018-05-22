@@ -45,21 +45,7 @@ export type SurvivalType = {
 
 export class StudyViewPageStore {
 
-    constructor() {
-        reaction(
-            () => this._loadedInitially,
-            (loadedInitially, reaction) => {
-                if (loadedInitially) {
-                    _.forEach(this.clinicalData.result, (obj, key) => {
-                        if (obj.length < 2 || obj.length > 10) {
-                            this.hideChart(key);
-                        }
-                    })
-                    reaction.dispose();
-                }
-            }
-        )
-    }
+    constructor() {}
 
     @observable studyId: string;
 
@@ -81,15 +67,11 @@ export class StudyViewPageStore {
 
     private _attributeChartVisibility = observable.map<boolean>();
 
-    @observable private _loadedInitially = false;
-
-
-    @computed get initialized() {
-        if (this._loadedInitially) {
-            return true;
-        }
-        return this.clinicalData.isComplete;
-    }
+    @observable private _initialized = false;
+	@computed get initialized()
+	{
+		return this._initialized || this.clinicalData.isComplete;
+	}
 
     @action
     updateClinicalDataEqualityFilters(attributeId: string,
@@ -371,12 +353,21 @@ export class StudyViewPageStore {
             },{})
         },
         default: {},
-        onResult:() => {
+        onResult:(data) => {
+
+            if (!this._initialized) {
+                _.forEach(data, (obj, key) => {
+                    if (obj.length < 2 || obj.length > 10) {
+                        this.hideChart(key);
+                    }
+                })
+                this._initialized = true;
+            }
             //update previous query params
             this._previousQueriedPatientAttributesId = this.queryPatientAttributeIds;
             this._previousQueriedSampleAttributesId = this.querySampleAttributeIds;
             this._previousFilters = this.filters;
-            this._loadedInitially = true;
+            
         }
     });
 
