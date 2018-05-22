@@ -115,6 +115,12 @@ describe("oncoprint screenshot tests", function() {
         var res = browser.checkElement('#oncoprint');
         assertScreenShotMatch(res);
     });
+    it("msk_impact_2017 query STK11:HOMDEL MUT", ()=>{
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_Non-Small_Cell_Lung_Cancer&gene_list=STK11%253A%2520HOMDEL%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`);
+        waitForOncoprint(20000);
+        var res = browser.checkElement('#oncoprint');
+        assertScreenShotMatch(res);
+    });
     it("hcc_inserm_fr_2015 with genes including TERT - it should show orange promoter mutations in TERT", function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=hcc_inserm_fr_2015&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=hcc_inserm_fr_2015_sequenced&gene_list=SOX9%2520RAN%2520TNK2%2520EP300%2520PXN%2520NCOA2%2520AR%2520NRIP1%2520NCOR1%2520NCOR2%2520TERT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=hcc_inserm_fr_2015_mutations`);
         waitForOncoprint(20000);
@@ -146,6 +152,20 @@ describe("oncoprint screenshot tests", function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=brca_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=brca_tcga_pub_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_tcga_pub_gistic&show_samples=false&heatmap_track_groups=brca_tcga_pub_methylation_hm27%2CKRAS%2CNRAS%2CBRAF%2CTP53%2CBRCA1%2CBRCA2`;
         goToUrlAndSetLocalStorage(url);
         waitForOncoprint(10000);
+        var res = browser.checkElement("#oncoprint");
+        assertScreenShotMatch(res);
+    });
+    it("'profiled in' tracks in msk impact with 3 n/p genes", function() {
+        var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=msk_impact_2017_cnaseq&gene_list=AKR1C1%2520AKR1C2%2520AKR1C4&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
+        goToUrlAndSetLocalStorage(url);
+        waitForOncoprint(20000);
+        var res = browser.checkElement("#oncoprint");
+        assertScreenShotMatch(res);
+    });
+    it("'profiled in' tracks in multiple study with SOS1", function() {
+        var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=SOS1&geneset_list=%20&tab_index=tab_visualize&Action=Submit&cancer_study_list=msk_impact_2017%2Cbrca_bccrc&show_samples=false&clinicallist=CANCER_STUDY%2CPROFILED_IN_MUTATION_EXTENDED%2CPROFILED_IN_msk_impact_2017_cna#summary`;
+        goToUrlAndSetLocalStorage(url);
+        waitForOncoprint(20000);
         var res = browser.checkElement("#oncoprint");
         assertScreenShotMatch(res);
     });
