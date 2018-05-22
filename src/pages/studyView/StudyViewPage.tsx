@@ -58,7 +58,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     }
 
     renderAttributeChart = (clinicalAttribute: ClinicalAttribute) => {
-        const data = this.store.clinicalAttributePromises[clinicalAttribute.clinicalAttributeId];
+        const data = this.store.studyViewClinicalDataCountsCache.get({attribute:clinicalAttribute,filters:this.store.filters})
         const filters = this.store.getClinicalDataEqualityFilters(clinicalAttribute)
         return (<ChartContainer
             chartType={ChartType.PIE_CHART}
@@ -115,7 +115,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
                     <MSKTab key={0} id="summaryTab" linkText="Summary">
                             {
-                                this.store.defaultVisibleAttributes.isComplete && this.store.initialized &&
+                                this.store.defaultVisibleAttributes.isComplete && 
+                                this.store.initalClinicalDataCounts.isComplete &&
+                                this.store.initialized && 
                                 (
                                     <div className={styles.flexContainer}>
                                         {this.store.visibleAttributes.map(this.renderAttributeChart)}
