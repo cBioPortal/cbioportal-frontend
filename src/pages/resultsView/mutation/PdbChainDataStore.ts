@@ -1,7 +1,7 @@
-import {SimpleMobXApplicationDataStore} from "../../../shared/lib/IMobXApplicationDataStore";
+import {SimpleLazyMobXTableApplicationDataStore} from "../../../shared/lib/ILazyMobXTableApplicationDataStore";
 import {IPdbChain} from "../../../shared/model/Pdb";
 import {action, computed, observable} from "mobx";
-export default class PdbChainDataStore extends SimpleMobXApplicationDataStore<IPdbChain> {
+export default class PdbChainDataStore extends SimpleLazyMobXTableApplicationDataStore<IPdbChain> {
     @observable public selectedUid:string;
 
     public getChainUid(chain:IPdbChain) {
