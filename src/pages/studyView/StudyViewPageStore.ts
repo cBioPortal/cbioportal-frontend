@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import {remoteData} from "../../shared/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import {action, computed, observable, reaction} from "mobx";
+import {action, computed, observable} from "mobx";
 import {
     ClinicalDataCount,
     ClinicalDataEqualityFilter,
@@ -26,6 +26,7 @@ import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
 import { getClinicalCountsData } from 'pages/studyView/StudyViewUtils';
 import MobxPromise from 'mobxpromise';
+import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
 
 
 export enum ClinicalDataType {
@@ -47,6 +48,8 @@ export class StudyViewPageStore {
 
     constructor() {}
 
+    public studyViewClinicalDataCountsCache = new StudyViewClinicalDataCountsCache()
+
     @observable studyId: string;
 
     @observable sampleAttrIds: string[] = [];
@@ -59,19 +62,25 @@ export class StudyViewPageStore {
 
     @observable private _cnaGeneFilter: CopyNumberGeneFilter;
 
-    private _previousQueriedSampleAttributesId:string[] = [];
-
-    private _previousQueriedPatientAttributesId:string[] = [];
-
-    private _previousFilters:StudyViewFilter = {} as any;
-
     private _attributeChartVisibility = observable.map<boolean>();
 
     @observable private _initialized = false;
+
 	@computed get initialized()
 	{
-		return this._initialized || this.clinicalData.isComplete;
-	}
+		return this._initialized;
+    }
+    
+    set initialized(flag){
+        if(!this._initialized && flag){
+            _.forEach(this.initalClinicalDataCounts.result, (obj, key) => {
+                if (obj.length < 2 || obj.length > 10) {
+                    this.hideChart(key);
+                }
+            });
+            this._initialized = true;
+        }
+    }
 
     @action
     updateClinicalDataEqualityFilters(attributeId: string,
@@ -243,68 +252,6 @@ export class StudyViewPageStore {
         },[])
     }
 
-    @computed get querySampleAttributeIds() {
-        const attributeIds = this.visibleAttributes
-        .filter(attribute => !attribute.patientAttribute)
-        .map(attribute => attribute.clinicalAttributeId);
-
-        //update ids when the chart is added or when the filters is updated
-        if(attributeIds.length > this._previousQueriedSampleAttributesId.length ||
-            (JSON.stringify(this.filters) !== JSON.stringify(this._previousFilters))){
-            return attributeIds;
-        } else {
-            return this._previousQueriedSampleAttributesId
-        }
-    }    
-
-    @computed get queryPatientAttributeIds() {
-        const attributeIds = this.visibleAttributes
-        .filter(attribute => attribute.patientAttribute)
-        .map(attribute => attribute.clinicalAttributeId);
-
-        //update ids when the chart is added or when the filters is updated
-        if(attributeIds.length > this._previousQueriedPatientAttributesId.length ||
-            (JSON.stringify(this.filters) !== JSON.stringify(this._previousFilters))){
-            return attributeIds;
-        } else {
-            return this._previousQueriedPatientAttributesId
-        }
-    }
-
-    @computed get clinicalAttributePromises(): { [id: string]: MobxPromise<ClinicalDataCount[]> } {
-        let filters = this.filters;
-        let studyId = this.studyId;
-        let sampleAttributePromises = _.reduce(this.querySampleAttributeIds, (acc, next) => {
-            acc[next] = new MobxPromise({
-                invoke: async () => {
-                    return internalClient.fetchClinicalDataCountsUsingPOST({
-                        studyId: studyId,
-                        attributeId: next,
-                        clinicalDataType: ClinicalDataType.SAMPLE,
-                        studyViewFilter: filters
-                    })
-                }
-            })
-            return acc;
-        }, {} as any);
-
-        let patientAttributePromises = _.reduce(this.queryPatientAttributeIds, (acc, next) => {
-            acc[next] = new MobxPromise({
-                invoke: async () => {
-                    return internalClient.fetchClinicalDataCountsUsingPOST({
-                        studyId: studyId,
-                        attributeId: next,
-                        clinicalDataType: ClinicalDataType.PATIENT,
-                        studyViewFilter: filters
-                    })
-                }
-            })
-            return acc;
-        }, {} as any);
-
-        return {...sampleAttributePromises, ...patientAttributePromises}
-    }
-
     //TODO:cleanup
     readonly defaultVisibleAttributes = remoteData({
         await: () => [this.clinicalAttributes],
@@ -344,30 +291,24 @@ export class StudyViewPageStore {
         }
     });
 
-    readonly clinicalData = remoteData<{[id:string]:ClinicalDataCount[]}>({
-        await: () => _.values(this.clinicalAttributePromises),
+    readonly initalClinicalDataCounts = remoteData<{[id:string]:ClinicalDataCount[]}>({
+        await: () => {
+            return this.defaultVisibleAttributes.result.map(attribute => {
+                return this.studyViewClinicalDataCountsCache.get({ attribute: attribute, filters: {} as any })
+            })
+        },
         invoke: async () => {
-            return _.reduce(this.clinicalAttributePromises,(acc:{[id:string]:ClinicalDataCount[]},obj,key)=>{
-                acc[key]=obj.result?obj.result:[];
+            return _.reduce(this.defaultVisibleAttributes.result, (acc, next) => {
+
+                acc[next.clinicalAttributeId] = this.studyViewClinicalDataCountsCache
+                    .get({ attribute: next, filters: {} as any })
+                    .result!;
                 return acc;
-            },{})
+            }, {} as any);
         },
         default: {},
-        onResult:(data) => {
-
-            if (!this._initialized) {
-                _.forEach(data, (obj, key) => {
-                    if (obj.length < 2 || obj.length > 10) {
-                        this.hideChart(key);
-                    }
-                })
-                this._initialized = true;
-            }
-            //update previous query params
-            this._previousQueriedPatientAttributesId = this.queryPatientAttributeIds;
-            this._previousQueriedSampleAttributesId = this.querySampleAttributeIds;
-            this._previousFilters = this.filters;
-            
+        onResult:() => {
+            this.initialized=true;
         }
     });
 
