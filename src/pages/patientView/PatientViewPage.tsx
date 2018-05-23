@@ -237,7 +237,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         </a>
                                         {sampleManager &&
                                          sampleManager.clinicalDataLegacyCleanAndDerived[sample.id] &&
-                                         getSpanElementsFromCleanData(sampleManager.clinicalDataLegacyCleanAndDerived[sample.id], 'lgg_ucsf_2014')}
+                                         getSpanElementsFromCleanData(sampleManager.clinicalDataLegacyCleanAndDerived[sample.id], patientViewPageStore.studyId)}
                                     </span>
                                 )
                             }
@@ -304,6 +304,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 <td><PatientHeader
                                     handlePatientClick={(id: string)=>this.handlePatientClick(id)}
                                     patient={patientViewPageStore.patientViewData.result.patient}
+                                    studyId={patientViewPageStore.studyId}
                                     darwinUrl={patientViewPageStore.darwinUrl.result}
                                     sampleManager={sampleManager}/></td>
                             </tr>
