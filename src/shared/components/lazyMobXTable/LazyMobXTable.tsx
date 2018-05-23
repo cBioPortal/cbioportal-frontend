@@ -22,8 +22,8 @@ import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import {ButtonToolbar} from "react-bootstrap";
 import { If } from 'react-if';
 import {SortMetric} from "../../lib/ISortMetric";
-import {IMobXApplicationDataStore, SimpleMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
-import {IMobXApplicationLazyDownloadDataFetcher} from "../../lib/IMobXApplicationLazyDownloadDataFetcher";
+import {ILazyMobXTableApplicationDataStore, SimpleLazyMobXTableApplicationDataStore} from "../../lib/ILazyMobXTableApplicationDataStore";
+import {ILazyMobXTableApplicationLazyDownloadDataFetcher} from "../../lib/ILazyMobXTableApplicationLazyDownloadDataFetcher";
 import {maxPage} from "./utils";
 
 export type SortDirection = 'asc' | 'desc';
@@ -32,6 +32,7 @@ export type Column<T> = {
     name: string;
     headerRender?:(name:string)=>JSX.Element;
     headerDownload?:(name:string)=>string;
+    width?:string|number;
     align?:"left"|"center"|"right";
     filter?:(data:T, filterString:string, filterStringUpper?:string, filterStringLower?:string)=>boolean;
     visible?:boolean;
@@ -47,8 +48,8 @@ type LazyMobXTableProps<T> = {
     className?:string;
     columns:Column<T>[];
     data?:T[];
-    dataStore?:IMobXApplicationDataStore<T>;
-    downloadDataFetcher?:IMobXApplicationLazyDownloadDataFetcher;
+    dataStore?:ILazyMobXTableApplicationDataStore<T>;
+    downloadDataFetcher?:ILazyMobXTableApplicationLazyDownloadDataFetcher;
     initialSortColumn?: string;
     initialSortDirection?:SortDirection;
     initialItemsPerPage?:number;
@@ -68,6 +69,8 @@ type LazyMobXTableProps<T> = {
     highlightColor?:"yellow"|"bluegray";
     pageToHighlight?:boolean;
     showCountHeader?:boolean;
+    onRowClick?:(d:T)=>void;
+    filterPlaceholder?:string;
 };
 
 function compareValues<U extends number|string>(a:U|null, b:U|null, asc:boolean):number {
@@ -202,9 +205,10 @@ class LazyMobXTableStore<T> {
     @observable public sortColumn:string;
     @observable public sortAscending:boolean;
     @observable.ref public columns:Column<T>[];
-    @observable public dataStore:IMobXApplicationDataStore<T>;
-    @observable public downloadDataFetcher:IMobXApplicationLazyDownloadDataFetcher|undefined;
+    @observable public dataStore:ILazyMobXTableApplicationDataStore<T>;
+    @observable public downloadDataFetcher:ILazyMobXTableApplicationLazyDownloadDataFetcher|undefined;
     @observable private highlightColor:string;
+    @observable private onRowClick:((d:T)=>void)|undefined;
 
     // this observable is intended to always refer to props.columnVisibility
     @observable private _columnVisibility:{[columnId: string]: boolean}|undefined;
@@ -384,6 +388,9 @@ class LazyMobXTableStore<T> {
             if (column.align) {
                 style.textAlign = column.align;
             }
+            if (column.width) {
+                style.width = column.width;
+            }
 
             return (
                 <th className='multilineHeader' {...headerProps} style={style}>
@@ -467,8 +474,19 @@ class LazyMobXTableStore<T> {
         const ret = [];
         for (let i=0; i<this.visibleData.length; i++) {
             const rowProps:any = {};
-            if (this.dataStore.isHighlighted(this.visibleData[i])) {
+            const rowIsHighlighted = this.dataStore.isHighlighted(this.visibleData[i]);
+            if (rowIsHighlighted) {
                 rowProps.className = this.highlightClassName;
+            }
+            if (this.onRowClick) {
+                rowProps.style = {
+                    cursor: rowIsHighlighted ? "auto" : "pointer"
+                };
+
+                const onRowClick = this.onRowClick; // by the time its called this might be undefined again, so need to save ref
+                rowProps.onClick = ()=>{
+                    onRowClick(this.visibleData[i]);
+                };
             }
             ret.push(
                 <tr key={i} {...rowProps}>
@@ -487,6 +505,9 @@ class LazyMobXTableStore<T> {
         this.dataStore.filterString = str;
         this.page = 0;
         this.dataStore.setFilter((d:T, filterString:string, filterStringUpper:string, filterStringLower:string)=>{
+            if (!filterString) {
+                return true; // dont filter if no input
+            }
             let match = false;
             for (const column of this.visibleColumns) {
                 match = (column.filter && column.filter(d, filterString, filterStringUpper, filterStringLower)) || false;
@@ -519,11 +540,12 @@ class LazyMobXTableStore<T> {
         this._columnVisibility = props.columnVisibility;
         this.highlightColor = props.highlightColor!;
         this.downloadDataFetcher = props.downloadDataFetcher;
+        this.onRowClick = props.onRowClick;
 
         if (props.dataStore) {
             this.dataStore = props.dataStore;
         } else {
-            this.dataStore = new SimpleMobXApplicationDataStore<T>(props.data || []);
+            this.dataStore = new SimpleLazyMobXTableApplicationDataStore<T>(props.data || []);
         }
 
         // even if dataStore passed in, we need to initialize sort props if undefined
@@ -753,7 +775,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
             <ButtonToolbar style={{marginLeft:0}} className="tableMainToolbar">
                 { this.props.showFilter ? (
                     <div className={`pull-right form-group has-feedback input-group-sm tableFilter`} style={{ display:'inline-block', marginLeft: 5}}>
-                        <input ref={this.handlers.filterInputRef} type="text" onInput={this.handlers.onFilterTextChange} className="form-control tableSearchInput" style={{ width:200 }}  />
+                        <input ref={this.handlers.filterInputRef} placeholder={this.props.filterPlaceholder || ""} type="text" onInput={this.handlers.onFilterTextChange} className="form-control tableSearchInput" style={{ width:200 }}  />
                         <span className="fa fa-search form-control-feedback" aria-hidden="true"></span>
                     </div>
                 ) : ""}

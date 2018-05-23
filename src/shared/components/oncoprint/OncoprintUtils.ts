@@ -262,7 +262,8 @@ export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
             oncoprint.props.store.alteredSampleKeys,
             oncoprint.props.store.sequencedSampleKeysByGene,
             oncoprint.props.store.alteredPatientKeys,
-            oncoprint.props.store.sequencedPatientKeysByGene
+            oncoprint.props.store.sequencedPatientKeysByGene,
+            oncoprint.props.store.selectedMolecularProfiles
         ],
         invoke: async()=>{
             return oncoprint.props.store.putativeDriverFilteredCaseAggregatedDataByOQLLine.result!.map(
@@ -271,7 +272,8 @@ export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
                     sampleMode ? x.cases.samples : x.cases.patients,
                     x.oql.gene,
                     sampleMode ? oncoprint.props.store.samples.result! : oncoprint.props.store.patients.result!,
-                    oncoprint.props.store.coverageInformation.result!
+                    oncoprint.props.store.coverageInformation.result!,
+                    oncoprint.props.store.selectedMolecularProfiles.result!
                 );
 
                 const info = alterationInfoForCaseAggregatedDataByOQLLine(sampleMode, x,
