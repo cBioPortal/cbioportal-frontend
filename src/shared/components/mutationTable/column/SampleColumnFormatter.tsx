@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {MolecularProfile, Mutation} from "shared/api/generated/CBioPortalAPI";
 import TruncatedText from "shared/components/TruncatedText";
+import {getPatientViewUrl, getSampleViewUrl} from "../../../api/urls";
 
 /**
  * @author Selcuk Onur Sumer
@@ -37,21 +38,8 @@ export default class SampleColumnFormatter
             const profile = molecularProfileIdToMolecularProfile[data[0].molecularProfileId];
             const studyId = profile && profile.studyId;
             if (studyId) {
-                let linkToPatientView:string = `#/patient?sampleId=${sampleId}&studyId=${studyId}`;
-                /**
-                 * HACK to deal with having mutation mapper on index.do
-                 * Change it to case.do
-                 * https://github.com/cBioPortal/cbioportal/issues/2783
-                 */
-                const indexLocation:number = window.location.href.search('index.do');
-                if (indexLocation > -1) {
-                    linkToPatientView = window.location.href.substring(0, indexLocation) + 'case.do' + linkToPatientView;
-                }
-                // END HACK
-
-
                 content = (
-                    <a href={linkToPatientView} target='_blank'>
+                    <a href={getSampleViewUrl(studyId, sampleId)} target='_blank'>
                         {content}
                     </a>
                 );

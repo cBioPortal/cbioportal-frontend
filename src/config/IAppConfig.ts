@@ -1,5 +1,6 @@
 export interface IAppConfig {
     apiRoot?: string;
+    baseUrl?:string;
     frontendUrl?: string;
     genomespaceEnabled: boolean;
     skinExampleStudyQueries: string[]; // in query the example searches
