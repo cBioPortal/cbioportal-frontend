@@ -1,6 +1,8 @@
 import { assert } from 'chai';
 import {QueryStore, normalizeQuery} from "./QueryStore";
-import {nonMolecularProfileParams} from "./QueryStoreUtils";
+import {nonMolecularProfileParams, profileAvailability} from "./QueryStoreUtils";
+import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
+import {MolecularProfile} from "../../api/generated/CBioPortalAPI";
 import Sinon from 'sinon';
 
 describe('QueryStoreUtils', ()=>{
@@ -44,6 +46,86 @@ describe('QueryStoreUtils', ()=>{
             store.selectableSelectedStudyIds = ["a"];
             assert.equal(nonMolecularProfileParams(store).cancer_study_id, "a");
             assert.equal(nonMolecularProfileParams(store).cancer_study_list, undefined);
+        });
+    });
+    describe("profileAvailability", ()=>{
+        it("returns correct profile availability result in case of zero profiles", ()=>{
+            assert.deepEqual(profileAvailability([]), {mutation:false, cna:false});
+        });
+        it("returns correct profile availability result in case of one profile", ()=>{
+            let profiles = [{
+                molecularAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
+                showProfileInAnalysisTab: true
+            }] as MolecularProfile[];
+            assert.deepEqual(profileAvailability(profiles), {mutation:true, cna:false});
+
+            profiles = [{
+                molecularAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
+                showProfileInAnalysisTab: false
+            }] as MolecularProfile[];
+            assert.deepEqual(profileAvailability(profiles), {mutation:false, cna:false});
+
+            profiles = [{
+                molecularAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                showProfileInAnalysisTab: true
+            }] as MolecularProfile[];
+            assert.deepEqual(profileAvailability(profiles), {mutation:false, cna:true});
+
+            profiles = [{
+                molecularAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                showProfileInAnalysisTab: false
+            }] as MolecularProfile[];
+            assert.deepEqual(profileAvailability(profiles), {mutation:false, cna:false});
+        });
+        it("returns correct profile availability result in case of two profiles", ()=>{
+            let profiles = [{
+                molecularAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
+                showProfileInAnalysisTab: true
+            },{
+                molecularAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                showProfileInAnalysisTab: true
+            }] as MolecularProfile[];
+            assert.deepEqual(profileAvailability(profiles), {mutation:true, cna:true});
+
+            profiles = [{
+                molecularAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
+                showProfileInAnalysisTab: false
+            },{
+                molecularAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                showProfileInAnalysisTab: true
+            }] as MolecularProfile[];
+            assert.deepEqual(profileAvailability(profiles), {mutation:false, cna:true});
+
+            profiles = [{
+                molecularAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
+                showProfileInAnalysisTab: true
+            },{
+                molecularAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                showProfileInAnalysisTab: false
+            }] as MolecularProfile[];
+            assert.deepEqual(profileAvailability(profiles), {mutation:true, cna:false});
+
+            profiles = [{
+                molecularAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
+                showProfileInAnalysisTab: false
+            },{
+                molecularAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                showProfileInAnalysisTab: false
+            }] as MolecularProfile[];
+            assert.deepEqual(profileAvailability(profiles), {mutation:false, cna:false});
+        });
+        it("returns correct profile availability result in case of several profiles", ()=>{
+            let profiles = [{
+                molecularAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
+                showProfileInAnalysisTab: true
+            },{
+                molecularAlterationType: AlterationTypeConstants.MUTATION_EXTENDED,
+                showProfileInAnalysisTab: false
+            },{
+                molecularAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+                showProfileInAnalysisTab: false
+            }] as MolecularProfile[];
+            assert.deepEqual(profileAvailability(profiles), {mutation:true, cna:false});
         });
     });
 });
