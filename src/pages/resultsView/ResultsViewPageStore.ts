@@ -3,7 +3,7 @@ import {
     SampleIdentifier, MolecularProfile, Mutation, NumericGeneMolecularData, MolecularDataFilter, Gene,
     ClinicalDataSingleStudyFilter, CancerStudy, PatientIdentifier, Patient, GenePanelData, GenePanelDataFilter,
     SampleList, MutationCountByPosition, MutationMultipleStudyFilter, SampleMolecularIdentifier,
-    MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter, PatientFilter, GenePanel
+    MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter, PatientFilter, GenePanel, MutationFilter
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action, reaction, IObservable, IObservableValue, ObservableMap} from "mobx";
@@ -497,13 +497,13 @@ export class ResultsViewPageStore {
 
     readonly coverageInformation = remoteData<CoverageInformation>({
         await:()=>[
-            this.selectedMolecularProfiles,
+            this.molecularProfilesInStudies,
             this.genes,
             this.samples,
             this.patients
         ],
         invoke:async()=>{
-            const studyToMolecularProfiles = _.groupBy(this.selectedMolecularProfiles.result!, profile=>profile.studyId);
+            const studyToMolecularProfiles = _.groupBy(this.molecularProfilesInStudies.result!, profile=>profile.studyId);
             const sampleMolecularIdentifiers:SampleMolecularIdentifier[] = [];
             this.samples.result!.forEach(sample=>{
                 const profiles = studyToMolecularProfiles[sample.studyId];
@@ -1876,6 +1876,34 @@ export class ResultsViewPageStore {
         this.studyIdToStudy,
         this.coverageInformation
     );
+
+    public mutationCache =
+        new MobxPromiseCache<{entrezGeneId:number}, Mutation[]>(
+            q=>({
+                await:()=>[
+                    this.studyToMutationMolecularProfile,
+                    this.studyToDataQueryFilter
+                ],
+                invoke: async()=>{
+                    return _.flatten(await Promise.all(Object.keys(this.studyToMutationMolecularProfile.result!).map(studyId=>{
+                        const molecularProfileId = this.studyToMutationMolecularProfile.result![studyId].molecularProfileId;
+                        const dqf = this.studyToDataQueryFilter.result![studyId];
+                        if (dqf && molecularProfileId) {
+                            return client.fetchMutationsInMolecularProfileUsingPOST({
+                                molecularProfileId,
+                                mutationFilter: {
+                                    entrezGeneIds:[q.entrezGeneId],
+                                    ...dqf
+                                } as MutationFilter,
+                                projection:"DETAILED"
+                            });
+                        } else {
+                            return Promise.resolve([]);
+                        }
+                    })));
+                }
+            })
+        );
 
     @action clearErrors() {
         this.ajaxErrors = [];

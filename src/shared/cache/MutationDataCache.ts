@@ -8,8 +8,8 @@ type Query = {
     entrezGeneId:number
 };
 
-function dataToKey(d:Mutation[]) {
-    return `${d[0].entrezGeneId}`;
+function dataToKey(d:Mutation[], entrezGeneId:number) {
+    return `${entrezGeneId}`;
 }
 
 function queryToKey(q:Query) {
@@ -18,7 +18,7 @@ function queryToKey(q:Query) {
 
 async function fetch(queries:Query[],
                studyToMolecularProfile:{[studyId:string]:MolecularProfile},
-                studyToDataQueryFilter:{[studyId:string]:IDataQueryFilter}):Promise<Mutation[][]> {
+                studyToDataQueryFilter:{[studyId:string]:IDataQueryFilter}):Promise<AugmentedData<Mutation[], number>[]> {
     const studies = Object.keys(studyToMolecularProfile);
     const results:Mutation[][] = await Promise.all(studies.map(studyId=>{
         const filter = studyToDataQueryFilter[studyId];
@@ -37,10 +37,29 @@ async function fetch(queries:Query[],
             return Promise.resolve([]);
         }
     }));
-    return _.values(_.groupBy(_.flatten(results), 'entrezGeneId'));
+    const genes = _.keyBy(queries, x=>x.entrezGeneId);
+    const groupedData = _.values(_.groupBy(_.flatten(results), 'entrezGeneId'));
+    const ret = [];
+    for (const geneData of groupedData) {
+        if (geneData.length) {
+            ret.push({
+                meta: geneData[0].entrezGeneId,
+                data: [geneData]
+            });
+            delete genes[geneData[0].entrezGeneId];
+        }
+    }
+    for (const remainingGene of Object.keys(genes)){
+        ret.push({
+            meta: parseInt(remainingGene, 10),
+            data: []
+        });
+    }
+
+    return ret;
 }
 
-export default class MutationDataCache extends LazyMobXCache<Mutation[], Query, string> {
+export default class MutationDataCache extends LazyMobXCache<Mutation[], Query, number> {
     constructor(studyToMolecularProfile:{[studyId:string]:MolecularProfile},
                 studyToDataQueryFilter:{[studyId:string]:IDataQueryFilter}) {
         super(queryToKey, dataToKey, fetch, studyToMolecularProfile, studyToDataQueryFilter);
