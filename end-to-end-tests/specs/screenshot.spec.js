@@ -53,8 +53,8 @@ function runResultsTestSuite(prefix){
 
     it(`${prefix} coexpression tab`, function(){
         browser.click("[href='#coexp']");
-        browser.waitForVisible('#coexp_table_div_KRAS',10000);
-        var res = browser.checkElement('#coexp',{hide:['.qtip'] });
+        browser.waitForVisible('div[data-test="CoExpressionPlot"]',10000);
+        var res = browser.checkElement('#coexp', { hide:['.qtip'] } );
         assertScreenShotMatch(res);
     });
 
@@ -222,29 +222,18 @@ describe('study view screenshot test', function(){
     });
 });
 
-describe.skip("coexpression tab screenshot tests", function() {
+describe("coexpression tab screenshot tests", function() {
     before(function() {
         var url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&case_ids=&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit#coexp`;
         goToUrlAndSetLocalStorage(url);
     });
     it('coexpression tab coadread_tcga_pub initial load', function() {
-        browser.waitForExist('div[data-test="CoExpressionPlotDiv"]', 10000); // wait for plopt to show up
-        var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
-        assertScreenShotMatch(res);
-    });
-    it('coexpression tab coadread_tcga_pub log scale x mutations on', function() {
-        browser.click('div[data-test="CoExpressionGeneTabContent"] input[data-test="xLogScale"]');
-        var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
-        assertScreenShotMatch(res);
-    });
-    it('coexpression tab coadread_tcga_pub log scale y mutations on', function() {
-        browser.click('div[data-test="CoExpressionGeneTabContent"] input[data-test="xLogScale"]');
-        browser.click('div[data-test="CoExpressionGeneTabContent"] input[data-test="yLogScale"]');
+        browser.waitForExist('div[data-test="CoExpressionPlot"]', 10000); // wait for plopt to show up
         var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
         assertScreenShotMatch(res);
     });
     it('coexpression tab coadread_tcga_pub log scale x and y mutations on', function() {
-        browser.click('div[data-test="CoExpressionGeneTabContent"] input[data-test="xLogScale"]');
+        browser.click('div[data-test="CoExpressionGeneTabContent"] input[data-test="logScale"]');
         var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
         assertScreenShotMatch(res);
     });
@@ -254,16 +243,16 @@ describe.skip("coexpression tab screenshot tests", function() {
         assertScreenShotMatch(res);
     });
     it('coexpression tab coadread_tcga_pub switch tabs', function() {
-        browser.click('#coexpressionTabGeneTabs .coExpressionTab1');// click on NRAS
+        browser.click('#coexpressionTabGeneTabs>ul>li:nth-child(2)>a');// click on NRAS
         browser.pause(100); // give time to start loading
-        browser.waitForExist('div[data-test="CoExpressionPlotDiv"]', 10000); // wait for plot to show up
+        browser.waitForExist('div[data-test="CoExpressionPlot"]', 10000); // wait for plot to show up
         var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
         assertScreenShotMatch(res);
     });
     it('coexpression tab coadread_tcga_pub switch profiles', function() {
         browser.execute(function() { resultsViewCoExpressionTab.onSelectDataSet({ value: "coadread_tcga_pub_mrna"}); });
         browser.pause(100); // give time to start loading
-        browser.waitForExist('div[data-test="CoExpressionPlotDiv"]', 10000); // wait for plot to show up
+        browser.waitForExist('div[data-test="CoExpressionPlot"]', 10000); // wait for plot to show up
         var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
         assertScreenShotMatch(res);
     });
