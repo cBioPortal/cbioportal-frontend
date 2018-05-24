@@ -1,7 +1,7 @@
 import {assert} from 'chai';
 
 import {GeneticTrackDatum} from "shared/components/oncoprint/Oncoprint";
-import {GenePanelData, Sample} from "shared/api/generated/CBioPortalAPI";
+import {GenePanelData, MolecularProfile, Sample} from "shared/api/generated/CBioPortalAPI";
 import {
     generateCaseAlterationData, generateDownloadData, generateGeneAlterationData, generateMutationDownloadData, generateOqlData
 } from "./DownloadUtils";
@@ -599,7 +599,11 @@ describe('DownloadUtils', () => {
                 }
             };
 
-            const caseAlterationData = generateCaseAlterationData(caseAggregatedDataByOQLLine,
+            const selectedMolecularProfiles = [{molecularProfileId:"AsdfasD"} as MolecularProfile];
+
+            const caseAlterationData = generateCaseAlterationData(
+                selectedMolecularProfiles,
+                caseAggregatedDataByOQLLine,
                 genePanelInformation,
                 samples,
                 geneAlterationData);
@@ -632,8 +636,9 @@ describe('DownloadUtils', () => {
                 patients: {}
             };
 
+            const selectedMolecularProfiles = [{molecularProfileId:"AsdfasD"} as MolecularProfile];
 
-            const caseAlterationData = generateCaseAlterationData(caseAggregatedDataByOQLLine, genePanelInformation, samples);
+            const caseAlterationData = generateCaseAlterationData(selectedMolecularProfiles, caseAggregatedDataByOQLLine, genePanelInformation, samples);
 
             assert.equal(caseAlterationData.length, 2,
                 "case alteration data has correct size");

@@ -168,7 +168,7 @@ function cleanAndDerive(clinicalData) {
  * @param {string} cancerStudyId    - short name of cancer study
  */
 function getSpanElements(clinicalData, cancerStudyId) {
-    return getSpanElementsFromCleanData(cleanAndDerive(clinicalData));
+    return getSpanElementsFromCleanData(cleanAndDerive(clinicalData), cancerStudyId);
 }
 
 function getSpanElementsFromCleanData(clinicalAttributesCleanDerived, cancerStudyId) {
