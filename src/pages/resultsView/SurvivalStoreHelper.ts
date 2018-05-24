@@ -1,7 +1,7 @@
 import { Patient, ClinicalData } from "shared/api/generated/CBioPortalAPI";
 import { PatientSurvival } from "../../shared/model/PatientSurvival";
 
-export function getPatientSurvivals(survivalClinicalDataGroupByUniquePatientKey: any,
+export function getPatientSurvivals(survivalClinicalDataGroupByUniquePatientKey: any, patients: Patient[],
     targetUniquePatientKeys: string[], statusAttributeId: string, monthsAttributeId: string,
     statusFilter: (s: string) => boolean): PatientSurvival[] {
 
@@ -14,9 +14,10 @@ export function getPatientSurvivals(survivalClinicalDataGroupByUniquePatientKey:
                 const monthsClinicalData: ClinicalData | undefined = clinicalData.find(c => c.clinicalAttributeId === monthsAttributeId);
                 if (statusClinicalData && monthsClinicalData && statusClinicalData.value != 'NA' &&
                     monthsClinicalData.value != 'NA' && !Number.isNaN(Number(monthsClinicalData.value))) {
+                    const patient: Patient = patients.filter(p => p.uniquePatientKey === uniquePatientKey)[0];
                     patientSurvivals.push({
-                        patientId: clinicalData[0].patientId,
-                        studyId: clinicalData[0].studyId,
+                        patientId: patient.patientId,
+                        studyId: patient.studyId,
                         status: statusFilter(statusClinicalData.value),
                         months: parseFloat(monthsClinicalData.value)
                     });
