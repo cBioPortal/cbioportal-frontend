@@ -1,7 +1,7 @@
 import {SortMetric} from "./ISortMetric";
 import {observable, computed, action} from "mobx";
 import {lazyMobXTableSort} from "../components/lazyMobXTable/LazyMobXTable";
-export interface IMobXApplicationDataStore<T> {
+export interface ILazyMobXTableApplicationDataStore<T> {
     // setter
     setFilter:(fn:(d:T, filterString?:string, filterStringUpper?:string, filterStringLower?:string)=>boolean)=>void;
 
@@ -21,8 +21,7 @@ export interface IMobXApplicationDataStore<T> {
     sortMetric:SortMetric<T>|undefined;
 };
 
-export class SimpleMobXApplicationDataStore<T> implements IMobXApplicationDataStore<T> {
-    @observable.ref protected data:T[];
+export class SimpleGetterLazyMobXTableApplicationDataStore<T> implements ILazyMobXTableApplicationDataStore<T> {
     @observable protected dataFilter:(d:T, filterString?:string, filterStringUpper?:string, filterStringLower?:string)=>boolean;
     @observable protected dataSelector:(d:T)=>boolean;
     @observable protected dataHighlighter:(d:T)=>boolean;
@@ -32,7 +31,7 @@ export class SimpleMobXApplicationDataStore<T> implements IMobXApplicationDataSt
     @observable public sortAscending:boolean|undefined;
 
     @computed get allData() {
-        return this.data;
+        return this.getData();
     }
     @computed get sortedData() {
         // if not defined, use default values for sortMetric and sortAscending
@@ -78,11 +77,16 @@ export class SimpleMobXApplicationDataStore<T> implements IMobXApplicationDataSt
     }
 
 
-    constructor(data:T[]) {
-        this.data = data;
+    constructor(private getData:()=>T[]) {
         this.filterString = "";
         this.dataHighlighter = ()=>false;
         this.dataSelector = ()=>false;
         this.dataFilter = ()=>true;
+    }
+}
+
+export class SimpleLazyMobXTableApplicationDataStore<T> extends SimpleGetterLazyMobXTableApplicationDataStore<T> {
+    constructor(data:T[]) {
+        super(()=>data);
     }
 }
