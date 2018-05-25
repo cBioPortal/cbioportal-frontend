@@ -140,6 +140,8 @@ declare module "oncoprintjs"
         getTracks:()=>TrackId[];
         removeAllTracks: () => void;
         removeExpansionTracksFor: (parent_track: TrackId) => void;
+        disableTrackExpansion: (track_id: TrackId) => void;
+        enableTrackExpansion: (track_id: TrackId) => void;
         removeAllExpansionTracksInGroup: (index: TrackGroupIndex) => void;
         setHorzZoomToFit: (ids: string[]) => void;
         updateHorzZoomToFitIds:(ids:string[])=>void;
