@@ -140,7 +140,7 @@
     "mobxpromise": "^1.3.1",
     "node-sass": "^4.3.0",
     "numeral": "^2.0.6",
-    "oncoprintjs": "^1.0.95",
+    "oncoprintjs": "^1.0.98",
     "parameter-validator": "^1.0.2",
     "pdfobject": "^2.0.201604172",
     "plotly.js": "^1.31.2",
