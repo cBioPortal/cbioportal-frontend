@@ -25,9 +25,4 @@ exposeComponentRenderer('renderRightBar', ()=> {
     return <RightBar store={GlobalStores.queryStore} />;
 });
 
-exposeComponentRenderer('renderQuerySelector', (props:{[k:string]:string|boolean|number})=> {
-    (window as any).addGenesAndSubmitQuery = GlobalStores.queryStore.addGenesAndSubmit.bind(GlobalStores.queryStore);
-    return <QueryAndDownloadTabs {...props} store={GlobalStores.queryStore} />;
-});
-
 (window as any).formSubmit = formSubmit;

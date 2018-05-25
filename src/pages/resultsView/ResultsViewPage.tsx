@@ -40,6 +40,7 @@ import {QueryStore} from "../../shared/components/query/QueryStore";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import {getGAInstance} from "../../shared/lib/tracking";
 import CoExpressionTabContainer from "./coExpression/CoExpressionTabContainer";
+import EnrichmentsTab from 'pages/resultsView/enrichments/EnrichmentsTab';
 
 
 const win = (window as any);
@@ -335,6 +336,14 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     <CoExpressionTabContainer store={this.resultsViewPageStore}/>
                 </div>
             );
+        });
+
+        exposeComponentRenderer('renderEnrichmentsTab', () => {
+
+            return (
+                <div className="cbioportal-frontend">
+                    <EnrichmentsTab store={this.resultsViewPageStore}/>
+                </div>);
         });
     }
 
