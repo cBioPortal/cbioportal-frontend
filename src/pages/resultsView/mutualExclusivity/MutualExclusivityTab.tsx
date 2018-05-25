@@ -13,8 +13,6 @@ import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator
 import { getCountsText, getData, getFilteredData } from "./MutualExclusivityUtil";
 
 export interface IMutualExclusivityTabProps {
-    // a mapping from Hugo Gene Symbol to list of booleans,
-    // each element of the list representing the altered status of a sample
     store: ResultsViewPageStore
 }
 
