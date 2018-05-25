@@ -14308,6 +14308,14 @@ var Oncoprint = (function () {
 	this.removeTracks(this.model.track_expansion_tracks[track_id].slice());
     }
 
+    Oncoprint.prototype.disableTrackExpansion = function (track_id) {
+	this.model.disableTrackExpansion(track_id);
+    }
+
+    Oncoprint.prototype.enableTrackExpansion = function (track_id) {
+	this.model.enableTrackExpansion(track_id);
+    }
+
     Oncoprint.prototype.removeAllExpansionTracksInGroup = function (index) {
 	var tracks_in_group = this.model.getTrackGroups()[index],
 	    expanded_tracks = [],
