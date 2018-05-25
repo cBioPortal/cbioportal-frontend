@@ -33,7 +33,6 @@ import {stringListToIndexSet, stringListToSet} from "../../shared/lib/StringUtil
 import {toSampleUuid} from "../../shared/lib/UuidUtils";
 import MutationDataCache from "../../shared/cache/MutationDataCache";
 import accessors, {getSimplifiedMutationType, SimplifiedMutationType} from "../../shared/lib/oql/accessors";
-import {filterCBioPortalWebServiceData} from "../../shared/lib/oql/oqlfilter.js";
 import {keepAlive} from "mobx-utils";
 import MutationMapper from "./mutation/MutationMapper";
 import {CacheData} from "../../shared/lib/LazyMobXCache";
@@ -43,7 +42,13 @@ import {
 } from "./cancerSummary/CancerSummaryContent";
 import {writeTest} from "../../shared/lib/writeTest";
 import {PatientSurvival} from "../../shared/model/PatientSurvival";
-import {filterCBioPortalWebServiceDataByOQLLine, OQLLineFilterOutput} from "../../shared/lib/oql/oqlfilter";
+import {
+    filterCBioPortalWebServiceData,
+    filterCBioPortalWebServiceDataByOQLLine,
+    filterCBioPortalWebServiceDataByUnflattenedOQLLine,
+    OQLLineFilterOutput,
+    UnflattenedOQLLineFilterOutput,
+} from "../../shared/lib/oql/oqlfilter";
 import GeneMolecularDataCache from "../../shared/cache/GeneMolecularDataCache";
 import GenesetMolecularDataCache from "../../shared/cache/GenesetMolecularDataCache";
 import GenesetCorrelatedGeneCache from "../../shared/cache/GenesetCorrelatedGeneCache";
@@ -61,7 +66,7 @@ import {countMutations, mutationCountByPositionKey} from "./mutationCountHelpers
 import {getPatientSurvivals} from "./SurvivalStoreHelper";
 import {QueryStore} from "shared/components/query/QueryStore";
 import {
-    annotateMolecularDatum, getOncoKbOncogenic,
+    annotateMolecularDatum, getOncoKbOncogenic, groupDataByCase,
     computeCustomDriverAnnotationReport, computePutativeDriverAnnotatedMutations,
     initializeCustomDriverAnnotationSettings, computeGenePanelInformation,
     fetchQueriedStudies, CoverageInformation
@@ -464,6 +469,41 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly putativeDriverFilteredCaseAggregatedDataByUnflattenedOQLLine = remoteData<{
+        cases: CaseAggregatedData<AnnotatedExtendedAlteration>,
+        oql: UnflattenedOQLLineFilterOutput<AnnotatedExtendedAlteration>
+    }[]>({
+        await: () => [
+            this.putativeDriverAnnotatedMutations,
+            this.annotatedMolecularData,
+            this.selectedMolecularProfiles,
+            this.defaultOQLQuery,
+            this.samples,
+            this.patients
+        ],
+        invoke: () => {
+            if (this.oqlQuery.trim() === '') {
+                return Promise.resolve([]);
+            } else {
+                const filteredAlterationsByOQLLine: UnflattenedOQLLineFilterOutput<AnnotatedExtendedAlteration>[] = (
+                    filterCBioPortalWebServiceDataByUnflattenedOQLLine(
+                        this.oqlQuery,
+                        [...(this.putativeDriverAnnotatedMutations.result!), ...(this.annotatedMolecularData.result!)],
+                        (new accessors(this.selectedMolecularProfiles.result!)),
+                        this.defaultOQLQuery.result!
+                    )
+                );
+
+                return Promise.resolve(filteredAlterationsByOQLLine.map(
+                    (oql) => ({
+                        cases: groupDataByCase(oql, this.samples.result!, this.patients.result!),
+                        oql
+                    })
+                ));
+            }
+        }
+    });
+
     readonly putativeDriverFilteredCaseAggregatedDataByOQLLine = remoteData<{cases:CaseAggregatedData<AnnotatedExtendedAlteration>, oql:OQLLineFilterOutput<AnnotatedExtendedAlteration>}[]>({
         await:()=>[
             this.putativeDriverAnnotatedMutations,
@@ -473,29 +513,23 @@ export class ResultsViewPageStore {
             this.samples,
             this.patients
         ],
-        invoke:()=>{
-            let unfilteredAlterations:(AnnotatedMutation | AnnotatedNumericGeneMolecularData)[] = [];
-            unfilteredAlterations = unfilteredAlterations.concat(this.putativeDriverAnnotatedMutations.result!);
-            unfilteredAlterations = unfilteredAlterations.concat(this.annotatedMolecularData.result!);
-
-            if (this.oqlQuery.trim() != "") {
-                const filteredAlterationsByOQLLine:OQLLineFilterOutput<AnnotatedExtendedAlteration>[] = filterCBioPortalWebServiceDataByOQLLine(this.oqlQuery, unfilteredAlterations,
-                        (new accessors(this.selectedMolecularProfiles.result!)), this.defaultOQLQuery.result!);
-
-                    return Promise.resolve(filteredAlterationsByOQLLine.map(oql=>{
-                        const cases:CaseAggregatedData<AnnotatedExtendedAlteration> = {
-                            samples:
-                                groupBy(oql.data, datum=>datum.uniqueSampleKey, this.samples.result!.map(sample=>sample.uniqueSampleKey)),
-                            patients:
-                                groupBy(oql.data, datum=>datum.uniquePatientKey, this.patients.result!.map(sample=>sample.uniquePatientKey))
-                        };
-                        return {
-                            cases,
-                            oql
-                        };
-                    }));
-            } else {
+        invoke: () => {
+            if (this.oqlQuery.trim() === '') {
                 return Promise.resolve([]);
+            } else {
+                const filteredAlterationsByOQLLine:OQLLineFilterOutput<AnnotatedExtendedAlteration>[] = filterCBioPortalWebServiceDataByOQLLine(
+                    this.oqlQuery,
+                    [...(this.putativeDriverAnnotatedMutations.result!), ...(this.annotatedMolecularData.result!)],
+                    (new accessors(this.selectedMolecularProfiles.result!)),
+                    this.defaultOQLQuery.result!
+                );
+
+                return Promise.resolve(filteredAlterationsByOQLLine.map(
+                    (oql) => ({
+                        cases: groupDataByCase(oql, this.samples.result!, this.patients.result!),
+                        oql
+                    })
+                ));
             }
         }
     });
