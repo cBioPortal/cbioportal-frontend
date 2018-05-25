@@ -96,14 +96,15 @@ export function selectDisplayValue(counts:{[value:string]:number}, priority:{[va
     } else {
         return undefined;
     }
-};
+}
 
 export function fillGeneticTrackDatum(
+    // must already have all non-disp* fields except trackLabel and data
     newDatum:Partial<GeneticTrackDatum>,
-    hugoGeneSymbol:string,
+    trackLabel:string,
     data:AnnotatedExtendedAlteration[]
-):GeneticTrackDatum {
-    newDatum.gene = hugoGeneSymbol;
+): GeneticTrackDatum {
+    newDatum.trackLabel = trackLabel;
     newDatum.data = data;
 
     let dispFusion = false;
@@ -168,7 +169,7 @@ export function fillGeneticTrackDatum(
 
 export function makeGeneticTrackData(
     caseAggregatedAlterationData:CaseAggregatedData<AnnotatedExtendedAlteration>["samples"],
-    hugoGeneSymbol:string,
+    hugoGeneSymbols:string|string[],
     samples:Sample[],
     genePanelInformation:CoverageInformation,
     selectedMolecularProfiles:MolecularProfile[]
@@ -176,7 +177,7 @@ export function makeGeneticTrackData(
 
 export function makeGeneticTrackData(
     caseAggregatedAlterationData:CaseAggregatedData<AnnotatedExtendedAlteration>["patients"],
-    hugoGeneSymbol:string,
+    hugoGeneSymbols:string|string[],
     patients:Patient[],
     genePanelInformation:CoverageInformation,
     selectedMolecularProfiles:MolecularProfile[]
@@ -184,7 +185,7 @@ export function makeGeneticTrackData(
 
 export function makeGeneticTrackData(
     caseAggregatedAlterationData:CaseAggregatedData<AnnotatedExtendedAlteration>["samples"]|CaseAggregatedData<AnnotatedExtendedAlteration>["patients"],
-    hugoGeneSymbol:string,
+    hugoGeneSymbols:string|string[],
     cases:Sample[]|Patient[],
     genePanelInformation:CoverageInformation,
     selectedMolecularProfiles:MolecularProfile[]
@@ -192,6 +193,7 @@ export function makeGeneticTrackData(
     if (!cases.length) {
         return [];
     }
+    const geneSymbolArray = hugoGeneSymbols instanceof Array ? hugoGeneSymbols : [hugoGeneSymbols];
     const _selectedMolecularProfiles = _.keyBy(selectedMolecularProfiles, p=>p.molecularProfileId);
     const ret:GeneticTrackDatum[] = [];
     if (isSampleList(cases)) {
@@ -203,19 +205,25 @@ export function makeGeneticTrackData(
             newDatum.uid = sample.uniqueSampleKey;
 
             const sampleSequencingInfo = genePanelInformation.samples[sample.uniqueSampleKey];
-            newDatum.profiled_in = sampleSequencingInfo.byGene[hugoGeneSymbol] || [];
+            newDatum.profiled_in = _.flatMap(
+                geneSymbolArray,
+                hugoGeneSymbol => sampleSequencingInfo.byGene[hugoGeneSymbol] || []
+            );
             newDatum.profiled_in = newDatum.profiled_in.concat(sampleSequencingInfo.allGenes).filter(p=>!!_selectedMolecularProfiles[p.molecularProfileId]); // filter out coverage information about non-selected profiles
             if (!newDatum.profiled_in.length) {
                 newDatum.na = true;
             }
-            newDatum.not_profiled_in = sampleSequencingInfo.notProfiledByGene[hugoGeneSymbol] || [];
+            newDatum.not_profiled_in = _.flatMap(
+                geneSymbolArray,
+                hugoGeneSymbol => sampleSequencingInfo.notProfiledByGene[hugoGeneSymbol] || []
+            );
             newDatum.not_profiled_in = newDatum.not_profiled_in.concat(sampleSequencingInfo.notProfiledAllGenes).filter(p=>!!_selectedMolecularProfiles[p.molecularProfileId]); // filter out coverage information about non-selected profiles
 
-            fillGeneticTrackDatum(
-                newDatum, hugoGeneSymbol,
+            ret.push(fillGeneticTrackDatum(
+                newDatum,
+                geneSymbolArray.join(' / '),
                 caseAggregatedAlterationData[sample.uniqueSampleKey]
-            );
-            ret.push(newDatum as GeneticTrackDatum);
+            ));
         }
     } else {
         // case: Patients
@@ -226,19 +234,25 @@ export function makeGeneticTrackData(
             newDatum.uid = patient.uniquePatientKey;
 
             const patientSequencingInfo = genePanelInformation.patients[patient.uniquePatientKey];
-            newDatum.profiled_in = patientSequencingInfo.byGene[hugoGeneSymbol] || [];
+            newDatum.profiled_in = _.flatMap(
+                geneSymbolArray,
+                hugoGeneSymbol => patientSequencingInfo.byGene[hugoGeneSymbol] || []
+            );
             newDatum.profiled_in = newDatum.profiled_in.concat(patientSequencingInfo.allGenes).filter(p=>!!_selectedMolecularProfiles[p.molecularProfileId]); // filter out coverage information about non-selected profiles
             if (!newDatum.profiled_in.length) {
                 newDatum.na = true;
             }
-            newDatum.not_profiled_in = patientSequencingInfo.notProfiledByGene[hugoGeneSymbol] || [];
+            newDatum.not_profiled_in = _.flatMap(
+                geneSymbolArray,
+                hugoGeneSymbol => patientSequencingInfo.notProfiledByGene[hugoGeneSymbol] || []
+            );
             newDatum.not_profiled_in = newDatum.not_profiled_in.concat(patientSequencingInfo.notProfiledAllGenes).filter(p=>!!_selectedMolecularProfiles[p.molecularProfileId]); // filter out coverage information about non-selected profiles
 
-            fillGeneticTrackDatum(
-                newDatum, hugoGeneSymbol,
+            ret.push(fillGeneticTrackDatum(
+                newDatum,
+                geneSymbolArray.join(' / '),
                 caseAggregatedAlterationData[patient.uniquePatientKey]
-            );
-            ret.push(newDatum as GeneticTrackDatum);
+            ));
         }
     }
     return ret;
