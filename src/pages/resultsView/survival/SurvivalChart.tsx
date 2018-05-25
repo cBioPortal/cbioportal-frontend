@@ -17,6 +17,7 @@ import {
     getDownloadContent, convertScatterDataToDownloadData
 } from "./SurvivalUtil";
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
+import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 
 export interface ISurvivalChartProps {
     alteredPatientSurvivals: PatientSurvival[];
@@ -198,13 +199,10 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     return [
                         {
                             target: "data",
-                            mutation: () => ({ active: true })
-                        },
-                        {
-                            target: "labels",
                             mutation: (props: any) => {
                                 this.tooltipModel = props;
                                 this.tooltipCounter++;
+                                return { active: true };
                             }
                         }
                     ];
@@ -213,16 +211,13 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     return [
                         {
                             target: "data",
-                            mutation: () => ({ active: false })
-                        },
-                        {
-                            target: "labels",
                             mutation: async () => {
                                 await sleep(100);
                                 if (!this.isTooltipHovered && this.tooltipCounter === 1) {
                                     this.tooltipModel = null;
                                 }
                                 this.tooltipCounter--;
+                                return { active: false };
                             }
                         }
                     ];
@@ -265,9 +260,9 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                                      data={getLineData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
                                      style={{data: {stroke: "blue", strokeWidth: 1}}}/>
                         <VictoryScatter data={getScatterDataWithOpacity(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
-                            symbol="plus" style={{ data: { fill: "red" } }} size={3} />
+                            symbol="plus" style={{ data: { fill: "red", opacity: (d:any) => d.opacity } }} size={3} />
                         <VictoryScatter data={getScatterDataWithOpacity(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
-                            symbol="plus" style={{ data: { fill: "blue" } }} size={3} />
+                            symbol="plus" style={{ data: { fill: "blue", opacity: (d:any) => d.opacity } }} size={3} />
                         <VictoryScatter data={getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
                             symbol="circle" style={{ data: { fill: "red", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0 } }} size={10} events={events} />
                         <VictoryScatter data={getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
@@ -277,7 +272,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                                 data={[
                                     { name: this.alteredLegendText, symbol: { fill: "red", type: "square" } },
                                     { name: this.unalteredLegendText, symbol: { fill: "blue", type: "square" } },
-                                    { name: `Logrank Test P-Value: ${this.logRank.toPrecision(3)}`, symbol: { opacity: 0 } }]} />
+                                    { name: `Logrank Test P-Value: ${toConditionalPrecision(this.logRank, 3, 0.001)}`, symbol: { opacity: 0 } }]} />
                         }
                     </VictoryChart>
                 </div>
