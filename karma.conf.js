@@ -65,7 +65,6 @@ module.exports = function (config) {
             'karma-chai',
             'karma-webpack',
             'karma-phantomjs-launcher',
-            'karma-spec-reporter',
             'karma-sourcemap-loader',
             'karma-coverage',
             'karma-coverage-istanbul-reporter',
@@ -87,7 +86,7 @@ module.exports = function (config) {
             showDiff: true
         },
 
-        reporters: ['mocha', 'spec','coverage-istanbul','junit'],
+        reporters: ['mocha', 'coverage-istanbul','junit'],
         port: 9876,
         colors: true,
         logLevel: config.LOG_DISABLE,
