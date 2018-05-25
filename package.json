@@ -249,7 +249,6 @@
     "karma-mocha-reporter": "^2.2.5",
     "karma-phantomjs-launcher": "^1.0.2",
     "karma-sourcemap-loader": "^0.3.7",
-    "karma-spec-reporter": "^0.0.26",
     "karma-webpack": "^2.0.2",
     "mocha": "^3.2.0",
     "phantomjs-polyfill": "^0.0.2",
