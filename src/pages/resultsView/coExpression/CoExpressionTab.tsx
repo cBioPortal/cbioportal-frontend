@@ -198,7 +198,6 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                         {this.props.genes.map((gene:Gene, i:number)=>{
                             return (
                                 <MSKTab
-                                    className={`coExpressionTab${i}`}
                                     key={i}
                                     id={gene.entrezGeneId+""}
                                     linkText={gene.hugoGeneSymbol}
