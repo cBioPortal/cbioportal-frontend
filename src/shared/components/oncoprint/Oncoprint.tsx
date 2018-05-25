@@ -53,7 +53,7 @@ export interface IGenesetHeatmapTrackDatum extends IBaseHeatmapTrackDatum {
 }
 
 export type GeneticTrackDatum = {
-    gene: string;
+    trackLabel: string;
     sample?:string;
     patient?:string;
     study_id:string;

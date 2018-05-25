@@ -74,10 +74,14 @@ export function generateOqlData(datum: GeneticTrackDatum,
     }
 
     return ({
-        // by default assume it is sequenced if no gene alteration data exists for a particular gene
-        sequenced: geneAlterationDataByGene && geneAlterationDataByGene[datum.gene] ?
-            geneAlterationDataByGene[datum.gene].sequenced > 0 : true,
-        geneSymbol: datum.gene,
+        // by default assume it is sequenced if the label is not a recognised
+        // gene symbol or if no gene alteration data exists for the gene; it
+        // should always be a gene symbol as long as the download tab doesn't
+        // use multi-gene tracks
+        sequenced: geneAlterationDataByGene && geneAlterationDataByGene[datum.trackLabel]
+            ? geneAlterationDataByGene[datum.trackLabel].sequenced > 0
+            : true,
+        geneSymbol: datum.trackLabel,
         mutation: proteinChanges,
         fusion: fusions,
         cna: cnaAlterations,
