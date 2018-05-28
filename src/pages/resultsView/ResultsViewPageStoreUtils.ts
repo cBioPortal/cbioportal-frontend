@@ -16,6 +16,7 @@ import {
     AnnotatedNumericGeneMolecularData,
     AnnotatedMutation,
     CaseAggregatedData,
+    IQueriedCaseData
 } from "./ResultsViewPageStore";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import _ from "lodash";
@@ -285,11 +286,7 @@ export function filterSubQueryData(
     accessorsInstance: accessors,
     samples: {uniqueSampleKey: string}[],
     patients: {uniquePatientKey: string}[]
-): undefined | {
-    cases: CaseAggregatedData<AnnotatedExtendedAlteration>,
-    oql: OQLLineFilterOutput<object>
-}[]
-{
+): IQueriedCaseData<object>[] | undefined {
     function filterDataForLine(oqlLine: string) {
         // assuming that merged track syntax will never allow
         // nesting, each inner OQL line will be one single-gene

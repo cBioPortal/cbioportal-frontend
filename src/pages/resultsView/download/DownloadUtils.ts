@@ -1,12 +1,12 @@
 import * as _ from 'lodash';
 import {
-    AlterationTypeConstants, AnnotatedExtendedAlteration, CaseAggregatedData, ExtendedAlteration
+    AlterationTypeConstants, AnnotatedExtendedAlteration, CaseAggregatedData, ExtendedAlteration,
+    IQueriedCaseData
 } from "../ResultsViewPageStore";
 import {
     alterationInfoForCaseAggregatedDataByOQLLine
 } from "shared/components/oncoprint/OncoprintUtils";
 import {makeGeneticTrackData} from "shared/components/oncoprint/DataUtils";
-import {OQLLineFilterOutput} from "shared/lib/oql/oqlfilter";
 import {GeneticTrackDatum} from "shared/components/oncoprint/Oncoprint";
 import {Sample, Gene, MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 import {ICaseAlteration, IOqlData, ISubAlteration} from "./CaseAlterationTable";
@@ -91,10 +91,7 @@ export function generateOqlData(datum: GeneticTrackDatum,
 }
 
 export function generateGeneAlterationData(
-    caseAggregatedDataByOQLLine?: {
-        cases:CaseAggregatedData<AnnotatedExtendedAlteration>,
-        oql:OQLLineFilterOutput<AnnotatedExtendedAlteration>
-    }[],
+    caseAggregatedDataByOQLLine?: IQueriedCaseData<AnnotatedExtendedAlteration>[],
     sequencedSampleKeysByGene: {[hugoGeneSymbol:string]:string[]} = {}): IGeneAlteration[]
 {
     return (caseAggregatedDataByOQLLine && !_.isEmpty(sequencedSampleKeysByGene)) ?
@@ -277,10 +274,7 @@ export function generateDownloadData(sampleAlterationDataByGene: {[key: string]:
 
 export function generateCaseAlterationData(
     selectedMolecularProfiles:MolecularProfile[],
-    caseAggregatedDataByOQLLine?: {
-        cases:CaseAggregatedData<AnnotatedExtendedAlteration>,
-        oql:OQLLineFilterOutput<AnnotatedExtendedAlteration>
-    }[],
+    caseAggregatedDataByOQLLine?: IQueriedCaseData<AnnotatedExtendedAlteration>[],
     genePanelInformation?: CoverageInformation,
     samples: Sample[] = [],
     geneAlterationDataByGene?: {[gene: string]: IGeneAlteration}
