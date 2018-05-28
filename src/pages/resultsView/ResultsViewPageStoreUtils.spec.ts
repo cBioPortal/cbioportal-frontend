@@ -103,7 +103,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
         });
     });
 
-    describe("filterMergedTrackGeneData", () => {
+    describe("filterSubQueryData", () => {
         // I believe these metadata to be all `new accessors()` needs
         // tslint:disable-next-line no-object-literal-type-assertion
         const makeBasicExpressionProfile = () => ({
