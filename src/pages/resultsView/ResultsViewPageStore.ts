@@ -127,6 +127,26 @@ export type CaseAggregatedData<T> = {
     patients: {[uniquePatientKey:string]:T[]};
 };
 
+/*
+ * OQL-queried data by patient and sample, along with the query metadata and,
+ * if specified in the type argument, a non-aggregated copy of the data
+ */
+export interface IQueriedCaseData<DataInOQL> {
+    cases: CaseAggregatedData<AnnotatedExtendedAlteration>;
+    oql: OQLLineFilterOutput<DataInOQL>;
+}
+
+/*
+ * OQL-queried data by patient and sample, along with the query metadata and a
+ * non-aggregated copy of the data and, in case of a merged track, an array of
+ * records per individual gene queried
+ */
+interface IQueriedMergedTrackCaseData {
+    cases: CaseAggregatedData<AnnotatedExtendedAlteration>;
+    oql: UnflattenedOQLLineFilterOutput<AnnotatedExtendedAlteration>;
+    list?: IQueriedCaseData<object>[];
+}
+
 export function buildDefaultOQLProfile(profilesTypes: string[], zScoreThreshold: number, rppaScoreThreshold: number) {
 
     var default_oql_uniq: any = {};
@@ -470,14 +490,9 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly putativeDriverFilteredCaseAggregatedDataByUnflattenedOQLLine = remoteData<{
-        cases: CaseAggregatedData<AnnotatedExtendedAlteration>,
-        oql: UnflattenedOQLLineFilterOutput<AnnotatedExtendedAlteration>,
-        list?: {
-            cases: CaseAggregatedData<AnnotatedExtendedAlteration>,
-            oql: OQLLineFilterOutput<object>
-        }[]
-    }[]>({
+    readonly putativeDriverFilteredCaseAggregatedDataByUnflattenedOQLLine = remoteData<
+        IQueriedMergedTrackCaseData[]
+    >({
         await: () => [
             this.putativeDriverAnnotatedMutations,
             this.annotatedMolecularData,
@@ -520,7 +535,7 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly putativeDriverFilteredCaseAggregatedDataByOQLLine = remoteData<{cases:CaseAggregatedData<AnnotatedExtendedAlteration>, oql:OQLLineFilterOutput<AnnotatedExtendedAlteration>}[]>({
+    readonly putativeDriverFilteredCaseAggregatedDataByOQLLine = remoteData<IQueriedCaseData<AnnotatedExtendedAlteration>[]>({
         await:()=>[
             this.putativeDriverAnnotatedMutations,
             this.annotatedMolecularData,
