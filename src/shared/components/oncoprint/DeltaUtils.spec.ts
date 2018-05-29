@@ -1,11 +1,17 @@
 import {assert} from "chai";
 import {
     heatmapClusterValueFn, numTracksWhoseDataChanged, transitionSortConfig,
+    transition,
     transitionTrackGroupSortPriority
 } from "./DeltaUtils";
-import {spy} from "sinon";
+import {createStubInstance, match, SinonStub, spy} from "sinon";
 import OncoprintJS from "oncoprintjs";
-import {CLINICAL_TRACK_GROUP_INDEX, GENETIC_TRACK_GROUP_INDEX, IGeneHeatmapTrackSpec} from "./Oncoprint";
+import {
+    CLINICAL_TRACK_GROUP_INDEX,
+    GENETIC_TRACK_GROUP_INDEX,
+    IGeneHeatmapTrackSpec,
+    IOncoprintProps
+} from "./Oncoprint";
 
 describe("Oncoprint DeltaUtils", ()=>{
     describe("numTracksWhoseDataChanged", ()=>{
@@ -29,6 +35,315 @@ describe("Oncoprint DeltaUtils", ()=>{
                 assert.equal(numTracksWhoseDataChanged(state1.slice(i), state2.slice(i)), state1.length - i);
                 assert.equal(numTracksWhoseDataChanged(state2.slice(i), state1.slice(i)), state1.length - i);
             }
+        });
+    });
+
+    describe("transition", () => {
+        const makeMinimalOncoprintProps = (): IOncoprintProps => ({
+            clinicalTracks: [],
+            geneticTracks: [],
+            genesetHeatmapTracks: [],
+            heatmapTracks: [],
+            divId: 'myDomId',
+            width: 1000,
+        });
+        const makeMinimalProfileMap = () => undefined;
+
+        it("renders an expandable genetic track if an expansion callback is provided for it", () => {
+            // given a genetic track specification with an expandCallback
+            const expansionCallback = spy();
+            const newProps: IOncoprintProps = {
+                ...makeMinimalOncoprintProps(),
+                geneticTracks: [{
+                    key: 'GENETICTRACK_1',
+                    label: 'GENE1 / GENE2',
+                    oql: '[GENE1: AMP; GENE2: AMP;]',
+                    info: '10%',
+                    data: [],
+                    expansionCallback: expansionCallback
+                }]
+            };
+            const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+            (oncoprint.addTracks as SinonStub).returns([1]);
+            const trackIdsByKey = {};
+            // when instructed to render the track from scratch
+            transition(
+                newProps,
+                makeMinimalOncoprintProps(),
+                oncoprint,
+                () => trackIdsByKey,
+                () => makeMinimalProfileMap()
+            );
+            // then it adds a track with an expandCallback track property that
+            // calls the provided function
+            assert.isTrue((oncoprint.addTracks as SinonStub).called);
+            (oncoprint.addTracks as SinonStub).args.forEach(([trackParamArray]) => {
+                trackParamArray.forEach((trackParams: any) => {
+                    if (trackParams.expandCallback !== undefined) {
+                        trackParams.expandCallback();
+                    }
+                });
+            });
+            assert.isTrue(
+                expansionCallback.called,
+                'calling the expand callbacks of added tracks should invoke the one provided'
+            );
+        });
+
+        it("renders expansion tracks if they are added to an existing genetic track", () => {
+            // given a genetic track specification with three expansion tracks
+            const expandableTrack = {
+                key: 'GENETICTRACK_0',
+                label: 'GENE5 / GENE7 / GENE1',
+                oql: '[GENE5: HOMDEL; GENE7: AMP HOMDEL; GENE1: HOMDEL]',
+                info: '60%',
+                data: [],
+            };
+            const oldProps: IOncoprintProps = {
+                ...makeMinimalOncoprintProps(),
+                geneticTracks: [expandableTrack]
+            };
+            const newProps: IOncoprintProps = {
+                ...makeMinimalOncoprintProps(),
+                geneticTracks: [{
+                    ...expandableTrack,
+                    expansionTrackList: [
+                        {key: 'GENETICTRACK_0_EXPANSION_0', label: 'GENE5', oql: 'GENE5: HOMDEL', info: '30%', data: []},
+                        {key: 'GENETICTRACK_0_EXPANSION_1', label: 'GENE7', oql: 'GENE7: AMP HOMDEL', info: '40%', data: []},
+                        {key: 'GENETICTRACK_0_EXPANSION_2', label: 'GENE1', oql: 'GENE1: HOMDEL', info: '10%', data: []}
+                    ]
+                }]
+            };
+            const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+            (oncoprint.addTracks as SinonStub).returns([1]);
+            const trackIdsByKey = {'GENETICTRACK_0': 5};
+            // when instructed to render the track from scratch
+            transition(
+                newProps,
+                oldProps,
+                oncoprint,
+                () => trackIdsByKey,
+                () => makeMinimalProfileMap()
+            );
+            // then it adds the three expansion tracks to the Oncoprint
+            assert.equal(
+                (oncoprint.addTracks as SinonStub).callCount,
+                3,
+                'Adding three expansion tracks should involve adding three tracks'
+            );
+            assert.isTrue(
+                (oncoprint.addTracks as SinonStub).alwaysCalledWith(
+                    [match.has('expansion_of', trackIdsByKey['GENETICTRACK_0'])]
+                ),
+                'Expansion tracks should be marked as expansions of their parent'
+            );
+            assert.isTrue(
+                (oncoprint.addTracks as SinonStub).calledWith(
+                    [match({label: 'GENE7', track_info: '40%'})]
+                ),
+                'The expansion tracks added should correspond to those requested'
+            );
+        });
+
+        it("disables further expansion if expansions are added to a genetic track", () => {
+            // given
+            const expandableTrack = {
+                key: 'GENETICTRACK_0',
+                label: 'MY_EXPANDABLE_TRACK',
+                oql: '["MY_EXPANDABLE_TRACK" GENE3;]',
+                info: '0%',
+                data: []
+            };
+            const oldProps: IOncoprintProps = {
+                ...makeMinimalOncoprintProps(),
+                geneticTracks: [expandableTrack]
+            };
+            const newProps: IOncoprintProps = {
+                ...makeMinimalOncoprintProps(),
+                geneticTracks: [{
+                    ...expandableTrack,
+                    expansionTrackList: [
+                        {key: 'GENETICTRACK_0_EXPANSION_0', label: 'GENE3', oql: 'GENE3;', info: '0%', data: []}
+                    ]
+                }]
+            };
+            const trackIdsByKey = {'GENETICTRACK_0': 8};
+            const oncoprint = createStubInstance(OncoprintJS);
+            (oncoprint.addTracks as SinonStub).returns([1]);
+            // when
+            transition(
+                newProps,
+                oldProps,
+                oncoprint,
+                () => trackIdsByKey,
+                () => makeMinimalProfileMap()
+            );
+            // then
+            assert.isTrue((oncoprint.disableTrackExpansion as SinonStub).calledWith(8));
+        });
+
+        it("re-enables expansion if an expandable genetic track no longer has expansions", () => {
+            // given
+            const expandableTrack = {
+                key: 'GENETICTRACK_0',
+                label: 'GENE3 / GENE4',
+                oql: '[GENE3; GENE4]',
+                info: '0%',
+                data: [],
+                expansionCallback: () => { /* do nothing */ }
+            };
+            const oldProps: IOncoprintProps = {
+                ...makeMinimalOncoprintProps(),
+                geneticTracks: [{
+                    ...expandableTrack,
+                    expansionTrackList: [
+                        {key: 'GENETICTRACK_0_EXPANSION_0', label: 'GENE3', oql: 'GENE3;', info: '0%', data: []},
+                        {key: 'GENETICTRACK_0_EXPANSION_1', label: 'GENE4', oql: 'GENE4;', info: '0%', data: []}
+                    ]
+                }]
+            };
+            const newProps: IOncoprintProps = {
+                ...makeMinimalOncoprintProps(),
+                geneticTracks: [expandableTrack]
+            };
+            const trackIdsByKey = {'GENETICTRACK_0': 2};
+            const oncoprint = createStubInstance(OncoprintJS);
+            (oncoprint.addTracks as SinonStub).returns([1]);
+            // when
+            transition(
+                newProps,
+                oldProps,
+                oncoprint,
+                () => trackIdsByKey,
+                () => makeMinimalProfileMap()
+            );
+            // then
+            assert.isTrue((oncoprint.enableTrackExpansion as SinonStub).calledWith(2));
+        });
+
+        it("supplies genetic expansions with callbacks that update track IDs when collapsing", () => {
+            // given a track being expanded
+            const expandableTrack = {
+                key: 'GENETICTRACK_0',
+                label: 'GENE1 / GENE2',
+                oql: '[GENE1: MUT; GENE2: MUT]',
+                info: '6.28%',
+                data: [],
+            };
+            const preExpandProps: IOncoprintProps = {
+                ...makeMinimalOncoprintProps(),
+                geneticTracks: [expandableTrack]
+            };
+            const postExpandProps: IOncoprintProps = {
+                ...makeMinimalOncoprintProps(),
+                geneticTracks: [{
+                    ...expandableTrack,
+                    expansionTrackList: [
+                        {key: 'GENETICTRACK_0_EXPANSION_0', label: 'GENE1', oql: 'GENE5: MUT', info: '0%', data: []},
+                        {key: 'GENETICTRACK_0_EXPANSION_1', label: 'GENE2', oql: 'GENE7: MUT', info: '6.28%', data: []},
+                    ]
+                }]
+            };
+            const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+            (oncoprint.addTracks as SinonStub).returns([27]);
+            const trackIdsByKey: {[trackKey: string]: number} = {
+                'GENETICTRACK_0': 5
+            };
+            // when rendering this transition
+            transition(
+                postExpandProps,
+                preExpandProps,
+                oncoprint,
+                () => trackIdsByKey,
+                () => makeMinimalProfileMap()
+            );
+            // then it lists these expansions' IDs in the map and passes the
+            // newly added tracks callbacks that unlist them again
+            assert.deepEqual(
+                trackIdsByKey,
+                {
+                    'GENETICTRACK_0': 5,
+                    'GENETICTRACK_0_EXPANSION_0': 27,
+                    'GENETICTRACK_0_EXPANSION_1': 27
+                },
+                "expansion tracks should have been listed before they're removed"
+            );
+            (oncoprint.addTracks as SinonStub).args.forEach(
+                // call the removeCallback with the track ID
+                ([[trackParams]]) => { trackParams.removeCallback(27); }
+            );
+            assert.deepEqual(
+                trackIdsByKey,
+                {'GENETICTRACK_0': 5},
+                'expansion tracks should have disappeared from the list after removal'
+            );
+        });
+
+        it("renders a genetic track with a coloured label if so requested", () => {
+            // given a genetic track specification with a label color
+            const newProps: IOncoprintProps = {
+                ...makeMinimalOncoprintProps(),
+                geneticTracks: [{
+                    key: 'GENETICTRACK_14',
+                    label: 'GENE7',
+                    oql: 'GENE7: A316M;',
+                    info: '0%',
+                    data: [],
+                    labelColor: 'fuchsia'
+                }]
+            };
+            const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+            (oncoprint.addTracks as SinonStub).returns([1]);
+            const trackIdsByKey = {};
+            // when instructed to render the track from scratch
+            transition(
+                newProps,
+                makeMinimalOncoprintProps(),
+                oncoprint,
+                () => trackIdsByKey,
+                () => makeMinimalProfileMap()
+            );
+            // then it adds a track with the specified track label color
+            assert.isTrue(
+                (oncoprint.addTracks as SinonStub).calledWith(
+                    [match.has('track_label_color', 'fuchsia')]
+                )
+            );
+        });
+
+        it("renders a heatmap track with a coloured label if so requested", () => {
+            // given a single-gene heatmap track specification with a label color
+            const newProps: IOncoprintProps = {
+                ...makeMinimalOncoprintProps(),
+                heatmapTracks: [{
+                    key: '"HEATMAPTRACK_mystudy_Zscores,GENE25"',
+                    label: '  GENE25',
+                    data: [],
+                    molecularProfileId: 'mystudy_Zscores',
+                    molecularAlterationType: 'MRNA_EXPRESSION',
+                    datatype: 'Z-SCORE',
+                    onRemove: () => { /* update external state */ },
+                    trackGroupIndex: 3,
+                    labelColor: 'olive'
+                }]
+            };
+            const oncoprint: OncoprintJS<any> = createStubInstance(OncoprintJS);
+            (oncoprint.addTracks as SinonStub).returns([1]);
+            const trackIdsByKey = {};
+            // when instructed to render the track from scratch
+            transition(
+                newProps,
+                makeMinimalOncoprintProps(),
+                oncoprint,
+                () => trackIdsByKey,
+                () => makeMinimalProfileMap()
+            );
+            // then it adds a track with the specified track label color
+            assert.isTrue(
+                (oncoprint.addTracks as SinonStub).calledWith(
+                    [match.has('track_label_color', 'olive')]
+                )
+            );
         });
     });
 
