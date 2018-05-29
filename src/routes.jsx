@@ -15,6 +15,7 @@ import { restoreRouteAfterRedirect } from './shared/lib/redirectHelpers';
 // webpack knows to 'split' the code into seperate bundles accordingly
 // see article http://henleyedition.com/implicit-code-splitting-with-react-router-and-webpack/
 import PatientViewPage from 'bundle-loader?lazy!babel-loader!./pages/patientView/PatientViewPage';
+import PatientViewPageSimple from 'bundle-loader?lazy!babel-loader!./pages/patientView/PatientViewPageSimple';
 import ResultsViewPage from 'bundle-loader?lazy!babel-loader!./pages/resultsView/ResultsViewPage';
 import HomePage from 'bundle-loader?lazy!babel-loader!./pages/home/HomePage';
 import TestimonialsPage from 'pages/staticPages/testimonialsPage/TestimonialsPage';
@@ -50,6 +51,7 @@ let getBlankPage = function(){
 export const makeRoutes = (routing) => {
     return (<Route path="/" component={Container}>
         <Route path="/home" getComponent={lazyLoadComponent(HomePage)}/>
+        <Route path="/patient-simple" getComponent={lazyLoadComponent(PatientViewPageSimple)}/>
         <Route path="/patient" getComponent={lazyLoadComponent(PatientViewPage)}/>
         <Route path="/datasets" getComponent={lazyLoadComponent(DatasetPage)} />
         <Route path="/restore" component={restoreRoute}/>
