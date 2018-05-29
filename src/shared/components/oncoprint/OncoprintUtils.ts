@@ -27,7 +27,7 @@ import {
 } from "./DataUtils";
 import ResultsViewOncoprint from "./ResultsViewOncoprint";
 import _ from "lodash";
-import {action, runInAction} from "mobx";
+import {action, runInAction, ObservableMap, IObservableArray} from "mobx";
 import {MobxPromise} from "mobxpromise";
 import GenesetCorrelatedGeneCache from "shared/cache/GenesetCorrelatedGeneCache";
 import Spec = Mocha.reporters.Spec;
@@ -282,6 +282,7 @@ interface IGeneticTrackAppState {
     sequencedSampleKeysByGene: any;
     sequencedPatientKeysByGene: any;
     selectedMolecularProfiles: MolecularProfile[];
+    expansionIndexMap: ObservableMap<number[]>;
 }
 export function makeGeneticTrackWith({
     sampleMode,
@@ -290,15 +291,21 @@ export function makeGeneticTrackWith({
     coverageInformation,
     sequencedSampleKeysByGene,
     sequencedPatientKeysByGene,
-    selectedMolecularProfiles
+    selectedMolecularProfiles,
+    expansionIndexMap
 }: IGeneticTrackAppState) {
-    return (
-        {cases: dataByCase, oql}: {
+    return function makeTrack(
+        {cases: dataByCase, oql, list: subTrackData}: {
             cases: CaseAggregatedData<AnnotatedExtendedAlteration>,
-            oql: UnflattenedOQLLineFilterOutput<object>
+            oql: UnflattenedOQLLineFilterOutput<object>,
+            list?: {
+                cases: CaseAggregatedData<AnnotatedExtendedAlteration>,
+                oql: UnflattenedOQLLineFilterOutput<object>
+            }[]
         },
-        index: number
-    ): GeneticTrackSpec => {
+        index: number,
+        parentKey?: string
+    ): GeneticTrackSpec {
         const geneSymbolArray = (isMergedTrackFilter(oql)
             ? oql.list.map(({gene}) => gene)
             : [oql.gene]
@@ -313,13 +320,36 @@ export function makeGeneticTrackWith({
             sequencedSampleKeysByGene,
             sequencedPatientKeysByGene
         ).percent;
-
+        const trackKey = (parentKey === undefined
+            ? `GENETICTRACK_${index}`
+            : `${parentKey}_EXPANSION_${index}`
+        );
+        const expansionCallback = (isMergedTrackFilter(oql)
+            ? () => { expansionIndexMap.set(trackKey, _.range(oql.list.length)); }
+            : undefined
+        );
+        const removeCallback = (parentKey !== undefined
+            ? () => {
+                (expansionIndexMap.get(parentKey) as IObservableArray<number>
+                ).remove(index);
+            }
+            : undefined
+        );
+        const expansions: GeneticTrackSpec[] = (
+            expansionIndexMap.get(trackKey) || []
+        ).map(expansionIndex => makeTrack(
+            subTrackData![expansionIndex], expansionIndex, trackKey
+        ));
         return {
-            key: `GENETICTRACK_${index}`,
-            label: formatGeneticTrackLabel(oql),
+            key: trackKey,
+            label: (parentKey !== undefined ? '  ' : '') + formatGeneticTrackLabel(oql),
+            labelColor: parentKey !== undefined ? 'grey' : undefined,
             oql: formatGeneticTrackOql(oql),
             info,
-            data
+            data,
+            expansionCallback,
+            removeCallback,
+            expansionTrackList: expansions.length ? expansions : undefined
         };
     };
 }
@@ -336,16 +366,20 @@ export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
             oncoprint.props.store.selectedMolecularProfiles
         ],
         invoke: async () => {
+            const trackFunction = makeGeneticTrackWith({
+                sampleMode,
+                samples: oncoprint.props.store.samples.result!,
+                patients: oncoprint.props.store.patients.result!,
+                coverageInformation: oncoprint.props.store.coverageInformation.result!,
+                sequencedSampleKeysByGene: oncoprint.props.store.sequencedSampleKeysByGene.result!,
+                sequencedPatientKeysByGene: oncoprint.props.store.sequencedPatientKeysByGene.result!,
+                selectedMolecularProfiles: oncoprint.props.store.selectedMolecularProfiles.result!,
+                expansionIndexMap: oncoprint.expansionsByGeneticTrackKey
+            });
             return oncoprint.props.store.putativeDriverFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.map(
-                makeGeneticTrackWith({
-                    sampleMode,
-                    samples: oncoprint.props.store.samples.result!,
-                    patients: oncoprint.props.store.patients.result!,
-                    coverageInformation: oncoprint.props.store.coverageInformation.result!,
-                    sequencedSampleKeysByGene: oncoprint.props.store.sequencedSampleKeysByGene.result!,
-                    sequencedPatientKeysByGene: oncoprint.props.store.sequencedPatientKeysByGene.result!,
-                    selectedMolecularProfiles: oncoprint.props.store.selectedMolecularProfiles.result!
-                })
+                (alterationData, trackIndex) => trackFunction(
+                    alterationData, trackIndex, undefined
+                )
             );
         },
         default: [],
@@ -512,7 +546,8 @@ export function makeGenesetHeatmapExpansionsMobxPromise(oncoprint:ResultsViewOnc
                             const profile = molecularProfileIdToMolecularProfile[molecularProfileId];
                             return {
                                 key: `EXPANSIONTRACK_${gsTrack},${hugoGeneSymbol},GROUP${trackGroup}`,
-                                label: hugoGeneSymbol,
+                                label: '  ' + hugoGeneSymbol,
+                                labelColor: 'grey',
                                 info: correlationValue.toFixed(2),
                                 molecularProfileId: molecularProfileId,
                                 molecularAlterationType: profile.molecularAlterationType,
