@@ -3,6 +3,7 @@ import {
     makeGeneticTrackWith,
     percentAltered
 } from "./OncoprintUtils";
+import {observable} from "mobx";
 import * as _ from 'lodash';
 import {assert} from 'chai';
 
@@ -116,7 +117,8 @@ describe('OncoprintUtils', () => {
             },
             sequencedSampleKeysByGene: {},
             sequencedPatientKeysByGene: {'BRCA1': [], 'PTEN': [], 'TP53': []},
-            selectedMolecularProfiles: []
+            selectedMolecularProfiles: [],
+            expansionIndexMap: observable.map<number[]>()
         });
         const makeMinimal3Patient3GeneCaseData = () => ({
             samples: {},
@@ -197,6 +199,180 @@ describe('OncoprintUtils', () => {
             // then it returns a track with that label and the genes' OQL
             assert.equal(track.label, 'HELLO');
             assert.equal(track.oql, '[BRCA1; PTEN;]');
+        });
+
+        it('returns an expandable track if queried for a merged track', () => {
+            // given
+            const storeProperties = makeMinimal3Patient3GeneStoreProperties();
+            const queryData = {
+                cases: makeMinimal3Patient3GeneCaseData(),
+                oql: {
+                    list: [
+                        {gene: 'TTN', oql_line: 'TTN;', parsed_oql_line: {gene: 'TTN', alterations: []}, data: []}
+                    ]
+                }
+            };
+            // when
+            const trackFunction = makeGeneticTrackWith({
+                sampleMode: false,
+                ...storeProperties
+            });
+            const track = trackFunction(queryData, MINIMAL_TRACK_INDEX);
+            // then
+            assert.isFunction(track.expansionCallback);
+        });
+
+        it("makes the expansion callback for merged tracks list the track's subquery indexes in the expansion observable", () => {
+            // given
+            const storeProperties = makeMinimal3Patient3GeneStoreProperties();
+            const queryData = {
+                cases: makeMinimal3Patient3GeneCaseData(),
+                oql: {
+                    list: [
+                        {gene: 'FOLR1', oql_line: 'FOLR1;', parsed_oql_line: {gene: 'FOLR1', alterations: []}, data: []},
+                        {gene: 'FOLR2', oql_line: 'FOLR2;', parsed_oql_line: {gene: 'FOLR2', alterations: []}, data: []},
+                        {gene: 'IZUMO1R', oql_line: 'IZUMO1R;', parsed_oql_line: {gene: 'IZUMO1R', alterations: []}, data: []}
+                    ]
+                },
+                list: [
+                    {
+                        cases: makeMinimal3Patient3GeneCaseData(),
+                        oql: {gene: 'FOLR1', oql_line: 'FOLR1;', parsed_oql_line: {gene: 'FOLR1', alterations: []}, data: []},
+                    },
+                    {
+                        cases: makeMinimal3Patient3GeneCaseData(),
+                        oql: {gene: 'FOLR2', oql_line: 'FOLR2;', parsed_oql_line: {gene: 'FOLR2', alterations: []}, data: []},
+                    },
+                    {
+                        cases: makeMinimal3Patient3GeneCaseData(),
+                        oql: {gene: 'IZUMO1R', oql_line: 'IZUMO1R;', parsed_oql_line: {gene: 'IZUMO1R', alterations: []}, data: []}
+                    }
+                ]
+            };
+            // when
+            const trackFunction = makeGeneticTrackWith({
+                sampleMode: false,
+                ...storeProperties,
+            });
+            const track = trackFunction(queryData, MINIMAL_TRACK_INDEX);
+            track.expansionCallback!();
+            // then
+            assert.includeMembers(
+                storeProperties.expansionIndexMap.get(track.key)!.slice(),
+                [0, 1, 2]
+            );
+        });
+
+        it("includes expansion tracks in the spec if the observable lists them", () => {
+            // given
+            const queryData = {
+                cases: makeMinimal3Patient3GeneCaseData(),
+                oql: {
+                    list: [
+                        {gene: 'PIK3CA', oql_line: 'PIK3CA;', parsed_oql_line: {gene: 'PIK3CA', alterations: []}, data: []},
+                        {gene: 'MTOR', oql_line: 'MTOR;', parsed_oql_line: {gene: 'MTOR', alterations: []}, data: []},
+                    ]
+                },
+                list: [
+                    {
+                        cases: makeMinimal3Patient3GeneCaseData(),
+                        oql: {gene: 'PIK3CA', oql_line: 'PIK3CA;', parsed_oql_line: {gene: 'PIK3CA', alterations: []}, data: []}
+                    },
+                    {
+                        cases: makeMinimal3Patient3GeneCaseData(),
+                        oql: {gene: 'MTOR', oql_line: 'MTOR;', parsed_oql_line: {gene: 'MTOR', alterations: []}, data: []}
+                    }
+                ]
+            };
+            const trackIndex = MINIMAL_TRACK_INDEX + 7;
+            // list expansions for the track key determined before expansion
+            const preExpandStoreProperties = makeMinimal3Patient3GeneStoreProperties();
+            const trackKey: string = makeGeneticTrackWith({
+                sampleMode: false, ...preExpandStoreProperties,
+            })(queryData, trackIndex).key;
+            const postExpandStoreProperties = {
+                ...preExpandStoreProperties,
+                expansionIndexMap: observable.shallowMap({[trackKey]: [0, 1]})
+            };
+            // when
+            const trackFunction = makeGeneticTrackWith({
+                sampleMode: false,
+                ...postExpandStoreProperties,
+            });
+            const track = trackFunction(
+                queryData,
+                trackIndex
+            );
+            // then
+            assert.equal(track.expansionTrackList![0].oql, 'PIK3CA;');
+            assert.equal(track.expansionTrackList![1].oql, 'MTOR;');
+        });
+
+        it("gives expansion tracks a remove callback that removes them from the observable", () => {
+            // given
+            const parentKey = 'SOME_MERGED_TRACK_14';
+            const trackIndex = MINIMAL_TRACK_INDEX + 8;
+            const storeProperties = {
+                ...makeMinimal3Patient3GeneStoreProperties(),
+                expansionIndexMap: observable.map<number[]>({
+                    'UNRELATED_TRACK_1': [8, 9, 10],
+                    [parentKey]: [3, trackIndex, 15]
+                })
+            };
+            const queryData = {
+                cases: makeMinimal3Patient3GeneCaseData(),
+                oql: {
+                    gene: 'ADH1',
+                    oql_line: 'ADH1;',
+                    parsed_oql_line: {gene: 'ADH1', alterations: []},
+                    data: []
+                }
+            };
+            // when
+            const trackFunction = makeGeneticTrackWith({
+                sampleMode: false,
+                ...storeProperties
+            });
+            const track = trackFunction(queryData, trackIndex, parentKey);
+            // then
+            assert.deepEqual(
+                storeProperties.expansionIndexMap.get(parentKey)!.slice(),
+                [3, trackIndex, 15],
+                "Just formatting an expansion track shouldn't change the parent's active expansions"
+            );
+            track.removeCallback!();
+            assert.deepEqual(
+                storeProperties.expansionIndexMap.get(parentKey)!.slice(),
+                [3, 15],
+                "Calling the track's remove callback should unlist it"
+            );
+        });
+
+        it('indents and lowlights expansion tracks', () => {
+            // given
+            const storeProperties = makeMinimal3Patient3GeneStoreProperties();
+            const queryData = {
+                 cases: makeMinimal3Patient3GeneCaseData(),
+                 oql: {
+                    gene: 'KRAS',
+                    oql_line: 'KRAS;',
+                    parsed_oql_line: {gene: 'KRAS', alterations: []},
+                    data: []
+                }
+            };
+            // when
+            const trackFunction = makeGeneticTrackWith({
+                sampleMode: true,
+                ...storeProperties,
+            });
+            const track = trackFunction(
+                queryData,
+                MINIMAL_TRACK_INDEX,
+                'PARENT_TRACK_1'
+            );
+            // then
+            assert.equal(track.labelColor, 'grey');
+            assert.equal(track.label, '  KRAS');
         });
     });
 
