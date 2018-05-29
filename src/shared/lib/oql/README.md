@@ -6,8 +6,3 @@ To create the parser, run:
 ```bash
 pegjs -o oql-parser.js oql_basic.pegjs
 ```
-
-To test the parser, run:
-```bash
-node test-oql-parser.js
-```
