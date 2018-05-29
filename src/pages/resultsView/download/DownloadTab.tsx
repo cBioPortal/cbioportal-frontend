@@ -60,7 +60,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
     }
 
     @computed get genePanelInformation() {
-        return this.props.store.genePanelInformation.result;
+        return this.props.store.coverageInformation.result;
     }
 
     @computed get geneAlterationData(): IGeneAlteration[] {
@@ -195,12 +195,12 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
         const loadingCaseAlterationData =
             this.props.store.putativeDriverFilteredCaseAggregatedDataByOQLLine.status === "pending" ||
             this.props.store.samples.status === "pending" ||
-            this.props.store.genePanelInformation.status === "pending";
+            this.props.store.coverageInformation.status === "pending";
 
         const errorCaseAlterationData =
             this.props.store.putativeDriverFilteredCaseAggregatedDataByOQLLine.status === "error" ||
             this.props.store.samples.status === "error" ||
-            this.props.store.genePanelInformation.status === "error";
+            this.props.store.coverageInformation.status === "error";
 
         const loadingDownloadData = loadingGeneAlterationData ||
             this.props.store.unfilteredCaseAggregatedData.status === "pending";

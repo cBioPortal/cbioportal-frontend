@@ -74,12 +74,12 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 
 				<CancerStudySelector/>
 
-				{this.store.isVirtualCohortQuery ?
+				{this.store.isVirtualStudyQuery ?
 					(<DataTypePrioritySelector/>) :
 					(<MolecularProfileSelector/>)
 				}
 
-				{(this.store.selectedStudyIds.length > 0) && (
+				{(this.store.selectableSelectedStudyIds.length > 0) && (
 					<CaseSetSelector/>
 				)}
 

@@ -24,7 +24,7 @@ describe('homepage', function() {
     }
 
     it('it should have 27 (small test db), 29 (public test db) or 31 studies (production) in list', function () {
-        browser.url(CBIOPORTAL_URL);
+        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
         var studies = $('[data-test="cancerTypeListContainer"] > ul > ul');
 
@@ -69,8 +69,12 @@ describe('homepage', function() {
     });
 
     it('should not allow submission if OQL contains EXP or PROT for multiple studies', ()=>{
-        var nextCheckboxSel = '[data-test="StudySelect"]:nth-child(5)';
-        browser.click(nextCheckboxSel);
+        var input = $(".autosuggest input[type=text]");
+        input.setValue('breast');
+        browser.pause(500);
+        var checkBox = $('[data-test="StudySelect"]');
+        checkBox.waitForExist(10000);
+        browser.click('[data-test="StudySelect"]');
 
         var oqlEntrySel = 'textarea[data-test="geneSet"]';
         browser.setValue(oqlEntrySel, 'PTEN: EXP>1');
@@ -205,7 +209,7 @@ describe('patient page', function(){
 
     it('oncokb indicators show up and hovering produces oncocard', function(){
 
-        browser.url(`${CBIOPORTAL_URL}/case.do#/patient?studyId=ucec_tcga_pub&caseId=TCGA-BK-A0CC`);
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/case.do#/patient?studyId=ucec_tcga_pub&caseId=TCGA-BK-A0CC`);
 
         browser.waitForExist('span=PPP2R1A');
 
@@ -234,7 +238,7 @@ describe('cross cancer query', function() {
     this.retries(2);
 
     it('should show cross cancer bar chart with TP53 in title when selecting multiple studies and querying for TP53', function() {
-        browser.url(`${CBIOPORTAL_URL}`);
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
         browser.setViewportSize({ height:1400, width:1000 });
 
         $('[data-test="StudySelect"]').waitForExist(20000);
@@ -252,9 +256,8 @@ describe('cross cancer query', function() {
         browser.waitForEnabled('[data-test="queryButton"]', 30000);
         browser.click('[data-test="queryButton"]');
 
-        // go to cancer types summary
-        $('#ui-id-1').waitForExist(60000);
-        $('#ui-id-1').click();
+        // wait for cancer types summary to appear
+        $('[data-test="cancerTypeSummaryChart"]').waitForExist(60000);
 
         // check if TP53 is in the navigation above the plots
         $('.nav-pills').waitForExist(30000);
@@ -271,7 +274,7 @@ describe('single study query', function() {
     });
     describe('mutation mapper ', function() {
         it('should show somatic and germline mutation rate', function() {
-            browser.url(`${CBIOPORTAL_URL}`);
+           goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
             browser.setViewportSize({ height:1400, width:1000 });
 
             var input = $(".autosuggest input[type=text]");
@@ -312,7 +315,7 @@ describe('single study query', function() {
         });
 
         it('should show lollipop for MUC2', function() {
-            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=cellline_nci60&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=cellline_nci60_cnaseq&gene_list=MUC2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=cellline_nci60_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=cellline_nci60_CNA`);
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=cellline_nci60&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=cellline_nci60_cnaseq&gene_list=MUC2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=cellline_nci60_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=cellline_nci60_CNA`);
             browser.setViewportSize({ height:1400, width:1000 });
 
             //  wait for mutations tab
@@ -328,7 +331,7 @@ describe('single study query', function() {
         this.retries(3)
 
         it('should show mutations plot', function() {
-            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=ov_tcga_pub_cna_seq&gene_list=BRCA1+BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`);
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=ov_tcga_pub_cna_seq&gene_list=BRCA1+BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`);
 
             // click enrichments tab
             $('#enrichments-result-tab').waitForExist(30000);
@@ -357,7 +360,7 @@ describe('single study query', function() {
         });
 
         it('should be possible to add genes to query, with custom case list query in single study query', function() {
-            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=-1&case_ids=ov_tcga_pub%3ATCGA-24-1428-01%0D%0Aov_tcga_pub%3ATCGA-24-1928-01%0D%0Aov_tcga_pub%3ATCGA-29-1698-01%0D%0Aov_tcga_pub%3ATCGA-24-0980-01%0D%0Aov_tcga_pub%3ATCGA-24-0970-01%0D%0Aov_tcga_pub%3ATCGA-13-0725-01%0D%0Aov_tcga_pub%3ATCGA-23-1027-01%0D%0Aov_tcga_pub%3ATCGA-13-0755-01%0D%0Aov_tcga_pub%3ATCGA-25-1315-01&gene_list=BRCA1%2520BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`);
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=-1&case_ids=ov_tcga_pub%3ATCGA-24-1428-01%0D%0Aov_tcga_pub%3ATCGA-24-1928-01%0D%0Aov_tcga_pub%3ATCGA-29-1698-01%0D%0Aov_tcga_pub%3ATCGA-24-0980-01%0D%0Aov_tcga_pub%3ATCGA-24-0970-01%0D%0Aov_tcga_pub%3ATCGA-13-0725-01%0D%0Aov_tcga_pub%3ATCGA-23-1027-01%0D%0Aov_tcga_pub%3ATCGA-13-0755-01%0D%0Aov_tcga_pub%3ATCGA-25-1315-01&gene_list=BRCA1%2520BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`);
             waitForOncoprint(60000);
             browser.pause(2000)
 
@@ -393,34 +396,34 @@ describe("results page", function() {
     });
     describe("mutual exclusivity tab", function() {
         it("should appear in a single study query with multiple genes", function(){
-            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%2520NRAS%2520BRAF%250APTEN%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
-            browser.waitForExist('li a#oncoprint-result-tab', 10000);
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%2520NRAS%2520BRAF%250APTEN%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
+            waitForOncoprint(10000);
 
             assert(browser.isVisible('li a#mutex-result-tab'));
         });
         it("should appear in a multiple study with multiple genes", function(){
-            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS%2520NRAS%2520BRAF%250APTEN%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`);
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS%2520NRAS%2520BRAF%250APTEN%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`);
             browser.waitForExist('li a#oncoprint-result-tab', 10000);
 
             assert(browser.isVisible('li a#mutex-result-tab'));
         });
         it("should not appear in a single study query with one gene", function(){
-            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
-            browser.waitForExist('li a#oncoprint-result-tab', 10000);
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
+            waitForOncoprint(10000);
             assert(!browser.isVisible('li a#mutex-result-tab'));
 
-            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
-            browser.waitForExist('li a#oncoprint-result-tab', 10000);
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
+            waitForOncoprint(10000);
             assert(!browser.isVisible('li a#mutex-result-tab'));
         });
         it.skip("should not appear in a multiple study query with one gene", function() {
-            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`);
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`);
             browser.waitForExist('li a#oncoprint-result-tab', 10000);
             browser.waitUntil(function(){
                 return !browser.isVisible('li a#mutex-result-tab');
             });
             assert(!browser.isVisible('li a#mutex-result-tab'));
-            browser.url(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`);
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`);
             browser.waitForExist('li a#oncoprint-result-tab', 10000);
             browser.waitUntil(function(){
                 return !browser.isVisible('li a#mutex-result-tab');
@@ -444,7 +447,7 @@ describe('oncoprint', function() {
     describe("initialization from URL parameters", ()=>{
         it("should start in patient mode if URL parameter show_samples=false or not specified", ()=>{
             // not specified
-            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=acc_tcga&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=acc_tcga_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic');
+            goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/index.do?cancer_study_id=acc_tcga&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=acc_tcga_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic');
             waitForOncoprint(10000);
 
             const patient_id_order = "VENHQS1PUi1BNUpZOmFjY190Y2dh,VENHQS1PUi1BNUo0OmFjY190Y2dh,VENHQS1PUi1BNUpCOmFjY190Y2dh,VENHQS1PUi1BNUoxOmFjY190Y2dh,VENHQS1PUi1BNUoyOmFjY190Y2dh,VENHQS1PUi1BNUozOmFjY190Y2dh,VENHQS1PUi1BNUo1OmFjY190Y2dh,VENHQS1PUi1BNUo2OmFjY190Y2dh,VENHQS1PUi1BNUo3OmFjY190Y2dh,VENHQS1PUi1BNUo4OmFjY190Y2dh,VENHQS1PUi1BNUo5OmFjY190Y2dh,VENHQS1PUi1BNUpBOmFjY190Y2dh,VENHQS1PUi1BNUpDOmFjY190Y2dh,VENHQS1PUi1BNUpEOmFjY190Y2dh,VENHQS1PUi1BNUpFOmFjY190Y2dh,VENHQS1PUi1BNUpGOmFjY190Y2dh,VENHQS1PUi1BNUpHOmFjY190Y2dh,VENHQS1PUi1BNUpIOmFjY190Y2dh,VENHQS1PUi1BNUpJOmFjY190Y2dh,VENHQS1PUi1BNUpKOmFjY190Y2dh,VENHQS1PUi1BNUpLOmFjY190Y2dh,VENHQS1PUi1BNUpMOmFjY190Y2dh,VENHQS1PUi1BNUpNOmFjY190Y2dh,VENHQS1PUi1BNUpPOmFjY190Y2dh,VENHQS1PUi1BNUpQOmFjY190Y2dh,VENHQS1PUi1BNUpROmFjY190Y2dh,VENHQS1PUi1BNUpSOmFjY190Y2dh,VENHQS1PUi1BNUpTOmFjY190Y2dh,VENHQS1PUi1BNUpUOmFjY190Y2dh,VENHQS1PUi1BNUpVOmFjY190Y2dh,VENHQS1PUi1BNUpWOmFjY190Y2dh,VENHQS1PUi1BNUpXOmFjY190Y2dh,VENHQS1PUi1BNUpYOmFjY190Y2dh,VENHQS1PUi1BNUpaOmFjY190Y2dh,VENHQS1PUi1BNUswOmFjY190Y2dh,VENHQS1PUi1BNUsxOmFjY190Y2dh,VENHQS1PUi1BNUsyOmFjY190Y2dh,VENHQS1PUi1BNUszOmFjY190Y2dh,VENHQS1PUi1BNUs0OmFjY190Y2dh,VENHQS1PUi1BNUs1OmFjY190Y2dh,VENHQS1PUi1BNUs2OmFjY190Y2dh,VENHQS1PUi1BNUs4OmFjY190Y2dh,VENHQS1PUi1BNUs5OmFjY190Y2dh,VENHQS1PUi1BNUtCOmFjY190Y2dh,VENHQS1PUi1BNUtPOmFjY190Y2dh,VENHQS1PUi1BNUtQOmFjY190Y2dh,VENHQS1PUi1BNUtROmFjY190Y2dh,VENHQS1PUi1BNUtTOmFjY190Y2dh,VENHQS1PUi1BNUtUOmFjY190Y2dh,VENHQS1PUi1BNUtVOmFjY190Y2dh,VENHQS1PUi1BNUtWOmFjY190Y2dh,VENHQS1PUi1BNUtXOmFjY190Y2dh,VENHQS1PUi1BNUtYOmFjY190Y2dh,VENHQS1PUi1BNUtZOmFjY190Y2dh,VENHQS1PUi1BNUtaOmFjY190Y2dh,VENHQS1PUi1BNUwxOmFjY190Y2dh,VENHQS1PUi1BNUwyOmFjY190Y2dh,VENHQS1PUi1BNUwzOmFjY190Y2dh,VENHQS1PUi1BNUw0OmFjY190Y2dh,VENHQS1PUi1BNUw1OmFjY190Y2dh,VENHQS1PUi1BNUw2OmFjY190Y2dh,VENHQS1PUi1BNUw4OmFjY190Y2dh,VENHQS1PUi1BNUw5OmFjY190Y2dh,VENHQS1PUi1BNUxBOmFjY190Y2dh,VENHQS1PUi1BNUxCOmFjY190Y2dh,VENHQS1PUi1BNUxDOmFjY190Y2dh,VENHQS1PUi1BNUxEOmFjY190Y2dh,VENHQS1PUi1BNUxFOmFjY190Y2dh,VENHQS1PUi1BNUxGOmFjY190Y2dh,VENHQS1PUi1BNUxHOmFjY190Y2dh,VENHQS1PUi1BNUxIOmFjY190Y2dh,VENHQS1PUi1BNUxJOmFjY190Y2dh,VENHQS1PUi1BNUxKOmFjY190Y2dh,VENHQS1PUi1BNUxLOmFjY190Y2dh,VENHQS1PUi1BNUxMOmFjY190Y2dh,VENHQS1PUi1BNUxOOmFjY190Y2dh,VENHQS1PUi1BNUxPOmFjY190Y2dh,VENHQS1PUi1BNUxQOmFjY190Y2dh,VENHQS1PUi1BNUxSOmFjY190Y2dh,VENHQS1PUi1BNUxTOmFjY190Y2dh,VENHQS1PUi1BNUxUOmFjY190Y2dh,VENHQS1PVS1BNVBJOmFjY190Y2dh,VENHQS1QNi1BNU9IOmFjY190Y2dh,VENHQS1QQS1BNVlHOmFjY190Y2dh,VENHQS1QSy1BNUg5OmFjY190Y2dh,VENHQS1QSy1BNUhBOmFjY190Y2dh,VENHQS1QSy1BNUhCOmFjY190Y2dh,VENHQS1QSy1BNUhDOmFjY190Y2dh";
@@ -455,7 +458,7 @@ describe('oncoprint', function() {
             );
 
             // = false
-            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=acc_tcga&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&show_samples=false&data_priority=0&case_set_id=acc_tcga_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic');
+            goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/index.do?cancer_study_id=acc_tcga&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&show_samples=false&data_priority=0&case_set_id=acc_tcga_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic');
 
             waitForOncoprint(10000);
 
@@ -467,7 +470,7 @@ describe('oncoprint', function() {
         });
 
         it("should start in sample mode if URL paramter show_samples=true", ()=>{
-            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=acc_tcga&show_samples=true&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=acc_tcga_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic');
+            goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/index.do?cancer_study_id=acc_tcga&show_samples=true&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=acc_tcga_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic');
             waitForOncoprint(10000);
 
             assert.equal(
@@ -478,7 +481,7 @@ describe('oncoprint', function() {
         });
 
         it("should start successfully if a specified clinical track doesnt exist", ()=>{
-            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=acc_tcga&show_samples=true&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=acc_tcga_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic&clinicallist=asodifjpaosidjfa');
+            goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/index.do?cancer_study_id=acc_tcga&show_samples=true&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=acc_tcga_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic&clinicallist=asodifjpaosidjfa');
             waitForOncoprint(10000);
 
             assert.equal(
@@ -495,7 +498,7 @@ describe('oncoprint', function() {
         });
 
         it("should start successfully if a specified clinical track doesnt exist, but others do", ()=>{
-            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=acc_tcga&show_samples=true&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=acc_tcga_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic&clinicallist=CANCER_TYPE,asodifjpaosidjfa,CANCER_TYPE_DETAILED,FRACTION_GENOME_ALTERED,aposdijfpoai,MUTATION_COUNT');
+            goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/index.do?cancer_study_id=acc_tcga&show_samples=true&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=acc_tcga_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic&clinicallist=CANCER_TYPE,asodifjpaosidjfa,CANCER_TYPE_DETAILED,FRACTION_GENOME_ALTERED,aposdijfpoai,MUTATION_COUNT');
             waitForOncoprint(10000);
 
             assert.equal(
@@ -511,6 +514,170 @@ describe('oncoprint', function() {
             )
         });
     });
+    describe("heatmap clustering", ()=>{
+        describe("'Cluster Heatmap' button", ()=>{
+            // THESE TESTs ARE RUN IN SERIAL, cannot be run alone
+            var clusterButtonSelector;
+            var heatmapButtonSelector;
+            var heatmapMenuSelector;
+
+            var sortButtonSelector;
+            var sortMenuSelector;
+            var sortMenuDataRadioSelector;
+            var sortMenuHeatmapRadioSelector;
+
+            before(()=>{
+                heatmapButtonSelector = "#heatmapDropdown";
+                heatmapMenuSelector = "div.oncoprint__controls__heatmap_menu";
+                clusterButtonSelector = heatmapMenuSelector + ' button[data-test="clusterHeatmapBtn"]';
+
+                sortButtonSelector="#sortDropdown";
+                sortMenuSelector = "div.oncoprint__controls__sort_menu";
+                sortMenuDataRadioSelector = sortMenuSelector + ' input[data-test="sortByData"]';
+                sortMenuHeatmapRadioSelector = sortMenuSelector + ' input[data-test="sortByHeatmapClustering"]';
+            });
+
+            it("should be active (pressed) if, and only if, the oncoprint is clustered by the profile selected in the dropdown", ()=>{
+                browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=blca_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=blca_tcga_pub_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=blca_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=blca_tcga_pub_gistic&show_samples=false&heatmap_track_groups=blca_tcga_pub_rna_seq_mrna_median_Zscores%2CKRAS%2CNRAS%2CBRAF%3Bblca_tcga_pub_rppa_Zscores%2CKRAS%2CNRAS%2CBRAF');
+                waitForOncoprint(10000);
+
+                // open heatmap menu
+                $(heatmapButtonSelector).click();
+                browser.waitForVisible(heatmapMenuSelector, 2000);
+                assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") === -1, "button not active - 1");
+                // click button
+                browser.click(clusterButtonSelector);
+                browser.pause(100);// wait for oncoprint to sort
+                assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") > -1, "button active - 1");
+                // change heatmap profile
+                browser.execute(function() { resultsViewOncoprint.selectHeatmapProfile(1); });
+                assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") === -1, "button not active - 2");
+                browser.execute(function() { resultsViewOncoprint.selectHeatmapProfile(0); });
+                assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") > -1, "button active - 2");
+            });
+            it("should return to sort by data when the button is un-clicked", ()=>{
+                // open sort menu, ensure sorted by heatmap clustering order
+                $(sortButtonSelector).click();
+                browser.waitForVisible(sortMenuSelector, 2000);
+                assert(!browser.isSelected(sortMenuDataRadioSelector), "not sorted by data");
+                assert(browser.isSelected(sortMenuHeatmapRadioSelector), "sorted by heatmap clustering");
+                // open heatmap menu and unclick clustering button
+                $(heatmapButtonSelector).click();
+                browser.waitForVisible(heatmapMenuSelector, 2000);
+                assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") > -1, "button active");
+                browser.click(clusterButtonSelector);
+                assert(browser.getAttribute(clusterButtonSelector, "class").split(/\s+/).indexOf("active") === -1, "button not active");
+                // open sort menu, ensure sorted by data
+                $(sortButtonSelector).click();
+                browser.waitForVisible(sortMenuSelector, 2000);
+                assert(!browser.isSelected(sortMenuHeatmapRadioSelector), "not sorted by heatmap clustering");
+                assert(browser.isSelected(sortMenuDataRadioSelector), "sorted by data");
+            });
+        });
+    });
+    describe("mutation annotation", ()=>{
+        let mutationColorMenuButton;
+        let mutationColorMenuDropdown;
+        let oncoKbCheckbox;
+        let hotspotsCheckbox;
+        let cbioportalCheckbox;
+        let cosmicCheckbox;
+
+        before(()=>{
+            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_cna_seq&gene_list=FBXW7&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations');
+            waitForOncoprint(10000);
+
+            mutationColorMenuButton = "#mutationColorDropdown";
+            mutationColorMenuDropdown = "div.oncoprint__controls__mutation_color_menu";
+
+            oncoKbCheckbox = mutationColorMenuDropdown + ' input[data-test="annotateOncoKb"]';
+            hotspotsCheckbox = mutationColorMenuDropdown + ' input[data-test="annotateHotspots"]';
+            cbioportalCheckbox = mutationColorMenuDropdown + ' input[data-test="annotateCBioPortalCount"]';
+            cosmicCheckbox = mutationColorMenuDropdown + ' input[data-test="annotateCOSMICCount"]';
+        });
+        it("annotates all types of mutations with cbioportal count and cosmic", ()=>{
+            browser.click(mutationColorMenuButton);
+            browser.waitForVisible(mutationColorMenuDropdown, 2000);
+            // select only mutation coloring by cbioportal count
+            browser.click(cbioportalCheckbox);
+            browser.click(oncoKbCheckbox);
+            browser.click(hotspotsCheckbox);
+            // set threshold 1
+            browser.execute(function() { resultsViewOncoprint.setAnnotateCBioPortalInputValue("1"); });
+            browser.pause(100); // give time to take effect
+            waitForOncoprint(10000);
+            let legendText = browser.getText("#oncoprint-inner svg");
+            assert(legendText.indexOf("Inframe Mutation (putative driver)") > -1, "cbio count annotates inframe mutations");
+            assert(legendText.indexOf("Missense Mutation (putative driver)") > -1, "cbio count annotates missense mutations");
+            assert(legendText.indexOf("Truncating Mutation (putative driver)") > -1, "cbio count annotates truncating mutations");
+
+            // select only mutation coloring by cosmic count
+            browser.click(cosmicCheckbox);
+            browser.click(cbioportalCheckbox);
+            // set threshold 1
+            browser.execute(function() { resultsViewOncoprint.setAnnotateCOSMICInputValue("1"); });
+            browser.pause(100); // give time to take effect
+            waitForOncoprint(10000);
+            legendText = browser.getText("#oncoprint-inner svg");
+            assert(legendText.indexOf("Inframe Mutation (putative driver)") > -1, "cosmic count annotates inframe mutations");
+            assert(legendText.indexOf("Missense Mutation (putative driver)") > -1, "cosmic count annotates missense mutations");
+            assert(legendText.indexOf("Truncating Mutation (putative driver)") > -1, "cosmic count annotates truncating mutations");
+        });
+    });
+
+    describe("germline mutation", ()=>{
+
+        it('should sort germline mutation in study ov_tcga_pub', () => {
+
+            // search for study with germline mutation (ov_tcga_pub)
+            browser.url(CBIOPORTAL_URL);
+            var input = $(".autosuggest input[type=text]");
+            input.waitForExist(10000);
+            input.setValue('ovarian serous cystadenocarcinoma tcga nature 2011');
+            browser.pause(500);
+            // should only be one element
+            assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+
+            // select it
+            var checkBox = $('[data-test="StudySelect"]');
+            checkBox.waitForExist(10000);
+            browser.click('[data-test="StudySelect"] input');
+
+            // query with BRCA1
+            $('[data-test="geneSet"]').setValue('BRCA1');
+
+            browser.waitForEnabled('[data-test="queryButton"]', 30000);
+            browser.click('[data-test="queryButton"]');
+
+            waitForOncoprint(10000);
+
+            // All patient/samples with germline mutation should be displayed first
+            // ====================================================================
+            // check if patient are sorted
+            assert.equal(
+                browser.execute(function () {
+                    return frontendOnc.getIdOrder().join(",");
+                }).value,
+                "VENHQS0yMy0xMTIyOm92X3RjZ2FfcHVi,VENHQS0zMS0xOTU5Om92X3RjZ2FfcHVi,VENHQS0wNC0xMzU2Om92X3RjZ2FfcHVi,VENHQS0wOS0xNjY5Om92X3RjZ2FfcHVi,VENHQS0wOS0yMDQ1Om92X3RjZ2FfcHVi,VENHQS0wOS0yMDUxOm92X3RjZ2FfcHVi,VENHQS0xMC0wOTMxOm92X3RjZ2FfcHVi,VENHQS0xMy0wODgzOm92X3RjZ2FfcHVi,VENHQS0xMy0wODkzOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTAzOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDA4Om92X3RjZ2FfcHVi,VENHQS0xMy0xNDk0Om92X3RjZ2FfcHVi,VENHQS0xMy0xNTEyOm92X3RjZ2FfcHVi,VENHQS0yMy0xMDI3Om92X3RjZ2FfcHVi,VENHQS0yMy0xMTE4Om92X3RjZ2FfcHVi,VENHQS0yMy0yMDc3Om92X3RjZ2FfcHVi,VENHQS0yMy0yMDc4Om92X3RjZ2FfcHVi,VENHQS0yMy0yMDc5Om92X3RjZ2FfcHVi,VENHQS0yMy0yMDgxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDcwOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjk4Om92X3RjZ2FfcHVi,VENHQS0yNS0yMzkyOm92X3RjZ2FfcHVi,VENHQS0yNS0yNDAxOm92X3RjZ2FfcHVi,VENHQS01Ny0xNTgyOm92X3RjZ2FfcHVi,VENHQS01OS0yMzQ4Om92X3RjZ2FfcHVi,VENHQS02MS0yMDA4Om92X3RjZ2FfcHVi,VENHQS02MS0yMTA5Om92X3RjZ2FfcHVi,VENHQS0wNC0xMzU3Om92X3RjZ2FfcHVi,VENHQS0xMy0wNzMwOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzYxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDg5Om92X3RjZ2FfcHVi,VENHQS0yMy0xMDI2Om92X3RjZ2FfcHVi,VENHQS0yNC0yMDM1Om92X3RjZ2FfcHVi,VENHQS0yNS0xNjI1Om92X3RjZ2FfcHVi,VENHQS0yNS0xNjMwOm92X3RjZ2FfcHVi,VENHQS0yNS0xNjMyOm92X3RjZ2FfcHVi,VENHQS0yOS0yNDI3Om92X3RjZ2FfcHVi,VENHQS0xMy0wODA0Om92X3RjZ2FfcHVi,VENHQS0wNC0xMzMxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzMyOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzM2Om92X3RjZ2FfcHVi,VENHQS0wNC0xMzM3Om92X3RjZ2FfcHVi,VENHQS0wNC0xMzM4Om92X3RjZ2FfcHVi,VENHQS0wNC0xMzQyOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzQzOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzQ2Om92X3RjZ2FfcHVi,VENHQS0wNC0xMzQ3Om92X3RjZ2FfcHVi,VENHQS0wNC0xMzQ4Om92X3RjZ2FfcHVi,VENHQS0wNC0xMzQ5Om92X3RjZ2FfcHVi,VENHQS0wNC0xMzUwOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzYxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzYyOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzY0Om92X3RjZ2FfcHVi,VENHQS0wNC0xMzY1Om92X3RjZ2FfcHVi,VENHQS0wNC0xMzY3Om92X3RjZ2FfcHVi,VENHQS0wNC0xNTE0Om92X3RjZ2FfcHVi,VENHQS0wNC0xNTE3Om92X3RjZ2FfcHVi,VENHQS0wNC0xNTI1Om92X3RjZ2FfcHVi,VENHQS0wNC0xNTMwOm92X3RjZ2FfcHVi,VENHQS0wNC0xNTQyOm92X3RjZ2FfcHVi,VENHQS0wOS0wMzY2Om92X3RjZ2FfcHVi,VENHQS0wOS0wMzY5Om92X3RjZ2FfcHVi,VENHQS0wOS0xNjU5Om92X3RjZ2FfcHVi,VENHQS0wOS0xNjYxOm92X3RjZ2FfcHVi,VENHQS0wOS0xNjYyOm92X3RjZ2FfcHVi,VENHQS0wOS0xNjY1Om92X3RjZ2FfcHVi,VENHQS0wOS0xNjY2Om92X3RjZ2FfcHVi,VENHQS0wOS0yMDQ0Om92X3RjZ2FfcHVi,VENHQS0wOS0yMDQ5Om92X3RjZ2FfcHVi,VENHQS0wOS0yMDUwOm92X3RjZ2FfcHVi,VENHQS0wOS0yMDUzOm92X3RjZ2FfcHVi,VENHQS0wOS0yMDU2Om92X3RjZ2FfcHVi,VENHQS0xMC0wOTI2Om92X3RjZ2FfcHVi,VENHQS0xMC0wOTI3Om92X3RjZ2FfcHVi,VENHQS0xMC0wOTI4Om92X3RjZ2FfcHVi,VENHQS0xMC0wOTMwOm92X3RjZ2FfcHVi,VENHQS0xMC0wOTMzOm92X3RjZ2FfcHVi,VENHQS0xMC0wOTM0Om92X3RjZ2FfcHVi,VENHQS0xMC0wOTM1Om92X3RjZ2FfcHVi,VENHQS0xMC0wOTM3Om92X3RjZ2FfcHVi,VENHQS0xMC0wOTM4Om92X3RjZ2FfcHVi,VENHQS0xMy0wNzE0Om92X3RjZ2FfcHVi,VENHQS0xMy0wNzE3Om92X3RjZ2FfcHVi,VENHQS0xMy0wNzIwOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzIzOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzI0Om92X3RjZ2FfcHVi,VENHQS0xMy0wNzI2Om92X3RjZ2FfcHVi,VENHQS0xMy0wNzI3Om92X3RjZ2FfcHVi,VENHQS0xMy0wNzUxOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzU1Om92X3RjZ2FfcHVi,VENHQS0xMy0wNzYwOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzYyOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzY1Om92X3RjZ2FfcHVi,VENHQS0xMy0wNzkxOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzkyOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzkzOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzk1Om92X3RjZ2FfcHVi,VENHQS0xMy0wODAwOm92X3RjZ2FfcHVi,VENHQS0xMy0wODA3Om92X3RjZ2FfcHVi,VENHQS0xMy0wODg0Om92X3RjZ2FfcHVi,VENHQS0xMy0wODg1Om92X3RjZ2FfcHVi,VENHQS0xMy0wODg2Om92X3RjZ2FfcHVi,VENHQS0xMy0wODg3Om92X3RjZ2FfcHVi,VENHQS0xMy0wODg5Om92X3RjZ2FfcHVi,VENHQS0xMy0wODkwOm92X3RjZ2FfcHVi,VENHQS0xMy0wODkxOm92X3RjZ2FfcHVi,VENHQS0xMy0wODk0Om92X3RjZ2FfcHVi,VENHQS0xMy0wODk3Om92X3RjZ2FfcHVi,VENHQS0xMy0wODk5Om92X3RjZ2FfcHVi,VENHQS0xMy0wOTAwOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTA0Om92X3RjZ2FfcHVi,VENHQS0xMy0wOTA1Om92X3RjZ2FfcHVi,VENHQS0xMy0wOTA2Om92X3RjZ2FfcHVi,VENHQS0xMy0wOTEwOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTExOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTEyOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTEzOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTE2Om92X3RjZ2FfcHVi,VENHQS0xMy0wOTE5Om92X3RjZ2FfcHVi,VENHQS0xMy0wOTIwOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTIzOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTI0Om92X3RjZ2FfcHVi,VENHQS0xMy0xNDAzOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDA0Om92X3RjZ2FfcHVi,VENHQS0xMy0xNDA1Om92X3RjZ2FfcHVi,VENHQS0xMy0xNDA3Om92X3RjZ2FfcHVi,VENHQS0xMy0xNDA5Om92X3RjZ2FfcHVi,VENHQS0xMy0xNDEwOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDExOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDEyOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDc3Om92X3RjZ2FfcHVi,VENHQS0xMy0xNDgxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDgyOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDgzOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDg0Om92X3RjZ2FfcHVi,VENHQS0xMy0xNDg3Om92X3RjZ2FfcHVi,VENHQS0xMy0xNDg4Om92X3RjZ2FfcHVi,VENHQS0xMy0xNDkxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDkyOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDk1Om92X3RjZ2FfcHVi,VENHQS0xMy0xNDk2Om92X3RjZ2FfcHVi,VENHQS0xMy0xNDk3Om92X3RjZ2FfcHVi,VENHQS0xMy0xNDk4Om92X3RjZ2FfcHVi,VENHQS0xMy0xNDk5Om92X3RjZ2FfcHVi,VENHQS0xMy0xNTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNTA0Om92X3RjZ2FfcHVi,VENHQS0xMy0xNTA1Om92X3RjZ2FfcHVi,VENHQS0xMy0xNTA2Om92X3RjZ2FfcHVi,VENHQS0xMy0xNTA3Om92X3RjZ2FfcHVi,VENHQS0xMy0xNTA5Om92X3RjZ2FfcHVi,VENHQS0xMy0xNTEwOm92X3RjZ2FfcHVi,VENHQS0xMy0yMDYwOm92X3RjZ2FfcHVi,VENHQS0yMC0wOTg3Om92X3RjZ2FfcHVi,VENHQS0yMC0wOTkwOm92X3RjZ2FfcHVi,VENHQS0yMC0wOTkxOm92X3RjZ2FfcHVi,VENHQS0yMy0xMDIxOm92X3RjZ2FfcHVi,VENHQS0yMy0xMDIyOm92X3RjZ2FfcHVi,VENHQS0yMy0xMDIzOm92X3RjZ2FfcHVi,VENHQS0yMy0xMDI0Om92X3RjZ2FfcHVi,VENHQS0yMy0xMDI4Om92X3RjZ2FfcHVi,VENHQS0yMy0xMDMwOm92X3RjZ2FfcHVi,VENHQS0yMy0xMDMxOm92X3RjZ2FfcHVi,VENHQS0yMy0xMDMyOm92X3RjZ2FfcHVi,VENHQS0yMy0xMTEwOm92X3RjZ2FfcHVi,VENHQS0yMy0xMTE2Om92X3RjZ2FfcHVi,VENHQS0yMy0xMTE3Om92X3RjZ2FfcHVi,VENHQS0yMy0xMTIwOm92X3RjZ2FfcHVi,VENHQS0yMy0xMTIzOm92X3RjZ2FfcHVi,VENHQS0yMy0xMTI0Om92X3RjZ2FfcHVi,VENHQS0yMy0yMDcyOm92X3RjZ2FfcHVi,VENHQS0yNC0wOTY2Om92X3RjZ2FfcHVi,VENHQS0yNC0wOTY4Om92X3RjZ2FfcHVi,VENHQS0yNC0wOTcwOm92X3RjZ2FfcHVi,VENHQS0yNC0wOTc1Om92X3RjZ2FfcHVi,VENHQS0yNC0wOTc5Om92X3RjZ2FfcHVi,VENHQS0yNC0wOTgwOm92X3RjZ2FfcHVi,VENHQS0yNC0wOTgyOm92X3RjZ2FfcHVi,VENHQS0yNC0xMTAzOm92X3RjZ2FfcHVi,VENHQS0yNC0xMTA0Om92X3RjZ2FfcHVi,VENHQS0yNC0xMTA1Om92X3RjZ2FfcHVi,VENHQS0yNC0xNDEzOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDE2Om92X3RjZ2FfcHVi,VENHQS0yNC0xNDE3Om92X3RjZ2FfcHVi,VENHQS0yNC0xNDE4Om92X3RjZ2FfcHVi,VENHQS0yNC0xNDE5Om92X3RjZ2FfcHVi,VENHQS0yNC0xNDIyOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDIzOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDI0Om92X3RjZ2FfcHVi,VENHQS0yNC0xNDI1Om92X3RjZ2FfcHVi,VENHQS0yNC0xNDI2Om92X3RjZ2FfcHVi,VENHQS0yNC0xNDI3Om92X3RjZ2FfcHVi,VENHQS0yNC0xNDI4Om92X3RjZ2FfcHVi,VENHQS0yNC0xNDMxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDM0Om92X3RjZ2FfcHVi,VENHQS0yNC0xNDM1Om92X3RjZ2FfcHVi,VENHQS0yNC0xNDM2Om92X3RjZ2FfcHVi,VENHQS0yNC0xNDYzOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDY0Om92X3RjZ2FfcHVi,VENHQS0yNC0xNDY2Om92X3RjZ2FfcHVi,VENHQS0yNC0xNDY5Om92X3RjZ2FfcHVi,VENHQS0yNC0xNDcxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDc0Om92X3RjZ2FfcHVi,VENHQS0yNC0xNTQ0Om92X3RjZ2FfcHVi,VENHQS0yNC0xNTQ1Om92X3RjZ2FfcHVi,VENHQS0yNC0xNTQ4Om92X3RjZ2FfcHVi,VENHQS0yNC0xNTQ5Om92X3RjZ2FfcHVi,VENHQS0yNC0xNTUxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTUyOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTUzOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTU1Om92X3RjZ2FfcHVi,VENHQS0yNC0xNTU2Om92X3RjZ2FfcHVi,VENHQS0yNC0xNTU3Om92X3RjZ2FfcHVi,VENHQS0yNC0xNTU4Om92X3RjZ2FfcHVi,VENHQS0yNC0xNTYwOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTYyOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTYzOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTY0Om92X3RjZ2FfcHVi,VENHQS0yNC0xNTY1Om92X3RjZ2FfcHVi,VENHQS0yNC0xNTY3Om92X3RjZ2FfcHVi,VENHQS0yNC0xNjAzOm92X3RjZ2FfcHVi,VENHQS0yNC0xNjA0Om92X3RjZ2FfcHVi,VENHQS0yNC0xNjE0Om92X3RjZ2FfcHVi,VENHQS0yNC0xNjE2Om92X3RjZ2FfcHVi,VENHQS0yNC0yMDE5Om92X3RjZ2FfcHVi,VENHQS0yNC0yMDI0Om92X3RjZ2FfcHVi,VENHQS0yNC0yMDMwOm92X3RjZ2FfcHVi,VENHQS0yNC0yMDM4Om92X3RjZ2FfcHVi,VENHQS0yNC0yMjU0Om92X3RjZ2FfcHVi,VENHQS0yNC0yMjYwOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjYxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjYyOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjY3Om92X3RjZ2FfcHVi,VENHQS0yNC0yMjcxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjgwOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjgxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjg4Om92X3RjZ2FfcHVi,VENHQS0yNC0yMjg5Om92X3RjZ2FfcHVi,VENHQS0yNC0yMjkwOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjkzOm92X3RjZ2FfcHVi,VENHQS0yNS0xMzEzOm92X3RjZ2FfcHVi,VENHQS0yNS0xMzE1Om92X3RjZ2FfcHVi,VENHQS0yNS0xMzE2Om92X3RjZ2FfcHVi,VENHQS0yNS0xMzE3Om92X3RjZ2FfcHVi,VENHQS0yNS0xMzE4Om92X3RjZ2FfcHVi,VENHQS0yNS0xMzE5Om92X3RjZ2FfcHVi,VENHQS0yNS0xMzIwOm92X3RjZ2FfcHVi,VENHQS0yNS0xMzIxOm92X3RjZ2FfcHVi,VENHQS0yNS0xMzIyOm92X3RjZ2FfcHVi,VENHQS0yNS0xMzI0Om92X3RjZ2FfcHVi,VENHQS0yNS0xMzI2Om92X3RjZ2FfcHVi,VENHQS0yNS0xMzI4Om92X3RjZ2FfcHVi,VENHQS0yNS0xMzI5Om92X3RjZ2FfcHVi,VENHQS0yNS0xNjIzOm92X3RjZ2FfcHVi,VENHQS0yNS0xNjI2Om92X3RjZ2FfcHVi,VENHQS0yNS0xNjI3Om92X3RjZ2FfcHVi,VENHQS0yNS0xNjI4Om92X3RjZ2FfcHVi,VENHQS0yNS0xNjMxOm92X3RjZ2FfcHVi,VENHQS0yNS0xNjMzOm92X3RjZ2FfcHVi,VENHQS0yNS0xNjM0Om92X3RjZ2FfcHVi,VENHQS0yNS0xNjM1Om92X3RjZ2FfcHVi,VENHQS0yNS0yMDQyOm92X3RjZ2FfcHVi,VENHQS0yNS0yMzkxOm92X3RjZ2FfcHVi,VENHQS0yNS0yMzkzOm92X3RjZ2FfcHVi,VENHQS0yNS0yMzk2Om92X3RjZ2FfcHVi,VENHQS0yNS0yMzk4Om92X3RjZ2FfcHVi,VENHQS0yNS0yMzk5Om92X3RjZ2FfcHVi,VENHQS0yNS0yNDAwOm92X3RjZ2FfcHVi,VENHQS0yNS0yNDA0Om92X3RjZ2FfcHVi,VENHQS0yNS0yNDA4Om92X3RjZ2FfcHVi,VENHQS0yNS0yNDA5Om92X3RjZ2FfcHVi,VENHQS0zMC0xODUzOm92X3RjZ2FfcHVi,VENHQS0zMC0xODYyOm92X3RjZ2FfcHVi,VENHQS0zMC0xODkxOm92X3RjZ2FfcHVi,VENHQS0zMS0xOTUwOm92X3RjZ2FfcHVi,VENHQS0zMS0xOTUzOm92X3RjZ2FfcHVi,VENHQS0zNi0xNTY4Om92X3RjZ2FfcHVi,VENHQS0zNi0xNTY5Om92X3RjZ2FfcHVi,VENHQS0zNi0xNTcwOm92X3RjZ2FfcHVi,VENHQS0zNi0xNTcxOm92X3RjZ2FfcHVi,VENHQS0zNi0xNTc0Om92X3RjZ2FfcHVi,VENHQS0zNi0xNTc1Om92X3RjZ2FfcHVi,VENHQS0zNi0xNTc2Om92X3RjZ2FfcHVi,VENHQS0zNi0xNTc3Om92X3RjZ2FfcHVi,VENHQS0zNi0xNTc4Om92X3RjZ2FfcHVi,VENHQS0zNi0xNTgwOm92X3RjZ2FfcHVi,VENHQS01Ny0xNTgzOm92X3RjZ2FfcHVi,VENHQS01Ny0xNTg0Om92X3RjZ2FfcHVi,VENHQS01Ny0xOTkzOm92X3RjZ2FfcHVi,VENHQS01OS0yMzUwOm92X3RjZ2FfcHVi,VENHQS01OS0yMzUxOm92X3RjZ2FfcHVi,VENHQS01OS0yMzUyOm92X3RjZ2FfcHVi,VENHQS01OS0yMzU0Om92X3RjZ2FfcHVi,VENHQS01OS0yMzU1Om92X3RjZ2FfcHVi,VENHQS01OS0yMzYzOm92X3RjZ2FfcHVi,VENHQS02MS0xNzI4Om92X3RjZ2FfcHVi,VENHQS02MS0xNzM2Om92X3RjZ2FfcHVi,VENHQS02MS0xOTE5Om92X3RjZ2FfcHVi,VENHQS02MS0xOTk1Om92X3RjZ2FfcHVi,VENHQS02MS0xOTk4Om92X3RjZ2FfcHVi,VENHQS02MS0yMDAwOm92X3RjZ2FfcHVi,VENHQS02MS0yMDAyOm92X3RjZ2FfcHVi,VENHQS02MS0yMDAzOm92X3RjZ2FfcHVi,VENHQS02MS0yMDA5Om92X3RjZ2FfcHVi,VENHQS02MS0yMDEyOm92X3RjZ2FfcHVi,VENHQS02MS0yMDE2Om92X3RjZ2FfcHVi,VENHQS02MS0yMDg4Om92X3RjZ2FfcHVi,VENHQS02MS0yMDkyOm92X3RjZ2FfcHVi,VENHQS02MS0yMDk0Om92X3RjZ2FfcHVi,VENHQS02MS0yMDk1Om92X3RjZ2FfcHVi,VENHQS02MS0yMDk3Om92X3RjZ2FfcHVi,VENHQS02MS0yMTAxOm92X3RjZ2FfcHVi,VENHQS02MS0yMTAyOm92X3RjZ2FfcHVi,VENHQS02MS0yMTA0Om92X3RjZ2FfcHVi,VENHQS02MS0yMTEwOm92X3RjZ2FfcHVi,VENHQS02MS0yMTExOm92X3RjZ2FfcHVi,VENHQS02MS0yMTEzOm92X3RjZ2FfcHVi",
+                "patient id order correct"
+            );
+
+
+            $('#oncoprint .oncoprint__controls #viewDropdownButton').click(); // open view menu
+            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForExist(10000);
+            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+
+            waitForOncoprint(10000);
+
+            // check if samples are sorted
+            assert.equal(
+                browser.execute(function () {return frontendOnc.getIdOrder().join(",");}).value,
+                "VENHQS0yMy0xMTIyLTAxOm92X3RjZ2FfcHVi,VENHQS0zMS0xOTU5LTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzU2LTAxOm92X3RjZ2FfcHVi,VENHQS0wOS0xNjY5LTAxOm92X3RjZ2FfcHVi,VENHQS0wOS0yMDQ1LTAxOm92X3RjZ2FfcHVi,VENHQS0wOS0yMDUxLTAxOm92X3RjZ2FfcHVi,VENHQS0xMC0wOTMxLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wODgzLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wODkzLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTAzLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDA4LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDk0LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNTEyLTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0xMDI3LTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0xMTE4LTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0yMDc3LTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0yMDc4LTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0yMDc5LTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0yMDgxLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDcwLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjk4LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0yMzkyLTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0yNDAxLTAxOm92X3RjZ2FfcHVi,VENHQS01Ny0xNTgyLTAxOm92X3RjZ2FfcHVi,VENHQS01OS0yMzQ4LTAxOm92X3RjZ2FfcHVi,VENHQS02MS0yMDA4LTAxOm92X3RjZ2FfcHVi,VENHQS02MS0yMTA5LTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzU3LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzMwLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzYxLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDg5LTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0xMDI2LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMDM1LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xNjI1LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xNjMwLTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xNjMyLTAxOm92X3RjZ2FfcHVi,VENHQS0yOS0yNDI3LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wODA0LTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzMxLTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzMyLTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzM2LTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzM3LTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzM4LTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzQyLTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzQzLTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzQ2LTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzQ3LTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzQ4LTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzQ5LTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzUwLTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzYxLTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzYyLTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzY0LTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzY1LTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xMzY3LTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xNTE0LTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xNTE3LTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xNTI1LTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xNTMwLTAxOm92X3RjZ2FfcHVi,VENHQS0wNC0xNTQyLTAxOm92X3RjZ2FfcHVi,VENHQS0wOS0wMzY2LTAxOm92X3RjZ2FfcHVi,VENHQS0wOS0wMzY5LTAxOm92X3RjZ2FfcHVi,VENHQS0wOS0xNjU5LTAxOm92X3RjZ2FfcHVi,VENHQS0wOS0xNjYxLTAxOm92X3RjZ2FfcHVi,VENHQS0wOS0xNjYyLTAxOm92X3RjZ2FfcHVi,VENHQS0wOS0xNjY1LTAxOm92X3RjZ2FfcHVi,VENHQS0wOS0xNjY2LTAxOm92X3RjZ2FfcHVi,VENHQS0wOS0yMDQ0LTAxOm92X3RjZ2FfcHVi,VENHQS0wOS0yMDQ5LTAxOm92X3RjZ2FfcHVi,VENHQS0wOS0yMDUwLTAxOm92X3RjZ2FfcHVi,VENHQS0wOS0yMDUzLTAxOm92X3RjZ2FfcHVi,VENHQS0wOS0yMDU2LTAxOm92X3RjZ2FfcHVi,VENHQS0xMC0wOTI2LTAxOm92X3RjZ2FfcHVi,VENHQS0xMC0wOTI3LTAxOm92X3RjZ2FfcHVi,VENHQS0xMC0wOTI4LTAxOm92X3RjZ2FfcHVi,VENHQS0xMC0wOTMwLTAxOm92X3RjZ2FfcHVi,VENHQS0xMC0wOTMzLTAxOm92X3RjZ2FfcHVi,VENHQS0xMC0wOTM0LTAxOm92X3RjZ2FfcHVi,VENHQS0xMC0wOTM1LTAxOm92X3RjZ2FfcHVi,VENHQS0xMC0wOTM3LTAxOm92X3RjZ2FfcHVi,VENHQS0xMC0wOTM4LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzE0LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzE3LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzIwLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzIzLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzI0LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzI2LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzI3LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzUxLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzU1LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzYwLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzYyLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzY1LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzkxLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzkyLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzkzLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wNzk1LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wODAwLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wODA3LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wODg0LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wODg1LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wODg2LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wODg3LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wODg5LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wODkwLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wODkxLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wODk0LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wODk3LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wODk5LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTAwLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTA0LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTA1LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTA2LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTEwLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTExLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTEyLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTEzLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTE2LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTE5LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTIwLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTIzLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0wOTI0LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDAzLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDA0LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDA1LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDA3LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDA5LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDEwLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDExLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDEyLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDc3LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDgxLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDgyLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDgzLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDg0LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDg3LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDg4LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDkxLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDkyLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDk1LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDk2LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDk3LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDk4LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNDk5LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNTAxLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNTA0LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNTA1LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNTA2LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNTA3LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNTA5LTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0xNTEwLTAxOm92X3RjZ2FfcHVi,VENHQS0xMy0yMDYwLTAxOm92X3RjZ2FfcHVi,VENHQS0yMC0wOTg3LTAxOm92X3RjZ2FfcHVi,VENHQS0yMC0wOTkwLTAxOm92X3RjZ2FfcHVi,VENHQS0yMC0wOTkxLTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0xMDIxLTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0xMDIyLTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0xMDIzLTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0xMDI0LTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0xMDI4LTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0xMDMwLTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0xMDMxLTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0xMDMyLTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0xMTEwLTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0xMTE2LTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0xMTE3LTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0xMTIwLTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0xMTIzLTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0xMTI0LTAxOm92X3RjZ2FfcHVi,VENHQS0yMy0yMDcyLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0wOTY2LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0wOTY4LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0wOTcwLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0wOTc1LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0wOTc5LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0wOTgwLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0wOTgyLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xMTAzLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xMTA0LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xMTA1LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDEzLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDE2LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDE3LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDE4LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDE5LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDIyLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDIzLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDI0LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDI1LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDI2LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDI3LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDI4LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDMxLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDM0LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDM1LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDM2LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDYzLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDY0LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDY2LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDY5LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDcxLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNDc0LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTQ0LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTQ1LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTQ4LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTQ5LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTUxLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTUyLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTUzLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTU1LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTU2LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTU3LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTU4LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTYwLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTYyLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTYzLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTY0LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTY1LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNTY3LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNjAzLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNjA0LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNjE0LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0xNjE2LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMDE5LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMDI0LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMDMwLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMDM4LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjU0LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjYwLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjYxLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjYyLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjY3LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjcxLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjgwLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjgxLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjg4LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjg5LTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjkwLTAxOm92X3RjZ2FfcHVi,VENHQS0yNC0yMjkzLTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xMzEzLTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xMzE1LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xMzE2LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xMzE3LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xMzE4LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xMzE5LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xMzIwLTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xMzIxLTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xMzIyLTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xMzI0LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xMzI2LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xMzI4LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xMzI5LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xNjIzLTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xNjI2LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xNjI3LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xNjI4LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xNjMxLTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xNjMzLTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xNjM0LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0xNjM1LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0yMDQyLTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0yMzkxLTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0yMzkzLTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0yMzk2LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0yMzk4LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0yMzk5LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0yNDAwLTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0yNDA0LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0yNDA4LTAxOm92X3RjZ2FfcHVi,VENHQS0yNS0yNDA5LTAxOm92X3RjZ2FfcHVi,VENHQS0zMC0xODUzLTAxOm92X3RjZ2FfcHVi,VENHQS0zMC0xODYyLTAxOm92X3RjZ2FfcHVi,VENHQS0zMC0xODkxLTAxOm92X3RjZ2FfcHVi,VENHQS0zMS0xOTUwLTAxOm92X3RjZ2FfcHVi,VENHQS0zMS0xOTUzLTAxOm92X3RjZ2FfcHVi,VENHQS0zNi0xNTY4LTAxOm92X3RjZ2FfcHVi,VENHQS0zNi0xNTY5LTAxOm92X3RjZ2FfcHVi,VENHQS0zNi0xNTcwLTAxOm92X3RjZ2FfcHVi,VENHQS0zNi0xNTcxLTAxOm92X3RjZ2FfcHVi,VENHQS0zNi0xNTc0LTAxOm92X3RjZ2FfcHVi,VENHQS0zNi0xNTc1LTAxOm92X3RjZ2FfcHVi,VENHQS0zNi0xNTc2LTAxOm92X3RjZ2FfcHVi,VENHQS0zNi0xNTc3LTAxOm92X3RjZ2FfcHVi,VENHQS0zNi0xNTc4LTAxOm92X3RjZ2FfcHVi,VENHQS0zNi0xNTgwLTAxOm92X3RjZ2FfcHVi,VENHQS01Ny0xNTgzLTAxOm92X3RjZ2FfcHVi,VENHQS01Ny0xNTg0LTAxOm92X3RjZ2FfcHVi,VENHQS01Ny0xOTkzLTAxOm92X3RjZ2FfcHVi,VENHQS01OS0yMzUwLTAxOm92X3RjZ2FfcHVi,VENHQS01OS0yMzUxLTAxOm92X3RjZ2FfcHVi,VENHQS01OS0yMzUyLTAxOm92X3RjZ2FfcHVi,VENHQS01OS0yMzU0LTAxOm92X3RjZ2FfcHVi,VENHQS01OS0yMzU1LTAxOm92X3RjZ2FfcHVi,VENHQS01OS0yMzYzLTAxOm92X3RjZ2FfcHVi,VENHQS02MS0xNzI4LTAxOm92X3RjZ2FfcHVi,VENHQS02MS0xNzM2LTAxOm92X3RjZ2FfcHVi,VENHQS02MS0xOTE5LTAxOm92X3RjZ2FfcHVi,VENHQS02MS0xOTk1LTAxOm92X3RjZ2FfcHVi,VENHQS02MS0xOTk4LTAxOm92X3RjZ2FfcHVi,VENHQS02MS0yMDAwLTAxOm92X3RjZ2FfcHVi,VENHQS02MS0yMDAyLTAxOm92X3RjZ2FfcHVi,VENHQS02MS0yMDAzLTAxOm92X3RjZ2FfcHVi,VENHQS02MS0yMDA5LTAxOm92X3RjZ2FfcHVi,VENHQS02MS0yMDEyLTAxOm92X3RjZ2FfcHVi,VENHQS02MS0yMDE2LTAxOm92X3RjZ2FfcHVi,VENHQS02MS0yMDg4LTAxOm92X3RjZ2FfcHVi,VENHQS02MS0yMDkyLTAxOm92X3RjZ2FfcHVi,VENHQS02MS0yMDk0LTAxOm92X3RjZ2FfcHVi,VENHQS02MS0yMDk1LTAxOm92X3RjZ2FfcHVi,VENHQS02MS0yMDk3LTAxOm92X3RjZ2FfcHVi,VENHQS02MS0yMTAxLTAxOm92X3RjZ2FfcHVi,VENHQS02MS0yMTAyLTAxOm92X3RjZ2FfcHVi,VENHQS02MS0yMTA0LTAxOm92X3RjZ2FfcHVi,VENHQS02MS0yMTEwLTAxOm92X3RjZ2FfcHVi,VENHQS02MS0yMTExLTAxOm92X3RjZ2FfcHVi,VENHQS02MS0yMTEzLTAxOm92X3RjZ2FfcHVi",
+                "sample id order correct");
+        });
+
+    });
+
     describe("sorting", ()=>{
         function topCmp(eltA, eltB) {
             return eltA.top - eltB.top;
@@ -547,7 +714,7 @@ describe('oncoprint', function() {
         }
 
         it("should sort patients and samples by custom case list order correctly", ()=>{
-            browser.url(CBIOPORTAL_URL);
+            goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
             // select Colorectal TCGA and Adrenocortical Carcinoma TCGA
             var input = $(".autosuggest input[type=text]");
@@ -611,7 +778,7 @@ describe('oncoprint', function() {
         });
 
         it("should sort patients and samples correctly in coadread_tcga_pub", ()=>{
-            browser.url(CBIOPORTAL_URL);
+            goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
             var input = $(".autosuggest input[type=text]");
 
@@ -658,7 +825,7 @@ describe('oncoprint', function() {
         });
 
         it("should sort patients and samples correctly in gbm_tcga_pub", ()=>{
-            browser.url(CBIOPORTAL_URL);
+            goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
             var input = $(".autosuggest input[type=text]");
 
@@ -705,10 +872,17 @@ describe('oncoprint', function() {
         });
 
         it("sorts correctly w/ clinical tracks and heatmap tracks, clinical tracks sorted", ()=>{
-            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%2520MDM2%2520MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=FRACTION_GENOME_ALTERED%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4');
+            goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%2520MDM2%2520MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=FRACTION_GENOME_ALTERED%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4');
             $('.alert-warning').$('button.close').click(); // close dev mode notification so it doesnt intercept clicks
 
             waitForOncoprint(10000);
+
+            // first get rid of the Profiled track
+            var profiledElements = getNthTrackOptionsElements(5);
+            profiledElements.button.click();
+            browser.waitForVisible(profiledElements.dropdown_selector, 1000); // wait for menu to appear
+            profiledElements.dropdown.$('li:nth-child(3)').click(); // Click Remove Track
+            browser.pause(100); // give time to take effect
 
             assert.equal(
                 browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
@@ -732,6 +906,7 @@ describe('oncoprint', function() {
             $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').click(); // go to patient mode
 
             waitForOncoprint(10000);
+
 
             var overallSurvivalElements = getNthTrackOptionsElements(4);
             overallSurvivalElements.button.click();
@@ -842,10 +1017,18 @@ describe('oncoprint', function() {
             );
         });
         it("sorts correctly w/ clinical tracks and heatmap tracks, heatmap tracks sorted", ()=>{
-            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%2520MDM2%2520MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=FRACTION_GENOME_ALTERED%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4&show_samples=true');
+            goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/index.do?cancer_study_id=gbm_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=gbm_tcga_pub_cnaseq&gene_list=TP53%2520MDM2%2520MDM4&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&clinicallist=FRACTION_GENOME_ALTERED%2CDFS_MONTHS%2CKARNOFSKY_PERFORMANCE_SCORE%2COS_STATUS&heatmap_track_groups=gbm_tcga_pub_mrna_median_Zscores%2CTP53%2CMDM2%2CMDM4%3Bgbm_tcga_pub_mrna_merged_median_Zscores%2CTP53%2CMDM2%2CMDM4&show_samples=true');
             $('.alert-warning').$('button.close').click(); // close dev mode notification so it doesnt intercept clicks
 
             waitForOncoprint(10000);
+
+            // first get rid of the Profiled track
+            var profiledElements = getNthTrackOptionsElements(5);
+            profiledElements.button.click();
+            browser.waitForVisible(profiledElements.dropdown_selector, 1000); // wait for menu to appear
+            profiledElements.dropdown.$('li:nth-child(3)').click(); // Click Remove Track
+            browser.pause(100); // give time to take effect
+
             browser.scroll(0,1000);//scroll down
 
             // Sort heatmap tracks
@@ -980,7 +1163,7 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist(selectedCaseSet_sel);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "All",
+            "All (252)",
             "Default case set for multiple"
         );
 
@@ -1030,7 +1213,7 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist(selectedCaseSet_sel, 10000);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "All",
+            "All (21206)",
             "Default selected case set with multiple studies should be 'All'"
         );
 
@@ -1052,7 +1235,7 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist(selectedCaseSet_sel);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "All",
+            "All (252)",
             "Default case set for multiple"
         );
 
@@ -1113,7 +1296,7 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist(selectedCaseSet_sel, 10000);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "All",
+            "All (368)",
             "Default selected case set with multiple studies should be 'All'"
         );
 
@@ -1150,7 +1333,7 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist(selectedCaseSet_sel, 10000);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "All",
+            "All (12997)",
             "Default selected case set with multiple studies should be 'All'"
         );
 

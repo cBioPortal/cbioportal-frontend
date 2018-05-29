@@ -58,7 +58,7 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
             return (
                 <div className="rightBarSection">
                     <h3>What's New</h3>
-                    <div dangerouslySetInnerHTML={{__html:AppConfig.skinRightNavWhatsNewBlurb}}></div>;
+                    <div dangerouslySetInnerHTML={{__html:AppConfig.skinRightNavWhatsNewBlurb}}></div>
                 </div>
             );
         } else {

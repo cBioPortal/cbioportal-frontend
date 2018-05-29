@@ -1,7 +1,7 @@
 import {getPatientViewUrl, getSampleViewUrl} from "../../api/urls";
 import $ from "jquery";
 import {
-    GeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
+    NumericGeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
     Mutation
 } from "../../api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
@@ -10,6 +10,7 @@ import {
     AnnotatedExtendedAlteration, AnnotatedMutation,
     ExtendedAlteration
 } from "../../../pages/resultsView/ResultsViewPageStore";
+import _ from "lodash";
 
 export const TOOLTIP_DIV_CLASS = "oncoprint__tooltip";
 
@@ -20,8 +21,8 @@ function patientViewAnchorTag(study_id:string, patient_id:string) {
     return `<a href="${getPatientViewUrl(study_id, patient_id)}" target="_blank">${patient_id}</a>`;
 };
 
-function makeGenePanelPopupLink(gene_panel_id:string) {
-    let anchor = $(`<a href="#" oncontextmenu="return false;">${gene_panel_id}</a>`);
+function makeGenePanelPopupLink(gene_panel_id:string, profiled:boolean) {
+    let anchor = $(`<a href="#" ${!profiled ? 'style="color:red;"': ""} oncontextmenu="return false;">${gene_panel_id}</a>`);
     anchor.ready(()=>{
         anchor.click(function() {
             client.getGenePanelUsingGET({ genePanelId: gene_panel_id }).then((panel:GenePanel)=>{
@@ -90,10 +91,16 @@ export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile
     return function (d:any) {
         let data_header = '';
         let profile_data = 'N/A';
-        if (genetic_alteration_type === "MRNA_EXPRESSION") {
-            data_header = 'MRNA: ';
-        } else if (genetic_alteration_type === "PROTEIN_LEVEL") {
-            data_header = 'PROT: ';
+        switch(genetic_alteration_type) {
+            case "MRNA_EXPRESSION":
+                data_header = 'MRNA: ';
+                break;
+            case "PROTEIN_LEVEL":
+                data_header = 'PROT: ';
+                break;
+            case "METHYLATION":
+                data_header = 'METHYLATION: ';
+                break;
         }
         if ((d.profile_data !== null) && (typeof d.profile_data !== "undefined")) {
             profile_data = d.profile_data.toFixed(2);
@@ -103,8 +110,44 @@ export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile
         return $('<div>').addClass(TOOLTIP_DIV_CLASS).append(ret);
     };
 };
+
+export function makeGeneticTrackTooltip_getCoverageInformation(
+    profiled_in: {genePanelId?:string, molecularProfileId:string}[]|undefined,
+    not_profiled_in: {genePanelId?:string, molecularProfileId:string}[]|undefined,
+):{
+    dispProfiledGenePanelIds: string[];
+    dispNotProfiledGenePanelIds: string[];
+    dispProfiledIn: string[]|undefined;
+    dispNotProfiledIn: string[]|undefined;
+    dispAllProfiled:boolean;
+    dispNotProfiled:boolean;
+} {
+    let dispProfiledGenePanelIds:string[] = [];
+    let dispProfiledGenePanelIdsMap:{[genePanelId:string]:string} = {};
+    let dispProfiledIn:string[]|undefined = undefined;
+    let dispProfiledInMap:{[molecularProfileId:string]:string} = {};
+    let dispNotProfiledIn:string[]|undefined = undefined;
+    let dispNotProfiledGenePanelIds:string[] = [];
+    if (profiled_in) {
+        dispProfiledGenePanelIds = _.uniq((profiled_in.map(x=>x.genePanelId) as (string|undefined)[]).filter(x=>!!x) as string[]);
+        dispProfiledIn = _.uniq(profiled_in.map(x=>x.molecularProfileId));
+        dispProfiledInMap = _.keyBy(dispProfiledIn);
+        dispProfiledGenePanelIdsMap = _.keyBy(dispProfiledGenePanelIds);
+    }
+    if (not_profiled_in) {
+        dispNotProfiledIn = _.uniq(not_profiled_in.map(x=>x.molecularProfileId)).filter(x=>!dispProfiledInMap[x]); // filter out profiles in profiled_in to avoid confusing tooltip (this occurs e.g. w multiple samples, one profiled one not)
+        dispNotProfiledGenePanelIds = _.uniq(not_profiled_in.map(x=>x.genePanelId)).filter(x=>(!!x && !dispProfiledGenePanelIdsMap[x])) as string[] ;
+    }
+    const dispAllProfiled = !!(dispProfiledIn && dispProfiledIn.length && dispNotProfiledIn && !dispNotProfiledIn.length);
+    const dispNotProfiled = !!(dispNotProfiledIn && dispNotProfiledIn.length && dispProfiledIn && !dispProfiledIn.length);
+    return {
+        dispProfiledGenePanelIds, dispNotProfiledGenePanelIds, dispProfiledIn, dispNotProfiledIn, dispAllProfiled, dispNotProfiled
+    };
+}
+
 export function makeGeneticTrackTooltip(
-    link_id?:boolean
+    link_id?:boolean,
+    getMolecularProfileMap?:()=>{[molecularProfileId:string]:MolecularProfile}|undefined
 ) {
     // TODO: all the data here is old API data
     function listOfMutationOrFusionDataToHTML(data:any[]) {
@@ -137,10 +180,16 @@ export function makeGeneticTrackTooltip(
             }
             return ret;
         });
-    };
+    }
+
+    function generateGermlineLabel() {
+        const ret = $('<small style="color: #ff0000">');
+        ret.append('&nbsp;Germline');
+        return ret;
+    }
 
     const disp_cna:{[integerCN:string]:string} = {'-2': 'HOMODELETED', '-1': 'HETLOSS', '1': 'GAIN', '2': 'AMPLIFIED'};
-    return function (d:GeneticTrackDatum) {
+    return function (d:Pick<GeneticTrackDatum, "data"|"profiled_in"|"sample"|"patient"|"study_id"|"na"|"not_profiled_in"|"disp_germ">) {
         const ret = $('<div>').addClass(TOOLTIP_DIV_CLASS);
         let mutations:any[] = [];
         let cna:any[] = [];
@@ -168,9 +217,9 @@ export function makeGeneticTrackTooltip(
                     (datum.alterationSubType === "fusion" ? fusions : mutations).push(tooltip_datum);
                     break;
                 case "COPY_NUMBER_ALTERATION":
-                    if (disp_cna.hasOwnProperty((datum as GeneMolecularData).value)) {
+                    if (disp_cna.hasOwnProperty((datum as NumericGeneMolecularData).value)) {
                         const tooltip_datum:any = {
-                            cna: disp_cna[(datum as GeneMolecularData).value]
+                            cna: disp_cna[(datum as NumericGeneMolecularData).value]
                         };
                         const oncokb_oncogenic = datum.oncoKbOncogenic;
                         if (oncokb_oncogenic) {
@@ -211,6 +260,9 @@ export function makeGeneticTrackTooltip(
                 }
                 ret.append(mutations[i]);
             }
+            if (d.disp_germ) {
+                ret.append(generateGermlineLabel());
+            }
             ret.append('<br>');
         }
         if (cna.length > 0) {
@@ -230,27 +282,58 @@ export function makeGeneticTrackTooltip(
         if (prot.length > 0) {
             ret.append('PROT: <b>' + prot.join(", ") + '</b><br>');
         }
-        // Coverage
-        let coverage_elts:any[] = (d.coverage || []).map((x:GenePanelData)=>{
-            return makeGenePanelPopupLink(x.genePanelId);
-        });
-        if (d.wholeExomeSequenced) {
-            coverage_elts.push("Whole-Exome Sequencing");
-        }
-        if (coverage_elts.length) {
-            ret.append("Coverage: ");
-            for (var i = 0; i < coverage_elts.length; i++) {
-                if (i > 0) {
+        // CoverageInformation
+        const coverageInformation = makeGeneticTrackTooltip_getCoverageInformation(d.profiled_in, d.not_profiled_in);
+        if (coverageInformation.dispProfiledGenePanelIds.length || coverageInformation.dispNotProfiledGenePanelIds.length) {
+            ret.append("Gene Panels: ");
+            let needsCommaFirst = false;
+            for (let i=0; i<coverageInformation.dispProfiledGenePanelIds.length; i++) {
+                if (needsCommaFirst) {
                     ret.append(",");
                 }
-                ret.append(coverage_elts[i]);
+                needsCommaFirst = true;
+                ret.append(makeGenePanelPopupLink(coverageInformation.dispProfiledGenePanelIds[i], true));
+            }
+            for (let i=0; i<coverageInformation.dispNotProfiledGenePanelIds.length; i++) {
+                if (needsCommaFirst) {
+                    ret.append(",");
+                }
+                needsCommaFirst = true;
+                ret.append(makeGenePanelPopupLink(coverageInformation.dispNotProfiledGenePanelIds[i], false));
             }
             ret.append("<br>");
         }
-        if (d.na) {
-            ret.append('Not sequenced');
+        if (coverageInformation.dispAllProfiled) {
+            ret.append("Profiled in all selected molecular profiles.");
+            ret.append("<br>");
+        } else if (coverageInformation.dispNotProfiled) {
+            ret.append('Not profiled in selected molecular profiles.');
             ret.append('<br>');
+        } else {
+            const molecularProfileMap = getMolecularProfileMap && getMolecularProfileMap();
+
+            if (coverageInformation.dispProfiledIn && coverageInformation.dispProfiledIn.length) {
+                ret.append("Profiled in: "+coverageInformation.dispProfiledIn.map(x=>{
+                        if (molecularProfileMap) {
+                            return molecularProfileMap[x].name;
+                        } else {
+                            return x;
+                        }
+                    }).join(", "));
+                ret.append("<br>");
+            }
+            if (coverageInformation.dispNotProfiledIn && coverageInformation.dispNotProfiledIn.length) {
+                ret.append("<span style='color:red; font-weight:bold'>Not profiled in: "+coverageInformation.dispNotProfiledIn.map(x=>{
+                        if (molecularProfileMap) {
+                            return molecularProfileMap[x].name;
+                        } else {
+                            return x;
+                        }
+                    }).join(", ")+"</span>");
+                ret.append("<br>");
+            }
         }
+
         let caseIdElt;
         if (d.sample) {
             caseIdElt = link_id ? sampleViewAnchorTag(d.study_id, d.sample) : d.sample;
