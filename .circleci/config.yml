@@ -36,6 +36,15 @@ jobs:
           paths:
             - node_modules
           key: v1-dependencies-{{ checksum "package-lock.json" }}
+      - run:
+          name: "Run build"
+          command: 'npm run build'
+      - save_cache:
+          paths:
+            - common-dist
+            - dist
+          key: asset-cache-{{ .Environment.CIRCLE_SHA1 }}
+
 
   api_sync:
     <<: *defaults
@@ -58,9 +67,12 @@ jobs:
           - v1-dependencies-{{ checksum "package-lock.json" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
+      - restore_cache:
+          keys:
+          - asset-cache-{{ .Environment.CIRCLE_SHA1 }}
       # run tests!
       - run:
-          command: "npm run build && npm test"
+          command: "npm test"
           environment:
             JUNIT_REPORT_PATH: ./junit/
             JUNIT_REPORT_NAME: test-results.xml
@@ -79,17 +91,20 @@ jobs:
           - v1-dependencies-{{ checksum "package-lock.json" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
+      - restore_cache:
+          keys:
+          - asset-cache-{{ .Environment.CIRCLE_SHA1 }}
       - run:
-          name: "Build DLL files"
-          command: "npm run buildDLL:dev"
+          name: "Install http server"
+          command: "npm i http-server"
       - run:
           name: "Spin up frontend repo and run end to end tests"
           command: |
-            npm run start & \
+            ./node_modules/http-server/bin/http-server --cors dist/ -p 3000 & \
             cd end-to-end-tests && \
             npm install && \
-            ./node_modules/webdriver-manager/bin/webdriver-manager update && \
-            ./node_modules/webdriver-manager/bin/webdriver-manager start & \
+            ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '2.37' && \
+            ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome '2.37' & \
             ./scripts/env_vars.sh && \
             eval "$(./scripts/env_vars.sh)" && \
             curl $CBIOPORTAL_URL > /dev/null && \
@@ -99,11 +114,12 @@ jobs:
             curl $CBIOPORTAL_URL > /dev/null && \
             sleep 20s && \
             curl http://localhost:3000 > /dev/null && \
-            sleep 20s && \
+            sleep 1s && \
             cd end-to-end-tests && \
             npm run test-webdriver-manager
           environment:
             JUNIT_REPORT_PATH: ./junit/
+            FRONTEND_TEST_USE_LOCAL_DIST: true
           when: always
       - run:
           name: "Make sure all screenshots are tracked (otherwise the test will always be succesful)"

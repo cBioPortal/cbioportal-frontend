@@ -7,7 +7,7 @@ import {AnnotatedExtendedAlteration} from "../ResultsViewPageStore";
 
 export interface ISubAlteration {
     type: string;
-    value: string;
+    value: number;
 }
 
 export interface IOqlData {
@@ -93,7 +93,7 @@ export function generateOqlDisplayValue(oqlData: {[oqlLine: string]: IOqlData}, 
         const datum = oqlData[oqlLine];
 
         if (datum) {
-            oqlValue = datum.sequenced ? generateOqlValue(oqlData[oqlLine]) : "N/S";
+            oqlValue = datum.sequenced ? generateOqlValue(oqlData[oqlLine]) : "N/P";
         }
     }
 

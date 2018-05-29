@@ -24,6 +24,7 @@ export type ClinicalTrackSpec = {
     label: string;
     description: string;
     data: ClinicalTrackDatum[];
+    na_legend_label?:string;
 } & ({
     datatype: "counts";
     countsCategoryLabels:string[];
@@ -58,14 +59,15 @@ export type GeneticTrackDatum = {
     study_id:string;
     uid:string;
     data:(ExtendedAlteration&AnnotatedMutation)[];
-    coverage?: GenePanelData[];
-    wholeExomeSequenced?:boolean;
+    profiled_in?: GenePanelData[];
+    not_profiled_in?:GenePanelData[];
     na?: boolean;
     disp_mut?:string;
     disp_cna?:string;
     disp_mrna?:string;
     disp_prot?:string;
     disp_fusion?:boolean;
+    disp_germ?:boolean;
 };
 
 export type GeneticTrackSpec = {
@@ -88,10 +90,13 @@ interface IBaseHeatmapTrackSpec {
 export interface IGeneHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     data: IGeneHeatmapTrackDatum[];
     onRemove: () => void;
+    info?: string;
 }
 export interface IGenesetHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     data: IGenesetHeatmapTrackDatum[];
     trackLinkUrl: string | undefined;
+    expansionTrackList: IGeneHeatmapTrackSpec[];
+    expansionCallback: () => void;
 }
 
 export const GENETIC_TRACK_GROUP_INDEX = 1;
@@ -106,6 +111,8 @@ export interface IOncoprintProps {
     heatmapTracks: IGeneHeatmapTrackSpec[];
     divId:string;
     width:number;
+
+    molecularProfileIdToMolecularProfile?:{[molecularProfileId:string]:MolecularProfile};
 
     horzZoomToFitIds?:string[];
 
@@ -177,7 +184,8 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
             }
         }
         if (!this.oncoprint.webgl_unavailable) {
-            transition(props, this.lastTransitionProps || {}, this.oncoprint, ()=>this.trackSpecKeyToTrackId);
+            transition(props, this.lastTransitionProps || {}, this.oncoprint, ()=>this.trackSpecKeyToTrackId,
+                ()=>this.props.molecularProfileIdToMolecularProfile);
             this.lastTransitionProps = _.clone(props);
         }
     }
