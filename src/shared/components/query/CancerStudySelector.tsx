@@ -85,9 +85,9 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 
     handleStudiesCheckbox<T>(event: React.FormEvent<T>, clickedStudyIds: string[]) {
         if ((event.target as HTMLInputElement).checked)
-            this.store.selectedStudyIds = _.union(this.store.selectedStudyIds, clickedStudyIds);
+            this.store.selectableSelectedStudyIds = _.union(this.store.selectableSelectedStudyIds, clickedStudyIds);
         else
-            this.store.selectedStudyIds = _.difference(this.store.selectedStudyIds, clickedStudyIds);
+            this.store.selectableSelectedStudyIds = _.difference(this.store.selectableSelectedStudyIds, clickedStudyIds);
     }
 
     CancerTypeList = observer(() => {
@@ -133,7 +133,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 
     render() {
 
-        const {selectedStudyIds, selectedStudies, shownStudies, shownAndSelectedStudies} =
+        const {selectableSelectedStudyIds, selectableSelectedStudies, shownStudies, shownAndSelectedStudies} =
             this.logic.mainView.getSelectionReport();
 
         return (
@@ -148,7 +148,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                         {!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending) && (
                             <Observer>
                                 {() => {
-                                    let numSelectedStudies = expr(() => this.store.selectedStudyIds.length);
+                                    let numSelectedStudies = expr(() => this.store.selectableSelectedStudyIds.length);
                                     let selectedCountClass = classNames({
                                         [styles.selectedCount]: true,
                                         [styles.selectionsExist]: numSelectedStudies > 0
@@ -161,7 +161,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                                             }}
                                         >
                                             <b>{numSelectedStudies}</b> studies selected
-                                            (<b>{this.store.selectedStudies_totalSampleCount}</b> samples)
+                                            (<b>{this.store.selectableSelectedStudies_totalSampleCount}</b> samples)
                                         </a>
                                     );
                                 }}
@@ -172,7 +172,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                         {(!!(!this.store.forDownloadTab) && !!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending)) && (
                             <Observer>
                                 {() => {
-                                    let hasSelection = this.store.selectedStudyIds.length > 0;
+                                    let hasSelection = this.store.selectableSelectedStudyIds.length > 0;
 
                                     if (hasSelection) {
                                         return (
@@ -196,9 +196,9 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                             <Observer>
                                 {() => {
 
-                                    const studyLimitReached = (this.store.selectedStudyIds.length > 20);
+                                    const studyLimitReached = (this.store.selectableSelectedStudyIds.length > 50);
                                     const tooltipMessage = studyLimitReached ?
-                                        <span>Too many studies selected for study summary (limit: 20)</span> :
+                                        <span>Too many studies selected for study summary (limit: 50)</span> :
                                         <span>Open summary of selected studies in a new window.</span>
 
                                     return (
@@ -236,6 +236,10 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                                 searchTextOptions = [this.store.searchText].concat(searchTextOptions as string[]);
                             let searchTimeout: number | null = null;
 
+                            const optionsWithSortKeys = searchTextOptions.map((name,i)=>{
+                                return { value: name, sortKey: i }
+                            });
+
                             return (
                                 <div style={{display: 'flex', alignItems: 'center'}}>
                                     {
@@ -253,7 +257,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                                         )
                                     }
                                     <Autosuggest
-                                        datalist={searchTextOptions}
+                                        datalist={optionsWithSortKeys}
                                         ref={(el: React.Component<any, any>) => this.autosuggest = el}
                                         placeholder="Search..."
                                         bsSize="small"
@@ -291,7 +295,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                     {!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending) && (
                         <Observer>
                             {() => {
-                                let numSelectedStudies = expr(() => this.store.selectedStudyIds.length);
+                                let numSelectedStudies = expr(() => this.store.selectableSelectedStudyIds.length);
                                 let selectedCountClass = classNames({
                                     [styles.selectedCount]: true,
                                     [styles.selectionsExist]: numSelectedStudies > 0
@@ -305,7 +309,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                                         }}
                                     >
 										<b>{numSelectedStudies}</b> studies selected
-										(<b>{this.store.selectedStudies_totalSampleCount}</b> samples)
+										(<b>{this.store.selectableSelectedStudies_totalSampleCount}</b> samples)
 									</span>
                                 );
                             }}

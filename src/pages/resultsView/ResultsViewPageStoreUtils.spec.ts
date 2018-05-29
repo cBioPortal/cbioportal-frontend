@@ -1,18 +1,25 @@
 import {getSimplifiedMutationType} from "shared/lib/oql/accessors";
 import {assert} from "chai";
 import {
-    Gene, GeneMolecularData, GenePanelData, MolecularProfile, Mutation, Patient,
-    Sample
+    Gene, NumericGeneMolecularData, GenePanelData, MolecularProfile, Mutation, Patient,
+    Sample, CancerStudy
 } from "../../shared/api/generated/CBioPortalAPI";
 import {
     annotateMolecularDatum,
     annotateMutationPutativeDriver,
     computeCustomDriverAnnotationReport, computeGenePanelInformation, computePutativeDriverAnnotatedMutations,
     getOncoKbOncogenic,
-    initializeCustomDriverAnnotationSettings
+    initializeCustomDriverAnnotationSettings,
+    fetchQueriedStudies
 } from "./ResultsViewPageStoreUtils";
 import {observable} from "mobx";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
+import {AnnotatedMutation} from "./ResultsViewPageStore";
+import * as _ from 'lodash';
+import sinon from 'sinon';
+import sessionServiceClient from "shared/api//sessionServiceInstance";
+import { VirtualStudy, VirtualStudyData } from "shared/model/VirtualStudy";
+import client from "shared/api/cbioportalClientInstance";
 
 describe("ResultsViewPageStoreUtils", ()=>{
     describe("computeCustomDriverAnnotationReport", ()=>{
@@ -263,7 +270,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
             assert.deepEqual(
                 annotateMutationPutativeDriver(
                     {
-                        mutationType: "in_frame_ins",
+                        mutationType: "asdfasdf",
                     } as Mutation,
                     {
                         hotspots: false,
@@ -276,8 +283,8 @@ describe("ResultsViewPageStoreUtils", ()=>{
                     putativeDriver: true,
                     isHotspot: false,
                     oncoKbOncogenic: "",
-                    simplifiedMutationType: getSimplifiedMutationType("in_frame_ins"),
-                    mutationType: "in_frame_ins",
+                    simplifiedMutationType: getSimplifiedMutationType("asdfasdf"),
+                    mutationType: "asdfasdf",
                 },
                 "tier"
             );
@@ -307,7 +314,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
             assert.deepEqual(
                 annotateMutationPutativeDriver(
                     {
-                        mutationType: "missense",
+                        mutationType: "asdfasdf",
                     } as Mutation,
                     {
                         hotspots: true,
@@ -322,8 +329,8 @@ describe("ResultsViewPageStoreUtils", ()=>{
                     putativeDriver: true,
                     isHotspot: true,
                     oncoKbOncogenic: "oncogenic",
-                    simplifiedMutationType: getSimplifiedMutationType("missense"),
-                    mutationType: "missense",
+                    simplifiedMutationType: getSimplifiedMutationType("asdfasdf"),
+                    mutationType: "asdfasdf",
                 }
             );
         });
@@ -331,7 +338,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
             assert.deepEqual(
                 annotateMutationPutativeDriver(
                     {
-                        mutationType: "missense",
+                        mutationType: "cvzxcv",
                     } as Mutation,
                     {
                         hotspots: false,
@@ -345,8 +352,8 @@ describe("ResultsViewPageStoreUtils", ()=>{
                     putativeDriver: false,
                     isHotspot: false,
                     oncoKbOncogenic: "",
-                    simplifiedMutationType: getSimplifiedMutationType("missense"),
-                    mutationType: "missense",
+                    simplifiedMutationType: getSimplifiedMutationType("cvzxcv"),
+                    mutationType: "cvzxcv",
                 }
             );
         });
@@ -362,14 +369,14 @@ describe("ResultsViewPageStoreUtils", ()=>{
                     [{mutationType:"missense"} as Mutation],
                     ()=>({oncoKb:"", hotspots:true, cbioportalCount:false, cosmicCount:true, customDriverBinary:false}),
                     true
-                ),
+                ) as Partial<AnnotatedMutation>[],
                 [{
                     mutationType:"missense",
                     simplifiedMutationType: getSimplifiedMutationType("missense"),
                     isHotspot: true,
                     oncoKbOncogenic: "",
                     putativeDriver: true
-                }]
+                } as AnnotatedMutation]
             );
         });
         it("annotates a few mutations", ()=>{
@@ -378,7 +385,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
                     [{mutationType:"missense"} as Mutation, {mutationType:"in_frame_del"} as Mutation, {mutationType:"asdf"} as Mutation],
                     ()=>({oncoKb:"", hotspots:true, cbioportalCount:false, cosmicCount:true, customDriverBinary:false}),
                     true
-                ),
+                ) as Partial<AnnotatedMutation>[],
                 [{
                     mutationType:"missense",
                     simplifiedMutationType: getSimplifiedMutationType("missense"),
@@ -419,7 +426,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
                         {oncoKb:"", hotspots:false, cbioportalCount:false, cosmicCount:false, customDriverBinary:false}
                     ),
                     true
-                ),
+                ) as Partial<AnnotatedMutation>[],
                 [{
                     mutationType:"in_frame_del",
                     simplifiedMutationType: getSimplifiedMutationType("in_frame_del"),
@@ -455,115 +462,115 @@ describe("ResultsViewPageStoreUtils", ()=>{
         it("annotates single element correctly in case of Likely Oncogenic", ()=>{
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Likely Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Likely Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:"Likely Oncogenic"}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:"Likely Oncogenic"}
             );
         });
         it("annotates single element correctly in case of Predicted Oncogenic", ()=>{
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Predicted Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Predicted Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:"Predicted Oncogenic"}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:"Predicted Oncogenic"}
             );
         });
         it("annotates single element correctly in case of Oncogenic", ()=>{
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:"Oncogenic"}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:"Oncogenic"}
             );
         });
         it("annotates single element correctly in case of Likely Neutral, Inconclusive, Unknown, asdfasd, undefined, empty", ()=>{
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Likely Neutral"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Likely Neutral"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Inconclusive"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Inconclusive"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Unknown"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Unknown"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"asdfasdf"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"asdfasdf"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:undefined} as any),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:undefined} as any),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:""} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:""} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"COPY_NUMBER_ALTERATION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
         });
         it("annotates non-copy number data with empty string", ()=>{
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"MUTATION_EXTENDED"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"MRNA_EXPRESSION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"PROTEIN_LEVEL"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
             assert.deepEqual(
                 annotateMolecularDatum(
-                    {value:"0", molecularProfileId:"profile"} as GeneMolecularData,
-                    (d:GeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
+                    {value:0, molecularProfileId:"profile"} as NumericGeneMolecularData,
+                    (d:NumericGeneMolecularData)=>({oncogenic:"Oncogenic"} as IndicatorQueryResp),
                     {"profile":{molecularAlterationType:"FUSION"} as MolecularProfile}
                 ),
-                {value:"0", molecularProfileId:"profile", oncoKbOncogenic:""}
+                {value:0, molecularProfileId:"profile", oncoKbOncogenic:""}
             );
         });
     });
@@ -572,7 +579,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
         const genes:Gene[] = [];
         const samples:Sample[] = [];
         const patients:Patient[] = [];
-        let genePanelDatum1:any, genePanelDatum2:any, wxsDatum1:any;/*, nsDatum1:any, nsDatum2:any;*/
+        let genePanelDatum1:any, genePanelDatum2:any, wxsDatum1:any, nsDatum1:any, nsDatum2:any;
         let genePanels:any[] = [];
         before(()=>{
 
@@ -619,37 +626,42 @@ describe("ResultsViewPageStoreUtils", ()=>{
             genePanelDatum1 = {
                 uniqueSampleKey: "PATIENT1 SAMPLE1",
                 uniquePatientKey: "PATIENT1",
-                genePanelId: "GENEPANEL1"
+                molecularProfileId: "PROFILE",
+                genePanelId: "GENEPANEL1",
+                profiled: true
             };
 
             genePanelDatum2 = {
                 uniqueSampleKey: "PATIENT2 SAMPLE1",
                 uniquePatientKey: "PATIENT2",
-                genePanelId: "GENEPANEL2"
+                molecularProfileId: "PROFILE",
+                genePanelId: "GENEPANEL2",
+                profiled: true
             };
 
             wxsDatum1 = {
                 uniqueSampleKey:"PATIENT1 SAMPLE2",
                 uniquePatientKey: "PATIENT1",
-                wholeExomeSequenced: true
+                molecularProfileId: "PROFILE",
+                profiled: true
             };
 
 
-            /*nsDatum1 = {
+            nsDatum1 = {
                 entrezGeneId: 2,
-                genePanelId:"GENEPANEL1",
+                molecularProfileId: "PROFILE",
                 uniqueSampleKey: "PATIENT1 SAMPLE1",
                 uniquePatientKey: "PATIENT1",
-                sequenced: false
+                profiled: false
             };
 
             nsDatum2 = {
                 entrezGeneId: 2,
-                genePanelId:"GENEPANEL1",
+                molecularProfileId: "PROFILE",
                 uniqueSampleKey: "PATIENT2 SAMPLE1",
                 uniquePatientKey: "PATIENT2",
-                sequenced: false
-            };*/
+                profiled: false
+            };
         });
         it("computes the correct object with no input data", ()=>{
             assert.deepEqual(
@@ -657,26 +669,36 @@ describe("ResultsViewPageStoreUtils", ()=>{
                 {
                     samples: {
                         "PATIENT1 SAMPLE1": {
-                            sequencedGenes:{},
-                            wholeExomeSequenced:false
+                            byGene:{},
+                            allGenes:[],
+                            notProfiledByGene:{},
+                            notProfiledAllGenes:[]
                         },
                         "PATIENT1 SAMPLE2": {
-                            sequencedGenes:{},
-                            wholeExomeSequenced:false
+                            byGene:{},
+                            allGenes:[],
+                            notProfiledByGene:{},
+                            notProfiledAllGenes:[]
                         },
                         "PATIENT2 SAMPLE1": {
-                            sequencedGenes:{},
-                            wholeExomeSequenced:false
+                            byGene:{},
+                            allGenes:[],
+                            notProfiledByGene:{},
+                            notProfiledAllGenes:[]
                         }
                     },
                     patients: {
                         "PATIENT1": {
-                            sequencedGenes:{},
-                            wholeExomeSequenced:false
+                            byGene:{},
+                            allGenes:[],
+                            notProfiledByGene:{},
+                            notProfiledAllGenes:[]
                         },
                         "PATIENT2": {
-                            sequencedGenes:{},
-                            wholeExomeSequenced:false
+                            byGene:{},
+                            allGenes:[],
+                            notProfiledByGene:{},
+                            notProfiledAllGenes:[]
                         }
                     }
                 }
@@ -690,26 +712,36 @@ describe("ResultsViewPageStoreUtils", ()=>{
                 {
                     samples: {
                         "PATIENT1 SAMPLE1": {
-                            sequencedGenes:{"GENE1":[genePanelDatum1], "GENE2":[genePanelDatum1]},
-                            wholeExomeSequenced:false
+                            byGene:{"GENE1":[genePanelDatum1], "GENE2":[genePanelDatum1]},
+                            allGenes:[],
+                            notProfiledByGene:{"GENE3":[genePanelDatum1]},
+                            notProfiledAllGenes:[]
                         },
                         "PATIENT1 SAMPLE2": {
-                            sequencedGenes:{},
-                            wholeExomeSequenced:false
+                            byGene:{},
+                            allGenes:[],
+                            notProfiledByGene:{},
+                            notProfiledAllGenes:[]
                         },
                         "PATIENT2 SAMPLE1": {
-                            sequencedGenes:{"GENE1":[genePanelDatum2], "GENE2":[genePanelDatum2]},
-                            wholeExomeSequenced:false
+                            byGene:{"GENE1":[genePanelDatum2], "GENE2":[genePanelDatum2]},
+                            allGenes:[],
+                            notProfiledByGene:{"GENE3":[genePanelDatum2]},
+                            notProfiledAllGenes:[]
                         }
                     },
                     patients: {
                         "PATIENT1": {
-                            sequencedGenes:{"GENE1":[genePanelDatum1], "GENE2":[genePanelDatum1]},
-                            wholeExomeSequenced:false
+                            byGene:{"GENE1":[genePanelDatum1], "GENE2":[genePanelDatum1]},
+                            allGenes:[],
+                            notProfiledByGene:{"GENE3":[genePanelDatum1]},
+                            notProfiledAllGenes:[]
                         },
                         "PATIENT2": {
-                            sequencedGenes:{"GENE1":[genePanelDatum2], "GENE2":[genePanelDatum2]},
-                            wholeExomeSequenced:false
+                            byGene:{"GENE1":[genePanelDatum2], "GENE2":[genePanelDatum2]},
+                            allGenes:[],
+                            notProfiledByGene:{"GENE3":[genePanelDatum2]},
+                            notProfiledAllGenes:[]
                         }
                     }
                 }
@@ -723,98 +755,229 @@ describe("ResultsViewPageStoreUtils", ()=>{
                 {
                     samples: {
                         "PATIENT1 SAMPLE1": {
-                            sequencedGenes:{},
-                            wholeExomeSequenced:false
+                            byGene:{},
+                            allGenes:[],
+                            notProfiledByGene:{},
+                            notProfiledAllGenes:[]
                         },
                         "PATIENT1 SAMPLE2": {
-                            sequencedGenes:{},
-                            wholeExomeSequenced:true
+                            byGene:{},
+                            allGenes:[wxsDatum1],
+                            notProfiledByGene:{},
+                            notProfiledAllGenes:[]
                         },
                         "PATIENT2 SAMPLE1": {
-                            sequencedGenes:{},
-                            wholeExomeSequenced:false
+                            byGene:{},
+                            allGenes:[],
+                            notProfiledByGene:{},
+                            notProfiledAllGenes:[]
                         }
                     },
                     patients: {
                         "PATIENT1": {
-                            sequencedGenes:{},
-                            wholeExomeSequenced:true
+                            byGene:{},
+                            allGenes:[wxsDatum1],
+                            notProfiledByGene:{},
+                            notProfiledAllGenes:[]
                         },
                         "PATIENT2": {
-                            sequencedGenes:{},
-                            wholeExomeSequenced:false
+                            byGene:{},
+                            allGenes:[],
+                            notProfiledByGene:{},
+                            notProfiledAllGenes:[]
                         }
                     }
                 }
             );
         });
-        /*it("computes the correct object with not sequenced data", ()=>{
+        it("computes the correct object with not sequenced data", ()=>{
             assert.deepEqual(
                 computeGenePanelInformation([
                     nsDatum1, nsDatum2
-                ] as GenePanelData[], samples, patients, genes),
+                ] as GenePanelData[], genePanels, samples, patients, genes),
                 {
                     samples: {
                         "PATIENT1 SAMPLE1": {
-                            sequencedGenes:{},
-                            wholeExomeSequenced:false
+                            byGene:{},
+                            allGenes:[],
+                            notProfiledByGene:{},
+                            notProfiledAllGenes:[nsDatum1]
                         },
                         "PATIENT1 SAMPLE2": {
-                            sequencedGenes:{},
-                            wholeExomeSequenced:false
+                            byGene:{},
+                            allGenes:[],
+                            notProfiledByGene:{},
+                            notProfiledAllGenes:[]
                         },
                         "PATIENT2 SAMPLE1": {
-                            sequencedGenes:{},
-                            wholeExomeSequenced:false
+                            byGene:{},
+                            allGenes:[],
+                            notProfiledByGene:{},
+                            notProfiledAllGenes:[nsDatum2]
                         }
                     },
                     patients: {
                         "PATIENT1": {
-                            sequencedGenes:{},
-                            wholeExomeSequenced:false
+                            byGene:{},
+                            allGenes:[],
+                            notProfiledByGene:{},
+                            notProfiledAllGenes:[nsDatum1]
                         },
                         "PATIENT2": {
-                            sequencedGenes:{},
-                            wholeExomeSequenced:false
+                            byGene:{},
+                            allGenes:[],
+                            notProfiledByGene:{},
+                            notProfiledAllGenes:[nsDatum2]
                         }
                     }
                 }
             );
-        });*/
+        });
         it("computes the correct object with gene panel data and whole exome sequenced data" /*and not sequenced data"*/, ()=>{
             assert.deepEqual(
                 computeGenePanelInformation([
                     genePanelDatum1, genePanelDatum2,
                     wxsDatum1
-                    //,nsDatum1, nsDatum2
+                    ,nsDatum1, nsDatum2
                 ] as GenePanelData[], genePanels, samples, patients, genes),
                 {
                     samples: {
                         "PATIENT1 SAMPLE1": {
-                            sequencedGenes:{"GENE1":[genePanelDatum1], "GENE2":[genePanelDatum1]},
-                            wholeExomeSequenced:false
+                            byGene:{"GENE1":[genePanelDatum1], "GENE2":[genePanelDatum1]},
+                            allGenes:[],
+                            notProfiledByGene:{"GENE3":[genePanelDatum1]},
+                            notProfiledAllGenes:[nsDatum1]
                         },
                         "PATIENT1 SAMPLE2": {
-                            sequencedGenes:{},
-                            wholeExomeSequenced:true
+                            byGene:{},
+                            allGenes:[wxsDatum1],
+                            notProfiledByGene:{},
+                            notProfiledAllGenes:[]
                         },
                         "PATIENT2 SAMPLE1": {
-                            sequencedGenes:{"GENE1":[genePanelDatum2], "GENE2":[genePanelDatum2]},
-                            wholeExomeSequenced:false
+                            byGene:{"GENE1":[genePanelDatum2], "GENE2":[genePanelDatum2]},
+                            allGenes:[],
+                            notProfiledByGene:{"GENE3":[genePanelDatum2]},
+                            notProfiledAllGenes:[nsDatum2]
                         }
                     },
                     patients: {
                         "PATIENT1": {
-                            sequencedGenes:{"GENE1":[genePanelDatum1], "GENE2":[genePanelDatum1]},
-                            wholeExomeSequenced:true
+                            byGene:{"GENE1":[genePanelDatum1], "GENE2":[genePanelDatum1]},
+                            allGenes:[wxsDatum1],
+                            notProfiledByGene:{"GENE3":[genePanelDatum1]},
+                            notProfiledAllGenes:[nsDatum1]
                         },
                         "PATIENT2": {
-                            sequencedGenes:{"GENE1":[genePanelDatum2], "GENE2":[genePanelDatum2]},
-                            wholeExomeSequenced:false
+                            byGene:{"GENE1":[genePanelDatum2], "GENE2":[genePanelDatum2]},
+                            allGenes:[],
+                            notProfiledByGene:{"GENE3":[genePanelDatum2]},
+                            notProfiledAllGenes:[nsDatum2]
                         }
                     }
                 }
             );
+        });
+    });
+    describe("getQueriedStudies", ()=>{
+
+        const virtualStudy: VirtualStudy = {
+            "id": "shared_study",
+            "data": {
+                "name": "Shared Study",
+                "description": "Shared Study",
+                "studies": [
+                    {
+                        "id": "test_study",
+                        "samples": [
+                        "sample-01",
+                        "sample-02",
+                        "sample-03"
+                        ]
+                    }
+                ],
+            } as VirtualStudyData
+        } as VirtualStudy;
+
+        let physicalStudies: { [id: string]: CancerStudy } = {
+            'physical_study_1': {
+                studyId: 'physical_study_1',
+            } as CancerStudy,
+            'physical_study_2': {
+                studyId: 'physical_study_2',
+            } as CancerStudy
+        };
+
+        let virtualStudies: { [id: string]: VirtualStudy } = {
+            'virtual_study_1': $.extend({},virtualStudy,{"id": "virtual_study_1"}) as VirtualStudy,
+            'virtual_study_2': $.extend({},virtualStudy,{"id": "virtual_study_2"}) as VirtualStudy
+        };
+
+        before(()=>{
+            sinon.stub(sessionServiceClient, "getVirtualStudy").callsFake(function fakeFn(id:string) {
+                return new Promise((resolve, reject) => {
+                    let obj = virtualStudies[id]
+                    if(_.isUndefined(obj)){
+                        reject()
+                    }
+                    else{
+                        resolve(obj);
+                    }
+                });
+            });
+
+            sinon.stub(client, "fetchStudiesUsingPOST").callsFake(function fakeFn(parameters: {
+                'studyIds': Array < string > ,
+                'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META"
+            }) {
+                return new Promise((resolve, reject) => {
+                    resolve(_.reduce(parameters.studyIds,(acc:CancerStudy[],next)=>{
+                        let obj = physicalStudies[next]
+                        if(!_.isUndefined(obj)){
+                            acc.push(obj)
+                        }
+                        return acc
+                    },[]))
+                });
+            });
+        })
+        after(() => {
+            (sessionServiceClient.getVirtualStudy as sinon.SinonStub).restore();
+            (client.fetchStudiesUsingPOST as sinon.SinonStub).restore();
+        });
+
+        it("when queried ids is empty", async ()=>{
+            let test = await fetchQueriedStudies({},[]);
+            assert.deepEqual(test,[]);
+        });
+
+        
+        it("when only physical studies are present", async ()=>{
+            let test = await fetchQueriedStudies(physicalStudies,['physical_study_1', 'physical_study_2']);
+            assert.deepEqual(_.map(test,obj=>obj.studyId), ['physical_study_1', 'physical_study_2']);
+        });
+
+        it("when only virtual studies are present", async ()=>{
+            let test = await fetchQueriedStudies({},['virtual_study_1', 'virtual_study_2']);
+            assert.deepEqual(_.map(test,obj=>obj.studyId), ['virtual_study_1', 'virtual_study_2']);
+        });
+
+        it("when physical and virtual studies are present", async ()=>{
+            let test = await fetchQueriedStudies(physicalStudies, ['physical_study_1', 'virtual_study_2']);
+            assert.deepEqual(_.map(test,obj=>obj.studyId), ['physical_study_1', 'virtual_study_2']);
+        });
+
+        it("when there only a subset of studies in studySampleMap compared to queriedIds", async ()=>{
+            let test = await fetchQueriedStudies({ 'physical_study_1': { studyId: 'physical_study_1'} as CancerStudy},['physical_study_1','physical_study_2']);
+            assert.deepEqual(_.map(test,obj=>obj.studyId), ['physical_study_1', 'physical_study_2']);
+        });
+        
+        //this case is not possible because id in these scenarios are first identified in QueryBuilder.java and
+        //returned to query selector page
+        it("when virtual study query having private study or unknow virtual study id", (done)=>{
+            fetchQueriedStudies({},['shared_study1']).catch((error)=>{
+                done();
+            });
         });
     });
 });

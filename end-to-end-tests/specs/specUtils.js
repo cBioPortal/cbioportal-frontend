@@ -4,18 +4,28 @@ function waitForOncoprint(timeout) {
 }
 
 function goToUrlAndSetLocalStorage(url) {
-    browser.url(url);
-    browser.localStorage('DELETE');
-    if (useExternalFrontend) {
-        browser.localStorage('POST', {key: 'localdev', value: 'true'});
+    if (!useExternalFrontend) {
+        browser.url(url);
+    } else {
+        var urlparam = useLocalDist? 'localdist' : 'localdev';
+        var prefix = (url.indexOf("?") > 0)? '&' : '?';
+        browser.url(`${url}${prefix}${urlparam}=true`);
     }
-    browser.refresh();
+}
+
+function sessionServiceIsEnabled() {
+    return browser.execute(function() {
+        return window.frontendConfig.sessionServiceIsEnabled;
+    }).value;
 }
 
 const useExternalFrontend = !process.env.FRONTEND_TEST_DO_NOT_LOAD_EXTERNAL_FRONTEND;
 
+const useLocalDist = process.env.FRONTEND_TEST_USE_LOCAL_DIST;
+
 module.exports = {
     waitForOncoprint: waitForOncoprint,
     goToUrlAndSetLocalStorage: goToUrlAndSetLocalStorage,
-    useExternalFrontend: useExternalFrontend
+    useExternalFrontend: useExternalFrontend,
+    sessionServiceIsEnabled: sessionServiceIsEnabled
 };

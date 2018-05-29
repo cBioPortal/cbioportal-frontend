@@ -1,16 +1,37 @@
+
 import {
-    Gene, GeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
-    Mutation, Patient, Sample
+    Gene, NumericGeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
+    Mutation, Patient, Sample, CancerStudy
 } from "../../shared/api/generated/CBioPortalAPI";
 import {action} from "mobx";
 import {getSimplifiedMutationType} from "../../shared/lib/oql/accessors";
-import {AnnotatedGeneMolecularData, AnnotatedMutation, GenePanelInformation} from "./ResultsViewPageStore";
+import {AnnotatedNumericGeneMolecularData, AnnotatedMutation} from "./ResultsViewPageStore";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import _ from "lodash";
+import sessionServiceClient from "shared/api//sessionServiceInstance";
+import { VirtualStudy } from "shared/model/VirtualStudy";
+import client from "shared/api/cbioportalClientInstance";
 
 type CustomDriverAnnotationReport = {
     hasBinary: boolean,
     tiers: string[];
+};
+
+export type CoverageInformation = {
+    samples:
+        {[uniqueSampleKey:string]:{
+            byGene:{[hugoGeneSymbol:string]:GenePanelData[]},
+            allGenes:GenePanelData[],
+            notProfiledByGene:{[hugoGeneSymbol:string]:GenePanelData[]}
+            notProfiledAllGenes:GenePanelData[];
+        }};
+    patients:
+        {[uniquePatientKey:string]:{
+            byGene:{[hugoGeneSymbol:string]:GenePanelData[]},
+            allGenes:GenePanelData[],
+            notProfiledByGene:{[hugoGeneSymbol:string]:GenePanelData[]}
+            notProfiledAllGenes:GenePanelData[];
+        }};
 };
 
 export function computeCustomDriverAnnotationReport(mutations:Mutation[]):CustomDriverAnnotationReport {
@@ -95,46 +116,76 @@ export function computeGenePanelInformation(
     samples: Sample[],
     patients: Patient[],
     genes:Gene[]
-):GenePanelInformation {
+):CoverageInformation {
     const entrezToGene = _.keyBy(genes, gene=>gene.entrezGeneId);
     const genePanelToGenes = _.mapValues(_.keyBy(genePanels, panel=>panel.genePanelId), (panel:GenePanel)=>{
         return panel.genes.filter(gene=>!!entrezToGene[gene.entrezGeneId]); // only list genes that we're curious in
     });
-    const sampleInfo:GenePanelInformation["samples"] = _.reduce(samples, (map:GenePanelInformation["samples"], sample)=>{
+    const sampleInfo:CoverageInformation["samples"] = _.reduce(samples, (map:CoverageInformation["samples"], sample)=>{
         map[sample.uniqueSampleKey] = {
-            sequencedGenes: {},
-            wholeExomeSequenced: false
+            byGene: {},
+            allGenes:[],
+            notProfiledByGene: {},
+            notProfiledAllGenes:[]
         };
         return map;
     }, {});
 
-    const patientInfo:GenePanelInformation["patients"] = _.reduce(patients, (map:GenePanelInformation["patients"], patient)=>{
+    const patientInfo:CoverageInformation["patients"] = _.reduce(patients, (map:CoverageInformation["patients"], patient)=>{
         map[patient.uniquePatientKey] = {
-            sequencedGenes: {},
-            wholeExomeSequenced: false
+            byGene: {},
+            allGenes:[],
+            notProfiledByGene: {},
+            notProfiledAllGenes:[]
         };
         return map;
     }, {});
+
+    const genePanelDataWithGenePanelId:GenePanelData[] = [];
     for (const gpData of genePanelData) {
         const sampleSequencingInfo = sampleInfo[gpData.uniqueSampleKey];
         const patientSequencingInfo = patientInfo[gpData.uniquePatientKey];
         const genePanelId = gpData.genePanelId;
 
-        if (genePanelId) {
-            // add gene panel data to record particular genes sequenced iff theres a gene panel id
-            if (genePanelToGenes[genePanelId]) {
-                for (const gene of genePanelToGenes[genePanelId]) {
-                    sampleSequencingInfo.sequencedGenes[gene.hugoGeneSymbol] = sampleSequencingInfo.sequencedGenes[gene.hugoGeneSymbol] || [];
-                    sampleSequencingInfo.sequencedGenes[gene.hugoGeneSymbol].push(gpData);
+        if (gpData.profiled) {
+            if (genePanelId) {
+                if (genePanelToGenes[genePanelId]) {
+                    // add gene panel data to record particular genes sequenced
+                    for (const gene of genePanelToGenes[genePanelId]) {
+                        sampleSequencingInfo.byGene[gene.hugoGeneSymbol] = sampleSequencingInfo.byGene[gene.hugoGeneSymbol] || [];
+                        sampleSequencingInfo.byGene[gene.hugoGeneSymbol].push(gpData);
 
-                    patientSequencingInfo.sequencedGenes[gene.hugoGeneSymbol] = patientSequencingInfo.sequencedGenes[gene.hugoGeneSymbol] || [];
-                    patientSequencingInfo.sequencedGenes[gene.hugoGeneSymbol].push(gpData);
+                        patientSequencingInfo.byGene[gene.hugoGeneSymbol] = patientSequencingInfo.byGene[gene.hugoGeneSymbol] || [];
+                        patientSequencingInfo.byGene[gene.hugoGeneSymbol].push(gpData);
+                    }
+                    // Add to list for more processing later
+                    genePanelDataWithGenePanelId.push(gpData);
                 }
+            } else {
+                // otherwise, all genes are profiled
+                sampleSequencingInfo.allGenes.push(gpData);
+                patientSequencingInfo.allGenes.push(gpData);
+            }
+        } else {
+            sampleSequencingInfo.notProfiledAllGenes.push(gpData);
+            patientSequencingInfo.notProfiledAllGenes.push(gpData);
+        }
+    }
+    // Record which of the queried genes are not profiled by gene panels
+    for (const gpData of genePanelDataWithGenePanelId) {
+        const sampleSequencingInfo = sampleInfo[gpData.uniqueSampleKey];
+        const patientSequencingInfo = patientInfo[gpData.uniquePatientKey];
+
+        for (const queryGene of genes) {
+            if (!sampleSequencingInfo.byGene[queryGene.hugoGeneSymbol]) {
+                sampleSequencingInfo.notProfiledByGene[queryGene.hugoGeneSymbol] = sampleSequencingInfo.notProfiledByGene[queryGene.hugoGeneSymbol] || [];
+                sampleSequencingInfo.notProfiledByGene[queryGene.hugoGeneSymbol].push(gpData);
+            }
+            if (!patientSequencingInfo.byGene[queryGene.hugoGeneSymbol]) {
+                patientSequencingInfo.notProfiledByGene[queryGene.hugoGeneSymbol] = patientSequencingInfo.notProfiledByGene[queryGene.hugoGeneSymbol] || [];
+                patientSequencingInfo.notProfiledByGene[queryGene.hugoGeneSymbol].push(gpData);
             }
         }
-
-        sampleSequencingInfo.wholeExomeSequenced = gpData.wholeExomeSequenced || sampleSequencingInfo.wholeExomeSequenced;
-        patientSequencingInfo.wholeExomeSequenced = gpData.wholeExomeSequenced || patientSequencingInfo.wholeExomeSequenced;
     }
     return {
         samples: sampleInfo,
@@ -143,10 +194,10 @@ export function computeGenePanelInformation(
 }
 
 export function annotateMolecularDatum(
-    molecularDatum:GeneMolecularData,
-    getOncoKbCnaAnnotationForOncoprint:(datum:GeneMolecularData)=>IndicatorQueryResp,
+    molecularDatum:NumericGeneMolecularData,
+    getOncoKbCnaAnnotationForOncoprint:(datum:NumericGeneMolecularData)=>IndicatorQueryResp|undefined,
     molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile}
-):AnnotatedGeneMolecularData {
+):AnnotatedNumericGeneMolecularData {
     let oncogenic = "";
     if (molecularProfileIdToMolecularProfile[molecularDatum.molecularProfileId].molecularAlterationType
         === "COPY_NUMBER_ALTERATION") {
@@ -156,4 +207,46 @@ export function annotateMolecularDatum(
         }
     }
     return Object.assign({oncoKbOncogenic: oncogenic}, molecularDatum);
+}
+
+export async function fetchQueriedStudies(filteredPhysicalStudies:{[id:string]:CancerStudy},queriedIds:string[]):Promise<CancerStudy[]>{
+    const queriedStudies:CancerStudy[] = [];
+    let unknownIds:{[id:string]:boolean} = {};
+    for(const id of queriedIds){
+        if(filteredPhysicalStudies[id]){
+            queriedStudies.push(filteredPhysicalStudies[id])
+        } else {
+            unknownIds[id]=true;
+        }
+    }
+
+    if(!_.isEmpty(unknownIds)){
+        await client.fetchStudiesUsingPOST({
+            studyIds:Object.keys(unknownIds),
+            projection:'DETAILED'
+        }).then(studies=>{
+            studies.forEach(study=>{
+                queriedStudies.push(study);
+                delete unknownIds[study.studyId];
+            })
+    
+        }).catch(() => {}) //this is for private instances. it throws error when the study is not found
+    }
+
+    let virtualStudypromises = Object.keys(unknownIds).map(id =>sessionServiceClient.getVirtualStudy(id))
+
+    await Promise.all(virtualStudypromises).then((allData: VirtualStudy[]) => {
+        allData.forEach(virtualStudy=>{
+            let study = {
+                allSampleCount:_.sumBy(virtualStudy.data.studies, study=>study.samples.length),
+                studyId: virtualStudy.id,
+                name: virtualStudy.data.name,
+                description: virtualStudy.data.description,
+                cancerTypeId: "My Virtual Studies"
+            } as CancerStudy;
+            queriedStudies.push(study)
+        })
+    });
+
+    return queriedStudies;
 }

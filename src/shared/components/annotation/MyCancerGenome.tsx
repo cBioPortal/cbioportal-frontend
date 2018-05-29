@@ -14,6 +14,40 @@ export function placeArrow(tooltipEl: any) {
 }
 
 /**
+ * This is NOT a generic html anchor tag parser. Assuming all MyCancerGenome links have the same simple structure.
+ * DOMParser can be used for generic parsing purposes, but it is not compatible with the current test environment.
+ * (i.e: DOMParser unit tests always fail, but it works fine in the browser)
+ */
+export function parseMyCancerGenomeLink(link: string)
+{
+    // Generic DOMParser solution (not compatible with the current unit test environment):
+    // const parser = new DOMParser();
+    // const htmlDoc = parser.parseFromString(link, "text/html");
+    // const links = htmlDoc.getElementsByTagName('a');
+
+    // assuming that we only have one attribute which is href
+    const hrefStart = link.indexOf('"') + 1;
+    const hrefEnd = hrefStart + link.slice(hrefStart).indexOf('"');
+
+    // assuming that the text starts right after the first >, and ends right before the </a>
+    const textStart = link.indexOf(">") + 1;
+    const textEnd = link.indexOf("</a>");
+
+    const href = link.slice(hrefStart, hrefEnd).trim();
+    const text = link.slice(textStart, textEnd).trim();
+
+    if (href.length > 0 && text.length > 0) {
+        return {
+            url: href,
+            text: text
+        };
+    }
+    else {
+        return undefined;
+    }
+}
+
+/**
  * @author Selcuk Onur Sumer
  */
 export default class MyCancerGenome extends React.Component<IMyCancerGenomeProps, {}>
@@ -33,10 +67,17 @@ export default class MyCancerGenome extends React.Component<IMyCancerGenomeProps
         const links:any[] = [];
 
         _.each(linksHTML, (link:string, index:number) => {
-            // TODO we need to dangerously insert HTML since the data is formatted as an html link...
-            links.push(
-                <li key={index} dangerouslySetInnerHTML={{__html: link}} />
-            );
+            // TODO this is a workaround, ideally we should fix the data itself
+            // parse the data as an HTML dom element, since it is formatted as an HTML link.
+            const myCancerGenomeLink = parseMyCancerGenomeLink(link);
+
+            if (myCancerGenomeLink) {
+                links.push(
+                    <li key={index}>
+                        <a href={myCancerGenomeLink.url} target="_blank">{myCancerGenomeLink.text}</a>
+                    </li>
+                );
+            }
         });
 
         return (

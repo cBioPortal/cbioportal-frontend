@@ -1,7 +1,7 @@
 import {assert} from 'chai';
 
 import {GeneticTrackDatum} from "shared/components/oncoprint/Oncoprint";
-import {Sample} from "shared/api/generated/CBioPortalAPI";
+import {GenePanelData, Sample} from "shared/api/generated/CBioPortalAPI";
 import {
     generateCaseAlterationData, generateDownloadData, generateGeneAlterationData, generateMutationDownloadData, generateOqlData
 } from "./DownloadUtils";
@@ -66,7 +66,7 @@ describe('DownloadUtils', () => {
         sampleId: "TCGA-EE-A20C-06",
         patientId: "TCGA-EE-A20C",
         studyId: "skcm_tcga",
-        value: "2.4745",
+        value: 2.4745,
         entrezGeneId: 5728,
         gene: {
             entrezGeneId: 5728,
@@ -88,7 +88,7 @@ describe('DownloadUtils', () => {
         sampleId: "TCGA-EE-A20C-06",
         patientId: "TCGA-EE-A20C",
         studyId: "skcm_tcga",
-        value: "2.5406",
+        value: 2.5406,
         entrezGeneId: 5728,
         gene: {
             entrezGeneId: 5728,
@@ -110,7 +110,7 @@ describe('DownloadUtils', () => {
         sampleId: "TCGA-EE-A20C-06",
         patientId: "TCGA-EE-A20C",
         studyId: "skcm_tcga",
-        value: "-1",
+        value: -1,
         entrezGeneId: 7157,
         gene: {
             entrezGeneId: 7157,
@@ -322,7 +322,7 @@ describe('DownloadUtils', () => {
                 sample: "TCGA-BF-A1PV-01",
                 study_id: "skcm_tcga",
                 uid: "VENHQS1CRi1BMVBWLTAxOnNrY21fdGNnYQ",
-                wholeExomeSequenced: true,
+                coverage:[],
                 gene: "PTEN",
                 data: sampleDataWithNoAlteration
             };
@@ -350,9 +350,9 @@ describe('DownloadUtils', () => {
                 sample: "TCGA-EE-A20C-06",
                 study_id: "skcm_tcga",
                 uid: "VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ",
-                wholeExomeSequenced: true,
+                coverage:[],
                 gene: "PTEN",
-                data: [mrnaDataForTCGAEEA20C, proteinDataForTCGAEEA20C],
+                data: [mrnaDataForTCGAEEA20C, proteinDataForTCGAEEA20C] as any[],
                 disp_mrna: "up",
                 disp_prot: "up"
             } as GeneticTrackDatum;
@@ -373,9 +373,9 @@ describe('DownloadUtils', () => {
             assert.equal(oqlData.proteinLevel.length, 1,
                 "protein level data exists for the sample with mrna and protein data only");
 
-            assert.deepEqual(oqlData.mrnaExp, [{type: "UP", value: "2.4745"}],
+            assert.deepEqual(oqlData.mrnaExp, [{type: "UP", value: 2.4745}],
                 "mRNA expression data is correct for the sample with mrna and protein data only");
-            assert.deepEqual(oqlData.proteinLevel, [{type: "UP", value: "2.5406"}],
+            assert.deepEqual(oqlData.proteinLevel, [{type: "UP", value: 2.5406}],
                 "protein level data is correct for the sample with mrna and protein data only");
         });
 
@@ -385,6 +385,7 @@ describe('DownloadUtils', () => {
                 sample: "P-0000378-T01-IM3",
                 study_id: "msk_impact_2017",
                 uid: "UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3",
+                coverage:[],
                 gene: "EGFR",
                 data: sampleDataWithBothMutationAndFusion,
                 disp_fusion: true,
@@ -573,12 +574,16 @@ describe('DownloadUtils', () => {
             const genePanelInformation = {
                 samples: {
                     "UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3": {
-                        "sequencedGenes": {},
-                        "wholeExomeSequenced": false
+                        "byGene": {},
+                        "allGenes": [],
+                        "notProfiledByGene":{},
+                        "notProfiledAllGenes":[]
                     },
                     "VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ": {
-                        "sequencedGenes": {},
-                        "wholeExomeSequenced": true
+                        "byGene": {},
+                        "allGenes": [{molecularProfileId:"AsdfasD", profiled:true} as GenePanelData],
+                        "notProfiledByGene":{},
+                        "notProfiledAllGenes":[]
                     }
                 },
                 patients: {}
@@ -612,12 +617,16 @@ describe('DownloadUtils', () => {
             const genePanelInformation = {
                 samples: {
                     "UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3": {
-                        "sequencedGenes": {},
-                        "wholeExomeSequenced": true
+                        "byGene": {},
+                        "allGenes": [{molecularProfileId:"AsdfasD", profiled:true} as GenePanelData],
+                        "notProfiledByGene":{},
+                        "notProfiledAllGenes":[]
                     },
                     "VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ": {
-                        "sequencedGenes": {},
-                        "wholeExomeSequenced": true
+                        "byGene": {},
+                        "allGenes": [{molecularProfileId:"AsdfasD", profiled:true} as GenePanelData],
+                        "notProfiledByGene":{},
+                        "notProfiledAllGenes":[]
                     }
                 },
                 patients: {}
@@ -649,10 +658,10 @@ describe('DownloadUtils', () => {
             assert.isTrue(caseAlterationData[1].altered,
                 "sample VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ is altered");
             assert.deepEqual(caseAlterationData[1].oqlData["PTEN: AMP HOMDEL MUT FUSION;"].mrnaExp,
-                [{type: 'UP', value: '2.4745'}],
+                [{type: 'UP', value: 2.4745}],
                 "mRNA data is correct for the sample key VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ");
             assert.deepEqual(caseAlterationData[1].oqlData["PTEN: AMP HOMDEL MUT FUSION;"].proteinLevel,
-                [{type: 'UP', value: '2.5406'}],
+                [{type: 'UP', value: 2.5406}],
                 "protein data is correct for the sample key VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ");
         });
     });
