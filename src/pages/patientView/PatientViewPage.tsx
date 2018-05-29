@@ -8,7 +8,6 @@ import FeatureTitle from "../../shared/components/featureTitle/FeatureTitle";
 import {Else, If, Then} from "react-if";
 import SampleManager from "./sampleManager";
 import PatientHeader from "./patientHeader/PatientHeader";
-import SignificantMutationalSignatures from "./patientHeader/SignificantMutationalSignatures";
 import {PaginationControls} from "../../shared/components/paginationControls/PaginationControls";
 import {IColumnVisibilityDef} from "shared/components/columnVisibilityControls/ColumnVisibilityControls";
 import {toggleColumnVisibility} from "shared/components/lazyMobXTable/ColumnVisibilityResolver";
@@ -28,6 +27,7 @@ import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicato
 import ValidationAlert from "shared/components/ValidationAlert";
 import AppConfig from "appConfig";
 import {getMouseIcon} from "./SVGIcons";
+import SampleRecord from 'pages/patientView/simple/SampleRecord';
 
 import "./patient.scss";
 import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
@@ -48,11 +48,11 @@ import {AppStore} from "../../AppStore";
 import request from 'superagent';
 import {remoteData} from "../../shared/api/remoteData";
 
-const patientViewPageStore = new PatientViewPageStore();
-
 const win:any = (window as any);
 
-win.patientViewPageStore = patientViewPageStore;
+import './sampleReports.scss';
+import SampleHeader from 'pages/patientView/sampleHeader/SampleHeader';
+
 
 export interface IPatientViewPageProps {
     params: any; // react route
@@ -76,15 +76,21 @@ export interface PatientViewUrlParams extends QueryParams{
 @inject('routing', 'appStore')
 @observer
 export default class PatientViewPage extends React.Component<IPatientViewPageProps, {}> {
+    static readonly patientViewPageStore = new PatientViewPageStore();
 
     @observable private mutationTableColumnVisibility: {[columnId: string]: boolean}|undefined;
     @observable private cnaTableColumnVisibility: {[columnId: string]: boolean}|undefined;
 
     constructor(props: IPatientViewPageProps) {
-
         super();
+        PatientViewPage.initPatientViewPage(props, PatientViewPage.patientViewPageStore);
+        (window as any).patientViewPageStore = PatientViewPage.patientViewPageStore;
+        this.onMutationTableColumnVisibilityToggled = this.onMutationTableColumnVisibilityToggled.bind(this);
+        this.onCnaTableColumnVisibilityToggled = this.onCnaTableColumnVisibilityToggled.bind(this);
+   }
 
-
+    // tslint:disable-next-line:member-ordering
+    public static initPatientViewPage(props: IPatientViewPageProps, store:PatientViewPageStore) {
         //TODO: this should be done by a module so that it can be reused on other pages
         const reaction1 = reaction(
             () => [props.routing.location.query, props.routing.location.hash, props.routing.location.pathname],
@@ -99,34 +105,31 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                 if (validationResult.isValid) {
 
-                    patientViewPageStore.urlValidationError = null;
+                    store.urlValidationError = null;
 
                     if ('studyId' in query) {
-                        patientViewPageStore.studyId = query.studyId;
+                        store.studyId = query.studyId;
                     }
                     if ('caseId' in query) {
-                        patientViewPageStore.setPatientId(query.caseId as string);
+                        store.setPatientId(query.caseId as string);
                     } else if ('sampleId' in query)
                     {
-                        patientViewPageStore.setSampleId(query.sampleId as string);
+                        store.setSampleId(query.sampleId as string);
                     }
 
                     // if there is a navCaseId list in url
                     const navCaseIdMatch = hash.match(/navCaseIds=([^&]*)/);
                     if (navCaseIdMatch && navCaseIdMatch.length > 1) {
-                        patientViewPageStore.patientIdsInCohort = parseCohortIds(navCaseIdMatch[1]);
+                        store.patientIdsInCohort = parseCohortIds(navCaseIdMatch[1]);
                     }
 
                 } else {
-                    patientViewPageStore.urlValidationError = validationResult.message;
+                    store.urlValidationError = validationResult.message;
                 }
 
             },
             { fireImmediately:true }
         );
-
-        this.onMutationTableColumnVisibilityToggled = this.onMutationTableColumnVisibilityToggled.bind(this);
-        this.onCnaTableColumnVisibilityToggled = this.onCnaTableColumnVisibilityToggled.bind(this);
     }
 
     public handleSampleClick(id: string, e: React.MouseEvent<HTMLAnchorElement>) {
@@ -156,10 +159,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     }
 
     @computed get cnaTableStatus() {
-        if (patientViewPageStore.molecularProfileIdDiscrete.isComplete) {
-            if (patientViewPageStore.molecularProfileIdDiscrete.result === undefined) {
+        if (PatientViewPage.patientViewPageStore.molecularProfileIdDiscrete.isComplete) {
+            if (PatientViewPage.patientViewPageStore.molecularProfileIdDiscrete.result === undefined) {
                 return "unavailable";
-            } else if (patientViewPageStore.discreteCNAData.isComplete) {
+            } else if (PatientViewPage.patientViewPageStore.discreteCNAData.isComplete) {
                 return "available";
             } else {
                 return "loading";
@@ -186,6 +189,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     }
 
     hideTissueImageTab(){
+        const patientViewPageStore = PatientViewPage.patientViewPageStore;
         return patientViewPageStore.hasTissueImageIFrameUrl.isPending || patientViewPageStore.hasTissueImageIFrameUrl.isError
             || (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && !patientViewPageStore.hasTissueImageIFrameUrl.result);
     }
@@ -193,14 +197,14 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     @autobind
     private customTabMountCallback(div:HTMLDivElement,tab:any){
-        showCustomTab(div, tab, this.props.routing.location, patientViewPageStore);
+        showCustomTab(div, tab, this.props.routing.location, PatientViewPage.patientViewPageStore);
     }
 
     private wholeSlideViewerUrl = remoteData<string | undefined>({
-        await: () => [patientViewPageStore.getWholeSlideViewerIds],
+        await: () => [PatientViewPage.patientViewPageStore.getWholeSlideViewerIds],
         invoke: async() => {
-            if (!_.isEmpty(patientViewPageStore.getWholeSlideViewerIds.result)) {
-                const url = getWholeSlideViewerUrl(patientViewPageStore.getWholeSlideViewerIds.result!, this.props.appStore.userName!);
+            if (!_.isEmpty(PatientViewPage.patientViewPageStore.getWholeSlideViewerIds.result)) {
+                const url = getWholeSlideViewerUrl(PatientViewPage.patientViewPageStore.getWholeSlideViewerIds.result!, this.props.appStore.userName!);
                 //if request succeeds then we return the url because we know request works.
                 try {
                     await request.get(url);
@@ -216,6 +220,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     });
 
     public render() {
+        const patientViewPageStore = PatientViewPage.patientViewPageStore;
 
         let sampleManager: SampleManager | null = null;
         let sampleHeader: (JSX.Element | undefined)[] | null = null;
@@ -247,38 +252,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 );
 
                 return (
-                    <div className="patientSample">
-                        <span className='clinical-spans'>
-                            {
-                                sampleManager!.getComponentForSample(sample.id, 1, '',
-                                    <span style={{display:'inline-flex'}}>
-                                        {'\u00A0'}
-                                        {isPDX && getMouseIcon()}
-                                        {isPDX && '\u00A0'}
-                                        <a
-                                            href={getSampleViewUrl(patientViewPageStore.studyMetaData.result!.studyId, sample.id)}
-                                            target="_blank"
-                                            onClick={(e: React.MouseEvent<HTMLAnchorElement>) => this.handleSampleClick(sample.id, e)}
-                                        >
-                                            {sample.id}
-                                        </a>
-                                        {sampleManager &&
-                                        sampleManager.clinicalDataLegacyCleanAndDerived[sample.id] &&
-                                        getSpanElementsFromCleanData(sampleManager.clinicalDataLegacyCleanAndDerived[sample.id], patientViewPageStore.studyId)}
-                                    </span>
-                                )
-                            }
-                        </span>
-                        {patientViewPageStore.hasMutationalSignatureData.result === true &&
-                        <LoadingIndicator isLoading={patientViewPageStore.mutationalSignatureData.isPending && patientViewPageStore.mutationalSignatureMetaData.isPending}/>}
-
-                        {patientViewPageStore.hasMutationalSignatureData.result === true &&
-                        patientViewPageStore.clinicalDataGroupedBySample.isComplete && patientViewPageStore.mutationalSignatureData.isComplete &&
-                        patientViewPageStore.mutationalSignatureMetaData.isComplete &&
-                        (<SignificantMutationalSignatures data={patientViewPageStore.mutationalSignatureData.result}
-                                                          metadata={patientViewPageStore.mutationalSignatureMetaData.result} uniqueSampleKey={sample.id}/>)}
-
-                    </div>
+                    <SampleHeader
+                        sample={sample}
+                        sampleManager={sampleManager}
+                        handleSampleClick={this.handleSampleClick}
+                        studyId={patientViewPageStore.studyMetaData.result!.studyId}
+                        patientViewPageStore={patientViewPageStore}
+                    />
                 );
             });
 
@@ -317,6 +297,28 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 />
             );
         }
+
+        // For sample reports
+        const sampleRecords = sampleManager && sampleManager.samples && (_.map(sampleManager!.samples, (sample: ClinicalDataBySampleId) => {
+            return (
+                <SampleRecord
+                    sample={sample}
+                    sampleManager={sampleManager}
+                    handleSampleClick={(() => void 0)}
+                    studyId={patientViewPageStore.studyMetaData.result!.studyId}
+                    mutationData={patientViewPageStore.mutationData.result!.filter(((mut) => mut.sampleId === sample.id))}
+                    cnaStatus={this.cnaTableStatus}
+                    discreteCNAData={patientViewPageStore.discreteCNAData.result!.filter(((cna) => cna.sampleId === sample.id))}
+                    oncoKbData={patientViewPageStore.oncoKbData}
+                    cnaOncoKbData={patientViewPageStore.cnaOncoKbData}
+                    oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
+                    evidenceCache={patientViewPageStore.oncoKbEvidenceCache}
+                    pubMedCache={patientViewPageStore.pubMedCache}
+                    userEmailAddress={AppConfig.serverConfig.user_email_address}
+                    patientViewPageStore={patientViewPageStore}
+                />
+            );
+        }));
 
         return (
             <PageLayout noMargin={true} hideFooter={true}>
@@ -543,19 +545,32 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     </MSKTab>
                     )}
 
-                    {/*<MSKTab key={5} id="mutationalSignatures" linkText="Mutational Signature Data" hide={true}>*/}
-                        {/*<div className="clearfix">*/}
-                            {/*<FeatureTitle title="Mutational Signatures" isLoading={ patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />*/}
-                            {/*<LoadingIndicator isLoading={patientViewPageStore.mutationalSignatureData.isPending}/>*/}
-                            {/*{*/}
-                                {/*(patientViewPageStore.clinicalDataGroupedBySample.isComplete && patientViewPageStore.mutationalSignatureData.isComplete) && (*/}
-                                    {/*<ClinicalInformationMutationalSignatureTable data={patientViewPageStore.mutationalSignatureData.result} showTitleBar={true}/>*/}
-                                {/*)*/}
-                            {/*}*/}
-                        {/*</div>*/}
-
-                    {/*</MSKTab>*/}
-
+                    <MSKTab key={6} id="sampleReportTab" linkText="Sample Report">
+                        <LoadingIndicator isLoading={patientViewPageStore.clinicalEvents.isPending} />
+                        {  (patientViewPageStore.patientViewData.isComplete && patientViewPageStore.samples.result && patientViewPageStore.samples.result.length > 1) && (
+                                <div className="sample-report-patient-header">
+                                    <div className="sample-report-patient-header-title">
+                                        <i className="fa fa-user-circle-o patientIcon" aria-hidden="true"></i>&nbsp;
+                                        <PatientHeader
+                                            handlePatientClick={(id: string)=>this.handlePatientClick(id)}
+                                            patient={patientViewPageStore.patientViewData.result.patient}
+                                            studyId={patientViewPageStore.studyId}
+                                            darwinUrl={patientViewPageStore.darwinUrl.result}
+                                            sampleManager={sampleManager}/>
+                                    </div>
+                                    <span style={{paddingLeft: 10, fontSize:"medium"}}>This patient has {patientViewPageStore.samples.result && patientViewPageStore.samples.result.length} samples.</span>
+                                </div>
+                            )
+                        }
+                        <div className="sample-report">
+                            {sampleRecords && sampleRecords.map((rec:JSX.Element) => {
+                                return (
+                                    <div>
+                                        {rec}
+                                    </div>
+                                );
+                            })}
+                        </div>
                                 {
                                     (AppConfig.serverConfig.custom_tabs) && AppConfig.serverConfig.custom_tabs.filter((tab:any)=>tab.location==="PATIENT_PAGE").map((tab:any, i:number)=>{
                                         return (<MSKTab key={100+i} id={'customTab'+1} unmountOnHide={(tab.unmountOnHide===true)}
@@ -563,8 +578,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         </MSKTab>)
                                     })
                                 }
+                    </MSKTab>
 
-                            </MSKTabs>
+                    </MSKTabs>
 
                         </Then>
                         <Else>

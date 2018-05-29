@@ -31,12 +31,15 @@ export class SampleLabelHTML extends React.Component<ISampleLabelHTMLProps, {}> 
     }
 
     public render() {
-        const { label, color, fillOpacity } = this.props;
+        const { label, color, fillOpacity, iconSize } = this.props;
+        const halfIconSize = Math.round(iconSize/2);
+        const fontSize = Math.round(iconSize*10/12);
+        const y = Math.round(iconSize/3);
         return (
-            <svg width='12' height='12' className='case-label-header'>
-                <g transform='translate(6,6)'>
-                    <circle r='6' fill={color} fillOpacity={fillOpacity} />
-                    <text y='4' textAnchor='middle' fontSize='10' fill='white'>{label}</text>
+            <svg width={iconSize} height={iconSize} className='case-label-header'>
+                <g transform={`translate(${halfIconSize},${halfIconSize})`}>
+                    <circle r={halfIconSize} fill={color} fillOpacity={fillOpacity} />
+                    <text y={y} textAnchor='middle' fontSize={fontSize} fill='white'>{label}</text>
                 </g>
             </svg>
         );
@@ -47,4 +50,5 @@ interface ISampleLabelHTMLProps {
     label: string;
     color: string;
     fillOpacity: number;
+    iconSize: number;
 }

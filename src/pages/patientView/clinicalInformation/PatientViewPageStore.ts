@@ -1,16 +1,16 @@
 import * as _ from 'lodash';
-import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
+import {ClinicalDataBySampleId} from "shared/api/api-types-extended";
 import {
     ClinicalData, MolecularProfile, Sample, Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData, MutationFilter,
     CopyNumberCount, ClinicalDataMultiStudyFilter
-} from "../../../shared/api/generated/CBioPortalAPI";
-import client from "../../../shared/api/cbioportalClientInstance";
-import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
+} from "shared/api/generated/CBioPortalAPI";
+import client from "shared/api/cbioportalClientInstance";
+import internalClient from "shared/api/cbioportalInternalClientInstance";
 import {
-    Gistic, GisticToGene, default as CBioPortalAPIInternal, MutSig
+    Gistic, GisticToGene, default as CBioPortalAPIInternal, MutSig,
 } from "shared/api/generated/CBioPortalAPIInternal";
 import {computed, observable, action, runInAction} from "mobx";
-import {remoteData} from "../../../shared/api/remoteData";
+import {remoteData} from "shared/api/remoteData";
 import {IGisticData} from "shared/model/Gistic";
 import {labelMobxPromises, cached} from "mobxpromise";
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
@@ -26,10 +26,10 @@ import GenomeNexusCache from "shared/cache/GenomeNexusCache";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotIndex} from "shared/model/CancerHotspots";
 import {IMutSigData} from "shared/model/MutSig";
-import {ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
+import {ICivicVariant, ICivicGene} from "shared/model/Civic";
 import {ClinicalInformationData} from "shared/model/ClinicalInformation";
 import VariantCountCache from "shared/cache/VariantCountCache";
-import CopyNumberCountCache from "./CopyNumberCountCache";
+import CopyNumberCountCache from "pages/patientView/clinicalInformation/CopyNumberCountCache";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
 import AppConfig from "appConfig";
@@ -44,7 +44,8 @@ import {
     fetchStudiesForSamplesWithoutCancerTypeClinicalData, fetchOncoKbAnnotatedGenesSuppressErrors, concatMutationData
 } from "shared/lib/StoreUtils";
 import {indexHotspotsData, fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
-import {stringListToSet} from "../../../shared/lib/StringUtils";
+import {stringListToSet} from "shared/lib/StringUtils";
+import {Gene as OncoKbGene} from "shared/api/generated/OncoKbAPI";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 import { VariantAnnotation } from 'shared/api/generated/GenomeNexusAPI';
 import { fetchVariantAnnotationsIndexedByGenomicLocation } from 'shared/lib/MutationAnnotator';
