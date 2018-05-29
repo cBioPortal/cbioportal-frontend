@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 import {
-    AlterationTypeConstants, AnnotatedExtendedAlteration, CaseAggregatedData, ExtendedAlteration, GenePanelInformation
+    AlterationTypeConstants, AnnotatedExtendedAlteration, CaseAggregatedData, ExtendedAlteration
 } from "../ResultsViewPageStore";
 import {
     alterationInfoForCaseAggregatedDataByOQLLine
@@ -11,6 +11,7 @@ import {GeneticTrackDatum} from "shared/components/oncoprint/Oncoprint";
 import {Sample, Gene} from "shared/api/generated/CBioPortalAPI";
 import {ICaseAlteration, IOqlData, ISubAlteration} from "./CaseAlterationTable";
 import {IGeneAlteration} from "./GeneAlterationTable";
+import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 
 
 export interface IDownloadFileRow {
@@ -218,7 +219,7 @@ export function generateDownloadFileRows(sampleAlterationDataByGene: {[key: stri
 
             if (sampleAlterationDataByGene[key]) {
                 sampleAlterationDataByGene[key].forEach(alteration => {
-                    const value = extractValue ? extractValue(alteration) : alteration.value;
+                    const value = extractValue ? extractValue(alteration) : String(alteration.value);
                     row.alterationData[gene].push(value);
                 });
             }
@@ -275,7 +276,7 @@ export function generateCaseAlterationData(
         cases:CaseAggregatedData<AnnotatedExtendedAlteration>,
         oql:OQLLineFilterOutput<AnnotatedExtendedAlteration>
     }[],
-    genePanelInformation?: GenePanelInformation,
+    genePanelInformation?: CoverageInformation,
     samples: Sample[] = [],
     geneAlterationDataByGene?: {[gene: string]: IGeneAlteration}): ICaseAlteration[]
 {
@@ -329,7 +330,7 @@ export function hasValidData(sampleAlterationDataByGene: {[key: string]: Extende
 
             // at least one valid value means, there is valid data
             // TODO also filter out values like "NA", "N/A", etc. ?
-            if (value && value.length > 0) {
+            if (value && String(value).length > 0) {
                 return true;
             }
         }

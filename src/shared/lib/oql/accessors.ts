@@ -1,4 +1,4 @@
-import {Mutation, MolecularProfile, GeneMolecularData} from "../../api/generated/CBioPortalAPI";
+import {Mutation, MolecularProfile, NumericGeneMolecularData} from "../../api/generated/CBioPortalAPI";
 import * as _ from 'lodash';
 
 var cna_profile_data_to_string: any = {
@@ -89,7 +89,7 @@ export default class accessors {
         return profile && profile.molecularAlterationType;
     }
 
-    public cna(d: GeneMolecularData) {
+    public cna(d: NumericGeneMolecularData) {
         if (this.molecularAlterationType(d.molecularProfileId) === 'COPY_NUMBER_ALTERATION') {
             return cna_profile_data_to_string[d.value];
         } else {
@@ -99,7 +99,7 @@ export default class accessors {
 
     public mut_type(d: Mutation) {
         if (this.molecularAlterationType(d.molecularProfileId) === 'MUTATION_EXTENDED') {
-            if (d.mutationType === "fusion") {
+            if (d.mutationType && d.mutationType.toLowerCase() === "fusion") {
                 return null;
             } else if (d.proteinChange && d.proteinChange.toLowerCase() === "promoter") {
                 return "promoter";
@@ -133,17 +133,17 @@ export default class accessors {
         }
     }
 
-    public exp(d: GeneMolecularData) {
+    public exp(d: NumericGeneMolecularData) {
         if (this.molecularAlterationType(d.molecularProfileId) === 'MRNA_EXPRESSION') {
-            return parseFloat(d.value);
+            return d.value;
         } else {
             return null;
         }
     }
 
-    public prot(d: GeneMolecularData) {
+    public prot(d: NumericGeneMolecularData) {
         if (this.molecularAlterationType(d.molecularProfileId) === 'PROTEIN_LEVEL') {
-            return parseFloat(d.value);
+            return d.value;
         } else {
             return null;
         }

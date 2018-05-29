@@ -1,12 +1,16 @@
 import {assert} from "chai";
-import {makeClinicalTrackTooltip, makeGeneticTrackTooltip, makeHeatmapTrackTooltip} from "./TooltipUtils";
+import {
+    makeClinicalTrackTooltip, makeGeneticTrackTooltip, makeGeneticTrackTooltip_getCoverageInformation,
+    makeHeatmapTrackTooltip
+} from "./TooltipUtils";
 import {GeneticTrackDatum} from "./Oncoprint";
 import {AnnotatedExtendedAlteration, AnnotatedMutation} from "../../../pages/resultsView/ResultsViewPageStore";
 import $ from "jquery";
+import {Mutation} from "../../api/generated/CBioPortalAPI";
 
 describe("Oncoprint TooltipUtils", ()=>{
     describe("makeGeneticTrackTooltip", ()=>{
-        let tooltip:(d:GeneticTrackDatum)=>JQuery;
+        let tooltip:(d:any)=>JQuery;
         before(()=>{
             tooltip = makeGeneticTrackTooltip(false);
         });
@@ -25,9 +29,10 @@ describe("Oncoprint TooltipUtils", ()=>{
                     data: [makeMutation({
                         driverFilter:"Putative_Driver",
                         driverFilterAnnotation: "annotation here"
-                    })]
+                    })],
+                    coverage: []
                 };
-                const tooltipOutput = tooltip(datum as GeneticTrackDatum);
+                const tooltipOutput = tooltip(datum);
                 assert.equal(tooltipOutput.find("img[src$='driver.png'][title='Putative_Driver: annotation here']").length, 1);
                 assert.equal(tooltipOutput.find("img[src$='driver.png']").length, 1, "should only be one icon");
             });
@@ -44,9 +49,10 @@ describe("Oncoprint TooltipUtils", ()=>{
                     }), makeMutation({
                         driverFilter:"Putative_Driver",
                         driverFilterAnnotation: "3 annotation"
-                    })]
+                    })],
+                    coverage: []
                 };
-                const tooltipOutput = tooltip(datum as GeneticTrackDatum);
+                const tooltipOutput = tooltip(datum );
                 assert.equal(tooltipOutput.find("img[src$='driver.png'][title='Putative_Driver: annotation 1']").length, 1);
                 assert.equal(tooltipOutput.find("img[src$='driver.png'][title='Putative_Driver: annotation 2']").length, 1);
                 assert.equal(tooltipOutput.find("img[src$='driver.png'][title='Putative_Driver: 3 annotation']").length, 1);
@@ -62,9 +68,10 @@ describe("Oncoprint TooltipUtils", ()=>{
                     }),makeMutation({
                         driverFilter:"Unknown",
                         driverFilterAnnotation: "asdfas"
-                    })]
+                    })],
+                    coverage: []
                 };
-                const tooltipOutput = tooltip(datum as GeneticTrackDatum);
+                const tooltipOutput = tooltip(datum);
                 assert.equal(tooltipOutput.find("img[src$='driver.png']").length, 0);
             });
 
@@ -74,9 +81,10 @@ describe("Oncoprint TooltipUtils", ()=>{
                     data: [makeMutation({
                         driverTiersFilter:"tier1",
                         driverTiersFilterAnnotation: "tier1 mutation"
-                    })]
+                    })],
+                    coverage: []
                 };
-                const tooltipOutput = tooltip(datum as GeneticTrackDatum);
+                const tooltipOutput = tooltip(datum);
                 assert.equal(tooltipOutput.find("img[src$='driver_tiers.png'][title='tier1: tier1 mutation']").length, 1);
                 assert.equal(tooltipOutput.find("img[src$='driver_tiers.png']").length, 1, "should only be one icon");
             });
@@ -93,9 +101,10 @@ describe("Oncoprint TooltipUtils", ()=>{
                     }),makeMutation({
                         driverTiersFilter:"tier4",
                         driverTiersFilterAnnotation: "mutation tier4"
-                    })]
+                    })],
+                    coverage: []
                 };
-                const tooltipOutput = tooltip(datum as GeneticTrackDatum);
+                const tooltipOutput = tooltip(datum);
                 assert.equal(tooltipOutput.find("img[src$='driver_tiers.png'][title='tier1: tier1 mutation']").length, 1);
                 assert.equal(tooltipOutput.find("img[src$='driver_tiers.png'][title='tier2: tier2 mutation']").length, 1);
                 assert.equal(tooltipOutput.find("img[src$='driver_tiers.png'][title='tier4: mutation tier4']").length, 1);
@@ -129,9 +138,10 @@ describe("Oncoprint TooltipUtils", ()=>{
                     }),makeMutation({
                         driverTiersFilter:"tier4",
                         driverTiersFilterAnnotation: "mutation tier4"
-                    })]
+                    })],
+                    coverage: []
                 };
-                const tooltipOutput = tooltip(datum as GeneticTrackDatum);
+                const tooltipOutput = tooltip(datum);
                 assert.equal(tooltipOutput.find("img[src$='driver_tiers.png'][title='tier1: tier1 mutation']").length, 1);
                 assert.equal(tooltipOutput.find("img[src$='driver_tiers.png'][title='tier2: tier2 mutation']").length, 1);
                 assert.equal(tooltipOutput.find("img[src$='driver_tiers.png'][title='tier4: mutation tier4']").length, 1);
@@ -151,11 +161,38 @@ describe("Oncoprint TooltipUtils", ()=>{
                     }),makeMutation({
                         driverFilter:"Unknown",
                         driverFilterAnnotation: "asdfas"
-                    }),makeMutation({}), makeMutation({})]
+                    }),makeMutation({}), makeMutation({})],
+                    coverage: []
                 };
-                const tooltipOutput = tooltip(datum as GeneticTrackDatum);
+                const tooltipOutput = tooltip(datum);
                 assert.equal(tooltipOutput.find("img[src$='driver.png']").length, 0, "should be no binary icons");
                 assert.equal(tooltipOutput.find("img[src$='driver_tiers.png']").length, 0, "should be no tiers icons");
+            });
+        });
+        describe("profiled and not profiled", ()=>{
+            it("should say 'Not profiled' if 'profiled_in' is empty and 'not_profiled_in' is not", ()=>{
+                const datum = {
+                    sample: "sample",
+                    data: [] as AnnotatedExtendedAlteration[],
+                    na:true,
+                    coverage: [],
+                    profiled_in:[],
+                    not_profiled_in:[{molecularProfileId:"profile"}]
+                };
+                const tooltipOutput = tooltip(datum);
+                assert.isTrue(tooltipOutput.html().indexOf("Not profiled in selected molecular profiles.") > -1);
+            });
+            it("should say 'profiled' if 'not_profiled_in' is empty and 'profiled_in' is not", ()=>{
+                const datum = {
+                    sample: "sample",
+                    data: [] as AnnotatedExtendedAlteration[],
+                    na:true,
+                    coverage: [],
+                    profiled_in:[{molecularProfileId:"profile", genePanelId:"panel"}],
+                    not_profiled_in:[]
+                };
+                const tooltipOutput = tooltip(datum);
+                assert.isTrue(tooltipOutput.html().indexOf("Profiled in all selected molecular profiles.") > -1);
             });
         });
     });
@@ -248,6 +285,138 @@ describe("Oncoprint TooltipUtils", ()=>{
             assert.isTrue(tooltipResult.html().indexOf("<b>-0.14</b>") > -1, "correct result with no integer part, negative");
             tooltipResult = tooltip({ profile_data:-6.100032, sample:"sampleID" });
             assert.isTrue(tooltipResult.html().indexOf("<b>-6.10</b>") > -1, "correct result with integer part, negative");
+        });
+    });
+    describe("makeGeneticTrackTooltip_getCoverageInformation", ()=>{
+        it("gives correct results on undefined input", ()=>{
+            assert.deepEqual(
+                makeGeneticTrackTooltip_getCoverageInformation(undefined, undefined),
+                {
+                    dispProfiledGenePanelIds: [],
+                    dispNotProfiledGenePanelIds: [],
+                    dispProfiledIn: undefined,
+                    dispNotProfiledIn: undefined,
+                    dispAllProfiled: false,
+                    dispNotProfiled: false
+                }
+            );
+        });
+        it("gives correct results on empty input", ()=>{
+            assert.deepEqual(
+                makeGeneticTrackTooltip_getCoverageInformation([], []),
+                {
+                    dispProfiledGenePanelIds: [],
+                    dispNotProfiledGenePanelIds: [],
+                    dispProfiledIn: [],
+                    dispNotProfiledIn: [],
+                    dispAllProfiled: false,
+                    dispNotProfiled: false
+                }
+            );
+        });
+        it("gives correct results with empty profiled_in but no not_profiled_in", ()=>{
+            assert.deepEqual(
+                makeGeneticTrackTooltip_getCoverageInformation([], undefined),
+                {
+                    dispProfiledGenePanelIds: [],
+                    dispNotProfiledGenePanelIds: [],
+                    dispProfiledIn: [],
+                    dispNotProfiledIn: undefined,
+                    dispAllProfiled: false,
+                    dispNotProfiled: false
+                }
+            );
+        });
+        it("gives correct results with empty not_profiled_in but no profiled_in", ()=>{
+            assert.deepEqual(
+                makeGeneticTrackTooltip_getCoverageInformation(undefined, []),
+                {
+                    dispProfiledGenePanelIds: [],
+                    dispNotProfiledGenePanelIds: [],
+                    dispProfiledIn: undefined,
+                    dispNotProfiledIn: [],
+                    dispAllProfiled: false,
+                    dispNotProfiled: false
+                }
+            );
+        });
+        it("gives correct results with nonempty profiled_in but no not_profiled_in", ()=>{
+            assert.deepEqual(
+                makeGeneticTrackTooltip_getCoverageInformation([{genePanelId:"panel", molecularProfileId:"profile"}], undefined),
+                {
+                    dispProfiledGenePanelIds: ["panel"],
+                    dispNotProfiledGenePanelIds: [],
+                    dispProfiledIn: ["profile"],
+                    dispNotProfiledIn: undefined,
+                    dispAllProfiled: false,
+                    dispNotProfiled: false
+                }
+            );
+        });
+        it("gives correct results with nonempty not_profiled_in but no profiled_in", ()=>{
+            assert.deepEqual(
+                makeGeneticTrackTooltip_getCoverageInformation(undefined, [{molecularProfileId:"profile"}]),
+                {
+                    dispProfiledGenePanelIds: [],
+                    dispNotProfiledGenePanelIds: [],
+                    dispProfiledIn: undefined,
+                    dispNotProfiledIn: ["profile"],
+                    dispAllProfiled: false,
+                    dispNotProfiled: false
+                }
+            );
+        });
+        it("gives correct results with nonempty profiled_in and empty not_profiled_in", ()=>{
+            assert.deepEqual(
+                makeGeneticTrackTooltip_getCoverageInformation([{molecularProfileId:"profile"}], []),
+                {
+                    dispProfiledGenePanelIds: [],
+                    dispNotProfiledGenePanelIds: [],
+                    dispProfiledIn: ["profile"],
+                    dispNotProfiledIn: [],
+                    dispAllProfiled: true,
+                    dispNotProfiled: false
+                }
+            );
+        });
+        it("gives correct results with nonempty not_profiled_in and empty profiled_in", ()=>{
+            assert.deepEqual(
+                makeGeneticTrackTooltip_getCoverageInformation([], [{molecularProfileId:"profile"}]),
+                {
+                    dispProfiledGenePanelIds: [],
+                    dispNotProfiledGenePanelIds: [],
+                    dispProfiledIn: [],
+                    dispNotProfiledIn: ["profile"],
+                    dispAllProfiled: false,
+                    dispNotProfiled: true
+                }
+            );
+        });
+        it("gives correct results with nonoverlapping profiled_in and not_profiled_in", ()=>{
+            assert.deepEqual(
+                makeGeneticTrackTooltip_getCoverageInformation([{genePanelId:"panel", molecularProfileId:"profile1"}], [{molecularProfileId:"profile"}]),
+                {
+                    dispProfiledGenePanelIds: ["panel"],
+                    dispNotProfiledGenePanelIds: [],
+                    dispProfiledIn: ["profile1"],
+                    dispNotProfiledIn: ["profile"],
+                    dispAllProfiled: false,
+                    dispNotProfiled: false
+                }
+            );
+        });
+        it("gives correct results with overlapping profiled_in and not_profiled_in", ()=>{
+            assert.deepEqual(
+                makeGeneticTrackTooltip_getCoverageInformation([{genePanelId:"panel", molecularProfileId:"profile"}], [{genePanelId:"panel2", molecularProfileId:"profile"}]),
+                {
+                    dispProfiledGenePanelIds: ["panel"],
+                    dispNotProfiledGenePanelIds: ["panel2"],
+                    dispProfiledIn: ["profile"],
+                    dispNotProfiledIn: [],
+                    dispAllProfiled: true,
+                    dispNotProfiled: false
+                }
+            );
         });
     });
 });

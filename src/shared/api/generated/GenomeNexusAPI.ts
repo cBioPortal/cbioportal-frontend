@@ -1,6 +1,20 @@
 import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
+export type ColocatedVariant = {
+    'gnomad_nfe_allele': string
+
+        'gnomad_nfe_maf': string
+
+        'gnomad_afr_allele': string
+
+        'gnomad_afr_maf': string
+
+        'gnomad_eas_allele': string
+
+        'gnomad_eas_maf': string
+
+};
 export type EnsemblFilter = {
     'geneIds': Array < string >
 
@@ -9,6 +23,16 @@ export type EnsemblFilter = {
         'proteinIds': Array < string >
 
         'transcriptIds': Array < string >
+
+};
+export type EnsemblGene = {
+    'geneId': string
+
+        'hugoSymbol': string
+
+        'synonyms': Array < string >
+
+        'previousSymbols': Array < string >
 
 };
 export type EnsemblTranscript = {
@@ -50,6 +74,8 @@ export type GeneXref = {
 
         'display_id': string
 
+        'ensemblGeneId': string
+
         'info_text': string
 
         'info_types': string
@@ -59,6 +85,103 @@ export type GeneXref = {
         'synonyms': Array < string >
 
         'version': string
+
+};
+export type GenomicLocation = {
+    'chromosome': string
+
+        'start': number
+
+        'end': number
+
+        'referenceAllele': string
+
+        'variantAllele': string
+
+};
+export type Hotspot = {
+    'aminoAcidPosition': IntegerRange
+
+        'hugoSymbol': string
+
+        'residue': string
+
+        'transcriptId': string
+
+        'tumorCount': number
+
+        'tumorTypeCount': number
+
+        'type': string
+
+};
+export type HotspotAnnotation = {
+    'annotation': Array < Array < Hotspot >
+        >
+
+        'license': string
+
+};
+export type IntegerRange = {
+    'end': number
+
+        'start': number
+
+};
+export type MutationAssessor = {
+    'codonStartPosition': string
+
+        'cosmicCount': number
+
+        'functionalImpact': string
+
+        'functionalImpactScore': number
+
+        'hgvs': string
+
+        'hugoSymbol': string
+
+        'input': string
+
+        'mappingIssue': string
+
+        'msaGaps': number
+
+        'msaHeight': number
+
+        'msaLink': string
+
+        'pdbLink': string
+
+        'referenceGenomeVariant': string
+
+        'referenceGenomeVariantType': string
+
+        'refseqId': string
+
+        'refseqPosition': number
+
+        'refseqResidue': string
+
+        'snpCount': number
+
+        'uniprotId': string
+
+        'uniprotPosition': number
+
+        'uniprotResidue': string
+
+        'variant': string
+
+        'variantConservationScore': number
+
+        'variantSpecificityScore': number
+
+};
+export type MutationAssessorAnnotation = {
+    'annotation': MutationAssessor
+
+        'license': string
 
 };
 export type PdbHeader = {
@@ -127,18 +250,50 @@ export type TranscriptConsequence = {
         'variant_allele': string
 
 };
+export type TranscriptConsequenceSummary = {
+    'codonChange': string
+
+        'consequenceTerms': string
+
+        'entrezGeneId': string
+
+        'hgvsc': string
+
+        'hgvsp': string
+
+        'hgvspShort': string
+
+        'hugoGeneSymbol': string
+
+        'proteinPosition': IntegerRange
+
+        'refSeq': string
+
+        'transcriptId': string
+
+        'variantClassification': string
+
+};
 export type VariantAnnotation = {
     'allele_string': string
 
         'annotationJSON': string
 
+        'annotation_summary': VariantAnnotationSummary
+
         'assembly_name': string
 
+        'colocatedVariants': Array < ColocatedVariant >
+
         'end': number
+
+        'hotspots': HotspotAnnotation
 
         'id': string
 
         'most_severe_consequence': string
+
+        'mutation_assessor': MutationAssessorAnnotation
 
         'seq_region_name': string
 
@@ -149,6 +304,22 @@ export type VariantAnnotation = {
         'transcript_consequences': Array < TranscriptConsequence >
 
         'variant': string
+
+};
+export type VariantAnnotationSummary = {
+    'assemblyName': string
+
+        'canonicalTranscriptId': string
+
+        'genomicLocation': GenomicLocation
+
+        'strandSign': string
+
+        'transcriptConsequences': Array < TranscriptConsequenceSummary >
+
+        'variant': string
+
+        'variantType': string
 
 };
 export type Version = {
@@ -296,6 +467,176 @@ export default class GenomeNexusAPI {
             });
         };
 
+    fetchVariantAnnotationByGenomicLocationPOSTURL(parameters: {
+        'genomicLocations': Array < GenomicLocation > ,
+        'isoformOverrideSource' ? : string,
+        'fields' ? : Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/annotation/genomic';
+
+        if (parameters['isoformOverrideSource'] !== undefined) {
+            queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+        }
+
+        if (parameters['fields'] !== undefined) {
+            queryParameters['fields'] = parameters['fields'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves VEP annotation for the provided list of genomic locations
+     * @method
+     * @name GenomeNexusAPI#fetchVariantAnnotationByGenomicLocationPOST
+     * @param {} genomicLocations - List of Genomic Locations
+     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
+     */
+    fetchVariantAnnotationByGenomicLocationPOST(parameters: {
+            'genomicLocations': Array < GenomicLocation > ,
+            'isoformOverrideSource' ? : string,
+            'fields' ? : Array < string > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < VariantAnnotation >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/annotation/genomic';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['genomicLocations'] !== undefined) {
+                    body = parameters['genomicLocations'];
+                }
+
+                if (parameters['genomicLocations'] === undefined) {
+                    reject(new Error('Missing required  parameter: genomicLocations'));
+                    return;
+                }
+
+                if (parameters['isoformOverrideSource'] !== undefined) {
+                    queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+                }
+
+                if (parameters['fields'] !== undefined) {
+                    queryParameters['fields'] = parameters['fields'];
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchVariantAnnotationByGenomicLocationGETURL(parameters: {
+        'genomicLocation': string,
+        'isoformOverrideSource' ? : string,
+        'fields' ? : Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/annotation/genomic/{genomicLocation}';
+
+        path = path.replace('{genomicLocation}', parameters['genomicLocation'] + '');
+        if (parameters['isoformOverrideSource'] !== undefined) {
+            queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+        }
+
+        if (parameters['fields'] !== undefined) {
+            queryParameters['fields'] = parameters['fields'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves VEP annotation for the provided genomic location
+     * @method
+     * @name GenomeNexusAPI#fetchVariantAnnotationByGenomicLocationGET
+     * @param {string} genomicLocation - A genomic location. For example 7,140453136,140453136,A,T
+     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: hotspots,mutation_assessor
+     */
+    fetchVariantAnnotationByGenomicLocationGET(parameters: {
+        'genomicLocation': string,
+        'isoformOverrideSource' ? : string,
+        'fields' ? : Array < string > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < VariantAnnotation > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/annotation/genomic/{genomicLocation}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{genomicLocation}', parameters['genomicLocation'] + '');
+
+            if (parameters['genomicLocation'] === undefined) {
+                reject(new Error('Missing required  parameter: genomicLocation'));
+                return;
+            }
+
+            if (parameters['isoformOverrideSource'] !== undefined) {
+                queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+            }
+
+            if (parameters['fields'] !== undefined) {
+                queryParameters['fields'] = parameters['fields'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        }).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+
     fetchVariantAnnotationGETURL(parameters: {
         'variant': string,
         'isoformOverrideSource' ? : string,
@@ -364,6 +705,133 @@ export default class GenomeNexusAPI {
 
             if (parameters['fields'] !== undefined) {
                 queryParameters['fields'] = parameters['fields'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        }).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+
+    fetchCanonicalEnsemblGeneIdByHugoSymbolsPOSTURL(parameters: {
+        'hugoSymbols': Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/ensembl/canonical-gene/hgnc';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves canonical Ensembl Gene ID by Hugo Symbols
+     * @method
+     * @name GenomeNexusAPI#fetchCanonicalEnsemblGeneIdByHugoSymbolsPOST
+     * @param {} hugoSymbols - List of Hugo Symbols. For example ["TP53","PIK3CA","BRCA1"]
+     */
+    fetchCanonicalEnsemblGeneIdByHugoSymbolsPOST(parameters: {
+            'hugoSymbols': Array < string > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < EnsemblGene >
+        > {
+            const domain = parameters.$domain ? parameters.$domain : this.domain;
+            const errorHandlers = this.errorHandlers;
+            const request = this.request;
+            let path = '/ensembl/canonical-gene/hgnc';
+            let body: any;
+            let queryParameters: any = {};
+            let headers: any = {};
+            let form: any = {};
+            return new Promise(function(resolve, reject) {
+                headers['Accept'] = 'application/json';
+                headers['Content-Type'] = 'application/json';
+
+                if (parameters['hugoSymbols'] !== undefined) {
+                    body = parameters['hugoSymbols'];
+                }
+
+                if (parameters['hugoSymbols'] === undefined) {
+                    reject(new Error('Missing required  parameter: hugoSymbols'));
+                    return;
+                }
+
+                if (parameters.$queryParameters) {
+                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                        var parameter = parameters.$queryParameters[parameterName];
+                        queryParameters[parameterName] = parameter;
+                    });
+                }
+
+                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+            }).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+
+    fetchCanonicalEnsemblGeneIdByHugoSymbolGETURL(parameters: {
+        'hugoSymbol': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/ensembl/canonical-gene/hgnc/{hugoSymbol}';
+
+        path = path.replace('{hugoSymbol}', parameters['hugoSymbol'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves Ensembl canonical gene id by Hugo Symbol
+     * @method
+     * @name GenomeNexusAPI#fetchCanonicalEnsemblGeneIdByHugoSymbolGET
+     * @param {string} hugoSymbol - A Hugo Symbol. For example TP53
+     */
+    fetchCanonicalEnsemblGeneIdByHugoSymbolGET(parameters: {
+        'hugoSymbol': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < EnsemblGene > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/ensembl/canonical-gene/hgnc/{hugoSymbol}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{hugoSymbol}', parameters['hugoSymbol'] + '');
+
+            if (parameters['hugoSymbol'] === undefined) {
+                reject(new Error('Missing required  parameter: hugoSymbol'));
+                return;
             }
 
             if (parameters.$queryParameters) {
