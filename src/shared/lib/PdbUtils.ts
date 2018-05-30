@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import {PdbHeader} from "shared/api/generated/PdbAnnotationAPI";
+import {PdbHeader} from "shared/api/generated/GenomeNexusAPI";
 import {Alignment} from "shared/api/generated/Genome2StructureAPI";
 import {
     IPdbPositionRange, IPdbChain, PdbAlignmentIndex,
@@ -94,10 +94,10 @@ export function mergeAlignments(alignments: Alignment[]): IPdbChain|undefined
 
     alignments.forEach((alignment: Alignment) => {
         const alignmentStr = generateAlignmentString(alignment) || "";
-        let diff = Math.abs(alignment.seqFrom - start);
+        const diff = Math.abs(alignment.seqFrom - start);
 
         if (alignment.seqFrom < start) {
-            let gapOrOverlap = Math.abs(alignmentStr.length - diff);
+            const gapOrOverlap = Math.abs(alignmentStr.length - diff);
 
             // overlap: we need to append non-overlapping segment of mergedAlignment to the current alignment
             if (alignmentStr.length >= diff) {
@@ -109,7 +109,7 @@ export function mergeAlignments(alignments: Alignment[]): IPdbChain|undefined
             }
         }
         else if (alignment.seqFrom >= start) {
-            let gapOrOverlap = Math.abs(mergedAlignment.length - diff);
+            const gapOrOverlap = Math.abs(mergedAlignment.length - diff);
 
             // overlap: we need to "insert" current alignment into merged alignment
             if (mergedAlignment.length >= diff) {
@@ -139,7 +139,7 @@ export function mergeAlignments(alignments: Alignment[]): IPdbChain|undefined
 
 function alignmentGap(length: number)
 {
-    let gap: string[] = [];
+    const gap: string[] = [];
 
     // add gap characters (character count = distance)
     for (let i = 0; i < length; i++) {
@@ -200,9 +200,9 @@ function calcIdentityPerc(alignment: string): number
             // increment gap count (gaps excluded from ratio calculation)
             gap++;
         }
-        else if (symbol == ALIGNMENT_MINUS ||
-            symbol == ALIGNMENT_PLUS ||
-            symbol == ALIGNMENT_SPACE)
+        else if (symbol === ALIGNMENT_MINUS ||
+            symbol === ALIGNMENT_PLUS ||
+            symbol === ALIGNMENT_SPACE)
         {
             // any special symbol other than a gap is considered as a mismatch
             // TODO is it better to assign a different weight for each symbol?

@@ -63,7 +63,7 @@ export default class PdbChainInfo extends React.Component<IPdbChainInfoProps, {}
                             <span>:</span>
                         </span>
                     </div>
-                    <div>
+                    <div data-test="pdbChainInfoText">
                         {this.props.truncateText ?
                             (<TextExpander text={pdbInfo}/>) :
                             (<span>{pdbInfo}</span>)
