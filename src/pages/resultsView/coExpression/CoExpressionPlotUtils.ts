@@ -16,5 +16,5 @@ export function getUniquePrecision(value:number, allValues:number[], maxPrecisio
 }
 
 export function axisLabel(gene:{hugoGeneSymbol:string, cytoband:string}, logScale:boolean) {
-    return `${gene.hugoGeneSymbol} ${false /*logScale*/ ? "(log10) " : ""}(Cytoband: ${gene.cytoband})`
+    return `${gene.hugoGeneSymbol} ${logScale ? "(log10) " : ""}(Cytoband: ${gene.cytoband})`
 }
