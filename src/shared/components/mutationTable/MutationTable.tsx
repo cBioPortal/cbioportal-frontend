@@ -400,8 +400,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             render: ProteinChangeColumnFormatter.renderWithMutationStatus,
             download: ProteinChangeColumnFormatter.getTextValue,
             sortBy:(d:Mutation[])=>ProteinChangeColumnFormatter.getSortValue(d),
-            filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
-                ProteinChangeColumnFormatter.getTextValue(d).toUpperCase().indexOf(filterStringUpper) > -1
+            filter: ProteinChangeColumnFormatter.getFilterValue
         };
 
         this._columns[MutationTableColumnType.MUTATION_TYPE] = {

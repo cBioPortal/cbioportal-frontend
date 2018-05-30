@@ -1,8 +1,8 @@
 import * as React from "react";
-import {PdbHeader} from "../../../api/generated/PdbAnnotationAPI";
 import * as _ from "lodash";
-import PdbHeaderCache from "../../../cache/PdbHeaderCache";
-import {IPdbChain} from "../../../model/Pdb";
+import {PdbHeader} from "shared/api/generated/GenomeNexusAPI";
+import PdbHeaderCache from "shared/cache/PdbHeaderCache";
+import {IPdbChain} from "shared/model/Pdb";
 
 export default class OrganismColumnFormatter {
     public static getOrganism(pdbHeader:PdbHeader, chainId:string):string {
@@ -12,12 +12,12 @@ export default class OrganismColumnFormatter {
 
         _.find(pdbHeader.compound, (mol:any)=>{
             if (_.indexOf(mol.chain, chainId.toLowerCase()) != -1 &&
-                pdbHeader.source[mol.mol_id] != null)
+                (pdbHeader.source as any)[mol.mol_id] != null)
             {
                 // chain is associated with this mol,
                 // get the organism info from the source
-                organism = pdbHeader.source[mol.mol_id].organism_scientific ||
-                    organism;
+                organism = (pdbHeader.source as any)[mol.mol_id].organism_scientific || organism;
+
                 return mol;
             }
         });
