@@ -28,6 +28,12 @@
     font-size: 11px;
 }
 
+.TableContainer {
+    :global(.tableSearchInput) {
+        width: 196px !important;
+    }
+}
+
 .Checkbox {
     margin-top: -2px !important;
     margin-bottom: 0 !important;
