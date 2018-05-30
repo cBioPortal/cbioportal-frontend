@@ -20,13 +20,14 @@ import ReactDOM from "react-dom";
 import fileDownload from "react-file-download";
 import styles from "./lollipopMutationPlot.module.scss";
 import Collapse from "react-collapse";
-import {MutationMapperStore} from "../../../pages/resultsView/mutation/MutationMapperStore";
+import MutationMapperStore from "shared/components/mutationMapper/MutationMapperStore";
 import EditableSpan from "../editableSpan/EditableSpan";
 
 export interface ILollipopMutationPlotProps extends IProteinImpactTypeColors
 {
     store:MutationMapperStore;
     onXAxisOffset?:(offset:number)=>void;
+    svgToPdfServiceUrl?: string;
     geneWidth:number;
 }
 
@@ -112,8 +113,11 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         for (const mutations of this.props.store.dataStore.sortedFilteredData) {
             for (const mutation of mutations) {
                 codon = mutation.proteinPosStart;
-                ret[codon] = ret[codon] || [];
-                ret[codon].push(mutation);
+
+                if (codon !== undefined) {
+                    ret[codon] = ret[codon] || [];
+                    ret[codon].push(mutation);
+                }
             }
         }
         return ret;
@@ -125,7 +129,10 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         Object.keys(this.mutationsByPosition).forEach(pos => {
             const position = parseInt(pos, 10);
             // for each position multiple mutations for the same patient is counted only once
-            map[position] = countUniqueMutations(this.mutationsByPosition[position]);
+            const mutations = this.mutationsByPosition[position];
+            if (mutations) {
+                map[position] = countUniqueMutations(mutations);
+            }
         });
 
         return map;
@@ -144,14 +151,15 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
             .sort((x,y)=>(countsByPosition[x[0].proteinPosStart] < countsByPosition[y[0].proteinPosStart] ? 1 : -1));
 
         // maxCount: max number of mutations at a position
-        const maxCount = countsByPosition[positionMutations[0][0].proteinPosStart];
+        const maxCount = positionMutations && positionMutations[0] ?
+            countsByPosition[positionMutations[0][0].proteinPosStart] : 0;
 
         // numLabelCandidates: number of positions with maxCount mutations
-        let numLabelCandidates = positionMutations.findIndex(
-            mutations => (countsByPosition[mutations[0].proteinPosStart] !== maxCount));
+        let numLabelCandidates = positionMutations ? positionMutations.findIndex(
+            mutations => (countsByPosition[mutations[0].proteinPosStart] !== maxCount)) : -1;
 
         if (numLabelCandidates === -1) {
-            numLabelCandidates = positionMutations.length;
+            numLabelCandidates = positionMutations ? positionMutations.length : 0;
         }
 
         // now we decide whether we'll show a label at all
@@ -363,7 +371,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                 fileDownload((new XMLSerializer()).serializeToString(this.toSVGDOMNode()), `${this.hugoGeneSymbol}_lollipop.svg`);
             },
             handlePDFClick:()=>{
-                svgToPdfDownload(`${this.hugoGeneSymbol}_lollipop.pdf`, this.toSVGDOMNode());
+                svgToPdfDownload(`${this.hugoGeneSymbol}_lollipop.pdf`, this.toSVGDOMNode(), this.props.svgToPdfServiceUrl);
             },
             onYMaxInputFocused:()=>{
                 this.yMaxInputFocused = true;
