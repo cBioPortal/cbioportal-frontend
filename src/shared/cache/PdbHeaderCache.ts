@@ -1,13 +1,12 @@
-import client from "shared/api/pdbAnnotationClientInstance";
+import client from "shared/api/genomeNexusClientInstance";
 import LazyMobXCache from "shared/lib/LazyMobXCache";
-import {PdbHeader} from "shared/api/generated/PdbAnnotationAPI";
+import {PdbHeader} from "shared/api/generated/GenomeNexusAPI";
 
 function fetch(pdbIds:string[]):Promise<PdbHeader[]> {
     if (pdbIds.length === 0) {
         return Promise.reject("No pdb ids given");
     } else {
-        // TODO PdbAnnotationAPI needs to be updated to support post body parameters
-        return client.postPdbHeader({
+        return client.fetchPdbHeaderPOST({
             pdbIds: pdbIds
         });
     }
