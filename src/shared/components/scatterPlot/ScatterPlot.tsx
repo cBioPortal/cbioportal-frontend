@@ -45,7 +45,6 @@ const DEFAULT_FONT_FAMILY = "Verdana,Arial,sans-serif";
 const CORRELATION_INFO_Y = 100; // experimentally determined
 const RIGHT_GUTTER = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
-const TOP_GUTTER = 50; // room for title;
 const PLOT_DATA_PADDING_PIXELS = 10;
 const MIN_LOG_ARGUMENT = 0.01;
 const LEFT_PADDING = 25;
@@ -143,8 +142,12 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         }
     }
 
+    @computed get legendX() {
+        return this.props.chartWidth - 20;
+    }
+
     private get legend() {
-        const x = this.props.chartWidth;
+        const x = this.legendX;
         const topPadding = 30;
         const approximateCorrelationInfoHeight = 30;
         const y = CORRELATION_INFO_Y + approximateCorrelationInfoHeight + topPadding;
@@ -165,7 +168,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
 
     private get correlationInfo() {
         const approxTextWidth = 107; // experimentally determined
-        const x = this.props.chartWidth;
+        const x = this.legendX;
         return (
             <g>
                 <text
@@ -236,7 +239,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
     }
 
     @computed get svgHeight() {
-        return this.props.chartHeight + TOP_GUTTER;
+        return this.props.chartHeight;
     }
 
     private logScale(x:number) {
@@ -330,7 +333,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                                     crossAxis={false}
                                     tickCount={NUM_AXIS_TICKS}
                                     tickFormat={this.tickFormatX}
-                                    axisLabelComponent={<VictoryLabel style={{fontFamily:this.fontFamily}} dy={40}/>}
+                                    axisLabelComponent={<VictoryLabel style={{fontFamily:this.fontFamily}} dy={25}/>}
                                     label={this.props.axisLabelX}
                                 />
                                 <VictoryAxis
