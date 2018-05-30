@@ -151,6 +151,9 @@ export default class CoExpressionTable extends React.Component<ICoExpressionTabl
                     filterPlaceholder="Enter gene or cytoband.."
                     paginationProps={this.paginationProps}
                     initialItemsPerPage={25}
+                    copyDownloadProps={{
+                        showCopy: false
+                    }}
                 />
             </div>
         );
