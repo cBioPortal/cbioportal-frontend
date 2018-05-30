@@ -58,12 +58,12 @@ export default class MiniBarChart extends React.Component<IMiniBarChartProps, {}
             <div className="posRelative">
                 <div style={{display: 'flex', flexDirection: 'row'}}>
                     <div>
-                        <div style={{paddingTop: 34}}>
+                        <div style={{paddingTop: 35}}>
                             <DefaultTooltip placement="right" overlay={<span>Query Genes selected by user</span>} destroyTooltipOnHide={true}>
                                 <i className="fa fa-info-circle" />
                             </DefaultTooltip>
                         </div>
-                        <div style={{paddingTop: 5}}>
+                        <div style={{paddingTop: 8}}>
                             <DefaultTooltip placement="right" overlay={<span>Gene selected in table</span>} destroyTooltipOnHide={true}>
                                 <i className="fa fa-info-circle" />
                             </DefaultTooltip>
@@ -94,8 +94,8 @@ export default class MiniBarChart extends React.Component<IMiniBarChartProps, {}
                     </VictoryChart>
                 </div>
                 {this.tooltipModel &&
-                    <Popover arrowOffsetTop={14} positionLeft={this.tooltipModel.y + 12} 
-                        positionTop={this.tooltipModel.x - 16} className={styles.BarTooltip}>
+                    <Popover arrowOffsetTop={14} positionLeft={this.tooltipModel.y + 17} 
+                        positionTop={this.tooltipModel.x - 13} className={styles.BarTooltip}>
                         <div>
                             {getBarChartTooltipContent(this.tooltipModel, this.props.selectedGene)}
                         </div>
