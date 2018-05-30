@@ -24,7 +24,10 @@ export function cytobandFilter(d:CoExpression, filterString:string) {
             filterString = filterString.substring(1);
             reject = true;
         }
-        match = !!(d.cytoband && d.cytoband.indexOf(filterString) > -1);
+        if (!filterString.length) {
+            return true;
+        }
+        match = !!(d.cytoband && d.cytoband.indexOf(filterString) === 0); // only match at beginning, this makes most sense for cytoband
         return reject ? !match : match;
     }
 }
