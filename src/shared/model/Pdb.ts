@@ -1,4 +1,4 @@
-import {PdbUniprotAlignment} from "../api/generated/PdbAnnotationAPI";
+import {Alignment} from "shared/api/generated/Genome2StructureAPI";
 
 export interface IPdbPosition {
     position: number;
@@ -12,7 +12,7 @@ export interface IPdbPositionRange {
 
 export type PdbAlignmentIndex = {
     [pdbId: string]: {
-        [chainId: string]: PdbUniprotAlignment[]
+        [chainId: string]: Alignment[]
     }
 };
 
