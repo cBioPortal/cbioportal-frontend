@@ -1,6 +1,6 @@
 import * as React from "react";
 import {CoExpression} from "../../../shared/api/generated/CBioPortalAPIInternal";
-import {correlationColor, correlationSortBy} from "./CoExpressionTableUtils";
+import {correlationColor, correlationSortBy, cytobandFilter} from "./CoExpressionTableUtils";
 import LazyMobXTable from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 import {ILazyMobXTableApplicationDataStore} from "../../../shared/lib/ILazyMobXTableApplicationDataStore";
 import {CoExpressionDataStore, TableMode} from "./CoExpressionViz";
@@ -36,20 +36,7 @@ export default class CoExpressionTable extends React.Component<ICoExpressionTabl
             {
                 name:"Cytoband",
                 render:(d:CoExpression)=>(<span>{d.cytoband}</span>),
-                filter:(d:CoExpression, filterString:string)=>{
-                    let match = false;
-                    let reject = false;
-                    if (filterString[0] === "-") {
-                        filterString = filterString.substring(1);
-                        reject = true;
-                    }
-                    if (!filterString.length) {
-                        return true;
-                    } else {
-                        match = d.cytoband.indexOf(filterString) > -1;
-                        return reject ? !match : match;
-                    }
-                },
+                filter:cytobandFilter,
                 download:(d:CoExpression)=>d.cytoband,
                 sortBy:(d:CoExpression)=>d.cytoband,
                 width:"30%"
