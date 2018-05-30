@@ -105,7 +105,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
             name: "Percentage of alteration in altered group",
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.alteredCount, d.alteredPercentage)}</span>,
             headerRender: (name: string) => <span style={{ display: 'inline-block', width: 80 }}>{name}</span>,
-            tooltip: <span>Percentages of altered cases in altered sample groups</span>,
+            tooltip: <span>Percentages of altered cases in altered sample group</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.alteredCount,
             download: (d: AlterationEnrichmentRow) => formatPercentage(d.alteredCount, d.alteredPercentage)
         };
@@ -114,7 +114,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
             name: "Percentage of alteration in unaltered group",
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.unalteredCount, d.unalteredPercentage)}</span>,
             headerRender: (name: string) => <span style={{ display: 'inline-block', width: 95 }}>{name}</span>,
-            tooltip: <span>Percentages of altered cases in unaltered sample groups</span>,
+            tooltip: <span>Percentages of altered cases in unaltered sample group</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.unalteredCount,
             download: (d: AlterationEnrichmentRow) => formatPercentage(d.unalteredCount, d.unalteredPercentage)
         };
