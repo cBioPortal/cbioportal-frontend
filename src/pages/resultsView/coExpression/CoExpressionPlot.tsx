@@ -220,6 +220,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                 }}
                 logX={this.props.logScale}
                 logY={this.props.logScale}
+                useLogSpaceTicks={true}
                 axisLabelX={this.axisLabelX}
                 axisLabelY={this.axisLabelY}
                 tooltip={this.tooltip}
