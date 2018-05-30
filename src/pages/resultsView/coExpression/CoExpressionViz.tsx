@@ -323,19 +323,22 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
     render() {
         let innerElt = (
             <div
-                style={{display:(!this.props.hidden && this.coExpressionDataPromise.isComplete) ? "inherit" : "none"}}
-                className="clearfix"
+                style={{
+                    display:(!this.props.hidden && this.coExpressionDataPromise.isComplete) ? "inherit" : "none",
+                }}
                 data-test="CoExpressionGeneTabContent"
             >
-                <div style={{width:"40%", float:"left", marginTop:6}}>
-                    <Observer>
-                        {this.table}
-                    </Observer>
-                </div>
-                <div style={{width:"60%", float:"right", marginTop:8}}>
-                    <Observer>
-                        {this.plot}
-                    </Observer>
+                <div className="clearfix">
+                    <div style={{width:"40%", float:"left", marginTop:6}}>
+                        <Observer>
+                            {this.table}
+                        </Observer>
+                    </div>
+                    <div style={{width:"60%", float:"right", marginTop:6 /*align with table controls*/}}>
+                        <Observer>
+                            {this.plot}
+                        </Observer>
+                    </div>
                 </div>
             </div>
         );
