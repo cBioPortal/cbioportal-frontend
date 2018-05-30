@@ -35,6 +35,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     }
     logX?:boolean;
     logY?:boolean;
+    useLogSpaceTicks?:boolean; // if log scale for an axis, then this prop determines whether the ticks are shown in post-log coordinate, or original data coordinate space
     axisLabelX?:string;
     axisLabelY?:string;
     fontFamily?:string;
@@ -270,7 +271,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
     }
 
     private tickFormat(t:number, logScale:boolean) {
-        if (logScale) {
+        if (logScale && !this.props.useLogSpaceTicks) {
             t = this.invLogScale(t);
         }
         return tickFormat(t);
@@ -368,7 +369,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                     <ScatterPlotTooltip
                         container={this.container}
                         targetHovered={this.pointHovered}
-                        targetCoords={{x: this.tooltipModel.x, y: this.tooltipModel.y}}
+                        targetCoords={{x: this.tooltipModel.x + LEFT_PADDING, y: this.tooltipModel.y}}
                         overlay={this.props.tooltip(this.tooltipModel.datum)}
                     />
                 )}
