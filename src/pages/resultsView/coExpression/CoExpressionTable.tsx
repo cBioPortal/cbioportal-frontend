@@ -114,30 +114,23 @@ export default class CoExpressionTable extends React.Component<ICoExpressionTabl
     render() {
         return (
             <div>
-                <div style={{marginTop:6, marginBottom:15}}>
-                    <div>Table of genes with the highest expression correlation</div>
-                    <div>
-                        <span>with </span>
-                        <span style={{fontWeight:"bold"}}>{this.props.referenceGene.hugoGeneSymbol} (Cytoband: {this.props.referenceGene.cytoband})</span>
-                    </div>
-                    <div>
-                        Click on a row to see the corresponding correlation plot.
-                        <InfoIcon
-                            style={{marginLeft:3}}
-                            tooltip={<div style={{maxWidth:200}}>{tableSearchInformation}</div>}
+                <div
+                    style={{float:"left", display:"flex", flexDirection:"row"}}
+                >
+                    <div style={{width:180}}>
+                        <Select
+                            value={this.props.tableMode}
+                            onChange={this.onSelectTableMode}
+                            options={this.tableModeOptions}
+                            searchable={false}
+                            clearable={false}
+                            className="coexpression-select-table-mode"
                         />
                     </div>
-                </div>
-                <div
-                    style={{float:"left", width:180}}
-                >
-                    <Select
-                        value={this.props.tableMode}
-                        onChange={this.onSelectTableMode}
-                        options={this.tableModeOptions}
-                        searchable={false}
-                        clearable={false}
-                        className="coexpression-select-table-mode"
+                    <InfoIcon
+                        style={{marginLeft:21, marginTop:"0.7em"}}
+                        tooltip={<div style={{maxWidth:200}}>{tableSearchInformation}</div>}
+                        tooltipPlacement="left"
                     />
                 </div>
                 <LazyMobXTable
