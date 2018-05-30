@@ -132,6 +132,29 @@ describe('Results Page', function() {
 
     });
 
+    describe("Mutations Tab", () => {
+
+        describe('3D structure visualizer', () => {
+            before(() => {
+                var url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=ov_tcga_pub&cancer_study_id=ov_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&Z_SCORE_THRESHOLD=2.0&case_set_id=ov_tcga_pub_3way_complete&case_ids=&gene_list=BRCA1+BRCA2&gene_set_choice=user-defined-list&Action=Submit`;
+                browser.url(url);
+                browser.click("[href='#mutation_details']");
+                browser.waitForEnabled('[data-test=view3DStructure]', 10000);
+            });
+
+            it('populates PDB info properly', () => {
+                browser.click('[data-test=view3DStructure]');
+                browser.waitUntil(() => (browser.getText('[data-test=pdbChainInfoText]') !== "LOADING"), 10000);
+
+                var text = browser.getText('[data-test="pdbChainInfoText"]')[0].trim();
+                // text might be truncated depending on the actual browser, so using startsWith instead
+                assert.ok(text.startsWith('complex structure of brca1 brct with singly'));
+            });
+
+        });
+
+    });
+
 });
 
 
