@@ -187,15 +187,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
     }
 
     private get title() {
-        let prefix:string = "";
-        switch (this.props.molecularProfile.molecularAlterationType) {
-            case AlterationTypeConstants.MRNA_EXPRESSION:
-                prefix = "mRNA ";
-                break;
-            case AlterationTypeConstants.PROTEIN_LEVEL:
-                prefix = "Protein ";
-        }
-        return `${prefix}co-expression: ${this.props.xAxisGene.hugoGeneSymbol} vs. ${this.props.yAxisGene.hugoGeneSymbol}`;
+        return `${this.props.molecularProfile.name}: ${this.props.xAxisGene.hugoGeneSymbol} vs. ${this.props.yAxisGene.hugoGeneSymbol}`;
     }
 
     @computed get axisLabelX() {
@@ -228,6 +220,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                 }}
                 logX={this.props.logScale}
                 logY={this.props.logScale}
+                useLogSpaceTicks={true}
                 axisLabelX={this.axisLabelX}
                 axisLabelY={this.axisLabelY}
                 tooltip={this.tooltip}
