@@ -35,6 +35,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     }
     logX?:boolean;
     logY?:boolean;
+    useLogSpaceTicks?:boolean; // if log scale for an axis, then this prop determines whether the ticks are shown in post-log coordinate, or original data coordinate space
     axisLabelX?:string;
     axisLabelY?:string;
     fontFamily?:string;
@@ -44,9 +45,9 @@ const DEFAULT_FONT_FAMILY = "Verdana,Arial,sans-serif";
 const CORRELATION_INFO_Y = 100; // experimentally determined
 const RIGHT_GUTTER = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
-const TOP_GUTTER = 50; // room for title;
 const PLOT_DATA_PADDING_PIXELS = 10;
 const MIN_LOG_ARGUMENT = 0.01;
+const LEFT_PADDING = 25;
 
 
 @observer
@@ -141,8 +142,12 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         }
     }
 
+    @computed get legendX() {
+        return this.props.chartWidth - 20;
+    }
+
     private get legend() {
-        const x = this.props.chartWidth;
+        const x = this.legendX;
         const topPadding = 30;
         const approximateCorrelationInfoHeight = 30;
         const y = CORRELATION_INFO_Y + approximateCorrelationInfoHeight + topPadding;
@@ -163,7 +168,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
 
     private get correlationInfo() {
         const approxTextWidth = 107; // experimentally determined
-        const x = this.props.chartWidth;
+        const x = this.legendX;
         return (
             <g>
                 <text
@@ -230,11 +235,11 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
     }
 
     @computed get svgWidth() {
-        return this.props.chartWidth + RIGHT_GUTTER;
+        return LEFT_PADDING + this.props.chartWidth + RIGHT_GUTTER;
     }
 
     @computed get svgHeight() {
-        return this.props.chartHeight + TOP_GUTTER;
+        return this.props.chartHeight;
     }
 
     private logScale(x:number) {
@@ -269,7 +274,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
     }
 
     private tickFormat(t:number, logScale:boolean) {
-        if (logScale) {
+        if (logScale && !this.props.useLogSpaceTicks) {
             t = this.invLogScale(t);
         }
         return tickFormat(t);
@@ -307,63 +312,67 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                         role="img"
                         viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
                     >
-                        <VictoryChart
-                            theme={CBIOPORTAL_VICTORY_THEME}
-                            width={this.props.chartWidth}
-                            height={this.props.chartHeight}
-                            standalone={false}
-                            domainPadding={PLOT_DATA_PADDING_PIXELS}
+                        <g
+                            transform={`translate(${LEFT_PADDING},0)`}
                         >
-                            {this.title}
-                            {this.legend}
-                            {this.correlationInfo}
-                            <VictoryAxis
-                                domain={this.plotDomain.x}
-                                orientation="bottom"
-                                offsetY={50}
-                                style={VictoryAxisStyle}
-                                crossAxis={false}
-                                tickCount={NUM_AXIS_TICKS}
-                                tickFormat={this.tickFormatX}
-                                axisLabelComponent={<VictoryLabel style={{fontFamily:this.fontFamily}} dy={25}/>}
-                                label={this.props.axisLabelX}
-                            />
-                            <VictoryAxis
-                                domain={this.plotDomain.y}
-                                style={VictoryAxisStyle}
-                                offsetX={50}
-                                orientation="left"
-                                crossAxis={false}
-                                tickCount={NUM_AXIS_TICKS}
-                                tickFormat={this.tickFormatY}
-                                dependentAxis={true}
-                                axisLabelComponent={<VictoryLabel style={{fontFamily:this.fontFamily}} dy={-25}/>}
-                                label={this.props.axisLabelY}
-                            />
-                            <VictoryScatter
-                                style={{
-                                    data: {
-                                        fill: ifndef(this.props.fill, "0x000000"),
-                                        stroke: ifndef(this.props.stroke, "0x000000"),
-                                        strokeWidth: ifndef(this.props.strokeWidth, 0),
-                                        fillOpacity: ifndef(this.props.fillOpacity, 1)
-                                    }
-                                }}
-                                size={this.size}
-                                symbol={this.props.symbol || "circle"}
-                                data={this.props.data}
-                                events={this.mouseEvents}
-                                x={this.x}
-                                y={this.y}
-                            />
-                        </VictoryChart>
+                            <VictoryChart
+                                theme={CBIOPORTAL_VICTORY_THEME}
+                                width={this.props.chartWidth}
+                                height={this.props.chartHeight}
+                                standalone={false}
+                                domainPadding={PLOT_DATA_PADDING_PIXELS}
+                            >
+                                {this.title}
+                                {this.legend}
+                                {this.correlationInfo}
+                                <VictoryAxis
+                                    domain={this.plotDomain.x}
+                                    orientation="bottom"
+                                    offsetY={50}
+                                    style={VictoryAxisStyle}
+                                    crossAxis={false}
+                                    tickCount={NUM_AXIS_TICKS}
+                                    tickFormat={this.tickFormatX}
+                                    axisLabelComponent={<VictoryLabel style={{fontFamily:this.fontFamily}} dy={25}/>}
+                                    label={this.props.axisLabelX}
+                                />
+                                <VictoryAxis
+                                    domain={this.plotDomain.y}
+                                    style={VictoryAxisStyle}
+                                    offsetX={50}
+                                    orientation="left"
+                                    crossAxis={false}
+                                    tickCount={NUM_AXIS_TICKS}
+                                    tickFormat={this.tickFormatY}
+                                    dependentAxis={true}
+                                    axisLabelComponent={<VictoryLabel style={{fontFamily:this.fontFamily}} dy={-50}/>}
+                                    label={this.props.axisLabelY}
+                                />
+                                <VictoryScatter
+                                    style={{
+                                        data: {
+                                            fill: ifndef(this.props.fill, "0x000000"),
+                                            stroke: ifndef(this.props.stroke, "0x000000"),
+                                            strokeWidth: ifndef(this.props.strokeWidth, 0),
+                                            fillOpacity: ifndef(this.props.fillOpacity, 1)
+                                        }
+                                    }}
+                                    size={this.size}
+                                    symbol={this.props.symbol || "circle"}
+                                    data={this.props.data}
+                                    events={this.mouseEvents}
+                                    x={this.x}
+                                    y={this.y}
+                                />
+                            </VictoryChart>
+                        </g>
                     </svg>
                 </div>
                 {this.container && this.tooltipModel && this.props.tooltip && (
                     <ScatterPlotTooltip
                         container={this.container}
                         targetHovered={this.pointHovered}
-                        targetCoords={{x: this.tooltipModel.x, y: this.tooltipModel.y}}
+                        targetCoords={{x: this.tooltipModel.x + LEFT_PADDING, y: this.tooltipModel.y}}
                         overlay={this.props.tooltip(this.tooltipModel.datum)}
                     />
                 )}
