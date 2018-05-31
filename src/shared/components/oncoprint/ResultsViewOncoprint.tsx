@@ -12,7 +12,7 @@ import OncoprintControls, {
     IOncoprintControlsHandlers,
     IOncoprintControlsState
 } from "shared/components/oncoprint/controls/OncoprintControls";
-import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
+import {AlterationTypeConstants, ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
 import {ClinicalAttribute, Gene, MolecularProfile, Mutation, Sample} from "../../api/generated/CBioPortalAPI";
 import {
     percentAltered, makeGeneticTracksMobxPromise,
@@ -752,6 +752,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     readonly clinicalAttributes_profiledIn = remoteData<OncoprintClinicalAttribute[]>({
         await:()=>[
+            this.props.store.samples,
             this.props.store.coverageInformation,
             this.props.store.molecularProfileIdToMolecularProfile,
             this.props.store.selectedMolecularProfiles
@@ -764,28 +765,39 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 _.groupBy(this.props.store.selectedMolecularProfiles.result!, "molecularAlterationType");
             const selectedMolecularProfilesMap = _.keyBy(this.props.store.selectedMolecularProfiles.result!, p=>p.molecularProfileId);
 
-            const existsUnprofiled:{[alterationType:string]:boolean} = {};
+            const existsProfiledCount:{[alterationType:string]:number} = {
+                [AlterationTypeConstants.MUTATION_EXTENDED]: 0,
+                [AlterationTypeConstants.COPY_NUMBER_ALTERATION]: 0,
+                [AlterationTypeConstants.MRNA_EXPRESSION]:0,
+                [AlterationTypeConstants.PROTEIN_LEVEL]:0
+            };
             const coverageInfo = this.props.store.coverageInformation.result!.samples;
             const molecularProfileIdToMolecularProfile = this.props.store.molecularProfileIdToMolecularProfile.result!;
             for (const uniqueSampleKey of Object.keys(coverageInfo)) {
-                for (const gpData of coverageInfo[uniqueSampleKey].notProfiledAllGenes) {
+                // record profiled by type
+                const isProfiled:{[alterationType:string]:boolean} = {};
+                for (const gpData of coverageInfo[uniqueSampleKey].allGenes) {
                     if (gpData.molecularProfileId in selectedMolecularProfilesMap) {
-                        // mark existsUnprofiled for this type because this is a selected profile
-                        existsUnprofiled[
+                        // mark isProfiled for this type because this is a selected profile
+                        isProfiled[
                             molecularProfileIdToMolecularProfile[gpData.molecularProfileId].molecularAlterationType
                         ] = true;
                     }
                 }
-                const byGene = coverageInfo[uniqueSampleKey].notProfiledByGene;
+                const byGene = coverageInfo[uniqueSampleKey].byGene;
                 for (const gene of Object.keys(byGene)) {
                     for (const gpData of byGene[gene]) {
                         if (gpData.molecularProfileId in selectedMolecularProfilesMap) {
-                            // mark existsUnprofiled for this type because this is a selected profile
-                            existsUnprofiled[
+                            // mark isProfiled for this type because this is a selected profile
+                            isProfiled[
                                 molecularProfileIdToMolecularProfile[gpData.molecularProfileId].molecularAlterationType
                             ] = true;
                         }
                     }
+                }
+                // increment counts
+                for (const alterationType of Object.keys(isProfiled)) {
+                    existsProfiledCount[alterationType] += 1;
                 }
             }
             // make a clinical attribute for each profile type which not every sample is profiled in
@@ -796,7 +808,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 "PROTEIN_LEVEL": "protein expression"
             };
 
-            const attributes:OncoprintClinicalAttribute[] = (Object.keys(existsUnprofiled).map(alterationType=>{
+            const existsUnprofiled = Object.keys(existsProfiledCount).filter(alterationType=>{
+                return existsProfiledCount[alterationType] < this.props.store.samples.result!.length;
+            });
+            const attributes:OncoprintClinicalAttribute[] = (existsUnprofiled.map(alterationType=>{
                 const group = groupedSelectedMolecularProfiles[alterationType];
                 if (!group) {
                     // No selected profiles of that type, skip it
