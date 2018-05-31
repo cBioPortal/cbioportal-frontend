@@ -80,9 +80,12 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                                 tickLabels: { padding: 135, fill: "black" }, axisLabel: { padding: 165, fill: "black", fontSize: 16 },
                                 axis: { stroke: "black", strokeWidth: 1 }, grid: { stroke: "#eeeeee", strokeDasharray: "none" }, ticks: { size: 0 }
                             }} />
-                        <VictoryLabel text={"← " + this.props.xAxisLeftLabel} x={60} y={300} style={{ fill: "blue" }} />
-                        <VictoryLabel text={this.props.xAxisRightLabel + " →"} x={200} y={300} style={{ fill: "red" }} />
-                        <VictoryLabel text="significance →" x={320} y={210} angle={-90} style={{ fontSize: 16 }} />
+                        <VictoryLabel text={"← " + this.props.xAxisLeftLabel} x={60} y={300} 
+                            style={{ fill: "blue", fontSize: 12, fontFamily: "Arial, Helvetica" }} />
+                        <VictoryLabel text={this.props.xAxisRightLabel + " →"} x={200} y={300} 
+                            style={{ fill: "red", fontSize: 12, fontFamily: "Arial, Helvetica" }} />
+                        <VictoryLabel text="significance →" x={320} y={210} angle={-90} 
+                            style={{ fontSize: 16, fontFamily: "Arial, Helvetica" }} />
                         <VictoryScatter style={{ data: { fill: "#58ACFA", fillOpacity: 0.4 } }} data={this.props.data} symbol="circle"
                             size={(datum: any, active: any) => active ? 10 : 3} events={events} />
                         <VictoryLine data={[{x: -this.props.xAxisDomain, y: -Math.log10(0.05)}, {x:this.props.xAxisDomain, y: -Math.log10(0.05)}]} 
