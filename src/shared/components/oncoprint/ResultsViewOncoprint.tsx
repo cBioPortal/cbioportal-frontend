@@ -12,7 +12,7 @@ import OncoprintControls, {
     IOncoprintControlsHandlers,
     IOncoprintControlsState
 } from "shared/components/oncoprint/controls/OncoprintControls";
-import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
+import {AlterationTypeConstants, ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
 import {ClinicalAttribute, Gene, MolecularProfile, Mutation, Sample} from "../../api/generated/CBioPortalAPI";
 import {
     percentAltered, makeGeneticTracksMobxPromise,
@@ -753,6 +753,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     readonly clinicalAttributes_profiledIn = remoteData<OncoprintClinicalAttribute[]>({
         await:()=>[
+            this.props.store.samples,
             this.props.store.coverageInformation,
             this.props.store.molecularProfileIdToMolecularProfile,
             this.props.store.selectedMolecularProfiles,
@@ -764,9 +765,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     this.props.store.coverageInformation.result!.samples,
                     this.props.store.molecularProfileIdToMolecularProfile.result!,
                     this.props.store.selectedMolecularProfiles.result!,
+                    this.props.store.samples.result!.length,
                     this.props.store.studyIds.result!.length === 1
                 )
-            )
+            );
         },
         onResult:(result:OncoprintClinicalAttribute[]|undefined)=>{
             // automatically select these tracks when the page loads
@@ -1041,6 +1043,14 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return "";
     }
 
+    @computed get alterationTypesInQuery() {
+        if (this.props.store.selectedMolecularProfiles.isComplete) {
+            return _.uniq(this.props.store.selectedMolecularProfiles.result.map(x=>x.molecularAlterationType));
+        } else {
+            return [];
+        }
+    }
+
     public render() {
         return (
             <div style={{position:'relative', minHeight:this.isHidden ? this.loadingIndicatorHeight : "auto"}} className="cbioportal-frontend">
@@ -1088,6 +1098,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 onReleaseRendering={this.onReleaseRendering}
                                 hiddenIds={!this.showUnalteredColumns ? this.unalteredKeys.result : undefined}
                                 molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
+                                alterationTypesInQuery={this.alterationTypesInQuery}
 
                                 horzZoomToFitIds={this.horzZoomToFitIds}
                                 distinguishMutationType={this.distinguishMutationType}

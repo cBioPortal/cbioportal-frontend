@@ -1,9 +1,10 @@
 import {CoverageInformation} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
-import {MolecularProfile} from "../../api/generated/CBioPortalAPI";
+import {MolecularProfile, Sample} from "../../api/generated/CBioPortalAPI";
 import {OncoprintClinicalAttribute} from "./ResultsViewOncoprint";
 import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
 import _ from "lodash";
 import naturalSort from "javascript-natural-sort";
+import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
 
 export const alterationTypeToProfiledForText:{[alterationType:string]:string} = {
     "MUTATION_EXTENDED": "mutations",
@@ -16,6 +17,7 @@ export function makeProfiledInClinicalAttributes(
     coverageInformation: CoverageInformation["samples"],
     molecularProfileIdToMolecularProfile: {[molecularProfileId:string]:MolecularProfile},
     selectedMolecularProfiles: MolecularProfile[],
+    numSamples:number,
     isSingleStudyQuery: boolean
 ) {
     // determine which Profiled In clinical attributes will exist in this query.
@@ -30,11 +32,12 @@ export function makeProfiledInClinicalAttributes(
         _.groupBy(selectedMolecularProfiles, "molecularAlterationType");
     const selectedMolecularProfilesMap = _.keyBy(selectedMolecularProfiles, p=>p.molecularProfileId);
 
-    const existsUnprofiled:{[alterationType:string]:boolean} = _.reduce(coverageInformation, (map, sampleCoverage)=>{
+    const existsUnprofiledCount:{[alterationType:string]:number} = _.reduce(coverageInformation, (map, sampleCoverage)=>{
+        const isUnprofiled:{[alterationType:string]:boolean} = {};
         for (const gpData of sampleCoverage.notProfiledAllGenes) {
             if (gpData.molecularProfileId in selectedMolecularProfilesMap) {
-                // mark existsUnprofiled for this type because this is a selected profile
-                map[
+                // mark isUnprofiled for this type because this is a selected profile
+                isUnprofiled[
                     molecularProfileIdToMolecularProfile[gpData.molecularProfileId].molecularAlterationType
                 ] = true;
             }
@@ -42,18 +45,26 @@ export function makeProfiledInClinicalAttributes(
         _.forEach(sampleCoverage.notProfiledByGene, (geneInfo)=>{
             for (const gpData of geneInfo) {
                 if (gpData.molecularProfileId in selectedMolecularProfilesMap) {
-                    // mark existsUnprofiled for this type because this is a selected profile
-                    map[
+                    // mark isUnprofiled for this type because this is a selected profile
+                    isUnprofiled[
                         molecularProfileIdToMolecularProfile[gpData.molecularProfileId].molecularAlterationType
                     ] = true;
                 }
             }
         });
+        // increment counts
+        for (const alterationType of Object.keys(isUnprofiled)) {
+            map[alterationType] = map[alterationType] || 0;
+            map[alterationType] += 1;
+        }
         return map;
-    }, {} as {[alterationType:string]:boolean});
+    }, {} as {[alterationType:string]:number});
 
     // make a clinical attribute for each profile type which not every sample is profiled in
-    const attributes:OncoprintClinicalAttribute[] = (Object.keys(existsUnprofiled).map(alterationType=>{
+    const existsUnprofiled = Object.keys(existsUnprofiledCount).filter(alterationType=>{
+        return existsUnprofiledCount[alterationType] > 0;
+    });
+    const attributes:OncoprintClinicalAttribute[] = (existsUnprofiled.map(alterationType=>{
         const group = groupedSelectedMolecularProfiles[alterationType];
         if (!group) {
             // No selected profiles of that type, skip it
@@ -81,7 +92,7 @@ export function makeProfiledInClinicalAttributes(
             };
         }
     }) as (OncoprintClinicalAttribute|null)[]).filter(x=>!!x) as OncoprintClinicalAttribute[];// filter out null
-
+    
     attributes.sort((a,b)=>naturalSort(a.displayName, b.displayName));
     return attributes;
 }
