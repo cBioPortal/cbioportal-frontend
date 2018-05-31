@@ -90,8 +90,8 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                     </VictoryChart>
                 </div>
                 {this.tooltipModel &&
-                    <Popover className={styles.ScatterTooltip} positionLeft={this.tooltipModel.x + 5} 
-                        positionTop={this.tooltipModel.y - 15}>
+                    <Popover className={styles.ScatterTooltip} positionLeft={this.tooltipModel.x + 15} 
+                        positionTop={this.tooltipModel.y - 3}>
                         {this.tooltipModel.datum.hugoGeneSymbol}
                     </Popover>
                 }
