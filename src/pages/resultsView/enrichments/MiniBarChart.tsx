@@ -89,7 +89,8 @@ export default class MiniBarChart extends React.Component<IMiniBarChartProps, {}
                             tickLabels: { padding: 2, fontSize: 12, fill: "black" }, grid: {pointerEvents: "none", stroke: "none"}, 
                             axis: { stroke: "black", strokeWidth: 1 } }}/>
                         {!this.props.selectedGene &&
-                            <VictoryLabel text="Select gene in table or volcano plot" x={91} y={65}/>
+                            <VictoryLabel text="Select gene in table or volcano plot" x={91} y={65} 
+                                style={{ fontSize: 12, fontFamily: "Arial, Helvetica" }}/>
                         }
                     </VictoryChart>
                 </div>
