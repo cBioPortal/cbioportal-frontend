@@ -155,13 +155,13 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
         const ret = [];
         if (hasX) {
             ret.push({
-                name: `${this.props.xAxisGene.hugoGeneSymbol} mutated`,
+                name: [this.props.xAxisGene.hugoGeneSymbol, "mutated"],
                 symbol: { fill: X_MUT_FILL, stroke: X_MUT_STROKE }
             });
         }
         if (hasY) {
             ret.push({
-                name: `${this.props.yAxisGene.hugoGeneSymbol} mutated`,
+                name: [this.props.yAxisGene.hugoGeneSymbol, "mutated"],
                 symbol: { fill: Y_MUT_FILL, stroke: Y_MUT_STROKE }
             });
         }
