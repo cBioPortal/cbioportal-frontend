@@ -81,9 +81,9 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                                 axis: { stroke: "black", strokeWidth: 1 }, grid: { stroke: "#eeeeee", strokeDasharray: "none" }, ticks: { size: 0 }
                             }} />
                         <VictoryLabel text={"← " + this.props.xAxisLeftLabel} x={60} y={300} 
-                            style={{ fill: "blue", fontSize: 12, fontFamily: "Arial, Helvetica" }} />
+                            style={{ fontSize: 12, fontFamily: "Arial, Helvetica" }} />
                         <VictoryLabel text={this.props.xAxisRightLabel + " →"} x={200} y={300} 
-                            style={{ fill: "red", fontSize: 12, fontFamily: "Arial, Helvetica" }} />
+                            style={{ fontSize: 12, fontFamily: "Arial, Helvetica" }} />
                         <VictoryLabel text="significance →" x={320} y={210} angle={-90} 
                             style={{ fontSize: 16, fontFamily: "Arial, Helvetica" }} />
                         <VictoryScatter style={{ data: { fill: "#58ACFA", fillOpacity: 0.4 } }} data={this.props.data} symbol="circle"

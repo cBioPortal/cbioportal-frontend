@@ -30,15 +30,6 @@ export function formatLogOddsRatio(logOddsRatio: number): string {
     return logOddsRatio.toFixed(2);
 }
 
-export function formatLogOddsRatioWithStyle(logOddsRatio: number): JSX.Element {
-
-    if (logOddsRatio >= 0) {
-        return <span style={{ color: "#00FF00" }}>{formatLogOddsRatio(logOddsRatio)}</span>;
-    } else {
-        return <span style={{ color: "#00FF00" }}>{formatLogOddsRatio(logOddsRatio)}</span>;
-    }
-}
-
 export function formatValueWithStyle(value: number): JSX.Element {
 
     let formattedValue = <span>{toConditionalPrecision(value, 3, 0.01)}</span>;
