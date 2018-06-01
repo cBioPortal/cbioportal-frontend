@@ -469,24 +469,36 @@ class LazyMobXTableStore<T> {
         }
     }
 
+    @computed get clickableClassName() {
+        if (this.highlightColor === "yellow") {
+            return "clickable-yellow";
+        } else if (this.highlightColor === "bluegray") {
+            return "clickable-bluegray";
+        }
+    }
+
     @computed get rows():JSX.Element[] {
         // We separate this so that highlighting isn't such a costly operation
         const ret = [];
         for (let i=0; i<this.visibleData.length; i++) {
             const rowProps:any = {};
             const rowIsHighlighted = this.dataStore.isHighlighted(this.visibleData[i]);
+            const classNames = [];
             if (rowIsHighlighted) {
-                rowProps.className = this.highlightClassName;
+                 classNames.push(this.highlightClassName);
             }
             if (this.onRowClick) {
-                rowProps.style = {
-                    cursor: rowIsHighlighted ? "auto" : "pointer"
-                };
+                if (!rowIsHighlighted) {
+                    classNames.push(this.clickableClassName);
+                }
 
                 const onRowClick = this.onRowClick; // by the time its called this might be undefined again, so need to save ref
                 rowProps.onClick = ()=>{
                     onRowClick(this.visibleData[i]);
                 };
+            }
+            if (classNames.length) {
+                rowProps.className = classNames.join(" ");
             }
             ret.push(
                 <tr key={i} {...rowProps}>
