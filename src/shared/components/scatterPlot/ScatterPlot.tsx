@@ -273,21 +273,22 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         return (active || !!(this.props.highlight && this.props.highlight(d)) ? 6 : 3);
     }
 
-    private tickFormat(t:number, logScale:boolean) {
+    private tickFormat(t:number, ticks:number[], logScale:boolean) {
         if (logScale && !this.props.useLogSpaceTicks) {
             t = this.invLogScale(t);
+            ticks = ticks.map(x=>this.invLogScale(x));
         }
-        return tickFormat(t);
+        return tickFormat(t, ticks);
     }
 
     @bind
-    private tickFormatX(t:number) {
-        return this.tickFormat(t, !!this.props.logX);
+    private tickFormatX(t:number, i:number, ticks:number[]) {
+        return this.tickFormat(t, ticks, !!this.props.logX);
     }
 
     @bind
-    private tickFormatY(t:number) {
-        return this.tickFormat(t, !!this.props.logY);
+    private tickFormatY(t:number, i:number, ticks:number[]) {
+        return this.tickFormat(t, ticks, !!this.props.logY);
     }
 
     render() {
