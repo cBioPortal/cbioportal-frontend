@@ -129,7 +129,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
 
         columns[AlterationEnrichmentTableColumnType.P_VALUE] = {
             name: "p-Value",
-            render: (d: AlterationEnrichmentRow) => <span>{toConditionalPrecision(d.pValue, 3, 0.01)}</span>,
+            render: (d: AlterationEnrichmentRow) => <span style={{whiteSpace: 'nowrap'}}>{toConditionalPrecision(d.pValue, 3, 0.01)}</span>,
             tooltip: <span>Derived from Fisher Exact Test</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.pValue,
             download: (d: AlterationEnrichmentRow) => toConditionalPrecision(d.pValue, 3, 0.01)
@@ -137,7 +137,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
 
         columns[AlterationEnrichmentTableColumnType.Q_VALUE] = {
             name: "q-Value",
-            render: (d: AlterationEnrichmentRow) => <span>{formatValueWithStyle(d.qValue)}</span>,
+            render: (d: AlterationEnrichmentRow) => <span style={{whiteSpace: 'nowrap'}}>{formatValueWithStyle(d.qValue)}</span>,
             tooltip: <span>Derived from Benjamini-Hochberg procedure</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.qValue,
             download: (d: AlterationEnrichmentRow) => toConditionalPrecision(d.qValue, 3, 0.01)
@@ -145,13 +145,25 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
 
         columns[AlterationEnrichmentTableColumnType.TENDENCY] = {
             name: "Tendency",
-            render: (d: AlterationEnrichmentRow) => <span>{calculateAlterationTendency(Number(d.logRatio))}&nbsp;&nbsp;&nbsp;
-                {d.qValue < 0.05 ? <Badge style={{
+            render: (d: AlterationEnrichmentRow) => <table><tr><td>{calculateAlterationTendency(Number(d.logRatio))}</td></tr>
+                {d.qValue < 0.05 ? <tr><td><Badge style={{
                     backgroundColor: '#58ACFA', fontSize: 8, marginBottom: 2
-                }}>Significant</Badge> : ""}</span>,
-            tooltip: <span>Log ratio > 0 &nbsp;&nbsp;: Enriched in altered group<br />
-                Log ratio &lt;= 0 : Enriched in unaltered group<br />
-                q-Value &lt; 0.05 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Significant association</span>,
+                }}>Significant</Badge></td></tr> : ""}</table>,
+            tooltip: 
+                <table>
+                    <tr>
+                        <td>Log ratio > 0</td>
+                        <td>: Enriched in altered group</td>
+                    </tr>
+                    <tr>
+                        <td>Log ratio &lt;= 0</td>
+                        <td>: Enriched in unaltered group</td>
+                    </tr>
+                    <tr>
+                        <td>q-Value &lt; 0.05</td>
+                        <td>: Significant association</td>
+                    </tr>
+                </table>,
             filter: (d: AlterationEnrichmentRow, filterString: string, filterStringUpper: string) =>
                 calculateAlterationTendency(Number(d.logRatio)).toUpperCase().includes(filterStringUpper),
             sortBy: (d: AlterationEnrichmentRow) => calculateAlterationTendency(Number(d.logRatio)),

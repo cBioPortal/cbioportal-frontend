@@ -150,7 +150,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
 
         columns[ExpressionEnrichmentTableColumnType.P_VALUE] = {
             name: "p-Value",
-            render: (d: ExpressionEnrichmentRow) => <span>{toConditionalPrecision(d.pValue, 3, 0.01)}</span>,
+            render: (d: ExpressionEnrichmentRow) => <span style={{whiteSpace: 'nowrap'}}>{toConditionalPrecision(d.pValue, 3, 0.01)}</span>,
             tooltip: <span>Derived from Fisher Exact Test</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.pValue,
             download: (d: ExpressionEnrichmentRow) => toConditionalPrecision(d.pValue, 3, 0.01)
@@ -158,7 +158,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
 
         columns[ExpressionEnrichmentTableColumnType.Q_VALUE] = {
             name: "q-Value",
-            render: (d: ExpressionEnrichmentRow) => <span>{formatValueWithStyle(d.qValue)}</span>,
+            render: (d: ExpressionEnrichmentRow) => <span style={{whiteSpace: 'nowrap'}}>{formatValueWithStyle(d.qValue)}</span>,
             tooltip: <span>Derived from Benjamini-Hochberg procedure</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.qValue,
             download: (d: ExpressionEnrichmentRow) => toConditionalPrecision(d.qValue, 3, 0.01)
@@ -166,13 +166,25 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
 
         columns[ExpressionEnrichmentTableColumnType.TENDENCY] = {
             name: "Tendency",
-            render: (d: ExpressionEnrichmentRow) => <span>{calculateExpressionTendency(Number(d.logRatio))}&nbsp;&nbsp;&nbsp;
-                {d.qValue < 0.05 ? <Badge style={{
+            render: (d: ExpressionEnrichmentRow) => <table><tr><td>{calculateExpressionTendency(Number(d.logRatio))}</td></tr>
+                {d.qValue < 0.05 ? <tr><td><Badge style={{
                     backgroundColor: '#58ACFA', fontSize: 8, marginBottom: 2
-                }}>Significant</Badge> : ""}</span>,
-            tooltip: <span>Log ratio > 0 &nbsp;&nbsp;: Over-expressed in altered group<br />
-                Log ratio &lt;= 0 : Under-expressed in altered group<br />
-                q-Value &lt; 0.05 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Significant association</span>,
+                }}>Significant</Badge></td></tr> : ""}</table>,
+            tooltip: 
+                <table>
+                    <tr>
+                        <td>Log ratio > 0</td>
+                        <td>: Over-expressed in altered group</td>
+                    </tr>
+                    <tr>
+                        <td>Log ratio &lt;= 0</td>
+                        <td>: Under-expressed in altered group</td>
+                    </tr>
+                    <tr>
+                        <td>q-Value &lt; 0.05</td>
+                        <td>: Significant association</td>
+                    </tr>
+                </table>,
             filter: (d: ExpressionEnrichmentRow, filterString: string, filterStringUpper: string) =>
                 calculateExpressionTendency(Number(d.logRatio)).toUpperCase().includes(filterStringUpper),
             sortBy: (d: ExpressionEnrichmentRow) => calculateExpressionTendency(Number(d.logRatio)),
