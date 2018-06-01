@@ -1120,8 +1120,8 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist(selectedCaseSet_sel);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "Cases with both mutations and copy number alterations data",
-            "Cases with both mutations and copy number alterations data",
+            "All (252)",
+            "All (252)",
         );
 
         // Deselect Ampullary Carcinoma
@@ -1174,8 +1174,8 @@ describe('case set selection in front page query form', function(){
 
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "Cases with both mutations and copy number alterations data",
-            "Cases with both mutations and copy number alterations data",
+            "All (21206)",
+            "All (21206)",
         );
 
         // Deselect all tcga -provisional studies
@@ -1198,8 +1198,8 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist(selectedCaseSet_sel);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "Cases with both mutations and copy number alterations data",
-            "Cases with both mutations and copy number alterations data",
+            "All (252)",
+            "All (252)",
         );
 
         // Deselect Ampullary Carcinoma
@@ -1261,8 +1261,8 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist(selectedCaseSet_sel, 10000);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "Cases with both mutations and copy number alterations data",
-            "Cases with both mutations and copy number alterations data",
+            "All (368)",
+            "All (368)",
         );
 
         // Uncheck study
@@ -1301,8 +1301,8 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist(selectedCaseSet_sel, 10000);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "Cases with both mutations and copy number alterations data",
-            "Cases with both mutations and copy number alterations data",
+            "All (12997)",
+            "All (12997)",
         );
 
         // Deselect all tcga -provisional studies
