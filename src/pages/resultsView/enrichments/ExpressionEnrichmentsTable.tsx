@@ -4,8 +4,7 @@ import LazyMobXTable, { Column } from "../../../shared/components/lazyMobXTable/
 import { observer } from "mobx-react";
 import { observable } from "mobx";
 import { Badge, Checkbox } from 'react-bootstrap';
-import { calculateExpressionTendency, formatValueWithStyle, formatLogOddsRatio, 
-    formatLogOddsRatioWithStyle } from "./EnrichmentsUtil";
+import { calculateExpressionTendency, formatValueWithStyle, formatLogOddsRatio } from "./EnrichmentsUtil";
 import { toConditionalPrecision, } from 'shared/lib/NumberUtils';
 import styles from "./styles.module.scss";
 import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
@@ -142,7 +141,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
 
         columns[ExpressionEnrichmentTableColumnType.LOG_RATIO] = {
             name: "Log Ratio",
-            render: (d: ExpressionEnrichmentRow) => <span>{formatLogOddsRatioWithStyle(Number(d.logRatio))}</span>,
+            render: (d: ExpressionEnrichmentRow) => <span>{formatLogOddsRatio(Number(d.logRatio))}</span>,
             tooltip: <span>Log2 based ratio of (mean in altered / mean in unaltered)</span>,
             sortBy: (d: ExpressionEnrichmentRow) => Number(d.logRatio),
             download: (d: ExpressionEnrichmentRow) => formatLogOddsRatio(Number(d.logRatio))
