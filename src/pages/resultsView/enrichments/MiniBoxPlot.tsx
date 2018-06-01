@@ -2,7 +2,7 @@ import * as React from 'react';
 import { observer } from "mobx-react";
 import { observable } from 'mobx';
 import styles from "./styles.module.scss";
-import { VictoryChart, VictoryLabel, VictoryBoxPlot, VictoryContainer, VictoryAxis, VictoryScatter } from 'victory';
+import { VictoryChart, VictoryBoxPlot, VictoryContainer, VictoryAxis, VictoryScatter } from 'victory';
 import { Popover } from 'react-bootstrap';
 import SvgSaver from 'svgsaver';
 import fileDownload from 'react-file-download';
