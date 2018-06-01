@@ -5,8 +5,7 @@ import { observer } from "mobx-react";
 import { observable } from "mobx";
 import { Badge, Checkbox } from 'react-bootstrap';
 import {
-    calculateAlterationTendency, formatLogOddsRatio, formatPercentage, formatValueWithStyle,
-    formatLogOddsRatioWithStyle
+    calculateAlterationTendency, formatLogOddsRatio, formatPercentage, formatValueWithStyle
 } from "./EnrichmentsUtil";
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import styles from "./styles.module.scss";
@@ -121,7 +120,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
 
         columns[AlterationEnrichmentTableColumnType.LOG_RATIO] = {
             name: "Log Ratio",
-            render: (d: AlterationEnrichmentRow) => <span>{formatLogOddsRatioWithStyle(Number(d.logRatio))}</span>,
+            render: (d: AlterationEnrichmentRow) => <span>{formatLogOddsRatio(Number(d.logRatio))}</span>,
             tooltip: <span>Log2 based ratio of (pct in altered / pct in unaltered)</span>,
             sortBy: (d: AlterationEnrichmentRow) => Number(d.logRatio),
             download: (d: AlterationEnrichmentRow) => formatLogOddsRatio(Number(d.logRatio))
