@@ -104,36 +104,32 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         };
 
         columns[ExpressionEnrichmentTableColumnType.MEAN_IN_ALTERED] = {
-            name: "Mean expression in altered group",
+            name: "μ in altered group",
             render: (d: ExpressionEnrichmentRow) => <span>{d.meanExpressionInAlteredGroup.toFixed(2)}</span>,
-            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 70 }}>{name}</span>,
             tooltip: <span>Mean of expression values in altered group</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.meanExpressionInAlteredGroup,
             download: (d: ExpressionEnrichmentRow) => d.meanExpressionInAlteredGroup.toFixed(2)
         };
 
         columns[ExpressionEnrichmentTableColumnType.MEAN_IN_UNALTERED] = {
-            name: "Mean expression in unaltered group",
+            name: "μ in unaltered group",
             render: (d: ExpressionEnrichmentRow) => <span>{d.meanExpressionInUnalteredGroup.toFixed(2)}</span>,
-            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 70 }}>{name}</span>,
             tooltip: <span>Mean of expression values in unaltered group</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.meanExpressionInUnalteredGroup,
             download: (d: ExpressionEnrichmentRow) => d.meanExpressionInUnalteredGroup.toFixed(2)
         };
 
         columns[ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_IN_ALTERED] = {
-            name: "Standard deviation in altered group",
+            name: "σ in altered group",
             render: (d: ExpressionEnrichmentRow) => <span>{d.standardDeviationInAlteredGroup.toFixed(2)}</span>,
-            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 70 }}>{name}</span>,
             tooltip: <span>Standard Deviation in altered group</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.standardDeviationInAlteredGroup,
             download: (d: ExpressionEnrichmentRow) => d.standardDeviationInAlteredGroup.toFixed(2)
         };
 
         columns[ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_IN_UNALTERED] = {
-            name: "Standard deviation in unaltered group",
+            name: "σ in unaltered group",
             render: (d: ExpressionEnrichmentRow) => <span>{d.standardDeviationInUnalteredGroup.toFixed(2)}</span>,
-            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 70 }}>{name}</span>,
             tooltip: <span>Standard Deviation in unaltered group</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.standardDeviationInUnalteredGroup,
             download: (d: ExpressionEnrichmentRow) => d.standardDeviationInUnalteredGroup.toFixed(2)
@@ -165,10 +161,10 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
 
         columns[ExpressionEnrichmentTableColumnType.TENDENCY] = {
             name: "Tendency",
-            render: (d: ExpressionEnrichmentRow) => <table><tr><td>{calculateExpressionTendency(Number(d.logRatio))}</td></tr>
-                {d.qValue < 0.05 ? <tr><td><Badge style={{
+            render: (d: ExpressionEnrichmentRow) => <div className={styles.Tendency}>{calculateExpressionTendency(Number(d.logRatio))}
+                {d.qValue < 0.05 ? <Badge style={{
                     backgroundColor: '#58ACFA', fontSize: 8, marginBottom: 2
-                }}>Significant</Badge></td></tr> : ""}</table>,
+                }}>Significant</Badge> : ""}</div>,
             tooltip: 
                 <table>
                     <tr>
