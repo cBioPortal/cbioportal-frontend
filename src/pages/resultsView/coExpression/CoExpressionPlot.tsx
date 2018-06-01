@@ -155,13 +155,13 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
         const ret = [];
         if (hasX) {
             ret.push({
-                name: `${this.props.xAxisGene.hugoGeneSymbol} mutated`,
+                name: [this.props.xAxisGene.hugoGeneSymbol, "mutated"],
                 symbol: { fill: X_MUT_FILL, stroke: X_MUT_STROKE }
             });
         }
         if (hasY) {
             ret.push({
-                name: `${this.props.yAxisGene.hugoGeneSymbol} mutated`,
+                name: [this.props.yAxisGene.hugoGeneSymbol, "mutated"],
                 symbol: { fill: Y_MUT_FILL, stroke: Y_MUT_STROKE }
             });
         }
@@ -187,15 +187,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
     }
 
     private get title() {
-        let prefix:string = "";
-        switch (this.props.molecularProfile.molecularAlterationType) {
-            case AlterationTypeConstants.MRNA_EXPRESSION:
-                prefix = "mRNA ";
-                break;
-            case AlterationTypeConstants.PROTEIN_LEVEL:
-                prefix = "Protein ";
-        }
-        return `${prefix}co-expression: ${this.props.xAxisGene.hugoGeneSymbol} vs. ${this.props.yAxisGene.hugoGeneSymbol}`;
+        return `${this.props.molecularProfile.name}: ${this.props.xAxisGene.hugoGeneSymbol} vs. ${this.props.yAxisGene.hugoGeneSymbol}`;
     }
 
     @computed get axisLabelX() {
@@ -228,6 +220,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                 }}
                 logX={this.props.logScale}
                 logY={this.props.logScale}
+                useLogSpaceTicks={true}
                 axisLabelX={this.axisLabelX}
                 axisLabelY={this.axisLabelY}
                 tooltip={this.tooltip}

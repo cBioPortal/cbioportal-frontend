@@ -3,6 +3,7 @@ import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 
 export interface IInfoIconProps {
     tooltip:JSX.Element;
+    tooltipPlacement?:string;
     style?:any;
 }
 
@@ -11,13 +12,13 @@ export default class InfoIcon extends React.Component<IInfoIconProps, {}> {
        return (
            <DefaultTooltip
                overlay={this.props.tooltip}
+               placement={this.props.tooltipPlacement || "right"}
            >
                <i
-                   className="fa fa-md fa-info-circle"
+                   className="glyphicon glyphicon-info-sign"
                    style={Object.assign({}, {
-                       color: "#0000ff",
+                       color: "#000000",
                        cursor: "pointer",
-                       marginTop:"0.1em"
                    }, this.props.style || {})}
                />
            </DefaultTooltip>
