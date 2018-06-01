@@ -28,7 +28,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     strokeWidth?:number | ((d:D)=>number);
     symbol?: string | ((d:D)=>string); // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
     tooltip?:(d:D)=>JSX.Element;
-    legendData?:{name:string, symbol:any}[]; // see http://formidable.com/open-source/victory/docs/victory-legend/#data
+    legendData?:{name:string|string[], symbol:any}[]; // see http://formidable.com/open-source/victory/docs/victory-legend/#data
     correlation?: {
         pearson: number;
         spearman: number;
