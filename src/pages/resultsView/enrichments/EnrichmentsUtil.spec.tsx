@@ -1,9 +1,9 @@
 import { assert } from 'chai';
 import React from 'react';
-import { calculateAlterationTendency, calculateExpressionTendency, formatLogOddsRatio, formatLogOddsRatioWithStyle, 
-    formatValueWithStyle, formatPercentage, getAlterationScatterData, getExpressionScatterData, roundLogRatio, 
-    calculateLogRatio, getAlterationRowData, getExpressionRowData, getFilteredData, getBarChartTooltipContent,
-    getBoxPlotScatterData, getDownloadContent, getAlterationsTooltipContent, shortenGenesLabel, getBoxPlotModels
+import { calculateAlterationTendency, calculateExpressionTendency, formatLogOddsRatio, formatValueWithStyle, 
+    formatPercentage, getAlterationScatterData, getExpressionScatterData, roundLogRatio, calculateLogRatio, 
+    getAlterationRowData, getExpressionRowData, getFilteredData, getBarChartTooltipContent, getBoxPlotScatterData, 
+    getDownloadContent, getAlterationsTooltipContent, shortenGenesLabel, getBoxPlotModels
 } from "./EnrichmentsUtil";
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
@@ -366,20 +366,6 @@ describe("EnrichmentsUtil", () => {
 
         it("returns 1.23 for 1.234", () => {
             assert.equal(formatLogOddsRatio(1.234), "1.23");
-        });
-    });
-
-    describe("#formatLogOddsRatioWithStyle()", () => {
-        it("returns <span style={{ color: \"#00FF00\" }}>5.00</span> for 5", () => {
-            expect(formatLogOddsRatioWithStyle(5)).toEqualJSX(<span style={{ color: "#00FF00" }}>5.00</span>);
-        });
-
-        it("returns <span style={{ color: \"#00FF00\" }}>0.00</span> for 0", () => {
-            expect(formatLogOddsRatioWithStyle(0)).toEqualJSX(<span style={{ color: "#00FF00" }}>0.00</span>);
-        });
-
-        it("returns <span style={{ color: \"#00FF00\" }}>-2.00</span> for -2", () => {
-            expect(formatLogOddsRatioWithStyle(-2)).toEqualJSX(<span style={{ color: "#00FF00" }}>-2.00</span>);
         });
     });
 
