@@ -32,7 +32,7 @@ type ICopyNumberTableWrapperProps = {
     cnaCivicGenes?: ICivicGeneDataWrapper;
     cnaCivicVariants?: ICivicVariantDataWrapper;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
-    oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean};
+    oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean}|Error;
     enableOncoKb?:boolean;
     enableCivic?:boolean;
     pubMedCache?:PubMedCache;
