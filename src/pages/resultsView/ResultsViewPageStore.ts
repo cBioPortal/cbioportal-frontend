@@ -21,7 +21,7 @@ import {
     fetchDiscreteCNAData, findMutationMolecularProfileId, mergeDiscreteCNAData,
     fetchSamples, fetchClinicalDataInStudy, generateDataQueryFilter,
     fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData, IDataQueryFilter,
-    isMutationProfile, fetchOncoKbAnnotatedGenes, groupBy, fetchOncoKbData,
+    isMutationProfile, fetchOncoKbAnnotatedGenesSuppressErrors, groupBy, fetchOncoKbData,
     ONCOKB_DEFAULT, generateUniqueSampleKeyToTumorTypeMap, cancerTypeForOncoKb, fetchCnaOncoKbData,
     fetchCnaOncoKbDataWithNumericGeneMolecularData, fetchGermlineConsentedSamples
 } from "shared/lib/StoreUtils";
@@ -1093,10 +1093,7 @@ export class ResultsViewPageStore {
     }
 
     readonly oncoKbAnnotatedGenes = remoteData({
-        invoke:()=>fetchOncoKbAnnotatedGenes(),
-        onError: (err: Error) => {
-            // fail silently, leave the error handling responsibility to the data consumer
-        }
+        invoke:()=>fetchOncoKbAnnotatedGenesSuppressErrors()
     }, {});
 
     readonly clinicalDataForSamples = remoteData<ClinicalData[]>({
@@ -1672,7 +1669,7 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly oncoKbData = remoteData<IOncoKbData>({
+    readonly oncoKbData = remoteData<IOncoKbData|Error>({
         await: () => [
             this.mutations,
             this.clinicalDataForSamples,
