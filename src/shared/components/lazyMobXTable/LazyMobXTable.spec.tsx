@@ -914,11 +914,11 @@ describe('LazyMobXTable', ()=>{
             const store:HighlightingDataStore = new HighlightingDataStore(data);
             let table = mount(<Table columns={columns} dataStore={store}/>);
             let rows = getSimpleTableRows(table);
-            assert.isFalse(rows.at(0).hasClass("highlight"), "row 0 not highlighted");
-            assert.isTrue(rows.at(1).hasClass("highlight"), "row 1 highlighted");
-            assert.isFalse(rows.at(2).hasClass("highlight"), "row 2 not highlighted");
-            assert.isTrue(rows.at(3).hasClass("highlight"), "row 3 highlighted");
-            assert.isTrue(rows.at(4).hasClass("highlight"), "row 4 highlighted");
+            assert.isFalse(rows.at(0).hasClass("highlighted"), "row 0 not highlighted");
+            assert.isTrue(rows.at(1).hasClass("highlighted"), "row 1 highlighted");
+            assert.isFalse(rows.at(2).hasClass("highlighted"), "row 2 not highlighted");
+            assert.isTrue(rows.at(3).hasClass("highlighted"), "row 3 highlighted");
+            assert.isTrue(rows.at(4).hasClass("highlighted"), "row 4 highlighted");
         });
         it("onRowClick prop fires w associated datum when the row is clicked", ()=>{
             let onRowClick = sinon.spy((fd:any)=>{});
