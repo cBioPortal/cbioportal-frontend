@@ -137,9 +137,9 @@ export default class MiniBoxPlot extends React.Component<IMiniBoxPlotProps, {}> 
                                 </div>
                                 <VictoryChart domainPadding={{ x: 60, y: 20 }} containerComponent={<VictoryContainer responsive={false} 
                                     containerRef={(ref: any) => this.svgContainer = ref}/>} height={350} width={350} 
-                                    padding={{ top: 50, bottom: 60, left: 60, right: 40 }} theme={CBIOPORTAL_VICTORY_THEME}>
+                                    padding={{ top: 50, bottom: 70, left: 60, right: 40 }} theme={CBIOPORTAL_VICTORY_THEME}>
                                     <VictoryAxis tickValues={[1, 2]} tickFormat={(t: any) => t === 1 ? "Altered" : "Unaltered"}
-                                        label={"Query: " + shortenGenesLabel(this.props.queryGenes, 3) + " (q-Value: " + 
+                                        label={"Query: " + shortenGenesLabel(this.props.queryGenes, 2) + "\n(q-Value: " + 
                                         toConditionalPrecision(this.props.selectedGeneQValue, 3, 0.01) + ")"}
                                         style={{
                                             axisLabel: { padding: 40, fill: "black", fontSize: 14 },
