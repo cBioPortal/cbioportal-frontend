@@ -103,7 +103,6 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_ALTERED] = {
             name: "Percentage of alteration in altered group",
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.alteredCount, d.alteredPercentage)}</span>,
-            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 80 }}>{name}</span>,
             tooltip: <span>Percentages of altered cases in altered sample group</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.alteredCount,
             download: (d: AlterationEnrichmentRow) => formatPercentage(d.alteredCount, d.alteredPercentage)
@@ -112,7 +111,6 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_UNALTERED] = {
             name: "Percentage of alteration in unaltered group",
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.unalteredCount, d.unalteredPercentage)}</span>,
-            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 95 }}>{name}</span>,
             tooltip: <span>Percentages of altered cases in unaltered sample group</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.unalteredCount,
             download: (d: AlterationEnrichmentRow) => formatPercentage(d.unalteredCount, d.unalteredPercentage)
@@ -144,10 +142,10 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
 
         columns[AlterationEnrichmentTableColumnType.TENDENCY] = {
             name: "Tendency",
-            render: (d: AlterationEnrichmentRow) => <table><tr><td>{calculateAlterationTendency(Number(d.logRatio))}</td></tr>
-                {d.qValue < 0.05 ? <tr><td><Badge style={{
+            render: (d: AlterationEnrichmentRow) => <div className={styles.Tendency}>{calculateAlterationTendency(Number(d.logRatio))}
+                {d.qValue < 0.05 ? <Badge style={{
                     backgroundColor: '#58ACFA', fontSize: 8, marginBottom: 2
-                }}>Significant</Badge></td></tr> : ""}</table>,
+                }}>Significant</Badge> : ""}</div>,
             tooltip: 
                 <table>
                     <tr>
