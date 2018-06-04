@@ -226,7 +226,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                         id="coexpressionTabGeneTabs"
                         activeTabId={this.selectedEntrezGeneId + ""}
                         onTabClick={this.onSelectGene}
-                        className="coexpressionTabGeneTabs secondaryTabs"
+                        className="coexpressionTabGeneTabs pillTabs"
                         unmountOnHide={true}
                         tabButtonStyle="pills"
                         enablePagination={true}
