@@ -112,7 +112,7 @@ export default class CNSegments extends React.Component<{ store: ResultsViewPage
     render(){
 
         if (this.props.store.samples.isComplete && this.props.store.genes.isComplete && this.props.store.studyIds.isComplete) {
-            return (<MSKTabs tabButtonStyle="pills" activeTabId={this.activeTabId} className="secondaryTabs" onTabClick={(id:string)=>{
+            return (<MSKTabs tabButtonStyle="pills" activeTabId={this.activeTabId} className="pillTabs" onTabClick={(id:string)=>{
                 this.activeTabId = id;
             }}>
                 {
