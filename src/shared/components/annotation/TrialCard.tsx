@@ -68,14 +68,15 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
     public variantItem(name?: string, trialTitle?: string, gene?: string, code?: string, oncogenicity?:string,
                        mutEffect?:string, nctId?:string, trialStatus?: string, dose?: string) {
         let result;
-        let url: string = "https://clinicaltrials.gov/ct2/show/"+nctId;
+        const url: string = "https://clinicaltrials.gov/ct2/show/"+nctId;
+        const img = trialStatus === 'open'? require('./images/open-sign.png') : require('./images/close-sign.png');
         if (name || trialTitle || gene || nctId) {
             result = (
                 <div className="trial-card">
                     <div className="trial-card-trial-header">
                         <span className="civic-card-variant-name">
                             <a href={url}>{trialTitle}
-                                <img src={require("./images/open-sign.png")} className="trial-logo"/>
+                                <img src={img} className="trial-logo"/>
                             </a>
                         </span>
                     </div>
