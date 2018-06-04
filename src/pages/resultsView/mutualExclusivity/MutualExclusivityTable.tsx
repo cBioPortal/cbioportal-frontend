@@ -6,6 +6,7 @@ import { observer } from "mobx-react";
 import { observable } from "mobx";
 import { Badge } from 'react-bootstrap';
 import { formatPValue, formatPValueWithStyle, formatLogOddsRatio } from "./MutualExclusivityUtil";
+import styles from "./styles.module.scss";
 
 export interface IMutualExclusivityTableProps {
     columns?: MutualExclusivityTableColumnType[];
@@ -141,8 +142,8 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
 
         this._columns[MutualExclusivityTableColumnType.ASSOCIATION] = {
             name: "Tendency",
-            render: (d: MutualExclusivity) => <table><tr><td>{d.association}</td></tr>{d.adjustedPValue < 0.05 ?
-                <tr><td><Badge style={{ backgroundColor: '#58ACFA' }}>Significant</Badge></td></tr> : ""}</table>,
+            render: (d: MutualExclusivity) => <div className={styles.Tendency}>{d.association}{d.adjustedPValue < 0.05 ?
+                <Badge style={{ backgroundColor: '#58ACFA' }}>Significant</Badge> : ""}</div>,
             tooltip: 
                 <table>
                     <tr>
