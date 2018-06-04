@@ -7,7 +7,6 @@ import _ from "lodash";
 import {If} from 'react-if';
 import { ChartHeader } from "pages/studyView/chartHeader/ChartHeader";
 import { ClinicalDataType, StudyViewPageStore } from "pages/studyView/StudyViewPageStore";
-import { getClinicalDataType } from "pages/studyView/StudyViewUtils";
 import fileDownload from 'react-file-download';
 import PieChart from "pages/studyView/charts/pieChart/PieChart";
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
@@ -48,6 +47,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     constructor(props: IChartContainerProps) {
         super(props);
         let fileName = props.clinicalAttribute.displayName.replace(/[ \t]/g,'_')
+        let clinicalDataType = this.props.clinicalAttribute.patientAttribute ? ClinicalDataType.PATIENT : ClinicalDataType.SAMPLE;
 
         this.handlers = {
             ref: (plot:AbstractChart)=>{ 
@@ -56,13 +56,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             resetFilters: action(()=>{
                 this.props.onUserSelection(
                     this.props.clinicalAttribute.clinicalAttributeId,
-                    getClinicalDataType(this.props.clinicalAttribute),
+                    clinicalDataType,
                     []);
             }),
             onUserSelection: action((values:string[])=>{
                 this.props.onUserSelection(
                     this.props.clinicalAttribute.clinicalAttributeId,
-                    getClinicalDataType(this.props.clinicalAttribute),
+                    clinicalDataType,
                     values);
             }),
             onMouseEnterPlot: action(()=>{ this.mouseInPlot = true;}),
@@ -103,7 +103,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     @computed get data(){
-        return this.props.promise.result
+        return this.props.promise.result || [];
     }
 
     public render() {
@@ -120,15 +120,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         handleResetClick={this.handlers.resetFilters}
                     />
 
-                    {this.data && this.data.length>0 && 
-                        <If condition={this.props.chartType===ChartType.PIE_CHART}>
-                            <PieChart
-                                ref={this.handlers.ref}
-                                onUserSelection={this.handlers.onUserSelection}
-                                filters={this.props.filters}
-                                data={this.data} />
-                        </If>
-                    }
+                    <If condition={this.props.chartType===ChartType.PIE_CHART}>
+                        <PieChart
+                            ref={this.handlers.ref}
+                            onUserSelection={this.handlers.onUserSelection}
+                            filters={this.props.filters}
+                            data={this.data} />
+                    </If>
                 </div>
             </If>
         );
