@@ -26,7 +26,7 @@ function setCustomTrackingEvents(){
         mixpanel.track(`results tab clicked (${$(this).text()})`,{ tab:$(this).text() ,studyIds:studies });
     });
 
-    $("#pancancer_study_summary").on('click','.secondaryTabs a', (e)=>{
+    $("#pancancer_study_summary").on('click','.pillTabs a', (e)=>{
         const text = $(e.currentTarget).text();
         const studies = _.map(win.resultsViewPageStore.studies.result,'studyId').join(',');
         mixpanel.track(`cancer type summary gene tab (${text})`,{ tab:text, studyIds:studies });
