@@ -146,7 +146,6 @@ export default class PdbChainTable extends React.Component<IPdbChainTableProps, 
                 initialItemsPerPage={6}
                 columns={this.columns}
                 dataStore={this.props.dataStore}
-                highlightColor="bluegray"
                 pageToHighlight={true}
             />
         );

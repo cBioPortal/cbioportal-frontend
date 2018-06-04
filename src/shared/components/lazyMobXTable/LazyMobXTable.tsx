@@ -66,7 +66,6 @@ type LazyMobXTableProps<T> = {
     showColumnVisibility?:boolean;
     columnVisibilityProps?:IColumnVisibilityControlsProps;
     columnVisibility?: {[columnId: string]: boolean};
-    highlightColor?:"yellow"|"bluegray";
     pageToHighlight?:boolean;
     showCountHeader?:boolean;
     onRowClick?:(d:T)=>void;
@@ -207,7 +206,6 @@ class LazyMobXTableStore<T> {
     @observable.ref public columns:Column<T>[];
     @observable public dataStore:ILazyMobXTableApplicationDataStore<T>;
     @observable public downloadDataFetcher:ILazyMobXTableApplicationLazyDownloadDataFetcher|undefined;
-    @observable private highlightColor:string;
     @observable private onRowClick:((d:T)=>void)|undefined;
 
     // this observable is intended to always refer to props.columnVisibility
@@ -461,22 +459,6 @@ class LazyMobXTableStore<T> {
         });
     }
 
-    @computed get highlightClassName() {
-        if (this.highlightColor === "yellow") {
-            return "highlight";
-        } else if (this.highlightColor === "bluegray") {
-            return "highlight-bluegray";
-        }
-    }
-
-    @computed get clickableClassName() {
-        if (this.highlightColor === "yellow") {
-            return "clickable-yellow";
-        } else if (this.highlightColor === "bluegray") {
-            return "clickable-bluegray";
-        }
-    }
-
     @computed get rows():JSX.Element[] {
         // We separate this so that highlighting isn't such a costly operation
         const ret = [];
@@ -485,11 +467,11 @@ class LazyMobXTableStore<T> {
             const rowIsHighlighted = this.dataStore.isHighlighted(this.visibleData[i]);
             const classNames = [];
             if (rowIsHighlighted) {
-                 classNames.push(this.highlightClassName);
+                 classNames.push("highlighted");
             }
             if (this.onRowClick) {
                 if (!rowIsHighlighted) {
-                    classNames.push(this.clickableClassName);
+                    classNames.push("clickable");
                 }
 
                 const onRowClick = this.onRowClick; // by the time its called this might be undefined again, so need to save ref
@@ -550,7 +532,6 @@ class LazyMobXTableStore<T> {
         this._itemsLabel = props.itemsLabel;
         this._itemsLabelPlural = props.itemsLabelPlural;
         this._columnVisibility = props.columnVisibility;
-        this.highlightColor = props.highlightColor!;
         this.downloadDataFetcher = props.downloadDataFetcher;
         this.onRowClick = props.onRowClick;
 
@@ -620,7 +601,6 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
         showCopyDownload: true,
         showPagination: true,
         showColumnVisibility: true,
-        highlightColor: "yellow",
 		showPaginationAtTop: false,
         showCountHeader: false
     };
