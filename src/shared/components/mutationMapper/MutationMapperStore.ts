@@ -267,6 +267,35 @@ export default class MutationMapperStore
         }
     }, undefined);
 
+    readonly trialMatchGenes = remoteData<ITrialMatchGene | undefined>({
+        await: () => [
+            this.mutationData,
+            this.clinicalDataForSamples
+        ],
+        invoke: async() => this.config.showCivic? fetchTrialMatchGenes(this.mutationData) : {},
+        onError: (err: Error) => {
+            // fail silently
+        }
+    }, undefined);
+
+    readonly trialMatchVariants = remoteData<ITrialMatchVariant | undefined>({
+        await: () => [
+            this.trialMatchGenes,
+            this.mutationData
+        ],
+        invoke: async() => {
+            if (this.config.showCivic && this.trialMatchGenes.result) {
+                return fetchTrialMatchVariants(this.trialMatchGenes.result as ITrialMatchGene, this.mutationData);
+            }
+            else {
+                return {};
+            }
+        },
+        onError: (err: Error) => {
+            // fail silently
+        }
+    }, undefined);
+
     constructor(protected config: IMutationMapperConfig,
                 public gene:Gene,
                 public samples:MobxPromise<SampleIdentifier[]>,

@@ -2,13 +2,13 @@ import * as request from 'superagent';
 import {ITrialMatchGene, ITrialMatchGeneData, ITrialMatchVariant, ITrialMatchVariantData, ITrialMatchData} from "shared/model/TrialMatch.ts";
 
 type TrialMatchAPIGene = {
-    name: string;
+    hugoSymbol: string;
     variants: Array<TrialMatchAPIGeneVariant>;
 };
 
 type TrialMatchAPIGeneVariant = {
-    name: string;
-    id: string;
+    proteinChange: string;
+    sampleId: string;
 };
 
 type TrialMatchAPIVariant = {
@@ -49,7 +49,7 @@ function createVariantMap(variantArray: Array<TrialMatchAPIGeneVariant>): {[vari
     let variantMap: {[variantName: string]: string} = {};
     if (variantArray && variantArray.length > 0) {
         variantArray.forEach(function(variant) {
-            variantMap[variant.name] = variant.id;
+            variantMap[variant.proteinChange] = variant.sampleId;
         });
     }
     return variantMap;
@@ -73,7 +73,7 @@ export default class TrialMatchAPI {
                     result = [response];
                 }
                 return result.map((record: TrialMatchAPIGene) => ({
-                    name: record.name,
+                    name: record.hugoSymbol,
                     variants: createVariantMap(record.variants)
                 }));
             });
@@ -83,16 +83,16 @@ export default class TrialMatchAPI {
      * Returns a promise that resolves with the variants for the parameters given.
      */
     getVariant(id: string, name: string, gene: string): Promise<ITrialMatchVariantData> {
-        return request.get('http://localhost:8081/web/api/matches/variants/' + id)
+        return request.get('http://localhost:8081/web/api/matches/' + gene + '/' + name + '?sample=' + id)
             .then((res) => {
                 const result = res.body;
                 return {
-                    id,
+                    genomicId: result[id].genomicId,
                     name,
                     gene,
-                    oncogenicity: result.oncogenicity,
-                    mutEffect: result.mutEffect,
-                    match: countMatches(result.matches)
+                    oncogenicity: result[id].oncogenicity,
+                    mutEffect: result[id].mutEffect,
+                    match: countMatches(result[id].matches)
                 };
             });
     }

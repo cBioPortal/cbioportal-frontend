@@ -3,14 +3,14 @@ import {ITrialMatchGene, ITrialMatchGeneData, ITrialMatchVariant, ITrialMatchVar
 import trialMatchClient from "shared/api/trialMatchClientInstance";
 import { DiscreteCopyNumberData } from "shared/api/generated/CBioPortalAPI";
 
-type MutationSpec = {gene:{hugoGeneSymbol: string}, proteinChange: string};
+type MutationSpec = {gene:{hugoGeneSymbol: string}, proteinChange: string, sampleId:string};
 
 /**
  * Asynchronously adds the given variant from a gene to the variant map specified.
  */
-function addTrialMatchVariant(variantMap: ITrialMatchVariant, variantId: string,
+function addTrialMatchVariant(variantMap: ITrialMatchVariant, sampleId: string,
                               variantName: string, geneSymbol: string): Promise<void> {
-    return trialMatchClient.getVariant(variantId, variantName, geneSymbol)
+    return trialMatchClient.getVariant(sampleId, variantName, geneSymbol)
         .then(function(result: ITrialMatchVariantData) {
             if (result) {
                 if (!variantMap[geneSymbol]) {

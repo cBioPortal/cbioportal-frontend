@@ -4,7 +4,7 @@ export interface ITrialMatchGeneData {
 }
 
 export interface ITrialMatchVariantData {
-    id: string;
+    genomicId: string;
     name: string;
     gene: string;
     oncogenicity: string;

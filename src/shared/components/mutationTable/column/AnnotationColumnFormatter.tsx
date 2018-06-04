@@ -214,7 +214,7 @@ export default class AnnotationColumnFormatter
         let trialMatchEntry = null;
         //Only search for matching Trial variants if the gene mutation exists in the Trial API
         if (trialMatchVariants[geneSymbol] && trialMatchVariants[geneSymbol][mutation.proteinChange]) {
-            let geneVariants: {[name: string]: ITrialMatchVariantData} = {[mutation.proteinChange]: trialMatchVariants[geneSymbol][mutation.proteinChange]};
+            let geneVariants: {[name: string]: ITrialMatchVariantData} = {[mutation.sampleId]: trialMatchVariants[geneSymbol][mutation.proteinChange]};
             let geneEntry: ITrialMatchGeneData = trialMatchGenes[geneSymbol];
             trialMatchEntry = buildTrialMatchEntry(geneEntry, geneVariants);
         }

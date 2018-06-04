@@ -77,7 +77,7 @@ export default class TrialMatch extends React.Component<ITrialMatchProps, {}>
         let trialMatchImgSrc = require("./images/clinic.png");
         if (!this.props.hasTrialMatchVariants)
         {
-            trialMatchImgSrc = require("./images/civic-logo-no-variants.png");
+            trialMatchImgSrc = require("./images/clinic.png");
         }
 
         if (this.props.trialMatchStatus === "error") {
