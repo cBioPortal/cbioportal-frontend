@@ -139,7 +139,6 @@ export default class CoExpressionTable extends React.Component<ICoExpressionTabl
                     columns={this.columns}
                     showColumnVisibility={false}
                     dataStore={this.props.dataStore}
-                    highlightColor="bluegray"
                     onRowClick={this.onRowClick}
                     filterPlaceholder="Enter gene or cytoband.."
                     paginationProps={this.paginationProps}
