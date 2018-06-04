@@ -24,7 +24,6 @@ import {
 } from 'shared/api/generated/CBioPortalAPI';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
-import { getClinicalCountsData } from 'pages/studyView/StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
 
