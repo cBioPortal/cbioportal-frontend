@@ -5,6 +5,8 @@ import { observable } from 'mobx';
 import { Popover } from 'react-bootstrap';
 import styles from "./styles.module.scss";
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
+import { formatLogOddsRatio } from "./EnrichmentsUtil";
+import { toConditionalPrecision, } from 'shared/lib/NumberUtils';
 
 export interface IMiniScatterChartProps {
     data: any[];
@@ -75,7 +77,7 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                                 tickLabels: { padding: 20, fill: "black" }, axisLabel: { padding: 40, fill: "black", fontSize: 16 },
                                 axis: { stroke: "black", strokeWidth: 1 }, grid: { stroke: "#eeeeee", strokeDasharray: "none" }, ticks: { size: 0 }
                             }} />
-                        <VictoryAxis label="-log10 q-Value" dependentAxis={true} tickCount={4}
+                        <VictoryAxis label="-log10 p-Value" dependentAxis={true} tickCount={4}
                             style={{
                                 tickLabels: { padding: 135, fill: "black" }, axisLabel: { padding: 165, fill: "black", fontSize: 16 },
                                 axis: { stroke: "black", strokeWidth: 1 }, grid: { stroke: "#eeeeee", strokeDasharray: "none" }, ticks: { size: 0 }
@@ -86,16 +88,17 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                             style={{ fontSize: 12, fontFamily: "Arial, Helvetica" }} />
                         <VictoryLabel text="significance →" x={320} y={210} angle={-90} 
                             style={{ fontSize: 16, fontFamily: "Arial, Helvetica" }} />
-                        <VictoryScatter style={{ data: { fill: "#58ACFA", fillOpacity: 0.4 } }} data={this.props.data} symbol="circle"
-                            size={(datum: any, active: any) => active ? 10 : 3} events={events} />
-                        <VictoryLine data={[{x: -this.props.xAxisDomain, y: -Math.log10(0.05)}, {x:this.props.xAxisDomain, y: -Math.log10(0.05)}]} 
-                            style={{ data: {strokeWidth: 1, strokeDasharray: "3,3"}}}/>
+                        <VictoryScatter style={{ data: { fill: (datum:any) => datum.qValue < 0.05 ? "#58ACFA" : "#D3D3D3", fillOpacity: 0.4 } }} 
+                            data={this.props.data} symbol="circle" size={(datum: any, active: any) => active ? 10 : 3} events={events} />
                     </VictoryChart>
                 </div>
                 {this.tooltipModel &&
                     <Popover className={styles.ScatterTooltip} positionLeft={this.tooltipModel.x + 15} 
-                        positionTop={this.tooltipModel.y - 3}>
-                        {this.tooltipModel.datum.hugoGeneSymbol}
+                        positionTop={this.tooltipModel.y - 25}>
+                        Gene: {this.tooltipModel.datum.hugoGeneSymbol}<br/>
+                        Log Ratio: {formatLogOddsRatio(this.tooltipModel.datum.logRatio)}<br/>
+                        p-Value: {toConditionalPrecision(this.tooltipModel.datum.y, 3, 0.01)}<br/>
+                        q-Value: {toConditionalPrecision(this.tooltipModel.datum.qValue, 3, 0.01)}
                     </Popover>
                 }
             </div>

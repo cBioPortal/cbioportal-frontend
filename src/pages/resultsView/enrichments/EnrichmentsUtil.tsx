@@ -48,8 +48,10 @@ export function getAlterationScatterData(alterationEnrichments: AlterationEnrich
 
     return alterationEnrichments.filter(a => !gueryGenes.includes(a.hugoGeneSymbol)).map((alterationEnrichment) => {
         return {
-            x: roundLogRatio(Number(alterationEnrichment.logRatio), 10), y: -Math.log10(alterationEnrichment.qValue),
-            hugoGeneSymbol: alterationEnrichment.hugoGeneSymbol
+            x: roundLogRatio(Number(alterationEnrichment.logRatio), 10), y: -Math.log10(alterationEnrichment.pValue),
+            hugoGeneSymbol: alterationEnrichment.hugoGeneSymbol,
+            qValue: alterationEnrichment.qValue,
+            logRatio: alterationEnrichment.logRatio
         };
     });
 }
@@ -59,9 +61,11 @@ export function getExpressionScatterData(expressionEnrichments: ExpressionEnrich
     return expressionEnrichments.filter(a => !gueryGenes.includes(a.hugoGeneSymbol)).map((expressionEnrichment) => {
         return {
             x: expressionEnrichment.logRatio,
-            y: -Math.log10(expressionEnrichment.qValue), 
+            y: -Math.log10(expressionEnrichment.pValue), 
             hugoGeneSymbol: expressionEnrichment.hugoGeneSymbol,
-            entrezGeneId: expressionEnrichment.entrezGeneId
+            entrezGeneId: expressionEnrichment.entrezGeneId,
+            qValue: expressionEnrichment.qValue,
+            logRatio: expressionEnrichment.logRatio
         };
     });
 }
