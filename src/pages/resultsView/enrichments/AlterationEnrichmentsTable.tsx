@@ -15,6 +15,7 @@ export interface IAlterationEnrichmentTableProps {
     columns?: AlterationEnrichmentTableColumnType[];
     data: AlterationEnrichmentRow[];
     initialSortColumn?: string;
+    alterationType: string;
     onCheckGene: (hugoGeneSymbol: string) => void;
     onGeneNameClick: (hugoGeneSymbol: string) => void;
 }
@@ -101,17 +102,21 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         };
 
         columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_ALTERED] = {
-            name: "Percentage of alteration in altered group",
+            name: "Samples with alteration in altered group",
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.alteredCount, d.alteredPercentage)}</span>,
-            tooltip: <span>Percentages of altered cases in altered sample group</span>,
+            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 100 }}>{name}</span>,
+            tooltip: <span>Number (percentage) of samples that have alterations in the query gene(s) that also 
+                have {this.props.alterationType} in the listed gene.</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.alteredCount,
             download: (d: AlterationEnrichmentRow) => formatPercentage(d.alteredCount, d.alteredPercentage)
         };
 
         columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_UNALTERED] = {
-            name: "Percentage of alteration in unaltered group",
+            name: "Samples with alteration in unaltered group",
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.unalteredCount, d.unalteredPercentage)}</span>,
-            tooltip: <span>Percentages of altered cases in unaltered sample group</span>,
+            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 100 }}>{name}</span>,
+            tooltip: <span>Number (percentage) of samples that do not have alterations in the query gene(s) that 
+                have {this.props.alterationType} in the listed gene.</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.unalteredCount,
             download: (d: AlterationEnrichmentRow) => formatPercentage(d.unalteredCount, d.unalteredPercentage)
         };
