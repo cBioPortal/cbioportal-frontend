@@ -58,7 +58,7 @@ export function nonMolecularProfileParams(store:QueryStore, whitespace_separated
     // case ids is of format study1:sample1+study2:sample2+...
     const case_ids = whitespace_separated_case_ids ?
                     whitespace_separated_case_ids.replace(/\s+/g, '+') :
-                    store.asyncCustomCaseSet.result.map(caseRow => (caseRow.studyId + ':' + caseRow.sampleId)).join('+');
+                    console.log("adam");
 
     let ret:NonMolecularProfileQueryParams = {
         cancer_study_id: selectedStudyIds.length === 1 ? selectedStudyIds[0] : 'all',
