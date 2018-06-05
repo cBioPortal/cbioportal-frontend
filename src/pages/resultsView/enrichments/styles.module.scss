@@ -64,24 +64,10 @@
     padding-top: 10px;
 }
 
-.ScatterTooltip {
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    border-color: black !important;
-    padding: 0 !important;
-}
-
-.ScatterTooltip div:first-child {
-    border-right-color: black !important;
-}
-
-.ScatterTooltip div:first-child::after {
-    border-right-color: #58ACFA !important;
-}
-
 .ScatterTooltip div:last-child {
     padding: 4px;
-    background-color: #58ACFA;
+    font-size: 11px;
+    white-space: nowrap;
 }
 
 .BarTooltip div:last-child {
