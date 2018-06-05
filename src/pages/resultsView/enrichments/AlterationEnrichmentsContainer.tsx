@@ -21,6 +21,7 @@ export interface IAlterationEnrichmentContainerProps {
     totalUnalteredCount: number;
     headerName: string;
     store: ResultsViewPageStore;
+    alterationType: string;
 }
 
 @observer
@@ -130,7 +131,8 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                             Significant only
                         </Checkbox>
                     </div>
-                    <AlterationEnrichmentTable data={this.filteredData} onCheckGene={this.onCheckGene} onGeneNameClick={this.onGeneNameClick}/>
+                    <AlterationEnrichmentTable data={this.filteredData} onCheckGene={this.onCheckGene} 
+                        onGeneNameClick={this.onGeneNameClick} alterationType={this.props.alterationType}/>
                 </div>
             </div>
         );

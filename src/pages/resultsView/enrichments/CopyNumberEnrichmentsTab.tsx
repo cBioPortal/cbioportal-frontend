@@ -34,14 +34,14 @@ export default class CopyNumberEnrichmentsTab extends React.Component<ICopyNumbe
                     totalAlteredCount={this.props.store.alteredSampleKeys.result!.length}
                     totalUnalteredCount={this.props.store.unalteredSampleKeys.result!.length}
                     headerName={"Deep Deletion - " + this.props.store.selectedEnrichmentCopyNumberProfile.name}
-                    store={this.props.store} />
+                    store={this.props.store} alterationType="a deep deletion"/>
                 <br/>
                 <br/>
                 <AlterationEnrichmentContainer data={this.props.store.copyNumberAmpEnrichmentData.result!}
                     totalAlteredCount={this.props.store.alteredSampleKeys.result!.length}
                     totalUnalteredCount={this.props.store.unalteredSampleKeys.result!.length}
                     headerName={"Amplification - " + this.props.store.selectedEnrichmentCopyNumberProfile.name}
-                    store={this.props.store} />
+                    store={this.props.store} alterationType="an amplification"/>
             </div>
         );
     }
