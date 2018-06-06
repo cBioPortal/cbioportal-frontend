@@ -1059,6 +1059,17 @@ describe('LazyMobXTable', ()=>{
             clock.tick(1000);
             assert.equal(table.find(SimpleTable).props().rows.length, data.length);
         });
+        it("keeps filtering intact even after re-rendering", ()=>{
+            const filterString = "asdfj";
+            const table = mount(<Table columns={columns} data={data}/>);
+            simulateTableSearchInput(table, filterString);
+            clock.tick(1000);
+            assert.equal(table.find(SimpleTable).props().rows.length, 1);
+
+            // force re-render
+            table.update();
+            assert.equal(table.find(SimpleTable).props().rows.length, 1);
+        });
     });
     describe('downloading data', ()=>{
         it("gives just the column names when theres no data in the table", async ()=>{
