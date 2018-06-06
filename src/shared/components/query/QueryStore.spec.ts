@@ -133,8 +133,10 @@ describe("QueryStore", ()=>{
     });
 
     describe("Multiple studies selected", ()=>{
+        let selectableStudiesSetStub:any;
+
         before(() => {
-            Sinon.stub(QueryStore.prototype,"selectableStudiesSet").get(()=>{
+            selectableStudiesSetStub = Sinon.stub(QueryStore.prototype,"selectableStudiesSet").get(()=>{
                 return {study1:['study1'],study2:['study2']};
             });
         });
@@ -149,6 +151,10 @@ describe("QueryStore", ()=>{
             assert.equal(store.submitError,"Please select one or more molecular profiles.");
             store.dataTypePriority = {mutation:true,cna:false};
             assert.notEqual(store.submitError,"Please select one or more molecular profiles.");
+        });
+
+        after(()=>{
+            selectableStudiesSetStub.restore();
         });
     });
 });
