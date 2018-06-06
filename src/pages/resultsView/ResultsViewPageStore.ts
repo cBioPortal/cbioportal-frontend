@@ -1157,7 +1157,7 @@ export class ResultsViewPageStore {
             this.patients
         ],
         invoke: async() => {
-            return getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result, this.patients.result,
+            return getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result,
                 this.alteredPatientKeys.result!, 'OS_STATUS', 'OS_MONTHS', s => s === 'DECEASED');
         }
     }, []);
@@ -1169,7 +1169,7 @@ export class ResultsViewPageStore {
             this.patients
         ],
         invoke: async() => {
-            return getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result, this.patients.result,
+            return getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result,
                 this.unalteredPatientKeys.result!, 'OS_STATUS', 'OS_MONTHS', s => s === 'DECEASED');
         }
     }, []);
@@ -1181,7 +1181,7 @@ export class ResultsViewPageStore {
             this.patients
         ],
         invoke: async() => {
-            return getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result, this.patients.result,
+            return getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result,
                 this.alteredPatientKeys.result!, 'DFS_STATUS', 'DFS_MONTHS', s => s === 'Recurred/Progressed' || s === 'Recurred');
         }
     }, []);
@@ -1193,7 +1193,7 @@ export class ResultsViewPageStore {
             this.patients
         ],
         invoke: async() => {
-            return getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result, this.patients.result,
+            return getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result,
                 this.unalteredPatientKeys.result!, 'DFS_STATUS', 'DFS_MONTHS', s => s === 'Recurred/Progressed' || s === 'Recurred');
         }
     }, []);
