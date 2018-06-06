@@ -427,42 +427,16 @@ export class StudyViewPageStore {
         return survivalTypes;
     }
 
-    readonly allSamples = remoteData<Sample[]>({
-        await: () => [this.molecularProfiles],
-        invoke: () => {
-            return internalClient.fetchSampleIdsUsingPOST({
-                studyId: this.studyId,
-                studyViewFilter: {
-                    clinicalDataEqualityFilters: [],
-                    mutatedGenes: [],
-                    cnaGenes: [],
-                    sampleIds: []
-                }
-            })
-        },
-        default: []
-    });
-
-    readonly allPatients = remoteData<Patient[]>({
-        await: () => [this.allSamples],
-        invoke: async () => {
-            return this.allSamples.result.map(sample => this.getPatientBySample(sample));
-        },
-        default: []
-    });
-
     readonly survivalPlotData = remoteData<SurvivalType[]>({
-        await: () => [this.allPatients,this.survivalData, this.selectedPatientIds, this.unSelectedPatientIds],
+        await: () => [this.survivalData, this.selectedPatientIds, this.unSelectedPatientIds],
         invoke: async () => {
 
             return this.survivalPlots.map(obj => {
                 obj.alteredGroup = getPatientSurvivals(
                     this.survivalData.result,
-                    this.allPatients.result,
                     this.selectedPatientIds.result!, obj.associatedAttrs[0], obj.associatedAttrs[1], s => obj.filter.indexOf(s) !== -1);
                 obj.unalteredGroup = getPatientSurvivals(
                     this.survivalData.result,
-                    this.allPatients.result,
                     this.unSelectedPatientIds.result!, obj.associatedAttrs[0], obj.associatedAttrs[1], s => obj.filter.indexOf(s) !== -1);
                 return obj
             });
