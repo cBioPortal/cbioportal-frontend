@@ -4,8 +4,7 @@ import LazyMobXTable, { Column } from "../../../shared/components/lazyMobXTable/
 import { observer } from "mobx-react";
 import { observable } from "mobx";
 import { Badge, Checkbox } from 'react-bootstrap';
-import { calculateExpressionTendency, formatValueWithStyle, formatLogOddsRatio, 
-    formatLogOddsRatioWithStyle } from "./EnrichmentsUtil";
+import { calculateExpressionTendency, formatValueWithStyle, formatLogOddsRatio } from "./EnrichmentsUtil";
 import { toConditionalPrecision, } from 'shared/lib/NumberUtils';
 import styles from "./styles.module.scss";
 import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
@@ -105,52 +104,48 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         };
 
         columns[ExpressionEnrichmentTableColumnType.MEAN_IN_ALTERED] = {
-            name: "Mean expression in altered group",
+            name: "μ in altered group",
             render: (d: ExpressionEnrichmentRow) => <span>{d.meanExpressionInAlteredGroup.toFixed(2)}</span>,
-            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 70 }}>{name}</span>,
-            tooltip: <span>Mean of expression values in altered group</span>,
+            tooltip: <span>Mean expression of the listed gene in samples that have alterations in the query gene(s).</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.meanExpressionInAlteredGroup,
             download: (d: ExpressionEnrichmentRow) => d.meanExpressionInAlteredGroup.toFixed(2)
         };
 
         columns[ExpressionEnrichmentTableColumnType.MEAN_IN_UNALTERED] = {
-            name: "Mean expression in unaltered group",
+            name: "μ in unaltered group",
             render: (d: ExpressionEnrichmentRow) => <span>{d.meanExpressionInUnalteredGroup.toFixed(2)}</span>,
-            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 70 }}>{name}</span>,
-            tooltip: <span>Mean of expression values in unaltered group</span>,
+            tooltip: <span>Mean expression of the listed gene in samples that do not have alterations in the query gene(s).</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.meanExpressionInUnalteredGroup,
             download: (d: ExpressionEnrichmentRow) => d.meanExpressionInUnalteredGroup.toFixed(2)
         };
 
         columns[ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_IN_ALTERED] = {
-            name: "Standard deviation in altered group",
+            name: "σ in altered group",
             render: (d: ExpressionEnrichmentRow) => <span>{d.standardDeviationInAlteredGroup.toFixed(2)}</span>,
-            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 70 }}>{name}</span>,
-            tooltip: <span>Standard Deviation in altered group</span>,
+            tooltip: <span>Standard deviation of expression of the listed gene in samples that have alterations in the query gene(s).</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.standardDeviationInAlteredGroup,
             download: (d: ExpressionEnrichmentRow) => d.standardDeviationInAlteredGroup.toFixed(2)
         };
 
         columns[ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_IN_UNALTERED] = {
-            name: "Standard deviation in unaltered group",
+            name: "σ in unaltered group",
             render: (d: ExpressionEnrichmentRow) => <span>{d.standardDeviationInUnalteredGroup.toFixed(2)}</span>,
-            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 70 }}>{name}</span>,
-            tooltip: <span>Standard Deviation in unaltered group</span>,
+            tooltip: <span>Standard deviation of expression of the listed gene in samples that do not have alterations in the query gene(s).</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.standardDeviationInUnalteredGroup,
             download: (d: ExpressionEnrichmentRow) => d.standardDeviationInUnalteredGroup.toFixed(2)
         };
 
         columns[ExpressionEnrichmentTableColumnType.LOG_RATIO] = {
             name: "Log Ratio",
-            render: (d: ExpressionEnrichmentRow) => <span>{formatLogOddsRatioWithStyle(Number(d.logRatio))}</span>,
-            tooltip: <span>Log2 based ratio of (pct in altered / pct in unaltered)</span>,
+            render: (d: ExpressionEnrichmentRow) => <span>{formatLogOddsRatio(d.logRatio)}</span>,
+            tooltip: <span>Log2 based ratio of (mean in altered / mean in unaltered)</span>,
             sortBy: (d: ExpressionEnrichmentRow) => Number(d.logRatio),
-            download: (d: ExpressionEnrichmentRow) => formatLogOddsRatio(Number(d.logRatio))
+            download: (d: ExpressionEnrichmentRow) => formatLogOddsRatio(d.logRatio)
         };
 
         columns[ExpressionEnrichmentTableColumnType.P_VALUE] = {
             name: "p-Value",
-            render: (d: ExpressionEnrichmentRow) => <span>{toConditionalPrecision(d.pValue, 3, 0.01)}</span>,
+            render: (d: ExpressionEnrichmentRow) => <span style={{whiteSpace: 'nowrap'}}>{toConditionalPrecision(d.pValue, 3, 0.01)}</span>,
             tooltip: <span>Derived from Fisher Exact Test</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.pValue,
             download: (d: ExpressionEnrichmentRow) => toConditionalPrecision(d.pValue, 3, 0.01)
@@ -158,7 +153,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
 
         columns[ExpressionEnrichmentTableColumnType.Q_VALUE] = {
             name: "q-Value",
-            render: (d: ExpressionEnrichmentRow) => <span>{formatValueWithStyle(d.qValue)}</span>,
+            render: (d: ExpressionEnrichmentRow) => <span style={{whiteSpace: 'nowrap'}}>{formatValueWithStyle(d.qValue)}</span>,
             tooltip: <span>Derived from Benjamini-Hochberg procedure</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.qValue,
             download: (d: ExpressionEnrichmentRow) => toConditionalPrecision(d.qValue, 3, 0.01)
@@ -166,13 +161,25 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
 
         columns[ExpressionEnrichmentTableColumnType.TENDENCY] = {
             name: "Tendency",
-            render: (d: ExpressionEnrichmentRow) => <span>{calculateExpressionTendency(Number(d.logRatio))}&nbsp;&nbsp;&nbsp;
+            render: (d: ExpressionEnrichmentRow) => <div className={styles.Tendency}>{calculateExpressionTendency(Number(d.logRatio))}
                 {d.qValue < 0.05 ? <Badge style={{
                     backgroundColor: '#58ACFA', fontSize: 8, marginBottom: 2
-                }}>Significant</Badge> : ""}</span>,
-            tooltip: <span>Log ratio > 0 &nbsp;&nbsp;: Over-expressed in altered group<br />
-                Log ratio &lt;= 0 : Under-expressed in altered group<br />
-                q-Value &lt; 0.05 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Significant association</span>,
+                }}>Significant</Badge> : ""}</div>,
+            tooltip: 
+                <table>
+                    <tr>
+                        <td>Log ratio > 0</td>
+                        <td>: Over-expressed in altered group</td>
+                    </tr>
+                    <tr>
+                        <td>Log ratio &lt;= 0</td>
+                        <td>: Under-expressed in altered group</td>
+                    </tr>
+                    <tr>
+                        <td>q-Value &lt; 0.05</td>
+                        <td>: Significant association</td>
+                    </tr>
+                </table>,
             filter: (d: ExpressionEnrichmentRow, filterString: string, filterStringUpper: string) =>
                 calculateExpressionTendency(Number(d.logRatio)).toUpperCase().includes(filterStringUpper),
             sortBy: (d: ExpressionEnrichmentRow) => calculateExpressionTendency(Number(d.logRatio)),

@@ -141,7 +141,7 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
                          unmountOnHide={true}
                          arrowStyle={{'line-height': .8}}
                          tabButtonStyle="pills"
-                         activeTabId={this.activeTab} className="secondaryTabs">
+                         activeTabId={this.activeTab} className="pillTabs">
                     {this.tabs}
                 </MSKTabs>
             </div>
