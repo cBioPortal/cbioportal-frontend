@@ -125,6 +125,16 @@ th.reactable-header-sort-asc:after {
 
 
 .secondaryTabs {
+
+  li a {
+    font-size: 12px;
+    padding: 4px 6px !important;
+    margin-right: 8px !important;
+  }
+
+}
+
+.pillTabs {
   > .nav.nav-pills {
 
     margin-bottom:5px;
