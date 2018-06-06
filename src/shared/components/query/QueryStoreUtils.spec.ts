@@ -8,7 +8,8 @@ import Sinon from 'sinon';
 describe('QueryStoreUtils', ()=>{
     describe('nonMolecularProfileParams', ()=>{
 
-        let addParamStub: any
+        let addParamStub: any;
+        let selectableStudiesSetStub:any;
 
         before(()=>{
             addParamStub = Sinon.stub(QueryStore.prototype, "addParamsFromWindow");
@@ -16,6 +17,9 @@ describe('QueryStoreUtils', ()=>{
 
         after(()=>{
             addParamStub.restore();
+            if (selectableStudiesSetStub) {
+                selectableStudiesSetStub.restore();
+            }
         });
 
         it("returns url-encoded, normalized query for gene_list parameter", ()=>{
@@ -40,7 +44,7 @@ describe('QueryStoreUtils', ()=>{
 
         it("correctly sets study parameters in case of single study", ()=>{
             let store = new QueryStore({} as Window);
-            Sinon.stub(store, "selectableStudiesSet").get(() => {
+            selectableStudiesSetStub = Sinon.stub(store, "selectableStudiesSet").get(() => {
                 return {"a":["a"], "b":["b"]};
             });
             store.selectableSelectedStudyIds = ["a"];

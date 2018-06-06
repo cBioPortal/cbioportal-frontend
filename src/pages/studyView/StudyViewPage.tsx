@@ -10,7 +10,6 @@ import { StudyViewPageStore, ClinicalDataType, SurvivalType } from 'pages/studyV
 import { reaction } from 'mobx';
 import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
 import _ from "lodash";
-import { getClinicalDataType } from 'pages/studyView/StudyViewUtils';
 
 export interface IStudyViewPageProps {
     routing: any;
