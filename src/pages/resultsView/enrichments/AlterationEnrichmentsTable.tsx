@@ -5,8 +5,7 @@ import { observer } from "mobx-react";
 import { observable } from "mobx";
 import { Badge, Checkbox } from 'react-bootstrap';
 import {
-    calculateAlterationTendency, formatLogOddsRatio, formatPercentage, formatValueWithStyle,
-    formatLogOddsRatioWithStyle
+    calculateAlterationTendency, formatLogOddsRatio, formatPercentage, formatValueWithStyle
 } from "./EnrichmentsUtil";
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import styles from "./styles.module.scss";
@@ -16,6 +15,7 @@ export interface IAlterationEnrichmentTableProps {
     columns?: AlterationEnrichmentTableColumnType[];
     data: AlterationEnrichmentRow[];
     initialSortColumn?: string;
+    alterationType: string;
     onCheckGene: (hugoGeneSymbol: string) => void;
     onGeneNameClick: (hugoGeneSymbol: string) => void;
 }
@@ -102,34 +102,36 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         };
 
         columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_ALTERED] = {
-            name: "Percentage of alteration in altered group",
+            name: "Samples with alteration in altered group",
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.alteredCount, d.alteredPercentage)}</span>,
-            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 80 }}>{name}</span>,
-            tooltip: <span>Percentages of altered cases in altered sample group</span>,
+            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 100 }}>{name}</span>,
+            tooltip: <span>Number (percentage) of samples that have alterations in the query gene(s) that also 
+                have {this.props.alterationType} in the listed gene.</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.alteredCount,
             download: (d: AlterationEnrichmentRow) => formatPercentage(d.alteredCount, d.alteredPercentage)
         };
 
         columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_UNALTERED] = {
-            name: "Percentage of alteration in unaltered group",
+            name: "Samples with alteration in unaltered group",
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.unalteredCount, d.unalteredPercentage)}</span>,
-            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 95 }}>{name}</span>,
-            tooltip: <span>Percentages of altered cases in unaltered sample group</span>,
+            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 100 }}>{name}</span>,
+            tooltip: <span>Number (percentage) of samples that do not have alterations in the query gene(s) that 
+                have {this.props.alterationType} in the listed gene.</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.unalteredCount,
             download: (d: AlterationEnrichmentRow) => formatPercentage(d.unalteredCount, d.unalteredPercentage)
         };
 
         columns[AlterationEnrichmentTableColumnType.LOG_RATIO] = {
             name: "Log Ratio",
-            render: (d: AlterationEnrichmentRow) => <span>{formatLogOddsRatioWithStyle(Number(d.logRatio))}</span>,
+            render: (d: AlterationEnrichmentRow) => <span>{formatLogOddsRatio(d.logRatio)}</span>,
             tooltip: <span>Log2 based ratio of (pct in altered / pct in unaltered)</span>,
             sortBy: (d: AlterationEnrichmentRow) => Number(d.logRatio),
-            download: (d: AlterationEnrichmentRow) => formatLogOddsRatio(Number(d.logRatio))
+            download: (d: AlterationEnrichmentRow) => formatLogOddsRatio(d.logRatio)
         };
 
         columns[AlterationEnrichmentTableColumnType.P_VALUE] = {
             name: "p-Value",
-            render: (d: AlterationEnrichmentRow) => <span>{toConditionalPrecision(d.pValue, 3, 0.01)}</span>,
+            render: (d: AlterationEnrichmentRow) => <span style={{whiteSpace: 'nowrap'}}>{toConditionalPrecision(d.pValue, 3, 0.01)}</span>,
             tooltip: <span>Derived from Fisher Exact Test</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.pValue,
             download: (d: AlterationEnrichmentRow) => toConditionalPrecision(d.pValue, 3, 0.01)
@@ -137,7 +139,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
 
         columns[AlterationEnrichmentTableColumnType.Q_VALUE] = {
             name: "q-Value",
-            render: (d: AlterationEnrichmentRow) => <span>{formatValueWithStyle(d.qValue)}</span>,
+            render: (d: AlterationEnrichmentRow) => <span style={{whiteSpace: 'nowrap'}}>{formatValueWithStyle(d.qValue)}</span>,
             tooltip: <span>Derived from Benjamini-Hochberg procedure</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.qValue,
             download: (d: AlterationEnrichmentRow) => toConditionalPrecision(d.qValue, 3, 0.01)
@@ -145,13 +147,25 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
 
         columns[AlterationEnrichmentTableColumnType.TENDENCY] = {
             name: "Tendency",
-            render: (d: AlterationEnrichmentRow) => <span>{calculateAlterationTendency(Number(d.logRatio))}&nbsp;&nbsp;&nbsp;
+            render: (d: AlterationEnrichmentRow) => <div className={styles.Tendency}>{calculateAlterationTendency(Number(d.logRatio))}
                 {d.qValue < 0.05 ? <Badge style={{
                     backgroundColor: '#58ACFA', fontSize: 8, marginBottom: 2
-                }}>Significant</Badge> : ""}</span>,
-            tooltip: <span>Log ratio > 0 &nbsp;&nbsp;: Enriched in altered group<br />
-                Log ratio &lt;= 0 : Enriched in unaltered group<br />
-                q-Value &lt; 0.05 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Significant association</span>,
+                }}>Significant</Badge> : ""}</div>,
+            tooltip: 
+                <table>
+                    <tr>
+                        <td>Log ratio > 0</td>
+                        <td>: Enriched in altered group</td>
+                    </tr>
+                    <tr>
+                        <td>Log ratio &lt;= 0</td>
+                        <td>: Enriched in unaltered group</td>
+                    </tr>
+                    <tr>
+                        <td>q-Value &lt; 0.05</td>
+                        <td>: Significant association</td>
+                    </tr>
+                </table>,
             filter: (d: AlterationEnrichmentRow, filterString: string, filterStringUpper: string) =>
                 calculateAlterationTendency(Number(d.logRatio)).toUpperCase().includes(filterStringUpper),
             sortBy: (d: AlterationEnrichmentRow) => calculateAlterationTendency(Number(d.logRatio)),

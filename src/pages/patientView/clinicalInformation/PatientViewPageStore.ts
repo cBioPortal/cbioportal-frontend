@@ -38,7 +38,7 @@ import {
     fetchMutSigData, findMrnaRankMolecularProfileId, mergeDiscreteCNAData, fetchSamplesForPatient, fetchClinicalData,
     fetchCopyNumberSegments, fetchClinicalDataForPatient, makeStudyToCancerTypeMap,
     fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, groupBySampleId, findSamplesWithoutCancerTypeClinicalData,
-    fetchStudiesForSamplesWithoutCancerTypeClinicalData, fetchOncoKbAnnotatedGenes
+    fetchStudiesForSamplesWithoutCancerTypeClinicalData, fetchOncoKbAnnotatedGenesSuppressErrors
 } from "shared/lib/StoreUtils";
 import {indexHotspotsData, fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
 import {stringListToSet} from "../../../shared/lib/StringUtils";
@@ -497,13 +497,10 @@ export class PatientViewPageStore {
     }, []);
 
     readonly oncoKbAnnotatedGenes = remoteData({
-        invoke:()=>fetchOncoKbAnnotatedGenes(),
-        onError: (err: Error) => {
-            // fail silently, leave the error handling responsibility to the data consumer
-        }
+        invoke:()=>fetchOncoKbAnnotatedGenesSuppressErrors()
     }, {});
 
-    readonly oncoKbData = remoteData<IOncoKbData>({
+    readonly oncoKbData = remoteData<IOncoKbData|Error>({
         await: () => [
             this.oncoKbAnnotatedGenes,
             this.mutationData,
