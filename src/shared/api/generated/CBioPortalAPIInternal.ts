@@ -92,6 +92,8 @@ export type CosmicMutation = {
 export type EnrichmentFilter = {
     'alteredIds': Array < string >
 
+        'queryGenes': Array < number >
+
         'unalteredIds': Array < string >
 
 };
