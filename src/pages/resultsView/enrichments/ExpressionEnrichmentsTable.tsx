@@ -8,6 +8,7 @@ import { calculateExpressionTendency, formatValueWithStyle, formatLogOddsRatio }
 import { toConditionalPrecision, } from 'shared/lib/NumberUtils';
 import styles from "./styles.module.scss";
 import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
+import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
 
 export interface IExpressionEnrichmentTableProps {
     columns?: ExpressionEnrichmentTableColumnType[];
@@ -93,12 +94,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
             name: "Cytoband",
             render: (d: ExpressionEnrichmentRow) => <span>{d.cytoband}</span>,
             tooltip: <span>Cytoband</span>,
-            filter: (d: ExpressionEnrichmentRow, filterString: string, filterStringUpper: string) => {
-                if (d.cytoband) {
-                    return d.cytoband.toUpperCase().includes(filterStringUpper);
-                }
-                return false;
-            },
+            filter: cytobandFilter,
             sortBy: (d: ExpressionEnrichmentRow) => d.cytoband,
             download: (d: ExpressionEnrichmentRow) => d.cytoband
         };
