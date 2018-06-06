@@ -31,5 +31,5 @@ export interface IOncoKbData {
 
 export interface IOncoKbDataWrapper {
     status: "pending" | "error" | "complete";
-    result?: IOncoKbData;
+    result?: IOncoKbData|Error;
 }
