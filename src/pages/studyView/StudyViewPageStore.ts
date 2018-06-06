@@ -1,4 +1,3 @@
-import * as React from 'react';
 import * as _ from 'lodash';
 import {remoteData} from "../../shared/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
@@ -24,15 +23,19 @@ import {
 } from 'shared/api/generated/CBioPortalAPI';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
-import MobxPromise from 'mobxpromise';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
 
+export type ClinicalDataType = 'SAMPLE' | 'PATIENT'
 
-export enum ClinicalDataType {
-    SAMPLE = "SAMPLE",
-    PATIENT = "PATIENT"
+export enum ChartType {
+    PIE_CHART='PIE_CHART',
+    BAR_CHART='BAR_CHART',
+    SURVIVAL='SURVIVAL',
+    TABLE='TABLE',
+    SCATTER='SCATTER'
 }
-export type ClinicalAttributeData = { [attrId: string]: ClinicalDataCount[] };
+
+export type ClinicalDataCountWithColor = ClinicalDataCount & {color: string}
 export type MutatedGenesData = MutationCountByGene[];
 export type CNAGenesData = CopyNumberCountByGene[];
 export type SurvivalType = {
@@ -42,6 +45,15 @@ export type SurvivalType = {
     filter: string[],
     alteredGroup: PatientSurvival[]
     unalteredGroup: PatientSurvival[]
+}
+
+export type ChartMeta = {
+    clinicalAttribute : ClinicalAttribute,
+    uniqueKey         : string,
+    chartType         : ChartType,
+    defaultChartType  : ChartType,
+    visible?          : boolean,
+    position?         : number
 }
 
 export class StudyViewPageStore {
@@ -62,43 +74,31 @@ export class StudyViewPageStore {
 
     @observable private _cnaGeneFilter: CopyNumberGeneFilter;
 
-    private _attributeChartVisibility = observable.map<boolean>();
-
     @observable private _initialized = false;
+
+    @observable private _chartVisibility = observable.map<boolean>();
+
+    @observable private _clinicalAttributesMetaSet = observable.map<ChartMeta>();;
 
 	@computed get initialized()
 	{
-		return this._initialized;
-    }
-    
-    set initialized(flag){
-        if(!this._initialized && flag){
-            _.forEach(this.initalClinicalDataCounts.result, (obj, key) => {
-                if (obj.length < 2 || obj.length > 10) {
-                    this.hideChart(key);
-                }
-            });
-            this._initialized = true;
-        }
+        return this.initalClinicalDataCounts.isComplete && this._initialized;
     }
 
     @action
-    updateClinicalDataEqualityFilters(attributeId: string,
-                                      clinicalDataType: ClinicalDataType,
+    updateClinicalDataEqualityFilters(chartMeta : ChartMeta,
                                       values: string[]) {
-
-        let id = [clinicalDataType, attributeId].join('_');
 
         if (values.length > 0) {
             let clinicalDataEqualityFilter = {
-                attributeId: attributeId,
-                clinicalDataType: clinicalDataType,
-                values: values
+                attributeId: chartMeta.clinicalAttribute.clinicalAttributeId,
+                clinicalDataType: chartMeta.clinicalAttribute.patientAttribute? 'PATIENT' : 'SAMPLE' as ClinicalDataType,
+                values: values.sort()
             };
-            this._clinicalDataEqualityFilterSet.set(id, clinicalDataEqualityFilter);
+            this._clinicalDataEqualityFilterSet.set(chartMeta.uniqueKey, clinicalDataEqualityFilter);
 
         } else {
-            this._clinicalDataEqualityFilterSet.delete(id);
+            this._clinicalDataEqualityFilterSet.delete(chartMeta.uniqueKey);
         }
     }
 
@@ -107,7 +107,7 @@ export class StudyViewPageStore {
         let mutatedGeneFilter = this._mutatedGeneFilter;
         if (!mutatedGeneFilter) {
             //TODO: all elements instead of one
-            mutatedGeneFilter = {molecularProfileId: this.mutationProfileIds[0], entrezGeneIds: []};
+            mutatedGeneFilter = { entrezGeneIds: []};
         }
         let _index = mutatedGeneFilter.entrezGeneIds.indexOf(entrezGeneId);
         if (_index === -1) {
@@ -124,8 +124,7 @@ export class StudyViewPageStore {
         if (!_cnaGeneFilter) {
              //TODO: all elements instead of one
             _cnaGeneFilter = {
-                alterations: [],
-                molecularProfileId: this.cnaProfileIds[0]
+                alterations: []
             }
         }
         var _index = -1;
@@ -146,13 +145,63 @@ export class StudyViewPageStore {
         this._cnaGeneFilter = _cnaGeneFilter;
     }
 
-    @action hideChart(attributeId: string) {
-        this._attributeChartVisibility.set(attributeId, false);
+    @action changeChartVisibility(uniqueKey: string, visibility:boolean) {
+        if(!visibility){
+            //TODO: Currently clears only clinicalDataEqualityFilters,Need to implement for others
+            this._clinicalDataEqualityFilterSet.delete(uniqueKey);
+        }
+        this._chartVisibility.set(uniqueKey, visibility);
+    }
+
+    @action changeChartType(uniqueKey: string, chartType:ChartType, updateDefaultType?:boolean){
+        let chartMetaObject = this._clinicalAttributesMetaSet.get(uniqueKey);
+        if(chartMetaObject){
+            chartMetaObject.chartType = chartType;
+            if(updateDefaultType){
+                chartMetaObject.defaultChartType = chartType
+            }
+            this._clinicalAttributesMetaSet.set(uniqueKey, chartMetaObject);
+        }
+    }
+    @action onChangeSelectedClinicalChart(options: {label: string; value: string;}[]) {
+        this._chartVisibility.clear();
+        for (const option of options) {
+            this.changeChartVisibility(option.value, true)
+        }
+    }
+
+    @computed get clinicalChartOptions() {
+        return _.map(this.clinicalAttributesMeta.result, clinicalAttributeMeta=>({
+            label: clinicalAttributeMeta.clinicalAttribute.displayName,
+            value: clinicalAttributeMeta.uniqueKey
+        }));
+    }
+
+    @computed get selectedClinicalCharts() {
+        return _.reduce(this._chartVisibility.keys(),(acc:{label: string; value: string;}[], next)=>{
+            if(this._chartVisibility.get(next)) {
+                let chartMeta = this._clinicalAttributesMetaSet.get(next)
+                if(chartMeta){
+                    acc.push({
+                        label: chartMeta.clinicalAttribute.displayName,
+                        value: chartMeta.uniqueKey
+                    })
+                }
+            }
+            return acc;
+        },[]);
+    }
+
+    @computed get emptyFilters() {
+        let filters: StudyViewFilter = {} as any;
+        filters.studyIds = [this.studyId]
+        return filters
     }
 
     @computed
     get filters() {
-        let filters: StudyViewFilter = {} as any;
+        let filters: StudyViewFilter = _.assign({},this.emptyFilters);
+
         let clinicalDataEqualityFilter = this._clinicalDataEqualityFilterSet.values();
 
         //checking for empty since the api throws error when the clinicalDataEqualityFilter array is empty
@@ -167,7 +216,6 @@ export class StudyViewPageStore {
         if (this._cnaGeneFilter && this._cnaGeneFilter.alterations.length > 0) {
             filters.cnaGenes = [this._cnaGeneFilter];
         }
-
         return filters;
     }
 
@@ -177,21 +225,6 @@ export class StudyViewPageStore {
 
     public getCNAGenesTableFilters(): CopyNumberGeneFilterElement[] {
         return this._cnaGeneFilter ? this._cnaGeneFilter.alterations : [];
-    }
-
-    public getClinicalDataEqualityFilters(clinicalAttribute: ClinicalAttribute): string[] {
-        let id = [clinicalAttribute.patientAttribute?'PATIENT':'SAMPLE', clinicalAttribute.clinicalAttributeId].join('_');
-        const filters = this._clinicalDataEqualityFilterSet.get(id);
-        return _.isUndefined(filters) ? [] as any : filters.values;
-    }
-
-    private getPatientBySample(sample: Sample): Patient {
-        return {
-            patientId: sample.patientId,
-            studyId: sample.studyId,
-            uniquePatientKey: sample.patientId,
-            uniqueSampleKey: sample.sampleId
-        };
     }
 
     readonly molecularProfiles = remoteData<MolecularProfile[]>({
@@ -229,47 +262,62 @@ export class StudyViewPageStore {
                 studyId: this.studyId
             })
         },
+        default: []
+    });
+
+    readonly clinicalAttributesMeta = remoteData<ChartMeta[]>({
+        await: () => [this.clinicalAttributes],
+        invoke: async () => {
+            let attributes = this.clinicalAttributes.result
+            //TODO: remove this once bar chart is implemented
+            let filteredAttributes = _.filter(attributes,attribute=> attribute.datatype === 'STRING')
+            return _.map(filteredAttributes, attribute => {
+                const clinicalDataType : ClinicalDataType = attribute.patientAttribute? 'PATIENT' : 'SAMPLE';
+                const uniqueKey = clinicalDataType + '_'+ attribute.clinicalAttributeId;
+                const chartType = attribute.datatype === 'STRING' ? ChartType.PIE_CHART : ChartType.BAR_CHART;
+                return { clinicalAttribute:attribute, uniqueKey: uniqueKey, chartType: chartType, defaultChartType: chartType, visible: false }
+            });
+        },
         default: [],
-        onResult:(attributes:ClinicalAttribute[])=>{
-            attributes.forEach(attribute=>{
-                this._attributeChartVisibility.set(attribute.clinicalAttributeId,false);
-            })
+        onResult:(result)=>{
+            _.forEach(result,obj=>{
+                this._clinicalAttributesMetaSet.set(obj.uniqueKey, obj)
+            });
         }
     });
 
-    readonly clinicalAttributeSet = remoteData<{[id:string]:ClinicalAttribute}>({
-        await: () => [this.clinicalAttributes],
-        invoke: () => Promise.resolve(_.keyBy(this.clinicalAttributes.result, x=>x.clinicalAttributeId))
-    },{});
-
-    @computed get visibleAttributes(){
-        const attributes = this.clinicalAttributeSet.result
-        return _.reduce(this._attributeChartVisibility.toJS(),(acc:ClinicalAttribute[],next,key)=>{
-            if(next && attributes[key]){
-                acc.push(attributes[key])
-            }
-            return acc;
-        },[])
+    @computed get visibleAttributes():ChartMeta[]{
+        if(this.initialized){
+            return _.reduce(this._chartVisibility.keys(),(acc:ChartMeta[], next)=>{
+                if(this._chartVisibility.get(next)) {
+                    let chartMeta = this._clinicalAttributesMetaSet.get(next)
+                    if(chartMeta){
+                        acc.push(chartMeta)
+                    }
+                }
+                return acc;
+            },[]);
+        }
+        return [];
     }
 
     //TODO:cleanup
     readonly defaultVisibleAttributes = remoteData({
-        await: () => [this.clinicalAttributes],
+        await: () => [this.clinicalAttributesMeta],
         invoke: async () => {
-
             let selectedAttrIds = [...this.sampleAttrIds, ...this.patientAttrIds];
-            let queriedAttributes = this.clinicalAttributes.result
+            let queriedAttributes = this.clinicalAttributesMeta.result
             if (!_.isEmpty(selectedAttrIds)) {
-                queriedAttributes = this.clinicalAttributes.result.filter(attribute => {
-                    return _.includes(selectedAttrIds, attribute.clinicalAttributeId);
+                queriedAttributes = this.clinicalAttributesMeta.result.filter(attribute => {
+                    return _.includes(selectedAttrIds, attribute.clinicalAttribute.clinicalAttributeId);
                 });
             }
 
             let sampleAttributeCount = 0;
             let patientAttributeCount = 0;
-            let filterAttributes: ClinicalAttribute[] = []
+            let filterAttributes: ChartMeta[] = []
             queriedAttributes.forEach(attribute => {
-                if(attribute.patientAttribute){
+                if(attribute.clinicalAttribute.patientAttribute){
                     if(patientAttributeCount<10){
                         filterAttributes.push(attribute)
                         patientAttributeCount++;
@@ -283,40 +331,51 @@ export class StudyViewPageStore {
             });
             return filterAttributes;
         },
-        default: [],
-        onResult:(attributes:ClinicalAttribute[])=>{
-            attributes.forEach(attribute=>{
-                this._attributeChartVisibility.set(attribute.clinicalAttributeId,true);
-            })
-        }
+        default: []
     });
 
     readonly initalClinicalDataCounts = remoteData<{[id:string]:ClinicalDataCount[]}>({
         await: () => {
-            return this.defaultVisibleAttributes.result.map(attribute => {
-                return this.studyViewClinicalDataCountsCache.get({ attribute: attribute, filters: {} as any })
+            let promises =  this.defaultVisibleAttributes.result.map(attributeMata => {
+                    return this.studyViewClinicalDataCountsCache.get({ attribute: attributeMata.clinicalAttribute, filters: this.emptyFilters })
             })
+            return [this.defaultVisibleAttributes, ...promises]
         },
         invoke: async () => {
             return _.reduce(this.defaultVisibleAttributes.result, (acc, next) => {
-
-                acc[next.clinicalAttributeId] = this.studyViewClinicalDataCountsCache
-                    .get({ attribute: next, filters: {} as any })
+                
+                acc[next.uniqueKey] = this.studyViewClinicalDataCountsCache
+                    .get({ attribute: next.clinicalAttribute, filters: this.emptyFilters })
                     .result!;
                 return acc;
             }, {} as any);
         },
         default: {},
-        onResult:() => {
-            this.initialized=true;
+        onResult:(result) => {
+            if(!this._initialized){
+                _.forEach(result, (obj, uniqueKey) => {
+                    let chartMeta = this._clinicalAttributesMetaSet.get(uniqueKey);
+                    //TODO: this is temporary. will be updated in next phase
+                    if(chartMeta){
+                        if (obj.length < 2 || obj.length > 100) {
+                            this.changeChartVisibility(uniqueKey, false);
+                        } else {
+                            if (obj.length > 20) {
+                                this.changeChartType(uniqueKey, ChartType.TABLE);
+                            }
+                            this.changeChartVisibility(uniqueKey, true);
+                        }
+                    }
+                });
+                this._initialized = true;
+            }
         }
     });
 
     private readonly samples = remoteData<Sample[]>({
         invoke: () => {
-            return internalClient.fetchSampleIdsUsingPOST({
-                studyId: this.studyId,
-                studyViewFilter: {} as any
+            return internalClient.fetchFilteredSamplesUsingPOST({
+                studyViewFilter: this.emptyFilters
             })
         },
         default: []
@@ -324,8 +383,7 @@ export class StudyViewPageStore {
 
     readonly selectedSamples = remoteData<Sample[]>({
         invoke: () => {
-            return internalClient.fetchSampleIdsUsingPOST({
-                studyId: this.studyId,
+            return internalClient.fetchFilteredSamplesUsingPOST({
                 studyViewFilter: this.filters
             })
         },
@@ -361,7 +419,6 @@ export class StudyViewPageStore {
             if(!_.isEmpty(this.mutationProfileIds)){
                 //TDOD: get data for all profiles
                 return internalClient.fetchMutatedGenesUsingPOST({
-                    molecularProfileId: this.mutationProfileIds[0],
                     studyViewFilter: this.filters
                 });
             } else{
@@ -376,7 +433,6 @@ export class StudyViewPageStore {
             if(!_.isEmpty(this.cnaProfileIds)){
                 //TDOD: get data for all profiles
                 return internalClient.fetchCNAGenesUsingPOST({
-                    molecularProfileId: this.cnaProfileIds[0],
                     studyViewFilter: this.filters
                 });
             } else{
@@ -448,7 +504,7 @@ export class StudyViewPageStore {
     });
 
     readonly survivalData = remoteData<{[id:string]:ClinicalData[]}>({
-        await: () => [this.patientIds],
+        await: () => [this.clinicalAttributes, this.patientIds],
         invoke: async () => {
             const filter: ClinicalDataSingleStudyFilter = {
                 attributeIds: _.flatten(this.survivalPlots.map(obj=>obj.associatedAttrs)),

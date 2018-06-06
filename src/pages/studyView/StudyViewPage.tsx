@@ -3,13 +3,13 @@ import {inject, observer} from "mobx-react";
 import styles from "./styles.module.scss";
 import {MutatedGenesTable} from "./table/MutatedGenesTable";
 import {CNAGenesTable} from "./table/CNAGenesTable";
-import {ChartContainer, ChartType} from 'pages/studyView/charts/ChartContainer';
+import {ChartContainer} from 'pages/studyView/charts/ChartContainer';
 import SurvivalChart from "../resultsView/survival/SurvivalChart";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
-import {ClinicalDataType, StudyViewPageStore, SurvivalType} from 'pages/studyView/StudyViewPageStore';
-import {reaction} from 'mobx';
-import {ClinicalAttribute} from 'shared/api/generated/CBioPortalAPI';;
 import {StudyViewComponentLoader} from "./charts/StudyViewComponentLoader";
+import { StudyViewPageStore, ClinicalDataType, SurvivalType, ChartMeta, ChartType } from 'pages/studyView/StudyViewPageStore';
+import { reaction } from 'mobx';
+const CheckedSelect = require("react-select-checked").CheckedSelect;
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -31,15 +31,24 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         this.store = new StudyViewPageStore();
 
         this.handlers = {
-            onUserSelection: (attrId: string, clinicalDataType: ClinicalDataType, values: string[])=> {
-                this.store.updateClinicalDataEqualityFilters(attrId, clinicalDataType, values)
+            onUserSelection: (chartMeta : ChartMeta, values: string[])=> {
+                this.store.updateClinicalDataEqualityFilters(chartMeta, values)
             },
             updateGeneFilter:(entrezGeneId: number)=>{
                 this.store.updateGeneFilter(entrezGeneId);
             },
             updateCNAGeneFilter:(entrezGeneId: number, alteration: number)=> {
                 this.store.updateCNAGeneFilter(entrezGeneId, alteration);
-            }
+            },
+            onDeleteChart:(uniqueKey:string)=>{
+                this.store.changeChartVisibility(uniqueKey, false);
+            },
+            changeChartType: (uniqueKey: string, chartType: ChartType, updateDefaultType?:boolean)=> {
+                this.store.changeChartType(uniqueKey, chartType, updateDefaultType)
+            },
+            onChangeSelectedClinicalChart:(options: {label: string; value: string;}[])=>{
+                this.store.onChangeSelectedClinicalChart(options)
+            } 
         }
 
         //TODO: this should be done by a module so that it can be reused on other pages
@@ -56,16 +65,15 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         );
     }
 
-    renderAttributeChart = (clinicalAttribute: ClinicalAttribute) => {
-        const data = this.store.studyViewClinicalDataCountsCache.get({attribute:clinicalAttribute,filters:this.store.filters})
-        const filters = this.store.getClinicalDataEqualityFilters(clinicalAttribute)
+    renderAttributeChart = (chartMeta: ChartMeta) => {
         return (<ChartContainer
-            chartType={ChartType.PIE_CHART}
-            clinicalAttribute={clinicalAttribute}
+            chartMeta={chartMeta}
             onUserSelection={this.handlers.onUserSelection}
-            key={clinicalAttribute.clinicalAttributeId}
-            promise={data}
-            filters={filters}
+            key={chartMeta.uniqueKey}
+            filter={this.store.filters}
+            dataCache ={this.store.studyViewClinicalDataCountsCache}
+            onDeleteChart={this.handlers.onDeleteChart}
+            changeChartType={this.handlers.changeChartType}
         />)
     };
 
@@ -116,21 +124,22 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                          className="mainTabs">
 
                     <MSKTab key={0} id="summaryTab" linkText="Summary">
-                            {
-                                this.store.defaultVisibleAttributes.isComplete && 
-                                this.store.initalClinicalDataCounts.isComplete &&
-                                this.store.initialized && 
-                                (
-                                    <div className={styles.studyViewFlexContainer}>
-                                        {this.store.visibleAttributes.map(this.renderAttributeChart)}
-                                    </div>
-                                )
-                            }
-                            {
-                                <div className={styles.studyViewFlexContainer}>
-                                    {this.store.survivalPlotData.result.map(this.renderSurvivalPlot)}
-                                </div>
-                            }
+                        <div style={{"width":"250px"}}>
+                            <CheckedSelect
+                                placeholder="Add clinical tracks.."
+                                isLoading={this.store.initialized}
+                                noResultsText={this.store.initialized ? "Loading..." : "No matching clinical tracks found"}
+                                onChange={this.handlers.onChangeSelectedClinicalChart}
+                                options={this.store.clinicalChartOptions}
+                                value={this.store.selectedClinicalCharts}
+                            />
+                        </div>
+                            <div className={styles.studyViewFlexContainer}>
+                                {this.store.visibleAttributes.map(this.renderAttributeChart)}
+                            </div>
+                            <div className={styles.studyViewFlexContainer}>
+                                {this.store.survivalPlotData.result.map(this.renderSurvivalPlot)}
+                            </div>
                             <div className={styles.studyViewFlexContainer}>
                                 <MutatedGenesTable
                                     promise={this.store.mutatedGeneData}
