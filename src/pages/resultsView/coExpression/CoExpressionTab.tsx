@@ -1,5 +1,8 @@
 import * as React from "react";
-import {Gene, MolecularProfile, Mutation, NumericGeneMolecularData} from "../../../shared/api/generated/CBioPortalAPI";
+import {
+    Gene, MolecularProfile, Mutation, NumericGeneMolecularData,
+    Sample
+} from "../../../shared/api/generated/CBioPortalAPI";
 import {action, autorun, computed, IReactionDisposer, observable, ObservableMap} from "mobx";
 import {observer, Observer} from "mobx-react";
 import {AlterationTypeConstants} from "../ResultsViewPageStore";
@@ -23,6 +26,7 @@ import setWindowVariable from "../../../shared/lib/setWindowVariable";
 import {ICoExpressionPlotProps} from "./CoExpressionPlot";
 import {bind} from "bind-decorator";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
+import {isSampleProfiledInMultiple} from "../../../shared/lib/isSampleProfiled";
 
 export interface ICoExpressionTabProps {
     molecularProfiles:MolecularProfile[];
@@ -30,6 +34,7 @@ export interface ICoExpressionTabProps {
     studyToDataQueryFilter:{[studyId:string]:IDataQueryFilter}
     numericGeneMolecularDataCache:MobxPromiseCache<{entrezGeneId:number, molecularProfileId:string}, NumericGeneMolecularData[]>;
     mutationCache:MobxPromiseCache<{entrezGeneId:number}, Mutation[]>;
+    samples:MobxPromise<Sample[]>;
     coverageInformation:MobxPromise<CoverageInformation>;
     studyToMutationMolecularProfile:MobxPromise<{[studyId:string]:MolecularProfile}>;
 }
@@ -80,6 +85,35 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
         return filterAndSortProfiles(this.props.molecularProfiles);
     }
 
+    readonly molecularProfileIdToProfiledSampleCount = remoteData({
+        await: ()=>[
+            this.props.samples,
+            this.props.coverageInformation
+        ],
+        invoke: ()=>{
+            const ret:{[molecularProfileId:string]:number} = {};
+            const profileIds = this.profiles.map(x=>x.molecularProfileId);
+            const coverageInformation = this.props.coverageInformation.result!;
+            for (const profileId of profileIds) {
+                ret[profileId] = 0;
+            }
+            let profiledReport:boolean[] = [];
+            for (const sample of this.props.samples.result!) {
+                profiledReport = isSampleProfiledInMultiple(
+                    sample.uniqueSampleKey,
+                    profileIds,
+                    coverageInformation
+                );
+                for (let i=0; i<profileIds.length; i++) {
+                    if (profiledReport[i]) {
+                        ret[profileIds[i]] += 1;
+                    }
+                }
+            }
+            return Promise.resolve(ret);
+        }
+    });
+
     @computed get hasMutationData() {
         return !!_.find(
             this.props.molecularProfiles,
@@ -115,10 +149,11 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
     );
 
     private get dataSetSelector() {
-        if (this.selectedMolecularProfile) {
+        if (this.selectedMolecularProfile && this.molecularProfileIdToProfiledSampleCount.isComplete) {
             let options = this.profiles.map(profile=>{
+                const profiledSampleCount = this.molecularProfileIdToProfiledSampleCount.result![profile.molecularProfileId];
                 return {
-                    label: profile.name,
+                    label: `${profile.name} (${profiledSampleCount} sample${profiledSampleCount !== 1 ? "s" : ""})`,
                     value: profile.molecularProfileId
                 };
             });
@@ -130,7 +165,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                     }}
                 >
                     <span>Data Set:</span>
-                    <div style={{display:"inline-block", width:300, marginLeft:4, marginRight:4}}>
+                    <div style={{display:"inline-block", width:376, marginLeft:4, marginRight:4, zIndex:10 /* so that on top when opened*/}}>
                         <Select
                             name="data-set-select"
                             value={this.selectedMolecularProfile.molecularProfileId}
@@ -191,9 +226,11 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                         id="coexpressionTabGeneTabs"
                         activeTabId={this.selectedEntrezGeneId + ""}
                         onTabClick={this.onSelectGene}
-                        className="coexpressionTabGeneTabs secondaryTabs"
+                        className="coexpressionTabGeneTabs pillTabs"
                         unmountOnHide={true}
                         tabButtonStyle="pills"
+                        enablePagination={true}
+                        arrowStyle={{'line-height':.8}}
                     >
                         {this.props.genes.map((gene:Gene, i:number)=>{
                             return (

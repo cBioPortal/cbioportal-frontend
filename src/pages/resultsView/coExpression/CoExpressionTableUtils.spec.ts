@@ -39,5 +39,23 @@ describe("CoExpressionTableUtils", ()=>{
         it("returns true if match in middle but minus sign at beginning", ()=>{
             assert.isTrue(cytobandFilter({ cytoband: "17p" } as any as CoExpression, "-7p"));
         });
+        it("returns true if matches at least one query, all positive", ()=>{
+            assert.isTrue(cytobandFilter({ cytoband: "17p" } as any as CoExpression, "17p 5p 3p"));
+        });
+        it("returns true if no match every query, all negative", ()=>{
+            assert.isTrue(cytobandFilter({ cytoband: "17p" } as any as CoExpression, "-5 -3 -7p -1p"));
+        });
+        it("returns true if passes at least one positive query and every negative query", ()=>{
+            assert.isTrue(cytobandFilter({ cytoband: "17p" } as any as CoExpression, "-5 -3 17p -7p -1p 3p"));
+        });
+        it("returns false if it doesnt match any query, all positive", ()=>{
+            assert.isFalse(cytobandFilter({ cytoband: "17p" } as any as CoExpression, "1p 1q 5p"));
+        });
+        it("returns false if it matches at least one query, all negative", ()=>{
+            assert.isFalse(cytobandFilter({ cytoband: "17p" } as any as CoExpression, "-5 -3 -17p -1p"));
+        });
+        it("returns false if fails every query, mix of positive and negative", ()=>{
+            assert.isFalse(cytobandFilter({ cytoband: "17p" } as any as CoExpression, "-17p 3q -1"));
+        });
     });
 });

@@ -1,9 +1,9 @@
 import { assert } from 'chai';
 import React from 'react';
-import { calculateAlterationTendency, calculateExpressionTendency, formatLogOddsRatio, formatLogOddsRatioWithStyle, 
-    formatValueWithStyle, formatPercentage, getAlterationScatterData, getExpressionScatterData, roundLogRatio, 
-    calculateLogRatio, getAlterationRowData, getExpressionRowData, getFilteredData, getBarChartTooltipContent,
-    getBoxPlotScatterData, getDownloadContent, getAlterationsTooltipContent, shortenGenesLabel, getBoxPlotModels
+import { calculateAlterationTendency, calculateExpressionTendency, formatLogOddsRatio, formatValueWithStyle, 
+    formatPercentage, getAlterationScatterData, getExpressionScatterData, roundLogRatio, calculateLogRatio, 
+    getAlterationRowData, getExpressionRowData, getFilteredData, getBarChartTooltipContent, getBoxPlotScatterData, 
+    getDownloadContent, getAlterationsTooltipContent, shortenGenesLabel, getBoxPlotModels
 } from "./EnrichmentsUtil";
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
@@ -369,20 +369,6 @@ describe("EnrichmentsUtil", () => {
         });
     });
 
-    describe("#formatLogOddsRatioWithStyle()", () => {
-        it("returns <span style={{ color: \"#00FF00\" }}>5.00</span> for 5", () => {
-            expect(formatLogOddsRatioWithStyle(5)).toEqualJSX(<span style={{ color: "#00FF00" }}>5.00</span>);
-        });
-
-        it("returns <span style={{ color: \"#00FF00\" }}>0.00</span> for 0", () => {
-            expect(formatLogOddsRatioWithStyle(0)).toEqualJSX(<span style={{ color: "#00FF00" }}>0.00</span>);
-        });
-
-        it("returns <span style={{ color: \"#00FF00\" }}>-2.00</span> for -2", () => {
-            expect(formatLogOddsRatioWithStyle(-2)).toEqualJSX(<span style={{ color: "#00FF00" }}>-2.00</span>);
-        });
-    });
-
     describe("#formatValueWithStyle()", () => {
         it("returns <span>0.300</span> for 0.3", () => {
             expect(formatValueWithStyle(0.3)).toEqualJSX(<span>0.300</span>);
@@ -410,8 +396,8 @@ describe("EnrichmentsUtil", () => {
 
         it("returns correct scatter data", () => {
             assert.deepEqual(getAlterationScatterData(exampleAlterationEnrichmentRowData, ["EGFR"]), [
-                {x: 10, y: 0.027549712180381356, hugoGeneSymbol: "FBXW4"},
-                {x: 10, y: 0.027549712180381356, hugoGeneSymbol: "CAND2"},
+                {x: 10, y: 2.804820678721167, hugoGeneSymbol: "FBXW4", logRatio: Infinity, qValue: 0.9385345997286061},
+                {x: 10, y: 2.804820678721167, hugoGeneSymbol: "CAND2", logRatio: Infinity, qValue: 0.9385345997286061},
             ]);
         });
     });
@@ -423,9 +409,12 @@ describe("EnrichmentsUtil", () => {
 
         it("returns correct scatter data", () => {
             assert.deepEqual(getExpressionScatterData(exampleExpressionEnrichmentRowData, ["EGFR"]), [
-                {x: -0.7514352361955119, y: 4.619204541428397, hugoGeneSymbol: "DHRS7B", entrezGeneId: 25979},
-                {x: 1.373692179998275, y: 4.619204541428397, hugoGeneSymbol: "PTPN3", entrezGeneId: 5774},
-                {x: 2.652285592481328, y: 4.612694682133429, hugoGeneSymbol: "EPHB3", entrezGeneId: 2049}
+                {x: -0.7514352361955119, y: 8.713104055017682, hugoGeneSymbol: "DHRS7B", entrezGeneId: 25979, 
+                    logRatio: -0.7514352361955119, qValue: 0.000024032306741578182},
+                {x: 1.373692179998275, y: 8.431950829601448, hugoGeneSymbol: "PTPN3", entrezGeneId: 5774, 
+                    logRatio: 1.373692179998275, qValue: 0.000024032306741578182},
+                {x: 2.652285592481328, y: 8.2493497112508, hugoGeneSymbol: "EPHB3", entrezGeneId: 2049, 
+                    logRatio: 2.652285592481328, qValue: 0.000024395252515979897}
             ]);
         });
     });

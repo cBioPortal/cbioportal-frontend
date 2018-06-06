@@ -5,24 +5,44 @@ import {GenePanelData} from "../api/generated/CBioPortalAPI";
 export function isSampleProfiled(uniqueSampleKey:string, molecularProfileId:string,
                                   hugoGeneSymbol:string, coverageInformation:CoverageInformation):boolean
 {
+    return !!getSampleProfiledReport(uniqueSampleKey, coverageInformation, hugoGeneSymbol)[molecularProfileId];
+}
+
+function getSampleProfiledReport(
+    uniqueSampleKey:string,
+    coverageInformation:CoverageInformation,
+    hugoGeneSymbol?:string
+):{[molecularProfileId:string]:boolean} {
+    // returns a map whose keys are the profiles which the sample is profiled in
     const sampleCoverage = coverageInformation.samples[uniqueSampleKey];
 
     // no sample coverage for sample
-    if (!sampleCoverage) return false;
+    if (!sampleCoverage) return {};
 
-    const byGeneCoverage = sampleCoverage.byGene[hugoGeneSymbol];
+    const byGeneCoverage = hugoGeneSymbol ? sampleCoverage.byGene[hugoGeneSymbol] : _.flatten(_.values(sampleCoverage.byGene));
 
     // no by gene coverage for gene AND there's no allGene data available
-    if (!byGeneCoverage && sampleCoverage.allGenes.length === 0) return false;
+    if (!byGeneCoverage && sampleCoverage.allGenes.length === 0) return {};
+
+    const ret:{[m:string]:boolean} = {};
 
     // does molecular profile appear in the GENE specific panel data
-    const coveredByGene = (!!byGeneCoverage && _.find(byGeneCoverage,
-        (genePanelData:GenePanelData)=>genePanelData.molecularProfileId === molecularProfileId) !== undefined);
+    for (const gpData of (byGeneCoverage || [])) {
+        ret[gpData.molecularProfileId] = true;
+    }
 
     // does molecular profile appear in CROSS gene panel data
-    const coveredByAll = (_.find(sampleCoverage.allGenes,
-        (genePanelData:GenePanelData)=>genePanelData.molecularProfileId === molecularProfileId) !== undefined);
+    for (const gpData of sampleCoverage.allGenes) {
+        ret[gpData.molecularProfileId] = true;
+    }
 
-    // IS covered if either is true
-    return (coveredByGene || coveredByAll);
+    return ret;
+}
+
+export function isSampleProfiledInMultiple(uniqueSampleKey:string, molecularProfileIds:string[],
+                                           coverageInformation:CoverageInformation, hugoGeneSymbol?:string):boolean[]
+{
+    // returns boolean[] in same order as molecularProfileIds
+    const profiledReport = getSampleProfiledReport(uniqueSampleKey, coverageInformation, hugoGeneSymbol);
+    return molecularProfileIds.map(molecularProfileId=>!!profiledReport[molecularProfileId]);
 }
