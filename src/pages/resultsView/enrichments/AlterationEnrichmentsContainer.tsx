@@ -14,6 +14,7 @@ import MiniScatterChart from 'pages/resultsView/enrichments/MiniScatterChart';
 import MiniBarChart from 'pages/resultsView/enrichments/MiniBarChart';
 import AddCheckedGenes from 'pages/resultsView/enrichments/AddCheckedGenes';
 import autobind from 'autobind-decorator';
+import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 
 export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichment[];
@@ -33,6 +34,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     @observable.shallow checkedGenes: string[] = [];
     @observable clickedGene: string;
     @observable selectedGenes: string[]|null;
+    @observable.ref highlightedRow:AlterationEnrichmentRow|undefined;
 
     @computed get data(): AlterationEnrichmentRow[] {
         return getAlterationRowData(this.props.data, this.props.totalAlteredCount, this.props.totalUnalteredCount,
@@ -95,6 +97,18 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         this.selectedGenes = null;
     }
 
+    private dataStore = new EnrichmentsTableDataStore(
+        ()=>{
+            return this.filteredData;
+        },
+        ()=>{
+            return this.highlightedRow;
+        },
+        (c:AlterationEnrichmentRow)=>{
+            this.highlightedRow = c;
+        }
+    );
+
     public render() {
 
         if (this.props.data.length === 0) {
@@ -132,7 +146,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                         </Checkbox>
                     </div>
                     <AlterationEnrichmentTable data={this.filteredData} onCheckGene={this.onCheckGene} 
-                        onGeneNameClick={this.onGeneNameClick} alterationType={this.props.alterationType}/>
+                        onGeneNameClick={this.onGeneNameClick} alterationType={this.props.alterationType} dataStore={this.dataStore}/>
                 </div>
             </div>
         );

@@ -9,11 +9,14 @@ import { toConditionalPrecision, } from 'shared/lib/NumberUtils';
 import styles from "./styles.module.scss";
 import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
 import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
+import autobind from 'autobind-decorator';
+import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 
 export interface IExpressionEnrichmentTableProps {
     columns?: ExpressionEnrichmentTableColumnType[];
     data: ExpressionEnrichmentRow[];
     initialSortColumn?: string;
+    dataStore: EnrichmentsTableDataStore;
     onCheckGene: (hugoGeneSymbol: string) => void;
     onGeneNameClick: (hugoGeneSymbol: string, entrezGeneId: number) => void;
 }
@@ -69,8 +72,10 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         this.props.onCheckGene(hugoGeneSymbol);
     }
 
-    private geneNameClick(hugoGeneSymbol: string, entrezGeneId: number) {
-        this.props.onGeneNameClick(hugoGeneSymbol, entrezGeneId);
+    @autobind
+    private onRowClick(d: ExpressionEnrichmentRow) {
+        this.props.onGeneNameClick(d.hugoGeneSymbol, d.entrezGeneId);
+        this.props.dataStore.setHighlighted(d);
     }
 
     protected generateColumns(): { [columnEnum: number]: ExpressionEnrichmentTableColumn } {
@@ -81,7 +86,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
             render: (d: ExpressionEnrichmentRow) => <div style={{ display: 'flex' }}><Checkbox checked={d.checked} 
                 disabled={d.disabled} key={d.hugoGeneSymbol} className={styles.Checkbox} 
                 onChange={() => this.checkboxChange(d.hugoGeneSymbol)} title={d.disabled ? "This is one of the query genes" : ""} />
-                <span className={styles.GeneName} onClick={() => this.geneNameClick(d.hugoGeneSymbol, d.entrezGeneId)}>
+                <span className={styles.GeneName}>
                 <b>{d.hugoGeneSymbol}</b></span></div>,
             tooltip: <span>Gene</span>,
             filter: (d: ExpressionEnrichmentRow, filterString: string, filterStringUpper: string) =>
@@ -189,7 +194,8 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         const orderedColumns = _.sortBy(this._columns, (c: ExpressionEnrichmentTableColumn) => c.order);
         return (
             <ExpressionEnrichmentTableComponent initialItemsPerPage={20} paginationProps={{ itemsPerPageOptions: [20] }}
-                columns={orderedColumns} data={this.props.data} initialSortColumn={this.props.initialSortColumn} />
+                columns={orderedColumns} data={this.props.data} initialSortColumn={this.props.initialSortColumn} 
+                onRowClick={this.onRowClick} dataStore={this.props.dataStore}/>
         );
     }
 }
