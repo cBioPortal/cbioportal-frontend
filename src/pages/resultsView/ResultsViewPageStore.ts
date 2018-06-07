@@ -1881,7 +1881,9 @@ export class ResultsViewPageStore {
         await: () => [
             this.alteredSamples,
             this.unalteredSamples,
-            this.mutationEnrichmentProfiles
+            this.mutationEnrichmentProfiles,
+            this.genes,
+            this.selectedMolecularProfiles
         ],
         invoke: async () => {
             // returns an empty array if the selected study doesn't have any mutation profiles
@@ -1890,7 +1892,8 @@ export class ResultsViewPageStore {
                     molecularProfileId: this.selectedEnrichmentMutationProfile.molecularProfileId,
                     enrichmentType: "SAMPLE",
                     enrichmentFilter: {alteredIds: this.alteredSamples.result.map(s => s.sampleId),
-                        unalteredIds: this.unalteredSamples.result.map(s => s.sampleId)}})) : [];
+                        unalteredIds: this.unalteredSamples.result.map(s => s.sampleId),
+                        queryGenes: this.getEnrichmentsQueryGenes(this.selectedEnrichmentMutationProfile)}})) : [];
         }
     });
 
@@ -1911,7 +1914,9 @@ export class ResultsViewPageStore {
         await: () => [
             this.alteredSamples,
             this.unalteredSamples,
-            this.copyNumberEnrichmentProfiles
+            this.copyNumberEnrichmentProfiles,
+            this.genes,
+            this.selectedMolecularProfiles
         ],
         invoke: async () => {
             // returns an empty array if the selected study doesn't have any CNA profiles
@@ -1924,7 +1929,9 @@ export class ResultsViewPageStore {
         await: () => [
             this.alteredSamples,
             this.unalteredSamples,
-            this.copyNumberEnrichmentProfiles
+            this.copyNumberEnrichmentProfiles,
+            this.genes,
+            this.selectedMolecularProfiles
         ],
         invoke: async () => {
             // returns an empty array if the selected study doesn't have any CNA profiles
@@ -1942,7 +1949,8 @@ export class ResultsViewPageStore {
             enrichmentType: "SAMPLE",
             enrichmentFilter: {
                 alteredIds: alteredSamples.map(s => s.sampleId),
-                unalteredIds: unalteredSamples.map(s => s.sampleId)
+                unalteredIds: unalteredSamples.map(s => s.sampleId),
+                queryGenes: this.getEnrichmentsQueryGenes(this.selectedEnrichmentCopyNumberProfile)
         }}));
     }
 
@@ -1970,7 +1978,9 @@ export class ResultsViewPageStore {
         await: () => [
             this.alteredSamples,
             this.unalteredSamples,
-            this.mRNAEnrichmentProfiles
+            this.mRNAEnrichmentProfiles,
+            this.genes,
+            this.selectedMolecularProfiles
         ],
         invoke: async () => {
             // returns an empty array if the selected study doesn't have any mRNA profiles
@@ -1979,7 +1989,8 @@ export class ResultsViewPageStore {
                     molecularProfileId: this.selectedEnrichmentMRNAProfile.molecularProfileId,
                     enrichmentType: "SAMPLE",
                     enrichmentFilter: {alteredIds: this.alteredSamples.result.map(s => s.sampleId),
-                        unalteredIds: this.unalteredSamples.result.map(s => s.sampleId)}})) : [];
+                        unalteredIds: this.unalteredSamples.result.map(s => s.sampleId),
+                        queryGenes: this.getEnrichmentsQueryGenes(this.selectedEnrichmentMRNAProfile)}})) : [];
         }
     });
 
@@ -2000,7 +2011,9 @@ export class ResultsViewPageStore {
         await: () => [
             this.alteredSamples,
             this.unalteredSamples,
-            this.proteinEnrichmentProfiles
+            this.proteinEnrichmentProfiles,
+            this.genes,
+            this.selectedMolecularProfiles
         ],
         invoke: async () => {
             // returns an empty array if the selected study doesn't have any protein profiles
@@ -2009,12 +2022,18 @@ export class ResultsViewPageStore {
                     molecularProfileId: this.selectedEnrichmentProteinProfile.molecularProfileId,
                     enrichmentType: "SAMPLE",
                     enrichmentFilter: {alteredIds: this.alteredSamples.result.map(s => s.sampleId),
-                        unalteredIds: this.unalteredSamples.result.map(s => s.sampleId)}})) : [];
+                        unalteredIds: this.unalteredSamples.result.map(s => s.sampleId),
+                        queryGenes: this.getEnrichmentsQueryGenes(this.selectedEnrichmentProteinProfile)}})) : [];
         }
     });
 
     private sortEnrichmentData(data: any[]): any[] {
         return _.sortBy(data, ["pValue", "hugoGeneSymbol"]);
+    }
+
+    private getEnrichmentsQueryGenes(molecularProfile: MolecularProfile): number[] {
+        return this.selectedMolecularProfiles.result!.map(s => s.molecularAlterationType)
+            .includes(molecularProfile.molecularAlterationType) ? this.genes.result!.map(g => g.entrezGeneId) : [];
     }
 
     @cached get oncoKbEvidenceCache() {
