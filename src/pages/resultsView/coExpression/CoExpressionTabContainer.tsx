@@ -19,7 +19,7 @@ export default class CoexpressionTabContainer extends React.Component<{ store:Re
                     studyToDataQueryFilter={this.props.store.studyToDataQueryFilter.result}
                     numericGeneMolecularDataCache={this.props.store.numericGeneMolecularDataCache}
                     mutationCache={this.props.store.mutationCache}
-                    samples={this.props.store.samples}
+                    molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount}
                     coverageInformation={this.props.store.coverageInformation}
                     studyToMutationMolecularProfile={this.props.store.studyToMutationMolecularProfile}
                 />
