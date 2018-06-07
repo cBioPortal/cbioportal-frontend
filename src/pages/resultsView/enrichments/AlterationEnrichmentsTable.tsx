@@ -11,12 +11,15 @@ import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import styles from "./styles.module.scss";
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
+import autobind from 'autobind-decorator';
+import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 
 export interface IAlterationEnrichmentTableProps {
     columns?: AlterationEnrichmentTableColumnType[];
     data: AlterationEnrichmentRow[];
     initialSortColumn?: string;
     alterationType: string;
+    dataStore: EnrichmentsTableDataStore;
     onCheckGene: (hugoGeneSymbol: string) => void;
     onGeneNameClick: (hugoGeneSymbol: string) => void;
 }
@@ -68,8 +71,10 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         this.props.onCheckGene(hugoGeneSymbol);
     }
 
-    private geneNameClick(hugoGeneSymbol: string) {
-        this.props.onGeneNameClick(hugoGeneSymbol);
+    @autobind
+    private onRowClick(d: AlterationEnrichmentRow) {
+        this.props.onGeneNameClick(d.hugoGeneSymbol);
+        this.props.dataStore.setHighlighted(d);
     }
 
     protected generateColumns():{ [columnEnum: number]: AlterationEnrichmentTableColumn } {
@@ -80,7 +85,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
             render: (d: AlterationEnrichmentRow) => <div style={{ display: 'flex' }}><Checkbox checked={d.checked} 
                 disabled={d.disabled} key={d.hugoGeneSymbol} className={styles.Checkbox} 
                 onChange={() => this.checkboxChange(d.hugoGeneSymbol)} title={d.disabled ? "This is one of the query genes" : ""} />
-                <span className={styles.GeneName} onClick={() => this.geneNameClick(d.hugoGeneSymbol)}><b>{d.hugoGeneSymbol}</b></span></div>,
+                <span className={styles.GeneName}><b>{d.hugoGeneSymbol}</b></span></div>,
             tooltip: <span>Gene</span>,
             filter: (d: AlterationEnrichmentRow, filterString: string, filterStringUpper: string) =>
                 d.hugoGeneSymbol.toUpperCase().includes(filterStringUpper),
@@ -175,7 +180,8 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         const orderedColumns = _.sortBy(this._columns, (c: AlterationEnrichmentTableColumn) => c.order);
         return (
             <AlterationEnrichmentTableComponent initialItemsPerPage={20} paginationProps={{ itemsPerPageOptions: [20] }}
-                columns={orderedColumns} data={this.props.data} initialSortColumn={this.props.initialSortColumn} />
+                columns={orderedColumns} data={this.props.data} initialSortColumn={this.props.initialSortColumn} 
+                onRowClick={this.onRowClick} dataStore={this.props.dataStore}/>
         );
     }
 }

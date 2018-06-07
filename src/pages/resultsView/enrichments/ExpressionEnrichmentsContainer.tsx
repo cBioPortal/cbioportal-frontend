@@ -14,6 +14,7 @@ import MiniScatterChart from 'pages/resultsView/enrichments/MiniScatterChart';
 import MiniBoxPlot from 'pages/resultsView/enrichments/MiniBoxPlot';
 import * as _ from "lodash";
 import autobind from 'autobind-decorator';
+import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 
 export interface IExpressionEnrichmentContainerProps {
     data: ExpressionEnrichment[];
@@ -31,6 +32,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
     @observable clickedGeneHugo: string;
     @observable clickedGeneEntrez: number;
     @observable selectedGenes: string[]|null;
+    @observable.ref highlightedRow:ExpressionEnrichmentRow|undefined;
 
     @computed get data(): ExpressionEnrichmentRow[] {
         return getExpressionRowData(this.props.data, this.props.selectedProfile.datatype, this.props.store.hugoGeneSymbols);
@@ -83,6 +85,18 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
         this.selectedGenes = null;
     }
 
+    private dataStore = new EnrichmentsTableDataStore(
+        ()=>{
+            return this.filteredData;
+        },
+        ()=>{
+            return this.highlightedRow;
+        },
+        (c:ExpressionEnrichmentRow)=>{
+            this.highlightedRow = c;
+        }
+    );
+
     public render() {
 
         if (this.props.data.length === 0) {
@@ -130,7 +144,8 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
                             Significant only
                         </Checkbox>
                     </div>
-                    <ExpressionEnrichmentTable data={this.filteredData} onCheckGene={this.onCheckGene} onGeneNameClick={this.onGeneNameClick}/>
+                    <ExpressionEnrichmentTable data={this.filteredData} onCheckGene={this.onCheckGene} onGeneNameClick={this.onGeneNameClick}
+                        dataStore={this.dataStore}/>
                 </div>
             </div>
         );
