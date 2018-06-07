@@ -26,7 +26,6 @@ import setWindowVariable from "../../../shared/lib/setWindowVariable";
 import {ICoExpressionPlotProps} from "./CoExpressionPlot";
 import {bind} from "bind-decorator";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
-import {isSampleProfiledInMultiple} from "../../../shared/lib/isSampleProfiled";
 
 export interface ICoExpressionTabProps {
     molecularProfiles:MolecularProfile[];
@@ -34,7 +33,7 @@ export interface ICoExpressionTabProps {
     studyToDataQueryFilter:{[studyId:string]:IDataQueryFilter}
     numericGeneMolecularDataCache:MobxPromiseCache<{entrezGeneId:number, molecularProfileId:string}, NumericGeneMolecularData[]>;
     mutationCache:MobxPromiseCache<{entrezGeneId:number}, Mutation[]>;
-    samples:MobxPromise<Sample[]>;
+    molecularProfileIdToProfiledSampleCount:MobxPromise<{[molecularProfileId:string]:number}>;
     coverageInformation:MobxPromise<CoverageInformation>;
     studyToMutationMolecularProfile:MobxPromise<{[studyId:string]:MolecularProfile}>;
 }
@@ -85,35 +84,6 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
         return filterAndSortProfiles(this.props.molecularProfiles);
     }
 
-    readonly molecularProfileIdToProfiledSampleCount = remoteData({
-        await: ()=>[
-            this.props.samples,
-            this.props.coverageInformation
-        ],
-        invoke: ()=>{
-            const ret:{[molecularProfileId:string]:number} = {};
-            const profileIds = this.profiles.map(x=>x.molecularProfileId);
-            const coverageInformation = this.props.coverageInformation.result!;
-            for (const profileId of profileIds) {
-                ret[profileId] = 0;
-            }
-            let profiledReport:boolean[] = [];
-            for (const sample of this.props.samples.result!) {
-                profiledReport = isSampleProfiledInMultiple(
-                    sample.uniqueSampleKey,
-                    profileIds,
-                    coverageInformation
-                );
-                for (let i=0; i<profileIds.length; i++) {
-                    if (profiledReport[i]) {
-                        ret[profileIds[i]] += 1;
-                    }
-                }
-            }
-            return Promise.resolve(ret);
-        }
-    });
-
     @computed get hasMutationData() {
         return !!_.find(
             this.props.molecularProfiles,
@@ -149,9 +119,9 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
     );
 
     private get dataSetSelector() {
-        if (this.selectedMolecularProfile && this.molecularProfileIdToProfiledSampleCount.isComplete) {
+        if (this.selectedMolecularProfile && this.props.molecularProfileIdToProfiledSampleCount.isComplete) {
             let options = this.profiles.map(profile=>{
-                const profiledSampleCount = this.molecularProfileIdToProfiledSampleCount.result![profile.molecularProfileId];
+                const profiledSampleCount = this.props.molecularProfileIdToProfiledSampleCount.result![profile.molecularProfileId];
                 return {
                     label: `${profile.name} (${profiledSampleCount} sample${profiledSampleCount !== 1 ? "s" : ""})`,
                     value: profile.molecularProfileId
