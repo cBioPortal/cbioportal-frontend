@@ -1,6 +1,6 @@
 import * as React from "react";
 import {CoExpression} from "../../../shared/api/generated/CBioPortalAPIInternal";
-import {correlationColor, correlationSortBy, cytobandFilter} from "./CoExpressionTableUtils";
+import {correlationColor, correlationSortBy} from "./CoExpressionTableUtils";
 import LazyMobXTable from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 import {ILazyMobXTableApplicationDataStore} from "../../../shared/lib/ILazyMobXTableApplicationDataStore";
 import {CoExpressionDataStore, TableMode} from "./CoExpressionViz";
@@ -11,6 +11,7 @@ import {tableSearchInformation} from "./CoExpressionTabUtils";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import InfoIcon from "../../../shared/components/InfoIcon";
 import {bind} from "bind-decorator";
+import { cytobandFilter } from "pages/resultsView/ResultsViewTableUtils";
 
 export interface ICoExpressionTableProps {
     referenceGene:{hugoGeneSymbol:string, cytoband:string};

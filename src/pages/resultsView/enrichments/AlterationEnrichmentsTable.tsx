@@ -10,6 +10,7 @@ import {
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import styles from "./styles.module.scss";
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
+import { cytobandFilter } from 'pages/resultsView/ResultsViewTableUtils';
 
 export interface IAlterationEnrichmentTableProps {
     columns?: AlterationEnrichmentTableColumnType[];
@@ -91,12 +92,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
             name: "Cytoband",
             render: (d: AlterationEnrichmentRow) => <span>{d.cytoband}</span>,
             tooltip: <span>Cytoband</span>,
-            filter: (d: AlterationEnrichmentRow, filterString: string, filterStringUpper: string) => {
-                if (d.cytoband) {
-                    return d.cytoband.toUpperCase().includes(filterStringUpper);
-                }
-                return false;
-            },
+            filter: cytobandFilter,
             sortBy: (d: AlterationEnrichmentRow) => d.cytoband,
             download: (d: AlterationEnrichmentRow) => d.cytoband
         };
