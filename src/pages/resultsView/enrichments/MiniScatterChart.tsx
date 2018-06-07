@@ -73,7 +73,7 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                         onSelectionCleared={(props:any) => this.handleSelectionCleared(props)}/>} theme={CBIOPORTAL_VICTORY_THEME}
                         domainPadding={{ y: [0, 20] }} height={350} width={350} padding={{ top: 40, bottom: 60, left: 60, right: 40 }}>
                         <VictoryAxis tickValues={this.props.xAxisTickValues} domain={[-this.props.xAxisDomain, this.props.xAxisDomain]} 
-                            label="log Ratio" style={{
+                            label="log Ratio" tickFormat={(t: any) => t >= 1000 || t <= -1000 ? `${t/1000}k` : t} style={{
                                 tickLabels: { padding: 20, fill: "black" }, axisLabel: { padding: 40, fill: "black", fontSize: 16 },
                                 axis: { stroke: "black", strokeWidth: 1 }, grid: { stroke: "#eeeeee", strokeDasharray: "none" }, ticks: { size: 0 }
                             }} />
