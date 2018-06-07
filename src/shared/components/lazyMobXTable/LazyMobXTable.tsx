@@ -194,7 +194,7 @@ function getDownloadObject<T>(columns: Column<T>[], rowData: T) {
 }
 
 class LazyMobXTableStore<T> {
-    @observable public filterString:string;
+    public filterString:string|undefined;
     @observable private _page:number;
     @observable private _itemsPerPage:number;
     @observable private _itemsLabel:string|undefined;
@@ -254,14 +254,6 @@ class LazyMobXTableStore<T> {
 
     @computed get maxPage() {
         return maxPage(this.displayData.length, this.itemsPerPage);
-    }
-
-    @computed get filterStringUpper() {
-        return this.filterString.toUpperCase();
-    }
-
-    @computed get filterStringLower() {
-        return this.filterString.toLowerCase();
     }
 
     @computed public get columnVisibility() {
@@ -484,6 +476,9 @@ class LazyMobXTableStore<T> {
     }
 
     @action setFilterString(str:string) {
+        // we need to keep the filter string value in this store as well as in the data store,
+        // because data store gets reset each time the component receives props.
+        this.filterString = str;
         this.dataStore.filterString = str;
         this.page = 0;
         this.dataStore.setFilter((d:T, filterString:string, filterStringUpper:string, filterStringLower:string)=>{
@@ -539,6 +534,11 @@ class LazyMobXTableStore<T> {
         if (this.dataStore.sortMetric === undefined) {
             this.dataStore.sortMetric = this.sortMetric;
         }
+
+        // we would like to keep the previous filter if exists
+        if (this.filterString) {
+            this.setFilterString(this.filterString);
+        }
     }
 
     @action updateColumnVisibility(id:string, visible:boolean)
@@ -561,7 +561,6 @@ class LazyMobXTableStore<T> {
     }
 
     constructor(lazyMobXTableProps:LazyMobXTableProps<T>) {
-        this.filterString = "";
         this.sortColumn = lazyMobXTableProps.initialSortColumn || "";
         this.sortAscending = (lazyMobXTableProps.initialSortDirection !== "desc"); // default ascending
         this.setProps(lazyMobXTableProps);

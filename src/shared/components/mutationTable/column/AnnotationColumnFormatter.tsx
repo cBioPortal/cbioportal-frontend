@@ -26,7 +26,7 @@ export interface IAnnotationColumnProps {
     myCancerGenomeData?: IMyCancerGenomeData;
     oncoKbData?: IOncoKbDataWrapper;
     oncoKbEvidenceCache?: OncoKbEvidenceCache;
-    oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean};
+    oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean}|Error;
     pubMedCache?: OncokbPubMedCache;
     userEmailAddress?:string;
     civicGenes?: ICivicGeneDataWrapper;
@@ -68,7 +68,7 @@ export default class AnnotationColumnFormatter
     }
 
     public static getData(rowData:Mutation[]|undefined,
-                          oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
+                          oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean}|Error,
                           hotspotData?:IHotspotDataWrapper,
                           myCancerGenomeData?:IMyCancerGenomeData,
                           oncoKbData?:IOncoKbDataWrapper,
@@ -83,7 +83,7 @@ export default class AnnotationColumnFormatter
             let oncoKbIndicator: IndicatorQueryResp|undefined;
             let hugoGeneSymbol = mutation.gene.hugoGeneSymbol;
 
-            const oncoKbGeneExist = !!oncoKbAnnotatedGenes[mutation.entrezGeneId];
+            const oncoKbGeneExist = !(oncoKbAnnotatedGenes instanceof Error) && !!oncoKbAnnotatedGenes[mutation.entrezGeneId];
 
             value = {
                 hugoGeneSymbol,
@@ -101,8 +101,23 @@ export default class AnnotationColumnFormatter
                     is3dHotspot(mutation, hotspotData.result) : false,
                 hotspotStatus: hotspotData ? hotspotData.status : "pending"
             };
-            if (oncoKbGeneExist) {
-                if (oncoKbData && oncoKbData.result && oncoKbData.status === "complete") {
+
+            // oncoKbData may exist but it might be an instance of Error, in that case we flag the status as error
+            if (oncoKbData && oncoKbData.result instanceof Error) {
+                value = {
+                    ...value,
+                    oncoKbStatus: "error",
+                    oncoKbIndicator: undefined
+                };
+            }
+            else if (oncoKbGeneExist) {
+                // actually, oncoKbData.result shouldn't be an instance of Error in this case (we already check it above),
+                // but we need to check it again in order to avoid TS errors/warnings
+                if (oncoKbData &&
+                    oncoKbData.result &&
+                    !(oncoKbData.result instanceof Error) &&
+                    oncoKbData.status === "complete")
+                {
                     oncoKbIndicator = AnnotationColumnFormatter.getIndicatorData(mutation, oncoKbData.result);
                 }
 
@@ -217,7 +232,7 @@ export default class AnnotationColumnFormatter
     }
 
     public static sortValue(data:Mutation[],
-                            oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
+                            oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean}|Error,
                             hotspotData?: IHotspotDataWrapper,
                             myCancerGenomeData?:IMyCancerGenomeData,
                             oncoKbData?: IOncoKbDataWrapper,
@@ -235,7 +250,7 @@ export default class AnnotationColumnFormatter
     }
 
     public static download(data:Mutation[]|undefined,
-                           oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
+                           oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean}|Error,
                            hotspotData?:IHotspotDataWrapper,
                            myCancerGenomeData?:IMyCancerGenomeData,
                            oncoKbData?:IOncoKbDataWrapper,
@@ -267,7 +282,10 @@ export default class AnnotationColumnFormatter
 
         let evidenceQuery:Query|undefined;
 
-        if (columnProps.oncoKbData && columnProps.oncoKbData.result) {
+        if (columnProps.oncoKbData &&
+            columnProps.oncoKbData.result &&
+            !(columnProps.oncoKbData.result instanceof Error))
+        {
             evidenceQuery = this.getEvidenceQuery(data[0], columnProps.oncoKbData.result);
         }
 

@@ -483,15 +483,29 @@ export async function fetchOncoKbAnnotatedGenes(client: OncoKbAPI = oncokbClient
         }, {});
 }
 
+export async function fetchOncoKbAnnotatedGenesSuppressErrors(client: OncoKbAPI = oncokbClient): Promise<{[entrezGeneId:number]:boolean}|Error>
+{
+    // we want to catch the error and fail silently with an empty result set,
+    // because we don't want other MobXPromises depending on this data to fail in case of an error
+    try {
+        return await fetchOncoKbAnnotatedGenes(client);
+    } catch (e) {
+        return new Error();
+    }
+}
+
 export async function fetchOncoKbData(uniqueSampleKeyToTumorType:{[uniqueSampleKey: string]: string},
-                                      annotatedGenes:{[entrezGeneId:number]:boolean},
+                                      annotatedGenes:{[entrezGeneId:number]:boolean}|Error,
                                       mutationData:MobxPromise<Mutation[]>,
                                       uncalledMutationData?:MobxPromise<Mutation[]>,
                                       client: OncoKbAPI = oncokbClient)
 {
     const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
 
-    if (mutationDataResult.length === 0) {
+    if (annotatedGenes instanceof Error) {
+        return new Error();
+    }
+    else if (mutationDataResult.length === 0) {
         return ONCOKB_DEFAULT;
     }
 
