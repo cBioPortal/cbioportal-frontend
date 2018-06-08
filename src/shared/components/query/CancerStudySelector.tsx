@@ -145,7 +145,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                     </SectionHeader>
 
                     <div>
-                        {!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending) && (
+                        {!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending && !this.store.profiledSamplesCount.isPending) && (
                             <Observer>
                                 {() => {
                                     let numSelectedStudies = expr(() => this.store.selectableSelectedStudyIds.length);
@@ -161,7 +161,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                                             }}
                                         >
                                             <b>{numSelectedStudies}</b> studies selected
-                                            (<b>{this.store.selectableSelectedStudies_totalSampleCount}</b> samples)
+                                            (<b>{this.store.profiledSamplesCount.result.all}</b> samples)
                                         </a>
                                     );
                                 }}
@@ -292,7 +292,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 
                 <SectionHeader style={{display: 'none'}} promises={[this.store.cancerTypes, this.store.cancerStudies]}>
                     Select Studies:
-                    {!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending) && (
+                    {!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending && !this.store.profiledSamplesCount.isPending) && (
                         <Observer>
                             {() => {
                                 let numSelectedStudies = expr(() => this.store.selectableSelectedStudyIds.length);
@@ -309,7 +309,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                                         }}
                                     >
 										<b>{numSelectedStudies}</b> studies selected
-										(<b>{this.store.selectableSelectedStudies_totalSampleCount}</b> samples)
+										(<b>{this.store.profiledSamplesCount.result.all}</b> samples)
 									</span>
                                 );
                             }}

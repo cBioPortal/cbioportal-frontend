@@ -8,14 +8,6 @@ import * as _ from 'lodash';
 
 describe("QueryStore", ()=>{
 
-    it("should correctly calculate Sample List Id from datatype priority in multiple study query", ()=>{
-        const calculateSampleListId = (QueryStore as any).prototype.calculateSampleListId;
-        assert.equal(calculateSampleListId({mutation:true,cna:true})   , '0');
-        assert.equal(calculateSampleListId({mutation:true,cna:false})  , '1');
-        assert.equal(calculateSampleListId({mutation:false,cna:true})  , '2');
-        assert.equal(calculateSampleListId({mutation:false,cna:false}) , 'all');
-    });
-
     describe("initialQueryParams on results page", ()=>{
         it("should contain the correct case_ids parameter in single study query", ()=>{
             const store = new QueryStore({

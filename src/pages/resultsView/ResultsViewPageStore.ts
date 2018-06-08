@@ -77,6 +77,7 @@ import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { VirtualStudy } from "shared/model/VirtualStudy";
 import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
 import OncoprintClinicalDataCache from "../../shared/cache/OncoprintClinicalDataCache";
+import {isSampleProfiledInMultiple} from "../../shared/lib/isSampleProfiled";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -1866,7 +1867,7 @@ export class ResultsViewPageStore {
 
     readonly mutationEnrichmentProfiles = remoteData<MolecularProfile[]>({
         await: () => [
-            this.molecularProfilesInStudies
+            this.molecularProfileIdToProfiledSampleCount
         ],
         invoke: async () => {
             return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) => 
@@ -1899,7 +1900,7 @@ export class ResultsViewPageStore {
 
     readonly copyNumberEnrichmentProfiles = remoteData<MolecularProfile[]>({
         await: () => [
-            this.molecularProfilesInStudies
+            this.molecularProfileIdToProfiledSampleCount
         ],
         invoke: async () => {
             return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) => 
@@ -1956,7 +1957,7 @@ export class ResultsViewPageStore {
 
     readonly mRNAEnrichmentProfiles = remoteData<MolecularProfile[]>({
         await: () => [
-            this.molecularProfilesInStudies
+            this.molecularProfileIdToProfiledSampleCount
         ],
         invoke: async () => {
             let profiles: MolecularProfile[] = _.filter(this.molecularProfilesInStudies.result,
@@ -1996,7 +1997,7 @@ export class ResultsViewPageStore {
 
     readonly proteinEnrichmentProfiles = remoteData<MolecularProfile[]>({
         await: () => [
-            this.molecularProfilesInStudies
+            this.molecularProfileIdToProfiledSampleCount
         ],
         invoke: async () => {
             return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) => 
@@ -2035,6 +2036,36 @@ export class ResultsViewPageStore {
         return this.selectedMolecularProfiles.result!.map(s => s.molecularAlterationType)
             .includes(molecularProfile.molecularAlterationType) ? this.genes.result!.map(g => g.entrezGeneId) : [];
     }
+
+    readonly molecularProfileIdToProfiledSampleCount = remoteData({
+        await: ()=>[
+            this.samples,
+            this.coverageInformation,
+            this.molecularProfilesInStudies
+        ],
+        invoke: ()=>{
+            const ret:{[molecularProfileId:string]:number} = {};
+            const profileIds = this.molecularProfilesInStudies.result.map(x=>x.molecularProfileId);
+            const coverageInformation = this.coverageInformation.result!;
+            for (const profileId of profileIds) {
+                ret[profileId] = 0;
+            }
+            let profiledReport:boolean[] = [];
+            for (const sample of this.samples.result!) {
+                profiledReport = isSampleProfiledInMultiple(
+                    sample.uniqueSampleKey,
+                    profileIds,
+                    coverageInformation
+                );
+                for (let i=0; i<profileIds.length; i++) {
+                    if (profiledReport[i]) {
+                        ret[profileIds[i]] += 1;
+                    }
+                }
+            }
+            return Promise.resolve(ret);
+        }
+    });
 
     @cached get oncoKbEvidenceCache() {
         return new OncoKbEvidenceCache();
