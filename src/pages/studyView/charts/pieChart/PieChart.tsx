@@ -8,6 +8,7 @@ import { COLORS, UNSELECTED_COLOR, NA_COLOR } from "pages/studyView/StudyViewUti
 import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 import { AbstractChart } from "pages/studyView/charts/ChartContainer";
 import { ClinicalDataCount } from "shared/api/generated/CBioPortalAPIInternal";
+import ifndef from "shared/lib/ifndef";
 
 export interface IPieChartProps {
     data: ClinicalDataCount[];
@@ -100,9 +101,9 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         //to hide label if the angle is too small(currently set to 20 degrees)
         return (
             <VictoryPie
-                theme={CBIOPORTAL_VICTORY_THEME}
                 containerComponent={<VictoryContainer
-                                        responsive={false}
+                                        theme={CBIOPORTAL_VICTORY_THEME}
+                                        standalone={false}
                                         containerRef={(ref: any) => this.svgContainer = ref}
                                     />}
                 width={190}
@@ -115,8 +116,15 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                 events={this.userEvents}
                 labelComponent={<VictoryLabel/>}
                 style={{
-                data: { fillOpacity: 0.9 },
-                labels: { fill: "white" }
+                    data: { 
+                        fill: (d:any) => ifndef(d.fill, "0x000000"),
+                        stroke: (d:any) => ifndef(d.stroke, "0x000000"),
+                        strokeWidth: (d:any) => ifndef(d.strokeWidth, 0),
+                        fillOpacity: (d:any) => ifndef(d.fillOpacity, 1)
+                    },
+                    labels: { 
+                        fill: "white" 
+                    }
                 }}
                 x="value"
                 y="count"
