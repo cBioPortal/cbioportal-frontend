@@ -72,10 +72,16 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
     }
 
     @computed get caseAlterationData(): ICaseAlteration[] {
-        return generateCaseAlterationData(this.caseAggregatedDataByOQLLine,
-            this.genePanelInformation,
-            this.samples,
-            this.geneAlterationDataByGene);
+        if (this.props.store.selectedMolecularProfiles.isComplete) {
+            return generateCaseAlterationData(
+                this.props.store.selectedMolecularProfiles.result,
+                this.caseAggregatedDataByOQLLine,
+                this.genePanelInformation,
+                this.samples,
+                this.geneAlterationDataByGene);
+        } else {
+            return [];
+        }
     }
 
     @computed get mutationData(): {[key: string]: ExtendedAlteration[]} {

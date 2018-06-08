@@ -1,4 +1,6 @@
 import {CancerStudyQueryUrlParams, normalizeQuery, QueryStore} from "./QueryStore";
+import { MolecularProfile } from "shared/api/generated/CBioPortalAPI";
+import { AlterationTypeConstants } from "pages/resultsView/ResultsViewPageStore";
 
 export type NonMolecularProfileQueryParams = Pick<CancerStudyQueryUrlParams,
     'cancer_study_id' | 'cancer_study_list' | 'Z_SCORE_THRESHOLD' | 'RPPA_SCORE_THRESHOLD' | 'data_priority' |
@@ -56,7 +58,7 @@ export function nonMolecularProfileParams(store:QueryStore, whitespace_separated
     // case ids is of format study1:sample1+study2:sample2+...
     const case_ids = whitespace_separated_case_ids ?
                     whitespace_separated_case_ids.replace(/\s+/g, '+') :
-                    store.asyncCustomCaseSet.result.map(caseRow => (caseRow.studyId + ':' + caseRow.sampleId)).join('+');
+                    console.log("adam");
 
     let ret:NonMolecularProfileQueryParams = {
         cancer_study_id: selectedStudyIds.length === 1 ? selectedStudyIds[0] : 'all',
@@ -88,4 +90,30 @@ export function molecularProfileParams(store:QueryStore, molecularProfileIds?:Re
         genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: store.getSelectedProfileIdFromMolecularAlterationType("PROTEIN_LEVEL", molecularProfileIds),
         genetic_profile_ids_PROFILE_GENESET_SCORE: store.getSelectedProfileIdFromMolecularAlterationType("GENESET_SCORE", molecularProfileIds)
     };
+}
+
+
+export function profileAvailability(molecularProfiles:MolecularProfile[]) {
+	let hasMutationProfile = false;
+	let hasCNAProfile = false;
+	for (const profile of molecularProfiles) {
+		if (!profile.showProfileInAnalysisTab)
+			continue;
+
+		switch (profile.molecularAlterationType) {
+			case AlterationTypeConstants.MUTATION_EXTENDED:
+				hasMutationProfile = true;
+				break;
+			case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
+				hasCNAProfile = true;
+				break;
+		}
+
+		if (hasMutationProfile && hasCNAProfile)
+			break;
+	}
+	return {
+		mutation: hasMutationProfile,
+		cna: hasCNAProfile
+	};
 }

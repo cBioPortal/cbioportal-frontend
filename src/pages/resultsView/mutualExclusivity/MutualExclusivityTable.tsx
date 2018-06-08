@@ -141,11 +141,23 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
 
         this._columns[MutualExclusivityTableColumnType.ASSOCIATION] = {
             name: "Tendency",
-            render: (d: MutualExclusivity) => <span>{d.association}&nbsp;&nbsp;&nbsp;{d.adjustedPValue < 0.05 ?
-                <Badge style={{ backgroundColor: '#58ACFA' }}>Significant</Badge> : ""}</span>,
-            tooltip: <span>Log odds ratio > 0 &nbsp;&nbsp;: Tendency towards co-occurrence<br />
-                Log odds ratio &lt;= 0 : Tendency towards mutual exclusivity<br />
-                Adjusted p-Value &lt; 0.05 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Significant association</span>,
+            render: (d: MutualExclusivity) => <table><tr><td>{d.association}</td></tr>{d.adjustedPValue < 0.05 ?
+                <tr><td><Badge style={{ backgroundColor: '#58ACFA' }}>Significant</Badge></td></tr> : ""}</table>,
+            tooltip: 
+                <table>
+                    <tr>
+                        <td>Log ratio > 0</td>
+                        <td>: Tendency towards co-occurrence</td>
+                    </tr>
+                    <tr>
+                        <td>Log ratio &lt;= 0</td>
+                        <td>: Tendency towards mutual exclusivity</td>
+                    </tr>
+                    <tr>
+                        <td>Adjusted p-Value &lt; 0.05</td>
+                        <td>: Significant association</td>
+                    </tr>
+                </table>,
             filter: (d: MutualExclusivity, filterString: string, filterStringUpper: string) =>
                 d.association.toUpperCase().includes(filterStringUpper),
             sortBy: (d: MutualExclusivity) => d.association,

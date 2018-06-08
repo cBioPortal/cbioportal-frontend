@@ -1,7 +1,7 @@
 import {assert} from 'chai';
 
 import {GeneticTrackDatum} from "shared/components/oncoprint/Oncoprint";
-import {GenePanelData, Sample} from "shared/api/generated/CBioPortalAPI";
+import {GenePanelData, MolecularProfile, Sample} from "shared/api/generated/CBioPortalAPI";
 import {
     generateCaseAlterationData, generateDownloadData, generateGeneAlterationData, generateMutationDownloadData, generateOqlData
 } from "./DownloadUtils";
@@ -318,12 +318,11 @@ describe('DownloadUtils', () => {
 
         it('generates empty oql data for a sample with no alteration data', () => {
 
-            const geneticTrackDatum = {
+            const geneticTrackDatum: GeneticTrackDatum = {
                 sample: "TCGA-BF-A1PV-01",
                 study_id: "skcm_tcga",
                 uid: "VENHQS1CRi1BMVBWLTAxOnNrY21fdGNnYQ",
-                coverage:[],
-                gene: "PTEN",
+                trackLabel: "PTEN",
                 data: sampleDataWithNoAlteration
             };
 
@@ -343,19 +342,17 @@ describe('DownloadUtils', () => {
                 "protein level data is empty for the sample with no alteration");
         });
 
-
         it('generates oql data properly for samples with multiple alteration types', () => {
 
-            const geneticTrackDatum = {
+            const geneticTrackDatum: GeneticTrackDatum = {
                 sample: "TCGA-EE-A20C-06",
                 study_id: "skcm_tcga",
                 uid: "VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ",
-                coverage:[],
-                gene: "PTEN",
+                trackLabel: "PTEN",
                 data: [mrnaDataForTCGAEEA20C, proteinDataForTCGAEEA20C] as any[],
                 disp_mrna: "up",
                 disp_prot: "up"
-            } as GeneticTrackDatum;
+            };
 
             const oqlData = generateOqlData(geneticTrackDatum);
 
@@ -381,17 +378,16 @@ describe('DownloadUtils', () => {
 
         it('generates oql data properly for samples with multiple mutations/fusions', () => {
 
-            const geneticTrackDatum = {
+            const geneticTrackDatum: GeneticTrackDatum = {
                 sample: "P-0000378-T01-IM3",
                 study_id: "msk_impact_2017",
                 uid: "UC0wMDAwMzc4LVQwMS1JTTM6bXNrX2ltcGFjdF8yMDE3",
-                coverage:[],
-                gene: "EGFR",
+                trackLabel: "EGFR",
                 data: sampleDataWithBothMutationAndFusion,
                 disp_fusion: true,
                 disp_cna: "amp",
                 disp_mut: "missense_rec"
-            } as GeneticTrackDatum;
+            };
 
             const oqlData = generateOqlData(geneticTrackDatum);
 
@@ -599,7 +595,11 @@ describe('DownloadUtils', () => {
                 }
             };
 
-            const caseAlterationData = generateCaseAlterationData(caseAggregatedDataByOQLLine,
+            const selectedMolecularProfiles = [{molecularProfileId:"AsdfasD"} as MolecularProfile];
+
+            const caseAlterationData = generateCaseAlterationData(
+                selectedMolecularProfiles,
+                caseAggregatedDataByOQLLine,
                 genePanelInformation,
                 samples,
                 geneAlterationData);
@@ -632,8 +632,9 @@ describe('DownloadUtils', () => {
                 patients: {}
             };
 
+            const selectedMolecularProfiles = [{molecularProfileId:"AsdfasD"} as MolecularProfile];
 
-            const caseAlterationData = generateCaseAlterationData(caseAggregatedDataByOQLLine, genePanelInformation, samples);
+            const caseAlterationData = generateCaseAlterationData(selectedMolecularProfiles, caseAggregatedDataByOQLLine, genePanelInformation, samples);
 
             assert.equal(caseAlterationData.length, 2,
                 "case alteration data has correct size");

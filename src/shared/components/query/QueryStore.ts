@@ -1,3 +1,4 @@
+/* tslint:disable: indent linebreak-style */
 import * as _ from 'lodash';
 import client from "../../api/cbioportalClientInstance";
 import {ObservableMap, toJS, observable, reaction, action, computed, whyRun, expr, isObservableMap} from "mobx";
@@ -10,15 +11,14 @@ import CancerStudyTreeData from "./CancerStudyTreeData";
 import {remoteData} from "../../api/remoteData";
 import {labelMobxPromises, cached, debounceAsync} from "mobxpromise";
 import internalClient from "../../api/cbioportalInternalClientInstance";
-import oql_parser, {MUTCommand} from "../../lib/oql/oql-parser";
+import {MUTCommand, SingleGeneQuery, SyntaxError} from "../../lib/oql/oql-parser";
+import {parseOQLQuery} from "../../lib/oql/oqlfilter";
 import memoize from "memoize-weak-decorator";
 import AppConfig from 'appConfig';
 import {gsUploadByGet} from "../../api/gsuploadwindow";
-import {OQLQuery} from "../../lib/oql/oql-parser";
 import {ComponentGetsStoreContext} from "../../lib/ContextUtils";
 import URL from 'url';
 import {buildCBioPortalUrl, BuildUrlParams, getHost, openStudySummaryFormSubmit} from "../../api/urls";
-import {SyntaxError} from "../../lib/oql/oql-parser";
 import StudyListLogic from "./StudyListLogic";
 import {QuerySession} from "../../lib/QuerySession";
 import {stringListToIndexSet, stringListToSet} from "../../lib/StringUtils";
@@ -27,7 +27,7 @@ import request, {Response} from "superagent";
 import formSubmit from "shared/lib/formSubmit";
 import {
 	MolecularProfileQueryParams, NonMolecularProfileQueryParams, queryUrl,
-	nonMolecularProfileParams, currentQueryParams, molecularProfileParams, queryParams
+	nonMolecularProfileParams, currentQueryParams, molecularProfileParams, queryParams, profileAvailability
 } from "./QueryStoreUtils";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import getOverlappingStudies from "../../lib/getOverlappingStudies";
@@ -136,45 +136,45 @@ export class QueryStore
 			molecularProfileIds: this._selectedProfileIds || []
 		};
 
-		reaction(
-			()=>this.allSelectedStudyIds,
-			()=>{
-				this.studiesHaveChangedSinceInitialization = true;
-			}
-		);
-
-		reaction(
-			()=>this.selectableStudiesSet,
-			selectableStudiesSet=>{
-				if(this.selectedSampleListId !== CUSTOM_CASE_LIST_ID) {
-					let virtualStudyIdsSet = stringListToSet(this.virtualStudies.result.map(x=>x.id));
-					let physicalStudyIdsSet = stringListToSet(this.cancerStudies.result.map(x=>x.studyId))
-					let userSelectableIds:{[studyId:string]:boolean} = Object.assign({}, physicalStudyIdsSet, virtualStudyIdsSet);
-					let sharedIds:string[] = [];
-					let unknownIds:string[] = [];
-			
-					this._defaultSelectedIds.keys().forEach(id=>{
-						if(selectableStudiesSet[id]){
-							if(!userSelectableIds[id]){
-								sharedIds.push(id)
-							}
-						}else{
-							unknownIds.push(id);
-						}
-					});
-					//this block is executed when the query is a saved virtual study query is shared to other user
-					//in this scenario we override some parameters to correctly show selected cases to user
-					if(!_.isEmpty(sharedIds) && _.isEmpty(unknownIds)){
-						this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
-						this.caseIdsMode = 'sample';
-						let studySampleMap = this._defaultStudySampleMap
-						this.caseIds = _.flatten<string>(Object.keys(studySampleMap).map(studyId=>{
-							return studySampleMap[studyId].map((sampleId:string)=>`${studyId}:${sampleId}`);
-						})).join("\n");
-					}
-				}
-			}
-		);
+		// reaction(
+		// 	()=>this.allSelectedStudyIds,
+		// 	()=>{
+		// 		this.studiesHaveChangedSinceInitialization = true;
+		// 	}
+		// );
+        //
+		// reaction(
+		// 	()=>this.selectableStudiesSet,
+		// 	selectableStudiesSet=>{
+		// 		if(this.selectedSampleListId !== CUSTOM_CASE_LIST_ID) {
+		// 			let virtualStudyIdsSet = stringListToSet(this.virtualStudies.result.map(x=>x.id));
+		// 			let physicalStudyIdsSet = stringListToSet(this.cancerStudies.result.map(x=>x.studyId))
+		// 			let userSelectableIds:{[studyId:string]:boolean} = Object.assign({}, physicalStudyIdsSet, virtualStudyIdsSet);
+		// 			let sharedIds:string[] = [];
+		// 			let unknownIds:string[] = [];
+		//
+		// 			this._defaultSelectedIds.keys().forEach(id=>{
+		// 				if(selectableStudiesSet[id]){
+		// 					if(!userSelectableIds[id]){
+		// 						sharedIds.push(id)
+		// 					}
+		// 				}else{
+		// 					unknownIds.push(id);
+		// 				}
+		// 			});
+		// 			//this block is executed when the query is a saved virtual study query is shared to other user
+		// 			//in this scenario we override some parameters to correctly show selected cases to user
+		// 			if(!_.isEmpty(sharedIds) && _.isEmpty(unknownIds)){
+		// 				this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
+		// 				this.caseIdsMode = 'sample';
+		// 				let studySampleMap = this._defaultStudySampleMap
+		// 				this.caseIds = _.flatten<string>(Object.keys(studySampleMap).map(studyId=>{
+		// 					return studySampleMap[studyId].map((sampleId:string)=>`${studyId}:${sampleId}`);
+		// 				})).join("\n");
+		// 			}
+		// 		}
+		// 	}
+		// );
 	}
 
 	@observable studiesHaveChangedSinceInitialization:boolean = false;
@@ -567,6 +567,28 @@ export class QueryStore
 			const profiles:CacheData<MolecularProfile[], string>[] =
 				await this.molecularProfilesInStudyCache.getPromise(this.physicalStudyIdsInSelection, true);
 			return _.flatten(profiles.map(d=>(d.data ? d.data : [])));
+		},
+		default: [],
+		onResult: () => {
+			if (!this.initiallySelected.sampleListId || this.studiesHaveChangedSinceInitialization) {
+				this._selectedSampleListId = undefined;
+			}
+		}
+	});
+
+	readonly profileAvailability = remoteData<{mutation: boolean, cna: boolean}>({
+		await:()=>[this.molecularProfilesInSelectedStudies],
+		invoke:()=>{
+			return Promise.resolve(profileAvailability(this.molecularProfilesInSelectedStudies.result!));
+		},
+		default:{
+			mutation: false,
+			cna: false
+		},
+		onResult: () => {
+			if (!this.initiallySelected.sampleListId || this.studiesHaveChangedSinceInitialization) {
+				this.dataTypePriority = profileAvailability(this.molecularProfilesInSelectedStudies.result!)
+			}
 		}
 	});
 
@@ -1049,10 +1071,22 @@ export class QueryStore
 
 	// SAMPLE LIST
 
+	private calculateSampleListId(dataTypePriority:{mutation: boolean, cna: boolean}): '0'|'1'|'2'|'all'
+	{
+		let {mutation, cna} = dataTypePriority;
+		if (mutation && cna)
+		    return '0';
+		if (mutation)
+		    return'1';
+		else if (cna)
+		    return '2';
+		return ALL_CASES_LIST_ID;
+	}
+
 	@computed get defaultSelectedSampleListId()
 	{
 		if (this.isVirtualStudyQuery) {
-			return ALL_CASES_LIST_ID;
+			return this.calculateSampleListId(this.dataTypePriority);
 		}
 
 		if (this.selectableSelectedStudyIds.length !== 1)
@@ -1109,12 +1143,15 @@ export class QueryStore
 
 	// GENES
 
-	@computed get oql():{ query: OQLQuery, error?: { start: number, end: number, message: string } }
+	@computed get oql(): {
+		query: SingleGeneQuery[],
+		error?: { start: number, end: number, message: string }
+	}
 	{
 		try
 		{
 			return {
-				query: this.geneQuery && oql_parser.parse(this.geneQuery.trim().toUpperCase()) || [],
+				query: this.geneQuery ? parseOQLQuery(this.geneQuery.trim().toUpperCase()) : [],
 				error: undefined
 			};
 		}
@@ -1142,11 +1179,11 @@ export class QueryStore
 		}
 	}
 
-	@computed get geneIds():string[]
+	@computed get geneIds(): string[]
 	{
 		try
 		{
-			return this.oql.query.map(line => line.gene).filter(gene => gene && gene !== 'DATATYPES');
+			return this.oql.query.map(line => line.gene);
 		}
 		catch (e)
 		{
@@ -1279,6 +1316,8 @@ export class QueryStore
 			if (haveExpInQuery && !expProfileSelected)
 				return "Expression specified in the list of genes, but not selected in the Molecular Profile Checkboxes.";
 
+		} else if(!(this.dataTypePriority.mutation || this.dataTypePriority.cna)){
+			return "Please select one or more molecular profiles.";
 		}
 		if (this.selectableSelectedStudyIds.length && this.selectedSampleListId === CUSTOM_CASE_LIST_ID)
 		{

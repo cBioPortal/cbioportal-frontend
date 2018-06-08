@@ -1,14 +1,14 @@
 import * as _ from 'lodash';
 import {
-    AlterationTypeConstants, AnnotatedExtendedAlteration, CaseAggregatedData, ExtendedAlteration
+    AlterationTypeConstants, AnnotatedExtendedAlteration, CaseAggregatedData, ExtendedAlteration,
+    IQueriedCaseData
 } from "../ResultsViewPageStore";
 import {
     alterationInfoForCaseAggregatedDataByOQLLine
 } from "shared/components/oncoprint/OncoprintUtils";
 import {makeGeneticTrackData} from "shared/components/oncoprint/DataUtils";
-import {OQLLineFilterOutput} from "shared/lib/oql/oqlfilter";
 import {GeneticTrackDatum} from "shared/components/oncoprint/Oncoprint";
-import {Sample, Gene} from "shared/api/generated/CBioPortalAPI";
+import {Sample, Gene, MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 import {ICaseAlteration, IOqlData, ISubAlteration} from "./CaseAlterationTable";
 import {IGeneAlteration} from "./GeneAlterationTable";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
@@ -74,10 +74,14 @@ export function generateOqlData(datum: GeneticTrackDatum,
     }
 
     return ({
-        // by default assume it is sequenced if no gene alteration data exists for a particular gene
-        sequenced: geneAlterationDataByGene && geneAlterationDataByGene[datum.gene] ?
-            geneAlterationDataByGene[datum.gene].sequenced > 0 : true,
-        geneSymbol: datum.gene,
+        // by default assume it is sequenced if the label is not a recognised
+        // gene symbol or if no gene alteration data exists for the gene; it
+        // should always be a gene symbol as long as the download tab doesn't
+        // use multi-gene tracks
+        sequenced: geneAlterationDataByGene && geneAlterationDataByGene[datum.trackLabel]
+            ? geneAlterationDataByGene[datum.trackLabel].sequenced > 0
+            : true,
+        geneSymbol: datum.trackLabel,
         mutation: proteinChanges,
         fusion: fusions,
         cna: cnaAlterations,
@@ -87,10 +91,7 @@ export function generateOqlData(datum: GeneticTrackDatum,
 }
 
 export function generateGeneAlterationData(
-    caseAggregatedDataByOQLLine?: {
-        cases:CaseAggregatedData<AnnotatedExtendedAlteration>,
-        oql:OQLLineFilterOutput<AnnotatedExtendedAlteration>
-    }[],
+    caseAggregatedDataByOQLLine?: IQueriedCaseData<AnnotatedExtendedAlteration>[],
     sequencedSampleKeysByGene: {[hugoGeneSymbol:string]:string[]} = {}): IGeneAlteration[]
 {
     return (caseAggregatedDataByOQLLine && !_.isEmpty(sequencedSampleKeysByGene)) ?
@@ -272,14 +273,12 @@ export function generateDownloadData(sampleAlterationDataByGene: {[key: string]:
 }
 
 export function generateCaseAlterationData(
-    caseAggregatedDataByOQLLine?: {
-        cases:CaseAggregatedData<AnnotatedExtendedAlteration>,
-        oql:OQLLineFilterOutput<AnnotatedExtendedAlteration>
-    }[],
+    selectedMolecularProfiles:MolecularProfile[],
+    caseAggregatedDataByOQLLine?: IQueriedCaseData<AnnotatedExtendedAlteration>[],
     genePanelInformation?: CoverageInformation,
     samples: Sample[] = [],
-    geneAlterationDataByGene?: {[gene: string]: IGeneAlteration}): ICaseAlteration[]
-{
+    geneAlterationDataByGene?: {[gene: string]: IGeneAlteration}
+): ICaseAlteration[] {
     const caseAlterationData: {[studyCaseId: string] : ICaseAlteration} = {};
 
     if (caseAggregatedDataByOQLLine &&
@@ -290,7 +289,7 @@ export function generateCaseAlterationData(
 
         caseAggregatedDataByOQLLine.forEach(data => {
             const geneticTrackData = makeGeneticTrackData(
-                data.cases.samples, data.oql.gene, samples, genePanelInformation);
+                data.cases.samples, data.oql.gene, samples, genePanelInformation, selectedMolecularProfiles);
 
             geneticTrackData.forEach(datum => {
                 const studyId = datum.study_id;

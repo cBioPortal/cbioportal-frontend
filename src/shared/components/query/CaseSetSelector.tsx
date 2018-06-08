@@ -25,57 +25,85 @@ export function filterCaseSetOptions(opt: ReactSelectOptionWithName, filter: str
 	return _.includes(opt.textLabel.toLowerCase(), filter.toLowerCase());
 }
 
+export enum CaseSetId {
+	"custom"       = '-1',
+	"mutation_cna" = '0',
+	"mutation"     = '1',
+	'cna'          = '2',
+	'all'          = 'all'
+}
+
+type CustomCaseSet = {
+	name: string,
+	description:string,
+	value: CaseSetId,
+	isdefault: boolean,
+	dataType?:{mutation: boolean, cna: boolean}
+};
+
+const CustomCaseSets: CustomCaseSet[] = [ 
+	{name: 'All', description: 'All cases in the selected cohorts', value: CaseSetId.all, isdefault : false} ,
+	{name: 'Cases with both mutations and copy number alterations data', description: 'All cases with both mutations and copy number alterations data', value: CaseSetId.mutation_cna, isdefault : false, dataType:{mutation:true, cna:true}},
+	{name: 'Cases with mutations data', description: 'All cases with mutations data', value: CaseSetId.mutation, isdefault : false, dataType:{mutation:true, cna:false}},
+	{name: 'Cases with copy number alterations data', description: 'All cases with copy number alterations data', value: CaseSetId.cna, isdefault : false, dataType:{mutation:false, cna:true}},
+	{name: 'User-defined Case List', description: 'Specify your own case list', value: CaseSetId.custom, isdefault : true}
+]
+
 @observer
 export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 {
 	@computed get caseSetOptions() : ReactSelectOptionWithName[]
 	{
-		let ret = [
-			...this.store.sampleLists.result.map(sampleList => {
-				return {
-					label: (
-						<DefaultTooltip
-							placement="right"
-							mouseEnterDelay={0}
-							overlay={<div className={styles.tooltip}>{sampleList.description}</div>}
-						>
-							<span>{`${sampleList.name} (${sampleList.sampleCount})`}</span>
-						</DefaultTooltip>
-					),
-					value: sampleList.sampleListId,
-					textLabel:sampleList.name
-				};
-			}),
-			{
+		let ret = this.store.sampleLists.result.map(sampleList => {
+			return {
 				label: (
 					<DefaultTooltip
 						placement="right"
 						mouseEnterDelay={0}
-						overlay={<div className={styles.tooltip}>Specify your own case list</div>}
+						overlay={<div className={styles.tooltip}>{sampleList.description}</div>}
 					>
-						<span>User-defined Case List</span>
+						<span>{`${sampleList.name} (${sampleList.sampleCount})`}</span>
 					</DefaultTooltip>
 				),
-				value: CUSTOM_CASE_LIST_ID,
-				textLabel:'User-defined Case List'
+				value: sampleList.sampleListId,
+				textLabel:sampleList.name
+			};
+		});
+
+		let {mutation,cna} = this.store.profileAvailability.result;
+
+		//filter case lists based on molecular profiles
+		let filteredcustomCaseSets = CustomCaseSets.filter(s=>{
+			if(this.store.isVirtualStudyQuery){
+				if( s.dataType && 
+					(!mutation || !cna) && 
+					(s.dataType.mutation !== mutation || s.dataType.cna !== cna)){
+					return false
+				}
+				return true;
+			} else {
+				return s.isdefault;
 			}
-		];
-		if (this.store.isVirtualStudyQuery) {
-			ret = [{
-				value: ALL_CASES_LIST_ID,
+		})
+
+		let customCaseSets = filteredcustomCaseSets.map(s => {
+			let displayText = (s.value === CaseSetId.all) ? `${s.name} (${this.store.selectableSelectedStudies_totalSampleCount})` : s.name;
+			return {
+				value: s.value,
 				label: (
 					<DefaultTooltip
 						placement="right"
 						mouseEnterDelay={0}
-						overlay={<div className={styles.tooltip}>All cases in the selected studies</div>}
+						overlay={<div className={styles.tooltip}>{s.description}</div>}
 					>
-						<span>All {`(${this.store.selectableSelectedStudies_totalSampleCount})`}</span>
+						<span>{displayText}</span>
 					</DefaultTooltip>
 				),
-				textLabel:'All'
-			}].concat(ret);
-		}
-		return ret;
+				textLabel: displayText
+			}
+		});
+
+		return ret.concat(customCaseSets);
 	}
 
 	render()
