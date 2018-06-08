@@ -4,7 +4,7 @@ import { ResultsViewPageStore } from "../ResultsViewPageStore";
 import { observable } from 'mobx';
 import ExpressionEnrichmentContainer from 'pages/resultsView/enrichments/ExpressionEnrichmentsContainer';
 import Loader from 'shared/components/loadingIndicator/LoadingIndicator';
-import DataSetDropdown from 'pages/resultsView/enrichments/DataSetDropdown';
+import EnrichmentsDataSetDropdown from 'pages/resultsView/enrichments/EnrichmentsDataSetDropdown';
 import { MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
 import autobind from 'autobind-decorator';
 
@@ -28,8 +28,9 @@ export default class ProteinEnrichmentsTab extends React.Component<IProteinEnric
 
         return (
             <div>
-                <DataSetDropdown dataSets={this.props.store.proteinEnrichmentProfiles.result!} onChange={this.onProfileChange}
-                    selectedValue={JSON.stringify(this.props.store.selectedEnrichmentProteinProfile)} />
+                <EnrichmentsDataSetDropdown dataSets={this.props.store.proteinEnrichmentProfiles.result!} onChange={this.onProfileChange}
+                    selectedValue={this.props.store.selectedEnrichmentProteinProfile.molecularProfileId} 
+                    molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount.result!}/>
                 <ExpressionEnrichmentContainer data={this.props.store.proteinEnrichmentData.result!}
                     selectedProfile={this.props.store.selectedEnrichmentProteinProfile} store={this.props.store} />
             </div>
