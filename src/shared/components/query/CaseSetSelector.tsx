@@ -10,6 +10,7 @@ import {getStudySummaryUrl} from '../../api/urls';
 import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import SectionHeader from "../sectionHeader/SectionHeader";
 import {ReactSelectOption} from "react-select";
+import { getFilteredCustomCaseSets } from 'shared/components/query/CaseSetSelectorUtils';
 
 const styles = styles_any as {
 	CaseSetSelector: string,
@@ -24,30 +25,6 @@ export interface ReactSelectOptionWithName extends ReactSelectOption<any> {
 export function filterCaseSetOptions(opt: ReactSelectOptionWithName, filter: string) {
 	return _.includes(opt.textLabel.toLowerCase(), filter.toLowerCase());
 }
-
-export enum CaseSetId {
-	"custom"       = '-1',
-	"mutation_cna" = '0',
-	"mutation"     = '1',
-	'cna'          = '2',
-	'all'          = 'all'
-}
-
-type CustomCaseSet = {
-	name: string,
-	description:string,
-	value: CaseSetId,
-	isdefault: boolean,
-	dataType?:{mutation: boolean, cna: boolean}
-};
-
-const CustomCaseSets: CustomCaseSet[] = [ 
-	{name: 'All', description: 'All cases in the selected cohorts', value: CaseSetId.all, isdefault : false} ,
-	{name: 'Cases with both mutations and copy number alterations data', description: 'All cases with both mutations and copy number alterations data', value: CaseSetId.mutation_cna, isdefault : false, dataType:{mutation:true, cna:true}},
-	{name: 'Cases with mutations data', description: 'All cases with mutations data', value: CaseSetId.mutation, isdefault : false, dataType:{mutation:true, cna:false}},
-	{name: 'Cases with copy number alterations data', description: 'All cases with copy number alterations data', value: CaseSetId.cna, isdefault : false, dataType:{mutation:false, cna:true}},
-	{name: 'User-defined Case List', description: 'Specify your own case list', value: CaseSetId.custom, isdefault : true}
-]
 
 @observer
 export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
@@ -70,24 +47,11 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 			};
 		});
 
-		let {mutation,cna} = this.store.profileAvailability.result;
-
-		//filter case lists based on molecular profiles
-		let filteredcustomCaseSets = CustomCaseSets.filter(s=>{
-			if(this.store.isVirtualStudyQuery){
-				if( s.dataType && 
-					(!mutation || !cna) && 
-					(s.dataType.mutation !== mutation || s.dataType.cna !== cna)){
-					return false
-				}
-				return true;
-			} else {
-				return s.isdefault;
-			}
-		})
+		let filteredcustomCaseSets = getFilteredCustomCaseSets(
+			this.store.isVirtualStudyQuery,
+			this.store.profiledSamplesCount.result);
 
 		let customCaseSets = filteredcustomCaseSets.map(s => {
-			let displayText = (s.value === CaseSetId.all) ? `${s.name} (${this.store.selectableSelectedStudies_totalSampleCount})` : s.name;
 			return {
 				value: s.value,
 				label: (
@@ -96,10 +60,10 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 						mouseEnterDelay={0}
 						overlay={<div className={styles.tooltip}>{s.description}</div>}
 					>
-						<span>{displayText}</span>
+						<span>{s.name}</span>
 					</DefaultTooltip>
 				),
-				textLabel: displayText
+				textLabel: s.name
 			}
 		});
 
@@ -115,7 +79,7 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 				<div>
 				<SectionHeader className="sectionLabel"
 							   secondaryComponent={<a href={getStudySummaryUrl(this.store.selectableSelectedStudyIds)} target="_blank">To build your own case set, try out our enhanced Study View.</a>}
-							   promises={[this.store.sampleLists, this.store.asyncCustomCaseSet]}>
+							   promises={[this.store.sampleLists, this.store.asyncCustomCaseSet, this.store.profiledSamplesCount]}>
 					Select Patient/Case Set:
 				</SectionHeader>
 				</div>
