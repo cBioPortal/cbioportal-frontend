@@ -27,7 +27,7 @@ import request, {Response} from "superagent";
 import formSubmit from "shared/lib/formSubmit";
 import {
 	MolecularProfileQueryParams, NonMolecularProfileQueryParams, queryUrl,
-	nonMolecularProfileParams, currentQueryParams, molecularProfileParams, queryParams, profileAvailability
+	nonMolecularProfileParams, currentQueryParams, molecularProfileParams, queryParams, profileAvailability, categorizedSamplesCount
 } from "./QueryStoreUtils";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import getOverlappingStudies from "../../lib/getOverlappingStudies";
@@ -37,6 +37,7 @@ import { getHierarchyData } from "shared/lib/StoreUtils";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import {VirtualStudy} from "shared/model/VirtualStudy";
 import { getGenesetsFromHierarchy, getVolcanoPlotMinYValue, getVolcanoPlotData } from "shared/components/query/GenesetsSelectorStore";
+import SampleListsInStudyCache from 'shared/cache/SampleListsInStudyCache';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -213,6 +214,15 @@ export class QueryStore
 
 	@computed get virtualStudiesMap():{[id:string]:VirtualStudy} {
 		return _.keyBy(this.virtualStudies.result, study => study.id);
+	}
+
+	@computed get selectedVirtualStudies():VirtualStudy[] {
+		return _.reduce(this.selectableSelectedStudies,(acc:VirtualStudy[], study)=>{
+			if (this.isVirtualStudy(study.studyId)) {
+				acc.push(this.virtualStudiesMap[study.studyId])
+			}
+			return acc;
+		},[]);
 	}
 
 	//gets a list of all physical studies in the selection
@@ -568,6 +578,24 @@ export class QueryStore
 				await this.molecularProfilesInStudyCache.getPromise(this.physicalStudyIdsInSelection, true);
 			return _.flatten(profiles.map(d=>(d.data ? d.data : [])));
 		},
+		default: []
+	});
+
+	readonly sampleListInSelectedStudies = remoteData<SampleList[]>({
+		await: () => {
+			return this.physicalStudyIdsInSelection.map(studyId => {
+				return this.sampleListsInStudyCache.get(studyId)
+			})
+		},
+		invoke: async () => {
+			return _.reduce(this.physicalStudyIdsInSelection,(acc: SampleList[], studyId)=>{
+				let sampleLists = this.sampleListsInStudyCache.get(studyId).result
+				if(!_.isUndefined(sampleLists)){
+					acc = acc.concat(sampleLists)
+				}
+				return acc;
+			},[]);
+		},
 		default: [],
 		onResult: () => {
 			if (!this.initiallySelected.sampleListId || this.studiesHaveChangedSinceInitialization) {
@@ -592,15 +620,29 @@ export class QueryStore
 		}
 	});
 
+	readonly profiledSamplesCount = remoteData<{ w_mut: number, w_cna: number, w_mut_cna: number, all: number }>({
+		await: () => [this.sampleListInSelectedStudies],
+		invoke: async () => {
+			return categorizedSamplesCount(
+				this.sampleListInSelectedStudies.result,
+				this.selectableSelectedStudyIds,
+				this.selectedVirtualStudies);
+		},
+		default: {
+			w_mut: 0,
+			w_cna: 0,
+			w_mut_cna: 0,
+			all:0
+		}
+	});
+
 	readonly sampleLists = remoteData({
 		invoke: async () => {
 			if (!this.isSingleNonVirtualStudySelected) {
 				return [];
 			}
-			let sampleLists = await client.getAllSampleListsInStudyUsingGET({
-				studyId: this.selectableSelectedStudyIds[0],
-				projection: 'DETAILED'
-			});
+			this.sampleListsInStudyCache.get(this.selectableSelectedStudyIds[0]).result!
+			let sampleLists = await this.sampleListsInStudyCache.get(this.selectableSelectedStudyIds[0]).result!
 			return _.sortBy(sampleLists, sampleList => sampleList.name);
 		},
 		default: [],
@@ -896,39 +938,6 @@ export class QueryStore
 		return ids.filter(id=>!(id in selectableStudiesSet));
 	}
 
-	@computed get selectableSelectedStudies_totalSampleCount()
-	{
-		const result:{[id:string]:number} = {};
-		const virtualStudySamples:{[id:string]:string[]} = {};
-
-		this.selectableSelectedStudies.forEach(study => {
-			//merge samples for a study across all virtual studies 
-			if(this.isVirtualStudy(study.studyId)){
-				if(this.virtualStudiesMap[study.studyId]){
-					this.virtualStudiesMap[study.studyId]
-						.data
-						.studies
-						.forEach(study => {
-							let samples = virtualStudySamples[study.id] || []
-							//samples may contain duplicates
-							virtualStudySamples[study.id] = samples.concat(study.samples)
-						});
-				}
-			}else{
-				//add selected physical studies samples count to result
-				result[study.studyId] =study.allSampleCount;
-			}
-		})
-		//if the physical study in virtual study is not present result object, then 
-		//add the study and samples count into result object
-		Object.keys(virtualStudySamples).forEach(id => {
-			if(!result[id]){
-				result[id] = _.uniq(virtualStudySamples[id]).length;
-			}
-		});
-		return Object.keys(result).reduce((sum, id) => sum + result[id], 0);
-	}
-
 	public isVirtualStudy(studyId:string):boolean {
 		// if the study id doesn't correspond to one in this.cancerStudies, then its a virtual Study
 		return !this.cancerStudyIdsSet.result[studyId];
@@ -1071,22 +1080,10 @@ export class QueryStore
 
 	// SAMPLE LIST
 
-	private calculateSampleListId(dataTypePriority:{mutation: boolean, cna: boolean}): '0'|'1'|'2'|'all'
-	{
-		let {mutation, cna} = dataTypePriority;
-		if (mutation && cna)
-		    return '0';
-		if (mutation)
-		    return'1';
-		else if (cna)
-		    return '2';
-		return ALL_CASES_LIST_ID;
-	}
-
 	@computed get defaultSelectedSampleListId()
 	{
 		if (this.isVirtualStudyQuery) {
-			return this.calculateSampleListId(this.dataTypePriority);
+			return ALL_CASES_LIST_ID;
 		}
 
 		if (this.selectableSelectedStudyIds.length !== 1)
@@ -1695,6 +1692,10 @@ export class QueryStore
 	@cached get molecularProfilesInStudyCache() {
 		return new MolecularProfilesInStudyCache();
 		
+	}
+
+	@cached get sampleListsInStudyCache() {
+		return new SampleListsInStudyCache();
 	}
 }
 
