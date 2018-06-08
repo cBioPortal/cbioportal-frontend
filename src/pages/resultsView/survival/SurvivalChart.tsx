@@ -38,35 +38,6 @@ export interface ISurvivalChartProps {
     styleOpts?: ConfigurableSurvivalChartStyleOpts;
 }
 
-type AxisStyleOpts = {
-    ticks: {
-        size: number,
-        stroke: string,
-        strokeWidth: number
-    },
-    tickLabels: {
-        padding: number, fill: string
-    },
-    axisLabel: {
-        padding: number, fill: string
-    },
-    grid: { opacity: number },
-    axis: { stroke: string, strokeWidth: number }
-}
-type StyleOpts = {
-    width: number,
-    height: number,
-    padding: { top: number, bottom: number, left: number, right: number },
-    axis: {
-        x: AxisStyleOpts,
-        y: AxisStyleOpts
-    },
-    legend: {
-        x: number
-        y: number
-    }
-}
-
 export type ConfigurableSurvivalChartStyleOpts = {
     width?: number,
     height?: number,
@@ -82,40 +53,23 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     private unalteredLegendText = 'Cases without Alteration(s) in Query Gene(s)';
     private svgContainer: any;
     private svgsaver = new SvgSaver();
-    private styleOptsDefaultProps:StyleOpts = {
+    private styleOptsDefaultProps:any = {
         width: 900,
         height: 500,
         padding: {top: 20, bottom: 50, left: 60, right: 20},
         axis: {
             x: {
-                ticks: {
-                    size: 8,
-                    stroke: 'black',
-                    strokeWidth: 1
-                },
-                tickLabels: {
-                    padding: 2, fill: "black"
-                },
                 axisLabel: {
-                    padding: 35, fill: "black"
+                    padding: 35
                 },
-                grid: {opacity: 0},
-                axis: {stroke: "black", strokeWidth: 1}
+                grid: {opacity: 0}
             },
             y: {
-                ticks: {
-                    size: 8,
-                    stroke: 'black',
-                    strokeWidth: 1
-                },
-                tickLabels: {
-                    padding: 2, fill: "black"
-                },
                 axisLabel: {
                     padding: 45, fill: "black"
                 },
-                grid: {opacity: 0},
-                axis: {stroke: "black", strokeWidth: 1}
+                grid: {opacity: 0}
+
             }
         },
         legend: {
@@ -126,7 +80,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
     @computed
     get styleOpts() {
-        let configurableOpts: StyleOpts = _.merge({}, this.styleOptsDefaultProps, this.props.styleOpts);
+        let configurableOpts: any = _.merge({}, this.styleOptsDefaultProps, this.props.styleOpts);
         configurableOpts.padding.right = this.props.showLegend ? 300 : configurableOpts.padding.right;
         configurableOpts.legend.x = configurableOpts.width - configurableOpts.padding.right;
         return configurableOpts;
