@@ -64,7 +64,7 @@ function initStore(queryStore: QueryStore) {
     // ultimate we will phase this out and this information will be stored in router etc.
     //const qSession:any = (window as any).QuerySession;
     var samplesSpecification:any = [];
-    if(_.includes(['all', '0', '1', '2'],serverVars.caseSetProperties.case_set_id)){
+    if(_.includes(['all', 'w_mut_cna', 'w_mut', 'w_cna'],serverVars.caseSetProperties.case_set_id)){
         var studyToSampleMap = serverVars.studySampleObj;
         var studies = Object.keys(studyToSampleMap);
         for (var i=0; i<studies.length; i++) {
