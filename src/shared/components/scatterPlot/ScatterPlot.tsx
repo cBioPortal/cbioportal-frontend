@@ -330,23 +330,21 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                                     domain={this.plotDomain.x}
                                     orientation="bottom"
                                     offsetY={50}
-                                    style={VictoryAxisStyle}
                                     crossAxis={false}
                                     tickCount={NUM_AXIS_TICKS}
                                     tickFormat={this.tickFormatX}
-                                    axisLabelComponent={<VictoryLabel style={{fontFamily:this.fontFamily}} dy={25}/>}
+                                    axisLabelComponent={<VictoryLabel dy={25}/>}
                                     label={this.props.axisLabelX}
                                 />
                                 <VictoryAxis
                                     domain={this.plotDomain.y}
-                                    style={VictoryAxisStyle}
                                     offsetX={50}
                                     orientation="left"
                                     crossAxis={false}
                                     tickCount={NUM_AXIS_TICKS}
                                     tickFormat={this.tickFormatY}
                                     dependentAxis={true}
-                                    axisLabelComponent={<VictoryLabel style={{fontFamily:this.fontFamily}} dy={-50}/>}
+                                    axisLabelComponent={<VictoryLabel dy={-50}/>}
                                     label={this.props.axisLabelY}
                                 />
                                 <VictoryScatter
