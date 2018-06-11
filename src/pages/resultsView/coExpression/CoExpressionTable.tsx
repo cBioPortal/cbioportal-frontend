@@ -107,9 +107,8 @@ export default class CoExpressionTable extends React.Component<ICoExpressionTabl
 
     private get paginationProps() {
         return {
-            showMoreButton: false,
-            showItemsPerPageSelector: false
-        };
+            itemsPerPageOptions: [25]
+        }
     }
 
     render() {
