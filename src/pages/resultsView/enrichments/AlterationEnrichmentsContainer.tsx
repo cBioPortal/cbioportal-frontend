@@ -117,7 +117,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         
         return (
             <div className={styles.Container}>
-                <div>
+                <div className={styles.LeftColumn}>
                     <MiniScatterChart data={getAlterationScatterData(this.data, this.props.store.hugoGeneSymbols)} 
                         xAxisLeftLabel="mutual exclusivity" xAxisRightLabel="co-occurrence" xAxisDomain={15} 
                         xAxisTickValues={[-10, 0, 10]}  onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection} 

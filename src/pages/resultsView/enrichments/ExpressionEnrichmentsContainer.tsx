@@ -115,7 +115,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
 
         return (
             <div className={styles.Container}>
-                <div>
+                <div className={styles.LeftColumn}>
                     <MiniScatterChart data={data} 
                         xAxisLeftLabel="under-expressed" xAxisRightLabel="over-expressed" xAxisDomain={Math.ceil(Math.abs(maxData.x))} 
                         xAxisTickValues={null} onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection} 
