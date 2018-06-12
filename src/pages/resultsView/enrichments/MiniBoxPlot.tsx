@@ -119,7 +119,7 @@ export default class MiniBoxPlot extends React.Component<IMiniBoxPlotProps, {}> 
             <div>
                 {this.props.selectedGeneHugo && this.scatterData.length > 0 &&
                     <div>
-                        <div>
+                        <div class="small" style={{ margin:"10px 0", paddingRight:20 }}>
                             Boxplots of {this.props.selectedProfile.name} data for altered and unaltered cases
                         </div>
                         <div className="posRelative">
