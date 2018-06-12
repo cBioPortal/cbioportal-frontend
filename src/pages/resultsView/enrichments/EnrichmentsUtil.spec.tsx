@@ -396,8 +396,8 @@ describe("EnrichmentsUtil", () => {
 
         it("returns correct scatter data", () => {
             assert.deepEqual(getAlterationScatterData(exampleAlterationEnrichmentRowData, ["EGFR"]), [
-                {x: 10, y: 2.804820678721167, hugoGeneSymbol: "FBXW4", logRatio: Infinity, qValue: 0.9385345997286061},
-                {x: 10, y: 2.804820678721167, hugoGeneSymbol: "CAND2", logRatio: Infinity, qValue: 0.9385345997286061},
+                {x: 10, y: 2.804820678721167, hugoGeneSymbol: "FBXW4", logRatio: Infinity, qValue: 0.9385345997286061, hovered: false},
+                {x: 10, y: 2.804820678721167, hugoGeneSymbol: "CAND2", logRatio: Infinity, qValue: 0.9385345997286061, hovered: false},
             ]);
         });
     });
@@ -410,11 +410,11 @@ describe("EnrichmentsUtil", () => {
         it("returns correct scatter data", () => {
             assert.deepEqual(getExpressionScatterData(exampleExpressionEnrichmentRowData, ["EGFR"]), [
                 {x: -0.7514352361955119, y: 8.713104055017682, hugoGeneSymbol: "DHRS7B", entrezGeneId: 25979, 
-                    logRatio: -0.7514352361955119, qValue: 0.000024032306741578182},
+                    logRatio: -0.7514352361955119, qValue: 0.000024032306741578182, hovered: false},
                 {x: 1.373692179998275, y: 8.431950829601448, hugoGeneSymbol: "PTPN3", entrezGeneId: 5774, 
-                    logRatio: 1.373692179998275, qValue: 0.000024032306741578182},
+                    logRatio: 1.373692179998275, qValue: 0.000024032306741578182, hovered: false},
                 {x: 2.652285592481328, y: 8.249349711250797, hugoGeneSymbol: "EPHB3", entrezGeneId: 2049,
-                    logRatio: 2.652285592481328, qValue: 0.000024395252515979897}
+                    logRatio: 2.652285592481328, qValue: 0.000024395252515979897, hovered: false}
             ]);
         });
     });
