@@ -148,7 +148,7 @@ describe("SurvivalUtil", () => {
                     {months: 0, status: true, patientId: "", studyId: ""}
                 ], [
                     {months: 0, status: false, patientId: "", studyId: ""}
-                ]), 0.31731050786294346);
+                ]), 0.31731050786294357);
             assert.isNaN(calculateLogRank([
                     {months: 1, status: false, patientId: "", studyId: ""}
                 ], [

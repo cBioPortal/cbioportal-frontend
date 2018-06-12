@@ -413,7 +413,7 @@ describe("EnrichmentsUtil", () => {
                     logRatio: -0.7514352361955119, qValue: 0.000024032306741578182},
                 {x: 1.373692179998275, y: 8.431950829601448, hugoGeneSymbol: "PTPN3", entrezGeneId: 5774, 
                     logRatio: 1.373692179998275, qValue: 0.000024032306741578182},
-                {x: 2.652285592481328, y: 8.2493497112508, hugoGeneSymbol: "EPHB3", entrezGeneId: 2049, 
+                {x: 2.652285592481328, y: 8.249349711250797, hugoGeneSymbol: "EPHB3", entrezGeneId: 2049,
                     logRatio: 2.652285592481328, qValue: 0.000024395252515979897}
             ]);
         });
@@ -447,7 +447,7 @@ describe("EnrichmentsUtil", () => {
         });
 
         it("should return 3 for ", () => {
-            assert.equal(calculateLogRatio(exampleExpressionEnrichments[0], "CONTINUOUS", false), -0.11825127752858446);
+            assert.equal(calculateLogRatio(exampleExpressionEnrichments[0], "CONTINUOUS", false), -0.11825127752858444);
         });
     });
 
