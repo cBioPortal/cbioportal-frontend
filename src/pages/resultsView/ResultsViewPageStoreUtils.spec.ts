@@ -1082,7 +1082,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
                     }
                 });
             });
-
+            //
             sinon.stub(client, "fetchStudiesUsingPOST").callsFake(function fakeFn(parameters: {
                 'studyIds': Array < string > ,
                 'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META"
@@ -1099,8 +1099,8 @@ describe("ResultsViewPageStoreUtils", ()=>{
             });
         })
         after(() => {
-            (sessionServiceClient.getVirtualStudy as sinon.SinonStub).restore();
-            (client.fetchStudiesUsingPOST as sinon.SinonStub).restore();
+            //(sessionServiceClient.getVirtualStudy as sinon.SinonStub).restore();
+            //(client.fetchStudiesUsingPOST as sinon.SinonStub).restore();
         });
 
         it("when queried ids is empty", async ()=>{
