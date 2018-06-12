@@ -51,7 +51,8 @@ export function getAlterationScatterData(alterationEnrichments: AlterationEnrich
             x: roundLogRatio(Number(alterationEnrichment.logRatio), 10), y: -Math.log10(alterationEnrichment.pValue),
             hugoGeneSymbol: alterationEnrichment.hugoGeneSymbol,
             qValue: alterationEnrichment.qValue,
-            logRatio: alterationEnrichment.logRatio
+            logRatio: alterationEnrichment.logRatio,
+            hovered: false
         };
     });
 }
@@ -65,7 +66,8 @@ export function getExpressionScatterData(expressionEnrichments: ExpressionEnrich
             hugoGeneSymbol: expressionEnrichment.hugoGeneSymbol,
             entrezGeneId: expressionEnrichment.entrezGeneId,
             qValue: expressionEnrichment.qValue,
-            logRatio: expressionEnrichment.logRatio
+            logRatio: expressionEnrichment.logRatio,
+            hovered: false
         };
     });
 }
