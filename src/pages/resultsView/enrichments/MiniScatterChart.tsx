@@ -67,7 +67,7 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
 
         return (
             <div className="posRelative">
-                <div className="borderedChart" style={{ marginRight: 8, marginTop: 8 }}>
+                <div className="borderedChart inlineBlock">
                     <VictoryChart containerComponent={<VictorySelectionContainer responsive={false}
                         onSelection={(points: any, bounds: any, props: any) => this.handleSelection(points, bounds, props)} 
                         onSelectionCleared={(props:any) => this.handleSelectionCleared(props)}/>} theme={CBIOPORTAL_VICTORY_THEME}
@@ -86,12 +86,12 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                         <VictoryLabel style={axisLabelStyles} text={"← " + this.props.xAxisLeftLabel} x={60} y={300}/>
                         <VictoryLabel style={axisLabelStyles} text={this.props.xAxisRightLabel + " →"} x={200} y={300}/>
                         <VictoryLabel style={axisLabelStyles} text="significance →" x={320} y={210} angle={-90}/>
-                        <VictoryScatter style={{ data: { fill: (datum:any) => datum.qValue < 0.05 ? "#58ACFA" : "#D3D3D3", fillOpacity: 0.4 } }} 
+                        <VictoryScatter style={{ data: { fill: (datum:any) => datum.qValue < 0.05 ? "#58ACFA" : "#D3D3D3", fillOpacity: 0.4 } }}
                             data={this.props.data} symbol="circle" size={(datum: any, active: any) => active ? 10 : 3} events={events} />
                     </VictoryChart>
                 </div>
                 {this.tooltipModel &&
-                    <Popover className={styles.ScatterTooltip} positionLeft={this.tooltipModel.x + 15} 
+                    <Popover className={"cbioTooltip"} positionLeft={this.tooltipModel.x + 15}
                         positionTop={this.tooltipModel.y - 25}>
                         Gene: {this.tooltipModel.datum.hugoGeneSymbol}<br/>
                         Log Ratio: {formatLogOddsRatio(this.tooltipModel.datum.logRatio)}<br/>
