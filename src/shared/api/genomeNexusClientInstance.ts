@@ -9,6 +9,6 @@ async function checkVersion(client:GenomeNexusAPI) {
 }
 
 const client = new GenomeNexusAPI(getGenomeNexusApiUrl());
-checkVersion(client);
+//checkVersion(client);
 
 export default client;
