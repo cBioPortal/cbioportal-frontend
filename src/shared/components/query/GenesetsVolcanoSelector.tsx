@@ -16,6 +16,7 @@ import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicato
 import { VictoryChart, VictoryScatter, VictoryTheme, VictorySelectionContainer,
     VictoryAxis, VictoryLabel, VictoryLine } from 'victory';
 import {QueryStoreComponent} from "./QueryStore";
+import CBIOPORTAL_VICTORY_THEME from "../../theme/cBioPoralTheme";
 
 const styles = styles_any as {
     GenesetsVolcanoSelectorWindow: string,
@@ -87,7 +88,7 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<Geneset
                     && (this.props.plotData) && (this.props.maxY)
                     && (this.store.volcanoPlotTableData.isComplete) && (this.props.data) && (
                 <VictoryChart
-                    theme={VictoryTheme.material}
+                    theme={CBIOPORTAL_VICTORY_THEME}
                     width={510}
                     containerComponent={
                         <VictorySelectionContainer
@@ -104,7 +105,6 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<Geneset
                     tickValues={[-1, -0.5, 0, 0.5, 1]}
                     style={{axisLabel: {padding: 35}}}
                     label={"GSVA score"}
-                    theme={VictoryTheme.material}
                     offsetY={50}
                     standalone={false}
                 />
@@ -112,7 +112,6 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<Geneset
                     domain={[0, this.props.maxY]}
                     style={{axisLabel: {padding: 35}, stroke: "none"}}
                     label={"-log10 p-value"}
-                    theme={VictoryTheme.material}
                     offsetX={50}
                     standalone={false}
                 />
@@ -141,11 +140,11 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<Geneset
                       { x: 0, y: this.props.maxY }
                     ]}
                 />
-                  <VictoryScatter
-                      style={{data: {fillOpacity: 0.3}}}
-                      size={3}
-                      data={this.props.plotData}
-                  />
+                <VictoryScatter
+                    style={{data: {  fill: (d: GenesetsVolcanoSelectorProps["plotData"]) => (d) ? d.fill : "", fillOpacity: 0.3}}}
+                    size={3}
+                    data={this.props.plotData}
+                />
                 </VictoryChart>
                       )
                   }
