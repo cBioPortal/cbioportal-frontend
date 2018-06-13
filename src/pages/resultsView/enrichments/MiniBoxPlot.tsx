@@ -118,12 +118,12 @@ export default class MiniBoxPlot extends React.Component<IMiniBoxPlotProps, {}> 
         return (
             <div>
                 {this.props.selectedGeneHugo && this.scatterData.length > 0 &&
-                    <div style={{width: 350, paddingTop: 40}}>
-                        <div style={{paddingBottom: 5}}>
+                    <div>
+                        <div class="small" style={{ margin:"10px 0", paddingRight:20 }}>
                             Boxplots of {this.props.selectedProfile.name} data for altered and unaltered cases
                         </div>
                         <div className="posRelative">
-                            <div className="borderedChart">
+                            <div className="borderedChart inlineBlock posRelative">
                                 <div className="btn-group" style={{position:'absolute', zIndex:10, right: 10 }} role="group">
                                     <button className={`btn btn-default btn-xs`} onClick={this.downloadSvg}>
                                         SVG <i className="fa fa-cloud-download" />
@@ -135,20 +135,21 @@ export default class MiniBoxPlot extends React.Component<IMiniBoxPlotProps, {}> 
                                         Data <i className="fa fa-cloud-download" />
                                     </button>
                                 </div>
-                                <VictoryChart domainPadding={{ x: 60, y: 20 }} containerComponent={<VictoryContainer responsive={false} 
-                                    containerRef={(ref: any) => this.svgContainer = ref}/>} height={350} width={350} 
-                                    padding={{ top: 50, bottom: 70, left: 60, right: 40 }} theme={CBIOPORTAL_VICTORY_THEME}>
+                                <VictoryChart domainPadding={{ x: 60, y: 20 }}  height={350} width={350} padding={{ top: 40, bottom: 60, left: 60, right: 40 }}
+                                              containerComponent={<VictoryContainer responsive={false}
+                                    containerRef={(ref: any) => this.svgContainer = ref}/>}
+                                              theme={CBIOPORTAL_VICTORY_THEME}>
                                     <VictoryAxis tickValues={[1, 2]} tickFormat={(t: any) => t === 1 ? "Altered" : "Unaltered"}
                                         label={"Query: " + shortenGenesLabel(this.props.queryGenes, 2) + "\n(q-Value: " + 
                                         toConditionalPrecision(this.props.selectedGeneQValue, 3, 0.01) + ")"} offsetY={70}
                                         style={{
-                                            axisLabel: { padding: 40, fill: "black", fontSize: 14 },
-                                            axis: { stroke: "black", strokeWidth: 1 }, grid: {stroke: "none"}
+                                            axisLabel: { padding: 40 },
+                                            grid: {stroke: "none"}
                                     }} />
                                     <VictoryAxis label={this.props.selectedGeneHugo + ", " + this.props.selectedProfile.name} 
                                         dependentAxis={true} style={{
-                                            axisLabel: { padding: 40, fill: "black", fontSize: 14 },
-                                            axis: { stroke: "black", strokeWidth: 1 }, grid: {stroke: "none"}
+                                            axisLabel: { padding: 40 },
+                                            grid: {stroke: "none"}
                                     }}/>
                                     <VictoryBoxPlot data={getBoxPlotModels(this.scatterData)} boxWidth={60} whiskerWidth={30} style={{
                                         q1: { fillOpacity: 0, strokeWidth: 1, stroke: "#BDBDBD" },
@@ -158,12 +159,12 @@ export default class MiniBoxPlot extends React.Component<IMiniBoxPlotProps, {}> 
                                         max: { strokeWidth: 1, stroke: "#BDBDBD" }
                                     }}/>
                                     <VictoryScatter data={this.scatterData} events={events} size={(datum: any, active: any) => active ? 10 : 3}
-                                        style={{ data: { fill: "#58ACFA", strokeWidth: 1, stroke: "#0174DF" } }}/>
+                                        style={{ data: { fill: "#58ACFA", strokeWidth: 0, stroke: "#0174DF" } }}/>
                                 </VictoryChart>
                             </div>
                             {this.tooltipModel &&
                                 <Popover positionLeft={this.tooltipModel.x + 22} 
-                                    positionTop={this.tooltipModel.y - 22} className={styles.BoxTooltip}
+                                    positionTop={this.tooltipModel.y - 22} className="cbioTooltip"
                                     onMouseEnter={this.tooltipMouseEnter} onMouseLeave={this.tooltipMouseLeave}>
                                     <a href={'/case.do#/patient?sampleId=' + this.tooltipModel.datum.sampleId + '&studyId=' +
                                     this.tooltipModel.datum.studyId} target="_blank"><b>{this.tooltipModel.datum.sampleId}</b></a><br />
@@ -175,7 +176,11 @@ export default class MiniBoxPlot extends React.Component<IMiniBoxPlotProps, {}> 
                     </div>
                 }
                 {!this.props.selectedGeneHugo &&
-                    <div style={{marginLeft: 35, marginTop: 150}}>Click on a gene in table to render plots here.</div>
+                    <div className="borderedChart inlineBlock" style={{ marginTop:20}}>
+                        <div className="text-center" style={{width:350}}>
+                            Click on a gene in table to render plots here.
+                        </div>
+                    </div>
                 }
             </div>
         );

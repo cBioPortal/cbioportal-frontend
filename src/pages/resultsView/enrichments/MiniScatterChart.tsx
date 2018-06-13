@@ -46,7 +46,9 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                             target: "data",
                             mutation: (props: any) => {
                                 this.tooltipModel = props;
-                                return { active: true };
+                                return {
+                                    datum: Object.assign({}, props.datum, {hovered: true})
+                                };
                             }
                         }
                     ];
@@ -55,9 +57,11 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                     return [
                         {
                             target: "data",
-                            mutation: () => {
+                            mutation: (props: any) => {
                                 this.tooltipModel = null;
-                                return { active: false };
+                                return {
+                                    datum: Object.assign({}, props.datum, {hovered: false})
+                                };
                             }
                         }
                     ];
@@ -67,13 +71,13 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
 
         return (
             <div className="posRelative">
-                <div className="borderedChart" style={{ marginRight: 8, marginTop: 8 }}>
+                <div className="borderedChart inlineBlock">
                     <VictoryChart containerComponent={<VictorySelectionContainer responsive={false}
                         onSelection={(points: any, bounds: any, props: any) => this.handleSelection(points, bounds, props)} 
                         onSelectionCleared={(props:any) => this.handleSelectionCleared(props)}/>} theme={CBIOPORTAL_VICTORY_THEME}
                         domainPadding={{ y: [0, 20] }} height={350} width={350} padding={{ top: 40, bottom: 60, left: 60, right: 40 }}>
                         <VictoryAxis tickValues={this.props.xAxisTickValues} domain={[-this.props.xAxisDomain, this.props.xAxisDomain]} 
-                            label="log Ratio" tickFormat={(t: any) => t >= 1000 || t <= -1000 ? `${t/1000}k` : t} style={{
+                            label="Log Ratio" tickFormat={(t: any) => t >= 1000 || t <= -1000 ? `${t/1000}k` : t} style={{
                                 tickLabels: { padding: 20 }, axisLabel: { padding: 40 },
                                 ticks: { size: 0 }
                             }} />
@@ -85,13 +89,14 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                             }} />
                         <VictoryLabel style={axisLabelStyles} text={"← " + this.props.xAxisLeftLabel} x={60} y={300}/>
                         <VictoryLabel style={axisLabelStyles} text={this.props.xAxisRightLabel + " →"} x={200} y={300}/>
-                        <VictoryLabel style={axisLabelStyles} text="significance →" x={320} y={210} angle={-90}/>
-                        <VictoryScatter style={{ data: { fill: (datum:any) => datum.qValue < 0.05 ? "#58ACFA" : "#D3D3D3", fillOpacity: 0.4 } }} 
-                            data={this.props.data} symbol="circle" size={(datum: any, active: any) => active ? 10 : 3} events={events} />
+                        <VictoryLabel style={axisLabelStyles} text="Significance →" x={320} y={210} angle={-90}/>
+                        <VictoryScatter style={{ data: { fill: (d:any, active: any) => active ? "#FE9929" : 
+                            d.qValue < 0.05 ? "#58ACFA" : "#D3D3D3", fillOpacity: 0.4 } }} 
+                            data={this.props.data} symbol="circle" size={(d: any) => d.hovered ? 10 : 3} events={events} />
                     </VictoryChart>
                 </div>
                 {this.tooltipModel &&
-                    <Popover className={styles.ScatterTooltip} positionLeft={this.tooltipModel.x + 15} 
+                    <Popover className={"cbioTooltip"} positionLeft={this.tooltipModel.x + 15}
                         positionTop={this.tooltipModel.y - 25}>
                         Gene: {this.tooltipModel.datum.hugoGeneSymbol}<br/>
                         Log Ratio: {formatLogOddsRatio(this.tooltipModel.datum.logRatio)}<br/>
