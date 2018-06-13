@@ -123,7 +123,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
             let options = this.profiles.map(profile=>{
                 const profiledSampleCount = this.props.molecularProfileIdToProfiledSampleCount.result![profile.molecularProfileId];
                 return {
-                    label: `${profile.name} (${profiledSampleCount} queried sample${profiledSampleCount !== 1 ? "s" : ""})`,
+                    label: `${profile.name} (${profiledSampleCount} sample${profiledSampleCount !== 1 ? "s" : ""})`,
                     value: profile.molecularProfileId
                 };
             });
@@ -146,7 +146,6 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                             className="coexpression-select-profile"
                         />
                     </div>
-                    <InfoIcon style={{marginLeft:3}} tooltip={<span>{this.selectedMolecularProfile.description}</span>}/>
                 </div>
             );
         } else {
