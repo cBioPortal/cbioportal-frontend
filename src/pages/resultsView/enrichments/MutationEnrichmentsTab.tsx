@@ -26,7 +26,7 @@ export default class MutationEnrichmentsTab extends React.Component<IMutationEnr
         }
 
         return (
-            <div>
+            <div data-test="MutationEnrichmentsTab">
                 <EnrichmentsDataSetDropdown dataSets={this.props.store.mutationEnrichmentProfiles.result!} onChange={this.onProfileChange}
                     selectedValue={this.props.store.selectedEnrichmentMutationProfile.molecularProfileId} 
                     molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount.result!}/>
