@@ -31,7 +31,6 @@ interface ITooltipModel {
 
 export const HORIZONTAL_SCROLLING_THRESHOLD = 37;
 
-//testIt
 export function mergeAlterationDataAcrossAlterationTypes(alterationData:ICancerSummaryChartData["data"]){
 
     // first get the group types

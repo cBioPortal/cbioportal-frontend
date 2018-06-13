@@ -1,7 +1,6 @@
 .Container {
     display: flex;
     justify-content: space-between;
-    padding-top: 5px;
 }
 
 .Checkboxes {
@@ -53,7 +52,7 @@
 }
 
 .DataSet {
-    padding-top: 10px;
+    padding-bottom: $standardMargin;
 }
 
 .ScatterTooltip div:last-child {
@@ -76,4 +75,9 @@
 .Tendency {
     display: flex;
     flex-direction: column;
+    align-items:flex-start;
+}
+
+.LeftColumn {
+    width:400px;
 }

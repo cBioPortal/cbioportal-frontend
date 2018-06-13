@@ -39,7 +39,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
     }
 
     @computed get filteredData(): ExpressionEnrichmentRow[] {
-        return getFilteredData(this.data, this.overExpressedFilter, this.underExpressedFilter, this.significanceFilter, 
+        return getFilteredData(this.data, this.underExpressedFilter, this.overExpressedFilter, this.significanceFilter, 
             this.selectedGenes);
     }
 
@@ -115,9 +115,9 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
 
         return (
             <div className={styles.Container}>
-                <div>
+                <div className={styles.LeftColumn}>
                     <MiniScatterChart data={data} 
-                        xAxisLeftLabel="under-expressed" xAxisRightLabel="over-expressed" xAxisDomain={Math.ceil(Math.abs(maxData.x))} 
+                        xAxisLeftLabel="Under-expressed" xAxisRightLabel="Over-expressed" xAxisDomain={Math.ceil(Math.abs(maxData.x))} 
                         xAxisTickValues={null} onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection} 
                         onSelectionCleared={this.onSelectionCleared}/>
                     <MiniBoxPlot selectedGeneHugo={this.clickedGeneHugo} selectedGeneEntrez={this.clickedGeneEntrez} 
