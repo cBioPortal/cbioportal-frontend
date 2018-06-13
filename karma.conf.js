@@ -30,6 +30,7 @@ webpackConfig.plugins.push(new webpack.DefinePlugin({
 
 webpackConfig.entry = "";
 
+
 module.exports = function (config) {
     config.set({
         basePath: '',
@@ -39,6 +40,11 @@ module.exports = function (config) {
                 pattern: './common-dist/common.bundle.js',
                 watched: false,
                 served: true
+            },
+            { pattern: "src/**/*.json",
+                included: false,
+                watched:false,
+                served:true
             },
             'tests.webpack.js'
         ],
@@ -64,17 +70,24 @@ module.exports = function (config) {
             'karma-mocha-reporter',
             'karma-chai',
             'karma-webpack',
-            'karma-phantomjs-launcher',
+            //'karma-phantomjs-launcher',
+            'karma-chrome-launcher',
             'karma-sourcemap-loader',
             'karma-coverage',
-            'karma-coverage-istanbul-reporter',
             'karma-junit-reporter'
         ],
 
-        coverageIstanbulReporter: {
-            reports: ['text-summary','json-summary','html', 'lcov'],
-            dir: './test/fixtures/outputs'
+        customLaunchers: {
+            Chrome_with_debugging: {
+                base: 'Chrome',
+                chromeDataDir: path.resolve(__dirname, '.chrome')
+            }
         },
+
+        // coverageIstanbulReporter: {
+        //     reports: ['text-summary','json-summary','html', 'lcov'],
+        //     dir: './test/fixtures/outputs'
+        // },
 
         junitReporter: {
             outputDir: process.env.JUNIT_REPORT_PATH,
@@ -86,11 +99,12 @@ module.exports = function (config) {
             showDiff: true
         },
 
-        reporters: ['mocha', 'coverage-istanbul','junit'],
+        reporters: ['mocha','junit'],
         port: 9876,
         colors: true,
         logLevel: config.LOG_DISABLE,
-        browsers: ['PhantomJS'],
+        browsers: ['Chrome'],
+        //browsers: ['PhantomJS'],
         singleRun: !argv.watch,
     });
 };

@@ -117,9 +117,9 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         
         return (
             <div className={styles.Container}>
-                <div>
+                <div className={styles.LeftColumn}>
                     <MiniScatterChart data={getAlterationScatterData(this.data, this.props.store.hugoGeneSymbols)} 
-                        xAxisLeftLabel="mutual exclusivity" xAxisRightLabel="co-occurrence" xAxisDomain={15} 
+                        xAxisLeftLabel="Mutual exclusivity" xAxisRightLabel="Co-occurrence" xAxisDomain={15} 
                         xAxisTickValues={[-10, 0, 10]}  onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection} 
                         onSelectionCleared={this.onSelectionCleared}/>
                     <MiniBarChart totalAlteredCount={this.props.totalAlteredCount} totalUnalteredCount={this.props.totalUnalteredCount}
@@ -132,13 +132,13 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                     </div>
                     <hr style={{ marginTop: 0, marginBottom: 5, borderWidth: 2 }} />
                     <div className={styles.Checkboxes}>
-                        <Checkbox checked={this.mutualExclusivityFilter}
-                            onChange={this.toggleMutualExclusivityFilter}>
-                            Mutual exclusivity
-                        </Checkbox>
                         <Checkbox checked={this.coOccurenceFilter}
                             onChange={this.toggleCoOccurenceFilter}>
                             Co-occurrence
+                        </Checkbox>
+                        <Checkbox checked={this.mutualExclusivityFilter}
+                            onChange={this.toggleMutualExclusivityFilter}>
+                            Mutual exclusivity
                         </Checkbox>
                         <Checkbox checked={this.significanceFilter}
                             onChange={this.toggleSignificanceFilter}>

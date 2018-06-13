@@ -44,7 +44,7 @@ describe("QueryStore", ()=>{
             );
         });
     });
-    describe('Virtual Studies section on query page', () => {
+    describe.skip('Virtual Studies section on query page', () => {
         let store_vs:QueryStore;
         const virtualStudies: VirtualStudy[] = [
             {
