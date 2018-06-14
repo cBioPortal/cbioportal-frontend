@@ -47,12 +47,12 @@ export default class GenesetsHierarchyFilterForm extends React.Component<Geneset
                 width:"100%", background:"#eee", padding:"10px 10px"}}>
                 <div style={{display: "flex", flexDirection: "column"}}>
                     <label htmlFor="GSVAScore">GSVA score</label>
-                    <input id="GSVAScore" type="number" value={this.scoreThreshold} style={{width:160, height:36, padding:10}}
+                    <input id="GSVAScore" type="string" value={this.scoreThreshold} style={{width:160, height:36, padding:10}}
                         onChange={event => this.scoreThreshold = event.target.value} step="0.1"/>
                 </div>
                 <div style={{display: "flex", flexDirection: "column"}}>
                     <label htmlFor="Pvalue">P-value</label>
-                    <input id="Pvalue" type="number" value={this.pvalueThreshold} style={{width:160, height:36, padding:10}}
+                    <input id="Pvalue" type="string" value={this.pvalueThreshold} style={{width:160, height:36, padding:10}}
                         onChange={event => this.pvalueThreshold = event.target.value} step="0.01" min="0"/>
                 </div>
                 <div>

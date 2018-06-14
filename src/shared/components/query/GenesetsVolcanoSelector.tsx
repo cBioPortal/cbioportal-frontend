@@ -16,6 +16,7 @@ import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicato
 import { VictoryChart, VictoryScatter, VictoryTheme, VictorySelectionContainer,
     VictoryAxis, VictoryLabel, VictoryLine } from 'victory';
 import {QueryStoreComponent} from "./QueryStore";
+import CBIOPORTAL_VICTORY_THEME from "../../theme/cBioPoralTheme";
 
 const styles = styles_any as {
     GenesetsVolcanoSelectorWindow: string,
@@ -87,8 +88,9 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<Geneset
                     && (this.props.plotData) && (this.props.maxY)
                     && (this.store.volcanoPlotTableData.isComplete) && (this.props.data) && (
                 <VictoryChart
-                    theme={VictoryTheme.material}
+                    theme={CBIOPORTAL_VICTORY_THEME}
                     width={510}
+                    height={350}
                     containerComponent={
                         <VictorySelectionContainer
                             onSelection={this.updateSelectionFromPlot}
@@ -104,7 +106,6 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<Geneset
                     tickValues={[-1, -0.5, 0, 0.5, 1]}
                     style={{axisLabel: {padding: 35}}}
                     label={"GSVA score"}
-                    theme={VictoryTheme.material}
                     offsetY={50}
                     standalone={false}
                 />
@@ -112,12 +113,11 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<Geneset
                     domain={[0, this.props.maxY]}
                     style={{axisLabel: {padding: 35}, stroke: "none"}}
                     label={"-log10 p-value"}
-                    theme={VictoryTheme.material}
                     offsetX={50}
                     standalone={false}
                 />
                 <VictoryLabel
-                    text="significance ↑"
+                    text="significance"
                     datum={{ x:1, y: 1.3}}
                     textAnchor="start"
                 />
@@ -141,16 +141,16 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<Geneset
                       { x: 0, y: this.props.maxY }
                     ]}
                 />
-                  <VictoryScatter
-                      style={{data: {fillOpacity: 0.3}}}
-                      size={3}
-                      data={this.props.plotData}
-                  />
+                <VictoryScatter
+                    style={{data: {  fill: (d: GenesetsVolcanoSelectorProps["plotData"]) => (d) ? d.fill : "", fillOpacity: 0.3}}}
+                    size={3}
+                    data={this.props.plotData}
+                />
                 </VictoryChart>
                       )
                   }
                 </div>
-                <div style={{float: "right", maxHeight: "356.5px", overflowY: "scroll", width: "650px"}}>
+                <div style={{float: "right", height: "356.5px", overflowY: "scroll", width: "650px"}}>
                 <LoadingIndicator isLoading={!(this.store.volcanoPlotTableData.isComplete && this.props.data)} />
                 {  (this.store.volcanoPlotTableData.isComplete) && (this.props.data) && (
                 <GenesetsVolcanoTable
@@ -190,23 +190,23 @@ export default class GenesetsVolcanoSelector extends QueryStoreComponent<Geneset
                     initialSortColumn="P Value"
                     initialSortDirection={'asc'}
                     showPagination={true}
-                    initialItemsPerPage={10}
+                    initialItemsPerPage={100}
                     showColumnVisibility={false}
                     showFilter={true}
                     showCopyDownload={false}
                 /> )
                 }
                 </div>
-                <div style={{clear: "both"}}>
+                <div style={{float: "right"}}>
                 {  (this.store.volcanoPlotTableData.isComplete) && (this.props.data) && (
-                       <button style={{marginTop:-20}} 
+                       <button style={{marginTop:15, float: "right"}}
                 className="btn btn-primary btn-sm pull-right"
                 onClick={() => this.props.onSelect(this.store.map_genesets_selected_volcano)}
                 >
                     Add selection to the query
                 </button>) }
                 {  (this.store.volcanoPlotTableData.isComplete) && (this.props.data) && (
-                        <button style={{marginTop:-20, marginRight:15}} 
+                        <button style={{marginRight:15, marginTop:15, float: "right"}} 
                     className="btn btn-primary btn-sm pull-right"
                     onClick={() => (this.store.map_genesets_selected_volcano.replace(this.props.initialSelection.map(geneset => [geneset, true])))}
                     >
