@@ -6,7 +6,6 @@ import Testimonials from "../testimonials/Testimonials";
 import {ThreeBounce} from 'better-react-spinkit';
 import AppConfig from "appConfig";
 import {QueryStore} from "shared/components/query/QueryStore";
-import { Timeline } from 'react-twitter-widgets';
 
 
 interface IRightBarProps
