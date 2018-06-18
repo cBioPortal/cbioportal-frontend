@@ -6,7 +6,6 @@ import Testimonials from "../testimonials/Testimonials";
 import {ThreeBounce} from 'better-react-spinkit';
 import AppConfig from "appConfig";
 import {QueryStore} from "shared/components/query/QueryStore";
-import { Timeline } from 'react-twitter-widgets';
 
 
 interface IRightBarProps
@@ -71,18 +70,7 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
                         </a>
                     </h3>
                     <div style={{marginTop:3}}>
-                        <Timeline
-                            dataSource={{
-                                sourceType: 'profile',
-                                screenName: 'cbioportal'
-                            }}
-                            options={{
-                                username: 'cbioportal',
-                                height: '200',
-                                chrome: 'noheader%20nofooter',
-                            }}
-                            onLoad={() => this.setState({twitterLoading:false})}
-                        />
+                        <div>Nada</div>
                     </div>
                     <div>
                         {this.state.twitterLoading &&
