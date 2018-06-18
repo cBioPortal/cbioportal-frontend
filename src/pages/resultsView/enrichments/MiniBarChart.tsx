@@ -95,7 +95,7 @@ export default class MiniBarChart extends React.Component<IMiniBarChartProps, {}
                     </VictoryChart>
                 </div>
                 {this.tooltipModel &&
-                    <Popover arrowOffsetTop={14} positionLeft={(this.tooltipModel.y * 1.05) + 14} 
+                    <Popover arrowOffsetTop={14} positionLeft={(this.tooltipModel.y * 1.06) + 16} 
                         positionTop={this.tooltipModel.x - 13} className={styles.BarTooltip}>
                         <div>
                             {getBarChartTooltipContent(this.tooltipModel, this.props.selectedGene)}
