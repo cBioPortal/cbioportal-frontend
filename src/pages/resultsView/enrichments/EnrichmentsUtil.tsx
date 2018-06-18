@@ -1,13 +1,12 @@
 import * as React from 'react';
 import { AlterationEnrichment, ExpressionEnrichment } from "shared/api/generated/CBioPortalAPIInternal";
 import { toConditionalPrecision } from "shared/lib/NumberUtils";
-import styles from "./styles.module.scss";
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
 import { tsvFormat } from 'd3-dsv';
-import { ExtendedAlteration } from 'pages/resultsView/ResultsViewPageStore';
 import { BoxPlotModel, calculateBoxPlotModel } from 'shared/lib/boxPlotUtils';
 import { NumericGeneMolecularData } from 'shared/api/generated/CBioPortalAPI';
+import seedrandom from 'seedrandom';
 
 const LOG_VALUE = "LOG-VALUE";
 const LOG2_VALUE = "LOG2-VALUE";
@@ -254,10 +253,11 @@ export function getBoxPlotScatterData(molecularData: NumericGeneMolecularData[],
         const alterations = sampleAlterations[uniqueSampleKey];
         const data: NumericGeneMolecularData | undefined = molecularData.find(m => m.uniqueSampleKey === uniqueSampleKey);
         if (data) {
-            const random = (Math.random() - 0.5) * 0.5;
+            const y = molecularProfileId.includes("rna_seq") ? Math.log(data.value + 1) / Math.log(2) : data.value;
+            const random = (seedrandom(y.toString())() - 0.5) * 0.5;
             scatterData.push({
                 x: alteredSampleKeys.includes(uniqueSampleKey) ? 1 + random : 2 + random,
-                y: molecularProfileId.includes("rna_seq") ? Math.log(data.value + 1) / Math.log(2) : data.value,
+                y: y,
                 sampleId: data.sampleId,
                 studyId: data.studyId,
                 alterations: getAlterationsTooltipContent(alterations)

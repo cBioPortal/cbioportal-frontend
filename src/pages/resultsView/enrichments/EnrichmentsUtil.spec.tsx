@@ -7,7 +7,6 @@ import { calculateAlterationTendency, calculateExpressionTendency, formatLogOdds
 } from "./EnrichmentsUtil";
 import expect from 'expect';
 import expectJSX from 'expect-jsx';
-import sinon from 'sinon';
 
 expect.extend(expectJSX);
 
@@ -243,21 +242,21 @@ const exampleAlterations = [
 
 const exampleBoxPlotScatterData = [
     {
-        x: 2, 
+        x: 1.922684807165747, 
         y: 9.940678152790728, 
         sampleId: "TCGA-OR-A5J1-01", 
         studyId: "acc_tcga", 
         alterations: ""
     },
     {
-        x: 2, 
+        x: 2.0781361505168783, 
         y: 8.34481740339671, 
         sampleId: "TCGA-OR-A5J2-01", 
         studyId: "acc_tcga", 
         alterations: ""
     },
     {
-        x: 2, 
+        x: 1.8867908893279546, 
         y: 9.660310790006957, 
         sampleId: "TCGA-OR-A5J3-01", 
         studyId: "acc_tcga", 
@@ -670,7 +669,6 @@ describe("EnrichmentsUtil", () => {
                 "VENHQS1PUi1BNUoyLTAxOmFjY190Y2dh": [],
                 "VENHQS1PUi1BNUozLTAxOmFjY190Y2dh": []
             }
-            sinon.stub(Math, 'random').returns(0.5);
             assert.deepEqual(getBoxPlotScatterData(exampleMolecularData, "acc_tcga_rna_seq_v2_mrna", sampleAlterations, []), 
                 exampleBoxPlotScatterData);
         });
