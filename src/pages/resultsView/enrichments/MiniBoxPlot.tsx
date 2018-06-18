@@ -15,6 +15,7 @@ import { getDownloadContent, getAlterationsTooltipContent, shortenGenesLabel,
     getBoxPlotModels, getBoxPlotScatterData } from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import autobind from 'autobind-decorator';
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
+import {getSampleViewUrl} from "../../../shared/api/urls";
 
 export interface IMiniBoxPlotProps {
     selectedGeneHugo: string;
@@ -166,8 +167,8 @@ export default class MiniBoxPlot extends React.Component<IMiniBoxPlotProps, {}> 
                                 <Popover positionLeft={this.tooltipModel.x + 22} 
                                     positionTop={this.tooltipModel.y - 22} className="cbioTooltip"
                                     onMouseEnter={this.tooltipMouseEnter} onMouseLeave={this.tooltipMouseLeave}>
-                                    <a href={'/case.do#/patient?sampleId=' + this.tooltipModel.datum.sampleId + '&studyId=' +
-                                    this.tooltipModel.datum.studyId} target="_blank"><b>{this.tooltipModel.datum.sampleId}</b></a><br />
+                                    <a href={getSampleViewUrl(this.tooltipModel.datum.studyId, this.tooltipModel.datum.sampleId)} target="_blank"><b>{this.tooltipModel.datum.sampleId}</b></a>
+                                    <br />
                                     mRNA expression: {this.tooltipModel.datum.y.toFixed(3)}<br />
                                     Alteration(s): {this.tooltipModel.datum.alterations}
                                 </Popover>
