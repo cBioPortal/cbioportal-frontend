@@ -44,10 +44,10 @@ export function openStudySummaryFormSubmit(studyIds: string | ReadonlyArray<stri
     formSubmit(params.pathname, params.query, "_blank", method);
 }
 export function getSampleViewUrl(studyId:string, sampleId:string) {
-    return cbioUrl('case.do', {}, `/patient?studyId=${studyId}&sampleId=${sampleId}`);
+    return cbioUrl('patient', { sampleId, studyId });
 }
-export function getPatientViewUrl(studyId:string, patientId:string) {
-    return cbioUrl('case.do', {}, `/patient?studyId=${studyId}&caseId=${patientId}`);
+export function getPatientViewUrl(studyId:string, caseId:string) {
+    return cbioUrl('patient', { studyId, caseId });
 }
 export function getPubMedUrl(pmid:string) {
     return `https://www.ncbi.nlm.nih.gov/pubmed/${pmid}`;
@@ -112,4 +112,8 @@ export function getDarwinUrl(sampleIds:string[], caseId:string) {
 
 export function getStudyDownloadListUrl(){
     return cbioUrl('proxy/download.cbioportal.org/study_list.json');
+}
+
+export function getBasePath(){
+    return AppConfig.baseUrl!.replace(/[^\/]*/,"");
 }
