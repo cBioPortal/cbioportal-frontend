@@ -245,7 +245,10 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                                     {
                                         (this.store.searchText) && (
                                             <span data-test="clearStudyFilter"
-                                                  onClick={(e) => { this.handlers.onClearFilter() }}
+                                                  onClick={(e) => {
+                                                      this.autosuggest.setState({ inputValue:"" });
+                                                      this.handlers.onClearFilter() }
+                                                  }
                                                   style={{
                                                       fontSize: 18,
                                                       cursor: 'pointer',
@@ -261,7 +264,6 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                                         ref={(el: React.Component<any, any>) => this.autosuggest = el}
                                         placeholder="Search..."
                                         bsSize="small"
-                                        value={this.store.searchText}
                                         onChange={(currentVal: string) => {
                                             if (searchTimeout !== null) {
                                                 window.clearTimeout(searchTimeout);
