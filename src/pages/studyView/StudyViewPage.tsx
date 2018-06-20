@@ -1,15 +1,15 @@
 import * as React from 'react';
-import { inject, observer, Observer } from "mobx-react";
+import {inject, observer} from "mobx-react";
 import styles from "./styles.module.scss";
 import {MutatedGenesTable} from "./table/MutatedGenesTable";
 import {CNAGenesTable} from "./table/CNAGenesTable";
 import {ChartContainer, ChartType} from 'pages/studyView/charts/ChartContainer';
 import SurvivalChart from "../resultsView/survival/SurvivalChart";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
-import { StudyViewPageStore, ClinicalDataType, SurvivalType } from 'pages/studyView/StudyViewPageStore';
-import { reaction } from 'mobx';
-import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
-import _ from "lodash";
+import {ClinicalDataType, StudyViewPageStore, SurvivalType} from 'pages/studyView/StudyViewPageStore';
+import {reaction} from 'mobx';
+import {ClinicalAttribute} from 'shared/api/generated/CBioPortalAPI';;
+import {StudyViewComponentLoader} from "./charts/StudyViewComponentLoader";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -70,32 +70,35 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     };
 
     renderSurvivalPlot = (data: SurvivalType) => {
-        return <div className={styles.survivalPlot}>
-            <SurvivalChart alteredPatientSurvivals={data.alteredGroup}
-                           unalteredPatientSurvivals={data.unalteredGroup}
-                           title={'test'}
-                           xAxisLabel="Months Survival"
-                           yAxisLabel="Overall Survival"
-                           totalCasesHeader="Number of Cases, Total"
-                           statusCasesHeader="Number of Cases, Deceased"
-                           medianMonthsHeader="Median Months Survival"
-                           yLabelTooltip="Survival estimate"
-                           xLabelWithEventTooltip="Time of death"
-                           xLabelWithoutEventTooltip="Time of last observation"
-                           showDownloadButtons={false}
-                           showTable={false}
-                           showLegend={false}
-                           styleOpts={{
-                               width: 450,
-                               height: 300
-                           }}
-                           fileName="Overall_Survival"/>
+        return <div className={styles.studyViewSurvivalPlot}>
+            <div className={styles.studyViewSurvivalPlotTitle}>{data.title}</div>
+            <div className={styles.studyViewSurvivalPlotBody}>
+                <StudyViewComponentLoader promise={this.store.survivalPlotData}>
+                    <SurvivalChart alteredPatientSurvivals={data.alteredGroup}
+                                   unalteredPatientSurvivals={data.unalteredGroup}
+                                   title={'test'}
+                                   xAxisLabel="Months Survival"
+                                   yAxisLabel="Surviving"
+                                   totalCasesHeader="Number of Cases, Total"
+                                   statusCasesHeader="Number of Cases, Deceased"
+                                   medianMonthsHeader="Median Months Survival"
+                                   yLabelTooltip="Survival estimate"
+                                   xLabelWithEventTooltip="Time of death"
+                                   xLabelWithoutEventTooltip="Time of last observation"
+                                   showDownloadButtons={false}
+                                   showTable={false}
+                                   showLegend={false}
+                                   styleOpts={{
+                                       width: 450,
+                                       height: 300
+                                   }}
+                                   fileName="Overall_Survival"/>
+                </StudyViewComponentLoader>
+            </div>
         </div>
     }
 
     render() {
-        let mutatedGeneData = this.store.mutatedGeneData.result;
-        let cnaGeneData = this.store.cnaGeneData.result;
         let cancerStudy = this.store.studyMetaData.result!;
         return (
             <div className="studyView">
@@ -118,29 +121,29 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                 this.store.initalClinicalDataCounts.isComplete &&
                                 this.store.initialized && 
                                 (
-                                    <div className={styles.flexContainer}>
+                                    <div className={styles.studyViewFlexContainer}>
                                         {this.store.visibleAttributes.map(this.renderAttributeChart)}
                                     </div>
                                 )
                             }
                             {
-                                <div className={styles.flexContainer}>
+                                <div className={styles.studyViewFlexContainer}>
                                     {this.store.survivalPlotData.result.map(this.renderSurvivalPlot)}
                                 </div>
                             }
-                            <div className={styles.flexContainer}>
-                                {(this.store.mutatedGeneData.isComplete && <MutatedGenesTable
-                                    data={mutatedGeneData}
+                            <div className={styles.studyViewFlexContainer}>
+                                <MutatedGenesTable
+                                    promise={this.store.mutatedGeneData}
                                     numOfSelectedSamples={100}
                                     filters={this.store.getMutatedGenesTableFilters()}
                                     toggleSelection={this.handlers.updateGeneFilter}
-                                />)}
-                                {(this.store.cnaGeneData.isComplete && <CNAGenesTable
-                                    data={cnaGeneData}
+                                />
+                                <CNAGenesTable
+                                    promise={this.store.cnaGeneData}
                                     numOfSelectedSamples={100}
                                     filters={this.store.getCNAGenesTableFilters()}
                                     toggleSelection={this.handlers.updateCNAGeneFilter}
-                                />)}
+                                />
                             </div>
                     </MSKTab>
                 </MSKTabs>
