@@ -1,38 +1,121 @@
+/* eslint camelcase: "off" */
 // Heavily dependent on OQL PEGjs specification
+import * as _ from 'lodash';
 import oql_parser from './oql-parser';
 
+function isDatatypeStatement(line) {
+    return line.gene !== undefined && line.gene.toUpperCase() === 'DATATYPES';
+}
+function isMergedTrackLine(line) {
+    return line.list !== undefined;
+}
 
-var parseOQLQuery = function (oql_query, opt_default_oql) {
-    /*	In: - oql_query, a string, an OQL query
+export function isMergedTrackFilter(oqlFilter) {
+    return oqlFilter.list !== undefined;
+}
+
+function parseMergedTrackOQLQuery(oql_query, opt_default_oql = '') {
+    /* In: - oql_query, a string, an OQL query
      - opt_default_oql, a string, default OQL to add to any empty line
-     Out: An array, with each element being a parsed OQL line, with
-     all 'DATATYPES' lines applied to subsequent lines and removed.
+     Out: An array, with each element being a parsed single-gene or
+     merged-track OQL line, with all 'DATATYPES' lines applied to subsequent
+     lines and removed.
      */
-    opt_default_oql = opt_default_oql || "";
-    var parsed = oql_parser.parse(oql_query);
 
-    var datatypes_alterations = false;
-    for (var i = 0; i < parsed.length; i++) {
-        if (parsed[i].gene.toLowerCase() === "datatypes") {
-            datatypes_alterations = parsed[i].alterations;
-        } else if (datatypes_alterations && !parsed[i].alterations) {
-            parsed[i].alterations = datatypes_alterations;
-        }
-    }
-
-    if (opt_default_oql.length > 0) {
-        for (var i = 0; i < parsed.length; i++) {
-            if (!parsed[i].alterations) {
-                parsed[i].alterations = oql_parser.parse("DUMMYGENE:" + opt_default_oql + ";")[0].alterations;
+    /* In:
+    *     - oql_lines:
+    *         (DatatypeStatement | MergedTrackLine | SingleGeneLine)[]
+    *     - intial_dt: Alterations
+    * Out:
+    *     (SingleGeneLine|MergedTrackLine)[]
+    */
+    function applyDatatypes(oql_lines, initial_dt) {
+        /* In:
+         *     - dt_state: Alterations
+         *     - line: DatatypeStatement | MergedTrackLine | SingleGeneLine
+         * Out:
+         *     {
+         *         dt_state: Alterations,
+         *         query_line: [SingleGeneLine|MergedTrackLine] | []
+         *     }
+         */
+        function evaluateDt(dt_state, line) {
+            if (isDatatypeStatement(line)) {
+                return {
+                    dt_state: line.alterations,
+                    query_line: []
+                };
+            } else if (isMergedTrackLine(line)) {
+                const applied_list = applyDatatypes(line.list, dt_state);
+                return {
+                    dt_state,
+                    query_line: [_.assign({}, line, { list: applied_list })]
+                };
+            } else {
+                const applied_alterations = line.alterations || dt_state;
+                return {
+                    dt_state,
+                    query_line: [_.assign({}, line, { alterations: applied_alterations })]
+                };
             }
         }
-        ;
+
+        /* In:
+        *     - current_result:
+        *         {
+        *             dt_state: Alterations,
+        *             query: (SingleGeneLine|MergedTrackLine)[]
+        *         }
+        *     - line: OQLQueryLine
+        * Out:
+        *     {
+        *         dt_state: Alterations,
+        *         query: (SingleGeneLine|MergedTrackLine)[]
+        *     }
+        */
+        function appendDtResult({ dt_state, query }, line) {
+            const { dt_state: new_dt_state, query_line } = evaluateDt(dt_state, line);
+            return {
+                dt_state: new_dt_state,
+                query: query.concat(query_line)
+            };
+        }
+
+        return oql_lines.reduce(
+            appendDtResult,
+            { dt_state: initial_dt, query: [] }
+        ).query;
     }
 
-    return parsed.filter(function (parsed_line) {
-        return parsed_line.gene.toLowerCase() !== "datatypes";
-    });
-};
+    const parsed = oql_parser.parse(oql_query);
+    let parsed_with_datatypes = applyDatatypes(parsed, false);
+    if (opt_default_oql.length > 0) {
+        const default_alterations = oql_parser.parse(`DUMMYGENE:${opt_default_oql};`)[0].alterations;
+        parsed_with_datatypes = applyDatatypes(parsed_with_datatypes, default_alterations);
+    }
+    return parsed_with_datatypes;
+}
+
+export function parseOQLQuery(oql_query, opt_default_oql = '') {
+    /* In: - oql_query, a string, an OQL query
+     - opt_default_oql, a string, default OQL to add to any empty line
+     Out: An array, with each element being a parsed single-gene OQL line,
+     with all 'DATATYPES' lines applied to subsequent lines and removed.
+     */
+
+    /* In: SingleGeneLine | MergedTrackLine
+     * Out: SingleGeneLine[]
+     */
+    function extractGeneLines(line) {
+        return (isMergedTrackLine(line)
+            ? line.list
+            : [line]
+        );
+    }
+
+    const parsed_with_datatypes = parseMergedTrackOQLQuery(oql_query, opt_default_oql);
+    return _.flatMap(parsed_with_datatypes, extractGeneLines);
+}
 
 var parsedOQLAlterationToSourceOQL = function(alteration) {
     if (alteration.alteration_type === "cna") {
@@ -330,18 +413,26 @@ var isDatumWantedByOQLEXPOrPROTCommand = function(alt_cmd, datum, accessors) {
     }
 };
 
-var filterData = function (oql_query, data, _accessors, opt_default_oql, opt_by_oql_line) {
+function filterData(oql_query, data, _accessors, opt_default_oql = '', opt_by_oql_line) {
     /* In:	- oql_query, a string
      *	- data, a list of data
      *	- accessors, accessors as defined above,
      *	- opt_default_oql, an optional argument, string, default oql to insert to empty oql lines
-     *	- opt_by_oql_line, optional argument, boolean, see Out for description
+     *	- opt_by_oql_line, optional argument, boolean or string, see Out for description
      *  Out: the given data, filtered by the given oql query.
-     *	* If opt_by_oql_line is true, then the result is a list of lists,
-     *	    where out[i] = the result of filtering the given data by oql_query
-     *	    line i (after removing 'DATATYPES' lines).
-     *	* If opt_by_oql_line is false, then the result is just a flat list,
-     *	    the data that is wanted by at least one oql line.
+     *    * If opt_by_oql_line is 'mergedtrack', then the result is
+     *      a list of objects having either a .data or .list property,
+     *      corresponding to single-gene and merged-track lines in
+     *      the OQL query respectively. out[i].data is the result of filtering
+     *      the given data by oql_query line i (after removing 'DATATYPES' lines)
+     *      or out[i].list is an array of such objects for the lines within the
+     *      merged track expression. Both objects have additional metadata
+     *      as listed in oqlfilter.d.ts.
+     *    * If opt_by_oql_line is 'gene' or true, then the result is just
+     *      a list of objects where out[i].data corresponds to gene i after
+     *      flattening merged track queries.
+     *    * If opt_by_oql_line is false or absent, then the result is
+     *      a flat list of the data that is wanted by at least one oql line.
      */
     data = $.extend(true, [], data); // deep copy, because of any modifications it will make during filtration
     var null_fn = function () {
@@ -360,24 +451,41 @@ var filterData = function (oql_query, data, _accessors, opt_default_oql, opt_by_
         data[i].molecularProfileAlterationType = accessors.molecularAlterationType(data[i].molecularProfileId);
     }
 
-    opt_default_oql = opt_default_oql || "";
-    var parsed_query = parseOQLQuery(oql_query, opt_default_oql)
-        .map(function (q_line) {
-            q_line.gene = q_line.gene.toUpperCase();
-            return q_line;
-        });
+    function applyToGeneLines(geneLineFunction) {
+        return (line) => {
+            if (isMergedTrackLine(line)) {
+                return {
+                    ...line,
+                    list: line.list.map(applyToGeneLines(geneLineFunction))
+                };
+            } else {
+                return geneLineFunction(line);
+            }
+        };
+    }
+
+    const queryParsingFunction = (
+        opt_by_oql_line === 'mergedtrack'
+        ? parseMergedTrackOQLQuery
+        : parseOQLQuery
+    );
+    const parsed_query = queryParsingFunction(oql_query, opt_default_oql).map(
+        applyToGeneLines(
+            q_line => ({ ...q_line, gene: q_line.gene.toUpperCase() })
+        )
+    );
 
     if (opt_by_oql_line) {
-        return parsed_query.map(function (query_line) {
-            return {
-                'gene': query_line.gene,
-                'parsed_oql_line': query_line,
-                'oql_line': unparseOQLQueryLine(query_line),
-                'data': data.filter(function (datum) {
-                    return isDatumWantedByOQLLine(query_line, datum, accessors.gene(datum).toUpperCase(), accessors);
-                })
-            };
-        });
+        return parsed_query.map(applyToGeneLines(
+            query_line => ({
+                gene: query_line.gene,
+                parsed_oql_line: query_line,
+                oql_line: unparseOQLQueryLine(query_line),
+                data: data.filter(datum =>
+                    isDatumWantedByOQLLine(query_line, datum, accessors.gene(datum).toUpperCase(), accessors)
+                )
+            })
+        ));
     } else {
         return data.filter(function (datum) {
             return isDatumWantedByOQL(parsed_query, datum, accessors);
@@ -397,7 +505,7 @@ export function filterCBioPortalWebServiceData(oql_query, data, accessors, opt_d
      *	- PROTEIN_LEVEL
      */
 
-    return filterData(oql_query, data, accessors, opt_default_oql, false);
+    return filterData(oql_query, data, accessors, opt_default_oql);
 }
 
 export function filterCBioPortalWebServiceDataByOQLLine(oql_query, data, accessors, opt_default_oql) {
@@ -410,7 +518,20 @@ export function filterCBioPortalWebServiceDataByOQLLine(oql_query, data, accesso
      *	- PROTEIN_LEVEL
      */
 
-    return filterData(oql_query, data, accessors, opt_default_oql, true);
+    return filterData(oql_query, data, accessors, opt_default_oql, 'gene');
+}
+
+export function filterCBioPortalWebServiceDataByUnflattenedOQLLine(oql_query, data, accessors, opt_default_oql) {
+    /* Wrapper method for filterData that has the cBioPortal default accessor functions
+     * Note that for use, the input data must have the field 'genetic_alteration_type,' which
+     * takes one of the following values:
+     *	- MUTATION_EXTENDED
+     *	- COPY_NUMBER_ALTERATION
+     *	- MRNA_EXPRESSION
+     *	- PROTEIN_LEVEL
+     */
+
+    return filterData(oql_query, data, accessors, opt_default_oql, 'mergedtrack');
 }
 
 

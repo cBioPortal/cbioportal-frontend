@@ -53,8 +53,16 @@ function runResultsTestSuite(prefix){
 
     it(`${prefix} coexpression tab`, function(){
         browser.click("[href='#coexp']");
-        browser.waitForVisible('#coexp_table_div_KRAS',10000);
-        var res = browser.checkElement('#coexp',{hide:['.qtip'] });
+        browser.waitForVisible('div[data-test="CoExpressionPlot"]',10000);
+        var res = browser.checkElement('#coexp', { hide:['.qtip'] } );
+        assertScreenShotMatch(res);
+    });
+
+    it(`${prefix} enrichments tab`, function(){
+        browser.click("[href='#enrichementTabDiv']");
+        browser.waitForVisible('div[data-test="MutationEnrichmentsTab"]',10000);
+        browser.click('b=CDK14');
+        var res = browser.checkElement('#enrichementTabDiv', { hide:['.qtip'] } );
         assertScreenShotMatch(res);
     });
 
@@ -218,6 +226,63 @@ describe('study view screenshot test', function(){
         browser.pause(5000);
 
         var res = browser.checkElement('#page_wrapper_table', {hide:['.qtip', '#footer-span-version'] });
+        assertScreenShotMatch(res);
+    });
+});
+
+describe("coexpression tab screenshot tests", function() {
+    before(function() {
+        var url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&case_ids=&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit#coexp`;
+        goToUrlAndSetLocalStorage(url);
+    });
+    it('coexpression tab coadread_tcga_pub initial load', function() {
+        browser.waitForExist('div[data-test="CoExpressionPlot"]', 10000); // wait for plot to show up
+        var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
+        assertScreenShotMatch(res);
+    });
+    it('coexpression tab coadread_tcga_pub log scale x and y mutations on', function() {
+        browser.click('div[data-test="CoExpressionGeneTabContent"] input[data-test="logScale"]');
+        var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
+        assertScreenShotMatch(res);
+    });
+    it('coexpression tab coadread_tcga_pub loc scale x and y mutations off', function() {
+        browser.click('div[data-test="CoExpressionGeneTabContent"] input[data-test="ShowMutations"]');
+        var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
+        assertScreenShotMatch(res);
+    });
+    it('coexpression tab coadread_tcga_pub switch tabs', function() {
+        browser.click('#coexpressionTabGeneTabs>ul>li:nth-child(2)>a');// click on NRAS
+        browser.pause(100); // give time to start loading
+        browser.waitForExist('div[data-test="CoExpressionPlot"]', 10000); // wait for plot to show up
+        var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
+        assertScreenShotMatch(res);
+    });
+    it('coexpression tab coadread_tcga_pub switch profiles', function() {
+        browser.execute(function() { resultsViewCoExpressionTab.onSelectDataSet({ value: "coadread_tcga_pub_mrna"}); });
+        browser.pause(100); // give time to start loading
+        browser.waitForExist('div[data-test="CoExpressionPlot"]', 10000); // wait for plot to show up
+        var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
+        assertScreenShotMatch(res);
+    });
+    it('coexpression tab coadread_tcga_pub with a lot of genes', function() {
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=AKR1C3%2520AR%2520CYB5A%2520CYP11A1%2520CYP11B1%2520CYP11B2%2520CYP17A1%2520CYP19A1%2520CYP21A2%2520HSD17B1%2520HSD17B10%2520HSD17B11%2520HSD17B12%2520HSD17B13%2520HSD17B14%2520HSD17B2%2520HSD17B3%2520HSD17B4%2520HSD17B6%2520HSD17B7%2520HSD17B8%2520HSD3B1%2520HSD3B2%2520HSD3B7%2520RDH5%2520SHBG%2520SRD5A1%2520SRD5A2%2520SRD5A3%2520STAR&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic#coexp`);
+        browser.waitForExist('div[data-test="CoExpressionPlot"]', 10000); // wait for plot to show up
+        var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
+        assertScreenShotMatch(res);
+    });
+});
+
+describe("enrichments tab screenshot tests", function() {
+    before(function() {
+        var url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&case_ids=&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit#enrichementTabDiv`;
+        goToUrlAndSetLocalStorage(url);
+    });
+    it('enrichments tab coadread_tcga_pub mRNA profile', function(){
+        browser.waitForVisible('div[data-test="MutationEnrichmentsTab"]',10000);
+        browser.click('a=mRNA');
+        browser.waitForVisible('div[data-test="MRNAEnrichmentsTab"]',10000);
+        browser.click('b=MERTK');
+        var res = browser.checkElement('#enrichementTabDiv', { hide:['.qtip'] } );
         assertScreenShotMatch(res);
     });
 });

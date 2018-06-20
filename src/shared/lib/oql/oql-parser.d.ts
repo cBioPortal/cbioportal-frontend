@@ -51,7 +51,7 @@ export declare type AminoAcid = 'G'|'P'|'A'|'V'|'L'|'I'|'M'|'C'|'F'|'Y'|'W'|'H'|
 // 	/ msp first:SingleGeneQuery msp br rest:Query  { return [first].concat(rest); }
 // 	/ msp first:SingleGeneQuery msp br { return [first]; }
 // 	/ msp first:SingleGeneQuery msp { return [first]; }
-export declare type OQLQuery = SingleGeneQuery[];
+export declare type OQLQuery = (SingleGeneQuery | MergedGeneQuery)[];
 //
 // ListOfGenes
 // 	= msp geneName:String msp rest:ListOfGenes { return [geneName].concat(rest);}
@@ -60,6 +60,7 @@ export declare type OQLQuery = SingleGeneQuery[];
 // SingleGeneQuery
 // 	= geneName:String msp ":" msp alts:Alterations { return {"gene": geneName, "alterations": alts}; }
 // 	/ geneName:String { return {"gene": geneName, "alterations":false}; }
+export declare type MergedGeneQuery = {label?: string, list: SingleGeneQuery[]};
 export declare type SingleGeneQuery = {gene:string, alterations:false|Alteration[]};
 //
 // Alterations
@@ -85,7 +86,7 @@ export declare type CNAType = 'AMP' | 'HOMDEL' | 'GAIN' | 'HETLOSS';
 // CNACommand
 // 	= "CNA"i msp op:ComparisonOp msp constrval:CNAType { return {"alteration_type":"cna", "constr_rel":op, "constr_val":constrval}; }
 //         / constrval:CNAType { return {"alteration_type":"cna", "constr_rel":"=", "constr_val":constrval}; }
-export declare type CNACommand = {alteration_type:'cna', constr_rel:ComparisonOp, constr_val:CNAType};
+export declare type CNACommand = {alteration_type:'cna', constr_rel:ComparisonOp | '=', constr_val:CNAType};
 //
 // MUTCommand
 // 	= "MUT" msp "=" msp mutation:Mutation { return {"alteration_type":"mut", "constr_rel": "=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info}; }
