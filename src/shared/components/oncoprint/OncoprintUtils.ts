@@ -366,7 +366,6 @@ export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
             oncoprint.props.store.selectedMolecularProfiles
         ],
         invoke: async () => {
-            debugger;
             const trackFunction = makeGeneticTrackWith({
                 sampleMode,
                 samples: oncoprint.props.store.samples.result!,

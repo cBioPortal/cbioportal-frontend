@@ -62,6 +62,7 @@ export const makeRoutes = (routing) => {
                 <Route path={getBasePath()}>
                     <Route path="patient" getComponent={lazyLoadComponent(PatientViewPage)}/>
                 </Route>
+                <Route path="/spa" getComponent={lazyLoadComponent(SPA)} />
                 <IndexRedirect to={defaultRoute}/>
                 <Route path="/study" getComponent={lazyLoadComponent(StudyViewPage)} />
         <IndexRedirect to={defaultRoute}/>

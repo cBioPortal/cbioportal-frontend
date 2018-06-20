@@ -1,12 +1,12 @@
 import * as React from 'react';
+import { Link } from 'react-router';
 
 export default class PortalHeader extends React.Component<{}, {}> {
 
     render(){
         return <header>
             <div id="leftHeaderContent">
-                <a id="cbioportal-logo" href="index.do"><img src={require("./cbioportal_logo.png")} alt="cBioPortal Logo"/></a>
-
+                <Link to="/spa" id="cbioportal-logo"><img src={require("./cbioportal_logo.png")} alt="cBioPortal Logo"/></Link>
                 <nav id="main-nav">
                     <ul>
                         <li className="internal">

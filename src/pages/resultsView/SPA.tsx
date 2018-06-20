@@ -45,21 +45,6 @@ import {parseOQLQuery} from "../../shared/lib/oql/oqlfilter";
 
 const win = (window as any);
 
-function postQueryToRoute(query: CancerStudyQueryUrlParams){
-    //console.log(query)
-    (win.routingStore as ExtendedRouterStore).updateRoute(query);
-}
-
-function getRoutingStore(): ExtendedRouterStore{
-    return (win as any);
-}
-
-// interface SampleSpec {
-//     studyId:string;
-//         sampleListId:string;
-//     sampleId:undefined
-// }
-
 function initStore(queryStore: QueryStore, pageInstance:SinglePageApp) {
 
 
@@ -70,99 +55,97 @@ function initStore(queryStore: QueryStore, pageInstance:SinglePageApp) {
     const resultsViewPageStore = new ResultsViewPageStore();
 
 
-    queryStore.singlePageAppSubmitRoutine = function(path:string, query:CancerStudyQueryUrlParams) {
+    // queryStore.singlePageAppSubmitRoutine = function(path:string, query:CancerStudyQueryUrlParams) {
+    //
+    //     console.log("RESTORE CUSTOM QUERY FUNCTIONALITY!!!!");
+    //
+    //     if (queryStore.selectableSelectedStudyIds.length > 1) {
+    //         resultsViewPageStore.samplesSpecification = _.map(queryStore.selectableSelectedStudyIds,(studyId:string)=>{
+    //             return {
+    //                 studyId,
+    //                 sampleListId:`${studyId}_all`,
+    //                 sampleId:undefined
+    //             }
+    //         })
+    //     } else {
+    //         resultsViewPageStore.samplesSpecification = [{
+    //             studyId:queryStore.selectableSelectedStudyIds[0],
+    //             sampleListId:queryStore.selectedSampleListId!,
+    //             sampleId:undefined
+    //         }];
+    //     }
+    //
+    //
+    //     // 2. NOW DERIVE PROFILE IDS
+    //     let profs:string[];
+    //
+    //     if (queryStore.selectableSelectedStudyIds.length === 1) {
+    //         profs = _.values(molecularProfileParams(queryStore));
+    //     } else {
+    //         const profiles = _.filter(queryStore.molecularProfilesInSelectedStudies.result,(profile:MolecularProfile)=>/MUTATION_EXTENDED|COPY/.test(profile.molecularAlterationType))
+    //         profs = profiles.map((profile:MolecularProfile)=>profile.molecularProfileId);
+    //     }
+    //
+    //     pageInstance.currentQuery = true;
+    //
+    //     postQueryToRoute(
+    //         Object.assign({}, query, {})
+    //     );
+    //
+    // };
 
-        console.log("RESTORE CUSTOM QUERY FUNCTIONALITY!!!!");
-
-        if (queryStore.selectableSelectedStudyIds.length > 1) {
-            resultsViewPageStore.samplesSpecification = _.map(queryStore.selectableSelectedStudyIds,(studyId:string)=>{
-                return {
-                    studyId,
-                    sampleListId:`${studyId}_all`,
-                    sampleId:undefined
-                }
-            })
-        } else {
-            resultsViewPageStore.samplesSpecification = [{
-                studyId:queryStore.selectableSelectedStudyIds[0],
-                sampleListId:queryStore.selectedSampleListId!,
-                sampleId:undefined
-            }];
-        }
-
-
-        // 2. NOW DERIVE PROFILE IDS
-        let profs:string[];
-
-        if (queryStore.selectableSelectedStudyIds.length === 1) {
-            profs = _.values(molecularProfileParams(queryStore));
-        } else {
-            const profiles = _.filter(queryStore.molecularProfilesInSelectedStudies.result,(profile:MolecularProfile)=>/MUTATION_EXTENDED|COPY/.test(profile.molecularAlterationType))
-            profs = profiles.map((profile:MolecularProfile)=>profile.molecularProfileId);
-        }
-
-        pageInstance.currentQuery = true;
-
-        postQueryToRoute(
-            Object.assign({}, query, {})
-        );
-
-    };
-
-    resultsViewPageStore.queryStore = queryStore;
+    //resultsViewPageStore.queryStore = queryStore;
 
     // // 3. NOW SET PARAMS
 
 
-    const reaction1 = reaction(
-        () =>{
-            return win.globalStores.routing.location.query
-        },
-        query => {
-
-           // debugger;
-
-            const oql = decodeURIComponent(query.gene_list);
-
-            let samplesSpecification: SamplesSpecificationElement[];
-
-            if (queryStore.selectableSelectedStudyIds.length > 1) {
-                samplesSpecification = _.map(queryStore.selectableSelectedStudyIds,(studyId:string)=>{
-                    return {
-                        studyId,
-                        sampleListId:`${studyId}_all`,
-                        sampleId:undefined
-                    }
-                })
-            } else {
-                samplesSpecification = [{
-                    studyId:queryStore.selectableSelectedStudyIds[0],
-                    sampleListId:queryStore.selectedSampleListId!,
-                    sampleId:undefined
-                }];
-            }
-
-
-            let profs:string[];
-
-            if (queryStore.selectableSelectedStudyIds.length === 1) {
-                profs = _.values(molecularProfileParams(queryStore));
-            } else {
-                const profiles = _.filter(queryStore.molecularProfilesInSelectedStudies.result,(profile:MolecularProfile)=>/MUTATION_EXTENDED|COPY/.test(profile.molecularAlterationType))
-                profs = profiles.map((profile:MolecularProfile)=>profile.molecularProfileId);
-            }
-
-            runInAction(()=>{
-                resultsViewPageStore.samplesSpecification = samplesSpecification;
-                resultsViewPageStore.hugoGeneSymbols = parseOQLQuery(oql).map((o: any) => o.gene);
-                resultsViewPageStore.selectedMolecularProfileIds = ["cellline_nci60_mutations"];
-                resultsViewPageStore.rppaScoreThreshold = parseFloat(query.RPPA_SCORE_THRESHOLD);
-                resultsViewPageStore.zScoreThreshold = parseFloat(query.Z_SCORE_THRESHOLD);
-                resultsViewPageStore.oqlQuery = oql;
-            });
-        },
-        { fireImmediately: false }
-    );
+    // const reaction1 = reaction(
+    //     () =>{
+    //         return win.globalStores.routing.location.query
+    //     },
+    //     query => {
+    //
+    //         const oql = decodeURIComponent(query.gene_list);
+    //
+    //         let samplesSpecification: SamplesSpecificationElement[];
+    //
+    //         if (queryStore.selectableSelectedStudyIds.length > 1) {
+    //             samplesSpecification = _.map(queryStore.selectableSelectedStudyIds,(studyId:string)=>{
+    //                 return {
+    //                     studyId,
+    //                     sampleListId:`${studyId}_all`,
+    //                     sampleId:undefined
+    //                 }
+    //             })
+    //         } else {
+    //             samplesSpecification = [{
+    //                 studyId:queryStore.selectableSelectedStudyIds[0],
+    //                 sampleListId:queryStore.selectedSampleListId!,
+    //                 sampleId:undefined
+    //             }];
+    //         }
+    //
+    //
+    //         let profs:string[];
+    //
+    //         if (queryStore.selectableSelectedStudyIds.length === 1) {
+    //             profs = _.values(molecularProfileParams(queryStore));
+    //         } else {
+    //             const profiles = _.filter(queryStore.molecularProfilesInSelectedStudies.result,(profile:MolecularProfile)=>/MUTATION_EXTENDED|COPY/.test(profile.molecularAlterationType))
+    //             profs = profiles.map((profile:MolecularProfile)=>profile.molecularProfileId);
+    //         }
+    //
+    //         runInAction(()=>{
+    //             resultsViewPageStore.samplesSpecification = samplesSpecification;
+    //             resultsViewPageStore.hugoGeneSymbols = parseOQLQuery(oql).map((o: any) => o.gene);
+    //             resultsViewPageStore.selectedMolecularProfileIds = ["cellline_nci60_mutations"];
+    //             resultsViewPageStore.rppaScoreThreshold = parseFloat(query.RPPA_SCORE_THRESHOLD);
+    //             resultsViewPageStore.zScoreThreshold = parseFloat(query.Z_SCORE_THRESHOLD);
+    //             resultsViewPageStore.oqlQuery = oql;
+    //         });
+    //     },
+    //     { fireImmediately: false }
+    // );
 
     return resultsViewPageStore;
 
@@ -225,7 +208,6 @@ export default class SinglePageApp extends React.Component<IResultsViewPageProps
                         }} store={this.props.queryStore}/>
                     </div>
                     <hr />
-
                 </If>
 
                 {
@@ -252,8 +234,9 @@ export default class SinglePageApp extends React.Component<IResultsViewPageProps
                         {/*</Observer>*/}
 
 
+                        <div style={{marginBottom:20}}>
                         <QuerySummary queryStore={this.props.queryStore} store={this.resultsViewPageStore}/>
-
+                        </div>
                         <MSKTabs activeTabId={this.props.routing.location.query.tab} unmountOnHide={true}
                                  onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
                             <MSKTab key={0} id="oncoprintTab" linkText="Oncoprint">
