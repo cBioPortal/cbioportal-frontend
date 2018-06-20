@@ -43,21 +43,32 @@ import CoExpressionTabContainer from "./coExpression/CoExpressionTabContainer";
 import EnrichmentsTab from 'pages/resultsView/enrichments/EnrichmentsTab';
 import QueryAndDownloadTabs from "../../shared/components/query/QueryAndDownloadTabs";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
+import RightBar from "../../shared/components/rightbar/RightBar";
 
 
 const win = (window as any);
 
-function initStore(queryStore: QueryStore) {
+function initStore() {
+
+
+    console.log("INIT RESULTS VIEW STORE");
 
     const resultsViewPageStore = new ResultsViewPageStore();
-
-    resultsViewPageStore.queryStore = queryStore;
 
     const reaction1 = reaction(
         () => {
             return win.globalStores.routing.location.query
         },
         query => {
+
+
+
+            if (!win.globalStores.routing.location.pathname.includes("/results")) {
+               return;
+            }
+
+            console.log("running reaction for results");
+
 
             const oql = decodeURIComponent(query.gene_list);
 
@@ -100,14 +111,34 @@ function initStore(queryStore: QueryStore) {
                 return molecularProfiles;
             }
 
-            console.log(getMolecularProfiles(query));
-
             runInAction(() => {
-                resultsViewPageStore.samplesSpecification = samplesSpecification;
-                resultsViewPageStore.hugoGeneSymbols = parseOQLQuery(oql).map((o: any) => o.gene);
-                resultsViewPageStore.selectedMolecularProfileIds = getMolecularProfiles(query);
-                resultsViewPageStore.rppaScoreThreshold = parseFloat(query.RPPA_SCORE_THRESHOLD);
-                resultsViewPageStore.zScoreThreshold = parseFloat(query.Z_SCORE_THRESHOLD);
+
+                if (!resultsViewPageStore.samplesSpecification || !_.isEqual(resultsViewPageStore.samplesSpecification.peek(), samplesSpecification)) {
+                    resultsViewPageStore.samplesSpecification = samplesSpecification;
+                }
+
+                const geneSymbols = parseOQLQuery(oql).map((o: any) => o.gene);
+                if (!resultsViewPageStore.hugoGeneSymbols || !_.isEqual(resultsViewPageStore.hugoGeneSymbols.peek(), geneSymbols)) {
+                    console.log("settings genes");
+                    resultsViewPageStore.hugoGeneSymbols = geneSymbols;
+                }
+
+                const profiles = getMolecularProfiles(query);
+                if (!resultsViewPageStore.selectedMolecularProfileIds || !_.isEqual(resultsViewPageStore.selectedMolecularProfileIds.peek(), profiles)) {
+                    resultsViewPageStore.selectedMolecularProfileIds = profiles;
+                }
+
+                if (_.isEqual(query.RPPA_SCORE_THRESHOLD, resultsViewPageStore.rppaScoreThreshold)) {
+                    resultsViewPageStore.rppaScoreThreshold = parseFloat(query.RPPA_SCORE_THRESHOLD);
+                }
+
+                if (_.isEqual(query.Z_SCORE_THRESHOLD, resultsViewPageStore.zScoreThreshold)) {
+                    resultsViewPageStore.zScoreThreshold = parseFloat(query.Z_SCORE_THRESHOLD);
+                }
+
+
+                //resultsViewPageStore.cohortIdsList = serverVars.cohortIdsList;
+                //resultsViewPageStore.genesetIds = genesetIds;
                 resultsViewPageStore.oqlQuery = oql;
             });
         },
@@ -117,6 +148,10 @@ function initStore(queryStore: QueryStore) {
     return resultsViewPageStore;
 }
 
+
+const resultsViewPageStore = initStore();
+
+(window as any).resultsViewPageStore = resultsViewPageStore;
 
 // // following is a bunch of dirty stuff necessary to read state from jsp page
 // // ultimate we will phase this out and this information will be stored in router etc.
@@ -179,6 +214,28 @@ type OncoprintTabInitProps = {
     divId: string;
 };
 
+
+export class PageLayout extends React.Component<{ showRightBar?:boolean },{}> {
+
+    render(){
+        return (
+            <div className="contentWidth noMargin">
+                <div id="mainColumn">
+                    <div>
+                        {this.props.children}
+                    </div>
+                </div>
+                {(this.props.showRightBar) &&
+                    (<div id="rightColumn">
+                        <RightBar queryStore={(window as any).globalStores.queryStore}/>
+                    </div>)
+                }
+            </div>
+        )
+    }
+
+}
+
 @inject('routing')
 @inject('queryStore')
 @observer
@@ -190,10 +247,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     constructor(props: IResultsViewPageProps) {
         super(props);
 
-        const resultsViewPageStore = initStore(props.queryStore);
         this.resultsViewPageStore = resultsViewPageStore;
-        (window as any).resultsViewPageStore = resultsViewPageStore;
-
         //this.exposeComponentRenderersToParentScript(props);
 
         //win.renderQuerySummary(document.getElementById('main_smry_info_div'));
@@ -382,31 +436,9 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     public render() {
 
         return (
-
-            <div>
+            <PageLayout showRightBar={false}>
                 {
                     (this.currentQuery) && (<div>
-
-                        {/*<div style={{marginBottom:8}}>*/}
-                        {/*<QuerySummary queryStore={this.props.queryStore} onSubmit={()=>this.showQuerySelector = true} store={this.resultsViewPageStore}/>*/}
-                        {/*</div>*/}
-
-                        {/*<Observer>*/}
-                        {/*{*/}
-                        {/*() => {*/}
-                        {/*return <div className={"contentWidth"} style={{marginBottom:8}}><OQLEditor*/}
-                        {/*oqlQuery={this.resultsViewPageStore.oqlQuery}*/}
-                        {/*onChange={(oql: string) =>{*/}
-                        {/*this.resultsViewPageStore.setOQL(oql);*/}
-                        {/*$("#oncoprintContainer > span").css({minWidth:"auto"});*/}
-                        {/*$(".oncoprintBody").removeClass("fadeIn");*/}
-                        {/*$(".oncoprintLoadingIndicator").css("visibility","visible");*/}
-                        {/*}}*/}
-                        {/*/></div>*/}
-                        {/*}*/}
-                        {/*}*/}
-                        {/*</Observer>*/}
-
 
                         <div style={{marginBottom:20}}>
                             <QuerySummary queryStore={this.props.queryStore} store={this.resultsViewPageStore}/>
@@ -441,21 +473,17 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                             <MSKTab key={6} id="copyNumberSegmentsTab" linkText="CN Segments">
                                 <CNSegments store={this.resultsViewPageStore}/>
                             </MSKTab>
-                            <MSKTab key={7} id="expressionTab" linkText="Expression">
-                                {
-                                    (this.resultsViewPageStore.studies.isComplete && this.resultsViewPageStore.genes.isComplete) && (
-                                        <div>put expression here</div>
-                                    )
-                                }
+                            <MSKTab id={7} id="coexpression" linkText={'Coexpression'}>
+                                <CoExpressionTabContainer store={this.resultsViewPageStore}/>
+                            </MSKTab>
+                            <MSKTab id={8} id="enrichment" linkText={'Enrichment'}>
+                                <EnrichmentsTab store={this.resultsViewPageStore}/>
                             </MSKTab>
 
                         </MSKTabs>
                     </div>)
-
                 }
-
-
-            </div>
+            </PageLayout>
         )
 
     }

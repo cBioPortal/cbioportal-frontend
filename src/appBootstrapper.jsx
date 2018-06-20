@@ -112,7 +112,6 @@ function initQueryStore() {
         // normalize this
         query.cancer_study_list = query.cancer_study_list || query.cancer_study_id;
         delete query.cancer_study_id;
-
         window.routingStore.updateRoute(query, "results");
 
     };

@@ -23,7 +23,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
         queryStore: QueryStore
     };
 
-    context: { router: any, queryStore:QueryStore };
+    context: { router: any, queryStore: QueryStore };
 
     componentDidMount() {
 
@@ -52,20 +52,11 @@ export default class Container extends React.Component<IContainerProps, {}> {
                 </div>
 
                 <div className="contentWrapper">
-                    <div className="contentWidth">
-                        <div id="mainColumn">
-                            <div>
-                                <UnsupportedBrowserModal/>
-                                {this.renderChildren()}
-                            </div>
-                        </div>
-                        <div id="rightColumn">
-                            <RightBar queryStore={(window as any).globalStores.queryStore}/>
-                        </div>
-                    </div>
+                    <UnsupportedBrowserModal/>
+                    {this.renderChildren()}
                 </div>
 
-                 <PortalFooter/>
+                <PortalFooter/>
 
             </div>
         );

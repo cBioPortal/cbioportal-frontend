@@ -288,6 +288,7 @@ th.reactable-header-sort-asc:after {
 
 #mainColumn {
   padding: $gutterWidth 0;
+  background-color:#edeaea;
 }
 
 .fixedWidth {
@@ -340,7 +341,6 @@ th.reactable-header-sort-asc:after {
 
 .contentWrapper {
 
-  background:#fff;
   min-height:500px;
 
   //header styles
@@ -403,6 +403,7 @@ th.reactable-header-sort-asc:after {
   margin:0 auto;
 }
 
+
 .noMargin {
   .contentWidth {
     padding-left: 0;
@@ -425,6 +426,12 @@ th.reactable-header-sort-asc:after {
     flex:1;
     padding-left:0;
   }
+
+  &.noMargin {
+    padding-left:0;
+    padding-right:0;
+  }
+
 }
 
 .alert {
