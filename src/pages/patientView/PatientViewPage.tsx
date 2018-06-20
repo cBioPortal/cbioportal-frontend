@@ -13,13 +13,15 @@ import SelectCallback = ReactBootstrap.SelectCallback;
 import {ThreeBounce} from 'better-react-spinkit';
 import PatientHeader from './patientHeader/PatientHeader';
 import {PaginationControls} from "../../shared/components/paginationControls/PaginationControls";
+import {IColumnVisibilityDef} from "shared/components/columnVisibilityControls/ColumnVisibilityControls";
+import {toggleColumnVisibility} from "shared/components/lazyMobXTable/ColumnVisibilityResolver";
 import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
 import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformationSamplesTable";
 import {observer, inject } from "mobx-react";
 import {getSpanElementsFromCleanData} from './clinicalInformation/lib/clinicalAttributesUtil.js';
 import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
-import {reaction, computed, autorun, IReactionDisposer} from "mobx";
+import {reaction, computed, autorun, IReactionDisposer, observable, action} from "mobx";
 import Timeline from "./timeline/Timeline";
 import {default as PatientViewMutationTable} from "./mutation/PatientViewMutationTable";
 import PathologyReport from "./pathologyReport/PathologyReport";
@@ -52,6 +54,9 @@ export interface IPatientViewPageProps {
 @inject('routing')
 @observer
 export default class PatientViewPage extends React.Component<IPatientViewPageProps, {}> {
+
+    @observable private mutationTableColumnVisibility: {[columnId: string]: boolean}|undefined;
+    @observable private cnaTableColumnVisibility: {[columnId: string]: boolean}|undefined;
 
     private updatePageTitleReaction: IReactionDisposer;
 
@@ -97,8 +102,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             () => patientViewPageStore.pageTitle,
             (title:string) => ((window as any).document.title = title),
             { fireImmediately:true }
-        )
+        );
 
+        this.onMutationTableColumnVisibilityToggled = this.onMutationTableColumnVisibilityToggled.bind(this);
+        this.onCnaTableColumnVisibilityToggled = this.onCnaTableColumnVisibilityToggled.bind(this);
     }
 
     public componentDidMount() {
@@ -164,6 +171,18 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         } else {
             return "loading";
         }
+    }
+
+    @action private onCnaTableColumnVisibilityToggled(columnId: string, columnVisibility?: IColumnVisibilityDef[])
+    {
+        this.cnaTableColumnVisibility = toggleColumnVisibility(
+            this.cnaTableColumnVisibility, columnId, columnVisibility);
+    }
+
+    @action private onMutationTableColumnVisibilityToggled(columnId: string, columnVisibility?: IColumnVisibilityDef[])
+    {
+        this.mutationTableColumnVisibility = toggleColumnVisibility(
+            this.mutationTableColumnVisibility, columnId, columnVisibility);
     }
 
     private shouldShowPathologyReport(patientViewPageStore: PatientViewPageStore): boolean {
@@ -379,6 +398,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         enableHotspot={AppConfig.showHotspot}
                                         enableMyCancerGenome={AppConfig.showMyCancerGenome}
                                         enableCivic={AppConfig.showCivic}
+                                        columnVisibility={this.mutationTableColumnVisibility}
+                                        columnVisibilityProps={{
+                                            onColumnToggled: this.onMutationTableColumnVisibilityToggled
+                                        }}
                                     />
                                 )
                             }
@@ -405,6 +428,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 gisticData={patientViewPageStore.gisticData.result}
                                 mrnaExprRankMolecularProfileId={patientViewPageStore.mrnaRankMolecularProfileId.result || undefined}
                                 status={this.cnaTableStatus}
+                                columnVisibility={this.cnaTableColumnVisibility}
+                                columnVisibilityProps={{
+                                    onColumnToggled: this.onCnaTableColumnVisibilityToggled
+                                }}
                             />
                         </MSKTab>
 

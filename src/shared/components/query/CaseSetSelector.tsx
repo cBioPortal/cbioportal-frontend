@@ -10,6 +10,7 @@ import {getStudySummaryUrl} from '../../api/urls';
 import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import SectionHeader from "../sectionHeader/SectionHeader";
 import {ReactSelectOption} from "react-select";
+import { getFilteredCustomCaseSets } from 'shared/components/query/CaseSetSelectorUtils';
 
 const styles = styles_any as {
 	CaseSetSelector: string,
@@ -30,52 +31,43 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 {
 	@computed get caseSetOptions() : ReactSelectOptionWithName[]
 	{
-		let ret = [
-			...this.store.sampleLists.result.map(sampleList => {
-				return {
-					label: (
-						<DefaultTooltip
-							placement="right"
-							mouseEnterDelay={0}
-							overlay={<div className={styles.tooltip}>{sampleList.description}</div>}
-						>
-							<span>{`${sampleList.name} (${sampleList.sampleCount})`}</span>
-						</DefaultTooltip>
-					),
-					value: sampleList.sampleListId,
-					textLabel:sampleList.name
-				};
-			}),
-			{
+		let ret = this.store.sampleLists.result.map(sampleList => {
+			return {
 				label: (
 					<DefaultTooltip
 						placement="right"
 						mouseEnterDelay={0}
-						overlay={<div className={styles.tooltip}>Specify your own case list</div>}
+						overlay={<div className={styles.tooltip}>{sampleList.description}</div>}
 					>
-						<span>User-defined Case List</span>
+						<span>{`${sampleList.name} (${sampleList.sampleCount})`}</span>
 					</DefaultTooltip>
 				),
-				value: CUSTOM_CASE_LIST_ID,
-				textLabel:'User-defined Case List'
+				value: sampleList.sampleListId,
+				textLabel:sampleList.name
+			};
+		});
+
+		let filteredcustomCaseSets = getFilteredCustomCaseSets(
+			this.store.isVirtualStudyQuery,
+			this.store.profiledSamplesCount.result);
+
+		let customCaseSets = filteredcustomCaseSets.map(s => {
+			return {
+				value: s.value,
+				label: (
+					<DefaultTooltip
+						placement="right"
+						mouseEnterDelay={0}
+						overlay={<div className={styles.tooltip}>{s.description}</div>}
+					>
+						<span>{s.name}</span>
+					</DefaultTooltip>
+				),
+				textLabel: s.name
 			}
-		];
-		if (this.store.isVirtualStudyQuery) {
-			ret = [{
-				value: ALL_CASES_LIST_ID,
-				label: (
-					<DefaultTooltip
-						placement="right"
-						mouseEnterDelay={0}
-						overlay={<div className={styles.tooltip}>All cases in the selected studies</div>}
-					>
-						<span>All {`(${this.store.selectableSelectedStudies_totalSampleCount})`}</span>
-					</DefaultTooltip>
-				),
-				textLabel:'All'
-			}].concat(ret);
-		}
-		return ret;
+		});
+
+		return ret.concat(customCaseSets);
 	}
 
 	render()
@@ -87,7 +79,7 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 				<div>
 				<SectionHeader className="sectionLabel"
 							   secondaryComponent={<a href={getStudySummaryUrl(this.store.selectableSelectedStudyIds)} target="_blank">To build your own case set, try out our enhanced Study View.</a>}
-							   promises={[this.store.sampleLists, this.store.asyncCustomCaseSet]}>
+							   promises={[this.store.sampleLists, this.store.asyncCustomCaseSet, this.store.profiledSamplesCount]}>
 					Select Patient/Case Set:
 				</SectionHeader>
 				</div>

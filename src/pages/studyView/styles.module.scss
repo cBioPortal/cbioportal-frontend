@@ -1,0 +1,10 @@
+.flexContainer {
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+}
+.survivalPlot {
+    float: left;
+    margin: 5px;
+}
