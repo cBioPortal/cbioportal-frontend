@@ -1,3 +1,4 @@
+/* tslint:disable: indent linebreak-style */
 import * as _ from 'lodash';
 import client from "../../api/cbioportalClientInstance";
 import {ObservableMap, toJS, observable, reaction, action, computed, whyRun, expr, isObservableMap} from "mobx";
@@ -10,15 +11,14 @@ import CancerStudyTreeData from "./CancerStudyTreeData";
 import {remoteData} from "../../api/remoteData";
 import {labelMobxPromises, cached, debounceAsync} from "mobxpromise";
 import internalClient from "../../api/cbioportalInternalClientInstance";
-import oql_parser, {MUTCommand} from "../../lib/oql/oql-parser";
+import {MUTCommand, SingleGeneQuery, SyntaxError} from "../../lib/oql/oql-parser";
+import {parseOQLQuery} from "../../lib/oql/oqlfilter";
 import memoize from "memoize-weak-decorator";
 import AppConfig from 'appConfig';
 import {gsUploadByGet} from "../../api/gsuploadwindow";
-import {OQLQuery} from "../../lib/oql/oql-parser";
 import {ComponentGetsStoreContext} from "../../lib/ContextUtils";
 import URL from 'url';
 import {buildCBioPortalUrl, BuildUrlParams, getHost, openStudySummaryFormSubmit} from "../../api/urls";
-import {SyntaxError} from "../../lib/oql/oql-parser";
 import StudyListLogic from "./StudyListLogic";
 import {QuerySession} from "../../lib/QuerySession";
 import {stringListToIndexSet, stringListToSet} from "../../lib/StringUtils";
@@ -27,7 +27,7 @@ import request, {Response} from "superagent";
 import formSubmit from "shared/lib/formSubmit";
 import {
 	MolecularProfileQueryParams, NonMolecularProfileQueryParams, queryUrl,
-	nonMolecularProfileParams, currentQueryParams, molecularProfileParams, queryParams
+	nonMolecularProfileParams, currentQueryParams, molecularProfileParams, queryParams, profileAvailability, categorizedSamplesCount
 } from "./QueryStoreUtils";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import getOverlappingStudies from "../../lib/getOverlappingStudies";
@@ -37,6 +37,7 @@ import { getHierarchyData } from "shared/lib/StoreUtils";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import {VirtualStudy} from "shared/model/VirtualStudy";
 import { getGenesetsFromHierarchy, getVolcanoPlotMinYValue, getVolcanoPlotData } from "shared/components/query/GenesetsSelectorStore";
+import SampleListsInStudyCache from 'shared/cache/SampleListsInStudyCache';
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -213,6 +214,15 @@ export class QueryStore
 
 	@computed get virtualStudiesMap():{[id:string]:VirtualStudy} {
 		return _.keyBy(this.virtualStudies.result, study => study.id);
+	}
+
+	@computed get selectedVirtualStudies():VirtualStudy[] {
+		return _.reduce(this.selectableSelectedStudies,(acc:VirtualStudy[], study)=>{
+			if (this.isVirtualStudy(study.studyId)) {
+				acc.push(this.virtualStudiesMap[study.studyId])
+			}
+			return acc;
+		},[]);
 	}
 
 	//gets a list of all physical studies in the selection
@@ -567,6 +577,62 @@ export class QueryStore
 			const profiles:CacheData<MolecularProfile[], string>[] =
 				await this.molecularProfilesInStudyCache.getPromise(this.physicalStudyIdsInSelection, true);
 			return _.flatten(profiles.map(d=>(d.data ? d.data : [])));
+		},
+		default: []
+	});
+
+	readonly sampleListInSelectedStudies = remoteData<SampleList[]>({
+		await: () => {
+			return this.physicalStudyIdsInSelection.map(studyId => {
+				return this.sampleListsInStudyCache.get(studyId)
+			})
+		},
+		invoke: async () => {
+			return _.reduce(this.physicalStudyIdsInSelection,(acc: SampleList[], studyId)=>{
+				let sampleLists = this.sampleListsInStudyCache.get(studyId).result
+				if(!_.isUndefined(sampleLists)){
+					acc = acc.concat(sampleLists)
+				}
+				return acc;
+			},[]);
+		},
+		default: [],
+		onResult: () => {
+			if (!this.initiallySelected.sampleListId || this.studiesHaveChangedSinceInitialization) {
+				this._selectedSampleListId = undefined;
+			}
+		}
+	});
+
+	readonly profileAvailability = remoteData<{mutation: boolean, cna: boolean}>({
+		await:()=>[this.molecularProfilesInSelectedStudies],
+		invoke:()=>{
+			return Promise.resolve(profileAvailability(this.molecularProfilesInSelectedStudies.result!));
+		},
+		default:{
+			mutation: false,
+			cna: false
+		},
+		onResult: () => {
+			if (!this.initiallySelected.sampleListId || this.studiesHaveChangedSinceInitialization) {
+				this.dataTypePriority = profileAvailability(this.molecularProfilesInSelectedStudies.result!)
+			}
+		}
+	});
+
+	readonly profiledSamplesCount = remoteData<{ w_mut: number, w_cna: number, w_mut_cna: number, all: number }>({
+		await: () => [this.sampleListInSelectedStudies],
+		invoke: async () => {
+			return categorizedSamplesCount(
+				this.sampleListInSelectedStudies.result,
+				this.selectableSelectedStudyIds,
+				this.selectedVirtualStudies);
+		},
+		default: {
+			w_mut: 0,
+			w_cna: 0,
+			w_mut_cna: 0,
+			all:0
 		}
 	});
 
@@ -575,10 +641,8 @@ export class QueryStore
 			if (!this.isSingleNonVirtualStudySelected) {
 				return [];
 			}
-			let sampleLists = await client.getAllSampleListsInStudyUsingGET({
-				studyId: this.selectableSelectedStudyIds[0],
-				projection: 'DETAILED'
-			});
+			this.sampleListsInStudyCache.get(this.selectableSelectedStudyIds[0]).result!
+			let sampleLists = await this.sampleListsInStudyCache.get(this.selectableSelectedStudyIds[0]).result!
 			return _.sortBy(sampleLists, sampleList => sampleList.name);
 		},
 		default: [],
@@ -874,39 +938,6 @@ export class QueryStore
 		return ids.filter(id=>!(id in selectableStudiesSet));
 	}
 
-	@computed get selectableSelectedStudies_totalSampleCount()
-	{
-		const result:{[id:string]:number} = {};
-		const virtualStudySamples:{[id:string]:string[]} = {};
-
-		this.selectableSelectedStudies.forEach(study => {
-			//merge samples for a study across all virtual studies 
-			if(this.isVirtualStudy(study.studyId)){
-				if(this.virtualStudiesMap[study.studyId]){
-					this.virtualStudiesMap[study.studyId]
-						.data
-						.studies
-						.forEach(study => {
-							let samples = virtualStudySamples[study.id] || []
-							//samples may contain duplicates
-							virtualStudySamples[study.id] = samples.concat(study.samples)
-						});
-				}
-			}else{
-				//add selected physical studies samples count to result
-				result[study.studyId] =study.allSampleCount;
-			}
-		})
-		//if the physical study in virtual study is not present result object, then 
-		//add the study and samples count into result object
-		Object.keys(virtualStudySamples).forEach(id => {
-			if(!result[id]){
-				result[id] = _.uniq(virtualStudySamples[id]).length;
-			}
-		});
-		return Object.keys(result).reduce((sum, id) => sum + result[id], 0);
-	}
-
 	public isVirtualStudy(studyId:string):boolean {
 		// if the study id doesn't correspond to one in this.cancerStudies, then its a virtual Study
 		return !this.cancerStudyIdsSet.result[studyId];
@@ -1109,12 +1140,15 @@ export class QueryStore
 
 	// GENES
 
-	@computed get oql():{ query: OQLQuery, error?: { start: number, end: number, message: string } }
+	@computed get oql(): {
+		query: SingleGeneQuery[],
+		error?: { start: number, end: number, message: string }
+	}
 	{
 		try
 		{
 			return {
-				query: this.geneQuery && oql_parser.parse(this.geneQuery.trim().toUpperCase()) || [],
+				query: this.geneQuery ? parseOQLQuery(this.geneQuery.trim().toUpperCase()) : [],
 				error: undefined
 			};
 		}
@@ -1142,11 +1176,11 @@ export class QueryStore
 		}
 	}
 
-	@computed get geneIds():string[]
+	@computed get geneIds(): string[]
 	{
 		try
 		{
-			return this.oql.query.map(line => line.gene).filter(gene => gene && gene !== 'DATATYPES');
+			return this.oql.query.map(line => line.gene);
 		}
 		catch (e)
 		{
@@ -1279,6 +1313,8 @@ export class QueryStore
 			if (haveExpInQuery && !expProfileSelected)
 				return "Expression specified in the list of genes, but not selected in the Molecular Profile Checkboxes.";
 
+		} else if(!(this.dataTypePriority.mutation || this.dataTypePriority.cna)){
+			return "Please select one or more molecular profiles.";
 		}
 		if (this.selectableSelectedStudyIds.length && this.selectedSampleListId === CUSTOM_CASE_LIST_ID)
 		{
@@ -1656,6 +1692,10 @@ export class QueryStore
 	@cached get molecularProfilesInStudyCache() {
 		return new MolecularProfilesInStudyCache();
 		
+	}
+
+	@cached get sampleListsInStudyCache() {
+		return new SampleListsInStudyCache();
 	}
 }
 

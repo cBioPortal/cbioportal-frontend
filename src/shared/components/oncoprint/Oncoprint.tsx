@@ -53,7 +53,7 @@ export interface IGenesetHeatmapTrackDatum extends IBaseHeatmapTrackDatum {
 }
 
 export type GeneticTrackDatum = {
-    gene: string;
+    trackLabel: string;
     sample?:string;
     patient?:string;
     study_id:string;
@@ -76,6 +76,10 @@ export type GeneticTrackSpec = {
     oql: string; // OQL corresponding to the track
     info: string;
     data: GeneticTrackDatum[];
+    expansionCallback?: () => void;
+    removeCallback?: () => void;
+    expansionTrackList?: GeneticTrackSpec[];
+    labelColor?: string;
 };
 
 interface IBaseHeatmapTrackSpec {
@@ -91,6 +95,7 @@ export interface IGeneHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     data: IGeneHeatmapTrackDatum[];
     onRemove: () => void;
     info?: string;
+    labelColor?: string;
 }
 export interface IGenesetHeatmapTrackSpec extends IBaseHeatmapTrackSpec {
     data: IGenesetHeatmapTrackDatum[];

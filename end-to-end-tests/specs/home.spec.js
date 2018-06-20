@@ -328,61 +328,13 @@ describe('single study query', function() {
     });
 
     describe('enrichments', function() {
-        this.retries(3)
+        //this.retries(3)
 
         it('should show mutations plot', function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=ov_tcga_pub_cna_seq&gene_list=BRCA1+BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`);
+            waitForOncoprint(10000);
 
-            // click enrichments tab
-            $('#enrichments-result-tab').waitForExist(30000);
-            $('#enrichments-result-tab').click();
-
-            // wait for plot to show
-            $('#ov_tcga_pub_mutations_plot_div').waitForExist(60000);
-        });
-
-        it('should be possible to add genes to query', function() {
-
-            var checkBoxes = $('.ov_tcga_pub_mutations_datatable_table_gene_checkbox_class');
-
-            checkBoxes.waitForExist(10000);
-
-            // select one gene and click add checked genes to query
-            browser.click('.ov_tcga_pub_mutations_datatable_table_gene_checkbox_class');
-            browser.click('#ov_tcga_pub_mutations_datatable_table_update_query_btn');
-
-            // wait for page to load
-            $('[data-test="QuerySummaryGeneCount"]').waitForExist(60000);
-            var text = browser.getText('[data-test="QuerySummaryGeneCount"]')
-
-            // there should be one more gene queried now
-            assert(text.search('3') > -1);
-        });
-
-        it('should be possible to add genes to query, with custom case list query in single study query', function() {
-            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=-1&case_ids=ov_tcga_pub%3ATCGA-24-1428-01%0D%0Aov_tcga_pub%3ATCGA-24-1928-01%0D%0Aov_tcga_pub%3ATCGA-29-1698-01%0D%0Aov_tcga_pub%3ATCGA-24-0980-01%0D%0Aov_tcga_pub%3ATCGA-24-0970-01%0D%0Aov_tcga_pub%3ATCGA-13-0725-01%0D%0Aov_tcga_pub%3ATCGA-23-1027-01%0D%0Aov_tcga_pub%3ATCGA-13-0755-01%0D%0Aov_tcga_pub%3ATCGA-25-1315-01&gene_list=BRCA1%2520BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`);
-            waitForOncoprint(60000);
-            browser.pause(2000)
-
-            // click enrichments tab
-            $('#enrichments-result-tab').waitForExist(30000);
-            $('#enrichments-result-tab').click();
-
-            var checkBoxes = $('.ov_tcga_pub_mutations_datatable_table_gene_checkbox_class');
-
-            checkBoxes.waitForExist(10000);
-
-            // select one gene and click add checked genes to query
-            browser.click('.ov_tcga_pub_mutations_datatable_table_gene_checkbox_class');
-            browser.click('#ov_tcga_pub_mutations_datatable_table_update_query_btn');
-
-            // wait for page to load
-            $('[data-test="QuerySummaryGeneCount"]').waitForExist(60000);
-            browser.pause(2000)
-            var text = browser.getText('[data-test="QuerySummaryGeneCount"]')
-
-            // there should be one more gene queried now
-            assert(text.search('3') > -1, "one more gene queried");
+            assert(browser.isVisible('li a#enrichments-result-tab'));
         });
     });
 });
@@ -727,13 +679,21 @@ describe('oncoprint', function() {
             checkBox.waitForExist(10000);
             browser.click('[data-test="StudySelect"] input');
 
+            input.setValue('');
             input.setValue('adrenocortical carcinoma tcga provisional');
             browser.pause(500);
             // should only be one element
+
+
+
             assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+
             var checkBox = $('[data-test="StudySelect"]');
             checkBox.waitForExist(10000);
             browser.click('[data-test="StudySelect"] input');
+
+            browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
+            browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);    
 
             browser.execute(function() { globalStores.queryStore.selectedSampleListId = "-1"; }); // select custom case list
 
@@ -1159,12 +1119,14 @@ describe('case set selection in front page query form', function(){
         checkBox = $('[data-test="StudySelect"]');
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
 
         browser.waitForExist(selectedCaseSet_sel);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
             "All (252)",
-            "Default case set for multiple"
+            "All (252)",
         );
 
         // Deselect Ampullary Carcinoma
@@ -1210,11 +1172,15 @@ describe('case set selection in front page query form', function(){
         input.setValue('tcga -provisional');
         browser.pause(500);
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
+
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
+
         assert.equal(
             browser.getText(selectedCaseSet_sel),
             "All (21206)",
-            "Default selected case set with multiple studies should be 'All'"
+            "All (21206)",
         );
 
         // Deselect all tcga -provisional studies
@@ -1232,11 +1198,13 @@ describe('case set selection in front page query form', function(){
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
 
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
             "All (252)",
-            "Default case set for multiple"
+            "All (252)",
         );
 
         // Deselect Ampullary Carcinoma
@@ -1293,11 +1261,13 @@ describe('case set selection in modify query form', function(){
         browser.click('[data-test="StudySelect"] input');
         browser.pause(100);
 
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
             "All (368)",
-            "Default selected case set with multiple studies should be 'All'"
+            "All (368)",
         );
 
         // Uncheck study
@@ -1330,11 +1300,14 @@ describe('case set selection in modify query form', function(){
         browser.pause(500);
 
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
+
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
             "All (12997)",
-            "Default selected case set with multiple studies should be 'All'"
+            "All (12997)",
         );
 
         // Deselect all tcga -provisional studies
@@ -1384,8 +1357,10 @@ describe('genetic profile selection in modify query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         // wait for data type priority selector to load
-        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="radio"][data-test="MC"]', 10000);
-        assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="radio"][data-test="MC"]'), "mutation and cna option should be selected");
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
+        assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'), "'Mutation' should be selected");
+        assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'), "'Copy number alterations' should be selected");
 
         //deselect other study
         browser.click('[data-test="StudySelect"] input');
@@ -1419,8 +1394,11 @@ describe('genetic profile selection in modify query form', function(){
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
 
         // wait for data type priority selector to load
-        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="radio"][data-test="MC"]', 10000);
-        assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="radio"][data-test="MC"]'), "mutation and cna option should be selected");
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
+        assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'), "'Mutation' should be selected");
+        assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'), "'Copy number alterations' should be selected");
+
 
         // Deselect all tcga -provisional studies
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
@@ -1472,8 +1450,10 @@ describe('genetic profile selection in front page query form', ()=>{
         browser.click('[data-test="StudySelect"] input');
 
         // wait for data type priority selector to load
-        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="radio"][data-test="MC"]', 10000);
-        assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="radio"][data-test="MC"]'), "mutation and cna option should be selected");
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
+        assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'), "'Mutation' should be selected");
+        assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'), "'Copy number alterations' should be selected");
 
         //deselect other study
         browser.click('[data-test="StudySelect"] input');
@@ -1493,8 +1473,10 @@ describe('genetic profile selection in front page query form', ()=>{
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
 
         // wait for data type priority selector to load
-        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="radio"][data-test="MC"]', 10000);
-        assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="radio"][data-test="MC"]'), "mutation and cna option should be selected");
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
+        browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
+        assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]'), "'Mutation' should be selected");
+        assert(browser.isSelected('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]'), "'Copy number alterations' should be selected");
 
         // Deselect all tcga provisional studies
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
