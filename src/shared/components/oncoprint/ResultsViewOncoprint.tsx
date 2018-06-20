@@ -134,6 +134,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     private heatmapGeneInputValueUpdater:IReactionDisposer;
 
     public selectedClinicalAttributeIds = observable.shallowMap<boolean>();
+    public expansionsByGeneticTrackKey = observable.map<number[]>();
     public expansionsByGenesetHeatmapTrackKey =
         observable.map<IGenesetExpansionRecord[]>();
     public molecularProfileIdToHeatmapTracks =
@@ -744,7 +745,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             this.props.store.selectedMolecularProfiles
         ],
         invoke:()=>{
-            const groupedMolecularProfiles:{[alterationType:string]:MolecularProfile[]} =
+            const groupedSelectedMolecularProfiles:{[alterationType:string]:MolecularProfile[]} =
                 _.groupBy(this.props.store.selectedMolecularProfiles.result!, "molecularAlterationType");
 
             const existsUnprofiled:{[alterationType:string]:boolean} = {};
@@ -773,9 +774,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 "PROTEIN_LEVEL": "protein expression"
             };
 
-            const attributes:OncoprintClinicalAttribute[] = Object.keys(existsUnprofiled).map(alterationType=>{
-                const group = groupedMolecularProfiles[alterationType];
-                if (group.length === 1) {
+            const attributes:OncoprintClinicalAttribute[] = (Object.keys(existsUnprofiled).map(alterationType=>{
+                const group = groupedSelectedMolecularProfiles[alterationType];
+                if (!group) {
+                    // No selected profiles of that type, skip it
+                    return null;
+                } else if (group.length === 1) {
                     // If only one profile of type, it gets its own attribute
                     const profile = group[0];
                     return {
@@ -797,7 +801,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                         patientAttribute: false
                     };
                 }
-            });
+            }) as (OncoprintClinicalAttribute|null)[]).filter(x=>!!x) as OncoprintClinicalAttribute[];// filter out null
 
             attributes.sort((a,b)=>naturalSort(a.displayName, b.displayName));
             return Promise.resolve(attributes);

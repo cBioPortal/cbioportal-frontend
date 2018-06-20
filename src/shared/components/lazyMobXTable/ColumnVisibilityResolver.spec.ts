@@ -1,6 +1,9 @@
 import {assert} from 'chai';
 import * as _ from 'lodash';
-import {resolveColumnVisibility, resolveColumnVisibilityByColumnDefinition} from "./ColumnVisibilityResolver";
+import {
+    ISimpleColumnVisibilityDef, resolveColumnVisibility,
+    resolveColumnVisibilityByColumnDefinition, toggleColumnVisibility
+} from "./ColumnVisibilityResolver";
 
 function getVisibleColumnIds(columnVisibility: {[columnId: string]: boolean}): string[]
 {
@@ -9,7 +12,7 @@ function getVisibleColumnIds(columnVisibility: {[columnId: string]: boolean}): s
 
 describe('ColumnVisibilityResolver', () => {
 
-    let columns:any[];
+    let columns: ISimpleColumnVisibilityDef[];
 
     beforeEach(() => {
         columns = [
@@ -111,6 +114,76 @@ describe('ColumnVisibilityResolver', () => {
 
             assert.deepEqual(getVisibleColumnIds(colVis), ["2nd", "3rd", "5th", "6th"],
                 "2nd, 3rd, 5th, and 6th columns should be visible");
+        });
+    });
+
+    describe('toggleColumnVisibility', () => {
+        it("properly initializes and toggles column visibility multiple times", () => {
+            const columnVisibilityDef: ISimpleColumnVisibilityDef[] = [
+                {
+                    id: "1st",
+                    name: "1st: doesn't have to be same as the id",
+                    visible: false
+                },
+                {
+                    id: "2nd",
+                    name: "2nd: doesn't have to be same as the id",
+                    visible: false
+                },
+                {
+                    id: "3rd",
+                    name: "3rd: doesn't have to be same as the id",
+                    visible: true
+                },
+                {
+                    id: "4th",
+                    name: "4th: doesn't have to be same as the id",
+                    visible: true
+                },
+                {
+                    id: "5th",
+                    name: "5th: doesn't have to be same as the id",
+                    visible: false
+                }
+            ];
+
+            // init with column visibility def
+            let colVis = toggleColumnVisibility(undefined, "5th", columnVisibilityDef);
+
+            assert.deepEqual(getVisibleColumnIds(colVis), ["3rd", "4th", "5th"],
+                "3rd and 4th initially visible, 5th toggled to be visible");
+
+            // toggle 4th column
+            colVis = toggleColumnVisibility(colVis, "4th", columnVisibilityDef);
+
+            assert.deepEqual(getVisibleColumnIds(colVis), ["3rd", "5th"],
+                "3rd and 5th visible, columnVisibilityDef should be ignored this time");
+
+            // toggle 3rd column
+            colVis = toggleColumnVisibility(colVis, "3rd");
+
+            assert.deepEqual(getVisibleColumnIds(colVis), ["5th"],
+                "only 5th visible");
+
+            // toggle 1st column
+            colVis = toggleColumnVisibility(colVis, "1st");
+
+            assert.deepEqual(getVisibleColumnIds(colVis), ["1st", "5th"],
+                "1st and 5th visible");
+
+            // toggle 1st and 5th columns
+            colVis = toggleColumnVisibility(colVis, "1st");
+            colVis = toggleColumnVisibility(colVis, "5th");
+
+            assert.equal(getVisibleColumnIds(colVis).length, 0,
+                "none visible");
+
+            // toggle 2nd and 3rd columns
+            colVis = toggleColumnVisibility(colVis, "2nd");
+            colVis = toggleColumnVisibility(colVis, "3rd");
+
+            assert.deepEqual(getVisibleColumnIds(colVis), ["2nd", "3rd"],
+                "2nd and 3rd visible");
         });
     });
 });

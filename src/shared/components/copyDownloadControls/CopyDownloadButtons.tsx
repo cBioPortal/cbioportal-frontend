@@ -78,7 +78,7 @@ export class CopyDownloadButtons extends React.Component<ICopyDownloadButtonsPro
     public render() {
         return (
             <span className={this.props.className}>
-                <ButtonGroup style={{ marginLeft:10 }} className={this.props.className}>
+                <ButtonGroup className={this.props.className}>
                     <If condition={this.props.showCopy}>
                         {this.copyButton()}
                     </If>
