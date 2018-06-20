@@ -37,6 +37,7 @@ export type MutatedGenesData = MutationCountByGene[];
 export type CNAGenesData = CopyNumberCountByGene[];
 export type SurvivalType = {
     id: string,
+    title: string,
     associatedAttrs: ['OS_STATUS', 'OS_MONTHS']|['DFS_STATUS', 'DFS_MONTHS'],
     filter: string[],
     alteredGroup: PatientSurvival[]
@@ -407,6 +408,7 @@ export class StudyViewPageStore {
         if (osStatusFlag && osMonthsFlag) {
             survivalTypes.push({
                 id: 'os_survival',
+                title: 'Overall Survival',
                 associatedAttrs: ['OS_STATUS', 'OS_MONTHS'],
                 filter: ['DECEASED'],
                 alteredGroup: [],
@@ -417,6 +419,7 @@ export class StudyViewPageStore {
         if (dfsStatusFlag && dfsMonthsFlag) {
             survivalTypes.push({
                 id: 'dfs_survival',
+                title: 'Disease Free Survival',
                 associatedAttrs: ['DFS_STATUS', 'DFS_MONTHS'],
                 filter: ['Recurred/Progressed', 'Recurred'],
                 alteredGroup: [],
