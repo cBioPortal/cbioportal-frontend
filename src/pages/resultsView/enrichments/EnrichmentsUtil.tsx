@@ -43,9 +43,9 @@ export function formatPercentage(count: number, percentage: number): string {
     return count + " (" + percentage.toFixed(2) + "%)";
 }
 
-export function getAlterationScatterData(alterationEnrichments: AlterationEnrichmentRow[], gueryGenes: string[]): any[] {
+export function getAlterationScatterData(alterationEnrichments: AlterationEnrichmentRow[], queryGenes: string[]): any[] {
 
-    return alterationEnrichments.filter(a => !gueryGenes.includes(a.hugoGeneSymbol)).map((alterationEnrichment) => {
+    return alterationEnrichments.filter(a => !queryGenes.includes(a.hugoGeneSymbol)).map((alterationEnrichment) => {
         return {
             x: roundLogRatio(Number(alterationEnrichment.logRatio), 10), y: -Math.log10(alterationEnrichment.pValue),
             hugoGeneSymbol: alterationEnrichment.hugoGeneSymbol,
@@ -56,9 +56,9 @@ export function getAlterationScatterData(alterationEnrichments: AlterationEnrich
     });
 }
 
-export function getExpressionScatterData(expressionEnrichments: ExpressionEnrichmentRow[], gueryGenes: string[]): any[] {
+export function getExpressionScatterData(expressionEnrichments: ExpressionEnrichmentRow[], queryGenes: string[]): any[] {
 
-    return expressionEnrichments.filter(a => !gueryGenes.includes(a.hugoGeneSymbol)).map((expressionEnrichment) => {
+    return expressionEnrichments.filter(a => !queryGenes.includes(a.hugoGeneSymbol)).map((expressionEnrichment) => {
         return {
             x: expressionEnrichment.logRatio,
             y: -Math.log10(expressionEnrichment.pValue), 
@@ -82,21 +82,13 @@ export function roundLogRatio(logRatio: number, threshold: number): number {
     }
 }
 
-export function calculateLogRatio(expressionEnrichment: ExpressionEnrichment, molecularProfileDatatype: string, assumeLogSpace: boolean): number {
-    
-    if (molecularProfileDatatype === LOG_VALUE || molecularProfileDatatype === LOG2_VALUE || assumeLogSpace) {
-        return expressionEnrichment.meanExpressionInAlteredGroup - expressionEnrichment.meanExpressionInUnalteredGroup;
-    }
-    return Math.log2(expressionEnrichment.meanExpressionInAlteredGroup / expressionEnrichment.meanExpressionInUnalteredGroup);
-}
-
 export function getAlterationRowData(alterationEnrichments: AlterationEnrichment[], totalAltered: number,
-    totalUnaltered: number, gueryGenes: string[]): AlterationEnrichmentRow[] {
+    totalUnaltered: number, queryGenes: string[]): AlterationEnrichmentRow[] {
 
     return alterationEnrichments.map(alterationEnrichment => {
         return {
-            checked: gueryGenes.includes(alterationEnrichment.hugoGeneSymbol),
-            disabled: gueryGenes.includes(alterationEnrichment.hugoGeneSymbol),
+            checked: queryGenes.includes(alterationEnrichment.hugoGeneSymbol),
+            disabled: queryGenes.includes(alterationEnrichment.hugoGeneSymbol),
             hugoGeneSymbol: alterationEnrichment.hugoGeneSymbol,
             entrezGeneId: alterationEnrichment.entrezGeneId,
             cytoband: alterationEnrichment.cytoband, 
@@ -111,16 +103,13 @@ export function getAlterationRowData(alterationEnrichments: AlterationEnrichment
     });
 }
 
-export function getExpressionRowData(expressionEnrichments: ExpressionEnrichment[], molecularProfileDatatype: string, gueryGenes: string[]):
+export function getExpressionRowData(expressionEnrichments: ExpressionEnrichment[], queryGenes: string[]):
     ExpressionEnrichmentRow[] {
-
-    const assumeLogSpace = expressionEnrichments.filter(a => a.meanExpressionInAlteredGroup <= 0 
-        || a.meanExpressionInUnalteredGroup <= 0).length > 0;
 
     return expressionEnrichments.map(expressionEnrichment => {
         return {
-            checked: gueryGenes.includes(expressionEnrichment.hugoGeneSymbol),
-            disabled: gueryGenes.includes(expressionEnrichment.hugoGeneSymbol),
+            checked: queryGenes.includes(expressionEnrichment.hugoGeneSymbol),
+            disabled: queryGenes.includes(expressionEnrichment.hugoGeneSymbol),
             hugoGeneSymbol: expressionEnrichment.hugoGeneSymbol,
             entrezGeneId: expressionEnrichment.entrezGeneId,
             cytoband: expressionEnrichment.cytoband,
@@ -128,7 +117,7 @@ export function getExpressionRowData(expressionEnrichments: ExpressionEnrichment
             meanExpressionInUnalteredGroup: expressionEnrichment.meanExpressionInUnalteredGroup,
             standardDeviationInAlteredGroup: expressionEnrichment.standardDeviationInAlteredGroup,
             standardDeviationInUnalteredGroup: expressionEnrichment.standardDeviationInUnalteredGroup,
-            logRatio: calculateLogRatio(expressionEnrichment, molecularProfileDatatype, assumeLogSpace),
+            logRatio: expressionEnrichment.meanExpressionInAlteredGroup - expressionEnrichment.meanExpressionInUnalteredGroup,
             pValue: expressionEnrichment.pValue,
             qValue: expressionEnrichment.qValue
         };

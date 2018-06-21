@@ -35,7 +35,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
     @observable.ref highlightedRow:ExpressionEnrichmentRow|undefined;
 
     @computed get data(): ExpressionEnrichmentRow[] {
-        return getExpressionRowData(this.props.data, this.props.selectedProfile.datatype, this.props.store.hugoGeneSymbols);
+        return getExpressionRowData(this.props.data, this.props.store.hugoGeneSymbols);
     }
 
     @computed get filteredData(): ExpressionEnrichmentRow[] {
