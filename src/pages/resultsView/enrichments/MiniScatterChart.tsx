@@ -97,7 +97,7 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                 </div>
                 {this.tooltipModel &&
                     <Popover className={"cbioTooltip"} positionLeft={this.tooltipModel.x + 15}
-                        positionTop={this.tooltipModel.y - 25}>
+                        positionTop={this.tooltipModel.y - 33}>
                         Gene: {this.tooltipModel.datum.hugoGeneSymbol}<br/>
                         Log Ratio: {formatLogOddsRatio(this.tooltipModel.datum.logRatio)}<br/>
                         p-Value: {toConditionalPrecision(this.tooltipModel.datum.y, 3, 0.01)}<br/>
