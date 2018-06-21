@@ -7,8 +7,8 @@ import { ChartType } from "pages/studyView/StudyViewPageStore";
 export interface IChartHeaderProps {
     clinicalAttribute: ClinicalAttribute;
     active           : boolean;
-    handleResetClick : () => void;
-    onDeleteChart    : () => void;
+    resetChart       : () => void;
+    deleteChart      : () => void;
     hideLabel?       : boolean;
     chartControls?   : ChartControls;
     changeChartType  : (chartType: ChartType) => void;
@@ -35,7 +35,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                     <If condition={this.props.active}>
                         <div role="group" className="btn-group">
                             <If condition={this.props.chartControls && this.props.chartControls.showResetIcon}>
-                                <button className="btn btn-xs" onClick={() => this.props.handleResetClick()}>
+                                <button className="btn btn-xs" onClick={() => this.props.resetChart()}>
                                     <i className="fa fa-undo" aria-hidden="true" title="Reset filters in chart"></i>
                                 </button>
                             </If>
@@ -53,7 +53,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     <i className="fa fa-pie-chart" aria-hidden="true" title="Convert to Pie chart"></i>
                                 </button>
                             </If>
-                            <button className="btn btn-xs"  onClick={() => this.props.onDeleteChart()}>
+                            <button className="btn btn-xs"  onClick={() => this.props.deleteChart()}>
                                 <i className="fa fa-times" aria-hidden="true" title="Delete chart"></i>
                             </button>
                         </div>
