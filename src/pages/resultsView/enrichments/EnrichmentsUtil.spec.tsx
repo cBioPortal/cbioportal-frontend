@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import React from 'react';
 import { calculateAlterationTendency, calculateExpressionTendency, formatLogOddsRatio, formatValueWithStyle, 
-    formatPercentage, getAlterationScatterData, getExpressionScatterData, roundLogRatio, calculateLogRatio, 
+    formatPercentage, getAlterationScatterData, getExpressionScatterData, roundLogRatio, 
     getAlterationRowData, getExpressionRowData, getFilteredData, getBarChartTooltipContent, getBoxPlotScatterData, 
     getDownloadContent, getAlterationsTooltipContent, shortenGenesLabel, getBoxPlotModels
 } from "./EnrichmentsUtil";
@@ -432,24 +432,6 @@ describe("EnrichmentsUtil", () => {
         });
     });
 
-    describe("#calculateLogRatio()", () => {
-        it("should return 3 for ", () => {
-            assert.equal(calculateLogRatio(exampleExpressionEnrichments[0], "LOG-VALUE", true), -0.7514352361955119);
-        });
-
-        it("should return 3 for ", () => {
-            assert.equal(calculateLogRatio(exampleExpressionEnrichments[0], "LOG2-VALUE", true), -0.7514352361955119);
-        });
-
-        it("should return 3 for ", () => {
-            assert.equal(calculateLogRatio(exampleExpressionEnrichments[0], "CONTINUOUS", true), -0.7514352361955119);
-        });
-
-        it("should return 3 for ", () => {
-            assert.equal(calculateLogRatio(exampleExpressionEnrichments[0], "CONTINUOUS", false), -0.11825127752858444);
-        });
-    });
-
     describe("#getAlterationRowData()", () => {
         it("returns empty array for empty array", () => {
             assert.deepEqual(getAlterationRowData([], 0, 0, []), []);
@@ -462,11 +444,11 @@ describe("EnrichmentsUtil", () => {
 
     describe("#getExpressionRowData()", () => {
         it("returns empty array for empty array", () => {
-            assert.deepEqual(getExpressionRowData([], "LOG-VALUE", ["EGFR"]), []);
+            assert.deepEqual(getExpressionRowData([], ["EGFR"]), []);
         });
 
         it("returns correct row data", () => {
-            assert.deepEqual(getExpressionRowData(exampleExpressionEnrichments, "LOG-VALUE", ["EGFR"]), exampleExpressionEnrichmentRowData);
+            assert.deepEqual(getExpressionRowData(exampleExpressionEnrichments, ["EGFR"]), exampleExpressionEnrichmentRowData);
         });
     });
 
