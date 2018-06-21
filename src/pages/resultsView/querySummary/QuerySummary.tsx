@@ -10,9 +10,10 @@ import './styles.scss';
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import formSubmit from '../../../shared/lib/formSubmit';
 import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
-import {observable} from "mobx";
+import {action, observable} from "mobx";
 import {QueryStore} from "../../../shared/components/query/QueryStore";
 import QueryAndDownloadTabs from "../../../shared/components/query/QueryAndDownloadTabs";
+import autobind from "autobind-decorator";
 
 class StudyLink extends React.Component<{ study: CancerStudy, onClick?: () => void, href?:string }, {}> {
     render() {
@@ -52,6 +53,13 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
         </div>
     }
 
+    @autobind
+    @action
+    closeQueryForm(){
+        this.queryFormVisible=false;
+        $(document).scrollTop(0);
+    }
+
     private get multipleStudyUI() {
         return <div>
             <span>
@@ -83,7 +91,6 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
     render() {
 
         if (!this.props.store.totalAlterationStats.isError && !this.props.store.queriedStudies.isError) {
-
 
             const loadingComplete = this.props.store.totalAlterationStats.isComplete && this.props.store.queriedStudies.isComplete;
 
@@ -118,7 +125,7 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
                     {
                         (this.queryStoreInitialized) && (
                             <div style={{marginTop:10}} className={classNames({ hidden:!this.queryFormVisible })}>
-                                <QueryAndDownloadTabs showDownloadTab={false} store={this.props.queryStore} />
+                                <QueryAndDownloadTabs onSubmit={this.closeQueryForm} showDownloadTab={false} store={this.props.queryStore} />
                             </div>
                         )
                     }

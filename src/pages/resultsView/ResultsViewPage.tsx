@@ -44,6 +44,7 @@ import EnrichmentsTab from 'pages/resultsView/enrichments/EnrichmentsTab';
 import QueryAndDownloadTabs from "../../shared/components/query/QueryAndDownloadTabs";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import RightBar from "../../shared/components/rightbar/RightBar";
+import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 
 
 const win = (window as any);
@@ -60,8 +61,6 @@ function initStore() {
             return win.globalStores.routing.location.query
         },
         query => {
-
-
 
             if (!win.globalStores.routing.location.pathname.includes("/results")) {
                return;
@@ -215,27 +214,6 @@ type OncoprintTabInitProps = {
 };
 
 
-export class PageLayout extends React.Component<{ showRightBar?:boolean },{}> {
-
-    render(){
-        return (
-            <div className="contentWidth noMargin">
-                <div id="mainColumn">
-                    <div>
-                        {this.props.children}
-                    </div>
-                </div>
-                {(this.props.showRightBar) &&
-                    (<div id="rightColumn">
-                        <RightBar queryStore={(window as any).globalStores.queryStore}/>
-                    </div>)
-                }
-            </div>
-        )
-    }
-
-}
-
 @inject('routing')
 @inject('queryStore')
 @observer
@@ -248,36 +226,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         super(props);
 
         this.resultsViewPageStore = resultsViewPageStore;
-        //this.exposeComponentRenderersToParentScript(props);
 
-        //win.renderQuerySummary(document.getElementById('main_smry_info_div'));
-
-        // // hide mutex tab
-        // $(document).ready(()=>{
-        //     if (!(window as any).serverVars.theQuery.trim().length || genes((window as any).serverVars.theQuery).length <= 1) {
-        //         $('a#mutex-result-tab').parent().hide();
-        //     }
-        //     //hide gene-specific tabs when we only query gene sets (and no genes are queried)
-        //     // TODO: this should probably be changed once we have single page
-        //     // app
-        //     if (!(window as any).serverVars.theQuery.trim().length || genes((window as any).serverVars.theQuery).length == 0) {
-        //         $('a#cancer-types-result-tab').parent().hide();
-        //         $('a#plots-result-tab').parent().hide();
-        //         $('a#mutation-result-tab').parent().hide();
-        //         $('a#coexp-result-tab').parent().hide();
-        //         $('a#enrichments-result-tab').parent().hide();
-        //         $('a#survival-result-tab').parent().hide();
-        //         $('a#network-result-tab').parent().hide();
-        //         $('a#igv-result-tab').parent().hide();
-        //         $('a#data-download-result-tab').parent().hide();
-        //     }
-        //
-        //     if (win.cancerStudyIdList !== 'null') {
-        //         getGAInstance().event('results view', 'show', { eventLabel: win.cancerStudyIdList  });
-        //     } else if (_.includes(['all','null'],win.cancerStudyId) === false) {
-        //         getGAInstance().event('results view', 'show', { eventLabel: win.cancerStudyId  });
-        //     }
-        // });
     }
 
     get addThisParameters() {
@@ -298,139 +247,10 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
     }
 
-    public exposeComponentRenderersToParentScript(props: IResultsViewPageProps) {
-
-
-        exposeComponentRenderer('renderOncoprint',
-            (props: OncoprintTabInitProps) => {
-                function addOnBecomeVisibleListener(callback: () => void) {
-                    $('#oncoprint-result-tab').click(callback);
-                }
-
-                return (
-                    <ResultsViewOncoprint
-                        divId={props.divId}
-                        store={this.resultsViewPageStore}
-                        routing={this.props.routing}
-                        addOnBecomeVisibleListener={addOnBecomeVisibleListener}
-                    />
-                );
-            });
-
-        exposeComponentRenderer('renderCNSegments',
-            () => {
-                return <CNSegments store={this.resultsViewPageStore}/>
-            }
-        );
-
-        exposeComponentRenderer('renderQuerySummary',
-            () => {
-                return <QuerySummary queryStore={props.queryStore} store={this.resultsViewPageStore}/>
-            }
-        );
-
-        exposeComponentRenderer('renderMutationsTab',
-            () => {
-                return <div>
-                    <AjaxErrorModal
-                        show={(this.resultsViewPageStore.ajaxErrors.length > 0)}
-                        onHide={() => {
-                            this.resultsViewPageStore.clearErrors();
-                        }}
-                    />
-                    <Mutations store={this.resultsViewPageStore}/>
-                </div>
-            });
-
-        exposeComponentRenderer('renderCancerTypeSummary',
-            () => {
-
-                return <Observer>
-                    {() => {
-
-                        const isComplete = this.resultsViewPageStore.samplesExtendedWithClinicalData.isComplete && this.resultsViewPageStore.alterationsByGeneBySampleKey.isComplete;
-                        const isPending = this.resultsViewPageStore.samplesExtendedWithClinicalData.isPending && this.resultsViewPageStore.alterationsByGeneBySampleKey.isPending;
-
-                        if (isComplete) {
-                            return (<div>
-                                <AjaxErrorModal
-                                    show={(this.resultsViewPageStore.ajaxErrors.length > 0)}
-                                    onHide={() => {
-                                        this.resultsViewPageStore.clearErrors();
-                                    }}
-                                />
-                                <CancerSummaryContainer
-                                    genes={this.resultsViewPageStore.genes.result!}
-                                    samplesExtendedWithClinicalData={this.resultsViewPageStore.samplesExtendedWithClinicalData.result!}
-                                    alterationsByGeneBySampleKey={this.resultsViewPageStore.alterationsByGeneBySampleKey.result!}
-                                    studies={this.resultsViewPageStore.studies.result!}
-                                    studyMap={this.resultsViewPageStore.physicalStudySet}
-                                />
-                            </div>)
-                        } else if (isPending) {
-                            return <Loader isLoading={true}/>
-                        } else {
-                            return <div></div>;
-                        }
-
-                    }}
-                </Observer>
-
-            });
-
-
-        exposeComponentRenderer('renderMutExTab', () => {
-
-            return (<div>
-                <MutualExclusivityTab store={this.resultsViewPageStore}/>
-            </div>)
-        });
-
-        exposeComponentRenderer('renderBookmark', () => {
-            return (
-                <div>
-                    <AddThisBookmark store={this.resultsViewPageStore} getParameters={this.addThisParameters}/>
-                </div>
-            );
-        });
-
-        exposeComponentRenderer('renderSurvivalTab', () => {
-
-            return (<div className="cbioportal-frontend">
-                <SurvivalTab store={this.resultsViewPageStore}/>
-            </div>)
-        });
-
-        exposeComponentRenderer('renderDownloadTab', () => {
-            return (
-                <div>
-                    <DownloadTab store={this.resultsViewPageStore}/>
-                </div>
-            );
-        });
-        exposeComponentRenderer('renderCoExpressionTab', () => {
-            return (
-                <div className="cbioportal-frontend">
-                    <CoExpressionTabContainer store={this.resultsViewPageStore}/>
-                </div>
-            );
-        });
-
-        exposeComponentRenderer('renderEnrichmentsTab', () => {
-
-            return (
-                <div className="cbioportal-frontend">
-                    <EnrichmentsTab store={this.resultsViewPageStore}/>
-                </div>);
-        });
-    }
-
     @observable currentQuery = true;
 
     private handleTabChange(id: string) {
-
         this.props.routing.updateRoute({ tab: id });
-
     }
 
     public render() {
@@ -440,7 +260,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                 {
                     (this.currentQuery) && (<div>
 
-                        <div style={{marginBottom:20}}>
+                        <div style={{margin:"0 20px 20px 20px"}}>
                             <QuerySummary queryStore={this.props.queryStore} store={this.resultsViewPageStore}/>
                         </div>
                         <MSKTabs activeTabId={this.props.routing.location.query.tab} unmountOnHide={true}
@@ -478,6 +298,10 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                             </MSKTab>
                             <MSKTab id={8} id="enrichment" linkText={'Enrichment'}>
                                 <EnrichmentsTab store={this.resultsViewPageStore}/>
+                            </MSKTab>
+
+                            <MSKTab id={9} id="download" linkText={'Download'}>
+                                <DownloadTab store={this.resultsViewPageStore}/>
                             </MSKTab>
 
                         </MSKTabs>

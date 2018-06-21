@@ -41,6 +41,7 @@ import {molecularProfileParams} from "../../shared/components/query/QueryStoreUt
 import CancerSummaryContainer from "./cancerSummary/CancerSummaryContainer";
 import ExtendedRouterStore from "../../shared/lib/ExtendedRouterStore";
 import {parseOQLQuery} from "../../shared/lib/oql/oqlfilter";
+import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 
 
 const win = (window as any);
@@ -196,12 +197,11 @@ export default class SinglePageApp extends React.Component<IResultsViewPageProps
 
         return (
 
-            <div>
-
+            <PageLayout showRightBar={true}>
                 <If condition={this.showQuerySelector}>
                     <div style={{padding:15}}>
                         <QueryAndDownloadTabs onSubmit={()=>{
-                            this.showQuerySelector = false;
+                            $(document).scrollTop(0);
                             // $("#oncoprintContainer > span").css({minWidth:"auto"});
                             // $(".oncoprintBody").removeClass("fadeIn");
                             // $(".oncoprintLoadingIndicator").css("visibility","visible");
@@ -209,79 +209,7 @@ export default class SinglePageApp extends React.Component<IResultsViewPageProps
                     </div>
                     <hr />
                 </If>
-
-                {
-                    (this.currentQuery) && (<div>
-
-                        {/*<div style={{marginBottom:8}}>*/}
-                        {/*<QuerySummary queryStore={this.props.queryStore} onSubmit={()=>this.showQuerySelector = true} store={this.resultsViewPageStore}/>*/}
-                        {/*</div>*/}
-
-                        {/*<Observer>*/}
-                        {/*{*/}
-                        {/*() => {*/}
-                        {/*return <div className={"contentWidth"} style={{marginBottom:8}}><OQLEditor*/}
-                        {/*oqlQuery={this.resultsViewPageStore.oqlQuery}*/}
-                        {/*onChange={(oql: string) =>{*/}
-                        {/*this.resultsViewPageStore.setOQL(oql);*/}
-                        {/*$("#oncoprintContainer > span").css({minWidth:"auto"});*/}
-                        {/*$(".oncoprintBody").removeClass("fadeIn");*/}
-                        {/*$(".oncoprintLoadingIndicator").css("visibility","visible");*/}
-                        {/*}}*/}
-                        {/*/></div>*/}
-                        {/*}*/}
-                        {/*}*/}
-                        {/*</Observer>*/}
-
-
-                        <div style={{marginBottom:20}}>
-                        <QuerySummary queryStore={this.props.queryStore} store={this.resultsViewPageStore}/>
-                        </div>
-                        <MSKTabs activeTabId={this.props.routing.location.query.tab} unmountOnHide={true}
-                                 onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
-                            <MSKTab key={0} id="oncoprintTab" linkText="Oncoprint">
-                                <ResultsViewOncoprint
-                                    divId={'oncoprintContainer'}
-                                    store={this.resultsViewPageStore}
-                                    routing={this.props.routing}
-                                />
-                            </MSKTab>
-                            <MSKTab key={1} id="cancerTypesSummaryTab" linkText="Cancer Types Summary">
-                                <CancerSummaryContainer
-                                    genes={this.resultsViewPageStore.genes.result!}
-                                    samplesExtendedWithClinicalData={this.resultsViewPageStore.samplesExtendedWithClinicalData.result!}
-                                    alterationsByGeneBySampleKey={this.resultsViewPageStore.alterationsByGeneBySampleKey.result!}
-                                    studies={this.resultsViewPageStore.studies.result!}
-                                    studyMap={this.resultsViewPageStore.physicalStudySet}
-                                />
-                            </MSKTab>
-                            <MSKTab key={3} id="mutationsTab" linkText="Mutations">
-                                <Mutations store={this.resultsViewPageStore}/>
-                            </MSKTab>
-                            <MSKTab key={5} id="mutualExclusivityTab" linkText="Mutual Exclusivity">
-                                <MutualExclusivityTab store={this.resultsViewPageStore}/>
-                            </MSKTab>
-                            <MSKTab key={4} id="survivalTab" linkText="Survival">
-                                <SurvivalTab store={this.resultsViewPageStore}/>
-                            </MSKTab>
-                            <MSKTab key={6} id="copyNumberSegmentsTab" linkText="CN Segments">
-                                <CNSegments store={this.resultsViewPageStore}/>
-                            </MSKTab>
-                            <MSKTab key={7} id="expressionTab" linkText="Expression">
-                                {
-                                    (this.resultsViewPageStore.studies.isComplete && this.resultsViewPageStore.genes.isComplete) && (
-                                        <div>put expression here</div>
-                                    )
-                                }
-                            </MSKTab>
-
-                        </MSKTabs>
-                    </div>)
-
-                }
-
-
-            </div>
+            </PageLayout>
         )
 
     }

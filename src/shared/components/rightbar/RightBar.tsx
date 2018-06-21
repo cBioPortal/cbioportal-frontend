@@ -7,6 +7,7 @@ import {ThreeBounce} from 'better-react-spinkit';
 import AppConfig from "appConfig";
 import {QueryStore} from "shared/components/query/QueryStore";
 import { Timeline } from 'react-twitter-widgets';
+import { Link } from 'react-router';
 
 
 interface IRightBarProps
@@ -125,7 +126,7 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
                         <a href="ln?q=BRAF:MUT=V600E">BRAF V600E mutations across cancer types</a>
                     </li>
                     <li>
-                        <a href="patient?studyId=ucec_tcga_pub&caseId=TCGA-BK-A0CC">Patient view of an endometrial cancer case</a>
+                        <Link to="patient?studyId=ucec_tcga_pub&caseId=TCGA-BK-A0CC">Patient view of an endometrial cancer case</Link>
                     </li>
                 </ul>
             </div>
