@@ -88,6 +88,11 @@ switch (window.defaultRoute) {
         // when refactoring is done, all pages will use this
         history = browserHistory;
         break;
+    case "/study":
+        // these pages are going to use state of-the-art browser history
+        // when refactoring is done, all pages will use this
+        history = browserHistory;
+        break;
     default:
         // legacy pages will use memory history so as not to interfere
         // with old url params
