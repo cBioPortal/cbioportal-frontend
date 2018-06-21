@@ -83,7 +83,7 @@ function initStore() {
                     }
                 ]
             } else {
-                samplesSpecification = query.cancer_study_list.split(",").map((studyId)=>{
+                samplesSpecification = query.cancer_study_list.split(",").map((studyId:string)=>{
                     return {
                         studyId,
                         sampleListId:`${studyId}_all`,
@@ -94,7 +94,7 @@ function initStore() {
 
 
 
-            function getMolecularProfiles(query){
+            function getMolecularProfiles(query:any){
                 //if there's only one study, we read profiles from query params and filter out udfine
                 const molecularProfiles = [
                     query.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
@@ -112,18 +112,18 @@ function initStore() {
 
             runInAction(() => {
 
-                if (!resultsViewPageStore.samplesSpecification || !_.isEqual(resultsViewPageStore.samplesSpecification.peek(), samplesSpecification)) {
+                if (!resultsViewPageStore.samplesSpecification || !_.isEqual(resultsViewPageStore.samplesSpecification.slice(), samplesSpecification)) {
                     resultsViewPageStore.samplesSpecification = samplesSpecification;
                 }
 
                 const geneSymbols = parseOQLQuery(oql).map((o: any) => o.gene);
-                if (!resultsViewPageStore.hugoGeneSymbols || !_.isEqual(resultsViewPageStore.hugoGeneSymbols.peek(), geneSymbols)) {
+                if (!resultsViewPageStore.hugoGeneSymbols || !_.isEqual(resultsViewPageStore.hugoGeneSymbols.slice(), geneSymbols)) {
                     console.log("settings genes");
                     resultsViewPageStore.hugoGeneSymbols = geneSymbols;
                 }
 
                 const profiles = getMolecularProfiles(query);
-                if (!resultsViewPageStore.selectedMolecularProfileIds || !_.isEqual(resultsViewPageStore.selectedMolecularProfileIds.peek(), profiles)) {
+                if (!resultsViewPageStore.selectedMolecularProfileIds || !_.isEqual(resultsViewPageStore.selectedMolecularProfileIds.slice(), profiles)) {
                     resultsViewPageStore.selectedMolecularProfileIds = profiles;
                 }
 
@@ -260,7 +260,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                 {
                     (this.currentQuery) && (<div>
 
-                        <div style={{margin:"0 20px 20px 20px"}}>
+                        <div style={{margin:"0 20px 10px 20px"}}>
                             <QuerySummary queryStore={this.props.queryStore} store={this.resultsViewPageStore}/>
                         </div>
                         <MSKTabs activeTabId={this.props.routing.location.query.tab} unmountOnHide={true}
@@ -293,14 +293,14 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                             <MSKTab key={6} id="copyNumberSegmentsTab" linkText="CN Segments">
                                 <CNSegments store={this.resultsViewPageStore}/>
                             </MSKTab>
-                            <MSKTab id={7} id="coexpression" linkText={'Coexpression'}>
+                            <MSKTab key={7} id="coexpression" linkText={'Coexpression'}>
                                 <CoExpressionTabContainer store={this.resultsViewPageStore}/>
                             </MSKTab>
-                            <MSKTab id={8} id="enrichment" linkText={'Enrichment'}>
+                            <MSKTab key={8} id="enrichment" linkText={'Enrichment'}>
                                 <EnrichmentsTab store={this.resultsViewPageStore}/>
                             </MSKTab>
 
-                            <MSKTab id={9} id="download" linkText={'Download'}>
+                            <MSKTab key={9} id="download" linkText={'Download'}>
                                 <DownloadTab store={this.resultsViewPageStore}/>
                             </MSKTab>
 

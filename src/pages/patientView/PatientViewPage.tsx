@@ -36,6 +36,7 @@ import { getMouseIcon } from './SVGIcons';
 import './patient.scss';
 import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
 import {getSampleViewUrl} from "../../shared/api/urls";
+import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -288,7 +289,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         }
 
         return (
-            <div className="patientViewPage">
+            <PageLayout showRightBar={false}>
+                <div className="patientViewPage">
 
                 <AjaxErrorModal
                     show={(patientViewPageStore.ajaxErrors.length > 0)}
@@ -508,6 +510,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 </If>
 
             </div>
+            </PageLayout>
         );
     }
 }
