@@ -121,8 +121,8 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
                         xAxisTickValues={null} onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection} 
                         onSelectionCleared={this.onSelectionCleared}/>
                     <MiniBoxPlot selectedGeneHugo={this.clickedGeneHugo} selectedGeneEntrez={this.clickedGeneEntrez} 
-                        selectedProfile={this.props.selectedProfile} fileName="enrichments-plots"
-                        queryGenes={this.props.store.hugoGeneSymbols} selectedGeneQValue={selectedGeneQValue} store={this.props.store}/>
+                        selectedProfile={this.props.selectedProfile} queryGenes={this.props.store.hugoGeneSymbols} 
+                        selectedGeneQValue={selectedGeneQValue} store={this.props.store}/>
                 </div>
                 <div className={styles.TableContainer}>
                     <div>
