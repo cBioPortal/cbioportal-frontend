@@ -164,8 +164,8 @@ export default class MiniBoxPlot extends React.Component<IMiniBoxPlotProps, {}> 
                                 </VictoryChart>
                             </div>
                             {this.tooltipModel &&
-                                <Popover positionLeft={this.tooltipModel.x + 22} 
-                                    positionTop={this.tooltipModel.y - 22} className="cbioTooltip"
+                                <Popover positionLeft={this.tooltipModel.x + 16} 
+                                    positionTop={this.tooltipModel.y - 26} className="cbioTooltip"
                                     onMouseEnter={this.tooltipMouseEnter} onMouseLeave={this.tooltipMouseLeave}>
                                     <a href={getSampleViewUrl(this.tooltipModel.datum.studyId, this.tooltipModel.datum.sampleId)} target="_blank"><b>{this.tooltipModel.datum.sampleId}</b></a>
                                     <br />
