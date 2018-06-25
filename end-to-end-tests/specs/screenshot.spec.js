@@ -74,9 +74,21 @@ function runResultsTestSuite(prefix){
     });
 
     it(`${prefix} network tab`, function(){
+
         browser.click("[href='#network']");
-        browser.waitForVisible('#cytoscapeweb canvas',20000);
+
+        browser.waitForExist('iframe#networkFrame', 10000);
+
+        browser.frame('networkFrame', function(err, result) {
+                if (err) console.log(err);
+            })
+        browser.waitForVisible('#cytoscapeweb canvas',60000);
+        browser.execute(function(){
+            $("<style>canvas { visibility: hidden} </style>").appendTo("body");
+        });
+        browser.frame(null);
         var res = browser.checkElement("#network",{hide:['.qtip','canvas'] });
+
         assertScreenShotMatch(res);
     });
 
