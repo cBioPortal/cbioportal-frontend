@@ -1,11 +1,11 @@
 import MobxPromise from "mobxpromise";
-import {IMobXApplicationLazyDownloadDataFetcher} from "shared/lib/IMobXApplicationLazyDownloadDataFetcher";
+import {ILazyMobXTableApplicationLazyDownloadDataFetcher} from "shared/lib/ILazyMobXTableApplicationLazyDownloadDataFetcher";
 import LazyMobXCache from "shared/lib/LazyMobXCache";
 import {default as GenomeNexusEnrichmentCache, fetch as fetchGenomeNexusData} from "shared/cache/GenomeNexusEnrichment";
 import {default as MutationCountCache, fetch as fetchMutationCountData} from "shared/cache/MutationCountCache";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 
-export class MutationTableDownloadDataFetcher implements IMobXApplicationLazyDownloadDataFetcher
+export class MutationTableDownloadDataFetcher implements ILazyMobXTableApplicationLazyDownloadDataFetcher
 {
     private allData:any[]|undefined = undefined;
 

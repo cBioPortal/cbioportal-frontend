@@ -1,7 +1,7 @@
 import { assert } from 'chai';
 import {
-    fillClinicalTrackDatum, fillGeneticTrackDatum, fillHeatmapTrackDatum, getOncoprintMutationType,
-    selectDisplayValue
+    fillClinicalTrackDatum, fillGeneticTrackDatum, fillHeatmapTrackDatum,
+    getOncoprintMutationType, makeGeneticTrackData, selectDisplayValue
 } from "./DataUtils";
 import {
     GeneticTrackDatum,
@@ -9,7 +9,14 @@ import {
     IGenesetHeatmapTrackDatum
 } from "shared/components/oncoprint/Oncoprint";
 import {AlterationTypeConstants, AnnotatedExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
-import {ClinicalAttribute, NumericGeneMolecularData, Mutation, Sample} from "../../api/generated/CBioPortalAPI";
+import {
+    ClinicalAttribute,
+    GenePanelData,
+    MolecularProfile,
+    Mutation,
+    Patient,
+    Sample
+} from "../../api/generated/CBioPortalAPI";
 import {OncoprintClinicalAttribute} from "./ResultsViewOncoprint";
 import {MutationSpectrum} from "../../api/generated/CBioPortalAPIInternal";
 import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
@@ -52,19 +59,463 @@ describe("DataUtils", ()=>{
        });
    });
 
+   describe("makeGeneticTrackData", () => {
+      const makeMinimalGenePanelData = (patientKey: string, profiled: boolean) => ({
+         molecularProfileId: 'PROFILE1',
+         uniquePatientKey: patientKey,
+         uniqueSampleKey: `${patientKey}-SAMPLE1`,
+         genePanelId: 'GENEPANEL1',
+         profiled
+      } as GenePanelData);
+      const makeMinimalDifferentGenePanelData = (patientKey: string, profiled: boolean) => ({
+         molecularProfileId: 'PROFILE1',
+         uniquePatientKey: patientKey,
+         uniqueSampleKey: `${patientKey}-SAMPLE1`,
+         genePanelId: "GENEPANEL2",
+         profiled
+      } as GenePanelData);
+      const makeMinimalWholeExomePanelData = (patientKey: string, profiled: boolean) => ({
+         molecularProfileId: 'PROFILE1',
+         uniquePatientKey: patientKey,
+         uniqueSampleKey: `${patientKey}-SAMPLE1`,
+         profiled
+      } as GenePanelData);
+      const makeMinimalPatient = (uniquePatientKey: string, patientId: string) => ({
+          uniquePatientKey, patientId, studyId: 'gbm_tcga'
+      } as Patient);
+      const makeMinimalProfilelArray = () => [{
+          molecularProfileId: 'PROFILE1',
+          studyId: 'STUDY1',
+          study: {groups: '', name: 'STUDY1', publicStudy: true, shortName: 'STUDY1', status: 1, studyId: 'STUDY1'},
+          name: 'PROFILE1',
+          description: '',
+          molecularAlterationType: 'COPY_NUMBER_ALTERATION',
+          datatype: 'DISCRETE',
+          showProfileInAnalysisTab: true
+      }] as MolecularProfile[];
+
+      it('returns one cell for each listed case', () => {
+         // given three patients and a whole-exome coverage panel
+         const patientArray = [
+            makeMinimalPatient('PATIENT1', 'TCGA-02-0001'),
+            makeMinimalPatient('PATIENT2', 'TCGA-02-0003'),
+            makeMinimalPatient('PATIENT3', 'TCGA-02-0006')
+         ];
+         const makeMinimalPatientGenePanel = (patientKey: string) => ({
+            allGenes: [makeMinimalWholeExomePanelData(patientKey, true)],
+            byGene: {},
+            notProfiledAllGenes: [],
+            notProfiledByGene: {}
+         });
+         const genePanelByCase = {
+            samples: {},
+            patients: {
+               'PATIENT1': makeMinimalPatientGenePanel('PATIENT1'),
+               'PATIENT2': makeMinimalPatientGenePanel('PATIENT2'),
+               'PATIENT3': makeMinimalPatientGenePanel('PATIENT3'),
+            }
+         };
+         // when called to make data for a gene that has zero alterations in
+         // these patients
+         const trackData = makeGeneticTrackData(
+            {'PATIENT1': [], 'PATIENT2': [], 'PATIENT3': []},
+            'PTEN',
+            patientArray,
+            genePanelByCase,
+            makeMinimalProfilelArray()
+        );
+         // then it returns three cells of data, corresponding to first, second
+         // and third patient respectively
+         assert.lengthOf(trackData, 3);
+         assert.equal(trackData[0].patient, 'TCGA-02-0001');
+         assert.equal(trackData[1].patient, 'TCGA-02-0003');
+         assert.equal(trackData[2].patient, 'TCGA-02-0006');
+      });
+
+      it('sets na if a single-gene cell is not covered by any panel', () => {
+         // given a patient and a gene panel that doesn't mark all genes as
+         // profiled in that patient
+         const patientArray = [makeMinimalPatient('PATIENT1', 'TCGA-02-0001')];
+         const genePanelByCase = {
+            samples: {},
+            patients: {'PATIENT1': {
+               allGenes: [],
+               byGene: {'PTEN': [makeMinimalGenePanelData('PATIENT1', true)]},
+               notProfiledAllGenes: [],
+               notProfiledByGene: {'TP53': [makeMinimalGenePanelData('PATIENT1', false)]}
+            }}
+         };
+         // when called to make a cell of data for a zero-alteration gene that
+         // isn't covered by the panel
+         const [trackDatum] = makeGeneticTrackData(
+            {'PATIENT1': []},
+            'TP53',
+            patientArray,
+            genePanelByCase,
+            makeMinimalProfilelArray()
+         );
+         // then it sets the na field of the cell to true
+         assert.isTrue(trackDatum.na);
+      });
+
+      it('sets na if none of the genes in a multi-gene cell is covered by a panel', () => {
+         // given a patient and a gene panel that doesn't mark all genes as
+         // profiled in that patient
+         const patientArray = [makeMinimalPatient('PATIENT1', 'TCGA-02-0001')];
+         const genePanelByCase = {
+            samples: {},
+            patients: {'PATIENT1': {
+               allGenes: [],
+               byGene: {'PTEN': [makeMinimalGenePanelData('PATIENT1', true)]},
+               notProfiledAllGenes: [],
+               notProfiledByGene: {
+                   'TP53': [makeMinimalGenePanelData('PATIENT1', false)],
+                   'BRCA1': [makeMinimalGenePanelData('PATIENT1', false)]
+               }
+            }}
+         };
+         // when called to make a cell of data for two zero-alteration genes
+         // that aren't covered by the panel
+         const [trackDatum] = makeGeneticTrackData(
+            {'PATIENT1': []},
+            ['TP53', 'BRCA1'],
+            patientArray,
+            genePanelByCase,
+            makeMinimalProfilelArray()
+         );
+         // then it sets the na field of the cell to true
+         assert.isTrue(trackDatum.na);
+      });
+
+      it('does not set na if a single-gene cell is covered by a panel', () => {
+         // given a patient and a gene panel that marks a gene as profiled in
+         // that patient
+         const patientArray = [makeMinimalPatient('PATIENT1', 'TCGA-02-0001')];
+         const genePanelByCase = {
+            samples: {},
+            patients: {'PATIENT1': {
+               allGenes: [],
+               byGene: {'PTEN': [makeMinimalGenePanelData('PATIENT1', true)]},
+               notProfiledAllGenes: [],
+               notProfiledByGene: {}
+            }}
+         };
+         // when called to make a cell of data for that (zero-alteration) gene
+         const [trackDatum] = makeGeneticTrackData(
+            {'PATIENT1': []},
+            'PTEN',
+            patientArray,
+            genePanelByCase,
+            makeMinimalProfilelArray()
+         );
+         // then it makes the na field of that track evaluate to a falsy value
+         assert.isNotOk(trackDatum.na);
+      });
+
+      it('does not set na if one of the genes in a multi-gene cell is covered by a panel', () => {
+         // given a patient and a gene panel that marks a gene as profiled in
+         // that patient
+         const patientArray = [makeMinimalPatient('PATIENT1', 'TCGA-02-0001')];
+         const genePanelByCase = {
+            samples: {},
+            patients: {'PATIENT1': {
+               allGenes: [],
+               byGene: {'PTEN': [makeMinimalGenePanelData('PATIENT1', true)]},
+               notProfiledAllGenes: [],
+               notProfiledByGene: {'BRCA2': [makeMinimalGenePanelData('PATIENT1', false)]}
+            }}
+         };
+         // when called to make a cell of data for that (zero-alteration) gene
+         // in addition to another one
+         const [trackDatum] = makeGeneticTrackData(
+            {'PATIENT1': []},
+            ['BRCA2', 'PTEN'],
+            patientArray,
+            genePanelByCase,
+            makeMinimalProfilelArray()
+         );
+         // then it makes the na field of that track evaluate to a falsy value
+         assert.isNotOk(trackDatum.na);
+      });
+
+      it('does not set na if a single-gene cell is covered by whole-exome profiling', () => {
+         // given a patient and a whole-exome gene panel that marks a gene as
+         // profiled in that patient
+         const patientArray = [makeMinimalPatient('PATIENT1', 'TCGA-02-0001')];
+         const genePanelByCase = {
+            samples: {},
+            patients: {'PATIENT1': {
+               allGenes: [makeMinimalWholeExomePanelData('PATIENT1', true)],
+               byGene: {},
+               notProfiledAllGenes: [],
+               notProfiledByGene: {}
+            }}
+         };
+         // when called to make a cell of data for that (zero-alteration) gene
+         const [trackDatum] = makeGeneticTrackData(
+            {'PATIENT1': []},
+            'PTEN',
+            patientArray,
+            genePanelByCase,
+            makeMinimalProfilelArray()
+         );
+         // then it makes the na field of that track evaluate to a falsy value
+         assert.isNotOk(trackDatum.na);
+      });
+
+      it('sets na per cell if two single-gene cells have different coverage', () => {
+         // given two patients and a gene panel that marks a gene as profiled
+         // in only one of them
+         const patientArray = [
+            makeMinimalPatient('PATIENT1', 'TCGA-02-0001'),
+            makeMinimalPatient('PATIENT2', 'TCGA-02-0003')
+         ];
+         const genePanelByCase = {
+            samples: {},
+            patients: {
+               'PATIENT1': {
+                  allGenes: [],
+                  byGene: {'PTEN': [makeMinimalGenePanelData('PATIENT1', true)]},
+                  notProfiledAllGenes: [],
+                  notProfiledByGene: {}
+               },
+               'PATIENT2': {
+                  allGenes: [],
+                  byGene: {},
+                  notProfiledAllGenes: [],
+                  notProfiledByGene: {'PTEN': [makeMinimalGenePanelData('PATIENT2', false)]}
+               }
+            }
+         };
+         // when called to make data for that (zero-alteration) gene
+         const trackData = makeGeneticTrackData(
+            {'PATIENT1': [], 'PATIENT2': []},
+            'PTEN',
+            patientArray,
+            genePanelByCase,
+            makeMinimalProfilelArray()
+         );
+         // then it sets na only on the cell for the patient that wasn't covered
+         assert.isNotOk(trackData[0].na);
+         assert.isTrue(trackData[1].na);
+      });
+
+      it('lists a profile in profiled_in if it covers a single-gene cell by whole-exome profiling', () => {
+         // given a patient and a whole-exome gene panel that marks a gene as
+         // profiled in that patient
+         const patientArray = [makeMinimalPatient('PATIENT1', 'TCGA-02-0001')];
+         const genePanelByCase = {
+            samples: {},
+            patients: {'PATIENT1': {
+               allGenes: [makeMinimalWholeExomePanelData('PATIENT1', true)],
+               byGene: {},
+               notProfiledAllGenes: [],
+               notProfiledByGene: {}
+            }}
+         };
+         // when called to make a cell of data for that (zero-alteration) gene
+         const [trackDatum] = makeGeneticTrackData(
+            {'PATIENT1': []},
+            'PTEN',
+            patientArray,
+            genePanelByCase,
+            makeMinimalProfilelArray()
+         );
+         // then it lists the profile in profiled_in and not in not_profiled_in
+         assert.deepEqual(
+             trackDatum.profiled_in,
+             [makeMinimalWholeExomePanelData('PATIENT1', true)]
+         );
+         assert.deepEqual(
+            trackDatum.not_profiled_in,
+            [],
+            'nothing should be listed in not_profiled_in in this case'
+        );
+      });
+
+      it('lists a profile in profiled_in if it covers a single-gene cell by a non-whole-exome panel', () => {
+         // given a patient and a non-whole-exome gene panel that marks a gene
+         // as profiled in that patient
+         const patientArray = [makeMinimalPatient('PATIENT1', 'TCGA-02-0001')];
+         const genePanelByCase = {
+            samples: {},
+            patients: {'PATIENT1': {
+               allGenes: [],
+               byGene: {'PTEN': [makeMinimalGenePanelData('PATIENT1', true)]},
+               notProfiledAllGenes: [],
+               notProfiledByGene: {}
+            }}
+         };
+         // when called to make a cell of data for that (zero-alteration) gene
+         const [trackDatum] = makeGeneticTrackData(
+            {'PATIENT1': []},
+            'PTEN',
+            patientArray,
+            genePanelByCase,
+            makeMinimalProfilelArray()
+         );
+         // then it lists the profile in profiled_in and not in not_profiled_in
+         assert.deepEqual(
+            trackDatum.profiled_in,
+            [makeMinimalGenePanelData('PATIENT1', true)]
+         );
+         assert.deepEqual(
+            trackDatum.not_profiled_in,
+            [],
+            'nothing should be listed in not_profiled_in in this case'
+         );
+      });
+
+      it('lists a profile in not_profiled_in if it skips a single-gene cell in a non-whole-exome panel', () => {
+         // given a patient and a gene panel that doesn't mark all genes as
+         // profiled in that patient
+         const patientArray = [makeMinimalPatient('PATIENT1', 'TCGA-02-0001')];
+         const genePanelByCase = {
+            samples: {},
+            patients: {'PATIENT1': {
+               allGenes: [],
+               byGene: {'PTEN': [makeMinimalGenePanelData('PATIENT1', true)]},
+               notProfiledAllGenes: [],
+               notProfiledByGene: {'TP53': [makeMinimalGenePanelData('PATIENT1', false)]}
+            }}
+         };
+         // when called to make a cell of data for a zero-alteration gene that
+         // isn't covered by the panel
+         const [trackDatum] = makeGeneticTrackData(
+            {'PATIENT1': []},
+            'TP53',
+            patientArray,
+            genePanelByCase,
+            makeMinimalProfilelArray()
+         );
+         // then it lists the profile in not_profiled_in and not in profiled_in
+         assert.deepEqual(
+            trackDatum.not_profiled_in,
+            [makeMinimalGenePanelData('PATIENT1', false)]
+         );
+         assert.deepEqual(
+            trackDatum.profiled_in,
+            [],
+            'nothing should be listed in profiled_in in this case'
+         );
+      });
+
+      it('lists a profile in not_profiled_in if it fails to cover a patient at all', () => {
+          // given a patient and a gene panel that marks that patient as
+          // unprofiled for all genes
+          const patientArray = [makeMinimalPatient('PATIENT1', 'TCGA-02-0001')];
+          const genePanelByCase = {
+             samples: {},
+             patients: {'PATIENT1': {
+                allGenes: [],
+                byGene: {},
+                notProfiledAllGenes: [makeMinimalWholeExomePanelData('PATIENT1', false)],
+                notProfiledByGene: {}
+             }}
+          };
+          // when called to make a cell of data for any (zero-alteration) gene
+          const [trackDatum] = makeGeneticTrackData(
+             {'PATIENT1': []},
+             'TP53',
+             patientArray,
+             genePanelByCase,
+             makeMinimalProfilelArray()
+          );
+          // then it lists the profile in not_profiled_in and not in profiled_in
+          assert.deepEqual(
+             trackDatum.not_profiled_in,
+             [makeMinimalWholeExomePanelData('PATIENT1', false)]
+          );
+          assert.deepEqual(
+             trackDatum.profiled_in,
+             [],
+             'nothing should be listed in profiled_in in this case'
+          );
+      });
+
+      it('lists panel coverage and non-coverage for all genes displayed in the cell', () => {
+         // given a patient, a gene panel that marks two genes as profiled in
+         // that patient, and a different gene panel that marks one
+         // of them as profiled in that patient
+         const patientArray = [makeMinimalPatient('PATIENT1', 'TCGA-02-0001')];
+         const genePanelByCase = {
+            samples: {},
+            patients: {'PATIENT1': {
+               allGenes: [],
+               byGene: {
+                  'PTEN': [
+                      makeMinimalGenePanelData('PATIENT1', true)
+                  ],
+                  'BRCA2': [
+                     makeMinimalGenePanelData('PATIENT1', true),
+                     makeMinimalDifferentGenePanelData('PATIENT1', true)
+                  ]
+              },
+              notProfiledAllGenes: [],
+              notProfiledByGene: {
+                  'PTEN': [
+                      makeMinimalDifferentGenePanelData('PATIENT1', false)
+                  ],
+                  'BRCA1': [
+                      makeMinimalGenePanelData('PATIENT1', false),
+                      makeMinimalDifferentGenePanelData('PATIENT1', false)
+                  ]
+               }
+            }},
+         };
+         // when called to make a cell of data for the two (zero-alteration)
+         // genes and another one that isn't covered
+         const [trackDatum] = makeGeneticTrackData(
+            {'PATIENT1': []},
+            ['BRCA2', 'PTEN', 'BRCA1'],
+            patientArray,
+            genePanelByCase,
+            makeMinimalProfilelArray()
+         );
+         // then the profiled_in attribute for the cell lists all the gene
+         // panel/profile combinations for the two covered genes in this
+         // patient, and the not_profiled_in attribute lists them for the
+         // un-covered genes
+         assert.deepEqual(
+            trackDatum.profiled_in,
+            [
+               makeMinimalGenePanelData('PATIENT1', true),   // BRCA2
+               makeMinimalDifferentGenePanelData('PATIENT1', true),   // BRCA2
+               makeMinimalGenePanelData('PATIENT1', true)   // PTEN
+           ],
+            'profiled_in should list the panels that cover genes'
+         );
+         assert.deepEqual(
+            trackDatum.not_profiled_in,
+            [
+                makeMinimalDifferentGenePanelData('PATIENT1', false),   // PTEN
+                makeMinimalGenePanelData('PATIENT1', false),   // BRCA1
+                makeMinimalDifferentGenePanelData('PATIENT1', false)   // BRCA1
+            ],
+            "not_profiled_in should list the panels that don't cover genes"
+         );
+      });
+
+   });
+
    describe("fillGeneticTrackDatum", ()=>{
+       const makeMinimalUnfilledDatum = () => ({
+           study_id: 'study1',
+           uid: 'SAMPLE1=='
+       });
        it("fills a datum w no data correctly", ()=>{
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", []),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", []),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: [],
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any);
+               });
        });
        it("fills a datum w one mutation data correctly", ()=>{
            let data = [
@@ -74,16 +525,18 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
                 } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: "missense_rec",
                    disp_germ: false
-               } as any, "missense driver with no germline");
+               },
+               "missense driver with no germline");
 
            data = [{
                mutationType: "in_frame_del",
@@ -91,16 +544,18 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: "inframe",
                    disp_germ: false
-               } as any, "inframe non-driver");
+               },
+               "inframe non-driver");
 
            data = [{
                mutationType: "truncating",
@@ -108,16 +563,18 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: "trunc",
                    disp_germ: false
-               } as any, "truncating non-driver");
+               },
+               "truncating non-driver");
 
            data = [{
                mutationType: "fusion",
@@ -125,9 +582,10 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
@@ -135,7 +593,8 @@ describe("DataUtils", ()=>{
                    disp_mut: undefined,
                    disp_fusion: true,
                    disp_germ: undefined
-               } as any, "fusion non-driver");
+               },
+               "fusion non-driver");
        });
 
 
@@ -145,32 +604,36 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: "amp",
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "amplification");
+               },
+               "amplification");
 
            data = [{
                value: 1,
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: "gain",
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "gain");
+               },
+               "gain");
 
            data = [{
                value: -1,
@@ -178,16 +641,18 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: "hetloss",
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "hetloss");
+               },
+               "hetloss");
 
            data = [{
                value: -2,
@@ -195,32 +660,36 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: "homdel",
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "homdel");
+               },
+               "homdel");
 
            data = [{
                value: 0,
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "diploid");
+               },
+               "diploid");
        });
 
        it("fills a datum w one germline data correctly", ()=>{
@@ -231,16 +700,18 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: "missense_rec",
                    disp_germ: true
-               } as any, "missense driver with germline");
+               },
+               "missense driver with germline");
 
             data = [{
                mutationType: "missense",
@@ -248,16 +719,18 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: "missense_rec",
                    disp_germ: false
-               } as any, "missense driver without germline");
+               },
+               "missense driver without germline");
        });
 
        it("fills a datum w one germline and one non-germline data correctly", ()=>{
@@ -273,16 +746,18 @@ describe("DataUtils", ()=>{
            } as AnnotatedExtendedAlteration];
 
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: "missense_rec",
                    disp_germ: true
-               } as any, "missense driver with germline is stronger than missense passenger");
+               },
+               "missense driver with germline is stronger than missense passenger");
 
            data = [{
                mutationType: "missense",
@@ -296,16 +771,18 @@ describe("DataUtils", ()=>{
            } as AnnotatedExtendedAlteration];
 
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: "trunc_rec",
                    disp_germ: false
-               } as any, "trunc driver is stronger than missense passenger w germline");
+               },
+               "trunc driver is stronger than missense passenger w germline");
        });
 
        it("fills a datum w one mrna data correctly", ()=>{
@@ -314,32 +791,36 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: "up",
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "up");
+               },
+               "up");
 
            data = [{
                alterationSubType:"down",
                molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: "down",
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "down");
+               },
+               "down");
        });
        it("fills a datum w one protein data correctly", ()=>{
            let data = [{
@@ -347,32 +828,36 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: "up",
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "up");
+               },
+               "up");
 
            data = [{
                alterationSubType:"down",
                molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: "down",
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "down");
+               },
+               "down");
        });
        it("fills a datum w two mutation data w correct priority", ()=>{
            let data = [{
@@ -385,16 +870,18 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: "trunc_rec",
                    disp_germ: false
-               } as any, "truncating driver beats missense driver");
+               },
+               "truncating driver beats missense driver");
 
            data = [{
                mutationType: "missense",
@@ -406,16 +893,18 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: "missense_rec",
                    disp_germ: false
-               } as any, "missense driver beats truncating non-driver");
+               },
+               "missense driver beats truncating non-driver");
 
            data = [{
                mutationType: "missense",
@@ -427,16 +916,18 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: "trunc",
                    disp_germ: false
-               } as any, "truncating non-driver beats missense non-driver");
+               },
+               "truncating non-driver beats missense non-driver");
        });
        it("fills a datum w multiple cna data w correct priority", ()=>{
            let data = [{
@@ -447,16 +938,18 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: "amp",
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "amplification beats gain");
+               },
+               "amplification beats gain");
 
            data = [{
                value: -2,
@@ -466,16 +959,18 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: "homdel",
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "homdel beats diploid");
+               },
+               "homdel beats diploid");
 
            data = [{
                value: -2,
@@ -488,16 +983,18 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: "homdel",
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "two homdels beats one amp");
+               },
+               "two homdels beats one amp");
 
            data = [{
                value: -2,
@@ -510,16 +1007,18 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.COPY_NUMBER_ALTERATION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: "amp",
                    disp_mrna: undefined,
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "two amps beats one homdel");
+               },
+               "two amps beats one homdel");
        });
        it("fills a datum w multiple mrna data w correct priority", ()=>{
            let data = [{
@@ -533,16 +1032,18 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: "down",
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "two downs beats one up");
+               },
+               "two downs beats one up");
 
            data = [{
                alterationSubType:"up",
@@ -555,16 +1056,18 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.MRNA_EXPRESSION
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: "up",
                    disp_prot: undefined,
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "two ups beats one down");
+               },
+               "two ups beats one down");
        });
        it("fills a datum w multiple protein data w correct priority", ()=>{
            let data = [{
@@ -578,16 +1081,18 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: "down",
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "two downs beats one up");
+               },
+               "two downs beats one up");
 
            data = [{
                alterationSubType:"up",
@@ -600,16 +1105,18 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.PROTEIN_LEVEL
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: undefined,
                    disp_mrna: undefined,
                    disp_prot: "up",
                    disp_mut: undefined,
                    disp_germ: undefined
-               } as any, "two ups beats one down");
+               },
+               "two ups beats one down");
        });
        it("fills a datum w several data of different types correctly", ()=>{
            let data = [{
@@ -649,16 +1156,17 @@ describe("DataUtils", ()=>{
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
            assert.deepEqual(
-               fillGeneticTrackDatum({}, "gene", data),
+               fillGeneticTrackDatum(makeMinimalUnfilledDatum(), "gene", data),
                {
-                   gene:"gene",
+                   ...makeMinimalUnfilledDatum(),
+                   trackLabel: "gene",
                    data: data,
                    disp_cna: "homdel",
                    disp_mrna: "up",
                    disp_prot: "down",
                    disp_mut: "trunc_rec",
                    disp_germ: false
-               } as any);
+               });
        });
    });
 
@@ -774,7 +1282,6 @@ describe("DataUtils", ()=>{
                {sampleId:"sample", studyId:"study"} as Sample,
                [{value: 7}]
            );
-           console.log(partialTrackDatum);
            assert.deepEqual(
                partialTrackDatum,
                {geneset_id:"MY_FAVORITE_GENE_SET-3", study:"study", profile_data:7}

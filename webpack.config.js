@@ -133,6 +133,8 @@ var config = {
         new CopyWebpackPlugin([
             {from: './common-dist', to: 'reactapp'},
             {from: './src/globalStyles/prefixed-bootstrap.min.css', to: 'reactapp/prefixed-bootstrap.min.css'},
+            {from: './src/shared/legacy/igv.min.js', to: 'reactapp/igv.min.js'},
+            {from: './src/shared/legacy/igv.css', to: 'reactapp/igv.css'},
             {from: './src/globalStyles/prefixed-bootstrap.min.css.map', to: 'reactapp/prefixed-bootstrap.min.css.map'}
         ]) // destination is relative to dist directory
     ],
