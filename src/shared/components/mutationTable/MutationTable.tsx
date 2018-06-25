@@ -21,6 +21,7 @@ import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter"
 import CancerTypeColumnFormatter from "./column/CancerTypeColumnFormatter";
 import MutationStatusColumnFormatter from "./column/MutationStatusColumnFormatter";
 import ValidationStatusColumnFormatter from "./column/ValidationStatusColumnFormatter";
+import StudyColumnFormatter from "./column/StudyColumnFormatter";
 import {ICosmicData} from "shared/model/Cosmic";
 import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
 import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
@@ -35,12 +36,12 @@ import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
 import VariantCountCache from "shared/cache/VariantCountCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
-import {IMobXApplicationDataStore} from "shared/lib/IMobXApplicationDataStore";
-import {IMobXApplicationLazyDownloadDataFetcher} from "shared/lib/IMobXApplicationLazyDownloadDataFetcher";
+import {ILazyMobXTableApplicationDataStore} from "shared/lib/ILazyMobXTableApplicationDataStore";
+import {ILazyMobXTableApplicationLazyDownloadDataFetcher} from "shared/lib/ILazyMobXTableApplicationLazyDownloadDataFetcher";
 import generalStyles from "./column/styles.module.scss";
 import classnames from 'classnames';
 import {IPaginationControlsProps} from "../paginationControls/PaginationControls";
-import StudyColumnFormatter from "./column/StudyColumnFormatter";
+import {IColumnVisibilityControlsProps} from "../columnVisibilityControls/ColumnVisibilityControls";
 
 export interface IMutationTableProps {
     studyIdToStudy?: {[studyId:string]:CancerStudy};
@@ -70,8 +71,8 @@ export interface IMutationTableProps {
     discreteCNAMolecularProfileId?:string;
     columns?:MutationTableColumnType[];
     data?:Mutation[][];
-    dataStore?:IMobXApplicationDataStore<Mutation[]>;
-    downloadDataFetcher?:IMobXApplicationLazyDownloadDataFetcher;
+    dataStore?:ILazyMobXTableApplicationDataStore<Mutation[]>;
+    downloadDataFetcher?:ILazyMobXTableApplicationLazyDownloadDataFetcher;
     initialItemsPerPage?:number;
     itemsLabel?:string;
     itemsLabelPlural?:string;
@@ -81,6 +82,7 @@ export interface IMutationTableProps {
     paginationProps?:IPaginationControlsProps;
     showCountHeader?:boolean;
     columnVisibility?: {[columnId: string]: boolean};
+    columnVisibilityProps?: IColumnVisibilityControlsProps;
 }
 
 export enum MutationTableColumnType {
@@ -534,6 +536,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 paginationProps={this.props.paginationProps}
                 showCountHeader={this.props.showCountHeader}
                 columnVisibility={this.props.columnVisibility}
+                columnVisibilityProps={this.props.columnVisibilityProps}
             />
         );
     }

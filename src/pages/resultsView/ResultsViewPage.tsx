@@ -23,8 +23,7 @@ import getOverlappingStudies from "../../shared/lib/getOverlappingStudies";
 import OverlappingStudiesWarning from "../../shared/components/overlappingStudiesWarning/OverlappingStudiesWarning";
 import CNSegments from "./cnSegments/CNSegments";
 import './styles.scss';
-import {genes} from "shared/lib/oql/oqlfilter.js";
-import oql_parser from "shared/lib/oql/oql-parser.js";
+import {genes, parseOQLQuery} from "shared/lib/oql/oqlfilter.js";
 
 (Chart as any).plugins.register({
     beforeDraw: function(chartInstance:any) {
@@ -33,13 +32,15 @@ import oql_parser from "shared/lib/oql/oql-parser.js";
         ctx.fillRect(0, 0, chartInstance.chart.width, chartInstance.chart.height);
     }
 });
-import Oncoprint, {GeneticTrackDatum} from "shared/components/oncoprint/Oncoprint";
+import Oncoprint from "shared/components/oncoprint/Oncoprint";
 import {QuerySession} from "../../shared/lib/QuerySession";
 import ResultsViewOncoprint from "shared/components/oncoprint/ResultsViewOncoprint";
 import QuerySummary from "./querySummary/QuerySummary";
 import {QueryStore} from "../../shared/components/query/QueryStore";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import {getGAInstance} from "../../shared/lib/tracking";
+import CoExpressionTabContainer from "./coExpression/CoExpressionTabContainer";
+import EnrichmentsTab from 'pages/resultsView/enrichments/EnrichmentsTab';
 
 
 const win = (window as any);
@@ -50,7 +51,7 @@ function initStore(queryStore: QueryStore) {
 
     const oqlQuery = serverVars.theQuery;
 
-    const parsedOQL = oql_parser.parse(oqlQuery);
+    const parsedOQL = parseOQLQuery(oqlQuery);
 
     const genesetIds = (serverVars.genesetIds.length
         ? serverVars.genesetIds.split(/\s+/)
@@ -63,8 +64,7 @@ function initStore(queryStore: QueryStore) {
     // ultimate we will phase this out and this information will be stored in router etc.
     //const qSession:any = (window as any).QuerySession;
     var samplesSpecification:any = [];
-    if (serverVars.caseSetProperties.case_set_id === "all") {
-        // "all" means all cases in the queried stud(y/ies) - not an actual case set that could be queried
+    if(_.includes(['all', 'w_mut_cna', 'w_mut', 'w_cna'],serverVars.caseSetProperties.case_set_id)){
         var studyToSampleMap = serverVars.studySampleObj;
         var studies = Object.keys(studyToSampleMap);
         for (var i=0; i<studies.length; i++) {
@@ -329,6 +329,21 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     <DownloadTab store={this.resultsViewPageStore} />
                 </div>
             );
+        });
+        exposeComponentRenderer('renderCoExpressionTab', ()=>{
+            return (
+                <div className="cbioportal-frontend">
+                    <CoExpressionTabContainer store={this.resultsViewPageStore}/>
+                </div>
+            );
+        });
+
+        exposeComponentRenderer('renderEnrichmentsTab', () => {
+
+            return (
+                <div className="cbioportal-frontend">
+                    <EnrichmentsTab store={this.resultsViewPageStore}/>
+                </div>);
         });
     }
 
