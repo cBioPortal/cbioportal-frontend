@@ -24,6 +24,7 @@ import OverlappingStudiesWarning from "../../shared/components/overlappingStudie
 import CNSegments from "./cnSegments/CNSegments";
 import './styles.scss';
 import {genes, parseOQLQuery} from "shared/lib/oql/oqlfilter.js";
+import Network from "./network/Network";
 
 (Chart as any).plugins.register({
     beforeDraw: function(chartInstance:any) {
@@ -124,6 +125,10 @@ type OncoprintTabInitProps = {
     divId: string;
 };
 
+function getDirtyServerVar(varName:string){
+    return (window as any).serverVars[varName]
+}
+
 @inject('routing')
 @inject('queryStore')
 @observer
@@ -171,12 +176,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         });
     }
 
-    componentDidMount(){
-
-        this.mountOverlappingStudiesWarning();
-
-    }
-
     private mountOverlappingStudiesWarning(){
 
         const target = $('<div class="cbioportal-frontend"></div>').insertBefore("#tabs");
@@ -192,6 +191,34 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                             return <span></span>;
                         } else {
                             return <span></span>;
+                        }
+                    }
+                }
+            </Observer>
+            ,
+            target[0]
+        );
+
+    }
+
+    private mountNetworkTab(){
+
+        const target = $('<div class="cbioportal-frontend"></div>').appendTo("#network");
+
+        ReactDOM.render(
+            <Observer>
+                {
+                    ()=> {
+                        if (this.resultsViewPageStore.studies.isComplete && this.resultsViewPageStore.sampleLists.isComplete) {
+                            return <Network genes={this.resultsViewPageStore.genes.result!}
+                                                   profileIds={this.resultsViewPageStore.selectedMolecularProfileIds}
+                                                   cancerStudyId={this.resultsViewPageStore.studies.result[0].studyId}
+                                                   zScoreThreshold={this.resultsViewPageStore.zScoreThreshold}
+                                                   caseSetId={(this.resultsViewPageStore.sampleLists.result!.length > 0) ? this.resultsViewPageStore.sampleLists.result![0].sampleListId : "-1"}
+                                                   caseIdsKey={getDirtyServerVar("caseSetProperties").case_ids_key}
+                            />
+                        } else {
+                            return <div />;
                         }
                     }
                 }
@@ -263,6 +290,29 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     <Mutations store={this.resultsViewPageStore}/>
                 </div>
             });
+
+
+        exposeComponentRenderer('renderNetworkTab',
+            ()=>{
+                return <Observer>
+                    {
+                        ()=> {
+                            if (this.resultsViewPageStore.studies.isComplete && this.resultsViewPageStore.sampleLists.isComplete) {
+                                return <Network genes={this.resultsViewPageStore.genes.result!}
+                                                profileIds={this.resultsViewPageStore.selectedMolecularProfileIds}
+                                                cancerStudyId={this.resultsViewPageStore.studies.result[0].studyId}
+                                                zScoreThreshold={this.resultsViewPageStore.zScoreThreshold}
+                                                caseSetId={(this.resultsViewPageStore.sampleLists.result!.length > 0) ? this.resultsViewPageStore.sampleLists.result![0].sampleListId : "-1"}
+                                                caseIdsKey={getDirtyServerVar("caseSetProperties").case_ids_key}
+                                />
+                            } else {
+                                return <div></div>;
+                            }
+                        }
+                    }
+                </Observer>
+            });
+
 
         exposeComponentRenderer('renderCancerTypeSummary',
             () => {
