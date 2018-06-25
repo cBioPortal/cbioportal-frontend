@@ -45,7 +45,7 @@
           "annotation-summary-controller"
         ],
         "summary": "Retrieves VEP annotation summary for the provided list of variants",
-        "operationId": "fetchVariantAnnotationPOST_1",
+        "operationId": "fetchVariantAnnotationSummaryPOST",
         "consumes": [
           "application/json"
         ],
@@ -672,35 +672,39 @@
     },
     "Hotspot": {
       "type": "object",
-      "required": [
-        "transcriptId"
-      ],
       "properties": {
-        "aminoAcidPosition": {
-          "description": "Amino acid position (start - end)",
-          "$ref": "#/definitions/IntegerRange"
-        },
         "hugoSymbol": {
           "type": "string",
           "description": "Hugo gene symbol"
         },
+        "inframeCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Inframe mutation count"
+        },
+        "missenseCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Missense mutation count"
+        },
         "residue": {
           "type": "string",
-          "description": "Hotspot Residue"
+          "description": "Hotspot residue"
         },
-        "transcriptId": {
-          "type": "string",
-          "description": "Transcript id"
+        "spliceCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Splice mutation count"
+        },
+        "truncatingCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Truncation mutation count"
         },
         "tumorCount": {
           "type": "integer",
           "format": "int32",
           "description": "Tumor count"
-        },
-        "tumorTypeCount": {
-          "type": "integer",
-          "format": "int32",
-          "description": "Tumor type count"
         },
         "type": {
           "type": "string",
