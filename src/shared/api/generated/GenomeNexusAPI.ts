@@ -46,12 +46,14 @@ export type EnsemblTranscript = {
 
         'pfamDomains': Array < PfamDomainRange >
 
-        'exons': Array < ExonRange >
-
         'hugoSymbols': Array < string >
 
+        'exons': Array < Exon >
+
+        'utrs': Array < UntranslatedRegion >
+
 };
-export type ExonRange = {
+export type Exon = {
     'exonId': string
 
         'exonStart': number
@@ -100,17 +102,19 @@ export type GenomicLocation = {
 
 };
 export type Hotspot = {
-    'aminoAcidPosition': IntegerRange
+    'hugoSymbol': string
 
-        'hugoSymbol': string
+        'inframeCount': number
+
+        'missenseCount': number
 
         'residue': string
 
-        'transcriptId': string
+        'spliceCount': number
+
+        'truncatingCount': number
 
         'tumorCount': number
-
-        'tumorTypeCount': number
 
         'type': string
 
@@ -272,6 +276,16 @@ export type TranscriptConsequenceSummary = {
         'transcriptId': string
 
         'variantClassification': string
+
+};
+export type UntranslatedRegion = {
+    'type': string
+
+        'start': number
+
+        'end': number
+
+        'strand': number
 
 };
 export type VariantAnnotation = {

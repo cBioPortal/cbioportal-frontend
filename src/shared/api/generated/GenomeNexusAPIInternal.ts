@@ -44,17 +44,19 @@ export type GenomicLocation = {
 
 };
 export type Hotspot = {
-    'aminoAcidPosition': IntegerRange
+    'hugoSymbol': string
 
-        'hugoSymbol': string
+        'inframeCount': number
+
+        'missenseCount': number
 
         'residue': string
 
-        'transcriptId': string
+        'spliceCount': number
+
+        'truncatingCount': number
 
         'tumorCount': number
-
-        'tumorTypeCount': number
 
         'type': string
 
@@ -220,7 +222,7 @@ export default class GenomeNexusAPIInternal {
         });
     }
 
-    fetchVariantAnnotationPOST_1URL(parameters: {
+    fetchVariantAnnotationSummaryPOSTURL(parameters: {
         'variants': Array < string > ,
         'isoformOverrideSource' ? : string,
         'projection' ? : "ALL" | "CANONICAL",
@@ -250,12 +252,12 @@ export default class GenomeNexusAPIInternal {
     /**
      * Retrieves VEP annotation summary for the provided list of variants
      * @method
-     * @name GenomeNexusAPIInternal#fetchVariantAnnotationPOST_1
+     * @name GenomeNexusAPIInternal#fetchVariantAnnotationSummaryPOST
      * @param {} variants - List of variants. For example ["X:g.66937331T>A","17:g.41242962_41242963insGA"]
      * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
      * @param {string} projection - Indicates whether to return summary for all transcripts or only for canonical transcript
      */
-    fetchVariantAnnotationPOST_1(parameters: {
+    fetchVariantAnnotationSummaryPOST(parameters: {
             'variants': Array < string > ,
             'isoformOverrideSource' ? : string,
             'projection' ? : "ALL" | "CANONICAL",
