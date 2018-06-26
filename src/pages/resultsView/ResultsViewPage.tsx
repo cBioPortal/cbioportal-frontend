@@ -45,6 +45,8 @@ import QueryAndDownloadTabs from "../../shared/components/query/QueryAndDownload
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import RightBar from "../../shared/components/rightbar/RightBar";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
+import autobind from "autobind-decorator";
+import client from "../../shared/api/cbioportalClientInstance";
 
 
 const win = (window as any);
@@ -253,7 +255,18 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         this.props.routing.updateRoute({ tab: id });
     }
 
+    @autobind
+    private customTabMountCallback(div:HTMLDivElement,tab:any){
+        if (typeof win[tab.mountCallbackName] === 'function'){
+            win[tab.mountCallbackName](div, this.props.routing.location, this.resultsViewPageStore, client);
+        } else {
+            alert(`Tab mount callback not implemented fir ${tab.title}`)
+        }
+    }
+
     public render() {
+
+        console.log( AppConfig.customTabs);
 
         return (
             <PageLayout showRightBar={false}>
@@ -303,6 +316,12 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                             <MSKTab key={9} id="download" linkText={'Download'}>
                                 <DownloadTab store={this.resultsViewPageStore}/>
                             </MSKTab>
+
+                            {
+                                (AppConfig.customTabs) && AppConfig.customTabs.map((tab:any)=>{
+                                    return <MSKTab key={10} id="custom1" onTabDidMount={(div)=>{ this.customTabMountCallback(div, tab) }} linkText={tab.title}></MSKTab>
+                                })
+                            }
 
                         </MSKTabs>
                     </div>)

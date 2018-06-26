@@ -4,6 +4,7 @@ import classnames from 'classnames';
 import {ThreeBounce} from 'better-react-spinkit';
 import ReactResizeDetector from 'react-resize-detector';
 import './styles.scss';
+import autobind from "autobind-decorator";
 
 export interface IMSKTabProps {
     inactive?:boolean;
@@ -13,6 +14,7 @@ export interface IMSKTabProps {
     className?:string;
     hide?:boolean;
     loading?:boolean;
+    onTabDidMount?:(div:HTMLDivElement)=>void;
     anchorStyle?:{[k:string]:string|number|boolean};
 }
 
@@ -22,9 +24,22 @@ export class MSKTab extends React.Component<IMSKTabProps,{}> {
         super(props);
     }
 
+    public div:HTMLDivElement;
+
+    componentDidMount(){
+        if (this.props.onTabDidMount) {
+            this.props.onTabDidMount(this.div);
+        }
+    }
+
+    @autobind
+    assignRef(div:HTMLDivElement){
+        this.div = div;
+    }
+
     render(){
         return (
-            <div
+            <div ref={this.assignRef}
                 className={classnames({ 'msk-tab':true, 'hiddenByPosition':!!this.props.inactive  }, this.props.className )}
             >
                 {this.props.children}
