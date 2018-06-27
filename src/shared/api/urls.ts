@@ -110,6 +110,10 @@ export function getSessionServiceApiUrl() {
     return cbioUrl(`/api-legacy/proxy/session/virtual_study`);
 }
 
+export function getConfigurationServiceApiUrl() {
+    return AppConfig.configurationServiceUrl;
+}
+
 export function getG2SApiUrl() {
     return 'https://g2s.genomenexus.org';
 }

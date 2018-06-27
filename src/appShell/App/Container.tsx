@@ -14,7 +14,12 @@ import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 import {observer} from "mobx-react";
 import client from "../../shared/api/cbioportalClientInstance";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
-import {getCbioPortalApiUrl, getGenomeNexusApiUrl, getOncoKbApiUrl} from "../../shared/api/urls";
+import {
+    getCbioPortalApiUrl,
+    getConfigurationServiceApiUrl,
+    getGenomeNexusApiUrl,
+    getOncoKbApiUrl
+} from "../../shared/api/urls";
 import civicClient from "../../shared/api/civicClientInstance";
 import genomeNexusClient from '../../shared/api/genomeNexusClientInstance';
 import internalGenomeNexusClient from '../../shared/api/genomeNexusInternalClientInstance';
@@ -29,7 +34,7 @@ const configPromise = remoteData(async ()=>{
 
     // need to use jsonp, so use jquery
     const config = await $.ajax({
-        url: "http://localhost:8080/config_service.jsp",
+        url: getConfigurationServiceApiUrl(),
         dataType: "jsonp",
         jsonpCallback: "callback"
     });
