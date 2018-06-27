@@ -10,6 +10,7 @@ export interface IAppConfig {
     //    'Shared institutional Data Sets': ['mskimpact', 'cellline_mskcc'],
     //    'Priority Studies': ['blca_tcga_pub', 'coadread_tcga_pub', 'brca_tcga_pub2015'], // for demo
     //},
+    configurationServiceUrl?: string;
     showCivic?: boolean;
     showHotspot?: boolean;
     showMyCancerGenome?: boolean;
@@ -23,6 +24,7 @@ export interface IAppConfig {
     enableDarwin?: boolean;
     appVersion?: string;
     historyType?: string;
+    customTabs?:any;
     skinBlurb?: string; // text on main page
     skinDatasetHeader?: string; // header on dataset page
     skinDatasetFooter?: string;
