@@ -1,12 +1,13 @@
 import * as React from 'react';
 import { observer } from "mobx-react";
-import { VictoryChart, VictorySelectionContainer, VictoryTheme, VictoryAxis, VictoryLabel, VictoryScatter, VictoryLine } from 'victory';
-import { observable } from 'mobx';
+import { VictoryChart, VictorySelectionContainer, VictoryAxis, VictoryLabel, VictoryScatter } from 'victory';
+import { observable, action } from 'mobx';
 import { Popover } from 'react-bootstrap';
-import styles from "./styles.module.scss";
-import CBIOPORTAL_VICTORY_THEME, {axisLabelStyles, baseLabelStyles} from "../../../shared/theme/cBioPoralTheme";
+import CBIOPORTAL_VICTORY_THEME, {axisLabelStyles} from "../../../shared/theme/cBioPoralTheme";
 import { formatLogOddsRatio } from "./EnrichmentsUtil";
 import { toConditionalPrecision, } from 'shared/lib/NumberUtils';
+import DownloadControls from 'shared/components/DownloadControls';
+import autobind from 'autobind-decorator';
 
 export interface IMiniScatterChartProps {
     data: any[];
@@ -23,6 +24,12 @@ export interface IMiniScatterChartProps {
 export default class MiniScatterChart extends React.Component<IMiniScatterChartProps, {}> {
 
     @observable tooltipModel: any;
+    @observable private svgContainer: any;
+    
+    @autobind
+    @action private svgRef(svgContainer:SVGElement|null) {
+        this.svgContainer = svgContainer;
+    }
 
     private handleSelection(points: any, bounds: any, props: any) {
         this.props.onSelection(points[0].data.map((d:any) => d.hugoGeneSymbol));
@@ -72,8 +79,15 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
         return (
             <div className="posRelative">
                 <div className="borderedChart inlineBlock">
-                    <VictoryChart containerComponent={<VictorySelectionContainer responsive={false}
-                        onSelection={(points: any, bounds: any, props: any) => this.handleSelection(points, bounds, props)} 
+                    <DownloadControls
+                        getSvg={() => this.svgContainer}
+                        buttons={["SVG", "PNG"]}
+                        filename="enrichments-volcano"
+                        dontFade={true}
+                        style={{position:'absolute', zIndex:10, right: 26 }}
+                    />
+                    <VictoryChart containerComponent={<VictorySelectionContainer containerRef={this.svgRef}
+                        onSelection={(points: any, bounds: any, props: any) => this.handleSelection(points, bounds, props)} responsive={false}
                         onSelectionCleared={(props:any) => this.handleSelectionCleared(props)}/>} theme={CBIOPORTAL_VICTORY_THEME}
                         domainPadding={{ y: [0, 20] }} height={350} width={350} padding={{ top: 40, bottom: 60, left: 60, right: 40 }}>
                         <VictoryAxis tickValues={this.props.xAxisTickValues} domain={[-this.props.xAxisDomain, this.props.xAxisDomain]} 
