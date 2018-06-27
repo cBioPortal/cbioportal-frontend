@@ -49,6 +49,7 @@ import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import RightBar from "../../shared/components/rightbar/RightBar";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import {createQueryStore} from "./SPA";
+import autobind from "autobind-decorator";
 
 const win = (window as any);
 
@@ -315,6 +316,15 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         this.props.routing.updateRoute({ tab: id });
     }
 
+    @autobind
+    private customTabMountCallback(div:HTMLDivElement,tab:any){
+        if (typeof win[tab.mountCallbackName] === 'function'){
+            win[tab.mountCallbackName](div, this.props.routing.location, this.resultsViewPageStore, tab.customParameters || {});
+        } else {
+            alert(`Tab mount callback not implemented for ${tab.title}`)
+        }
+    }
+
     public render() {
 
         const store = this.resultsViewPageStore;
@@ -415,9 +425,20 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                             <MSKTab key={11} id="download" linkText={'Download'}>
                                 <DownloadTab store={this.resultsViewPageStore}/>
                             </MSKTab>
-                            <MSKTab key={11} id="bookmark" linkText={'Bookmark'}>
+                            <MSKTab key={12} id="bookmark" linkText={'Bookmark'}>
                                 <Bookmark urlPromise={ this.resultsViewPageStore.bookmarkLinks } />
                             </MSKTab>
+
+                            {
+                                (AppConfig.customTabs) && AppConfig.customTabs.filter((tab:any)=>tab.location==="RESULTS_PAGE").map((tab:any, i:number)=>{
+                                    return (<MSKTab key={100+i} id={'customTab'+1} unmountOnHide={(tab.unmountOnHide===true)}
+                                                   onTabDidMount={(div)=>{ this.customTabMountCallback(div, tab) }}
+                                                    linkText={tab.title}
+                                        />
+                                   )
+                                })
+                            }
+
                         </MSKTabs>
                     </div>)
                 }
