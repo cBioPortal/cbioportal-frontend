@@ -16,6 +16,7 @@ export interface IMSKTabProps {
     loading?:boolean;
     onTabDidMount?:(div:HTMLDivElement)=>void;
     anchorStyle?:{[k:string]:string|number|boolean};
+    unmountOnHide?:boolean;
 }
 
 export class MSKTab extends React.Component<IMSKTabProps,{}> {
@@ -23,6 +24,10 @@ export class MSKTab extends React.Component<IMSKTabProps,{}> {
     constructor(props: IMSKTabProps){
         super(props);
     }
+
+    public static defaultProps: Partial<IMSKTabProps> = {
+        unmountOnHide: true
+    };
 
     public div:HTMLDivElement;
 
@@ -72,6 +77,10 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
     private shownTabs:string[] = [];
     private navTabsRef: HTMLUListElement;
     private tabRefs: {id:string, element:HTMLLIElement}[] = [];
+
+    public static defaultProps: Partial<IMSKTabsProps> = {
+        unmountOnHide: true
+    };
 
     constructor(){
         super();
@@ -159,7 +168,10 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                         effectiveActiveTab = this.props.activeTabId;
                         this.shownTabs.push(child.props.id);
                         memo.push(this.cloneTab(child, false, !!child.props.loading));
-                    } else if (!this.props.unmountOnHide && _.includes(this.shownTabs, child.props.id) && !child.props.loading) {
+                    } else if (
+                        (child.props.unmountOnHide === false || (this.props.unmountOnHide === false))
+                        && _.includes(this.shownTabs, child.props.id) && !child.props.loading) {
+                        // if we're NOT unmounting it and the tab has been shown and it's not loading, include it
                         memo.push(this.cloneTab(child, true, !!child.props.loading));
                     }
                 }

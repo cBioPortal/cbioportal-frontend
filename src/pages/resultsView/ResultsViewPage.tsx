@@ -258,15 +258,13 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     @autobind
     private customTabMountCallback(div:HTMLDivElement,tab:any){
         if (typeof win[tab.mountCallbackName] === 'function'){
-            win[tab.mountCallbackName](div, this.props.routing.location, this.resultsViewPageStore, client);
+            win[tab.mountCallbackName](div, this.props.routing.location, this.resultsViewPageStore, client, tab.customParameters || {});
         } else {
-            alert(`Tab mount callback not implemented fir ${tab.title}`)
+            alert(`Tab mount callback not implemented for ${tab.title}`)
         }
     }
 
     public render() {
-
-        console.log( AppConfig.customTabs);
 
         return (
             <PageLayout showRightBar={false}>
@@ -318,8 +316,11 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                             </MSKTab>
 
                             {
-                                (AppConfig.customTabs) && AppConfig.customTabs.map((tab:any)=>{
-                                    return <MSKTab key={10} id="custom1" onTabDidMount={(div)=>{ this.customTabMountCallback(div, tab) }} linkText={tab.title}></MSKTab>
+                                (AppConfig.customTabs) && AppConfig.customTabs.filter((tab)=>tab.location==="RESULTS_PAGE").map((tab:any, i:number)=>{
+                                    return (<MSKTab key={100+i} id={'customTab'+1} unmountOnHide={(tab.unmountOnHide===true)}
+                                                   onTabDidMount={(div)=>{ this.customTabMountCallback(div, tab) }} linkText={tab.title}>
+
+                                    </MSKTab>)
                                 })
                             }
 
