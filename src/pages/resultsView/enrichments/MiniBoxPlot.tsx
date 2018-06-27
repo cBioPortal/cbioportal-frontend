@@ -22,10 +22,11 @@ export interface IMiniBoxPlotProps {
     selectedGeneEntrez: number;
     selectedGeneQValue: number;
     selectedProfile: MolecularProfile;
-    fileName: string;
     queryGenes: string[];
     store: ResultsViewPageStore;
 }
+
+const FILE_NAME: string = "enrichments-boxplot";
 
 @observer
 export default class MiniBoxPlot extends React.Component<IMiniBoxPlotProps, {}> {
@@ -43,18 +44,18 @@ export default class MiniBoxPlot extends React.Component<IMiniBoxPlotProps, {}> 
 
     @autobind
     private downloadSvg() {
-        this.svgsaver.asSvg(this.svgContainer.firstChild, this.props.fileName + '.svg');
+        this.svgsaver.asSvg(this.svgContainer.firstChild, FILE_NAME + '.svg');
     }
 
     @autobind
     private downloadPng() {
-        this.svgsaver.asPng(this.svgContainer.firstChild, this.props.fileName + '.png');
+        this.svgsaver.asPng(this.svgContainer.firstChild, FILE_NAME + '.png');
     }
 
     @autobind
     private downloadData() {
         fileDownload(getDownloadContent(this.scatterData, this.props.selectedGeneHugo, this.props.selectedProfile.name), 
-            this.props.fileName + '.txt');
+            FILE_NAME + '.txt');
     }
 
     @autobind

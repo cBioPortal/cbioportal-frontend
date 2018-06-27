@@ -227,7 +227,15 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
     }
 
     @computed get pearsonCorr() {
-        return jStat.corrcoeff(this.splitData.x, this.splitData.y);
+        let x = this.splitData.x;
+        let y = this.splitData.y;
+        if (this.props.logX) {
+            x = x.map(d=>this.logScale(d));
+        }
+        if (this.props.logY) {
+            y = y.map(d=>this.logScale(d));
+        }
+        return jStat.corrcoeff(x, y);
     }
 
     @computed get spearmanCorr() {
@@ -243,11 +251,11 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
     }
 
     private logScale(x:number) {
-        return Math.log10(Math.max(x, MIN_LOG_ARGUMENT));
+        return Math.log2(Math.max(x, MIN_LOG_ARGUMENT));
     }
 
     private invLogScale(x:number) {
-        return Math.pow(10, x);
+        return Math.pow(2, x);
     }
 
     @bind
