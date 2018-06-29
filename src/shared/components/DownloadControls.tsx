@@ -97,7 +97,7 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
 
     render() {
         const buttonGroup = (
-            <div role="group" className="btn-group cancer-summary--chart-buttons" style={this.props.style||{}}>
+            <div role="group" className="btn-group chartDownloadButtons" style={this.props.style||{}}>
                 {this.props.additionalLeftButtons && this.props.additionalLeftButtons.map(makeButton)}
                 {this.buttons}
                 {this.props.additionalRightButtons && this.props.additionalRightButtons.map(makeButton)}
