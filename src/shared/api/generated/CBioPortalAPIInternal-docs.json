@@ -1465,6 +1465,9 @@
         "hugoGeneSymbol": {
           "type": "string"
         },
+        "qValue": {
+          "type": "number"
+        },
         "totalCount": {
           "type": "integer",
           "format": "int32"
@@ -1971,6 +1974,9 @@
         },
         "hugoGeneSymbol": {
           "type": "string"
+        },
+        "qValue": {
+          "type": "number"
         },
         "totalCount": {
           "type": "integer",
