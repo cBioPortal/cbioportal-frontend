@@ -1,15 +1,15 @@
 import * as React from 'react';
-import {inject, observer} from "mobx-react";
+import { inject, observer } from "mobx-react";
 import styles from "./styles.module.scss";
-import {MutatedGenesTable} from "./table/MutatedGenesTable";
-import {CNAGenesTable} from "./table/CNAGenesTable";
-import {ChartContainer, ChartType} from 'pages/studyView/charts/ChartContainer';
+import { MutatedGenesTable } from "./table/MutatedGenesTable";
+import { CNAGenesTable } from "./table/CNAGenesTable";
+import { ChartContainer } from 'pages/studyView/charts/ChartContainer';
 import SurvivalChart from "../resultsView/survival/SurvivalChart";
-import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
-import {ClinicalDataType, StudyViewPageStore, SurvivalType} from 'pages/studyView/StudyViewPageStore';
-import {reaction} from 'mobx';
-import {ClinicalAttribute} from 'shared/api/generated/CBioPortalAPI';;
-import {StudyViewComponentLoader} from "./charts/StudyViewComponentLoader";
+import { MSKTab, MSKTabs } from "../../shared/components/MSKTabs/MSKTabs";
+import { StudyViewComponentLoader } from "./charts/StudyViewComponentLoader";
+import { StudyViewPageStore, ClinicalDataType, SurvivalType, ChartMeta, ChartType } from 'pages/studyView/StudyViewPageStore';
+import { reaction } from 'mobx';
+import { If } from 'react-if';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -24,21 +24,24 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
     private store: StudyViewPageStore;
     private queryInput: HTMLInputElement;
-    private handlers:any;
+    private handlers: any;
 
     constructor(props: IStudyViewPageProps) {
         super();
         this.store = new StudyViewPageStore();
 
         this.handlers = {
-            onUserSelection: (attrId: string, clinicalDataType: ClinicalDataType, values: string[])=> {
-                this.store.updateClinicalDataEqualityFilters(attrId, clinicalDataType, values)
+            onUserSelection: (chartMeta: ChartMeta, values: string[]) => {
+                this.store.updateClinicalDataEqualityFilters(chartMeta, values)
             },
-            updateGeneFilter:(entrezGeneId: number)=>{
+            updateGeneFilter: (entrezGeneId: number) => {
                 this.store.updateGeneFilter(entrezGeneId);
             },
-            updateCNAGeneFilter:(entrezGeneId: number, alteration: number)=> {
+            updateCNAGeneFilter: (entrezGeneId: number, alteration: number) => {
                 this.store.updateCNAGeneFilter(entrezGeneId, alteration);
+            },
+            onDeleteChart: (uniqueKey: string) => {
+                this.store.changeChartVisibility(uniqueKey, false);
             }
         }
 
@@ -47,25 +50,23 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             () => props.routing.location.query,
             query => {
                 if ('studyId' in query) {
-                    this.store.studyId = query.studyId;
-                    this.store.sampleAttrIds = ('sampleAttrIds' in query ? (query.sampleAttrIds  as string).split(",") : []);
+                    this.store.studyIds = (query.studyId as string).split(",");
+                    this.store.sampleAttrIds = ('sampleAttrIds' in query ? (query.sampleAttrIds as string).split(",") : []);
                     this.store.patientAttrIds = ('patientAttrIds' in query ? (query.patientAttrIds as string).split(",") : []);
                 }
             },
-            {fireImmediately: true}
+            { fireImmediately: true }
         );
     }
 
-    renderAttributeChart = (clinicalAttribute: ClinicalAttribute) => {
-        const data = this.store.studyViewClinicalDataCountsCache.get({attribute:clinicalAttribute,filters:this.store.filters})
-        const filters = this.store.getClinicalDataEqualityFilters(clinicalAttribute)
+    renderAttributeChart = (chartMeta: ChartMeta) => {
         return (<ChartContainer
-            chartType={ChartType.PIE_CHART}
-            clinicalAttribute={clinicalAttribute}
+            chartMeta={chartMeta}
             onUserSelection={this.handlers.onUserSelection}
-            key={clinicalAttribute.clinicalAttributeId}
-            promise={data}
-            filters={filters}
+            key={chartMeta.uniqueKey}
+            filter={this.store.filters}
+            dataCache={this.store.studyViewClinicalDataCountsCache}
+            onDeleteChart={this.handlers.onDeleteChart}
         />)
     };
 
@@ -75,62 +76,58 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             <div className={styles.studyViewSurvivalPlotBody}>
                 <StudyViewComponentLoader promise={this.store.survivalPlotData}>
                     <SurvivalChart alteredPatientSurvivals={data.alteredGroup}
-                                   unalteredPatientSurvivals={data.unalteredGroup}
-                                   title={'test'}
-                                   xAxisLabel="Months Survival"
-                                   yAxisLabel="Surviving"
-                                   totalCasesHeader="Number of Cases, Total"
-                                   statusCasesHeader="Number of Cases, Deceased"
-                                   medianMonthsHeader="Median Months Survival"
-                                   yLabelTooltip="Survival estimate"
-                                   xLabelWithEventTooltip="Time of death"
-                                   xLabelWithoutEventTooltip="Time of last observation"
-                                   showDownloadButtons={false}
-                                   showTable={false}
-                                   showLegend={false}
-                                   styleOpts={{
-                                       width: 450,
-                                       height: 300
-                                   }}
-                                   fileName="Overall_Survival"/>
+                        unalteredPatientSurvivals={data.unalteredGroup}
+                        title={'test'}
+                        xAxisLabel="Months Survival"
+                        yAxisLabel="Surviving"
+                        totalCasesHeader="Number of Cases, Total"
+                        statusCasesHeader="Number of Cases, Deceased"
+                        medianMonthsHeader="Median Months Survival"
+                        yLabelTooltip="Survival estimate"
+                        xLabelWithEventTooltip="Time of death"
+                        xLabelWithoutEventTooltip="Time of last observation"
+                        showDownloadButtons={false}
+                        showTable={false}
+                        showLegend={false}
+                        styleOpts={{
+                            width: 450,
+                            height: 300
+                        }}
+                        fileName="Overall_Survival" />
                 </StudyViewComponentLoader>
             </div>
         </div>
     }
 
     render() {
-        let cancerStudy = this.store.studyMetaData.result!;
-        return (
-            <div className="studyView">
-                <div className="topBanner">
-                    {
-                        this.store.studyMetaData.isComplete && (
-                            <div className="studyViewHeader">
-                                <h3>{cancerStudy.name}</h3>
-                                <p dangerouslySetInnerHTML={{__html: cancerStudy.description}}></p>
-                            </div>
-                        )
-                    }
-                </div>
-                <MSKTabs id="studyViewTabs" activeTabId={this.props.routing.location.query.tab}
-                         className="mainTabs">
-
-                    <MSKTab key={0} id="summaryTab" linkText="Summary">
-                            {
-                                this.store.defaultVisibleAttributes.isComplete && 
-                                this.store.initalClinicalDataCounts.isComplete &&
-                                this.store.initialized && 
-                                (
-                                    <div className={styles.studyViewFlexContainer}>
-                                        {this.store.visibleAttributes.map(this.renderAttributeChart)}
-                                    </div>
-                                )
-                            }
-                            {
-                                <div className={styles.studyViewFlexContainer}>
-                                    {this.store.survivalPlotData.result.map(this.renderSurvivalPlot)}
+        if (this.store.studies.isComplete) {
+            return (
+                <div className="studyView">
+                    <div className="topBanner">
+                        <div className="studyViewHeader">
+                            <If condition={this.store.studies.result.length === 1}>
+                                <div>
+                                    <h3>{this.store.studies.result![0].name}</h3>
+                                    <p dangerouslySetInnerHTML={{ __html: this.store.studies.result![0].description }}></p>
                                 </div>
-                            }
+                            </If>
+                            {/*TDOD: currently show as Multiple Studies but should be shandles properly, i.e as in production*/}
+                            <If condition={this.store.studies.result!.length > 1}>
+                                <h3>Multiple Studies</h3>
+                            </If>
+                        </div>
+                    </div>
+                    <MSKTabs id="studyViewTabs" activeTabId={this.props.routing.location.query.tab}
+                        className="mainTabs">
+
+                        <MSKTab key={0} id="summaryTab" linkText="Summary">
+                            <div className={styles.studyViewFlexContainer}>
+                                {this.store.initialClinicalDataCounts.isComplete && 
+                                    this.store.visibleAttributes.map(this.renderAttributeChart)}
+                            </div>
+                            <div className={styles.studyViewFlexContainer}>
+                                {this.store.survivalPlotData.result.map(this.renderSurvivalPlot)}
+                            </div>
                             <div className={styles.studyViewFlexContainer}>
                                 <MutatedGenesTable
                                     promise={this.store.mutatedGeneData}
@@ -145,9 +142,14 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     toggleSelection={this.handlers.updateCNAGeneFilter}
                                 />
                             </div>
-                    </MSKTab>
-                </MSKTabs>
-            </div>
-        )
+                        </MSKTab>
+                    </MSKTabs>
+                </div>
+            )
+        } else {
+            //TODO: update with loading
+            return null;
+        }
+
     }
 }

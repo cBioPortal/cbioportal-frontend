@@ -89,6 +89,99 @@
     "https"
   ],
   "paths": {
+    "/attributes/{attributeId}/clinical-data-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch clinical data counts by study view filter",
+        "operationId": "fetchClinicalDataCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "attributeId",
+            "in": "path",
+            "description": "Attribute ID e.g. CANCER_TYPE",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clinicalDataType",
+            "in": "query",
+            "description": "Type of the clinical data",
+            "required": false,
+            "type": "string",
+            "default": "SAMPLE",
+            "enum": [
+              "SAMPLE",
+              "PATIENT"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Clinical data count filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ClinicalDataCount"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cna-genes/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch CNA genes by study view filter",
+        "operationId": "fetchCNAGenesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CopyNumberCountByGene"
+              }
+            }
+          }
+        }
+      }
+    },
     "/cosmic-counts/fetch": {
       "post": {
         "tags": [
@@ -123,6 +216,43 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/CosmicMutation"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/filtered-samples/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch sample IDs by study view filter",
+        "operationId": "fetchFilteredSamplesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Sample"
               }
             }
           }
@@ -492,50 +622,6 @@
         }
       }
     },
-    "/molecular-profiles/{molecularProfileId}/cna-genes/fetch": {
-      "post": {
-        "tags": [
-          "Study View"
-        ],
-        "summary": "Fetch CNA genes by study view filter",
-        "operationId": "fetchCNAGenesUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "molecularProfileId",
-            "in": "path",
-            "description": "Molecular Profile ID e.g. acc_tcga_gistic",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "studyViewFilter",
-            "description": "Study view filter",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/StudyViewFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/CopyNumberCountByGene"
-              }
-            }
-          }
-        }
-      }
-    },
     "/molecular-profiles/{molecularProfileId}/co-expressions/fetch": {
       "post": {
         "tags": [
@@ -776,50 +862,6 @@
         }
       }
     },
-    "/molecular-profiles/{molecularProfileId}/mutated-genes/fetch": {
-      "post": {
-        "tags": [
-          "Study View"
-        ],
-        "summary": "Fetch mutated genes by study view filter",
-        "operationId": "fetchMutatedGenesUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "molecularProfileId",
-            "in": "path",
-            "description": "Molecular Profile ID e.g. acc_tcga_mutations",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "studyViewFilter",
-            "description": "Study view filter",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/StudyViewFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/MutationCountByGene"
-              }
-            }
-          }
-        }
-      }
-    },
     "/molecular-profiles/{molecularProfileId}/mutation-enrichments/fetch": {
       "post": {
         "tags": [
@@ -920,47 +962,6 @@
         }
       }
     },
-    "/molecular-profiles/{molecularProfileId}/sample-counts/fetch": {
-      "post": {
-        "tags": [
-          "Study View"
-        ],
-        "summary": "Fetch sample IDs by study view filter",
-        "operationId": "fetchMolecularProfileSampleCountsUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "molecularProfileId",
-            "in": "path",
-            "description": "Molecular Profile ID e.g. acc_tcga_mutations",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "studyViewFilter",
-            "description": "Study view filter",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/StudyViewFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "$ref": "#/definitions/MolecularProfileSampleCount"
-            }
-          }
-        }
-      }
-    },
     "/molecular-profiles/{molecularProfileId}/variant-counts/fetch": {
       "post": {
         "tags": [
@@ -1008,13 +1009,13 @@
         }
       }
     },
-    "/studies/{studyId}/attributes/{attributeId}/clinical-data-counts/fetch": {
+    "/mutated-genes/fetch": {
       "post": {
         "tags": [
           "Study View"
         ],
-        "summary": "Fetch clinical data counts by study view filter",
-        "operationId": "fetchClinicalDataCountsUsingPOST",
+        "summary": "Fetch mutated genes by study view filter",
+        "operationId": "fetchMutatedGenesUsingPOST",
         "consumes": [
           "application/json"
         ],
@@ -1023,35 +1024,9 @@
         ],
         "parameters": [
           {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. acc_tcga",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "attributeId",
-            "in": "path",
-            "description": "Attribute ID e.g. CANCER_TYPE",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "clinicalDataType",
-            "in": "query",
-            "description": "Type of the clinical data",
-            "required": false,
-            "type": "string",
-            "default": "SAMPLE",
-            "enum": [
-              "SAMPLE",
-              "PATIENT"
-            ]
-          },
-          {
             "in": "body",
             "name": "studyViewFilter",
-            "description": "Clinical data count filter",
+            "description": "Study view filter",
             "required": true,
             "schema": {
               "$ref": "#/definitions/StudyViewFilter"
@@ -1064,8 +1039,42 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ClinicalDataCount"
+                "$ref": "#/definitions/MutationCountByGene"
               }
+            }
+          }
+        }
+      }
+    },
+    "/sample-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch sample IDs by study view filter",
+        "operationId": "fetchMolecularProfileSampleCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/MolecularProfileSampleCount"
             }
           }
         }
@@ -1109,50 +1118,6 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/FractionGenomeAltered"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/studies/{studyId}/samples/fetch": {
-      "post": {
-        "tags": [
-          "Study View"
-        ],
-        "summary": "Fetch sample IDs by study view filter",
-        "operationId": "fetchSampleIdsUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "studyId",
-            "in": "path",
-            "description": "Study ID e.g. acc_tcga",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "studyViewFilter",
-            "description": "Study view filter",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/StudyViewFilter"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/Sample"
               }
             }
           }
@@ -1515,9 +1480,6 @@
           "items": {
             "$ref": "#/definitions/CopyNumberGeneFilterElement"
           }
-        },
-        "molecularProfileId": {
-          "type": "string"
         }
       },
       "title": "CopyNumberGeneFilter"
@@ -1892,11 +1854,19 @@
     "MolecularProfileSampleCount": {
       "type": "object",
       "properties": {
-        "numberOfProfiledSamples": {
+        "numberOfCNAProfiledSamples": {
           "type": "integer",
           "format": "int32"
         },
-        "numberOfUnprofiledSamples": {
+        "numberOfCNAUnprofiledSamples": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "numberOfMutationProfiledSamples": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "numberOfMutationUnprofiledSamples": {
           "type": "integer",
           "format": "int32"
         }
@@ -2018,9 +1988,6 @@
             "type": "integer",
             "format": "int32"
           }
-        },
-        "molecularProfileId": {
-          "type": "string"
         }
       },
       "title": "MutationGeneFilter"
@@ -2147,6 +2114,18 @@
       },
       "title": "Sample"
     },
+    "SampleIdentifier": {
+      "type": "object",
+      "properties": {
+        "sampleId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        }
+      },
+      "title": "SampleIdentifier"
+    },
     "StudyViewFilter": {
       "type": "object",
       "properties": {
@@ -2168,7 +2147,13 @@
             "$ref": "#/definitions/MutationGeneFilter"
           }
         },
-        "sampleIds": {
+        "sampleIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SampleIdentifier"
+          }
+        },
+        "studyIds": {
           "type": "array",
           "items": {
             "type": "string"
