@@ -1,48 +1,49 @@
 import * as _ from "lodash";
 import {ClinicalData, Gene, Mutation} from "shared/api/generated/CBioPortalAPI";
 
-// TODO add column name alternatives?
-// map of <mutation input model field name, input header name> pairs
-export const HEADER_MAP: {[attrName: string]: string} = {
+const LITERAL_TO_HEADER: {[attrName: string]: string} = {
     aminoAcidChange: "amino_acid_change",
     center: "center",
     driverFilter: "driver_filter",
     driverFilterAnnotation: "driver_filter_annotation",
     driverTiersFilter: "driver_tiers_filter",
     driverTiersFilterAnnotation: "driver_tiers_filter_annotation",
-    endPosition: "end_position",
     entrezGeneId: "entrez_gene_id",
-    //fisValue: "fis_value",
-    //functionalImpactScore: "functional_impact_score",
     chromosome: "chromosome",
     hugoGeneSymbol: "hugo_symbol",
-    // 'keyword': string
-    // 'linkMsa': string
-    // 'linkPdb': string
-    // 'linkXvar': string
     molecularProfileId: "molecular_profile_id",
     mutationStatus: "mutation_status",
     mutationType: "mutation_type",
     ncbiBuild: "ncbi_build",
-    normalAltCount: "normal_alt_count",
-    normalRefCount: "normal_ref_count",
     patientId: "patient_id",
     proteinChange: "protein_change",
-    proteinPosEnd: "protein_position_end",
-    proteinPosStart: "protein_position_start",
     referenceAllele: "reference_allele",
     refseqMrnaId: "refseq_mrna_id",
     sampleId: "sample_id",
-    startPosition: "start_position",
     studyId: "study_id",
-    tumorAltCount: "tumor_alt_count",
-    tumorRefCount: "tumor_ref_count",
     uniquePatientKey: "unique_patient_key",
     uniqueSampleKey: "unique_sample_key",
     validationStatus: "validation_status",
     variantAllele: "variant_allele",
     variantType: "variant_type",
     cancerType: "cancer_type"
+};
+
+const NUMERICAL_TO_HEADER: {[attrName: string]: string} = {
+    startPosition: "start_position",
+    endPosition: "end_position",
+    proteinPosEnd: "protein_position_end",
+    proteinPosStart: "protein_position_start",
+    tumorAltCount: "tumor_alt_count",
+    tumorRefCount: "tumor_ref_count",
+    normalAltCount: "normal_alt_count",
+    normalRefCount: "normal_ref_count",
+};
+
+// TODO add column name aliases?
+// map of <mutation input model field name, input header name> pairs
+export const MODEL_TO_HEADER: {[attrName: string]: string} = {
+    ...LITERAL_TO_HEADER, ...NUMERICAL_TO_HEADER
 };
 
 // map of <mutation input model field name, clinical attr id> pairs
@@ -87,7 +88,7 @@ export function buildIndexMap(header: string): {[columnName:string]: number}
  */
 export function parseLine(line: string,
                           indexMap: {[columnName:string]: number},
-                          headerMap: {[attrName:string]: string} = HEADER_MAP): Partial<MutationInput>
+                          headerMap: {[attrName:string]: string} = MODEL_TO_HEADER): Partial<MutationInput>
 {
     const mutation: Partial<MutationInput> = {};
 
@@ -125,7 +126,7 @@ export function parseLine(line: string,
 export function parseValue(field: string,
                            values: string[],
                            indexMap: {[columnName:string]: number},
-                           headerMap: {[attrName:string]: string} = HEADER_MAP): string|undefined
+                           headerMap: {[attrName:string]: string} = MODEL_TO_HEADER): string|undefined
 {
     // get the column name for the given field name
     const column = headerMap[field];
@@ -266,7 +267,7 @@ export function mutationInputToMutation(mutationInputData?: Partial<MutationInpu
         Object.keys(mutationInput).forEach((key: keyof MutationInput) => {
             // do NOT include ClinicalInput fields
             if (!clinicalAttrIdMap[key]) {
-                mutation[key as keyof Mutation] = mutationInput[key];
+                mutation[key as keyof Mutation] = parseField(mutationInput, key);
             }
         });
 
@@ -274,4 +275,15 @@ export function mutationInputToMutation(mutationInputData?: Partial<MutationInpu
     });
 
     return mutations;
+}
+
+function parseField(mutationInput: Partial<MutationInput>, key: keyof MutationInput)
+{
+    let value = mutationInput[key];
+
+    if (value && NUMERICAL_TO_HEADER[key]) {
+        value = parseInt(value.toString(), 10);
+    }
+
+    return value || undefined;
 }
