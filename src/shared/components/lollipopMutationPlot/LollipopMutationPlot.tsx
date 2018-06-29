@@ -114,7 +114,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
             for (const mutation of mutations) {
                 codon = mutation.proteinPosStart;
 
-                if (codon !== undefined) {
+                if (codon !== undefined && codon !== null) {
                     ret[codon] = ret[codon] || [];
                     ret[codon].push(mutation);
                 }
