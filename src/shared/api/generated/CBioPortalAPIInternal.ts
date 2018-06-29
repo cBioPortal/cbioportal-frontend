@@ -64,6 +64,8 @@ export type CopyNumberCountByGene = {
 
         'hugoGeneSymbol': string
 
+        'qValue': number
+
         'totalCount': number
 
 };
@@ -283,6 +285,8 @@ export type MutationCountByGene = {
         'frequency': number
 
         'hugoGeneSymbol': string
+
+        'qValue': number
 
         'totalCount': number
 

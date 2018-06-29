@@ -643,30 +643,6 @@
       }
     },
     "/pfam/domain": {
-      "get": {
-        "tags": [
-          "pfam-controller"
-        ],
-        "summary": "Retrieves all PFAM domains",
-        "operationId": "fetchPfamDomainsGET",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/PfamDomain"
-              }
-            }
-          }
-        }
-      },
       "post": {
         "tags": [
           "pfam-controller"
