@@ -19,7 +19,7 @@ import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 import {getSampleViewUrl} from "../../../shared/api/urls";
 import "./styles.scss";
 import {bind} from "bind-decorator";
-import ScatterPlot from "../../../shared/components/scatterPlot/ScatterPlot";
+import ScatterPlot from "../../../shared/components/plots/ScatterPlot";
 import Timer = NodeJS.Timer;
 import DownloadControls from "../../../shared/components/DownloadControls";
 import {axisLabel} from "./CoExpressionPlotUtils";

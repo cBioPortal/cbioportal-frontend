@@ -3,7 +3,8 @@ import {
     SampleIdentifier, MolecularProfile, Mutation, NumericGeneMolecularData, MolecularDataFilter, Gene,
     ClinicalDataSingleStudyFilter, CancerStudy, PatientIdentifier, Patient, GenePanelData, GenePanelDataFilter,
     SampleList, MutationCountByPosition, MutationMultipleStudyFilter, SampleMolecularIdentifier,
-    MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter, PatientFilter, GenePanel, MutationFilter
+    MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter, PatientFilter,
+    GenePanel, ClinicalAttribute, MutationFilter
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action, reaction, IObservable, IObservableValue, ObservableMap} from "mobx";
@@ -1263,6 +1264,15 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly patientKeyToSamples = remoteData({
+        await:()=>[
+            this.samples
+        ],
+        invoke: ()=>{
+            return Promise.resolve(_.groupBy(this.samples.result!, sample=>sample.uniquePatientKey));
+        }
+    });
+
     readonly patients = remoteData({
         await: ()=>[
             this.samples
@@ -1318,7 +1328,7 @@ export class ResultsViewPageStore {
             })
         }
     }, []);
-    
+
     //this is only required to show study name and description on the results page
     //CancerStudy objects for all the cohortIds
     readonly queriedStudies = remoteData({
@@ -1537,6 +1547,11 @@ export class ResultsViewPageStore {
         onResult:(genes:Gene[])=>{
             this.geneCache.addData(genes);
         }
+    });
+
+    readonly entrezGeneIdToGene = remoteData<{[entrezGeneId:number]:Gene}>({
+        await: ()=>[this.genes],
+        invoke: ()=>Promise.resolve(_.keyBy(this.genes.result!, gene=>gene.entrezGeneId))
     });
 
     readonly genesetLinkMap = remoteData<{[genesetId: string]: string}>({
@@ -2205,6 +2220,24 @@ export class ResultsViewPageStore {
                     return Promise.resolve([]);
                 }
             }
+        })
+    );
+
+    public clinicalDataCache = new MobxPromiseCache<ClinicalAttribute, ClinicalData[]>(
+        attr=>({
+            await:()=>[
+                this.samples,
+                this.patients
+            ],
+            invoke:()=>client.fetchClinicalDataUsingPOST({
+                clinicalDataType: attr.patientAttribute ? "PATIENT" : "SAMPLE",
+                clinicalDataMultiStudyFilter: {
+                    attributeIds: [attr.clinicalAttributeId],
+                    identifiers: attr.patientAttribute ?
+                        this.patients.result!.map(p=>({entityId:p.patientId, studyId:p.studyId})) :
+                        this.samples.result!.map(s=>({entityId:s.sampleId, studyId:s.studyId}))
+                }
+            })
         })
     );
 
