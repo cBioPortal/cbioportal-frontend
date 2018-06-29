@@ -84,7 +84,6 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                         buttons={["SVG", "PNG"]}
                         filename="enrichments-volcano"
                         dontFade={true}
-                        style={{position:'absolute', zIndex:10, right: 26 }}
                     />
                     <VictoryChart containerComponent={<VictorySelectionContainer containerRef={this.svgRef}
                         onSelection={(points: any, bounds: any, props: any) => this.handleSelection(points, bounds, props)} responsive={false}

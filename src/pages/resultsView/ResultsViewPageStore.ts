@@ -35,7 +35,6 @@ import {toSampleUuid} from "../../shared/lib/UuidUtils";
 import MutationDataCache from "../../shared/cache/MutationDataCache";
 import accessors, {getSimplifiedMutationType, SimplifiedMutationType} from "../../shared/lib/oql/accessors";
 import {keepAlive} from "mobx-utils";
-import MutationMapper from "./mutation/MutationMapper";
 import {AugmentedData, CacheData} from "../../shared/lib/LazyMobXCache";
 import {
     IAlterationCountMap,
