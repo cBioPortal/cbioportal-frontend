@@ -18,7 +18,6 @@ import DownloadTab from "./download/DownloadTab";
 import Chart from 'chart.js';
 import {CancerStudy, Sample} from "../../shared/api/generated/CBioPortalAPI";
 import AppConfig from 'appConfig';
-import AddThisBookmark from 'shared/components/addThis/AddThisBookmark';
 import getOverlappingStudies from "../../shared/lib/getOverlappingStudies";
 import OverlappingStudiesWarning from "../../shared/components/overlappingStudiesWarning/OverlappingStudiesWarning";
 import CNSegments from "./cnSegments/CNSegments";
@@ -42,6 +41,7 @@ import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import {getGAInstance} from "../../shared/lib/tracking";
 import CoExpressionTabContainer from "./coExpression/CoExpressionTabContainer";
 import EnrichmentsTab from 'pages/resultsView/enrichments/EnrichmentsTab';
+import {Bookmark} from "./bookmark/Bookmark";
 
 
 const win = (window as any);
@@ -352,22 +352,16 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
 
         exposeComponentRenderer('renderMutExTab', () => {
-
             return (<div>
                 <MutualExclusivityTab store={this.resultsViewPageStore}/>
             </div>)
         });
 
-        exposeComponentRenderer('renderBookmark', () => {
-            return (
-                <div>
-                    <AddThisBookmark store={this.resultsViewPageStore} getParameters={this.addThisParameters}/>
-                </div>
-            );
+        exposeComponentRenderer('renderBookmarkTab', () => {
+            return <Bookmark urlPromise={ this.resultsViewPageStore.bookmarkLinks } />
         });
 
         exposeComponentRenderer('renderSurvivalTab', () => {
-
             return (<div className="cbioportal-frontend">
                 <SurvivalTab store={this.resultsViewPageStore}/>
             </div>)
