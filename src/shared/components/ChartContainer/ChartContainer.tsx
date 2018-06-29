@@ -30,7 +30,6 @@ export default class ChartContainer extends React.Component<IChartContainer, {}>
 
                 <DownloadControls
                     filename={this.props.exportFileName || "chart-download"}
-                    style={{position:'absolute', zIndex:10, right:10,top:10}}
                     dontFade={true}
                     getSvg={this.props.getSVGElement!}
                 />
