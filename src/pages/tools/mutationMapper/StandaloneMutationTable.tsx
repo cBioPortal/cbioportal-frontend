@@ -3,6 +3,8 @@ import {observer} from "mobx-react";
 import {
     IMutationTableProps, MutationTableColumnType, default as MutationTable
 } from "shared/components/mutationTable/MutationTable";
+import TumorAlleleFreqColumnFormatter from "shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter";
+import CancerTypeColumnFormatter from "shared/components/mutationTable/column/CancerTypeColumnFormatter";
 
 export interface IStandaloneMutationTableProps extends IMutationTableProps {
     // add standalone specific props here if needed
@@ -46,7 +48,11 @@ export default class StandaloneMutationTable extends MutationTable<IStandaloneMu
         super.generateColumns();
 
         // override default visibility for some columns
-        this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ].visible = false;
+        this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ].visible = TumorAlleleFreqColumnFormatter.isVisible(
+            this.props.dataStore ? this.props.dataStore.allData : this.props.data);
+        this._columns[MutationTableColumnType.CANCER_TYPE].visible = CancerTypeColumnFormatter.isVisible(
+            this.props.dataStore ? this.props.dataStore.allData : this.props.data,
+            this.props.uniqueSampleKeyToTumorType);
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT].visible = true;
 
         // order columns
