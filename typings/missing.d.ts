@@ -30,3 +30,4 @@ declare module 'd3-dsv';
 declare module 'victory';
 declare module 'universal-ga';
 declare module 'mixpanel-browser';
+declare module 'measure-text';

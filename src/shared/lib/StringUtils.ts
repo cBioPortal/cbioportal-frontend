@@ -18,15 +18,19 @@ export function longestCommonStartingSubstring(str1:string, str2:string) {
 }
 
 export function stringListToSet(alos:ReadonlyArray<string>):{[s:string]:boolean} {
-    return alos.reduce((map:{[s:string]:boolean}, next:string)=>{
-        map[next] = true;
-        return map;
-    }, {});
+    return stringListToMap(alos, ()=>true);
 }
 
 export function stringListToIndexSet(alos:ReadonlyArray<string>):{[s:string]:number} {
-    return alos.reduce((map:{[s:string]:number}, next:string, index:number)=>{
-        map[next] = index;
+    return stringListToMap(alos, (s:string, i:number)=>i);
+}
+
+export function stringListToMap<T>(
+    alos:ReadonlyArray<string>,
+    mapFn:(s:string, index:number, array:ReadonlyArray<string>)=>T
+):{[s:string]:T} {
+    return alos.reduce((map:{[s:string]:T}, next:string, index:number)=>{
+        map[next] = mapFn(next, index, alos);
         return map;
     }, {});
 }
