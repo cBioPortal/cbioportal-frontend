@@ -1,6 +1,5 @@
 import { ClinicalDataCount, StudyViewFilter } from "shared/api/generated/CBioPortalAPIInternal";
 import _ from "lodash";
-import { ClinicalAttributeData, ClinicalDataType } from "pages/studyView/StudyViewPageStore";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import { ClinicalAttribute } from "shared/api/generated/CBioPortalAPI";
 
