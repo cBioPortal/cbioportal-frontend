@@ -5,8 +5,84 @@
     <title><%= htmlWebpackPlugin.options.title %></title>
     <script>
         window.devContext = true;
-        window.defaultRoute = "/home";
+        window.defaultRoute = "/study";
+
+        window.legacySupportFrontendConfig = {
+            enableDarwin : false,
+            appVersion : '20180612-1730',
+            maxTreeDepth : 3,
+            showOncoKB : true,
+            oncoKBApiUrl : 'oncokb.org/api/v1',
+            genomeNexusApiUrl : 'https://www.genomenexus.org/',
+            showCivic : true,
+            showHotspot : true,
+            showMyCancerGenome : true,
+            showGenomeNexus : true,
+            querySetsOfGenes : JSON.parse('null'),
+            skinBlurb : 'The cBioPortal for Cancer Genomics provides <b>visualization</b>, <b>analysis</b> and <b>download</b> of large-scale <b>cancer genomics</b> data sets. <p><b>Please cite</b> <a href="http://www.ncbi.nlm.nih.gov/pubmed/23550210">Gao et al. <i>Sci. Signal.</i> 2013</a> &amp;  <a href="http://cancerdiscovery.aacrjournals.org/content/2/5/401.abstract"> Cerami et al. <i>Cancer Discov.</i> 2012</a> when publishing results based on cBioPortal.',
+            skinExampleStudyQueries : 'tcga pancancer atlas\ntcga provisional\ntcga -provisional -pancancer\ntcga or icgc\nmsk-impact\n-"cell line"\nbreast\nesophageal OR stomach\nprostate msk\nserous'.split("\n"),
+            skinDatasetHeader : 'The portal currently contains data from <NUM_CANCER_STUDIES> cancer genomics studies.  The table below lists the number of available samples per cancer study and data type.',
+            skinDatasetFooter : 'Data sets of published studies were curated from literature. Data sets of provisional TCGA studies were downloaded from Broad Firehose (http://gdac.broadinstitute.org) and updated quarterly.',
+            skinRightNavShowDatasets : true,
+            skinRightNavShowExamples : true,
+            skinRightNavShowTestimonials : true,
+            skinRightNavExamplesHTML : '',
+            skinRightNavExamplesHTML : '',
+            skinRightNavWhatsNewBlurb : '',
+            userEmailAddress : 'anonymousUser',
+            oncoprintCustomDriverAnnotationBinaryMenuLabel: 'null',
+            oncoprintCustomDriverAnnotationTiersMenuLabel: 'null',
+            oncoprintCustomDriverAnnotationDefault:'false' !== "false", // true unless "false"
+            oncoprintCustomDriverTiersAnnotationDefault:'false' !== "false", // true unless "false"
+            oncoprintOncoKbHotspotsDefault:{"true":undefined, "false":"disable", "custom":"custom"}['true'],
+            oncoprintHideVUSDefault:'false' === "true", // false unless "true"
+            priorityStudies : {},
+            sessionServiceIsEnabled: 'http://dashi2.cbio.mskcc.org:8180/session_service_virtual_study/api/sessions/public_portal/' !== ""
+        }
+
+        // this prevents react router from messing with hash in a way that could is unecessary (static pages)
+        // or could conflict
+        // Prioritized studies for study selector
+        window.legacySupportFrontendConfig.priorityStudies['PanCancer Studies'] =
+            [
+                'msk_impact_2017'
+                ,
+                'nsclc_tcga_broad_2016'
+            ];
+        window.legacySupportFrontendConfig.priorityStudies['Cell lines'] =
+            [
+                'cellline_ccle_broad'
+                ,
+                'cellline_nci60'
+            ];
+
+
+        function assignQuickDirty(obj1, obj2){
+            for (var k in obj2) {
+                obj1[k] = obj2[k];
+            }
+            return obj1;
+        }
+
+        // override legacySupportFrontendConfig with new frontendConfig
+        window.frontendConfig = JSON.parse('{"genomeNexusApiUrl":"https://www.genomenexus.org"}');
+        //window.frontendConfig = Object.assign(window.legacySupportFrontendConfig, window.frontendConfig);
+        window.frontendConfig = assignQuickDirty(window.legacySupportFrontendConfig, window.frontendConfig);
+
+        //window.frontendConfig.frontendUrl = window.frontendConfig.frontendUrl? window.frontendConfig.frontendUrl : 'https://cbioportal.mskcc.org/frontend/65535174d9fbffdb97a7bd9efec1ed45fa05ae2e/';
+        window.frontendConfig.apiRoot = window.frontendConfig.apiRoot? window.frontendConfig.apiRoot : 'www.cbioportal.org/beta';
+        // pass baseUrl explicitly for frontend routing, in case somebody wants to
+        // override apiRoot for some other reason
+        window.frontendConfig.baseUrl = window.frontendConfig.baseUrl? window.frontendConfig.baseUrl : 'www.cbioportal.org/beta';
+        // default, override on per page bases, set to hash if full react page
+        window.frontendConfig.historyType = window.frontendConfig.historyType? window.frontendConfig.historyType : 'memory';
+
+
+
+
+
     </script>
+
     <script src="reactapp/common.bundle.js"></script>
     <link href="reactapp/prefixed-bootstrap.min.css" rel="stylesheet"></link>
 </head>

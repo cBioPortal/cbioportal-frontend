@@ -80,7 +80,7 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 							   secondaryComponent={<a target="_blank" href={getOncoQueryDocUrl()}>Advanced: Onco Query Language (OQL)</a>}
 							   promises={[this.store.mutSigForSingleStudy, this.store.gisticForSingleStudy, this.store.genes]}
 				>
-					Enter Gene Set:
+					Enter Genes:
 				</SectionHeader>
 
 				<FlexCol overflow>

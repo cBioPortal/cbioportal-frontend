@@ -27,14 +27,6 @@ export class HomePageStore {
     });
 }
 
-function getRootElement()
-{
-    for (let node of document.childNodes)
-        if (node instanceof HTMLElement)
-            return node;
-    throw new Error("No HTMLElement found");
-}
-
 interface IHomePageProps
 {
     queryStore:QueryStore

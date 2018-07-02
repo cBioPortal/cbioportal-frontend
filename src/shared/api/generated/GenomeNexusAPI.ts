@@ -28,6 +28,8 @@ export type EnsemblFilter = {
 export type EnsemblGene = {
     'geneId': string
 
+        'hugoSymbol': string
+
         'synonyms': Array < string >
 
         'previousSymbols': Array < string >
@@ -44,12 +46,14 @@ export type EnsemblTranscript = {
 
         'pfamDomains': Array < PfamDomainRange >
 
-        'exons': Array < ExonRange >
-
         'hugoSymbols': Array < string >
 
+        'exons': Array < Exon >
+
+        'utrs': Array < UntranslatedRegion >
+
 };
-export type ExonRange = {
+export type Exon = {
     'exonId': string
 
         'exonStart': number
@@ -98,17 +102,19 @@ export type GenomicLocation = {
 
 };
 export type Hotspot = {
-    'aminoAcidPosition': IntegerRange
+    'hugoSymbol': string
 
-        'hugoSymbol': string
+        'inframeCount': number
+
+        'missenseCount': number
 
         'residue': string
 
-        'transcriptId': string
+        'spliceCount': number
+
+        'truncatingCount': number
 
         'tumorCount': number
-
-        'tumorTypeCount': number
 
         'type': string
 
@@ -270,6 +276,16 @@ export type TranscriptConsequenceSummary = {
         'transcriptId': string
 
         'variantClassification': string
+
+};
+export type UntranslatedRegion = {
+    'type': string
+
+        'start': number
+
+        'end': number
+
+        'strand': number
 
 };
 export type VariantAnnotation = {
@@ -1398,58 +1414,6 @@ export default class GenomeNexusAPI {
             return response.body;
         });
     };
-
-    fetchPfamDomainsGETURL(parameters: {
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/pfam/domain';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Retrieves all PFAM domains
-     * @method
-     * @name GenomeNexusAPI#fetchPfamDomainsGET
-     */
-    fetchPfamDomainsGET(parameters: {
-            $queryParameters ? : any,
-                $domain ? : string
-        }): Promise < Array < PfamDomain >
-        > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/pfam/domain';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
 
     fetchPfamDomainsByPfamAccessionPOSTURL(parameters: {
         'pfamAccessions': Array < string > ,

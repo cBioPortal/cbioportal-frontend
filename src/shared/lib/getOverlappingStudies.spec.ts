@@ -71,4 +71,32 @@ describe('getOverlappingStudies',()=>{
 
     });
 
+    it('finds pan can, pub and provisional', ()=>{
+
+        let studies = [
+            { studyId: 'blca_tcga_pub' },
+            { studyId: 'blca_tcga_pan_can_atlas_2018'},
+            { studyId: 'blca_tcga'}
+        ];
+
+        let ret = getOverlappingStudies(studies as CancerStudy[]);
+
+        assert.equal(ret[0].length, 3);
+
+    });
+
+    it('finds pan can and pub', ()=>{
+
+        let studies = [
+            { studyId: 'blca_tcga_pub' },
+            { studyId: 'blca_tcga_pan_can_atlas_2018'},
+        ];
+
+        let ret = getOverlappingStudies(studies as CancerStudy[]);
+
+        assert.equal(ret[0].length, 2);
+
+    });
+
+
 })

@@ -19,46 +19,71 @@ export class CopyDownloadButtons extends React.Component<ICopyDownloadButtonsPro
         showCopyMessage: false
     };
 
+    get baseTooltipProps()
+    {
+        return {
+            placement: "top",
+            mouseLeaveDelay: 0,
+            mouseEnterDelay: 0.5
+        };
+    }
+
+    copyButton()
+    {
+        const button = (
+            <button
+                ref={this.props.copyButtonRef}
+                className="btn btn-sm btn-default"
+                data-clipboard-text="NA"
+                id="copyButton"
+                onClick={this.props.handleCopy}
+            >
+                {this.props.copyLabel} <i className='fa fa-clipboard'/>
+            </button>
+        );
+
+        // We need two separate tooltips to properly show/hide "Copied" text, and switch between "Copy" and "Copied".
+        // (Also, we need to manually set the visibility due to async rendering issues after clicking the button)
+        return (
+            <DefaultTooltip
+                overlay={<span className="alert-success">Copied!</span>}
+                visible={this.props.showCopyMessage}
+                {...this.baseTooltipProps}
+            >
+                <DefaultTooltip
+                    overlay={<span>Copy</span>}
+                    visible={this.props.showCopyMessage ? false : undefined}
+                    {...this.baseTooltipProps}
+                >
+                    {button}
+                </DefaultTooltip>
+            </DefaultTooltip>
+        );
+    }
+
+    downloadButton()
+    {
+        return (
+            <DefaultTooltip
+                overlay={<span>Download TSV</span>}
+                {...this.baseTooltipProps}
+            >
+                <Button className="btn-sm" onClick={this.props.handleDownload}>
+                    {this.props.downloadLabel} <i className='fa fa-cloud-download'/>
+                </Button>
+            </DefaultTooltip>
+        );
+    }
+
     public render() {
         return (
             <span className={this.props.className}>
-                <ButtonGroup style={{ marginLeft:10 }} className={this.props.className}>
+                <ButtonGroup className={this.props.className}>
                     <If condition={this.props.showCopy}>
-                        <DefaultTooltip
-                            overlay={() => {
-                                if (this.props.showCopyMessage) {
-                                    return <span className="alert-success">Copied!</span>;
-                                }
-                                else {
-                                    return <span>Copy</span>;
-                                }
-                            }}
-                            placement="top"
-                            mouseLeaveDelay={0}
-                            mouseEnterDelay={0.5}
-                        >
-                            <button
-                                ref={this.props.copyButtonRef}
-                                className="btn btn-sm btn-default"
-                                data-clipboard-text="NA"
-                                id="copyButton"
-                                onClick={this.props.handleCopy}
-                            >
-                                {this.props.copyLabel} <i className='fa fa-clipboard'/>
-                            </button>
-                        </DefaultTooltip>
+                        {this.copyButton()}
                     </If>
                     <If condition={this.props.showDownload}>
-                        <DefaultTooltip
-                            overlay={<span>Download TSV</span>}
-                            mouseLeaveDelay={0}
-                            mouseEnterDelay={0.5}
-                            placement="top"
-                        >
-                            <Button className="btn-sm" onClick={this.props.handleDownload}>
-                                {this.props.downloadLabel} <i className='fa fa-cloud-download'/>
-                            </Button>
-                        </DefaultTooltip>
+                        {this.downloadButton()}
                     </If>
                 </ButtonGroup>
             </span>

@@ -40,17 +40,21 @@ const baseProps = {
 // *
 // * Labels
 // *
-const baseLabelStyles = {
+export const baseLabelStyles = {
     fontFamily: sansSerif,
     fontSize,
     letterSpacing,
     padding,
-    fill: blueGrey700,
     stroke: "transparent",
     strokeWidth: 0
 };
 
+
+
 const centeredLabelStyles = assign({ textAnchor: "middle" }, baseLabelStyles);
+
+export const axisLabelStyles = assign({}, baseLabelStyles, { fontSize:13, padding })
+
 // *
 // * Strokes
 // *
@@ -71,15 +75,12 @@ const CBIOPORTAL_VICTORY_THEME = {
         style: {
             axis: {
                 fill: "transparent",
-                stroke: blueGrey300,
-                strokeWidth: 2,
+                stroke: "black",
+                strokeWidth: 1,
                 strokeLinecap,
                 strokeLinejoin
             },
-            axisLabel: assign({}, centeredLabelStyles, {
-                padding,
-                stroke: "transparent"
-            }),
+            axisLabel: assign({}, centeredLabelStyles, axisLabelStyles),
             grid: {
                 fill: "none",
                 stroke: blueGrey50,
@@ -90,14 +91,15 @@ const CBIOPORTAL_VICTORY_THEME = {
             },
             ticks: {
                 fill: "transparent",
-                size: 5,
-                stroke: blueGrey300,
+                size: 4,
+                stroke: "black",
                 strokeWidth: 1,
                 strokeLinecap,
                 strokeLinejoin
             },
             tickLabels: assign({}, baseLabelStyles, {
-                fill: blueGrey700
+                fill: "black",
+                padding:2
             })
         }
     }, baseProps),
@@ -209,7 +211,10 @@ const CBIOPORTAL_VICTORY_THEME = {
         titleOrientation: "top",
         style: {
             data: {
-                type: "circle"
+                type: "circle",
+                size:3,
+                strokeWidth:1,
+                stroke:"black"
             },
             labels: baseLabelStyles,
             title: assign({}, baseLabelStyles, { padding: 5 })

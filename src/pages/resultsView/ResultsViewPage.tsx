@@ -18,12 +18,12 @@ import DownloadTab from "./download/DownloadTab";
 import Chart from 'chart.js';
 import {CancerStudy, Sample} from "../../shared/api/generated/CBioPortalAPI";
 import AppConfig from 'appConfig';
-import AddThisBookmark from 'shared/components/addThis/AddThisBookmark';
 import getOverlappingStudies from "../../shared/lib/getOverlappingStudies";
 import OverlappingStudiesWarning from "../../shared/components/overlappingStudiesWarning/OverlappingStudiesWarning";
 import CNSegments from "./cnSegments/CNSegments";
 import './styles.scss';
 import {genes, parseOQLQuery} from "shared/lib/oql/oqlfilter.js";
+import Network from "./network/Network";
 
 (Chart as any).plugins.register({
     beforeDraw: function(chartInstance:any) {
@@ -39,6 +39,10 @@ import QuerySummary from "./querySummary/QuerySummary";
 import {QueryStore} from "../../shared/components/query/QueryStore";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import {getGAInstance} from "../../shared/lib/tracking";
+import CoExpressionTabContainer from "./coExpression/CoExpressionTabContainer";
+import EnrichmentsTab from 'pages/resultsView/enrichments/EnrichmentsTab';
+import {Bookmark} from "./bookmark/Bookmark";
+import PlotsTab from "./plots/PlotsTab";
 
 
 const win = (window as any);
@@ -62,8 +66,7 @@ function initStore(queryStore: QueryStore) {
     // ultimate we will phase this out and this information will be stored in router etc.
     //const qSession:any = (window as any).QuerySession;
     var samplesSpecification:any = [];
-    if (serverVars.caseSetProperties.case_set_id === "all") {
-        // "all" means all cases in the queried stud(y/ies) - not an actual case set that could be queried
+    if(_.includes(['all', 'w_mut_cna', 'w_mut', 'w_cna'],serverVars.caseSetProperties.case_set_id)){
         var studyToSampleMap = serverVars.studySampleObj;
         var studies = Object.keys(studyToSampleMap);
         for (var i=0; i<studies.length; i++) {
@@ -123,6 +126,10 @@ type OncoprintTabInitProps = {
     divId: string;
 };
 
+function getDirtyServerVar(varName:string){
+    return (window as any).serverVars[varName]
+}
+
 @inject('routing')
 @inject('queryStore')
 @observer
@@ -170,12 +177,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         });
     }
 
-    componentDidMount(){
-
-        this.mountOverlappingStudiesWarning();
-
-    }
-
     private mountOverlappingStudiesWarning(){
 
         const target = $('<div class="cbioportal-frontend"></div>').insertBefore("#tabs");
@@ -191,6 +192,34 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                             return <span></span>;
                         } else {
                             return <span></span>;
+                        }
+                    }
+                }
+            </Observer>
+            ,
+            target[0]
+        );
+
+    }
+
+    private mountNetworkTab(){
+
+        const target = $('<div class="cbioportal-frontend"></div>').appendTo("#network");
+
+        ReactDOM.render(
+            <Observer>
+                {
+                    ()=> {
+                        if (this.resultsViewPageStore.studies.isComplete && this.resultsViewPageStore.sampleLists.isComplete) {
+                            return <Network genes={this.resultsViewPageStore.genes.result!}
+                                                   profileIds={this.resultsViewPageStore.selectedMolecularProfileIds}
+                                                   cancerStudyId={this.resultsViewPageStore.studies.result[0].studyId}
+                                                   zScoreThreshold={this.resultsViewPageStore.zScoreThreshold}
+                                                   caseSetId={(this.resultsViewPageStore.sampleLists.result!.length > 0) ? this.resultsViewPageStore.sampleLists.result![0].sampleListId : "-1"}
+                                                   caseIdsKey={getDirtyServerVar("caseSetProperties").case_ids_key}
+                            />
+                        } else {
+                            return <div />;
                         }
                     }
                 }
@@ -263,6 +292,29 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                 </div>
             });
 
+
+        exposeComponentRenderer('renderNetworkTab',
+            ()=>{
+                return <Observer>
+                    {
+                        ()=> {
+                            if (this.resultsViewPageStore.studies.isComplete && this.resultsViewPageStore.sampleLists.isComplete) {
+                                return <Network genes={this.resultsViewPageStore.genes.result!}
+                                                profileIds={this.resultsViewPageStore.selectedMolecularProfileIds}
+                                                cancerStudyId={this.resultsViewPageStore.studies.result[0].studyId}
+                                                zScoreThreshold={this.resultsViewPageStore.zScoreThreshold}
+                                                caseSetId={(this.resultsViewPageStore.sampleLists.result!.length > 0) ? this.resultsViewPageStore.sampleLists.result![0].sampleListId : "-1"}
+                                                caseIdsKey={getDirtyServerVar("caseSetProperties").case_ids_key}
+                                />
+                            } else {
+                                return <div></div>;
+                            }
+                        }
+                    }
+                </Observer>
+            });
+
+
         exposeComponentRenderer('renderCancerTypeSummary',
             () => {
 
@@ -301,22 +353,16 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
 
         exposeComponentRenderer('renderMutExTab', () => {
-
             return (<div>
                 <MutualExclusivityTab store={this.resultsViewPageStore}/>
             </div>)
         });
 
-        exposeComponentRenderer('renderBookmark', () => {
-            return (
-                <div>
-                    <AddThisBookmark store={this.resultsViewPageStore} getParameters={this.addThisParameters}/>
-                </div>
-            );
+        exposeComponentRenderer('renderBookmarkTab', () => {
+            return <Bookmark urlPromise={ this.resultsViewPageStore.bookmarkLinks } />
         });
 
         exposeComponentRenderer('renderSurvivalTab', () => {
-
             return (<div className="cbioportal-frontend">
                 <SurvivalTab store={this.resultsViewPageStore}/>
             </div>)
@@ -328,6 +374,27 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     <DownloadTab store={this.resultsViewPageStore} />
                 </div>
             );
+        });
+        exposeComponentRenderer('renderCoExpressionTab', ()=>{
+            return (
+                <div className="cbioportal-frontend">
+                    <CoExpressionTabContainer store={this.resultsViewPageStore}/>
+                </div>
+            );
+        });
+
+        exposeComponentRenderer('renderEnrichmentsTab', () => {
+
+            return (
+                <div className="cbioportal-frontend">
+                    <EnrichmentsTab store={this.resultsViewPageStore}/>
+                </div>);
+        });
+
+        exposeComponentRenderer('renderPlotsTab', ()=>{
+            return (<div className="cbioportal-frontend">
+                <PlotsTab store={this.resultsViewPageStore}/>
+            </div>);
         });
     }
 

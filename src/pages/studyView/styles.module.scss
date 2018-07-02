@@ -1,0 +1,21 @@
+.studyViewFlexContainer {
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+}
+.studyViewSurvivalPlot {
+    float: left;
+    margin: 5px;
+}
+
+.studyViewSurvivalPlotTitle {
+    font-size: 18px;
+    color: #000;
+    font-weight: 700;
+    text-align: center;
+}
+
+.studyViewSurvivalPlotBody {
+    position: relative
+}

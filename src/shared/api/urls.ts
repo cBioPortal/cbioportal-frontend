@@ -44,10 +44,10 @@ export function openStudySummaryFormSubmit(studyIds: string | ReadonlyArray<stri
     formSubmit(params.pathname, params.query, "_blank", method);
 }
 export function getSampleViewUrl(studyId:string, sampleId:string) {
-    return cbioUrl('case.do', {}, `/patient?studyId=${studyId}&sampleId=${sampleId}`);
+    return cbioUrl('patient', { sampleId, studyId });
 }
-export function getPatientViewUrl(studyId:string, patientId:string) {
-    return cbioUrl('case.do', {}, `/patient?studyId=${studyId}&caseId=${patientId}`);
+export function getPatientViewUrl(studyId:string, caseId:string) {
+    return cbioUrl('patient', { studyId, caseId });
 }
 export function getPubMedUrl(pmid:string) {
     return `https://www.ncbi.nlm.nih.gov/pubmed/${pmid}`;
@@ -56,7 +56,7 @@ export function getMyGeneUrl(entrezGeneId: number) {
     return `https://mygene.info/v3/gene/${entrezGeneId}?fields=uniprot`;
 }
 export function getUniprotIdUrl(swissProtAccession: string) {
-    return cbioUrl(`proxy/uniprot.org/uniprot/?query=accession:${swissProtAccession}&format=tab&columns=entry+name`);
+    return `https://www.uniprot.org/uniprot/?query=accession:${swissProtAccession}&format=tab&columns=entry+name`;
 }
 export function getMutationAlignerUrl() {
     return cbioUrl(`getMutationAligner.json`);
@@ -98,9 +98,6 @@ export function getSessionServiceApiUrl() {
     return cbioUrl(`/api-legacy/proxy/session/virtual_study`);
 }
 
-export function getPdbAnnotationApiUrl() {
-    return 'https://cbioportal.mskcc.org/pdb-annotation';
-}
 export function getG2SApiUrl() {
     return 'https://g2s.genomenexus.org';
 }
@@ -115,4 +112,16 @@ export function getDarwinUrl(sampleIds:string[], caseId:string) {
 
 export function getStudyDownloadListUrl(){
     return cbioUrl('proxy/download.cbioportal.org/study_list.json');
+}
+
+export function getSessionServiceUrl(){
+    return cbioUrl('api-legacy/proxy/session/main_session');
+}
+
+
+export function getBitlyServiceUrl(){
+    return cbioUrl('api-legacy/proxy/bitly');
+}
+export function getBasePath(){
+    return AppConfig.baseUrl!.replace(/[^\/]*/,"");
 }

@@ -24,7 +24,7 @@ export default class SimpleTable extends React.Component<ISimpleTableProps, {}> 
             </tr>];
 
         return (
-            <table className={classNames('table table-striped table-border-top', className)}>
+            <table className={classNames('simple-table table table-striped table-border-top', className)}>
                 <thead>
                     <tr>{headers}</tr>
                 </thead>

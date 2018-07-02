@@ -36,8 +36,8 @@ import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
 import VariantCountCache from "shared/cache/VariantCountCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
-import {IMobXApplicationDataStore} from "shared/lib/IMobXApplicationDataStore";
-import {IMobXApplicationLazyDownloadDataFetcher} from "shared/lib/IMobXApplicationLazyDownloadDataFetcher";
+import {ILazyMobXTableApplicationDataStore} from "shared/lib/ILazyMobXTableApplicationDataStore";
+import {ILazyMobXTableApplicationLazyDownloadDataFetcher} from "shared/lib/ILazyMobXTableApplicationLazyDownloadDataFetcher";
 import generalStyles from "./column/styles.module.scss";
 import classnames from 'classnames';
 import {IPaginationControlsProps} from "../paginationControls/PaginationControls";
@@ -71,8 +71,8 @@ export interface IMutationTableProps {
     discreteCNAMolecularProfileId?:string;
     columns?:MutationTableColumnType[];
     data?:Mutation[][];
-    dataStore?:IMobXApplicationDataStore<Mutation[]>;
-    downloadDataFetcher?:IMobXApplicationLazyDownloadDataFetcher;
+    dataStore?:ILazyMobXTableApplicationDataStore<Mutation[]>;
+    downloadDataFetcher?:ILazyMobXTableApplicationLazyDownloadDataFetcher;
     initialItemsPerPage?:number;
     itemsLabel?:string;
     itemsLabelPlural?:string;
@@ -400,8 +400,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             render: ProteinChangeColumnFormatter.renderWithMutationStatus,
             download: ProteinChangeColumnFormatter.getTextValue,
             sortBy:(d:Mutation[])=>ProteinChangeColumnFormatter.getSortValue(d),
-            filter: (d:Mutation[], filterString:string, filterStringUpper:string) =>
-                ProteinChangeColumnFormatter.getTextValue(d).toUpperCase().indexOf(filterStringUpper) > -1
+            filter: ProteinChangeColumnFormatter.getFilterValue
         };
 
         this._columns[MutationTableColumnType.MUTATION_TYPE] = {

@@ -125,6 +125,34 @@ th.reactable-header-sort-asc:after {
 
 
 .secondaryTabs {
+
+  li {
+    a {
+
+      font-size: 12px;
+      padding: 4px 6px !important;
+      margin-right: 8px !important;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: none !important;
+      }
+
+    }
+
+    &.active a {
+      background:#eee !important;
+    }
+
+  }
+
+  .tab-content {
+    margin-top:$standardMargin;
+  }
+
+}
+
+.pillTabs {
   > .nav.nav-pills {
 
     margin-bottom:5px;
@@ -441,3 +469,24 @@ h3.hr {
   border:1px dashed $borderColor !important;
 }
 
+.popover {
+
+  &.cbioTooltip {
+
+    position:absolute !important;
+    display:block !important;
+    max-width:600px !important;
+    div:last-child {
+      white-space: nowrap;
+    }
+
+    .popover-content {
+      font-size:$font-size-small !important;
+    }
+  }
+
+}
+
+.inlineBlock {
+  display:inline-block;;
+}
