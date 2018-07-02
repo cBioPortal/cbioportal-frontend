@@ -292,7 +292,8 @@ describe("Oncoprint TooltipUtils", ()=>{
             assert.deepEqual(
                 makeGeneticTrackTooltip_getCoverageInformation(undefined, undefined),
                 {
-                    dispGenePanelIds: [],
+                    dispProfiledGenePanelIds: [],
+                    dispNotProfiledGenePanelIds: [],
                     dispProfiledIn: undefined,
                     dispNotProfiledIn: undefined,
                     dispAllProfiled: false,
@@ -304,7 +305,8 @@ describe("Oncoprint TooltipUtils", ()=>{
             assert.deepEqual(
                 makeGeneticTrackTooltip_getCoverageInformation([], []),
                 {
-                    dispGenePanelIds: [],
+                    dispProfiledGenePanelIds: [],
+                    dispNotProfiledGenePanelIds: [],
                     dispProfiledIn: [],
                     dispNotProfiledIn: [],
                     dispAllProfiled: false,
@@ -316,7 +318,8 @@ describe("Oncoprint TooltipUtils", ()=>{
             assert.deepEqual(
                 makeGeneticTrackTooltip_getCoverageInformation([], undefined),
                 {
-                    dispGenePanelIds: [],
+                    dispProfiledGenePanelIds: [],
+                    dispNotProfiledGenePanelIds: [],
                     dispProfiledIn: [],
                     dispNotProfiledIn: undefined,
                     dispAllProfiled: false,
@@ -328,7 +331,8 @@ describe("Oncoprint TooltipUtils", ()=>{
             assert.deepEqual(
                 makeGeneticTrackTooltip_getCoverageInformation(undefined, []),
                 {
-                    dispGenePanelIds: [],
+                    dispProfiledGenePanelIds: [],
+                    dispNotProfiledGenePanelIds: [],
                     dispProfiledIn: undefined,
                     dispNotProfiledIn: [],
                     dispAllProfiled: false,
@@ -340,7 +344,8 @@ describe("Oncoprint TooltipUtils", ()=>{
             assert.deepEqual(
                 makeGeneticTrackTooltip_getCoverageInformation([{genePanelId:"panel", molecularProfileId:"profile"}], undefined),
                 {
-                    dispGenePanelIds: ["panel"],
+                    dispProfiledGenePanelIds: ["panel"],
+                    dispNotProfiledGenePanelIds: [],
                     dispProfiledIn: ["profile"],
                     dispNotProfiledIn: undefined,
                     dispAllProfiled: false,
@@ -352,7 +357,8 @@ describe("Oncoprint TooltipUtils", ()=>{
             assert.deepEqual(
                 makeGeneticTrackTooltip_getCoverageInformation(undefined, [{molecularProfileId:"profile"}]),
                 {
-                    dispGenePanelIds: [],
+                    dispProfiledGenePanelIds: [],
+                    dispNotProfiledGenePanelIds: [],
                     dispProfiledIn: undefined,
                     dispNotProfiledIn: ["profile"],
                     dispAllProfiled: false,
@@ -364,7 +370,8 @@ describe("Oncoprint TooltipUtils", ()=>{
             assert.deepEqual(
                 makeGeneticTrackTooltip_getCoverageInformation([{molecularProfileId:"profile"}], []),
                 {
-                    dispGenePanelIds: [],
+                    dispProfiledGenePanelIds: [],
+                    dispNotProfiledGenePanelIds: [],
                     dispProfiledIn: ["profile"],
                     dispNotProfiledIn: [],
                     dispAllProfiled: true,
@@ -376,7 +383,8 @@ describe("Oncoprint TooltipUtils", ()=>{
             assert.deepEqual(
                 makeGeneticTrackTooltip_getCoverageInformation([], [{molecularProfileId:"profile"}]),
                 {
-                    dispGenePanelIds: [],
+                    dispProfiledGenePanelIds: [],
+                    dispNotProfiledGenePanelIds: [],
                     dispProfiledIn: [],
                     dispNotProfiledIn: ["profile"],
                     dispAllProfiled: false,
@@ -388,7 +396,8 @@ describe("Oncoprint TooltipUtils", ()=>{
             assert.deepEqual(
                 makeGeneticTrackTooltip_getCoverageInformation([{genePanelId:"panel", molecularProfileId:"profile1"}], [{molecularProfileId:"profile"}]),
                 {
-                    dispGenePanelIds: ["panel"],
+                    dispProfiledGenePanelIds: ["panel"],
+                    dispNotProfiledGenePanelIds: [],
                     dispProfiledIn: ["profile1"],
                     dispNotProfiledIn: ["profile"],
                     dispAllProfiled: false,
@@ -398,9 +407,10 @@ describe("Oncoprint TooltipUtils", ()=>{
         });
         it("gives correct results with overlapping profiled_in and not_profiled_in", ()=>{
             assert.deepEqual(
-                makeGeneticTrackTooltip_getCoverageInformation([{genePanelId:"panel", molecularProfileId:"profile"}], [{molecularProfileId:"profile"}]),
+                makeGeneticTrackTooltip_getCoverageInformation([{genePanelId:"panel", molecularProfileId:"profile"}], [{genePanelId:"panel2", molecularProfileId:"profile"}]),
                 {
-                    dispGenePanelIds: ["panel"],
+                    dispProfiledGenePanelIds: ["panel"],
+                    dispNotProfiledGenePanelIds: ["panel2"],
                     dispProfiledIn: ["profile"],
                     dispNotProfiledIn: [],
                     dispAllProfiled: true,

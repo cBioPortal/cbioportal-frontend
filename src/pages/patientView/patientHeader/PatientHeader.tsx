@@ -12,6 +12,7 @@ import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultToo
 
 export type IPatientHeaderProps = {
     patient:any;
+    studyId: string;
     sampleManager?:SampleManager | null;
     handlePatientClick:any;
     darwinUrl?: string;
@@ -21,7 +22,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
 
         return (
             <div className={styles.patientHeader}>
-                {this.props.patient && this.getOverlayTriggerPatient(this.props.patient, this.props.sampleManager)}
+                {this.props.patient && this.getOverlayTriggerPatient(this.props.patient, this.props.studyId, this.props.sampleManager)}
                 {this.getDarwinUrl(this.props.darwinUrl)}
             </div>
         );
@@ -49,7 +50,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
         );
     }
 
-    private getOverlayTriggerPatient(patient: any, sampleManager?: SampleManager|null) {
+    private getOverlayTriggerPatient(patient: any, studyId:string, sampleManager?: SampleManager|null) {
         const clinicalDataLegacy = fromPairs(patient.clinicalData.map(
             (x: any) => [x.clinicalAttributeId, x.value])
         );
@@ -72,7 +73,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
             >
                 <span className='clinical-spans' id='patient-attributes'>
                     <a href="javascript:void(0)" onClick={()=>this.props.handlePatientClick(patient.id)}>{patient.id}</a>
-                    {getSpanElements(clinicalDataLegacy, 'lgg_ucsf_2014')}
+                    {getSpanElements(clinicalDataLegacy, studyId)}
                 </span>
             </DefaultTooltip>
         );

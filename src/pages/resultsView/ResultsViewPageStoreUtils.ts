@@ -1,15 +1,28 @@
-
 import {
     Gene, NumericGeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
     Mutation, Patient, Sample, CancerStudy
 } from "../../shared/api/generated/CBioPortalAPI";
 import {action} from "mobx";
-import {getSimplifiedMutationType} from "../../shared/lib/oql/accessors";
-import {AnnotatedNumericGeneMolecularData, AnnotatedMutation} from "./ResultsViewPageStore";
+import accessors, {getSimplifiedMutationType} from "../../shared/lib/oql/accessors";
+import {
+    OQLLineFilterOutput,
+    UnflattenedOQLLineFilterOutput,
+    filterCBioPortalWebServiceDataByUnflattenedOQLLine,
+    isMergedTrackFilter
+} from "../../shared/lib/oql/oqlfilter";
+import {groupBy} from "../../shared/lib/StoreUtils";
+import {
+    AnnotatedExtendedAlteration,
+    AnnotatedNumericGeneMolecularData,
+    AnnotatedMutation,
+    CaseAggregatedData,
+    IQueriedCaseData
+} from "./ResultsViewPageStore";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import _ from "lodash";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { VirtualStudy } from "shared/model/VirtualStudy";
+import client from "shared/api/cbioportalClientInstance";
 
 type CustomDriverAnnotationReport = {
     hasBinary: boolean,
@@ -208,27 +221,34 @@ export function annotateMolecularDatum(
     return Object.assign({oncoKbOncogenic: oncogenic}, molecularDatum);
 }
 
-export async function getQueriedStudies(
-    physicalStudies:{[id:string]:CancerStudy},
-    virtualStudies:{[id:string]:CancerStudy},
-    queriedIds:string[]
-):Promise<CancerStudy[]>{
+export async function fetchQueriedStudies(filteredPhysicalStudies:{[id:string]:CancerStudy},queriedIds:string[]):Promise<CancerStudy[]>{
     const queriedStudies:CancerStudy[] = [];
-    const cohorts: {[id:string]:CancerStudy} = Object.assign({}, physicalStudies, virtualStudies);
-    //this would mostly contain unauthorized and shared virtual study ids
-    const unknownIds:string[] = []
+    let unknownIds:{[id:string]:boolean} = {};
     for(const id of queriedIds){
-        if(cohorts[id]){
-            queriedStudies.push(cohorts[id])
+        if(filteredPhysicalStudies[id]){
+            queriedStudies.push(filteredPhysicalStudies[id])
         } else {
-            unknownIds.push(id)
+            unknownIds[id]=true;
         }
     }
 
-    let promises = unknownIds.map(id =>sessionServiceClient.getVirtualStudy(id))
-			
-    let otherVirtualStudies = await Promise.all(promises).then((allData: VirtualStudy[]) => {
-        return allData.map(virtualStudy => {
+    if(!_.isEmpty(unknownIds)){
+        await client.fetchStudiesUsingPOST({
+            studyIds:Object.keys(unknownIds),
+            projection:'DETAILED'
+        }).then(studies=>{
+            studies.forEach(study=>{
+                queriedStudies.push(study);
+                delete unknownIds[study.studyId];
+            })
+    
+        }).catch(() => {}) //this is for private instances. it throws error when the study is not found
+    }
+
+    let virtualStudypromises = Object.keys(unknownIds).map(id =>sessionServiceClient.getVirtualStudy(id))
+
+    await Promise.all(virtualStudypromises).then((allData: VirtualStudy[]) => {
+        allData.forEach(virtualStudy=>{
             let study = {
                 allSampleCount:_.sumBy(virtualStudy.data.studies, study=>study.samples.length),
                 studyId: virtualStudy.id,
@@ -236,8 +256,60 @@ export async function getQueriedStudies(
                 description: virtualStudy.data.description,
                 cancerTypeId: "My Virtual Studies"
             } as CancerStudy;
-            return study;
+            queriedStudies.push(study)
         })
     });
-    return queriedStudies.concat(otherVirtualStudies);
+
+    return queriedStudies;
+}
+
+export function groupDataByCase(
+    oqlFilter: UnflattenedOQLLineFilterOutput<AnnotatedExtendedAlteration>,
+    samples: {uniqueSampleKey: string}[],
+    patients: {uniquePatientKey: string}[]
+): CaseAggregatedData<AnnotatedExtendedAlteration> {
+    const data: AnnotatedExtendedAlteration[] = (
+        isMergedTrackFilter(oqlFilter)
+        ? _.flatMap(oqlFilter.list, (geneLine) => geneLine.data)
+        : oqlFilter.data
+    );
+    return {
+        samples: groupBy(data, datum=>datum.uniqueSampleKey, samples.map(sample=>sample.uniqueSampleKey)),
+        patients: groupBy(data, datum=>datum.uniquePatientKey, patients.map(sample=>sample.uniquePatientKey))
+    };
+}
+
+export function filterSubQueryData(
+    queryStructure: UnflattenedOQLLineFilterOutput<object>,
+    defaultOQLQuery: string,
+    data: (AnnotatedMutation | NumericGeneMolecularData)[],
+    accessorsInstance: accessors,
+    samples: {uniqueSampleKey: string}[],
+    patients: {uniquePatientKey: string}[]
+): IQueriedCaseData<object>[] | undefined {
+    function filterDataForLine(oqlLine: string) {
+        // assuming that merged track syntax will never allow
+        // nesting, each inner OQL line will be one single-gene
+        // query
+        const alterationsForLine = (
+            filterCBioPortalWebServiceDataByUnflattenedOQLLine(
+                oqlLine,
+                data,
+                accessorsInstance,
+                defaultOQLQuery
+            )[0]
+        ) as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
+        return {
+            cases: groupDataByCase(alterationsForLine, samples, patients),
+            oql: alterationsForLine
+        };
+    }
+
+    if (!isMergedTrackFilter(queryStructure)) {
+        return undefined;
+    } else {
+        return queryStructure.list.map(
+            innerLine => filterDataForLine(innerLine.oql_line)
+        );
+    }
 }

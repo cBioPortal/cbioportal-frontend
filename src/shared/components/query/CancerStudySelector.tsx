@@ -145,7 +145,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                     </SectionHeader>
 
                     <div>
-                        {!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending) && (
+                        {!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending && !this.store.profiledSamplesCount.isPending) && (
                             <Observer>
                                 {() => {
                                     let numSelectedStudies = expr(() => this.store.selectableSelectedStudyIds.length);
@@ -161,7 +161,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                                             }}
                                         >
                                             <b>{numSelectedStudies}</b> studies selected
-                                            (<b>{this.store.selectableSelectedStudies_totalSampleCount}</b> samples)
+                                            (<b>{this.store.profiledSamplesCount.result.all}</b> samples)
                                         </a>
                                     );
                                 }}
@@ -236,12 +236,19 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                                 searchTextOptions = [this.store.searchText].concat(searchTextOptions as string[]);
                             let searchTimeout: number | null = null;
 
+                            const optionsWithSortKeys = searchTextOptions.map((name,i)=>{
+                                return { value: name, sortKey: i }
+                            });
+
                             return (
                                 <div style={{display: 'flex', alignItems: 'center'}}>
                                     {
                                         (this.store.searchText) && (
                                             <span data-test="clearStudyFilter"
-                                                  onClick={(e) => { this.handlers.onClearFilter() }}
+                                                  onClick={(e) => {
+                                                      this.autosuggest.setState({ inputValue:"" });
+                                                      this.handlers.onClearFilter() }
+                                                  }
                                                   style={{
                                                       fontSize: 18,
                                                       cursor: 'pointer',
@@ -253,11 +260,10 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                                         )
                                     }
                                     <Autosuggest
-                                        datalist={searchTextOptions}
+                                        datalist={optionsWithSortKeys}
                                         ref={(el: React.Component<any, any>) => this.autosuggest = el}
                                         placeholder="Search..."
                                         bsSize="small"
-                                        value={this.store.searchText}
                                         onChange={(currentVal: string) => {
                                             if (searchTimeout !== null) {
                                                 window.clearTimeout(searchTimeout);
@@ -288,7 +294,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 
                 <SectionHeader style={{display: 'none'}} promises={[this.store.cancerTypes, this.store.cancerStudies]}>
                     Select Studies:
-                    {!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending) && (
+                    {!!(!this.store.cancerTypes.isPending && !this.store.cancerStudies.isPending && !this.store.profiledSamplesCount.isPending) && (
                         <Observer>
                             {() => {
                                 let numSelectedStudies = expr(() => this.store.selectableSelectedStudyIds.length);
@@ -305,7 +311,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
                                         }}
                                     >
 										<b>{numSelectedStudies}</b> studies selected
-										(<b>{this.store.selectableSelectedStudies_totalSampleCount}</b> samples)
+										(<b>{this.store.profiledSamplesCount.result.all}</b> samples)
 									</span>
                                 );
                             }}

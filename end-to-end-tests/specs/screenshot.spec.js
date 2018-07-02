@@ -39,9 +39,7 @@ function runResultsTestSuite(prefix){
 
     it(`${prefix} plots tab`, function(){
         browser.click("[href='#plots']");
-        browser.waitForExist('#plots-box svg',10000);
-        var res = browser.checkElement('#plots', { hide:['.qtip'], misMatchTolerance:1 });
-        assertScreenShotMatch(res);
+        waitForAndCheckPlotsTab();
     });
 
     it(`${prefix} mutation tab`, function(){
@@ -53,8 +51,16 @@ function runResultsTestSuite(prefix){
 
     it(`${prefix} coexpression tab`, function(){
         browser.click("[href='#coexp']");
-        browser.waitForVisible('#coexp_table_div_KRAS',10000);
-        var res = browser.checkElement('#coexp',{hide:['.qtip'] });
+        browser.waitForVisible('div[data-test="CoExpressionPlot"]',10000);
+        var res = browser.checkElement('#coexp', { hide:['.qtip'] } );
+        assertScreenShotMatch(res);
+    });
+
+    it(`${prefix} enrichments tab`, function(){
+        browser.click("[href='#enrichementTabDiv']");
+        browser.waitForVisible('div[data-test="MutationEnrichmentsTab"]',10000);
+        browser.click('b=CDK14');
+        var res = browser.checkElement('#enrichementTabDiv', { hide:['.qtip'] } );
         assertScreenShotMatch(res);
     });
 
@@ -66,9 +72,21 @@ function runResultsTestSuite(prefix){
     });
 
     it(`${prefix} network tab`, function(){
+
         browser.click("[href='#network']");
-        browser.waitForVisible('#cytoscapeweb canvas',20000);
+
+        browser.waitForExist('iframe#networkFrame', 10000);
+
+        browser.frame('networkFrame', function(err, result) {
+                if (err) console.log(err);
+            })
+        browser.waitForVisible('#cytoscapeweb canvas',60000);
+        browser.execute(function(){
+            $("<style>canvas { visibility: hidden} </style>").appendTo("body");
+        });
+        browser.frame(null);
         var res = browser.checkElement("#network",{hide:['.qtip','canvas'] });
+
         assertScreenShotMatch(res);
     });
 
@@ -115,6 +133,12 @@ describe("oncoprint screenshot tests", function() {
         var res = browser.checkElement('#oncoprint');
         assertScreenShotMatch(res);
     });
+    it("msk_impact_2017 query STK11:HOMDEL MUT", ()=>{
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_Non-Small_Cell_Lung_Cancer&gene_list=STK11%253A%2520HOMDEL%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`);
+        waitForOncoprint(20000);
+        var res = browser.checkElement('#oncoprint');
+        assertScreenShotMatch(res);
+    });
     it("hcc_inserm_fr_2015 with genes including TERT - it should show orange promoter mutations in TERT", function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=hcc_inserm_fr_2015&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=hcc_inserm_fr_2015_sequenced&gene_list=SOX9%2520RAN%2520TNK2%2520EP300%2520PXN%2520NCOA2%2520AR%2520NRIP1%2520NCOR1%2520NCOR2%2520TERT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=hcc_inserm_fr_2015_mutations`);
         waitForOncoprint(20000);
@@ -146,6 +170,20 @@ describe("oncoprint screenshot tests", function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=brca_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=brca_tcga_pub_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_tcga_pub_gistic&show_samples=false&heatmap_track_groups=brca_tcga_pub_methylation_hm27%2CKRAS%2CNRAS%2CBRAF%2CTP53%2CBRCA1%2CBRCA2`;
         goToUrlAndSetLocalStorage(url);
         waitForOncoprint(10000);
+        var res = browser.checkElement("#oncoprint");
+        assertScreenShotMatch(res);
+    });
+    it("'profiled in' tracks in msk impact with 3 n/p genes", function() {
+        var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=msk_impact_2017_cnaseq&gene_list=AKR1C1%2520AKR1C2%2520AKR1C4&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
+        goToUrlAndSetLocalStorage(url);
+        waitForOncoprint(20000);
+        var res = browser.checkElement("#oncoprint");
+        assertScreenShotMatch(res);
+    });
+    it("'profiled in' tracks in multiple study with SOS1", function() {
+        var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=SOS1&geneset_list=%20&tab_index=tab_visualize&Action=Submit&cancer_study_list=msk_impact_2017%2Cbrca_bccrc&show_samples=false&clinicallist=CANCER_STUDY%2CPROFILED_IN_MUTATION_EXTENDED%2CPROFILED_IN_msk_impact_2017_cna#summary`;
+        goToUrlAndSetLocalStorage(url);
+        waitForOncoprint(20000);
         var res = browser.checkElement("#oncoprint");
         assertScreenShotMatch(res);
     });
@@ -199,6 +237,144 @@ describe('study view screenshot test', function(){
 
         var res = browser.checkElement('#page_wrapper_table', {hide:['.qtip', '#footer-span-version'] });
         assertScreenShotMatch(res);
+    });
+});
+
+describe("coexpression tab screenshot tests", function() {
+    before(function() {
+        var url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&case_ids=&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit#coexp`;
+        goToUrlAndSetLocalStorage(url);
+    });
+    it('coexpression tab coadread_tcga_pub initial load', function() {
+        browser.waitForExist('div[data-test="CoExpressionPlot"]', 10000); // wait for plot to show up
+        var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
+        assertScreenShotMatch(res);
+    });
+    it('coexpression tab coadread_tcga_pub log scale x and y mutations on', function() {
+        browser.click('div[data-test="CoExpressionGeneTabContent"] input[data-test="logScale"]');
+        var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
+        assertScreenShotMatch(res);
+    });
+    it('coexpression tab coadread_tcga_pub loc scale x and y mutations off', function() {
+        browser.click('div[data-test="CoExpressionGeneTabContent"] input[data-test="ShowMutations"]');
+        var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
+        assertScreenShotMatch(res);
+    });
+    it('coexpression tab coadread_tcga_pub switch tabs', function() {
+        browser.click('#coexpressionTabGeneTabs>ul>li:nth-child(2)>a');// click on NRAS
+        browser.pause(100); // give time to start loading
+        browser.waitForExist('div[data-test="CoExpressionPlot"]', 10000); // wait for plot to show up
+        var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
+        assertScreenShotMatch(res);
+    });
+    it('coexpression tab coadread_tcga_pub switch profiles', function() {
+        browser.execute(function() { resultsViewCoExpressionTab.onSelectDataSet({ value: "coadread_tcga_pub_mrna"}); });
+        browser.pause(100); // give time to start loading
+        browser.waitForExist('div[data-test="CoExpressionPlot"]', 10000); // wait for plot to show up
+        var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
+        assertScreenShotMatch(res);
+    });
+    it('coexpression tab coadread_tcga_pub with a lot of genes', function() {
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=AKR1C3%2520AR%2520CYB5A%2520CYP11A1%2520CYP11B1%2520CYP11B2%2520CYP17A1%2520CYP19A1%2520CYP21A2%2520HSD17B1%2520HSD17B10%2520HSD17B11%2520HSD17B12%2520HSD17B13%2520HSD17B14%2520HSD17B2%2520HSD17B3%2520HSD17B4%2520HSD17B6%2520HSD17B7%2520HSD17B8%2520HSD3B1%2520HSD3B2%2520HSD3B7%2520RDH5%2520SHBG%2520SRD5A1%2520SRD5A2%2520SRD5A3%2520STAR&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic#coexp`);
+        browser.waitForExist('div[data-test="CoExpressionPlot"]', 10000); // wait for plot to show up
+        var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
+        assertScreenShotMatch(res);
+    });
+});
+
+describe("enrichments tab screenshot tests", function() {
+    before(function() {
+        var url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&case_ids=&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit#enrichementTabDiv`;
+        goToUrlAndSetLocalStorage(url);
+    });
+    it('enrichments tab coadread_tcga_pub mRNA profile', function(){
+        browser.waitForVisible('div[data-test="MutationEnrichmentsTab"]',10000);
+        browser.click('a=mRNA');
+        browser.waitForVisible('div[data-test="MRNAEnrichmentsTab"]',10000);
+        browser.click('b=MERTK');
+        var res = browser.checkElement('#enrichementTabDiv', { hide:['.qtip'] } );
+        assertScreenShotMatch(res);
+    });
+});
+
+function waitForAndCheckPlotsTab() {
+    browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 10000);
+    var res = browser.checkElement('div[data-test="PlotsTabEntireDiv"]', { hide:['.qtip'] });
+    assertScreenShotMatch(res);
+}
+
+describe("plots tab screenshot tests", function() {
+    before(function() {
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=brca_tcga&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=brca_tcga_cnaseq&gene_list=TP53%2520MDM2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_tcga_gistic#plots`);
+    });
+    it("plots tab molecular vs molecular same gene", function() {
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab molecular vs molecular same gene changed gene", function() {
+        browser.execute(function() { resultsViewPlotsTab.onGeneSelect(true, 4193); });
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab copy number view", function() {
+        browser.click('input[data-test="ViewCopyNumber"]');
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab molecular vs molecular different genes", function() {
+        browser.click('[data-test="HorizontalAxisGeneLockButton"]');
+        browser.execute(function() { resultsViewPlotsTab.onGeneSelect(false, 7157); });
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab molecular vs molecular different genes different profiles", function() {
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisProfileIdSelect({ value: "brca_tcga_rna_seq_v2_mrna" }); });
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab molecular vs molecular swapped axes", function() {
+        browser.click('[data-test="swapHorzVertButton"]');
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab search case id", function() {
+        browser.execute(function() { resultsViewPlotsTab.executeSearchCase("TCGA-E2"); });
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab search case id and mutation", function() {
+        browser.execute(function() { resultsViewPlotsTab.executeSearchMutation("I195T"); });
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab search mutation", function() {
+        browser.execute(function() { resultsViewPlotsTab.executeSearchCase(""); });
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab log scale off", function() {
+        browser.click('input[data-test="VerticalLogCheckbox"]');
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab clinical vs molecular", function() {
+        browser.click('input[data-test="HorizontalAxisClinicalAttributeRadio"]');
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab clinical vs molecular boxplot", function() {
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisClinicalAttributeSelect({ value: "AJCC_PATHOLOGIC_TUMOR_STAGE" }); });
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab molecular vs clinical boxplot, mutation search off", function() {
+        browser.execute(function() { resultsViewPlotsTab.executeSearchMutation(""); });
+        browser.click('[data-test="swapHorzVertButton"]');
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab clinical vs clinical boxplot", function() {
+        browser.click('input[data-test="HorizontalAxisClinicalAttributeRadio"]');
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab search case id in clinical vs clinical boxplot", function() {
+        browser.execute(function() { resultsViewPlotsTab.executeSearchCase("TCGA-B6"); });
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab clinical vs clinical table plot", function() {
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisClinicalAttributeSelect({ value: "AJCC_TUMOR_PATHOLOGIC_PT" }); });
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab copy number vs clinical table plot", function() {
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisProfileTypeSelect({ value: "COPY_NUMBER_ALTERATION" }); });
+        waitForAndCheckPlotsTab();
     });
 });
 

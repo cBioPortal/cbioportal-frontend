@@ -1,0 +1,83 @@
+.Container {
+    display: flex;
+    justify-content: space-between;
+}
+
+.Checkboxes {
+    display: flex;
+    flex-direction: row;
+    float: left;
+    align-items:center;
+    height: 30px;
+}
+  
+.Checkboxes > * {
+    margin:0 10px !important;
+}
+  
+.TableContainer {
+    width: 800px;
+}
+
+.TableContainer th {
+    font-size: 10px;
+}
+
+.TableContainer td {
+    font-size: 11px;
+}
+
+.TableContainer {
+    :global(.tableSearchInput) {
+        width: 194px !important;
+    }
+}
+
+.Checkbox {
+    margin-top: -2px !important;
+    margin-bottom: 0 !important;
+}
+
+.Checkbox label input:disabled {
+    cursor: auto !important;
+}
+
+.Checkbox label {
+    cursor: auto !important;
+    min-height: 12px !important;
+}
+
+.GeneName {
+    margin-bottom: 5px;
+}
+
+.DataSet {
+    padding-bottom: $standardMargin;
+}
+
+.ScatterTooltip div:last-child {
+    padding: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.BarTooltip div:last-child {
+    padding: 3px;
+    font-size: 11px;
+    white-space: nowrap;
+}
+
+.BoxTooltip div:last-child {
+    padding: 3px 10px;
+    white-space: nowrap;
+}
+
+.Tendency {
+    display: flex;
+    flex-direction: column;
+    align-items:flex-start;
+}
+
+.LeftColumn {
+    width:400px;
+}
