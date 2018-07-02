@@ -35,6 +35,7 @@ import { getMouseIcon } from './SVGIcons';
 
 import './patient.scss';
 import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
+import {getSampleViewUrl} from "../../shared/api/urls";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -66,8 +67,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         //TODO: this should be done by a module so that it can be reused on other pages
         const reaction1 = reaction(
-            () => props.routing.location.query,
-            query => {
+            () => [props.routing.location.query, props.routing.location.hash],
+            ([query,hash]) => {
 
                 const validationResult = validateParametersPatientView(query);
 
@@ -85,11 +86,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         patientViewPageStore.setSampleId(query.sampleId as string);
                     }
 
-                    let patientIdsInCohort = ('navCaseIds' in query ? (query.navCaseIds as string).split(",") : []);
+                    // if there is a navCaseId list in url
+                    const navCaseIdMatch = hash.match(/navCaseIds=([^&]*)/);
+                    if (navCaseIdMatch && navCaseIdMatch.length > 1) {
+                        const navCaseIds = navCaseIdMatch[1].split(',');
+                        patientViewPageStore.patientIdsInCohort = navCaseIds.map((entityId:string)=>{
+                            return entityId.includes(':') ? entityId : patientViewPageStore.studyId + ':' + entityId;
+                        });
+                    }
 
-                    patientViewPageStore.patientIdsInCohort = patientIdsInCohort.map(entityId=>{
-                        return entityId.includes(':') ? entityId : patientViewPageStore.studyId + ':' + entityId;
-                    });
                 } else {
                     patientViewPageStore.urlValidationError = validationResult.message;
                 }
@@ -229,7 +234,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         {isPDX && getMouseIcon()}
                                         {isPDX && '\u00A0'}
                                         <a
-                                            href={`case.do?#/patient?sampleId=${sample.id}&studyId=${patientViewPageStore.studyMetaData.result!.studyId}`}
+                                            href={getSampleViewUrl(patientViewPageStore.studyMetaData.result!.studyId, sample.id)}
                                             target="_blank"
                                             onClick={(e: React.MouseEvent<HTMLAnchorElement>) => this.handleSampleClick(sample.id, e)}
                                         >
@@ -237,7 +242,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         </a>
                                         {sampleManager &&
                                          sampleManager.clinicalDataLegacyCleanAndDerived[sample.id] &&
-                                         getSpanElementsFromCleanData(sampleManager.clinicalDataLegacyCleanAndDerived[sample.id], 'lgg_ucsf_2014')}
+                                         getSpanElementsFromCleanData(sampleManager.clinicalDataLegacyCleanAndDerived[sample.id], patientViewPageStore.studyId)}
                                     </span>
                                 )
                             }
@@ -304,6 +309,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 <td><PatientHeader
                                     handlePatientClick={(id: string)=>this.handlePatientClick(id)}
                                     patient={patientViewPageStore.patientViewData.result.patient}
+                                    studyId={patientViewPageStore.studyId}
                                     darwinUrl={patientViewPageStore.darwinUrl.result}
                                     sampleManager={sampleManager}/></td>
                             </tr>

@@ -72,6 +72,10 @@
       "description": " "
     },
     {
+      "name": "Study View",
+      "description": " "
+    },
+    {
       "name": "Variant Counts",
       "description": " "
     },
@@ -85,6 +89,99 @@
     "https"
   ],
   "paths": {
+    "/attributes/{attributeId}/clinical-data-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch clinical data counts by study view filter",
+        "operationId": "fetchClinicalDataCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "attributeId",
+            "in": "path",
+            "description": "Attribute ID e.g. CANCER_TYPE",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "clinicalDataType",
+            "in": "query",
+            "description": "Type of the clinical data",
+            "required": false,
+            "type": "string",
+            "default": "SAMPLE",
+            "enum": [
+              "SAMPLE",
+              "PATIENT"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Clinical data count filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ClinicalDataCount"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cna-genes/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch CNA genes by study view filter",
+        "operationId": "fetchCNAGenesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CopyNumberCountByGene"
+              }
+            }
+          }
+        }
+      }
+    },
     "/cosmic-counts/fetch": {
       "post": {
         "tags": [
@@ -119,6 +216,43 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/CosmicMutation"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/filtered-samples/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch sample IDs by study view filter",
+        "operationId": "fetchFilteredSamplesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Sample"
               }
             }
           }
@@ -875,6 +1009,77 @@
         }
       }
     },
+    "/mutated-genes/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch mutated genes by study view filter",
+        "operationId": "fetchMutatedGenesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/MutationCountByGene"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sample-counts/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch sample IDs by study view filter",
+        "operationId": "fetchMolecularProfileSampleCountsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/MolecularProfileSampleCount"
+            }
+          }
+        }
+      }
+    },
     "/studies/{studyId}/fraction-genome-altered/fetch": {
       "post": {
         "tags": [
@@ -904,15 +1109,6 @@
             "schema": {
               "$ref": "#/definitions/FractionGenomeAlteredFilter"
             }
-          },
-          {
-            "name": "cutoff",
-            "in": "query",
-            "description": "Cutoff",
-            "required": false,
-            "type": "number",
-            "default": 0.2,
-            "format": "double"
           }
         ],
         "responses": {
@@ -1166,6 +1362,41 @@
       },
       "title": "AlterationEnrichment"
     },
+    "ClinicalDataCount": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "ClinicalDataCount"
+    },
+    "ClinicalDataEqualityFilter": {
+      "type": "object",
+      "properties": {
+        "attributeId": {
+          "type": "string"
+        },
+        "clinicalDataType": {
+          "type": "string",
+          "enum": [
+            "SAMPLE",
+            "PATIENT"
+          ]
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "ClinicalDataEqualityFilter"
+    },
     "CoExpression": {
       "type": "object",
       "required": [
@@ -1210,6 +1441,66 @@
       },
       "title": "CoExpressionFilter"
     },
+    "CopyNumberCountByGene": {
+      "type": "object",
+      "properties": {
+        "alteration": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "countByEntity": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "cytoband": {
+          "type": "string"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "frequency": {
+          "type": "number"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "qValue": {
+          "type": "number"
+        },
+        "totalCount": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "CopyNumberCountByGene"
+    },
+    "CopyNumberGeneFilter": {
+      "type": "object",
+      "properties": {
+        "alterations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CopyNumberGeneFilterElement"
+          }
+        }
+      },
+      "title": "CopyNumberGeneFilter"
+    },
+    "CopyNumberGeneFilterElement": {
+      "type": "object",
+      "properties": {
+        "alteration": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "CopyNumberGeneFilterElement"
+    },
     "CosmicMutation": {
       "type": "object",
       "required": [
@@ -1245,6 +1536,13 @@
           "type": "array",
           "items": {
             "type": "string"
+          }
+        },
+        "queryGenes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
           }
         },
         "unalteredIds": {
@@ -1556,6 +1854,28 @@
       },
       "title": "Info"
     },
+    "MolecularProfileSampleCount": {
+      "type": "object",
+      "properties": {
+        "numberOfCNAProfiledSamples": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "numberOfCNAUnprofiledSamples": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "numberOfMutationProfiledSamples": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "numberOfMutationUnprofiledSamples": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "MolecularProfileSampleCount"
+    },
     "MrnaPercentile": {
       "type": "object",
       "required": [
@@ -1638,6 +1958,46 @@
       },
       "title": "MutSig"
     },
+    "MutationCountByGene": {
+      "type": "object",
+      "properties": {
+        "countByEntity": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "frequency": {
+          "type": "number"
+        },
+        "hugoGeneSymbol": {
+          "type": "string"
+        },
+        "qValue": {
+          "type": "number"
+        },
+        "totalCount": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "MutationCountByGene"
+    },
+    "MutationGeneFilter": {
+      "type": "object",
+      "properties": {
+        "entrezGeneIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "title": "MutationGeneFilter"
+    },
     "MutationSpectrum": {
       "type": "object",
       "required": [
@@ -1712,6 +2072,101 @@
         }
       },
       "title": "MutationSpectrumFilter"
+    },
+    "Sample": {
+      "type": "object",
+      "required": [
+        "patientId",
+        "sampleId",
+        "studyId"
+      ],
+      "properties": {
+        "cancerTypeId": {
+          "type": "string"
+        },
+        "copyNumberSegmentPresent": {
+          "type": "boolean"
+        },
+        "patientId": {
+          "type": "string"
+        },
+        "sampleId": {
+          "type": "string"
+        },
+        "sampleType": {
+          "type": "string",
+          "enum": [
+            "Primary Solid Tumor",
+            "Recurrent Solid Tumor",
+            "Primary Blood Tumor",
+            "Recurrent Blood Tumor",
+            "Metastatic",
+            "Blood Derived Normal",
+            "Solid Tissues Normal"
+          ]
+        },
+        "sequenced": {
+          "type": "boolean"
+        },
+        "studyId": {
+          "type": "string"
+        },
+        "uniquePatientKey": {
+          "type": "string"
+        },
+        "uniqueSampleKey": {
+          "type": "string"
+        }
+      },
+      "title": "Sample"
+    },
+    "SampleIdentifier": {
+      "type": "object",
+      "properties": {
+        "sampleId": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        }
+      },
+      "title": "SampleIdentifier"
+    },
+    "StudyViewFilter": {
+      "type": "object",
+      "properties": {
+        "clinicalDataEqualityFilters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClinicalDataEqualityFilter"
+          }
+        },
+        "cnaGenes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CopyNumberGeneFilter"
+          }
+        },
+        "mutatedGenes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MutationGeneFilter"
+          }
+        },
+        "sampleIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SampleIdentifier"
+          }
+        },
+        "studyIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "StudyViewFilter"
     },
     "VariantCount": {
       "type": "object",

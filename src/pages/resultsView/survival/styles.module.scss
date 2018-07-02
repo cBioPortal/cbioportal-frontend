@@ -16,12 +16,12 @@
   white-space: nowrap;
 }
 
-
 .Tooltip {
   div {
     font-size: 12px;
   }
   max-width:none !important; //override bootstrap
+  white-space: nowrap;
 }
 
 .NotAvailable {

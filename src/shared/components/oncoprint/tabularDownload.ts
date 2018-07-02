@@ -69,7 +69,7 @@ export default function tabularDownload(
     //Add genetic data
     for (const geneticTrack of geneticTracks) {
         const currentTrackData = geneticTrack.data;
-        const currentGeneName = currentTrackData[0].gene; //The gene is the same for all entries of the track
+        const currentGeneName = currentTrackData[0].trackLabel;   // the label is the same for all entries of the track
         //Add the currentGeneName to the oncoprintData if it does not exist
         if (oncoprintData.CNA[currentGeneName] === undefined) {
             oncoprintData.CNA[currentGeneName] = {};

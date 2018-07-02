@@ -17,6 +17,8 @@ import {
     getDownloadContent, convertScatterDataToDownloadData, downSampling, GroupedScatterData, filteringScatterData
 } from "./SurvivalUtil";
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
+import { toConditionalPrecision } from 'shared/lib/NumberUtils';
+import {getPatientViewUrl} from "../../../shared/api/urls";
 
 export interface ISurvivalChartProps {
     alteredPatientSurvivals: PatientSurvival[];
@@ -35,35 +37,6 @@ export interface ISurvivalChartProps {
     showLegend?: boolean;
     showDownloadButtons?: boolean;
     styleOpts?: ConfigurableSurvivalChartStyleOpts;
-}
-
-type AxisStyleOpts = {
-    ticks: {
-        size: number,
-        stroke: string,
-        strokeWidth: number
-    },
-    tickLabels: {
-        padding: number, fill: string
-    },
-    axisLabel: {
-        padding: number, fill: string
-    },
-    grid: { opacity: number },
-    axis: { stroke: string, strokeWidth: number }
-}
-type StyleOpts = {
-    width: number,
-    height: number,
-    padding: { top: number, bottom: number, left: number, right: number },
-    axis: {
-        x: AxisStyleOpts,
-        y: AxisStyleOpts
-    },
-    legend: {
-        x: number
-        y: number
-    }
 }
 
 export type ConfigurableSurvivalChartStyleOpts = {
@@ -86,40 +59,23 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     private unalteredLegendText = 'Cases without Alteration(s) in Query Gene(s)';
     private svgContainer: any;
     private svgsaver = new SvgSaver();
-    private styleOptsDefaultProps:StyleOpts = {
+    private styleOptsDefaultProps:any = {
         width: 900,
         height: 500,
         padding: {top: 20, bottom: 50, left: 60, right: 20},
         axis: {
             x: {
-                ticks: {
-                    size: 8,
-                    stroke: 'black',
-                    strokeWidth: 1
-                },
-                tickLabels: {
-                    padding: 2, fill: "black"
-                },
                 axisLabel: {
-                    padding: 35, fill: "black"
+                    padding: 35
                 },
-                grid: {opacity: 0},
-                axis: {stroke: "black", strokeWidth: 1}
+                grid: {opacity: 0}
             },
             y: {
-                ticks: {
-                    size: 8,
-                    stroke: 'black',
-                    strokeWidth: 1
-                },
-                tickLabels: {
-                    padding: 2, fill: "black"
-                },
                 axisLabel: {
                     padding: 45, fill: "black"
                 },
-                grid: {opacity: 0},
-                axis: {stroke: "black", strokeWidth: 1}
+                grid: {opacity: 0}
+
             }
         },
         legend: {
@@ -130,7 +86,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
     @computed
     get styleOpts() {
-        let configurableOpts: StyleOpts = _.merge({}, this.styleOptsDefaultProps, this.props.styleOpts);
+        let configurableOpts: any = _.merge({}, this.styleOptsDefaultProps, this.props.styleOpts);
         configurableOpts.padding.right = this.props.showLegend ? 300 : configurableOpts.padding.right;
         configurableOpts.legend.x = configurableOpts.width - configurableOpts.padding.right;
         return configurableOpts;
@@ -240,13 +196,10 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     return [
                         {
                             target: "data",
-                            mutation: () => ({ active: true })
-                        },
-                        {
-                            target: "labels",
                             mutation: (props: any) => {
                                 this.tooltipModel = props;
                                 this.tooltipCounter++;
+                                return { active: true };
                             }
                         }
                     ];
@@ -255,16 +208,13 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     return [
                         {
                             target: "data",
-                            mutation: () => ({ active: false })
-                        },
-                        {
-                            target: "labels",
                             mutation: async () => {
                                 await sleep(100);
                                 if (!this.isTooltipHovered && this.tooltipCounter === 1) {
                                     this.tooltipModel = null;
                                 }
                                 this.tooltipCounter--;
+                                return { active: false };
                             }
                         }
                     ];
@@ -312,30 +262,20 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                         <VictoryLine interpolation="stepAfter"
                                      data={this.scatterData.unaltered.line}
                                      style={{data: {stroke: "blue", strokeWidth: 1}}}/>
-                        <VictoryScatter
-                            data={this.scatterData.altered.scatterWithOpacity}
-                            symbol="plus" style={{data: {fill: "red"}}} size={3}/>
-                        <VictoryScatter
-                            data={this.scatterData.unaltered.scatterWithOpacity}
-                            symbol="plus" style={{data: {fill: "blue"}}} size={3}/>
+                        <VictoryScatter data={this.scatterData.altered.scatterWithOpacity}
+                            symbol="plus" style={{ data: { fill: "red" , opacity: (d:any) => d.opacity} }} size={3} />
+                        <VictoryScatter data={this.scatterData.unaltered.scatterWithOpacity}
+                            symbol="plus" style={{ data: { fill: "blue" , opacity: (d:any) => d.opacity} }} size={3} />
                         <VictoryScatter data={this.scatterData.altered.scatter}
-                                        symbol="circle" style={{
-                            data: {
-                                fill: "red",
-                                fillOpacity: (datum: any, active: any) => active ? 0.3 : 0
-                            }
-                        }} size={10} events={events}/>
-                        <VictoryScatter
-                            data={this.scatterData.unaltered.scatter}
-                            symbol="circle"
-                            style={{data: {fill: "blue", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0}}}
-                            size={10} events={events}/>
+                            symbol="circle" style={{ data: { fill: "red", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0} } } size={10} events={events} />
+                        <VictoryScatter data={this.scatterData.unaltered.scatter}
+                            symbol="circle" style={{ data: { fill: "blue", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0 } }} size={10} events={events} />
                         {this.props.showLegend &&
                             <VictoryLegend x={this.styleOpts.legend.x} y={this.styleOpts.legend.y}
                                 data={[
                                     { name: this.alteredLegendText, symbol: { fill: "red", type: "square" } },
                                     { name: this.unalteredLegendText, symbol: { fill: "blue", type: "square" } },
-                                    { name: `Logrank Test P-Value: ${this.logRank.toPrecision(3)}`, symbol: { opacity: 0 } }]} />
+                                    { name: `Logrank Test P-Value: ${toConditionalPrecision(this.logRank, 3, 0.001)}`, symbol: { opacity: 0 } }]} />
                         }
                     </VictoryChart>
                 </div>
@@ -345,8 +285,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                         positionTop={this.tooltipModel.y - 60}
                         onMouseEnter={this.tooltipMouseEnter} onMouseLeave={this.tooltipMouseLeave}>
                         <div>
-                            Patient ID: <a href={'/case.do#/patient?caseId=' + this.tooltipModel.datum.patientId + '&studyId=' +
-                                this.tooltipModel.datum.studyId} target="_blank">{this.tooltipModel.datum.patientId}</a><br />
+                            Patient ID: <a href={getPatientViewUrl(this.tooltipModel.datum.studyId, this.tooltipModel.datum.patientId)} target="_blank">{this.tooltipModel.datum.patientId}</a><br />
                             {this.props.yLabelTooltip}: {(this.tooltipModel.datum.y).toFixed(2)}%<br />
                             {this.tooltipModel.datum.status ? this.props.xLabelWithEventTooltip :
                                 this.props.xLabelWithoutEventTooltip}

@@ -30,6 +30,7 @@ export class CopyDownloadControls extends React.Component<IAsyncCopyDownloadCont
     @observable downloadingData = false;
     @observable copyingData = false;
     @observable showErrorMessage = false;
+    @observable showTooltipCopyMessage = false;
 
     private _copyButton: HTMLButtonElement|null = null;
     private _modalCopyButton: HTMLButtonElement|null = null;
@@ -39,6 +40,7 @@ export class CopyDownloadControls extends React.Component<IAsyncCopyDownloadCont
 
     public static defaultProps:IAsyncCopyDownloadControlsProps = {
         className: "",
+        copyMessageDuration: 3000,
         showCopy: true,
         showDownload: true,
         downloadFilename: "data.tsv"
@@ -74,13 +76,12 @@ export class CopyDownloadControls extends React.Component<IAsyncCopyDownloadCont
 
     public render()
     {
-        const arrowContent = <div className="rc-tooltip-arrow-inner"/>;
-
         return (
             <span>
                 <CopyDownloadButtons
                     className={this.props.className}
                     showCopy={this.props.showCopy}
+                    showCopyMessage={this.showTooltipCopyMessage}
                     showDownload={this.props.showDownload}
                     copyLabel={this.props.copyLabel}
                     downloadLabel={this.props.downloadLabel}
@@ -197,6 +198,9 @@ export class CopyDownloadControls extends React.Component<IAsyncCopyDownloadCont
                 this._copyText = text;
                 this.copyingData = true;
             }
+            else {
+                this.showSimpleCopyMessage();
+            }
         });
     }
 
@@ -253,5 +257,16 @@ export class CopyDownloadControls extends React.Component<IAsyncCopyDownloadCont
         // promise is rejected: we need to hide the download indicator and show an error message
         this.downloadingData = false;
         this.showErrorMessage = true;
+    }
+
+    @action
+    private showSimpleCopyMessage()
+    {
+        this.showTooltipCopyMessage = true;
+
+        // we only want to show the notification for a limited time
+        setTimeout(() => {
+            this.showTooltipCopyMessage = false;
+        }, this.props.copyMessageDuration);
     }
 }

@@ -18,15 +18,39 @@ export function longestCommonStartingSubstring(str1:string, str2:string) {
 }
 
 export function stringListToSet(alos:ReadonlyArray<string>):{[s:string]:boolean} {
-    return alos.reduce((map:{[s:string]:boolean}, next:string)=>{
-        map[next] = true;
+    return stringListToMap(alos, ()=>true);
+}
+
+export function stringListToIndexSet(alos:ReadonlyArray<string>):{[s:string]:number} {
+    return stringListToMap(alos, (s:string, i:number)=>i);
+}
+
+export function stringListToMap<T>(
+    alos:ReadonlyArray<string>,
+    mapFn:(s:string, index:number, array:ReadonlyArray<string>)=>T
+):{[s:string]:T} {
+    return alos.reduce((map:{[s:string]:T}, next:string, index:number)=>{
+        map[next] = mapFn(next, index, alos);
         return map;
     }, {});
 }
 
-export function stringListToIndexSet(alos:ReadonlyArray<string>):{[s:string]:number} {
-    return alos.reduce((map:{[s:string]:number}, next:string, index:number)=>{
-        map[next] = index;
-        return map;
-    }, {});
+/**
+ * Unquote a string wrapped with single or double quotes.
+ *
+ * @param {string} str  input string wrapped with single or double quotes
+ */
+export function unquote(str: string): string
+{
+    return str.replace(/(^")|(^')|("$)|('$)/g, '');
+}
+
+/**
+ * Replaces escaped tab ("\\t") and new line ("\\n") substrings with actual tab ("\t") and new line ("\n") characters.
+ *
+ * @param {string} str  input string with "\\t" and "\\n" substrings
+ */
+export function unescapeTabDelimited(str: string): string
+{
+    return str.replace(/\\t/g, "\t").replace(/\\n/g, "\n");
 }

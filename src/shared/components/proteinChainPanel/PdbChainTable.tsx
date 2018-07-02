@@ -6,7 +6,7 @@ import PdbChainDataStore from "../../../pages/resultsView/mutation/PdbChainDataS
 import PdbChainInfo from "../PdbChainInfo";
 import PdbHeaderCache from "../../cache/PdbHeaderCache";
 import {computed} from "mobx";
-import {PdbHeader} from "../../api/generated/PdbAnnotationAPI";
+import {PdbHeader} from "shared/api/generated/GenomeNexusAPI";
 import OrganismColumnFormatter from "./column/OrganismColumnFormatter";
 import LazyLoadedTableCell from "shared/lib/LazyLoadedTableCell";
 import {generatePdbInfoSummary} from "../../lib/PdbUtils";
@@ -16,7 +16,7 @@ class PdbChainTableComponent extends LazyMobXTable<IPdbChain> {}
 export interface IPdbChainTableProps {
     dataStore:PdbChainDataStore;
     cache?:PdbHeaderCache;
-};
+}
 
 @observer
 export default class PdbChainTable extends React.Component<IPdbChainTableProps, {}> {
@@ -94,7 +94,7 @@ export default class PdbChainTable extends React.Component<IPdbChainTableProps, 
                 return OrganismColumnFormatter.getOrganismFromCache(this.props.cache, d);
             },
             filter:(d:IPdbChain, filterString:string, filterStringUpper:string)=>{
-                let organism = OrganismColumnFormatter.getOrganismFromCache(this.props.cache, d) || "";
+                const organism = OrganismColumnFormatter.getOrganismFromCache(this.props.cache, d) || "";
                 return (organism.toUpperCase().indexOf(filterStringUpper) > -1);
             },
             visible: !!this.props.cache,
@@ -146,7 +146,6 @@ export default class PdbChainTable extends React.Component<IPdbChainTableProps, 
                 initialItemsPerPage={6}
                 columns={this.columns}
                 dataStore={this.props.dataStore}
-                highlightColor="bluegray"
                 pageToHighlight={true}
             />
         );

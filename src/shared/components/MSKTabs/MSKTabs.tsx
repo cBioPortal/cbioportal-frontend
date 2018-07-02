@@ -5,7 +5,7 @@ import {ThreeBounce} from 'better-react-spinkit';
 import ReactResizeDetector from 'react-resize-detector';
 import './styles.scss';
 
-interface IMSKTabProps {
+export interface IMSKTabProps {
     inactive?:boolean;
     id:string;
     linkText:string;

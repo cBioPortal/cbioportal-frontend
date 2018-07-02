@@ -13,8 +13,6 @@ import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator
 import { getCountsText, getData, getFilteredData } from "./MutualExclusivityUtil";
 
 export interface IMutualExclusivityTabProps {
-    // a mapping from Hugo Gene Symbol to list of booleans,
-    // each element of the list representing the altered status of a sample
     store: ResultsViewPageStore
 }
 
@@ -64,15 +62,15 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
                         {getCountsText(this.data)}
                         <div className={styles.Checkboxes}>
                             <Checkbox checked={this.mutualExclusivityFilter}
-                                onChange={this.mutualExclusivityFilterChange}>
+                                      onChange={this.mutualExclusivityFilterChange}>
                                 Mutual exclusivity
                             </Checkbox>
                             <Checkbox checked={this.coOccurenceFilter}
-                                onChange={this.coOccurenceFilterChange}>
+                                      onChange={this.coOccurenceFilterChange}>
                                 Co-occurrence
                             </Checkbox>
                             <Checkbox checked={this.significantPairsFilter}
-                                onChange={this.significantPairsFilterChange}>
+                                      onChange={this.significantPairsFilterChange}>
                                 Significant only
                             </Checkbox>
                         </div>
