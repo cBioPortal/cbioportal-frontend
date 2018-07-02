@@ -20,7 +20,7 @@ export default class ExtendedRouterStore extends RouterStore {
         // put a leading slash if there isn't one
         path = URL.resolve('/', path);
 
-        this.push( URL.format({pathname: path, query: newQuery}) );
+        this.push( URL.format({pathname: path, query: newQuery, hash:this.location.hash}) );
 
     }
 

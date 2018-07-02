@@ -1,4 +1,4 @@
-import {getSimplifiedMutationType} from "shared/lib/oql/accessors";
+import accessors, {getSimplifiedMutationType} from "shared/lib/oql/accessors";
 import {assert} from "chai";
 import {
     Gene, NumericGeneMolecularData, GenePanelData, MolecularProfile, Mutation, Patient,
@@ -8,10 +8,14 @@ import {
     annotateMolecularDatum,
     annotateMutationPutativeDriver,
     computeCustomDriverAnnotationReport, computeGenePanelInformation, computePutativeDriverAnnotatedMutations,
+    filterSubQueryData,
     getOncoKbOncogenic,
     initializeCustomDriverAnnotationSettings,
-    getQueriedStudies
+    fetchQueriedStudies
 } from "./ResultsViewPageStoreUtils";
+import {
+    OQLLineFilterOutput, MergedTrackLineFilterOutput
+} from "../../shared/lib/oql/oqlfilter";
 import {observable} from "mobx";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import {AnnotatedMutation} from "./ResultsViewPageStore";
@@ -19,6 +23,7 @@ import * as _ from 'lodash';
 import sinon from 'sinon';
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { VirtualStudy, VirtualStudyData } from "shared/model/VirtualStudy";
+import client from "shared/api/cbioportalClientInstance";
 
 describe("ResultsViewPageStoreUtils", ()=>{
     describe("computeCustomDriverAnnotationReport", ()=>{
@@ -94,6 +99,159 @@ describe("ResultsViewPageStoreUtils", ()=>{
             assert.deepEqual(
                 computeCustomDriverAnnotationReport([driverTiersFilterMutation, driverFilterMutation, neitherMutation]),
                 {hasBinary:true, tiers:["T"]}
+            );
+        });
+    });
+
+    describe("filterSubQueryData", () => {
+        // I believe these metadata to be all `new accessors()` needs
+        // tslint:disable-next-line no-object-literal-type-assertion
+        const makeBasicExpressionProfile = () => ({
+            "molecularAlterationType": "MRNA_EXPRESSION",
+            "datatype": "Z-SCORE",
+            "molecularProfileId": "brca_tcga_mrna_median_Zscores",
+            "studyId": "brca_tcga"
+        } as MolecularProfile);
+
+        // I believe this to be the projection the filter function needs
+        const makeMinimalExpressionData = (
+            points: {entrezGeneId: number, uniqueSampleKey: string, value: number}[]
+        ) => points.map(({entrezGeneId, uniqueSampleKey, value}) => ({
+            entrezGeneId, value,uniqueSampleKey,
+            sampleId: `TCGA-${uniqueSampleKey}`,
+            uniquePatientKey: `${uniqueSampleKey}_PATIENT`,
+            patientId: `TCGA-${uniqueSampleKey}_PATIENT`,
+            molecularProfileId: 'brca_tcga_mrna_median_Zscores',
+            studyId: 'brca_tcga',
+            gene: {
+                entrezGeneId, hugoGeneSymbol: `GENE${entrezGeneId}`,
+                "type": "protein-coding", "cytoband": "1p20.1", "length": 4000
+            }
+        })) as NumericGeneMolecularData[];
+
+        const makeMinimalCaseArrays = (sampleKeys: string[]) => ({
+            samples: sampleKeys.map(
+                uniqueSampleKey => ({uniqueSampleKey})
+            ),
+            patients: sampleKeys.map(
+                uniqueSampleKey => ({uniquePatientKey: `${uniqueSampleKey}_PATIENT`})
+            )
+        });
+
+        it("returns undefined when queried for a non-merged track", () => {
+            // given
+            const accessorsInstance = new accessors([makeBasicExpressionProfile()]);
+            const dataArray: NumericGeneMolecularData[] = makeMinimalExpressionData([{
+                entrezGeneId: 1000,
+                uniqueSampleKey: 'SAMPLE1',
+                value: 1.5
+            }]);
+            const {samples, patients} = makeMinimalCaseArrays(['SAMPLE1']);
+            const queryLine: OQLLineFilterOutput<object> = {
+                gene: 'GENE400',
+                oql_line: 'GENE400: EXP>=2;',
+                parsed_oql_line: {gene: 'GENE400', alterations: [{
+                    alteration_type: 'exp',
+                    constr_rel: '>=',
+                    constr_val: 2
+                }]},
+                data: []
+            };
+            // when
+            const data = filterSubQueryData(
+                queryLine,
+                '',
+                dataArray,
+                accessorsInstance,
+                samples, patients
+            );
+            // then
+            assert.isUndefined(data);
+        });
+
+        it("returns a two-element array with no alterations if queried for a two-gene merged track that matches none", () => {
+            // given
+            const accessorsInstance = new accessors([makeBasicExpressionProfile()]);
+            const dataArray: NumericGeneMolecularData[] = makeMinimalExpressionData([
+                {entrezGeneId: 1000, uniqueSampleKey: 'SAMPLE1', value: 1.5},
+                {entrezGeneId: 1001, uniqueSampleKey: 'SAMPLE1', value: 1.5},
+            ]);
+            const {samples, patients} = makeMinimalCaseArrays(['SAMPLE1']);
+            // [DATATYPES: EXP<-3; GENE1000 GENE1001],
+            const queryLine: MergedTrackLineFilterOutput<object> = {
+                list: [
+                    {oql_line: 'GENE1000: EXP<-3;', gene: 'GENE1000', data: [], parsed_oql_line: {
+                        gene: 'GENE1000', alterations: [{alteration_type: 'exp', constr_rel: '<', constr_val: -3}]
+                    }},
+                    {oql_line: 'GENE1001: EXP<-3;', gene: 'GENE1001', data: [], parsed_oql_line: {
+                        gene: 'GENE1001', alterations: [{alteration_type: 'exp', constr_rel: '<', constr_val: -3}]
+                    }}
+                ]
+            };
+            // when
+            const data = filterSubQueryData(
+                queryLine,
+                '',
+                dataArray,
+                accessorsInstance,
+                samples, patients
+            );
+            // then
+            assert.lengthOf(data!, 2);
+            assert.deepEqual(
+                data![0].cases,
+                {
+                    samples: {'SAMPLE1': []},
+                    patients: {'SAMPLE1_PATIENT': []}
+                }
+            );
+            assert.deepEqual(
+                data![1].cases,
+                {
+                    samples: {'SAMPLE1': []},
+                    patients: {'SAMPLE1_PATIENT': []}
+                }
+            );
+        });
+
+        it("lists alterations that match genes in a merged track", () => {
+            // given
+            const accessorsInstance = new accessors([makeBasicExpressionProfile()]);
+            const dataArray: NumericGeneMolecularData[] = makeMinimalExpressionData([
+                {entrezGeneId: 1000, uniqueSampleKey: 'SAMPLE1', value: 0},
+                {entrezGeneId: 1000, uniqueSampleKey: 'SAMPLE2', value: 0},
+                {entrezGeneId: 1001, uniqueSampleKey: 'SAMPLE1', value: 2.2},
+                {entrezGeneId: 1001, uniqueSampleKey: 'SAMPLE2', value: 2.7}
+            ]);
+            const {samples, patients} = makeMinimalCaseArrays(
+                ['SAMPLE1', 'SAMPLE2']
+            );
+            // [DATATYPES: EXP >= 2.5; GENE1000 GENE1001]'
+            const queryLine: MergedTrackLineFilterOutput<object> = {
+                list: [
+                    {oql_line: 'GENE1000: EXP>2.5;', gene: 'GENE1000', data: [], parsed_oql_line: {
+                        gene: 'GENE1000', alterations: [{alteration_type: 'exp', constr_rel: '>', constr_val: 2.5}]
+                    }},
+                    {oql_line: 'GENE1001: EXP>2.5;', gene: 'GENE1001', data: [], parsed_oql_line: {
+                        gene: 'GENE1001', alterations: [{alteration_type: 'exp', constr_rel: '>', constr_val: 2.5}]
+                    }}
+                ]
+            };
+            // when
+            const data = filterSubQueryData(
+                queryLine,
+                '',
+                dataArray,
+                accessorsInstance,
+                samples, patients
+            );
+            // then
+            const gene2AlterationsBySample = data![1].cases.samples;
+            assert.lengthOf(gene2AlterationsBySample['SAMPLE1'], 0);
+            assert.lengthOf(gene2AlterationsBySample['SAMPLE2'], 1);
+            assert.equal(
+                gene2AlterationsBySample['SAMPLE2'][0].alterationSubType,
+                'up'
             );
         });
     });
@@ -880,88 +1038,101 @@ describe("ResultsViewPageStoreUtils", ()=>{
     });
     describe("getQueriedStudies", ()=>{
 
-        let physicalStudies = [{
-            studyId: 'physical_study_1',
-        },{
-            studyId: 'physical_study_2',
-        }] as CancerStudy[]
+        const virtualStudy: VirtualStudy = {
+            "id": "shared_study",
+            "data": {
+                "name": "Shared Study",
+                "description": "Shared Study",
+                "studies": [
+                    {
+                        "id": "test_study",
+                        "samples": [
+                        "sample-01",
+                        "sample-02",
+                        "sample-03"
+                        ]
+                    }
+                ],
+            } as VirtualStudyData
+        } as VirtualStudy;
 
-        let virtualStudies = [{
-            studyId: 'virtual_study_1',
-        },{
-            studyId: 'virtual_study_2',
-        }] as CancerStudy[]
+        let physicalStudies: { [id: string]: CancerStudy } = {
+            'physical_study_1': {
+                studyId: 'physical_study_1',
+            } as CancerStudy,
+            'physical_study_2': {
+                studyId: 'physical_study_2',
+            } as CancerStudy
+        };
 
-        let physicalStudySet:{[id:string]:CancerStudy} = _.keyBy(physicalStudies, study=>study.studyId)
-        let virtualStudySet:{[id:string]:CancerStudy} = _.keyBy(virtualStudies, study=>study.studyId)
-
-        const sharedVirtualStudy: VirtualStudy = {
-                                                    "id": "shared_study",
-                                                    "data": {
-                                                        "name": "Shared Study",
-                                                        "description": "Shared Study",
-                                                        "studies": [
-                                                            {
-                                                                "id": "test_study",
-                                                                "samples": [
-                                                                "sample-01",
-                                                                "sample-02",
-                                                                "sample-03"
-                                                                ]
-                                                            }
-                                                        ],
-                                                    } as VirtualStudyData
-                                                } as VirtualStudy;
+        let virtualStudies: { [id: string]: VirtualStudy } = {
+            'virtual_study_1': $.extend({},virtualStudy,{"id": "virtual_study_1"}) as VirtualStudy,
+            'virtual_study_2': $.extend({},virtualStudy,{"id": "virtual_study_2"}) as VirtualStudy
+        };
 
         before(()=>{
             sinon.stub(sessionServiceClient, "getVirtualStudy").callsFake(function fakeFn(id:string) {
                 return new Promise((resolve, reject) => {
-                    if(id === 'shared_study'){
-                        resolve(sharedVirtualStudy);
+                    let obj = virtualStudies[id]
+                    if(_.isUndefined(obj)){
+                        reject()
                     }
                     else{
-                        reject()
+                        resolve(obj);
                     }
                 });
             });
+            //
+            sinon.stub(client, "fetchStudiesUsingPOST").callsFake(function fakeFn(parameters: {
+                'studyIds': Array < string > ,
+                'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META"
+            }) {
+                return new Promise((resolve, reject) => {
+                    resolve(_.reduce(parameters.studyIds,(acc:CancerStudy[],next)=>{
+                        let obj = physicalStudies[next]
+                        if(!_.isUndefined(obj)){
+                            acc.push(obj)
+                        }
+                        return acc
+                    },[]))
+                });
+            });
         })
+        after(() => {
+            //(sessionServiceClient.getVirtualStudy as sinon.SinonStub).restore();
+            //(client.fetchStudiesUsingPOST as sinon.SinonStub).restore();
+        });
 
         it("when queried ids is empty", async ()=>{
-            let test = await getQueriedStudies({}, {},[]);
+            let test = await fetchQueriedStudies({},[]);
             assert.deepEqual(test,[]);
         });
 
         
         it("when only physical studies are present", async ()=>{
-            let test = await getQueriedStudies(physicalStudySet, virtualStudySet, ['physical_study_1', 'physical_study_2']);
-            assert.deepEqual(test, _.values(physicalStudySet));
+            let test = await fetchQueriedStudies(physicalStudies,['physical_study_1', 'physical_study_2']);
+            assert.deepEqual(_.map(test,obj=>obj.studyId), ['physical_study_1', 'physical_study_2']);
         });
 
         it("when only virtual studies are present", async ()=>{
-            let test = await getQueriedStudies(physicalStudySet, virtualStudySet, ['virtual_study_1', 'virtual_study_2']);
-            assert.deepEqual(test,_.values(virtualStudySet));
+            let test = await fetchQueriedStudies({},['virtual_study_1', 'virtual_study_2']);
+            assert.deepEqual(_.map(test,obj=>obj.studyId), ['virtual_study_1', 'virtual_study_2']);
         });
 
         it("when physical and virtual studies are present", async ()=>{
-            let test = await getQueriedStudies(physicalStudySet, virtualStudySet, ['physical_study_1', 'virtual_study_2']);
-            assert.deepEqual(test,[physicalStudySet['physical_study_1'],virtualStudySet['virtual_study_2']]);
-        });
-        
-        it("when virtual study query shared to another user", async ()=>{
-            let test = await getQueriedStudies(physicalStudySet, virtualStudySet, ['shared_study']);
-            assert.deepEqual(test,[{
-                allSampleCount:_.sumBy(sharedVirtualStudy.data.studies, study=>study.samples.length),
-                studyId: sharedVirtualStudy.id,
-                name: sharedVirtualStudy.data.name,
-                description: sharedVirtualStudy.data.description,
-                cancerTypeId: "My Virtual Studies"
-            } as CancerStudy]);
+            let test = await fetchQueriedStudies(physicalStudies, ['physical_study_1', 'virtual_study_2']);
+            assert.deepEqual(_.map(test,obj=>obj.studyId), ['physical_study_1', 'virtual_study_2']);
         });
 
+        it("when there only a subset of studies in studySampleMap compared to queriedIds", async ()=>{
+            let test = await fetchQueriedStudies({ 'physical_study_1': { studyId: 'physical_study_1'} as CancerStudy},['physical_study_1','physical_study_2']);
+            assert.deepEqual(_.map(test,obj=>obj.studyId), ['physical_study_1', 'physical_study_2']);
+        });
+        
         //this case is not possible because id in these scenarios are first identified in QueryBuilder.java and
         //returned to query selector page
         it("when virtual study query having private study or unknow virtual study id", (done)=>{
-            getQueriedStudies(physicalStudySet, virtualStudySet, ['shared_study1']).catch((error)=>{
+            fetchQueriedStudies({},['shared_study1']).catch((error)=>{
                 done();
             });
         });

@@ -1,5 +1,7 @@
 import { assert } from 'chai';
-import {longestCommonStartingSubstring, stringListToIndexSet, stringListToSet} from "./StringUtils";
+import {
+    unescapeTabDelimited, longestCommonStartingSubstring, stringListToIndexSet, stringListToSet, unquote
+} from "./StringUtils";
 
 describe("longestCommonStartingSubstring", ()=>{
     it("finds correct result on various inputs", ()=>{
@@ -28,5 +30,12 @@ describe("stringListToIndexSet", ()=>{
         assert.deepEqual(stringListToIndexSet(["a"]), {"a":0}, "one element");
         assert.deepEqual(stringListToIndexSet(["a","b"]), {"a":0, "b":1}, "two elements");
         assert.deepEqual(stringListToIndexSet(["a","b", "C", "d", "E", "FG"]), {"a":0, "b":1, "C":2, "d":3, "E":4, "FG":5}, "several elements");
+    });
+});
+
+describe("unquote and decodeTabDelimited", () => {
+    it("unquotes only wrapping quotes and replaces all \\t and \\n characters in a string", () => {
+        assert.equal(unquote(unescapeTabDelimited("\"cBioPortal\\n'Redefining'\\t\"Data Analysis\"\"")),
+            "cBioPortal\n\'Redefining\'\t\"Data Analysis\"");
     });
 });

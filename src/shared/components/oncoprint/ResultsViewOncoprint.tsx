@@ -29,10 +29,12 @@ import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import {Button} from "react-bootstrap";
 import tabularDownload from "./tabularDownload";
-import {SpecialAttribute} from "shared/cache/ClinicalDataCache";
 import * as URL from "url";
 import classNames from 'classnames';
 import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
+import naturalSort from "javascript-natural-sort";
+import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
+import Spec = Mocha.reporters.Spec;
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -45,6 +47,7 @@ export type OncoprintClinicalAttribute =
     Pick<ClinicalAttribute, "datatype"|"description"|"displayName"|"patientAttribute"> &
     {
         clinicalAttributeId: string|SpecialAttribute;
+        molecularProfileIds?:string[];
     };
 
 export type SortMode = (
@@ -65,28 +68,28 @@ const specialClinicalAttributes:OncoprintClinicalAttribute[] = [
         datatype: "NUMBER",
         description: "Fraction Genome Altered",
         displayName: "Fraction Genome Altered",
-        patientAttribute: false
+        patientAttribute: false,
     },
     {
         clinicalAttributeId: SpecialAttribute.MutationCount,
         datatype: "NUMBER",
         description: "Number of mutations",
         displayName: "Total mutations",
-        patientAttribute: false
+        patientAttribute: false,
     },
     {
         clinicalAttributeId: SpecialAttribute.StudyOfOrigin,
         datatype: "STRING",
         description: "Study which the sample is a part of.",
         displayName: "Study of origin",
-        patientAttribute: false
+        patientAttribute: false,
     },
     {
         clinicalAttributeId: SpecialAttribute.MutationSpectrum,
         datatype: "COUNTS_MAP",
         description: "Number of point mutations in the sample counted by different types of nucleotide changes.",
         displayName: "Mutation spectrum",
-        patientAttribute: false
+        patientAttribute: false,
     }
 ];
 
@@ -131,6 +134,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     private heatmapGeneInputValueUpdater:IReactionDisposer;
 
     public selectedClinicalAttributeIds = observable.shallowMap<boolean>();
+    public expansionsByGeneticTrackKey = observable.map<number[]>();
     public expansionsByGenesetHeatmapTrackKey =
         observable.map<IGenesetExpansionRecord[]>();
     public molecularProfileIdToHeatmapTracks =
@@ -734,14 +738,94 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
+    readonly clinicalAttributes_profiledIn = remoteData<OncoprintClinicalAttribute[]>({
+        await:()=>[
+            this.props.store.coverageInformation,
+            this.props.store.molecularProfileIdToMolecularProfile,
+            this.props.store.selectedMolecularProfiles
+        ],
+        invoke:()=>{
+            const groupedSelectedMolecularProfiles:{[alterationType:string]:MolecularProfile[]} =
+                _.groupBy(this.props.store.selectedMolecularProfiles.result!, "molecularAlterationType");
+
+            const existsUnprofiled:{[alterationType:string]:boolean} = {};
+            const coverageInfo = this.props.store.coverageInformation.result!.samples;
+            const molecularProfileIdToMolecularProfile = this.props.store.molecularProfileIdToMolecularProfile.result!;
+            for (const uniqueSampleKey of Object.keys(coverageInfo)) {
+                for (const gpData of coverageInfo[uniqueSampleKey].notProfiledAllGenes) {
+                    existsUnprofiled[
+                        molecularProfileIdToMolecularProfile[gpData.molecularProfileId].molecularAlterationType
+                    ] = true;
+                }
+                const byGene = coverageInfo[uniqueSampleKey].notProfiledByGene;
+                for (const gene of Object.keys(byGene)) {
+                    for (const gpData of byGene[gene]) {
+                        existsUnprofiled[
+                            molecularProfileIdToMolecularProfile[gpData.molecularProfileId].molecularAlterationType
+                        ] = true;
+                    }
+                }
+            }
+            // make a clinical attribute for each profile type which not every sample is profiled in
+            const alterationTypeToName:{[alterationType:string]:string} = {
+                "MUTATION_EXTENDED": "mutations",
+                "COPY_NUMBER_ALTERATION": "copy number alterations",
+                "MRNA_EXPRESSION": "mRNA expression",
+                "PROTEIN_LEVEL": "protein expression"
+            };
+
+            const attributes:OncoprintClinicalAttribute[] = (Object.keys(existsUnprofiled).map(alterationType=>{
+                const group = groupedSelectedMolecularProfiles[alterationType];
+                if (!group) {
+                    // No selected profiles of that type, skip it
+                    return null;
+                } else if (group.length === 1) {
+                    // If only one profile of type, it gets its own attribute
+                    const profile = group[0];
+                    return {
+                        clinicalAttributeId: `${SpecialAttribute.Profiled}_${profile.molecularProfileId}`,
+                        datatype: "STRING",
+                        description: `Profiled in ${profile.name}: ${profile.description}`,
+                        displayName: `Profiled in ${profile.name}`,
+                        molecularProfileIds: [profile.molecularProfileId],
+                        patientAttribute: false
+                    };
+                } else {
+                    // If more than one, merge it
+                    return {
+                        clinicalAttributeId: `${SpecialAttribute.Profiled}_${alterationType}`,
+                        datatype: "STRING",
+                        description: "",
+                        displayName: `Profiled for ${alterationTypeToName[alterationType]}`,
+                        molecularProfileIds: group.map(p=>p.molecularProfileId),
+                        patientAttribute: false
+                    };
+                }
+            }) as (OncoprintClinicalAttribute|null)[]).filter(x=>!!x) as OncoprintClinicalAttribute[];// filter out null
+
+            attributes.sort((a,b)=>naturalSort(a.displayName, b.displayName));
+            return Promise.resolve(attributes);
+        },
+        onResult:(result:OncoprintClinicalAttribute[]|undefined)=>{
+            for (const attr of (result || [])) {
+                this.selectedClinicalAttributeIds.set(attr.clinicalAttributeId, true);
+            }
+        }
+    });
+
     readonly clinicalAttributes = remoteData({
-        await:()=>[this.props.store.clinicalAttributes],
+        await:()=>[this.props.store.studies, this.props.store.clinicalAttributes, this.clinicalAttributes_profiledIn],
         invoke:()=>{
             let clinicalAttributes:OncoprintClinicalAttribute[] = _.sortBy(
                 this.props.store.clinicalAttributes.result!,
                 x=>x.displayName
             ); // sort server clinical attrs by display name
-            clinicalAttributes = specialClinicalAttributes.concat(clinicalAttributes); // put special clinical attrs at beginning
+            clinicalAttributes = specialClinicalAttributes.concat(this.clinicalAttributes_profiledIn.result!)
+                                                            .concat(clinicalAttributes); // put special clinical attrs at beginning
+            // filter out StudyOfOrigin if only one study
+            if (this.props.store.studies.result!.length === 1) {
+                clinicalAttributes = clinicalAttributes.filter(x=>(x.clinicalAttributeId!==SpecialAttribute.StudyOfOrigin));
+            }
             clinicalAttributes = _.uniqBy(clinicalAttributes, x=>x.clinicalAttributeId); // remove duplicates in case of multiple studies w same attr
             return Promise.resolve(clinicalAttributes);
         }
