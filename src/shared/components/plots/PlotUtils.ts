@@ -1,3 +1,4 @@
+import Timer = NodeJS.Timer;
 export function getDeterministicRandomNumber(seed:number, range?:[number, number]) {
     // source: https://stackoverflow.com/a/23304189
     seed = Math.sin(seed)*10000;
@@ -8,6 +9,52 @@ export function getDeterministicRandomNumber(seed:number, range?:[number, number
     return r;
 }
 
+export function makeMouseEvents(self:{ tooltipModel: any, pointHovered: boolean}) {
+    let disappearTimeout:Timer | null = null;
+    const disappearDelayMs = 250;
+
+    return [{
+        target: "data",
+        eventHandlers: {
+            onMouseOver: () => {
+                return [
+                    {
+                        target: "data",
+                        mutation: (props: any) => {
+                            self.tooltipModel = props;
+                            self.pointHovered = true;
+
+                            if (disappearTimeout !== null) {
+                                clearTimeout(disappearTimeout);
+                                disappearTimeout = null;
+                            }
+
+                            return { active: true };
+                        }
+                    }
+                ];
+            },
+            onMouseOut: () => {
+                return [
+                    {
+                        target: "data",
+                        mutation: () => {
+                            if (disappearTimeout !== null) {
+                                clearTimeout(disappearTimeout);
+                            }
+
+                            disappearTimeout = setTimeout(()=>{
+                                self.pointHovered = false;
+                            }, disappearDelayMs);
+
+                            return { active: false };
+                        }
+                    }
+                ];
+            }
+        }
+    }];
+}
 export function scatterPlotSize<D>(
     highlight?:(d:D)=>boolean,
     size?:(d:D, active:Boolean, isHighlighted?:boolean)=>number
