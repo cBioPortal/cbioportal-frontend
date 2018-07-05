@@ -22,7 +22,8 @@ import {bind} from "bind-decorator";
 import ScatterPlot from "../../../shared/components/plots/ScatterPlot";
 import Timer = NodeJS.Timer;
 import DownloadControls from "../../../shared/components/DownloadControls";
-import {axisLabel} from "./CoExpressionPlotUtils";
+import {axisLabel, isNotProfiled} from "./CoExpressionPlotUtils";
+import _ from "lodash";
 
 type GeneId = { hugoGeneSymbol:string, entrezGeneId: number, cytoband:string};
 
@@ -47,7 +48,7 @@ export interface ICoExpressionPlotProps {
 }
 
 
-type CoExpressionPlotData = {
+export type CoExpressionPlotData = {
     x:number,
     y:number,
     mutationsX:string,
@@ -91,7 +92,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
     @computed get stroke() {
         if (this.props.showMutations) {
             return (d:{mutationsX:string, mutationsY:string, profiledX:boolean, profiledY:boolean})=>{
-                if (!d.profiledX && !d.profiledY) {
+                if (isNotProfiled(d)) {
                     return NOT_PROFILED_STROKE;
                 } else if (d.mutationsX && d.mutationsY) {
                     return BOTH_MUT_STROKE;
@@ -111,7 +112,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
     @computed get fill() {
         if (this.props.showMutations) {
             return (d:{mutationsX:string, mutationsY:string, profiledX:boolean, profiledY:boolean})=>{
-                if (!d.profiledX && !d.profiledY) {
+                if (isNotProfiled(d)) {
                     return NOT_PROFILED_FILL;
                 } else if (d.mutationsX && d.mutationsY) {
                     return BOTH_MUT_FILL;
@@ -137,8 +138,8 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
         let hasY = false;
         let hasNone = false;
         let hasNotProfiled = false;
-        for (const d of this.props.data) {
-            if (!d.profiledX && !d.profiledY) {
+        for (const d of this.data) {
+            if (isNotProfiled(d)) {
                 hasNotProfiled = true;
             }
             if (d.mutationsX && d.mutationsY) {
@@ -186,6 +187,22 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
         return ret;
     }
 
+    @computed get data() {
+        // sort in order to set z index in plot
+        // order: both mutated, one mutated, neither mutated, not profiled
+        return _.sortBy(this.props.data, d=>{
+            if (d.mutationsX && d.mutationsY) {
+                return 3;
+            } else if (d.mutationsX || d.mutationsY) {
+                return 2;
+            } else if (!isNotProfiled(d)) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
+    }
+
     private get title() {
         return `${this.props.molecularProfile.name}: ${this.props.xAxisGene.hugoGeneSymbol} vs. ${this.props.yAxisGene.hugoGeneSymbol}`;
     }
@@ -200,14 +217,14 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
 
     @bind
     private plot() {
-        if (!this.props.data.length) {
+        if (!this.data.length) {
             return <span>No data to plot.</span>;
         }
         return (
             <CoExpressionScatterPlot
                 svgRef={this.svgRef}
                 title={this.title}
-                data={this.props.data}
+                data={this.data}
                 chartWidth={this.props.width}
                 chartHeight={this.props.height}
                 stroke={this.stroke}
