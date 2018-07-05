@@ -362,6 +362,7 @@ describe("plots tab screenshot tests", function() {
     });
     it("plots tab clinical vs molecular", function() {
         browser.click('input[data-test="HorizontalAxisClinicalAttributeRadio"]');
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisClinicalAttributeSelect({ value: "AGE" }); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab clinical vs molecular boxplot", function() {
@@ -375,6 +376,7 @@ describe("plots tab screenshot tests", function() {
     });
     it("plots tab clinical vs clinical boxplot", function() {
         browser.click('input[data-test="HorizontalAxisClinicalAttributeRadio"]');
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisClinicalAttributeSelect({ value: "AGE" }); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab search case id in clinical vs clinical boxplot", function() {
