@@ -132,8 +132,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     constructor(props:IPlotsTabProps) {
         super(props);
 
-        this.horzSelection = this.initAxisMenuSelection();
-        this.vertSelection = this.initAxisMenuSelection();
+        this.horzSelection = this.initAxisMenuSelection(false);
+        this.vertSelection = this.initAxisMenuSelection(true);
 
         this.geneLock = true;
         this.searchCaseInput = "";
@@ -152,7 +152,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         return "plot"; // todo: more specific?
     }
 
-    private initAxisMenuSelection():AxisMenuSelection {
+    private initAxisMenuSelection(vertical:boolean):AxisMenuSelection {
         const self = this;
 
         return observable({
@@ -181,8 +181,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 this._entrezGeneId = e;
             },
             get molecularProfileType() {
+                // default is horizontal CNA vs vertical mRNA
                 if (this._molecularProfileType === undefined && self.profileTypeOptions.length) {
-                    return self.profileTypeOptions[0].value;
+                    if (vertical && !!self.profileTypeOptions.find(o=>(o.value === AlterationTypeConstants.MRNA_EXPRESSION))) {
+                        return AlterationTypeConstants.MRNA_EXPRESSION;
+                    } else if (!vertical && !!self.profileTypeOptions.find(o=>(o.value === AlterationTypeConstants.COPY_NUMBER_ALTERATION))) {
+                        return AlterationTypeConstants.COPY_NUMBER_ALTERATION;
+                    } else {
+                        return self.profileTypeOptions[0].value;
+                    }
                 } else {
                     return this._molecularProfileType;
                 }
@@ -465,7 +472,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @autobind
     @action
-    private onVerticalAxisProfileIdSelect(option:any) {
+    public onVerticalAxisProfileIdSelect(option:any) {
         this.vertSelection.molecularProfileId = option.value;
     }
 
@@ -477,7 +484,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @autobind
     @action
-    private onVerticalAxisClinicalAttributeSelect(option:any) {
+    public onVerticalAxisClinicalAttributeSelect(option:any) {
         this.vertSelection.clinicalAttributeId = option.value;
     }
 
