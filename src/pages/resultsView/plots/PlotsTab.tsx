@@ -13,7 +13,8 @@ import {
     makeAxisDataPromise, makeScatterPlotData, makeScatterPlotPointAppearance, molecularProfileTypeDisplayOrder,
     molecularProfileTypeToDisplayType, scatterPlotTooltip, scatterPlotLegendData, IStringAxisData, INumberAxisData,
     makeBoxScatterPlotData, IScatterPlotSampleData, noMutationAppearance, IBoxScatterPlotPoint, boxPlotTooltip,
-    getCnaQueries, getMutationQueries, getScatterPlotDownloadData, getBoxPlotDownloadData, getTablePlotDownloadData
+    getCnaQueries, getMutationQueries, getScatterPlotDownloadData, getBoxPlotDownloadData, getTablePlotDownloadData,
+    mutationRenderPriority, mutationSummaryRenderPriority
 } from "./PlotsTabUtils";
 import {
     ClinicalAttribute, MolecularProfile, Mutation,
@@ -969,7 +970,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     });
 
-    readonly scatterPlotData = remoteData<IScatterPlotData[]>({
+    readonly _unsortedScatterPlotData = remoteData<IScatterPlotData[]>({
         await: ()=>{
             const ret:MobxPromise<any>[] = [
                 this.horzAxisDataPromise,
@@ -1012,6 +1013,34 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     return Promise.resolve([]);
                 }
             }
+        }
+    });
+
+    readonly scatterPlotData = remoteData<IScatterPlotData[]>({
+        await:()=>[this._unsortedScatterPlotData],
+        invoke:()=>{
+            let data = this._unsortedScatterPlotData.result!;
+            switch (this.viewType) {
+                case ViewType.MutationType:
+                    data = _.sortBy<IScatterPlotData>(data, d=>{
+                        if (d.dispMutationType! in mutationRenderPriority) {
+                            return -mutationRenderPriority[d.dispMutationType!]
+                        } else {
+                            return Number.NEGATIVE_INFINITY;
+                        }
+                    });
+                    break;
+                case ViewType.MutationSummary:
+                    data = _.sortBy<IScatterPlotData>(data, d=>{
+                        if (d.dispMutationSummary! in mutationSummaryRenderPriority) {
+                            return -mutationSummaryRenderPriority[d.dispMutationSummary!]        ;
+                        } else {
+                            return Number.NEGATIVE_INFINITY;
+                        }
+                    });
+                    break;
+            }
+            return Promise.resolve(data);
         }
     });
 
