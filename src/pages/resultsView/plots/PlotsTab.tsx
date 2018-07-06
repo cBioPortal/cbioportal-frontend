@@ -13,7 +13,8 @@ import {
     makeAxisDataPromise, makeScatterPlotData, makeScatterPlotPointAppearance, molecularProfileTypeDisplayOrder,
     molecularProfileTypeToDisplayType, scatterPlotTooltip, scatterPlotLegendData, IStringAxisData, INumberAxisData,
     makeBoxScatterPlotData, IScatterPlotSampleData, noMutationAppearance, IBoxScatterPlotPoint, boxPlotTooltip,
-    getCnaQueries, getMutationQueries, getScatterPlotDownloadData, getBoxPlotDownloadData, getTablePlotDownloadData
+    getCnaQueries, getMutationQueries, getScatterPlotDownloadData, getBoxPlotDownloadData, getTablePlotDownloadData,
+    mutationRenderPriority, mutationSummaryRenderPriority
 } from "./PlotsTabUtils";
 import {
     ClinicalAttribute, MolecularProfile, Mutation,
@@ -131,8 +132,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     constructor(props:IPlotsTabProps) {
         super(props);
 
-        this.horzSelection = this.initAxisMenuSelection();
-        this.vertSelection = this.initAxisMenuSelection();
+        this.horzSelection = this.initAxisMenuSelection(false);
+        this.vertSelection = this.initAxisMenuSelection(true);
 
         this.geneLock = true;
         this.searchCaseInput = "";
@@ -151,7 +152,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         return "plot"; // todo: more specific?
     }
 
-    private initAxisMenuSelection():AxisMenuSelection {
+    private initAxisMenuSelection(vertical:boolean):AxisMenuSelection {
         const self = this;
 
         return observable({
@@ -180,8 +181,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 this._entrezGeneId = e;
             },
             get molecularProfileType() {
+                // default is horizontal CNA vs vertical mRNA
                 if (this._molecularProfileType === undefined && self.profileTypeOptions.length) {
-                    return self.profileTypeOptions[0].value;
+                    if (vertical && !!self.profileTypeOptions.find(o=>(o.value === AlterationTypeConstants.MRNA_EXPRESSION))) {
+                        return AlterationTypeConstants.MRNA_EXPRESSION;
+                    } else if (!vertical && !!self.profileTypeOptions.find(o=>(o.value === AlterationTypeConstants.COPY_NUMBER_ALTERATION))) {
+                        return AlterationTypeConstants.COPY_NUMBER_ALTERATION;
+                    } else {
+                        return self.profileTypeOptions[0].value;
+                    }
                 } else {
                     return this._molecularProfileType;
                 }
@@ -464,7 +472,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @autobind
     @action
-    private onVerticalAxisProfileIdSelect(option:any) {
+    public onVerticalAxisProfileIdSelect(option:any) {
         this.vertSelection.molecularProfileId = option.value;
     }
 
@@ -476,7 +484,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @autobind
     @action
-    private onVerticalAxisClinicalAttributeSelect(option:any) {
+    public onVerticalAxisClinicalAttributeSelect(option:any) {
         this.vertSelection.clinicalAttributeId = option.value;
     }
 
@@ -969,7 +977,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     });
 
-    readonly scatterPlotData = remoteData<IScatterPlotData[]>({
+    readonly _unsortedScatterPlotData = remoteData<IScatterPlotData[]>({
         await: ()=>{
             const ret:MobxPromise<any>[] = [
                 this.horzAxisDataPromise,
@@ -1012,6 +1020,34 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     return Promise.resolve([]);
                 }
             }
+        }
+    });
+
+    readonly scatterPlotData = remoteData<IScatterPlotData[]>({
+        await:()=>[this._unsortedScatterPlotData],
+        invoke:()=>{
+            let data = this._unsortedScatterPlotData.result!;
+            switch (this.viewType) {
+                case ViewType.MutationType:
+                    data = _.sortBy<IScatterPlotData>(data, d=>{
+                        if (d.dispMutationType! in mutationRenderPriority) {
+                            return -mutationRenderPriority[d.dispMutationType!]
+                        } else {
+                            return Number.NEGATIVE_INFINITY;
+                        }
+                    });
+                    break;
+                case ViewType.MutationSummary:
+                    data = _.sortBy<IScatterPlotData>(data, d=>{
+                        if (d.dispMutationSummary! in mutationSummaryRenderPriority) {
+                            return -mutationSummaryRenderPriority[d.dispMutationSummary!]        ;
+                        } else {
+                            return Number.NEGATIVE_INFINITY;
+                        }
+                    });
+                    break;
+            }
+            return Promise.resolve(data);
         }
     });
 

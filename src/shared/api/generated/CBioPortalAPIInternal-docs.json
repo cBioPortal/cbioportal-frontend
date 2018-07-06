@@ -259,6 +259,46 @@
         }
       }
     },
+    "/fraction-genome-altered/fetch": {
+      "post": {
+        "tags": [
+          "Fraction Genome Altered"
+        ],
+        "summary": "Fetch fraction genome altered in multiple studies",
+        "operationId": "fetchFractionGenomeAlteredInMultipleStudiesUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "sampleIdentifiers",
+            "description": "List of Sample Identifiers",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/SampleIdentifier"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/FractionGenomeAltered"
+              }
+            }
+          }
+        }
+      }
+    },
     "/geneset-hierarchy/fetch": {
       "post": {
         "tags": [
