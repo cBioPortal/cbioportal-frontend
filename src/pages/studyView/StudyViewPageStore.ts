@@ -12,7 +12,8 @@ import {
     MutationCountByGene,
     MutationGeneFilter,
     Sample,
-    StudyViewFilter
+    StudyViewFilter,
+    SampleIdentifier
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {
     ClinicalAttribute,
@@ -71,6 +72,8 @@ export class StudyViewPageStore {
 
     @observable private _cnaGeneFilter: CopyNumberGeneFilter;
 
+    @observable private _sampleIdentifiers:SampleIdentifier[];
+
     @observable private _chartVisibility = observable.map<boolean>();
 
     private _clinicalAttributesMetaSet: { [id: string]: ChartMeta } = {} as any;
@@ -107,6 +110,16 @@ export class StudyViewPageStore {
         this._mutatedGeneFilter = mutatedGeneFilter;
     }
 
+    @action
+    updateCustomCasesFilter(cases: Sample[]) {
+
+        this._sampleIdentifiers = _.map(cases, obj => {
+            return {
+                "sampleId": obj.sampleId,
+                "studyId": obj.studyId
+            }
+        })
+    }
     @action
     updateCNAGeneFilter(entrezGeneId: number, alteration: number) {
         let _cnaGeneFilter = this._cnaGeneFilter;
@@ -148,7 +161,7 @@ export class StudyViewPageStore {
 
     @computed
     get filters() {
-        let filters: StudyViewFilter = { studyIds: this.studyIds } as any;
+        let filters: StudyViewFilter = {} as any;
 
         let clinicalDataEqualityFilter = this._clinicalDataEqualityFilterSet.values();
 
@@ -163,6 +176,12 @@ export class StudyViewPageStore {
 
         if (this._cnaGeneFilter && this._cnaGeneFilter.alterations.length > 0) {
             filters.cnaGenes = [this._cnaGeneFilter];
+        }
+
+        if(this._sampleIdentifiers && this._sampleIdentifiers.length>0) {
+            filters.sampleIdentifiers = this._sampleIdentifiers;
+        } else {
+            filters.studyIds = this.studyIds
         }
         return filters;
     }
