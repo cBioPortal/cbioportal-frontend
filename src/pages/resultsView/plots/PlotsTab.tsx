@@ -71,6 +71,7 @@ export interface IPlotsTabProps {
 
 export enum SpecialClinicalAttribute {
     TotalMutations = "TOTAL_MUTATIONS",
+    FractionGenomeAltered = "FRACTION_GENOME_ALTERED"
 }
 
 const searchInputTimeoutMs = 600;
@@ -386,6 +387,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     studyId: this.props.store.studyIds.result[0],
                     count: 0
                 };
+                _map[SpecialClinicalAttribute.FractionGenomeAltered] = {
+                        clinicalAttributeId: SpecialClinicalAttribute.FractionGenomeAltered,
+                        datatype: "NUMBER",
+                        description: "Fraction Genome Altered",
+                        displayName: "Fraction Genome Altered",
+                        patientAttribute: false,
+                        priority: "1",
+                        studyId: this.props.store.studyIds.result[0],
+                        count: 0
+                    };
             };
             return _map;
         } else {
@@ -400,7 +411,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 value: SpecialClinicalAttribute.TotalMutations,
                 label: "Total mutations"
             });
-                
+            _clinicalAttributes.push({
+                value: SpecialClinicalAttribute.FractionGenomeAltered,
+                label: "Fraction Genome Altered"
+            });
             this.props.store.clinicalAttributes.result.map(attribute=>(
                     _clinicalAttributes.push({
                 value: attribute.clinicalAttributeId,
