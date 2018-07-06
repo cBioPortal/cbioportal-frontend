@@ -497,10 +497,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @autobind
     @action
     private swapHorzVertSelections() {
-        for (const key of (Object.keys(this.horzSelection) as (keyof AxisMenuSelection)[])) {
-            const horzVersion = this.horzSelection[key];
-            this.horzSelection[key] = this.vertSelection[key];
-            this.vertSelection[key] = horzVersion;
+        const keys:(keyof AxisMenuSelection)[] = ["axisType", "entrezGeneId", "molecularProfileType", "molecularProfileId", "clinicalAttributeId", "logScale"];
+        // have to store all values for swap because values depend on each other in derived data way so the copy can mess up if you do it one by one
+        const horz = keys.map(k=>this.horzSelection[k]);
+        const vert = keys.map(k=>this.vertSelection[k]);
+        for (let i=0; i<keys.length; i++) {
+            this.horzSelection[keys[i]] = vert[i];
+            this.vertSelection[keys[i]] = horz[i];
         }
     }
 
