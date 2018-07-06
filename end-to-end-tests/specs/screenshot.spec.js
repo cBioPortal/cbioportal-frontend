@@ -306,6 +306,11 @@ function waitForAndCheckPlotsTab() {
 describe("plots tab screenshot tests", function() {
     before(function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=brca_tcga&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=brca_tcga_cnaseq&gene_list=TP53%2520MDM2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_tcga_gistic#plots`);
+        browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 10000);
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisProfileTypeSelect({ value: "MRNA_EXPRESSION" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisProfileIdSelect({ value: "brca_tcga_mrna" }); });
+        browser.execute(function() { resultsViewPlotsTab.onVerticalAxisProfileTypeSelect({ value: "MRNA_EXPRESSION" }); });
+        browser.execute(function() { resultsViewPlotsTab.onVerticalAxisProfileIdSelect({ value: "brca_tcga_mrna" }); });
     });
     it("plots tab molecular vs molecular same gene", function() {
         waitForAndCheckPlotsTab();
