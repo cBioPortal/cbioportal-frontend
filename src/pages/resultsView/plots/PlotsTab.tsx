@@ -14,20 +14,20 @@ import {
     molecularProfileTypeToDisplayType, scatterPlotTooltip, scatterPlotLegendData, IStringAxisData, INumberAxisData,
     makeBoxScatterPlotData, IScatterPlotSampleData, noMutationAppearance, IBoxScatterPlotPoint, boxPlotTooltip,
     getCnaQueries, getMutationQueries, getScatterPlotDownloadData, getBoxPlotDownloadData, getTablePlotDownloadData,
-    mutationRenderPriority, mutationSummaryRenderPriority
+    mutationRenderPriority, mutationSummaryRenderPriority, MutationSummary, mutationSummaryToAppearance
 } from "./PlotsTabUtils";
 import {
     ClinicalAttribute, MolecularProfile, Mutation,
     NumericGeneMolecularData
 } from "../../../shared/api/generated/CBioPortalAPI";
 import Timer = NodeJS.Timer;
-import ScatterPlot from "shared/components/plots/ScatterPlot";
+import ScatterPlot, {LEGEND_Y as SCATTERPLOT_LEGEND_Y} from "shared/components/plots/ScatterPlot";
 import TablePlot from "shared/components/plots/TablePlot";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import InfoIcon from "../../../shared/components/InfoIcon";
 import {remoteData} from "../../../shared/api/remoteData";
 import {MobxPromise} from "mobxpromise";
-import BoxScatterPlot, {IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPlot";
+import BoxScatterPlot, {LEGEND_Y as BOXPLOT_LEGEND_Y, IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPlot";
 import DownloadControls from "../../../shared/components/DownloadControls";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import setWindowVariable from "../../../shared/lib/setWindowVariable";
@@ -549,12 +549,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     readonly mutationPromise = remoteData({
-        await:()=>this.props.store.mutationCache.getAll(
+        await:()=>this.props.store.putativeDriverAnnotatedMutationCache.getAll(
             getMutationQueries(this.horzSelection, this.vertSelection)
         ),
         invoke: ()=>{
             if (this.mutationDataShown) {
-                return Promise.resolve(_.flatten(this.props.store.mutationCache.getAll(
+                return Promise.resolve(_.flatten(this.props.store.putativeDriverAnnotatedMutationCache.getAll(
                     getMutationQueries(this.horzSelection, this.vertSelection)
                 ).map(p=>p.result!)));
             } else {
@@ -671,7 +671,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @computed get scatterPlotAppearance() {
-        return makeScatterPlotPointAppearance(this.viewType, this.mutationDataExists, this.cnaDataExists);
+        return makeScatterPlotPointAppearance(this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated);
     }
 
     @computed get scatterPlotFill() {
@@ -682,7 +682,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             case ViewType.MutationSummary:
                 return (d:IScatterPlotSampleData)=>this.scatterPlotAppearance(d).fill!;
             case ViewType.None:
-                return noMutationAppearance.fill;
+                return mutationSummaryToAppearance[MutationSummary.Neither].fill;
         }
     }
 
@@ -1051,7 +1051,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     });
 
-    readonly boxPlotData = remoteData<{horizontal:boolean, data:IBoxScatterPlotData<IBoxScatterPlotPoint>[]}>({
+    readonly _unsortedBoxPlotData = remoteData<{horizontal:boolean, data:IBoxScatterPlotData<IBoxScatterPlotPoint>[]}>({
         await: ()=>{
             const ret:MobxPromise<any>[] = [
                 this.horzAxisDataPromise,
@@ -1106,6 +1106,41 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     )
                 });
             }
+        }
+    });
+
+    readonly boxPlotData = remoteData<{horizontal:boolean, data:IBoxScatterPlotData<IBoxScatterPlotPoint>[]}>({
+        await: ()=>[this._unsortedBoxPlotData],
+        invoke:()=>{
+            const horizontal = this._unsortedBoxPlotData.result!.horizontal;
+            let boxPlotData = this._unsortedBoxPlotData.result!.data;
+            switch (this.viewType) {
+                case ViewType.MutationType:
+                    boxPlotData = boxPlotData.map(labelAndData=>({
+                        label: labelAndData.label,
+                        data: _.sortBy<IBoxScatterPlotPoint>(labelAndData.data, d=>{
+                            if (d.dispMutationType! in mutationRenderPriority) {
+                                return -mutationRenderPriority[d.dispMutationType!]
+                            } else {
+                                return Number.NEGATIVE_INFINITY;
+                            }
+                        })
+                    }));
+                    break;
+                case ViewType.MutationSummary:
+                    boxPlotData = boxPlotData.map(labelAndData=>({
+                        label: labelAndData.label,
+                        data: _.sortBy<IBoxScatterPlotPoint>(labelAndData.data, d=>{
+                            if (d.dispMutationSummary! in mutationSummaryRenderPriority) {
+                                return -mutationSummaryRenderPriority[d.dispMutationSummary!]        ;
+                            } else {
+                                return Number.NEGATIVE_INFINITY;
+                            }
+                        })
+                    }));
+                    break;
+            }
+            return Promise.resolve({ horizontal, data: boxPlotData });
         }
     });
 
@@ -1170,7 +1205,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 strokeWidth={1}
                                 useLogSpaceTicks={true}
                                 legendData={scatterPlotLegendData(
-                                    this.scatterPlotData.result, this.viewType, this.mutationDataExists, this.cnaDataExists
+                                    this.scatterPlotData.result, this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated
                                 )}
                             />
                         );
@@ -1202,7 +1237,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 strokeWidth={1}
                                 useLogSpaceTicks={true}
                                 legendData={scatterPlotLegendData(
-                                    _.flatten(this.boxPlotData.result.data.map(d=>d.data)), this.viewType, this.mutationDataExists, this.cnaDataExists
+                                    _.flatten(this.boxPlotData.result.data.map(d=>d.data)), this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated
                                 )}
                             />
                         );
@@ -1215,22 +1250,33 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 default:
                     return <span>Not implemented yet</span>
             }
+            const legendY = (plotType === PlotType.ScatterPlot ? SCATTERPLOT_LEGEND_Y : BOXPLOT_LEGEND_Y);
             return (
-                <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative inlineBlock">
-                    <DownloadControls
-                        getSvg={this.getSvg}
-                        filename={this.downloadFilename}
-                        buttons={["SVG", "PDF"]}
-                        additionalRightButtons={[{
-                            key:"data",
-                            content:<span>Data <i className="fa fa-cloud-download" aria-hidden="true"/></span>,
-                            onClick:this.downloadData,
-                            disabled: !this.props.store.entrezGeneIdToGene.isComplete
-                        }]}
-                        dontFade={true}
-                        style={{position:'absolute', right:10, top:10 }}
-                    />
-                    {plotElt}
+                <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative inlineBlock" style={{position: "relative"}}>
+                    <div style={{display:"flex", flexDirection:"row"}}>
+                        <DownloadControls
+                            getSvg={this.getSvg}
+                            filename={this.downloadFilename}
+                            buttons={["SVG", "PDF"]}
+                            additionalRightButtons={[{
+                                key:"data",
+                                content:<span>Data <i className="fa fa-cloud-download" aria-hidden="true"/></span>,
+                                onClick:this.downloadData,
+                                disabled: !this.props.store.entrezGeneIdToGene.isComplete
+                            }]}
+                            dontFade={true}
+                            style={{position:'absolute', right:10, top:10 }}
+                        />
+                        {plotElt}
+                        {(plotType === PlotType.ScatterPlot || plotType === PlotType.BoxPlot) && this.viewType === ViewType.MutationType && (
+                            <div style={{position:"relative", top:legendY + 4.5}}>
+                                <InfoIcon
+                                    tooltip={<span>Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</span>}
+                                    tooltipPlacement="right"
+                                />
+                            </div>
+                        )}
+                    </div>
                 </div>
             );
         }

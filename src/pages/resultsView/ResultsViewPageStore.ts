@@ -235,6 +235,7 @@ type MutationAnnotationSettings = {
     driverTiers:ObservableMap<boolean>;
     hotspots:boolean;
     oncoKb:boolean;
+    driversAnnotated:boolean;
 };
 
 /* fields and methods in the class below are ordered based on roughly
@@ -274,15 +275,19 @@ export class ResultsViewPageStore {
                 this._ignoreUnknown = val;
             },
             get ignoreUnknown() {
-                const anySelected = store.mutationAnnotationSettings.oncoKb ||
-                    store.mutationAnnotationSettings.hotspots ||
-                    store.mutationAnnotationSettings.cbioportalCount ||
-                    store.mutationAnnotationSettings.cosmicCount ||
-                    store.mutationAnnotationSettings.driverFilter ||
-                    store.mutationAnnotationSettings.driverTiers.entries().reduce((oneSelected, nextEntry)=>{
+                return this._ignoreUnknown && this.driversAnnotated;
+            },
+            get driversAnnotated() {
+                const anySelected = this.oncoKb ||
+                    this.hotspots ||
+                    this.cbioportalCount ||
+                    this.cosmicCount ||
+                    this.driverFilter ||
+                    this.driverTiers.entries().reduce((oneSelected:boolean, nextEntry:[string, boolean])=>{
                         return oneSelected || nextEntry[1];
                     }, false);
-                return this._ignoreUnknown && anySelected;
+
+                return anySelected;
             }
         });
     }
@@ -1583,6 +1588,19 @@ export class ResultsViewPageStore {
             return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutations.result!, this.getPutativeDriverInfo.result!, !!this.mutationAnnotationSettings.ignoreUnknown));
         }
     });
+
+    public putativeDriverAnnotatedMutationCache =
+        new MobxPromiseCache<{entrezGeneId:number}, AnnotatedMutation[]>(
+            q=>({
+                await: ()=>[
+                    this.mutationCache.get(q),
+                    this.getPutativeDriverInfo
+                ],
+                invoke: ()=>{
+                    return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutationCache.get(q).result!, this.getPutativeDriverInfo.result!, !!this.mutationAnnotationSettings.ignoreUnknown));
+                }
+            })
+        );
 
     readonly annotatedMolecularData = remoteData<AnnotatedNumericGeneMolecularData[]>({
         await: ()=>[
