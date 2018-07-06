@@ -357,16 +357,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     @computed get distinguishDrivers() {
-        const anySelected = this.props.store.mutationAnnotationSettings.oncoKb ||
-            this.props.store.mutationAnnotationSettings.hotspots ||
-            this.props.store.mutationAnnotationSettings.cbioportalCount ||
-            this.props.store.mutationAnnotationSettings.cosmicCount ||
-            this.props.store.mutationAnnotationSettings.driverFilter ||
-            this.props.store.mutationAnnotationSettings.driverTiers.entries().reduce((oneSelected, nextEntry)=>{
-                return oneSelected || nextEntry[1];
-            }, false);
-
-        return anySelected;
+        return this.props.store.mutationAnnotationSettings.driversAnnotated;
     }
 
     onMouseEnter(){
