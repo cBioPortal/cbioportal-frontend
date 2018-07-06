@@ -266,6 +266,7 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
     // also divide this component into smaller components
     public render()
     {
+        const oncokbLogo = <img src={require("./images/oncokb.png")} className="oncokb-logo" alt="OncoKB"/>;
         return (
             <div className="oncokb-card" data-test='oncokb-card'>
                 <div className="z-depth-2">
@@ -409,11 +410,11 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
                     <div className="item footer">
                         <If condition={this.oncokbLinkOut===undefined}>
                             <Then>
-                                <img src={require("./images/oncokb.png")} className="oncokb-logo" alt="OncoKB"/>
+                                {oncokbLogo}
                             </Then>
                             <Else>
                                 <a href={`${this.oncokbLinkOut}`} target="_blank">
-                                    <img src={require("./images/oncokb.png")} className="oncokb-logo" alt="OncoKB"/>
+                                    {oncokbLogo}
                                 </a>
                             </Else>
                         </If>
