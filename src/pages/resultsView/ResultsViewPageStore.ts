@@ -24,10 +24,10 @@ import {
     fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData, IDataQueryFilter,
     isMutationProfile, fetchOncoKbAnnotatedGenesSuppressErrors, groupBy, fetchOncoKbData,
     ONCOKB_DEFAULT, generateUniqueSampleKeyToTumorTypeMap, cancerTypeForOncoKb, fetchCnaOncoKbData,
-    fetchCnaOncoKbDataWithNumericGeneMolecularData, fetchGermlineConsentedSamples
+    fetchCnaOncoKbDataWithNumericGeneMolecularData, fetchGermlineConsentedSamples, fetchGenes
 } from "shared/lib/StoreUtils";
 import {indexHotspotsData, fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
-import {MutationMapperStore} from "./mutation/MutationMapperStore";
+import ResultsViewMutationMapperStore from "./mutation/ResultsViewMutationMapperStore";
 import AppConfig from "appConfig";
 import * as _ from 'lodash';
 import {stringListToIndexSet, stringListToSet} from "../../shared/lib/StringUtils";
@@ -35,7 +35,6 @@ import {toSampleUuid} from "../../shared/lib/UuidUtils";
 import MutationDataCache from "../../shared/cache/MutationDataCache";
 import accessors, {getSimplifiedMutationType, SimplifiedMutationType} from "../../shared/lib/oql/accessors";
 import {keepAlive} from "mobx-utils";
-import MutationMapper from "./mutation/MutationMapper";
 import {CacheData} from "../../shared/lib/LazyMobXCache";
 import {
     IAlterationCountMap,
@@ -1057,27 +1056,25 @@ export class ResultsViewPageStore {
         return _.groupBy(this.mutations.result,(mutation:Mutation)=>mutation.gene.hugoGeneSymbol);
     }
 
-    readonly mutationMapperStores = remoteData<{ [hugoGeneSymbol: string]: MutationMapperStore }>({
+    readonly mutationMapperStores = remoteData<{ [hugoGeneSymbol: string]: ResultsViewMutationMapperStore }>({
         await: () => [this.genes, this.oncoKbAnnotatedGenes, this.uniqueSampleKeyToTumorType, this.mutations],
         invoke: () => {
             if (this.genes.result) {
                 // we have to use _.reduce, otherwise this.genes.result (Immutable, due to remoteData) will return
                 //  an Immutable as the result of reduce, and MutationMapperStore when it is made immutable all the
                 //  mobx machinery going on in the readonly remoteDatas and observables somehow gets messed up.
-                return Promise.resolve(_.reduce(this.genes.result, (map: { [hugoGeneSymbol: string]: MutationMapperStore }, gene: Gene) => {
-                    map[gene.hugoGeneSymbol] = new MutationMapperStore(AppConfig,
+                return Promise.resolve(_.reduce(this.genes.result, (map: { [hugoGeneSymbol: string]: ResultsViewMutationMapperStore }, gene: Gene) => {
+                    map[gene.hugoGeneSymbol] = new ResultsViewMutationMapperStore(AppConfig,
                         gene,
                         this.samples,
                         this.oncoKbAnnotatedGenes.result || {},
                         this.mutationsByGene[gene.hugoGeneSymbol],
-                        () => (this.mutationDataCache),
                         () => (this.genomeNexusEnrichmentCache),
                         () => (this.mutationCountCache),
                         this.studyIdToStudy,
                         this.molecularProfileIdToMolecularProfile,
                         this.clinicalDataForSamples,
                         this.studiesForSamplesWithoutCancerTypeClinicalData,
-                        this.samplesWithoutCancerTypeClinicalData,
                         this.germlineConsentedSamples,
                         this.indexedHotspotData,
                         this.uniqueSampleKeyToTumorType.result!,
@@ -1091,7 +1088,7 @@ export class ResultsViewPageStore {
         }
     }, {});
 
-    public getMutationMapperStore(hugoGeneSymbol: string): MutationMapperStore | undefined {
+    public getMutationMapperStore(hugoGeneSymbol: string): ResultsViewMutationMapperStore | undefined {
         return this.mutationMapperStores.result[hugoGeneSymbol];
     }
 
@@ -1532,18 +1529,7 @@ export class ResultsViewPageStore {
     });
 
     readonly genes = remoteData<Gene[]>({
-        invoke: async () => {
-            if (this.hugoGeneSymbols && this.hugoGeneSymbols.length) {
-                const order = stringListToIndexSet(this.hugoGeneSymbols);
-                return _.sortBy(await client.fetchGenesUsingPOST({
-                    geneIdType: "HUGO_GENE_SYMBOL",
-                    geneIds: this.hugoGeneSymbols.slice(),
-                    projection: "SUMMARY"
-                }), (gene: Gene) => order[gene.hugoGeneSymbol]);
-            } else {
-                return [];
-            }
-        },
+        invoke: async () => fetchGenes(this.hugoGeneSymbols),
         onResult:(genes:Gene[])=>{
             this.geneCache.addData(genes);
         }

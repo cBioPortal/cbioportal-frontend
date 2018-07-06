@@ -2,7 +2,7 @@ import * as React from "react";
 import LazyMobXTable, {Column} from "../lazyMobXTable/LazyMobXTable";
 import {observer} from "mobx-react";
 import {IPdbChain} from "../../model/Pdb";
-import PdbChainDataStore from "../../../pages/resultsView/mutation/PdbChainDataStore";
+import PdbChainDataStore from "../mutationMapper/PdbChainDataStore";
 import PdbChainInfo from "../PdbChainInfo";
 import PdbHeaderCache from "../../cache/PdbHeaderCache";
 import {computed} from "mobx";
