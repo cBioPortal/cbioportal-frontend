@@ -1,11 +1,11 @@
 import {
     somaticMutationRate, germlineMutationRate, countUniqueMutations, groupMutationsByGeneAndPatientAndProteinChange,
-    countDuplicateMutations, uniqueGenomicLocations
+    countDuplicateMutations, uniqueGenomicLocations, updateMissingGeneInfo
 } from "./MutationUtils";
 import * as _ from 'lodash';
 import { assert, expect } from 'chai';
 import sinon from 'sinon';
-import {MolecularProfile, Mutation} from "../api/generated/CBioPortalAPI";
+import {Gene, MolecularProfile, Mutation} from "../api/generated/CBioPortalAPI";
 import {initMutation} from "test/MutationMockUtils";
 import { MUTATION_STATUS_GERMLINE } from "shared/constants";
 
@@ -337,6 +337,86 @@ describe('MutationUtils', () => {
 
             assert.equal(genomicLocations.length, 3,
                 "Duplicate genomic locations should be removed (5 - 2 = 3)");
+        });
+    });
+
+    describe('updateMissingGeneInfo', () => {
+
+        const genesByHugoSymbol: {[hugoGeneSymbol:string]: Gene} = {
+            AR: {
+                entrezGeneId: 367,
+                hugoGeneSymbol: "AR",
+                type: "protein-coding",
+                cytoband: "Xq12",
+                length: 186588,
+                chromosome: "X"
+            },
+            BRCA1: {
+                entrezGeneId: 672,
+                hugoGeneSymbol: "BRCA1",
+                type: "protein-coding",
+                cytoband: "17q21.31",
+                length: 81189,
+                chromosome: "17"
+            },
+            BRCA2: {
+                entrezGeneId: 675,
+                hugoGeneSymbol: "BRCA2",
+                type: "protein-coding",
+                cytoband: "13q13.1",
+                length: 84193,
+                chromosome: "13"
+            }
+        };
+
+        it('adds missing gene information for the mutations', () => {
+            const mutations = [
+                {
+                    gene: {
+                        hugoGeneSymbol: "AR",
+                    },
+                    proteinChange: "L729I",
+                },
+                {
+                    gene: {
+                        hugoGeneSymbol: "BRCA1",
+                    },
+                    proteinChange: "C47W"
+                },
+                {
+                    gene: {
+                        hugoGeneSymbol: "BRCA2",
+                    },
+                    entrezGeneId: undefined,
+                    aminoAcidChange: "R2842C"
+                }
+            ];
+
+            updateMissingGeneInfo(mutations as Partial<Mutation>[], genesByHugoSymbol);
+
+            assert.deepEqual(mutations[0].gene, genesByHugoSymbol["AR"]);
+            assert.equal(mutations[0].entrezGeneId, genesByHugoSymbol["AR"].entrezGeneId);
+            assert.deepEqual(mutations[1].gene, genesByHugoSymbol["BRCA1"]);
+            assert.equal(mutations[1].entrezGeneId, genesByHugoSymbol["BRCA1"].entrezGeneId);
+            assert.deepEqual(mutations[2].gene, genesByHugoSymbol["BRCA2"]);
+            assert.equal(mutations[2].entrezGeneId, genesByHugoSymbol["BRCA2"].entrezGeneId);
+        });
+
+        it('should not overwrite existing gene information', () => {
+            const mutations = [
+                {
+                    gene: {
+                        hugoGeneSymbol: "AR",
+                        entrezGeneId: -1
+                    },
+                    entrezGeneId: -1
+                }
+            ];
+
+            updateMissingGeneInfo(mutations as Partial<Mutation>[], genesByHugoSymbol);
+
+            assert.notEqual(mutations[0].entrezGeneId, genesByHugoSymbol["AR"].entrezGeneId);
+            assert.notEqual(mutations[0].gene.entrezGeneId, genesByHugoSymbol["AR"].entrezGeneId);
         });
     });
 });
