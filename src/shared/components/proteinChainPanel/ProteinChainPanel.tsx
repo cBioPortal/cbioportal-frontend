@@ -8,7 +8,7 @@ import Collapse from "react-collapse";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import {HitZone} from "../HitZone";
 import ProteinChain from "./ProteinChain";
-import {MutationMapperStore} from "../../../pages/resultsView/mutation/MutationMapperStore";
+import MutationMapperStore from "shared/components/mutationMapper/MutationMapperStore";
 import {ALIGNMENT_GAP, IPdbChain} from "../../model/Pdb";
 import PdbHeaderCache from "../../cache/PdbHeaderCache";
 import PdbChainInfo from "../PdbChainInfo";
