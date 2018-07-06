@@ -31,6 +31,8 @@ import {AlterationTypeConstants, AnnotatedMutation} from "../ResultsViewPageStor
 import numeral from "numeral";
 import {getUniqueSampleKeyToCategories} from "../../../shared/components/plots/TablePlotUtils";
 import client from "../../../shared/api/cbioportalClientInstance";
+import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
+import { FractionGenomeAlteredFilter } from "shared/api/generated/CBioPortalAPIInternal";
 
 export const CLIN_ATTR_DATA_TYPE = "clinical_attribute";
 export const dataTypeToDisplayType:{[s:string]:string} = {
@@ -340,6 +342,42 @@ function makeAxisDataPromise_Clinical(
                         axisData_Data.push({
                             uniqueSampleKey: mutationCount.uniqueSampleKey,
                             value: mutationCount.mutationCount,
+                        });
+                    }
+                    return Promise.resolve(axisData);
+                }
+            });
+            break;
+        case SpecialClinicalAttribute.FractionGenomeAltered:
+            let fractionGenomeAltered = remoteData({
+                await:()=>[patientKeyToSamples, studyToMutationMolecularProfile],
+                invoke:()=>{
+                    const _patientKeyToSamples = patientKeyToSamples.result!;
+                    const _studyToMutationMolecularProfile = studyToMutationMolecularProfile.result!;
+                    const _studyId = attribute.studyId;
+                    // get all samples
+                    let samples = _.flatten(_.values(_patientKeyToSamples));
+                    let sampleIds = samples.map(s=>s.sampleId);
+                    // produce sample data from patient clinical data
+                    let fractionGenomeAltered = internalClient.fetchFractionGenomeAlteredUsingPOST({
+                        studyId: _studyId,
+                        fractionGenomeAlteredFilter: {
+                            sampleIds: sampleIds
+                        } as FractionGenomeAlteredFilter
+                    });
+                    return Promise.resolve(fractionGenomeAltered);
+                }
+            });
+            ret = remoteData({
+                await:()=>[fractionGenomeAltered],
+                invoke:()=>{
+                    const _fractionGenomeAltered = fractionGenomeAltered.result!;
+                    const axisData:IAxisData = { data:[], datatype:attribute.datatype.toLowerCase() };
+                    const axisData_Data = axisData.data;
+                    for (const fractionGenomeAlteredItems of _fractionGenomeAltered) {
+                        axisData_Data.push({
+                            uniqueSampleKey: fractionGenomeAlteredItems.uniqueSampleKey,
+                            value: fractionGenomeAlteredItems.value,
                         });
                     }
                     return Promise.resolve(axisData);
