@@ -6,19 +6,23 @@ import { bind } from 'bind-decorator';
 import Draggable from 'react-draggable';
 import classnames from 'classnames';
 import styles from "./styles.module.scss";
-import { FlexRow } from 'shared/components/flexbox/FlexBox';
 import { observable, computed, action } from 'mobx';
 import { ButtonGroup, Radio } from 'react-bootstrap';
+import { debounceAsync } from 'mobxpromise';
+import { stringListToSet } from 'shared/lib/StringUtils';
+import SectionHeader from 'shared/components/sectionHeader/SectionHeader';
+import { remoteData } from 'shared/api/remoteData';
 
 export interface ICustomCaseSelectionProps {
     selectedSamples: Sample[];
     onClose: () => void;
-    onSubmit:(samples:Sample[]) => void;
+    onSubmit: (samples: Sample[]) => void;
+    queriedStudies?: string[];
 }
 
-const GroupByOptions: { value: 'sample'|'patient'; label: string;}[] = [
-    {value: 'sample', label: 'By sample ID'},
-    {value: 'patient', label: 'By patient ID'}
+const GroupByOptions: { value: 'sample' | 'patient'; label: string; }[] = [
+    { value: 'sample', label: 'By sample ID' },
+    { value: 'patient', label: 'By patient ID' }
 ];
 
 @observer
@@ -27,18 +31,26 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     @observable showCaseIds: boolean = false;
     @observable caseIdsMode: 'sample' | 'patient' = 'sample';
     @observable caseIds: string = ''
-    @observable invalidCases: string[] = [];
     @observable validCases: Sample[] = []
 
     @computed get sampleSet(): { [id: string]: Sample } {
-        return _.reduce(this.props.selectedSamples, (acc: { [id: string]: Sample }, next) => {
-            acc[next.studyId + ':' + next.sampleId] = next;
-            return acc;
-        }, {});
+        return _.keyBy(this.props.selectedSamples, s => `${s.studyId}:${s.sampleId}`)
     }
 
     @computed get shouldStudyIdPresent() {
-        return Object.keys(_.groupBy(this.props.selectedSamples, sample => sample.studyId)).length > 1;
+        if (this.props.queriedStudies) {
+            return this.props.queriedStudies.length > 1;
+        } else {
+            return _.uniq(this.props.selectedSamples.map(sample => sample.studyId)).length > 1
+        }
+    }
+
+    @computed get queriedStudiesSet() {
+        if (this.props.queriedStudies) {
+            return stringListToSet(this.props.queriedStudies);
+        } else {
+            return stringListToSet(this.props.selectedSamples.map(sample => sample.studyId))
+        }
     }
 
     private header() {
@@ -58,61 +70,74 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
         );
     }
 
-    @bind
-    @action private validateCases(caseIds: string) {
-        let invalidEntries: string[] = [];
-        let validCases:Sample[] =[];
-        if(!_.isEmpty(caseIds)) {
-            let cases = _.uniq(caseIds.trim().split('\n'));
-            validCases= _.reduce(cases, (acc: Sample[], next) => {
-                let pair = next.split(':').map(obj => obj.trim());
-    
-                if (this.shouldStudyIdPresent) {
-                    if (pair.length == 2) {
-                        let sample = this.sampleSet[next];
-                        if (sample) {
-                            acc.push(sample);
-                        }
-                        else {
-                            invalidEntries.push(next);
-                        }
+    private invokeCustomCaseSetLater = debounceAsync(
+        async (params: Pick<this, 'caseIds'>) => {
+            let entities = params.caseIds.trim().split(/\s+/g);
+            let singleStudyId = _.keys(this.queriedStudiesSet)[0]
+            const cases: { id: string, study: string }[] = entities.map(entity => {
+                let splitEntity = entity.split(':');
+                if (splitEntity.length === 1) {
+                    // no study specified
+                    if (this.shouldStudyIdPresent) {
+                        // otherwise, throw error
+                        throw new Error(`No study specified for ${this.caseIdsMode} id: ${entity}, and more than one study selected for query.`);
                     } else {
-                        invalidEntries.push(next);
+                        // if only one study selected, fill it in
+                        return {
+                            id: entity,
+                            study: singleStudyId
+                        };
                     }
+                } else if (splitEntity.length === 2) {
+                    const study = splitEntity[0];
+                    const id = splitEntity[1];
+                    if (!this.queriedStudiesSet[study]) {
+                        throw new Error(`Study ${study} is not selected.`);
+                    }
+                    return {
+                        id,
+                        study
+                    };
                 } else {
-                    if (pair.length == 2) {
-                        let sample = this.sampleSet[next];
-                        if (sample) {
-                            acc.push(sample);
-                        } else {
-                            invalidEntries.push(next);
-                        }
-                    } else {
-                        let studyId = this.props.selectedSamples[0].studyId;
-                        let sample = this.sampleSet[studyId + ':' + next];
-                        if (sample) {
-                            acc.push(sample);
-                        } else {
-                            invalidEntries.push(next);
-                        }
-                    }
+                    throw new Error(`Input error for entity: ${entity}.`);
                 }
-                return acc;
-            }, []);
-        }
-        this.validCases = validCases;
-        this.invalidCases = invalidEntries;
-        this.caseIds = caseIds;
-    }
+            });
+
+            let invalidCases: { id: string, study: string }[] = [];
+            let validCases: Sample[] = [];
+            let caseSet: { [id: string]: Sample } = {}
+            if (this.caseIdsMode === 'sample') {
+                caseSet = _.keyBy(this.props.selectedSamples, s => `${s.studyId}:${s.sampleId}`);
+            } else {
+                caseSet = _.keyBy(this.props.selectedSamples, s => `${s.studyId}:${s.patientId}`);
+            }
+
+            cases.forEach((next) => {
+                let sample = caseSet[`${next.study}:${next.id}`];
+                if (sample) {
+                    validCases.push(sample);
+                } else {
+                    invalidCases.push(next);
+                }
+            });
+
+            if (invalidCases.length) {
+                throw new Error(
+                    `Invalid ${
+                    this.caseIdsMode
+                    }${
+                    invalidCases.length > 1 ? 's' : ''
+                    } for the selected cancer study: ${
+                    invalidCases.map(x => x.id).join(', ')
+                    }`
+                );
+            }
+            return validCases;
+        },
+        500
+    );
 
     public mainContent() {
-        let classes: string[] = [styles.textArea]
-        if (this.invalidCases.length > 0) {
-            classes.push(styles.invalid);
-        } else if (this.validCases.length > 0) {
-            classes.push(styles.valid);
-        }
-
         return (
             <div className={styles.body}>
                 <ButtonGroup>
@@ -121,10 +146,9 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                             return <Radio
                                 checked={option.value === this.caseIdsMode}
                                 onChange={(e) => {
-                                        this.caseIds = '';
-                                        this.invalidCases = [];
-                                        this.validCases = [];
-                                        this.caseIdsMode = $(e.target).attr("data-value") as any;
+                                    this.caseIds = '';
+                                    this.validCases = [];
+                                    this.caseIdsMode = $(e.target).attr("data-value") as any;
                                 }}
                                 inline
                                 data-value={option.value}
@@ -139,35 +163,51 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                             this.caseIds = this.props.selectedSamples.map(sample => {
                                 return `${sample.studyId}:${(this.caseIdsMode === 'sample') ? sample.sampleId : sample.patientId}`
                             }).join("\n");
-                            this.invalidCases = [];
                             this.validCases = this.props.selectedSamples;
                         }}>
                         Use selected samples/patients
                     </span>
 
                 </div>
-                
+
                 <textarea
-                    className={classnames(classes)}
                     value={this.caseIds}
-                    onChange={event => this.validateCases(event.currentTarget.value)}
+                    onChange={event => this.caseIds = event.currentTarget.value}
                     data-test='CustomCaseSetInput'
                 />
             </div>
         );
     }
 
+    readonly asyncCustomCaseSet = remoteData<Sample[]>({
+        invoke: async () => {
+            if (this.caseIds.trim().length === 0)
+                return [];
+            return this.invokeCustomCaseSetLater({
+                caseIds: this.caseIds,
+            })
+        },
+        default: [],
+        onResult: (validCases) => {
+            this.validCases = validCases;
+        }
+    });
+
     private footer() {
         return (
             <div className={styles.footer}>
-                <span>Please input IDs (one per line)</span>
-                <button
-                    disabled={this.invalidCases.length > 0 || this.validCases.length === 0}
-                    className="btn btn-sm"
-                    style={{ float: "right" }}
-                    onClick={event => this.props.onSubmit(this.validCases)} >
-                    Submit
-                </button>
+                <SectionHeader promises={[this.asyncCustomCaseSet]} />
+                <div style={{ float: "right", height: "40px" }}>
+                    <button
+                        disabled={!_.isUndefined(this.asyncCustomCaseSet.error) || this.validCases.length === 0}
+                        className="btn btn-sm"
+                        style={{ float: "right" }}
+                        onClick={event => this.props.onSubmit(this.validCases)} >
+                        Submit
+                    </button>
+
+                </div>
+
             </div>
         );
     }
