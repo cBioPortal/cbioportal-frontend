@@ -7,7 +7,6 @@ import "./styles.scss";
 import { bind } from 'bind-decorator';
 import { buildCBioPortalUrl } from 'shared/api/urls';
 import CustomCaseSelection from 'pages/studyView/customCaseSelection/CustomCaseSelection';
-import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 
 export interface ISummaryHeaderProps {
     selectedSamples: Sample[];
@@ -26,31 +25,23 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
 
     @bind
     private openCases() {
-
-        const firstSample = this.props.selectedSamples[0];
-        const groupedSamples = _.groupBy(this.props.selectedSamples, sample => sample.studyId);
-        const IncludeStudyId: boolean = Object.keys(groupedSamples).length > 1;
-
-        let navCaseIds = _.map(groupedSamples, (samples) => {
-            return _.map(samples, sample => {
-                let returnString = '';
-                if (IncludeStudyId) {
-                    returnString += sample.studyId + ':';
-                }
-                returnString += sample.patientId;
-                return returnString;
-            }).join(',');
-        }).join(',');
-
-        //TODO: handle browser url length limitation
-        //TODO: somehow below line is not working
-        //window.open(buildCBioPortalUrl('patient', { sampleId:firstSample.sampleId, studyId:firstSample.studyId ,navCaseIds : navCaseIds}));
-
-        window.open(buildCBioPortalUrl('case.do', {
-            sampleId: firstSample.sampleId,
-            studyId: firstSample.studyId,
-            navCaseIds: navCaseIds
-        }));
+        if(!_.isEmpty(this.props.selectedSamples)){
+            const firstSample = this.props.selectedSamples[0];
+            const groupedSamples = _.groupBy(this.props.selectedSamples, sample => sample.studyId);
+            const includeStudyId: boolean = Object.keys(groupedSamples).length > 1;
+    
+            let navCaseIds =  _.map(this.props.selectedSamples, sample => (includeStudyId? sample.studyId : '') + sample.patientId).join(',')
+    
+            //TODO: handle browser url length limitation
+            //TODO: somehow below line is not working
+            //window.open(buildCBioPortalUrl('patient', { sampleId:firstSample.sampleId, studyId:firstSample.studyId ,navCaseIds : navCaseIds}));
+    
+            window.open(buildCBioPortalUrl('case.do', {
+                sampleId: firstSample.sampleId,
+                studyId: firstSample.studyId,
+                navCaseIds: navCaseIds
+            }));
+        }        
     }
 
     @bind
@@ -62,7 +53,7 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
 
     render() {
         return (
-            <div className="studyview-summary-header">
+            <div className="studyViewSummaryHeader">
                 {
                     (this.isCustomCaseBoxOpen) && (
                         <CustomCaseSelection
