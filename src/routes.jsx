@@ -21,6 +21,7 @@ import HomePage from 'bundle-loader?lazy!babel-loader!./pages/home/HomePage';
 import TestimonialsPage from 'pages/staticPages/testimonialsPage/TestimonialsPage';
 import DatasetPage from 'bundle-loader?lazy!babel-loader!./pages/datasetView/DatasetPage';
 import StudyViewPage from 'bundle-loader?lazy!babel-loader!./pages/studyView/StudyViewPage';
+import MutationMapperTool from 'bundle-loader?lazy!babel-loader!./pages/tools/mutationMapper/MutationMapperTool';
 import './globalComponents';
 import {getBasePath} from "shared/api/urls";
 
@@ -62,9 +63,10 @@ export const makeRoutes = (routing) => {
                 <Route path="/results" getComponent={lazyLoadComponent(ResultsViewPage)} />
                 <Route path={getBasePath()}>
                     <Route path="patient" getComponent={lazyLoadComponent(PatientViewPage)}/>
+                    <Route path="newstudy" getComponent={lazyLoadComponent(StudyViewPage)} />
                 </Route>
                 <IndexRedirect to={defaultRoute}/>
-                <Route path="/study" getComponent={lazyLoadComponent(StudyViewPage)} />
+                <Route path="/mutation_mapper" getComponent={lazyLoadComponent(MutationMapperTool)} />
         <IndexRedirect to={defaultRoute}/>
     </Route>)
 };
