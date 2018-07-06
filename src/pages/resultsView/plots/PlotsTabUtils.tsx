@@ -500,7 +500,7 @@ const notProfiledAppearance = {
 };
 
 const mutationLegendOrder = ["fusion", "promoter", "trunc", "inframe", "missense"];
-const mutationRenderPriority = stringListToIndexSet(mutationLegendOrder);
+export const mutationRenderPriority = stringListToIndexSet(mutationLegendOrder);
 
 export const noMutationAppearance = {
     symbol : "circle",
@@ -527,6 +527,7 @@ const mutationSummaryToAppearance = {
     }
 };
 const mutationSummaryLegendOrder = [MutationSummary.Both, MutationSummary.One, MutationSummary.Neither];
+export const mutationSummaryRenderPriority = stringListToIndexSet(mutationSummaryLegendOrder);
 
 const cnaToAppearance = {
     "-2":{
