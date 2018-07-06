@@ -51,6 +51,11 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             query => {
                 if ('studyId' in query) {
                     this.store.studyIds = (query.studyId as string).split(",");
+                }
+                if ('id' in query) {
+                    this.store.studyIds = (query.id as string).split(",");
+                }
+                if (this.store.studyIds) {
                     this.store.sampleAttrIds = ('sampleAttrIds' in query ? (query.sampleAttrIds as string).split(",") : []);
                     this.store.patientAttrIds = ('patientAttrIds' in query ? (query.patientAttrIds as string).split(",") : []);
                 }
