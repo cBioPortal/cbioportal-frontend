@@ -10,6 +10,8 @@ import { StudyViewComponentLoader } from "./charts/StudyViewComponentLoader";
 import { StudyViewPageStore, ClinicalDataType, SurvivalType, ChartMeta, ChartType } from 'pages/studyView/StudyViewPageStore';
 import { reaction } from 'mobx';
 import { If } from 'react-if';
+import SummaryHeader from 'pages/studyView/SummaryHeader';
+import { Sample } from 'shared/api/generated/CBioPortalAPI';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -42,6 +44,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             },
             onDeleteChart: (uniqueKey: string) => {
                 this.store.changeChartVisibility(uniqueKey, false);
+            },
+            updateCustomCasesFilter: (cases: Sample[]) => {
+                this.store.updateCustomCasesFilter(cases);
             }
         }
 
@@ -51,6 +56,11 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             query => {
                 if ('studyId' in query) {
                     this.store.studyIds = (query.studyId as string).split(",");
+                }
+                if ('id' in query) {
+                    this.store.studyIds = (query.id as string).split(",");
+                }
+                if (this.store.studyIds) {
                     this.store.sampleAttrIds = ('sampleAttrIds' in query ? (query.sampleAttrIds as string).split(",") : []);
                     this.store.patientAttrIds = ('patientAttrIds' in query ? (query.patientAttrIds as string).split(",") : []);
                 }
@@ -121,6 +131,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                         className="mainTabs">
 
                         <MSKTab key={0} id="summaryTab" linkText="Summary">
+                            <SummaryHeader
+                                selectedSamples={this.store.selectedSamples.result!}
+                                updateCustomCasesFilter={this.handlers.updateCustomCasesFilter}/>
                             <div className={styles.studyViewFlexContainer}>
                                 {this.store.initialClinicalDataCounts.isComplete && 
                                     this.store.visibleAttributes.map(this.renderAttributeChart)}
