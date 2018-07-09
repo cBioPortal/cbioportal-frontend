@@ -43,6 +43,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
 
 const DEFAULT_FONT_FAMILY = "Verdana,Arial,sans-serif";
 const CORRELATION_INFO_Y = 100; // experimentally determined
+export const LEGEND_Y = CORRELATION_INFO_Y + 30 /* approximate correlation info height */ + 30 /* top padding*/
 const RIGHT_GUTTER = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 10;
@@ -150,14 +151,13 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         const x = this.legendX;
         const topPadding = 30;
         const approximateCorrelationInfoHeight = 30;
-        const y = CORRELATION_INFO_Y + approximateCorrelationInfoHeight + topPadding;
         if (this.props.legendData && this.props.legendData.length) {
             return (
                 <VictoryLegend
                     orientation="vertical"
                     data={this.props.legendData}
                     x={x}
-                    y={y}
+                    y={LEGEND_Y}
                     width={RIGHT_GUTTER}
                 />
             );
