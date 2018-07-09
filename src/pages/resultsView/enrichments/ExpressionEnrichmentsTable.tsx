@@ -147,7 +147,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         columns[ExpressionEnrichmentTableColumnType.P_VALUE] = {
             name: "p-Value",
             render: (d: ExpressionEnrichmentRow) => <span style={{whiteSpace: 'nowrap'}}>{toConditionalPrecision(d.pValue, 3, 0.01)}</span>,
-            tooltip: <span>Derived from Fisher Exact Test</span>,
+            tooltip: <span>Derived from Student's t-test</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.pValue,
             download: (d: ExpressionEnrichmentRow) => toConditionalPrecision(d.pValue, 3, 0.01)
         };
