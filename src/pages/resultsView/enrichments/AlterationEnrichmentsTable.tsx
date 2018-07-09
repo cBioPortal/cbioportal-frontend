@@ -133,7 +133,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         columns[AlterationEnrichmentTableColumnType.P_VALUE] = {
             name: "p-Value",
             render: (d: AlterationEnrichmentRow) => <span style={{whiteSpace: 'nowrap'}}>{toConditionalPrecision(d.pValue, 3, 0.01)}</span>,
-            tooltip: <span>Derived from Fisher Exact Test</span>,
+            tooltip: <span>Derived from Fisher's exact test</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.pValue,
             download: (d: AlterationEnrichmentRow) => toConditionalPrecision(d.pValue, 3, 0.01)
         };
