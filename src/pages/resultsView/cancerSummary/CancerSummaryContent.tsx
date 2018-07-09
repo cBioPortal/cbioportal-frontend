@@ -5,7 +5,6 @@ import {computed, observable} from "mobx";
 import {observer} from "mobx-react";
 import Slider from 'react-rangeslider';
 import {FormGroup, ControlLabel, FormControl} from 'react-bootstrap';
-import jsPDF from 'jspdf';
 import {If, Then, Else} from 'react-if';
 import classnames from 'classnames';
 import SvgSaver from 'svgsaver';
