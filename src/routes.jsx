@@ -15,7 +15,7 @@ import { restoreRouteAfterRedirect } from './shared/lib/redirectHelpers';
 // webpack knows to 'split' the code into seperate bundles accordingly
 // see article http://henleyedition.com/implicit-code-splitting-with-react-router-and-webpack/
 import PatientViewPage from 'bundle-loader?lazy!babel-loader!./pages/patientView/PatientViewPage';
-import PatientViewPageSimple from 'bundle-loader?lazy!babel-loader!./pages/patientView/PatientViewPageSimple';
+import PatientViewPageSimple from 'bundle-loader?lazy!babel-loader!./pages/patientView/simple/PatientViewPageSimple';
 import ResultsViewPage from 'bundle-loader?lazy!babel-loader!./pages/resultsView/ResultsViewPage';
 import HomePage from 'bundle-loader?lazy!babel-loader!./pages/home/HomePage';
 import TestimonialsPage from 'pages/staticPages/testimonialsPage/TestimonialsPage';

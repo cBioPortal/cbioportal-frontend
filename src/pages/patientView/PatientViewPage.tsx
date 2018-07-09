@@ -33,10 +33,8 @@ import { getMouseIcon } from './SVGIcons';
 
 import './patient.scss';
 import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
+import SampleHeader from 'pages/patientView/sampleHeader/SampleHeader';
 
-const patientViewPageStore = new PatientViewPageStore();
-
-(window as any).patientViewPageStore = patientViewPageStore;
 
 export interface IPatientViewPageProps {
     routing: any;
@@ -52,13 +50,24 @@ export interface IPatientViewPageProps {
 @inject('routing')
 @observer
 export default class PatientViewPage extends React.Component<IPatientViewPageProps, {}> {
+    static readonly patientViewPageStore = new PatientViewPageStore();
 
     private updatePageTitleReaction: IReactionDisposer;
 
     constructor(props: IPatientViewPageProps) {
-
         super();
+        PatientViewPage.initPatientViewPage(props, PatientViewPage.patientViewPageStore);
+        (window as any).patientViewPageStore = PatientViewPage.patientViewPageStore;
 
+        this.updatePageTitleReaction = reaction(
+            () => PatientViewPage.patientViewPageStore.pageTitle,
+            (title:string) => ((window as any).document.title = title),
+            { fireImmediately:true }
+        );
+    }
+
+    // tslint:disable-next-line:member-ordering
+    public static initPatientViewPage(props: IPatientViewPageProps, patientViewPageStore:PatientViewPageStore) {
         //TODO: this should be done by a module so that it can be reused on other pages
         const reaction1 = reaction(
             () => props.routing.location.query,
@@ -93,11 +102,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             { fireImmediately:true }
         );
 
-        this.updatePageTitleReaction = reaction(
-            () => patientViewPageStore.pageTitle,
-            (title:string) => ((window as any).document.title = title),
-            { fireImmediately:true }
-        )
 
     }
 
@@ -135,42 +139,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         // namely that href will open in a new window/tab
     }
 
-    private handleTabChange(id: string) {
-
-        this.props.routing.updateRoute({ tab: id });
-
-    }
-
-    private handlePatientClick(id: string) {
-
-        let values = id.split(":");
-        if(values.length == 2){
-            this.props.routing.updateRoute({ studyId: values[0], caseId: values[1], sampleId: undefined });
-        } else {
-            this.props.routing.updateRoute({ caseId: id, sampleId: undefined });
-        }
-
-    }
-
-    @computed get cnaTableStatus() {
-        if (patientViewPageStore.molecularProfileIdDiscrete.isComplete) {
-            if (patientViewPageStore.molecularProfileIdDiscrete.result === undefined) {
-                return "unavailable";
-            } else if (patientViewPageStore.discreteCNAData.isComplete) {
-                return "available";
-            } else {
-                return "loading";
-            }
-        } else {
-            return "loading";
-        }
-    }
-
-    private shouldShowPathologyReport(patientViewPageStore: PatientViewPageStore): boolean {
-        return patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length > 0;
-    }
-
-    public render() {
+    render() {
+        const patientViewPageStore = PatientViewPage.patientViewPageStore;
 
         let sampleManager: SampleManager | null = null;
         let sampleHeader: (JSX.Element | undefined)[] | null = null;
@@ -195,35 +165,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             }
 
             sampleHeader = _.map(sampleManager!.samples, (sample: ClinicalDataBySampleId) => {
-                const isPDX:boolean = (sampleManager &&
-                    sampleManager.clinicalDataLegacyCleanAndDerived &&
-                    sampleManager.clinicalDataLegacyCleanAndDerived[sample.id] &&
-                    sampleManager.clinicalDataLegacyCleanAndDerived[sample.id].DERIVED_NORMALIZED_CASE_TYPE === 'Xenograft'
-                );
                 return (
-                    <div className="patientSample">
-                        <span className='clinical-spans'>
-                            {
-                                sampleManager!.getComponentForSample(sample.id, 1, '',
-                                    <span style={{display:'inline-flex'}}>
-                                        {'\u00A0'}
-                                        {isPDX && getMouseIcon()}
-                                        {isPDX && '\u00A0'}
-                                        <a
-                                            href={`case.do?#/patient?sampleId=${sample.id}&studyId=${patientViewPageStore.studyMetaData.result!.studyId}`}
-                                            target="_blank"
-                                            onClick={(e: React.MouseEvent<HTMLAnchorElement>) => this.handleSampleClick(sample.id, e)}
-                                        >
-                                            {sample.id}
-                                        </a>
-                                        {sampleManager &&
-                                         sampleManager.clinicalDataLegacyCleanAndDerived[sample.id] &&
-                                         getSpanElementsFromCleanData(sampleManager.clinicalDataLegacyCleanAndDerived[sample.id], patientViewPageStore.studyId)}
-                                    </span>
-                                )
-                            }
-                        </span>
-                    </div>
+                    <SampleHeader
+                        sample={sample}
+                        sampleManager={sampleManager}
+                        handleSampleClick={this.handleSampleClick}
+                        studyId={patientViewPageStore.studyMetaData.result!.studyId}
+                    />
                 );
             });
 
@@ -477,5 +425,42 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
             </div>
         );
+    }
+
+
+    private handleTabChange(id: string) {
+
+        this.props.routing.updateRoute({ tab: id });
+
+    }
+
+    @computed get cnaTableStatus() {
+        if (PatientViewPage.patientViewPageStore.molecularProfileIdDiscrete.isComplete) {
+            if (PatientViewPage.patientViewPageStore.molecularProfileIdDiscrete.result === undefined) {
+                return "unavailable";
+            } else if (PatientViewPage.patientViewPageStore.discreteCNAData.isComplete) {
+                return "available";
+            } else {
+                return "loading";
+            }
+        } else {
+            return "loading";
+        }
+    }
+
+    private shouldShowPathologyReport(patientViewPageStore: PatientViewPageStore): boolean {
+        return patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length > 0;
+    }
+
+
+    private handlePatientClick(id: string) {
+
+        const values = id.split(":");
+        if(values.length === 2){
+            this.props.routing.updateRoute({ studyId: values[0], caseId: values[1], sampleId: undefined });
+        } else {
+            this.props.routing.updateRoute({ caseId: id, sampleId: undefined });
+        }
+
     }
 }
