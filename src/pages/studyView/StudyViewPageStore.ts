@@ -20,11 +20,15 @@ import {
     ClinicalData,
     MolecularProfile,
     MolecularProfileFilter,
-    ClinicalDataMultiStudyFilter
+    ClinicalDataMultiStudyFilter,
+    Gene
 } from 'shared/api/generated/CBioPortalAPI';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
+import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
+import { bind } from '../../../node_modules/bind-decorator';
+import { updateGeneQuery } from 'pages/studyView/StudyViewUtils';
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT'
 
@@ -78,6 +82,25 @@ export class StudyViewPageStore {
 
     private _clinicalAttributesMetaSet: { [id: string]: ChartMeta } = {} as any;
 
+    @observable geneQueryStr: string;
+
+    @observable private geneQueries: SingleGeneQuery[] = [];
+
+    @observable private genesInQuery: Gene[] = [];
+
+    @bind
+    @action onCheckGene(hugoGeneSymbol: string) {
+        this.geneQueryStr = updateGeneQuery(this.geneQueries, hugoGeneSymbol);
+    }
+
+    @computed get selectedGenes(): string[] {
+        return this.genesInQuery.map(gene => gene.hugoGeneSymbol);
+    }
+
+    @action updateSelectedGenes(query: SingleGeneQuery[], genesInQuery: Gene[]) {
+        this.geneQueries = query;
+        this.genesInQuery = genesInQuery
+    }
 
     @action
     updateClinicalDataEqualityFilters(chartMeta: ChartMeta, values: string[]) {

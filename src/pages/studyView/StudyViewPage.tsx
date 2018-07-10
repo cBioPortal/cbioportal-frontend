@@ -7,11 +7,12 @@ import { ChartContainer } from 'pages/studyView/charts/ChartContainer';
 import SurvivalChart from "../resultsView/survival/SurvivalChart";
 import { MSKTab, MSKTabs } from "../../shared/components/MSKTabs/MSKTabs";
 import { StudyViewComponentLoader } from "./charts/StudyViewComponentLoader";
-import { StudyViewPageStore, ClinicalDataType, SurvivalType, ChartMeta, ChartType } from 'pages/studyView/StudyViewPageStore';
+import { StudyViewPageStore, SurvivalType, ChartMeta } from 'pages/studyView/StudyViewPageStore';
 import { reaction } from 'mobx';
 import { If } from 'react-if';
 import SummaryHeader from 'pages/studyView/SummaryHeader';
-import { Sample } from 'shared/api/generated/CBioPortalAPI';
+import { Sample, Gene } from 'shared/api/generated/CBioPortalAPI';
+import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -47,6 +48,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             },
             updateCustomCasesFilter: (cases: Sample[]) => {
                 this.store.updateCustomCasesFilter(cases);
+            },
+            updateSelectedGenes:(query: SingleGeneQuery[], genesInQuery: Gene[])=>{
+                this.store.updateSelectedGenes(query, genesInQuery);
             }
         }
 
@@ -132,8 +136,11 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
                         <MSKTab key={0} id="summaryTab" linkText="Summary">
                             <SummaryHeader
+                                geneQuery={this.store.geneQueryStr}
                                 selectedSamples={this.store.selectedSamples.result!}
-                                updateCustomCasesFilter={this.handlers.updateCustomCasesFilter}/>
+                                updateCustomCasesFilter={this.handlers.updateCustomCasesFilter}
+                                updateSelectedGenes={this.handlers.updateSelectedGenes}
+                            />
                             <div className={styles.studyViewFlexContainer}>
                                 {this.store.initialClinicalDataCounts.isComplete && 
                                     this.store.visibleAttributes.map(this.renderAttributeChart)}
@@ -147,12 +154,16 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     numOfSelectedSamples={100}
                                     filters={this.store.getMutatedGenesTableFilters()}
                                     toggleSelection={this.handlers.updateGeneFilter}
+                                    selectedGenes={this.store.selectedGenes}
+                                    onGeneSelect={this.store.onCheckGene}
                                 />
                                 <CNAGenesTable
                                     promise={this.store.cnaGeneData}
                                     numOfSelectedSamples={100}
                                     filters={this.store.getCNAGenesTableFilters()}
                                     toggleSelection={this.handlers.updateCNAGeneFilter}
+                                    selectedGenes={this.store.selectedGenes}
+                                    onGeneSelect={this.store.onCheckGene}
                                 />
                             </div>
                         </MSKTab>
