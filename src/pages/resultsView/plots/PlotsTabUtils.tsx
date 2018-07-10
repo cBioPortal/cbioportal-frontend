@@ -17,6 +17,10 @@ import {
 } from "../../../shared/components/oncoprint/DataUtils";
 import {stringListToIndexSet} from "../../../shared/lib/StringUtils";
 import {
+    CNA_COLOR_AMP,
+    CNA_COLOR_GAIN,
+    CNA_COLOR_HETLOSS,
+    CNA_COLOR_HOMDEL,
     DEFAULT_GREY,
     MUT_COLOR_FUSION, MUT_COLOR_INFRAME, MUT_COLOR_INFRAME_PASSENGER,
     MUT_COLOR_MISSENSE, MUT_COLOR_MISSENSE_PASSENGER, MUT_COLOR_PROMOTER, MUT_COLOR_TRUNC, MUT_COLOR_TRUNC_PASSENGER
@@ -36,20 +40,8 @@ export const molecularProfileTypeToDisplayType:{[s:string]:string} = {
 
 export const molecularProfileTypeDisplayOrder = ["MRNA_EXPRESSION", "COPY_NUMBER_ALTERATION", "PROTEIN_LEVEL", "METHYLATION"];
 
-export type PlotsData = {
-    [uniqueSampleKey:string]:{
-        caseId: string, // stable sample id
-        cna_anno: string,
-        mutation: {
-            [hugoSymbol:string]:{
-                details: string, // protein code
-                type: string // mutation type
-            }
-        },
-        xVal: string, // float representing [WHAT??]
-        yVal: string // float representing [WHAT??]
-    }
-}
+export const CNA_STROKE_WIDTH = 1.8;
+export const PLOT_SIDELENGTH = 650;
 
 export interface IAxisData {
     data:{
@@ -112,6 +104,15 @@ export function isNumberData(d:IAxisData): d is INumberAxisData {
     return d.datatype === "number";
 }
 
+export function scatterPlotSize(
+    d:IScatterPlotSampleData,
+    active:boolean,
+    isHighlighted:boolean
+) {
+    const big = active || isHighlighted;
+    return big ? 6 : 4;
+}
+
 export function scatterPlotLegendData(
     data:IScatterPlotSampleData[],
     viewType:ViewType,
@@ -119,14 +120,16 @@ export function scatterPlotLegendData(
     cnaDataExists: MobxPromise<boolean>,
     driversAnnotated: boolean
 ) {
-    const _mutationDataExists = mutationDataExists.isComplete && mutationDataExists.result
-    if (viewType === ViewType.CopyNumber &&
-        cnaDataExists.isComplete && cnaDataExists.result) {
+    const _mutationDataExists = mutationDataExists.isComplete && mutationDataExists.result;
+    const _cnaDataExists = cnaDataExists.isComplete && cnaDataExists.result;
+    if (viewType === ViewType.CopyNumber && _cnaDataExists) {
         return scatterPlotCnaLegendData(data);
     } else if (viewType === ViewType.MutationType && _mutationDataExists) {
-        return scatterPlotMutationLegendData(data, driversAnnotated);
+        return scatterPlotMutationLegendData(data, driversAnnotated, true);
     } else if (viewType === ViewType.MutationSummary && _mutationDataExists) {
         return scatterPlotMutationSummaryLegendData(data);
+    } else if (viewType === ViewType.MutationTypeAndCopyNumber && _mutationDataExists && _cnaDataExists) {
+        return scatterPlotMutationLegendData(data, driversAnnotated, false).concat(scatterPlotCnaLegendData(data));
     }
     return [];
 }
@@ -172,7 +175,8 @@ function scatterPlotMutationSummaryLegendData(
 
 function scatterPlotMutationLegendData(
     data:IScatterPlotSampleData[],
-    driversAnnotated:boolean
+    driversAnnotated:boolean,
+    showStroke:boolean
 ) {
     const oncoprintMutationTypeToAppearance = driversAnnotated ? oncoprintMutationTypeToAppearanceDrivers: oncoprintMutationTypeToAppearanceDefault;
     let showNoMutationElement = false;
@@ -206,6 +210,7 @@ function scatterPlotMutationLegendData(
                 name: appearance.legendLabel,
                 symbol: {
                     stroke: appearance.stroke,
+                    strokeOpacity: +showStroke,
                     fill: appearance.fill,
                     type: appearance.symbol
                 }
@@ -217,6 +222,7 @@ function scatterPlotMutationLegendData(
             name: noMutationAppearance.legendLabel,
             symbol: {
                 stroke: noMutationAppearance.stroke,
+                strokeOpacity: +showStroke,
                 fill: noMutationAppearance.fill,
                 type: noMutationAppearance.symbol
             }
@@ -227,6 +233,7 @@ function scatterPlotMutationLegendData(
             name: NOT_PROFILED_MUTATION_LEGEND_LABEL,
             symbol: {
                 stroke: notProfiledAppearance.stroke,
+                strokeOpacity: +showStroke,
                 fill: notProfiledAppearance.fill,
                 type: "circle"
             }
@@ -267,7 +274,8 @@ function scatterPlotCnaLegendData(
             symbol: {
                 stroke: appearance.stroke,
                 fillOpacity: 0,
-                type: "circle"
+                type: "circle",
+                strokeWidth: CNA_STROKE_WIDTH
             }
         };
     });
@@ -569,7 +577,7 @@ export const mutationRenderPriority = stringListToIndexSet([
 
 export const noMutationAppearance = {
     symbol : "circle",
-    fill : DEFAULT_GREY,
+    fill : "#e3e3e3",
     stroke : "#000000",
     legendLabel : "Not mutated"
 };
@@ -597,23 +605,23 @@ export const mutationSummaryRenderPriority = stringListToIndexSet(mutationSummar
 const cnaToAppearance = {
     "-2":{
         legendLabel: "Deep Deletion",
-        stroke:"#00008B",
+        stroke:CNA_COLOR_HOMDEL,
     },
     "-1":{
         legendLabel: "Shallow Deletion",
-        stroke:"#00BFFF",
+        stroke:"#2aced4",
     },
     "0":{
         legendLabel: "Diploid",
-        stroke:"#000000",
+        stroke:DEFAULT_GREY,
     },
     "1":{
         legendLabel: "Gain",
-        stroke: "#FF69B4",
+        stroke: "#ff8c9f",
     },
     "2":{
         legendLabel: "Amplification",
-        stroke: "#FF0000",
+        stroke: CNA_COLOR_AMP,
     }
 };
 
@@ -624,6 +632,25 @@ const noCnaAppearance = {
 
 const cnaCategoryOrder = ["-2", "-1", "0", "1", "2"].map(x=>(cnaToAppearance as any)[x].legendLabel);
 
+function getMutationTypeAppearance(d:IScatterPlotSampleData, oncoprintMutationTypeToAppearance:{[mutType:string]:{symbol:string, fill:string, stroke:string, legendLabel:string}}) {
+    if (!d.profiledMutations) {
+        return notProfiledAppearance;
+    } else if (!d.dispMutationType) {
+        return noMutationAppearance;
+    } else {
+        return oncoprintMutationTypeToAppearance[d.dispMutationType];
+    }
+}
+function getCopyNumberAppearance(d:IScatterPlotSampleData) {
+    if (!d.profiledCna) {
+        return notProfiledAppearance;
+    } else if (!d.dispCna) {
+        return noCnaAppearance;
+    } else {
+        return cnaToAppearance[d.dispCna.value as -2 | -1 | 0 | 1 | 2];
+    }
+}
+
 export function makeScatterPlotPointAppearance(
     viewType: ViewType,
     mutationDataExists: MobxPromise<boolean>,
@@ -632,30 +659,25 @@ export function makeScatterPlotPointAppearance(
 ):(d:IScatterPlotSampleData)=>{ stroke:string, fill?:string, symbol?:string} {
     const oncoprintMutationTypeToAppearance = driversAnnotated ? oncoprintMutationTypeToAppearanceDrivers: oncoprintMutationTypeToAppearanceDefault;
     switch (viewType) {
+        case ViewType.MutationTypeAndCopyNumber:
+            if (cnaDataExists.isComplete && cnaDataExists.result && mutationDataExists.isComplete && mutationDataExists.result) {
+                return (d:IScatterPlotSampleData)=>{
+                    const cnaAppearance = getCopyNumberAppearance(d);
+                    const mutAppearance = getMutationTypeAppearance(d, oncoprintMutationTypeToAppearance);
+                    return Object.assign({}, mutAppearance, cnaAppearance); // overwrite with cna stroke
+                };
+            }
+            break;
         case ViewType.CopyNumber:
             if (cnaDataExists.isComplete && cnaDataExists.result) {
-                return (d:IScatterPlotSampleData)=>{
-                    if (!d.profiledCna) {
-                        return notProfiledAppearance;
-                    } else if (!d.dispCna) {
-                        return noCnaAppearance;
-                    } else {
-                        return cnaToAppearance[d.dispCna.value as -2 | -1 | 0 | 1 | 2];
-                    }
-                };
+                return getCopyNumberAppearance;
             }
+            break;
         case ViewType.MutationType:
             if (mutationDataExists.isComplete && mutationDataExists.result) {
-                return (d:IScatterPlotSampleData)=>{
-                    if (!d.profiledMutations) {
-                        return notProfiledAppearance;
-                    } else if (!d.dispMutationType) {
-                        return noMutationAppearance;
-                    } else {
-                        return oncoprintMutationTypeToAppearance[d.dispMutationType];
-                    }
-                };
+                return (d:IScatterPlotSampleData)=>getMutationTypeAppearance(d, oncoprintMutationTypeToAppearance);
             }
+            break;
         case ViewType.MutationSummary:
             if (mutationDataExists.isComplete && mutationDataExists.result) {
                 return (d:IScatterPlotSampleData)=>{
@@ -668,10 +690,10 @@ export function makeScatterPlotPointAppearance(
                     }
                 };
             }
-        default:
-            // By default, return same circle as mutation summary "Neither"
-            return ()=>mutationSummaryToAppearance[MutationSummary.Neither];
+            break;
     }
+    // By default, return same circle as mutation summary "Neither"
+    return ()=>mutationSummaryToAppearance[MutationSummary.Neither];
 }
 
 function mutationsProteinChanges(
