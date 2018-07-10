@@ -150,7 +150,6 @@ const EVENT_KEY = {
 @observer
 export default class OncoprintControls extends React.Component<IOncoprintControlsProps, {}> {
     @observable horzZoomSliderState:number;
-    @observable clinicalTracksMenuFocused = false;
 
     constructor(props:IOncoprintControlsProps) {
         super(props);
@@ -175,7 +174,6 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         this.onHorzZoomSliderChange = this.onHorzZoomSliderChange.bind(this);
         this.onHorzZoomSliderSet = this.onHorzZoomSliderSet.bind(this);
         this.onSetHorzZoomTextInput = this.onSetHorzZoomTextInput.bind(this);
-        this.onClinicalTracksMenuFocus = this.onClinicalTracksMenuFocus.bind(this);
 
         this.horzZoomSliderState = props.state.horzZoom;
         reaction(()=>this.props.state.horzZoom,
@@ -359,13 +357,8 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         }
     }
 
-    private onClinicalTracksMenuFocus() {
-        this.clinicalTracksMenuFocused = true;
-    }
-
     @computed get clinicalTrackOptions() {
-        if (this.clinicalTracksMenuFocused &&
-            this.props.state.clinicalAttributesPromise &&
+        if (this.props.state.clinicalAttributesPromise &&
             this.props.state.clinicalAttributesPromise.result &&
             this.props.state.clinicalAttributeSampleCountPromise &&
             this.props.state.clinicalAttributeSampleCountPromise.result
@@ -401,8 +394,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
     }
 
     @computed get clinicalTracksMenuLoading() {
-        return this.clinicalTracksMenuFocused &&
-            ((this.props.state.clinicalAttributesPromise &&
+        return ((this.props.state.clinicalAttributesPromise &&
             this.props.state.clinicalAttributesPromise.isPending) ||
             (this.props.state.clinicalAttributeSampleCountPromise &&
             this.props.state.clinicalAttributeSampleCountPromise.isPending));
@@ -415,13 +407,10 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
             // TODO: pass unmodified string array as value prop when possible
             // TODO: remove labelKey specification, leave to default prop, when possible
             return (
-                <div
-                    onFocus={this.onClinicalTracksMenuFocus}
-                >
+                <div>
                     <CheckedSelect
-                        placeholder="Add clinical tracks.."
-                        isLoading={this.clinicalTracksMenuLoading}
-                        noResultsText={this.clinicalTracksMenuLoading ? "Downloading available clinical attributes..." : "No matching clinical tracks found"}
+                        disabled={this.clinicalTracksMenuLoading}
+                        placeholder={this.clinicalTracksMenuLoading ? "Downloading clinical tracks..." : "Add clinical tracks.."}
                         onChange={this.onChangeSelectedClinicalTracks}
                         options={this.clinicalTrackOptions}
                         value={(this.props.state.selectedClinicalAttributeIds || []).map(x=>({value:x}))}

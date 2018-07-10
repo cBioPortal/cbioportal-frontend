@@ -277,7 +277,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.props.store.mutationAnnotationSettings.cosmicCountThreshold + "";
             },
             get clinicalAttributesPromise() {
-                return self.clinicalAttributes;
+                return self.sortedClinicalAttributes;
             },
             get clinicalAttributeSampleCountPromise() {
                 return self.props.store.clinicalAttributeIdToAvailableSampleCount;
@@ -814,36 +814,45 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     });
 
-    readonly clinicalAttributes = remoteData({
-        await:()=>[
-            this.props.store.studies,
-            this.props.store.clinicalAttributes,
-            this.clinicalAttributes_profiledIn,
+    readonly sortedClinicalAttributes = remoteData({
+        await: ()=>[
+            this.clinicalAttributes,
             this.props.store.clinicalAttributeIdToAvailableSampleCount
         ],
         invoke:()=>{
             const availableSampleCount = this.props.store.clinicalAttributeIdToAvailableSampleCount.result!;
-            let clinicalAttributes:OncoprintClinicalAttribute[] = _.sortBy<ClinicalAttribute>(
-                this.props.store.clinicalAttributes.result!,
+            let server:OncoprintClinicalAttribute[] = _.sortBy<ClinicalAttribute>(
+                this.clinicalAttributes.result!.server,
                 [
                     (x:ClinicalAttribute)=>{
                         let sampleCount = availableSampleCount[x.clinicalAttributeId];
                         if (sampleCount === undefined) {
-                        sampleCount = 0;
-                    }
+                            sampleCount = 0;
+                        }
                         return -sampleCount;
                     },
                     (x:ClinicalAttribute)=>x.displayName
                 ]
             ); // sort server clinical attrs by availability and display name
-            clinicalAttributes = specialClinicalAttributes.concat(this.clinicalAttributes_profiledIn.result!)
-                                                            .concat(clinicalAttributes); // put special clinical attrs at beginning
-            // filter out StudyOfOrigin if only one study
+            return Promise.resolve(this.clinicalAttributes.result!.special.concat(server)); // put special clinical attrs at beginning
+        }
+    });
+
+    readonly clinicalAttributes = remoteData({
+        await:()=>[
+            this.props.store.studies,
+            this.props.store.clinicalAttributes,
+            this.clinicalAttributes_profiledIn,
+        ],
+        invoke:()=>{
+            let special = specialClinicalAttributes.concat(this.clinicalAttributes_profiledIn.result!);
             if (this.props.store.studies.result!.length === 1) {
-                clinicalAttributes = clinicalAttributes.filter(x=>(x.clinicalAttributeId!==SpecialAttribute.StudyOfOrigin));
+                // filter out StudyOfOrigin if only one study
+                special = special.filter(x=>(x.clinicalAttributeId!==SpecialAttribute.StudyOfOrigin));
             }
-            clinicalAttributes = _.uniqBy(clinicalAttributes, x=>x.clinicalAttributeId); // remove duplicates in case of multiple studies w same attr
-            return Promise.resolve(clinicalAttributes);
+            let server = this.props.store.clinicalAttributes.result!;
+            server = _.uniqBy(server, x=>x.clinicalAttributeId); // remove duplicates in case of multiple studies w same attr
+            return Promise.resolve({ special, server, all:special.concat(server) });
         }
     });
 
@@ -852,10 +861,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             this.clinicalAttributes
         ],
         invoke: ()=>{
-            return Promise.resolve(_.reduce(this.clinicalAttributes.result!, (map:any, attr:OncoprintClinicalAttribute)=>{
-                map[attr.clinicalAttributeId] = attr;
-                return map;
-            }, {}));
+            return Promise.resolve(_.keyBy(this.clinicalAttributes.result!.all,
+                (attr:OncoprintClinicalAttribute)=>attr.clinicalAttributeId));
         }
     });
 
