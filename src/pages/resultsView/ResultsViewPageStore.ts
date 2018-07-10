@@ -35,7 +35,7 @@ import {toSampleUuid} from "../../shared/lib/UuidUtils";
 import MutationDataCache from "../../shared/cache/MutationDataCache";
 import accessors, {getSimplifiedMutationType, SimplifiedMutationType} from "../../shared/lib/oql/accessors";
 import {keepAlive} from "mobx-utils";
-import {CacheData} from "../../shared/lib/LazyMobXCache";
+import {AugmentedData, CacheData} from "../../shared/lib/LazyMobXCache";
 import {
     IAlterationCountMap,
     IAlterationData
@@ -70,7 +70,7 @@ import {
     getOncoKbOncogenic, groupDataByCase,
     computeCustomDriverAnnotationReport, computePutativeDriverAnnotatedMutations,
     initializeCustomDriverAnnotationSettings, computeGenePanelInformation,
-    fetchQueriedStudies, CoverageInformation
+    fetchQueriedStudies, CoverageInformation, isRNASeqProfile
 } from "./ResultsViewPageStoreUtils";
 import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alterationCountHelpers";
 import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
@@ -235,6 +235,7 @@ type MutationAnnotationSettings = {
     driverTiers:ObservableMap<boolean>;
     hotspots:boolean;
     oncoKb:boolean;
+    driversAnnotated:boolean;
 };
 
 /* fields and methods in the class below are ordered based on roughly
@@ -274,15 +275,19 @@ export class ResultsViewPageStore {
                 this._ignoreUnknown = val;
             },
             get ignoreUnknown() {
-                const anySelected = store.mutationAnnotationSettings.oncoKb ||
-                    store.mutationAnnotationSettings.hotspots ||
-                    store.mutationAnnotationSettings.cbioportalCount ||
-                    store.mutationAnnotationSettings.cosmicCount ||
-                    store.mutationAnnotationSettings.driverFilter ||
-                    store.mutationAnnotationSettings.driverTiers.entries().reduce((oneSelected, nextEntry)=>{
+                return this._ignoreUnknown && this.driversAnnotated;
+            },
+            get driversAnnotated() {
+                const anySelected = this.oncoKb ||
+                    this.hotspots ||
+                    this.cbioportalCount ||
+                    this.cosmicCount ||
+                    this.driverFilter ||
+                    this.driverTiers.entries().reduce((oneSelected:boolean, nextEntry:[string, boolean])=>{
                         return oneSelected || nextEntry[1];
                     }, false);
-                return this._ignoreUnknown && anySelected;
+
+                return anySelected;
             }
         });
     }
@@ -308,6 +313,8 @@ export class ResultsViewPageStore {
     @observable public sessionIdURL = '';
 
     @observable selectedMolecularProfileIds: string[] = [];
+
+    @observable expressionTabSeqVersion: number = 2;
 
     public mutationAnnotationSettings:MutationAnnotationSettings;
 
@@ -1584,6 +1591,19 @@ export class ResultsViewPageStore {
         }
     });
 
+    public putativeDriverAnnotatedMutationCache =
+        new MobxPromiseCache<{entrezGeneId:number}, AnnotatedMutation[]>(
+            q=>({
+                await: ()=>[
+                    this.mutationCache.get(q),
+                    this.getPutativeDriverInfo
+                ],
+                invoke: ()=>{
+                    return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutationCache.get(q).result!, this.getPutativeDriverInfo.result!, !!this.mutationAnnotationSettings.ignoreUnknown));
+                }
+            })
+        );
+
     readonly annotatedMolecularData = remoteData<AnnotatedNumericGeneMolecularData[]>({
         await: ()=>[
             this.molecularData,
@@ -2160,6 +2180,68 @@ export class ResultsViewPageStore {
             );
         }
     });
+
+    readonly expressionProfiles = remoteData({
+        await:()=>[
+            this.molecularProfilesInStudies
+        ],
+        invoke:()=>{
+            return Promise.resolve(this.molecularProfilesInStudies.result.filter(
+                (profile:MolecularProfile)=>isRNASeqProfile(profile.molecularProfileId, this.expressionTabSeqVersion)
+            ));
+        }
+    });
+
+    readonly rnaSeqMolecularData = remoteData<{[hugoGeneSymbol:string]:NumericGeneMolecularData[][]}>({
+       await:()=>[
+           this.expressionProfiles,
+           this.genes,
+           this.geneMolecularDataCache
+       ],
+       invoke: async ()=>{
+
+           const rnaSeqProfiles = this.expressionProfiles.result!;
+
+           const queries = _.flatMap(this.genes.result,(gene:Gene)=>{
+               return rnaSeqProfiles.map((profile:MolecularProfile)=> {
+                   return ({
+                       entrezGeneId: gene.entrezGeneId,
+                       molecularProfileId: profile.molecularProfileId,
+                       hugoGeneSymbol:gene.hugoGeneSymbol
+                   })
+               });
+           });
+
+           const data = await this.geneMolecularDataCache.result!.getPromise(queries,true);
+
+           // group cache objects by entrez geneId
+           const groupedByGene = _.groupBy(data,
+               (cacheItem:CacheData<NumericGeneMolecularData[], { entrezGeneId:number, molecularProfileId:string; }>)=>
+                   (cacheItem.meta) ? cacheItem.meta!.entrezGeneId : undefined
+           );
+
+           // now convert key from entrez to hugeGeneSymbol
+           const keyedByHugoSymbol = _.mapKeys(groupedByGene,(val, entrezGeneId:string)=>{
+               // look up huge gene symbol on gene with matching entrez
+               return _.find(this.genes.result,(gene:Gene)=>gene.entrezGeneId.toString()===entrezGeneId)!.hugoGeneSymbol;
+           });
+
+           const unwrapCacheObjects:{[hugeGeneSymbol:string]:NumericGeneMolecularData[][]} =
+               _.mapValues(keyedByHugoSymbol,(val:AugmentedData<NumericGeneMolecularData[], GeneMolecularDataCache>)=>{
+                    return _.map(val,(item:AugmentedData<NumericGeneMolecularData[], GeneMolecularDataCache>)=>item.data);
+                }) as any; // there's an error with typing for _.mapValues
+
+           return Promise.resolve(unwrapCacheObjects);
+
+       }
+
+    });
+
+    @memoize sortRnaSeqMolecularDataByStudy(seqData:{[profileId:string]:NumericGeneMolecularData[]}){
+        return _.keyBy(seqData,(data:NumericGeneMolecularData[])=>{
+           return data[0].studyId;
+        });
+    }
 
     readonly genesetMolecularDataCache = remoteData({
         await:() => [

@@ -274,15 +274,14 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                         </div>
                     )}
                 </div>
-                <div style={{display:"inline-block"}}>
-                    <DownloadControls
-                        getSvg={this.svg === null ? undefined : this.getSvg}
-                        buttons={["SVG", "PDF"]}
-                        filename="coexpression"
-                        dontFade={true}
-                        style={{marginTop:13}}
-                    />
-                </div>
+
+                <DownloadControls
+                    getSvg={this.svg === null ? undefined : this.getSvg}
+                    buttons={["SVG", "PDF"]}
+                    filename="coexpression"
+                    dontFade={true}
+                />
+
             </div>
         );
     }
