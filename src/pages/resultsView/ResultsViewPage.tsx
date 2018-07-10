@@ -16,7 +16,7 @@ import MutualExclusivityTab from "./mutualExclusivity/MutualExclusivityTab";
 import SurvivalTab from "./survival/SurvivalTab";
 import DownloadTab from "./download/DownloadTab";
 import Chart from 'chart.js';
-import {CancerStudy, Sample} from "../../shared/api/generated/CBioPortalAPI";
+import {CancerStudy, Gene, MolecularProfile, Sample} from "../../shared/api/generated/CBioPortalAPI";
 import AppConfig from 'appConfig';
 import getOverlappingStudies from "../../shared/lib/getOverlappingStudies";
 import OverlappingStudiesWarning from "../../shared/components/overlappingStudiesWarning/OverlappingStudiesWarning";
@@ -39,6 +39,7 @@ import QuerySummary from "./querySummary/QuerySummary";
 import {QueryStore} from "../../shared/components/query/QueryStore";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import {getGAInstance} from "../../shared/lib/tracking";
+import ExpressionWrapper from "./expression/ExpressionWrapper";
 import CoExpressionTabContainer from "./coExpression/CoExpressionTabContainer";
 import EnrichmentsTab from 'pages/resultsView/enrichments/EnrichmentsTab';
 import {Bookmark} from "./bookmark/Bookmark";
@@ -249,6 +250,36 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     }
 
     public exposeComponentRenderersToParentScript(props: IResultsViewPageProps){
+
+
+        exposeComponentRenderer('renderExpression',()=>{
+
+                return <Observer>
+                    {
+                        ()=> {
+
+                            const store = this.resultsViewPageStore;
+
+                            if (store.rnaSeqMolecularData.isComplete && store.studyIdToStudy.isComplete
+                                && store.mutations.isComplete && store.genes.isComplete && store.coverageInformation.isComplete) {
+                                return <ExpressionWrapper studyMap={store.studyIdToStudy.result}
+                                                          genes={store.genes.result}
+                                                          data={store.rnaSeqMolecularData.result}
+                                                          mutations={store.mutations.result}
+                                                          RNASeqVersion={store.expressionTabSeqVersion}
+                                                          coverageInformation={store.coverageInformation.result}
+                                                          onRNASeqVersionChange={(version:number)=>store.expressionTabSeqVersion=version}
+                                />
+                            } else {
+                                return <div><Loader isLoading={true}/></div>
+                            }
+
+
+                        }
+                    }
+                </Observer>
+
+        });
 
 
         exposeComponentRenderer('renderOncoprint',

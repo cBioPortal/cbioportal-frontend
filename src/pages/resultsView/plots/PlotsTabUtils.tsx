@@ -17,12 +17,13 @@ import {
 } from "../../../shared/components/oncoprint/DataUtils";
 import {stringListToIndexSet} from "../../../shared/lib/StringUtils";
 import {
+    DEFAULT_GREY,
     MUT_COLOR_FUSION, MUT_COLOR_INFRAME, MUT_COLOR_INFRAME_PASSENGER,
     MUT_COLOR_MISSENSE, MUT_COLOR_MISSENSE_PASSENGER, MUT_COLOR_PROMOTER, MUT_COLOR_TRUNC, MUT_COLOR_TRUNC_PASSENGER
 } from "../../../shared/components/oncoprint/geneticrules";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 import {IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPlot";
-import {AlterationTypeConstants} from "../ResultsViewPageStore";
+import {AlterationTypeConstants, AnnotatedMutation} from "../ResultsViewPageStore";
 import numeral from "numeral";
 import {getUniqueSampleKeyToCategories} from "../../../shared/components/plots/TablePlotUtils";
 
@@ -77,7 +78,7 @@ export interface INumberAxisData {
     datatype:string;
 }
 
-enum MutationSummary {
+export enum MutationSummary {
     Neither="Neither", Both="Both", One="One"
 }
 
@@ -93,7 +94,7 @@ export interface IScatterPlotSampleData {
     dispMutationSummary?:MutationSummary;
     profiledCna?:boolean;
     profiledMutations?:boolean;
-    mutations: Mutation[];
+    mutations: AnnotatedMutation[];
     copyNumberAlterations: NumericGeneMolecularData[];
 }
 
@@ -115,14 +116,15 @@ export function scatterPlotLegendData(
     data:IScatterPlotSampleData[],
     viewType:ViewType,
     mutationDataExists: MobxPromise<boolean>,
-    cnaDataExists: MobxPromise<boolean>
+    cnaDataExists: MobxPromise<boolean>,
+    driversAnnotated: boolean
 ) {
     const _mutationDataExists = mutationDataExists.isComplete && mutationDataExists.result
     if (viewType === ViewType.CopyNumber &&
         cnaDataExists.isComplete && cnaDataExists.result) {
         return scatterPlotCnaLegendData(data);
     } else if (viewType === ViewType.MutationType && _mutationDataExists) {
-        return scatterPlotMutationLegendData(data);
+        return scatterPlotMutationLegendData(data, driversAnnotated);
     } else if (viewType === ViewType.MutationSummary && _mutationDataExists) {
         return scatterPlotMutationSummaryLegendData(data);
     }
@@ -169,8 +171,10 @@ function scatterPlotMutationSummaryLegendData(
 }
 
 function scatterPlotMutationLegendData(
-    data:IScatterPlotSampleData[]
+    data:IScatterPlotSampleData[],
+    driversAnnotated:boolean
 ) {
+    const oncoprintMutationTypeToAppearance = driversAnnotated ? oncoprintMutationTypeToAppearanceDrivers: oncoprintMutationTypeToAppearanceDefault;
     let showNoMutationElement = false;
     let showNotProfiledElement = false;
     const uniqueMutations =
@@ -197,7 +201,7 @@ function scatterPlotMutationLegendData(
         _.chain(mutationLegendOrder)
         .filter(type=>!!uniqueMutations[type])
         .map(type=>{
-            const appearance = oncoprintMutationTypeToAppearance[type as OncoprintMutationType];
+            const appearance = oncoprintMutationTypeToAppearance[type];
             return {
                 name: appearance.legendLabel,
                 symbol: {
@@ -459,17 +463,69 @@ export function getAxisDescription(
     return ret;
 }
 
-const oncoprintMutationTypeToAppearance:{[type in OncoprintMutationType]:{symbol:string, fill:string, stroke:string, legendLabel:string}}
+const oncoprintMutationTypeToAppearanceDrivers:{[mutType:string]:{symbol:string, fill:string, stroke:string, legendLabel:string}}
 = {
     "inframe": {
         symbol : "circle",
         fill : MUT_COLOR_INFRAME_PASSENGER,
         stroke : "#000000",
-        legendLabel : "Inframe"
+        legendLabel : "Inframe (VUS)"
+    },
+    "inframe.driver": {
+        symbol : "circle",
+        fill: MUT_COLOR_INFRAME,
+        stroke : "#000000",
+        legendLabel : "Inframe (Driver)"
     },
     "missense":{
         symbol : "circle",
         fill : MUT_COLOR_MISSENSE_PASSENGER,
+        stroke : "#000000",
+        legendLabel : "Missense (VUS)"
+    },
+    "missense.driver":{
+        symbol : "circle",
+        fill : MUT_COLOR_MISSENSE,
+        stroke : "#000000",
+        legendLabel : "Missense (Driver)"
+    },
+    "fusion":{
+        symbol: "circle",
+        fill: MUT_COLOR_FUSION,
+        stroke: "#000000",
+        legendLabel: "Fusion"
+    },
+    "trunc":{
+        symbol: "circle",
+        fill: MUT_COLOR_TRUNC_PASSENGER,
+        stroke: "#000000",
+        legendLabel: "Truncating (VUS)"
+    },
+    "trunc.driver":{
+        symbol: "circle",
+        fill: MUT_COLOR_TRUNC,
+        stroke: "#000000",
+        legendLabel: "Truncating (Driver)"
+    },
+    "promoter":{
+        symbol: "circle",
+        fill: MUT_COLOR_PROMOTER,
+        stroke: "#000000",
+        legendLabel: "Promoter"
+    }
+};
+
+const oncoprintMutationTypeToAppearanceDefault:{[mutType:string]:{symbol:string, fill:string, stroke:string, legendLabel:string}}
+    = {
+    "inframe": {
+        symbol : "circle",
+        fill: MUT_COLOR_INFRAME,
+        stroke : "#000000",
+        legendLabel : "Inframe"
+    },
+    "missense":{
+        symbol : "circle",
+        fill : MUT_COLOR_MISSENSE,
         stroke : "#000000",
         legendLabel : "Missense"
     },
@@ -481,7 +537,7 @@ const oncoprintMutationTypeToAppearance:{[type in OncoprintMutationType]:{symbol
     },
     "trunc":{
         symbol: "circle",
-        fill: MUT_COLOR_TRUNC_PASSENGER,
+        fill: MUT_COLOR_TRUNC,
         stroke: "#000000",
         legendLabel: "Truncating"
     },
@@ -499,17 +555,26 @@ const notProfiledAppearance = {
     stroke: "d3d3d3", // TODO: right grey?
 };
 
-const mutationLegendOrder = ["fusion", "promoter", "trunc", "inframe", "missense"];
-export const mutationRenderPriority = stringListToIndexSet(mutationLegendOrder);
+const mutationLegendOrder = [
+    "fusion",
+    "promoter.driver", "promoter",
+    "trunc.driver", "trunc",
+    "inframe.driver", "inframe",
+    "missense.driver", "missense"
+];
+export const mutationRenderPriority = stringListToIndexSet([
+    "fusion", "promoter.driver", "trunc.driver", "inframe.driver", "missense.driver",
+    "promoter", "trunc", "inframe", "missense"
+]);
 
 export const noMutationAppearance = {
     symbol : "circle",
-    fill : "#00AAF8",
-    stroke : "#0089C6",
+    fill : DEFAULT_GREY,
+    stroke : "#000000",
     legendLabel : "Not mutated"
 };
 
-const mutationSummaryToAppearance = {
+export const mutationSummaryToAppearance = {
     "Neither":{
         fill: "#00AAF8",
         stroke: "#0089C6",
@@ -562,8 +627,10 @@ const cnaCategoryOrder = ["-2", "-1", "0", "1", "2"].map(x=>(cnaToAppearance as 
 export function makeScatterPlotPointAppearance(
     viewType: ViewType,
     mutationDataExists: MobxPromise<boolean>,
-    cnaDataExists: MobxPromise<boolean>
+    cnaDataExists: MobxPromise<boolean>,
+    driversAnnotated: boolean
 ):(d:IScatterPlotSampleData)=>{ stroke:string, fill?:string, symbol?:string} {
+    const oncoprintMutationTypeToAppearance = driversAnnotated ? oncoprintMutationTypeToAppearanceDrivers: oncoprintMutationTypeToAppearanceDefault;
     switch (viewType) {
         case ViewType.CopyNumber:
             if (cnaDataExists.isComplete && cnaDataExists.result) {
@@ -602,8 +669,8 @@ export function makeScatterPlotPointAppearance(
                 };
             }
         default:
-            // By default, return same circle as "not mutated"
-            return ()=>noMutationAppearance;
+            // By default, return same circle as mutation summary "Neither"
+            return ()=>mutationSummaryToAppearance[MutationSummary.Neither];
     }
 }
 
@@ -616,20 +683,46 @@ function mutationsProteinChanges(
     return sorted.map(entry=>`${entry[0]}: ${entry[1].filter(m=>!!m.proteinChange).map(m=>m.proteinChange).join(", ")}`);
 }
 
+function tooltipMutationsSection(
+    mutations:AnnotatedMutation[],
+    entrezGeneIdToGene:{[entrezGeneId:number]:Gene}
+) {
+    const oncoKbIcon = (mutation:AnnotatedMutation)=>(<img src="images/oncokb-oncogenic-1.svg" title={mutation.oncoKbOncogenic} style={{height:11, width:11, marginBottom: 2}}/>);
+    const hotspotIcon = <img src="images/cancer-hotspots.svg" title="Hotspot" style={{height:11, width:11, marginBottom:3}}/>;
+    const mutationsByGene = _.groupBy(mutations.filter(m=>!!m.proteinChange), m=>entrezGeneIdToGene[m.entrezGeneId].hugoGeneSymbol);
+    const sorted = _.chain(mutationsByGene).entries().sortBy(x=>x[0]).value();
+    return (
+        <div>
+            {sorted.map(entry=>{
+                const proteinChangeComponents = [];
+                for (const mutation of entry[1]) {
+                    proteinChangeComponents.push(
+                        <span key={mutation.proteinChange}>
+                            {mutation.proteinChange} {mutation.isHotspot ? hotspotIcon : null} {mutation.oncoKbOncogenic ? oncoKbIcon(mutation) : null}
+                        </span>
+                    );
+                    proteinChangeComponents.push(<span>,</span>);
+                }
+                proteinChangeComponents.pop(); // remove last comma
+                return (
+                    <span>
+                        {entry[0]}: {proteinChangeComponents}
+                    </span>
+                );
+            })}
+        </div>
+    );
+}
+
 function generalScatterPlotTooltip<D extends IScatterPlotSampleData>(
     d:D,
     entrezGeneIdToGene:MobxPromise<{[entrezGeneId:number]:Gene}>,
     horizontalKey:keyof D,
     verticalKey:keyof D
 ) {
-    let mutationsSection:JSX.Element[]|null = null;
+    let mutationsSection:any = null;
     if (entrezGeneIdToGene.isComplete && d.mutations.length) {
-        const proteinChanges = mutationsProteinChanges(d.mutations, entrezGeneIdToGene.result!);
-        mutationsSection = proteinChanges.map(geneLine=>(
-            <div key={geneLine}>
-                {geneLine}
-            </div>
-        ));
+        mutationsSection = tooltipMutationsSection(d.mutations, entrezGeneIdToGene.result!);
     }
     return (
         <div>
@@ -669,7 +762,7 @@ export function makeBoxScatterPlotData(
     coverageInformation:CoverageInformation["samples"],
     mutations?:{
         molecularProfileIds:string[],
-        data: Mutation[]
+        data: AnnotatedMutation[]
     },
     copyNumberAlterations?:{
         molecularProfileIds:string[],
@@ -699,7 +792,7 @@ export function makeScatterPlotData(
     coverageInformation:CoverageInformation["samples"],
     mutations?:{
         molecularProfileIds:string[],
-        data: Mutation[]
+        data: AnnotatedMutation[]
     },
     copyNumberAlterations?:{
         molecularProfileIds:string[],
@@ -714,7 +807,7 @@ export function makeScatterPlotData(
     coverageInformation:CoverageInformation["samples"],
     mutations?:{
         molecularProfileIds:string[],
-        data: Mutation[]
+        data: AnnotatedMutation[]
     },
     copyNumberAlterations?:{
         molecularProfileIds:string[],
@@ -729,14 +822,14 @@ export function makeScatterPlotData(
     coverageInformation:CoverageInformation["samples"],
     mutations?:{
         molecularProfileIds:string[],
-        data: Mutation[]
+        data: AnnotatedMutation[]
     },
     copyNumberAlterations?:{
         molecularProfileIds:string[],
         data:NumericGeneMolecularData[]
     }
 ):IScatterPlotData[]|IBoxScatterPlotPoint[] {
-    const mutationsMap:{[uniqueSampleKey:string]:Mutation[]} =
+    const mutationsMap:{[uniqueSampleKey:string]:AnnotatedMutation[]} =
         mutations ? _.groupBy(mutations.data, m=>m.uniqueSampleKey) : {};
     const cnaMap:{[uniqueSampleKey:string]:NumericGeneMolecularData[]} =
         copyNumberAlterations? _.groupBy(copyNumberAlterations.data, d=>d.uniqueSampleKey) : {};
@@ -754,11 +847,15 @@ export function makeScatterPlotData(
             }
         }
         let dispMutationType:OncoprintMutationType | undefined = undefined;
-        const sampleMutations:Mutation[] | undefined = mutationsMap[d.uniqueSampleKey];
+        const sampleMutations:AnnotatedMutation[] | undefined = mutationsMap[d.uniqueSampleKey];
         if (sampleMutations && sampleMutations.length) {
             const counts =
                 _.chain(sampleMutations)
-                .groupBy(mutation=>getOncoprintMutationType(mutation))
+                .groupBy(mutation=>{
+                    const mutationType = getOncoprintMutationType(mutation);
+                    const driverSuffix = (mutationType !== "fusion" && mutationType !== "promoter" && mutation.putativeDriver) ? ".driver" : "";
+                    return `${mutationType}${driverSuffix}`;
+                })
                 .mapValues(muts=>muts.length)
                 .value();
             dispMutationType = selectDisplayValue(counts, mutationRenderPriority) as OncoprintMutationType;
