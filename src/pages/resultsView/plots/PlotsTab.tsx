@@ -14,7 +14,8 @@ import {
     molecularProfileTypeToDisplayType, scatterPlotTooltip, scatterPlotLegendData, IStringAxisData, INumberAxisData,
     makeBoxScatterPlotData, IScatterPlotSampleData, noMutationAppearance, IBoxScatterPlotPoint, boxPlotTooltip,
     getCnaQueries, getMutationQueries, getScatterPlotDownloadData, getBoxPlotDownloadData, getTablePlotDownloadData,
-    mutationRenderPriority, mutationSummaryRenderPriority, MutationSummary, mutationSummaryToAppearance
+    mutationRenderPriority, mutationSummaryRenderPriority, MutationSummary, mutationSummaryToAppearance,
+    CNA_STROKE_WIDTH, scatterPlotSize, PLOT_SIDELENGTH
 } from "./PlotsTabUtils";
 import {
     ClinicalAttribute, MolecularProfile, Mutation,
@@ -55,6 +56,7 @@ export enum AxisType {
 
 export enum ViewType {
     MutationType,
+    MutationTypeAndCopyNumber,
     CopyNumber,
     MutationSummary,
     None
@@ -93,7 +95,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @observable geneLock:boolean;
     @observable searchCaseInput:string;
     @observable searchMutationInput:string;
-    @observable _viewType:ViewType;
+    @observable viewMutationType:boolean = true;
+    @observable viewCopyNumber:boolean = true;
 
     @observable svg:SVGElement|null;
 
@@ -108,7 +111,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @computed get viewType():ViewType {
         if (this.sameGeneInBothAxes) {
             // both axes molecular profile, same gene
-            return this._viewType;
+            if (this.viewMutationType && this.viewCopyNumber) {
+                return ViewType.MutationTypeAndCopyNumber;
+            } else if (this.viewMutationType) {
+                return ViewType.MutationType;
+            } else if (this.viewCopyNumber) {
+                return ViewType.CopyNumber;
+            } else {
+                return ViewType.None;
+            }
         } else if (this.bothAxesMolecularProfile) {
             // both axes molecular profile, different gene
             return ViewType.MutationSummary;
@@ -120,10 +131,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             // neither axis gene
             return ViewType.None;
         }
-    }
-
-    set viewType(v:ViewType) {
-        this._viewType = v;
     }
 
     private searchCaseTimeout:Timer;
@@ -138,7 +145,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         this.geneLock = true;
         this.searchCaseInput = "";
         this.searchMutationInput = "";
-        this.viewType = ViewType.MutationType;
 
         setWindowVariable("resultsViewPlotsTab", this); // for e2e testing
     }
@@ -195,6 +201,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 }
             },
             set molecularProfileType(t:string|undefined) {
+                if (this._molecularProfileType !== t) {
+                    this._molecularProfileId = undefined;
+                }
                 this._molecularProfileType = t;
             },
             get molecularProfileId() {
@@ -258,10 +267,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 this.vertSelection.logScale = !this.vertSelection.logScale;
                 break;
             case EventKey.utilities_viewCopyNumber:
-                this.viewType = ViewType.CopyNumber;
+                this.viewCopyNumber = !this.viewCopyNumber;
                 break;
             case EventKey.utilities_viewMutationType:
-                this.viewType = ViewType.MutationType;
+                this.viewMutationType = !this.viewMutationType;
                 break;
         }
     }
@@ -518,7 +527,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @computed get cnaDataShown() {
-        return this.cnaDataExists && this.viewType === ViewType.CopyNumber;
+        return this.cnaDataExists && (this.viewType === ViewType.CopyNumber || this.viewType === ViewType.MutationTypeAndCopyNumber);
     }
 
     readonly cnaPromise = remoteData({
@@ -548,7 +557,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @computed get mutationDataShown() {
         return this.mutationDataExists &&
-            (this.viewType === ViewType.MutationType || this.viewType === ViewType.MutationSummary);
+            (this.viewType === ViewType.MutationType || this.viewType === ViewType.MutationSummary ||
+                this.viewType === ViewType.MutationTypeAndCopyNumber);
     }
 
     readonly mutationPromise = remoteData({
@@ -681,6 +691,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         switch (this.viewType) {
             case ViewType.CopyNumber:
                 return "#000000";
+            case ViewType.MutationTypeAndCopyNumber:
             case ViewType.MutationType:
             case ViewType.MutationSummary:
                 return (d:IScatterPlotSampleData)=>this.scatterPlotAppearance(d).fill!;
@@ -692,6 +703,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @computed get scatterPlotFillOpacity() {
         if (this.viewType === ViewType.CopyNumber) {
             return 0;
+        } else {
+            return 1;
+        }
+    }
+
+    @computed get scatterPlotStrokeWidth() {
+        if (this.viewType === ViewType.CopyNumber || this.viewType === ViewType.MutationTypeAndCopyNumber) {
+            return CNA_STROKE_WIDTH;
         } else {
             return 1;
         }
@@ -733,16 +752,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             }
             return caseMatch || mutationMatch;
         };
-    }
-
-    @computed get scatterPlotSymbol() {
-        switch (this.viewType) {
-            case ViewType.MutationType:
-                return (d:IScatterPlotSampleData)=>this.scatterPlotAppearance(d).symbol!;
-            case ViewType.CopyNumber:
-            case ViewType.MutationSummary:
-                return "circle";
-        }
     }
 
     private getAxisMenu(vertical:boolean) {
@@ -903,27 +912,28 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     </div>)}
                     {showBottomPart && (
                         <div>
-                            <label>View</label>
-                            <div className="radio"><label>
+                            <label>Coloring by</label>
+                            <div className="checkbox"><label>
                                 <input
-                                    type="radio"
+                                    data-test="ViewMutationType"
+                                    type="checkbox"
                                     name="utilities_viewMutationType"
                                     value={EventKey.utilities_viewMutationType}
-                                    checked={this.viewType === ViewType.MutationType}
+                                    checked={this.viewMutationType}
                                     onClick={this.onInputClick}
                                     disabled={!this.mutationDataExists.isComplete || !this.mutationDataExists.result}
-                                /> Mutation Type
+                                /> Mutations
                             </label></div>
-                            <div className="radio"><label>
+                            <div className="checkbox"><label>
                                 <input
                                     data-test="ViewCopyNumber"
-                                    type="radio"
+                                    type="checkbox"
                                     name="utilities_viewCopyNumber"
                                     value={EventKey.utilities_viewCopyNumber}
-                                    checked={this.viewType === ViewType.CopyNumber}
+                                    checked={this.viewCopyNumber}
                                     onClick={this.onInputClick}
                                     disabled={!this.cnaDataExists.isComplete || !this.cnaDataExists.result}
-                                /> Copy Number
+                                /> Copy Number Alteration
                             </label></div>
                         </div>
                     )}
@@ -1031,6 +1041,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         invoke:()=>{
             let data = this._unsortedScatterPlotData.result!;
             switch (this.viewType) {
+                case ViewType.MutationTypeAndCopyNumber:
                 case ViewType.MutationType:
                     data = _.sortBy<IScatterPlotData>(data, d=>{
                         if (d.dispMutationType! in mutationRenderPriority) {
@@ -1109,7 +1120,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     )
                 });
             }
-        }
+        },
     });
 
     readonly boxPlotData = remoteData<{horizontal:boolean, data:IBoxScatterPlotData<IBoxScatterPlotPoint>[]}>({
@@ -1118,6 +1129,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             const horizontal = this._unsortedBoxPlotData.result!.horizontal;
             let boxPlotData = this._unsortedBoxPlotData.result!.data;
             switch (this.viewType) {
+                case ViewType.MutationTypeAndCopyNumber:
                 case ViewType.MutationType:
                     boxPlotData = boxPlotData.map(labelAndData=>({
                         label: labelAndData.label,
@@ -1180,8 +1192,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             vertCategoryOrder={(this.vertAxisDataPromise.result! as IStringAxisData).categoryOrder}
                             minCellWidth={35}
                             minCellHeight={35}
-                            minChartWidth={500}
-                            minChartHeight={500}
+                            minChartWidth={PLOT_SIDELENGTH}
+                            minChartHeight={PLOT_SIDELENGTH}
                             axisLabelX={this.horzLabel}
                             axisLabelY={this.vertLabel}
                         />
@@ -1195,17 +1207,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 axisLabelX={this.horzLabel + this.horzLabelLogSuffix}
                                 axisLabelY={this.vertLabel + this.vertLabelLogSuffix}
                                 data={this.scatterPlotData.result}
-                                chartWidth={500}
-                                chartHeight={500}
+                                size={scatterPlotSize}
+                                chartWidth={PLOT_SIDELENGTH}
+                                chartHeight={PLOT_SIDELENGTH}
                                 tooltip={this.scatterPlotTooltip}
                                 highlight={this.scatterPlotHighlight}
                                 logX={this.horzSelection.logScale}
                                 logY={this.vertSelection.logScale}
                                 fill={this.scatterPlotFill}
                                 stroke={this.scatterPlotStroke}
-                                symbol={this.scatterPlotSymbol}
+                                symbol="circle"
                                 fillOpacity={this.scatterPlotFillOpacity}
-                                strokeWidth={1}
+                                strokeWidth={this.scatterPlotStrokeWidth}
                                 useLogSpaceTicks={true}
                                 legendData={scatterPlotLegendData(
                                     this.scatterPlotData.result, this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated
@@ -1228,16 +1241,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 axisLabelX={this.horzLabel + (horizontal ? this.horzLabelLogSuffix : "")}
                                 axisLabelY={this.vertLabel + (!horizontal ? this.vertLabelLogSuffix : "")}
                                 data={this.boxPlotData.result.data}
-                                chartBase={500}
+                                chartBase={550}
                                 tooltip={this.boxPlotTooltip}
                                 highlight={this.scatterPlotHighlight}
                                 horizontal={horizontal}
                                 logScale={horizontal ? this.horzSelection.logScale : this.vertSelection.logScale}
+                                size={scatterPlotSize}
                                 fill={this.scatterPlotFill}
                                 stroke={this.scatterPlotStroke}
-                                symbol={this.scatterPlotSymbol}
+                                symbol="circle"
                                 fillOpacity={this.scatterPlotFillOpacity}
-                                strokeWidth={1}
+                                strokeWidth={this.scatterPlotStrokeWidth}
                                 useLogSpaceTicks={true}
                                 legendData={scatterPlotLegendData(
                                     _.flatten(this.boxPlotData.result.data.map(d=>d.data)), this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated
@@ -1271,7 +1285,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             style={{position:'absolute', right:10, top:10 }}
                         />
                         {plotElt}
-                        {(plotType === PlotType.ScatterPlot || plotType === PlotType.BoxPlot) && this.viewType === ViewType.MutationType && (
+                        {(plotType === PlotType.ScatterPlot || plotType === PlotType.BoxPlot) &&
+                        (this.viewType === ViewType.MutationType || this.viewType === ViewType.MutationTypeAndCopyNumber) && (
                             <div style={{position:"relative", top:legendY + 4.5}}>
                                 <InfoIcon
                                     tooltip={<span>Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</span>}

@@ -9,6 +9,7 @@ import jStat from "jStat";
 import ScatterPlotTooltip from "./ScatterPlotTooltip";
 import ifndef from "shared/lib/ifndef";
 import {tickFormatNumeral} from "./TickUtils";
+import {scatterPlotSize} from "./PlotUtils";
 
 export interface IBaseScatterPlotData {
     x:number;
@@ -24,6 +25,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     highlight?:(d:D)=>boolean;
     fill?:string | ((d:D)=>string);
     stroke?:string | ((d:D)=>string);
+    size?:(d:D, active:boolean, isHighlighted?:boolean)=>number;
     fillOpacity?:number | ((d:D)=>number);
     strokeWidth?:number | ((d:D)=>number);
     symbol?: string | ((d:D)=>string); // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
@@ -46,7 +48,7 @@ const CORRELATION_INFO_Y = 100; // experimentally determined
 export const LEGEND_Y = CORRELATION_INFO_Y + 30 /* approximate correlation info height */ + 30 /* top padding*/
 const RIGHT_GUTTER = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
-const PLOT_DATA_PADDING_PIXELS = 10;
+const PLOT_DATA_PADDING_PIXELS = 50;
 const MIN_LOG_ARGUMENT = 0.01;
 const LEFT_PADDING = 25;
 
@@ -278,10 +280,9 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
 
     @computed get size() {
         const highlight = this.props.highlight;
+        const size = this.props.size;
         // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
-        return (d:D, active:boolean)=>{
-            return (active || !!(highlight && highlight(d)) ? 6 : 3);
-        };
+        return scatterPlotSize(highlight, size);
     }
     
     private tickFormat(t:number, ticks:number[], logScale:boolean) {
