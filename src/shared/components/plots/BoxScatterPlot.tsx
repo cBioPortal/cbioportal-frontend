@@ -12,6 +12,7 @@ import {IBaseScatterPlotData} from "./ScatterPlot";
 import {getDeterministicRandomNumber} from "./PlotUtils";
 import {logicalAnd} from "../../lib/LogicUtils";
 import {tickFormatNumeral, wrapTick} from "./TickUtils";
+import {scatterPlotSize} from "./PlotUtils";
 
 export interface IBaseBoxScatterPlotPoint {
     value:number;
@@ -29,6 +30,7 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     data: IBoxScatterPlotData<D>[];
     chartBase:number;
     highlight?:(d:D)=>boolean;
+    size?:(d:D, active:boolean, isHighlighted?:boolean)=>number;
     fill?:string | ((d:D)=>string);
     stroke?:string | ((d:D)=>string);
     fillOpacity?:number | ((d:D)=>number);
@@ -57,7 +59,7 @@ type BoxModel = {
 const DEFAULT_FONT_FAMILY = "Verdana,Arial,sans-serif";
 const RIGHT_GUTTER = 120; // room for legend
 const NUM_AXIS_TICKS = 8;
-const PLOT_DATA_PADDING_PIXELS = 10;
+const PLOT_DATA_PADDING_PIXELS = 50;
 export const LEGEND_Y = 100; // experimentally determined
 const MIN_LOG_ARGUMENT = 0.01;
 const CATEGORY_LABEL_HORZ_ANGLE = -70;
@@ -285,10 +287,9 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
 
     @computed get scatterPlotSize() {
         const highlight = this.props.highlight;
+        const size = this.props.size;
         // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
-        return (d:D, active:boolean)=>{
-            return (active || !!(highlight && highlight(d)) ? 6 : 3);
-        };
+        return scatterPlotSize(highlight, size);
     }
 
     @computed get labels() {
