@@ -58,6 +58,7 @@ const DEFAULT_FONT_FAMILY = "Verdana,Arial,sans-serif";
 const RIGHT_GUTTER = 120; // room for legend
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 10;
+export const LEGEND_Y = 100; // experimentally determined
 const MIN_LOG_ARGUMENT = 0.01;
 const CATEGORY_LABEL_HORZ_ANGLE = -70;
 const DEFAULT_LEFT_PADDING = 25;
@@ -187,14 +188,13 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
 
     private get legend() {
         const x = this.legendX;
-        const y = 100; // experimentally determined
         if (this.props.legendData && this.props.legendData.length) {
             return (
                 <VictoryLegend
                     orientation="vertical"
                     data={this.props.legendData}
                     x={x}
-                    y={y}
+                    y={LEGEND_Y}
                     width={RIGHT_GUTTER}
                 />
             );
