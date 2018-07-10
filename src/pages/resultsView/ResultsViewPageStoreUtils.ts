@@ -313,3 +313,22 @@ export function filterSubQueryData(
         );
     }
 }
+
+
+export function isRNASeqProfile(profileId:string, version:number): boolean {
+    const ver = (version === 2) ? 'v2_' : '';
+    // note that pan can only has v2 expression data, so don't worry about v1
+    return RegExp(`rna_seq_${ver}mrna$|pan_can_atlas_2018_rna_seq_${ver}mrna_median$`).test(profileId);
+}
+
+export function isTCGAPubStudy(studyId:string){
+    return /tcga_pub$/.test(studyId);
+}
+
+export function isTCGAProvStudy(studyId:string){
+    return /tcga$/.test(studyId);
+}
+
+export function isPanCanStudy(studyId:string){
+    return /tcga_pan_can_atlas/.test(studyId);
+}
