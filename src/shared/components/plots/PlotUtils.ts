@@ -7,3 +7,21 @@ export function getDeterministicRandomNumber(seed:number, range?:[number, number
     }
     return r;
 }
+
+export function scatterPlotSize<D>(
+    highlight?:(d:D)=>boolean,
+    size?:(d:D, active:Boolean, isHighlighted?:boolean)=>number
+) {
+    // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
+    if (size) {
+        if (highlight) {
+            return (d:D, active:boolean)=>size(d, active, highlight(d));
+        } else {
+            return size;
+        }
+    } else {
+        return (d:D, active:boolean)=>{
+            return (active || !!(highlight && highlight(d)) ? 6 : 3);
+        };
+    }
+}
