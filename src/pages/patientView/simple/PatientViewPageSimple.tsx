@@ -12,6 +12,7 @@ import SampleRecord from 'pages/patientView/simple/SampleRecord';
 import _ from 'lodash';
 import { ClinicalDataBySampleId } from 'shared/api/api-types-extended';
 import { computed } from 'mobx';
+import AppConfig from 'appConfig';
 
 @inject('routing')
 @observer
@@ -63,7 +64,12 @@ export default class PatientViewPageSimple extends React.Component<IPatientViewP
                         mutationData={patientViewPageStore.mutationData.result!.filter(((mut) => mut.sampleId === sample.id))}
                         cnaStatus={this.cnaStatus}
                         discreteCNAData={patientViewPageStore.discreteCNAData.result}
-                        oncoKbData={patientViewPageStore.oncoKbData!.result}
+                        oncoKbData={patientViewPageStore.oncoKbData}
+                        cnaOncoKbData={patientViewPageStore.cnaOncoKbData}
+                        oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
+                        evidenceCache={patientViewPageStore.oncoKbEvidenceCache}
+                        pubMedCache={patientViewPageStore.pubMedCache}
+                        userEmailAddress={AppConfig.userEmailAddress}
                     />
                 );
         });
