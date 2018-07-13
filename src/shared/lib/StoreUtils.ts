@@ -4,7 +4,7 @@ import Response = request.Response;
 import {
     default as CBioPortalAPI, MolecularProfile, Mutation, MutationFilter, DiscreteCopyNumberData,
     DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier,
-    ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter, NumericGeneMolecularData, SampleFilter
+    ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter, NumericGeneMolecularData, SampleFilter, Gene
 } from "shared/api/generated/CBioPortalAPI";
 import { EnsemblFilter, EnsemblTranscript } from "shared/api/generated/GenomeNexusAPI";
 import {getMyGeneUrl, getUniprotIdUrl} from "shared/api/urls";
@@ -25,7 +25,7 @@ import {
 import {
     getCivicVariants, getCivicGenes
 } from "shared/lib/CivicUtils";
-import {Query, default as OncoKbAPI, Gene} from "shared/api/generated/OncoKbAPI";
+import {Query, default as OncoKbAPI, Gene as OncoKbGene} from "shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import {MobxPromise} from "mobxpromise";
 import {keywordToCosmic, geneToMyCancerGenome} from "shared/lib/AnnotationUtils";
@@ -34,10 +34,12 @@ import {IOncoKbData} from "shared/model/OncoKB";
 import {IGisticData} from "shared/model/Gistic";
 import {IMutSigData} from "shared/model/MutSig";
 import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
+import {IMutationalSignature} from "shared/model/MutationalSignature";
 import {ICivicGeneData, ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import {MOLECULAR_PROFILE_MUTATIONS_SUFFIX, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 import GenomeNexusAPI from "shared/api/generated/GenomeNexusAPI";
 import {AlterationTypeConstants} from "../../pages/resultsView/ResultsViewPageStore";
+import {stringListToIndexSet} from "./StringUtils";
 
 export const ONCOKB_DEFAULT: IOncoKbData = {
     uniqueSampleKeyToTumorType : {},
@@ -61,6 +63,22 @@ export async function fetchMutationData(mutationFilter:MutationFilter,
             mutationFilter,
             projection: "DETAILED"
         });
+    } else {
+        return [];
+    }
+}
+
+
+export async function fetchGenes(hugoGeneSymbols?: string[],
+                                 client: CBioPortalAPI = defaultClient)
+{
+    if (hugoGeneSymbols && hugoGeneSymbols.length) {
+        const order = stringListToIndexSet(hugoGeneSymbols);
+        return _.sortBy(await client.fetchGenesUsingPOST({
+            geneIdType: "HUGO_GENE_SYMBOL",
+            geneIds: hugoGeneSymbols.slice(),
+            projection: "SUMMARY"
+        }), (gene: Gene) => order[gene.hugoGeneSymbol]);
     } else {
         return [];
     }
@@ -108,7 +126,7 @@ export async function fetchCanonicalTranscriptWithFallback(hugoSymbol:string,
                                                            allTranscripts: EnsemblTranscript[] | undefined,
                                                            client:GenomeNexusAPI =  genomeNexusClient)
 {
-    return fetchCanonicalTranscript(hugoSymbol, isoformOverrideSource).catch(() => {
+    return fetchCanonicalTranscript(hugoSymbol, isoformOverrideSource, client).catch(() => {
         // get transcript with max protein length in given list of all transcripts
         const transcript = _.maxBy(allTranscripts, (t:EnsemblTranscript) => t.proteinLength);
         return transcript? transcript : undefined;
@@ -475,9 +493,15 @@ export function fetchMyCancerGenomeData(): IMyCancerGenomeData
     return geneToMyCancerGenome(data);
 }
 
+export function fetchMutationalSignatureData(): IMutationalSignature[]
+{
+    const data: IMutationalSignature[] = require('../../../resources/samplemutsigdata.json');
+    return data;
+}
+
 export async function fetchOncoKbAnnotatedGenes(client: OncoKbAPI = oncokbClient): Promise<{[entrezGeneId:number]:boolean}>
 {
-    return _.reduce(await client.genesGetUsingGET({}), (map:{[entrezGeneId:number]:boolean}, next:Gene)=>{
+    return _.reduce(await client.genesGetUsingGET({}), (map:{[entrezGeneId:number]:boolean}, next:OncoKbGene)=>{
             map[next.entrezGeneId] = true;
             return map;
         }, {});

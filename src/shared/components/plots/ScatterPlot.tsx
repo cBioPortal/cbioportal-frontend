@@ -7,8 +7,9 @@ import Timer = NodeJS.Timer;
 import {VictoryChart, VictoryAxis, VictoryScatter, VictoryLegend, VictoryLabel} from "victory";
 import jStat from "jStat";
 import ScatterPlotTooltip from "./ScatterPlotTooltip";
-import {tickFormat, VictoryAxisStyle} from "./ScatterPlotUtils";
 import ifndef from "shared/lib/ifndef";
+import {tickFormatNumeral} from "./TickUtils";
+import {scatterPlotSize} from "./PlotUtils";
 
 export interface IBaseScatterPlotData {
     x:number;
@@ -24,6 +25,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     highlight?:(d:D)=>boolean;
     fill?:string | ((d:D)=>string);
     stroke?:string | ((d:D)=>string);
+    size?:(d:D, active:boolean, isHighlighted?:boolean)=>number;
     fillOpacity?:number | ((d:D)=>number);
     strokeWidth?:number | ((d:D)=>number);
     symbol?: string | ((d:D)=>string); // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
@@ -43,9 +45,10 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
 
 const DEFAULT_FONT_FAMILY = "Verdana,Arial,sans-serif";
 const CORRELATION_INFO_Y = 100; // experimentally determined
+export const LEGEND_Y = CORRELATION_INFO_Y + 30 /* approximate correlation info height */ + 30 /* top padding*/
 const RIGHT_GUTTER = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
-const PLOT_DATA_PADDING_PIXELS = 10;
+const PLOT_DATA_PADDING_PIXELS = 50;
 const MIN_LOG_ARGUMENT = 0.01;
 const LEFT_PADDING = 25;
 
@@ -150,14 +153,13 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         const x = this.legendX;
         const topPadding = 30;
         const approximateCorrelationInfoHeight = 30;
-        const y = CORRELATION_INFO_Y + approximateCorrelationInfoHeight + topPadding;
         if (this.props.legendData && this.props.legendData.length) {
             return (
                 <VictoryLegend
                     orientation="vertical"
                     data={this.props.legendData}
                     x={x}
-                    y={y}
+                    y={LEGEND_Y}
                     width={RIGHT_GUTTER}
                 />
             );
@@ -276,9 +278,11 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         }
     }
 
-    @bind
-    private size(d:D, active:boolean) {
-        return (active || !!(this.props.highlight && this.props.highlight(d)) ? 6 : 3);
+    @computed get size() {
+        const highlight = this.props.highlight;
+        const size = this.props.size;
+        // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
+        return scatterPlotSize(highlight, size);
     }
     
     private tickFormat(t:number, ticks:number[], logScale:boolean) {
@@ -286,7 +290,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
             t = this.invLogScale(t);
             ticks = ticks.map(x=>this.invLogScale(x));
         }
-        return tickFormat(t, ticks);
+        return tickFormatNumeral(t, ticks);
     }
 
     @bind
@@ -333,7 +337,6 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                             >
                                 {this.title}
                                 {this.legend}
-                                {this.correlationInfo}
                                 <VictoryAxis
                                     domain={this.plotDomain.x}
                                     orientation="bottom"
@@ -361,7 +364,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                                             fill: ifndef(this.props.fill, "0x000000"),
                                             stroke: ifndef(this.props.stroke, "0x000000"),
                                             strokeWidth: ifndef(this.props.strokeWidth, 0),
-                                            fillOpacity: ifndef(this.props.fillOpacity, 1)
+                                            fillOpacity: ifndef(this.props.fillOpacity, 1),
                                         }
                                     }}
                                     size={this.size}
@@ -372,6 +375,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                                     y={this.y}
                                 />
                             </VictoryChart>
+                            {this.correlationInfo}
                         </g>
                     </svg>
                 </div>

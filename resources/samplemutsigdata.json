@@ -1,0 +1,842 @@
+[
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_1",
+		"value": "0.153874341"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_2",
+		"value": "0.022012723"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_3",
+		"value": "0.015855642"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_4",
+		"value": "0.013186186"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_5",
+		"value": "0.029483023"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_6",
+		"value": "0.083596646"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_7",
+		"value": "0.043039032"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_8",
+		"value": "0.015948013"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_9",
+		"value": "0.006608695"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_10",
+		"value": "0.005837072"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_11",
+		"value": "0.012679916"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_12",
+		"value": "0.007096374"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_13",
+		"value": "0.006531437"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_14",
+		"value": "0.048746091"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_15",
+		"value": "0.138540561"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_16",
+		"value": "0.00855241"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_17",
+		"value": "0.004904281"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_18",
+		"value": "0.006522386"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_19",
+		"value": "0.01076758"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_20",
+		"value": "0.00677272"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_21",
+		"value": "0.033560715"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_22",
+		"value": "0.038244037"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_23",
+		"value": "0.004552954"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_24",
+		"value": "0.011343724"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_25",
+		"value": "0.121544294"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_26",
+		"value": "0.020567767"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_27",
+		"value": "0.020224194"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_28",
+		"value": "0.003378688"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_29",
+		"value": "0.010491854"
+	},
+	{
+		"sampleId": "P-0001104-T01-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_30",
+		"value": "0.095536644"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_1",
+		"value": "0.153874341"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_2",
+		"value": "0.022012723"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_3",
+		"value": "0.015855642"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_4",
+		"value": "0.013186186"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_5",
+		"value": "0.029483023"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_6",
+		"value": "0.083596646"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_7",
+		"value": "0.043039032"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_8",
+		"value": "0.015948013"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_9",
+		"value": "0.006608695"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_10",
+		"value": "0.005837072"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_11",
+		"value": "0.012679916"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_12",
+		"value": "0.007096374"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_13",
+		"value": "0.006531437"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_14",
+		"value": "0.048746091"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_15",
+		"value": "0.138540561"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_16",
+		"value": "0.00855241"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_17",
+		"value": "0.004904281"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_18",
+		"value": "0.006522386"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_19",
+		"value": "0.01076758"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_20",
+		"value": "0.00677272"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_21",
+		"value": "0.033560715"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_22",
+		"value": "0.038244037"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_23",
+		"value": "0.004552954"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_24",
+		"value": "0.011343724"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_25",
+		"value": "0.121544294"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_26",
+		"value": "0.020567767"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_27",
+		"value": "0.020224194"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_28",
+		"value": "0.003378688"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_29",
+		"value": "0.010491854"
+	},
+	{
+		"sampleId": "P-0001104-T02-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_30",
+		"value": "0.095536644"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_1",
+		"value": "0.153874341"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_2",
+		"value": "0.022012723"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_3",
+		"value": "0.015855642"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_4",
+		"value": "0.013186186"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_5",
+		"value": "0.029483023"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_6",
+		"value": "0.083596646"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_7",
+		"value": "0.043039032"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_8",
+		"value": "0.015948013"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_9",
+		"value": "0.006608695"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_10",
+		"value": "0.005837072"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_11",
+		"value": "0.012679916"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_12",
+		"value": "0.007096374"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_13",
+		"value": "0.006531437"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_14",
+		"value": "0.048746091"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_15",
+		"value": "0.138540561"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_16",
+		"value": "0.00855241"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_17",
+		"value": "0.004904281"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_18",
+		"value": "0.006522386"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_19",
+		"value": "0.01076758"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_20",
+		"value": "0.00677272"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_21",
+		"value": "0.033560715"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_22",
+		"value": "0.038244037"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_23",
+		"value": "0.004552954"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_24",
+		"value": "0.011343724"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_25",
+		"value": "0.121544294"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_26",
+		"value": "0.020567767"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_27",
+		"value": "0.020224194"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_28",
+		"value": "0.003378688"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_29",
+		"value": "0.010491854"
+	},
+	{
+		"sampleId": "P-0001104-T03-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_30",
+		"value": "0.095536644"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_1",
+		"value": "0.184688776"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_2",
+		"value": "0.017746265"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_3",
+		"value": "0.054436376"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_4",
+		"value": "0.062506084"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_5",
+		"value": "0.050632399"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_6",
+		"value": "0.080332234"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_7",
+		"value": "0.032746636"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_8",
+		"value": "0.046731167"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_9",
+		"value": "0.006320228"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_10",
+		"value": "0.004536801"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_11",
+		"value": "0.011143495"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_12",
+		"value": "0.00610477"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_13",
+		"value": "0.004979599"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_14",
+		"value": "0.038600385"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_15",
+		"value": "0.11195089"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_16",
+		"value": "0.01091442"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_17",
+		"value": "0.005005163"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_18",
+		"value": "0.011508855"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_19",
+		"value": "0.014900357"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_20",
+		"value": "0.00720214"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_21",
+		"value": "0.017908607"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_22",
+		"value": "0.027479059"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_23",
+		"value": "0.003330503"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_24",
+		"value": "0.023764958"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_25",
+		"value": "0.068646213"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_26",
+		"value": "0.015895406"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_27",
+		"value": "0.015451751"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_28",
+		"value": "0.003631145"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_29",
+		"value": "0.006341756"
+	},
+	{
+		"sampleId": "P-0001104-T05-IM3",
+		"patientId": "P-0001104",
+		"studyId": "msk_impact_2017",
+		"mutationalSignatureId": "mutational_signature_30",
+		"value": "0.054563562"
+	}
+]

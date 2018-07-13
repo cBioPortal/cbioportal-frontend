@@ -1,0 +1,31 @@
+.lockIcon {
+  color: #000000;
+}
+
+.plotsTab {
+
+  margin-top:$standardMargin;
+
+  .leftColumn {
+    width:25%;
+
+    margin-right:$standardMargin;
+
+    .Select {
+      width:240px;
+    }
+
+    > div > div {
+      padding:10px;
+    }
+
+    .axisBlock {
+      background:#eee;
+      border-radius:4px;
+    }
+
+  }
+
+
+
+}

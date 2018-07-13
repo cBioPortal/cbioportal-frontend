@@ -1,4 +1,5 @@
 import {MobxPromise, MobxPromiseInputParams} from "mobxpromise";
+import {logicalAnd} from "./LogicUtils";
 
 export function stringifyObjectUnique(obj:{[k:string]:any}) {
     const keys = Object.keys(obj);
@@ -31,5 +32,13 @@ export default class MobxPromiseCache<Query, Result> {
 
     public getAll(queries:Query[]):MobxPromise<Result>[] {
         return queries.map(q=>this.get(q));
+    }
+
+    public await(promises:MobxPromise<any>[], getQueries:(...promiseResults:any[])=>Query[]) {
+        let ret = promises;
+        if (logicalAnd(promises.map(p=>p.isComplete))) {
+            ret = ret.concat(this.getAll(getQueries.apply(null, promises.map(p=>p.result))));
+        }
+        return ret;
     }
 }

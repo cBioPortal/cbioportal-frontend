@@ -3,7 +3,8 @@ import {
     SampleIdentifier, MolecularProfile, Mutation, NumericGeneMolecularData, MolecularDataFilter, Gene,
     ClinicalDataSingleStudyFilter, CancerStudy, PatientIdentifier, Patient, GenePanelData, GenePanelDataFilter,
     SampleList, MutationCountByPosition, MutationMultipleStudyFilter, SampleMolecularIdentifier,
-    MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter, PatientFilter, GenePanel, MutationFilter
+    MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter, PatientFilter,
+    GenePanel, ClinicalAttribute, MutationFilter
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
 import {computed, observable, action, reaction, IObservable, IObservableValue, ObservableMap} from "mobx";
@@ -23,10 +24,10 @@ import {
     fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData, IDataQueryFilter,
     isMutationProfile, fetchOncoKbAnnotatedGenesSuppressErrors, groupBy, fetchOncoKbData,
     ONCOKB_DEFAULT, generateUniqueSampleKeyToTumorTypeMap, cancerTypeForOncoKb, fetchCnaOncoKbData,
-    fetchCnaOncoKbDataWithNumericGeneMolecularData, fetchGermlineConsentedSamples
+    fetchCnaOncoKbDataWithNumericGeneMolecularData, fetchGermlineConsentedSamples, fetchGenes
 } from "shared/lib/StoreUtils";
 import {indexHotspotsData, fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
-import {MutationMapperStore} from "./mutation/MutationMapperStore";
+import ResultsViewMutationMapperStore from "./mutation/ResultsViewMutationMapperStore";
 import AppConfig from "appConfig";
 import * as _ from 'lodash';
 import {stringListToIndexSet, stringListToSet} from "../../shared/lib/StringUtils";
@@ -34,8 +35,7 @@ import {toSampleUuid} from "../../shared/lib/UuidUtils";
 import MutationDataCache from "../../shared/cache/MutationDataCache";
 import accessors, {getSimplifiedMutationType, SimplifiedMutationType} from "../../shared/lib/oql/accessors";
 import {keepAlive} from "mobx-utils";
-import MutationMapper from "./mutation/MutationMapper";
-import {CacheData} from "../../shared/lib/LazyMobXCache";
+import {AugmentedData, CacheData} from "../../shared/lib/LazyMobXCache";
 import {
     IAlterationCountMap,
     IAlterationData
@@ -70,14 +70,15 @@ import {
     getOncoKbOncogenic, groupDataByCase,
     computeCustomDriverAnnotationReport, computePutativeDriverAnnotatedMutations,
     initializeCustomDriverAnnotationSettings, computeGenePanelInformation,
-    fetchQueriedStudies, CoverageInformation
+    fetchQueriedStudies, CoverageInformation, isRNASeqProfile
 } from "./ResultsViewPageStoreUtils";
 import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alterationCountHelpers";
-import sessionServiceClient from "shared/api//sessionServiceInstance";
-import { VirtualStudy } from "shared/model/VirtualStudy";
 import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
 import OncoprintClinicalDataCache from "../../shared/cache/OncoprintClinicalDataCache";
 import {isSampleProfiledInMultiple} from "../../shared/lib/isSampleProfiled";
+import {BookmarkLinks} from "../../shared/model/BookmarkLinks";
+import {getBitlyServiceUrl, getSessionServiceUrl} from "../../shared/api/urls";
+import url from 'url';
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -234,6 +235,7 @@ type MutationAnnotationSettings = {
     driverTiers:ObservableMap<boolean>;
     hotspots:boolean;
     oncoKb:boolean;
+    driversAnnotated:boolean;
 };
 
 /* fields and methods in the class below are ordered based on roughly
@@ -273,15 +275,19 @@ export class ResultsViewPageStore {
                 this._ignoreUnknown = val;
             },
             get ignoreUnknown() {
-                const anySelected = store.mutationAnnotationSettings.oncoKb ||
-                    store.mutationAnnotationSettings.hotspots ||
-                    store.mutationAnnotationSettings.cbioportalCount ||
-                    store.mutationAnnotationSettings.cosmicCount ||
-                    store.mutationAnnotationSettings.driverFilter ||
-                    store.mutationAnnotationSettings.driverTiers.entries().reduce((oneSelected, nextEntry)=>{
+                return this._ignoreUnknown && this.driversAnnotated;
+            },
+            get driversAnnotated() {
+                const anySelected = this.oncoKb ||
+                    this.hotspots ||
+                    this.cbioportalCount ||
+                    this.cosmicCount ||
+                    this.driverFilter ||
+                    this.driverTiers.entries().reduce((oneSelected:boolean, nextEntry:[string, boolean])=>{
                         return oneSelected || nextEntry[1];
                     }, false);
-                return this._ignoreUnknown && anySelected;
+
+                return anySelected;
             }
         });
     }
@@ -307,6 +313,8 @@ export class ResultsViewPageStore {
     @observable public sessionIdURL = '';
 
     @observable selectedMolecularProfileIds: string[] = [];
+
+    @observable expressionTabSeqVersion: number = 2;
 
     public mutationAnnotationSettings:MutationAnnotationSettings;
 
@@ -1055,27 +1063,25 @@ export class ResultsViewPageStore {
         return _.groupBy(this.mutations.result,(mutation:Mutation)=>mutation.gene.hugoGeneSymbol);
     }
 
-    readonly mutationMapperStores = remoteData<{ [hugoGeneSymbol: string]: MutationMapperStore }>({
+    readonly mutationMapperStores = remoteData<{ [hugoGeneSymbol: string]: ResultsViewMutationMapperStore }>({
         await: () => [this.genes, this.oncoKbAnnotatedGenes, this.uniqueSampleKeyToTumorType, this.mutations],
         invoke: () => {
             if (this.genes.result) {
                 // we have to use _.reduce, otherwise this.genes.result (Immutable, due to remoteData) will return
                 //  an Immutable as the result of reduce, and MutationMapperStore when it is made immutable all the
                 //  mobx machinery going on in the readonly remoteDatas and observables somehow gets messed up.
-                return Promise.resolve(_.reduce(this.genes.result, (map: { [hugoGeneSymbol: string]: MutationMapperStore }, gene: Gene) => {
-                    map[gene.hugoGeneSymbol] = new MutationMapperStore(AppConfig,
+                return Promise.resolve(_.reduce(this.genes.result, (map: { [hugoGeneSymbol: string]: ResultsViewMutationMapperStore }, gene: Gene) => {
+                    map[gene.hugoGeneSymbol] = new ResultsViewMutationMapperStore(AppConfig,
                         gene,
                         this.samples,
                         this.oncoKbAnnotatedGenes.result || {},
                         this.mutationsByGene[gene.hugoGeneSymbol],
-                        () => (this.mutationDataCache),
                         () => (this.genomeNexusEnrichmentCache),
                         () => (this.mutationCountCache),
                         this.studyIdToStudy,
                         this.molecularProfileIdToMolecularProfile,
                         this.clinicalDataForSamples,
                         this.studiesForSamplesWithoutCancerTypeClinicalData,
-                        this.samplesWithoutCancerTypeClinicalData,
                         this.germlineConsentedSamples,
                         this.indexedHotspotData,
                         this.uniqueSampleKeyToTumorType.result!,
@@ -1089,7 +1095,7 @@ export class ResultsViewPageStore {
         }
     }, {});
 
-    public getMutationMapperStore(hugoGeneSymbol: string): MutationMapperStore | undefined {
+    public getMutationMapperStore(hugoGeneSymbol: string): ResultsViewMutationMapperStore | undefined {
         return this.mutationMapperStores.result[hugoGeneSymbol];
     }
 
@@ -1262,6 +1268,15 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly patientKeyToSamples = remoteData({
+        await:()=>[
+            this.samples
+        ],
+        invoke: ()=>{
+            return Promise.resolve(_.groupBy(this.samples.result!, sample=>sample.uniquePatientKey));
+        }
+    });
+
     readonly patients = remoteData({
         await: ()=>[
             this.samples
@@ -1317,7 +1332,7 @@ export class ResultsViewPageStore {
             })
         }
     }, []);
-    
+
     //this is only required to show study name and description on the results page
     //CancerStudy objects for all the cohortIds
     readonly queriedStudies = remoteData({
@@ -1459,6 +1474,52 @@ export class ResultsViewPageStore {
         }
     }, {});
 
+
+    public getSessionIdInUrl(){
+        const parsedQString = url.parse((window as any).location.href, true);
+        return parsedQString.query.session_id;
+    }
+
+    readonly bookmarkLinks = remoteData<BookmarkLinks>({
+
+        await:()=>[
+            this.studies
+        ],
+
+        invoke: async () => {
+
+            const win = window as any;
+
+            let longUrl = win.location.href;
+
+            let sessionResp;
+
+            // if we have a session service, lets get the url for the session
+            if (AppConfig.sessionServiceIsEnabled) {
+                longUrl = await new Promise((resolve, reject)=>{
+                    win.getSessionServiceBookmark(window.location.href, $("#bookmark-result-tab").data('session'), function(url:string){
+;                        resolve(url);
+                    });
+                });
+            }
+
+            const queryData = {
+                version:3.0,
+                longUrl:longUrl,
+                session_id:longUrl.match(/session_id=(.*)$/)[1],
+                history:0,
+                format:"json"
+            };
+
+            const bitlyResponse = await request.get(getBitlyServiceUrl())
+                .query(queryData) as any;
+
+            const parsedBitlyResponse = JSON.parse(bitlyResponse.body) as any;
+            return { longUrl , shortenedUrl:(_.values(parsedBitlyResponse.results)[0] as any).shortUrl  }
+        }
+
+    });
+
     readonly molecularProfileIdToDataQueryFilter = remoteData<{[molecularProfileId:string]:IDataQueryFilter}>({
         await: ()=>[
             this.molecularProfilesInStudies,
@@ -1475,21 +1536,15 @@ export class ResultsViewPageStore {
     });
 
     readonly genes = remoteData<Gene[]>({
-        invoke: async () => {
-            if (this.hugoGeneSymbols && this.hugoGeneSymbols.length) {
-                const order = stringListToIndexSet(this.hugoGeneSymbols);
-                return _.sortBy(await client.fetchGenesUsingPOST({
-                    geneIdType: "HUGO_GENE_SYMBOL",
-                    geneIds: this.hugoGeneSymbols.slice(),
-                    projection: "SUMMARY"
-                }), (gene: Gene) => order[gene.hugoGeneSymbol]);
-            } else {
-                return [];
-            }
-        },
+        invoke: async () => fetchGenes(this.hugoGeneSymbols),
         onResult:(genes:Gene[])=>{
             this.geneCache.addData(genes);
         }
+    });
+
+    readonly entrezGeneIdToGene = remoteData<{[entrezGeneId:number]:Gene}>({
+        await: ()=>[this.genes],
+        invoke: ()=>Promise.resolve(_.keyBy(this.genes.result!, gene=>gene.entrezGeneId))
     });
 
     readonly genesetLinkMap = remoteData<{[genesetId: string]: string}>({
@@ -1535,6 +1590,19 @@ export class ResultsViewPageStore {
             return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutations.result!, this.getPutativeDriverInfo.result!, !!this.mutationAnnotationSettings.ignoreUnknown));
         }
     });
+
+    public putativeDriverAnnotatedMutationCache =
+        new MobxPromiseCache<{entrezGeneId:number}, AnnotatedMutation[]>(
+            q=>({
+                await: ()=>[
+                    this.mutationCache.get(q),
+                    this.getPutativeDriverInfo
+                ],
+                invoke: ()=>{
+                    return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutationCache.get(q).result!, this.getPutativeDriverInfo.result!, !!this.mutationAnnotationSettings.ignoreUnknown));
+                }
+            })
+        );
 
     readonly annotatedMolecularData = remoteData<AnnotatedNumericGeneMolecularData[]>({
         await: ()=>[
@@ -2113,6 +2181,68 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly expressionProfiles = remoteData({
+        await:()=>[
+            this.molecularProfilesInStudies
+        ],
+        invoke:()=>{
+            return Promise.resolve(this.molecularProfilesInStudies.result.filter(
+                (profile:MolecularProfile)=>isRNASeqProfile(profile.molecularProfileId, this.expressionTabSeqVersion)
+            ));
+        }
+    });
+
+    readonly rnaSeqMolecularData = remoteData<{[hugoGeneSymbol:string]:NumericGeneMolecularData[][]}>({
+       await:()=>[
+           this.expressionProfiles,
+           this.genes,
+           this.geneMolecularDataCache
+       ],
+       invoke: async ()=>{
+
+           const rnaSeqProfiles = this.expressionProfiles.result!;
+
+           const queries = _.flatMap(this.genes.result,(gene:Gene)=>{
+               return rnaSeqProfiles.map((profile:MolecularProfile)=> {
+                   return ({
+                       entrezGeneId: gene.entrezGeneId,
+                       molecularProfileId: profile.molecularProfileId,
+                       hugoGeneSymbol:gene.hugoGeneSymbol
+                   })
+               });
+           });
+
+           const data = await this.geneMolecularDataCache.result!.getPromise(queries,true);
+
+           // group cache objects by entrez geneId
+           const groupedByGene = _.groupBy(data,
+               (cacheItem:CacheData<NumericGeneMolecularData[], { entrezGeneId:number, molecularProfileId:string; }>)=>
+                   (cacheItem.meta) ? cacheItem.meta!.entrezGeneId : undefined
+           );
+
+           // now convert key from entrez to hugeGeneSymbol
+           const keyedByHugoSymbol = _.mapKeys(groupedByGene,(val, entrezGeneId:string)=>{
+               // look up huge gene symbol on gene with matching entrez
+               return _.find(this.genes.result,(gene:Gene)=>gene.entrezGeneId.toString()===entrezGeneId)!.hugoGeneSymbol;
+           });
+
+           const unwrapCacheObjects:{[hugeGeneSymbol:string]:NumericGeneMolecularData[][]} =
+               _.mapValues(keyedByHugoSymbol,(val:AugmentedData<NumericGeneMolecularData[], GeneMolecularDataCache>)=>{
+                    return _.map(val,(item:AugmentedData<NumericGeneMolecularData[], GeneMolecularDataCache>)=>item.data);
+                }) as any; // there's an error with typing for _.mapValues
+
+           return Promise.resolve(unwrapCacheObjects);
+
+       }
+
+    });
+
+    @memoize sortRnaSeqMolecularDataByStudy(seqData:{[profileId:string]:NumericGeneMolecularData[]}){
+        return _.keyBy(seqData,(data:NumericGeneMolecularData[])=>{
+           return data[0].studyId;
+        });
+    }
+
     readonly genesetMolecularDataCache = remoteData({
         await:() => [
             this.molecularProfileIdToDataQueryFilter
@@ -2158,6 +2288,24 @@ export class ResultsViewPageStore {
                     return Promise.resolve([]);
                 }
             }
+        })
+    );
+
+    public clinicalDataCache = new MobxPromiseCache<ClinicalAttribute, ClinicalData[]>(
+        attr=>({
+            await:()=>[
+                this.samples,
+                this.patients
+            ],
+            invoke:()=>client.fetchClinicalDataUsingPOST({
+                clinicalDataType: attr.patientAttribute ? "PATIENT" : "SAMPLE",
+                clinicalDataMultiStudyFilter: {
+                    attributeIds: [attr.clinicalAttributeId],
+                    identifiers: attr.patientAttribute ?
+                        this.patients.result!.map(p=>({entityId:p.patientId, studyId:p.studyId})) :
+                        this.samples.result!.map(s=>({entityId:s.sampleId, studyId:s.studyId}))
+                }
+            })
         })
     );
 

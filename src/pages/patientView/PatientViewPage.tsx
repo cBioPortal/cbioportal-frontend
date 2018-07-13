@@ -36,6 +36,8 @@ import { getMouseIcon } from './SVGIcons';
 import './patient.scss';
 import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
 import {getSampleViewUrl} from "../../shared/api/urls";
+import ClinicalInformationMutationalSignatureTable
+    from "./clinicalInformation/ClinicalInformationMutationalSignatureTable";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -445,12 +447,11 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                                     <div className="clearfix">
                                         <FeatureTitle title="Patient"
-                                                      isLoading={ patientViewPageStore.clinicalDataPatient.isPending }
+                                                      isLoading={patientViewPageStore.clinicalDataPatient.isPending}
                                                       className="pull-left"/>
-                                        { (patientViewPageStore.clinicalDataPatient.isComplete) && (
+                                        {(patientViewPageStore.clinicalDataPatient.isComplete) && (
                                             <ClinicalInformationPatientTable showTitleBar={true}
                                                                              data={patientViewPageStore.clinicalDataPatient.result}/>
-
                                         )
                                         }
                                     </div>
@@ -496,6 +497,18 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         <div style={{position: "relative"}}>
                             <IFrameLoader height={700} url={  `http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=${patientViewPageStore.patientId}` } />
                         </div>
+                    </MSKTab>
+
+                    <MSKTab key={6} id="mutationalSignatureTab" linkText="Mutational Signature Data">
+
+                        <div className="clearfix">
+                            <FeatureTitle title="Mutational Signatures" isLoading={ patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />
+                            {  (patientViewPageStore.clinicalDataGroupedBySample.isComplete) && (
+                                <ClinicalInformationMutationalSignatureTable/>
+                            )
+                            }
+                        </div>
+
                     </MSKTab>
 
                     </MSKTabs>
