@@ -16,12 +16,14 @@ export type IPatientHeaderProps = {
     sampleManager?:SampleManager | null;
     handlePatientClick:any;
     darwinUrl?: string;
+    showIcon?: boolean;
 }
 export default class PatientHeader extends React.Component<IPatientHeaderProps, {}> {
     public render() {
 
         return (
             <div className={styles.patientHeader}>
+                {this.props.showIcon && (<i className="fa fa-user-circle-o patientIcon" aria-hidden="true"></i>)}
                 {this.props.patient && this.getOverlayTriggerPatient(this.props.patient, this.props.studyId, this.props.sampleManager)}
                 {this.getDarwinUrl(this.props.darwinUrl)}
             </div>

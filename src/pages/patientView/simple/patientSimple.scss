@@ -6,19 +6,23 @@
     font-family: 'Lato', sans-serif;
 
     .flex-row {
+        width: 1200px;
         display: flex;
         flex-direction: row;
         justify-content: space-evenly;
 
         .patient-header {
+            font-size: medium;
+            width: 100%;
             background-color: #FFF;
             border: 1px solid #ddd;
             border-radius: 4px;
             text-align: center;
             padding: 10px;
             .patientIcon {
-                font-size: 100px;
-                padding-bottom: 10px;
+                font-size: large;
+                padding-right: 5px;
+                /*padding-bottom: 10px;*/
             }
         }
 
@@ -42,10 +46,17 @@
     justify-content: center;
     background-color: #FFF;
     border: 1px solid #ddd;
-    padding: 10px;
-    margin-left: 20px;
-    margin-right: 20px;
     border-radius: 4px;
+    width: 1200px;
+
+    .patientSample {
+        background-color: lightyellow;
+        padding: 5px;
+        padding-left: 15px;
+        border-bottom: solid;
+        border-color: #ddd;
+        border-width: 1px;
+    }
 
     .sample-info-record {
         text-align: center;
@@ -162,7 +173,7 @@
         padding-bottom: 10px;
 
         .sample-info-drugs {
-            width: 1000px;
+            width: 100%;
             height: auto;
             padding-bottom: 5px;
         }
@@ -174,12 +185,34 @@
         }
     }
     .genetic-alterations-list {
-        max-width: 800px;
+        width: 100%;
         border-radius: 4px;
         box-shadow: 1px 1px 5px 0px #bbb;
         padding: 10px;
         text-align: left;
-        .genetic-alteration-list-item {
-        }
     }
 }
+$mutations-color: #007400;
+.badge.genetic-alteration-filter {
+    cursor: pointer;
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                supported by Chrome and Opera */
+}
+/* Decided to not use this component 
+.badge.mutations.actionable:hover {
+    background-color: $mutations-color;
+}
+.badge.mutations.actionable:hover {
+    background-color: $mutations-color;
+}
+.badge.mutations.driver:hover {
+    background-color: lighten( $mutations-color, 10% );
+}
+.badge.mutations.vus:hover {
+    background-color: lighten( $mutations-color, 20% );
+}*/

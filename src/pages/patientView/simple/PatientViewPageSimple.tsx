@@ -70,6 +70,7 @@ export default class PatientViewPageSimple extends React.Component<IPatientViewP
                         evidenceCache={patientViewPageStore.oncoKbEvidenceCache}
                         pubMedCache={patientViewPageStore.pubMedCache}
                         userEmailAddress={AppConfig.userEmailAddress}
+                        patientViewPageStore={patientViewPageStore}
                     />
                 );
         });
@@ -78,7 +79,6 @@ export default class PatientViewPageSimple extends React.Component<IPatientViewP
             <div className="flex-container">
                 <div className="flex-row">
                     <div className="patient-header">
-                        <i className="fa fa-user-circle-o patientIcon" aria-hidden="true"></i><br />
                         <div className="patient-text">
                             {  (patientViewPageStore.patientViewData.isComplete) && (
                                 <PatientHeader
@@ -86,7 +86,8 @@ export default class PatientViewPageSimple extends React.Component<IPatientViewP
                                             patient={patientViewPageStore.patientViewData.result.patient}
                                             studyId={patientViewPageStore.studyId}
                                             darwinUrl={patientViewPageStore.darwinUrl.result}
-                                            sampleManager={sampleManager}/>
+                                            sampleManager={sampleManager}
+                                            showIcon={true}/>
                             ) }
                         </div>
                     </div>
