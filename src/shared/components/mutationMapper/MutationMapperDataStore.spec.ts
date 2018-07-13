@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
+import {Mutation} from "../../api/generated/CBioPortalAPI";
 import MutationMapperDataStore from "./MutationMapperDataStore";
 
 describe("MutationMapperDataStore", ()=>{

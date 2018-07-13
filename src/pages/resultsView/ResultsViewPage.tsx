@@ -16,9 +16,8 @@ import MutualExclusivityTab from "./mutualExclusivity/MutualExclusivityTab";
 import SurvivalTab from "./survival/SurvivalTab";
 import DownloadTab from "./download/DownloadTab";
 import Chart from 'chart.js';
-import {CancerStudy, Sample} from "../../shared/api/generated/CBioPortalAPI";
+import {CancerStudy, Gene, MolecularProfile, Sample} from "../../shared/api/generated/CBioPortalAPI";
 import AppConfig from 'appConfig';
-import AddThisBookmark from 'shared/components/addThis/AddThisBookmark';
 import getOverlappingStudies from "../../shared/lib/getOverlappingStudies";
 import OverlappingStudiesWarning from "../../shared/components/overlappingStudiesWarning/OverlappingStudiesWarning";
 import CNSegments from "./cnSegments/CNSegments";
@@ -40,8 +39,11 @@ import QuerySummary from "./querySummary/QuerySummary";
 import {QueryStore} from "../../shared/components/query/QueryStore";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import {getGAInstance} from "../../shared/lib/tracking";
+import ExpressionWrapper from "./expression/ExpressionWrapper";
 import CoExpressionTabContainer from "./coExpression/CoExpressionTabContainer";
 import EnrichmentsTab from 'pages/resultsView/enrichments/EnrichmentsTab';
+import {Bookmark} from "./bookmark/Bookmark";
+import PlotsTab from "./plots/PlotsTab";
 
 
 const win = (window as any);
@@ -250,6 +252,36 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     public exposeComponentRenderersToParentScript(props: IResultsViewPageProps){
 
 
+        exposeComponentRenderer('renderExpression',()=>{
+
+                return <Observer>
+                    {
+                        ()=> {
+
+                            const store = this.resultsViewPageStore;
+
+                            if (store.rnaSeqMolecularData.isComplete && store.studyIdToStudy.isComplete
+                                && store.mutations.isComplete && store.genes.isComplete && store.coverageInformation.isComplete) {
+                                return <ExpressionWrapper studyMap={store.studyIdToStudy.result}
+                                                          genes={store.genes.result}
+                                                          data={store.rnaSeqMolecularData.result}
+                                                          mutations={store.mutations.result}
+                                                          RNASeqVersion={store.expressionTabSeqVersion}
+                                                          coverageInformation={store.coverageInformation.result}
+                                                          onRNASeqVersionChange={(version:number)=>store.expressionTabSeqVersion=version}
+                                />
+                            } else {
+                                return <div><Loader isLoading={true}/></div>
+                            }
+
+
+                        }
+                    }
+                </Observer>
+
+        });
+
+
         exposeComponentRenderer('renderOncoprint',
             (props:OncoprintTabInitProps)=>{
                 function addOnBecomeVisibleListener(callback:()=>void) {
@@ -352,22 +384,16 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
 
         exposeComponentRenderer('renderMutExTab', () => {
-
             return (<div>
                 <MutualExclusivityTab store={this.resultsViewPageStore}/>
             </div>)
         });
 
-        exposeComponentRenderer('renderBookmark', () => {
-            return (
-                <div>
-                    <AddThisBookmark store={this.resultsViewPageStore} getParameters={this.addThisParameters}/>
-                </div>
-            );
+        exposeComponentRenderer('renderBookmarkTab', () => {
+            return <Bookmark urlPromise={ this.resultsViewPageStore.bookmarkLinks } />
         });
 
         exposeComponentRenderer('renderSurvivalTab', () => {
-
             return (<div className="cbioportal-frontend">
                 <SurvivalTab store={this.resultsViewPageStore}/>
             </div>)
@@ -394,6 +420,12 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                 <div className="cbioportal-frontend">
                     <EnrichmentsTab store={this.resultsViewPageStore}/>
                 </div>);
+        });
+
+        exposeComponentRenderer('renderPlotsTab', ()=>{
+            return (<div className="cbioportal-frontend">
+                <PlotsTab store={this.resultsViewPageStore}/>
+            </div>);
         });
     }
 

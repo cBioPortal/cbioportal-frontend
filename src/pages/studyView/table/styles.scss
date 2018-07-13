@@ -1,0 +1,18 @@
+.studyViewTable {
+    font-size: 12px;
+    font-family: Verdana, Arial, sans-serif;
+    margin-top: 10px;
+
+    .tableSearchInput{
+        width: 150px !important;
+        margin-right: 5px;
+    }
+
+    .labelContent {
+        overflow: hidden;
+        white-space:nowrap;
+        text-overflow:ellipsis;
+        display:inline-block;
+        width: 150px; 
+    }
+}
