@@ -11,7 +11,9 @@ import { StudyViewPageStore, ClinicalDataType, SurvivalType, ChartMeta, ChartTyp
 import { reaction } from 'mobx';
 import { If } from 'react-if';
 import SummaryHeader from 'pages/studyView/SummaryHeader';
-import { Sample } from 'shared/api/generated/CBioPortalAPI';
+import {Sample, SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
+import StudyViewScatterPlot from "./charts/scatterPlot/StudyViewScatterPlot";
+import {isSelected, mutationCountVsCnaTooltip} from "./StudyViewUtils";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -45,7 +47,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             onDeleteChart: (uniqueKey: string) => {
                 this.store.changeChartVisibility(uniqueKey, false);
             },
-            updateCustomCasesFilter: (cases: Sample[]) => {
+            updateCustomCasesFilter: (cases: SampleIdentifier[]) => {
                 this.store.updateCustomCasesFilter(cases);
             }
         }
@@ -154,6 +156,22 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     filters={this.store.getCNAGenesTableFilters()}
                                     toggleSelection={this.handlers.updateCNAGeneFilter}
                                 />
+                                {this.store.mutationCountVsFractionGenomeAlteredData.isComplete && (
+                                    <StudyViewScatterPlot
+                                        width={500}
+                                        height={500}
+                                        onSelection={this.handlers.updateCustomCasesFilter}
+                                        data={this.store.mutationCountVsFractionGenomeAlteredData.result}
+                                        isLoading={this.store.selectedSamples.isPending}
+                                        isSelected={d=>isSelected(d, this.store.selectedSamplesMap)}
+                                        selectedFill="#ff0000"
+                                        unselectedFill="#0000ff"
+                                        axisLabelX="Fraction of copy number altered genome"
+                                        axisLabelY="# of mutations"
+                                        title="Mutation Count vs. CNA"
+                                        tooltip={mutationCountVsCnaTooltip}
+                                    />
+                                )}
                             </div>
                         </MSKTab>
                     </MSKTabs>
@@ -163,6 +181,5 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             //TODO: update with loading
             return null;
         }
-
     }
 }
