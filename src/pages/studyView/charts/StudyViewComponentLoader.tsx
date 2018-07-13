@@ -10,7 +10,7 @@ export interface StudyViewComponentLoaderProps {
 export class StudyViewComponentLoader extends React.Component<StudyViewComponentLoaderProps> {
     public render() {
         return (
-            <div style={{margin: 'auto'}}>
+            <div>
                 <If condition={this.props.promise.isPending}>
                     <ThreeBounce className="center-block text-center"/>
                 </If>

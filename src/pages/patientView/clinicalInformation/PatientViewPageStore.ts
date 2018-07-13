@@ -32,7 +32,7 @@ import MutationCountCache from "shared/cache/MutationCountCache";
 import AppConfig from "appConfig";
 import {
     findMolecularProfileIdDiscrete, ONCOKB_DEFAULT, fetchOncoKbData,
-    fetchCnaOncoKbData, mergeMutations, fetchMyCancerGenomeData, fetchCosmicData,
+    fetchCnaOncoKbData, mergeMutations, fetchMyCancerGenomeData, fetchMutationalSignatureData, fetchCosmicData,
     fetchMutationData, fetchDiscreteCNAData, generateUniqueSampleKeyToTumorTypeMap, findMutationMolecularProfileId,
     findUncalledMutationMolecularProfileId, mergeMutationsIncludingUncalled, fetchGisticData, fetchCopyNumberData,
     fetchMutSigData, findMrnaRankMolecularProfileId, mergeDiscreteCNAData, fetchSamplesForPatient, fetchClinicalData,
@@ -171,6 +171,10 @@ export class PatientViewPageStore {
 
     @computed get myCancerGenomeData() {
         return fetchMyCancerGenomeData();
+    }
+
+    @computed get mutationalSignatureData(){
+        return fetchMutationalSignatureData();
     }
 
     readonly derivedPatientId = remoteData<string>({
