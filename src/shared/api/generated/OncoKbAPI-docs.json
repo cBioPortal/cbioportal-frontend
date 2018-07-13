@@ -1408,6 +1408,9 @@
         "oncogenicity": {
           "type": "string"
         },
+        "proteinChange": {
+          "type": "string"
+        },
         "refSeq": {
           "type": "string"
         },
@@ -1861,6 +1864,9 @@
           "type": "string"
         },
         "pmids": {
+          "type": "string"
+        },
+        "proteinChange": {
           "type": "string"
         },
         "refSeq": {
