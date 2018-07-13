@@ -12,13 +12,13 @@ function base64ToArrayBuffer(base64:string) {
     return bytes;
 }
 
-export default function (filename:string, svg:Element) {
+export default function (filename:string, svg:Element, servletUrl?: string) {
     const svgelement = "<?xml version='1.0'?>"+(new XMLSerializer()).serializeToString(svg);
     const two_megabyte_limit = 2000000;
     if (svgelement.length > two_megabyte_limit) {
         return false;
     }
-    const servletURL = "svgtopdf.do";
+    const servletURL = servletUrl || "svgtopdf.do";
     const filetype = "pdf_data";
     request.post(servletURL)
         .type('form')
