@@ -92,6 +92,8 @@ export type AnnotatedVariant = {
 
         'oncogenicity': string
 
+        'proteinChange': string
+
         'refSeq': string
 
         'variant': string
@@ -255,6 +257,8 @@ export type ActionableGene = {
         'level': string
 
         'pmids': string
+
+        'proteinChange': string
 
         'refSeq': string
 
