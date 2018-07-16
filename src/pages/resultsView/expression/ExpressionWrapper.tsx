@@ -507,7 +507,11 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @computed get paddingBottom(){
-        return _.maxBy(this.sortedLabels,(label:string)=>label.length)!.length * 9;
+        if (!this.sortedLabels.length) {
+            return 10;
+        } else {
+            return _.maxBy(this.sortedLabels,(label:string)=>label.length)!.length * 9;
+        }
     }
 
     @computed
