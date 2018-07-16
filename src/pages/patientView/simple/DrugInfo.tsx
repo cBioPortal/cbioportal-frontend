@@ -19,7 +19,7 @@ export default class DrugInfo extends React.Component<IDrugInfoProps, {}> {
     render() {
         if (this.props.indicator) {
             return (
-                <div style={{padding:20,textAlign:"center", fontSize:"large"}}>
+                <div>
                     <div style={{width:300,margin:"0 auto",textAlign:"center"}}>
                         <OncoKB
                             hugoGeneSymbol={this.props.annotation.hugoGeneSymbol}

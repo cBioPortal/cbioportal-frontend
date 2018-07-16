@@ -35,6 +35,17 @@ export type ISampleRecordProps = {
     patientViewPageStore: PatientViewPageStore;
 };
 
+type MutationAndAnnotation = {
+    mutation: Mutation;
+    annotation: IAnnotation;
+};
+
+type DiscreteCopyNumberDataAndAnnotation = {
+    cna: DiscreteCopyNumberData;
+    annotation: IAnnotation;
+};
+
+
 interface ISampleRecordState {
     show_mutations: boolean;
     show_cna: boolean;
@@ -54,8 +65,13 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
     getDrivers() {
         if (this.props.oncoKbData.result) {
             const drivers = this.props.mutationData.map(
-                (m:Mutation) => AnnotationColumnFormatter.getIndicatorData(m, this.props.oncoKbData.result!)
-            ).filter(x => x !== undefined && x.oncogenic);
+                (m:Mutation) => {
+                    return {
+                        "mutation":m, 
+                        "annotation":AnnotationColumnFormatter.getData([m], this.props.oncoKbAnnotatedGenes, undefined, undefined, this.props.oncoKbData)
+                    };
+                }
+            ).filter(x => x.annotation !== undefined && x.annotation.oncoKbIndicator && x.annotation.oncoKbIndicator.oncogenic);
             return drivers;
         } else {
             return [];
@@ -73,13 +89,12 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
 
     }
     getDriversWithTreatmentInfo() {
-        return this.getDrivers().filter(x => x && x.treatments.length > 0);
+        return this.getDrivers().filter(x => x.annotation.oncoKbIndicator && x.annotation.oncoKbIndicator.treatments.length > 0);
     }
     getCNADriversWithTreatmentInfo() {
         return this.getCNADrivers().filter(x => x && x.treatments.length > 0);
     }
     render() {
-        const annotationData:IAnnotation = AnnotationColumnFormatter.getData(this.props.mutationData, this.props.oncoKbAnnotatedGenes, undefined, undefined, this.props.oncoKbData);
         const annotationDiscreteCNAData:IAnnotation = AnnotationColumnFormatterDiscreteCNA.getData(this.props.discreteCNAData, this.props.oncoKbAnnotatedGenes, this.props.cnaOncoKbData);
 
         return (
@@ -97,18 +112,20 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                         <div className="flex-row sample-info-record sample-info-record-drugs">
                             <div className='sample-info-card sample-info-drugs'>
                                 <div className='sample-info-card-title extra-text-header'>Diagnostic, Therapeutic and/or Prognostic biomarker(s)</div>
-                                {annotationData && this.getDriversWithTreatmentInfo().map((driver) => {
-                                    return driver && (
-                                        <DrugInfo 
-                                            annotation={annotationData}
-                                            indicator={driver}
-                                            evidenceCache={this.props.evidenceCache}
-                                            evidenceQuery={driver.query}
-                                            pubMedCache={this.props.pubMedCache}
-                                            userEmailAddress={this.props.userEmailAddress}
-                                        />
-                                    );
-                                })}
+                                    <div style={{padding:20,textAlign:"center", fontSize:"large"}}>
+                                        {this.getDriversWithTreatmentInfo().map((mutAnn:MutationAndAnnotation) => {
+                                            return mutAnn && (
+                                                    <DrugInfo 
+                                                        annotation={mutAnn.annotation}
+                                                        indicator={mutAnn.annotation.oncoKbIndicator}
+                                                        evidenceCache={this.props.evidenceCache}
+                                                        evidenceQuery={mutAnn.annotation.oncoKbIndicator && mutAnn.annotation.oncoKbIndicator.query}
+                                                        pubMedCache={this.props.pubMedCache}
+                                                        userEmailAddress={this.props.userEmailAddress}
+                                                    />
+                                            );
+                                        })}
+                                    </div>
                             </div>
                         </div>
                     )}
