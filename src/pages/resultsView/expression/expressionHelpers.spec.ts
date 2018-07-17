@@ -88,7 +88,7 @@ describe('getMolecularDataBuckets', () => {
                     "studyId": "laml_tcga_pan_can_atlas_2018",
                     "value": 2711.30470514441
                 }],
-                "frame_shift_ins": [{
+                "trunc": [{
                     "uniqueSampleKey": "VENHQS1BQi0yODIwLTAzOmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg",
                     "uniquePatientKey": "VENHQS1BQi0yODIwOmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg",
                     "entrezGeneId": 7157,
@@ -98,16 +98,6 @@ describe('getMolecularDataBuckets', () => {
                     "studyId": "laml_tcga_pan_can_atlas_2018",
                     "value": 177.760665663725
                 }, {
-                    "uniqueSampleKey": "VENHQS1BQi0yODYwLTAzOmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg",
-                    "uniquePatientKey": "VENHQS1BQi0yODYwOmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg",
-                    "entrezGeneId": 7157,
-                    "molecularProfileId": "laml_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median",
-                    "sampleId": "TCGA-AB-2860-03",
-                    "patientId": "TCGA-AB-2860",
-                    "studyId": "laml_tcga_pan_can_atlas_2018",
-                    "value": 609.377468235893
-                }],
-                "splice_site": [{
                     "uniqueSampleKey": "VENHQS1BQi0yODM4LTAzOmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg",
                     "uniquePatientKey": "VENHQS1BQi0yODM4OmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg",
                     "entrezGeneId": 7157,
@@ -126,6 +116,16 @@ describe('getMolecularDataBuckets', () => {
                     "studyId": "laml_tcga_pan_can_atlas_2018",
                     "value": 256.24401856776
                 }, {
+                    "uniqueSampleKey": "VENHQS1BQi0yODYwLTAzOmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg",
+                    "uniquePatientKey": "VENHQS1BQi0yODYwOmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg",
+                    "entrezGeneId": 7157,
+                    "molecularProfileId": "laml_tcga_pan_can_atlas_2018_rna_seq_v2_mrna_median",
+                    "sampleId": "TCGA-AB-2860-03",
+                    "patientId": "TCGA-AB-2860",
+                    "studyId": "laml_tcga_pan_can_atlas_2018",
+                    "value": 609.377468235893
+                },
+                {
                     "uniqueSampleKey": "VENHQS1BQi0yODY4LTAzOmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg",
                     "uniquePatientKey": "VENHQS1BQi0yODY4OmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg",
                     "entrezGeneId": 7157,
@@ -134,8 +134,8 @@ describe('getMolecularDataBuckets', () => {
                     "patientId": "TCGA-AB-2868",
                     "studyId": "laml_tcga_pan_can_atlas_2018",
                     "value": 916.328015361695
-                }],
-                "frame_shift_del": [{
+                },
+                {
                     "uniqueSampleKey": "VENHQS1BQi0yOTM4LTAzOmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg",
                     "uniquePatientKey": "VENHQS1BQi0yOTM4OmxhbWxfdGNnYV9wYW5fY2FuX2F0bGFzXzIwMTg",
                     "entrezGeneId": 7157,
