@@ -1,17 +1,19 @@
 import * as React from "react";
 import SvgSaver from 'svgsaver';
-import {bind} from "bind-decorator";
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 import FadeInteraction from "./fadeInteraction/FadeInteraction";
 import {observer} from "mobx-react";
 import {computed} from "mobx";
+import autobind from "autobind-decorator";
+import fileDownload from 'react-file-download';
 
 type ButtonSpec = { key:string, content:JSX.Element, onClick:()=>void, disabled?: boolean };
 
-type DownloadControlsButton = "PDF" | "PNG" | "SVG";
+type DownloadControlsButton = "PDF" | "PNG" | "SVG" | "Data";
 
 interface IDownloadControlsProps {
     getSvg?:()=>SVGElement|null;
+    getData?:()=>string;
     filename:string;
     buttons?: DownloadControlsButton[],
     additionalLeftButtons?:ButtonSpec[],
@@ -37,7 +39,7 @@ function makeButton(spec:ButtonSpec) {
 export default class DownloadControls extends React.Component<IDownloadControlsProps, {}> {
     private svgsaver = new SvgSaver();
 
-    @bind
+    @autobind
     private downloadSvg() {
         if (this.props.getSvg) {
             const svg = this.props.getSvg();
@@ -47,7 +49,7 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
         }
     }
 
-    @bind
+    @autobind
     private downloadPng() {
         if (this.props.getSvg) {
             const svg = this.props.getSvg();
@@ -57,13 +59,21 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
         }
     }
 
-    @bind
+    @autobind
     private downloadPdf() {
         if (this.props.getSvg) {
             const svg = this.props.getSvg();
             if (svg) {
                 svgToPdfDownload(`${this.props.filename}.pdf`, svg);
             }
+        }
+    }
+
+    @autobind
+    private downloadData() {
+        if (this.props.getData) {
+            const data = this.props.getData();
+            fileDownload(data, `${this.props.filename}.txt`);
         }
     }
 
@@ -86,6 +96,12 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
                     content: <span>PDF <i className="fa fa-cloud-download" aria-hidden="true"/></span>,
                     onClick: this.downloadPdf,
                     disabled: !this.props.getSvg
+            },
+            "Data":{
+                key: "Data",
+                content: <span>Data <i className="fa fa-cloud-download" aria-hidden="true"/></span>,
+                onClick: this.downloadData,
+                disabled: !this.props.getData
             }
         };
     }
