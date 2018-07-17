@@ -28,9 +28,9 @@ import classNames from 'classnames';
 import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
 import {CoverageInformation, isPanCanStudy, isTCGAProvStudy} from "../ResultsViewPageStoreUtils";
 import {sleep} from "../../../shared/lib/TimeUtils";
-import PortalLink from "../../../shared/components/PortalLink/PortalLink";
 import {mutationRenderPriority} from "../plots/PlotsTabUtils";
 import {getOncoprintMutationType} from "../../../shared/components/oncoprint/DataUtils";
+import {getSampleViewUrl} from "../../../shared/api/urls";
 
 export interface ExpressionWrapperProps {
     studyMap: { [studyId: string]: CancerStudy };
@@ -552,14 +552,10 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     )}
                     <strong>Study:</strong> {this.tooltipModel!.data.studyName}<br/>
                     <strong>Sample ID:</strong>&nbsp;
-                    <PortalLink to={{
-                        pathname: 'patient',
-                        search: `studyId=${this.tooltipModel!.data.studyId}&sampleId=${this.tooltipModel!.data.sampleId}`,
-                        basepath: 'case.do',
-                        newTab:true
-                    }}>
-                        {this.tooltipModel!.data.sampleId}<br/>
-                    </PortalLink>
+
+                    <a href={getSampleViewUrl(this.tooltipModel!.data.studyId, this.tooltipModel!.data.sampleId)} target="_blank">
+                        {this.tooltipModel!.data.sampleId}
+                    </a>
 
                     <strong>Expression:</strong> {this.tooltipModel!.data.expression}
                 </div>
