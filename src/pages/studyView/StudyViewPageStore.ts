@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import { remoteData } from "../../shared/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import { action, computed, observable, toJS } from "mobx";
+import { action, computed, observable, toJS, ObservableMap } from "mobx";
 import {
     ClinicalDataCount,
     ClinicalDataEqualityFilter,
@@ -20,11 +20,16 @@ import {
     ClinicalData,
     MolecularProfile,
     MolecularProfileFilter,
-    ClinicalDataMultiStudyFilter
+    ClinicalDataMultiStudyFilter,
+    Gene
 } from 'shared/api/generated/CBioPortalAPI';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
 import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
+import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
+import { bind } from '../../../node_modules/bind-decorator';
+import { updateGeneQuery } from 'pages/studyView/StudyViewUtils';
+import { stringListToSet } from 'shared/lib/StringUtils';
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT'
 
@@ -78,6 +83,27 @@ export class StudyViewPageStore {
 
     private _clinicalAttributesMetaSet: { [id: string]: ChartMeta } = {} as any;
 
+    @observable geneQueryStr: string;
+
+    @observable private geneQueries: SingleGeneQuery[] = [];
+
+    @observable private queriedGeneSet = observable.map<boolean>();
+
+    @bind
+    @action onCheckGene(hugoGeneSymbol: string) {
+        //only update geneQueryStr whenever a table gene is clicked.
+        this.geneQueryStr = updateGeneQuery(this.geneQueries, hugoGeneSymbol);
+        this.queriedGeneSet.set(hugoGeneSymbol,!this.queriedGeneSet.get(hugoGeneSymbol));
+    }
+    
+    @computed get selectedGenes(): string[] {
+        return this.queriedGeneSet.keys().filter(gene=>!!this.queriedGeneSet.get(gene));
+    }
+
+    @action updateSelectedGenes(query: SingleGeneQuery[], genesInQuery: Gene[]) {
+        this.geneQueries = query;
+        this.queriedGeneSet = new ObservableMap(stringListToSet(genesInQuery.map(gene => gene.hugoGeneSymbol)))
+    }
 
     @action
     updateClinicalDataEqualityFilters(chartMeta: ChartMeta, values: string[]) {
