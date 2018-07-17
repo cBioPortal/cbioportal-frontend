@@ -471,7 +471,7 @@ export function getAxisDescription(
     return ret;
 }
 
-const oncoprintMutationTypeToAppearanceDrivers:{[mutType:string]:{symbol:string, fill:string, stroke:string, legendLabel:string}}
+export const oncoprintMutationTypeToAppearanceDrivers:{[mutType:string]:{symbol:string, fill:string, stroke:string, legendLabel:string}}
 = {
     "inframe": {
         symbol : "circle",
@@ -523,7 +523,7 @@ const oncoprintMutationTypeToAppearanceDrivers:{[mutType:string]:{symbol:string,
     }
 };
 
-const oncoprintMutationTypeToAppearanceDefault:{[mutType:string]:{symbol:string, fill:string, stroke:string, legendLabel:string}}
+export const oncoprintMutationTypeToAppearanceDefault:{[mutType:string]:{symbol:string, fill:string, stroke:string, legendLabel:string}}
     = {
     "inframe": {
         symbol : "circle",
@@ -557,13 +557,13 @@ const oncoprintMutationTypeToAppearanceDefault:{[mutType:string]:{symbol:string,
     }
 };
 
-const notProfiledAppearance = {
+export const notProfiledAppearance = {
     symbol: "circle",
     fill: "#ffffff",
     stroke: "d3d3d3", // TODO: right grey?
 };
 
-const mutationLegendOrder = [
+export const mutationLegendOrder = [
     "fusion",
     "promoter.driver", "promoter",
     "trunc.driver", "trunc",
@@ -599,7 +599,7 @@ export const mutationSummaryToAppearance = {
         legendLabel: "Both mutated"
     }
 };
-const mutationSummaryLegendOrder = [MutationSummary.Both, MutationSummary.One, MutationSummary.Neither];
+export const mutationSummaryLegendOrder = [MutationSummary.Both, MutationSummary.One, MutationSummary.Neither];
 export const mutationSummaryRenderPriority = stringListToIndexSet(mutationSummaryLegendOrder);
 
 const cnaToAppearance = {
