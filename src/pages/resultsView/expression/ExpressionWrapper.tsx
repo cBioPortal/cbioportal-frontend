@@ -537,7 +537,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             <div className="popover right cbioTooltip"
                  onMouseLeave={this.tooltipMouseLeave}
                  onMouseEnter={this.tooltipMouseEnter}
-                 style={{top: this.tooltipModel!.y, width:300, left: this.tooltipModel!.x}}
+                 style={{top: this.tooltipModel!.y, left: this.tooltipModel!.x}}
             >
                 <div className="arrow" style={{top: 30}}></div>
                 <div className="popover-content">
@@ -551,12 +551,10 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         </span>
                     )}
                     <strong>Study:</strong> {this.tooltipModel!.data.studyName}<br/>
-                    <strong>Sample ID:</strong>&nbsp;
-
-                    <a href={getSampleViewUrl(this.tooltipModel!.data.studyId, this.tooltipModel!.data.sampleId)} target="_blank">
+                    <strong>Sample ID:</strong> <a href={getSampleViewUrl(this.tooltipModel!.data.studyId, this.tooltipModel!.data.sampleId)} target="_blank">
                         {this.tooltipModel!.data.sampleId}
                     </a>
-
+                    <br/>
                     <strong>Expression:</strong> {this.tooltipModel!.data.expression}
                 </div>
             </div>
