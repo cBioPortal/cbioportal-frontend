@@ -92,6 +92,8 @@ export type AnnotatedVariant = {
 
         'oncogenicity': string
 
+        'proteinChange': string
+
         'refSeq': string
 
         'variant': string
@@ -143,6 +145,12 @@ export type TumorType = {
         'parent': string
 
         'tissue': string
+
+};
+export type Version = {
+    'date': string
+
+        'version': string
 
 };
 export type TreatmentDrugId = {
@@ -256,6 +264,8 @@ export type ActionableGene = {
 
         'pmids': string
 
+        'proteinChange': string
+
         'refSeq': string
 
         'variant': string
@@ -319,6 +329,12 @@ export type MainType = {
     'id': number
 
         'name': string
+
+};
+export type OncoKBInfo = {
+    'dataVersion': Version
+
+        'oncoTreeVersion': string
 
 };
 export type VariantConsequence = {
@@ -1450,6 +1466,57 @@ export default class OncoKbAPI {
                 return response.body;
             });
         };
+
+    infoGetUsingGETURL(parameters: {
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/info';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * infoGet
+     * @method
+     * @name OncoKbAPI#infoGetUsingGET
+     */
+    infoGetUsingGET(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < OncoKBInfo > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/info';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        }).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
 
     levelsGetUsingGETURL(parameters: {
         $queryParameters ? : any
