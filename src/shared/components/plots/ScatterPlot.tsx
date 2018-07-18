@@ -305,6 +305,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
 
     render() {
         if (!this.props.data.length) {
+            setTimeout(()=>this.svgRef(null), 0);
             return <span>No data to plot.</span>;
         }
         return (
