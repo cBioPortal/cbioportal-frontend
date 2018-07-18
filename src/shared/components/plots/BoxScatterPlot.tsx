@@ -417,6 +417,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
 
     render() {
         if (!this.props.data.length) {
+            setTimeout(()=>this.svgRef(null), 0);
             return <span>No data to plot.</span>;
         }
         return (
