@@ -424,7 +424,6 @@ export class ResultsViewPageStore {
             this.samples
         ],
         invoke: () => {
-
             // we get mutations with mutations endpoint, all other alterations with this one, so filter out mutation genetic profile
             const profilesWithoutMutationProfile = _.filter(this.selectedMolecularProfiles.result, (profile: MolecularProfile) => profile.molecularAlterationType !== 'MUTATION_EXTENDED');
             const genes = this.genes.result;
@@ -453,6 +452,65 @@ export class ResultsViewPageStore {
             } else {
                 return Promise.resolve([]);
             }
+        }
+    });
+
+    readonly nonMutationMolecularProfileDataAvailability = remoteData<{[molecularProfileId:string]:{[entrezGeneId:number]:number}}>({
+        await:()=>[
+            this.molecularProfilesInStudies,
+            this.studyToDataQueryFilter,
+            this.genes
+        ],
+        invoke:async()=>{
+            const ret:{[molecularProfileId:string]:{[entrezGeneId:number]:number}} = {};
+            const promises = [];
+            const studyToDataQueryFilter = this.studyToDataQueryFilter.result!;
+            for (const profile of this.molecularProfilesInStudies.result!) {
+                if (profile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED) {
+                    continue;
+                }
+                for (const gene of this.genes.result!) {
+                    const molecularDataFilter = {
+                        entrezGeneIds: [gene.entrezGeneId],
+                        ...studyToDataQueryFilter[profile.studyId]
+                    } as MolecularDataFilter;
+                    const molecularProfileId = profile.molecularProfileId;
+                    const projection = "META";
+                    promises.push(client.fetchAllMolecularDataInMolecularProfileUsingPOSTWithHttpInfo({
+                        molecularProfileId,
+                        molecularDataFilter,
+                        projection
+                    }).then(function(response: request.Response) {
+                        ret[molecularProfileId] = ret[molecularProfileId] || {};
+                        ret[molecularProfileId][gene.entrezGeneId] = parseInt(response.header["total-count"], 10);
+                    }));
+                }
+            }
+            await Promise.all(promises);
+            return ret;
+        }
+    });
+
+    readonly nonMutationMolecularProfilesWithData = remoteData<{[entrezGeneId:number]:MolecularProfile[]}>({
+        await:()=>[
+            this.genes,
+            this.molecularProfilesInStudies,
+            this.nonMutationMolecularProfileDataAvailability
+        ],
+        invoke:()=>{
+            const ret:{[entrezGeneId:number]:MolecularProfile[]} = {};
+            const molecularProfilesInStudies = this.molecularProfilesInStudies.result!;
+            const nonMutationMolecularProfileDataAvailability = this.nonMutationMolecularProfileDataAvailability.result!;
+            for (const gene of this.genes.result!) {
+                ret[gene.entrezGeneId] = molecularProfilesInStudies.filter(p=>{
+                    if (p.molecularProfileId in nonMutationMolecularProfileDataAvailability) {
+                        return !!nonMutationMolecularProfileDataAvailability[p.molecularProfileId][gene.entrezGeneId];
+                    } else {
+                        return false;
+                    }
+                });
+            }
+            return Promise.resolve(ret);
         }
     });
 

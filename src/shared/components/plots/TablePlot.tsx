@@ -338,6 +338,7 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
 
     render() {
         if (!this.tableData.data.length) {
+            setTimeout(()=>this.svgRef(null), 0);
             return <span>No data to plot.</span>;
         }
         const cellElements = this.tableData.data.map(d=>{
