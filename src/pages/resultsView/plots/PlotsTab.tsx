@@ -167,13 +167,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             },
             get dataType() {
                 // default is horizontal CNA vs vertical mRNA
-                if (this._dataType === undefined && self.dataTypeOptions.length) {
-                    if (vertical && !!self.dataTypeOptions.find(o=>(o.value === AlterationTypeConstants.MRNA_EXPRESSION))) {
+                if (this.entrezGeneId === undefined) {
+                    return this._dataType;
+                }
+                const dataTypeOptions = self.geneToDataTypeOptions[this.entrezGeneId] || [];
+                if (this._dataType === undefined && dataTypeOptions.length) {
+                    if (vertical && !!dataTypeOptions.find(o=>(o.value === AlterationTypeConstants.MRNA_EXPRESSION))) {
                         return AlterationTypeConstants.MRNA_EXPRESSION;
-                    } else if (!vertical && !!self.dataTypeOptions.find(o=>(o.value === AlterationTypeConstants.COPY_NUMBER_ALTERATION))) {
+                    } else if (!vertical && !!dataTypeOptions.find(o=>(o.value === AlterationTypeConstants.COPY_NUMBER_ALTERATION))) {
                         return AlterationTypeConstants.COPY_NUMBER_ALTERATION;
                     } else {
-                        return self.dataTypeOptions[0].value;
+                        return dataTypeOptions[0].value;
                     }
                 } else {
                     return this._dataType;
@@ -186,11 +190,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 this._dataType = t;
             },
             get dataSourceId() {
+                if (this.entrezGeneId === undefined) {
+                    return this._dataSourceId;
+                }
+                const dataSourceOptionsByType = self.geneToTypeToDataSourceOptions[this.entrezGeneId] || {};
                 if (this._dataSourceId === undefined &&
                     this.dataType &&
-                    self.dataSourceOptionsByType[this.dataType] &&
-                    self.dataSourceOptionsByType[this.dataType].length) {
-                    return self.dataSourceOptionsByType[this.dataType][0].value;
+                    dataSourceOptionsByType[this.dataType] &&
+                    dataSourceOptionsByType[this.dataType].length) {
+                    return dataSourceOptionsByType[this.dataType][0].value;
                 } else {
                     return this._dataSourceId;
                 }
@@ -427,45 +435,51 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     }
 
-    @computed get dataTypeOptions() {
-        let dataTypeIds:string[] = [];
+    @computed get geneToDataTypeOptions():{[entrezGeneId:number]:{value:string, label:string}[]} {
+        if (this.props.store.nonMutationMolecularProfilesWithData.isComplete) {
+            return _.mapValues(this.props.store.nonMutationMolecularProfilesWithData.result!,
+                profiles=>{
+                const dataTypeIds:string[] = _.uniq(
+                    profiles.map(profile=>profile.molecularAlterationType)
+                ).filter(type=>!!dataTypeToDisplayType[type]);
 
-        if (this.props.store.molecularProfilesInStudies.isComplete) {
-            dataTypeIds = dataTypeIds.concat(
-                _.uniq(
-                    this.props.store.molecularProfilesInStudies.result.map(profile=>profile.molecularAlterationType)
-                ).filter(type=>!!dataTypeToDisplayType[type])
+                if (this.clinicalAttributeOptions.length) {
+                    dataTypeIds.push(CLIN_ATTR_DATA_TYPE);
+                }
+
+                return _.sortBy(dataTypeIds,
+                            type=>dataTypeDisplayOrder.indexOf(type)
+                        ).map(type=>({
+                            value: type,
+                            label: dataTypeToDisplayType[type]
+                        }))
+                }
             );
-        }
 
-        if (this.clinicalAttributeOptions.length) {
-            dataTypeIds.push(CLIN_ATTR_DATA_TYPE);
+        } else {
+            return {};
         }
-
-        return _.sortBy(
-            dataTypeIds,
-            type=>dataTypeDisplayOrder.indexOf(type)
-        ).map(type=>({
-            value: type,
-            label: dataTypeToDisplayType[type]
-        }));
     }
 
-    @computed get dataSourceOptionsByType() {
-        let ret:{[type:string]:{value:string, label:string}[]} = {};
-
-        if (this.props.store.molecularProfilesInStudies.isComplete) {
-            ret = Object.assign(ret, _.mapValues(
-                _.groupBy(this.props.store.molecularProfilesInStudies.result, profile=>profile.molecularAlterationType),
-                profiles=>profiles.map(p=>({value:p.molecularProfileId, label:p.name}))
-            ));
+    @computed get geneToTypeToDataSourceOptions():{[entrezGeneId:number]:{[type:string]:{value:string, label:string}[]}} {
+        if (this.props.store.nonMutationMolecularProfilesWithData.isComplete) {
+            return _.mapValues(this.props.store.nonMutationMolecularProfilesWithData.result!,
+                profiles=>{
+                    const map = _.mapValues(
+                        _.groupBy(profiles, profile=>profile.molecularAlterationType),
+                        profilesOfType=>(
+                            profilesOfType.map(p=>({value:p.molecularProfileId, label:p.name})
+                        ))
+                    );
+                    if (this.clinicalAttributeOptions.length) {
+                        map[CLIN_ATTR_DATA_TYPE] = this.clinicalAttributeOptions;
+                    }
+                    return map;
+                }
+            );
+        } else {
+            return {};
         }
-
-        if (this.clinicalAttributeOptions.length) {
-            ret[CLIN_ATTR_DATA_TYPE] = this.clinicalAttributeOptions;
-        }
-
-        return ret;
     }
 
     @autobind
@@ -748,6 +762,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     private getAxisMenu(vertical:boolean) {
         const axisSelection = vertical ? this.vertSelection : this.horzSelection;
         const dataTestWhichAxis = vertical ? "Vertical" : "Horizontal";
+        let dataTypeOptions:{value:string, label:string}[] = [];
+        let dataSourceOptionsByType:{[type:string]:{value:string, label:string}[]} = {};
+        if (axisSelection.entrezGeneId !== undefined) {
+            dataTypeOptions = this.geneToDataTypeOptions[axisSelection.entrezGeneId] || [];
+            dataSourceOptionsByType = this.geneToTypeToDataSourceOptions[axisSelection.entrezGeneId] || {};
+        }
         return (
             <form>
                 <h4>{vertical ? "Vertical" : "Horizontal"} Axis</h4>
@@ -789,7 +809,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             name={`${vertical ? "v" : "h"}-profile-type-selector`}
                             value={axisSelection.dataType}
                             onChange={vertical ? this.onVerticalAxisDataTypeSelect : this.onHorizontalAxisDataTypeSelect}
-                            options={this.dataTypeOptions}
+                            options={dataTypeOptions}
                             clearable={false}
                             searchable={false}
                         />
@@ -801,7 +821,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 name={`${vertical ? "v" : "h"}-profile-name-selector`}
                                 value={axisSelection.dataSourceId}
                                 onChange={vertical ? this.onVerticalAxisDataSourceSelect : this.onHorizontalAxisDataSourceSelect}
-                                options={this.dataSourceOptionsByType[axisSelection.dataType+""] || []}
+                                options={dataSourceOptionsByType[axisSelection.dataType+""] || []}
                                 clearable={false}
                                 searchable={false}
                             />
@@ -1224,6 +1244,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             return (
                 <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative inlineBlock" style={{position: "relative"}}>
                     <div style={{display:"flex", flexDirection:"row"}}>
+                    {this.svg && (
                         <DownloadControls
                             getSvg={this.getSvg}
                             filename={this.downloadFilename}
@@ -1238,8 +1259,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             style={{position:'absolute', right:10, top:10 }}
                             collapse={true}
                         />
+                    )}
                         {plotElt}
-                        {(plotType === PlotType.ScatterPlot || plotType === PlotType.BoxPlot) &&
+                        { this.svg && // only show info if theres an actual plot
+                        (plotType === PlotType.ScatterPlot || plotType === PlotType.BoxPlot) &&
                         (this.viewType === ViewType.MutationType || this.viewType === ViewType.MutationTypeAndCopyNumber) && (
                             <div style={{position:"relative", top:legendY + 4.5}}>
                                 <InfoIcon
