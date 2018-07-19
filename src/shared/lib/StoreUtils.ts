@@ -495,8 +495,7 @@ export function fetchMyCancerGenomeData(): IMyCancerGenomeData
 
 export function fetchMutationalSignatureData(): IMutationalSignature[]
 {
-    const data: IMutationalSignature[] = require('../../../resources/samplemutsigdata.json');
-    return data;
+    return require('../../../resources/samplemutsigdata.json');
 }
 
 export async function fetchOncoKbAnnotatedGenes(client: OncoKbAPI = oncokbClient): Promise<{[entrezGeneId:number]:boolean}>
