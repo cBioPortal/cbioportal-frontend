@@ -1,4 +1,4 @@
-.flex-container {
+.sample-report.flex-container {
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -39,7 +39,7 @@
         }
     }
 }
-.sample-info {
+.sample-report.sample-info {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -94,7 +94,7 @@
                 width: 100%;
                 color: white;
                 letter-spacing: 1px;
-                text-transform: uppercase;
+                /*text-transform: uppercase;*/
                 font-size: medium;
             }
 
@@ -104,7 +104,7 @@
                 align-self: center;
                 display:flex;
                 justify-content: space-evenly;
-                font-size: 100px;
+                font-size: 50px;
                 text-align:center;
             }
 
@@ -134,17 +134,20 @@
                                             supported by Chrome and Opera */
         }
         .sample-info-card.genomic-alterations-card.active {
-            border-style: solid;
-            border-width: 4px;
+            /*border-style: solid;
+            border-width: 4px;*/
+            .sample-info-card-number {
+                text-decoration: underline;
+            }
         }
         .sample-info-card.genomic-alterations-card.active.mutations {
             border-color: #007400; 
         }
         .sample-info-card.genomic-alterations-card.active.copy-number-changes {
-            border-color: #FF0000;
+            border-color: #d83c3c;
         }
         .sample-info-card.genomic-alterations-card.active.rearrangements {
-            border-color: #8B00C9;
+            border-color: #8d0ec5;
         }
         .sample-info-card.genomic-alterations-card:hover {
             cursor: pointer;
@@ -158,13 +161,13 @@
         }
         .sample-info-card.copy-number-changes {
             .sample-info-card-title {
-                background-color: #FF0000;
+                background-color: #d83c3c;
                 text-align: center;
             }
         }
         .sample-info-card.rearrangements {
             .sample-info-card-title {
-                background-color: #8B00C9;
+                background-color: #8d0ec5;
                 text-align: center;
             }
         }
@@ -191,17 +194,6 @@
         padding: 10px;
         text-align: left;
     }
-}
-$mutations-color: #007400;
-.badge.genetic-alteration-filter {
-    cursor: pointer;
-    -webkit-touch-callout: none; /* iOS Safari */
-    -webkit-user-select: none; /* Safari */
-    -khtml-user-select: none; /* Konqueror HTML */
-        -moz-user-select: none; /* Firefox */
-        -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none; /* Non-prefixed version, currently
-                                supported by Chrome and Opera */
 }
 /* Decided to not use this component 
 .badge.mutations.actionable:hover {

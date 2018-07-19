@@ -2,37 +2,38 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import $ from 'jquery';
 import { default as ReactBootstrap} from 'react-bootstrap';
-import GenomicOverview from './genomicOverview/GenomicOverview';
+import GenomicOverview from 'pages/patientView/genomicOverview/GenomicOverview';
 import { ClinicalData } from "shared/api/generated/CBioPortalAPI";
-import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
-import { RequestStatus } from "../../shared/api/api-types-extended";
-import FeatureTitle from '../../shared/components/featureTitle/FeatureTitle';
+import { ClinicalDataBySampleId } from "shared/api/api-types-extended";
+import { RequestStatus } from "shared/api/api-types-extended";
+import FeatureTitle from 'shared/components/featureTitle/FeatureTitle';
 import {If, Then, Else} from 'react-if';
-import SampleManager from './sampleManager';
+import SampleManager from 'pages/patientView/sampleManager';
 import SelectCallback = ReactBootstrap.SelectCallback;
 import {ThreeBounce} from 'better-react-spinkit';
-import PatientHeader from './patientHeader/PatientHeader';
-import {PaginationControls} from "../../shared/components/paginationControls/PaginationControls";
-import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
-import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
-import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformationSamplesTable";
+import PatientHeader from 'pages/patientView/patientHeader/PatientHeader';
+import {PaginationControls} from "shared/components/paginationControls/PaginationControls";
+import { PatientViewPageStore } from 'pages/patientView/clinicalInformation/PatientViewPageStore';
+import ClinicalInformationPatientTable from "pages/patientView/clinicalInformation/ClinicalInformationPatientTable";
+import ClinicalInformationSamples from "pages/patientView/clinicalInformation/ClinicalInformationSamplesTable";
 import {observer, inject } from "mobx-react";
-import {getSpanElementsFromCleanData} from './clinicalInformation/lib/clinicalAttributesUtil.js';
-import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
+import {getSpanElementsFromCleanData} from 'pages/patientView/clinicalInformation/lib/clinicalAttributesUtil';
+import CopyNumberTableWrapper from "pages/patientView/copyNumberAlterations/CopyNumberTableWrapper";
 import {reaction, computed, autorun, IReactionDisposer} from "mobx";
-import Timeline from "./timeline/Timeline";
-import {default as PatientViewMutationTable} from "./mutation/PatientViewMutationTable";
-import PathologyReport from "./pathologyReport/PathologyReport";
-import { MSKTabs, MSKTab } from "../../shared/components/MSKTabs/MSKTabs";
-import { validateParametersPatientView } from '../../shared/lib/validateParameters';
+import Timeline from "pages/patientView/timeline/Timeline";
+import {default as PatientViewMutationTable} from "pages/patientView/mutation/PatientViewMutationTable";
+import PathologyReport from "pages/patientView/pathologyReport/PathologyReport";
+import { MSKTabs, MSKTab } from "shared/components/MSKTabs/MSKTabs";
+import { validateParametersPatientView } from 'shared/lib/validateParameters';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import ValidationAlert from "shared/components/ValidationAlert";
 import AjaxErrorModal from "shared/components/AjaxErrorModal";
 import AppConfig from 'appConfig';
-import { getMouseIcon } from './SVGIcons';
+import { getMouseIcon } from 'pages/patientView/SVGIcons';
+import SampleRecord from 'pages/patientView/simple/SampleRecord';
 
 import './patient.scss';
-import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
+import IFrameLoader from "shared/components/iframeLoader/IFrameLoader";
 import SampleHeader from 'pages/patientView/sampleHeader/SampleHeader';
 
 
@@ -210,6 +211,28 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 />
             );
         }
+
+        // For sample reports
+        const sampleRecords = sampleManager && sampleManager.samples && (_.map(sampleManager!.samples, (sample: ClinicalDataBySampleId) => {
+                return (
+                    <SampleRecord
+                        sample={sample}
+                        sampleManager={sampleManager}
+                        handleSampleClick={(() => void 0)}
+                        studyId={patientViewPageStore.studyMetaData.result!.studyId}
+                        mutationData={patientViewPageStore.mutationData.result!.filter(((mut) => mut.sampleId === sample.id))}
+                        cnaStatus={this.cnaTableStatus}
+                        discreteCNAData={patientViewPageStore.discreteCNAData.result}
+                        oncoKbData={patientViewPageStore.oncoKbData}
+                        cnaOncoKbData={patientViewPageStore.cnaOncoKbData}
+                        oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
+                        evidenceCache={patientViewPageStore.oncoKbEvidenceCache}
+                        pubMedCache={patientViewPageStore.pubMedCache}
+                        userEmailAddress={AppConfig.userEmailAddress}
+                        patientViewPageStore={patientViewPageStore}
+                    />
+                );
+        }));
 
         return (
             <div className="patientViewPage">
@@ -411,6 +434,39 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     >
                         <div style={{position: "relative"}}>
                             <IFrameLoader height={700} url={  `http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=${patientViewPageStore.patientId}` } />
+                        </div>
+                    </MSKTab>
+
+                    <MSKTab key={6} id="sampleReportTab" linkText="Sample Report">
+                        <LoadingIndicator isLoading={patientViewPageStore.clinicalEvents.isPending} />
+                        <div className="sample-report flex-container">
+                            <div className="flex-row">
+                                <div className="patient-header">
+                                    <div className="patient-text">
+                                        {  (patientViewPageStore.patientViewData.isComplete) && (
+                                            <PatientHeader
+                                                        handlePatientClick={((id: string) => void 0)}
+                                                        patient={patientViewPageStore.patientViewData.result.patient}
+                                                        studyId={patientViewPageStore.studyId}
+                                                        darwinUrl={patientViewPageStore.darwinUrl.result}
+                                                        sampleManager={sampleManager}
+                                                        showIcon={true}/>
+                                        ) }
+                                    </div>
+                                </div>
+                            </div>
+                            {sampleRecords && sampleRecords.map((rec:JSX.Element) => {
+                                return (
+                                    <div>
+                                        <div className="flex-row">
+                                            <div className="line-in-middle">
+                                            &nbsp;
+                                            </div>
+                                        </div>
+                                        {rec}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </MSKTab>
 

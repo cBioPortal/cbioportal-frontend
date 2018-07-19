@@ -54,7 +54,7 @@ export default class PatientViewPageSimple extends React.Component<IPatientViewP
             (window as any).sampleManager = sampleManager;
         }
 
-        const sampleRecords = _.map(sampleManager!.samples, (sample: ClinicalDataBySampleId) => {
+        const sampleRecords = sampleManager && sampleManager.samples && (_.map(sampleManager!.samples, (sample: ClinicalDataBySampleId) => {
                 return (
                     <SampleRecord
                         sample={sample}
@@ -73,10 +73,10 @@ export default class PatientViewPageSimple extends React.Component<IPatientViewP
                         patientViewPageStore={patientViewPageStore}
                     />
                 );
-        });
+        }));
 
         return (
-            <div className="flex-container">
+            <div className="sample-report flex-container">
                 <div className="flex-row">
                     <div className="patient-header">
                         <div className="patient-text">
@@ -92,7 +92,7 @@ export default class PatientViewPageSimple extends React.Component<IPatientViewP
                         </div>
                     </div>
                 </div>
-                {sampleRecords.map((rec:JSX.Element) => {
+                {sampleRecords && sampleRecords.map((rec:JSX.Element) => {
                     return (
                         <div>
                             <div className="flex-row">

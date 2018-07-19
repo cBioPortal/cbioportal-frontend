@@ -1,5 +1,6 @@
 import React from "react";
-import { IndicatorQueryResp, Query } from "shared/api/generated/OncoKbAPI";
+import * as _ from "lodash";
+import { IndicatorQueryResp, Query, IndicatorQueryTreatment } from "shared/api/generated/OncoKbAPI";
 import OncoKB from "shared/components/annotation/OncoKB";
 import { IAnnotation } from "shared/components/mutationTable/column/AnnotationColumnFormatter";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
@@ -19,8 +20,8 @@ export default class DrugInfo extends React.Component<IDrugInfoProps, {}> {
     render() {
         if (this.props.indicator) {
             return (
-                <div>
-                    <div style={{width:300,margin:"0 auto",textAlign:"center"}}>
+                <tr>
+                    <td>
                         <OncoKB
                             hugoGeneSymbol={this.props.annotation.hugoGeneSymbol}
                             geneNotExist={!this.props.annotation.oncoKbGeneExist}
@@ -31,9 +32,11 @@ export default class DrugInfo extends React.Component<IDrugInfoProps, {}> {
                             pubMedCache={this.props.pubMedCache}
                             userEmailAddress={this.props.userEmailAddress}
                         />
-                    <b>{this.props.indicator.query.hugoSymbol}</b> {this.props.indicator.query.alteration} {this.props.indicator.treatments[0].drugs[0].drugName}
-                    </div>
-                </div>
+                    </td>
+                    <td><b>{this.props.indicator.query.hugoSymbol}</b></td>
+                    <td>{this.props.indicator.query.alteration}</td>
+                    <td>{_.uniq(_.flatMap(this.props.indicator.treatments, (x) => x.drugs).map((x) => x.drugName)).join(", ")}</td>
+                </tr>
             );
         } else {
             return null;

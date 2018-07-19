@@ -17,6 +17,7 @@ import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicato
 import AppConfig from 'appConfig';
 import PatientViewMutationTable from "pages/patientView/mutation/PatientViewMutationTable";
 import CopyNumberTableWrapper from "pages/patientView/copyNumberAlterations/CopyNumberTableWrapper";
+import GeneticAlterationTable from "pages/patientView/simple/GeneticAlterationTable";
 
 export type ISampleRecordProps = {
     sample: ClinicalDataBySampleId;
@@ -41,7 +42,7 @@ type MutationAndAnnotation = {
 };
 
 type DiscreteCopyNumberDataAndAnnotation = {
-    cna: DiscreteCopyNumberData;
+    discreteCopyNumberData: DiscreteCopyNumberData;
     annotation: IAnnotation;
 };
 
@@ -62,6 +63,15 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
             show_rearrangements: false
         };
     }
+    getNumberOfAlterations() {
+        return this.props.mutationData.length + this.props.discreteCNAData.length;
+    }
+    getNumberOfDriverAlterations() {
+        return this.getDrivers().length + this.getCNADrivers().length;
+    }
+    getNumberOfDriverAlterationsWithTreatmentInfo() {
+        return this.getDriversWithTreatmentInfo().length + this.getCNADriversWithTreatmentInfo().length;
+    }
     getDrivers() {
         if (this.props.oncoKbData.result) {
             const drivers = this.props.mutationData.map(
@@ -80,8 +90,13 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
     getCNADrivers() {
         if (this.props.cnaOncoKbData.result) {
             const drivers = this.props.discreteCNAData.map(
-                (cna:DiscreteCopyNumberData) => AnnotationColumnFormatterDiscreteCNA.getIndicatorData([cna], this.props.cnaOncoKbData.result!)
-            ).filter(x => x !== undefined && x.oncogenic);
+                (cna:DiscreteCopyNumberData) => {
+                    return {
+                        "discreteCopyNumberData":cna,
+                        "annotation":AnnotationColumnFormatterDiscreteCNA.getData([cna], this.props.oncoKbAnnotatedGenes, this.props.cnaOncoKbData)
+                    };
+                }
+            ).filter(x => x.annotation !== undefined && x.annotation.oncoKbIndicator && x.annotation.oncoKbIndicator.oncogenic);
             return drivers;
         } else {
             return [];
@@ -92,13 +107,11 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
         return this.getDrivers().filter(x => x.annotation.oncoKbIndicator && x.annotation.oncoKbIndicator.treatments.length > 0);
     }
     getCNADriversWithTreatmentInfo() {
-        return this.getCNADrivers().filter(x => x && x.treatments.length > 0);
+        return this.getCNADrivers().filter(x => x.annotation.oncoKbIndicator && x.annotation.oncoKbIndicator.treatments.length > 0);
     }
     render() {
-        const annotationDiscreteCNAData:IAnnotation = AnnotationColumnFormatterDiscreteCNA.getData(this.props.discreteCNAData, this.props.oncoKbAnnotatedGenes, this.props.cnaOncoKbData);
-
         return (
-            <div className="sample-info">
+            <div className="sample-report sample-info">
                 <div style={{width:"100%",paddingBottom:10,fontSize:"medium"}}>
                     <SampleHeader
                         sample={this.props.sample}
@@ -108,34 +121,49 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                     />
                 </div>
                 <div style={{padding:10,width:"100%"}}>
-                    {(this.getDriversWithTreatmentInfo().length > 0) && (
-                        <div className="flex-row sample-info-record sample-info-record-drugs">
-                            <div className='sample-info-card sample-info-drugs'>
-                                <div className='sample-info-card-title extra-text-header'>Diagnostic, Therapeutic and/or Prognostic biomarker(s)</div>
-                                    <div style={{padding:20,textAlign:"center", fontSize:"large"}}>
-                                        {this.getDriversWithTreatmentInfo().map((mutAnn:MutationAndAnnotation) => {
-                                            return mutAnn && (
-                                                    <DrugInfo 
-                                                        annotation={mutAnn.annotation}
-                                                        indicator={mutAnn.annotation.oncoKbIndicator}
-                                                        evidenceCache={this.props.evidenceCache}
-                                                        evidenceQuery={mutAnn.annotation.oncoKbIndicator && mutAnn.annotation.oncoKbIndicator.query}
-                                                        pubMedCache={this.props.pubMedCache}
-                                                        userEmailAddress={this.props.userEmailAddress}
-                                                    />
-                                            );
-                                        })}
+                    <div className="flex-row sample-info-record sample-info-record-drugs">
+                        <div className='sample-info-card sample-info-drugs'>
+                            <div className='sample-info-card-title extra-text-header'>Summary</div>
+                            <div style={{padding:20,textAlign:"center", fontSize:"large"}}>
+                                <p style={{paddingBottom:10}}>{this.getNumberOfAlterations()} alterations detected, including <b>{this.getNumberOfDriverAlterations()} known oncogenic</b> of which <b>{this.getNumberOfDriverAlterationsWithTreatmentInfo()} are actionable</b>:</p>
+                                {(this.getDriversWithTreatmentInfo().length > 0) && (
+                                    <div>
+                                        <table className="table">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">Level</th>
+                                                    <th scope="col">Gene</th>
+                                                    <th scope="col">Alteration</th>
+                                                    <th scope="col">Drug</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {this.getDriversWithTreatmentInfo().map((mutAnn:MutationAndAnnotation) => {
+                                                    return mutAnn && (
+                                                            <DrugInfo 
+                                                                annotation={mutAnn.annotation}
+                                                                indicator={mutAnn.annotation.oncoKbIndicator}
+                                                                evidenceCache={this.props.evidenceCache}
+                                                                evidenceQuery={mutAnn.annotation.oncoKbIndicator && mutAnn.annotation.oncoKbIndicator.query}
+                                                                pubMedCache={this.props.pubMedCache}
+                                                                userEmailAddress={this.props.userEmailAddress}
+                                                            />
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
                                     </div>
+                                )}
                             </div>
                         </div>
-                    )}
-                    <div className="flex-row sample-info-record">
+                    </div>
+                    <div style={{paddingTop:10}} className="flex-row sample-info-record">
                         <div className={classNames('sample-info-card', 'genomic-alterations-card', 'mutations', {'active': this.state.show_mutations})} onClick={() => {this.setState({show_mutations:!this.state.show_mutations});}}>
                             <div className='sample-info-card-title extra-text-header'>Mutations</div>
                             <div className='sample-info-card-number'><div>{this.props.mutationData.length}</div></div>
                             <div className='sample-info-card-extra-info extra-text'>
                                 <div className="extra-info-drivers extra-text">
-                                    {this.getDrivers().length} driver{this.getDrivers().length > 1? "s":""}<br />
+                                    {this.getDrivers().length} oncogenic<br />
                                     {this.getDriversWithTreatmentInfo().length} actionable<br />
                                 </div>
                                 <div className="extra-info-passengers extra-text"><br />TMB: 2.3</div>
@@ -146,10 +174,10 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                             <div className='sample-info-card-number'><div>{this.props.cnaStatus === "available"? this.props.discreteCNAData.length : "-"}</div></div>
                             <div className='sample-info-card-extra-info extra-text'>
                                 <div className="extra-info-drivers extra-text">
-                                    {this.getCNADrivers().length} driver{this.getCNADrivers().length > 1? "s":""}<br />
+                                    {this.getCNADrivers().length} oncogenic<br />
                                     {this.getCNADriversWithTreatmentInfo().length} actionable<br />
                                 </div>
-                                <div className="extra-info-passengers extra-text"></div>
+                                <div className="extra-info-passengers extra-text"><br />FGA: 0.2</div>
                             </div>
                         </div>
                         <div className={classNames('sample-info-card', 'genomic-alterations-card', 'rearrangements', {active: this.state.show_rearrangements})} onClick={() => {this.setState({show_rearrangements:!this.state.show_rearrangements});}}>
@@ -159,12 +187,15 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                         </div>
                     </div>
                     <div style={{width:"100%"}}>
-                        {(this.state.show_mutations || this.state.show_rearrangements) && (
+                        {(this.state.show_mutations || this.state.show_rearrangements || this.state.show_cna) && (
+                            this.getGeneticAlterationTable()
+                        )}
+                        {/*(this.state.show_mutations || this.state.show_rearrangements) && (
                             this.getMutationTable()
                         )}
                         {(this.state.show_cna) && (
                             this.getCopyNumberTable()
-                        )}
+                        )*/}
                     </div>
                 </div>
             </div>
@@ -243,6 +274,50 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                     gisticData={patientViewPageStore.gisticData.result}
                     mrnaExprRankMolecularProfileId={patientViewPageStore.mrnaRankMolecularProfileId.result || undefined}
                     status={this.props.cnaStatus}
+                />
+            </div>
+        );
+    }
+    private getGeneticAlterationTable(): JSX.Element {
+        const patientViewPageStore = this.props.patientViewPageStore;
+        const sampleManager = this.props.sampleManager;
+
+        return (
+            <div style={{paddingTop:30}}>
+                <LoadingIndicator 
+                    isLoading={(
+                        (this.props.cnaStatus === 'loading') ||
+                        patientViewPageStore.mutationData.isPending ||
+                        patientViewPageStore.uncalledMutationData.isPending ||
+                        patientViewPageStore.oncoKbAnnotatedGenes.isPending
+                    )}
+                />
+                <GeneticAlterationTable
+                    sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
+                    sampleManager={sampleManager}
+                    cnaOncoKbData={patientViewPageStore.cnaOncoKbData}
+                    cnaCivicGenes={patientViewPageStore.cnaCivicGenes}
+                    cnaCivicVariants={patientViewPageStore.cnaCivicVariants}
+                    oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
+                    oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
+                    enableOncoKb={AppConfig.showOncoKB}
+                    enableCivic={AppConfig.showCivic}
+                    userEmailAddress={AppConfig.userEmailAddress}
+                    pubMedCache={patientViewPageStore.pubMedCache}
+                    data={[...patientViewPageStore.mergedDiscreteCNAData, ...patientViewPageStore.mergedMutationDataIncludingUncalled]}
+                    copyNumberCountCache={patientViewPageStore.copyNumberCountCache}
+                    mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
+                    gisticData={patientViewPageStore.gisticData.result}
+                    mrnaExprRankMolecularProfileId={patientViewPageStore.mrnaRankMolecularProfileId.result || undefined}
+                    status={this.props.cnaStatus}
+                    // mutation annotation info
+                    hotspotData={patientViewPageStore.indexedHotspotData}
+                    myCancerGenomeData={patientViewPageStore.myCancerGenomeData}
+                    oncoKbData={patientViewPageStore.oncoKbData}
+                    civicGenes={patientViewPageStore.civicGenes}
+                    civicVariants={patientViewPageStore.civicVariants}
+                    enableHotspot={AppConfig.showHotspot}
+                    enableMyCancerGenome={AppConfig.showMyCancerGenome}
                 />
             </div>
         );
