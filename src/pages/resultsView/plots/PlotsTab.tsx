@@ -29,7 +29,7 @@ import InfoIcon from "../../../shared/components/InfoIcon";
 import {remoteData} from "../../../shared/api/remoteData";
 import {MobxPromise} from "mobxpromise";
 import BoxScatterPlot, {LEGEND_Y as BOXPLOT_LEGEND_Y, IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPlot";
-import DownloadControls from "../../../shared/components/DownloadControls";
+import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import setWindowVariable from "../../../shared/lib/setWindowVariable";
 import autobind from "autobind-decorator";
@@ -1229,13 +1229,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             filename={this.downloadFilename}
                             buttons={["SVG", "PDF"]}
                             additionalRightButtons={[{
-                                key:"data",
+                                key:"Data",
                                 content:<span>Data <i className="fa fa-cloud-download" aria-hidden="true"/></span>,
                                 onClick:this.downloadData,
                                 disabled: !this.props.store.entrezGeneIdToGene.isComplete
                             }]}
                             dontFade={true}
                             style={{position:'absolute', right:10, top:10 }}
+                            collapse={true}
                         />
                         {plotElt}
                         {(plotType === PlotType.ScatterPlot || plotType === PlotType.BoxPlot) &&
