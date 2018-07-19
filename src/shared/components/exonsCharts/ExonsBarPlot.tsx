@@ -26,7 +26,7 @@ import ExonsBarPlotStore from './ExonsBarPlotStore';
 import DefaultTooltip from '../defaultTooltip/DefaultTooltip';
 import { PfamDomainRangeExt } from '../../model/Fusion';
 import { ExonRangeExt } from '../../model/Fusion';
-import styles from "./ExonBarPlot.scss";
+import  "./ExonBarPlot.scss";
 
 export interface IExonBarPlotProps {
     store: ExonsBarPlotStore;
@@ -59,7 +59,6 @@ export default class ExonBarPlot extends React.Component<IExonBarPlotProps, {}> 
                     placement="top"
                     overlay={this.renderExonToolTipContent(e)}>
                     <rect
-                        className='exon-fade-in'
                         x={e.x}
                         y={0}
                         width={e.width * this.props.store.divider}
@@ -102,7 +101,7 @@ export default class ExonBarPlot extends React.Component<IExonBarPlotProps, {}> 
         const pFamX = this.props.store.deltaXPos > 0 ? this.props.store.deltaXPos : '';
 
         return (
-            <div style={{display: 'flex', width: '100%'}}>
+            <div style={{display: 'flex', width: '100%'}} className='fade-in'>
                 <div
                     style={{
                         display: 'flex',
