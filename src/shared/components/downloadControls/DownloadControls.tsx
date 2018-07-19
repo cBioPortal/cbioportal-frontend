@@ -1,11 +1,14 @@
 import * as React from "react";
 import SvgSaver from 'svgsaver';
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
-import FadeInteraction from "./fadeInteraction/FadeInteraction";
+import FadeInteraction from "../fadeInteraction/FadeInteraction";
 import {observer} from "mobx-react";
-import {computed} from "mobx";
+import {action, computed, observable} from "mobx";
 import autobind from "autobind-decorator";
 import fileDownload from 'react-file-download';
+import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
+import classnames from "classnames";
+import styles from "./DownloadControls.module.scss";
 
 type ButtonSpec = { key:string, content:JSX.Element, onClick:()=>void, disabled?: boolean };
 
@@ -19,6 +22,7 @@ interface IDownloadControlsProps {
     additionalLeftButtons?:ButtonSpec[],
     additionalRightButtons?:ButtonSpec[]
     dontFade?:boolean;
+    collapse?:boolean;
     style?:any;
 }
 
@@ -35,9 +39,22 @@ function makeButton(spec:ButtonSpec) {
     );
 }
 
+function makeMenuItem(spec:ButtonSpec) {
+    return (
+        <div
+            key={spec.key}
+            onClick={spec.disabled ? ()=>{} : spec.onClick}
+            className={classnames({[styles.menuItemEnabled]:!spec.disabled, [styles.menuItemDisabled]:!!spec.disabled}, styles.menuItem)}
+        >
+            {spec.key}
+        </div>
+    );
+}
+
 @observer
 export default class DownloadControls extends React.Component<IDownloadControlsProps, {}> {
     private svgsaver = new SvgSaver();
+    @observable private collapsed = true;
 
     @autobind
     private downloadSvg() {
@@ -106,25 +123,52 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
         };
     }
 
-    @computed get buttons() {
-        const btns:DownloadControlsButton[] = this.props.buttons || ["SVG", "PNG", "PDF"];
-        return btns.map(btn=>makeButton(this.downloadControlsButtons[btn]));
+    @computed get buttonSpecs() {
+        const middleButtons = (this.props.buttons || ["SVG", "PNG", "PDF"]).map(x=>this.downloadControlsButtons[x]);
+        return (this.props.additionalLeftButtons || []).concat(middleButtons).concat(this.props.additionalRightButtons || []);
+    }
+
+    @autobind @action
+    private onTooltipVisibleChange(visible:boolean) {
+        this.collapsed = !visible;
     }
 
     render() {
-        const buttonGroup = (
-            <div role="group" className="btn-group chartDownloadButtons" style={this.props.style||{}}>
-                {this.props.additionalLeftButtons && this.props.additionalLeftButtons.map(makeButton)}
-                {this.buttons}
-                {this.props.additionalRightButtons && this.props.additionalRightButtons.map(makeButton)}
-            </div>
-        );
+        let element:any = null
+        if (this.props.collapse) {
+            element = (
+                <div style={this.props.style||{}}>
+                    <DefaultTooltip
+                        mouseEnterDelay={0}
+                        onVisibleChange={this.onTooltipVisibleChange as any}
+                        overlay={<div className={classnames("cbioportal-frontend", styles.downloadControls)} style={{display:"flex", flexDirection:"column"}}>{this.buttonSpecs.map(makeMenuItem)}</div>}
+                        placement="bottom"
+                    >
+                        <div style={{cursor:"pointer"}}>
+                            <div
+                                key="collapsedIcon"
+                                className={classnames("btn", "btn-default", "btn-xs", {"active":!this.collapsed} )}
+                                style={{pointerEvents:"none"}}
+                            >
+                                <span><i className="fa fa-cloud-download" aria-hidden="true"/></span>
+                            </div>
+                        </div>
+                    </DefaultTooltip>
+                </div>
+            );
+        } else {
+            element = (
+                <div role="group" className="btn-group chartDownloadButtons" style={this.props.style||{}}>
+                    {this.buttonSpecs.map(makeButton)}
+                </div>
+            );
+        }
         if (this.props.dontFade) {
-            return buttonGroup;
+            return element;
         } else {
             return (
                 <FadeInteraction>
-                    {buttonGroup}
+                    {element}
                 </FadeInteraction>
             );
         }
