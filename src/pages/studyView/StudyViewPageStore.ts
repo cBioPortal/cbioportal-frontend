@@ -28,6 +28,7 @@ import {
 import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
+import {Layout} from 'react-grid-layout';
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT'
 
@@ -58,6 +59,7 @@ export type ChartMeta = {
 }
 
 export type StudyViewPageLayOutProps = {
+    layout: Layout[],
     cols:number,
     rowHeight: number
 }
@@ -99,8 +101,10 @@ export class StudyViewPageStore {
 
     @computed
     get studyViewPageLayoutProps(): StudyViewPageLayOutProps {
+        let cols = Math.floor(this.browserWidth / chartWidth);
         return {
-            cols: Math.floor(this.browserWidth / chartWidth),
+            layout: this.calculateLayout(this.visibleAttributes, cols),
+            cols: cols,
             rowHeight: 200
         };
     }
@@ -204,12 +208,26 @@ export class StudyViewPageStore {
             filters.cnaGenes = [this._cnaGeneFilter];
         }
 
-        if(this._sampleIdentifiers && this._sampleIdentifiers.length>0) {
+        if (this._sampleIdentifiers && this._sampleIdentifiers.length > 0) {
             filters.sampleIdentifiers = this._sampleIdentifiers;
         } else {
             filters.studyIds = this.studyIds
         }
         return filters;
+    }
+
+    private calculateLayout(visibleAttributes: ChartMeta[], cols: number): Layout[] {
+        let layout: Layout[] = _.sortBy(visibleAttributes, [(attr: ChartMeta) => attr.clinicalAttribute.priority])
+            .map((attr, index) => ({
+                    i: attr.uniqueKey,
+                    x: index % cols,
+                    y: Math.floor(index / cols),
+                    w: 1,
+                    h: 1,
+                    isResizable: false
+                })
+            ) || [];
+        return layout;
     }
 
     public getMutatedGenesTableFilters(): number[] {

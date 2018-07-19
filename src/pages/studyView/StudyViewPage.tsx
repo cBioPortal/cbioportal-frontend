@@ -91,12 +91,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         return (
             <div
                 key={chartMeta.uniqueKey}
-                data-grid={{
-                    x: index % this.store.studyViewPageLayoutProps.cols,
-                    y: Math.floor(index / this.store.studyViewPageLayoutProps.cols),
-                    w: 1,
-                    h: 1
-                }}
                 style={{border: '1px solid #d3d3d3'}}
             >
                 <ChartContainer
@@ -169,6 +163,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                  style={{width: this.store.containerWidth}}
                                                  cols={this.store.studyViewPageLayoutProps.cols}
                                                  rowHeight={this.store.studyViewPageLayoutProps.rowHeight}
+                                                 layout={this.store.studyViewPageLayoutProps.layout}
                                                  draggableHandle={'.fa-arrows'}>
                                     {this.store.visibleAttributes.map(this.renderAttributeChart)}
                                 </ReactGridLayout>
