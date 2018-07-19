@@ -164,8 +164,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     public render() {
         return (
-            <div className={classnames(styles.chart, this.chartWidth, this.chartHeight)}
-                onMouseEnter={this.handlers.onMouseEnterChart}
+            <div onMouseEnter={this.handlers.onMouseEnterChart}
                 onMouseLeave={this.handlers.onMouseLeaveChart}>
                 <ChartHeader
                     clinicalAttribute={this.props.chartMeta.clinicalAttribute}

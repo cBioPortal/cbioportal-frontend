@@ -1,24 +1,28 @@
 import * as React from 'react';
-import { inject, observer } from "mobx-react";
+import {inject, observer} from "mobx-react";
 import styles from "./styles.module.scss";
-import { MutatedGenesTable } from "./table/MutatedGenesTable";
-import { CNAGenesTable } from "./table/CNAGenesTable";
-import { ChartContainer } from 'pages/studyView/charts/ChartContainer';
+import {MutatedGenesTable} from "./table/MutatedGenesTable";
+import {CNAGenesTable} from "./table/CNAGenesTable";
+import {ChartContainer} from 'pages/studyView/charts/ChartContainer';
 import SurvivalChart from "../resultsView/survival/SurvivalChart";
-import { MSKTab, MSKTabs } from "../../shared/components/MSKTabs/MSKTabs";
-import { StudyViewComponentLoader } from "./charts/StudyViewComponentLoader";
-import { StudyViewPageStore, ClinicalDataType, SurvivalType, ChartMeta, ChartType } from 'pages/studyView/StudyViewPageStore';
-import { reaction } from 'mobx';
-import { If } from 'react-if';
+import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
+import {StudyViewComponentLoader} from "./charts/StudyViewComponentLoader";
+import {ChartMeta, StudyViewPageStore, SurvivalType} from 'pages/studyView/StudyViewPageStore';
+import {reaction} from 'mobx';
+import {If} from 'react-if';
 import SummaryHeader from 'pages/studyView/SummaryHeader';
-import {Sample, SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
+import {SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
 import StudyViewScatterPlot from "./charts/scatterPlot/StudyViewScatterPlot";
 import {isSelected, mutationCountVsCnaTooltip} from "./StudyViewUtils";
+import GridLayout from 'react-grid-layout';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
 
 export interface IStudyViewPageProps {
     routing: any;
 }
 
+const ReactGridLayout = GridLayout.WidthProvider(GridLayout);
 // making this an observer (mobx-react) causes this component to re-render any time
 // there is a change to any observable value which is referenced in its render method. 
 // Even if this value is referenced deep within some helper method
@@ -71,15 +75,39 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         );
     }
 
-    renderAttributeChart = (chartMeta: ChartMeta) => {
-        return (<ChartContainer
-            chartMeta={chartMeta}
-            onUserSelection={this.handlers.onUserSelection}
-            key={chartMeta.uniqueKey}
-            filter={this.store.filters}
-            dataCache={this.store.studyViewClinicalDataCountsCache}
-            onDeleteChart={this.handlers.onDeleteChart}
-        />)
+    renderAttributeChart = (chartMeta: ChartMeta, index: number) => {
+        // Using custom component inside of the GridLayout creates too many chaos as mentioned here
+        // https://github.com/STRML/react-grid-layout/issues/299
+        // Option 1:    Always create div wrapper out of your custom component, but this solves all the issues.
+        // Option 2:    Expose style, className in your component and apply all the properties in your component
+        //              first division tag. And remember, you component has to use div as first child.
+        //              This solution only works with grid layout, not resizing.
+        // Decided to go with option 1 due to following reasons:
+        // 1.   The ChartContainer should be used to include all charts in the study view.
+        //      Then across the study page, there should be only one place to include ChartContainer component.
+        // 2.   The maintainer of RGL repo is currently not actively accepts pull requests. So we don't know when the
+        //      issue will be solved.
+        console.log(this.store.studyViewPageLayoutProps.cols);
+        return (
+            <div
+                key={chartMeta.uniqueKey}
+                data-grid={{
+                    x: index % this.store.studyViewPageLayoutProps.cols,
+                    y: Math.floor(index / this.store.studyViewPageLayoutProps.cols),
+                    w: 1,
+                    h: 1
+                }}
+                style={{border: '1px solid #d3d3d3'}}
+            >
+                <ChartContainer
+                    chartMeta={chartMeta}
+                    onUserSelection={this.handlers.onUserSelection}
+                    key={chartMeta.uniqueKey}
+                    filter={this.store.filters}
+                    dataCache={this.store.studyViewClinicalDataCountsCache}
+                    onDeleteChart={this.handlers.onDeleteChart}
+                />
+            </div>)
     };
 
     renderSurvivalPlot = (data: SurvivalType) => {
@@ -136,10 +164,14 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                             <SummaryHeader
                                 selectedSamples={this.store.selectedSamples.result!}
                                 updateCustomCasesFilter={this.handlers.updateCustomCasesFilter}/>
-                            <div className={styles.studyViewFlexContainer}>
-                                {this.store.initialClinicalDataCounts.isComplete && 
-                                    this.store.visibleAttributes.map(this.renderAttributeChart)}
-                            </div>
+                            {this.store.initialClinicalDataCounts.isComplete && (
+                                <ReactGridLayout className="layout"
+                                                 cols={this.store.studyViewPageLayoutProps.cols}
+                                                 rowHeight={this.store.studyViewPageLayoutProps.rowHeight}
+                                                 draggableHandle={'.fa-arrows'}>
+                                    {this.store.visibleAttributes.map(this.renderAttributeChart)}
+                                </ReactGridLayout>
+                            )}
                             <div className={styles.studyViewFlexContainer}>
                                 {this.store.survivalPlotData.result.map(this.renderSurvivalPlot)}
                             </div>

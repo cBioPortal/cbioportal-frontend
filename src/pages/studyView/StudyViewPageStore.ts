@@ -55,10 +55,21 @@ export type ChartMeta = {
     defaultChartType: ChartType
 }
 
+export type StudyViewPageLayOutProps = {
+    cols:number,
+    rowHeight: number
+}
+
 export class StudyViewPageStore {
 
-    constructor() { }
+    constructor() {
+        this.studyViewPageLayoutProps = observable({
+            cols:6,
+            rowHeight:200
+        });
+    }
 
+    public studyViewPageLayoutProps:StudyViewPageLayOutProps;
     public studyViewClinicalDataCountsCache = new StudyViewClinicalDataCountsCache()
 
     @observable studyIds: string[] = [];
