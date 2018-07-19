@@ -1,31 +1,33 @@
 import * as _ from 'lodash';
-import { remoteData } from "../../shared/api/remoteData";
+import {remoteData} from "../../shared/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import { action, computed, observable, toJS } from "mobx";
+import {action, computed, observable, toJS} from "mobx";
 import {
     ClinicalDataCount,
     ClinicalDataEqualityFilter,
     CopyNumberCountByGene,
     CopyNumberGeneFilter,
-    CopyNumberGeneFilterElement, FractionGenomeAltered, FractionGenomeAlteredFilter,
+    CopyNumberGeneFilterElement,
+    FractionGenomeAltered,
+    FractionGenomeAlteredFilter,
     MutationCountByGene,
     MutationGeneFilter,
     Sample,
-    StudyViewFilter,
-    SampleIdentifier
+    SampleIdentifier,
+    StudyViewFilter
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {
     ClinicalAttribute,
     ClinicalData,
+    ClinicalDataMultiStudyFilter,
     MolecularProfile,
     MolecularProfileFilter,
-    ClinicalDataMultiStudyFilter, MutationCount
+    MutationCount
 } from 'shared/api/generated/CBioPortalAPI';
-import { PatientSurvival } from 'shared/model/PatientSurvival';
-import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
+import {PatientSurvival} from 'shared/model/PatientSurvival';
+import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
-import client from "../../shared/api/cbioportalClientInstance";
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT'
 
@@ -60,16 +62,13 @@ export type StudyViewPageLayOutProps = {
     rowHeight: number
 }
 
+const chartWidth = 200;
+
 export class StudyViewPageStore {
 
     constructor() {
-        this.studyViewPageLayoutProps = observable({
-            cols:6,
-            rowHeight:200
-        });
     }
 
-    public studyViewPageLayoutProps:StudyViewPageLayOutProps;
     public studyViewClinicalDataCountsCache = new StudyViewClinicalDataCountsCache()
 
     @observable studyIds: string[] = [];
@@ -77,6 +76,9 @@ export class StudyViewPageStore {
     @observable sampleAttrIds: string[] = [];
 
     @observable patientAttrIds: string[] = [];
+
+    // Browser width will be fetched from window object event
+    @observable browserWidth:number = 900;
 
     private _clinicalDataEqualityFilterSet = observable.map<ClinicalDataEqualityFilter>();
 
@@ -90,6 +92,18 @@ export class StudyViewPageStore {
 
     private _clinicalAttributesMetaSet: { [id: string]: ChartMeta } = {} as any;
 
+    @computed
+    get containerWidth(): number {
+        return this.studyViewPageLayoutProps.cols * chartWidth;
+    }
+
+    @computed
+    get studyViewPageLayoutProps(): StudyViewPageLayOutProps {
+        return {
+            cols: Math.floor(this.browserWidth / chartWidth),
+            rowHeight: 200
+        };
+    }
 
     @action
     updateClinicalDataEqualityFilters(chartMeta: ChartMeta, values: string[]) {
