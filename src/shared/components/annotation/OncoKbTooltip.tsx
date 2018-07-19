@@ -86,6 +86,7 @@ export default class OncoKbTooltip extends React.Component<IOncoKbTooltipProps, 
                     geneNotExist={this.props.geneNotExist}
                     title={`${this.props.indicator.query.hugoSymbol} ${this.props.indicator.query.alteration} in ${this.props.indicator.query.tumorType}`}
                     gene={this.props.indicator.geneExist ? this.props.indicator.query.hugoSymbol : ''}
+                    variant={this.props.indicator.query.alteration ? this.props.indicator.query.alteration : ''}
                     oncogenicity={this.props.indicator.oncogenic}
                     oncogenicityPmids={generateOncogenicCitations(evidence.oncogenicRefs)}
                     mutationEffect={evidence.mutationEffect.knownEffect}

@@ -1,10 +1,12 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import Collapse from 'react-collapse';
-import {If, Then, Else} from 'react-if';
+import {Else, If, Then} from 'react-if';
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import {mergeAlterations} from 'shared/lib/OncoKbUtils';
 import {ICache} from "shared/lib/SimpleCache";
+import {computed, observable, action} from "mobx";
+import {observer} from "mobx-react";
 // TODO these need to be defined as modules, and class names used in this component need to be updated
 import "./styles/oncoKbCard.scss";
 import "./styles/oncoKbCard.custom.scss";
@@ -12,6 +14,7 @@ import "./styles/oncoKbCard.custom.scss";
 type OncoKbCardPropsBase = {
     title: string;
     gene: string;
+    variant: string,
     oncogenicity: string;
     oncogenicityPmids: number[];
     mutationEffect: string;
@@ -29,15 +32,25 @@ export type OncoKbCardProps =
     (OncoKbCardPropsBase & { geneNotExist:false}) |
     (Partial<OncoKbCardPropsBase> & {geneNotExist: true});
 
-export interface IOncoKbCardState {
-    activeTab: "oncogenicity" | "mutationEffect";
-    levelsCollapsed: boolean;
-}
-
-export default class OncoKbCard extends React.Component<OncoKbCardProps, IOncoKbCardState>
+@observer
+export default class OncoKbCard extends React.Component<OncoKbCardProps>
 {
-    public static get LEVELS(): string[]
-    {
+    @observable activeTab:"oncogenicity" | "mutationEffect" = "oncogenicity";
+    @observable levelsCollapsed: boolean = true;
+
+    @computed
+    get oncokbLinkOut() {
+        let link: string | undefined = undefined;
+        if (this.props.gene) {
+            link = `http://oncokb.org/#/gene/${this.props.gene}`;
+            if (this.props.variant) {
+                link = `${link}/variant/${this.props.variant}`;
+            }
+        }
+        return link;
+    }
+
+    public static get LEVELS(): string[] {
         return ['1', '2A', '2B', '3A', '3B', '4', 'R1'];
     }
 
@@ -64,11 +77,6 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps, IOncoKb
     constructor()
     {
         super();
-
-        this.state = {
-            activeTab: "oncogenicity",
-            levelsCollapsed: true
-        };
 
         this.handleOncogenicityTabSelect = this.handleOncogenicityTabSelect.bind(this);
         this.handleMutationEffectTabSelect = this.handleMutationEffectTabSelect.bind(this);
@@ -258,6 +266,7 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps, IOncoKb
     // also divide this component into smaller components
     public render()
     {
+        const oncokbLogo = <img src={require("./images/oncokb.png")} className="oncokb-logo" alt="OncoKB"/>;
         return (
             <div className="oncokb-card" data-test='oncokb-card'>
                 <div className="z-depth-2">
@@ -290,7 +299,7 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps, IOncoKb
                                             <div className="indicator"/>
                                         </ul>
                                     </div>
-                                    <If condition={this.state.activeTab === "oncogenicity"}>
+                                    <If condition={this.activeTab === "oncogenicity"}>
                                         <div className="col s12 oncogenicity">
                                             <div className="summary" style={{padding:'10px 0'}}>
                                                 <p>
@@ -332,7 +341,7 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps, IOncoKb
                                             </If>
                                         </div>
                                     </If>
-                                    <If condition={this.state.activeTab === "mutationEffect"}>
+                                    <If condition={this.activeTab === "mutationEffect"}>
                                         <div className="col s12 tab-pane mutation-effect">
                                             <If condition={this.props.biologicalSummary !== undefined && this.props.biologicalSummary.length > 0}>
                                                 <Then>
@@ -376,15 +385,15 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps, IOncoKb
                                 <div className="item-list levels-wrapper">
                                     <div className="collapsible-header" onClick={this.handleLevelCollapse}>Levels
                                         <span className="secondary-content">
-                                            <If condition={this.state.levelsCollapsed}>
+                                            <If condition={this.levelsCollapsed}>
                                                 <i className="fa fa-chevron-down"/>
                                             </If>
-                                            <If condition={!this.state.levelsCollapsed}>
+                                            <If condition={!this.levelsCollapsed}>
                                                 <i className="fa fa-chevron-up"/>
                                             </If>
                                         </span>
                                     </div>
-                                    <Collapse isOpened={!this.state.levelsCollapsed}>
+                                    <Collapse isOpened={!this.levelsCollapsed}>
                                         <div className="levels oncokb-card-levels-collapse">
                                             <ul>
                                                 {this.generateLevelRows(OncoKbCard.LEVELS, OncoKbCard.LEVEL_DESC)}
@@ -399,9 +408,16 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps, IOncoKb
                     )}
 
                     <div className="item footer">
-                        <a href={`http://oncokb.org/#/gene/${this.props.gene}`} target="_blank">
-                            <img src={require("./images/oncokb.png")} className="oncokb-logo" alt="OncoKB"/>
-                        </a>
+                        <If condition={this.oncokbLinkOut===undefined}>
+                            <Then>
+                                {oncokbLogo}
+                            </Then>
+                            <Else>
+                                <a href={`${this.oncokbLinkOut}`} target="_blank">
+                                    {oncokbLogo}
+                                </a>
+                            </Else>
+                        </If>
                         <span className="pull-right feedback">
                             <button className="btn btn-default btn-sm" onClick={this.props.handleFeedbackOpen}>
                                 Feedback
@@ -421,12 +437,14 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps, IOncoKb
         this.handleTabSelect("mutationEffect");
     }
 
-    private handleTabSelect(tabName:'oncogenicity'|'mutationEffect'): void {
-        this.setState(({activeTab : tabName} as IOncoKbCardState));
+    @action
+    handleTabSelect(tabName:'oncogenicity'|'mutationEffect'): void {
+        this.activeTab = tabName;
     }
 
-    private handleLevelCollapse(): void {
-        this.setState(({levelsCollapsed : !this.state.levelsCollapsed} as IOncoKbCardState));
+    @action
+    handleLevelCollapse(): void {
+        this.levelsCollapsed = !this.levelsCollapsed;
     }
 
     public insertLink(str:string, link:any)
