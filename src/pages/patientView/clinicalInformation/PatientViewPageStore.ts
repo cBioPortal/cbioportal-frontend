@@ -40,6 +40,7 @@ import {
     fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, groupBySampleId, findSamplesWithoutCancerTypeClinicalData,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData, fetchOncoKbAnnotatedGenesSuppressErrors
 } from "shared/lib/StoreUtils";
+import {IMutationalSignature} from "../../../shared/model/MutationalSignature";
 import {indexHotspotsData, fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
 import {stringListToSet} from "../../../shared/lib/StringUtils";
 import {Gene as OncoKbGene} from "../../../shared/api/generated/OncoKbAPI";
@@ -173,7 +174,7 @@ export class PatientViewPageStore {
         return fetchMyCancerGenomeData();
     }
 
-    @computed get mutationalSignatureData(){
+    mutationalSignatureData(): IMutationalSignature[]{
         return fetchMutationalSignatureData();
     }
 
