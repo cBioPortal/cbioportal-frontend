@@ -6,7 +6,7 @@ import getCanonicalMutationType from "shared/lib/getCanonicalMutationType";
 
 interface IMutationTypeFormat {
     label?: string;
-    longName?: string;
+    longName: string;
     className: string;
     mainType: string;
     priority?: number;
@@ -164,6 +164,16 @@ export default class MutationTypeColumnFormatter
         } else {
             return null;
         }
+    }
+
+    public static renderLongNameFunction(data:Mutation[])
+    {
+        // use text for all purposes (display, sort, filter)
+        const mapEntry = MutationTypeColumnFormatter.getMapEntry(data);
+        const className:string = MutationTypeColumnFormatter.getClassName(data);
+        const text:string = mapEntry? mapEntry.longName : '';
+
+        return <span className={styles[className]}>{text}</span>;
     }
 
     public static renderFunction(data:Mutation[])

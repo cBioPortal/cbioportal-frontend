@@ -102,7 +102,7 @@ export default class GeneticAlterationTable extends React.Component<IGeneticAlte
             name: "Alteration Type",
             render:(d:(DiscreteCopyNumberData|Mutation)[])=> {
                 if (d && d[0].hasOwnProperty("mutationType")) {
-                    return MutationTypeColumnFormatter.renderFunction(d as Mutation[]);
+                    return MutationTypeColumnFormatter.renderLongNameFunction(d as Mutation[]);
                 } else {
                     return <span><b>Copy Number Change</b></span>;
                 }

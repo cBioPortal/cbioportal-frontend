@@ -33,6 +33,7 @@ import { getMouseIcon } from 'pages/patientView/SVGIcons';
 import SampleRecord from 'pages/patientView/simple/SampleRecord';
 
 import './patient.scss';
+import './sampleReports.scss';
 import IFrameLoader from "shared/components/iframeLoader/IFrameLoader";
 import SampleHeader from 'pages/patientView/sampleHeader/SampleHeader';
 
@@ -439,30 +440,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                     <MSKTab key={6} id="sampleReportTab" linkText="Sample Report">
                         <LoadingIndicator isLoading={patientViewPageStore.clinicalEvents.isPending} />
-                        <div className="sample-report flex-container">
-                            <div className="flex-row">
-                                <div className="patient-header">
-                                    <div className="patient-text">
-                                        {  (patientViewPageStore.patientViewData.isComplete) && (
-                                            <PatientHeader
-                                                        handlePatientClick={((id: string) => void 0)}
-                                                        patient={patientViewPageStore.patientViewData.result.patient}
-                                                        studyId={patientViewPageStore.studyId}
-                                                        darwinUrl={patientViewPageStore.darwinUrl.result}
-                                                        sampleManager={sampleManager}
-                                                        showIcon={true}/>
-                                        ) }
-                                    </div>
-                                </div>
-                            </div>
+                        <div className="sample-report">
                             {sampleRecords && sampleRecords.map((rec:JSX.Element) => {
                                 return (
                                     <div>
-                                        <div className="flex-row">
-                                            <div className="line-in-middle">
-                                            &nbsp;
-                                            </div>
-                                        </div>
                                         {rec}
                                     </div>
                                 );

@@ -18,6 +18,7 @@ import AppConfig from 'appConfig';
 import PatientViewMutationTable from "pages/patientView/mutation/PatientViewMutationTable";
 import CopyNumberTableWrapper from "pages/patientView/copyNumberAlterations/CopyNumberTableWrapper";
 import GeneticAlterationTable from "pages/patientView/simple/GeneticAlterationTable";
+import { default as ActionableAlterationsTable, MutationAndAnnotation } from "./ActionableAlterationsTable";
 
 export type ISampleRecordProps = {
     sample: ClinicalDataBySampleId;
@@ -34,11 +35,6 @@ export type ISampleRecordProps = {
     pubMedCache?: OncokbPubMedCache;
     userEmailAddress?:string;
     patientViewPageStore: PatientViewPageStore;
-};
-
-type MutationAndAnnotation = {
-    mutation: Mutation;
-    annotation: IAnnotation;
 };
 
 type DiscreteCopyNumberDataAndAnnotation = {
@@ -112,52 +108,36 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
     render() {
         return (
             <div className="sample-report sample-info">
-                <div style={{width:"100%",paddingBottom:10,fontSize:"medium"}}>
+                <div style={{width:"100%",fontSize:"medium"}}>
                     <SampleHeader
                         sample={this.props.sample}
                         sampleManager={this.props.sampleManager}
                         handleSampleClick={(() => void 0)}
                         studyId={this.props.studyId}
+                        iconSize={14}
                     />
                 </div>
-                <div style={{padding:10,width:"100%"}}>
+                <div style={{paddingLeft:10,width:"100%"}}>
                     <div className="flex-row sample-info-record sample-info-record-drugs">
                         <div className='sample-info-card sample-info-drugs'>
-                            <div className='sample-info-card-title extra-text-header'>Summary</div>
-                            <div style={{padding:20,textAlign:"center", fontSize:"large"}}>
-                                <p style={{paddingBottom:10}}>{this.getNumberOfAlterations()} alterations detected, including <b>{this.getNumberOfDriverAlterations()} known oncogenic</b> of which <b>{this.getNumberOfDriverAlterationsWithTreatmentInfo()} are actionable</b>:</p>
+                            <div style={{fontSize:"medium"}}>
+                                <p style={{paddingBottom:10}}>{this.getNumberOfAlterations()} alterations detected, including <b>{this.getNumberOfDriverAlterations()} known oncogenic</b> of which <b>{this.getNumberOfDriverAlterationsWithTreatmentInfo()} are actionable</b>.</p>
+                                <span><b>Actionable alterations ({this.getNumberOfDriverAlterationsWithTreatmentInfo()})</b></span>
                                 {(this.getDriversWithTreatmentInfo().length > 0) && (
-                                    <div>
-                                        <table className="table">
-                                            <thead>
-                                                <tr>
-                                                    <th scope="col">Level</th>
-                                                    <th scope="col">Gene</th>
-                                                    <th scope="col">Alteration</th>
-                                                    <th scope="col">Drug</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {this.getDriversWithTreatmentInfo().map((mutAnn:MutationAndAnnotation) => {
-                                                    return mutAnn && (
-                                                            <DrugInfo 
-                                                                annotation={mutAnn.annotation}
-                                                                indicator={mutAnn.annotation.oncoKbIndicator}
-                                                                evidenceCache={this.props.evidenceCache}
-                                                                evidenceQuery={mutAnn.annotation.oncoKbIndicator && mutAnn.annotation.oncoKbIndicator.query}
-                                                                pubMedCache={this.props.pubMedCache}
-                                                                userEmailAddress={this.props.userEmailAddress}
-                                                            />
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
+                                    <div style={{paddingTop:10}}>
+                                        <ActionableAlterationsTable
+                                            actionableAlterations={this.getDriversWithTreatmentInfo()}
+                                            evidenceCache={this.props.evidenceCache}
+                                            pubMedCache={this.props.pubMedCache}
+                                            userEmailAddress={this.props.userEmailAddress}
+                                        />
                                     </div>
                                 )}
                             </div>
                         </div>
                     </div>
-                    <div style={{paddingTop:10}} className="flex-row sample-info-record">
+                    <span style={{fontSize:"medium"}}><b>All alterations ({this.getNumberOfAlterations()})</b></span>
+                    <div style={{paddingTop:15}} className="flex-row sample-info-record">
                         <div className={classNames('sample-info-card', 'genomic-alterations-card', 'mutations', {'active': this.state.show_mutations})} onClick={() => {this.setState({show_mutations:!this.state.show_mutations});}}>
                             <div className='sample-info-card-title extra-text-header'>Mutations</div>
                             <div className='sample-info-card-number'><div>{this.props.mutationData.length}</div></div>

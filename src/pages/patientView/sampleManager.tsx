@@ -1,12 +1,12 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import SampleInline from './patientHeader/SampleInline';
-import {ClinicalDataBySampleId} from "../../shared/api/api-types-extended";
+import SampleInline from 'pages/patientView/patientHeader/SampleInline';
+import {ClinicalDataBySampleId} from "shared/api/api-types-extended";
 import { ClinicalData } from "shared/api/generated/CBioPortalAPI";
-import {cleanAndDerive} from './clinicalInformation/lib/clinicalAttributesUtil.js';
+import {cleanAndDerive} from 'pages/patientView/clinicalInformation/lib/clinicalAttributesUtil';
 import styles from './patientHeader/style/clinicalAttributes.scss';
 import naturalSort from 'javascript-natural-sort';
-import {ClinicalEvent, ClinicalEventData} from "../../shared/api/generated/CBioPortalAPI";
+import {ClinicalEvent, ClinicalEventData} from "shared/api/generated/CBioPortalAPI";
 
 
 // sort samples based on event, clinical data and id
@@ -152,9 +152,10 @@ class SampleManager {
     getComponentForSample(sampleId: string,
                           fillOpacity: number = 1,
                           extraTooltipText: string = '',
-                          additionalContent: JSX.Element|null = null)
+                          additionalContent: JSX.Element|null = null,
+                          iconSize?: number)
     {
-        let sample = _.find(this.samples, (s: ClinicalDataBySampleId)=> {
+        const sample = _.find(this.samples, (s: ClinicalDataBySampleId)=> {
             return s.id === sampleId;
         });
 
@@ -166,6 +167,7 @@ class SampleManager {
                 fillOpacity={fillOpacity}
                 extraTooltipText={extraTooltipText}
                 additionalContent={additionalContent}
+                iconSize={iconSize}
             />
         );
     }

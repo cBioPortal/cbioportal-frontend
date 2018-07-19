@@ -9,6 +9,7 @@ export type ISampleHeaderProps = {
     sampleManager?: SampleManager | null;
     studyId: string;
     handleSampleClick: any;
+    iconSize?: number;
 };
 
 export default class SampleHeader extends React.Component<ISampleHeaderProps, {}> {
@@ -44,7 +45,8 @@ export default class SampleHeader extends React.Component<ISampleHeaderProps, {}
                                 {sampleManager &&
                                 sampleManager.clinicalDataLegacyCleanAndDerived[sample.id] &&
                                 getSpanElementsFromCleanData(sampleManager.clinicalDataLegacyCleanAndDerived[sample.id], studyId)}
-                            </span>
+                            </span>,
+                            this.props.iconSize
                         )
                     }
                 </span>
