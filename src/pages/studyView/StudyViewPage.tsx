@@ -75,7 +75,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         );
     }
 
-    renderAttributeChart = (chartMeta: ChartMeta, index: number) => {
+    renderAttributeChart = (chartMeta: ChartMeta) => {
         // Using custom component inside of the GridLayout creates too many chaos as mentioned here
         // https://github.com/STRML/react-grid-layout/issues/299
         // Option 1:    Always create div wrapper out of your custom component, but this solves all the issues.
@@ -83,15 +83,15 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         //              first division tag. And remember, you component has to use div as first child.
         //              This solution only works with grid layout, not resizing.
         // Decided to go with option 1 due to following reasons:
-        // 1.   The ChartContainer should be used to include all charts in the study view.
+        // 1.   The ChartContainer will be used to include all charts in the study view.
         //      Then across the study page, there should be only one place to include ChartContainer component.
-        // 2.   The maintainer of RGL repo is currently not actively accepts pull requests. So we don't know when the
+        // 2.   The maintainer of RGL repo currently not actively accepts pull requests. So we don't know when the
         //      issue will be solved.
 
         return (
             <div
                 key={chartMeta.uniqueKey}
-                style={{border: '1px solid #d3d3d3'}}
+                className={styles.studyViewChartContainer}
             >
                 <ChartContainer
                     chartMeta={chartMeta}
