@@ -58,7 +58,7 @@ export type ChartMeta = {
     defaultChartType: ChartType
 }
 
-export type StudyViewPageLayOutProps = {
+export type StudyViewPageLayoutProps = {
     layout: Layout[],
     cols:number,
     rowHeight: number
@@ -100,7 +100,7 @@ export class StudyViewPageStore {
     }
 
     @computed
-    get studyViewPageLayoutProps(): StudyViewPageLayOutProps {
+    get studyViewPageLayoutProps(): StudyViewPageLayoutProps {
         let cols = Math.floor(this.browserWidth / chartWidth);
         return {
             layout: this.calculateLayout(this.visibleAttributes, cols),
