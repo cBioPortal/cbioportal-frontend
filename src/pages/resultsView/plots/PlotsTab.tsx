@@ -81,6 +81,10 @@ export interface IPlotsTabProps {
     store:ResultsViewPageStore;
 };
 
+export enum SpecialClinicalAttribute {
+    TotalMutations = "TOTAL_MUTATIONS",
+}
+
 const searchInputTimeoutMs = 600;
 
 class PlotsTabScatterPlot extends ScatterPlot<IScatterPlotData> {}
@@ -420,10 +424,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @computed get clinicalAttributeIdToClinicalAttribute():{[clinicalAttributeId:string]:ClinicalAttribute} {
         if (this.props.store.clinicalAttributes.isComplete) {
-            return this.props.store.clinicalAttributes.result.reduce((map:{[clinicalAttributeId:string]:ClinicalAttribute}, next)=>{
-                map[next.clinicalAttributeId] = next;
-                return map;
-            }, {});
+            let _map: {[clinicalAttributeId: string]: ClinicalAttribute} = _.keyBy(this.props.store.clinicalAttributes.result, c=>c.clinicalAttributeId)
+            if (this.props.store.studyIds.isComplete) {
+                _map[SpecialClinicalAttribute.TotalMutations] = {
+                    clinicalAttributeId: SpecialClinicalAttribute.TotalMutations,
+                    datatype: "NUMBER",
+                    description: "Total mutations",
+                    displayName: "Total mutations",
+                    patientAttribute: false,
+                    priority: "1",
+                    studyId: this.props.store.studyIds.result[0],
+                    count: 0
+                };
+            };
+            return _map;
         } else {
             return {};
         }
@@ -431,10 +445,19 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @computed get clinicalAttributeOptions() {
         if (this.props.store.clinicalAttributes.isComplete) {
-            return this.props.store.clinicalAttributes.result.map(attribute=>({
+            let _clinicalAttributes: {value: string, label: string}[] = [];
+            _clinicalAttributes.push({
+                value: SpecialClinicalAttribute.TotalMutations,
+                label: "Total mutations"
+            });
+                
+            this.props.store.clinicalAttributes.result.map(attribute=>(
+                    _clinicalAttributes.push({
                 value: attribute.clinicalAttributeId,
                 label: attribute.displayName
-            }));
+            })));
+            
+            return _clinicalAttributes;
         } else {
             return [];
         }
@@ -585,6 +608,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             this.props.store.entrezGeneIdToGene,
             this.props.store.clinicalDataCache,
             this.props.store.numericGeneMolecularDataCache,
+            this.props.store.studyToMutationMolecularProfile
         );
     }
 
@@ -596,7 +620,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             this.props.store.patientKeyToSamples,
             this.props.store.entrezGeneIdToGene,
             this.props.store.clinicalDataCache,
-            this.props.store.numericGeneMolecularDataCache
+            this.props.store.numericGeneMolecularDataCache,
+            this.props.store.studyToMutationMolecularProfile
         );
     }
 
