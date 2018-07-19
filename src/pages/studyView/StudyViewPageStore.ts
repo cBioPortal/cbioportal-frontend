@@ -29,6 +29,7 @@ import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
 import {Layout} from 'react-grid-layout';
+import windowStore from 'shared/components/window/WindowStore';
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT'
 
@@ -79,9 +80,6 @@ export class StudyViewPageStore {
 
     @observable patientAttrIds: string[] = [];
 
-    // Browser width will be fetched from window object event
-    @observable browserWidth:number = 900;
-
     private _clinicalDataEqualityFilterSet = observable.map<ClinicalDataEqualityFilter>();
 
     @observable private _mutatedGeneFilter: MutationGeneFilter;
@@ -101,7 +99,7 @@ export class StudyViewPageStore {
 
     @computed
     get studyViewPageLayoutProps(): StudyViewPageLayoutProps {
-        let cols = Math.floor(this.browserWidth / chartWidth);
+        let cols:number = Math.floor(windowStore.size.width / chartWidth);
         return {
             layout: this.calculateLayout(this.visibleAttributes, cols),
             cols: cols,
