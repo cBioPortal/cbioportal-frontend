@@ -53,6 +53,9 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     <i className="fa fa-pie-chart" aria-hidden="true" title="Convert to Pie chart"></i>
                                 </button>
                             </If>
+                            <button className="btn btn-xs">
+                                <i className="fa fa-arrows" aria-hidden="true" title="Move chart"></i>
+                            </button>
                             <button className="btn btn-xs"  onClick={() => this.props.deleteChart()}>
                                 <i className="fa fa-times" aria-hidden="true" title="Delete chart"></i>
                             </button>
