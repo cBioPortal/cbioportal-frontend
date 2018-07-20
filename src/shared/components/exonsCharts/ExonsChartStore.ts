@@ -64,7 +64,7 @@ export class ExonsChartStore {
 
     @computed
     get computedFusions(): StructuralVariantExt[] {
-        return (this.fusionDataStore || []).tableData.map((f: StructuralVariantExt[]) => {
+        return (this.fusionDataStore || {tableData:[]}).tableData.map((f: StructuralVariantExt[]) => {
             let site1Exons = this.getExonsBySite(
                 1,
                 f[0].site1EnsemblTranscriptId,
@@ -90,7 +90,7 @@ export class ExonsChartStore {
 
     @computed
     get computedTranscripts(): EnsemblTranscriptExt[] {
-        return this.transcripts ? this.transcripts.map(t => {
+        return (this.transcripts || []).map(t => {
             t.exons = <ExonRangeExt[]> t.exons
                 .sort(
                     // sort exons by rank
@@ -104,13 +104,13 @@ export class ExonsChartStore {
                     return e;
                 });
             t.totalWidth = this.getTotalWidth(<ExonRangeExt[]> t.exons);
-            t.deltaX = 0;
+            t.deltaX = 0; // initialise delta for the x axis
             return t;
-        }) : [];
+        });
     }
 
-    private getPfamDomainDetails(pfamDomains: PfamDomainRangeExt[]): PfamDomainRangeExt[] {
-        return pfamDomains
+    getPfamDomainDetails(pfamDomains: PfamDomainRangeExt[]): PfamDomainRangeExt[] {
+        return (pfamDomains || [])
         // do not include empty objects
             .filter((pfam: PfamDomainRangeExt) => Object.keys(pfam).length > 0)
             // add fill color and calculate widths
@@ -131,8 +131,7 @@ export class ExonsChartStore {
 
     @computed
     get referenceTranscripts(): EnsemblTranscriptExt[] {
-        return this.computedTranscripts.length
-            ? this.computedTranscripts
+        return (this.computedTranscripts || [])
                 .filter(t => t.isReferenceGene) // get only reference gene transcripts
                 .map(t => {
                     // calculate five primes total length
@@ -144,17 +143,14 @@ export class ExonsChartStore {
                     // Add pfam domains data
                     t.pfamDomains = this.getPfamDomainDetails(t.pfamDomains);
                     return t;
-                })
-            : [];
+                });
     }
 
-    private getFusionDetails(t: EnsemblTranscriptExt): StructuralVariantExt[] {
-
+    getFusionDetails(t: EnsemblTranscriptExt): StructuralVariantExt[] {
         let prevFusions: StructuralVariantExt[] = [];
         let site1LongestValue: number = 0;
         let site1LongestFusion: StructuralVariantExt[];
         let isCurrentFusionHasLongestSite1: boolean;
-
         return this.computedFusions
             // get only fusion data for the given transcript id
             .filter(fusion => {
@@ -211,10 +207,10 @@ export class ExonsChartStore {
      */
     @computed
     get fusionsByReferences(): EnsemblTranscriptExt[] {
-        return this.referenceTranscripts.length ? this.referenceTranscripts.map(t => {
+        return (this.referenceTranscripts || []).map(t => {
                 // add fusions
                 t.fusions = this.getFusionDetails(t);
                 return t;
-            }) : [];
+            });
     }
 }

@@ -22,13 +22,12 @@
 
 import { ExonsChartStore } from './ExonsChartStore';
 import { assert } from 'chai';
-import { CancerStudy, Gene, StructuralVariant } from '../../api/generated/CBioPortalAPI';
+import { CancerStudy } from '../../api/generated/CBioPortalAPI';
 import FusionMapperDataStore from '../../../pages/resultsView/fusion/ResultViewFusionMapperDataStore';
-import {
-    EnsemblTranscriptExt} from '../../model/Fusion';
+import { EnsemblTranscriptExt } from '../../model/Fusion';
 import { PfamDomainRangeExt, StructuralVariantExt } from '../../model/Fusion';
 
-const _sv = [
+const structuralVariants = [
     [{
         uniqueSampleKey: "VENHQS1BMi1BMDRQLTAxOnN0dWR5X2VzXzBfZHVw",
         uniquePatientKey: "VENHQS1BMi1BMDRQOnN0dWR5X2VzXzBfZHVw",
@@ -128,7 +127,7 @@ const _sv = [
         driverTiersFilterAnn: "NA"
     }]
 ];
-let _transcripts = [
+const allTranscripts = [
     {
         transcriptId: "ENST00000332149",
         geneId: "ENSG00000184012",
@@ -317,8 +316,8 @@ let _transcripts = [
         fillColor: "#084594",
         isLeftAligned: false,
         fusions: [],
-        utrs:[],
-        fivePrimeLength:0,
+        utrs: [],
+        fivePrimeLength: 0,
         totalWidth: 1000,
         deltaX: 100
     },
@@ -500,7 +499,7 @@ let _transcripts = [
         fillColor: "#2171b5",
         isLeftAligned: false,
         fusions: [],
-        utrs:[],
+        utrs: [],
         totalWidth: 1000,
         deltaX: 100,
         fivePrimeLength: 0
@@ -693,7 +692,7 @@ let _transcripts = [
         fillColor: "#8c2d04",
         isLeftAligned: false,
         fusions: [],
-        utrs:[],
+        utrs: [],
         totalWidth: 1000,
         deltaX: 100,
         fivePrimeLength: 0
@@ -706,7 +705,7 @@ let _transcripts = [
         proteinLength: 75,
         pfamDomains: [
             {
-                pfamDomainId: "PF00071",
+                pfamDomainId: "PF00041",
                 pfamDomainStart: 5,
                 pfamDomainEnd: 44,
                 fillColor: 'orange',
@@ -876,66 +875,228 @@ let _transcripts = [
         fillColor: "#cc4c02",
         isLeftAligned: false,
         fusions: [],
-        utrs:[],
+        utrs: [],
         totalWidth: 1000,
         deltaX: 100,
         fivePrimeLength: 0
     }
 ];
-
-const studyIdToStudy = <{[studyId: string]: CancerStudy}>{
+const pfamsDetails =   [
+    {
+        "pfamAccession": "PF00041",
+        "name": "fn3",
+        "description": "Fibronectin type III domain"
+    },
+    {
+        "pfamAccession": "PF00069",
+        "name": "Pkinase",
+        "description": "Protein kinase domain"
+    },
+    {
+        "pfamAccession": "PF00102",
+        "name": "Y_phosphatase",
+        "description": "Protein-tyrosine phosphatase"
+    },
+    {
+        "pfamAccession": "PF00373",
+        "name": "FERM_M",
+        "description": "FERM central domain"
+    }
+];
+const studyIdToStudy = <{ [studyId: string]: CancerStudy }>{
     'study_es_0_dup': <CancerStudy> {name: "Breast Ductal Carcinoma"},
     'study_es_1_dup': <CancerStudy> {name: "Adrenocortical Carcinoma"}
 };
-
-const _store = new ExonsChartStore(<Gene>{hugoGeneSymbol: 'TMPRSS2', chromosome: ''}, new FusionMapperDataStore(_sv),
-    _transcripts, studyIdToStudy, [], true);
+const exonsChartStore = new ExonsChartStore(
+    {hugoGeneSymbol: 'TMPRSS2', chromosome: ''},
+    new FusionMapperDataStore(structuralVariants),
+    allTranscripts,
+    studyIdToStudy,
+    pfamsDetails,
+    true
+);
+const emptyStore = new ExonsChartStore(
+    {hugoGeneSymbol: 'EMPTYGENE', chromosome: ''},
+    new FusionMapperDataStore([]),
+    [],
+    {},
+    [],
+    false
+);
 
 describe("ExonsChartStore", () => {
     describe("referenceTranscripts", () => {
+        it("should return empty array when computed transcripts not existing", () => {
+            assert.equal(emptyStore.referenceTranscripts.length, 0);
+        });
         it("should return reference transcripts only", () => {
-            let _isAllReferenceTranscripts = _store.referenceTranscripts.length ?
-                _store.referenceTranscripts.reduce(
-                    (accumulator:boolean, curr:EnsemblTranscriptExt) =>
-                        curr.hugoSymbols[0] === "TMPRSS2" && accumulator, true) : false;
-            assert.isTrue(_isAllReferenceTranscripts);
+            exonsChartStore.referenceTranscripts.forEach(t => {
+                assert.equal(t.hugoSymbols[0], "TMPRSS2");
+            });
         });
     });
 
     describe("getTranscriptById", () => {
+        it("should return empty array when transcripts is not existing", () => {
+            const _transcripts = emptyStore.getTranscriptById("ENST00000332149");
+            assert.equal(_transcripts.length, 0)
+        });
+
         it("should return correct result when get transcript by id", () => {
-            let _transcriptById = _store.getTranscriptById("ENST00000332149");
-            assert.equal(_transcriptById[0].transcriptId, "ENST00000332149")
+            const transcriptById = exonsChartStore.getTranscriptById("ENST00000332149");
+            assert.equal(transcriptById[0].transcriptId, "ENST00000332149")
         });
     });
 
     describe("getExonsBySite", () => {
         it("should return exons from 1 until breakpoint for site 1", () => {
-            let _exons = _store.getExonsBySite(1, "ENST00000332149", 4); // site1, ENST00000332149 length is 14, and breakpoint 4
+            const _exons = exonsChartStore.getExonsBySite(1, "ENST00000332149", 4); // site1, ENST00000332149 length
+            // is 14, and breakpoint 4
             assert.equal(_exons.length, 4);
             assert.equal(_exons[0].rank, 1);
             assert.equal(_exons[_exons.length - 1].rank, 4);
         });
 
         it("should return exons from breakpoint until last exon for site 2", () => {
-            let _exons = _store.getExonsBySite(2, "ENST00000332149", 4); // site1, ENST00000332149 length is 14 and breakpoint 4
+            const _exons = exonsChartStore.getExonsBySite(2, "ENST00000332149", 4); // site1, ENST00000332149 length
+            // is 14 and breakpoint 4
             assert.equal(_exons.length, 11);
             assert.equal(_exons[0].rank, 4);
             assert.equal(_exons[_exons.length - 1].rank, 14);
         });
     });
 
+    describe("getTotalWidth", () => {
+        it("should return total width of exons", () => {
+            const total = exonsChartStore.getTotalWidth(allTranscripts[0].exons);
+            assert.equal(total, 3191);
+        });
+    });
+
     describe("computedFusions", () => {
+        it("should return an empty array if the data store does not exist", () => {
+            assert.equal(emptyStore.computedFusions.length, 0);
+        });
         it("should return fusions with exons", () => {
-            _store.computedFusions.forEach((f:StructuralVariantExt) => {
-                assert.isDefined(f.exons)
+            exonsChartStore.computedFusions.forEach((f: StructuralVariantExt) => {
+                assert.isDefined(f.exons);
             });
         });
+        // TODO: more extensive unit testings
+    });
+
+    describe("computedTranscripts", () => {
+
+        const _t = [{
+            transcriptId: "ENST00000557334",
+            geneId: "ENSG00000133703",
+            hugoSymbols: ["KRAS"],
+            proteinId: "ENSP00000452512",
+            proteinLength: 75,
+            pfamDomains: [],
+            exons: [
+                {
+                    exonId: "ENSE00001919654",
+                    exonStart: 1300,
+                    exonEnd: 1400,
+                    rank: 14,
+                    strand: -1,
+                    version: 1,
+                    width: 0,
+                    x: 0
+                },
+                {
+                    exonId: "ENSE00003654781",
+                    exonStart: 1200,
+                    exonEnd: 1300,
+                    rank: 13,
+                    strand: -1,
+                    version: 1,
+                    fillColor: '#000',
+                    width: 0,
+                    x: 0
+                },
+                {
+                    exonId: "ENSE00001324661",
+                    exonStart: 1100,
+                    exonEnd: 1250,
+                    rank: 12,
+                    strand: -1,
+                    version: 1,
+                    fillColor: '#000',
+                    width: 0,
+                    x: 0
+                }],
+            isReferenceGene: false,
+            fillColor: "#cc4c02",
+            isLeftAligned: false,
+            fusions: [],
+            utrs: [],
+            totalWidth: 1000,
+            deltaX: 100,
+            fivePrimeLength: 0
+        }];
+
+        const myStore = new ExonsChartStore({
+                hugoGeneSymbol: 'TMPRSS2',
+                chromosome: ''
+            }, new FusionMapperDataStore(structuralVariants),
+            _t, studyIdToStudy, [], true);
+
+        const assertValues = [
+            {rank: 12, fillColor: '#000', width: 150},
+            {rank: 13, fillColor: '#000', width: 100},
+            {rank: 14, fillColor: '#cc4c02', width: 100}];
+
+        it("should return transcript with sorted exons with fill color and width", () => {
+            myStore.computedTranscripts.map((t => {
+                t.exons.map((exon, i) => {
+                    assert.equal(exon.rank, assertValues[i].rank);
+                    assert.equal(exon.fillColor, assertValues[i].fillColor);
+                    assert.equal(exon.width, assertValues[i].width);
+                });
+            }))
+        });
+
+        it("should return an empty array if the data store does not exist", () => {
+            assert.equal(emptyStore.computedTranscripts.length, 0);
+        });
+    });
+
+    describe("getPfamDomainDetails", () => {
+        it("should return an empty array if pfam domain is empty", () => {
+            assert.equal(emptyStore.getPfamDomainDetails([]).length, 0)
+        });
+        it("should return pfam with more detailed information", () => {
+            const asserts = [
+                {name: 'fn3', fillColor: 'orange', description: 'Fibronectin type III domain', width: 50},
+                {name: 'Pkinase', fillColor: 'orange', description: 'Protein kinase domain', width: 100}
+            ];
+            let pfamRanges = [
+                {
+                    pfamDomainId: "PF00041",
+                    pfamDomainStart: 150,
+                    pfamDomainEnd: 200,
+                    x: 0,
+                },
+                {
+                    pfamDomainId: "PF00069",
+                    pfamDomainStart: 250,
+                    pfamDomainEnd: 350,
+                    x: 0,
+                }
+            ];
+            exonsChartStore.getPfamDomainDetails(pfamRanges).forEach( (pfamRange, idx) => {
+                assert.equal(pfamRange.name, asserts[idx].name);
+                assert.equal(pfamRange.fillColor, asserts[idx].fillColor);
+                assert.equal(pfamRange.width, asserts[idx].width);
+            })
+        })
     });
 
     describe("fusionsByReferences", () => {
         it("should return reference transcripts with related fusions on each transcript", () => {
-            _store.fusionsByReferences.forEach((t: EnsemblTranscriptExt) => {
+            exonsChartStore.fusionsByReferences.forEach((t: EnsemblTranscriptExt) => {
                 // expect to be defined
                 assert.isDefined(t.fusions);
                 // expect to contain related transcript id
