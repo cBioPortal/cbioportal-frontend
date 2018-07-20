@@ -18,6 +18,7 @@ import {
 } from "./SurvivalUtil";
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
+import autobind from "autobind-decorator";
 
 export interface ISurvivalChartProps {
     alteredPatientSurvivals: PatientSurvival[];
@@ -144,6 +145,18 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
             this.alteredLegendText, this.unalteredLegendText), this.props.fileName + '.txt');
     }
 
+    @autobind
+    private hoverCircleFillOpacity(datum:any, active:any) {
+        if (active ||
+            (this.isTooltipHovered && this.tooltipModel &&
+            this.tooltipModel.datum.studyId === datum.studyId &&
+                this.tooltipModel.datum.patientId === datum.patientId)) {
+            return 0.3;
+        } else {
+            return 0;
+        }
+    }
+
     public render() {
 
         const events = [{
@@ -218,9 +231,9 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                         <VictoryScatter data={getScatterDataWithOpacity(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
                             symbol="plus" style={{ data: { fill: "blue", opacity: (d:any) => d.opacity } }} size={3} />
                         <VictoryScatter data={getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
-                            symbol="circle" style={{ data: { fill: "red", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0 } }} size={10} events={events} />
+                            symbol="circle" style={{ data: { fill: "red", fillOpacity: this.hoverCircleFillOpacity } }} size={10} events={events} />
                         <VictoryScatter data={getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
-                            symbol="circle" style={{ data: { fill: "blue", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0 } }} size={10} events={events} />
+                            symbol="circle" style={{ data: { fill: "blue", fillOpacity: this.hoverCircleFillOpacity } }} size={10} events={events} />
                         {this.props.showLegend &&
                             <VictoryLegend x={this.styleOpts.legend.x} y={this.styleOpts.legend.y}
                                 data={[
@@ -231,9 +244,9 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     </VictoryChart>
                 </div>
                 {this.tooltipModel &&
-                    <Popover arrowOffsetTop={56} className={styles.Tooltip} positionLeft={this.tooltipModel.x + 15}
+                    <Popover arrowOffsetTop={56} className={styles.Tooltip} positionLeft={this.tooltipModel.x + 10}
                              { ...{container:this} }
-                        positionTop={this.tooltipModel.y - 60}
+                        positionTop={this.tooltipModel.y - 47}
                         onMouseEnter={this.tooltipMouseEnter} onMouseLeave={this.tooltipMouseLeave}>
                         <div>
                             Patient ID: <a href={'/case.do#/patient?caseId=' + this.tooltipModel.datum.patientId + '&studyId=' +
