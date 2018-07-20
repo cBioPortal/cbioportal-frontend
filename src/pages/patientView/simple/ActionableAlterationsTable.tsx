@@ -88,6 +88,7 @@ export default class ActionableAlterationsTableWrapper extends React.Component<I
                   initialSortDirection="asc"*/
                   showFilter={false}
                   showCopyDownload={false}
+                  className="actionable-alterations-table"
             />
         );
     }

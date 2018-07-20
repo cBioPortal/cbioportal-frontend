@@ -2,7 +2,25 @@
     display: flex;
     flex-direction: row;
 }
+.actionable-alterations-table > tbody > tr:nth-of-type(odd) {
+    background-color: white !important;
+}
+.actionable-alterations-table td {
+    vertical-align: middle !important;
+}
+/* Set minimum width for level column */
+.actionable-alterations-table thead > tr > th:nth-child(4) {
+    min-width: 100px !important;
+}
+/* Set max width for drug column */
+.actionable-alterations-table thead > tr > th:nth-child(5) {
+    width: 350px !important;
+}
 .sample-report.sample-info {
+    width:1000px;
+    margin-left: auto;
+    margin-right: auto;
+
     .patientSample {
         font-size: large;
         padding-bottom: 13px;
@@ -11,6 +29,7 @@
     .sample-info-record {
         text-align: center;
         flex-flow: row wrap;
+        justify-content: space-between;
         width: 100%;
         padding-bottom: 15px;
 
@@ -80,7 +99,6 @@
                     -ms-user-select: none; /* Internet Explorer/Edge */
                         user-select: none; /* Non-prefixed version, currently
                                             supported by Chrome and Opera */
-            margin-right: 30px;
         }
         .sample-info-card.genomic-alterations-card.active {
             /*border-style: solid;
@@ -128,7 +146,7 @@
             width: 100%;
             height: auto;
             padding-bottom: 5px;
-            box-shadow: none;
+            /*box-shadow: none;*/
         }
         .sample-info-card-title {
             text-align: center;
