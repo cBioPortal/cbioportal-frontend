@@ -751,18 +751,24 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @computed get scatterPlotHighlight() {
-        const searchCase = this.searchCase;
-        const searchMutation = this.searchMutation;
+        const searchCaseWords = this.searchCase.trim().split(/\s+/g);
+        const searchMutationWords = this.searchMutation.trim().split(/\s+/g);
 
         // need to regenerate the function whenever these change in order to trigger immediate Victory rerender
         return (d:IScatterPlotSampleData)=>{
             let caseMatch = false;
-            if (searchCase.length) {
-                caseMatch = d.sampleId.indexOf(searchCase) > -1;
+            for (const word of searchCaseWords) {
+                caseMatch = caseMatch || (!!word.length && (d.sampleId.indexOf(word) > -1));
+                if (caseMatch) {
+                    break;
+                }
             }
             let mutationMatch = false;
-            if (searchMutation.length) {
-                mutationMatch = !!d.mutations.find(m=>!!(m.proteinChange && (m.proteinChange.indexOf(searchMutation) > -1)));
+            for (const word of searchMutationWords) {
+                mutationMatch = mutationMatch || (!!word.length && (!!d.mutations.find(m=>!!(m.proteinChange && (m.proteinChange.indexOf(word) > -1)))));
+                if (mutationMatch) {
+                    break;
+                }
             }
             return caseMatch || mutationMatch;
         };
