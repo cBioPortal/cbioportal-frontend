@@ -537,9 +537,9 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             <div className="popover right cbioTooltip"
                  onMouseLeave={this.tooltipMouseLeave}
                  onMouseEnter={this.tooltipMouseEnter}
-                 style={{top: this.tooltipModel!.y, left: this.tooltipModel!.x}}
+                 style={{top: this.tooltipModel!.y, left: this.tooltipModel!.x-8}}
             >
-                <div className="arrow" style={{top: 30}}></div>
+                <div className="arrow" style={{top: 27}}></div>
                 <div className="popover-content">
                     { this.showMutations && (
                         <span>
