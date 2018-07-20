@@ -8,5 +8,15 @@
         {
           "url": "https://github.com/heroku/heroku-buildpack-nodejs#v91"
         }
-    ]
+    ],
+    "env": {
+        "CBIOPORTAL_URL": {
+            "description":"Don't change this on first build. Then use this to set backend url to e.g. http://www.cbioportal.org/beta",
+			"required": false
+        },
+        "GENOME_NEXUS_URL": {
+            "description":"Don't change on first build. Then use this to change genome nexus url to e.g. https://beta.genomenexus.org",
+			"required": false
+        }
+    }
 }
