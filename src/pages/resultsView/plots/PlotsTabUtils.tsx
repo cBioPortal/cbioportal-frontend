@@ -841,6 +841,19 @@ function generalScatterPlotTooltip<D extends IScatterPlotSampleData>(
     );
 }
 
+export function maxWidthTooltip(text:string, maxWidth:number) {
+    const fontFamily = "Arial, Helvetica";
+    const fontSize = "12px";
+    const lines = wrapText(text, maxWidth, fontFamily, fontSize);
+    const elements = _.flatten(lines.map(line=>([<span key={line}>{line}</span>, <br/>])));
+    elements.pop(); // remove last <br>
+    return (
+        <span>
+            {elements}
+        </span>
+    );
+}
+
 export function scatterPlotTooltip(d:IScatterPlotData, entrezGeneIdToGene:MobxPromise<{[entrezGeneId:number]:Gene}>) {
     return generalScatterPlotTooltip(d, entrezGeneIdToGene, "x", "y");
 }
