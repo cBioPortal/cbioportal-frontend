@@ -118,7 +118,7 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                     />
                 </div>
                 <div style={{paddingLeft:10,width:"100%"}}>
-                    <p><span><b>Summary: </b></span>{this.getNumberOfAlterations()} alterations detected, including <b>{this.getNumberOfDriverAlterations()} known oncogenic</b> of which <b>{this.getNumberOfDriverAlterationsWithTreatmentInfo()} are actionable</b>.</p>
+                    <p><span style={{fontSize:"medium"}}><b>Summary: </b></span>{this.getNumberOfAlterations()} alterations detected, including <b>{this.getNumberOfDriverAlterations()} known oncogenic</b> of which <b>{this.getNumberOfDriverAlterationsWithTreatmentInfo()} are actionable</b>.</p>
                     <div className="flex-row sample-info-record sample-info-record-drugs">
                         <div className='sample-info-card sample-info-drugs'>
                             <div className='sample-info-card-title extra-text-header'>Actionable Alterations</div>
@@ -136,6 +136,7 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                             </div>
                         </div>
                     </div>
+                    <span><b>Genetic Alteration Categories</b></span>
                     <div style={{paddingTop:15}} className="flex-row sample-info-record">
                         <div className={classNames('sample-info-card', 'genomic-alterations-card', 'mutations', {'active': this.state.show_mutations})} onClick={() => {this.setState({show_mutations:!this.state.show_mutations});}}>
                             <div className='sample-info-card-title extra-text-header'>Mutations</div>
