@@ -794,8 +794,8 @@ function tooltipMutationsSection(
     mutations:AnnotatedMutation[],
     entrezGeneIdToGene:{[entrezGeneId:number]:Gene}
 ) {
-    const oncoKbIcon = (mutation:AnnotatedMutation)=>(<img src="images/oncokb-oncogenic-1.svg" title={mutation.oncoKbOncogenic} style={{height:11, width:11, marginBottom: 2}}/>);
-    const hotspotIcon = <img src="images/cancer-hotspots.svg" title="Hotspot" style={{height:11, width:11, marginBottom:3}}/>;
+    const oncoKbIcon = (mutation:AnnotatedMutation)=>(<img src="images/oncokb-oncogenic-1.svg" title={mutation.oncoKbOncogenic} style={{height:11, width:11, marginLeft:2, marginBottom: 2}}/>);
+    const hotspotIcon = <img src="images/cancer-hotspots.svg" title="Hotspot" style={{height:11, width:11, marginLeft:2, marginBottom:3}}/>;
     const mutationsByGene = _.groupBy(mutations.filter(m=>!!m.proteinChange), m=>entrezGeneIdToGene[m.entrezGeneId].hugoGeneSymbol);
     const sorted = _.chain(mutationsByGene).entries().sortBy(x=>x[0]).value();
     return (
@@ -805,10 +805,10 @@ function tooltipMutationsSection(
                 for (const mutation of entry[1]) {
                     proteinChangeComponents.push(
                         <span key={mutation.proteinChange}>
-                            {mutation.proteinChange} {mutation.isHotspot ? hotspotIcon : null} {mutation.oncoKbOncogenic ? oncoKbIcon(mutation) : null}
+                            {mutation.proteinChange}<span style={{marginLeft:1}}>{mutation.isHotspot ? hotspotIcon : null}{mutation.oncoKbOncogenic ? oncoKbIcon(mutation) : null}</span>
                         </span>
                     );
-                    proteinChangeComponents.push(<span>,</span>);
+                    proteinChangeComponents.push(<span>, </span>);
                 }
                 proteinChangeComponents.pop(); // remove last comma
                 return (
