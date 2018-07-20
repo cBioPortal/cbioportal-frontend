@@ -892,7 +892,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     </div>)}
                     {showBottomPart && (
                         <div>
-                            <label>Coloring by</label>
+                            <label>Color samples by</label>
                             <div className="checkbox"><label>
                                 <input
                                     data-test="ViewMutationType"
