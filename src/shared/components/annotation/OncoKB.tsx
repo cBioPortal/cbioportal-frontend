@@ -129,7 +129,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
                         placement="right"
                         trigger={['hover', 'focus']}
                         onPopupAlign={hideArrow}
-                        destroyTooltipOnHide={false}
+                        destroyTooltipOnHide={true}
                     >
                         {oncoKbContent}
                     </DefaultTooltip>

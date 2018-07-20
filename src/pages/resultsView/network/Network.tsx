@@ -41,8 +41,11 @@ export default class Network extends React.Component<INetworkTabParams, {}> {
             "netsize": "large",
             "diffusion": "0"
         };
+        const path = (/\/\/localhost|127\.0\.0\.1/.test(AppConfig.frontendUrl!)) ?
+            AppConfig.frontendUrl! :
+            `//${AppConfig.baseUrl!}`;
 
-        return this.baseUrl + "reactapp/network/network.htm?apiHost="+ AppConfig.baseUrl +"&networkParams=" + JSON.stringify(networkParams);
+        return path + "/reactapp/network/network.htm?apiHost="+ AppConfig.baseUrl +"&networkParams=" + JSON.stringify(networkParams);
     }
 
     render(){
