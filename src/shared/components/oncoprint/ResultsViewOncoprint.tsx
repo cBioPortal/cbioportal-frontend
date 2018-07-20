@@ -66,14 +66,14 @@ const specialClinicalAttributes:OncoprintClinicalAttribute[] = [
     {
         clinicalAttributeId: SpecialAttribute.FractionGenomeAltered,
         datatype: "NUMBER",
-        description: "Fraction Genome Altered",
+        description: "Fraction of the genome with copy number alterations.",
         displayName: "Fraction Genome Altered",
         patientAttribute: false,
     },
     {
         clinicalAttributeId: SpecialAttribute.MutationCount,
         datatype: "NUMBER",
-        description: "Number of mutations",
+        description: "Number of mutations.",
         displayName: "Total mutations",
         patientAttribute: false,
     },
