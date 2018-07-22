@@ -7,7 +7,7 @@ import {ChartContainer} from 'pages/studyView/charts/ChartContainer';
 import SurvivalChart from "../resultsView/survival/SurvivalChart";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import {StudyViewComponentLoader} from "./charts/StudyViewComponentLoader";
-import {ChartMeta, StudyViewPageStore, SurvivalType} from 'pages/studyView/StudyViewPageStore';
+import {ChartMeta, ChartType, StudyViewPageStore, SurvivalType} from 'pages/studyView/StudyViewPageStore';
 import {reaction} from 'mobx';
 import {If} from 'react-if';
 import SummaryHeader from 'pages/studyView/SummaryHeader';
@@ -49,6 +49,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             },
             onDeleteChart: (uniqueKey: string) => {
                 this.store.changeChartVisibility(uniqueKey, false);
+            },
+            onChangeChartType: (chartMeta: ChartMeta, newChartType: ChartType) => {
+                this.store.changeChartType(chartMeta, newChartType);
             },
             updateCustomCasesFilter: (cases: SampleIdentifier[]) => {
                 this.store.updateCustomCasesFilter(cases);
@@ -99,6 +102,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     filter={this.store.filters}
                     dataCache={this.store.studyViewClinicalDataCountsCache}
                     onDeleteChart={this.handlers.onDeleteChart}
+                    onChangeChartType={this.handlers.onChangeChartType}
                 />
             </div>)
     };

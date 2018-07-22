@@ -41,6 +41,11 @@ export enum ChartType {
     SCATTER = 'SCATTER'
 }
 
+export type ChartSize = {
+    w: number,
+    h: number
+}
+
 export type ClinicalDataCountWithColor = ClinicalDataCount & { color: string }
 export type MutatedGenesData = MutationCountByGene[];
 export type CNAGenesData = CopyNumberCountByGene[];
@@ -56,7 +61,8 @@ export type SurvivalType = {
 export type ChartMeta = {
     clinicalAttribute: ClinicalAttribute,
     uniqueKey: string,
-    defaultChartType: ChartType
+    defaultChartType: ChartType,
+    size: ChartSize
 }
 
 export type StudyViewPageLayoutProps = {
@@ -65,14 +71,49 @@ export type StudyViewPageLayoutProps = {
     rowHeight: number
 }
 
-const chartWidth = 200;
-
 export class StudyViewPageStore {
 
     constructor() {
     }
 
     public studyViewClinicalDataCountsCache = new StudyViewClinicalDataCountsCache()
+
+    readonly defaultChartSetting = {
+        oneGridWidth: 200,
+        oneGridHeight: 200,
+        charts: {
+            'PIE_CHART': {
+                size: {
+                    w: 1,
+                    h: 1
+                }
+            },
+            'BAR_CHART': {
+                size: {
+                    w: 2,
+                    h: 1
+                }
+            },
+            'SCATTER': {
+                size: {
+                    w: 2,
+                    h: 2
+                }
+            },
+            'TABLE': {
+                size: {
+                    w: 2,
+                    h: 2
+                }
+            },
+            'SURVIVAL': {
+                size: {
+                    w: 2,
+                    h: 2
+                }
+            }
+        }
+    };
 
     @observable studyIds: string[] = [];
 
@@ -90,20 +131,22 @@ export class StudyViewPageStore {
 
     @observable private _chartVisibility = observable.map<boolean>();
 
+    @observable private chartsSize = observable.map<ChartSize>();
+
     private _clinicalAttributesMetaSet: { [id: string]: ChartMeta } = {} as any;
 
     @computed
     get containerWidth(): number {
-        return this.studyViewPageLayoutProps.cols * chartWidth;
+        return this.studyViewPageLayoutProps.cols * this.defaultChartSetting.oneGridWidth;
     }
 
     @computed
     get studyViewPageLayoutProps(): StudyViewPageLayoutProps {
-        let cols:number = Math.floor(windowStore.size.width / chartWidth);
+        let cols:number = Math.floor(windowStore.size.width / this.defaultChartSetting.oneGridWidth);
         return {
-            layout: this.calculateLayout(this.visibleAttributes, cols),
             cols: cols,
-            rowHeight: 200
+            rowHeight: this.defaultChartSetting.oneGridHeight,
+            layout: this.calculateLayout(this.visibleAttributes, cols, this.chartsSize)
         };
     }
 
@@ -214,18 +257,20 @@ export class StudyViewPageStore {
         return filters;
     }
 
-    private calculateLayout(visibleAttributes: ChartMeta[], cols: number): Layout[] {
-        let layout: Layout[] = _.sortBy(visibleAttributes, [(attr: ChartMeta) => attr.clinicalAttribute.priority])
-            .map((attr, index) => ({
-                    i: attr.uniqueKey,
-                    x: index % cols,
-                    y: Math.floor(index / cols),
-                    w: 1,
-                    h: 1,
-                    isResizable: false
-                })
+    private calculateLayout(visibleAttributes: ChartMeta[], cols: number, chartSize: any): Layout[] {
+        return _.sortBy(visibleAttributes, [(attr: ChartMeta) => attr.clinicalAttribute.priority])
+            .map((attr, index) => {
+                    let _size = chartSize.has(attr.uniqueKey) ? chartSize.get(attr.uniqueKey) : {w: 1, h: 1};
+                    return {
+                        i: attr.uniqueKey,
+                        x: index % cols,
+                        y: Math.floor(index / cols),
+                        w: _size!.w,
+                        h: _size!.h,
+                        isResizable: false
+                    };
+                }
             ) || [];
-        return layout;
     }
 
     public getMutatedGenesTableFilters(): number[] {
@@ -285,7 +330,12 @@ export class StudyViewPageStore {
                 const uniqueKey = clinicalDataType + '_' + attribute.clinicalAttributeId;
                 //TODO: currently only piechart is handled
                 if (attribute.datatype === 'STRING') {
-                    acc[uniqueKey] = { clinicalAttribute: attribute, uniqueKey: uniqueKey, defaultChartType: ChartType.PIE_CHART };
+                    acc[uniqueKey] = {
+                        clinicalAttribute: attribute,
+                        uniqueKey: uniqueKey,
+                        defaultChartType: ChartType.PIE_CHART,
+                        size: this.defaultChartSetting.charts.PIE_CHART.size
+                    };
                 }
                 return acc
             }, {});
@@ -299,11 +349,22 @@ export class StudyViewPageStore {
             if (this._chartVisibility.get(next)) {
                 let chartMeta = this._clinicalAttributesMetaSet[next];
                 if (chartMeta) {
-                    acc.push(chartMeta)
+                    acc.push(chartMeta);
+                    this.chartsSize.set(chartMeta.clinicalAttribute.clinicalAttributeId, chartMeta.size);
                 }
             }
             return acc;
         }, []);
+    }
+
+    public changeChartType(attr: ChartMeta, newChartType: ChartType) {
+        let newChartSize = this.defaultChartSetting.charts[newChartType].size || {w: 1, h: 1};
+        this.changeChartSize(attr, newChartSize);
+    }
+
+    @action
+    changeChartSize(attr: ChartMeta, newSize: ChartSize) {
+        this.chartsSize.set(attr.uniqueKey, newSize);
     }
 
     //TODO:cleanup
