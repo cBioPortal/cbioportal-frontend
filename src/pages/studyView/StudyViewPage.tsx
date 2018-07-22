@@ -14,7 +14,7 @@ import SummaryHeader from 'pages/studyView/SummaryHeader';
 import {SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
 import StudyViewScatterPlot from "./charts/scatterPlot/StudyViewScatterPlot";
 import {isSelected, mutationCountVsCnaTooltip} from "./StudyViewUtils";
-import GridLayout from 'react-grid-layout';
+import ReactGridLayout from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
@@ -22,7 +22,6 @@ export interface IStudyViewPageProps {
     routing: any;
 }
 
-const ReactGridLayout = GridLayout.WidthProvider(GridLayout);
 // making this an observer (mobx-react) causes this component to re-render any time
 // there is a change to any observable value which is referenced in its render method. 
 // Even if this value is referenced deep within some helper method
@@ -105,7 +104,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     };
 
     renderSurvivalPlot = (data: SurvivalType) => {
-        return <div className={styles.studyViewSurvivalPlot}>
+        return <div key={data.id} className={styles.studyViewSurvivalPlot}>
             <div className={styles.studyViewSurvivalPlotTitle}>{data.title}</div>
             <div className={styles.studyViewSurvivalPlotBody}>
                 <StudyViewComponentLoader promise={this.store.survivalPlotData}>
@@ -161,6 +160,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                             {this.store.initialClinicalDataCounts.isComplete && (
                                 <ReactGridLayout className="layout"
                                                  style={{width: this.store.containerWidth}}
+                                                 width={this.store.containerWidth}
                                                  cols={this.store.studyViewPageLayoutProps.cols}
                                                  rowHeight={this.store.studyViewPageLayoutProps.rowHeight}
                                                  layout={this.store.studyViewPageLayoutProps.layout}
