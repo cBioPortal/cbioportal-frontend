@@ -85,14 +85,12 @@ describe.only('StudyViewUtils', () => {
     describe("calculateLayout", () => {
         it("Empty array should be returned when no attributes given", () => {
             let layout: Layout[] = calculateLayout([], 6, observable.map<ChartDimension>());
-            console.log(layout);
             assert.isArray(layout);
             assert.equal(layout.length, 0);
         });
 
         it("The layout is not expected", () => {
             let layout: Layout[] = calculateLayout(visibleAttrs, 6, observable.map<ChartDimension>());
-            console.log(layout);
             assert.equal(layout.length, 8);
             assert.equal(layout[0].i, 'test0');
             assert.equal(layout[0].x, 0);
@@ -122,7 +120,6 @@ describe.only('StudyViewUtils', () => {
 
         it("The layout is not expected", () => {
             let layout: Layout[] = calculateLayout(visibleAttrs, 2, observable.map<ChartDimension>());
-            console.log(layout);
             assert.equal(layout.length, 8);
             assert.equal(layout[0].i, 'test0');
             assert.equal(layout[0].x, 0);
