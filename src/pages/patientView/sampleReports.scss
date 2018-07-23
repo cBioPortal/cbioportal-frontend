@@ -39,7 +39,7 @@
             //justify-content: center;
             //background-color: #EFF4FE;
             width: 250px;
-            height: 200px;
+            height: 250px;
             padding: 0px;
             border-radius: 4px;
             /*box-shadow: 1px 1px 5px 0px #bbb;*/
@@ -101,6 +101,9 @@
             }
         }
         .sample-info-card.genomic-alterations-card {
+            border: dotted 1px #ddd;
+            padding-bottom: 30px;
+            padding-top: 20px;
             -webkit-touch-callout: none; /* iOS Safari */
                 -webkit-user-select: none; /* Safari */
                 -khtml-user-select: none; /* Konqueror HTML */

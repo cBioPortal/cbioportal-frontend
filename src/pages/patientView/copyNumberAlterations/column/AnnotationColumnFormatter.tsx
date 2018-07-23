@@ -1,4 +1,5 @@
 import * as React from 'react';
+import {If} from 'react-if';
 import * as _ from "lodash";
 import {DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
 import {
@@ -10,7 +11,7 @@ import Civic from "shared/components/annotation/Civic";
 import {generateQueryVariantId, generateQueryVariant} from "shared/lib/OncoKbUtils";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
-import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData, ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
+import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData, ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic";
 import {buildCivicEntry, getCivicCNAVariants} from "shared/lib/CivicUtils";
 
 /**
@@ -140,6 +141,19 @@ export default class AnnotationColumnFormatter
 
         return _.flatten([OncoKB.sortValue(annotationData.oncoKbIndicator),
                          Civic.sortValue(annotationData.civicEntry)]);
+    }
+
+    public static renderInterpretationFunction(data:DiscreteCopyNumberData[], columnProps:IAnnotationColumnProps)
+    {
+        const annotation:IAnnotation = AnnotationColumnFormatter.getData(data, columnProps.oncoKbAnnotatedGenes, columnProps.oncoKbData, columnProps.civicGenes, columnProps.civicVariants);
+
+        return (
+            <span>
+                <If condition={columnProps.enableOncoKb || false}>
+                    <span>{DefaultAnnotationColumnFormatter.getInterpretation(annotation)}</span>
+                </If>
+            </span>
+        );
     }
 
     public static renderFunction(data:DiscreteCopyNumberData[], columnProps:IAnnotationColumnProps)

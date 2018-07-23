@@ -14,7 +14,7 @@ import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
 import {generateQueryVariantId, generateQueryVariant} from "shared/lib/OncoKbUtils";
 import {is3dHotspot, isRecurrentHotspot} from "shared/lib/AnnotationUtils";
-import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData, ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
+import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData, ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic";
 import {buildCivicEntry} from "shared/lib/CivicUtils";
 
 export interface IAnnotationColumnProps {
@@ -252,6 +252,43 @@ export default class AnnotationColumnFormatter
             `CancerHotspot: ${annotationData.isHotspot ? 'yes' : 'no'}`,
             `3DHotspot: ${annotationData.is3dHotspot ? 'yes' : 'no'}`,
         ].join(";");
+    }
+
+    public static getInterpretation(annotation:IAnnotation) {
+        // Only use OncoKb interpretation for now
+        const isActionable = annotation.oncoKbIndicator && annotation.oncoKbIndicator.treatments.length > 0;
+        const isOncogenicNotActionable = !isActionable && annotation.oncoKbIndicator && annotation.oncoKbIndicator.oncogenic;
+        const isVUS = !isActionable && !isOncogenicNotActionable;
+
+        if (isActionable && annotation.oncoKbIndicator) {
+            return annotation.oncoKbIndicator.highestSensitiveLevel.replace("_"," ").replace("EVEL","evel");
+        } else if (isOncogenicNotActionable) {
+            return "Oncogenic";
+        } else if (isVUS) {
+            return "VUS";
+        } else {
+            return "";
+        }
+    }
+
+    public static renderInterpretationFunction(data:Mutation[], columnProps:IAnnotationColumnProps)
+    {
+        const annotation:IAnnotation = AnnotationColumnFormatter.getData(
+            data,
+            columnProps.oncoKbAnnotatedGenes,
+            columnProps.hotspotData,
+            columnProps.myCancerGenomeData,
+            columnProps.oncoKbData,
+            columnProps.civicGenes,
+            columnProps.civicVariants);
+
+        return (
+            <span>
+                <If condition={columnProps.enableOncoKb || false}>
+                    <span>{AnnotationColumnFormatter.getInterpretation(annotation)}</span>
+                </If>
+            </span>
+        );
     }
 
     public static renderFunction(data:Mutation[], columnProps:IAnnotationColumnProps)

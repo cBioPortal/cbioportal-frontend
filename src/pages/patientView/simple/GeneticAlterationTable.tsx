@@ -135,6 +135,49 @@ export default class GeneticAlterationTable extends React.Component<IGeneticAlte
         });
 
         columns.push({
+            name: "Interpretation",
+            render:(d:(DiscreteCopyNumberData|Mutation)[])=> {
+                if (d && d[0].hasOwnProperty("mutationType")) {
+                    return MutationAnnotationColumnFormatter.renderInterpretationFunction(
+                        d as Mutation[], {
+                            hotspotData: this.props.hotspotData,
+                            myCancerGenomeData: this.props.myCancerGenomeData,
+                            oncoKbData: this.props.oncoKbData,
+                            oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
+                            oncoKbAnnotatedGenes: this.props.oncoKbAnnotatedGenes,
+                            pubMedCache: this.props.pubMedCache,
+                            civicGenes: this.props.civicGenes,
+                            civicVariants: this.props.civicVariants,
+                            enableCivic: this.props.enableCivic as boolean,
+                            enableOncoKb: this.props.enableOncoKb as boolean,
+                            enableMyCancerGenome: this.props.enableMyCancerGenome as boolean,
+                            enableHotspot: this.props.enableHotspot as boolean,
+                            userEmailAddress: this.props.userEmailAddress
+                        }
+                    );
+                } else {
+                    return CNAAnnotationColumnFormatter.renderInterpretationFunction(
+                        d as DiscreteCopyNumberData[], {
+                            oncoKbData: this.props.cnaOncoKbData,
+                            oncoKbEvidenceCache: this.props.oncoKbEvidenceCache,
+                            oncoKbAnnotatedGenes: this.props.oncoKbAnnotatedGenes,
+                            enableOncoKb: this.props.enableOncoKb as boolean,
+                            pubMedCache: this.props.pubMedCache,
+                            civicGenes: this.props.cnaCivicGenes,
+                            civicVariants: this.props.cnaCivicVariants,
+                            enableCivic: this.props.enableCivic as boolean,
+                            enableMyCancerGenome: false,
+                            enableHotspot: false,
+                            userEmailAddress: this.props.userEmailAddress
+                        }
+                    );
+                }
+            },
+            visible: true,
+            order: 60
+        });
+
+        columns.push({
             name: "Annotation",
             render:(d:(DiscreteCopyNumberData|Mutation)[])=> {
                 if (d && d[0].hasOwnProperty("mutationType")) {
@@ -195,7 +238,7 @@ export default class GeneticAlterationTable extends React.Component<IGeneticAlte
                 }
             },
             visible: true,
-            order: 60
+            order: 70
         });
 
         /*
