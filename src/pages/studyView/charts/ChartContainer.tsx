@@ -62,7 +62,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 this.mouseInChart = true;
             }),
             onMouseLeaveChart: action(() => {
-                this.placement = 'right'
                 this.mouseInChart = false;
             }),
             handleDownloadDataClick: () => {
@@ -80,6 +79,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 this.props.onDeleteChart(this.props.chartMeta.uniqueKey);
             },
             onChangeChartType: (newChartType: ChartType) => {
+                this.mouseInChart = false;
                 this.props.onChangeChartType(this.props.chartMeta, newChartType)
             }
         };
