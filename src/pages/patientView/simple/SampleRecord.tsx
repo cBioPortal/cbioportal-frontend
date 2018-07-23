@@ -47,6 +47,12 @@ interface ISampleRecordState {
     show_mutations: boolean;
     show_cna: boolean;
     show_rearrangements: boolean;
+    show_oncogenic_mutations: boolean;
+    show_actionable_mutations: boolean;
+    show_vus_mutations: boolean;
+    show_oncogenic_cna: boolean;
+    show_actionable_cna: boolean;
+    show_vus_cna: boolean;
 }
 
 @observer
@@ -56,7 +62,13 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
         this.state = {
             show_mutations: false,
             show_cna: false,
-            show_rearrangements: false
+            show_rearrangements: false,
+            show_oncogenic_mutations: false,
+            show_actionable_mutations: false,
+            show_vus_mutations: false,
+            show_oncogenic_cna: false,
+            show_actionable_cna: false,
+            show_vus_cna: false
         };
     }
     getNumberOfAlterations() {
@@ -68,22 +80,21 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
     getNumberOfDriverAlterationsWithTreatmentInfo() {
         return this.getDriversWithTreatmentInfo().length + this.getCNADriversWithTreatmentInfo().length;
     }
-    getDrivers() {
+    getMutationsAnnotated() {
         if (this.props.oncoKbData.result) {
-            const drivers = this.props.mutationData.map(
+            return this.props.mutationData.map(
                 (m:Mutation) => {
                     return {
                         "mutation":m, 
                         "annotation":AnnotationColumnFormatter.getData([m], this.props.oncoKbAnnotatedGenes, undefined, undefined, this.props.oncoKbData)
                     };
                 }
-            ).filter(x => x.annotation !== undefined && x.annotation.oncoKbIndicator && x.annotation.oncoKbIndicator.oncogenic);
-            return drivers;
+            );
         } else {
             return [];
         }
     }
-    getCNADrivers() {
+    getCNAAnnotated() {
         if (this.props.cnaOncoKbData.result) {
             const drivers = this.props.discreteCNAData.map(
                 (cna:DiscreteCopyNumberData) => {
@@ -92,7 +103,35 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                         "annotation":AnnotationColumnFormatterDiscreteCNA.getData([cna], this.props.oncoKbAnnotatedGenes, this.props.cnaOncoKbData)
                     };
                 }
-            ).filter(x => x.annotation !== undefined && x.annotation.oncoKbIndicator && x.annotation.oncoKbIndicator.oncogenic);
+            );
+            return drivers;
+        } else {
+            return [];
+        }
+    }
+    getDrivers() {
+        if (this.props.oncoKbData.result) {
+            const drivers = this.getMutationsAnnotated().filter(this.isOncogenic);
+            return drivers;
+        } else {
+            return [];
+        }
+    }
+    isActionable(x:MutationAndAnnotation|{"discreteCopyNumberData":DiscreteCopyNumberData,"annotation":IAnnotation}) {
+        return x.annotation !== undefined && x.annotation.oncoKbIndicator && x.annotation.oncoKbIndicator.treatments.length > 0;
+    }
+    isOncogenic(x:MutationAndAnnotation|{"discreteCopyNumberData":DiscreteCopyNumberData,"annotation":IAnnotation}) {
+        return x.annotation !== undefined && x.annotation.oncoKbIndicator && x.annotation.oncoKbIndicator.oncogenic;
+    }
+    isOncogenicNotActionable(x:MutationAndAnnotation|{"discreteCopyNumberData":DiscreteCopyNumberData,"annotation":IAnnotation}) {
+        return this.isOncogenic(x) && !this.isActionable(x);
+    }
+    isVUS(x:MutationAndAnnotation|{"discreteCopyNumberData":DiscreteCopyNumberData,"annotation":IAnnotation}) {
+        return !this.isOncogenic(x);
+    }
+    getCNADrivers() {
+        if (this.props.cnaOncoKbData.result) {
+            const drivers = this.getCNAAnnotated().filter(this.isOncogenic);
             return drivers;
         } else {
             return [];
@@ -100,10 +139,25 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
 
     }
     getDriversWithTreatmentInfo() {
-        return this.getDrivers().filter(x => x.annotation.oncoKbIndicator && x.annotation.oncoKbIndicator.treatments.length > 0);
+        return this.getDrivers().filter(this.isActionable);
     }
     getCNADriversWithTreatmentInfo() {
-        return this.getCNADrivers().filter(x => x.annotation.oncoKbIndicator && x.annotation.oncoKbIndicator.treatments.length > 0);
+        return this.getCNADrivers().filter(this.isActionable);
+    }
+    getGeneticAlterationDataFiltered() {
+        const mutationAnns = this.getMutationsAnnotated();
+        const mutationDataFiltered = mutationAnns.filter((ann:MutationAndAnnotation) => {
+            return (this.state.show_oncogenic_mutations && this.isOncogenicNotActionable(ann)) ||
+                   (this.state.show_actionable_mutations && this.isActionable(ann)) ||
+                   (this.state.show_vus_mutations && this.isVUS(ann));
+        });
+        const discreteCNAAns = this.getCNAAnnotated();
+        const CNADataFiltered = discreteCNAAns.filter((ann:{"discreteCopyNumberData":DiscreteCopyNumberData,"annotation":IAnnotation}) => {
+            return (this.state.show_oncogenic_cna && this.isOncogenicNotActionable(ann)) ||
+                   (this.state.show_actionable_cna && this.isActionable(ann)) ||
+                   (this.state.show_vus_cna && this.isVUS(ann));
+        });
+        return [...mutationDataFiltered.map(x => [x.mutation]), ...CNADataFiltered.map(x => [x.discreteCopyNumberData])];
     }
     render() {
         return (
@@ -136,38 +190,46 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                             </div>
                         </div>
                     </div>
-                    <span><b>Genetic Alteration Categories</b></span>
                     <div style={{paddingTop:15}} className="flex-row sample-info-record">
-                        <div className={classNames('sample-info-card', 'genomic-alterations-card', 'mutations', {'active': this.state.show_mutations})} onClick={() => {this.setState({show_mutations:!this.state.show_mutations});}}>
+                        <div className={classNames('sample-info-card', 'genomic-alterations-card', 'mutations', {'active': this.state.show_mutations})} >
                             <div className='sample-info-card-title extra-text-header'>Mutations</div>
                             <div className='sample-info-card-number'><div>{this.props.mutationData.length}</div></div>
                             <div className='sample-info-card-extra-info extra-text'>
-                                <div className="extra-info-drivers extra-text">
+                                <span style={{lineHeight:2}}>TMB: 2.3</span><br />
+                                <span style={{float:"left"}}><input className="alteration-filter-checkbox" type="checkbox" onClick={() => {this.setState({show_oncogenic_mutations:!this.state.show_oncogenic_mutations,show_actionable_mutations:!this.state.show_oncogenic_mutations});}}></input> oncogenic</span><span style={{float:"right"}}>{this.getDrivers().length}</span><br />
+                                <span style={{float:"left"}}><input className="alteration-filter-checkbox" type="checkbox" checked={this.state.show_actionable_mutations} onClick={() => {this.setState({show_actionable_mutations:!this.state.show_actionable_mutations});}}></input> actionable</span><span style={{float:"right"}}>{this.getDriversWithTreatmentInfo().length}</span><br />
+                                <span style={{float:"left"}}><input className="alteration-filter-checkbox" type="checkbox" onClick={() => {this.setState({show_vus_mutations:!this.state.show_vus_mutations});}}></input> VUS</span><span style={{float:"right"}}>{this.props.mutationData.length - this.getDrivers().length}</span><br />
+
+                                {/*<div className="extra-info-drivers extra-text">
                                     {this.getDrivers().length} oncogenic<br />
                                     {this.getDriversWithTreatmentInfo().length} actionable<br />
                                 </div>
-                                <div className="extra-info-passengers extra-text"><br />TMB: 2.3</div>
+                                <div className="extra-info-passengers extra-text"><br />TMB: 2.3</div>*/}
                             </div>
                         </div>
                         <div className={classNames('sample-info-card', 'genomic-alterations-card', 'copy-number-changes', {'active': this.state.show_cna})} onClick={() => {this.setState({show_cna:!this.state.show_cna});}}>
                             <div className='sample-info-card-title extra-text-header'>Copy Number Changes</div>
                             <div className='sample-info-card-number'><div>{this.props.cnaStatus === "available"? this.props.discreteCNAData.length : "-"}</div></div>
                             <div className='sample-info-card-extra-info extra-text'>
-                                <div className="extra-info-drivers extra-text">
-                                    {this.getCNADrivers().length} oncogenic<br />
-                                    {this.getCNADriversWithTreatmentInfo().length} actionable<br />
-                                </div>
-                                <div className="extra-info-passengers extra-text"><br />FGA: 0.2</div>
+                                    <span style={{lineHeight:2}}>FGA: 0.2</span><br />
+                                    <span style={{float:"left"}}><input className="alteration-filter-checkbox" type="checkbox" onClick={() => {this.setState({show_oncogenic_cna:!this.state.show_oncogenic_cna});}}></input> oncogenic</span><span style={{float:"right"}}>{this.getCNADrivers().length}</span><br />
+                                    <span style={{float:"left"}}><input className="alteration-filter-checkbox" type="checkbox" onClick={() => {this.setState({show_actionable_cna:!this.state.show_actionable_cna});}}></input> actionable</span><span style={{float:"right"}}>{this.getCNADriversWithTreatmentInfo().length}</span><br />
+                                    <span style={{float:"left"}}><input className="alteration-filter-checkbox" type="checkbox" onClick={() => {this.setState({show_vus_cna:!this.state.show_vus_cna});}}></input> VUS</span><span style={{float:"right"}}>{this.props.discreteCNAData.length - this.getCNADrivers().length}</span><br />
                             </div>
                         </div>
                         <div className={classNames('sample-info-card', 'genomic-alterations-card', 'rearrangements', {active: this.state.show_rearrangements})} onClick={() => {this.setState({show_rearrangements:!this.state.show_rearrangements});}}>
                             <div className='sample-info-card-title extra-text-header'>Rearrangements</div>
                             <div className='sample-info-card-number'><div>-</div></div>
-                            <div className='sample-info-card-extra-info extra-text'><div className="extra-info-drivers"></div><div className="extra-info-passengers extra-text">&nbsp;</div></div>
+                            <div className='sample-info-card-extra-info extra-text'>
+                                        <span style={{lineHeight:2}}>&nbsp;</span><br />
+                                        <span style={{float:"left"}}>&nbsp;</span><span style={{float:"right"}}>&nbsp;</span><br />
+                                        <span style={{float:"left"}}>&nbsp;</span><span style={{float:"right"}}>&nbsp;</span><br />
+                            </div>
                         </div>
                     </div>
                     <div style={{width:"100%"}}>
-                        {(this.state.show_mutations || this.state.show_rearrangements || this.state.show_cna) && (
+                        {(this.state.show_actionable_mutations || this.state.show_oncogenic_mutations || this.state.show_vus_mutations ||
+                          this.state.show_actionable_cna || this.state.show_oncogenic_cna || this.state.show_vus_cna) && (
                             this.getGeneticAlterationTable()
                         )}
                         {/*(this.state.show_mutations || this.state.show_rearrangements) && (
@@ -284,7 +346,7 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                     enableCivic={AppConfig.showCivic}
                     userEmailAddress={AppConfig.userEmailAddress}
                     pubMedCache={patientViewPageStore.pubMedCache}
-                    data={[...patientViewPageStore.mergedDiscreteCNAData, ...patientViewPageStore.mergedMutationDataIncludingUncalled]}
+                    data={this.getGeneticAlterationDataFiltered()}
                     copyNumberCountCache={patientViewPageStore.copyNumberCountCache}
                     mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
                     gisticData={patientViewPageStore.gisticData.result}
