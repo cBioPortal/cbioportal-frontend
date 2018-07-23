@@ -23,3 +23,9 @@
 .studyViewChartContainer {
     border: 1px solid #d3d3d3
 }
+
+.studyViewGridItem {
+    .react-grid-item:hover {
+        z-index: 1;
+    }
+}

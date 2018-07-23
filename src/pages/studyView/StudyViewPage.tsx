@@ -162,15 +162,17 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                 selectedSamples={this.store.selectedSamples.result!}
                                 updateCustomCasesFilter={this.handlers.updateCustomCasesFilter}/>
                             {this.store.initialClinicalDataCounts.isComplete && (
-                                <ReactGridLayout className="layout"
-                                                 style={{width: this.store.containerWidth}}
-                                                 width={this.store.containerWidth}
-                                                 cols={this.store.studyViewPageLayoutProps.cols}
-                                                 rowHeight={this.store.studyViewPageLayoutProps.rowHeight}
-                                                 layout={this.store.studyViewPageLayoutProps.layout}
-                                                 draggableHandle={'.fa-arrows'}>
-                                    {this.store.visibleAttributes.map(this.renderAttributeChart)}
-                                </ReactGridLayout>
+                                <div className={styles.studyViewGridItem}>
+                                    <ReactGridLayout className="layout"
+                                                     style={{width: this.store.containerWidth}}
+                                                     width={this.store.containerWidth}
+                                                     cols={this.store.studyViewPageLayoutProps.cols}
+                                                     rowHeight={this.store.studyViewPageLayoutProps.rowHeight}
+                                                     layout={this.store.studyViewPageLayoutProps.layout}
+                                                     draggableHandle={'.fa-arrows'}>
+                                        {this.store.visibleAttributes.map(this.renderAttributeChart)}
+                                    </ReactGridLayout>
+                                </div>
                             )}
                             <div className={styles.studyViewFlexContainer}>
                                 {this.store.survivalPlotData.result.map(this.renderSurvivalPlot)}
