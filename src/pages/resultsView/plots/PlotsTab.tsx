@@ -10,12 +10,12 @@ import _ from "lodash";
 import {
     getAxisDescription,
     getAxisLabel, IScatterPlotData, isNumberData, isStringData, logScalePossible,
-    makeAxisDataPromise, makeScatterPlotData, makeScatterPlotPointAppearance, molecularProfileTypeDisplayOrder,
-    molecularProfileTypeToDisplayType, scatterPlotTooltip, scatterPlotLegendData, IStringAxisData, INumberAxisData,
+    makeAxisDataPromise, makeScatterPlotData, makeScatterPlotPointAppearance, dataTypeDisplayOrder,
+    dataTypeToDisplayType, scatterPlotTooltip, scatterPlotLegendData, IStringAxisData, INumberAxisData,
     makeBoxScatterPlotData, IScatterPlotSampleData, noMutationAppearance, IBoxScatterPlotPoint, boxPlotTooltip,
     getCnaQueries, getMutationQueries, getScatterPlotDownloadData, getBoxPlotDownloadData, getTablePlotDownloadData,
     mutationRenderPriority, mutationSummaryRenderPriority, MutationSummary, mutationSummaryToAppearance,
-    CNA_STROKE_WIDTH, scatterPlotSize, PLOT_SIDELENGTH
+    CNA_STROKE_WIDTH, scatterPlotSize, PLOT_SIDELENGTH, CLIN_ATTR_DATA_TYPE
 } from "./PlotsTabUtils";
 import {
     ClinicalAttribute, MolecularProfile, Mutation,
@@ -37,22 +37,12 @@ import fileDownload from 'react-file-download';
 import onMobxPromise from "../../../shared/lib/onMobxPromise";
 
 enum EventKey {
-    horz_molecularProfile,
-    horz_clinicalAttribute,
     horz_logScale,
-
-    vert_molecularProfile,
-    vert_clinicalAttribute,
     vert_logScale,
-
     utilities_viewMutationType,
     utilities_viewCopyNumber,
 }
 
-export enum AxisType {
-    molecularProfile,
-    clinicalAttribute
-}
 
 export enum ViewType {
     MutationType,
@@ -69,11 +59,9 @@ export enum PlotType {
 }
 
 export type AxisMenuSelection = {
-    axisType: AxisType|undefined;
     entrezGeneId?:number;
-    molecularProfileType?:string;
-    molecularProfileId?:string;
-    clinicalAttributeId?:string;
+    dataType?:string;
+    dataSourceId?:string;
     logScale: boolean;
 };
 
@@ -127,8 +115,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         } else if (this.bothAxesMolecularProfile) {
             // both axes molecular profile, different gene
             return ViewType.MutationSummary;
-        } else if (this.horzSelection.axisType === AxisType.molecularProfile ||
-                    this.vertSelection.axisType === AxisType.molecularProfile) {
+        } else if (this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE ||
+                    this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
             // one axis molecular profile
             return ViewType.MutationType;
         } else {
@@ -166,20 +154,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         const self = this;
 
         return observable({
-            get axisType() {
-                if (!self.profileTypeOptions.length && !self.clinicalAttributeOptions.length) {
-                    return undefined;
-                } else if (!self.profileTypeOptions.length) {
-                    return AxisType.clinicalAttribute;
-                } else if (!self.clinicalAttributeOptions.length) {
-                    return AxisType.molecularProfile;
-                } else {
-                    return this._axisType;
-                }
-            },
-            set axisType(a:AxisType|undefined) {
-                this._axisType = a;
-            },
             get entrezGeneId() {
                 if (this._entrezGeneId === undefined && self.geneOptions.isComplete && self.geneOptions.result.length) {
                     return self.geneOptions.result[0].value;
@@ -190,48 +164,38 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             set entrezGeneId(e:number|undefined) {
                 this._entrezGeneId = e;
             },
-            get molecularProfileType() {
+            get dataType() {
                 // default is horizontal CNA vs vertical mRNA
-                if (this._molecularProfileType === undefined && self.profileTypeOptions.length) {
-                    if (vertical && !!self.profileTypeOptions.find(o=>(o.value === AlterationTypeConstants.MRNA_EXPRESSION))) {
+                if (this._dataType === undefined && self.dataTypeOptions.length) {
+                    if (vertical && !!self.dataTypeOptions.find(o=>(o.value === AlterationTypeConstants.MRNA_EXPRESSION))) {
                         return AlterationTypeConstants.MRNA_EXPRESSION;
-                    } else if (!vertical && !!self.profileTypeOptions.find(o=>(o.value === AlterationTypeConstants.COPY_NUMBER_ALTERATION))) {
+                    } else if (!vertical && !!self.dataTypeOptions.find(o=>(o.value === AlterationTypeConstants.COPY_NUMBER_ALTERATION))) {
                         return AlterationTypeConstants.COPY_NUMBER_ALTERATION;
                     } else {
-                        return self.profileTypeOptions[0].value;
+                        return self.dataTypeOptions[0].value;
                     }
                 } else {
-                    return this._molecularProfileType;
+                    return this._dataType;
                 }
             },
-            set molecularProfileType(t:string|undefined) {
-                if (this._molecularProfileType !== t) {
-                    this._molecularProfileId = undefined;
+            set dataType(t:string|undefined) {
+                if (this._dataType !== t) {
+                    this._dataSourceId = undefined;
                 }
-                this._molecularProfileType = t;
+                this._dataType = t;
             },
-            get molecularProfileId() {
-                if (this._molecularProfileId === undefined &&
-                    this.molecularProfileType &&
-                    self.profileNameOptionsByType[this.molecularProfileType] &&
-                    self.profileNameOptionsByType[this.molecularProfileType].length) {
-                    return self.profileNameOptionsByType[this.molecularProfileType][0].value;
+            get dataSourceId() {
+                if (this._dataSourceId === undefined &&
+                    this.dataType &&
+                    self.dataSourceOptionsByType[this.dataType] &&
+                    self.dataSourceOptionsByType[this.dataType].length) {
+                    return self.dataSourceOptionsByType[this.dataType][0].value;
                 } else {
-                    return this._molecularProfileId;
+                    return this._dataSourceId;
                 }
             },
-            set molecularProfileId(id:string|undefined) {
-                this._molecularProfileId = id;
-            },
-            get clinicalAttributeId() {
-                if (this._clinicalAttributeId === undefined && self.clinicalAttributeOptions.length) {
-                    return self.clinicalAttributeOptions[0].value;
-                } else {
-                    return this._clinicalAttributeId;
-                }
-            },
-            set clinicalAttributeId(id:string|undefined) {
-                this._clinicalAttributeId = id;
+            set dataSourceId(id:string|undefined) {
+                this._dataSourceId = id;
             },
             get logScale() {
                 return this._logScale && logScalePossible(this);
@@ -239,11 +203,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             set logScale(v:boolean) {
                 this._logScale = v;
             },
-            _axisType: AxisType.molecularProfile,
             _entrezGeneId: undefined,
-            _molecularProfileType: undefined,
-            _molecularProfileId: undefined,
-            _clinicalAttributeId: undefined,
+            _dataType: undefined,
+            _dataSourceId: undefined,
             _logScale: true
         });
     }
@@ -252,18 +214,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @action
     private onInputClick(event:React.MouseEvent<HTMLInputElement>) {
         switch (parseInt((event.target as HTMLInputElement).value, 10)) {
-            case EventKey.horz_molecularProfile:
-                this.horzSelection.axisType = AxisType.molecularProfile;
-                break;
-            case EventKey.horz_clinicalAttribute:
-                this.horzSelection.axisType = AxisType.clinicalAttribute;
-                break;
-            case EventKey.vert_molecularProfile:
-                this.vertSelection.axisType = AxisType.molecularProfile;
-                break;
-            case EventKey.vert_clinicalAttribute:
-                this.vertSelection.axisType = AxisType.clinicalAttribute;
-                break;
             case EventKey.horz_logScale:
                 this.horzSelection.logScale = !this.horzSelection.logScale;
                 break;
@@ -463,73 +413,75 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     }
 
-    @computed get profileTypeOptions() {
+    @computed get dataTypeOptions() {
+        let dataTypeIds:string[] = [];
+
         if (this.props.store.molecularProfilesInStudies.isComplete) {
-            return _.sortBy(
+            dataTypeIds = dataTypeIds.concat(
                 _.uniq(
                     this.props.store.molecularProfilesInStudies.result.map(profile=>profile.molecularAlterationType)
-                ).filter(type=>!!molecularProfileTypeToDisplayType[type]),
-                type=>molecularProfileTypeDisplayOrder.indexOf(type)
-            ).map(type=>({
-                value: type,
-                label: molecularProfileTypeToDisplayType[type]
-            }));
-        } else {
-            return [];
+                ).filter(type=>!!dataTypeToDisplayType[type])
+            );
         }
+
+        if (this.clinicalAttributeOptions.length) {
+            dataTypeIds.push(CLIN_ATTR_DATA_TYPE);
+        }
+
+        return _.sortBy(
+            dataTypeIds,
+            type=>dataTypeDisplayOrder.indexOf(type)
+        ).map(type=>({
+            value: type,
+            label: dataTypeToDisplayType[type]
+        }));
     }
 
-    @computed get profileNameOptionsByType() {
+    @computed get dataSourceOptionsByType() {
+        let ret:{[type:string]:{value:string, label:string}[]} = {};
+
         if (this.props.store.molecularProfilesInStudies.isComplete) {
-            return _.mapValues(
+            ret = Object.assign(ret, _.mapValues(
                 _.groupBy(this.props.store.molecularProfilesInStudies.result, profile=>profile.molecularAlterationType),
                 profiles=>profiles.map(p=>({value:p.molecularProfileId, label:p.name}))
-            );
-        } else {
-            return {};
+            ));
         }
+
+        if (this.clinicalAttributeOptions.length) {
+            ret[CLIN_ATTR_DATA_TYPE] = this.clinicalAttributeOptions;
+        }
+
+        return ret;
     }
 
     @autobind
     @action
-    private onVerticalAxisProfileTypeSelect(option:any) {
-        this.vertSelection.molecularProfileType = option.value;
+    private onVerticalAxisDataTypeSelect(option:any) {
+        this.vertSelection.dataType = option.value;
     }
 
     @autobind
     @action
-    public onHorizontalAxisProfileTypeSelect(option:any) {
-        this.horzSelection.molecularProfileType = option.value;
+    public onHorizontalAxisDataTypeSelect(option:any) {
+        this.horzSelection.dataType = option.value;
     }
 
     @autobind
     @action
-    public onVerticalAxisProfileIdSelect(option:any) {
-        this.vertSelection.molecularProfileId = option.value;
+    public onVerticalAxisDataSourceSelect(option:any) {
+        this.vertSelection.dataSourceId = option.value;
     }
 
     @autobind
     @action
-    public onHorizontalAxisProfileIdSelect(option:any) {
-        this.horzSelection.molecularProfileId = option.value;
-    }
-
-    @autobind
-    @action
-    public onVerticalAxisClinicalAttributeSelect(option:any) {
-        this.vertSelection.clinicalAttributeId = option.value;
-    }
-
-    @autobind
-    @action
-    public onHorizontalAxisClinicalAttributeSelect(option:any) {
-        this.horzSelection.clinicalAttributeId = option.value;
+    public onHorizontalAxisDataSourceSelect(option:any) {
+        this.horzSelection.dataSourceId = option.value;
     }
 
     @autobind
     @action
     private swapHorzVertSelections() {
-        const keys:(keyof AxisMenuSelection)[] = ["axisType", "entrezGeneId", "molecularProfileType", "molecularProfileId", "clinicalAttributeId", "logScale"];
+        const keys:(keyof AxisMenuSelection)[] = ["entrezGeneId", "dataType", "dataSourceId", "logScale"];
         // have to store all values for swap because values depend on each other in derived data way so the copy can mess up if you do it one by one
         const horz = keys.map(k=>this.horzSelection[k]);
         const vert = keys.map(k=>this.vertSelection[k]);
@@ -540,8 +492,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @computed get bothAxesMolecularProfile() {
-        return (this.horzSelection.axisType === AxisType.molecularProfile) &&
-             (this.vertSelection.axisType === AxisType.molecularProfile);
+        return (this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE) &&
+             (this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE);
     }
 
     @computed get sameGeneInBothAxes() {
@@ -594,7 +546,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     getMutationQueries(this.horzSelection, this.vertSelection)
                 ).map(p=>p.result!)));
             } else {
-                return Promise.resolve(undefined);
+                return Promise.resolve([]);
             }
         }
     });
@@ -786,106 +738,56 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             <form>
                 <h4>{vertical ? "Vertical" : "Horizontal"} Axis</h4>
                 <div>
-                    <div className="radio"><label>
-                        <input
-                            data-test={`${dataTestWhichAxis}AxisMolecularProfileRadio`}
-                            type="radio"
-                            name={vertical ? "vert_molecularProfile" : "horz_molecularProfile"}
-                            value={vertical ? EventKey.vert_molecularProfile : EventKey.horz_molecularProfile}
-                            checked={axisSelection.axisType === AxisType.molecularProfile}
-                            onClick={this.onInputClick}
-                        /> Molecular Profile
-                    </label></div>
-                    <div className="radio"><label>
-                        <input
-                            data-test={`${dataTestWhichAxis}AxisClinicalAttributeRadio`}
-                            type="radio"
-                            name={vertical ? "vert_clinicalAttribute" : "horz_clinicalAttribute"}
-                            value={vertical ? EventKey.vert_clinicalAttribute : EventKey.horz_clinicalAttribute}
-                            checked={axisSelection.axisType === AxisType.clinicalAttribute}
-                            onClick={this.onInputClick}
-                        /> Clinical Attribute
-                    </label></div>
-                </div>
-                {(axisSelection.axisType === AxisType.molecularProfile) && (
-                    <div>
-                        <div className="form-group">
-                            <label>Gene</label>
-                            <div style={{display:"flex", flexDirection:"row"}}>
-                                <ReactSelect
-                                    name={`${vertical ? "v" : "h"}-gene-selector`}
-                                    value={axisSelection.entrezGeneId}
-                                    onChange={vertical ? this.onVerticalAxisGeneSelect : this.onHorizontalAxisGeneSelect}
-                                    isLoading={this.geneOptions.isPending}
-                                    options={this.geneOptions.isComplete ? this.geneOptions.result : []}
-                                    clearable={false}
-                                    searchable={false}
-                                />
-                                <div style={{marginLeft:7, display:"inline"}}>
-                                    {/* this parent div, and the div inside <DefaultTooltip>, are necessary because of issue with <DefaultTooltip> placement */}
-                                    <DefaultTooltip
-                                        placement="right"
-                                        overlay={<span>{this.geneLock ? "Gene selection synchronized in both axes" : "Gene selections independent in each axis"}</span>}
-                                    >
-                                        <div data-test={`${dataTestWhichAxis}AxisGeneLockButton`}>
-                                            <LockIcon locked={this.geneLock} className="lockIcon" onClick={vertical ? this.onVerticalAxisGeneLockClick : this.onHorizontalAxisGeneLockClick}/>
-                                        </div>
-                                    </DefaultTooltip>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="form-group">
-                            <label>Profile Type</label>
-                            <ReactSelect
-                                name={`${vertical ? "v" : "h"}-profile-type-selector`}
-                                value={axisSelection.molecularProfileType}
-                                onChange={vertical ? this.onVerticalAxisProfileTypeSelect : this.onHorizontalAxisProfileTypeSelect}
-                                options={this.profileTypeOptions}
-                                clearable={false}
-                                searchable={false}
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label>Profile Name</label>
-                            <div style={{display:"flex", flexDirection:"row"}}>
-                                <ReactSelect
-                                    name={`${vertical ? "v" : "h"}-profile-name-selector`}
-                                    value={axisSelection.molecularProfileId}
-                                    onChange={vertical ? this.onVerticalAxisProfileIdSelect : this.onHorizontalAxisProfileIdSelect}
-                                    options={this.profileNameOptionsByType[axisSelection.molecularProfileType+""] || []}
-                                    clearable={false}
-                                    searchable={false}
-                                />
-                                <InfoIcon
-                                    tooltip={<span>{vertical ? this.vertDescription : this.horzDescription}</span>}
-                                    tooltipPlacement="right"
-                                    style={{marginTop:"0.9em", marginLeft:5}}
-                                />
-                            </div>
-                        </div>
-                        { logScalePossible(axisSelection) && (
-                            <div className="checkbox"><label>
-                                <input
-                                    data-test={`${dataTestWhichAxis}LogCheckbox`}
-                                    type="checkbox"
-                                    name={vertical ? "vert_logScale" : "vert_logScale"}
-                                    value={vertical ? EventKey.vert_logScale : EventKey.horz_logScale}
-                                    checked={axisSelection.logScale}
-                                    onClick={this.onInputClick}
-                                /> Apply Log Scale
-                            </label></div>
-                        )}
-                    </div>
-                )}
-                {(axisSelection.axisType === AxisType.clinicalAttribute) && (
-                    <div>
-                        Clinical Attribute
+                    <div className="form-group" style={{opacity:(axisSelection.dataType === CLIN_ATTR_DATA_TYPE ? 0.5 : 1)}}>
+                        <label>Gene</label>
                         <div style={{display:"flex", flexDirection:"row"}}>
                             <ReactSelect
-                                name={`${vertical ? "v" : "h"}-clinical-attribute-selector`}
-                                value={axisSelection.clinicalAttributeId}
-                                onChange={vertical ? this.onVerticalAxisClinicalAttributeSelect : this.onHorizontalAxisClinicalAttributeSelect}
-                                options={this.clinicalAttributeOptions}
+                                name={`${vertical ? "v" : "h"}-gene-selector`}
+                                value={axisSelection.entrezGeneId}
+                                onChange={vertical ? this.onVerticalAxisGeneSelect : this.onHorizontalAxisGeneSelect}
+                                isLoading={this.geneOptions.isPending}
+                                options={this.geneOptions.isComplete ? this.geneOptions.result : []}
+                                clearable={false}
+                                searchable={false}
+                                disabled={axisSelection.dataType === CLIN_ATTR_DATA_TYPE}
+                            />
+                            <div style={{marginLeft:7, display:"inline"}}>
+                                {/* this parent div, and the div inside <DefaultTooltip>, are necessary because of issue with <DefaultTooltip> placement */}
+                                <DefaultTooltip
+                                    placement="right"
+                                    overlay={<span>{this.geneLock ? "Gene selection synchronized in both axes" : "Gene selections independent in each axis"}</span>}
+                                >
+                                    <div data-test={`${dataTestWhichAxis}AxisGeneLockButton`}>
+                                        <LockIcon
+                                            locked={this.geneLock}
+                                            disabled={axisSelection.dataType === CLIN_ATTR_DATA_TYPE}
+                                            className="lockIcon"
+                                            onClick={vertical ? this.onVerticalAxisGeneLockClick : this.onHorizontalAxisGeneLockClick}
+                                        />
+                                    </div>
+                                </DefaultTooltip>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="form-group">
+                        <label>Data Type</label>
+                        <ReactSelect
+                            name={`${vertical ? "v" : "h"}-profile-type-selector`}
+                            value={axisSelection.dataType}
+                            onChange={vertical ? this.onVerticalAxisDataTypeSelect : this.onHorizontalAxisDataTypeSelect}
+                            options={this.dataTypeOptions}
+                            clearable={false}
+                            searchable={false}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>{axisSelection.dataType === CLIN_ATTR_DATA_TYPE ? "Clinical Attribute" : `${axisSelection.dataType ? dataTypeToDisplayType[axisSelection.dataType] : ""} Profile`}</label>
+                        <div style={{display:"flex", flexDirection:"row"}}>
+                            <ReactSelect
+                                name={`${vertical ? "v" : "h"}-profile-name-selector`}
+                                value={axisSelection.dataSourceId}
+                                onChange={vertical ? this.onVerticalAxisDataSourceSelect : this.onHorizontalAxisDataSourceSelect}
+                                options={this.dataSourceOptionsByType[axisSelection.dataType+""] || []}
                                 clearable={false}
                                 searchable={false}
                             />
@@ -896,7 +798,19 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             />
                         </div>
                     </div>
-                )}
+                    { logScalePossible(axisSelection) && (
+                        <div className="checkbox"><label>
+                            <input
+                                data-test={`${dataTestWhichAxis}LogCheckbox`}
+                                type="checkbox"
+                                name={vertical ? "vert_logScale" : "vert_logScale"}
+                                value={vertical ? EventKey.vert_logScale : EventKey.horz_logScale}
+                                checked={axisSelection.logScale}
+                                onClick={this.onInputClick}
+                            /> Apply Log Scale
+                        </label></div>
+                    )}
+                </div>
             </form>
         );
     }
