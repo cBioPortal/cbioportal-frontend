@@ -65,6 +65,11 @@ export type ChartMeta = {
     size: ChartSize
 }
 
+export type layoutMatrixItem = {
+    notFull: boolean,
+    matrix: string[]
+}
+
 export type StudyViewPageLayoutProps = {
     layout: Layout[],
     cols:number,
@@ -258,19 +263,120 @@ export class StudyViewPageStore {
     }
 
     private calculateLayout(visibleAttributes: ChartMeta[], cols: number, chartSize: any): Layout[] {
-        return _.sortBy(visibleAttributes, [(attr: ChartMeta) => attr.clinicalAttribute.priority])
-            .map((attr, index) => {
+        let matrix: layoutMatrixItem[] = [];
+        _.sortBy(visibleAttributes, [(attr: ChartMeta) => attr.clinicalAttribute.priority])
+            .forEach((attr, index) => {
                     let _size = chartSize.has(attr.uniqueKey) ? chartSize.get(attr.uniqueKey) : {w: 1, h: 1};
-                    return {
-                        i: attr.uniqueKey,
-                        x: index % cols,
-                        y: Math.floor(index / cols),
-                        w: _size!.w,
-                        h: _size!.h,
-                        isResizable: false
-                    };
+                    matrix = this.getLayoutMatrix(matrix, attr.uniqueKey, _size);
                 }
-            ) || [];
+            );
+
+        let _layout: Layout[] = [];
+        let x = 0;
+        let y = 0;
+        let plottedCharts: any = {};
+        _.forEach(matrix, (group: layoutMatrixItem, index) => {
+            if ((x + 1) % cols === 0) {
+                x = 0;
+                y = y + 2;
+            }
+            let _x = x - 1;
+            let _y = y;
+            _.forEach(group.matrix, (uniqueId, _index: number) => {
+                ++_x;
+
+                if (_index === 2) {
+                    _x = x;
+                    _y++;
+                }
+                if (!uniqueId) {
+                    return;
+                }
+                if (plottedCharts.hasOwnProperty(uniqueId)) {
+                    return;
+                }
+                plottedCharts[uniqueId] = 1;
+                let _size = chartSize.has(uniqueId) ? chartSize.get(uniqueId) : {w: 1, h: 1};
+                _layout.push({
+                    i: uniqueId,
+                    x: _x,
+                    y: _y,
+                    w: _size!.w,
+                    h: _size!.h,
+                    isResizable: false
+                });
+            });
+            x = x + 2;
+        });
+        return _layout;
+    }
+
+    private getLayoutMatrix(layoutMatrix: layoutMatrixItem[], key: string, chartDimension: ChartSize) {
+        let neighborIndex: number;
+        let foundSpace = false;
+        let chartSize = chartDimension.w * chartDimension.h;
+
+        _.some(layoutMatrix, function (layoutItem) {
+            if (foundSpace) {
+                return true;
+            }
+            if (layoutItem.notFull) {
+                var _matrix = layoutItem.matrix;
+                _.some(_matrix, function (item, _matrixIndex) {
+                    if (chartSize === 2) {
+                        var _validIndex = false;
+                        if (chartDimension.h === 2) {
+                            neighborIndex = _matrixIndex + 2;
+                            if (_matrixIndex < 2) {
+                                _validIndex = true;
+                            }
+                        } else {
+                            neighborIndex = _matrixIndex + 1;
+                            if (_matrixIndex % 2 === 0) {
+                                _validIndex = true;
+                            }
+                        }
+                        if (neighborIndex < _matrix.length && _validIndex) {
+                            if (item === '' && _matrix[neighborIndex] === '') {
+                                // Found a place for chart
+                                _matrix[_matrixIndex] = _matrix[neighborIndex] = key;
+                                foundSpace = true;
+                                layoutItem.notFull = _.includes(_matrix, '');
+                                return true;
+                            }
+                        }
+                    } else if (chartSize === 1) {
+                        if (item === '') {
+                            // Found a place for chart
+                            _matrix[_matrixIndex] = key;
+                            foundSpace = true;
+                            if (_matrixIndex === _matrix.length - 1) {
+                                layoutItem.notFull = false;
+                            }
+                            return true;
+                        }
+                    } else if (chartSize === 4) {
+                        if (item === '' && _matrix[0] === '' && _matrix[1] === '' && _matrix[2] === '' && _matrix[3] === '') {
+                            // Found a place for chart
+                            _matrix = _.fill(Array(4), key);
+                            layoutItem.notFull = false;
+                            foundSpace = true;
+                            return true;
+                        }
+                    }
+                });
+                layoutItem.matrix = _matrix;
+            }
+        });
+
+        if (!foundSpace) {
+            layoutMatrix.push({
+                notFull: true,
+                matrix: _.fill(Array(4), '')
+            });
+            layoutMatrix = this.getLayoutMatrix(layoutMatrix, key, chartDimension);
+        }
+        return layoutMatrix;
     }
 
     public getMutatedGenesTableFilters(): number[] {
