@@ -2,7 +2,7 @@ import React from 'react';
 import { Route, Redirect, IndexRedirect } from 'react-router';
 import { inject } from 'mobx-react';
 import Container from 'appShell/App/Container';
-import { restoreRouteAfterRedirect } from './shared/lib/redirectHelpers';
+import { restoreRouteAfterRedirect } from 'shared/lib/redirectHelpers';
 
 /* HOW TO ADD A NEW ROUTE
 * 1. Import the "page" component using the bundle-loader directives as seen in imports below
@@ -15,12 +15,11 @@ import { restoreRouteAfterRedirect } from './shared/lib/redirectHelpers';
 // webpack knows to 'split' the code into seperate bundles accordingly
 // see article http://henleyedition.com/implicit-code-splitting-with-react-router-and-webpack/
 import PatientViewPage from 'bundle-loader?lazy!babel-loader!./pages/patientView/PatientViewPage';
-import PatientViewPageSimple from 'bundle-loader?lazy!babel-loader!./pages/patientView/simple/PatientViewPageSimple';
 import ResultsViewPage from 'bundle-loader?lazy!babel-loader!./pages/resultsView/ResultsViewPage';
 import HomePage from 'bundle-loader?lazy!babel-loader!./pages/home/HomePage';
 import TestimonialsPage from 'pages/staticPages/testimonialsPage/TestimonialsPage';
 import DatasetPage from 'bundle-loader?lazy!babel-loader!./pages/datasetView/DatasetPage';
-import './globalComponents';
+import 'globalComponents';
 
 // accepts bundle-loader's deferred loader function and defers execution of route's render
 // until chunk is loaded
@@ -51,7 +50,6 @@ let getBlankPage = function(){
 export const makeRoutes = (routing) => {
     return (<Route path="/" component={Container}>
         <Route path="/home" getComponent={lazyLoadComponent(HomePage)}/>
-        <Route path="/patient-simple" getComponent={lazyLoadComponent(PatientViewPageSimple)}/>
         <Route path="/patient" getComponent={lazyLoadComponent(PatientViewPage)}/>
         <Route path="/datasets" getComponent={lazyLoadComponent(DatasetPage)} />
         <Route path="/restore" component={restoreRoute}/>
