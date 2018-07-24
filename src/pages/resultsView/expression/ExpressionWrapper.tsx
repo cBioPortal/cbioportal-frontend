@@ -56,6 +56,7 @@ type ExpressionTooltipModel = {
     studyName: string;
     studyId:string;
     mutationType:string | null;
+    proteinChange:string | null;
     sampleId: string;
     expression: number,
     style: ExpressionStyle
@@ -424,7 +425,8 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                 studyId: geneMolecularData.studyId,
                 expression: geneMolecularData.value,
                 style: expressionStyle,
-                mutationType:(mutation && oncoprintMutationType) ? oncoprintMutationType : null
+                mutationType:(mutation && oncoprintMutationType) ? oncoprintMutationType : null,
+                proteinChange: (mutation && mutation.proteinChange) ? mutation.proteinChange : null
             }
         };
 
@@ -541,21 +543,25 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             >
                 <div className="arrow" style={{top: 27}}></div>
                 <div className="popover-content">
-                    { this.showMutations && (
-                        <span>
-                            <svg height="10" width="10" style={{marginTop:3}}>
-                                <svg height={8} width={8}><Point size={3} x={4} y={4} symbol={style.symbol} style={{ fill:style.fill, stroke:style.stroke }} /></svg>
-                            </svg>
-                            &nbsp;{style.legendText}
-                            <br/>
-                        </span>
-                    )}
                     <strong>Study:</strong> {this.tooltipModel!.data.studyName}<br/>
-                    <strong>Sample ID:</strong> <a href={getSampleViewUrl(this.tooltipModel!.data.studyId, this.tooltipModel!.data.sampleId)} target="_blank">
-                        {this.tooltipModel!.data.sampleId}
-                    </a>
+                    <strong>Sample ID:</strong>&nbsp;
+                    <a href={getSampleViewUrl(this.tooltipModel!.data.studyId, this.tooltipModel!.data.sampleId)} target="_blank">
+                    {this.tooltipModel!.data.sampleId}</a>
                     <br/>
                     <strong>Expression:</strong> {this.tooltipModel!.data.expression}
+                    { this.showMutations && (
+                        <div>
+                            <strong>Mutation type:</strong>
+                            &nbsp;{style.legendText}
+                            <br/>
+                        </div>
+                    )}
+                    {
+                        (this.showMutations && this.tooltipModel!.data.proteinChange) &&
+                        (<div><strong>Mutation detail:</strong> {this.tooltipModel!.data.proteinChange}</div>)
+                    }
+
+
                 </div>
             </div>
 
