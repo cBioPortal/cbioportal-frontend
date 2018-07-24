@@ -501,37 +501,48 @@ export default class OncoKbAPI {
      * @method
      * @name OncoKbAPI#classificationVariantsGetUsingGET
      */
+    classificationVariantsGetUsingGETWithHttpInfo(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/classification/variants';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get All OncoKB Variant Classification.
+     * @method
+     * @name OncoKbAPI#classificationVariantsGetUsingGET
+     */
     classificationVariantsGetUsingGET(parameters: {
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < string >
         > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/classification/variants';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
+            return this.classificationVariantsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-
     drugsGetUsingGETURL(parameters: {
         $queryParameters ? : any
     }): string {
@@ -553,37 +564,48 @@ export default class OncoKbAPI {
      * @method
      * @name OncoKbAPI#drugsGetUsingGET
      */
+    drugsGetUsingGETWithHttpInfo(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/drugs';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get all curated drugs.
+     * @method
+     * @name OncoKbAPI#drugsGetUsingGET
+     */
     drugsGetUsingGET(parameters: {
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < Drug >
         > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/drugs';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
+            return this.drugsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-
     drugsLookupGetUsingGETURL(parameters: {
         'name' ? : string,
         'atcCode' ? : string,
@@ -628,6 +650,68 @@ export default class OncoKbAPI {
      * @param {string} synonym - Drug Synonyms
      * @param {boolean} exactMatch - Exactly Match
      */
+    drugsLookupGetUsingGETWithHttpInfo(parameters: {
+        'name' ? : string,
+        'atcCode' ? : string,
+        'synonym' ? : string,
+        'exactMatch': boolean,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/drugs/lookup';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['name'] !== undefined) {
+                queryParameters['name'] = parameters['name'];
+            }
+
+            if (parameters['atcCode'] !== undefined) {
+                queryParameters['atcCode'] = parameters['atcCode'];
+            }
+
+            if (parameters['synonym'] !== undefined) {
+                queryParameters['synonym'] = parameters['synonym'];
+            }
+
+            if (parameters['exactMatch'] !== undefined) {
+                queryParameters['exactMatch'] = parameters['exactMatch'];
+            }
+
+            if (parameters['exactMatch'] === undefined) {
+                reject(new Error('Missing required  parameter: exactMatch'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Search drugs.
+     * @method
+     * @name OncoKbAPI#drugsLookupGetUsingGET
+     * @param {string} name - Drug Name
+     * @param {string} atcCode - ATC Code
+     * @param {string} synonym - Drug Synonyms
+     * @param {boolean} exactMatch - Exactly Match
+     */
     drugsLookupGetUsingGET(parameters: {
             'name' ? : string,
             'atcCode' ? : string,
@@ -637,53 +721,10 @@ export default class OncoKbAPI {
                 $domain ? : string
         }): Promise < Array < Drug >
         > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/drugs/lookup';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters['name'] !== undefined) {
-                    queryParameters['name'] = parameters['name'];
-                }
-
-                if (parameters['atcCode'] !== undefined) {
-                    queryParameters['atcCode'] = parameters['atcCode'];
-                }
-
-                if (parameters['synonym'] !== undefined) {
-                    queryParameters['synonym'] = parameters['synonym'];
-                }
-
-                if (parameters['exactMatch'] !== undefined) {
-                    queryParameters['exactMatch'] = parameters['exactMatch'];
-                }
-
-                if (parameters['exactMatch'] === undefined) {
-                    reject(new Error('Missing required  parameter: exactMatch'));
-                    return;
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
+            return this.drugsLookupGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-
     evidencesUUIDsGetUsingPOSTURL(parameters: {
         'uuids': Array < string > ,
         'fields' ? : string,
@@ -713,12 +754,12 @@ export default class OncoKbAPI {
      * @param {} uuids - Unique identifier list.
      * @param {string} fields - The fields to be returned.
      */
-    evidencesUUIDsGetUsingPOST(parameters: {
+    evidencesUUIDsGetUsingPOSTWithHttpInfo(parameters: {
         'uuids': Array < string > ,
         'fields' ? : string,
         $queryParameters ? : any,
         $domain ? : string
-    }): Promise < Evidence > {
+    }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
@@ -753,11 +794,26 @@ export default class OncoKbAPI {
 
             request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
 
-        }).then(function(response: request.Response) {
-            return response.body;
         });
     };
 
+    /**
+     * Get specific evidences.
+     * @method
+     * @name OncoKbAPI#evidencesUUIDsGetUsingPOST
+     * @param {} uuids - Unique identifier list.
+     * @param {string} fields - The fields to be returned.
+     */
+    evidencesUUIDsGetUsingPOST(parameters: {
+        'uuids': Array < string > ,
+        'fields' ? : string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < Evidence > {
+        return this.evidencesUUIDsGetUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     evidencesLookupGetUsingGETURL(parameters: {
         'entrezGeneId' ? : number,
         'hugoSymbol' ? : string,
@@ -850,6 +906,111 @@ export default class OncoKbAPI {
      * @param {string} evidenceTypes - Separate by comma. Evidence type includes GENE_SUMMARY, GENE_BACKGROUND, MUTATION_SUMMARY, ONCOGENIC, MUTATION_EFFECT, VUS, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, TUMOR_TYPE_SUMMARY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE
      * @param {string} fields - The fields to be returned.
      */
+    evidencesLookupGetUsingGETWithHttpInfo(parameters: {
+        'entrezGeneId' ? : number,
+        'hugoSymbol' ? : string,
+        'variant' ? : string,
+        'tumorType' ? : string,
+        'consequence' ? : string,
+        'proteinStart' ? : string,
+        'proteinEnd' ? : string,
+        'source' ? : string,
+        'highestLevelOnly' ? : boolean,
+        'levelOfEvidence' ? : string,
+        'evidenceTypes' ? : string,
+        'fields' ? : string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/evidences/lookup';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['entrezGeneId'] !== undefined) {
+                queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
+            }
+
+            if (parameters['hugoSymbol'] !== undefined) {
+                queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
+            }
+
+            if (parameters['variant'] !== undefined) {
+                queryParameters['variant'] = parameters['variant'];
+            }
+
+            if (parameters['tumorType'] !== undefined) {
+                queryParameters['tumorType'] = parameters['tumorType'];
+            }
+
+            if (parameters['consequence'] !== undefined) {
+                queryParameters['consequence'] = parameters['consequence'];
+            }
+
+            if (parameters['proteinStart'] !== undefined) {
+                queryParameters['proteinStart'] = parameters['proteinStart'];
+            }
+
+            if (parameters['proteinEnd'] !== undefined) {
+                queryParameters['proteinEnd'] = parameters['proteinEnd'];
+            }
+
+            if (parameters['source'] !== undefined) {
+                queryParameters['source'] = parameters['source'];
+            }
+
+            if (parameters['highestLevelOnly'] !== undefined) {
+                queryParameters['highestLevelOnly'] = parameters['highestLevelOnly'];
+            }
+
+            if (parameters['levelOfEvidence'] !== undefined) {
+                queryParameters['levelOfEvidence'] = parameters['levelOfEvidence'];
+            }
+
+            if (parameters['evidenceTypes'] !== undefined) {
+                queryParameters['evidenceTypes'] = parameters['evidenceTypes'];
+            }
+
+            if (parameters['fields'] !== undefined) {
+                queryParameters['fields'] = parameters['fields'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Search evidences. Multi-queries are supported.
+     * @method
+     * @name OncoKbAPI#evidencesLookupGetUsingGET
+     * @param {integer} entrezGeneId - The entrez gene ID.
+     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation.
+     * @param {string} variant - Variant name.
+     * @param {string} tumorType - Tumor type name. OncoTree code is supported.
+     * @param {string} consequence - Consequence. Possible value: feature_truncation, frameshift_variant, inframe_deletion, inframe_insertion, start_lost, missense_variant, splice_region_variant, stop_gained, synonymous_variant
+     * @param {string} proteinStart - Protein Start.
+     * @param {string} proteinEnd - Protein End.
+     * @param {string} source - Tumor type source. OncoTree tumor types are the default setting. We may have customized version, like Quest.
+     * @param {boolean} highestLevelOnly - Only show highest level evidences
+     * @param {string} levelOfEvidence - Separate by comma. LEVEL_1, LEVEL_2A, LEVEL_2B, LEVEL_3A, LEVEL_3B, LEVEL_4, LEVEL_R1, LEVEL_R2, LEVEL_R3
+     * @param {string} evidenceTypes - Separate by comma. Evidence type includes GENE_SUMMARY, GENE_BACKGROUND, MUTATION_SUMMARY, ONCOGENIC, MUTATION_EFFECT, VUS, PROGNOSTIC_IMPLICATION, DIAGNOSTIC_IMPLICATION, TUMOR_TYPE_SUMMARY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY, STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY, INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE
+     * @param {string} fields - The fields to be returned.
+     */
     evidencesLookupGetUsingGET(parameters: {
             'entrezGeneId' ? : number,
             'hugoSymbol' ? : string,
@@ -867,80 +1028,10 @@ export default class OncoKbAPI {
                 $domain ? : string
         }): Promise < Array < Evidence >
         > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/evidences/lookup';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters['entrezGeneId'] !== undefined) {
-                    queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
-                }
-
-                if (parameters['hugoSymbol'] !== undefined) {
-                    queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
-                }
-
-                if (parameters['variant'] !== undefined) {
-                    queryParameters['variant'] = parameters['variant'];
-                }
-
-                if (parameters['tumorType'] !== undefined) {
-                    queryParameters['tumorType'] = parameters['tumorType'];
-                }
-
-                if (parameters['consequence'] !== undefined) {
-                    queryParameters['consequence'] = parameters['consequence'];
-                }
-
-                if (parameters['proteinStart'] !== undefined) {
-                    queryParameters['proteinStart'] = parameters['proteinStart'];
-                }
-
-                if (parameters['proteinEnd'] !== undefined) {
-                    queryParameters['proteinEnd'] = parameters['proteinEnd'];
-                }
-
-                if (parameters['source'] !== undefined) {
-                    queryParameters['source'] = parameters['source'];
-                }
-
-                if (parameters['highestLevelOnly'] !== undefined) {
-                    queryParameters['highestLevelOnly'] = parameters['highestLevelOnly'];
-                }
-
-                if (parameters['levelOfEvidence'] !== undefined) {
-                    queryParameters['levelOfEvidence'] = parameters['levelOfEvidence'];
-                }
-
-                if (parameters['evidenceTypes'] !== undefined) {
-                    queryParameters['evidenceTypes'] = parameters['evidenceTypes'];
-                }
-
-                if (parameters['fields'] !== undefined) {
-                    queryParameters['fields'] = parameters['fields'];
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
+            return this.evidencesLookupGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-
     evidencesLookupPostUsingPOSTURL(parameters: {
         'body': EvidenceQueries,
         'fields' ? : string,
@@ -970,6 +1061,56 @@ export default class OncoKbAPI {
      * @param {} body - List of queries. Please see swagger.json for request body format. Please use JSON string.
      * @param {string} fields - The fields to be returned.
      */
+    evidencesLookupPostUsingPOSTWithHttpInfo(parameters: {
+        'body': EvidenceQueries,
+        'fields' ? : string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/evidences/lookup';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['body'] !== undefined) {
+                body = parameters['body'];
+            }
+
+            if (parameters['body'] === undefined) {
+                reject(new Error('Missing required  parameter: body'));
+                return;
+            }
+
+            if (parameters['fields'] !== undefined) {
+                queryParameters['fields'] = parameters['fields'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Search evidences.
+     * @method
+     * @name OncoKbAPI#evidencesLookupPostUsingPOST
+     * @param {} body - List of queries. Please see swagger.json for request body format. Please use JSON string.
+     * @param {string} fields - The fields to be returned.
+     */
     evidencesLookupPostUsingPOST(parameters: {
             'body': EvidenceQueries,
             'fields' ? : string,
@@ -977,45 +1118,10 @@ export default class OncoKbAPI {
             $domain ? : string
         }): Promise < Array < EvidenceQueryRes >
         > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/evidences/lookup';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters['body'] !== undefined) {
-                    body = parameters['body'];
-                }
-
-                if (parameters['body'] === undefined) {
-                    reject(new Error('Missing required  parameter: body'));
-                    return;
-                }
-
-                if (parameters['fields'] !== undefined) {
-                    queryParameters['fields'] = parameters['fields'];
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
+            return this.evidencesLookupPostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-
     evidencesUUIDGetUsingGETURL(parameters: {
         'uuid': string,
         'fields' ? : string,
@@ -1046,12 +1152,12 @@ export default class OncoKbAPI {
      * @param {string} uuid - Unique identifier.
      * @param {string} fields - The fields to be returned.
      */
-    evidencesUUIDGetUsingGET(parameters: {
+    evidencesUUIDGetUsingGETWithHttpInfo(parameters: {
         'uuid': string,
         'fields' ? : string,
         $queryParameters ? : any,
         $domain ? : string
-    }): Promise < Evidence > {
+    }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
@@ -1084,11 +1190,26 @@ export default class OncoKbAPI {
 
             request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
 
-        }).then(function(response: request.Response) {
-            return response.body;
         });
     };
 
+    /**
+     * Get specific evidence.
+     * @method
+     * @name OncoKbAPI#evidencesUUIDGetUsingGET
+     * @param {string} uuid - Unique identifier.
+     * @param {string} fields - The fields to be returned.
+     */
+    evidencesUUIDGetUsingGET(parameters: {
+        'uuid': string,
+        'fields' ? : string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < Evidence > {
+        return this.evidencesUUIDGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     genesGetUsingGETURL(parameters: {
         'fields' ? : string,
         $queryParameters ? : any
@@ -1115,42 +1236,55 @@ export default class OncoKbAPI {
      * @name OncoKbAPI#genesGetUsingGET
      * @param {string} fields - The fields to be returned.
      */
+    genesGetUsingGETWithHttpInfo(parameters: {
+        'fields' ? : string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/genes';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['fields'] !== undefined) {
+                queryParameters['fields'] = parameters['fields'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get list of currently curated genes.
+     * @method
+     * @name OncoKbAPI#genesGetUsingGET
+     * @param {string} fields - The fields to be returned.
+     */
     genesGetUsingGET(parameters: {
             'fields' ? : string,
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < Gene >
         > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/genes';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters['fields'] !== undefined) {
-                    queryParameters['fields'] = parameters['fields'];
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
+            return this.genesGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-
     genesLookupGetUsingGETURL(parameters: {
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
@@ -1195,6 +1329,63 @@ export default class OncoKbAPI {
      * @param {string} query - The search query, it could be hugoSymbol or entrezGeneId.
      * @param {string} fields - The fields to be returned.
      */
+    genesLookupGetUsingGETWithHttpInfo(parameters: {
+        'hugoSymbol' ? : string,
+        'entrezGeneId' ? : number,
+        'query' ? : string,
+        'fields' ? : string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/genes/lookup';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['hugoSymbol'] !== undefined) {
+                queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
+            }
+
+            if (parameters['entrezGeneId'] !== undefined) {
+                queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
+            }
+
+            if (parameters['query'] !== undefined) {
+                queryParameters['query'] = parameters['query'];
+            }
+
+            if (parameters['fields'] !== undefined) {
+                queryParameters['fields'] = parameters['fields'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Search gene.
+     * @method
+     * @name OncoKbAPI#genesLookupGetUsingGET
+     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation. (Deprecated, use query instead)
+     * @param {integer} entrezGeneId - The entrez gene ID. (Deprecated, use query instead)
+     * @param {string} query - The search query, it could be hugoSymbol or entrezGeneId.
+     * @param {string} fields - The fields to be returned.
+     */
     genesLookupGetUsingGET(parameters: {
             'hugoSymbol' ? : string,
             'entrezGeneId' ? : number,
@@ -1204,48 +1395,10 @@ export default class OncoKbAPI {
                 $domain ? : string
         }): Promise < Array < Gene >
         > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/genes/lookup';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters['hugoSymbol'] !== undefined) {
-                    queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
-                }
-
-                if (parameters['entrezGeneId'] !== undefined) {
-                    queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
-                }
-
-                if (parameters['query'] !== undefined) {
-                    queryParameters['query'] = parameters['query'];
-                }
-
-                if (parameters['fields'] !== undefined) {
-                    queryParameters['fields'] = parameters['fields'];
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
+            return this.genesLookupGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-
     genesEntrezGeneIdGetUsingGETURL(parameters: {
         'entrezGeneId': number,
         'fields' ? : string,
@@ -1276,12 +1429,12 @@ export default class OncoKbAPI {
      * @param {integer} entrezGeneId - The entrez gene ID.
      * @param {string} fields - The fields to be returned.
      */
-    genesEntrezGeneIdGetUsingGET(parameters: {
+    genesEntrezGeneIdGetUsingGETWithHttpInfo(parameters: {
         'entrezGeneId': number,
         'fields' ? : string,
         $queryParameters ? : any,
         $domain ? : string
-    }): Promise < Gene > {
+    }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
@@ -1314,11 +1467,26 @@ export default class OncoKbAPI {
 
             request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
 
-        }).then(function(response: request.Response) {
-            return response.body;
         });
     };
 
+    /**
+     * Get specific gene information.
+     * @method
+     * @name OncoKbAPI#genesEntrezGeneIdGetUsingGET
+     * @param {integer} entrezGeneId - The entrez gene ID.
+     * @param {string} fields - The fields to be returned.
+     */
+    genesEntrezGeneIdGetUsingGET(parameters: {
+        'entrezGeneId': number,
+        'fields' ? : string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < Gene > {
+        return this.genesEntrezGeneIdGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     genesEntrezGeneIdEvidencesGetUsingGETURL(parameters: {
         'entrezGeneId': number,
         'evidenceTypes' ? : string,
@@ -1349,6 +1517,54 @@ export default class OncoKbAPI {
      * @param {integer} entrezGeneId - The entrez gene ID.
      * @param {string} evidenceTypes - Separate by comma. Evidence type includes GENE_SUMMARY, GENE_BACKGROUND
      */
+    genesEntrezGeneIdEvidencesGetUsingGETWithHttpInfo(parameters: {
+        'entrezGeneId': number,
+        'evidenceTypes' ? : string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/genes/{entrezGeneId}/evidences';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{entrezGeneId}', parameters['entrezGeneId'] + '');
+
+            if (parameters['entrezGeneId'] === undefined) {
+                reject(new Error('Missing required  parameter: entrezGeneId'));
+                return;
+            }
+
+            if (parameters['evidenceTypes'] !== undefined) {
+                queryParameters['evidenceTypes'] = parameters['evidenceTypes'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get list of evidences for specific gene.
+     * @method
+     * @name OncoKbAPI#genesEntrezGeneIdEvidencesGetUsingGET
+     * @param {integer} entrezGeneId - The entrez gene ID.
+     * @param {string} evidenceTypes - Separate by comma. Evidence type includes GENE_SUMMARY, GENE_BACKGROUND
+     */
     genesEntrezGeneIdEvidencesGetUsingGET(parameters: {
             'entrezGeneId': number,
             'evidenceTypes' ? : string,
@@ -1356,43 +1572,10 @@ export default class OncoKbAPI {
             $domain ? : string
         }): Promise < Array < GeneEvidence >
         > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/genes/{entrezGeneId}/evidences';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                path = path.replace('{entrezGeneId}', parameters['entrezGeneId'] + '');
-
-                if (parameters['entrezGeneId'] === undefined) {
-                    reject(new Error('Missing required  parameter: entrezGeneId'));
-                    return;
-                }
-
-                if (parameters['evidenceTypes'] !== undefined) {
-                    queryParameters['evidenceTypes'] = parameters['evidenceTypes'];
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
+            return this.genesEntrezGeneIdEvidencesGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-
     genesEntrezGeneIdVariantsGetUsingGETURL(parameters: {
         'entrezGeneId': number,
         'fields' ? : string,
@@ -1423,6 +1606,54 @@ export default class OncoKbAPI {
      * @param {integer} entrezGeneId - The entrez gene ID.
      * @param {string} fields - The fields to be returned.
      */
+    genesEntrezGeneIdVariantsGetUsingGETWithHttpInfo(parameters: {
+        'entrezGeneId': number,
+        'fields' ? : string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/genes/{entrezGeneId}/variants';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{entrezGeneId}', parameters['entrezGeneId'] + '');
+
+            if (parameters['entrezGeneId'] === undefined) {
+                reject(new Error('Missing required  parameter: entrezGeneId'));
+                return;
+            }
+
+            if (parameters['fields'] !== undefined) {
+                queryParameters['fields'] = parameters['fields'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get list of variants for specific gene.
+     * @method
+     * @name OncoKbAPI#genesEntrezGeneIdVariantsGetUsingGET
+     * @param {integer} entrezGeneId - The entrez gene ID.
+     * @param {string} fields - The fields to be returned.
+     */
     genesEntrezGeneIdVariantsGetUsingGET(parameters: {
             'entrezGeneId': number,
             'fields' ? : string,
@@ -1430,43 +1661,10 @@ export default class OncoKbAPI {
             $domain ? : string
         }): Promise < Array < Alteration >
         > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/genes/{entrezGeneId}/variants';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                path = path.replace('{entrezGeneId}', parameters['entrezGeneId'] + '');
-
-                if (parameters['entrezGeneId'] === undefined) {
-                    reject(new Error('Missing required  parameter: entrezGeneId'));
-                    return;
-                }
-
-                if (parameters['fields'] !== undefined) {
-                    queryParameters['fields'] = parameters['fields'];
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
+            return this.genesEntrezGeneIdVariantsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-
     infoGetUsingGETURL(parameters: {
         $queryParameters ? : any
     }): string {
@@ -1488,10 +1686,10 @@ export default class OncoKbAPI {
      * @method
      * @name OncoKbAPI#infoGetUsingGET
      */
-    infoGetUsingGET(parameters: {
+    infoGetUsingGETWithHttpInfo(parameters: {
         $queryParameters ? : any,
             $domain ? : string
-    }): Promise < OncoKBInfo > {
+    }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
@@ -1513,11 +1711,22 @@ export default class OncoKbAPI {
 
             request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
 
-        }).then(function(response: request.Response) {
-            return response.body;
         });
     };
 
+    /**
+     * infoGet
+     * @method
+     * @name OncoKbAPI#infoGetUsingGET
+     */
+    infoGetUsingGET(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < OncoKBInfo > {
+        return this.infoGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     levelsGetUsingGETURL(parameters: {
         $queryParameters ? : any
     }): string {
@@ -1539,10 +1748,10 @@ export default class OncoKbAPI {
      * @method
      * @name OncoKbAPI#levelsGetUsingGET
      */
-    levelsGetUsingGET(parameters: {
+    levelsGetUsingGETWithHttpInfo(parameters: {
         $queryParameters ? : any,
             $domain ? : string
-    }): Promise < {} > {
+    }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
@@ -1564,11 +1773,22 @@ export default class OncoKbAPI {
 
             request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
 
-        }).then(function(response: request.Response) {
-            return response.body;
         });
     };
 
+    /**
+     * Get all levels.
+     * @method
+     * @name OncoKbAPI#levelsGetUsingGET
+     */
+    levelsGetUsingGET(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < {} > {
+        return this.levelsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     levelsResistenceGetUsingGETURL(parameters: {
         $queryParameters ? : any
     }): string {
@@ -1590,10 +1810,10 @@ export default class OncoKbAPI {
      * @method
      * @name OncoKbAPI#levelsResistenceGetUsingGET
      */
-    levelsResistenceGetUsingGET(parameters: {
+    levelsResistenceGetUsingGETWithHttpInfo(parameters: {
         $queryParameters ? : any,
             $domain ? : string
-    }): Promise < {} > {
+    }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
@@ -1615,11 +1835,22 @@ export default class OncoKbAPI {
 
             request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
 
-        }).then(function(response: request.Response) {
-            return response.body;
         });
     };
 
+    /**
+     * Get all resistence levels.
+     * @method
+     * @name OncoKbAPI#levelsResistenceGetUsingGET
+     */
+    levelsResistenceGetUsingGET(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < {} > {
+        return this.levelsResistenceGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     levelsSensitiveGetUsingGETURL(parameters: {
         $queryParameters ? : any
     }): string {
@@ -1641,10 +1872,10 @@ export default class OncoKbAPI {
      * @method
      * @name OncoKbAPI#levelsSensitiveGetUsingGET
      */
-    levelsSensitiveGetUsingGET(parameters: {
+    levelsSensitiveGetUsingGETWithHttpInfo(parameters: {
         $queryParameters ? : any,
             $domain ? : string
-    }): Promise < {} > {
+    }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
@@ -1666,11 +1897,22 @@ export default class OncoKbAPI {
 
             request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
 
-        }).then(function(response: request.Response) {
-            return response.body;
         });
     };
 
+    /**
+     * Get all sensitive levels.
+     * @method
+     * @name OncoKbAPI#levelsSensitiveGetUsingGET
+     */
+    levelsSensitiveGetUsingGET(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < {} > {
+        return this.levelsSensitiveGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     searchGetUsingGETURL(parameters: {
         'id' ? : string,
         'hugoSymbol' ? : string,
@@ -1793,7 +2035,7 @@ export default class OncoKbAPI {
      * @param {string} hgvs - HGVS varaint. Its priority is higher than entrezGeneId/hugoSymbol + variant combination
      * @param {string} fields - The fields to be returned.
      */
-    searchGetUsingGET(parameters: {
+    searchGetUsingGETWithHttpInfo(parameters: {
         'id' ? : string,
         'hugoSymbol' ? : string,
         'entrezGeneId' ? : number,
@@ -1813,7 +2055,7 @@ export default class OncoKbAPI {
         'fields' ? : string,
         $queryParameters ? : any,
             $domain ? : string
-    }): Promise < IndicatorQueryResp > {
+    }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
@@ -1903,11 +2145,56 @@ export default class OncoKbAPI {
 
             request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
 
-        }).then(function(response: request.Response) {
-            return response.body;
         });
     };
 
+    /**
+     * General search for possible combinations.
+     * @method
+     * @name OncoKbAPI#searchGetUsingGET
+     * @param {string} id - The query ID
+     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation.
+     * @param {integer} entrezGeneId - The entrez gene ID.
+     * @param {string} variant - Variant name.
+     * @param {string} variantType - Variant type.
+     * @param {string} svType - Structural Variant Type.
+     * @param {string} consequence - Consequence
+     * @param {integer} proteinStart - Protein Start
+     * @param {integer} proteinEnd - Protein End
+     * @param {string} tumorType - Tumor type name. OncoTree code is supported.
+     * @param {string} source - Tumor type source. OncoTree tumor types are the default setting. We may have customized version, like Quest.
+     * @param {string} levels - Level of evidences.
+     * @param {boolean} highestLevelOnly - Only show treatments of highest level
+     * @param {string} queryType - Query type. There maybe slight differences between different query types. Currently support web or regular.
+     * @param {string} evidenceType - Evidence type.
+     * @param {string} hgvs - HGVS varaint. Its priority is higher than entrezGeneId/hugoSymbol + variant combination
+     * @param {string} fields - The fields to be returned.
+     */
+    searchGetUsingGET(parameters: {
+        'id' ? : string,
+        'hugoSymbol' ? : string,
+        'entrezGeneId' ? : number,
+        'variant' ? : string,
+        'variantType' ? : string,
+        'svType' ? : "DELETION" | "TRANSLOCATION" | "DUPLICATION" | "INSERTION" | "INVERSION" | "FUSION",
+        'consequence' ? : string,
+        'proteinStart' ? : number,
+        'proteinEnd' ? : number,
+        'tumorType' ? : string,
+        'source' ? : string,
+        'levels' ? : string,
+        'highestLevelOnly' ? : boolean,
+        'queryType' ? : string,
+        'evidenceType' ? : string,
+        'hgvs' ? : string,
+        'fields' ? : string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < IndicatorQueryResp > {
+        return this.searchGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     searchPostUsingPOSTURL(parameters: {
         'body': EvidenceQueries,
         'fields' ? : string,
@@ -1937,6 +2224,56 @@ export default class OncoKbAPI {
      * @param {} body - List of queries. Please see swagger.json for request body format.
      * @param {string} fields - The fields to be returned.
      */
+    searchPostUsingPOSTWithHttpInfo(parameters: {
+        'body': EvidenceQueries,
+        'fields' ? : string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/search';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['body'] !== undefined) {
+                body = parameters['body'];
+            }
+
+            if (parameters['body'] === undefined) {
+                reject(new Error('Missing required  parameter: body'));
+                return;
+            }
+
+            if (parameters['fields'] !== undefined) {
+                queryParameters['fields'] = parameters['fields'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * General search for possible combinations.
+     * @method
+     * @name OncoKbAPI#searchPostUsingPOST
+     * @param {} body - List of queries. Please see swagger.json for request body format.
+     * @param {string} fields - The fields to be returned.
+     */
     searchPostUsingPOST(parameters: {
             'body': EvidenceQueries,
             'fields' ? : string,
@@ -1944,45 +2281,10 @@ export default class OncoKbAPI {
             $domain ? : string
         }): Promise < Array < IndicatorQueryResp >
         > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/search';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters['body'] !== undefined) {
-                    body = parameters['body'];
-                }
-
-                if (parameters['body'] === undefined) {
-                    reject(new Error('Missing required  parameter: body'));
-                    return;
-                }
-
-                if (parameters['fields'] !== undefined) {
-                    queryParameters['fields'] = parameters['fields'];
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
+            return this.searchPostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-
     utilsAllActionableVariantsGetUsingGETURL(parameters: {
         $queryParameters ? : any
     }): string {
@@ -2004,37 +2306,48 @@ export default class OncoKbAPI {
      * @method
      * @name OncoKbAPI#utilsAllActionableVariantsGetUsingGET
      */
+    utilsAllActionableVariantsGetUsingGETWithHttpInfo(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/utils/allActionableVariants';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get All Actionable Variants.
+     * @method
+     * @name OncoKbAPI#utilsAllActionableVariantsGetUsingGET
+     */
     utilsAllActionableVariantsGetUsingGET(parameters: {
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < ActionableGene >
         > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/utils/allActionableVariants';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
+            return this.utilsAllActionableVariantsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-
     utilsAllActionableVariantsTxtGetUsingGETURL(parameters: {
         $queryParameters ? : any
     }): string {
@@ -2056,10 +2369,10 @@ export default class OncoKbAPI {
      * @method
      * @name OncoKbAPI#utilsAllActionableVariantsTxtGetUsingGET
      */
-    utilsAllActionableVariantsTxtGetUsingGET(parameters: {
+    utilsAllActionableVariantsTxtGetUsingGETWithHttpInfo(parameters: {
         $queryParameters ? : any,
             $domain ? : string
-    }): Promise < string > {
+    }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
@@ -2081,11 +2394,22 @@ export default class OncoKbAPI {
 
             request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
 
-        }).then(function(response: request.Response) {
-            return response.body;
         });
     };
 
+    /**
+     * Get All Actionable Variants in text file.
+     * @method
+     * @name OncoKbAPI#utilsAllActionableVariantsTxtGetUsingGET
+     */
+    utilsAllActionableVariantsTxtGetUsingGET(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < string > {
+        return this.utilsAllActionableVariantsTxtGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     utilsAllAnnotatedVariantsGetUsingGETURL(parameters: {
         $queryParameters ? : any
     }): string {
@@ -2107,37 +2431,48 @@ export default class OncoKbAPI {
      * @method
      * @name OncoKbAPI#utilsAllAnnotatedVariantsGetUsingGET
      */
+    utilsAllAnnotatedVariantsGetUsingGETWithHttpInfo(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/utils/allAnnotatedVariants';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get All Annotated Variants.
+     * @method
+     * @name OncoKbAPI#utilsAllAnnotatedVariantsGetUsingGET
+     */
     utilsAllAnnotatedVariantsGetUsingGET(parameters: {
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < AnnotatedVariant >
         > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/utils/allAnnotatedVariants';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
+            return this.utilsAllAnnotatedVariantsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-
     utilsAllAnnotatedVariantsTxtGetUsingGETURL(parameters: {
         $queryParameters ? : any
     }): string {
@@ -2159,10 +2494,10 @@ export default class OncoKbAPI {
      * @method
      * @name OncoKbAPI#utilsAllAnnotatedVariantsTxtGetUsingGET
      */
-    utilsAllAnnotatedVariantsTxtGetUsingGET(parameters: {
+    utilsAllAnnotatedVariantsTxtGetUsingGETWithHttpInfo(parameters: {
         $queryParameters ? : any,
             $domain ? : string
-    }): Promise < string > {
+    }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
@@ -2184,11 +2519,22 @@ export default class OncoKbAPI {
 
             request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
 
-        }).then(function(response: request.Response) {
-            return response.body;
         });
     };
 
+    /**
+     * Get All Annotated Variants in text file.
+     * @method
+     * @name OncoKbAPI#utilsAllAnnotatedVariantsTxtGetUsingGET
+     */
+    utilsAllAnnotatedVariantsTxtGetUsingGET(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < string > {
+        return this.utilsAllAnnotatedVariantsTxtGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     utilsCancerGeneListGetUsingGETURL(parameters: {
         $queryParameters ? : any
     }): string {
@@ -2210,37 +2556,48 @@ export default class OncoKbAPI {
      * @method
      * @name OncoKbAPI#utilsCancerGeneListGetUsingGET
      */
+    utilsCancerGeneListGetUsingGETWithHttpInfo(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/utils/cancerGeneList';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get cancer gene list in text file.
+     * @method
+     * @name OncoKbAPI#utilsCancerGeneListGetUsingGET
+     */
     utilsCancerGeneListGetUsingGET(parameters: {
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < CancerGene >
         > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/utils/cancerGeneList';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = '*/*';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
+            return this.utilsCancerGeneListGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-
     variantsGetUsingGETURL(parameters: {
         'fields' ? : string,
         $queryParameters ? : any
@@ -2267,42 +2624,55 @@ export default class OncoKbAPI {
      * @name OncoKbAPI#variantsGetUsingGET
      * @param {string} fields - The fields to be returned.
      */
+    variantsGetUsingGETWithHttpInfo(parameters: {
+        'fields' ? : string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/variants';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['fields'] !== undefined) {
+                queryParameters['fields'] = parameters['fields'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get all annotated variants.
+     * @method
+     * @name OncoKbAPI#variantsGetUsingGET
+     * @param {string} fields - The fields to be returned.
+     */
     variantsGetUsingGET(parameters: {
             'fields' ? : string,
             $queryParameters ? : any,
                 $domain ? : string
         }): Promise < Array < Alteration >
         > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/variants';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters['fields'] !== undefined) {
-                    queryParameters['fields'] = parameters['fields'];
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
+            return this.variantsGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-
     variantsLookupGetUsingGETURL(parameters: {
         'entrezGeneId' ? : number,
         'hugoSymbol' ? : string,
@@ -2377,6 +2747,93 @@ export default class OncoKbAPI {
      * @param {string} hgvs - HGVS varaint. Its priority is higher than entrezGeneId/hugoSymbol + variant combination
      * @param {string} fields - The fields to be returned.
      */
+    variantsLookupGetUsingGETWithHttpInfo(parameters: {
+        'entrezGeneId' ? : number,
+        'hugoSymbol' ? : string,
+        'variant' ? : string,
+        'variantType' ? : string,
+        'consequence' ? : string,
+        'proteinStart' ? : number,
+        'proteinEnd' ? : number,
+        'hgvs' ? : string,
+        'fields' ? : string,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/variants/lookup';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['entrezGeneId'] !== undefined) {
+                queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
+            }
+
+            if (parameters['hugoSymbol'] !== undefined) {
+                queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
+            }
+
+            if (parameters['variant'] !== undefined) {
+                queryParameters['variant'] = parameters['variant'];
+            }
+
+            if (parameters['variantType'] !== undefined) {
+                queryParameters['variantType'] = parameters['variantType'];
+            }
+
+            if (parameters['consequence'] !== undefined) {
+                queryParameters['consequence'] = parameters['consequence'];
+            }
+
+            if (parameters['proteinStart'] !== undefined) {
+                queryParameters['proteinStart'] = parameters['proteinStart'];
+            }
+
+            if (parameters['proteinEnd'] !== undefined) {
+                queryParameters['proteinEnd'] = parameters['proteinEnd'];
+            }
+
+            if (parameters['hgvs'] !== undefined) {
+                queryParameters['hgvs'] = parameters['hgvs'];
+            }
+
+            if (parameters['fields'] !== undefined) {
+                queryParameters['fields'] = parameters['fields'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Search for variants.
+     * @method
+     * @name OncoKbAPI#variantsLookupGetUsingGET
+     * @param {integer} entrezGeneId - The entrez gene ID. entrezGeneId is prioritize than hugoSymbol if both parameters have been defined
+     * @param {string} hugoSymbol - The gene symbol used in Human Genome Organisation.
+     * @param {string} variant - variant name.
+     * @param {string} variantType - variantType
+     * @param {string} consequence - consequence
+     * @param {integer} proteinStart - proteinStart
+     * @param {integer} proteinEnd - proteinEnd
+     * @param {string} hgvs - HGVS varaint. Its priority is higher than entrezGeneId/hugoSymbol + variant combination
+     * @param {string} fields - The fields to be returned.
+     */
     variantsLookupGetUsingGET(parameters: {
             'entrezGeneId' ? : number,
             'hugoSymbol' ? : string,
@@ -2391,68 +2848,10 @@ export default class OncoKbAPI {
                 $domain ? : string
         }): Promise < Array < Alteration >
         > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/variants/lookup';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters['entrezGeneId'] !== undefined) {
-                    queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
-                }
-
-                if (parameters['hugoSymbol'] !== undefined) {
-                    queryParameters['hugoSymbol'] = parameters['hugoSymbol'];
-                }
-
-                if (parameters['variant'] !== undefined) {
-                    queryParameters['variant'] = parameters['variant'];
-                }
-
-                if (parameters['variantType'] !== undefined) {
-                    queryParameters['variantType'] = parameters['variantType'];
-                }
-
-                if (parameters['consequence'] !== undefined) {
-                    queryParameters['consequence'] = parameters['consequence'];
-                }
-
-                if (parameters['proteinStart'] !== undefined) {
-                    queryParameters['proteinStart'] = parameters['proteinStart'];
-                }
-
-                if (parameters['proteinEnd'] !== undefined) {
-                    queryParameters['proteinEnd'] = parameters['proteinEnd'];
-                }
-
-                if (parameters['hgvs'] !== undefined) {
-                    queryParameters['hgvs'] = parameters['hgvs'];
-                }
-
-                if (parameters['fields'] !== undefined) {
-                    queryParameters['fields'] = parameters['fields'];
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
+            return this.variantsLookupGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-
     variantsLookupPostUsingPOSTURL(parameters: {
         'body': Array < VariantSearchQuery > ,
         'fields' ? : string,
@@ -2482,6 +2881,56 @@ export default class OncoKbAPI {
      * @param {} body - List of queries.
      * @param {string} fields - The fields to be returned.
      */
+    variantsLookupPostUsingPOSTWithHttpInfo(parameters: {
+        'body': Array < VariantSearchQuery > ,
+        'fields' ? : string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/variants/lookup';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['body'] !== undefined) {
+                body = parameters['body'];
+            }
+
+            if (parameters['body'] === undefined) {
+                reject(new Error('Missing required  parameter: body'));
+                return;
+            }
+
+            if (parameters['fields'] !== undefined) {
+                queryParameters['fields'] = parameters['fields'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Search for variants.
+     * @method
+     * @name OncoKbAPI#variantsLookupPostUsingPOST
+     * @param {} body - List of queries.
+     * @param {string} fields - The fields to be returned.
+     */
     variantsLookupPostUsingPOST(parameters: {
             'body': Array < VariantSearchQuery > ,
             'fields' ? : string,
@@ -2490,43 +2939,8 @@ export default class OncoKbAPI {
         }): Promise < Array < Array < {} >
         >
         > {
-            const domain = parameters.$domain ? parameters.$domain : this.domain;
-            const errorHandlers = this.errorHandlers;
-            const request = this.request;
-            let path = '/variants/lookup';
-            let body: any;
-            let queryParameters: any = {};
-            let headers: any = {};
-            let form: any = {};
-            return new Promise(function(resolve, reject) {
-                headers['Accept'] = 'application/json';
-                headers['Content-Type'] = 'application/json';
-
-                if (parameters['body'] !== undefined) {
-                    body = parameters['body'];
-                }
-
-                if (parameters['body'] === undefined) {
-                    reject(new Error('Missing required  parameter: body'));
-                    return;
-                }
-
-                if (parameters['fields'] !== undefined) {
-                    queryParameters['fields'] = parameters['fields'];
-                }
-
-                if (parameters.$queryParameters) {
-                    Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                        var parameter = parameters.$queryParameters[parameterName];
-                        queryParameters[parameterName] = parameter;
-                    });
-                }
-
-                request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-            }).then(function(response: request.Response) {
+            return this.variantsLookupPostUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
-
 }
