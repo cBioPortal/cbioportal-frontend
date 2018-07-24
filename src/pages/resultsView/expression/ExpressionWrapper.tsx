@@ -306,6 +306,13 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @computed
+    get alphabetizedStudies(){
+        return _.chain(this.props.studyMap).values().sortBy(
+            (study:CancerStudy)=>study.name
+        ).value();
+    }
+
+    @computed
     get studySelectionModal() {
 
         return (<Modal show={this.studySelectorModalVisible} onHide={() => {
@@ -317,7 +324,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             <Modal.Body>
                 <div>
                     {
-                        _.map(this.props.studyMap, (study: CancerStudy) => {
+                        _.map(this.alphabetizedStudies, (study: CancerStudy) => {
                             const hasData = study.studyId in this.dataByStudyId;
                             return (
                                 <div className={classNames('checkbox',{ disabled:!hasData })}>
