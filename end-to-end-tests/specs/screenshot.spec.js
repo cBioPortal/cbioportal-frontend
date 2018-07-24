@@ -202,7 +202,7 @@ describe("download tab screenshot tests", function() {
 
 describe('patient view page screenshot test', function(){
     before(function(){
-        var url = `${CBIOPORTAL_URL}/case.do#/patient?studyId=lgg_ucsf_2014&caseId=P04`;
+        var url = `${CBIOPORTAL_URL}/patient?studyId=lgg_ucsf_2014&caseId=P04`;
         goToUrlAndSetLocalStorage(url);
     });
 
