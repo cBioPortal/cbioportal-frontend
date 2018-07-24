@@ -4,6 +4,7 @@ import SampleManager from "pages/patientView/sampleManager";
 import SampleHeader from "pages/patientView/sampleHeader/SampleHeader";
 import { PatientViewPageStore } from "pages/patientView/clinicalInformation/PatientViewPageStore";
 import { Mutation, DiscreteCopyNumberData } from "shared/api/generated/CBioPortalAPI";
+import { FractionGenomeAltered } from "shared/api/generated/CBioPortalAPIInternal";
 import { IOncoKbData, IOncoKbDataWrapper } from "shared/model/OncoKB";
 import AnnotationColumnFormatter, { IAnnotation } from "shared/components/mutationTable/column/AnnotationColumnFormatter";
 import AnnotationColumnFormatterDiscreteCNA from "pages/patientView/copyNumberAlterations/column/AnnotationColumnFormatter";
@@ -19,6 +20,7 @@ import PatientViewMutationTable from "pages/patientView/mutation/PatientViewMuta
 import CopyNumberTableWrapper from "pages/patientView/copyNumberAlterations/CopyNumberTableWrapper";
 import GeneticAlterationTable from "pages/patientView/simple/GeneticAlterationTable";
 import { default as ActionableAlterationsTable, MutationAndAnnotation } from "./ActionableAlterationsTable";
+import { toFixedWithThreshold } from "shared/lib/FormatUtils";
 
 export type ISampleRecordProps = {
     sample: ClinicalDataBySampleId;
@@ -35,6 +37,7 @@ export type ISampleRecordProps = {
     pubMedCache?: OncokbPubMedCache;
     userEmailAddress?:string;
     patientViewPageStore: PatientViewPageStore;
+    fractionGenomeAltered?: FractionGenomeAltered;
 };
 
 type DiscreteCopyNumberDataAndAnnotation = {
@@ -200,7 +203,7 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                             <div className='sample-info-card-title extra-text-header'>Mutations</div>
                             <div className='sample-info-card-number'><div>{this.props.mutationData.length}</div></div>
                             <div className='sample-info-card-extra-info extra-text'>
-                                <span style={{lineHeight:2}}>TMB: 2.3</span><br />
+                                <span style={{lineHeight:2}}>TMB 2.3</span><br />
                                 <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" onClick={() => {this.setState({show_oncogenic_mutations:!this.state.show_oncogenic_mutations,show_actionable_mutations:!this.state.show_oncogenic_mutations});}}></input> oncogenic</span><span style={{float:"right"}}>{this.getDrivers().length}</span><br />
                                 <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" checked={this.state.show_actionable_mutations} onClick={() => {this.setState({show_actionable_mutations:!this.state.show_actionable_mutations});}}></input> actionable</span><span style={{float:"right"}}>{this.getDriversWithTreatmentInfo().length}</span><br />
                                 <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" onClick={() => {this.setState({show_vus_mutations:!this.state.show_vus_mutations});}}></input> VUS</span><span style={{float:"right"}}>{this.props.mutationData.length - this.getDrivers().length}</span><br />
@@ -216,7 +219,7 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                             <div className='sample-info-card-title extra-text-header'>Copy Number Changes</div>
                             <div className='sample-info-card-number'><div>{this.props.cnaStatus === "available"? this.props.discreteCNAData.length : "-"}</div></div>
                             <div className='sample-info-card-extra-info extra-text'>
-                                    <span style={{lineHeight:2}}>FGA: 0.2</span><br />
+                                    <span style={{lineHeight:2}}>{this.props.fractionGenomeAltered? `FGA ${toFixedWithThreshold(this.props.fractionGenomeAltered.value, 2)}` : '\u00A0'}</span><br />
                                     <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" onClick={() => {this.setState({show_oncogenic_cna:!this.state.show_oncogenic_cna});}}></input> oncogenic</span><span style={{float:"right"}}>{this.getCNADrivers().length}</span><br />
                                     <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" onClick={() => {this.setState({show_actionable_cna:!this.state.show_actionable_cna});}}></input> actionable</span><span style={{float:"right"}}>{this.getCNADriversWithTreatmentInfo().length}</span><br />
                                     <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" onClick={() => {this.setState({show_vus_cna:!this.state.show_vus_cna});}}></input> VUS</span><span style={{float:"right"}}>{this.props.discreteCNAData.length - this.getCNADrivers().length}</span><br />

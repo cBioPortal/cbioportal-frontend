@@ -150,6 +150,9 @@
             }
         }
         .sample-info-card.copy-number-changes {
+            border-left: none;
+            border-right: none;
+
             .sample-info-card-number {
                 color: #d83c3c;
             }

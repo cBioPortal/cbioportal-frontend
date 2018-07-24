@@ -1,32 +1,33 @@
 import * as _ from 'lodash';
-import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
+import {ClinicalDataBySampleId} from "shared/api/api-types-extended";
 import {
     ClinicalData, MolecularProfile, Sample, Mutation, DiscreteCopyNumberFilter, DiscreteCopyNumberData, MutationFilter,
     CopyNumberCount, ClinicalDataMultiStudyFilter
-} from "../../../shared/api/generated/CBioPortalAPI";
-import client from "../../../shared/api/cbioportalClientInstance";
-import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
+} from "shared/api/generated/CBioPortalAPI";
+import client from "shared/api/cbioportalClientInstance";
+import internalClient from "shared/api/cbioportalInternalClientInstance";
 import {
-    Gistic, GisticToGene, default as CBioPortalAPIInternal, MutSig
+    Gistic, GisticToGene, default as CBioPortalAPIInternal, MutSig,
+    FractionGenomeAltered, FractionGenomeAlteredFilter
 } from "shared/api/generated/CBioPortalAPIInternal";
 import {computed, observable, action} from "mobx";
-import {remoteData, addErrorHandler} from "../../../shared/api/remoteData";
+import {remoteData, addErrorHandler} from "shared/api/remoteData";
 import {IGisticData} from "shared/model/Gistic";
 import {labelMobxPromises, cached} from "mobxpromise";
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
 import request from 'superagent';
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
-import {getTissueImageCheckUrl, getDarwinUrl} from "../../../shared/api/urls";
+import {getTissueImageCheckUrl, getDarwinUrl} from "shared/api/urls";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
 import PubMedCache from "shared/cache/PubMedCache";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotIndex} from "shared/model/CancerHotspots";
 import {IMutSigData} from "shared/model/MutSig";
-import {ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
+import {ICivicVariant, ICivicGene} from "shared/model/Civic";
 import {ClinicalInformationData} from "shared/model/ClinicalInformation";
 import VariantCountCache from "shared/cache/VariantCountCache";
-import CopyNumberCountCache from "./CopyNumberCountCache";
+import CopyNumberCountCache from "pages/patientView/clinicalInformation/CopyNumberCountCache";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
 import AppConfig from "appConfig";
@@ -41,8 +42,8 @@ import {
     fetchStudiesForSamplesWithoutCancerTypeClinicalData, fetchOncoKbAnnotatedGenes
 } from "shared/lib/StoreUtils";
 import {indexHotspotsData, fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
-import {stringListToSet} from "../../../shared/lib/StringUtils";
-import {Gene as OncoKbGene} from "../../../shared/api/generated/OncoKbAPI";
+import {stringListToSet} from "shared/lib/StringUtils";
+import {Gene as OncoKbGene} from "shared/api/generated/OncoKbAPI";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 
 type PageMode = 'patient' | 'sample';
@@ -613,6 +614,30 @@ export class PatientViewPageStore {
             this.hotspotData
         ],
         invoke: ()=>Promise.resolve(indexHotspotsData(this.hotspotData))
+    });
+
+    // tslint:disable-next-line:member-ordering
+    readonly fractionGenomeAltered = remoteData<FractionGenomeAltered[]>({
+        await:()=>[
+            this.samples
+        ],
+        invoke:async()=>{
+            const studyToSamples = _.groupBy(this.samples.result!, s=>s.studyId);
+            return _.flatten(await Promise.all(
+                _.map(studyToSamples, (samples, studyId)=>{
+                    if (samples && samples.length) {
+                        return internalClient.fetchFractionGenomeAlteredUsingPOST({
+                            studyId,
+                            fractionGenomeAlteredFilter: {
+                                sampleIds: samples.map(s=>s.sampleId)
+                            } as FractionGenomeAlteredFilter
+                        });
+                    } else {
+                        return Promise.resolve([]);
+                    }
+                })
+            ));
+        }
     });
 
     @computed get mergedMutationData(): Mutation[][] {

@@ -215,24 +215,26 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         // For sample reports
         const sampleRecords = sampleManager && sampleManager.samples && (_.map(sampleManager!.samples, (sample: ClinicalDataBySampleId) => {
-                return (
-                    <SampleRecord
-                        sample={sample}
-                        sampleManager={sampleManager}
-                        handleSampleClick={(() => void 0)}
-                        studyId={patientViewPageStore.studyMetaData.result!.studyId}
-                        mutationData={patientViewPageStore.mutationData.result!.filter(((mut) => mut.sampleId === sample.id))}
-                        cnaStatus={this.cnaTableStatus}
-                        discreteCNAData={patientViewPageStore.discreteCNAData.result}
-                        oncoKbData={patientViewPageStore.oncoKbData}
-                        cnaOncoKbData={patientViewPageStore.cnaOncoKbData}
-                        oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
-                        evidenceCache={patientViewPageStore.oncoKbEvidenceCache}
-                        pubMedCache={patientViewPageStore.pubMedCache}
-                        userEmailAddress={AppConfig.userEmailAddress}
-                        patientViewPageStore={patientViewPageStore}
-                    />
-                );
+            const fractionGenomeAltered = patientViewPageStore.fractionGenomeAltered.result && patientViewPageStore.fractionGenomeAltered.result.filter(((fga) => fga.sampleId === sample.id))? patientViewPageStore.fractionGenomeAltered.result!.filter(((fga) => fga.sampleId === sample.id))[0] : undefined;
+            return (
+                <SampleRecord
+                    sample={sample}
+                    sampleManager={sampleManager}
+                    handleSampleClick={(() => void 0)}
+                    studyId={patientViewPageStore.studyMetaData.result!.studyId}
+                    mutationData={patientViewPageStore.mutationData.result!.filter(((mut) => mut.sampleId === sample.id))}
+                    cnaStatus={this.cnaTableStatus}
+                    discreteCNAData={patientViewPageStore.discreteCNAData.result}
+                    oncoKbData={patientViewPageStore.oncoKbData}
+                    cnaOncoKbData={patientViewPageStore.cnaOncoKbData}
+                    oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
+                    evidenceCache={patientViewPageStore.oncoKbEvidenceCache}
+                    pubMedCache={patientViewPageStore.pubMedCache}
+                    userEmailAddress={AppConfig.userEmailAddress}
+                    patientViewPageStore={patientViewPageStore}
+                    fractionGenomeAltered={fractionGenomeAltered}
+                />
+            );
         }));
 
         return (
