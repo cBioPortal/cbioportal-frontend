@@ -31,21 +31,33 @@
         flex-flow: row wrap;
         justify-content: space-between;
         width: 100%;
-        padding-bottom: 15px;
+
+        .sample-info-card:hover .alteration-filter-checkbox {
+            visibility: visible;
+        }
 
         .sample-info-card {
             display: flex;
             flex-direction: column;
             //justify-content: center;
             //background-color: #EFF4FE;
-            width: 250px;
+            //width: 250px;
+            border: dotted 1px #ddd;
+            border-top: none;
+            border-bottom: none;
+            width: 33.33%;
             height: 250px;
             padding: 0px;
-            border-radius: 4px;
+            /*border-radius: 4px;*/
             /*box-shadow: 1px 1px 5px 0px #bbb;*/
 
             .alteration-filter-checkbox {
-                margin-right: 10px;
+                visibility: hidden;
+                margin-right: 5px;
+                margin-left: -25px;
+            }
+            .alteration-filter-checkbox.visible {
+                visibility: visible;
             }
 
             .extra-text {
@@ -101,7 +113,6 @@
             }
         }
         .sample-info-card.genomic-alterations-card {
-            border: dotted 1px #ddd;
             padding-bottom: 30px;
             padding-top: 20px;
             -webkit-touch-callout: none; /* iOS Safari */
@@ -150,8 +161,6 @@
         }
     }
     .sample-info-record.sample-info-record-drugs {
-        padding-bottom: 10px;
-
         .sample-info-drugs {
             width: 100%;
             height: auto;
