@@ -688,20 +688,21 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     </form>
 
                     <div>
+                        <label>Select studies:</label>&nbsp;
                         <If condition={this.studyTypeCounts.provisional.length > 0}>
                             <button className="btn btn-default btn-xs" style={{marginRight:5}}
                                     onClick={() => this.applyStudyFilter((study: CancerStudy) => isTCGAProvStudy(study.studyId))}>
-                                Select TCGA Provisional ({this.studyTypeCounts.provisional.length})
+                                 TCGA Provisional ({this.studyTypeCounts.provisional.length})
                             </button>
                         </If>
                         <If condition={this.studyTypeCounts.panCancer.length > 0}>
                             <button className="btn btn-default btn-xs" style={{marginRight:5}}
                                     onClick={() => this.applyStudyFilter((study: CancerStudy) => isPanCanStudy(study.studyId))}>
-                                Select TCGA Pan-Can Atlas ({this.studyTypeCounts.panCancer.length})
+                                TCGA Pan-Can Atlas ({this.studyTypeCounts.panCancer.length})
                             </button>
                         </If>
                         <button className="btn btn-default btn-xs"
-                                onClick={() => this.studySelectorModalVisible = !this.studySelectorModalVisible}>Custom</button>
+                                onClick={() => this.studySelectorModalVisible = !this.studySelectorModalVisible}>Custom list</button>
 
                     </div>
 
