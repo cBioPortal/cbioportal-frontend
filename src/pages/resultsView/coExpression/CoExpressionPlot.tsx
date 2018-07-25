@@ -74,19 +74,14 @@ const NOT_PROFILED_FILL = "#ffffff";
 
 function noop() {};
 
+const SVG_ID = "coexpression-plot-svg";
+
 @observer
 export default class CoExpressionPlot extends React.Component<ICoExpressionPlotProps, {}> {
 
-    @observable private svg:SVGElement|null = null;
-
-    @bind
-    @action private svgRef(svg:SVGElement|null) {
-        this.svg = svg;
-    }
-
     @bind
     private getSvg() {
-        return this.svg;
+        return document.getElementById(SVG_ID) as SVGElement | null;
     }
 
     @computed get stroke() {
@@ -222,7 +217,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
         }
         return (
             <CoExpressionScatterPlot
-                svgRef={this.svgRef}
+                svgId={SVG_ID}
                 title={this.title}
                 data={this.data}
                 chartWidth={this.props.width}
@@ -276,7 +271,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                 </div>
 
                 <DownloadControls
-                    getSvg={this.svg === null ? undefined : this.getSvg}
+                    getSvg={this.getSvg}
                     buttons={["SVG", "PDF"]}
                     filename="coexpression"
                     dontFade={true}
