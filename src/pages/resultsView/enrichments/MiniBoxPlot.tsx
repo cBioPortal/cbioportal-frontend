@@ -4,8 +4,6 @@ import { observable } from 'mobx';
 import styles from "./styles.module.scss";
 import { VictoryChart, VictoryBoxPlot, VictoryContainer, VictoryAxis, VictoryScatter } from 'victory';
 import { Popover } from 'react-bootstrap';
-import SvgSaver from 'svgsaver';
-import fileDownload from 'react-file-download';
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import { ResultsViewPageStore, ExtendedAlteration } from "../ResultsViewPageStore";
 import { MolecularProfile, NumericGeneMolecularData } from 'shared/api/generated/CBioPortalAPI';
@@ -16,6 +14,7 @@ import { getDownloadContent, getAlterationsTooltipContent, shortenGenesLabel,
 import autobind from 'autobind-decorator';
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
 import {getSampleViewUrl} from "../../../shared/api/urls";
+import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 
 export interface IMiniBoxPlotProps {
     selectedGeneHugo: string;
@@ -35,7 +34,6 @@ export default class MiniBoxPlot extends React.Component<IMiniBoxPlotProps, {}> 
     private isTooltipHovered: boolean = false;
     private tooltipCounter: number = 0;
     private svgContainer: any;
-    private svgsaver = new SvgSaver();
     private scatterData: any[] = [];
 
     componentWillReceiveProps() {
@@ -43,19 +41,13 @@ export default class MiniBoxPlot extends React.Component<IMiniBoxPlotProps, {}> 
     }
 
     @autobind
-    private downloadSvg() {
-        this.svgsaver.asSvg(this.svgContainer.firstChild, FILE_NAME + '.svg');
+    private getSvg() {
+        return this.svgContainer.firstChild;
     }
 
     @autobind
-    private downloadPng() {
-        this.svgsaver.asPng(this.svgContainer.firstChild, FILE_NAME + '.png');
-    }
-
-    @autobind
-    private downloadData() {
-        fileDownload(getDownloadContent(this.scatterData, this.props.selectedGeneHugo, this.props.selectedProfile.name), 
-            FILE_NAME + '.txt');
+    private getData() {
+        return getDownloadContent(this.scatterData, this.props.selectedGeneHugo, this.props.selectedProfile.name);
     }
 
     @autobind
@@ -126,17 +118,15 @@ export default class MiniBoxPlot extends React.Component<IMiniBoxPlotProps, {}> 
                         </div>
                         <div className="posRelative">
                             <div className="borderedChart inlineBlock posRelative">
-                                <div className="btn-group" style={{position:'absolute', zIndex:10, right: 10 }} role="group">
-                                    <button className={`btn btn-default btn-xs`} onClick={this.downloadSvg}>
-                                        SVG <i className="fa fa-cloud-download" />
-                                    </button>
-                                    <button className={`btn btn-default btn-xs`} onClick={this.downloadPng}>
-                                        PNG <i className="fa fa-cloud-download" />
-                                    </button>
-                                    <button className={`btn btn-default btn-xs`} onClick={this.downloadData}>
-                                        Data <i className="fa fa-cloud-download" />
-                                    </button>
-                                </div>
+                                <DownloadControls
+                                    buttons={["SVG", "PNG", "Data"]}
+                                    getSvg={this.getSvg}
+                                    getData={this.getData}
+                                    collapse={true}
+                                    dontFade={true}
+                                    style={{position:'absolute', zIndex:10, right: 10 }}
+                                    filename={FILE_NAME}
+                                />
                                 <VictoryChart domainPadding={{ x: 60, y: 20 }}  height={350} width={350} padding={{ top: 40, bottom: 60, left: 60, right: 40 }}
                                               containerComponent={<VictoryContainer responsive={false}
                                     containerRef={(ref: any) => this.svgContainer = ref}/>}
