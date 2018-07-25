@@ -21,7 +21,7 @@ import "./styles.scss";
 import {bind} from "bind-decorator";
 import ScatterPlot from "../../../shared/components/plots/ScatterPlot";
 import Timer = NodeJS.Timer;
-import DownloadControls from "../../../shared/components/DownloadControls";
+import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 import {axisLabel, isNotProfiled} from "./CoExpressionPlotUtils";
 import _ from "lodash";
 
@@ -249,7 +249,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
     @bind
     private toolbar() {
         return (
-            <div style={{textAlign:"center"}}>
+            <div style={{textAlign:"center", position:"relative"}}>
                 <div style={{display:"inline-block"}}>
                     {this.props.showMutationControls && (
                         <div className="checkbox coexpression-plot-toolbar-elt"><label>
@@ -280,6 +280,8 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                     buttons={["SVG", "PDF"]}
                     filename="coexpression"
                     dontFade={true}
+                    collapse={true}
+                    style={{position:"absolute", top:10, right:10}}
                 />
 
             </div>
