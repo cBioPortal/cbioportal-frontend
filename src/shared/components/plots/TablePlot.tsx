@@ -15,7 +15,7 @@ import {wrapTick} from "./TickUtils";
 import {getUniqueSampleKeyToCategories} from "./TablePlotUtils";
 
 export interface ITablePlotProps {
-    svgRef?:(svg:SVGElement|null)=>void;
+    svgId?:string;
     horzData:IStringAxisData["data"];
     vertData:IStringAxisData["data"];
     horzCategoryOrder?:string[];
@@ -121,19 +121,10 @@ class VictoryTableCell extends React.Component<IVictoryTableCellProps, {}> {
 @observer
 export default class TablePlot extends React.Component<ITablePlotProps, {}> {
     @observable.ref private container:HTMLDivElement;
-    private svg:SVGElement|null;
 
     @bind
     private containerRef(container:HTMLDivElement) {
         this.container = container;
-    }
-
-    @bind
-    private svgRef(svg:SVGElement|null) {
-        this.svg = svg;
-        if (this.props.svgRef) {
-            this.props.svgRef(this.svg);
-        }
     }
 
     @computed get tableData():ITableData {
@@ -338,7 +329,6 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
 
     render() {
         if (!this.tableData.data.length) {
-            setTimeout(()=>this.svgRef(null), 0);
             return <span>No data to plot.</span>;
         }
         const cellElements = this.tableData.data.map(d=>{
@@ -365,7 +355,7 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
                     style={{width: this.svgWidth, height: this.svgHeight}}
                 >
                     <svg
-                        ref={this.svgRef}
+                        id={this.props.svgId || ""}
                         style={{
                             width: this.svgWidth,
                             height: this.svgHeight,
