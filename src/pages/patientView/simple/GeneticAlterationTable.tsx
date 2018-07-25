@@ -339,6 +339,7 @@ export default class GeneticAlterationTable extends React.Component<IGeneticAlte
                         showPagination={false}
                         showFilter={false}
                         showCopyDownload={false}
+                        className="genetic-alterations-table"
                     />
                 )
             }

@@ -45,6 +45,10 @@
 .actionable-alterations-table [role="button"] {
     cursor: default;
 }
+/* Set min width for alteration type column */
+.genetic-alterations-table thead > tr > th:nth-child(2) {
+    min-width: 180px !important;
+}
 .sample-report.sample-info {
     width:1000px;
     margin-left: auto;

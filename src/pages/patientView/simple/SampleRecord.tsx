@@ -393,7 +393,7 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                     enableHotspot={AppConfig.showHotspot}
                     enableMyCancerGenome={AppConfig.showMyCancerGenome}
                 />
-                {!this.hasAllCheckboxSelected() && (<div style={{textAlign:"center",paddingTop:5}}>Showing {this.getGeneticAlterationDataFiltered().length} of {this.getNumberOfAlterations()} alterations (<a onClick={() => this.showAll()}>Show all)</a></div>)}
+                {(this.getNumberOfAlterations() !== this.getGeneticAlterationDataFiltered().length) && (<div style={{textAlign:"center",paddingTop:5}}>Showing {this.getGeneticAlterationDataFiltered().length} of {this.getNumberOfAlterations()} alterations (<a onClick={() => this.showAll()}>Show all</a>)</div>)}
             </div>
         );
     }
