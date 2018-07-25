@@ -80,6 +80,8 @@ const searchInputTimeoutMs = 600;
 class PlotsTabScatterPlot extends ScatterPlot<IScatterPlotData> {}
 class PlotsTabBoxPlot extends BoxScatterPlot<IBoxScatterPlotPoint> {}
 
+const SVG_ID = "plots-tab-plot-svg";
+
 @observer
 export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
@@ -92,15 +94,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @observable viewMutationType:boolean = true;
     @observable viewCopyNumber:boolean = true;
 
-    @observable svg:SVGElement|null;
-
     @observable searchCase:string = "";
     @observable searchMutation:string = "";
-
-    @autobind
-    private svgRef(svg:SVGElement|null) {
-        this.svg = svg;
-    }
+    @observable plotExists = false;
 
     @computed get viewType():ViewType {
         if (this.sameGeneInBothAxes) {
@@ -145,7 +141,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @autobind
     private getSvg() {
-        return this.svg;
+        return document.getElementById(SVG_ID) as SVGElement | null;
     }
 
     private downloadFilename = "plot"; // todo: more specific?
@@ -1173,7 +1169,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 case PlotType.Table:
                     plotElt = (
                         <TablePlot
-                            svgRef={this.svgRef}
+                            svgId={SVG_ID}
                             horzData={(this.horzAxisDataPromise.result! as IStringAxisData).data}
                             vertData={(this.vertAxisDataPromise.result! as IStringAxisData).data}
                             horzCategoryOrder={(this.horzAxisDataPromise.result! as IStringAxisData).categoryOrder}
@@ -1191,7 +1187,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     if (this.scatterPlotData.isComplete) {
                         plotElt = (
                             <PlotsTabScatterPlot
-                                svgRef={this.svgRef}
+                                svgId={SVG_ID}
                                 axisLabelX={this.horzLabel.result! + this.horzLabelLogSuffix}
                                 axisLabelY={this.vertLabel.result! + this.vertLabelLogSuffix}
                                 data={this.scatterPlotData.result}
@@ -1224,7 +1220,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         const horizontal = this.boxPlotData.result.horizontal;
                         plotElt = (
                             <PlotsTabBoxPlot
-                                svgRef={this.svgRef}
+                                svgId={SVG_ID}
                                 boxWidth={this.boxPlotBoxWidth}
                                 axisLabelX={this.horzLabel.result! + (horizontal ? this.horzLabelLogSuffix : "")}
                                 axisLabelY={this.vertLabel.result! + (!horizontal ? this.vertLabelLogSuffix : "")}
@@ -1259,7 +1255,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             return (
                 <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative inlineBlock" style={{position: "relative"}}>
                     <div style={{display:"flex", flexDirection:"row"}}>
-                    {this.svg && (
+                    {this.plotExists && (
                         <DownloadControls
                             getSvg={this.getSvg}
                             filename={this.downloadFilename}
@@ -1276,7 +1272,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         />
                     )}
                         {plotElt}
-                        { this.svg && // only show info if theres an actual plot
+                        { this.plotExists && // only show info if theres an actual plot
                         (plotType === PlotType.ScatterPlot || plotType === PlotType.BoxPlot) &&
                         (this.viewType === ViewType.MutationType || this.viewType === ViewType.MutationTypeAndCopyNumber) && (
                             <div style={{position:"relative", top:legendY + 4.5}}>
@@ -1292,7 +1288,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     }
 
+    componentDidUpdate() {
+        this.plotExists = !!this.getSvg();
+    }
+
     public render() {
+        console.log("render");
         return (
             <div className={"plotsTab"} style={{display:"flex", flexDirection:"row", maxWidth:"inherit"}} data-test="PlotsTabEntireDiv">
                 <div className="leftColumn">
@@ -1301,9 +1302,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     </Observer>
                 </div>
                 <div style={{overflow:"auto"}}>
-                    <Observer>
-                        {this.plot}
-                    </Observer>
+                    {this.plot()}
                 </div>
             </div>
         );
