@@ -15,7 +15,8 @@ import {
     makeBoxScatterPlotData, IScatterPlotSampleData, noMutationAppearance, IBoxScatterPlotPoint, boxPlotTooltip,
     getCnaQueries, getMutationQueries, getScatterPlotDownloadData, getBoxPlotDownloadData, getTablePlotDownloadData,
     mutationRenderPriority, mutationSummaryRenderPriority, MutationSummary, mutationSummaryToAppearance,
-    CNA_STROKE_WIDTH, scatterPlotSize, PLOT_SIDELENGTH, CLIN_ATTR_DATA_TYPE, maxWidthTooltip
+    CNA_STROKE_WIDTH, scatterPlotSize, PLOT_SIDELENGTH, CLIN_ATTR_DATA_TYPE, maxWidthTooltip,
+    sortScatterPlotDataForZIndex
 } from "./PlotsTabUtils";
 import {
     ClinicalAttribute, MolecularProfile, Mutation,
@@ -1025,29 +1026,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     readonly scatterPlotData = remoteData<IScatterPlotData[]>({
         await:()=>[this._unsortedScatterPlotData],
         invoke:()=>{
-            let data = this._unsortedScatterPlotData.result!;
-            switch (this.viewType) {
-                case ViewType.MutationTypeAndCopyNumber:
-                case ViewType.MutationType:
-                    data = _.sortBy<IScatterPlotData>(data, d=>{
-                        if (d.dispMutationType! in mutationRenderPriority) {
-                            return -mutationRenderPriority[d.dispMutationType!]
-                        } else {
-                            return Number.NEGATIVE_INFINITY;
-                        }
-                    });
-                    break;
-                case ViewType.MutationSummary:
-                    data = _.sortBy<IScatterPlotData>(data, d=>{
-                        if (d.dispMutationSummary! in mutationSummaryRenderPriority) {
-                            return -mutationSummaryRenderPriority[d.dispMutationSummary!]        ;
-                        } else {
-                            return Number.NEGATIVE_INFINITY;
-                        }
-                    });
-                    break;
-            }
-            return Promise.resolve(data);
+            // Sort data to put some data on top (z-index order)
+            return Promise.resolve(sortScatterPlotDataForZIndex<IScatterPlotData>(
+                this._unsortedScatterPlotData.result!,
+                this.viewType,
+                this.scatterPlotHighlight
+            ));
         }
     });
 
@@ -1112,35 +1096,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     readonly boxPlotData = remoteData<{horizontal:boolean, data:IBoxScatterPlotData<IBoxScatterPlotPoint>[]}>({
         await: ()=>[this._unsortedBoxPlotData],
         invoke:()=>{
+            // Sort data to put some data on top (z-index order)
             const horizontal = this._unsortedBoxPlotData.result!.horizontal;
             let boxPlotData = this._unsortedBoxPlotData.result!.data;
-            switch (this.viewType) {
-                case ViewType.MutationTypeAndCopyNumber:
-                case ViewType.MutationType:
-                    boxPlotData = boxPlotData.map(labelAndData=>({
-                        label: labelAndData.label,
-                        data: _.sortBy<IBoxScatterPlotPoint>(labelAndData.data, d=>{
-                            if (d.dispMutationType! in mutationRenderPriority) {
-                                return -mutationRenderPriority[d.dispMutationType!]
-                            } else {
-                                return Number.NEGATIVE_INFINITY;
-                            }
-                        })
-                    }));
-                    break;
-                case ViewType.MutationSummary:
-                    boxPlotData = boxPlotData.map(labelAndData=>({
-                        label: labelAndData.label,
-                        data: _.sortBy<IBoxScatterPlotPoint>(labelAndData.data, d=>{
-                            if (d.dispMutationSummary! in mutationSummaryRenderPriority) {
-                                return -mutationSummaryRenderPriority[d.dispMutationSummary!]        ;
-                            } else {
-                                return Number.NEGATIVE_INFINITY;
-                            }
-                        })
-                    }));
-                    break;
-            }
+            boxPlotData = boxPlotData.map(labelAndData=>({
+                label: labelAndData.label,
+                data: sortScatterPlotDataForZIndex<IBoxScatterPlotPoint>(labelAndData.data, this.viewType, this.scatterPlotHighlight)
+            }));
             return Promise.resolve({ horizontal, data: boxPlotData });
         }
     });
