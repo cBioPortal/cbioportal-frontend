@@ -180,30 +180,30 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                 </div>
                 <div style={{paddingLeft:10,width:"100%"}}>
                     <p><span style={{fontSize:"medium"}}><b>Summary: </b></span>{this.getNumberOfAlterations()} alterations detected, including <b>{this.getNumberOfDriverAlterations()} known oncogenic</b> of which <b>{this.getNumberOfDriverAlterationsWithTreatmentInfo()} are actionable</b>.</p>
-                    <div className="flex-row sample-info-record sample-info-record-drugs">
-                        <div className='sample-info-card sample-info-drugs'>
-                            <div className='sample-info-card-title extra-text-header'>Actionable Alterations</div>
-                            <div style={{padding:20,width:900,margin:"0 auto",fontSize:"medium"}}>
-                                {(this.getDriversWithTreatmentInfo().length > 0) && (
+                    {(this.getNumberOfDriverAlterationsWithTreatmentInfo() > 0) && (
+                        <div className="flex-row sample-info-record sample-info-record-drugs">
+                            <div className='sample-info-card sample-info-drugs'>
+                                <div className='sample-info-card-title extra-text-header'>Actionable Alterations</div>
+                                <div style={{padding:20,width:900,margin:"0 auto",fontSize:"medium"}}>
                                     <div style={{paddingTop:10}}>
                                         <ActionableAlterationsTable
-                                            actionableAlterations={this.getDriversWithTreatmentInfo()}
+                                            actionableAlterations={[...this.getDriversWithTreatmentInfo(), ...this.getCNADriversWithTreatmentInfo()]}
                                             evidenceCache={this.props.evidenceCache}
                                             pubMedCache={this.props.pubMedCache}
                                             userEmailAddress={this.props.userEmailAddress}
                                         />
                                     </div>
-                                )}
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
                     <div className="flex-row sample-info-record">
                         <div style={{width:"100%",backgroundColor:"#F5F7F9",fontWeight:400,border:"solid 1px #ddd",textAlign:"center",padding:5,fontSize:"medium"}}>All alterations</div>
                         <div className={classNames('sample-info-card', 'genomic-alterations-card', 'mutations', {'active': this.state.show_mutations})} >
                             <div className='sample-info-card-title extra-text-header'>Mutations</div>
                             <div className='sample-info-card-number'><div>{this.props.mutationData.length}</div></div>
                             <div className='sample-info-card-extra-info extra-text'>
-                                <span style={{lineHeight:2}}>TMB 2.3</span><br />
+                                {/*<span style={{lineHeight:2}}>TMB 2.3</span><br />*/}
                                 <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" onClick={() => {this.setState({show_oncogenic_mutations:!this.state.show_oncogenic_mutations,show_actionable_mutations:!this.state.show_oncogenic_mutations});}}></input> oncogenic</span><span style={{float:"right"}}>{this.getDrivers().length}</span><br />
                                 <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" checked={this.state.show_actionable_mutations} onClick={() => {this.setState({show_actionable_mutations:!this.state.show_actionable_mutations});}}></input> actionable</span><span style={{float:"right"}}>{this.getDriversWithTreatmentInfo().length}</span><br />
                                 <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" onClick={() => {this.setState({show_vus_mutations:!this.state.show_vus_mutations});}}></input> VUS</span><span style={{float:"right"}}>{this.props.mutationData.length - this.getDrivers().length}</span><br />
@@ -219,7 +219,7 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                             <div className='sample-info-card-title extra-text-header'>Copy Number Changes</div>
                             <div className='sample-info-card-number'><div>{this.props.cnaStatus === "available"? this.props.discreteCNAData.length : "-"}</div></div>
                             <div className='sample-info-card-extra-info extra-text'>
-                                    <span style={{lineHeight:2}}>{this.props.fractionGenomeAltered? `FGA ${toFixedWithThreshold(this.props.fractionGenomeAltered.value, 2)}` : '\u00A0'}</span><br />
+                                    {/*<span style={{lineHeight:2}}>{this.props.fractionGenomeAltered? `FGA ${toFixedWithThreshold(this.props.fractionGenomeAltered.value, 2)}` : '\u00A0'}</span><br />}*/}
                                     <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" onClick={() => {this.setState({show_oncogenic_cna:!this.state.show_oncogenic_cna});}}></input> oncogenic</span><span style={{float:"right"}}>{this.getCNADrivers().length}</span><br />
                                     <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" onClick={() => {this.setState({show_actionable_cna:!this.state.show_actionable_cna});}}></input> actionable</span><span style={{float:"right"}}>{this.getCNADriversWithTreatmentInfo().length}</span><br />
                                     <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" onClick={() => {this.setState({show_vus_cna:!this.state.show_vus_cna});}}></input> VUS</span><span style={{float:"right"}}>{this.props.discreteCNAData.length - this.getCNADrivers().length}</span><br />
@@ -229,7 +229,7 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                             <div className='sample-info-card-title extra-text-header'>Rearrangements</div>
                             <div className='sample-info-card-number'><div>-</div></div>
                             <div className='sample-info-card-extra-info extra-text'>
-                                        <span style={{lineHeight:2}}>&nbsp;</span><br />
+                                        {/*<span style={{lineHeight:2}}>&nbsp;</span><br />*/}
                                         <span style={{float:"left"}}>&nbsp;</span><span style={{float:"right"}}>&nbsp;</span><br />
                                         <span style={{float:"left"}}>&nbsp;</span><span style={{float:"right"}}>&nbsp;</span><br />
                                         <span style={{float:"left"}}>&nbsp;</span><span style={{float:"right"}}>&nbsp;</span><br />

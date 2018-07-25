@@ -12,14 +12,19 @@ export type MutationAndAnnotation = {
     annotation: IAnnotation;
 };
 
+export type DiscreteCopyNumberDataAndAnnotation = {
+    discreteCopyNumberData: DiscreteCopyNumberData;
+    annotation: IAnnotation;
+};
+
 type IActionableAlterationsTableWrapperProps = {
-    actionableAlterations: MutationAndAnnotation[];
+    actionableAlterations: (MutationAndAnnotation|DiscreteCopyNumberDataAndAnnotation)[];
     evidenceCache?: OncoKbEvidenceCache;
     pubMedCache?: OncokbPubMedCache;
     userEmailAddress?:string;
 };
 
-class ActionableAlterationsTable extends LazyMobXTable<MutationAndAnnotation[]> {
+class ActionableAlterationsTable extends LazyMobXTable<(MutationAndAnnotation|DiscreteCopyNumberDataAndAnnotation)[]> {
 }
 
 export default class ActionableAlterationsTableWrapper extends React.Component<IActionableAlterationsTableWrapperProps, {}> {
@@ -30,15 +35,15 @@ export default class ActionableAlterationsTableWrapper extends React.Component<I
                 columns={[
                     {
                         name:' ',
-                        render:(mutAnns:MutationAndAnnotation[])=> {
-                            const mutAnn = mutAnns[0];
+                        render:(actionAnns:(MutationAndAnnotation|DiscreteCopyNumberDataAndAnnotation)[])=> {
+                            const actionAnn = actionAnns[0];
                             return (<OncoKB
-                                hugoGeneSymbol={mutAnn.annotation.hugoGeneSymbol}
-                                geneNotExist={!mutAnn.annotation.oncoKbGeneExist}
-                                status={mutAnn.annotation.oncoKbStatus}
-                                indicator={mutAnn.annotation.oncoKbIndicator}
+                                hugoGeneSymbol={actionAnn.annotation.hugoGeneSymbol}
+                                geneNotExist={!actionAnn.annotation.oncoKbGeneExist}
+                                status={actionAnn.annotation.oncoKbStatus}
+                                indicator={actionAnn.annotation.oncoKbIndicator}
                                 evidenceCache={this.props.evidenceCache}
-                                evidenceQuery={mutAnn.annotation.oncoKbIndicator && mutAnn.annotation.oncoKbIndicator.query}
+                                evidenceQuery={actionAnn.annotation.oncoKbIndicator && actionAnn.annotation.oncoKbIndicator.query}
                                 pubMedCache={this.props.pubMedCache}
                                 userEmailAddress={this.props.userEmailAddress}
                             />);
@@ -46,37 +51,41 @@ export default class ActionableAlterationsTableWrapper extends React.Component<I
                     },
                     {
                         name:'Gene',
-                        render:(mutAnns:MutationAndAnnotation[])=> {
-                            const mutAnn = mutAnns[0];
+                        render:(actionAnns:(MutationAndAnnotation|DiscreteCopyNumberDataAndAnnotation)[])=> {
+                            const actionAnn = actionAnns[0];
                             return (
-                                <span><b>{mutAnn.annotation.hugoGeneSymbol}</b></span>
+                                <span><b>{actionAnn.annotation.hugoGeneSymbol}</b></span>
                             );
                         },
                     },
                     {
                         name:'Alteration',
-                        render:(mutAnns:MutationAndAnnotation[])=> {
-                            const mutAnn = mutAnns[0];
+                        render:(actionAnns:(MutationAndAnnotation|DiscreteCopyNumberDataAndAnnotation)[])=> {
+                            const actionAnn = actionAnns[0];
                             return (
-                                <span>{mutAnn.annotation.oncoKbIndicator && mutAnn.annotation.oncoKbIndicator.query.alteration}</span>
+                                <span>{actionAnn.annotation.oncoKbIndicator && actionAnn.annotation.oncoKbIndicator.query.alteration}</span>
                             );
                         },
                     },
                     {
                         name:'Level',
-                        render:(mutAnns:MutationAndAnnotation[])=> {
-                            const mutAnn = mutAnns[0];
-                            const level = mutAnn.annotation.oncoKbIndicator? mutAnn.annotation.oncoKbIndicator.highestSensitiveLevel.replace("_"," ").replace("EVEL","evel") : "";
+                        render:(actionAnns:(MutationAndAnnotation|DiscreteCopyNumberDataAndAnnotation)[])=> {
+                            const actionAnn = actionAnns[0];
+                            const level = actionAnn.annotation.oncoKbIndicator? actionAnn.annotation.oncoKbIndicator.highestSensitiveLevel.replace("_"," ").replace("EVEL","evel") : "";
                             return (
                                 <span>{level}</span>
                             );
                         },
+                        sortBy: (actionAnns:(MutationAndAnnotation|DiscreteCopyNumberDataAndAnnotation)[])=> { 
+                            const actionAnn = actionAnns[0];
+                            return OncoKB.sortValue(actionAnn.annotation.oncoKbIndicator);
+                        }
                     },
                     {
                         name:'Drug',
-                        render:(mutAnns:MutationAndAnnotation[])=> {
-                            const mutAnn = mutAnns[0];
-                            const drugNames = mutAnn.annotation.oncoKbIndicator? _.uniq(_.flatMap(mutAnn.annotation.oncoKbIndicator.treatments, (x) => x.drugs).map((x) => x.drugName)).join(", ") : ''; 
+                        render:(actionAnns:(MutationAndAnnotation|DiscreteCopyNumberDataAndAnnotation)[])=> {
+                            const actionAnn = actionAnns[0];
+                            const drugNames = actionAnn.annotation.oncoKbIndicator? _.uniq(_.flatMap(actionAnn.annotation.oncoKbIndicator.treatments, (x) => x.drugs).map((x) => x.drugName)).join(", ") : ''; 
                             return <span>{drugNames}</span>;
                         },
                     }
@@ -84,8 +93,8 @@ export default class ActionableAlterationsTableWrapper extends React.Component<I
                   showPagination={false}
                   showColumnVisibility={false}
                   initialItemsPerPage={0}
-                  /*initialSortColumn="Attribute"
-                  initialSortDirection="asc"*/
+                  initialSortColumn="Level"
+                  initialSortDirection="desc"
                   showFilter={false}
                   showCopyDownload={false}
                   className="actionable-alterations-table"

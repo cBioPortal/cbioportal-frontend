@@ -16,6 +16,16 @@
 .actionable-alterations-table thead > tr > th:nth-child(5) {
     width: 350px !important;
 }
+/* Remove sort icon and button */
+.actionable-alterations-table th.sort-des:after {
+    content: '';
+}
+.actionable-alterations-table th.sort-asc:after {
+    content: '';
+}
+.actionable-alterations-table [role="button"] {
+    cursor: default;
+}
 .sample-report.sample-info {
     width:1000px;
     margin-left: auto;
@@ -46,7 +56,8 @@
             border-top: none;
             border-bottom: none;
             width: 33.33%;
-            height: 250px;
+            /*height: 250px;*/
+            height: 230px;
             padding: 0px;
             /*border-radius: 4px;*/
             /*box-shadow: 1px 1px 5px 0px #bbb;*/
