@@ -1,4 +1,4 @@
-import {AxisMenuSelection, ViewType, SpecialClinicalAttribute} from "./PlotsTab";
+import {AxisMenuSelection, ViewType} from "./PlotsTab";
 import {MobxPromise} from "mobxpromise";
 import {
     CancerStudy,
@@ -33,6 +33,7 @@ import {getUniqueSampleKeyToCategories} from "../../../shared/components/plots/T
 import client from "../../../shared/api/cbioportalClientInstance";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
 import { FractionGenomeAlteredFilter } from "shared/api/generated/CBioPortalAPIInternal";
+import {SpecialAttribute} from "../../../shared/cache/OncoprintClinicalDataCache";
 
 export const CLIN_ATTR_DATA_TYPE = "clinical_attribute";
 export const dataTypeToDisplayType:{[s:string]:string} = {
@@ -316,7 +317,7 @@ function makeAxisDataPromise_Clinical(
     const promise = clinicalDataCache.get(attribute);
     let ret:MobxPromise<IAxisData>;
     switch(attribute.clinicalAttributeId) {
-        case SpecialClinicalAttribute.TotalMutations:
+        case SpecialAttribute.MutationCount:
             let mutationCounts = remoteData({
                 await:()=>[patientKeyToSamples, studyToMutationMolecularProfile],
                 invoke:()=>{
@@ -348,7 +349,7 @@ function makeAxisDataPromise_Clinical(
                 }
             });
             break;
-        case SpecialClinicalAttribute.FractionGenomeAltered:
+        case SpecialAttribute.FractionGenomeAltered:
             let fractionGenomeAltered = remoteData({
                 await:()=>[patientKeyToSamples, studyToMutationMolecularProfile],
                 invoke:()=>{
