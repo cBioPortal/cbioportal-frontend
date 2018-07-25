@@ -18,7 +18,7 @@ import {
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import {getPatientViewUrl} from "../../../shared/api/urls";
-import DownloadControls from "../../../shared/components/DownloadControls";
+import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 import autobind from "autobind-decorator";
 
 export interface ISurvivalChartProps {
@@ -232,6 +232,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                             getSvg={this.getSvg}
                             getData={this.getData}
                             style={{position:'absolute', zIndex: 10, right: 10}}
+                            collapse={true}
                         />
                     }
 

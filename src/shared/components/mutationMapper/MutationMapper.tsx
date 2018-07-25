@@ -36,7 +36,6 @@ export interface IMutationMapperProps {
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     pdbHeaderCache?: PdbHeaderCache;
     pubMedCache?:PubMedCache;
-    svgToPdfServiceUrl?:string;
 }
 
 @observer
@@ -134,7 +133,6 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                 store={this.props.store}
                 onXAxisOffset={this.handlers.onXAxisOffset}
                 geneWidth={this.geneWidth}
-                svgToPdfServiceUrl={this.props.svgToPdfServiceUrl}
                 {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
             />
         );

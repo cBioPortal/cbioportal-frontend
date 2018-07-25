@@ -1,7 +1,7 @@
 import * as React from 'react';
 import SvgSaver from 'svgsaver';
 import autobind from "autobind-decorator";
-import DownloadControls from "../DownloadControls";
+import DownloadControls from "../downloadControls/DownloadControls";
 
 interface IChartContainer {
     getSVGElement?:()=>SVGElement;
