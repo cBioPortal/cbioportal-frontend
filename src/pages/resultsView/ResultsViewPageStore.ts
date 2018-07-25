@@ -504,6 +504,7 @@ export class ResultsViewPageStore {
             for (const gene of this.genes.result!) {
                 ret[gene.entrezGeneId] = molecularProfilesInStudies.filter(p=>{
                     if (p.molecularProfileId in nonMutationMolecularProfileDataAvailability) {
+                        // return false if theres no entry for this profile/gene pair, or if there is an entry and the availabile count is 0
                         return !!nonMutationMolecularProfileDataAvailability[p.molecularProfileId][gene.entrezGeneId];
                     } else {
                         return false;
