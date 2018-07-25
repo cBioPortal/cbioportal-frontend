@@ -468,21 +468,20 @@ function makeAxisDataPromise_Molecular(
 
 export function makeAxisDataPromise(
     selection:AxisMenuSelection,
-    clinicalAttributeIdToClinicalAttribute:{[clinicalAttributeId:string]:ClinicalAttribute},
+    clinicalAttributeIdToClinicalAttribute:MobxPromise<{[clinicalAttributeId:string]:ClinicalAttribute}>,
     molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>,
     patientKeyToSamples:MobxPromise<{[uniquePatientKey:string]:Sample[]}>,
     entrezGeneIdToGene:MobxPromise<{[entrezGeneId:number]:Gene}>,
     clinicalDataCache:MobxPromiseCache<ClinicalAttribute, ClinicalData[]>,
     numericGeneMolecularDataCache:MobxPromiseCache<{entrezGeneId:number, molecularProfileId:string}, NumericGeneMolecularData[]>,
     studyToMutationMolecularProfile: MobxPromise<{[studyId: string]: MolecularProfile}>
-    
 ):MobxPromise<IAxisData> {
 
     let ret:MobxPromise<IAxisData> = remoteData(()=>new Promise<IAxisData>(()=>0)); // always isPending
     switch (selection.dataType) {
         case CLIN_ATTR_DATA_TYPE:
-            if (selection.dataSourceId !== undefined) {
-                const attribute = clinicalAttributeIdToClinicalAttribute[selection.dataSourceId];
+            if (selection.dataSourceId !== undefined && clinicalAttributeIdToClinicalAttribute.isComplete) {
+                const attribute = clinicalAttributeIdToClinicalAttribute.result![selection.dataSourceId];
                 ret = makeAxisDataPromise_Clinical(attribute, clinicalDataCache, patientKeyToSamples, studyToMutationMolecularProfile);
             }
             break;
