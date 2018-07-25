@@ -110,13 +110,58 @@ export function isNumberData(d:IAxisData): d is INumberAxisData {
     return d.datatype === "number";
 }
 
+export function sortScatterPlotDataForZIndex<D extends Pick<IScatterPlotSampleData, "dispMutationType" | "dispMutationSummary">>(
+    data: D[],
+    viewType:ViewType,
+    highlight: (d:D)=>boolean
+) {
+    // sort by render priority
+    switch (viewType) {
+        case ViewType.MutationTypeAndCopyNumber:
+        case ViewType.MutationType:
+            data = _.sortBy<D>(data, d=>{
+                if (d.dispMutationType! in mutationRenderPriority) {
+                    return -mutationRenderPriority[d.dispMutationType!]
+                } else {
+                    return Number.NEGATIVE_INFINITY;
+                }
+            });
+            break;
+        case ViewType.MutationSummary:
+            data = _.sortBy<D>(data, d=>{
+                if (d.dispMutationSummary! in mutationSummaryRenderPriority) {
+                    return -mutationSummaryRenderPriority[d.dispMutationSummary!]        ;
+                } else {
+                    return Number.NEGATIVE_INFINITY;
+                }
+            });
+            break;
+    }
+    // Now that we've sorted by render order, put highlighted data on top
+    const highlighted = [];
+    const unhighlighted = [];
+    for (const d of data) {
+        if (highlight(d)) {
+            highlighted.push(d);
+        } else {
+            unhighlighted.push(d);
+        }
+    }
+    return unhighlighted.concat(highlighted);
+}
+
 export function scatterPlotSize(
     d:IScatterPlotSampleData,
     active:boolean,
     isHighlighted:boolean
 ) {
-    const big = active || isHighlighted;
-    return big ? 6 : 4;
+    if (isHighlighted) {
+        return 8;
+    } else if (active) {
+        return 6;
+    } else {
+        return 4;
+    }
 }
 
 export function scatterPlotLegendData(
