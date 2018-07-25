@@ -445,7 +445,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     });
 
     readonly geneToDataTypeOptions = remoteData<{[entrezGeneId:number]:{value:string, label:string}[]}>({
-        await:()=>[this.props.store.nonMutationMolecularProfilesWithData, this.clinicalAttributeOptions],
+        await:()=>[
+            this.props.store.nonMutationMolecularProfilesWithData,
+            this.clinicalAttributeOptions
+        ],
         invoke:()=>{
             return Promise.resolve(_.mapValues(this.props.store.nonMutationMolecularProfilesWithData.result!,
                 profiles=>{
@@ -469,15 +472,24 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     });
 
     readonly geneToTypeToDataSourceOptions = remoteData<{[entrezGeneId:number]:{[type:string]:{value:string, label:string}[]}}>({
-        await:()=>[this.props.store.nonMutationMolecularProfilesWithData, this.clinicalAttributeOptions],
+        await:()=>[
+            this.props.store.nonMutationMolecularProfilesWithData,
+            this.props.store.nonMutationMolecularProfileDataAvailability,
+            this.clinicalAttributeOptions
+        ],
         invoke:()=>{
+            const sampleCounts = this.props.store.nonMutationMolecularProfileDataAvailability.result!;
             return Promise.resolve(_.mapValues(this.props.store.nonMutationMolecularProfilesWithData.result!,
-                profiles=>{
+                (profiles, gene)=>{
                     const map = _.mapValues(
                         _.groupBy(profiles, profile=>profile.molecularAlterationType),
                         profilesOfType=>(
-                            profilesOfType.map(p=>({value:p.molecularProfileId, label:p.name})
-                            ))
+                            profilesOfType.map(p=>{
+                                // sampleCount definitely exists because these profiles are in nonMutationMolecularProfilesWithData
+                                const sampleCount = sampleCounts[p.molecularProfileId][gene];
+                                return {value:p.molecularProfileId, label:`${p.name} (${sampleCount} samples)`};
+                            })
+                        )
                     );
                     if (this.clinicalAttributeOptions.result!.length) {
                         map[CLIN_ATTR_DATA_TYPE] = this.clinicalAttributeOptions.result!;
@@ -674,28 +686,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     }
 
-    readonly horzDescription = remoteData({
-        await:()=>[this.props.store.molecularProfileIdToMolecularProfile, this.clinicalAttributeIdToClinicalAttribute],
-        invoke:()=>{
-            return Promise.resolve(getAxisDescription(
-                this.horzSelection,
-                this.props.store.molecularProfileIdToMolecularProfile.result!,
-                this.clinicalAttributeIdToClinicalAttribute.result!
-            ));
-        }
-    });
-
-    readonly vertDescription = remoteData({
-        await:()=>[this.props.store.molecularProfileIdToMolecularProfile, this.clinicalAttributeIdToClinicalAttribute],
-        invoke:()=>{
-            return Promise.resolve(getAxisDescription(
-                this.vertSelection,
-                this.props.store.molecularProfileIdToMolecularProfile.result!,
-                this.clinicalAttributeIdToClinicalAttribute.result!
-            ));
-        }
-    });
-
     @computed get scatterPlotAppearance() {
         return makeScatterPlotPointAppearance(this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated);
     }
@@ -828,17 +818,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         <label>{axisSelection.dataType === CLIN_ATTR_DATA_TYPE ? "Clinical Attribute" : `${axisSelection.dataType ? dataTypeToDisplayType[axisSelection.dataType] : ""} Profile`}</label>
                         <div style={{display:"flex", flexDirection:"row"}}>
                             <ReactSelect
+                                className="data-source-id"
                                 name={`${vertical ? "v" : "h"}-profile-name-selector`}
                                 value={axisSelection.dataSourceId}
                                 onChange={vertical ? this.onVerticalAxisDataSourceSelect : this.onHorizontalAxisDataSourceSelect}
                                 options={dataSourceOptionsByType[axisSelection.dataType+""] || []}
                                 clearable={false}
                                 searchable={false}
-                            />
-                            <InfoIcon
-                                tooltip={<span>{vertical ? this.vertDescription : this.horzDescription}</span>}
-                                tooltipPlacement="right"
-                                style={{marginTop:"0.9em", marginLeft:5}}
                             />
                         </div>
                     </div>
@@ -1293,7 +1279,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     public render() {
-        console.log("render");
         return (
             <div className={"plotsTab"} style={{display:"flex", flexDirection:"row", maxWidth:"inherit"}} data-test="PlotsTabEntireDiv">
                 <div className="leftColumn">
