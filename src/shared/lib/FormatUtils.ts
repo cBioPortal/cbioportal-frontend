@@ -45,3 +45,14 @@ export function toFixedWithThreshold(value: number, digits: number): string
 export function getPercentage(proportion: number, digits: number = 1) {
     return `${toFixedWithThreshold(100 * proportion, digits)}%`;
 }
+
+/* difference between this function and the previous one is it will display
+percentages less than 1% as <1%
+*/
+export function getMutSigPercentage(proportion: number, digits: number = 1) {
+    if (Number(toFixedWithThreshold(100 * proportion, digits)) < 1){
+        return "<1.0%";
+    }
+
+    return `${toFixedWithThreshold(100 * proportion, digits)}%`;
+}

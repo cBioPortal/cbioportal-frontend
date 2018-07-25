@@ -5,6 +5,7 @@ import styles from './style/patientTable.module.scss';
 import {SHOW_ALL_PAGE_SIZE} from "../../../shared/components/paginationControls/PaginationControls";
 import {IMutationalSignature} from "../../../shared/model/MutationalSignature";
 import convertSamplesData, {IConvertedSamplesData} from "./lib/convertSamplesData";
+import {getMutSigPercentage} from "../../../shared/lib/FormatUtils";
 import _ from 'lodash';
 import {labelMobxPromises} from "mobxpromise";
 
@@ -20,13 +21,9 @@ class MutationalSignatureTable extends LazyMobXTable<IMutationalSignatureRow> {}
 
 interface IMutationalSignatureRow {
     mutationalSignatureId:string;
-    sampleValues:{[uniqueSampleKey: string]: number},
+    sampleValues:{[uniqueSampleKey: string]: string},
 
 };
-
-interface IColumns{
-    id:string
-}
 
 export function prepareDataForTable(mutationalSignatureData: IMutationalSignature[]):IMutationalSignatureRow[] {
 
@@ -43,21 +40,17 @@ export function prepareDataForTable(mutationalSignatureData: IMutationalSignatur
         let mutationalSignatureRowForTable: IMutationalSignatureRow = {mutationalSignatureId:"", sampleValues: {}};
         mutationalSignatureRowForTable.mutationalSignatureId = mutationalSignature.id;
         for (const sample of mutationalSignature.samples){
-            mutationalSignatureRowForTable.sampleValues[sample.sampleId] = Number(sample.value.toFixed(4));
+            mutationalSignatureRowForTable.sampleValues[sample.uniqueSampleKey] = getMutSigPercentage(sample.value);
         }
         tableData.push(mutationalSignatureRowForTable);
     }
     return tableData;
 }
 
-export function prepareDataForColumns(mutationalSignatureData: IMutationalSignature[]): IColumns[]{
-    return _.map(_.uniqBy(mutationalSignatureData,"sampleId"), (uniqSample) => ({id: uniqSample.sampleId}));
-}
-
 export default class ClinicalInformationMutationalSignatureTable extends React.Component<IClinicalInformationMutationalSignatureTableProps, {}> {
 
     public render() {
-        const uniqueSamples = prepareDataForColumns(this.props.data);
+        const uniqueSamples = _.map(_.uniqBy(this.props.data, "uniqueSampleKey"), (uniqSample => ({id: uniqSample.uniqueSampleKey})));
         const tableData = prepareDataForTable(this.props.data);
         const firstCol = 'mutationalSignatureId';
         const columns:Column<IMutationalSignatureRow>[] = [{

@@ -7,7 +7,7 @@ export interface IColumn {
 
 export interface IAttrData {
     [attrId:string]: {
-        [sampleId: string]: ClinicalAttribute | string | number;
+        [sampleId: string]: ClinicalAttribute | string;
         clinicalAttribute: ClinicalAttribute;
         id: string;
     };
