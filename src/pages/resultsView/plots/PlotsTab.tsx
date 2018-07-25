@@ -35,6 +35,7 @@ import setWindowVariable from "../../../shared/lib/setWindowVariable";
 import autobind from "autobind-decorator";
 import fileDownload from 'react-file-download';
 import onMobxPromise from "../../../shared/lib/onMobxPromise";
+import {logicalOr} from "../../../shared/lib/LogicUtils";
 
 enum EventKey {
     horz_logScale,
@@ -147,9 +148,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         return this.svg;
     }
 
-    @computed get downloadFilename() {
-        return "plot"; // todo: more specific?
-    }
+    private downloadFilename = "plot"; // todo: more specific?
 
     private initAxisMenuSelection(vertical:boolean):AxisMenuSelection {
         const self = this;
@@ -166,13 +165,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 this._entrezGeneId = e;
             },
             get dataType() {
-                if (this.entrezGeneId === undefined) {
+                if (this.entrezGeneId === undefined || !self.geneToDataTypeOptions.isComplete) {
                     // if theres no selected gene (this only happens at beginning of initialization),
-                    //  return the stored value for this variable
+                    //  or if there are no options to select a default from, then return the stored value for this variable
                     return this._dataType;
                 }
                 // otherwise, pick the default based on sources that have data for the selected gene
-                const dataTypeOptions = self.geneToDataTypeOptions[this.entrezGeneId] || [];
+                const dataTypeOptions = self.geneToDataTypeOptions.result![this.entrezGeneId] || [];
                 if (this._dataType === undefined && dataTypeOptions.length) {
                     // return computed default if _dataType is undefined and if there are options to select a default value from
                     if (vertical && !!dataTypeOptions.find(o=>(o.value === AlterationTypeConstants.MRNA_EXPRESSION))) {
@@ -186,7 +185,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         return dataTypeOptions[0].value;
                     }
                 } else {
-                    // otherwise, _dataType is defined, so return it
+                    // otherwise, _dataType is defined, or there are no default options to choose from, so return _dataType
                     return this._dataType;
                 }
             },
@@ -197,14 +196,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 this._dataType = t;
             },
             get dataSourceId() {
-                if (this.entrezGeneId === undefined) {
+                if (this.entrezGeneId === undefined || !self.geneToTypeToDataSourceOptions.isComplete) {
                     // if theres no selected gene (this only happens at beginning of initialization),
-                    //  return the stored value for this variable
+                    //  or if there are no options to select a default from, then return the stored value for this variable
                     return this._dataSourceId;
                 }
                 // otherwise, pick the default based on the current selected data type, and
                 //  the sources that have data for the selected gene
-                const dataSourceOptionsByType = self.geneToTypeToDataSourceOptions[this.entrezGeneId] || {};
+                const dataSourceOptionsByType = self.geneToTypeToDataSourceOptions.result![this.entrezGeneId] || {};
                 if (this._dataSourceId === undefined &&
                     this.dataType &&
                     dataSourceOptionsByType[this.dataType] &&
@@ -212,7 +211,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     // return computed default if _dataSourceId is undefined
                     return dataSourceOptionsByType[this.dataType][0].value;
                 } else {
-                    // otherwise, _dataSourceId is defined, so return it
+                    // otherwise, _dataSourceId is defined, or there are no default options to choose from, so return _dataType
                     return this._dataSourceId;
                 }
             },
@@ -255,24 +254,26 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     private downloadData() {
         onMobxPromise<any>(
             [this.props.store.entrezGeneIdToGene,
-            this.props.store.sampleKeyToSample],
-            (entrezGeneIdToGene, sampleKeyToSample)=>{
+            this.props.store.sampleKeyToSample,
+            this.horzLabel,
+            this.vertLabel],
+            (entrezGeneIdToGene, sampleKeyToSample, horzLabel, vertLabel)=>{
                 const filename = `${this.downloadFilename}.txt`;
                 switch (this.plotType.result) {
                     case PlotType.ScatterPlot:
                         fileDownload(
                             getScatterPlotDownloadData(
                                 this.scatterPlotData.result!,
-                                this.horzLabel,
-                                this.vertLabel,
+                                horzLabel,
+                                vertLabel,
                                 entrezGeneIdToGene
                             ),
                             filename
                         );
                         break;
                     case PlotType.BoxPlot:
-                        const categoryLabel = this.boxPlotData.result!.horizontal ? this.vertLabel : this.horzLabel;
-                        const valueLabel = this.boxPlotData.result!.horizontal ? this.horzLabel : this.vertLabel;
+                        const categoryLabel = this.boxPlotData.result!.horizontal ? vertLabel : horzLabel;
+                        const valueLabel = this.boxPlotData.result!.horizontal ? horzLabel : vertLabel;
                         fileDownload(
                             getBoxPlotDownloadData(
                                 this.boxPlotData.result!.data,
@@ -289,8 +290,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 (this.horzAxisDataPromise.result! as IStringAxisData).data,
                                 (this.vertAxisDataPromise.result! as IStringAxisData).data,
                                 sampleKeyToSample,
-                                this.horzLabel,
-                                this.vertLabel
+                                horzLabel,
+                                vertLabel
                             ),
                             filename
                         );
@@ -394,39 +395,40 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     });
 
-    @computed get clinicalAttributeIdToClinicalAttribute():{[clinicalAttributeId:string]:ClinicalAttribute} {
-        if (this.props.store.clinicalAttributes.isComplete) {
-            let _map: {[clinicalAttributeId: string]: ClinicalAttribute} = _.keyBy(this.props.store.clinicalAttributes.result, c=>c.clinicalAttributeId)
-            if (this.props.store.studyIds.isComplete) {
-                _map[SpecialClinicalAttribute.TotalMutations] = {
-                    clinicalAttributeId: SpecialClinicalAttribute.TotalMutations,
-                    datatype: "NUMBER",
-                    description: "Total mutations",
-                    displayName: "Total mutations",
-                    patientAttribute: false,
-                    priority: "1",
-                    studyId: this.props.store.studyIds.result[0],
-                    count: 0
-                };
-                _map[SpecialClinicalAttribute.FractionGenomeAltered] = {
-                        clinicalAttributeId: SpecialClinicalAttribute.FractionGenomeAltered,
-                        datatype: "NUMBER",
-                        description: "Fraction Genome Altered",
-                        displayName: "Fraction Genome Altered",
-                        patientAttribute: false,
-                        priority: "1",
-                        studyId: this.props.store.studyIds.result[0],
-                        count: 0
-                    };
+    readonly clinicalAttributeIdToClinicalAttribute = remoteData<{[clinicalAttributeId:string]:ClinicalAttribute}>({
+        await:()=>[
+            this.props.store.clinicalAttributes,
+            this.props.store.studyIds
+        ],
+        invoke:()=>{
+            let _map: {[clinicalAttributeId: string]: ClinicalAttribute} = _.keyBy(this.props.store.clinicalAttributes.result, c=>c.clinicalAttributeId);
+            _map[SpecialClinicalAttribute.TotalMutations] = {
+                clinicalAttributeId: SpecialClinicalAttribute.TotalMutations,
+                datatype: "NUMBER",
+                description: "Total mutations",
+                displayName: "Total mutations",
+                patientAttribute: false,
+                priority: "1",
+                studyId: this.props.store.studyIds.result![0],
+                count: 0
             };
-            return _map;
-        } else {
-            return {};
+            _map[SpecialClinicalAttribute.FractionGenomeAltered] = {
+                clinicalAttributeId: SpecialClinicalAttribute.FractionGenomeAltered,
+                datatype: "NUMBER",
+                description: "Fraction Genome Altered",
+                displayName: "Fraction Genome Altered",
+                patientAttribute: false,
+                priority: "1",
+                studyId: this.props.store.studyIds.result![0],
+                count: 0
+            };
+            return Promise.resolve(_map);
         }
-    }
+    });
 
-    @computed get clinicalAttributeOptions() {
-        if (this.props.store.clinicalAttributes.isComplete) {
+    readonly clinicalAttributeOptions = remoteData({
+        await:()=>[this.props.store.clinicalAttributes],
+        invoke:()=>{
             let _clinicalAttributes: {value: string, label: string}[] = [];
             _clinicalAttributes.push({
                 value: SpecialClinicalAttribute.TotalMutations,
@@ -436,64 +438,59 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 value: SpecialClinicalAttribute.FractionGenomeAltered,
                 label: "Fraction Genome Altered"
             });
-            this.props.store.clinicalAttributes.result.map(attribute=>(
-                    _clinicalAttributes.push({
-                value: attribute.clinicalAttributeId,
-                label: attribute.displayName
-            })));
-            
-            return _clinicalAttributes;
-        } else {
-            return [];
-        }
-    }
+            this.props.store.clinicalAttributes.result!.map(attribute=>(
+                _clinicalAttributes.push({
+                    value: attribute.clinicalAttributeId,
+                    label: attribute.displayName
+                })));
 
-    @computed get geneToDataTypeOptions():{[entrezGeneId:number]:{value:string, label:string}[]} {
-        if (this.props.store.nonMutationMolecularProfilesWithData.isComplete) {
-            return _.mapValues(this.props.store.nonMutationMolecularProfilesWithData.result!,
+            return Promise.resolve(_clinicalAttributes);
+        }
+    });
+
+    readonly geneToDataTypeOptions = remoteData<{[entrezGeneId:number]:{value:string, label:string}[]}>({
+        await:()=>[this.props.store.nonMutationMolecularProfilesWithData, this.clinicalAttributeOptions],
+        invoke:()=>{
+            return Promise.resolve(_.mapValues(this.props.store.nonMutationMolecularProfilesWithData.result!,
                 profiles=>{
-                const dataTypeIds:string[] = _.uniq(
-                    profiles.map(profile=>profile.molecularAlterationType)
-                ).filter(type=>!!dataTypeToDisplayType[type]);
+                    const dataTypeIds:string[] = _.uniq(
+                        profiles.map(profile=>profile.molecularAlterationType)
+                    ).filter(type=>!!dataTypeToDisplayType[type]);
 
-                if (this.clinicalAttributeOptions.length) {
-                    dataTypeIds.push(CLIN_ATTR_DATA_TYPE);
+                    if (this.clinicalAttributeOptions.result!.length) {
+                        dataTypeIds.push(CLIN_ATTR_DATA_TYPE);
+                    }
+
+                    return _.sortBy(dataTypeIds,
+                        type=>dataTypeDisplayOrder.indexOf(type)
+                    ).map(type=>({
+                        value: type,
+                        label: dataTypeToDisplayType[type]
+                    }));
                 }
-
-                return _.sortBy(dataTypeIds,
-                            type=>dataTypeDisplayOrder.indexOf(type)
-                        ).map(type=>({
-                            value: type,
-                            label: dataTypeToDisplayType[type]
-                        }))
-                }
-            );
-
-        } else {
-            return {};
+            ));
         }
-    }
+    });
 
-    @computed get geneToTypeToDataSourceOptions():{[entrezGeneId:number]:{[type:string]:{value:string, label:string}[]}} {
-        if (this.props.store.nonMutationMolecularProfilesWithData.isComplete) {
-            return _.mapValues(this.props.store.nonMutationMolecularProfilesWithData.result!,
+    readonly geneToTypeToDataSourceOptions = remoteData<{[entrezGeneId:number]:{[type:string]:{value:string, label:string}[]}}>({
+        await:()=>[this.props.store.nonMutationMolecularProfilesWithData, this.clinicalAttributeOptions],
+        invoke:()=>{
+            return Promise.resolve(_.mapValues(this.props.store.nonMutationMolecularProfilesWithData.result!,
                 profiles=>{
                     const map = _.mapValues(
                         _.groupBy(profiles, profile=>profile.molecularAlterationType),
                         profilesOfType=>(
                             profilesOfType.map(p=>({value:p.molecularProfileId, label:p.name})
-                        ))
+                            ))
                     );
-                    if (this.clinicalAttributeOptions.length) {
-                        map[CLIN_ATTR_DATA_TYPE] = this.clinicalAttributeOptions;
+                    if (this.clinicalAttributeOptions.result!.length) {
+                        map[CLIN_ATTR_DATA_TYPE] = this.clinicalAttributeOptions.result!;
                     }
                     return map;
                 }
-            );
-        } else {
-            return {};
+            ));
         }
-    }
+    });
 
     @autobind
     @action
@@ -633,19 +630,21 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     });
 
 
-    @computed get horzLabel() {
-        if (this.props.store.molecularProfileIdToMolecularProfile.isComplete &&
-            this.props.store.entrezGeneIdToGene.isComplete) {
-            return getAxisLabel(
+    readonly horzLabel = remoteData({
+        await:()=>[
+            this.props.store.molecularProfileIdToMolecularProfile,
+            this.props.store.entrezGeneIdToGene,
+            this.clinicalAttributeIdToClinicalAttribute
+        ],
+        invoke:()=>{
+            return Promise.resolve(getAxisLabel(
                 this.horzSelection,
-                this.props.store.molecularProfileIdToMolecularProfile.result,
-                this.props.store.entrezGeneIdToGene.result,
-                this.clinicalAttributeIdToClinicalAttribute
-            );
-        } else {
-            return "";
+                this.props.store.molecularProfileIdToMolecularProfile.result!,
+                this.props.store.entrezGeneIdToGene.result!,
+                this.clinicalAttributeIdToClinicalAttribute.result!
+            ));
         }
-    }
+    });
 
     @computed get horzLabelLogSuffix() {
         if (this.horzSelection.logScale) {
@@ -655,19 +654,21 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     }
 
-    @computed get vertLabel() {
-        if (this.props.store.molecularProfileIdToMolecularProfile.isComplete &&
-            this.props.store.entrezGeneIdToGene.isComplete) {
-            return getAxisLabel(
+    readonly vertLabel = remoteData({
+        await:()=>[
+            this.props.store.molecularProfileIdToMolecularProfile,
+            this.props.store.entrezGeneIdToGene,
+            this.clinicalAttributeIdToClinicalAttribute
+        ],
+        invoke:()=>{
+            return Promise.resolve(getAxisLabel(
                 this.vertSelection,
-                this.props.store.molecularProfileIdToMolecularProfile.result,
-                this.props.store.entrezGeneIdToGene.result,
-                this.clinicalAttributeIdToClinicalAttribute
-            );
-        } else {
-            return "";
+                this.props.store.molecularProfileIdToMolecularProfile.result!,
+                this.props.store.entrezGeneIdToGene.result!,
+                this.clinicalAttributeIdToClinicalAttribute.result!
+            ));
         }
-    }
+    });
 
     @computed get vertLabelLogSuffix() {
         if (this.vertSelection.logScale) {
@@ -677,29 +678,27 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     }
 
-    @computed get horzDescription() {
-        if (this.props.store.molecularProfileIdToMolecularProfile.isComplete) {
-            return getAxisDescription(
+    readonly horzDescription = remoteData({
+        await:()=>[this.props.store.molecularProfileIdToMolecularProfile, this.clinicalAttributeIdToClinicalAttribute],
+        invoke:()=>{
+            return Promise.resolve(getAxisDescription(
                 this.horzSelection,
-                this.props.store.molecularProfileIdToMolecularProfile.result,
-                this.clinicalAttributeIdToClinicalAttribute
-            );
-        } else {
-            return "";
+                this.props.store.molecularProfileIdToMolecularProfile.result!,
+                this.clinicalAttributeIdToClinicalAttribute.result!
+            ));
         }
-    }
+    });
 
-    @computed get vertDescription() {
-        if (this.props.store.molecularProfileIdToMolecularProfile.isComplete) {
-            return getAxisDescription(
+    readonly vertDescription = remoteData({
+        await:()=>[this.props.store.molecularProfileIdToMolecularProfile, this.clinicalAttributeIdToClinicalAttribute],
+        invoke:()=>{
+            return Promise.resolve(getAxisDescription(
                 this.vertSelection,
-                this.props.store.molecularProfileIdToMolecularProfile.result,
-                this.clinicalAttributeIdToClinicalAttribute
-            );
-        } else {
-            return "";
+                this.props.store.molecularProfileIdToMolecularProfile.result!,
+                this.clinicalAttributeIdToClinicalAttribute.result!
+            ));
         }
-    }
+    });
 
     @computed get scatterPlotAppearance() {
         return makeScatterPlotPointAppearance(this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated);
@@ -777,9 +776,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         const dataTestWhichAxis = vertical ? "Vertical" : "Horizontal";
         let dataTypeOptions:{value:string, label:string}[] = [];
         let dataSourceOptionsByType:{[type:string]:{value:string, label:string}[]} = {};
-        if (axisSelection.entrezGeneId !== undefined) {
-            dataTypeOptions = this.geneToDataTypeOptions[axisSelection.entrezGeneId] || [];
-            dataSourceOptionsByType = this.geneToTypeToDataSourceOptions[axisSelection.entrezGeneId] || {};
+        if (!this.geneToDataTypeOptions.isComplete || !this.geneToTypeToDataSourceOptions.isComplete) {
+            return <LoadingIndicator isLoading={true}/>;
+        } else if (axisSelection.entrezGeneId !== undefined) {
+            dataTypeOptions = this.geneToDataTypeOptions.result![axisSelection.entrezGeneId] || [];
+            dataSourceOptionsByType = this.geneToTypeToDataSourceOptions.result![axisSelection.entrezGeneId] || {};
         }
         return (
             <form>
@@ -1159,9 +1160,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @autobind
     private plot() {
-        if (this.plotType.isPending || this.horzAxisDataPromise.isPending || this.vertAxisDataPromise.isPending) {
+        const promises = [this.plotType, this.horzAxisDataPromise, this.vertAxisDataPromise, this.horzLabel, this.vertLabel];
+        if (logicalOr(promises.map(p=>p.isPending))) {
             return <LoadingIndicator isLoading={true}/>;
-        } else if (this.plotType.isError || this.horzAxisDataPromise.isError || this.vertAxisDataPromise.isError) {
+        } else if (logicalOr(promises.map(p=>p.isError))) {
             return <span>Error loading plot data.</span>;
         } else {
             // all complete
@@ -1180,8 +1182,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             minCellHeight={35}
                             minChartWidth={PLOT_SIDELENGTH}
                             minChartHeight={PLOT_SIDELENGTH}
-                            axisLabelX={this.horzLabel}
-                            axisLabelY={this.vertLabel}
+                            axisLabelX={this.horzLabel.result!}
+                            axisLabelY={this.vertLabel.result!}
                         />
                     );
                     break;
@@ -1190,8 +1192,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         plotElt = (
                             <PlotsTabScatterPlot
                                 svgRef={this.svgRef}
-                                axisLabelX={this.horzLabel + this.horzLabelLogSuffix}
-                                axisLabelY={this.vertLabel + this.vertLabelLogSuffix}
+                                axisLabelX={this.horzLabel.result! + this.horzLabelLogSuffix}
+                                axisLabelY={this.vertLabel.result! + this.vertLabelLogSuffix}
                                 data={this.scatterPlotData.result}
                                 size={scatterPlotSize}
                                 chartWidth={PLOT_SIDELENGTH}
@@ -1224,8 +1226,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             <PlotsTabBoxPlot
                                 svgRef={this.svgRef}
                                 boxWidth={this.boxPlotBoxWidth}
-                                axisLabelX={this.horzLabel + (horizontal ? this.horzLabelLogSuffix : "")}
-                                axisLabelY={this.vertLabel + (!horizontal ? this.vertLabelLogSuffix : "")}
+                                axisLabelX={this.horzLabel.result! + (horizontal ? this.horzLabelLogSuffix : "")}
+                                axisLabelY={this.vertLabel.result! + (!horizontal ? this.vertLabelLogSuffix : "")}
                                 data={this.boxPlotData.result.data}
                                 chartBase={550}
                                 tooltip={this.boxPlotTooltip}
