@@ -224,7 +224,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     studyId={patientViewPageStore.studyMetaData.result!.studyId}
                     mutationData={patientViewPageStore.mutationData.result!.filter(((mut) => mut.sampleId === sample.id))}
                     cnaStatus={this.cnaTableStatus}
-                    discreteCNAData={patientViewPageStore.discreteCNAData.result}
+                    discreteCNAData={patientViewPageStore.discreteCNAData.result!.filter(((cna) => cna.sampleId === sample.id))}
                     oncoKbData={patientViewPageStore.oncoKbData}
                     cnaOncoKbData={patientViewPageStore.cnaOncoKbData}
                     oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
@@ -442,6 +442,21 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                     <MSKTab key={6} id="sampleReportTab" linkText="Sample Report">
                         <LoadingIndicator isLoading={patientViewPageStore.clinicalEvents.isPending} />
+                        {  (patientViewPageStore.patientViewData.isComplete && patientViewPageStore.samples.result && patientViewPageStore.samples.result.length > 1) && (
+                                <div className="sample-report-patient-header">
+                                    <div className="sample-report-patient-header-title">
+                                        <i className="fa fa-user-circle-o patientIcon" aria-hidden="true"></i>&nbsp;
+                                        <PatientHeader
+                                            handlePatientClick={(id: string)=>this.handlePatientClick(id)}
+                                            patient={patientViewPageStore.patientViewData.result.patient}
+                                            studyId={patientViewPageStore.studyId}
+                                            darwinUrl={patientViewPageStore.darwinUrl.result}
+                                            sampleManager={sampleManager}/>
+                                    </div>
+                                    <span style={{paddingLeft: 10, fontSize:"medium"}}>This patient has {patientViewPageStore.samples.result && patientViewPageStore.samples.result.length} samples.</span>
+                                </div>
+                            )
+                        }
                         <div className="sample-report">
                             {sampleRecords && sampleRecords.map((rec:JSX.Element) => {
                                 return (

@@ -47,9 +47,6 @@ type DiscreteCopyNumberDataAndAnnotation = {
 
 
 interface ISampleRecordState {
-    show_mutations: boolean;
-    show_cna: boolean;
-    show_rearrangements: boolean;
     show_oncogenic_mutations: boolean;
     show_actionable_mutations: boolean;
     show_vus_mutations: boolean;
@@ -63,9 +60,6 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
     constructor(props:ISampleRecordProps) {
         super(props);
         this.state = {
-            show_mutations: false,
-            show_cna: false,
-            show_rearrangements: false,
             show_oncogenic_mutations: false,
             show_actionable_mutations: false,
             show_vus_mutations: false,
@@ -166,6 +160,30 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
         return this.state.show_actionable_mutations || this.state.show_oncogenic_mutations || this.state.show_vus_mutations ||
                this.state.show_actionable_cna || this.state.show_oncogenic_cna || this.state.show_vus_cna;
     }
+    hasAllCheckboxSelected() {
+        return this.state.show_actionable_mutations && this.state.show_oncogenic_mutations && this.state.show_vus_mutations &&
+               this.state.show_actionable_cna && this.state.show_oncogenic_cna && this.state.show_vus_cna;
+    }
+    showAll() {
+        this.setState({
+            show_oncogenic_mutations: true,
+            show_actionable_mutations: true,
+            show_vus_mutations: true,
+            show_oncogenic_cna: true,
+            show_actionable_cna: true,
+            show_vus_cna: true
+        });
+    }
+    showNone() {
+        this.setState({
+            show_oncogenic_mutations: false,
+            show_actionable_mutations: false,
+            show_vus_mutations: false,
+            show_oncogenic_cna: false,
+            show_actionable_cna: false,
+            show_vus_cna: false
+        });
+    }
     render() {
         return (
             <div className="sample-report sample-info">
@@ -199,14 +217,14 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                     )}
                     <div className="flex-row sample-info-record">
                         <div style={{width:"100%",backgroundColor:"#F5F7F9",fontWeight:400,border:"solid 1px #ddd",textAlign:"center",padding:5,fontSize:"medium"}}>All alterations</div>
-                        <div className={classNames('sample-info-card', 'genomic-alterations-card', 'mutations', {'active': this.state.show_mutations})} >
+                        <div className={classNames('sample-info-card', 'genomic-alterations-card', 'mutations')}>
                             <div className='sample-info-card-title extra-text-header'>Mutations</div>
                             <div className='sample-info-card-number'><div>{this.props.mutationData.length}</div></div>
                             <div className='sample-info-card-extra-info extra-text'>
                                 {/*<span style={{lineHeight:2}}>TMB 2.3</span><br />*/}
-                                <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" onClick={() => {this.setState({show_oncogenic_mutations:!this.state.show_oncogenic_mutations,show_actionable_mutations:!this.state.show_oncogenic_mutations});}}></input> oncogenic</span><span style={{float:"right"}}>{this.getDrivers().length}</span><br />
+                                <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" checked={this.state.show_oncogenic_mutations} onClick={() => {this.setState({show_oncogenic_mutations:!this.state.show_oncogenic_mutations,show_actionable_mutations:!this.state.show_oncogenic_mutations});}}></input> oncogenic</span><span style={{float:"right"}}>{this.getDrivers().length}</span><br />
                                 <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" checked={this.state.show_actionable_mutations} onClick={() => {this.setState({show_actionable_mutations:!this.state.show_actionable_mutations});}}></input> actionable</span><span style={{float:"right"}}>{this.getDriversWithTreatmentInfo().length}</span><br />
-                                <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" onClick={() => {this.setState({show_vus_mutations:!this.state.show_vus_mutations});}}></input> VUS</span><span style={{float:"right"}}>{this.props.mutationData.length - this.getDrivers().length}</span><br />
+                                <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" checked={this.state.show_vus_mutations} onClick={() => {this.setState({show_vus_mutations:!this.state.show_vus_mutations});}}></input> VUS</span><span style={{float:"right"}}>{this.props.mutationData.length - this.getDrivers().length}</span><br />
 
                                 {/*<div className="extra-info-drivers extra-text">
                                     {this.getDrivers().length} oncogenic<br />
@@ -215,17 +233,17 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                                 <div className="extra-info-passengers extra-text"><br />TMB: 2.3</div>*/}
                             </div>
                         </div>
-                        <div className={classNames('sample-info-card', 'genomic-alterations-card', 'copy-number-changes', {'active': this.state.show_cna})} onClick={() => {this.setState({show_cna:!this.state.show_cna});}}>
+                        <div className={classNames('sample-info-card', 'genomic-alterations-card', 'copy-number-changes')}>
                             <div className='sample-info-card-title extra-text-header'>Copy Number Changes</div>
                             <div className='sample-info-card-number'><div>{this.props.cnaStatus === "available"? this.props.discreteCNAData.length : "-"}</div></div>
                             <div className='sample-info-card-extra-info extra-text'>
                                     {/*<span style={{lineHeight:2}}>{this.props.fractionGenomeAltered? `FGA ${toFixedWithThreshold(this.props.fractionGenomeAltered.value, 2)}` : '\u00A0'}</span><br />}*/}
-                                    <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" onClick={() => {this.setState({show_oncogenic_cna:!this.state.show_oncogenic_cna});}}></input> oncogenic</span><span style={{float:"right"}}>{this.getCNADrivers().length}</span><br />
-                                    <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" onClick={() => {this.setState({show_actionable_cna:!this.state.show_actionable_cna});}}></input> actionable</span><span style={{float:"right"}}>{this.getCNADriversWithTreatmentInfo().length}</span><br />
-                                    <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" onClick={() => {this.setState({show_vus_cna:!this.state.show_vus_cna});}}></input> VUS</span><span style={{float:"right"}}>{this.props.discreteCNAData.length - this.getCNADrivers().length}</span><br />
+                                    <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" checked={this.state.show_oncogenic_cna} onClick={() => {this.setState({show_oncogenic_cna:!this.state.show_oncogenic_cna,show_actionable_cna:!this.state.show_oncogenic_cna});}}></input> oncogenic</span><span style={{float:"right"}}>{this.getCNADrivers().length}</span><br />
+                                    <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" checked={this.state.show_actionable_cna} onClick={() => {this.setState({show_actionable_cna:!this.state.show_actionable_cna});}}></input> actionable</span><span style={{float:"right"}}>{this.getCNADriversWithTreatmentInfo().length}</span><br />
+                                    <span style={{float:"left"}}><input className={classNames("alteration-filter-checkbox", this.hasAnyCheckboxSelected()? "visible": "")} type="checkbox" checked={this.state.show_vus_cna} onClick={() => {this.setState({show_vus_cna:!this.state.show_vus_cna});}}></input> VUS</span><span style={{float:"right"}}>{this.props.discreteCNAData.length - this.getCNADrivers().length}</span><br />
                             </div>
                         </div>
-                        <div className={classNames('sample-info-card', 'genomic-alterations-card', 'rearrangements', {active: this.state.show_rearrangements})} onClick={() => {this.setState({show_rearrangements:!this.state.show_rearrangements});}}>
+                        <div className={classNames('sample-info-card', 'genomic-alterations-card', 'rearrangements')}>
                             <div className='sample-info-card-title extra-text-header'>Rearrangements</div>
                             <div className='sample-info-card-number'><div>-</div></div>
                             <div className='sample-info-card-extra-info extra-text'>
@@ -236,7 +254,7 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                             </div>
                         </div>
                     </div>
-                    <div style={{width:"100%",padding: this.hasAnyCheckboxSelected()? 20: 0,border:"dotted 1px #ddd",borderTop:"none"}}>
+                    <div style={{width:"100%",padding: this.hasAnyCheckboxSelected()? 20: 0,border:"dotted 1px #ddd",borderTop:"none",borderBottom:"none",paddingBottom: this.hasAnyCheckboxSelected()? 10: 0}}>
                         {this.hasAnyCheckboxSelected() && (
                             this.getGeneticAlterationTable()
                         )}
@@ -247,6 +265,11 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                             this.getCopyNumberTable()
                         )*/}
                     </div>
+                    {this.hasAnyCheckboxSelected() && (
+                        <div style={{padding:5,backgroundColor:"#F5F7F9",width:"100%",textAlign:"center",fontWeight:400,border:"solid 1px #ddd",fontSize:"medium",cursor:"pointer"}} onClick={() => this.showNone()}>Close&nbsp;<i className="fa fa-angle-up"></i></div>
+                    ) || (
+                        <div style={{padding:5,backgroundColor:"#F5F7F9",width:"100%",textAlign:"center",fontWeight:400,border:"solid 1px #ddd",fontSize:"medium",cursor:"pointer"}} onClick={() => this.showAll()}>Expand&nbsp;<i className="fa fa-angle-down"></i></div>
+                    )}
                 </div>
             </div>
         );
@@ -343,7 +366,8 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                     )}
                 />
                 <GeneticAlterationTable
-                    sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
+                    /*sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}*/
+                    sampleIds={[this.props.sample.id]}
                     sampleManager={sampleManager}
                     cnaOncoKbData={patientViewPageStore.cnaOncoKbData}
                     cnaCivicGenes={patientViewPageStore.cnaCivicGenes}
@@ -369,6 +393,7 @@ export default class SampleRecord extends React.Component<ISampleRecordProps, IS
                     enableHotspot={AppConfig.showHotspot}
                     enableMyCancerGenome={AppConfig.showMyCancerGenome}
                 />
+                {!this.hasAllCheckboxSelected() && (<div style={{textAlign:"center",paddingTop:5}}>Showing {this.getGeneticAlterationDataFiltered().length} of {this.getNumberOfAlterations()} alterations (<a onClick={() => this.showAll()}>Show all)</a></div>)}
             </div>
         );
     }

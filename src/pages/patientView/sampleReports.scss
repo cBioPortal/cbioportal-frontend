@@ -2,6 +2,25 @@
     display: flex;
     flex-direction: row;
 }
+.sample-report-patient-header {
+    width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+    padding-bottom: 25px;
+
+    .patientIcon {
+        margin-left: -5px;
+    }
+
+    i + div {
+        display: inline;
+    }
+
+    .sample-report-patient-header-title {
+        font-size: large;
+        padding-bottom: 13px;
+    }
+}
 .actionable-alterations-table > tbody > tr:nth-of-type(odd) {
     background-color: white !important;
 }
@@ -30,6 +49,7 @@
     width:1000px;
     margin-left: auto;
     margin-right: auto;
+    padding-bottom: 75px;
 
     .patientSample {
         font-size: large;

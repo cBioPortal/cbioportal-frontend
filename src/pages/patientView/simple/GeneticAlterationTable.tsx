@@ -331,12 +331,12 @@ export default class GeneticAlterationTable extends React.Component<IGeneticAlte
                         data={this.props.data}
                         initialSortColumn="Annotation"
                         initialSortDirection="desc"
-                        initialItemsPerPage={this.fitsOnTwoPages()? GeneticAlterationTable.INITIAL_ITEMS_PER_PAGE * 2: GeneticAlterationTable.INITIAL_ITEMS_PER_PAGE}
+                        initialItemsPerPage={0}
                         itemsLabel="Genetic Alteration"
                         itemsLabelPlural="Genetic Alterations"
-                        showCountHeader={!this.fitsOnTwoPages()}
+                        showCountHeader={false}
                         showColumnVisibility={false}
-                        showPagination={!this.fitsOnTwoPages()}
+                        showPagination={false}
                         showFilter={false}
                         showCopyDownload={false}
                     />
