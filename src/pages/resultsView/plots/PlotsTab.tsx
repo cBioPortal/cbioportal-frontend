@@ -36,6 +36,7 @@ import autobind from "autobind-decorator";
 import fileDownload from 'react-file-download';
 import onMobxPromise from "../../../shared/lib/onMobxPromise";
 import {logicalOr} from "../../../shared/lib/LogicUtils";
+import {SpecialAttribute} from "../../../shared/cache/OncoprintClinicalDataCache";
 
 enum EventKey {
     horz_logScale,
@@ -69,11 +70,6 @@ export type AxisMenuSelection = {
 export interface IPlotsTabProps {
     store:ResultsViewPageStore;
 };
-
-export enum SpecialClinicalAttribute {
-    TotalMutations = "TOTAL_MUTATIONS",
-    FractionGenomeAltered = "FRACTION_GENOME_ALTERED"
-}
 
 const searchInputTimeoutMs = 600;
 
@@ -398,8 +394,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         ],
         invoke:()=>{
             let _map: {[clinicalAttributeId: string]: ClinicalAttribute} = _.keyBy(this.props.store.clinicalAttributes.result, c=>c.clinicalAttributeId);
-            _map[SpecialClinicalAttribute.TotalMutations] = {
-                clinicalAttributeId: SpecialClinicalAttribute.TotalMutations,
+            _map[SpecialAttribute.MutationCount] = {
+                clinicalAttributeId: SpecialAttribute.MutationCount,
                 datatype: "NUMBER",
                 description: "Total mutations",
                 displayName: "Total mutations",
@@ -408,8 +404,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 studyId: this.props.store.studyIds.result![0],
                 count: 0
             };
-            _map[SpecialClinicalAttribute.FractionGenomeAltered] = {
-                clinicalAttributeId: SpecialClinicalAttribute.FractionGenomeAltered,
+            _map[SpecialAttribute.FractionGenomeAltered] = {
+                clinicalAttributeId: SpecialAttribute.FractionGenomeAltered,
                 datatype: "NUMBER",
                 description: "Fraction Genome Altered",
                 displayName: "Fraction Genome Altered",
@@ -423,15 +419,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     });
 
     readonly clinicalAttributeOptions = remoteData({
-        await:()=>[this.props.store.clinicalAttributes],
+        await:()=>[this.props.store.clinicalAttributes, this.props.store.clinicalAttributeIdToAvailableSampleCount],
         invoke:()=>{
             let _clinicalAttributes: {value: string, label: string}[] = [];
             _clinicalAttributes.push({
-                value: SpecialClinicalAttribute.TotalMutations,
+                value: SpecialAttribute.MutationCount,
                 label: "Total mutations"
             });
             _clinicalAttributes.push({
-                value: SpecialClinicalAttribute.FractionGenomeAltered,
+                value: SpecialAttribute.FractionGenomeAltered,
                 label: "Fraction Genome Altered"
             });
             this.props.store.clinicalAttributes.result!.map(attribute=>(
@@ -439,6 +435,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     value: attribute.clinicalAttributeId,
                     label: attribute.displayName
                 })));
+
+            const sampleCounts = this.props.store.clinicalAttributeIdToAvailableSampleCount.result!;
+            _clinicalAttributes = _clinicalAttributes.filter(option=>{
+                const count = sampleCounts[option.value];
+                if (!count) {
+                    return false;
+                } else {
+                    option.label = `${option.label} (${count} samples)`;
+                    return true;
+                }
+            });
 
             return Promise.resolve(_clinicalAttributes);
         }
@@ -486,7 +493,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         profilesOfType=>(
                             profilesOfType.map(p=>{
                                 // sampleCount definitely exists because these profiles are in nonMutationMolecularProfilesWithData
-                                const sampleCount = sampleCounts[p.molecularProfileId][gene];
+                                const sampleCount = sampleCounts[p.molecularProfileId][parseInt(gene, 10)];
                                 return {value:p.molecularProfileId, label:`${p.name} (${sampleCount} samples)`};
                             })
                         )
