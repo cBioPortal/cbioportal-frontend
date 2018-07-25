@@ -166,20 +166,27 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 this._entrezGeneId = e;
             },
             get dataType() {
-                // default is horizontal CNA vs vertical mRNA
                 if (this.entrezGeneId === undefined) {
+                    // if theres no selected gene (this only happens at beginning of initialization),
+                    //  return the stored value for this variable
                     return this._dataType;
                 }
+                // otherwise, pick the default based on sources that have data for the selected gene
                 const dataTypeOptions = self.geneToDataTypeOptions[this.entrezGeneId] || [];
                 if (this._dataType === undefined && dataTypeOptions.length) {
+                    // return computed default if _dataType is undefined and if there are options to select a default value from
                     if (vertical && !!dataTypeOptions.find(o=>(o.value === AlterationTypeConstants.MRNA_EXPRESSION))) {
+                        // default for the vertical axis is mrna, if one is available
                         return AlterationTypeConstants.MRNA_EXPRESSION;
                     } else if (!vertical && !!dataTypeOptions.find(o=>(o.value === AlterationTypeConstants.COPY_NUMBER_ALTERATION))) {
+                        // default for the horizontal axis is CNA, if one is available
                         return AlterationTypeConstants.COPY_NUMBER_ALTERATION;
                     } else {
+                        // otherwise, just return the first option
                         return dataTypeOptions[0].value;
                     }
                 } else {
+                    // otherwise, _dataType is defined, so return it
                     return this._dataType;
                 }
             },
@@ -191,15 +198,21 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             },
             get dataSourceId() {
                 if (this.entrezGeneId === undefined) {
+                    // if theres no selected gene (this only happens at beginning of initialization),
+                    //  return the stored value for this variable
                     return this._dataSourceId;
                 }
+                // otherwise, pick the default based on the current selected data type, and
+                //  the sources that have data for the selected gene
                 const dataSourceOptionsByType = self.geneToTypeToDataSourceOptions[this.entrezGeneId] || {};
                 if (this._dataSourceId === undefined &&
                     this.dataType &&
                     dataSourceOptionsByType[this.dataType] &&
                     dataSourceOptionsByType[this.dataType].length) {
+                    // return computed default if _dataSourceId is undefined
                     return dataSourceOptionsByType[this.dataType][0].value;
                 } else {
+                    // otherwise, _dataSourceId is defined, so return it
                     return this._dataSourceId;
                 }
             },
