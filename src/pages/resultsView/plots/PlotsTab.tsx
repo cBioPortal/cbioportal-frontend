@@ -15,7 +15,7 @@ import {
     makeBoxScatterPlotData, IScatterPlotSampleData, noMutationAppearance, IBoxScatterPlotPoint, boxPlotTooltip,
     getCnaQueries, getMutationQueries, getScatterPlotDownloadData, getBoxPlotDownloadData, getTablePlotDownloadData,
     mutationRenderPriority, mutationSummaryRenderPriority, MutationSummary, mutationSummaryToAppearance,
-    CNA_STROKE_WIDTH, scatterPlotSize, PLOT_SIDELENGTH, CLIN_ATTR_DATA_TYPE, maxWidthTooltip,
+    CNA_STROKE_WIDTH, scatterPlotSize, PLOT_SIDELENGTH, CLIN_ATTR_DATA_TYPE,
     sortScatterPlotDataForZIndex
 } from "./PlotsTabUtils";
 import {
@@ -732,6 +732,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @autobind
+    private scatterPlotStrokeOpacity(d:IScatterPlotSampleData) {
+        return this.scatterPlotAppearance(d).strokeOpacity;
+    }
+
+    @autobind
     private scatterPlotTooltip(d:IScatterPlotData) {
         return scatterPlotTooltip(d, this.props.store.entrezGeneIdToGene);
     }
@@ -1165,6 +1170,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 logY={this.vertSelection.logScale}
                                 fill={this.scatterPlotFill}
                                 stroke={this.scatterPlotStroke}
+                                strokeOpacity={this.scatterPlotStrokeOpacity}
                                 symbol="circle"
                                 fillOpacity={this.scatterPlotFillOpacity}
                                 strokeWidth={this.scatterPlotStrokeWidth}
@@ -1198,6 +1204,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 size={scatterPlotSize}
                                 fill={this.scatterPlotFill}
                                 stroke={this.scatterPlotStroke}
+                                strokeOpacity={this.scatterPlotStrokeOpacity}
                                 symbol="circle"
                                 fillOpacity={this.scatterPlotFillOpacity}
                                 strokeWidth={this.scatterPlotStrokeWidth}
