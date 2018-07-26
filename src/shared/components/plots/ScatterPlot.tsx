@@ -17,7 +17,7 @@ export interface IBaseScatterPlotData {
 }
 
 export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
-    svgRef?:(svg:SVGElement|null)=>void;
+    svgId?:string;
     title?:string;
     data: D[];
     chartWidth:number;
@@ -60,19 +60,10 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
     private mouseEvents:any = this.makeMouseEvents();
 
     @observable.ref private container:HTMLDivElement;
-    private svg:SVGElement|null;
 
     @bind
     private containerRef(container:HTMLDivElement) {
         this.container = container;
-    }
-
-    @bind
-    private svgRef(svg:SVGElement|null) {
-        this.svg = svg;
-        if (this.props.svgRef) {
-            this.props.svgRef(this.svg);
-        }
     }
 
     private makeMouseEvents() {
@@ -314,7 +305,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                     style={{width: this.svgWidth, height: this.svgHeight}}
                 >
                     <svg
-                        ref={this.svgRef}
+                        id={this.props.svgId || ""}
                         style={{
                             width: this.svgWidth,
                             height: this.svgHeight,
