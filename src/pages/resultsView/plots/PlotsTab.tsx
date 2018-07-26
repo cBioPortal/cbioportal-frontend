@@ -899,7 +899,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     </div>)}
                     {showBottomPart && (
                         <div>
-                            <label>Color samples by</label>
+                            <label>Color Samples By</label>
                             <div className="checkbox"><label>
                                 <input
                                     data-test="ViewMutationType"
@@ -909,7 +909,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     checked={this.viewMutationType}
                                     onClick={this.onInputClick}
                                     disabled={!this.mutationDataExists.isComplete || !this.mutationDataExists.result}
-                                /> Mutations
+                                /> Mutation Type
                             </label></div>
                             <div className="checkbox"><label>
                                 <input
