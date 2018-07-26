@@ -4382,6 +4382,8 @@ NetworkVis.prototype._createInteractionTypeVisibilityWindow = function(divId)
  */
 NetworkVis.prototype.popUpSBGNView = function(sourceNodeID, targetNodeID, edgeType)
 {
+    // DISABLE THIS FUNCTIONALITY
+    return;
 
   if (edgeType == 'DRUG_TARGET') {
     return;
