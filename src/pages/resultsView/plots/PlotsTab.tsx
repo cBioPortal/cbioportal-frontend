@@ -1111,8 +1111,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     }
 
-    @autobind
-    private plot() {
+    @computed get plot() {
         const promises = [this.plotType, this.horzAxisDataPromise, this.vertAxisDataPromise, this.horzLabel, this.vertLabel];
         if (logicalOr(promises.map(p=>p.isPending))) {
             return <LoadingIndicator isLoading={true}/>;
@@ -1260,7 +1259,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     </Observer>
                 </div>
                 <div style={{overflow:"auto"}}>
-                    {this.plot()}
+                    {this.plot}
                 </div>
             </div>
         );
