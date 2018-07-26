@@ -49,6 +49,7 @@ export const dataTypeDisplayOrder = [CLIN_ATTR_DATA_TYPE, "MRNA_EXPRESSION", "CO
 export const CNA_STROKE_WIDTH = 1.8;
 export const PLOT_SIDELENGTH = 650;
 
+
 export interface IAxisData {
     data:{
         uniqueSampleKey:string;
@@ -82,6 +83,8 @@ export enum MutationSummary {
 
 const NOT_PROFILED_MUTATION_LEGEND_LABEL = ["Not profiled","for mutations"];
 const NOT_PROFILED_CNA_LEGEND_LABEL = ["Not profiled", "for copy number", "alterations"];
+const MUTATION_TYPE_NOT_PROFILED = "not_profiled_mutation";
+const MUTATION_TYPE_NOT_MUTATED = "not_mutated";
 
 export interface IScatterPlotSampleData {
     uniqueSampleKey:string;
@@ -110,7 +113,7 @@ export function isNumberData(d:IAxisData): d is INumberAxisData {
     return d.datatype === "number";
 }
 
-export function sortScatterPlotDataForZIndex<D extends Pick<IScatterPlotSampleData, "dispMutationType" | "dispMutationSummary">>(
+export function sortScatterPlotDataForZIndex<D extends Pick<IScatterPlotSampleData, "dispMutationType" | "dispMutationSummary" | "profiledMutations">>(
     data: D[],
     viewType:ViewType,
     highlight: (d:D)=>boolean
@@ -122,6 +125,10 @@ export function sortScatterPlotDataForZIndex<D extends Pick<IScatterPlotSampleDa
             data = _.sortBy<D>(data, d=>{
                 if (d.dispMutationType! in mutationRenderPriority) {
                     return -mutationRenderPriority[d.dispMutationType!]
+                } else if (!d.dispMutationType) {
+                    return -mutationRenderPriority[MUTATION_TYPE_NOT_MUTATED];
+                } else if (!d.profiledMutations) {
+                    return -mutationRenderPriority[MUTATION_TYPE_NOT_PROFILED];
                 } else {
                     return Number.NEGATIVE_INFINITY;
                 }
@@ -131,6 +138,8 @@ export function sortScatterPlotDataForZIndex<D extends Pick<IScatterPlotSampleDa
             data = _.sortBy<D>(data, d=>{
                 if (d.dispMutationSummary! in mutationSummaryRenderPriority) {
                     return -mutationSummaryRenderPriority[d.dispMutationSummary!]        ;
+                } else if (!d.profiledMutations) {
+                    return -mutationSummaryRenderPriority[MUTATION_TYPE_NOT_PROFILED];
                 } else {
                     return Number.NEGATIVE_INFINITY;
                 }
@@ -722,7 +731,7 @@ export const mutationLegendOrder = [
 ];
 export const mutationRenderPriority = stringListToIndexSet([
     "fusion", "promoter.driver", "trunc.driver", "inframe.driver", "missense.driver",
-    "promoter", "trunc", "inframe", "missense"
+    "promoter", "trunc", "inframe", "missense", MUTATION_TYPE_NOT_MUTATED, MUTATION_TYPE_NOT_PROFILED
 ]);
 
 export const noMutationAppearance = {
@@ -754,7 +763,7 @@ export const mutationSummaryToAppearance = {
     }
 };
 export const mutationSummaryLegendOrder = [MutationSummary.Both, MutationSummary.One, MutationSummary.Neither];
-export const mutationSummaryRenderPriority = stringListToIndexSet(mutationSummaryLegendOrder);
+export const mutationSummaryRenderPriority = stringListToIndexSet((mutationSummaryLegendOrder as any[]).concat(MUTATION_TYPE_NOT_PROFILED));
 
 const cnaToAppearance = {
     "-2":{
