@@ -176,12 +176,12 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                         {
                             target: "data",
                             mutation: (props:any) => {
-                                if (props.datum.x in self.props.countsByGroup) {
+                                if (props.datum.xKey in self.props.countsByGroup) {
                                     self.tooltipModel = {
                                         x:props.x + 20 - this.scrollPane.scrollLeft,
                                         y:props.y - 18,
                                         groupName:props.datum.x,
-                                        alterationData:self.props.countsByGroup[props.datum.x]
+                                        alterationData:self.props.countsByGroup[props.datum.xKey]
                                     };
                                 } else {
                                     self.hideTooltip();
@@ -207,9 +207,9 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
     buildTooltip(tooltipModel: ITooltipModel){
 
         return (
-            <div className="popover right"
+            <div className="popover cbioTooltip right"
                  onMouseLeave={()=>this.hideTooltip()}
-                 style={{display:'block', position:'absolute', top:tooltipModel.y, width:500, left:tooltipModel!.x}}
+                 style={{top:tooltipModel.y, left:tooltipModel!.x}}
             >
                 <div className="arrow" style={{top:30}}></div>
                 <div className="popover-content">
