@@ -419,7 +419,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     });
 
     readonly clinicalAttributeOptions = remoteData({
-        await:()=>[this.props.store.clinicalAttributes, this.props.store.clinicalAttributeIdToAvailableSampleCount],
+        await:()=>[this.props.store.clinicalAttributes],
         invoke:()=>{
             let _clinicalAttributes: {value: string, label: string}[] = [];
             _clinicalAttributes.push({
@@ -436,16 +436,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     label: attribute.displayName
                 })));
 
-            const sampleCounts = this.props.store.clinicalAttributeIdToAvailableSampleCount.result!;
-            _clinicalAttributes = _clinicalAttributes.filter(option=>{
-                const count = sampleCounts[option.value];
-                if (!count) {
-                    return false;
-                } else {
-                    option.label = `${option.label} (${count} samples)`;
-                    return true;
-                }
-            });
+            // to load more quickly, only filter and annotate with data availability once its ready
+            // TODO: temporarily disabled because cant figure out a way right now to make this work nicely
+            /*if (this.props.store.clinicalAttributeIdToAvailableSampleCount.isComplete) {
+                const sampleCounts = this.props.store.clinicalAttributeIdToAvailableSampleCount.result!;
+                _clinicalAttributes = _clinicalAttributes.filter(option=>{
+                    const count = sampleCounts[option.value];
+                    if (!count) {
+                        return false;
+                    } else {
+                        option.label = `${option.label} (${count} samples)`;
+                        return true;
+                    }
+                });
+            }*/
 
             return Promise.resolve(_clinicalAttributes);
         }
