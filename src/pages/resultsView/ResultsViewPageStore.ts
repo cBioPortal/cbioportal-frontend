@@ -79,14 +79,13 @@ import {BookmarkLinks} from "../../shared/model/BookmarkLinks";
 import {getBitlyServiceUrl, getSessionServiceUrl} from "../../shared/api/urls";
 import url from 'url';
 import OncoprintClinicalDataCache, {SpecialAttribute} from "../../shared/cache/OncoprintClinicalDataCache";
+import {getDefaultMolecularProfiles} from "../../shared/lib/getDefaultMolecularProfiles";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
     | {isApplicable: false, value?: undefined}
 );
 
-export type SamplesSpecificationElement = {studyId: string, sampleId: string, sampleListId: undefined} |
-    {studyId: string, sampleId: undefined, sampleListId: string};
 
 export const AlterationTypeConstants = {
     MUTATION_EXTENDED: 'MUTATION_EXTENDED',
@@ -97,6 +96,9 @@ export const AlterationTypeConstants = {
     GENESET_SCORE: 'GENESET_SCORE',
     METHYLATION: 'METHYLATION'
 }
+
+export type SamplesSpecificationElement = {studyId: string, sampleId: string, sampleListId: undefined} |
+    {studyId: string, sampleId: undefined, sampleListId: string};
 
 export interface ExtendedAlteration extends Mutation, NumericGeneMolecularData {
     molecularProfileAlterationType: MolecularProfile["molecularAlterationType"];
@@ -296,6 +298,9 @@ export class ResultsViewPageStore {
 
     @observable public urlValidationError: string | null = null;
 
+    // maps to the old data_priority parameter
+    @observable public profileFilter: number;
+
     @observable ajaxErrors: Error[] = [];
 
     @observable hugoGeneSymbols: string[];
@@ -345,11 +350,23 @@ export class ResultsViewPageStore {
 
     readonly selectedMolecularProfiles = remoteData<MolecularProfile[]>({
         await: ()=>[
-          this.molecularProfilesInStudies
+            this.studyToMolecularProfiles,
+            this.studies
         ],
         invoke: () => {
-            const idLookupMap = _.keyBy(this.selectedMolecularProfileIds,(id:string)=>id); // optimization
-            return Promise.resolve(this.molecularProfilesInStudies.result!.filter((profile:MolecularProfile)=>(profile.molecularProfileId in idLookupMap)));
+
+            if (this.studies.result.length > 1) {
+                return Promise.resolve(getDefaultMolecularProfiles(this.studyToMolecularProfiles.result!, this.profileFilter));
+            } else {
+                // if we have only one study, then consult the selectedMolecularProfileIds because
+                // user can directly select set
+                const idLookupMap = _.keyBy(this.selectedMolecularProfileIds,(id:string)=>id); // optimization
+                return Promise.resolve(this.molecularProfilesInStudies.result!.filter(
+                    (profile:MolecularProfile)=>(profile.molecularProfileId in idLookupMap))
+                );
+            }
+
+
         }
     });
 
@@ -687,18 +704,25 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly studyToMolecularProfiles = remoteData({
+        await:()=>[this.molecularProfilesInStudies],
+        invoke:()=>{
+            return Promise.resolve(_.groupBy(this.molecularProfilesInStudies.result!, profile=>profile.studyId));
+        }
+    });
+
     readonly coverageInformation = remoteData<CoverageInformation>({
         await:()=>[
-            this.molecularProfilesInStudies,
+            this.studyToMolecularProfiles,
             this.genes,
             this.samples,
             this.patients
         ],
         invoke:async()=>{
-            const studyToMolecularProfiles = _.groupBy(this.molecularProfilesInStudies.result!, profile=>profile.studyId);
+            //const studyToMolecularProfiles = _.groupBy(this.studyToMolecularProfiles.result!, profile=>profile.studyId);
             const sampleMolecularIdentifiers:SampleMolecularIdentifier[] = [];
             this.samples.result!.forEach(sample=>{
-                const profiles = studyToMolecularProfiles[sample.studyId];
+                const profiles = this.studyToMolecularProfiles.result![sample.studyId];
                 if (profiles) {
                     const sampleId = sample.sampleId;
                     for (const profile of profiles) {
@@ -1504,13 +1528,16 @@ export class ResultsViewPageStore {
     readonly heatmapMolecularProfiles = remoteData<MolecularProfile[]>({
         await: () => [
             this.molecularProfilesInStudies,
+            this.selectedMolecularProfiles,
             this.genesetMolecularProfile
         ],
         invoke: () => {
             const MRNA_EXPRESSION = AlterationTypeConstants.MRNA_EXPRESSION;
             const PROTEIN_LEVEL = AlterationTypeConstants.PROTEIN_LEVEL;
             const METHYLATION = AlterationTypeConstants.METHYLATION;
-            const selectedMolecularProfileIds = stringListToSet(this.selectedMolecularProfileIds);
+            const selectedMolecularProfileIds = stringListToSet(
+                this.selectedMolecularProfiles.result!.map((profile)=>profile.molecularProfileId)
+            );
 
             const expressionHeatmaps = _.sortBy(
                 _.filter(this.molecularProfilesInStudies.result!, profile=>{

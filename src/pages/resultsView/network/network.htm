@@ -15,11 +15,13 @@
     var host = "./files";
     var apiHost;
     // if this fails, we are NOT in production, so allow anything
-    try {
-        apiHost = window.parent.location.hostname;
-    } catch (exc){
-        apiHost = "//" + queryParams.apiHost;
-    }
+    // try {
+    //     apiHost = window.parent.location.hostname;
+    // } catch (exc){
+    //     apiHost = "//" + queryParams.apiHost;
+    // }
+
+    apiHost = "//" + queryParams.apiHost;
 
     function writeScriptTag(path) {
         document.write('<script src="' + host + "/" + path + '"></' + 'script>');
