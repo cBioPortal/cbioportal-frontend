@@ -1177,10 +1177,12 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
 
+        browser.pause(1000000);
+
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "All (21206)",
-            "All (21206)",
+            "All (21333)",
+            "All (21333)",
         );
 
         // Deselect all tcga -provisional studies
