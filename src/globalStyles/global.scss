@@ -491,8 +491,12 @@ h3.hr {
       white-space: nowrap;
     }
 
-    .popover-content {
-      font-size:11px;
+    p {
+      margin-bottom:0 !important;
+    }
+
+    .popover-content, p, td {
+      font-size:11px !important;
     }
   }
 
