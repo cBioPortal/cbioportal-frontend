@@ -24,7 +24,7 @@ export interface IBoxScatterPlotData<D extends IBaseBoxScatterPlotPoint> {
 }
 
 export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
-    svgRef?:(svg:SVGElement|null)=>void;
+    svgId?:string;
     fontFamily?:string;
     title?:string;
     data: IBoxScatterPlotData<D>[];
@@ -83,19 +83,10 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     private mouseEvents:any = this.makeMouseEvents();
 
     @observable.ref private container:HTMLDivElement;
-    private svg:SVGElement|null;
 
     @bind
     private containerRef(container:HTMLDivElement) {
         this.container = container;
-    }
-
-    @bind
-    private svgRef(svg:SVGElement|null) {
-        this.svg = svg;
-        if (this.props.svgRef) {
-            this.props.svgRef(this.svg);
-        }
     }
 
     private makeMouseEvents() {
@@ -426,7 +417,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                     style={{width: this.svgWidth, height: this.svgHeight}}
                 >
                     <svg
-                        ref={this.svgRef}
+                        id={this.props.svgId || ""}
                         style={{
                             width: this.svgWidth,
                             height: this.svgHeight,
