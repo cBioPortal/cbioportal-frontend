@@ -206,6 +206,7 @@ function scatterPlotMutationSummaryLegendData(
             name: appearance.legendLabel,
             symbol: {
                 stroke: appearance.stroke,
+                strokeOpacity: appearance.strokeOpacity,
                 fill: appearance.fill,
                 type: "circle"
             }
@@ -216,6 +217,7 @@ function scatterPlotMutationSummaryLegendData(
             name: NOT_PROFILED_MUTATION_LEGEND_LABEL,
             symbol: {
                 stroke: notProfiledAppearance.stroke,
+                strokeOpacity: notProfiledAppearance.strokeOpacity,
                 fill: notProfiledAppearance.fill,
                 type: "circle"
             }
@@ -261,7 +263,7 @@ function scatterPlotMutationLegendData(
                 name: appearance.legendLabel,
                 symbol: {
                     stroke: appearance.stroke,
-                    strokeOpacity: +showStroke,
+                    strokeOpacity: (showStroke ? appearance.strokeOpacity : 0),
                     fill: appearance.fill,
                     type: appearance.symbol
                 }
@@ -273,7 +275,7 @@ function scatterPlotMutationLegendData(
             name: noMutationAppearance.legendLabel,
             symbol: {
                 stroke: noMutationAppearance.stroke,
-                strokeOpacity: +showStroke,
+                strokeOpacity: (showStroke ? noMutationAppearance.strokeOpacity : 0),
                 fill: noMutationAppearance.fill,
                 type: noMutationAppearance.symbol
             }
@@ -284,7 +286,7 @@ function scatterPlotMutationLegendData(
             name: NOT_PROFILED_MUTATION_LEGEND_LABEL,
             symbol: {
                 stroke: notProfiledAppearance.stroke,
-                strokeOpacity: +showStroke,
+                strokeOpacity: (showStroke ? notProfiledAppearance.strokeOpacity : 0),
                 fill: notProfiledAppearance.fill,
                 type: "circle"
             }
@@ -601,88 +603,103 @@ export function getAxisDescription(
     return ret;
 }
 
-export const oncoprintMutationTypeToAppearanceDrivers:{[mutType:string]:{symbol:string, fill:string, stroke:string, legendLabel:string}}
+const NON_CNA_STROKE_OPACITY = 0.5;
+
+export const oncoprintMutationTypeToAppearanceDrivers:{[mutType:string]:{symbol:string, fill:string, stroke:string, strokeOpacity:number, legendLabel:string}}
 = {
     "inframe": {
         symbol : "circle",
         fill : MUT_COLOR_INFRAME_PASSENGER,
         stroke : "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel : "Inframe (VUS)"
     },
     "inframe.driver": {
         symbol : "circle",
         fill: MUT_COLOR_INFRAME,
         stroke : "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel : "Inframe (Driver)"
     },
     "missense":{
         symbol : "circle",
         fill : MUT_COLOR_MISSENSE_PASSENGER,
         stroke : "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel : "Missense (VUS)"
     },
     "missense.driver":{
         symbol : "circle",
         fill : MUT_COLOR_MISSENSE,
         stroke : "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel : "Missense (Driver)"
     },
     "fusion":{
         symbol: "circle",
         fill: MUT_COLOR_FUSION,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Fusion"
     },
     "trunc":{
         symbol: "circle",
         fill: MUT_COLOR_TRUNC_PASSENGER,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Truncating (VUS)"
     },
     "trunc.driver":{
         symbol: "circle",
         fill: MUT_COLOR_TRUNC,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Truncating (Driver)"
     },
     "promoter":{
         symbol: "circle",
         fill: MUT_COLOR_PROMOTER,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Promoter"
     }
 };
 
-export const oncoprintMutationTypeToAppearanceDefault:{[mutType:string]:{symbol:string, fill:string, stroke:string, legendLabel:string}}
+export const oncoprintMutationTypeToAppearanceDefault:{[mutType:string]:{symbol:string, fill:string, stroke:string, strokeOpacity:number, legendLabel:string}}
     = {
     "inframe": {
         symbol : "circle",
         fill: MUT_COLOR_INFRAME,
         stroke : "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel : "Inframe"
     },
     "missense":{
         symbol : "circle",
         fill : MUT_COLOR_MISSENSE,
         stroke : "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel : "Missense"
     },
     "fusion":{
         symbol: "circle",
         fill: MUT_COLOR_FUSION,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Fusion"
     },
     "trunc":{
         symbol: "circle",
         fill: MUT_COLOR_TRUNC,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Truncating"
     },
     "promoter":{
         symbol: "circle",
         fill: MUT_COLOR_PROMOTER,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Promoter"
     }
 };
@@ -691,6 +708,7 @@ export const notProfiledAppearance = {
     symbol: "circle",
     fill: "#ffffff",
     stroke: "d3d3d3", // TODO: right grey?
+    strokeOpacity:0,
 };
 
 export const mutationLegendOrder = [
@@ -709,6 +727,7 @@ export const noMutationAppearance = {
     symbol : "circle",
     fill : "#e3e3e3",
     stroke : "#000000",
+    strokeOpacity:0,
     legendLabel : "Not mutated"
 };
 
@@ -716,16 +735,19 @@ export const mutationSummaryToAppearance = {
     "Neither":{
         fill: "#00AAF8",
         stroke: "#0089C6",
+        strokeOpacity:1,
         legendLabel: "Neither mutated"
     },
     "One":{
         fill : "#DBA901",
         stroke : "#886A08",
+        strokeOpacity:1,
         legendLabel : "One Gene mutated"
     },
     "Both":{
         fill : "#FF0000",
         stroke : "#B40404",
+        strokeOpacity:1,
         legendLabel: "Both mutated"
     }
 };
@@ -736,33 +758,39 @@ const cnaToAppearance = {
     "-2":{
         legendLabel: "Deep Deletion",
         stroke:CNA_COLOR_HOMDEL,
+        strokeOpacity:1,
     },
     "-1":{
         legendLabel: "Shallow Deletion",
         stroke:"#2aced4",
+        strokeOpacity:1,
     },
     "0":{
         legendLabel: "Diploid",
         stroke:DEFAULT_GREY,
+        strokeOpacity:1,
     },
     "1":{
         legendLabel: "Gain",
         stroke: "#ff8c9f",
+        strokeOpacity:1,
     },
     "2":{
         legendLabel: "Amplification",
         stroke: CNA_COLOR_AMP,
+        strokeOpacity:1,
     }
 };
 
 const noCnaAppearance = {
     stroke: "#333333",
+    strokeOpacity:1,
     legendLabel: "No CNA data",
 };
 
 const cnaCategoryOrder = ["-2", "-1", "0", "1", "2"].map(x=>(cnaToAppearance as any)[x].legendLabel);
 
-function getMutationTypeAppearance(d:IScatterPlotSampleData, oncoprintMutationTypeToAppearance:{[mutType:string]:{symbol:string, fill:string, stroke:string, legendLabel:string}}) {
+function getMutationTypeAppearance(d:IScatterPlotSampleData, oncoprintMutationTypeToAppearance:{[mutType:string]:{symbol:string, fill:string, stroke:string, strokeOpacity:number, legendLabel:string}}) {
     if (!d.profiledMutations) {
         return notProfiledAppearance;
     } else if (!d.dispMutationType) {
@@ -786,7 +814,7 @@ export function makeScatterPlotPointAppearance(
     mutationDataExists: MobxPromise<boolean>,
     cnaDataExists: MobxPromise<boolean>,
     driversAnnotated: boolean
-):(d:IScatterPlotSampleData)=>{ stroke:string, fill?:string, symbol?:string} {
+):(d:IScatterPlotSampleData)=>{ stroke:string, strokeOpacity:number, fill?:string, symbol?:string} {
     const oncoprintMutationTypeToAppearance = driversAnnotated ? oncoprintMutationTypeToAppearanceDrivers: oncoprintMutationTypeToAppearanceDefault;
     switch (viewType) {
         case ViewType.MutationTypeAndCopyNumber:
@@ -883,19 +911,6 @@ function generalScatterPlotTooltip<D extends IScatterPlotSampleData>(
             <div>Vertical: <span style={{fontWeight:"bold"}}>{d[verticalKey] as any}</span></div>
             {mutationsSection}
         </div>
-    );
-}
-
-export function maxWidthTooltip(text:string, maxWidth:number) {
-    const fontFamily = "Arial, Helvetica";
-    const fontSize = "12px";
-    const lines = wrapText(text, maxWidth, fontFamily, fontSize);
-    const elements = _.flatten(lines.map(line=>([<span key={line}>{line}</span>, <br/>])));
-    elements.pop(); // remove last <br>
-    return (
-        <span>
-            {elements}
-        </span>
     );
 }
 
