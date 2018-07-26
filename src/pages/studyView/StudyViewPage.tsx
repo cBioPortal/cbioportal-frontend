@@ -11,7 +11,7 @@ import { StudyViewPageStore, SurvivalType, ChartMeta } from 'pages/studyView/Stu
 import { reaction } from 'mobx';
 import { If } from 'react-if';
 import SummaryHeader from 'pages/studyView/SummaryHeader';
-import {Sample, SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
+import { SampleIdentifier, Gene } from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import StudyViewScatterPlot from "./charts/scatterPlot/StudyViewScatterPlot";
 import {isSelected, mutationCountVsCnaTooltip} from "./StudyViewUtils";

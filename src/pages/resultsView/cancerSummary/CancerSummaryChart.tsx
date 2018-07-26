@@ -6,6 +6,8 @@ import {observable} from "mobx";
 import {observer} from "mobx-react";
 import {CSSProperties} from "react";
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
+import autobind from "autobind-decorator";
+import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 
 interface CancerSummaryChartProps {
     colors: Record<keyof IAlterationCountMap, string>;
@@ -65,6 +67,11 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
     constructor(){
         super();
         this.tickFormat = this.tickFormat.bind(this);
+    }
+
+    @autobind
+    private getSvg() {
+        return (this.svgContainer as any).firstChild;
     }
 
     private get width(){
@@ -304,6 +311,14 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                         }
                     </VictoryChart>
                     </div>
+                    <DownloadControls
+                        getSvg={this.getSvg}
+                        buttons={["SVG", "PNG"]}
+                        filename="cancer_types_summary"
+                        dontFade={true}
+                        collapse={true}
+                        style={{position:"absolute", top:10, right:10}}
+                    />
                 </div>
             </div>
         );

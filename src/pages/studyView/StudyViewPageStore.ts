@@ -21,7 +21,7 @@ import {
     MolecularProfile,
     MolecularProfileFilter,
     ClinicalDataMultiStudyFilter,
-    MutationCount
+    MutationCount,
     Gene
 } from 'shared/api/generated/CBioPortalAPI';
 import { PatientSurvival } from 'shared/model/PatientSurvival';
