@@ -12,6 +12,7 @@ import SampleManager from './sampleManager';
 import SelectCallback = ReactBootstrap.SelectCallback;
 import {ThreeBounce} from 'better-react-spinkit';
 import PatientHeader from './patientHeader/PatientHeader';
+import MutationalSignatureConfidence from './patientHeader/MutationalSignatureConfidence';
 import {PaginationControls} from "../../shared/components/paginationControls/PaginationControls";
 import {IColumnVisibilityDef} from "shared/components/columnVisibilityControls/ColumnVisibilityControls";
 import {toggleColumnVisibility} from "shared/components/lazyMobXTable/ColumnVisibilityResolver";
@@ -226,6 +227,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     sampleManager.clinicalDataLegacyCleanAndDerived[sample.id] &&
                     sampleManager.clinicalDataLegacyCleanAndDerived[sample.id].DERIVED_NORMALIZED_CASE_TYPE === 'Xenograft'
                 );
+
                 return (
                     <div className="patientSample">
                         <span className='clinical-spans'>
@@ -249,6 +251,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 )
                             }
                         </span>
+
+                        <MutationalSignatureConfidence data={patientViewPageStore.mutationalSignatureData()}/>
+
                     </div>
                 );
             });
