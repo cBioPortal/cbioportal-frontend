@@ -96,22 +96,50 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @observable plotExists = false;
 
     @computed get viewType():ViewType {
+        let ret:ViewType = ViewType.None;
+        switch (this.maximumPossibleViewType) {
+            case ViewType.MutationTypeAndCopyNumber:
+                if (this.viewMutationType && this.viewCopyNumber) {
+                    ret = ViewType.MutationTypeAndCopyNumber;
+                } else if (this.viewMutationType) {
+                    ret = ViewType.MutationType;
+                } else if (this.viewCopyNumber) {
+                    ret = ViewType.CopyNumber;
+                } else {
+                    ret = ViewType.None;
+                }
+                break;
+            case ViewType.MutationSummary:
+                if (this.viewMutationType) {
+                    ret = ViewType.MutationSummary;
+                } else {
+                    ret = ViewType.None;
+                }
+                break;
+            case ViewType.MutationType:
+                if (this.viewMutationType) {
+                    ret = ViewType.MutationType;
+                } else {
+                    ret = ViewType.None;
+                }
+                break;
+        }
+        return ret;
+    }
+
+    @computed get maximumPossibleViewType():ViewType {
+        if (this.plotType.result === PlotType.Table) {
+            // cant show either in table
+            return ViewType.None;
+        }
         if (this.sameGeneInBothAxes) {
             // both axes molecular profile, same gene
-            if (this.viewMutationType && this.viewCopyNumber) {
-                return ViewType.MutationTypeAndCopyNumber;
-            } else if (this.viewMutationType) {
-                return ViewType.MutationType;
-            } else if (this.viewCopyNumber) {
-                return ViewType.CopyNumber;
-            } else {
-                return ViewType.None;
-            }
+            return ViewType.MutationTypeAndCopyNumber;
         } else if (this.bothAxesMolecularProfile) {
             // both axes molecular profile, different gene
             return ViewType.MutationSummary;
         } else if (this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE ||
-                    this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
+            this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
             // one axis molecular profile
             return ViewType.MutationType;
         } else {
@@ -872,7 +900,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @autobind
     private getUtilitiesMenu() {
         const showTopPart = this.plotType.isComplete && this.plotType.result !== PlotType.Table;
-        const showBottomPart = this.sameGeneInBothAxes;
+        const showBottomPart = this.maximumPossibleViewType !== ViewType.None;
         if (!showTopPart && !showBottomPart) {
             return <span></span>;
         }
@@ -906,28 +934,32 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     {showBottomPart && (
                         <div>
                             <label>Color Samples By</label>
-                            <div className="checkbox"><label>
-                                <input
-                                    data-test="ViewMutationType"
-                                    type="checkbox"
-                                    name="utilities_viewMutationType"
-                                    value={EventKey.utilities_viewMutationType}
-                                    checked={this.viewMutationType}
-                                    onClick={this.onInputClick}
-                                    disabled={!this.mutationDataExists.isComplete || !this.mutationDataExists.result}
-                                /> Mutation Type
-                            </label></div>
-                            <div className="checkbox"><label>
-                                <input
-                                    data-test="ViewCopyNumber"
-                                    type="checkbox"
-                                    name="utilities_viewCopyNumber"
-                                    value={EventKey.utilities_viewCopyNumber}
-                                    checked={this.viewCopyNumber}
-                                    onClick={this.onInputClick}
-                                    disabled={!this.cnaDataExists.isComplete || !this.cnaDataExists.result}
-                                /> Copy Number Alteration
-                            </label></div>
+                            {(this.maximumPossibleViewType !== ViewType.None && this.mutationDataExists.result) && (
+                                <div className="checkbox"><label>
+                                    <input
+                                        data-test="ViewMutationType"
+                                        type="checkbox"
+                                        name="utilities_viewMutationType"
+                                        value={EventKey.utilities_viewMutationType}
+                                        checked={this.viewMutationType}
+                                        onClick={this.onInputClick}
+                                        disabled={!this.mutationDataExists.isComplete || !this.mutationDataExists.result}
+                                    /> Mutation Type
+                                </label></div>
+                            )}
+                            {(this.maximumPossibleViewType === ViewType.MutationTypeAndCopyNumber && this.cnaDataExists.result) && (
+                                <div className="checkbox"><label>
+                                    <input
+                                        data-test="ViewCopyNumber"
+                                        type="checkbox"
+                                        name="utilities_viewCopyNumber"
+                                        value={EventKey.utilities_viewCopyNumber}
+                                        checked={this.viewCopyNumber}
+                                        onClick={this.onInputClick}
+                                        disabled={!this.cnaDataExists.isComplete || !this.cnaDataExists.result}
+                                    /> Copy Number Alteration
+                                </label></div>
+                            )}
                         </div>
                     )}
                 </div>
