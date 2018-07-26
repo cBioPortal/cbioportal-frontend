@@ -1240,7 +1240,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         { this.plotExists && // only show info if theres an actual plot
                         (plotType === PlotType.ScatterPlot || plotType === PlotType.BoxPlot) &&
                         (this.viewType === ViewType.MutationType || this.viewType === ViewType.MutationTypeAndCopyNumber) && (
-                            <div style={{position:"relative", top:legendY + 4.5}}>
+                            <div style={{position:"relative", top:legendY + 3.5}}>
                                 <InfoIcon
                                     tooltip={<span>Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</span>}
                                     tooltipPlacement="right"
