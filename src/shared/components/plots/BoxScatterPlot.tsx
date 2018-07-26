@@ -34,6 +34,7 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     fill?:string | ((d:D)=>string);
     stroke?:string | ((d:D)=>string);
     fillOpacity?:number | ((d:D)=>number);
+    strokeOpacity?:number | ((d:D)=>number);
     strokeWidth?:number | ((d:D)=>number);
     symbol?: string | ((d:D)=>string); // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
     tooltip?:(d:D)=>JSX.Element;
@@ -455,6 +456,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                                             fill: ifndef(this.props.fill, "0x000000"),
                                             stroke: ifndef(this.props.stroke, "0x000000"),
                                             strokeWidth: ifndef(this.props.strokeWidth, 0),
+                                            strokeOpacity: ifndef(this.props.strokeOpacity, 1),
                                             fillOpacity: ifndef(this.props.fillOpacity, 1)
                                         }
                                     }}
