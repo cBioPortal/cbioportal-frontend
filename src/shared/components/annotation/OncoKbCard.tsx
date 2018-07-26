@@ -5,11 +5,12 @@ import {Else, If, Then} from 'react-if';
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import {mergeAlterations} from 'shared/lib/OncoKbUtils';
 import {ICache} from "shared/lib/SimpleCache";
-import {computed, observable, action} from "mobx";
+import {action, computed, observable} from "mobx";
 import {observer} from "mobx-react";
 // TODO these need to be defined as modules, and class names used in this component need to be updated
 import "./styles/oncoKbCard.scss";
 import "./styles/oncoKbCard.custom.scss";
+import {ArticleAbstract, Citations} from "../../api/generated/OncoKbAPI";
 
 type OncoKbCardPropsBase = {
     title: string;
@@ -18,7 +19,7 @@ type OncoKbCardPropsBase = {
     oncogenicity: string;
     oncogenicityPmids: number[];
     mutationEffect: string;
-    mutationEffectPmids: number[];
+    mutationEffectCitations: Citations;
     geneSummary: string;
     variantSummary: string;
     tumorTypeSummary: string;
@@ -92,7 +93,7 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
                         cancerType: string,
                         pmidData: ICache<any>,
                         pmids:number[],
-                        abstracts:any[])
+                        abstracts:ArticleAbstract[])
     {
         const levelTooltipContent = () => (
             <div style={{maxWidth: "200px"}}>
@@ -241,7 +242,7 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
         return rows;
     }
 
-    public generateTreatmentRows(treatments:any[], levelDes:{[level:string]: JSX.Element}, pmidData:ICache<any>):JSX.Element[]
+    public generateTreatmentRows(treatments:any[], levelDes:{[level:string]: JSX.Element},  pmidData:ICache<any>):JSX.Element[]
     {
         const rows:JSX.Element[] = [];
 
@@ -352,16 +353,15 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
                                                     </div>
                                                 </Then>
                                                 <Else>
-                                                    <If condition={this.props.mutationEffectPmids.length > 0}>
+                                                    <If condition={this.props.mutationEffectCitations && (this.props.mutationEffectCitations.abstracts.length > 0 || this.props.mutationEffectCitations.pmids.length > 0)}>
                                                         <Then>
                                                             <div className="refs">
                                                                 <ul className="list-group" style={{marginBottom: 0}}>
-                                                                    {
-                                                                        this.pmidList(
-                                                                            this.props.mutationEffectPmids,
-                                                                            this.props.pmidData
-                                                                        )
-                                                                    }
+                                                                    {this.abstractList(this.props.mutationEffectCitations.abstracts)}
+                                                                    {this.pmidList(
+                                                                        this.props.mutationEffectCitations.pmids.map((pmid)=>Number(pmid)),
+                                                                        this.props.pmidData
+                                                                    )}
                                                                 </ul>
                                                             </div>
                                                         </Then>
