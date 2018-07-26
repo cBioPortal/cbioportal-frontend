@@ -52,7 +52,7 @@ class FunctionalImpactColumnTooltip extends React.Component<FunctionalImpactColu
                                 {/*
                                 <span
                                     style={{display:'inline-block',width:22}}
-                                    title='Mutation Asessor'
+                                    title='Mutation Assessor'
                                     onMouseOver={() => this.setState({active:'mutationAssessor'})}
                                 >
                                     <img

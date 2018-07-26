@@ -739,6 +739,57 @@
     }
   },
   "definitions": {
+    "Alleles": {
+      "type": "object",
+      "properties": {
+        "allele": {
+          "type": "string",
+          "description": "allele"
+        }
+      }
+    },
+    "ClinVar": {
+      "type": "object",
+      "properties": {
+        "_license": {
+          "type": "string",
+          "description": "license"
+        },
+        "alleleId": {
+          "type": "integer",
+          "format": "int32",
+          "description": "allele_id"
+        },
+        "alt": {
+          "type": "string",
+          "description": "alt"
+        },
+        "chrom": {
+          "type": "string",
+          "description": "chrom"
+        },
+        "cytogenic": {
+          "type": "string",
+          "description": "cytogenic"
+        },
+        "gene": {
+          "description": "gene",
+          "$ref": "#/definitions/Gene"
+        },
+        "hg19": {
+          "description": "hg19",
+          "$ref": "#/definitions/Hg19"
+        },
+        "hg38": {
+          "description": "hg38",
+          "$ref": "#/definitions/Hg38"
+        },
+        "hgvs": {
+          "description": "hgvs",
+          "$ref": "#/definitions/Hgvs"
+        }
+      }
+    },
     "ColocatedVariant": {
       "type": "object",
       "required": [
@@ -750,6 +801,9 @@
         "gnomad_nfe_maf"
       ],
       "properties": {
+        "dbSnpId": {
+          "type": "string"
+        },
         "gnomad_nfe_allele": {
           "type": "string",
           "description": "GnomAD Non-Finnish European Allele"
@@ -773,6 +827,119 @@
         "gnomad_eas_maf": {
           "type": "string",
           "description": "GnomAD East Asian MAF"
+        }
+      }
+    },
+    "Cosmic": {
+      "type": "object",
+      "properties": {
+        "_license": {
+          "type": "string",
+          "description": "_license"
+        },
+        "alt": {
+          "type": "string",
+          "description": "alt"
+        },
+        "chrom": {
+          "type": "string",
+          "description": "chrom"
+        },
+        "cosmicId": {
+          "type": "string",
+          "description": "cosmic_id"
+        },
+        "hg19": {
+          "description": "hg19",
+          "$ref": "#/definitions/Hg19"
+        },
+        "mutFreq": {
+          "type": "number",
+          "format": "double",
+          "description": "mut_freq"
+        },
+        "mutNt": {
+          "type": "string",
+          "description": "mut_nt"
+        },
+        "ref": {
+          "type": "string",
+          "description": "ref"
+        },
+        "tumorSite": {
+          "type": "string",
+          "description": "tumor_site"
+        }
+      }
+    },
+    "Dbsnp": {
+      "type": "object",
+      "properties": {
+        "_class": {
+          "type": "string",
+          "description": "class"
+        },
+        "allele_origin": {
+          "type": "string"
+        },
+        "alleles": {
+          "type": "array",
+          "description": "alleles",
+          "items": {
+            "$ref": "#/definitions/Alleles"
+          }
+        },
+        "alt": {
+          "type": "string",
+          "description": "alt"
+        },
+        "chrom": {
+          "type": "string",
+          "description": "chrom"
+        },
+        "dbsnpBuild": {
+          "type": "integer",
+          "format": "int32",
+          "description": "dbsnp_build"
+        },
+        "flags": {
+          "type": "array",
+          "description": "flags",
+          "items": {
+            "type": "string"
+          }
+        },
+        "gene": {
+          "description": "gene",
+          "$ref": "#/definitions/Gene"
+        },
+        "hg19": {
+          "description": "hg19",
+          "$ref": "#/definitions/Hg19"
+        },
+        "license": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "string",
+          "description": "ref"
+        },
+        "rsid": {
+          "type": "string",
+          "description": "rsid"
+        },
+        "validated": {
+          "type": "boolean",
+          "example": false,
+          "description": "validated"
+        },
+        "varSubtype": {
+          "type": "string",
+          "description": "var_subtype"
+        },
+        "vartype": {
+          "type": "string",
+          "description": "vartype"
         }
       }
     },
@@ -937,6 +1104,18 @@
         }
       }
     },
+    "Gene": {
+      "type": "object",
+      "properties": {
+        "geneid": {
+          "type": "string"
+        },
+        "symbol": {
+          "type": "string",
+          "description": "symbol"
+        }
+      }
+    },
     "GeneXref": {
       "type": "object",
       "required": [
@@ -1023,6 +1202,51 @@
         "variantAllele": {
           "type": "string",
           "description": "Variant Allele"
+        }
+      }
+    },
+    "Hg19": {
+      "type": "object",
+      "properties": {
+        "end": {
+          "type": "integer",
+          "format": "int32",
+          "description": "end"
+        },
+        "start": {
+          "type": "integer",
+          "format": "int32",
+          "description": "start"
+        }
+      }
+    },
+    "Hg38": {
+      "type": "object",
+      "properties": {
+        "end": {
+          "type": "string",
+          "description": "end"
+        },
+        "start": {
+          "type": "string",
+          "description": "start"
+        }
+      }
+    },
+    "Hgvs": {
+      "type": "object",
+      "properties": {
+        "coding": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "genomic": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
@@ -1215,6 +1439,87 @@
       "properties": {
         "annotation": {
           "$ref": "#/definitions/MutationAssessor"
+        },
+        "license": {
+          "type": "string"
+        }
+      }
+    },
+    "Mutdb": {
+      "type": "object",
+      "properties": {
+        "alt": {
+          "type": "string",
+          "description": "alt"
+        },
+        "chrom": {
+          "type": "string",
+          "description": "chrom"
+        },
+        "cosmicId": {
+          "type": "string",
+          "description": "cosmic_id"
+        },
+        "hg19": {
+          "description": "hg19",
+          "$ref": "#/definitions/Hg19"
+        },
+        "mutpredScore": {
+          "type": "number",
+          "format": "double",
+          "description": "mutpred_score"
+        },
+        "ref": {
+          "type": "string",
+          "description": "ref"
+        },
+        "rsid": {
+          "type": "string",
+          "description": "rsid"
+        },
+        "uniprotId": {
+          "type": "string",
+          "description": "uniprot_id"
+        }
+      }
+    },
+    "MyVariantInfo": {
+      "type": "object",
+      "properties": {
+        "clinVar": {
+          "$ref": "#/definitions/ClinVar"
+        },
+        "cosmic": {
+          "description": "cosmic",
+          "$ref": "#/definitions/Cosmic"
+        },
+        "dbsnp": {
+          "description": "dbsnp",
+          "$ref": "#/definitions/Dbsnp"
+        },
+        "hgvs": {
+          "type": "string",
+          "description": "hgvs"
+        },
+        "mutdb": {
+          "$ref": "#/definitions/Mutdb"
+        },
+        "vcf": {
+          "description": "vcf",
+          "$ref": "#/definitions/Vcf"
+        },
+        "version": {
+          "type": "integer",
+          "format": "int32",
+          "description": "version"
+        }
+      }
+    },
+    "MyVariantInfoAnnotation": {
+      "type": "object",
+      "properties": {
+        "annotation": {
+          "$ref": "#/definitions/MyVariantInfo"
         },
         "license": {
           "type": "string"
@@ -1516,6 +1821,10 @@
           "description": "Mutation Assessor Annotation",
           "$ref": "#/definitions/MutationAssessorAnnotation"
         },
+        "my_variant_info": {
+          "description": "My Variant Info Annotation",
+          "$ref": "#/definitions/MyVariantInfoAnnotation"
+        },
         "seq_region_name": {
           "type": "string",
           "description": "Chromosome"
@@ -1580,6 +1889,25 @@
         "variantType": {
           "type": "string",
           "description": "Variant type"
+        }
+      }
+    },
+    "Vcf": {
+      "type": "object",
+      "required": [
+        "alt",
+        "position",
+        "ref"
+      ],
+      "properties": {
+        "alt": {
+          "type": "string"
+        },
+        "position": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "string"
         }
       }
     },
