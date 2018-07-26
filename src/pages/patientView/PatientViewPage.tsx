@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import $ from 'jquery';
 import { default as ReactBootstrap} from 'react-bootstrap';
 import GenomicOverview from './genomicOverview/GenomicOverview';
-import { ClinicalData } from "shared/api/generated/CBioPortalAPI";
+import {CancerStudy, ClinicalData} from "shared/api/generated/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
 import { RequestStatus } from "../../shared/api/api-types-extended";
 import FeatureTitle from '../../shared/components/featureTitle/FeatureTitle';
@@ -39,7 +39,9 @@ import {getSampleViewUrl} from "../../shared/api/urls";
 
 const patientViewPageStore = new PatientViewPageStore();
 
-(window as any).patientViewPageStore = patientViewPageStore;
+const win:any = (window as any);
+
+win.patientViewPageStore = patientViewPageStore;
 
 export interface IPatientViewPageProps {
     routing: any;
@@ -60,6 +62,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     @observable private cnaTableColumnVisibility: {[columnId: string]: boolean}|undefined;
 
     private updatePageTitleReaction: IReactionDisposer;
+    private updateMetaReaction: IReactionDisposer;
 
     constructor(props: IPatientViewPageProps) {
 
@@ -105,37 +108,36 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         this.updatePageTitleReaction = reaction(
             () => patientViewPageStore.pageTitle,
-            (title:string) => ((window as any).document.title = title),
+            (title:string) => {
+                win.document.title = title;
+            },
             { fireImmediately:true }
         );
+
+        this.updateMetaReaction = autorun(
+            () => {
+                const study = patientViewPageStore.studyMetaData.result;
+                if (study) {
+                    // first kill any existing meta tag
+                    $("meta[name=description]").remove();
+                    const id = ((patientViewPageStore.pageMode === "patient") ?
+                        patientViewPageStore.patientId : patientViewPageStore.sampleId);
+                    const content =
+                        `${id} from ${study.name}`;
+                    const meta = $(`<meta name="description" content="${content}">`).prependTo("head");
+                }
+            }
+        );
+
 
         this.onMutationTableColumnVisibilityToggled = this.onMutationTableColumnVisibilityToggled.bind(this);
         this.onCnaTableColumnVisibilityToggled = this.onCnaTableColumnVisibilityToggled.bind(this);
     }
 
-    public componentDidMount() {
-
-        this.exposeComponentRenderersToParentScript();
-
-    }
-
     public componentWillUnmount(){
-
         //dispose reaction
         this.updatePageTitleReaction();
-
-    }
-
-    // this gives the parent (legacy) cbioportal code control to mount
-    // these components whenever and wherever it wants
-    exposeComponentRenderersToParentScript() {
-
-        // exposeComponentRenderer('renderClinicalInformationContainer', ClinicalInformationContainer,
-        //     { store:this.props.store }
-        // );
-        //
-        // exposeComponentRenderer('renderGenomicOverview', GenomicOverview);
-
+        this.updateMetaReaction();
     }
 
     public handleSampleClick(id: string, e: React.MouseEvent<HTMLAnchorElement>) {
