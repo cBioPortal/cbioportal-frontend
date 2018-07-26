@@ -382,14 +382,10 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
             } else {
                 return x.value;
             }
-        }))).filter(box=>{
-            // filter out not well-defined boxes
-            return logicalAnd(
-                ["IQR", "max", "median", "min", "q1", "q2", "q3", "whiskerLower", "whiskerUpper"].map(key=>{
-                    return !isNaN((box as any)[key]);
-                })
-            );
-        }).map((model, i)=>{
+        }))).map((model, i)=>{
+            // create boxes, importantly we dont filter at this step because
+            //  we need the indexes to be intact and correpond to the index in the input data,
+            //  in order to properly determine the x/y coordinates
             const box:BoxModel = {
                 min: model.whiskerLower,
                 max: model.whiskerUpper,
@@ -403,6 +399,13 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                 box.x = this.categoryCoord(i)
             }
             return box;
+        }).filter(box=>{
+            // filter out not well-defined boxes
+            return logicalAnd(
+                ["min", "max", "median", "q1", "q3"].map(key=>{
+                    return !isNaN((box as any)[key]);
+                })
+            );
         });
     }
 
