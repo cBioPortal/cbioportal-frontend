@@ -345,6 +345,7 @@ describe("plots tab screenshot tests", function() {
         waitForAndCheckPlotsTab();
     });
     it("plots tab search case id", function() {
+        browser.click('input[data-test="ViewMutationType"]');
         browser.execute(function() { resultsViewPlotsTab.executeSearchCase("TCGA-E2 TCGA-A8-A08G"); });
         waitForAndCheckPlotsTab();
     });
