@@ -1,10 +1,11 @@
-import { ClinicalDataCount, StudyViewFilter } from "shared/api/generated/CBioPortalAPIInternal";
 import _ from "lodash";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import { ClinicalAttribute } from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
 import {getSampleViewUrl, getStudySummaryUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
+import { SingleGeneQuery } from "shared/lib/oql/oql-parser";
+import { unparseOQLQueryLine } from "shared/lib/oql/oqlfilter";
 
 //TODO:cleanup
 export const COLORS = [
@@ -61,7 +62,7 @@ export const COLORS = [
     '#b82e27', '#316397', '#994495', '#22aa93',
     '#aaaa14', '#6633c1', '#e67303', '#8b0705',
     '#651062', '#329267', '#5574a1', '#3b3ea5'
-  ];
+];
 
 export const NA_COLOR = '#CCCCCC'
 
@@ -104,4 +105,16 @@ export function mutationCountVsCnaTooltip(d:{ data:Pick<IStudyViewScatterPlotDat
 
 export function isSelected(datum:{uniqueSampleKey:string}, selectedSamples:{[uniqueSampleKey:string]:any}) {
     return datum.uniqueSampleKey in selectedSamples;
+}
+export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: string): string {
+
+    let updatedQueries = _.filter(geneQueries,query=> query.gene !== selectedGene)
+    if(updatedQueries.length === geneQueries.length){
+        updatedQueries.push({
+            gene: selectedGene,
+            alterations: false
+        })
+    }
+    return updatedQueries.map(query=>unparseOQLQueryLine(query)).join('\n');
+
 }

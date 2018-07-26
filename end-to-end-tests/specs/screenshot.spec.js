@@ -316,10 +316,10 @@ describe("plots tab screenshot tests", function() {
         waitForAndCheckPlotsTab();
     });
     it("plots tab molecular vs molecular same gene", function() {
-        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisProfileTypeSelect({ value: "MRNA_EXPRESSION" }); });
-        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisProfileIdSelect({ value: "brca_tcga_mrna" }); });
-        browser.execute(function() { resultsViewPlotsTab.onVerticalAxisProfileTypeSelect({ value: "MRNA_EXPRESSION" }); });
-        browser.execute(function() { resultsViewPlotsTab.onVerticalAxisProfileIdSelect({ value: "brca_tcga_mrna" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "MRNA_EXPRESSION" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "brca_tcga_mrna" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "MRNA_EXPRESSION" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "brca_tcga_mrna" }); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab molecular vs molecular same gene changed gene", function() {
@@ -337,7 +337,7 @@ describe("plots tab screenshot tests", function() {
         waitForAndCheckPlotsTab();
     });
     it("plots tab molecular vs molecular different genes different profiles", function() {
-        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisProfileIdSelect({ value: "brca_tcga_rna_seq_v2_mrna" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "brca_tcga_rna_seq_v2_mrna" }); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab molecular vs molecular swapped axes", function() {
@@ -361,11 +361,12 @@ describe("plots tab screenshot tests", function() {
         waitForAndCheckPlotsTab();
     });
     it("plots tab clinical vs molecular", function() {
-        browser.click('input[data-test="HorizontalAxisClinicalAttributeRadio"]');
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "clinical_attribute" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "AGE" }); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab clinical vs molecular boxplot", function() {
-        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisClinicalAttributeSelect({ value: "AJCC_PATHOLOGIC_TUMOR_STAGE" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "AJCC_PATHOLOGIC_TUMOR_STAGE" }); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab molecular vs clinical boxplot, mutation search off", function() {
@@ -374,7 +375,8 @@ describe("plots tab screenshot tests", function() {
         waitForAndCheckPlotsTab();
     });
     it("plots tab clinical vs clinical boxplot", function() {
-        browser.click('input[data-test="HorizontalAxisClinicalAttributeRadio"]');
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "clinical_attribute" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "AGE" }); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab search case id in clinical vs clinical boxplot", function() {
@@ -382,11 +384,11 @@ describe("plots tab screenshot tests", function() {
         waitForAndCheckPlotsTab();
     });
     it("plots tab clinical vs clinical table plot", function() {
-        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisClinicalAttributeSelect({ value: "AJCC_TUMOR_PATHOLOGIC_PT" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "AJCC_TUMOR_PATHOLOGIC_PT" }); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab copy number vs clinical table plot", function() {
-        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisProfileTypeSelect({ value: "COPY_NUMBER_ALTERATION" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "COPY_NUMBER_ALTERATION" }); });
         waitForAndCheckPlotsTab();
     });
 });

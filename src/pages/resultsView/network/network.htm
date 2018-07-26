@@ -12,11 +12,14 @@
 
     var queryParams = url("?");
 
-    var host = "//" + window.location.hostname + ":" +  window.location.port  +  "/reactapp/network/files";
-
-    host = "./files";
-
-    var apiHost = "//" + queryParams.apiHost;
+    var host = "./files";
+    var apiHost;
+    // if this fails, we are NOT in production, so allow anything
+    try {
+        apiHost = window.parent.location.hostname;
+    } catch (exc){
+        apiHost = "//" + queryParams.apiHost;
+    }
 
     function writeScriptTag(path) {
         document.write('<script src="' + host + "/" + path + '"></' + 'script>');

@@ -28,7 +28,9 @@ import classNames from 'classnames';
 import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
 import {CoverageInformation, isPanCanStudy, isTCGAProvStudy} from "../ResultsViewPageStoreUtils";
 import {sleep} from "../../../shared/lib/TimeUtils";
-import PortalLink from "../../../shared/components/PortalLink/PortalLink";
+import {mutationRenderPriority} from "../plots/PlotsTabUtils";
+import {getOncoprintMutationType} from "../../../shared/components/oncoprint/DataUtils";
+import {getSampleViewUrl} from "../../../shared/api/urls";
 
 export interface ExpressionWrapperProps {
     studyMap: { [studyId: string]: CancerStudy };
@@ -359,7 +361,9 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
         const nonMutStyle = ExpressionStyleSheet.non_mut;
         const nonSequenced = ExpressionStyleSheet.non_sequenced;
 
-        deDupedLegendData.push({name: nonMutStyle.legendText, symbol: {fill: nonMutStyle.fill, stroke:nonMutStyle.stroke, size:SYMBOL_SIZE, type: nonMutStyle.symbol}});
+        if (this.showMutations) {
+            deDupedLegendData.push({name: nonMutStyle.legendText, symbol: {fill: nonMutStyle.fill, stroke:nonMutStyle.stroke, size:SYMBOL_SIZE, type: nonMutStyle.symbol}});
+        }
 
         if (_.flatten(this.victoryTraces.unSequencedTraces).length > 0) {
             deDupedLegendData.push({name: nonSequenced.legendText,
@@ -403,9 +407,10 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
         // determine style based on mutation
         let expressionStyle: ExpressionStyle;
+        let oncoprintMutationType:string = "";
         if (mutation) {
-            const canonicalMutationType = getCanonicalMutationType(mutation.mutationType) || "other";
-            expressionStyle = getExpressionStyle(canonicalMutationType);
+            oncoprintMutationType = getOncoprintMutationType(mutation);
+            expressionStyle = getExpressionStyle(oncoprintMutationType);
         } else {
             expressionStyle = ExpressionStyleSheet.non_mut;
         }
@@ -419,7 +424,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                 studyId: geneMolecularData.studyId,
                 expression: geneMolecularData.value,
                 style: expressionStyle,
-                mutationType:(mutation) ? mutation.mutationType : null
+                mutationType:(mutation && oncoprintMutationType) ? oncoprintMutationType : null
             }
         };
 
@@ -441,7 +446,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @computed
     get buildUnmutatedTraces() {
-        return this.victoryTraces.unMutatedTraces.map((trace) => this.buildScatter(trace, ExpressionStyleSheet.non_mut))
+        return this.victoryTraces.unMutatedTraces.map((trace) => this.buildScatter(trace, this.showMutations ? ExpressionStyleSheet.non_mut : ExpressionStyleSheet.not_showing_mut))
     }
 
     @computed
@@ -452,7 +457,11 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     @computed
     get buildMutationScatters() {
         return _.flatMap(this.victoryTraces.mutationScatterTraces, (traces:{[mutationType:string]:ScatterPoint[]}) => {
-            return _.map(traces, (value, key) => {
+            // sort traces by mutation rendering priority
+            const sortedEntries = _.sortBy(_.toPairs(traces), entry=>-1*mutationRenderPriority[entry[0]]);
+            return sortedEntries.map(entry=>{
+                const key = entry[0];
+                const value = entry[1];
                 const style = getExpressionStyle(key);
                 return (this.showMutationType.length === 0 || (this.showMutationType as any).includes(key))
                     ? this.buildScatter(value, style) : null;
@@ -507,7 +516,11 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @computed get paddingBottom(){
-        return _.maxBy(this.sortedLabels,(label:string)=>label.length)!.length * 9;
+        if (!this.sortedLabels.length) {
+            return 10;
+        } else {
+            return _.maxBy(this.sortedLabels,(label:string)=>label.length)!.length * 9;
+        }
     }
 
     @computed
@@ -520,33 +533,28 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     get toolTip() {
         const style: ExpressionStyle = this.tooltipModel!.data.style as ExpressionStyle;
 
-        const mutationType = (this.tooltipModel!.data.mutationType)
-            ? this.tooltipModel!.data.mutationType!.replace("_"," ") : this.tooltipModel!.data.style.legendText;
-
         return (
             <div className="popover right cbioTooltip"
                  onMouseLeave={this.tooltipMouseLeave}
                  onMouseEnter={this.tooltipMouseEnter}
-                 style={{top: this.tooltipModel!.y, width:300, left: this.tooltipModel!.x}}
+                 style={{top: this.tooltipModel!.y, left: this.tooltipModel!.x-8}}
             >
-                <div className="arrow" style={{top: 30}}></div>
+                <div className="arrow" style={{top: 27}}></div>
                 <div className="popover-content">
-                    <svg height="10" width="10" style={{marginTop:3}}>
-                        <svg height={8} width={8}><Point size={3} x={4} y={4} symbol={style.symbol} style={{ fill:style.fill, stroke:style.stroke }} /></svg>
-                    </svg>
-                    &nbsp;{mutationType}
-                    <br/>
+                    { this.showMutations && (
+                        <span>
+                            <svg height="10" width="10" style={{marginTop:3}}>
+                                <svg height={8} width={8}><Point size={3} x={4} y={4} symbol={style.symbol} style={{ fill:style.fill, stroke:style.stroke }} /></svg>
+                            </svg>
+                            &nbsp;{style.legendText}
+                            <br/>
+                        </span>
+                    )}
                     <strong>Study:</strong> {this.tooltipModel!.data.studyName}<br/>
-                    <strong>Sample ID:</strong>&nbsp;
-                    <PortalLink to={{
-                        pathname: 'patient',
-                        search: `studyId=${this.tooltipModel!.data.studyId}&sampleId=${this.tooltipModel!.data.sampleId}`,
-                        basepath: 'case.do',
-                        newTab:true
-                    }}>
-                        {this.tooltipModel!.data.sampleId}<br/>
-                    </PortalLink>
-
+                    <strong>Sample ID:</strong> <a href={getSampleViewUrl(this.tooltipModel!.data.studyId, this.tooltipModel!.data.sampleId)} target="_blank">
+                        {this.tooltipModel!.data.sampleId}
+                    </a>
+                    <br/>
                     <strong>Expression:</strong> {this.tooltipModel!.data.expression}
                 </div>
             </div>
