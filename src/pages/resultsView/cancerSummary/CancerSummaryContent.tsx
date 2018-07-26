@@ -213,8 +213,8 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
                 // if we don't meet the threshold set by the user in the custom controls, don't put data in (default 0)
                 if (meetsAlterationThreshold && meetsSampleTotalThreshold) {
-
                     // now we push label into collection
+
                     if (this.props.labelTransformer) {
                         labels.push(this.props.labelTransformer(groupKey))
                     } else {
@@ -236,13 +236,14 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
                     memo.push({
                         alterationType: alterationKey,
-                        x: groupKey,
+                        x: (this.props.labelTransformer) ? this.props.labelTransformer(groupKey) : groupKey,
+                        xKey: groupKey,
                         y: this.getYValue(alterationCount, alterationData.sampleTotal)
                     });
                 }
 
                 return memo;
-            }, [] as { x: string, y: number, alterationType: string }[]);
+            }, [] as { x: string, y: number, xKey:string, alterationType: string }[]);
         });
 
         return { labels:_.uniq(labels), data: retData, representedAlterations, maxPercentage , maxAbsoluteCount, maxSampleCount };
