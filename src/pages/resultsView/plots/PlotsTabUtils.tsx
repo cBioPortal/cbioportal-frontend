@@ -80,8 +80,8 @@ export enum MutationSummary {
     Neither="Neither", Both="Both", One="One"
 }
 
-const NOT_PROFILED_MUTATION_LEGEND_LABEL = "Not profiled for mutations";
-const NOT_PROFILED_CNA_LEGEND_LABEL = "Not profiled for copy number alterations";
+const NOT_PROFILED_MUTATION_LEGEND_LABEL = ["Not profiled","for mutations"];
+const NOT_PROFILED_CNA_LEGEND_LABEL = ["Not profiled", "for copy number", "alterations"];
 
 export interface IScatterPlotSampleData {
     uniqueSampleKey:string;
@@ -200,7 +200,7 @@ function scatterPlotMutationSummaryLegendData(
         }).uniq().filter(x=>!!x).value();
     // no data, not profiled
 
-    const legendData = mutationSummaryLegendOrder.filter(x=>(unique.indexOf(x) > -1)).map((x:MutationSummary)=>{
+    const legendData:any[] = mutationSummaryLegendOrder.filter(x=>(unique.indexOf(x) > -1)).map((x:MutationSummary)=>{
         const appearance = mutationSummaryToAppearance[x];
         return {
             name: appearance.legendLabel,
@@ -254,7 +254,7 @@ function scatterPlotMutationLegendData(
             .keyBy(x=>x)
             .value();
 
-    const legendData =
+    const legendData:any[] =
         _.chain(mutationLegendOrder)
         .filter(type=>!!uniqueMutations[type])
         .map(type=>{
@@ -338,7 +338,8 @@ function scatterPlotCnaLegendData(
             symbol: {
                 stroke: noCnaAppearance.stroke,
                 fillOpacity: 0,
-                type: "circle"
+                type: "circle",
+                strokeWidth: CNA_STROKE_WIDTH
             }
         });
     }
@@ -348,7 +349,8 @@ function scatterPlotCnaLegendData(
             symbol: {
                 stroke: notProfiledAppearance.stroke,
                 fill: notProfiledAppearance.fill,
-                type: "circle"
+                type: "circle",
+                strokeWidth: CNA_STROKE_WIDTH
             }
         });
     }
@@ -1126,16 +1128,24 @@ function makeScatterPlotData_profiledReport(
 
 export function getCnaQueries(
     entrezGeneId:number,
-    studyToMolecularProfileDiscrete:{[studyId:string]:MolecularProfile}
+    studyToMolecularProfileDiscrete:{[studyId:string]:MolecularProfile},
+    cnaDataShown:boolean
 ) {
+    if (!cnaDataShown) {
+        return [];
+    }
     return _.values(studyToMolecularProfileDiscrete)
         .map(p=>({molecularProfileId: p.molecularProfileId, entrezGeneId}));
 }
 
 export function getMutationQueries(
     horzSelection:AxisMenuSelection,
-    vertSelection:AxisMenuSelection
+    vertSelection:AxisMenuSelection,
+    mutationDataShown:boolean
 ) {
+    if (!mutationDataShown) {
+        return [];
+    }
     const queries:{entrezGeneId:number}[] = [];
     let horzEntrezGeneId:number | undefined = undefined;
     if (horzSelection.dataType !== CLIN_ATTR_DATA_TYPE &&

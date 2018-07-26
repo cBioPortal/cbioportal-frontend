@@ -568,7 +568,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             [this.props.store.studyToMolecularProfileDiscrete],
             map=>{
                 if (this.cnaDataShown && this.horzSelection.entrezGeneId !== undefined) {
-                    return getCnaQueries(this.horzSelection.entrezGeneId, map);
+                    return getCnaQueries(this.horzSelection.entrezGeneId, map, this.cnaDataShown);
                 } else {
                     return [];
                 }
@@ -578,12 +578,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             if (this.cnaDataShown && this.horzSelection.entrezGeneId !== undefined) {
                 const queries = getCnaQueries(
                     this.horzSelection.entrezGeneId,
-                    this.props.store.studyToMolecularProfileDiscrete.result!
+                    this.props.store.studyToMolecularProfileDiscrete.result!,
+                    this.cnaDataShown
                 );
                 const promises = this.props.store.numericGeneMolecularDataCache.getAll(queries);
-                return Promise.resolve(_.flatten(promises.map(p=>p.result!)));
+                return Promise.resolve(_.flatten(promises.map(p=>p.result!)).filter(x=>!!x));
             } else {
-                return Promise.resolve(undefined);
+                return Promise.resolve([]);
             }
         }
     });
@@ -596,13 +597,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     readonly mutationPromise = remoteData({
         await:()=>this.props.store.putativeDriverAnnotatedMutationCache.getAll(
-            getMutationQueries(this.horzSelection, this.vertSelection)
+            getMutationQueries(this.horzSelection, this.vertSelection, this.mutationDataShown)
         ),
         invoke: ()=>{
             if (this.mutationDataShown) {
                 return Promise.resolve(_.flatten(this.props.store.putativeDriverAnnotatedMutationCache.getAll(
-                    getMutationQueries(this.horzSelection, this.vertSelection)
-                ).map(p=>p.result!)));
+                    getMutationQueries(this.horzSelection, this.vertSelection, this.mutationDataShown)
+                ).map(p=>p.result!)).filter(x=>!!x));
             } else {
                 return Promise.resolve([]);
             }
@@ -983,23 +984,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     });
 
     readonly _unsortedScatterPlotData = remoteData<IScatterPlotData[]>({
-        await: ()=>{
-            const ret:MobxPromise<any>[] = [
-                this.horzAxisDataPromise,
-                this.vertAxisDataPromise,
-                this.props.store.sampleKeyToSample,
-                this.props.store.coverageInformation
-            ];
-            if (this.mutationDataShown) {
-                ret.push(this.mutationPromise);
-                ret.push(this.props.store.studyToMutationMolecularProfile);
-            }
-            if (this.cnaDataShown) {
-                ret.push(this.cnaPromise);
-                ret.push(this.props.store.studyToMolecularProfileDiscrete);
-            }
-            return ret;
-        },
+        await: ()=>[
+            this.horzAxisDataPromise,
+            this.vertAxisDataPromise,
+            this.props.store.sampleKeyToSample,
+            this.props.store.coverageInformation,
+            this.mutationPromise,
+            this.props.store.studyToMutationMolecularProfile,
+            this.cnaPromise,
+            this.props.store.studyToMolecularProfileDiscrete
+        ],
         invoke: ()=>{
             const horzAxisData = this.horzAxisDataPromise.result;
             const vertAxisData = this.vertAxisDataPromise.result;
@@ -1041,23 +1035,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     });
 
     readonly _unsortedBoxPlotData = remoteData<{horizontal:boolean, data:IBoxScatterPlotData<IBoxScatterPlotPoint>[]}>({
-        await: ()=>{
-            const ret:MobxPromise<any>[] = [
-                this.horzAxisDataPromise,
-                this.vertAxisDataPromise,
-                this.props.store.sampleKeyToSample,
-                this.props.store.coverageInformation
-            ];
-            if (this.mutationDataShown) {
-                ret.push(this.mutationPromise);
-                ret.push(this.props.store.studyToMutationMolecularProfile);
-            }
-            if (this.cnaDataShown) {
-                ret.push(this.cnaPromise);
-                ret.push(this.props.store.studyToMolecularProfileDiscrete);
-            }
-            return ret;
-        },
+        await: ()=>[
+            this.horzAxisDataPromise,
+            this.vertAxisDataPromise,
+            this.props.store.sampleKeyToSample,
+            this.props.store.coverageInformation,
+            this.mutationPromise,
+            this.props.store.studyToMutationMolecularProfile,
+            this.cnaPromise,
+            this.props.store.studyToMolecularProfileDiscrete
+        ],
         invoke: ()=>{
             const horzAxisData = this.horzAxisDataPromise.result;
             const vertAxisData = this.vertAxisDataPromise.result;
