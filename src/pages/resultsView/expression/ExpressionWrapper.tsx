@@ -111,7 +111,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @computed get selectedStudies() {
-        return _.filter(this._selectedStudies, (isSelected: boolean, study: CancerStudy) => isSelected);
+        return _.filter(this.props.studyMap,(study)=>this._selectedStudies[study.studyId] === true);
     }
 
     @computed get containerWidth() {
@@ -120,7 +120,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @computed get chartWidth() {
-        return this.sortedLabels.length * (this.widthThreshold ? 25 : 110) + 200;
+        return this.sortedLabels.length * (this.widthThreshold ? 30 : 110) + 200;
     }
 
     @computed get widthThreshold(){
@@ -306,10 +306,39 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
         this.sortBy = event.currentTarget.value as any;
     }
 
+    @autobind
+    handleSelectAllStudies(){
+        this.applyStudyFilter((study)=>{
+            return study.studyId in this.dataByStudyId;
+        });
+    }
+
+    @autobind
+    handleDeselectAllStudies(){
+        this.applyStudyFilter((study)=>{
+            return false;
+        });
+    }
+
+    @computed get hasUnselectedStudies(){
+        return undefined !== _.find(this.props.studyMap,(study)=>{
+            const hasData = study.studyId in this.dataByStudyId;
+            const isSelected = this.selectedStudies.includes(study);
+            return hasData && !isSelected;
+        });
+    }
+
+    @computed
+    get alphabetizedStudies(){
+        return _.chain(this.props.studyMap).values().sortBy(
+            (study:CancerStudy)=>study.name
+        ).value();
+    }
+
     @computed
     get studySelectionModal() {
 
-        return (<Modal show={this.studySelectorModalVisible} onHide={() => {
+        return (<Modal data-test="ExpressionStudyModal" show={true} onHide={() => {
             this.studySelectorModalVisible = false
         }} className="cbioportal-frontend">
             <Modal.Header closeButton>
@@ -317,8 +346,13 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             </Modal.Header>
             <Modal.Body>
                 <div>
+                    <div>
+                        <a data-test="ExpressionStudySelectAll" className={classNames({hidden:!this.hasUnselectedStudies})} onClick={this.handleSelectAllStudies}>Select all</a>
+                        <span className={classNames({hidden:!this.hasUnselectedStudies || this.selectedStudies.length === 0})}>&nbsp;|&nbsp;</span>
+                        <a data-test="ExpressionStudyUnselectAll" className={classNames({hidden:this.selectedStudies.length === 0})} onClick={this.handleDeselectAllStudies}>Deselect all</a>
+                    </div>
                     {
-                        _.map(this.props.studyMap, (study: CancerStudy) => {
+                        _.map(this.alphabetizedStudies, (study: CancerStudy) => {
                             const hasData = study.studyId in this.dataByStudyId;
                             return (
                                 <div className={classNames('checkbox',{ disabled:!hasData })}>
@@ -633,14 +667,10 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     render() {
-
         return (
             <div>
-                {this.studySelectionModal}
+                { (this.studySelectorModalVisible) && this.studySelectionModal }
                 <div style={{marginBottom:15}}>
-
-
-
 
                     <MSKTabs onTabClick={this.handleTabClick}
                              enablePagination={true}
@@ -694,20 +724,21 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     </form>
 
                     <div>
+                        <label>Select studies:</label>&nbsp;
                         <If condition={this.studyTypeCounts.provisional.length > 0}>
                             <button className="btn btn-default btn-xs" style={{marginRight:5}}
                                     onClick={() => this.applyStudyFilter((study: CancerStudy) => isTCGAProvStudy(study.studyId))}>
-                                Select TCGA Provisional ({this.studyTypeCounts.provisional.length})
+                                 TCGA Provisional ({this.studyTypeCounts.provisional.length})
                             </button>
                         </If>
                         <If condition={this.studyTypeCounts.panCancer.length > 0}>
                             <button className="btn btn-default btn-xs" style={{marginRight:5}}
                                     onClick={() => this.applyStudyFilter((study: CancerStudy) => isPanCanStudy(study.studyId))}>
-                                Select TCGA Pan-Can Atlas ({this.studyTypeCounts.panCancer.length})
+                                TCGA Pan-Can Atlas ({this.studyTypeCounts.panCancer.length})
                             </button>
                         </If>
-                        <button className="btn btn-default btn-xs"
-                                onClick={() => this.studySelectorModalVisible = !this.studySelectorModalVisible}>Custom</button>
+                        <button data-test="ExpressionStudyModalButton"className="btn btn-default btn-xs"
+                                onClick={() => this.studySelectorModalVisible = !this.studySelectorModalVisible}>Custom list</button>
 
                     </div>
 
@@ -746,9 +777,6 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         </div>
                     </Else>
                 </If>
-
-
-
             </div>
         );
     }
