@@ -158,11 +158,9 @@ export function getMolecularDataBuckets(studyData: NumericGeneMolecularData[],
 
 }
 
-export function calculateJitter(uniqueSampleKey:string){
-    return getJitterForCase(uniqueSampleKey)*0.30;
-
+export function calculateJitter(uniqueSampleKey:string) {
+    return getJitterForCase(uniqueSampleKey) * 0.30;
 }
-
 
 export function prioritizeMutations(mutations:Mutation[]){
     return _.orderBy(mutations,(mutation:Mutation)=>{
@@ -170,3 +168,4 @@ export function prioritizeMutations(mutations:Mutation[]){
         return mutationRenderPriority[oncoprintMutationType];
     });
 }
+
