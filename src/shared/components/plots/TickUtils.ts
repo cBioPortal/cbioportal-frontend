@@ -1,60 +1,10 @@
 import _ from "lodash";
 import measureText from "measure-text";
 import numeral from "numeral";
-
-function getTickTextWidth(label:string) {
-    return measureText({text: label, fontFamily: "Arial, Helvetica", fontSize: "12px", lineHeight: 1}).width.value;
-}
-
-function splitTickByWidth(str:string, maxWidth:number) {
-    const ret:string[] = [];
-    let index = 0;
-    let chunk = "";
-    while (index < str.length) {
-        chunk += str[index];
-        if (getTickTextWidth(chunk) >= maxWidth) {
-            ret.push(chunk);
-            chunk = "";
-        }
-        index += 1;
-    }
-    if (chunk.length) {
-        ret.push(chunk);
-    }
-    return ret;
-}
+import {wrapText} from "../../lib/wrapText";
 
 export function wrapTick(label:string, maxWidth:number):string[] {
-    if (getTickTextWidth(label) <= maxWidth) {
-        return [label];
-    } else {
-        // label too big, need to wrap to fit
-        let words = label.split(/\s+/g); // first split words, for nicer breaks if possible
-        // next split chunks of max width
-        words = _.flatten(words.map(word=>splitTickByWidth(word, maxWidth)));
-        let currentLine = "";
-        const ret:string[] = [];
-        for (const word of words) {
-            if (getTickTextWidth(word) >= maxWidth) {
-                if (currentLine.length) {
-                    ret.push(currentLine);
-                }
-                ret.push(word);
-                currentLine = "";
-            } else if (getTickTextWidth(currentLine + word) >= maxWidth) {
-                if (currentLine.length) {
-                    ret.push(currentLine);
-                }
-                currentLine = word;
-            } else {
-                currentLine += word;
-            }
-        }
-        if (currentLine.length) {
-            ret.push(currentLine);
-        }
-        return ret;
-    }
+    return wrapText(label, maxWidth, "Arial, Helvetica", "12px");
 }
 
 function zeroes(times:number) {

@@ -27,6 +27,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     stroke?:string | ((d:D)=>string);
     size?:(d:D, active:boolean, isHighlighted?:boolean)=>number;
     fillOpacity?:number | ((d:D)=>number);
+    strokeOpacity?:number | ((d:D)=>number);
     strokeWidth?:number | ((d:D)=>number);
     symbol?: string | ((d:D)=>string); // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
     tooltip?:(d:D)=>JSX.Element;
@@ -355,6 +356,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                                             fill: ifndef(this.props.fill, "0x000000"),
                                             stroke: ifndef(this.props.stroke, "0x000000"),
                                             strokeWidth: ifndef(this.props.strokeWidth, 0),
+                                            strokeOpacity: ifndef(this.props.strokeOpacity, 1),
                                             fillOpacity: ifndef(this.props.fillOpacity, 1),
                                         }
                                     }}

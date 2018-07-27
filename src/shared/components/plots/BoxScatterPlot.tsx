@@ -34,6 +34,7 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     fill?:string | ((d:D)=>string);
     stroke?:string | ((d:D)=>string);
     fillOpacity?:number | ((d:D)=>number);
+    strokeOpacity?:number | ((d:D)=>number);
     strokeWidth?:number | ((d:D)=>number);
     symbol?: string | ((d:D)=>string); // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
     tooltip?:(d:D)=>JSX.Element;
@@ -381,14 +382,10 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
             } else {
                 return x.value;
             }
-        }))).filter(box=>{
-            // filter out not well-defined boxes
-            return logicalAnd(
-                ["IQR", "max", "median", "min", "q1", "q2", "q3", "whiskerLower", "whiskerUpper"].map(key=>{
-                    return !isNaN((box as any)[key]);
-                })
-            );
-        }).map((model, i)=>{
+        }))).map((model, i)=>{
+            // create boxes, importantly we dont filter at this step because
+            //  we need the indexes to be intact and correpond to the index in the input data,
+            //  in order to properly determine the x/y coordinates
             const box:BoxModel = {
                 min: model.whiskerLower,
                 max: model.whiskerUpper,
@@ -402,6 +399,13 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                 box.x = this.categoryCoord(i)
             }
             return box;
+        }).filter(box=>{
+            // filter out not well-defined boxes
+            return logicalAnd(
+                ["min", "max", "median", "q1", "q3"].map(key=>{
+                    return !isNaN((box as any)[key]);
+                })
+            );
         });
     }
 
@@ -455,6 +459,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                                             fill: ifndef(this.props.fill, "0x000000"),
                                             stroke: ifndef(this.props.stroke, "0x000000"),
                                             strokeWidth: ifndef(this.props.strokeWidth, 0),
+                                            strokeOpacity: ifndef(this.props.strokeOpacity, 1),
                                             fillOpacity: ifndef(this.props.fillOpacity, 1)
                                         }
                                     }}
