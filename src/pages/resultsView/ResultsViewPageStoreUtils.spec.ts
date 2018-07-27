@@ -518,17 +518,20 @@ describe("ResultsViewPageStoreUtils", ()=>{
 
     describe("computePutativeDriverAnnotatedMutations", ()=>{
         it("returns empty list for empty input", ()=>{
-            assert.deepEqual(computePutativeDriverAnnotatedMutations([], ()=>({}) as any, false), []);
+            assert.deepEqual(computePutativeDriverAnnotatedMutations([], ()=>({}) as any, {}, false), []);
         });
         it("annotates a single mutation", ()=>{
             assert.deepEqual(
                 computePutativeDriverAnnotatedMutations(
-                    [{mutationType:"missense"} as Mutation],
+                    [{mutationType:"missense", entrezGeneId:1} as Mutation],
                     ()=>({oncoKb:"", hotspots:true, cbioportalCount:false, cosmicCount:true, customDriverBinary:false}),
+                    {1:{ hugoGeneSymbol:"mygene"} as Gene},
                     true
                 ) as Partial<AnnotatedMutation>[],
                 [{
                     mutationType:"missense",
+                    hugoGeneSymbol:"mygene",
+                    entrezGeneId:1,
                     simplifiedMutationType: getSimplifiedMutationType("missense"),
                     isHotspot: true,
                     oncoKbOncogenic: "",
@@ -539,24 +542,31 @@ describe("ResultsViewPageStoreUtils", ()=>{
         it("annotates a few mutations", ()=>{
             assert.deepEqual(
                 computePutativeDriverAnnotatedMutations(
-                    [{mutationType:"missense"} as Mutation, {mutationType:"in_frame_del"} as Mutation, {mutationType:"asdf"} as Mutation],
+                    [{mutationType:"missense", entrezGeneId:1} as Mutation, {mutationType:"in_frame_del", entrezGeneId:1} as Mutation, {mutationType:"asdf", entrezGeneId:134} as Mutation],
                     ()=>({oncoKb:"", hotspots:true, cbioportalCount:false, cosmicCount:true, customDriverBinary:false}),
+                    {1:{hugoGeneSymbol:"gene1hello"} as Gene, 134:{hugoGeneSymbol:"gene3hello"} as Gene},
                     true
                 ) as Partial<AnnotatedMutation>[],
                 [{
                     mutationType:"missense",
+                    hugoGeneSymbol:"gene1hello",
+                    entrezGeneId:1,
                     simplifiedMutationType: getSimplifiedMutationType("missense"),
                     isHotspot: true,
                     oncoKbOncogenic: "",
                     putativeDriver: true
                 },{
                     mutationType:"in_frame_del",
+                    hugoGeneSymbol:"gene1hello",
+                    entrezGeneId:1,
                     simplifiedMutationType: getSimplifiedMutationType("in_frame_del"),
                     isHotspot: true,
                     oncoKbOncogenic: "",
                     putativeDriver: true
                 },{
                     mutationType:"asdf",
+                    hugoGeneSymbol:"gene3hello",
+                    entrezGeneId:134,
                     simplifiedMutationType: getSimplifiedMutationType("asdf"),
                     isHotspot: true,
                     oncoKbOncogenic: "",
@@ -567,8 +577,9 @@ describe("ResultsViewPageStoreUtils", ()=>{
         it("excludes a single non-annotated mutation", ()=>{
             assert.deepEqual(
                 computePutativeDriverAnnotatedMutations(
-                    [{mutationType:"missense"} as Mutation],
+                    [{mutationType:"missense", entrezGeneId:1} as Mutation],
                     ()=>({oncoKb:"", hotspots:false, cbioportalCount:false, cosmicCount:false, customDriverBinary:false}),
+                    {1:{hugoGeneSymbol:"gene1hello"} as Gene, 134:{hugoGeneSymbol:"gene3hello"} as Gene},
                     true
                 ),
                 []
@@ -577,15 +588,18 @@ describe("ResultsViewPageStoreUtils", ()=>{
         it("excludes non-annotated mutations from a list of a few", ()=>{
             assert.deepEqual(
                 computePutativeDriverAnnotatedMutations(
-                    [{mutationType:"missense"} as Mutation, {mutationType:"in_frame_del"} as Mutation, {mutationType:"asdf"} as Mutation],
+                    [{mutationType:"missense", entrezGeneId:1} as Mutation, {mutationType:"in_frame_del", entrezGeneId:1} as Mutation, {mutationType:"asdf", entrezGeneId:134} as Mutation],
                     (m)=>(m.mutationType === "in_frame_del" ?
                         {oncoKb:"", hotspots:false, cbioportalCount:false, cosmicCount:false, customDriverBinary:true}:
                         {oncoKb:"", hotspots:false, cbioportalCount:false, cosmicCount:false, customDriverBinary:false}
                     ),
+                    {1:{hugoGeneSymbol:"gene1hello"} as Gene, 134:{hugoGeneSymbol:"gene3hello"} as Gene},
                     true
                 ) as Partial<AnnotatedMutation>[],
                 [{
                     mutationType:"in_frame_del",
+                    hugoGeneSymbol:"gene1hello",
+                    entrezGeneId:1,
                     simplifiedMutationType: getSimplifiedMutationType("in_frame_del"),
                     isHotspot: false,
                     oncoKbOncogenic: "",
