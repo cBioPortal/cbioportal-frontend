@@ -44,7 +44,7 @@ export default class OncoKbTooltip extends React.Component<IOncoKbTooltipProps, 
     public get pmidData():ICache<any>
     {
         if (this.props.pubMedCache && this.evidenceCacheData) {
-            let mutationEffectPmids = this.props.indicator ?
+            let mutationEffectPmids = (this.props.indicator && this.props.indicator.mutationEffect) ?
                 this.props.indicator.mutationEffect.citations.pmids.map(pmid => Number(pmid)) : [];
             const refs = extractPmids(this.evidenceCacheData.data).concat(mutationEffectPmids);
 
@@ -96,7 +96,7 @@ export default class OncoKbTooltip extends React.Component<IOncoKbTooltipProps, 
                     geneSummary={this.props.indicator.geneSummary}
                     variantSummary={this.props.indicator.variantSummary}
                     tumorTypeSummary={this.props.indicator.tumorTypeSummary}
-                    biologicalSummary={this.props.indicator.mutationEffect.description}
+                    biologicalSummary={this.props.indicator.mutationEffect ? this.props.indicator.mutationEffect.description : ''}
                     treatments={generateTreatments(evidence.treatments)}
                     pmidData={pmidData}
                     handleFeedbackOpen={this.props.handleFeedbackOpen}
