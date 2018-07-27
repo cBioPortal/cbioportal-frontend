@@ -1179,8 +1179,8 @@ describe('case set selection in front page query form', function(){
 
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "All (21206)",
-            "All (21206)",
+            "All (21333)",
+            "All (21333)",
         );
 
         // Deselect all tcga -provisional studies

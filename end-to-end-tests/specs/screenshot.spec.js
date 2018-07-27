@@ -345,11 +345,12 @@ describe("plots tab screenshot tests", function() {
         waitForAndCheckPlotsTab();
     });
     it("plots tab search case id", function() {
-        browser.execute(function() { resultsViewPlotsTab.executeSearchCase("TCGA-E2"); });
+        browser.click('input[data-test="ViewMutationType"]');
+        browser.execute(function() { resultsViewPlotsTab.executeSearchCase("TCGA-E2 TCGA-A8-A08G"); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab search case id and mutation", function() {
-        browser.execute(function() { resultsViewPlotsTab.executeSearchMutation("I195T"); });
+        browser.execute(function() { resultsViewPlotsTab.executeSearchMutation("I195T H179R apsdoifjapsoid"); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab search mutation", function() {
@@ -380,7 +381,7 @@ describe("plots tab screenshot tests", function() {
         waitForAndCheckPlotsTab();
     });
     it("plots tab search case id in clinical vs clinical boxplot", function() {
-        browser.execute(function() { resultsViewPlotsTab.executeSearchCase("TCGA-B6"); });
+        browser.execute(function() { resultsViewPlotsTab.executeSearchCase("kjpoij12     TCGA-B6 asdfas TCGA-A7-A13"); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab clinical vs clinical table plot", function() {
