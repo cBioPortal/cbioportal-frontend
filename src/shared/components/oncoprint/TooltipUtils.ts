@@ -153,7 +153,7 @@ export function makeGeneticTrackTooltip(
     function listOfMutationOrFusionDataToHTML(data:any[]) {
         return data.map(function(d:any) {
             var ret = $('<span>');
-            ret.append('<b>'+d.amino_acid_change+'</b>');
+            ret.append(`<b>${d.hugo_gene_symbol} ${d.amino_acid_change}</b>`);
             if (d.cancer_hotspots_hotspot) {
                 ret.append('<img src="images/cancer-hotspots.svg" title="Hotspot" style="height:11px; width:11px; margin-left:3px"/>');
             }
@@ -202,6 +202,7 @@ export function makeGeneticTrackTooltip(
             switch (molecularAlterationType) {
                 case "MUTATION_EXTENDED":
                     const tooltip_datum:any = {};
+                    tooltip_datum.hugo_gene_symbol = datum.hugoGeneSymbol;
                     tooltip_datum.amino_acid_change = datum.proteinChange;
                     tooltip_datum.driver_filter = datum.driverFilter;
                     tooltip_datum.driver_filter_annotation = datum.driverFilterAnnotation;

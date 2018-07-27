@@ -101,10 +101,12 @@ export function annotateMutationPutativeDriver(
 export function computePutativeDriverAnnotatedMutations(
     mutations: Mutation[],
     getPutativeDriverInfo:(mutation:Mutation)=>{oncoKb:string, hotspots:boolean, cbioportalCount:boolean, cosmicCount:boolean, customDriverBinary:boolean, customDriverTier?:string},
+    entrezGeneIdToGene:{[entrezGeneId:number]:Gene},
     ignoreUnknown:boolean
 ):AnnotatedMutation[] {
     return mutations.reduce((annotated:AnnotatedMutation[], mutation:Mutation)=>{
         const annotatedMutation = annotateMutationPutativeDriver(mutation, getPutativeDriverInfo(mutation)); // annotate
+        annotatedMutation.hugoGeneSymbol = entrezGeneIdToGene[mutation.entrezGeneId].hugoGeneSymbol;
         if (annotatedMutation.putativeDriver || !ignoreUnknown) {
             annotated.push(annotatedMutation);
         }
