@@ -1,31 +1,34 @@
 import * as _ from 'lodash';
-import { remoteData } from "../../shared/api/remoteData";
+import {remoteData} from "../../shared/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import { action, computed, observable, toJS } from "mobx";
+import {action, computed, observable, toJS} from "mobx";
 import {
     ClinicalDataCount,
     ClinicalDataEqualityFilter,
     CopyNumberCountByGene,
     CopyNumberGeneFilter,
-    CopyNumberGeneFilterElement, FractionGenomeAltered, FractionGenomeAlteredFilter,
+    CopyNumberGeneFilterElement,
+    FractionGenomeAltered,
+    FractionGenomeAlteredFilter,
     MutationCountByGene,
     MutationGeneFilter,
     Sample,
-    StudyViewFilter,
-    SampleIdentifier
+    SampleIdentifier,
+    StudyViewFilter
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {
     ClinicalAttribute,
     ClinicalData,
+    ClinicalDataMultiStudyFilter,
     MolecularProfile,
     MolecularProfileFilter,
-    ClinicalDataMultiStudyFilter, MutationCount
+    MutationCount
 } from 'shared/api/generated/CBioPortalAPI';
-import { PatientSurvival } from 'shared/model/PatientSurvival';
-import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
+import {PatientSurvival} from 'shared/model/PatientSurvival';
+import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
-import client from "../../shared/api/cbioportalClientInstance";
+import {isPreSelectedClinicalAttr} from './StudyViewUtils';
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT'
 
@@ -282,7 +285,18 @@ export class StudyViewPageStore {
             let filterAttributes: ClinicalAttribute[] = []
             // Todo: its a temporary logic to show limited charts initially(10 sample and 10 patient attribute charts)
             // this logic will be updated later
-            queriedAttributes.forEach(attribute => {
+            queriedAttributes.sort((a, b) => {
+                if (isPreSelectedClinicalAttr(a.clinicalAttributeId)) {
+                    if (isPreSelectedClinicalAttr(b.clinicalAttributeId)) {
+                        return 0;
+                    }
+                    return -1;
+                }
+                if (isPreSelectedClinicalAttr(b.clinicalAttributeId)) {
+                    return -1;
+                }
+                return 0;
+            }).forEach(attribute => {
                 if (attribute.patientAttribute) {
                     if (patientAttributeCount < 10) {
                         filterAttributes.push(attribute)
