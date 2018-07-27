@@ -16,6 +16,7 @@ import {scatterPlotSize} from "./PlotUtils";
 
 export interface IBaseBoxScatterPlotPoint {
     value:number;
+    jitter?:number; // between -1 and 1
 }
 
 export interface IBoxScatterPlotData<D extends IBaseBoxScatterPlotPoint> {
@@ -252,27 +253,41 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         return this.boxWidth * (this.props.horizontal ? ((this.plotDomain.y[1] - this.plotDomain.y[0])/this.chartHeight) : ((this.plotDomain.x[1] - this.plotDomain.x[0])/this.chartWidth));
     }
 
-    private jitter(seed:number) {
-        // receive seed so jitter for same number is always the same
-        return 0.5*this.boxWidthDataSpace * getDeterministicRandomNumber(seed, [-1, 1]);
+    private jitter(d:D, randomNumber:number) {
+        // randomNumber: between -1 and 1
+        return 0.5*this.boxWidthDataSpace * randomNumber;
     }
 
     @bind
-    private scatterPlotX(d:IBaseScatterPlotData) {
+    private scatterPlotX(d:IBaseScatterPlotData & D) {
         if (this.props.logScale && this.props.horizontal) {
             return this.logScale(d.x);
         } else {
-            const jitter = this.props.horizontal ? 0 : this.jitter(d.y);
+            let jitter = 0;
+            if (!this.props.horizontal) {
+                let jitterRandomNumber = d.jitter;
+                if (jitterRandomNumber === undefined) {
+                    jitterRandomNumber = getDeterministicRandomNumber(d.y, [-1,1]);
+                }
+                jitter = this.jitter(d, jitterRandomNumber);
+            }
             return d.x + jitter;
         }
     }
 
     @bind
-    private scatterPlotY(d:IBaseScatterPlotData) {
+    private scatterPlotY(d:IBaseScatterPlotData & D) {
         if (this.props.logScale && !this.props.horizontal) {
             return this.logScale(d.y);
         } else {
-            const jitter = this.props.horizontal ? this.jitter(d.x) : 0;
+            let jitter = 0;
+            if (this.props.horizontal) {
+                let jitterRandomNumber = d.jitter;
+                if (jitterRandomNumber === undefined) {
+                    jitterRandomNumber = getDeterministicRandomNumber(d.x, [-1,1]);
+                }
+                jitter = this.jitter(d, jitterRandomNumber);
+            }
             return d.y + jitter;
         }
     }
@@ -344,7 +359,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                 data.push(Object.assign({}, d, {
                     [dataAxis]:d.value,
                     [categoryAxis]:categoryCoord,
-                } as {x:number, y:number}));
+                } as {x:number, y:number} & IBaseBoxScatterPlotPoint));
             }
         }
         return data;
