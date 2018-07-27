@@ -38,6 +38,7 @@ import fileDownload from 'react-file-download';
 import onMobxPromise from "../../../shared/lib/onMobxPromise";
 import {logicalOr} from "../../../shared/lib/LogicUtils";
 import {SpecialAttribute} from "../../../shared/cache/OncoprintClinicalDataCache";
+import NoOqlWarning from "../../../shared/components/NoOqlWarning";
 
 enum EventKey {
     horz_logScale,
@@ -1284,14 +1285,19 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     public render() {
         return (
-            <div className={"plotsTab"} style={{display:"flex", flexDirection:"row", maxWidth:"inherit"}} data-test="PlotsTabEntireDiv">
-                <div className="leftColumn">
-                    <Observer>
-                        {this.controls}
-                    </Observer>
+            <div data-test="PlotsTabEntireDiv">
+                <div style={{marginBottom:10, marginTop:7, marginLeft:11.5}}>
+                    {NoOqlWarning}
                 </div>
-                <div style={{overflow:"auto"}}>
-                    {this.plot}
+                <div className={"plotsTab"} style={{display:"flex", flexDirection:"row", maxWidth:"inherit"}}>
+                    <div className="leftColumn">
+                        <Observer>
+                            {this.controls}
+                        </Observer>
+                    </div>
+                    <div style={{overflow:"auto"}}>
+                        {this.plot}
+                    </div>
                 </div>
             </div>
         );
