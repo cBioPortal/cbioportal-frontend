@@ -34,6 +34,7 @@ import client from "../../../shared/api/cbioportalClientInstance";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
 import { FractionGenomeAlteredFilter } from "shared/api/generated/CBioPortalAPIInternal";
 import {SpecialAttribute} from "../../../shared/cache/OncoprintClinicalDataCache";
+import {getDeterministicRandomNumber, getJitterForCase} from "../../../shared/components/plots/PlotUtils";
 
 export const CLIN_ATTR_DATA_TYPE = "clinical_attribute";
 export const dataTypeToDisplayType:{[s:string]:string} = {
@@ -104,6 +105,7 @@ export interface IScatterPlotData extends IScatterPlotSampleData, IBaseScatterPl
 export interface IBoxScatterPlotPoint extends IScatterPlotSampleData {
     category:string;
     value:number;
+    jitter:number;
 }
 
 export function isStringData(d:IAxisData): d is IStringAxisData {
@@ -1024,7 +1026,7 @@ export function makeScatterPlotData(
         mutations ? _.groupBy(mutations.data, m=>m.uniqueSampleKey) : {};
     const cnaMap:{[uniqueSampleKey:string]:NumericGeneMolecularData[]} =
         copyNumberAlterations? _.groupBy(copyNumberAlterations.data, d=>d.uniqueSampleKey) : {};
-    const dataMap:{[uniqueSampleKey:string]:Partial<IScatterPlotSampleData & { x:string|number, y:number, category:string, value:number }>} = {};
+    const dataMap:{[uniqueSampleKey:string]:Partial<IScatterPlotSampleData & { x:string|number, y:number, category:string, value:number, jitter:number }>} = {};
     for (const d of horzData.data) {
         const sample = uniqueSampleKeyToSample[d.uniqueSampleKey];
         const sampleCopyNumberAlterations:NumericGeneMolecularData[] | undefined = cnaMap[d.uniqueSampleKey];
@@ -1106,6 +1108,7 @@ export function makeScatterPlotData(
             // we only care about cases with both x and y data
             datum.y = d.value;
             datum.value = d.value;
+            datum.jitter = getJitterForCase(d.uniqueSampleKey);
             data.push(datum);
         }
     }
