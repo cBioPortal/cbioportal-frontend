@@ -237,7 +237,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             const buckets = getMolecularDataBuckets(studyData, this.showMutations, this.mutationsKeyedBySampleId, this.props.coverageInformation, this.selectedGene);
             const mutationTraces = _.mapValues(buckets.mutationBuckets, (molecularData: NumericGeneMolecularData[], canonicalMutationType: string) => {
                 return molecularData.map((datum) => {
-                    return {y: datum, x: i + calculateJitter(this.boxWidth, datum.value)}
+                    return {y: datum, x: i + calculateJitter(datum.uniqueSampleKey)}
                 });
             });
             mutationScatterTraces.push(mutationTraces);
@@ -258,7 +258,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             const studyData = sortedData[i];
             const buckets = this.molecularDataByMutationType[i];
             const unmutatedTrace = buckets.unmutatedBucket.map((datum: NumericGeneMolecularData) => {
-                return {y: datum, x: i + calculateJitter(this.boxWidth, datum.value)}
+                return {y: datum, x: i + calculateJitter(datum.uniqueSampleKey)}
             });
             unMutatedTraces.push(unmutatedTrace);
         }
@@ -272,7 +272,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             // get buckets for this study
             const buckets = this.molecularDataByMutationType[i];
             const unsequencedTrace = buckets.unsequencedBucket.map((datum: NumericGeneMolecularData) => {
-                return {y: datum, x: i + calculateJitter(this.boxWidth, datum.value)}
+                return {y: datum, x: i + calculateJitter(datum.uniqueSampleKey)}
             });
             unsequencedTraces.push(unsequencedTrace);
         }
