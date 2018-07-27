@@ -107,6 +107,7 @@ export interface ExtendedAlteration extends Mutation, NumericGeneMolecularData {
 };
 
 export interface AnnotatedMutation extends Mutation {
+    hugoGeneSymbol:string;
     putativeDriver: boolean;
     oncoKbOncogenic:string;
     isHotspot:boolean;
@@ -1699,10 +1700,11 @@ export class ResultsViewPageStore {
     readonly putativeDriverAnnotatedMutations = remoteData<AnnotatedMutation[]>({
         await:()=>[
             this.mutations,
-            this.getPutativeDriverInfo
+            this.getPutativeDriverInfo,
+            this.entrezGeneIdToGene
         ],
         invoke:()=>{
-            return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutations.result!, this.getPutativeDriverInfo.result!, !!this.mutationAnnotationSettings.ignoreUnknown));
+            return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutations.result!, this.getPutativeDriverInfo.result!, this.entrezGeneIdToGene.result!, !!this.mutationAnnotationSettings.ignoreUnknown));
         }
     });
 
@@ -1711,10 +1713,11 @@ export class ResultsViewPageStore {
             q=>({
                 await: ()=>[
                     this.mutationCache.get(q),
-                    this.getPutativeDriverInfo
+                    this.getPutativeDriverInfo,
+                    this.entrezGeneIdToGene
                 ],
                 invoke: ()=>{
-                    return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutationCache.get(q).result!, this.getPutativeDriverInfo.result!, !!this.mutationAnnotationSettings.ignoreUnknown));
+                    return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutationCache.get(q).result!, this.getPutativeDriverInfo.result!, this.entrezGeneIdToGene.result!, !!this.mutationAnnotationSettings.ignoreUnknown));
                 }
             })
         );
