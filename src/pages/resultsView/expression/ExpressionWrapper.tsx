@@ -204,10 +204,11 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
         for (let i = 0; i < sortedData.length; i++) {
             const studyData = sortedData[i];
 
-            // we don't want to let zero values affect the distribution markers
-            //const withoutZeros = studyData.filter((molecularData: NumericGeneMolecularData) => molecularData.value > 0);
+            let transformedData = studyData;
 
-            const boxData = calculateBoxPlotModel(studyData.map(this.dataTransformer));
+            transformedData = transformedData.filter((molecularData: NumericGeneMolecularData) => molecularData.value > 0);
+
+            const boxData = calculateBoxPlotModel(transformedData.map(this.dataTransformer));
 
             // *IMPORTANT* because Victory does not handle outliers,
             // we are overriding meaning of min and max in order to show whiskers
@@ -612,7 +613,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     width={this.chartWidth}
                     theme={CBIOPORTAL_VICTORY_THEME}
                     domainPadding={{x: [30, 30], y:[10, 10]}}
-                    domain={{y: [this.domain.min, this.domain.max], x:[0,this.victoryTraces.boxTraces.length + 1]}}
+                    domain={{ x:[0,this.victoryTraces.boxTraces.length + 1]}}
                     padding={{bottom: this.paddingBottom, left: 100, top: 60, right: 10}}
                     containerComponent={<VictoryContainer width={this.containerWidth} containerRef={(ref: any) => this.svgContainer = ref}
                                                           responsive={false}/>}
