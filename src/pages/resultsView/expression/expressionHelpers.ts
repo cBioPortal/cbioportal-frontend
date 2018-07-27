@@ -9,6 +9,7 @@ import {
     MUT_COLOR_FUSION, MUT_COLOR_INFRAME,
     MUT_COLOR_MISSENSE, MUT_COLOR_PROMOTER, MUT_COLOR_TRUNC
 } from "../../../shared/components/oncoprint/geneticrules";
+import {getJitterForCase} from "../../../shared/components/plots/PlotUtils";
 
 export type ExpressionStyle = {
     typeName: string;
@@ -157,21 +158,8 @@ export function getMolecularDataBuckets(studyData: NumericGeneMolecularData[],
 
 }
 
-
-function getRandomNumber(seed:number) {
-    // source: https://stackoverflow.com/a/23304189
-    seed = Math.sin(seed)*10000;
-    return seed - Math.floor(seed);
-}
-
-// private jitter(seed:number) {
-//     // receive seed so jitter for same number is always the same
-//     return varianceSize * (getRandomNumber(seed) - getRandomNumber(seed+1));
-// }
-
-export function calculateJitter(boxWidth: number, seed:number){
-    return (getRandomNumber(seed) - getRandomNumber(seed+1)) * 0.30;
-    //return (Math.random()-0.5)*0.45;
+export function calculateJitter(uniqueSampleKey:string){
+    return getJitterForCase(uniqueSampleKey)*0.30;
 
 }
 

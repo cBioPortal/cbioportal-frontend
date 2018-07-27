@@ -8,6 +8,22 @@ export function getDeterministicRandomNumber(seed:number, range?:[number, number
     return r;
 }
 
+function getSeedFromUniqueKey(uniqueKey:string) {
+    let hash = 0, i, chr;
+    if (uniqueKey.length === 0) return hash;
+    for (i = 0; i < uniqueKey.length; i++) {
+        chr   = uniqueKey.charCodeAt(i);
+        hash  = ((hash << 5) - hash) + chr;
+        hash |= 0; // Convert to 32bit integer
+    }
+    return hash;
+}
+
+export function getJitterForCase(uniqueKey:string) {
+    const seed = getSeedFromUniqueKey(uniqueKey);
+    return getDeterministicRandomNumber(seed, [-1,1]);
+}
+
 export function scatterPlotSize<D>(
     highlight?:(d:D)=>boolean,
     size?:(d:D, active:Boolean, isHighlighted?:boolean)=>number
