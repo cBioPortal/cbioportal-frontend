@@ -148,7 +148,7 @@ export default class MiniBoxPlot extends React.Component<IMiniBoxPlotProps, {}> 
                                             grid: {stroke: "none"}
                                     }} />
                                     <VictoryAxis label={this.props.selectedGeneHugo + ", " + this.props.selectedProfile.name} 
-                                        dependentAxis={true} style={{
+                                        dependentAxis={true} crossAxis={false} style={{
                                             axisLabel: { padding: 40 },
                                             grid: {stroke: "none"}
                                     }}/>
