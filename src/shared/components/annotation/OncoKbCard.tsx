@@ -103,8 +103,8 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
 
         const treatmentTooltipContent = (abstracts.length > 0 || pmids.length > 0) ?
             () => (
-                <div style={{maxWidth: "400px", maxHeight: "200px", overflowY: "auto"}}>
-                    <ul className="list-group" style={{marginBottom: 0}}>
+                <div style={{maxWidth: "400px", maxHeight: "400px", overflowY: "auto"}}>
+                    <ul className="list-group" style={{margin: '0 5px'}}>
                         {this.abstractList(abstracts)}
                         {this.pmidList(pmids, pmidData)}
                     </ul>
@@ -194,7 +194,7 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
                     <b>{title}</b>
                 </a>
                 <br/>
-                <div style={{width: "100%"}}>
+                <div style={{width: "100%", display: 'inline-block'}}>
                     {author} {source}. {date} <span style={{float: "right"}}>PMID: {pmid}</span>
                 </div>
             </li>
@@ -518,8 +518,8 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
         if (componentType === 'tooltip')
         {
             const tooltipContent = () => (
-                <div style={{maxWidth: "400px", maxHeight: "200px", overflowY: "auto"}}>
-                    <ul className="list-group" style={{marginBottom: 0}}>
+                <div style={{maxWidth: "400px", maxHeight: "400px", overflowY: "auto"}}>
+                    <ul className="list-group" style={{margin: '0 5px'}}>
                         {this.pmidList(ids.map((id:string) => parseInt(id)), this.props.pmidData)}
                     </ul>
                 </div>
