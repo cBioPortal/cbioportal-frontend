@@ -49,6 +49,7 @@ export const dataTypeDisplayOrder = [CLIN_ATTR_DATA_TYPE, "MRNA_EXPRESSION", "CO
 export const CNA_STROKE_WIDTH = 1.8;
 export const PLOT_SIDELENGTH = 650;
 
+
 export interface IAxisData {
     data:{
         uniqueSampleKey:string;
@@ -80,8 +81,10 @@ export enum MutationSummary {
     Neither="Neither", Both="Both", One="One"
 }
 
-const NOT_PROFILED_MUTATION_LEGEND_LABEL = "Not profiled for mutations";
-const NOT_PROFILED_CNA_LEGEND_LABEL = "Not profiled for copy number alterations";
+const NOT_PROFILED_MUTATION_LEGEND_LABEL = ["Not profiled","for mutations"];
+const NOT_PROFILED_CNA_LEGEND_LABEL = ["Not profiled", "for copy number", "alterations"];
+const MUTATION_TYPE_NOT_PROFILED = "not_profiled_mutation";
+const MUTATION_TYPE_NOT_MUTATED = "not_mutated";
 
 export interface IScatterPlotSampleData {
     uniqueSampleKey:string;
@@ -110,13 +113,64 @@ export function isNumberData(d:IAxisData): d is INumberAxisData {
     return d.datatype === "number";
 }
 
+export function sortScatterPlotDataForZIndex<D extends Pick<IScatterPlotSampleData, "dispMutationType" | "dispMutationSummary" | "profiledMutations">>(
+    data: D[],
+    viewType:ViewType,
+    highlight: (d:D)=>boolean
+) {
+    // sort by render priority
+    switch (viewType) {
+        case ViewType.MutationTypeAndCopyNumber:
+        case ViewType.MutationType:
+            data = _.sortBy<D>(data, d=>{
+                if (d.dispMutationType! in mutationRenderPriority) {
+                    return -mutationRenderPriority[d.dispMutationType!]
+                } else if (!d.dispMutationType) {
+                    return -mutationRenderPriority[MUTATION_TYPE_NOT_MUTATED];
+                } else if (!d.profiledMutations) {
+                    return -mutationRenderPriority[MUTATION_TYPE_NOT_PROFILED];
+                } else {
+                    return Number.NEGATIVE_INFINITY;
+                }
+            });
+            break;
+        case ViewType.MutationSummary:
+            data = _.sortBy<D>(data, d=>{
+                if (d.dispMutationSummary! in mutationSummaryRenderPriority) {
+                    return -mutationSummaryRenderPriority[d.dispMutationSummary!]        ;
+                } else if (!d.profiledMutations) {
+                    return -mutationSummaryRenderPriority[MUTATION_TYPE_NOT_PROFILED];
+                } else {
+                    return Number.NEGATIVE_INFINITY;
+                }
+            });
+            break;
+    }
+    // Now that we've sorted by render order, put highlighted data on top
+    const highlighted = [];
+    const unhighlighted = [];
+    for (const d of data) {
+        if (highlight(d)) {
+            highlighted.push(d);
+        } else {
+            unhighlighted.push(d);
+        }
+    }
+    return unhighlighted.concat(highlighted);
+}
+
 export function scatterPlotSize(
     d:IScatterPlotSampleData,
     active:boolean,
     isHighlighted:boolean
 ) {
-    const big = active || isHighlighted;
-    return big ? 6 : 4;
+    if (isHighlighted) {
+        return 8;
+    } else if (active) {
+        return 6;
+    } else {
+        return 4;
+    }
 }
 
 export function scatterPlotLegendData(
@@ -155,12 +209,13 @@ function scatterPlotMutationSummaryLegendData(
         }).uniq().filter(x=>!!x).value();
     // no data, not profiled
 
-    const legendData = mutationSummaryLegendOrder.filter(x=>(unique.indexOf(x) > -1)).map((x:MutationSummary)=>{
+    const legendData:any[] = mutationSummaryLegendOrder.filter(x=>(unique.indexOf(x) > -1)).map((x:MutationSummary)=>{
         const appearance = mutationSummaryToAppearance[x];
         return {
             name: appearance.legendLabel,
             symbol: {
                 stroke: appearance.stroke,
+                strokeOpacity: appearance.strokeOpacity,
                 fill: appearance.fill,
                 type: "circle"
             }
@@ -171,6 +226,7 @@ function scatterPlotMutationSummaryLegendData(
             name: NOT_PROFILED_MUTATION_LEGEND_LABEL,
             symbol: {
                 stroke: notProfiledAppearance.stroke,
+                strokeOpacity: notProfiledAppearance.strokeOpacity,
                 fill: notProfiledAppearance.fill,
                 type: "circle"
             }
@@ -207,7 +263,7 @@ function scatterPlotMutationLegendData(
             .keyBy(x=>x)
             .value();
 
-    const legendData =
+    const legendData:any[] =
         _.chain(mutationLegendOrder)
         .filter(type=>!!uniqueMutations[type])
         .map(type=>{
@@ -216,7 +272,7 @@ function scatterPlotMutationLegendData(
                 name: appearance.legendLabel,
                 symbol: {
                     stroke: appearance.stroke,
-                    strokeOpacity: +showStroke,
+                    strokeOpacity: (showStroke ? appearance.strokeOpacity : 0),
                     fill: appearance.fill,
                     type: appearance.symbol
                 }
@@ -228,7 +284,7 @@ function scatterPlotMutationLegendData(
             name: noMutationAppearance.legendLabel,
             symbol: {
                 stroke: noMutationAppearance.stroke,
-                strokeOpacity: +showStroke,
+                strokeOpacity: (showStroke ? noMutationAppearance.strokeOpacity : 0),
                 fill: noMutationAppearance.fill,
                 type: noMutationAppearance.symbol
             }
@@ -239,7 +295,7 @@ function scatterPlotMutationLegendData(
             name: NOT_PROFILED_MUTATION_LEGEND_LABEL,
             symbol: {
                 stroke: notProfiledAppearance.stroke,
-                strokeOpacity: +showStroke,
+                strokeOpacity: (showStroke ? notProfiledAppearance.strokeOpacity : 0),
                 fill: notProfiledAppearance.fill,
                 type: "circle"
             }
@@ -291,7 +347,8 @@ function scatterPlotCnaLegendData(
             symbol: {
                 stroke: noCnaAppearance.stroke,
                 fillOpacity: 0,
-                type: "circle"
+                type: "circle",
+                strokeWidth: CNA_STROKE_WIDTH
             }
         });
     }
@@ -301,7 +358,8 @@ function scatterPlotCnaLegendData(
             symbol: {
                 stroke: notProfiledAppearance.stroke,
                 fill: notProfiledAppearance.fill,
-                type: "circle"
+                type: "circle",
+                strokeWidth: CNA_STROKE_WIDTH
             }
         });
     }
@@ -556,88 +614,103 @@ export function getAxisDescription(
     return ret;
 }
 
-export const oncoprintMutationTypeToAppearanceDrivers:{[mutType:string]:{symbol:string, fill:string, stroke:string, legendLabel:string}}
+const NON_CNA_STROKE_OPACITY = 0.5;
+
+export const oncoprintMutationTypeToAppearanceDrivers:{[mutType:string]:{symbol:string, fill:string, stroke:string, strokeOpacity:number, legendLabel:string}}
 = {
     "inframe": {
         symbol : "circle",
         fill : MUT_COLOR_INFRAME_PASSENGER,
         stroke : "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel : "Inframe (VUS)"
     },
     "inframe.driver": {
         symbol : "circle",
         fill: MUT_COLOR_INFRAME,
         stroke : "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel : "Inframe (Driver)"
     },
     "missense":{
         symbol : "circle",
         fill : MUT_COLOR_MISSENSE_PASSENGER,
         stroke : "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel : "Missense (VUS)"
     },
     "missense.driver":{
         symbol : "circle",
         fill : MUT_COLOR_MISSENSE,
         stroke : "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel : "Missense (Driver)"
     },
     "fusion":{
         symbol: "circle",
         fill: MUT_COLOR_FUSION,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Fusion"
     },
     "trunc":{
         symbol: "circle",
         fill: MUT_COLOR_TRUNC_PASSENGER,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Truncating (VUS)"
     },
     "trunc.driver":{
         symbol: "circle",
         fill: MUT_COLOR_TRUNC,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Truncating (Driver)"
     },
     "promoter":{
         symbol: "circle",
         fill: MUT_COLOR_PROMOTER,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Promoter"
     }
 };
 
-export const oncoprintMutationTypeToAppearanceDefault:{[mutType:string]:{symbol:string, fill:string, stroke:string, legendLabel:string}}
+export const oncoprintMutationTypeToAppearanceDefault:{[mutType:string]:{symbol:string, fill:string, stroke:string, strokeOpacity:number, legendLabel:string}}
     = {
     "inframe": {
         symbol : "circle",
         fill: MUT_COLOR_INFRAME,
         stroke : "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel : "Inframe"
     },
     "missense":{
         symbol : "circle",
         fill : MUT_COLOR_MISSENSE,
         stroke : "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel : "Missense"
     },
     "fusion":{
         symbol: "circle",
         fill: MUT_COLOR_FUSION,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Fusion"
     },
     "trunc":{
         symbol: "circle",
         fill: MUT_COLOR_TRUNC,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Truncating"
     },
     "promoter":{
         symbol: "circle",
         fill: MUT_COLOR_PROMOTER,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Promoter"
     }
 };
@@ -646,6 +719,7 @@ export const notProfiledAppearance = {
     symbol: "circle",
     fill: "#ffffff",
     stroke: "d3d3d3", // TODO: right grey?
+    strokeOpacity:0,
 };
 
 export const mutationLegendOrder = [
@@ -657,13 +731,14 @@ export const mutationLegendOrder = [
 ];
 export const mutationRenderPriority = stringListToIndexSet([
     "fusion", "promoter.driver", "trunc.driver", "inframe.driver", "missense.driver",
-    "promoter", "trunc", "inframe", "missense"
+    "promoter", "trunc", "inframe", "missense", MUTATION_TYPE_NOT_MUTATED, MUTATION_TYPE_NOT_PROFILED
 ]);
 
 export const noMutationAppearance = {
     symbol : "circle",
     fill : "#e3e3e3",
     stroke : "#000000",
+    strokeOpacity:0,
     legendLabel : "Not mutated"
 };
 
@@ -671,53 +746,62 @@ export const mutationSummaryToAppearance = {
     "Neither":{
         fill: "#00AAF8",
         stroke: "#0089C6",
+        strokeOpacity:1,
         legendLabel: "Neither mutated"
     },
     "One":{
         fill : "#DBA901",
         stroke : "#886A08",
+        strokeOpacity:1,
         legendLabel : "One Gene mutated"
     },
     "Both":{
         fill : "#FF0000",
         stroke : "#B40404",
+        strokeOpacity:1,
         legendLabel: "Both mutated"
     }
 };
 export const mutationSummaryLegendOrder = [MutationSummary.Both, MutationSummary.One, MutationSummary.Neither];
-export const mutationSummaryRenderPriority = stringListToIndexSet(mutationSummaryLegendOrder);
+export const mutationSummaryRenderPriority = stringListToIndexSet((mutationSummaryLegendOrder as any[]).concat(MUTATION_TYPE_NOT_PROFILED));
 
 const cnaToAppearance = {
     "-2":{
         legendLabel: "Deep Deletion",
         stroke:CNA_COLOR_HOMDEL,
+        strokeOpacity:1,
     },
     "-1":{
         legendLabel: "Shallow Deletion",
         stroke:"#2aced4",
+        strokeOpacity:1,
     },
     "0":{
         legendLabel: "Diploid",
         stroke:DEFAULT_GREY,
+        strokeOpacity:1,
     },
     "1":{
         legendLabel: "Gain",
         stroke: "#ff8c9f",
+        strokeOpacity:1,
     },
     "2":{
         legendLabel: "Amplification",
         stroke: CNA_COLOR_AMP,
+        strokeOpacity:1,
     }
 };
 
 const noCnaAppearance = {
     stroke: "#333333",
+    strokeOpacity:1,
     legendLabel: "No CNA data",
 };
 
 const cnaCategoryOrder = ["-2", "-1", "0", "1", "2"].map(x=>(cnaToAppearance as any)[x].legendLabel);
 
-function getMutationTypeAppearance(d:IScatterPlotSampleData, oncoprintMutationTypeToAppearance:{[mutType:string]:{symbol:string, fill:string, stroke:string, legendLabel:string}}) {
+function getMutationTypeAppearance(d:IScatterPlotSampleData, oncoprintMutationTypeToAppearance:{[mutType:string]:{symbol:string, fill:string, stroke:string, strokeOpacity:number, legendLabel:string}}) {
     if (!d.profiledMutations) {
         return notProfiledAppearance;
     } else if (!d.dispMutationType) {
@@ -741,7 +825,7 @@ export function makeScatterPlotPointAppearance(
     mutationDataExists: MobxPromise<boolean>,
     cnaDataExists: MobxPromise<boolean>,
     driversAnnotated: boolean
-):(d:IScatterPlotSampleData)=>{ stroke:string, fill?:string, symbol?:string} {
+):(d:IScatterPlotSampleData)=>{ stroke:string, strokeOpacity:number, fill?:string, symbol?:string} {
     const oncoprintMutationTypeToAppearance = driversAnnotated ? oncoprintMutationTypeToAppearanceDrivers: oncoprintMutationTypeToAppearanceDefault;
     switch (viewType) {
         case ViewType.MutationTypeAndCopyNumber:
@@ -794,8 +878,8 @@ function tooltipMutationsSection(
     mutations:AnnotatedMutation[],
     entrezGeneIdToGene:{[entrezGeneId:number]:Gene}
 ) {
-    const oncoKbIcon = (mutation:AnnotatedMutation)=>(<img src="images/oncokb-oncogenic-1.svg" title={mutation.oncoKbOncogenic} style={{height:11, width:11, marginBottom: 2}}/>);
-    const hotspotIcon = <img src="images/cancer-hotspots.svg" title="Hotspot" style={{height:11, width:11, marginBottom:3}}/>;
+    const oncoKbIcon = (mutation:AnnotatedMutation)=>(<img src="images/oncokb-oncogenic-1.svg" title={mutation.oncoKbOncogenic} style={{height:11, width:11, marginLeft:2, marginBottom: 2}}/>);
+    const hotspotIcon = <img src="images/cancer-hotspots.svg" title="Hotspot" style={{height:11, width:11, marginLeft:2, marginBottom:3}}/>;
     const mutationsByGene = _.groupBy(mutations.filter(m=>!!m.proteinChange), m=>entrezGeneIdToGene[m.entrezGeneId].hugoGeneSymbol);
     const sorted = _.chain(mutationsByGene).entries().sortBy(x=>x[0]).value();
     return (
@@ -805,10 +889,10 @@ function tooltipMutationsSection(
                 for (const mutation of entry[1]) {
                     proteinChangeComponents.push(
                         <span key={mutation.proteinChange}>
-                            {mutation.proteinChange} {mutation.isHotspot ? hotspotIcon : null} {mutation.oncoKbOncogenic ? oncoKbIcon(mutation) : null}
+                            {mutation.proteinChange}<span style={{marginLeft:1}}>{mutation.isHotspot ? hotspotIcon : null}{mutation.oncoKbOncogenic ? oncoKbIcon(mutation) : null}</span>
                         </span>
                     );
-                    proteinChangeComponents.push(<span>,</span>);
+                    proteinChangeComponents.push(<span>, </span>);
                 }
                 proteinChangeComponents.pop(); // remove last comma
                 return (
@@ -1053,16 +1137,24 @@ function makeScatterPlotData_profiledReport(
 
 export function getCnaQueries(
     entrezGeneId:number,
-    studyToMolecularProfileDiscrete:{[studyId:string]:MolecularProfile}
+    studyToMolecularProfileDiscrete:{[studyId:string]:MolecularProfile},
+    cnaDataShown:boolean
 ) {
+    if (!cnaDataShown) {
+        return [];
+    }
     return _.values(studyToMolecularProfileDiscrete)
         .map(p=>({molecularProfileId: p.molecularProfileId, entrezGeneId}));
 }
 
 export function getMutationQueries(
     horzSelection:AxisMenuSelection,
-    vertSelection:AxisMenuSelection
+    vertSelection:AxisMenuSelection,
+    mutationDataShown:boolean
 ) {
+    if (!mutationDataShown) {
+        return [];
+    }
     const queries:{entrezGeneId:number}[] = [];
     let horzEntrezGeneId:number | undefined = undefined;
     if (horzSelection.dataType !== CLIN_ATTR_DATA_TYPE &&
