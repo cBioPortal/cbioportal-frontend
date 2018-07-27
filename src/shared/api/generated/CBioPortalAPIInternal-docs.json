@@ -6,7 +6,7 @@
     "title": "cBioPortal web API [Beta]",
     "contact": {
       "name": "cBioPortal",
-      "url": "www.cbioportal.org",
+      "url": "http://www.cbioportal.org",
       "email": "cbioportal@googlegroups.com"
     },
     "license": {
