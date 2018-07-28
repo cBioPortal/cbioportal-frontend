@@ -26,6 +26,7 @@ import setWindowVariable from "../../../shared/lib/setWindowVariable";
 import {ICoExpressionPlotProps} from "./CoExpressionPlot";
 import {bind} from "bind-decorator";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
+import NoOqlWarning from "../../../shared/components/NoOqlWarning";
 
 export interface ICoExpressionTabProps {
     molecularProfiles:MolecularProfile[];
@@ -248,8 +249,9 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
     }
 
     render() {
+        let divContents = null;
         if (this.profiles.length) {
-            return (
+            divContents = (
                 <div>
                     <Observer>
                         {this.header}
@@ -260,11 +262,19 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                 </div>
             );
         } else {
-            return (
+            divContents = (
                 <div>
                     <span>There are no available profiles in the queried studies.</span>
                 </div>
             );
         }
+        return (
+            <div>
+                <div style={{marginBottom:10}}>
+                    {NoOqlWarning}
+                </div>
+                {divContents}
+            </div>
+        );
     }
 }
