@@ -1,19 +1,20 @@
 import * as React from "react";
 import styles from "./styles.module.scss";
-import { observer } from "mobx-react";
-import { action, computed, observable } from "mobx";
+import {observer} from "mobx-react";
+import {action, computed, observable} from "mobx";
 import _ from "lodash";
-import { StudyViewComponentLoader } from "./StudyViewComponentLoader";
-import { ChartHeader, ChartControls } from "pages/studyView/chartHeader/ChartHeader";
-import { ChartType, ChartMeta, ClinicalDataCountWithColor } from "pages/studyView/StudyViewPageStore";
+import {StudyViewComponentLoader} from "./StudyViewComponentLoader";
+import {ChartControls, ChartHeader} from "pages/studyView/chartHeader/ChartHeader";
+import {ChartMeta, ChartType} from "pages/studyView/StudyViewPageStore";
 import fileDownload from 'react-file-download';
 import PieChart from "pages/studyView/charts/pieChart/PieChart";
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 import classnames from 'classnames';
-import StudyViewClinicalDataCountsCache from "shared/cache/StudyViewClinicalDataCountsCache";
-import { StudyViewFilter } from "shared/api/generated/CBioPortalAPIInternal";
+import {StudyViewFilter} from "shared/api/generated/CBioPortalAPIInternal";
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
-import { bind } from "bind-decorator";
+import {bind} from "bind-decorator";
+import MobxPromise from "mobxpromise";
+import SurvivalChart from "../../resultsView/survival/SurvivalChart";
 
 export interface AbstractChart {
     downloadData: () => string;
@@ -22,7 +23,7 @@ export interface AbstractChart {
 
 export interface IChartContainerProps {
     chartMeta: ChartMeta;
-    dataCache: StudyViewClinicalDataCountsCache;
+    promise: MobxPromise<any>;
     filter: StudyViewFilter;
     onUserSelection: (chartMeta: ChartMeta, value: string[]) => void;
     onDeleteChart: (uniqueKey: string) => void;
@@ -39,13 +40,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @observable chartType: ChartType
 
     @computed get fileName() {
-        return this.props.chartMeta.clinicalAttribute.displayName.replace(/[ \t]/g, '_');
+        return this.props.chartMeta.displayName.replace(/[ \t]/g, '_');
     }
 
     constructor(props: IChartContainerProps) {
         super(props);
 
-        this.chartType = this.props.chartMeta.defaultChartType;
+        this.chartType = this.props.chartMeta.chartType;
 
         this.handlers = {
             ref: (plot: AbstractChart) => {
@@ -66,7 +67,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 this.mouseInChart = false;
             }),
             handleDownloadDataClick: () => {
-                let firstLine = this.props.chartMeta.clinicalAttribute.displayName + '\tCount'
+                let firstLine = this.props.chartMeta.displayName + '\tCount'
                 fileDownload(firstLine + '\n' + this.plot.downloadData(), this.fileName);
 
             },
@@ -124,7 +125,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 break;
             }
             case ChartType.TABLE: {
-                if (!_.isEqual(this.props.chartMeta.defaultChartType, ChartType.TABLE)) {
+                if (!_.isEqual(this.props.chartMeta.chartType, ChartType.TABLE)) {
                     controls = { showPieIcon: true }
                 }
                 break;
@@ -145,18 +146,41 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     ref={this.handlers.ref}
                     onUserSelection={this.handlers.onUserSelection}
                     filters={this.chartFilters}
-                    data={this.props.dataCache.get({ attribute: this.props.chartMeta.clinicalAttribute, filters: this.props.filter }).result!}
+                    data={this.props.promise.result}
                     active={this.mouseInChart}
                     placement={this.placement}
                 />)
             }
             case ChartType.TABLE: {
                 return (<ClinicalTable
-                    data={this.props.dataCache.get({ attribute: this.props.chartMeta.clinicalAttribute, filters: this.props.filter }).result!}
+                    data={this.props.promise.result}
                     filters={this.chartFilters}
                     onUserSelection={this.handlers.onUserSelection}
-                    label={this.props.chartMeta.clinicalAttribute.displayName}
+                    label={this.props.chartMeta.displayName}
                 />)
+            }
+            case ChartType.SURVIVAL: {
+                return (
+                    <SurvivalChart alteredPatientSurvivals={this.props.promise.result.alteredGroup}
+                                   unalteredPatientSurvivals={this.props.promise.result.unalteredGroup}
+                                   title={'test'}
+                                   xAxisLabel="Months Survival"
+                                   yAxisLabel="Surviving"
+                                   totalCasesHeader="Number of Cases, Total"
+                                   statusCasesHeader="Number of Cases, Deceased"
+                                   medianMonthsHeader="Median Months Survival"
+                                   yLabelTooltip="Survival estimate"
+                                   xLabelWithEventTooltip="Time of death"
+                                   xLabelWithoutEventTooltip="Time of last observation"
+                                   showDownloadButtons={false}
+                                   showTable={false}
+                                   showLegend={false}
+                                   styleOpts={{
+                                       width: 450,
+                                       height: 300
+                                   }}
+                                   fileName="Overall_Survival"/>
+                )
             }
             default: return null;
         }
@@ -168,7 +192,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 onMouseEnter={this.handlers.onMouseEnterChart}
                 onMouseLeave={this.handlers.onMouseLeaveChart}>
                 <ChartHeader
-                    clinicalAttribute={this.props.chartMeta.clinicalAttribute}
+                    chartMeta={this.props.chartMeta}
                     active={this.mouseInChart}
                     resetChart={this.handlers.resetFilters}
                     deleteChart={this.handlers.onDeleteChart}
@@ -176,7 +200,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     chartControls={this.chartControls}
                     changeChartType={this.changeChartType}
                 />
-                <StudyViewComponentLoader promise={this.props.dataCache.get({ attribute: this.props.chartMeta.clinicalAttribute, filters: this.props.filter })}>
+                <StudyViewComponentLoader promise={this.props.promise}>
                     {this.chart}
                 </StudyViewComponentLoader>
             </div>

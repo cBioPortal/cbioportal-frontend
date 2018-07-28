@@ -29,6 +29,7 @@ import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
 import {isPreSelectedClinicalAttr} from './StudyViewUtils';
+import MobxPromise from 'mobxpromise';
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT'
 
@@ -53,9 +54,11 @@ export type SurvivalType = {
 }
 
 export type ChartMeta = {
-    clinicalAttribute: ClinicalAttribute,
+    clinicalAttribute?: ClinicalAttribute,
     uniqueKey: string,
-    defaultChartType: ChartType
+    displayName: string,
+    description: string,
+    chartType: ChartType,
 }
 
 export class StudyViewPageStore {
@@ -82,13 +85,14 @@ export class StudyViewPageStore {
 
     private _clinicalAttributesMetaSet: { [id: string]: ChartMeta } = {} as any;
 
+    private _survivalClinicalData = observable.map<ClinicalData[]>();
 
     @action
     updateClinicalDataEqualityFilters(chartMeta: ChartMeta, values: string[]) {
         if (values.length > 0) {
             let clinicalDataEqualityFilter = {
-                attributeId: chartMeta.clinicalAttribute.clinicalAttributeId,
-                clinicalDataType: chartMeta.clinicalAttribute.patientAttribute ? 'PATIENT' : 'SAMPLE' as ClinicalDataType,
+                attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
+                clinicalDataType: chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE' as ClinicalDataType,
                 values: values.sort()
             };
             this._clinicalDataEqualityFilterSet.set(chartMeta.uniqueKey, clinicalDataEqualityFilter);
@@ -247,7 +251,13 @@ export class StudyViewPageStore {
                 const uniqueKey = clinicalDataType + '_' + attribute.clinicalAttributeId;
                 //TODO: currently only piechart is handled
                 if (attribute.datatype === 'STRING') {
-                    acc[uniqueKey] = { clinicalAttribute: attribute, uniqueKey: uniqueKey, defaultChartType: ChartType.PIE_CHART };
+                    acc[uniqueKey] = {
+                        displayName: attribute.displayName,
+                        uniqueKey: uniqueKey,
+                        chartType: ChartType.PIE_CHART,
+                        description: attribute.description,
+                        clinicalAttribute: attribute
+                    };
                 }
                 return acc
             }, {});
@@ -257,7 +267,7 @@ export class StudyViewPageStore {
     });
 
     @computed get visibleAttributes(): ChartMeta[] {
-        return _.reduce(this._chartVisibility.keys(), (acc: ChartMeta[], next) => {
+        let attrs = _.reduce(this._chartVisibility.keys(), (acc: ChartMeta[], next) => {
             if (this._chartVisibility.get(next)) {
                 let chartMeta = this._clinicalAttributesMetaSet[next];
                 if (chartMeta) {
@@ -266,6 +276,16 @@ export class StudyViewPageStore {
             }
             return acc;
         }, []);
+
+        attrs = attrs.concat(this.survivalPlots.map(survivalPlot => {
+            return {
+                uniqueKey: survivalPlot.id,
+                chartType: ChartType.SURVIVAL,
+                displayName: survivalPlot.title,
+                description: ''
+            };
+        }));
+        return attrs;
     }
 
     //TODO:cleanup
@@ -463,6 +483,22 @@ export class StudyViewPageStore {
         return survivalTypes;
     }
 
+    public getSurvivalData(chartMeta: ChartMeta):MobxPromise<any> {
+        return remoteData<any>({
+            await: () => [this.survivalPlotData],
+            invoke: async () => {
+                let matchedSP = {};
+                _.some(this.survivalPlots, (survivalPlot) => {
+                    if(survivalPlot.id === chartMeta.uniqueKey) {
+                        matchedSP = survivalPlot;
+                        return true;
+                    }
+                });
+                return matchedSP;
+            },
+            default: {}
+        });
+    }
     readonly survivalPlotData = remoteData<SurvivalType[]>({
         await: () => [this.survivalData, this.selectedPatientIds, this.unSelectedPatientIds],
         invoke: async () => {
