@@ -1,19 +1,18 @@
 import * as React from 'react';
-import { inject, observer } from "mobx-react";
+import {inject, observer} from "mobx-react";
 import styles from "./styles.module.scss";
-import { MutatedGenesTable } from "./table/MutatedGenesTable";
-import { CNAGenesTable } from "./table/CNAGenesTable";
-import { ChartContainer } from 'pages/studyView/charts/ChartContainer';
-import SurvivalChart from "../resultsView/survival/SurvivalChart";
-import { MSKTab, MSKTabs } from "../../shared/components/MSKTabs/MSKTabs";
-import { StudyViewComponentLoader } from "./charts/StudyViewComponentLoader";
-import { StudyViewPageStore, ClinicalDataType, SurvivalType, ChartMeta, ChartType } from 'pages/studyView/StudyViewPageStore';
-import { reaction } from 'mobx';
-import { If } from 'react-if';
+import {MutatedGenesTable} from "./table/MutatedGenesTable";
+import {CNAGenesTable} from "./table/CNAGenesTable";
+import {ChartContainer} from 'pages/studyView/charts/ChartContainer';
+import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
+import {ChartMeta, ChartType, StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
+import {reaction} from 'mobx';
+import {If} from 'react-if';
 import SummaryHeader from 'pages/studyView/SummaryHeader';
-import {Sample, SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
+import {SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
 import StudyViewScatterPlot from "./charts/scatterPlot/StudyViewScatterPlot";
 import {isSelected, mutationCountVsCnaTooltip} from "./StudyViewUtils";
+import MobxPromise from "mobxpromise";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -67,49 +66,44 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     this.store.patientAttrIds = ('patientAttrIds' in query ? (query.patientAttrIds as string).split(",") : []);
                 }
             },
-            { fireImmediately: true }
+            {fireImmediately: true}
         );
     }
 
     renderAttributeChart = (chartMeta: ChartMeta) => {
+        let promise: MobxPromise<any>;
+        switch (chartMeta.chartType) {
+            case ChartType.PIE_CHART: {
+                promise = this.store.studyViewClinicalDataCountsCache.get({
+                    attribute: chartMeta.clinicalAttribute!,
+                    filters: this.store.filters
+                });
+                break;
+            }
+            case ChartType.TABLE: {
+                promise = this.store.studyViewClinicalDataCountsCache.get({
+                    attribute: chartMeta.clinicalAttribute!,
+                    filters: this.store.filters
+                });
+                break;
+            }
+            case ChartType.SURVIVAL: {
+                promise = this.store.getSurvivalData(chartMeta);
+                break;
+            }
+            default:
+                promise = this.store.survivalPlotData;
+                break;
+        }
         return (<ChartContainer
             chartMeta={chartMeta}
             onUserSelection={this.handlers.onUserSelection}
             key={chartMeta.uniqueKey}
             filter={this.store.filters}
-            dataCache={this.store.studyViewClinicalDataCountsCache}
+            promise={promise}
             onDeleteChart={this.handlers.onDeleteChart}
         />)
     };
-
-    renderSurvivalPlot = (data: SurvivalType) => {
-        return <div className={styles.studyViewSurvivalPlot}>
-            <div className={styles.studyViewSurvivalPlotTitle}>{data.title}</div>
-            <div className={styles.studyViewSurvivalPlotBody}>
-                <StudyViewComponentLoader promise={this.store.survivalPlotData}>
-                    <SurvivalChart alteredPatientSurvivals={data.alteredGroup}
-                        unalteredPatientSurvivals={data.unalteredGroup}
-                        title={'test'}
-                        xAxisLabel="Months Survival"
-                        yAxisLabel="Surviving"
-                        totalCasesHeader="Number of Cases, Total"
-                        statusCasesHeader="Number of Cases, Deceased"
-                        medianMonthsHeader="Median Months Survival"
-                        yLabelTooltip="Survival estimate"
-                        xLabelWithEventTooltip="Time of death"
-                        xLabelWithoutEventTooltip="Time of last observation"
-                        showDownloadButtons={false}
-                        showTable={false}
-                        showLegend={false}
-                        styleOpts={{
-                            width: 450,
-                            height: 300
-                        }}
-                        fileName="Overall_Survival" />
-                </StudyViewComponentLoader>
-            </div>
-        </div>
-    }
 
     render() {
         if (this.store.studies.isComplete) {
@@ -120,7 +114,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                             <If condition={this.store.studies.result.length === 1}>
                                 <div>
                                     <h3>{this.store.studies.result![0].name}</h3>
-                                    <p dangerouslySetInnerHTML={{ __html: this.store.studies.result![0].description }}></p>
+                                    <p dangerouslySetInnerHTML={{__html: this.store.studies.result![0].description}}></p>
                                 </div>
                             </If>
                             {/*TDOD: currently show as Multiple Studies but should be shandles properly, i.e as in production*/}
@@ -130,18 +124,15 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                         </div>
                     </div>
                     <MSKTabs id="studyViewTabs" activeTabId={this.props.routing.location.query.tab}
-                        className="mainTabs">
+                             className="mainTabs">
 
                         <MSKTab key={0} id="summaryTab" linkText="Summary">
                             <SummaryHeader
                                 selectedSamples={this.store.selectedSamples.result!}
                                 updateCustomCasesFilter={this.handlers.updateCustomCasesFilter}/>
                             <div className={styles.studyViewFlexContainer}>
-                                {this.store.initialClinicalDataCounts.isComplete && 
-                                    this.store.visibleAttributes.map(this.renderAttributeChart)}
-                            </div>
-                            <div className={styles.studyViewFlexContainer}>
-                                {this.store.survivalPlotData.result.map(this.renderSurvivalPlot)}
+                                {this.store.initialClinicalDataCounts.isComplete &&
+                                this.store.visibleAttributes.map(this.renderAttributeChart)}
                             </div>
                             <div className={styles.studyViewFlexContainer}>
                                 <MutatedGenesTable
@@ -163,7 +154,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                         onSelection={this.handlers.updateCustomCasesFilter}
                                         data={this.store.mutationCountVsFractionGenomeAlteredData.result}
                                         isLoading={this.store.selectedSamples.isPending}
-                                        isSelected={d=>isSelected(d, this.store.selectedSamplesMap)}
+                                        isSelected={d => isSelected(d, this.store.selectedSamplesMap)}
                                         selectedFill="#ff0000"
                                         unselectedFill="#0000ff"
                                         axisLabelX="Fraction of copy number altered genome"
