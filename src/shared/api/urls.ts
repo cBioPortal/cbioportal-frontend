@@ -3,7 +3,11 @@ import AppConfig from "appConfig";
 import formSubmit from "shared/lib/formSubmit";
 
 export function getHost(){
-    return AppConfig.apiRoot;
+    if (typeof AppConfig.apiRoot === 'string') {
+        return AppConfig.apiRoot.replace(/^http[s]?:\/\//,'').replace(/\/$/,""); // get rid of protocol and trailing slashes
+    } else {
+        return AppConfig.apiRoot;
+    }
 }
 
 export type BuildUrlParams = {pathname:string, query?:QueryParams, hash?:string};
@@ -56,7 +60,7 @@ export function getMyGeneUrl(entrezGeneId: number) {
     return `https://mygene.info/v3/gene/${entrezGeneId}?fields=uniprot`;
 }
 export function getUniprotIdUrl(swissProtAccession: string) {
-    return cbioUrl(`proxy/uniprot.org/uniprot/?query=accession:${swissProtAccession}&format=tab&columns=entry+name`);
+    return `https://www.uniprot.org/uniprot/?query=accession:${swissProtAccession}&format=tab&columns=entry+name`;
 }
 export function getMutationAlignerUrl() {
     return cbioUrl(`getMutationAligner.json`);

@@ -1,25 +1,31 @@
-th {
-  padding-left: 10px;
-  padding-bottom: 5px;
-  background-color: rgb(255,255,255); // solid background
-}
+.simple-table {
+  th {
+    padding-left: 10px;
+    padding-bottom: 5px;
+    background-color: rgb(255,255,255); // solid background
+  }
 
-tbody>tr:nth-of-type(odd).highlight {
-  background-color: #E0E000 !important;
-}
+  tbody>tr:nth-of-type(odd).highlighted {
+    background-color: #9FAFD1 !important;
+  }
 
-tbody>tr:nth-of-type(odd).highlight-bluegray {
-  background-color: #9FAFD1 !important;
-}
+  tbody>tr:nth-of-type(even) { // solid background - hard coded hack, react-bootstrap .table-striped makes ODD # rows grey
+    background-color: rgb(255,255,255);
+  }
 
-tbody>tr:nth-of-type(even) { // solid background - hard coded hack, react-bootstrap .table-striped makes ODD # rows grey
-  background-color: rgb(255,255,255);
-}
+  tbody>tr:nth-of-type(even).highlighted {
+    background-color: #B0BED9;
+  }
 
-tbody>tr:nth-of-type(even).highlight {
-  background-color: #E9E900;
-}
+  tbody>tr.clickable {
+    cursor: pointer;
+  }
 
-tbody>tr:nth-of-type(even).highlight-bluegray {
-  background-color: #B0BED9;
+  tbody>tr:nth-of-type(even).clickable:hover {
+    background-color: #b6c4df !important;
+  }
+
+  tbody>tr:nth-of-type(odd).clickable:hover {
+    background-color: #a7b6d8 !important;
+  }
 }

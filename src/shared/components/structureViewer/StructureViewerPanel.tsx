@@ -13,7 +13,7 @@ import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import ResidueMappingCache from "shared/cache/ResidueMappingCache";
 import {ResidueMapping} from "shared/api/generated/Genome2StructureAPI";
 import {CacheData} from "shared/lib/LazyMobXCache";
-import {IMobXApplicationDataStore} from "shared/lib/IMobXApplicationDataStore";
+import {ILazyMobXTableApplicationDataStore} from "shared/lib/ILazyMobXTableApplicationDataStore";
 import MutationMapperDataStore from "pages/resultsView/mutation/MutationMapperDataStore";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IPdbChain, PdbAlignmentIndex} from "shared/model/Pdb";
@@ -30,7 +30,7 @@ import styles from "./structureViewer.module.scss";
 
 export interface IStructureViewerPanelProps extends IProteinImpactTypeColors
 {
-    pdbChainDataStore: IMobXApplicationDataStore<IPdbChain>;
+    pdbChainDataStore: ILazyMobXTableApplicationDataStore<IPdbChain>;
     pdbAlignmentIndex?: PdbAlignmentIndex;
     mutationDataStore?: MutationMapperDataStore;
     pdbHeaderCache?: PdbHeaderCache;

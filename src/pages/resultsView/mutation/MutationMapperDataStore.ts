@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import {
-    SimpleMobXApplicationDataStore
-} from "../../../shared/lib/IMobXApplicationDataStore";
+    SimpleLazyMobXTableApplicationDataStore
+} from "../../../shared/lib/ILazyMobXTableApplicationDataStore";
 import {Mutation} from "../../../shared/api/generated/CBioPortalAPI";
 import {action, computed, observable} from "mobx";
 import Immutable from "seamless-immutable";
@@ -10,7 +10,7 @@ import {countDuplicateMutations, groupMutationsByGeneAndPatientAndProteinChange}
 type PositionAttr = {[position:string]:boolean};
 type ImmutablePositionAttr = PositionAttr & Immutable.ImmutableObject<PositionAttr>;
 
-export default class MutationMapperDataStore extends SimpleMobXApplicationDataStore<Mutation[]>{
+export default class MutationMapperDataStore extends SimpleLazyMobXTableApplicationDataStore<Mutation[]>{
     @observable.ref private selectedPositions:ImmutablePositionAttr;
     @observable.ref private highlightedPositions:ImmutablePositionAttr;
 

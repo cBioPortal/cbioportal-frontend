@@ -643,30 +643,6 @@
       }
     },
     "/pfam/domain": {
-      "get": {
-        "tags": [
-          "pfam-controller"
-        ],
-        "summary": "Retrieves all PFAM domains",
-        "operationId": "fetchPfamDomainsGET",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/PfamDomain"
-              }
-            }
-          }
-        }
-      },
       "post": {
         "tags": [
           "pfam-controller"
@@ -896,23 +872,30 @@
             "$ref": "#/definitions/PfamDomainRange"
           }
         },
-        "exons": {
-          "type": "array",
-          "description": "Exon information",
-          "items": {
-            "$ref": "#/definitions/ExonRange"
-          }
-        },
         "hugoSymbols": {
           "type": "array",
           "description": "Hugo symbols",
           "items": {
             "type": "string"
           }
+        },
+        "exons": {
+          "type": "array",
+          "description": "Exon information",
+          "items": {
+            "$ref": "#/definitions/Exon"
+          }
+        },
+        "utrs": {
+          "type": "array",
+          "description": "UTR information",
+          "items": {
+            "$ref": "#/definitions/UntranslatedRegion"
+          }
         }
       }
     },
-    "ExonRange": {
+    "Exon": {
       "type": "object",
       "required": [
         "exonEnd",
@@ -1045,35 +1028,39 @@
     },
     "Hotspot": {
       "type": "object",
-      "required": [
-        "transcriptId"
-      ],
       "properties": {
-        "aminoAcidPosition": {
-          "description": "Amino acid position (start - end)",
-          "$ref": "#/definitions/IntegerRange"
-        },
         "hugoSymbol": {
           "type": "string",
           "description": "Hugo gene symbol"
         },
+        "inframeCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Inframe mutation count"
+        },
+        "missenseCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Missense mutation count"
+        },
         "residue": {
           "type": "string",
-          "description": "Hotspot Residue"
+          "description": "Hotspot residue"
         },
-        "transcriptId": {
-          "type": "string",
-          "description": "Transcript id"
+        "spliceCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Splice mutation count"
+        },
+        "truncatingCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Truncation mutation count"
         },
         "tumorCount": {
           "type": "integer",
           "format": "int32",
           "description": "Tumor count"
-        },
-        "tumorTypeCount": {
-          "type": "integer",
-          "format": "int32",
-          "description": "Tumor type count"
         },
         "type": {
           "type": "string",
@@ -1446,6 +1433,36 @@
         "variantClassification": {
           "type": "string",
           "description": "Variant classification"
+        }
+      }
+    },
+    "UntranslatedRegion": {
+      "type": "object",
+      "required": [
+        "end",
+        "start",
+        "strand",
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "UTR Type"
+        },
+        "start": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Start position of UTR"
+        },
+        "end": {
+          "type": "integer",
+          "format": "int32",
+          "description": "End position of UTR"
+        },
+        "strand": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Strand UTR is on, -1 for - and 1 for +"
         }
       }
     },

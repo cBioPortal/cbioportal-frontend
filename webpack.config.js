@@ -120,8 +120,8 @@ var config = {
         new webpack.DefinePlugin({
             'VERSION': version, 
             'COMMIT': commit,
-            'ENV_CBIOPORTAL_URL': process.env.CBIOPORTAL_URL? JSON.stringify(cleanUrl(process.env.CBIOPORTAL_URL)) : '"unknown"',
-            'ENV_GENOME_NEXUS_URL': process.env.GENOME_NEXUS_URL? JSON.stringify(cleanUrl(process.env.GENOME_NEXUS_URL)) : '"unkown"',
+            'ENV_CBIOPORTAL_URL': process.env.CBIOPORTAL_URL? JSON.stringify(cleanUrl(process.env.CBIOPORTAL_URL)) : '"replace_me_env_cbioportal_url"',
+            'ENV_GENOME_NEXUS_URL': process.env.GENOME_NEXUS_URL? JSON.stringify(cleanUrl(process.env.GENOME_NEXUS_URL)) : '"replace_me_env_genome_nexus_url"',
         }),
         new HtmlWebpackPlugin({cache: false, template: 'my-index.ejs'}),
         WebpackFailPlugin,
@@ -133,6 +133,8 @@ var config = {
         new CopyWebpackPlugin([
             {from: './common-dist', to: 'reactapp'},
             {from: './src/globalStyles/prefixed-bootstrap.min.css', to: 'reactapp/prefixed-bootstrap.min.css'},
+            {from: './src/shared/legacy/igv.min.js', to: 'reactapp/igv.min.js'},
+            {from: './src/shared/legacy/igv.css', to: 'reactapp/igv.css'},
             {from: './src/globalStyles/prefixed-bootstrap.min.css.map', to: 'reactapp/prefixed-bootstrap.min.css.map'}
         ]) // destination is relative to dist directory
     ],

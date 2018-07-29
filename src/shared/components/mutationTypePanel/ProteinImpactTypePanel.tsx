@@ -1,7 +1,7 @@
 import * as React from "react";
 
 import {Mutation} from "../../api/generated/CBioPortalAPI";
-import {IMobXApplicationDataStore} from "../../lib/IMobXApplicationDataStore";
+import {ILazyMobXTableApplicationDataStore} from "../../lib/ILazyMobXTableApplicationDataStore";
 import {observer} from "mobx-react";
 import {
     ProteinImpactType,
@@ -13,7 +13,7 @@ import styles from './styles.module.scss';
 
 export interface IProteinImpactTypePanelProps extends IProteinImpactTypeColors
 {
-    dataStore:IMobXApplicationDataStore<Mutation[]>;
+    dataStore:ILazyMobXTableApplicationDataStore<Mutation[]>;
 }
 
 const buttonOrder:ProteinImpactType[] = ["missense", "truncating", "inframe", "other"];

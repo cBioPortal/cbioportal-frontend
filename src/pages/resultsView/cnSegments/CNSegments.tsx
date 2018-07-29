@@ -6,6 +6,7 @@ import {Gene, Sample} from "../../../shared/api/generated/CBioPortalAPI";
 import {unescapeTabDelimited, unquote} from "shared/lib/StringUtils";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import {observable} from "mobx";
+import AppConfig from "appConfig";
 import fileDownload from 'react-file-download';
 
 interface CNSegmentsIframeProps {
@@ -30,13 +31,13 @@ class CNASegmentIframe extends React.Component<CNSegmentsIframeProps,{}>{
         height = Math.min(height, 800);
         var headerContent = '<head>    <link rel="stylesheet" type="text/css"  href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/themes/smoothness/jquery-ui.css"/>'
             + '<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css">'
-            + '<link rel="stylesheet" type="text/css" href="css/igv.css">'
+            + `<link rel="stylesheet" type="text/css" href="${AppConfig.frontendUrl}reactapp/igv.css">`
             + '<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"><\/script>'
             + '<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"><\/script>'
             + '<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js"><\/script>'
             + '<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/es5-shim/4.5.7/es5-shim.min.js"><\/script>'
             + '<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.35.3/es6-shim.js"><\/script>'
-            + '<script type="text/javascript" src="js/lib/igv.min.js"><\/script></head>';
+            + `<script type="text/javascript" src="${AppConfig.frontendUrl}reactapp/igv.min.js"><\/script></head>`;
 
 
         var bodyContent1 = '<body style="margin:0"><div id="igvDiv" style="padding-top: 10px;padding-bottom: 10px;"></div><script type="text/javascript">  $(document).ready(function () {    var div = $("#igvDiv"),   options = {'
@@ -111,7 +112,7 @@ export default class CNSegments extends React.Component<{ store: ResultsViewPage
     render(){
 
         if (this.props.store.samples.isComplete && this.props.store.genes.isComplete && this.props.store.studyIds.isComplete) {
-            return (<MSKTabs tabButtonStyle="pills" activeTabId={this.activeTabId} className="secondaryTabs" onTabClick={(id:string)=>{
+            return (<MSKTabs tabButtonStyle="pills" activeTabId={this.activeTabId} className="pillTabs" onTabClick={(id:string)=>{
                 this.activeTabId = id;
             }}>
                 {
