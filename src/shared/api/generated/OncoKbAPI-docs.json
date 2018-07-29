@@ -31,6 +31,10 @@
       "description": "The genes API"
     },
     {
+      "name": "info-api-controller",
+      "description": "This includes all OncoKB general information"
+    },
+    {
       "name": "search-api-controller",
       "description": "The search API"
     },
@@ -642,6 +646,29 @@
               "items": {
                 "$ref": "#/definitions/Alteration"
               }
+            }
+          }
+        }
+      }
+    },
+    "/info": {
+      "get": {
+        "tags": [
+          "Info"
+        ],
+        "summary": "infoGet",
+        "operationId": "infoGetUsingGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/OncoKBInfo"
             }
           }
         }
@@ -1408,6 +1435,9 @@
         "oncogenicity": {
           "type": "string"
         },
+        "proteinChange": {
+          "type": "string"
+        },
         "refSeq": {
           "type": "string"
         },
@@ -1522,6 +1552,17 @@
         "tissue": {
           "type": "string",
           "description": "The tissue this tumor type belongs to."
+        }
+      }
+    },
+    "Version": {
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
         }
       }
     },
@@ -1863,6 +1904,9 @@
         "pmids": {
           "type": "string"
         },
+        "proteinChange": {
+          "type": "string"
+        },
         "refSeq": {
           "type": "string"
         },
@@ -2016,6 +2060,17 @@
         }
       },
       "description": "General tumor type category."
+    },
+    "OncoKBInfo": {
+      "type": "object",
+      "properties": {
+        "dataVersion": {
+          "$ref": "#/definitions/Version"
+        },
+        "oncoTreeVersion": {
+          "type": "string"
+        }
+      }
     },
     "VariantConsequence": {
       "type": "object",

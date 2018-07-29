@@ -1,4 +1,4 @@
-import {getSimplifiedMutationType} from "shared/lib/oql/accessors";
+import accessors, {getSimplifiedMutationType} from "shared/lib/oql/accessors";
 import {assert} from "chai";
 import {
     Gene, NumericGeneMolecularData, GenePanelData, MolecularProfile, Mutation, Patient,
@@ -8,10 +8,14 @@ import {
     annotateMolecularDatum,
     annotateMutationPutativeDriver,
     computeCustomDriverAnnotationReport, computeGenePanelInformation, computePutativeDriverAnnotatedMutations,
+    filterSubQueryData,
     getOncoKbOncogenic,
     initializeCustomDriverAnnotationSettings,
     fetchQueriedStudies
 } from "./ResultsViewPageStoreUtils";
+import {
+    OQLLineFilterOutput, MergedTrackLineFilterOutput
+} from "../../shared/lib/oql/oqlfilter";
 import {observable} from "mobx";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import {AnnotatedMutation} from "./ResultsViewPageStore";
@@ -95,6 +99,159 @@ describe("ResultsViewPageStoreUtils", ()=>{
             assert.deepEqual(
                 computeCustomDriverAnnotationReport([driverTiersFilterMutation, driverFilterMutation, neitherMutation]),
                 {hasBinary:true, tiers:["T"]}
+            );
+        });
+    });
+
+    describe("filterSubQueryData", () => {
+        // I believe these metadata to be all `new accessors()` needs
+        // tslint:disable-next-line no-object-literal-type-assertion
+        const makeBasicExpressionProfile = () => ({
+            "molecularAlterationType": "MRNA_EXPRESSION",
+            "datatype": "Z-SCORE",
+            "molecularProfileId": "brca_tcga_mrna_median_Zscores",
+            "studyId": "brca_tcga"
+        } as MolecularProfile);
+
+        // I believe this to be the projection the filter function needs
+        const makeMinimalExpressionData = (
+            points: {entrezGeneId: number, uniqueSampleKey: string, value: number}[]
+        ) => points.map(({entrezGeneId, uniqueSampleKey, value}) => ({
+            entrezGeneId, value,uniqueSampleKey,
+            sampleId: `TCGA-${uniqueSampleKey}`,
+            uniquePatientKey: `${uniqueSampleKey}_PATIENT`,
+            patientId: `TCGA-${uniqueSampleKey}_PATIENT`,
+            molecularProfileId: 'brca_tcga_mrna_median_Zscores',
+            studyId: 'brca_tcga',
+            gene: {
+                entrezGeneId, hugoGeneSymbol: `GENE${entrezGeneId}`,
+                "type": "protein-coding", "cytoband": "1p20.1", "length": 4000
+            }
+        })) as NumericGeneMolecularData[];
+
+        const makeMinimalCaseArrays = (sampleKeys: string[]) => ({
+            samples: sampleKeys.map(
+                uniqueSampleKey => ({uniqueSampleKey})
+            ),
+            patients: sampleKeys.map(
+                uniqueSampleKey => ({uniquePatientKey: `${uniqueSampleKey}_PATIENT`})
+            )
+        });
+
+        it("returns undefined when queried for a non-merged track", () => {
+            // given
+            const accessorsInstance = new accessors([makeBasicExpressionProfile()]);
+            const dataArray: NumericGeneMolecularData[] = makeMinimalExpressionData([{
+                entrezGeneId: 1000,
+                uniqueSampleKey: 'SAMPLE1',
+                value: 1.5
+            }]);
+            const {samples, patients} = makeMinimalCaseArrays(['SAMPLE1']);
+            const queryLine: OQLLineFilterOutput<object> = {
+                gene: 'GENE400',
+                oql_line: 'GENE400: EXP>=2;',
+                parsed_oql_line: {gene: 'GENE400', alterations: [{
+                    alteration_type: 'exp',
+                    constr_rel: '>=',
+                    constr_val: 2
+                }]},
+                data: []
+            };
+            // when
+            const data = filterSubQueryData(
+                queryLine,
+                '',
+                dataArray,
+                accessorsInstance,
+                samples, patients
+            );
+            // then
+            assert.isUndefined(data);
+        });
+
+        it("returns a two-element array with no alterations if queried for a two-gene merged track that matches none", () => {
+            // given
+            const accessorsInstance = new accessors([makeBasicExpressionProfile()]);
+            const dataArray: NumericGeneMolecularData[] = makeMinimalExpressionData([
+                {entrezGeneId: 1000, uniqueSampleKey: 'SAMPLE1', value: 1.5},
+                {entrezGeneId: 1001, uniqueSampleKey: 'SAMPLE1', value: 1.5},
+            ]);
+            const {samples, patients} = makeMinimalCaseArrays(['SAMPLE1']);
+            // [DATATYPES: EXP<-3; GENE1000 GENE1001],
+            const queryLine: MergedTrackLineFilterOutput<object> = {
+                list: [
+                    {oql_line: 'GENE1000: EXP<-3;', gene: 'GENE1000', data: [], parsed_oql_line: {
+                        gene: 'GENE1000', alterations: [{alteration_type: 'exp', constr_rel: '<', constr_val: -3}]
+                    }},
+                    {oql_line: 'GENE1001: EXP<-3;', gene: 'GENE1001', data: [], parsed_oql_line: {
+                        gene: 'GENE1001', alterations: [{alteration_type: 'exp', constr_rel: '<', constr_val: -3}]
+                    }}
+                ]
+            };
+            // when
+            const data = filterSubQueryData(
+                queryLine,
+                '',
+                dataArray,
+                accessorsInstance,
+                samples, patients
+            );
+            // then
+            assert.lengthOf(data!, 2);
+            assert.deepEqual(
+                data![0].cases,
+                {
+                    samples: {'SAMPLE1': []},
+                    patients: {'SAMPLE1_PATIENT': []}
+                }
+            );
+            assert.deepEqual(
+                data![1].cases,
+                {
+                    samples: {'SAMPLE1': []},
+                    patients: {'SAMPLE1_PATIENT': []}
+                }
+            );
+        });
+
+        it("lists alterations that match genes in a merged track", () => {
+            // given
+            const accessorsInstance = new accessors([makeBasicExpressionProfile()]);
+            const dataArray: NumericGeneMolecularData[] = makeMinimalExpressionData([
+                {entrezGeneId: 1000, uniqueSampleKey: 'SAMPLE1', value: 0},
+                {entrezGeneId: 1000, uniqueSampleKey: 'SAMPLE2', value: 0},
+                {entrezGeneId: 1001, uniqueSampleKey: 'SAMPLE1', value: 2.2},
+                {entrezGeneId: 1001, uniqueSampleKey: 'SAMPLE2', value: 2.7}
+            ]);
+            const {samples, patients} = makeMinimalCaseArrays(
+                ['SAMPLE1', 'SAMPLE2']
+            );
+            // [DATATYPES: EXP >= 2.5; GENE1000 GENE1001]'
+            const queryLine: MergedTrackLineFilterOutput<object> = {
+                list: [
+                    {oql_line: 'GENE1000: EXP>2.5;', gene: 'GENE1000', data: [], parsed_oql_line: {
+                        gene: 'GENE1000', alterations: [{alteration_type: 'exp', constr_rel: '>', constr_val: 2.5}]
+                    }},
+                    {oql_line: 'GENE1001: EXP>2.5;', gene: 'GENE1001', data: [], parsed_oql_line: {
+                        gene: 'GENE1001', alterations: [{alteration_type: 'exp', constr_rel: '>', constr_val: 2.5}]
+                    }}
+                ]
+            };
+            // when
+            const data = filterSubQueryData(
+                queryLine,
+                '',
+                dataArray,
+                accessorsInstance,
+                samples, patients
+            );
+            // then
+            const gene2AlterationsBySample = data![1].cases.samples;
+            assert.lengthOf(gene2AlterationsBySample['SAMPLE1'], 0);
+            assert.lengthOf(gene2AlterationsBySample['SAMPLE2'], 1);
+            assert.equal(
+                gene2AlterationsBySample['SAMPLE2'][0].alterationSubType,
+                'up'
             );
         });
     });
@@ -925,7 +1082,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
                     }
                 });
             });
-
+            //
             sinon.stub(client, "fetchStudiesUsingPOST").callsFake(function fakeFn(parameters: {
                 'studyIds': Array < string > ,
                 'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META"
@@ -942,8 +1099,8 @@ describe("ResultsViewPageStoreUtils", ()=>{
             });
         })
         after(() => {
-            (sessionServiceClient.getVirtualStudy as sinon.SinonStub).restore();
-            (client.fetchStudiesUsingPOST as sinon.SinonStub).restore();
+            //(sessionServiceClient.getVirtualStudy as sinon.SinonStub).restore();
+            //(client.fetchStudiesUsingPOST as sinon.SinonStub).restore();
         });
 
         it("when queried ids is empty", async ()=>{

@@ -89,8 +89,7 @@ async function fetch(
                         studyId,
                         fractionGenomeAlteredFilter: {
                             sampleIds: samplesInStudy.map(s=>s.sampleId)
-                        } as FractionGenomeAlteredFilter,
-                        cutoff: 0.2
+                        } as FractionGenomeAlteredFilter
                     });
                 } else {
                     return Promise.resolve([]);

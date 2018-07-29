@@ -1,4 +1,8 @@
 import {CancerStudyQueryUrlParams, normalizeQuery, QueryStore} from "./QueryStore";
+import { MolecularProfile, SampleList } from "shared/api/generated/CBioPortalAPI";
+import { AlterationTypeConstants } from "pages/resultsView/ResultsViewPageStore";
+import * as _ from "lodash";
+import { VirtualStudy } from "shared/model/VirtualStudy";
 
 export type NonMolecularProfileQueryParams = Pick<CancerStudyQueryUrlParams,
     'cancer_study_id' | 'cancer_study_list' | 'Z_SCORE_THRESHOLD' | 'RPPA_SCORE_THRESHOLD' | 'data_priority' |
@@ -88,4 +92,116 @@ export function molecularProfileParams(store:QueryStore, molecularProfileIds?:Re
         genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION: store.getSelectedProfileIdFromMolecularAlterationType("PROTEIN_LEVEL", molecularProfileIds),
         genetic_profile_ids_PROFILE_GENESET_SCORE: store.getSelectedProfileIdFromMolecularAlterationType("GENESET_SCORE", molecularProfileIds)
     };
+}
+
+
+export function profileAvailability(molecularProfiles:MolecularProfile[]) {
+	let hasMutationProfile = false;
+	let hasCNAProfile = false;
+	for (const profile of molecularProfiles) {
+		if (!profile.showProfileInAnalysisTab)
+			continue;
+
+		switch (profile.molecularAlterationType) {
+			case AlterationTypeConstants.MUTATION_EXTENDED:
+				hasMutationProfile = true;
+				break;
+			case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
+				hasCNAProfile = true;
+				break;
+		}
+
+		if (hasMutationProfile && hasCNAProfile)
+			break;
+	}
+	return {
+		mutation: hasMutationProfile,
+		cna: hasCNAProfile
+	};
+}
+
+export function categorizedSamplesCount(sampleLists: SampleList[],selectedStudies:string[],selectedVirtualStudies:VirtualStudy[]) {
+    let mutationSamples: { [studyId: string]: { [sampleId: string]: boolean } } = {};
+    let cnaSamples: { [studyId: string]: { [sampleId: string]: boolean } } = {};
+    let mutationCnaSamples: { [studyId: string]: { [sampleId: string]: boolean } } = {};
+    let allSamples: { [studyId: string]: { [sampleId: string]: boolean } } = {};
+
+    let filteredMutationSamples: { [studyId: string]: { [sampleId: string]: boolean } } = {};
+    let filteredCnaSamples: { [studyId: string]: { [sampleId: string]: boolean } } = {};
+    let filteredMutationCnaSamples: { [studyId: string]: { [sampleId: string]: boolean } } = {};
+    let filteredallSamples: { [studyId: string]: { [sampleId: string]: boolean } } = {};
+
+    sampleLists
+        .filter(sampleList => _.includes(['all_cases_in_study', 'all_cases_with_mutation_and_cna_data', 'all_cases_with_mutation_data', 'all_cases_with_cna_data'], sampleList.category))
+        .forEach(sampleList => {
+            let samples: { [sampleId: string]: boolean } =
+                _.reduce(sampleList.sampleIds, (acc: { [sampleId: string]: boolean }, next) => {
+                    acc[next] = true;
+                    return acc;
+                }, {});
+
+            switch (sampleList.category) {
+                case "all_cases_with_mutation_and_cna_data":
+                    mutationCnaSamples[sampleList.studyId] = samples;
+                    break;
+                case "all_cases_with_mutation_data":
+                    mutationSamples[sampleList.studyId] = samples;
+                    break;
+                case "all_cases_with_cna_data":
+                    cnaSamples[sampleList.studyId] = samples;
+                    break;
+                case "all_cases_in_study":
+                    allSamples[sampleList.studyId] = samples;
+                    break;
+            }
+        });
+
+    let selectedVirtualStudySet: { [id: string]: VirtualStudy } =_.reduce(selectedVirtualStudies, (acc: { [id: string]: VirtualStudy }, next) => {
+            acc[next.id] = next; return acc
+    }, {});
+    let selectedPhysicalStudyIds = selectedStudies.filter(id => !_.has(selectedVirtualStudySet, id));
+
+    //add all samples from selected physical studies
+    _.forEach(selectedPhysicalStudyIds,studyId=>{
+        filteredMutationSamples[studyId] = mutationSamples[studyId] || {};
+        filteredCnaSamples[studyId] = cnaSamples[studyId] || {};
+        filteredMutationCnaSamples[studyId] = mutationCnaSamples[studyId] || {};
+        filteredallSamples[studyId] = allSamples[studyId] || {};
+    });
+
+    _.forEach(selectedVirtualStudySet,virtualStudy=>{
+        _.forEach(virtualStudy.data.studies,study=>{
+            
+            // check if the study in this virtual study is already in the selected studies list
+            // and only add the samples if its not already present
+            if(!_.includes(selectedPhysicalStudyIds,study.id)){
+                filteredMutationSamples[study.id] = filteredMutationSamples[study.id] || {};
+                filteredCnaSamples[study.id] = filteredCnaSamples[study.id] || {};
+                filteredMutationCnaSamples[study.id] = filteredMutationCnaSamples[study.id] || {};
+                filteredallSamples[study.id] = filteredallSamples[study.id] || {};
+
+                _.forEach(study.samples,sampleId=>{
+                    if(mutationSamples[study.id] && mutationSamples[study.id][sampleId]){
+                        filteredMutationSamples[study.id][sampleId] = true;
+                    }
+                    if(cnaSamples[study.id] && cnaSamples[study.id][sampleId]){
+                        filteredCnaSamples[study.id][sampleId] = true;
+                    }
+                    if(mutationCnaSamples[study.id] && mutationCnaSamples[study.id][sampleId]){
+                        filteredMutationCnaSamples[study.id][sampleId] = true;
+                    }
+                    if(allSamples[study.id] && allSamples[study.id][sampleId]){
+                        filteredallSamples[study.id][sampleId] = true;
+                    }
+                });
+            }
+        });
+    });
+
+    return {
+        w_mut: _.reduce(filteredMutationSamples, (acc: number, next) => acc + Object.keys(next).length, 0),
+        w_cna: _.reduce(filteredCnaSamples, (acc: number, next) => acc + Object.keys(next).length, 0),
+        w_mut_cna: _.reduce(filteredMutationCnaSamples, (acc: number, next) => acc + Object.keys(next).length, 0),
+        all: _.reduce(filteredallSamples, (acc: number, next) => acc + Object.keys(next).length, 0)
+    }
 }

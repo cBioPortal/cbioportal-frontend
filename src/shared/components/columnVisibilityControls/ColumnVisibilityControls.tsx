@@ -13,7 +13,7 @@ export interface IColumnVisibilityControlsProps {
     className?: string;
     buttonText?: string | JSX.Element;
     columnVisibility?: IColumnVisibilityDef[];
-    onColumnToggled?: (columnId: string) => void;
+    onColumnToggled?: (columnId: string, columnVisibility?: IColumnVisibilityDef[]) => void;
 }
 
 /**
@@ -70,7 +70,7 @@ export class ColumnVisibilityControls extends React.Component<IColumnVisibilityC
         const id = evt.currentTarget.getAttribute("data-id");
 
         if (this.props.onColumnToggled && id) {
-            this.props.onColumnToggled(id);
+            this.props.onColumnToggled(id, this.props.columnVisibility);
         }
     }
 }
