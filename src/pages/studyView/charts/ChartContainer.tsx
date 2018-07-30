@@ -66,10 +66,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 this.props.onUserSelection(this.props.chartMeta, values);
             }),
             updateCNAGeneFilter: action((entrezGeneId: number, alteration: number) => {
-                this.props.onUserSelection(this.props.chartMeta, [entrezGeneId.toString(), alteration.toString()]);
+                this.props.onUserSelection(entrezGeneId, alteration);
             }),
             updateGeneFilter: action((value: number) => {
-                this.props.onUserSelection(this.props.chartMeta, [value.toString()]);
+                this.props.onUserSelection(value);
             }),
             onMouseEnterChart: action((event: React.MouseEvent<any>) => {
                 this.placement = event.nativeEvent.x > 800 ? 'left' : 'right';
