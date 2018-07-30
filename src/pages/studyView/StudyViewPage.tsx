@@ -1,8 +1,6 @@
 import * as React from 'react';
 import {inject, observer} from "mobx-react";
 import styles from "./styles.module.scss";
-import {MutatedGenesTable} from "./table/MutatedGenesTable";
-import {CNAGenesTable} from "./table/CNAGenesTable";
 import {ChartContainer} from 'pages/studyView/charts/ChartContainer';
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import {ChartMeta, ChartType, StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
@@ -35,13 +33,21 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
         this.handlers = {
             onUserSelection: (chartMeta: ChartMeta, values: string[]) => {
-                this.store.updateClinicalDataEqualityFilters(chartMeta, values)
-            },
-            updateGeneFilter: (entrezGeneId: number) => {
-                this.store.updateGeneFilter(entrezGeneId);
-            },
-            updateCNAGeneFilter: (entrezGeneId: number, alteration: number) => {
-                this.store.updateCNAGeneFilter(entrezGeneId, alteration);
+                if (chartMeta.uniqueKey === 'MUTATED_GENES_TABLE') {
+                    if (values.length == 0) {
+                        this.store.resetGeneFilter();
+                    } else {
+                        this.store.updateGeneFilter(Number(values[0]));
+                    }
+                } else if (chartMeta.uniqueKey === 'CNA_GENES_TABLE') {
+                    if (values.length == 0) {
+                        this.store.resetCNAGEneFilter();
+                    } else {
+                        this.store.updateCNAGeneFilter(Number(values[0]), Number(values[1]));
+                    }
+                } else {
+                    this.store.updateClinicalDataEqualityFilters(chartMeta, values);
+                }
             },
             onDeleteChart: (uniqueKey: string) => {
                 this.store.changeChartVisibility(uniqueKey, false);
@@ -72,19 +78,30 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
     renderAttributeChart = (chartMeta: ChartMeta) => {
         let promise: MobxPromise<any>;
+        let filters: any[] = [];
         switch (chartMeta.chartType) {
             case ChartType.PIE_CHART: {
                 promise = this.store.studyViewClinicalDataCountsCache.get({
                     attribute: chartMeta.clinicalAttribute!,
                     filters: this.store.filters
                 });
+                filters = this.store.getClinicalDtaFiltersByUniqueKey(chartMeta.uniqueKey);
                 break;
             }
             case ChartType.TABLE: {
-                promise = this.store.studyViewClinicalDataCountsCache.get({
-                    attribute: chartMeta.clinicalAttribute!,
-                    filters: this.store.filters
-                });
+                if (chartMeta.uniqueKey === 'MUTATED_GENES_TABLE') {
+                    filters = this.store.getMutatedGenesTableFilters();
+                    promise = this.store.mutatedGeneData;
+                } else if (chartMeta.uniqueKey === 'CNA_GENES_TABLE') {
+                    filters = this.store.getCNAGenesTableFilters();
+                    promise = this.store.cnaGeneData;
+                } else {
+                    filters = this.store.getClinicalDtaFiltersByUniqueKey(chartMeta.uniqueKey);
+                    promise = this.store.studyViewClinicalDataCountsCache.get({
+                        attribute: chartMeta.clinicalAttribute!,
+                        filters: this.store.filters
+                    });
+                }
                 break;
             }
             case ChartType.SURVIVAL: {
@@ -99,7 +116,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             chartMeta={chartMeta}
             onUserSelection={this.handlers.onUserSelection}
             key={chartMeta.uniqueKey}
-            filter={this.store.filters}
+            filters={filters}
             promise={promise}
             onDeleteChart={this.handlers.onDeleteChart}
         />)
@@ -135,18 +152,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                 this.store.visibleAttributes.map(this.renderAttributeChart)}
                             </div>
                             <div className={styles.studyViewFlexContainer}>
-                                <MutatedGenesTable
-                                    promise={this.store.mutatedGeneData}
-                                    numOfSelectedSamples={100}
-                                    filters={this.store.getMutatedGenesTableFilters()}
-                                    toggleSelection={this.handlers.updateGeneFilter}
-                                />
-                                <CNAGenesTable
-                                    promise={this.store.cnaGeneData}
-                                    numOfSelectedSamples={100}
-                                    filters={this.store.getCNAGenesTableFilters()}
-                                    toggleSelection={this.handlers.updateCNAGeneFilter}
-                                />
                                 {this.store.mutationCountVsFractionGenomeAlteredData.isComplete && (
                                     <StudyViewScatterPlot
                                         width={500}

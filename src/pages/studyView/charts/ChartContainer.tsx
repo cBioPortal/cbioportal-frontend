@@ -10,11 +10,12 @@ import fileDownload from 'react-file-download';
 import PieChart from "pages/studyView/charts/pieChart/PieChart";
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 import classnames from 'classnames';
-import {StudyViewFilter} from "shared/api/generated/CBioPortalAPIInternal";
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
 import {bind} from "bind-decorator";
 import MobxPromise from "mobxpromise";
 import SurvivalChart from "../../resultsView/survival/SurvivalChart";
+import {MutatedGenesTable} from "../table/MutatedGenesTable";
+import {CNAGenesTable} from "../table/CNAGenesTable";
 
 export interface AbstractChart {
     downloadData: () => string;
@@ -24,7 +25,7 @@ export interface AbstractChart {
 export interface IChartContainerProps {
     chartMeta: ChartMeta;
     promise: MobxPromise<any>;
-    filter: StudyViewFilter;
+    filters: any;
     onUserSelection: (chartMeta: ChartMeta, value: string[]) => void;
     onDeleteChart: (uniqueKey: string) => void;
 }
@@ -39,7 +40,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @observable placement: 'left' | 'right' = 'right';
     @observable chartType: ChartType
 
-    @computed get fileName() {
+    @computed
+    get fileName() {
         return this.props.chartMeta.displayName.replace(/[ \t]/g, '_');
     }
 
@@ -57,6 +59,12 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }),
             onUserSelection: action((values: string[]) => {
                 this.props.onUserSelection(this.props.chartMeta, values);
+            }),
+            updateCNAGeneFilter: action((entrezGeneId: number, alteration: number) => {
+                this.props.onUserSelection(this.props.chartMeta, [entrezGeneId.toString(), alteration.toString()]);
+            }),
+            updateGeneFilter: action((value: number) => {
+                this.props.onUserSelection(this.props.chartMeta, [value.toString()]);
             }),
             onMouseEnterChart: action((event: React.MouseEvent<any>) => {
                 this.placement = event.nativeEvent.x > 800 ? 'left' : 'right';
@@ -92,12 +100,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         }
     }
 
-    @computed get chartFilters() {
-        let filters = _.filter(this.props.filter.clinicalDataEqualityFilters, filter => _.isEqual(filter.clinicalDataType + '_' + filter.attributeId, this.props.chartMeta.uniqueKey));
-        return _.isEmpty(filters) ? [] : filters[0].values;
-    }
-
-    @computed get chartWidth() {
+    @computed
+    get chartWidth() {
         let chartWidth = styles.chartWidthTwo;
         if (this.chartType === ChartType.PIE_CHART) {
             chartWidth = styles.chartWidthOne;
@@ -105,7 +109,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         return chartWidth;
     }
 
-    @computed get chartHeight() {
+    @computed
+    get chartHeight() {
         let chartHeight = styles.chartHeightTwo;
         if (this.chartType === ChartType.PIE_CHART) {
             chartHeight = styles.chartHeightOne;
@@ -113,51 +118,75 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         return chartHeight;
     }
 
-    @computed get hideLabel() {
+    @computed
+    get hideLabel() {
         return this.chartType === ChartType.TABLE;
     }
 
-    @computed get chartControls(): ChartControls {
+    @computed
+    get chartControls(): ChartControls {
         let controls = {};
         switch (this.chartType) {
             case ChartType.PIE_CHART: {
-                controls = { showTableIcon: true }
+                controls = {showTableIcon: true}
                 break;
             }
             case ChartType.TABLE: {
                 if (!_.isEqual(this.props.chartMeta.chartType, ChartType.TABLE)) {
-                    controls = { showPieIcon: true }
+                    controls = {showPieIcon: true}
                 }
                 break;
             }
         }
-        return { ...controls, showResetIcon: this.chartFilters.length > 0 };
+        return {...controls, showResetIcon: this.props.filters.length > 0};
     }
 
     @bind
-    @action changeChartType(chartType: ChartType) {
+    @action
+    changeChartType(chartType: ChartType) {
         this.chartType = chartType;
     }
 
-    @computed get chart() {
+    @computed
+    get chart() {
         switch (this.chartType) {
             case ChartType.PIE_CHART: {
                 return (<PieChart
                     ref={this.handlers.ref}
                     onUserSelection={this.handlers.onUserSelection}
-                    filters={this.chartFilters}
+                    filters={this.props.filters}
                     data={this.props.promise.result}
                     active={this.mouseInChart}
                     placement={this.placement}
                 />)
             }
             case ChartType.TABLE: {
-                return (<ClinicalTable
-                    data={this.props.promise.result}
-                    filters={this.chartFilters}
-                    onUserSelection={this.handlers.onUserSelection}
-                    label={this.props.chartMeta.displayName}
-                />)
+                if (this.props.chartMeta.uniqueKey === 'MUTATED_GENES_TABLE') {
+                    return (
+                        <MutatedGenesTable
+                            promise={this.props.promise}
+                            numOfSelectedSamples={100}
+                            filters={this.props.filters}
+                            onUserSelection={this.handlers.updateGeneFilter}
+                        />
+                    );
+                } else if (this.props.chartMeta.uniqueKey === 'CNA_GENES_TABLE') {
+                    return (
+                        <CNAGenesTable
+                            promise={this.props.promise}
+                            numOfSelectedSamples={100}
+                            filters={this.props.filters}
+                            onUserSelection={this.handlers.updateCNAGeneFilter}
+                        />
+                    );
+                } else {
+                    return (<ClinicalTable
+                        data={this.props.promise.result}
+                        filters={this.props.filters}
+                        onUserSelection={this.handlers.onUserSelection}
+                        label={this.props.chartMeta.displayName}
+                    />)
+                }
             }
             case ChartType.SURVIVAL: {
                 return (
@@ -176,21 +205,22 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                    showTable={false}
                                    showLegend={false}
                                    styleOpts={{
-                                       width: 450,
-                                       height: 300
+                                       width: 400,
+                                       height: 380
                                    }}
                                    fileName="Overall_Survival"/>
                 )
             }
-            default: return null;
+            default:
+                return null;
         }
     }
 
     public render() {
         return (
             <div className={classnames(styles.chart, this.chartWidth, this.chartHeight)}
-                onMouseEnter={this.handlers.onMouseEnterChart}
-                onMouseLeave={this.handlers.onMouseLeaveChart}>
+                 onMouseEnter={this.handlers.onMouseEnterChart}
+                 onMouseLeave={this.handlers.onMouseLeaveChart}>
                 <ChartHeader
                     chartMeta={this.props.chartMeta}
                     active={this.mouseInChart}
