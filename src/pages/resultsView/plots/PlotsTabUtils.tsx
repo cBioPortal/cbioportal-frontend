@@ -297,7 +297,7 @@ function scatterPlotMutationLegendData(
             name: NOT_PROFILED_MUTATION_LEGEND_LABEL,
             symbol: {
                 stroke: notProfiledAppearance.stroke,
-                strokeOpacity: (showStroke ? notProfiledAppearance.strokeOpacity : 0),
+                strokeOpacity: notProfiledAppearance.strokeOpacity, // always show because its white
                 fill: notProfiledAppearance.fill,
                 type: "circle"
             }
@@ -720,8 +720,8 @@ export const oncoprintMutationTypeToAppearanceDefault:{[mutType:string]:{symbol:
 export const notProfiledAppearance = {
     symbol: "circle",
     fill: "#ffffff",
-    stroke: "d3d3d3", // TODO: right grey?
-    strokeOpacity:0,
+    stroke: "#000000",
+    strokeOpacity:0.3,
 };
 
 export const mutationLegendOrder = [
@@ -738,9 +738,9 @@ export const mutationRenderPriority = stringListToIndexSet([
 
 export const noMutationAppearance = {
     symbol : "circle",
-    fill : "#e3e3e3",
+    fill: "#c4e5f5",
     stroke : "#000000",
-    strokeOpacity:0,
+    strokeOpacity:0.3,
     legendLabel : "Not mutated"
 };
 
