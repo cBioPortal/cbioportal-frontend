@@ -120,6 +120,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @observable showUnalteredColumns:boolean = true;
     @observable showWhitespaceBetweenColumns:boolean = true;
     @observable showClinicalTrackLegends:boolean = true;
+    @observable _onlyShowClinicalLegendForAlteredCases = false;
+
+    @computed get onlyShowClinicalLegendForAlteredCases() {
+        return this.showClinicalTrackLegends && this._onlyShowClinicalLegendForAlteredCases;
+    }
+
     @observable showMinimap:boolean = false;
 
     @observable selectedHeatmapProfile = "";
@@ -230,6 +236,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             },
             get showClinicalTrackLegends(){
                 return self.showClinicalTrackLegends;
+            },
+            get onlyShowClinicalLegendForAlteredCases() {
+                return self.onlyShowClinicalLegendForAlteredCases;
             },
             get showMinimap() {
                 return self.showMinimap;
@@ -406,6 +415,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             onSelectShowUnalteredColumns:(show:boolean)=>{this.showUnalteredColumns = show;},
             onSelectShowWhitespaceBetweenColumns:(show:boolean)=>{this.showWhitespaceBetweenColumns = show;},
             onSelectShowClinicalTrackLegends:(show:boolean)=>{this.showClinicalTrackLegends = show; },
+            onSelectOnlyShowClinicalLegendForAlteredCases:(show:boolean)=>{this._onlyShowClinicalLegendForAlteredCases = show; },
             onSelectShowMinimap:(show:boolean)=>{this.showMinimap = show;},
             onSelectDistinguishMutationType:(s:boolean)=>{this.distinguishMutationType = s;},
             onSelectDistinguishDrivers:action((s:boolean)=>{

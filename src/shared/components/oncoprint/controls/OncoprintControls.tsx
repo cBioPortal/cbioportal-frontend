@@ -30,6 +30,7 @@ export interface IOncoprintControlsHandlers {
     onSelectShowUnalteredColumns?:(unalteredColumnsShown:boolean)=>void,
     onSelectShowWhitespaceBetweenColumns?:(showWhitespace:boolean)=>void,
     onSelectShowClinicalTrackLegends?:(showLegends:boolean)=>void,
+    onSelectOnlyShowClinicalLegendForAlteredCases?:(showLegends:boolean)=>void,
     onSelectShowMinimap?:(showMinimap:boolean)=>void,
     onSelectDistinguishMutationType?:(distinguish:boolean)=>void,
     onSelectDistinguishDrivers?:(distinguish:boolean)=>void,
@@ -67,6 +68,7 @@ export interface IOncoprintControlsState {
     showUnalteredColumns?:boolean,
     showWhitespaceBetweenColumns?:boolean,
     showClinicalTrackLegends?:boolean,
+    onlyShowClinicalLegendForAlteredCases?:boolean,
     showMinimap?:boolean,
     distinguishMutationType?:boolean,
     distinguishDrivers?:boolean,
@@ -119,6 +121,7 @@ const EVENT_KEY = {
     showUnalteredColumns: "2",
     showWhitespaceBetweenColumns: "3",
     showClinicalTrackLegends: "4",
+    onlyShowClinicalLegendForAlteredCases: "4.1",
     distinguishMutationType: "5",
     sortByMutationType: "6",
     sortAlphabetical: "7",
@@ -227,6 +230,10 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
             case EVENT_KEY.showClinicalTrackLegends:
                 this.props.handlers.onSelectShowClinicalTrackLegends &&
                 this.props.handlers.onSelectShowClinicalTrackLegends(!this.props.state.showClinicalTrackLegends);
+                break;
+            case EVENT_KEY.onlyShowClinicalLegendForAlteredCases:
+                this.props.handlers.onSelectOnlyShowClinicalLegendForAlteredCases &&
+                this.props.handlers.onSelectOnlyShowClinicalLegendForAlteredCases(!this.props.state.onlyShowClinicalLegendForAlteredCases);
                 break;
             case EVENT_KEY.columnTypeSample:
                 this.props.handlers.onSelectColumnType && this.props.handlers.onSelectColumnType("sample");
@@ -761,6 +768,16 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                         checked={this.props.state.showClinicalTrackLegends}
                         onClick={this.onInputClick}
                     /> Show legends for clinical tracks
+                </label></div>
+                <div className="checkbox" style={{marginLeft:20}}><label>
+                    <input
+                        data-test="onlyShowClinicalLegendsForAltered"
+                        type="checkbox"
+                        value={EVENT_KEY.onlyShowClinicalLegendForAlteredCases}
+                        checked={this.props.state.onlyShowClinicalLegendForAlteredCases}
+                        onClick={this.onInputClick}
+                        disabled={!this.props.state.showClinicalTrackLegends}
+                    /> Only show clinical track legends for altered {this.props.state.columnMode === "patient" ? "patients" : "samples"}.
                 </label></div>
             </CustomDropdown>
         );
