@@ -123,6 +123,7 @@ declare module "oncoprintjs"
         expansion_of?: TrackId;
         expandCallback?: (id: TrackId) => void;
         expandButtonTextGetter?: (is_expanded: boolean) => string;
+        important_ids?:string[];
     };
 
     export default class OncoprintJS<D> {
@@ -158,6 +159,7 @@ declare module "oncoprintjs"
         getTrackData:(track_id:TrackId)=>D[];
         getTrackDataIdKey:(track_id:TrackId)=>string;
         setTrackData:(track_id:TrackId, data:D[], data_id_key:string)=>void;
+        setTrackImportantIds:(track_id:TrackId, ids?:string[])=>void;
         setTrackGroupSortPriority:(priority:TrackGroupIndex[])=>void;
         setTrackGroupLegendOrder:(group_order:TrackGroupIndex[])=>void;
         setTrackSortDirection:(track_id:TrackId, dir:TrackSortDirection)=>TrackSortDirection;

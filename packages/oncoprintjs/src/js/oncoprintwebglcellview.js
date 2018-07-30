@@ -753,6 +753,15 @@ var OncoprintWebGLCellView = (function () {
 	}
 	renderAllTracks(this, model);
     }
+    OncoprintWebGLCellView.prototype.setTrackImportantIds = function(model, track_id) {
+        if (this.rendering_suppressed) {
+            return;
+        };
+        getShapes(this, model, track_id);
+        computeVertexPositionsAndVertexColors(this, model, track_id);
+        computeVertexColumns(this, model, track_id);
+        renderAllTracks(this, model);
+    }
     OncoprintWebGLCellView.prototype.setTrackData = function(model, track_id) {
 	if (this.rendering_suppressed) {
 	    return;

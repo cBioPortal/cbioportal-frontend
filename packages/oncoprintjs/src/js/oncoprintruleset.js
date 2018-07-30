@@ -262,12 +262,16 @@ var RuleSet = (function () {
 	}
 	return shapes;
     }
-    RuleSet.prototype.apply = function (data, cell_width, cell_height, out_active_rules) {
+    RuleSet.prototype.apply = function (data, cell_width, cell_height, out_active_rules, data_id_key, important_ids) {
 	// Returns a list of lists of concrete shapes, in the same order as data
+	// optional parameter important_ids determines which ids count towards active rules (optional parameter data_id_key
+	//		is used for this too)
 	var ret = [];
 	for (var i = 0; i < data.length; i++) {
-	    var rules = this.getRulesWithId(data[i]);
-	    if (typeof out_active_rules !== 'undefined') {
+		var datum = data[i];
+		var should_mark_active = !important_ids || !!important_ids[datum[data_id_key]];
+	    var rules = this.getRulesWithId(datum);
+	    if (typeof out_active_rules !== 'undefined' && should_mark_active) {
 		for (var j = 0; j < rules.length; j++) {
 		    out_active_rules[rules[j].id] = true;
 		}
@@ -456,7 +460,7 @@ var CategoricalRuleSet = (function () {
 	ruleset.addRule(ruleset.category_key, category, rule_params);
     };
 
-    CategoricalRuleSet.prototype.apply = function (data, cell_width, cell_height, out_active_rules) {
+    CategoricalRuleSet.prototype.apply = function (data, cell_width, cell_height, out_active_rules, data_id_key, important_ids) {
 	// First ensure there is a color for all categories
 	for (var i = 0, data_len = data.length; i < data_len; i++) {
 	    if (data[i][NA_STRING]) {
@@ -471,7 +475,7 @@ var CategoricalRuleSet = (function () {
 	    }
 	}
 	// Then propagate the call up
-	return LookupRuleSet.prototype.apply.call(this, data, cell_width, cell_height, out_active_rules);
+	return LookupRuleSet.prototype.apply.call(this, data, cell_width, cell_height, out_active_rules, data_id_key, important_ids);
     };
 
     return CategoricalRuleSet;
@@ -559,7 +563,7 @@ var LinearInterpRuleSet = (function () {
         }
     };
 
-    LinearInterpRuleSet.prototype.apply = function (data, cell_width, cell_height, out_active_rules) {
+    LinearInterpRuleSet.prototype.apply = function (data, cell_width, cell_height, out_active_rules, data_id_key, important_ids) {
 	// First find value range
 	var value_min = Number.POSITIVE_INFINITY;
 	var value_max = Number.NEGATIVE_INFINITY;
@@ -581,7 +585,7 @@ var LinearInterpRuleSet = (function () {
 	this.updateLinearRules();
 
 	// Then propagate the call up
-	return ConditionRuleSet.prototype.apply.call(this, data, cell_width, cell_height, out_active_rules);
+	return ConditionRuleSet.prototype.apply.call(this, data, cell_width, cell_height, out_active_rules, data_id_key, important_ids);
     };
 
     LinearInterpRuleSet.prototype.updateLinearRules = function () {

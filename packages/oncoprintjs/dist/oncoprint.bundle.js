@@ -13825,7 +13825,7 @@ var Oncoprint = (function () {
 			    .css({'position':'absolute', 
 				    'top':'250px',
 				    'min-height':1})
-			    .addClass("noselect");
+			    .addClass("noselect oncoprint-legend-div");
 	
 	var $cell_div = $('<div>')
 			.css({'width':width,
@@ -14558,6 +14558,16 @@ var Oncoprint = (function () {
 	}
 	resizeAndOrganizeAfterTimeout(this);
     }
+
+    Oncoprint.prototype.setTrackImportantIds = function(track_id, ids) {
+    	if(this.webgl_unavailable) {
+    		return;
+		}
+		this.model.setTrackImportantIds(track_id, ids);
+    	this.cell_view.setTrackImportantIds(this.model, track_id);
+    	this.legend_view.setTrackImportantIds(this.model);
+    	resizeAndOrganizeAfterTimeout(this);
+	}
     
     Oncoprint.prototype.setTrackGroupSortPriority = function(priority) {
         if(this.webgl_unavailable) {
@@ -15089,6 +15099,7 @@ var OncoprintModel = (function () {
 	this.track_group_legend_order = [];
 	
 	// Track Properties
+	this.track_important_ids = {}; // a set of "important" ids - only these ids will cause a used rule to become active and thus shown in the legend
 	this.track_label = {};
 	this.track_label_color = {};
 	this.track_html_label = {};
@@ -15475,7 +15486,9 @@ var OncoprintModel = (function () {
 	var id_key = this.getTrackDataIdKey(track_id);
 	var spacing = this.getTrackHasColumnSpacing(track_id);
 	var width = this.getCellWidth(use_base_size) + (!spacing ? this.getCellPadding(use_base_size, true) : 0);
-	var shapes = this.getRuleSet(track_id).apply(data, width, this.getCellHeight(track_id, use_base_size), active_rules);
+	var shapes = this.getRuleSet(track_id).apply(
+		data, width, this.getCellHeight(track_id, use_base_size), active_rules, id_key, this.getTrackImportantIds(track_id)
+	);
 	
 	setTrackActiveRules(this, track_id, active_rules);
 	
@@ -15511,6 +15524,24 @@ var OncoprintModel = (function () {
 	} else {
 	    return [];
 	}
+    }
+
+    function _setTrackImportantIds(model, track_id, ids) {
+    	if (!ids) {
+    		model.track_important_ids[track_id] = undefined;
+		} else {
+			model.track_important_ids[track_id] = ids.reduce(function(map, next_id) {
+				map[next_id] = true;
+				return map;
+			}, {});
+		}
+	}
+
+    OncoprintModel.prototype.setTrackImportantIds = function(track_id, ids) {
+    	_setTrackImportantIds(this, track_id, ids);
+	}
+    OncoprintModel.prototype.getTrackImportantIds = function(track_id) {
+        return this.track_important_ids[track_id];
     }
     
     OncoprintModel.prototype.getRuleSets = function() {
@@ -15679,7 +15710,7 @@ var OncoprintModel = (function () {
 		    params.removeCallback, params.label, params.description, params.track_info,
 		    params.sortCmpFn, params.sort_direction_changeable, params.init_sort_direction, params.onSortDirectionChange,
 		    params.data, params.rule_set, params.track_label_color, params.html_label,
-		    params.expansion_of, params.expandCallback, params.expandButtonTextGetter
+		    params.expansion_of, params.expandCallback, params.expandButtonTextGetter, params.important_ids
 	    );
 	}
 	this.track_tops.update();
@@ -15691,7 +15722,8 @@ var OncoprintModel = (function () {
 	    removeCallback, label, description, track_info,
 	    sortCmpFn, sort_direction_changeable, init_sort_direction, onSortDirectionChange,
 	    data, rule_set, track_label_color, html_label,
-	    expansion_of, expandCallback, expandButtonTextGetter
+	    expansion_of, expandCallback, expandButtonTextGetter,
+		 important_ids
     ) {
 	model.track_label[track_id] = ifndef(label, "Label");
 	model.track_label_color[track_id] = ifndef(track_label_color, "black");
@@ -15736,6 +15768,10 @@ var OncoprintModel = (function () {
 	    model.track_rule_set_id[track_id] = rule_set.rule_set_id;
 	}
 	model.track_active_rules[track_id] = {};
+
+	if (important_ids) {
+		_setTrackImportantIds(model, track_id, important_ids);
+	}
 
 	model.track_sort_direction[track_id] = ifndef(init_sort_direction, 1);
 	
@@ -17756,6 +17792,15 @@ var OncoprintWebGLCellView = (function () {
 	    computeVertexColumns(this, model, track_ids[i]);
 	}
 	renderAllTracks(this, model);
+    }
+    OncoprintWebGLCellView.prototype.setTrackImportantIds = function(model, track_id) {
+        if (this.rendering_suppressed) {
+            return;
+        };
+        getShapes(this, model, track_id);
+        computeVertexPositionsAndVertexColors(this, model, track_id);
+        computeVertexColumns(this, model, track_id);
+        renderAllTracks(this, model);
     }
     OncoprintWebGLCellView.prototype.setTrackData = function(model, track_id) {
 	if (this.rendering_suppressed) {
@@ -23126,12 +23171,16 @@ var RuleSet = (function () {
 	}
 	return shapes;
     }
-    RuleSet.prototype.apply = function (data, cell_width, cell_height, out_active_rules) {
+    RuleSet.prototype.apply = function (data, cell_width, cell_height, out_active_rules, data_id_key, important_ids) {
 	// Returns a list of lists of concrete shapes, in the same order as data
+	// optional parameter important_ids determines which ids count towards active rules (optional parameter data_id_key
+	//		is used for this too)
 	var ret = [];
 	for (var i = 0; i < data.length; i++) {
-	    var rules = this.getRulesWithId(data[i]);
-	    if (typeof out_active_rules !== 'undefined') {
+		var datum = data[i];
+		var should_mark_active = !important_ids || !!important_ids[datum[data_id_key]];
+	    var rules = this.getRulesWithId(datum);
+	    if (typeof out_active_rules !== 'undefined' && should_mark_active) {
 		for (var j = 0; j < rules.length; j++) {
 		    out_active_rules[rules[j].id] = true;
 		}
@@ -23320,7 +23369,7 @@ var CategoricalRuleSet = (function () {
 	ruleset.addRule(ruleset.category_key, category, rule_params);
     };
 
-    CategoricalRuleSet.prototype.apply = function (data, cell_width, cell_height, out_active_rules) {
+    CategoricalRuleSet.prototype.apply = function (data, cell_width, cell_height, out_active_rules, data_id_key, important_ids) {
 	// First ensure there is a color for all categories
 	for (var i = 0, data_len = data.length; i < data_len; i++) {
 	    if (data[i][NA_STRING]) {
@@ -23335,7 +23384,7 @@ var CategoricalRuleSet = (function () {
 	    }
 	}
 	// Then propagate the call up
-	return LookupRuleSet.prototype.apply.call(this, data, cell_width, cell_height, out_active_rules);
+	return LookupRuleSet.prototype.apply.call(this, data, cell_width, cell_height, out_active_rules, data_id_key, important_ids);
     };
 
     return CategoricalRuleSet;
@@ -23423,7 +23472,7 @@ var LinearInterpRuleSet = (function () {
         }
     };
 
-    LinearInterpRuleSet.prototype.apply = function (data, cell_width, cell_height, out_active_rules) {
+    LinearInterpRuleSet.prototype.apply = function (data, cell_width, cell_height, out_active_rules, data_id_key, important_ids) {
 	// First find value range
 	var value_min = Number.POSITIVE_INFINITY;
 	var value_max = Number.NEGATIVE_INFINITY;
@@ -23445,7 +23494,7 @@ var LinearInterpRuleSet = (function () {
 	this.updateLinearRules();
 
 	// Then propagate the call up
-	return ConditionRuleSet.prototype.apply.call(this, data, cell_width, cell_height, out_active_rules);
+	return ConditionRuleSet.prototype.apply.call(this, data, cell_width, cell_height, out_active_rules, data_id_key, important_ids);
     };
 
     LinearInterpRuleSet.prototype.updateLinearRules = function () {
@@ -24740,6 +24789,11 @@ var OncoprintLegendView = (function() {
 	    if (rule_sets[i].exclude_from_legend && !show_all) {
 		continue;
 	    }
+        var rules = model.getActiveRules(rule_sets[i].rule_set_id);
+	    if (rules.length === 0) {
+	    	// dont render this ruleset into legend if no active rules
+	    	continue;
+		}
 	    var rule_set_group = svgfactory.group(0,y);
 	    everything_group.appendChild(rule_set_group);
 	    (function addLabel() {
@@ -24752,8 +24806,7 @@ var OncoprintLegendView = (function() {
 	    
 	    var x = rule_start_x + view.padding_after_rule_set_label;
 	    var in_group_y_offset = 0;
-	    
-	    var rules = model.getActiveRules(rule_sets[i].rule_set_id);
+
 	    var labelSort = function(ruleA, ruleB) {
             var labelA = ruleA.rule.legend_label;
             var labelB = ruleB.rule.legend_label;
@@ -24912,7 +24965,11 @@ var OncoprintLegendView = (function() {
     OncoprintLegendView.prototype.setTrackData = function(model) {
 	renderLegend(this, model);
     }
-    
+
+    OncoprintLegendView.prototype.setTrackImportantIds = function(model) {
+    	renderLegend(this, model);
+	}
+
     OncoprintLegendView.prototype.shareRuleSet = function(model) {
 	renderLegend(this, model);
     }
