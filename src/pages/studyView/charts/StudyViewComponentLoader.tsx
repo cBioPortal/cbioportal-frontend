@@ -2,7 +2,7 @@ import * as React from "react";
 import {If} from 'react-if';
 import MobxPromise from "mobxpromise";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator"
-
+import styles from "../styles.module.scss";
 
 export interface StudyViewComponentLoaderProps {
     promise: MobxPromise<any>
@@ -11,7 +11,7 @@ export interface StudyViewComponentLoaderProps {
 export class StudyViewComponentLoader extends React.Component<StudyViewComponentLoaderProps> {
     public render() {
         return (
-            <div style={{margin: 'auto'}}>
+            <div className={this.props.promise.isPending ? styles.studyViewAutoMargin : null}>
                 <If condition={this.props.promise.isPending}>
                     <LoadingIndicator
                         isLoading={!!this.props.promise.isPending}
