@@ -52,7 +52,8 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             MutationTableColumnType.FUNCTIONAL_IMPACT,
             MutationTableColumnType.COSMIC,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
-            MutationTableColumnType.TUMORS
+            MutationTableColumnType.TUMORS,
+            MutationTableColumnType.DBSNP
         ]
     };
 
@@ -132,7 +133,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.MRNA_EXPR].order = 182;
         this._columns[MutationTableColumnType.COHORT].order = 183;
         this._columns[MutationTableColumnType.COSMIC].order = 184;
-
+        this._columns[MutationTableColumnType.DBSNP].order = 185;
         // exclusions
         this._columns[MutationTableColumnType.MRNA_EXPR].shouldExclude = ()=>{
             return (!this.props.mrnaExprRankMolecularProfileId) || (this.getSamples().length > 1);

@@ -289,7 +289,7 @@ export default class FunctionalImpactColumnFormatter {
         const genomeNexusData = FunctionalImpactColumnFormatter.getGenomeNexusData(data, genomeNexusCache);
         return (
                 <div>
-                    {FunctionalImpactColumnFormatter.makeFuncionalImpactViz(genomeNexusData)}
+                    {FunctionalImpactColumnFormatter.makeFunctionalImpactViz(genomeNexusData)}
                 </div>
         );
     }
@@ -317,7 +317,7 @@ export default class FunctionalImpactColumnFormatter {
         return cache.get(data[0]);
     }
 
-    private static makeFuncionalImpactViz(genomeNexusData:GenomeNexusCacheDataType | null) {
+    private static makeFunctionalImpactViz(genomeNexusData:GenomeNexusCacheDataType | null) {
         let status:TableCellStatus | null = null;
 
         if (genomeNexusData === null) {

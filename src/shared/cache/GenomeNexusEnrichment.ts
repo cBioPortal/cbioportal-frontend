@@ -25,7 +25,7 @@ export function fetch(queries: Mutation[]):Promise<VariantAnnotationEnriched[]> 
                     mutation => generateGenomeNexusQuery(mutation)).filter(
                         query => query.length > 0)),
                 // TODO: update genome nexus API to return all fields by default
-                fields: ['hotspots', 'mutation_assessor']
+                fields: ['hotspots', 'mutation_assessor','my_variant_info']
             }
         ) as Promise<VariantAnnotationEnriched[]>; 
     } else {

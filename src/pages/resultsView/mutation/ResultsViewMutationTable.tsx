@@ -44,7 +44,8 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
             MutationTableColumnType.NORMAL_ALLELE_FREQ,
             MutationTableColumnType.CANCER_TYPE,
-            MutationTableColumnType.NUM_MUTATIONS
+            MutationTableColumnType.NUM_MUTATIONS,
+            MutationTableColumnType.DBSNP
         ]
     };
 
@@ -74,6 +75,7 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
         this._columns[MutationTableColumnType.COSMIC].order = 60;
         this._columns[MutationTableColumnType.MUTATION_STATUS].order = 70;
         this._columns[MutationTableColumnType.VALIDATION_STATUS].order = 80;
+        this._columns[MutationTableColumnType.DBSNP].order = 90;
         this._columns[MutationTableColumnType.CENTER].order = 100;
         this._columns[MutationTableColumnType.CHROMOSOME].order = 110;
         this._columns[MutationTableColumnType.START_POS].order = 120;

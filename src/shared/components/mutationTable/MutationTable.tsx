@@ -1,47 +1,48 @@
-import * as React from "react";
-import {observer} from "mobx-react";
-import {observable, computed} from "mobx";
+import classnames from 'classnames';
 import * as _ from "lodash";
-import {default as LazyMobXTable, Column, SortDirection} from "shared/components/lazyMobXTable/LazyMobXTable";
-import {CancerStudy, MolecularProfile, Mutation} from "shared/api/generated/CBioPortalAPI";
-import SampleColumnFormatter from "./column/SampleColumnFormatter";
-import TumorAlleleFreqColumnFormatter from "./column/TumorAlleleFreqColumnFormatter";
-import NormalAlleleFreqColumnFormatter from "./column/NormalAlleleFreqColumnFormatter";
-import MrnaExprColumnFormatter from "./column/MrnaExprColumnFormatter";
-import CohortColumnFormatter from "./column/CohortColumnFormatter";
-import DiscreteCNAColumnFormatter from "./column/DiscreteCNAColumnFormatter";
-import AlleleCountColumnFormatter from "./column/AlleleCountColumnFormatter";
-import GeneColumnFormatter from "./column/GeneColumnFormatter";
-import ChromosomeColumnFormatter from "./column/ChromosomeColumnFormatter";
-import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
-import MutationTypeColumnFormatter from "./column/MutationTypeColumnFormatter";
-import FunctionalImpactColumnFormatter from "./column/FunctionalImpactColumnFormatter";
-import CosmicColumnFormatter from "./column/CosmicColumnFormatter";
-import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter";
-import CancerTypeColumnFormatter from "./column/CancerTypeColumnFormatter";
-import MutationStatusColumnFormatter from "./column/MutationStatusColumnFormatter";
-import ValidationStatusColumnFormatter from "./column/ValidationStatusColumnFormatter";
-import StudyColumnFormatter from "./column/StudyColumnFormatter";
-import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
-import {ICosmicData} from "shared/model/Cosmic";
-import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
-import {IHotspotDataWrapper} from "shared/model/CancerHotspots";
-import {IOncoKbDataWrapper} from "shared/model/OncoKB";
-import {ICivicVariantDataWrapper, ICivicGeneDataWrapper} from "shared/model/Civic";
-import {IMutSigData} from "shared/model/MutSig";
+import { computed, observable } from "mobx";
+import { observer } from "mobx-react";
+import * as React from "react";
+import { CancerStudy, MolecularProfile, Mutation } from "shared/api/generated/CBioPortalAPI";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
-import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
 import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
-import VariantCountCache from "shared/cache/VariantCountCache";
-import PubMedCache from "shared/cache/PubMedCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
-import {ILazyMobXTableApplicationDataStore} from "shared/lib/ILazyMobXTableApplicationDataStore";
-import {ILazyMobXTableApplicationLazyDownloadDataFetcher} from "shared/lib/ILazyMobXTableApplicationLazyDownloadDataFetcher";
+import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
+import PubMedCache from "shared/cache/PubMedCache";
+import VariantCountCache from "shared/cache/VariantCountCache";
+import { Column, default as LazyMobXTable, SortDirection } from "shared/components/lazyMobXTable/LazyMobXTable";
+import { ILazyMobXTableApplicationDataStore } from "shared/lib/ILazyMobXTableApplicationDataStore";
+import { ILazyMobXTableApplicationLazyDownloadDataFetcher } from "shared/lib/ILazyMobXTableApplicationLazyDownloadDataFetcher";
+import { IHotspotDataWrapper } from "shared/model/CancerHotspots";
+import { ICivicGeneDataWrapper, ICivicVariantDataWrapper } from "shared/model/Civic";
+import { ICosmicData } from "shared/model/Cosmic";
+import { IMutSigData } from "shared/model/MutSig";
+import { IMyCancerGenomeData } from "shared/model/MyCancerGenome";
+import { IOncoKbDataWrapper } from "shared/model/OncoKB";
+import { IColumnVisibilityControlsProps } from "../columnVisibilityControls/ColumnVisibilityControls";
+import { IPaginationControlsProps } from "../paginationControls/PaginationControls";
+import AlleleCountColumnFormatter from "./column/AlleleCountColumnFormatter";
+import AnnotationColumnFormatter from "./column/AnnotationColumnFormatter";
+import CancerTypeColumnFormatter from "./column/CancerTypeColumnFormatter";
+import ChromosomeColumnFormatter from "./column/ChromosomeColumnFormatter";
+import CohortColumnFormatter from "./column/CohortColumnFormatter";
+import CosmicColumnFormatter from "./column/CosmicColumnFormatter";
+import DbSNPColumnFormatter from "./column/DbSNPColumnFormatter"
+import DiscreteCNAColumnFormatter from "./column/DiscreteCNAColumnFormatter";
+import FunctionalImpactColumnFormatter from "./column/FunctionalImpactColumnFormatter";
+import GeneColumnFormatter from "./column/GeneColumnFormatter";
+import MrnaExprColumnFormatter from "./column/MrnaExprColumnFormatter";
+import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter";
+import MutationStatusColumnFormatter from "./column/MutationStatusColumnFormatter";
+import MutationTypeColumnFormatter from "./column/MutationTypeColumnFormatter";
+import NormalAlleleFreqColumnFormatter from "./column/NormalAlleleFreqColumnFormatter";
+import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
+import SampleColumnFormatter from "./column/SampleColumnFormatter";
+import StudyColumnFormatter from "./column/StudyColumnFormatter";
 import generalStyles from "./column/styles.module.scss";
-import classnames from 'classnames';
-import {IPaginationControlsProps} from "../paginationControls/PaginationControls";
-import {IColumnVisibilityControlsProps} from "../columnVisibilityControls/ColumnVisibilityControls";
+import TumorAlleleFreqColumnFormatter from "./column/TumorAlleleFreqColumnFormatter";
+import ValidationStatusColumnFormatter from "./column/ValidationStatusColumnFormatter";
 
 export interface IMutationTableProps {
     studyIdToStudy?: {[studyId:string]:CancerStudy};
@@ -60,6 +61,7 @@ export interface IMutationTableProps {
     enableHotspot?: boolean;
     enableCivic?: boolean;
     enableFunctionalImpact?: boolean;
+    enableDbSNP?: boolean;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspotData?: IHotspotDataWrapper;
     cosmicData?:ICosmicData;
@@ -113,7 +115,8 @@ export enum MutationTableColumnType {
     REF_READS,
     VAR_READS,
     CANCER_TYPE,
-    NUM_MUTATIONS
+    NUM_MUTATIONS,
+    DBSNP
 }
 
 type MutationTableColumn = Column<Mutation[]>&{order?:number, shouldExclude?:()=>boolean};
@@ -490,6 +493,15 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             tooltip:(<span>Total number of nonsynonymous mutations in the sample</span>),
             align: "right"
         };
+
+        this._columns[MutationTableColumnType.DBSNP] = {
+        name: "RSID",
+        render: (d: Mutation[]) => (this.props.genomeNexusEnrichmentCache
+            ? DbSNPColumnFormatter.renderFunction(d, this.props.genomeNexusEnrichmentCache as GenomeNexusEnrichmentCache)
+            : (<span></span>)),
+        download: (d: Mutation[]) => DbSNPColumnFormatter.download(
+            d, this.props.genomeNexusEnrichmentCache as GenomeNexusEnrichmentCache)
+            };
     }
 
     @computed protected get orderedColumns(): MutationTableColumnType[] {

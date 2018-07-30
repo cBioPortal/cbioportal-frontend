@@ -1,8 +1,7 @@
 import * as React from 'react';
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
-import {CancerStudy, MolecularProfile, Mutation} from "shared/api/generated/CBioPortalAPI";
+import { CancerStudy, MolecularProfile, Mutation } from "shared/api/generated/CBioPortalAPI";
+import { getStudySummaryUrl } from "../../../api/urls";
 import TruncatedText from "../../TruncatedText";
-import {getStudySummaryUrl} from "../../../api/urls";
 
 export default class StudyColumnFormatter
 {
