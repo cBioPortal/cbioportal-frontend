@@ -30,6 +30,7 @@ import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
 import {isPreSelectedClinicalAttr} from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
+import {Column} from "../../shared/components/lazyMobXTable/LazyMobXTable";
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT'
 
@@ -59,6 +60,7 @@ export type ChartMeta = {
     displayName: string,
     description: string,
     chartType: ChartType,
+    tableColumns?: Column<any>[]
 }
 
 export class StudyViewPageStore {
@@ -118,6 +120,10 @@ export class StudyViewPageStore {
         this._mutatedGeneFilter = mutatedGeneFilter;
     }
 
+    @action resetGeneFilter() {
+        this._mutatedGeneFilter.entrezGeneIds = [];
+    }
+
     @action
     updateCustomCasesFilter(cases: SampleIdentifier[]) {
 
@@ -153,6 +159,11 @@ export class StudyViewPageStore {
             _cnaGeneFilter.alterations.splice(_index, 1);
         }
         this._cnaGeneFilter = _cnaGeneFilter;
+    }
+
+    @action
+    resetCNAGEneFilter() {
+        this._cnaGeneFilter.alterations = [];
     }
 
     @action changeChartVisibility(uniqueKey: string, visible: boolean) {
@@ -200,6 +211,11 @@ export class StudyViewPageStore {
 
     public getCNAGenesTableFilters(): CopyNumberGeneFilterElement[] {
         return this._cnaGeneFilter ? this._cnaGeneFilter.alterations : [];
+    }
+
+    public getClinicalDtaFiltersByUniqueKey(uniqueKey: string): string[] {
+        let filters = _.filter(this._clinicalDataEqualityFilterSet.values(), filter => _.isEqual(filter.clinicalDataType + '_' + filter.attributeId, uniqueKey));
+        return _.isEmpty(filters) ? [] : filters[0].values;
     }
 
     readonly molecularProfiles = remoteData<MolecularProfile[]>({
@@ -285,6 +301,24 @@ export class StudyViewPageStore {
                 description: ''
             };
         }));
+
+        if (!_.isEmpty(this.mutationProfiles.result!)) {
+            attrs.push({
+                uniqueKey: 'MUTATED_GENES_TABLE',
+                chartType: ChartType.TABLE,
+                displayName: 'Mutated Genes',
+                description: ''
+            })
+        }
+
+        if (!_.isEmpty(this.cnaProfileIds)) {
+            attrs.push({
+                uniqueKey: 'CNA_GENES_TABLE',
+                chartType: ChartType.TABLE,
+                displayName: 'CNA Genes',
+                description: ''
+            })
+        }
         return attrs;
     }
 

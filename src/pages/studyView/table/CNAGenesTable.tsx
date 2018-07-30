@@ -9,12 +9,11 @@ import {CopyNumberCountByGene, CopyNumberGeneFilterElement} from "shared/api/gen
 import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
 import MobxPromise from "mobxpromise";
 import {If} from 'react-if';
-import {StudyViewComponentLoader} from "../charts/StudyViewComponentLoader";
 
 export interface ICNAGenesTablePros {
     promise: MobxPromise<CNAGenesData>;
     filters: CopyNumberGeneFilterElement[];
-    toggleSelection: (entrezGeneId: number, alteration: number) => void;
+    onUserSelection: (entrezGeneId: number, alteration: number) => void;
     numOfSelectedSamples: number;
 }
 
@@ -39,48 +38,44 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
     public render() {
         return (
             <div className={styles.studyViewTablesTable}>
-                <div className={styles.studyViewTablesTitle}>CNA Genes</div>
-                <div className={styles.studyViewTablesBody}>
-                    <StudyViewComponentLoader promise={this.props.promise}>
-                        <CNAGenesTableComponent
-                            className={styles.studyViewTablesBody}
-                            initialItemsPerPage={10}
-                            showCopyDownload={false}
-                            data={this.props.promise.result}
-                            columns={
-                                [
-                                    {
-                                        name: 'Gene',
-                                        render: (data: CopyNumberCountByGene) => <span>{data.hugoGeneSymbol}</span>
-                                    },
-                                    {
-                                        name: 'Cytoband',
-                                        render: (data: CopyNumberCountByGene) => <span>{data.cytoband}</span>
-                                    },
-                                    {
-                                        name: 'CNA',
-                                        render: (data: CopyNumberCountByGene) =>
-                                            <span>{data.alteration === -2 ? 'DEL' : 'AMP'}</span>
-                                    },
-                                    {
-                                        name: '#',
-                                        render: (data: CopyNumberCountByGene) =>
-                                            <LabeledCheckbox
-                                                checked={this.isChecked(data.entrezGeneId, data.alteration)}
-                                                onChange={event => this.props.toggleSelection(data.entrezGeneId, data.alteration)}
-                                            >
-                                                {data.countByEntity}
-                                            </LabeledCheckbox>
-                                    },
-                                    {
-                                        name: 'Freq',
-                                        render: (data: CopyNumberCountByGene) => <span>{data.frequency + '%'}</span>
-                                    }
-                                ]
+                <CNAGenesTableComponent
+                    className={styles.studyViewTablesBody}
+                    initialItemsPerPage={10}
+                    showCopyDownload={false}
+                    showColumnVisibility={false}
+                    data={this.props.promise.result}
+                    columns={
+                        [
+                            {
+                                name: 'Gene',
+                                render: (data: CopyNumberCountByGene) => <span>{data.hugoGeneSymbol}</span>
+                            },
+                            {
+                                name: 'Cytoband',
+                                render: (data: CopyNumberCountByGene) => <span>{data.cytoband}</span>
+                            },
+                            {
+                                name: 'CNA',
+                                render: (data: CopyNumberCountByGene) =>
+                                    <span>{data.alteration === -2 ? 'DEL' : 'AMP'}</span>
+                            },
+                            {
+                                name: '#',
+                                render: (data: CopyNumberCountByGene) =>
+                                    <LabeledCheckbox
+                                        checked={this.isChecked(data.entrezGeneId, data.alteration)}
+                                        onChange={event => this.props.onUserSelection(data.entrezGeneId, data.alteration)}
+                                    >
+                                        {data.countByEntity}
+                                    </LabeledCheckbox>
+                            },
+                            {
+                                name: 'Freq',
+                                render: (data: CopyNumberCountByGene) => <span>{data.frequency + '%'}</span>
                             }
-                        />
-                    </StudyViewComponentLoader>
-                </div>
+                        ]
+                    }
+                />
             </div>
         );
     }
