@@ -63,6 +63,11 @@ var OncoprintLegendView = (function() {
 	    if (rule_sets[i].exclude_from_legend && !show_all) {
 		continue;
 	    }
+        var rules = model.getActiveRules(rule_sets[i].rule_set_id);
+	    if (rules.length === 0) {
+	    	// dont render this ruleset into legend if no active rules
+	    	continue;
+		}
 	    var rule_set_group = svgfactory.group(0,y);
 	    everything_group.appendChild(rule_set_group);
 	    (function addLabel() {
@@ -75,8 +80,7 @@ var OncoprintLegendView = (function() {
 	    
 	    var x = rule_start_x + view.padding_after_rule_set_label;
 	    var in_group_y_offset = 0;
-	    
-	    var rules = model.getActiveRules(rule_sets[i].rule_set_id);
+
 	    var labelSort = function(ruleA, ruleB) {
             var labelA = ruleA.rule.legend_label;
             var labelB = ruleB.rule.legend_label;
@@ -235,7 +239,11 @@ var OncoprintLegendView = (function() {
     OncoprintLegendView.prototype.setTrackData = function(model) {
 	renderLegend(this, model);
     }
-    
+
+    OncoprintLegendView.prototype.setTrackImportantIds = function(model) {
+    	renderLegend(this, model);
+	}
+
     OncoprintLegendView.prototype.shareRuleSet = function(model) {
 	renderLegend(this, model);
     }

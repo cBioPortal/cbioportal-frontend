@@ -132,6 +132,7 @@ var OncoprintModel = (function () {
 	this.track_group_legend_order = [];
 	
 	// Track Properties
+	this.track_important_ids = {}; // a set of "important" ids - only these ids will cause a used rule to become active and thus shown in the legend
 	this.track_label = {};
 	this.track_label_color = {};
 	this.track_html_label = {};
@@ -518,7 +519,9 @@ var OncoprintModel = (function () {
 	var id_key = this.getTrackDataIdKey(track_id);
 	var spacing = this.getTrackHasColumnSpacing(track_id);
 	var width = this.getCellWidth(use_base_size) + (!spacing ? this.getCellPadding(use_base_size, true) : 0);
-	var shapes = this.getRuleSet(track_id).apply(data, width, this.getCellHeight(track_id, use_base_size), active_rules);
+	var shapes = this.getRuleSet(track_id).apply(
+		data, width, this.getCellHeight(track_id, use_base_size), active_rules, id_key, this.getTrackImportantIds(track_id)
+	);
 	
 	setTrackActiveRules(this, track_id, active_rules);
 	
@@ -554,6 +557,24 @@ var OncoprintModel = (function () {
 	} else {
 	    return [];
 	}
+    }
+
+    function _setTrackImportantIds(model, track_id, ids) {
+    	if (!ids) {
+    		model.track_important_ids[track_id] = undefined;
+		} else {
+			model.track_important_ids[track_id] = ids.reduce(function(map, next_id) {
+				map[next_id] = true;
+				return map;
+			}, {});
+		}
+	}
+
+    OncoprintModel.prototype.setTrackImportantIds = function(track_id, ids) {
+    	_setTrackImportantIds(this, track_id, ids);
+	}
+    OncoprintModel.prototype.getTrackImportantIds = function(track_id) {
+        return this.track_important_ids[track_id];
     }
     
     OncoprintModel.prototype.getRuleSets = function() {
@@ -722,7 +743,7 @@ var OncoprintModel = (function () {
 		    params.removeCallback, params.label, params.description, params.track_info,
 		    params.sortCmpFn, params.sort_direction_changeable, params.init_sort_direction, params.onSortDirectionChange,
 		    params.data, params.rule_set, params.track_label_color, params.html_label,
-		    params.expansion_of, params.expandCallback, params.expandButtonTextGetter
+		    params.expansion_of, params.expandCallback, params.expandButtonTextGetter, params.important_ids
 	    );
 	}
 	this.track_tops.update();
@@ -734,7 +755,8 @@ var OncoprintModel = (function () {
 	    removeCallback, label, description, track_info,
 	    sortCmpFn, sort_direction_changeable, init_sort_direction, onSortDirectionChange,
 	    data, rule_set, track_label_color, html_label,
-	    expansion_of, expandCallback, expandButtonTextGetter
+	    expansion_of, expandCallback, expandButtonTextGetter,
+		 important_ids
     ) {
 	model.track_label[track_id] = ifndef(label, "Label");
 	model.track_label_color[track_id] = ifndef(track_label_color, "black");
@@ -779,6 +801,10 @@ var OncoprintModel = (function () {
 	    model.track_rule_set_id[track_id] = rule_set.rule_set_id;
 	}
 	model.track_active_rules[track_id] = {};
+
+	if (important_ids) {
+		_setTrackImportantIds(model, track_id, important_ids);
+	}
 
 	model.track_sort_direction[track_id] = ifndef(init_sort_direction, 1);
 	
