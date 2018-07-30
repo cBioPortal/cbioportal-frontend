@@ -39,7 +39,9 @@ export enum ChartType {
     BAR_CHART = 'BAR_CHART',
     SURVIVAL = 'SURVIVAL',
     TABLE = 'TABLE',
-    SCATTER = 'SCATTER'
+    SCATTER = 'SCATTER',
+    MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
+    CNA_GENES_TABLE = 'CNA_GENES_TABLE'
 }
 
 export type ClinicalDataCountWithColor = ClinicalDataCount & { color: string }
@@ -134,6 +136,16 @@ export class StudyViewPageStore {
             }
         })
     }
+
+    @action
+    resetCustomCasesFilter() {
+        this._sampleIdentifiers = [];
+    };
+
+    public getCustomCasesFilter() {
+        return this._sampleIdentifiers;
+    }
+
     @action
     updateCNAGeneFilter(entrezGeneId: number, alteration: number) {
         let _cnaGeneFilter = this._cnaGeneFilter;
@@ -305,7 +317,7 @@ export class StudyViewPageStore {
         if (!_.isEmpty(this.mutationProfiles.result!)) {
             attrs.push({
                 uniqueKey: 'MUTATED_GENES_TABLE',
-                chartType: ChartType.TABLE,
+                chartType: ChartType.MUTATED_GENES_TABLE,
                 displayName: 'Mutated Genes',
                 description: ''
             })
@@ -314,11 +326,18 @@ export class StudyViewPageStore {
         if (!_.isEmpty(this.cnaProfileIds)) {
             attrs.push({
                 uniqueKey: 'CNA_GENES_TABLE',
-                chartType: ChartType.TABLE,
+                chartType: ChartType.CNA_GENES_TABLE,
                 displayName: 'CNA Genes',
                 description: ''
             })
         }
+
+        attrs.push({
+            uniqueKey: 'MUTATION_COUNT_CNA_FRACTION',
+            chartType: ChartType.SCATTER,
+            displayName: 'Mutation count Vs. CNA',
+            description: ''
+        });
         return attrs;
     }
 

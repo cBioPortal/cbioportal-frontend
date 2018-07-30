@@ -16,6 +16,8 @@ import MobxPromise from "mobxpromise";
 import SurvivalChart from "../../resultsView/survival/SurvivalChart";
 import {MutatedGenesTable} from "../table/MutatedGenesTable";
 import {CNAGenesTable} from "../table/CNAGenesTable";
+import StudyViewScatterPlot from "./scatterPlot/StudyViewScatterPlot";
+import {isSelected, mutationCountVsCnaTooltip} from '../StudyViewUtils';
 
 export interface AbstractChart {
     downloadData: () => string;
@@ -26,8 +28,11 @@ export interface IChartContainerProps {
     chartMeta: ChartMeta;
     promise: MobxPromise<any>;
     filters: any;
-    onUserSelection: (chartMeta: ChartMeta, value: string[]) => void;
+    onUserSelection?: any;
+    onResetSelection?: any;
     onDeleteChart: (uniqueKey: string) => void;
+    selectedSamplesMap?: any;
+    selectedSamples?: any;
 }
 
 @observer
@@ -55,7 +60,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 this.plot = plot;
             },
             resetFilters: action(() => {
-                this.props.onUserSelection(this.props.chartMeta, []);
+                this.props.onResetSelection(this.props.chartMeta, []);
             }),
             onUserSelection: action((values: string[]) => {
                 this.props.onUserSelection(this.props.chartMeta, values);
@@ -138,7 +143,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 break;
             }
         }
-        return {...controls, showResetIcon: this.props.filters.length > 0};
+        return {...controls, showResetIcon: this.props.filters && this.props.filters.length > 0};
     }
 
     @bind
@@ -161,32 +166,32 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 />)
             }
             case ChartType.TABLE: {
-                if (this.props.chartMeta.uniqueKey === 'MUTATED_GENES_TABLE') {
-                    return (
-                        <MutatedGenesTable
-                            promise={this.props.promise}
-                            numOfSelectedSamples={100}
-                            filters={this.props.filters}
-                            onUserSelection={this.handlers.updateGeneFilter}
-                        />
-                    );
-                } else if (this.props.chartMeta.uniqueKey === 'CNA_GENES_TABLE') {
-                    return (
-                        <CNAGenesTable
-                            promise={this.props.promise}
-                            numOfSelectedSamples={100}
-                            filters={this.props.filters}
-                            onUserSelection={this.handlers.updateCNAGeneFilter}
-                        />
-                    );
-                } else {
-                    return (<ClinicalTable
-                        data={this.props.promise.result}
+                return (<ClinicalTable
+                    data={this.props.promise.result}
+                    filters={this.props.filters}
+                    onUserSelection={this.handlers.onUserSelection}
+                    label={this.props.chartMeta.displayName}
+                />)
+            }
+            case ChartType.MUTATED_GENES_TABLE: {
+                return (
+                    <MutatedGenesTable
+                        promise={this.props.promise}
+                        numOfSelectedSamples={100}
                         filters={this.props.filters}
-                        onUserSelection={this.handlers.onUserSelection}
-                        label={this.props.chartMeta.displayName}
-                    />)
-                }
+                        onUserSelection={this.handlers.updateGeneFilter}
+                    />
+                );
+            }
+            case ChartType.CNA_GENES_TABLE: {
+                return (
+                    <CNAGenesTable
+                        promise={this.props.promise}
+                        numOfSelectedSamples={100}
+                        filters={this.props.filters}
+                        onUserSelection={this.handlers.updateCNAGeneFilter}
+                    />
+                );
             }
             case ChartType.SURVIVAL: {
                 return (
@@ -209,6 +214,23 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                        height: 380
                                    }}
                                    fileName="Overall_Survival"/>
+                )
+            }
+            case ChartType.SCATTER: {
+                return (
+                    <StudyViewScatterPlot
+                        width={400}
+                        height={380}
+                        onSelection={this.props.onUserSelection}
+                        data={this.props.promise.result}
+                        isSelected={d => isSelected(d, this.props.selectedSamplesMap)}
+                        isLoading={this.props.selectedSamples.isPending}
+                        selectedFill="#ff0000"
+                        unselectedFill="#0000ff"
+                        axisLabelX="Fraction of copy number altered genome"
+                        axisLabelY="# of mutations"
+                        tooltip={mutationCountVsCnaTooltip}
+                    />
                 )
             }
             default:
