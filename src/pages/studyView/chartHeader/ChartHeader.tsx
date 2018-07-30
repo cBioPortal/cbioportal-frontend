@@ -1,6 +1,5 @@
 import * as React from "react";
 import "./styles.scss";
-import {ClinicalAttribute} from "shared/api/generated/CBioPortalAPI";
 import {If} from 'react-if';
 import {ChartMeta, ChartType} from "pages/studyView/StudyViewPageStore";
 
@@ -39,10 +38,12 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     <i className="fa fa-undo" aria-hidden="true" title="Reset filters in chart"></i>
                                 </button>
                             </If>
-                            <button className="btn btn-xs">
-                                <i className="fa fa-info-circle" aria-hidden="true"
-                                   title={this.props.chartMeta.description}></i>
-                            </button>
+                            <If condition={!!this.props.chartMeta.description}>
+                                <button className="btn btn-xs">
+                                    <i className="fa fa-info-circle" aria-hidden="true"
+                                       title={this.props.chartMeta.description}></i>
+                                </button>
+                            </If>
                             <If condition={this.props.chartControls && this.props.chartControls.showTableIcon}>
                                 <button className="btn btn-xs"  onClick={() => this.props.changeChartType(ChartType.TABLE)}>
                                     <i className="fa fa-table" aria-hidden="true" title="Convert to table"></i>

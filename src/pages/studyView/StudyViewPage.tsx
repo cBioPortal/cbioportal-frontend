@@ -1,15 +1,13 @@
 import * as React from 'react';
 import {inject, observer} from "mobx-react";
 import styles from "./styles.module.scss";
-import {ChartContainer} from 'pages/studyView/charts/ChartContainer';
+import {ChartContainer, IChartContainerProps} from 'pages/studyView/charts/ChartContainer';
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import {ChartMeta, ChartType, StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
 import {reaction} from 'mobx';
 import {If} from 'react-if';
 import SummaryHeader from 'pages/studyView/SummaryHeader';
 import {SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
-import StudyViewScatterPlot from "./charts/scatterPlot/StudyViewScatterPlot";
-import {isSelected, mutationCountVsCnaTooltip} from "./StudyViewUtils";
 import MobxPromise from "mobxpromise";
 
 export interface IStudyViewPageProps {
@@ -33,27 +31,28 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
         this.handlers = {
             onUserSelection: (chartMeta: ChartMeta, values: string[]) => {
-                if (chartMeta.uniqueKey === 'MUTATED_GENES_TABLE') {
-                    if (values.length == 0) {
-                        this.store.resetGeneFilter();
-                    } else {
-                        this.store.updateGeneFilter(Number(values[0]));
-                    }
-                } else if (chartMeta.uniqueKey === 'CNA_GENES_TABLE') {
-                    if (values.length == 0) {
-                        this.store.resetCNAGEneFilter();
-                    } else {
-                        this.store.updateCNAGeneFilter(Number(values[0]), Number(values[1]));
-                    }
-                } else {
-                    this.store.updateClinicalDataEqualityFilters(chartMeta, values);
-                }
+                this.store.updateClinicalDataEqualityFilters(chartMeta, values)
+            },
+            updateGeneFilter: (entrezGeneId: number) => {
+                this.store.updateGeneFilter(entrezGeneId);
+            },
+            resetGeneFilter: (chartMeta: ChartMeta,) => {
+                this.store.resetGeneFilter();
+            },
+            resetCNAGEneFilter: (chartMeta: ChartMeta,) => {
+                this.store.resetCNAGEneFilter();
+            },
+            updateCNAGeneFilter: (entrezGeneId: number, alteration: number) => {
+                this.store.updateCNAGeneFilter(entrezGeneId, alteration);
             },
             onDeleteChart: (uniqueKey: string) => {
                 this.store.changeChartVisibility(uniqueKey, false);
             },
             updateCustomCasesFilter: (cases: SampleIdentifier[]) => {
                 this.store.updateCustomCasesFilter(cases);
+            },
+            resetCustomCasesFilter: () => {
+                this.store.resetCustomCasesFilter();
             }
         }
 
@@ -77,49 +76,63 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     }
 
     renderAttributeChart = (chartMeta: ChartMeta) => {
-        let promise: MobxPromise<any>;
-        let filters: any[] = [];
+        let props:any = {
+            chartMeta: chartMeta,
+            filters: [],
+            onDeleteChart: this.handlers.onDeleteChart
+        };
         switch (chartMeta.chartType) {
             case ChartType.PIE_CHART: {
-                promise = this.store.studyViewClinicalDataCountsCache.get({
+                props.promise = this.store.studyViewClinicalDataCountsCache.get({
                     attribute: chartMeta.clinicalAttribute!,
                     filters: this.store.filters
                 });
-                filters = this.store.getClinicalDtaFiltersByUniqueKey(chartMeta.uniqueKey);
+                props.filters = this.store.getClinicalDtaFiltersByUniqueKey(chartMeta.uniqueKey);
+                props.onUserSelection = this.handlers.onUserSelection;
+                props.onResetSelection = this.handlers.onUserSelection;
                 break;
             }
             case ChartType.TABLE: {
-                if (chartMeta.uniqueKey === 'MUTATED_GENES_TABLE') {
-                    filters = this.store.getMutatedGenesTableFilters();
-                    promise = this.store.mutatedGeneData;
-                } else if (chartMeta.uniqueKey === 'CNA_GENES_TABLE') {
-                    filters = this.store.getCNAGenesTableFilters();
-                    promise = this.store.cnaGeneData;
-                } else {
-                    filters = this.store.getClinicalDtaFiltersByUniqueKey(chartMeta.uniqueKey);
-                    promise = this.store.studyViewClinicalDataCountsCache.get({
-                        attribute: chartMeta.clinicalAttribute!,
-                        filters: this.store.filters
-                    });
-                }
+                props.filters = this.store.getClinicalDtaFiltersByUniqueKey(chartMeta.uniqueKey);
+                props.promise = this.store.studyViewClinicalDataCountsCache.get({
+                    attribute: chartMeta.clinicalAttribute!,
+                    filters: this.store.filters
+                });
+                props.onUserSelection = this.handlers.onUserSelection;
+                props.onResetSelection = this.handlers.onUserSelection;
+                break;
+            }
+            case ChartType.MUTATED_GENES_TABLE: {
+                props.filters = this.store.getMutatedGenesTableFilters();
+                props.promise = this.store.mutatedGeneData;
+                props.onUserSelection = this.handlers.updateGeneFilter;
+                props.onResetSelection = this.handlers.resetGeneFilter;
+                break;
+            }
+            case ChartType.CNA_GENES_TABLE: {
+                props.filters = this.store.getCNAGenesTableFilters();
+                props.promise = this.store.cnaGeneData;
+                props.onUserSelection = this.handlers.updateCNAGeneFilter;
+                props.onResetSelection = this.handlers.resetCNAGEneFilter;
                 break;
             }
             case ChartType.SURVIVAL: {
-                promise = this.store.getSurvivalData(chartMeta);
+                props.promise = this.store.getSurvivalData(chartMeta);
+                break;
+            }
+            case ChartType.SCATTER: {
+                props.filters = this.store.getCustomCasesFilter();
+                props.promise = this.store.mutationCountVsFractionGenomeAlteredData;
+                props.selectedSamplesMap = this.store.selectedSamplesMap;
+                props.selectedSamples = this.store.selectedSamples;
+                props.onUserSelection = this.handlers.updateCustomCasesFilter;
+                props.onResetSelection = this.handlers.resetCustomCasesFilter;
                 break;
             }
             default:
-                promise = this.store.survivalPlotData;
                 break;
         }
-        return (<ChartContainer
-            chartMeta={chartMeta}
-            onUserSelection={this.handlers.onUserSelection}
-            key={chartMeta.uniqueKey}
-            filters={filters}
-            promise={promise}
-            onDeleteChart={this.handlers.onDeleteChart}
-        />)
+        return <ChartContainer key={chartMeta.uniqueKey} {...props}/>;
     };
 
     render() {
@@ -150,24 +163,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                             <div className={styles.studyViewFlexContainer}>
                                 {this.store.initialClinicalDataCounts.isComplete &&
                                 this.store.visibleAttributes.map(this.renderAttributeChart)}
-                            </div>
-                            <div className={styles.studyViewFlexContainer}>
-                                {this.store.mutationCountVsFractionGenomeAlteredData.isComplete && (
-                                    <StudyViewScatterPlot
-                                        width={500}
-                                        height={500}
-                                        onSelection={this.handlers.updateCustomCasesFilter}
-                                        data={this.store.mutationCountVsFractionGenomeAlteredData.result}
-                                        isLoading={this.store.selectedSamples.isPending}
-                                        isSelected={d => isSelected(d, this.store.selectedSamplesMap)}
-                                        selectedFill="#ff0000"
-                                        unselectedFill="#0000ff"
-                                        axisLabelX="Fraction of copy number altered genome"
-                                        axisLabelY="# of mutations"
-                                        title="Mutation Count vs. CNA"
-                                        tooltip={mutationCountVsCnaTooltip}
-                                    />
-                                )}
                             </div>
                         </MSKTab>
                     </MSKTabs>
