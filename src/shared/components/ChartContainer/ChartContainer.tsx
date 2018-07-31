@@ -26,14 +26,13 @@ export default class ChartContainer extends React.Component<IChartContainer, {}>
 
         return  (
             <div className="borderedChart">
-
-
                 <DownloadControls
                     filename={this.props.exportFileName || "chart-download"}
                     dontFade={true}
                     getSvg={this.props.getSVGElement!}
+                    collapse={true}
+                    style={{position:"absolute", top:10, right:10, zIndex:10}}
                 />
-
                 <div style={{fontFamily:"Arial, Helvetica", overflowX:'auto', overflowY:'hidden'}}>
                     {this.props.children}
                 </div>
