@@ -28,7 +28,7 @@ import {
 import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
-import {isPreSelectedClinicalAttr} from './StudyViewUtils';
+import {getClinicalAttributeUniqueKey, isPreSelectedClinicalAttr} from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {Column} from "../../shared/components/lazyMobXTable/LazyMobXTable";
 
@@ -43,6 +43,12 @@ export enum ChartType {
     MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
     CNA_GENES_TABLE = 'CNA_GENES_TABLE'
 }
+
+export const SpecialChartUniqueKey: { [id: string]: string } = {
+    MUTATED_GENES_TABLE: 'MUTATED_GENES_TABLE',
+    CNA_GENES_TABLE: 'CNA_GENES_TABLE',
+    MUTATION_COUNT_CNA_FRACTION: 'MUTATION_COUNT_CNA_FRACTION'
+};
 
 export type ClinicalDataCountWithColor = ClinicalDataCount & { color: string }
 export type MutatedGenesData = MutationCountByGene[];
@@ -86,8 +92,6 @@ export class StudyViewPageStore {
     @observable private _sampleIdentifiers:SampleIdentifier[];
 
     @observable private _chartVisibility = observable.map<boolean>();
-
-    private _clinicalAttributesMetaSet: { [id: string]: ChartMeta } = {} as any;
 
     private _survivalClinicalData = observable.map<ClinicalData[]>();
 
@@ -270,75 +274,78 @@ export class StudyViewPageStore {
         invoke: () => defaultClient.fetchClinicalAttributesUsingPOST({
             studyIds: this.studies.result.map(study => study.studyId)
         }),
-        default: [],
-        onResult: (attributes) => {
-            // Add meta information for each of the clinical attribute
-            // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
-            let newMap: { [id: string]: ChartMeta } = _.reduce(attributes, (acc: { [id: string]: ChartMeta }, attribute) => {
-                const clinicalDataType: ClinicalDataType = attribute.patientAttribute ? 'PATIENT' : 'SAMPLE';
-                const uniqueKey = clinicalDataType + '_' + attribute.clinicalAttributeId;
-                //TODO: currently only piechart is handled
-                if (attribute.datatype === 'STRING') {
-                    acc[uniqueKey] = {
-                        displayName: attribute.displayName,
-                        uniqueKey: uniqueKey,
-                        chartType: ChartType.PIE_CHART,
-                        description: attribute.description,
-                        clinicalAttribute: attribute
-                    };
-                }
-                return acc
-            }, {});
-            //Reset the metaSet whenever the studies changes
-            this._clinicalAttributesMetaSet = newMap;
-        }
+        default: []
     });
 
-    @computed get visibleAttributes(): ChartMeta[] {
-        let attrs = _.reduce(this._chartVisibility.keys(), (acc: ChartMeta[], next) => {
-            if (this._chartVisibility.get(next)) {
-                let chartMeta = this._clinicalAttributesMetaSet[next];
-                if (chartMeta) {
-                    acc.push(chartMeta)
-                }
+    @computed
+    get chartMetaSet(): { [id: string]: ChartMeta } {
+        let _chartMetaSet: { [id: string]: ChartMeta } = {};
+        // Add meta information for each of the clinical attribute
+        // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
+        _.reduce(this.clinicalAttributes.result, (acc: { [id: string]: ChartMeta }, attribute) => {
+            const uniqueKey = getClinicalAttributeUniqueKey(attribute);
+            //TODO: currently only piechart is handled
+            if (attribute.datatype === 'STRING') {
+                acc[uniqueKey] = {
+                    displayName: attribute.displayName,
+                    uniqueKey: uniqueKey,
+                    chartType: ChartType.PIE_CHART,
+                    description: attribute.description,
+                    clinicalAttribute: attribute
+                };
             }
-            return acc;
-        }, []);
+            return acc
+        }, _chartMetaSet);
 
-        attrs = attrs.concat(this.survivalPlots.map(survivalPlot => {
-            return {
+
+        _.reduce(this.survivalPlots, (acc: { [id: string]: ChartMeta }, survivalPlot) => {
+            acc[survivalPlot.id] = {
                 uniqueKey: survivalPlot.id,
                 chartType: ChartType.SURVIVAL,
                 displayName: survivalPlot.title,
                 description: ''
             };
-        }));
+            return acc;
+        }, _chartMetaSet);
 
         if (!_.isEmpty(this.mutationProfiles.result!)) {
-            attrs.push({
-                uniqueKey: 'MUTATED_GENES_TABLE',
+            _chartMetaSet[SpecialChartUniqueKey.MUTATED_GENES_TABLE] = {
+                uniqueKey: SpecialChartUniqueKey.MUTATED_GENES_TABLE,
                 chartType: ChartType.MUTATED_GENES_TABLE,
                 displayName: 'Mutated Genes',
                 description: ''
-            })
+            };
         }
 
         if (!_.isEmpty(this.cnaProfileIds)) {
-            attrs.push({
-                uniqueKey: 'CNA_GENES_TABLE',
+            _chartMetaSet[SpecialChartUniqueKey.CNA_GENES_TABLE] = {
+                uniqueKey: SpecialChartUniqueKey.CNA_GENES_TABLE,
                 chartType: ChartType.CNA_GENES_TABLE,
                 displayName: 'CNA Genes',
                 description: ''
-            })
+            };
         }
 
-        attrs.push({
-            uniqueKey: 'MUTATION_COUNT_CNA_FRACTION',
+        _chartMetaSet[SpecialChartUniqueKey.MUTATION_COUNT_CNA_FRACTION] = {
+            uniqueKey: SpecialChartUniqueKey.MUTATION_COUNT_CNA_FRACTION,
             chartType: ChartType.SCATTER,
             displayName: 'Mutation count Vs. CNA',
             description: ''
+        };
+
+        return _chartMetaSet;
+    }
+
+    @computed
+    get visibleAttributes(): ChartMeta[] {
+        const _keys = this._chartVisibility.keys();
+        let _visibleCharts:ChartMeta[] = [];
+        _.each(this.chartMetaSet, (chartMeta:ChartMeta, uniqueKey:string) => {
+            if(!_.includes(_keys, uniqueKey) || this._chartVisibility.get(uniqueKey)) {
+                _visibleCharts.push(chartMeta);
+            }
         });
-        return attrs;
+        return _visibleCharts;
     }
 
     //TODO:cleanup
@@ -370,15 +377,20 @@ export class StudyViewPageStore {
                 }
                 return 0;
             }).forEach(attribute => {
+                const uniqueKey = getClinicalAttributeUniqueKey(attribute);
                 if (attribute.patientAttribute) {
                     if (patientAttributeCount < 10) {
                         filterAttributes.push(attribute)
                         patientAttributeCount++;
+                    } else {
+                        this.changeChartVisibility(uniqueKey, false);
                     }
                 } else {
                     if (sampleAttributeCount < 10) {
                         filterAttributes.push(attribute)
                         sampleAttributeCount++;
+                    } else {
+                        this.changeChartVisibility(uniqueKey, false);
                     }
                 }
             });
