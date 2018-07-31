@@ -47,16 +47,25 @@ describe('ClinicalInformationMutationalSignatureTable', () => {
         assert.deepEqual(result, [
             {mutationalSignatureId: 'firstMutationalSignature',
              sampleValues:{
-                firstSample: "1%",
-                secondSample: "2%"
+                "firstSample":{
+                    value: 1,
+                    confidence: 1
+                },
+                "secondSample": {
+                    value: 2,
+                    confidence: 2
+                }
              }
              },
             {mutationalSignatureId: 'secondMutationalSignature',
                 sampleValues:{
-                    firstSample: "3%"
+                    "firstSample":{
+                        value: 3,
+                        confidence: 3
+                    }
                 }
+
             }
         ]);
     });
 }
-
