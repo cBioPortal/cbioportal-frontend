@@ -43,6 +43,7 @@ import {
 import {writeTest} from "../../shared/lib/writeTest";
 import {PatientSurvival} from "../../shared/model/PatientSurvival";
 import {
+    doesQueryContainOQL,
     filterCBioPortalWebServiceData,
     filterCBioPortalWebServiceDataByOQLLine,
     filterCBioPortalWebServiceDataByUnflattenedOQLLine,
@@ -323,6 +324,10 @@ export class ResultsViewPageStore {
     @observable.ref selectedEnrichmentCopyNumberProfile: MolecularProfile;
     @observable.ref selectedEnrichmentMRNAProfile: MolecularProfile;
     @observable.ref selectedEnrichmentProteinProfile: MolecularProfile;
+
+    @computed get queryContainsOql() {
+        return doesQueryContainOQL(this.oqlQuery);
+    }
 
     private getURL() {
         const shareURL = window.location.href;
