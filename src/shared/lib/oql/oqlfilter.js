@@ -142,7 +142,7 @@ var parsedOQLAlterationToSourceOQL = function(alteration) {
         return "FUSION";
     }
 };
-var unparseOQLQueryLine = function (parsed_oql_query_line) {
+export function unparseOQLQueryLine(parsed_oql_query_line) {
     var ret = "";
     var gene = parsed_oql_query_line.gene;
     var alterations = parsed_oql_query_line.alterations;
