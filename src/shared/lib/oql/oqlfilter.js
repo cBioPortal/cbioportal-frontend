@@ -117,6 +117,22 @@ export function parseOQLQuery(oql_query, opt_default_oql = '') {
     return _.flatMap(parsed_with_datatypes, extractGeneLines);
 }
 
+export function doesQueryContainOQL(oql_query) {
+    /* In: oql_query, a string, an OQL query (which could just be genes with no specified alterations)
+        Out: boolean, true iff the query has explicit OQL (e.g. `BRCA1: MUT` as opposed to just `BRCA1`)
+     */
+
+    const parsedQuery = parseOQLQuery(oql_query);
+    let ret = false;
+    for (const singleGeneQuery of parsedQuery) {
+        if (singleGeneQuery.alterations !== false) {
+            ret = true;
+            break;
+        }
+    }
+    return ret;
+}
+
 var parsedOQLAlterationToSourceOQL = function(alteration) {
     if (alteration.alteration_type === "cna") {
         if (alteration.constr_rel === "=") {
