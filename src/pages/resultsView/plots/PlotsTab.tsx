@@ -39,6 +39,7 @@ import onMobxPromise from "../../../shared/lib/onMobxPromise";
 import {logicalOr} from "../../../shared/lib/LogicUtils";
 import {SpecialAttribute} from "../../../shared/cache/OncoprintClinicalDataCache";
 import NoOqlWarning from "../../../shared/components/NoOqlWarning";
+import ScrollBar from "../../../shared/components/Scrollbar/ScrollBar";
 
 enum EventKey {
     horz_logScale,
@@ -85,6 +86,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     private horzSelection:AxisMenuSelection;
     private vertSelection:AxisMenuSelection;
+    private scrollPane:HTMLDivElement;
 
     @observable geneLock:boolean;
     @observable searchCaseInput:string;
@@ -95,6 +97,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @observable searchCase:string = "";
     @observable searchMutation:string = "";
     @observable plotExists = false;
+
+    @autobind
+    private getScrollPane(){
+        return this.scrollPane;
+    }
 
     @computed get viewType():ViewType {
         let ret:ViewType = ViewType.None;
@@ -996,6 +1003,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @autobind
+    private assignScrollPaneRef(el:HTMLDivElement){
+        this.scrollPane=el;
+    }
+
+    @autobind
     private controls() {
         return (
             <div style={{display:"flex", flexDirection:"column"}}>
@@ -1271,8 +1283,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             }
             const legendY = (plotType === PlotType.ScatterPlot ? SCATTERPLOT_LEGEND_Y : BOXPLOT_LEGEND_Y);
             return (
-                <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative inlineBlock" style={{position: "relative"}}>
-                    <div style={{display:"flex", flexDirection:"row"}}>
+                <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative">
+                    <ScrollBar style={{position:'relative', top:-5}} getScrollEl={this.getScrollPane} />
                     {this.plotExists && (
                         <DownloadControls
                             getSvg={this.getSvg}
@@ -1289,18 +1301,19 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             collapse={true}
                         />
                     )}
+                        <div ref={this.assignScrollPaneRef} style={{position:"relative", display:"inline-block"}}>
                         {plotElt}
+                        </div>
                         { this.plotExists && // only show info if theres an actual plot
                         (plotType === PlotType.ScatterPlot || plotType === PlotType.BoxPlot) &&
                         (this.viewType === ViewType.MutationType || this.viewType === ViewType.MutationTypeAndCopyNumber) && (
-                            <div style={{position:"relative", top:legendY + 3.5}}>
+                            <div style={{position:"absolute", top:legendY + 3.5, right:14 }}>
                                 <InfoIcon
                                     tooltip={<span>Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</span>}
                                     tooltipPlacement="right"
                                 />
                             </div>
                         )}
-                    </div>
                 </div>
             );
         }
