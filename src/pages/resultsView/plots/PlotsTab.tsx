@@ -65,6 +65,7 @@ export enum PlotType {
 
 export type AxisMenuSelection = {
     entrezGeneId?:number;
+    selectedGeneOption?:{value:number, label:string}; // value is entrez id, label is hugo symbol
     dataType?:string;
     dataSourceId?:string;
     logScale: boolean;
@@ -81,6 +82,8 @@ class PlotsTabBoxPlot extends BoxScatterPlot<IBoxScatterPlotPoint> {}
 
 const SVG_ID = "plots-tab-plot-svg";
 
+export const SAME_GENE_OPTION_VALUE = "same";
+
 @observer
 export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
@@ -88,7 +91,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     private vertSelection:AxisMenuSelection;
     private scrollPane:HTMLDivElement;
 
-    @observable geneLock:boolean;
     @observable searchCaseInput:string;
     @observable searchMutationInput:string;
     @observable viewMutationType:boolean = true;
@@ -179,7 +181,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         this.horzSelection = this.initAxisMenuSelection(false);
         this.vertSelection = this.initAxisMenuSelection(true);
 
-        this.geneLock = true;
         this.searchCaseInput = "";
         this.searchMutationInput = "";
 
@@ -198,14 +199,26 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
         return observable({
             get entrezGeneId() {
-                if (this._entrezGeneId === undefined && self.geneOptions.isComplete && self.geneOptions.result.length) {
-                    return self.geneOptions.result[0].value;
+                if (this.selectedGeneOption) {
+                    if (this.selectedGeneOption.value === SAME_GENE_OPTION_VALUE) {
+                        return self.horzSelection.entrezGeneId;
+                    } else {
+                        return this.selectedGeneOption.value;
+                    }
                 } else {
-                    return this._entrezGeneId;
+                    return undefined;
                 }
             },
-            set entrezGeneId(e:number|undefined) {
-                this._entrezGeneId = e;
+            get selectedGeneOption() {
+                const geneOptions = (vertical ? self.vertGeneOptions : self.horzGeneOptions.result) || [];
+                if (this._selectedGeneOption === undefined && geneOptions.length) {
+                    return geneOptions[0];
+                } else {
+                    return this._selectedGeneOption;
+                }
+            },
+            set selectedGeneOption(o:any) {
+                this._selectedGeneOption = o;
             },
             get dataType() {
                 if (this.entrezGeneId === undefined || !self.geneToDataTypeOptions.isComplete) {
@@ -267,7 +280,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             set logScale(v:boolean) {
                 this._logScale = v;
             },
-            _entrezGeneId: undefined,
+            _selectedGeneOption: undefined,
             _dataType: undefined,
             _dataSourceId: undefined,
             _logScale: true
@@ -408,54 +421,37 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     }
 
-    @action
-    private onGeneLockClick(vertical:boolean) {
-        this.geneLock = !this.geneLock;
-        if (vertical) {
-            this.horzSelection.entrezGeneId = this.vertSelection.entrezGeneId;
-        } else {
-            this.vertSelection.entrezGeneId = this.horzSelection.entrezGeneId;
-        }
-    }
-
-    @autobind
-    private onVerticalAxisGeneLockClick() {
-        this.onGeneLockClick(true);
-    }
-
-    @autobind
-    private onHorizontalAxisGeneLockClick() {
-        this.onGeneLockClick(false);
-    }
-
-    @action
-    public onGeneSelect(vertical:boolean, entrezGeneId:number) {
-        let targetSelection;
-        let otherSelection;
-        if (vertical) {
-            targetSelection = this.vertSelection;
-            otherSelection = this.horzSelection;
-        } else {
-            targetSelection = this.horzSelection;
-            otherSelection = this.vertSelection;
-        }
-        targetSelection.entrezGeneId = entrezGeneId;
-        if (this.geneLock) {
-            otherSelection.entrezGeneId = entrezGeneId;
-        }
-    }
-
     @autobind
     private onVerticalAxisGeneSelect(option:any) {
-        this.onGeneSelect(true, option.value);
+        this.vertSelection.selectedGeneOption = option;
     }
 
     @autobind
     private onHorizontalAxisGeneSelect(option:any) {
-        this.onGeneSelect(false, option.value);
+        this.horzSelection.selectedGeneOption = option;
     }
 
-    readonly geneOptions = remoteData({
+    public test__selectGeneOption(vertical:boolean, optionValue:any) {
+        // for end to end testing
+        // optionValue is either entrez id or the code for same gene
+        let options:any[];
+        if (vertical) {
+            options = this.vertGeneOptions;
+        } else {
+            options = this.horzGeneOptions.result || [];
+        }
+        const option = options.find(x=>(x.value === optionValue));
+        if (!option) {
+            throw "Option not found";
+        }
+        if (vertical) {
+            this.onVerticalAxisGeneSelect(option);
+        } else {
+            this.onHorizontalAxisGeneSelect(option);
+        }
+    }
+
+    readonly horzGeneOptions = remoteData({
         await:()=>[this.props.store.genes],
         invoke:()=>{
             return Promise.resolve(
@@ -463,6 +459,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             );
         }
     });
+
+    @computed get vertGeneOptions() {
+        // computed instead of remoteData in order to make the rerender synchronous when the 'Same gene (HUGO SYMBOL)'
+        //  option changes. if its remoteData, theres setTimeout(0)'s in the way and it causes unnecessarily an extra
+        //  render which leads to a flash of the loading icon on the screen
+        let sameGeneOption = undefined;
+        if (this.horzSelection.selectedGeneOption) {
+            sameGeneOption = [{ value: SAME_GENE_OPTION_VALUE, label: `Same gene (${this.horzSelection.selectedGeneOption.label})`}];
+        }
+        return (sameGeneOption || []).concat((this.horzGeneOptions.result || []) as any[]);
+    };
 
     readonly clinicalAttributeIdToClinicalAttribute = remoteData<{[clinicalAttributeId:string]:ClinicalAttribute}>({
         await:()=>[
@@ -615,13 +622,21 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @autobind
     @action
     private swapHorzVertSelections() {
-        const keys:(keyof AxisMenuSelection)[] = ["entrezGeneId", "dataType", "dataSourceId", "logScale"];
+        const keys:(keyof AxisMenuSelection)[] = ["dataType", "dataSourceId", "logScale"];
         // have to store all values for swap because values depend on each other in derived data way so the copy can mess up if you do it one by one
         const horz = keys.map(k=>this.horzSelection[k]);
         const vert = keys.map(k=>this.vertSelection[k]);
         for (let i=0; i<keys.length; i++) {
             this.horzSelection[keys[i]] = vert[i];
             this.vertSelection[keys[i]] = horz[i];
+        }
+
+        // only swap genes if vertSelection is not set to "Same gene"
+        if (!this.vertSelection.selectedGeneOption || (this.vertSelection.selectedGeneOption.value.toString() !== SAME_GENE_OPTION_VALUE)) {
+            const horzOption = this.horzSelection.selectedGeneOption;
+            const vertOption = this.vertSelection.selectedGeneOption;
+            this.horzSelection.selectedGeneOption = vertOption;
+            this.vertSelection.selectedGeneOption = horzOption;
         }
     }
 
@@ -878,30 +893,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         <div style={{display:"flex", flexDirection:"row"}}>
                             <ReactSelect
                                 name={`${vertical ? "v" : "h"}-gene-selector`}
-                                value={axisSelection.entrezGeneId}
+                                value={axisSelection.selectedGeneOption ? axisSelection.selectedGeneOption.value : undefined}
                                 onChange={vertical ? this.onVerticalAxisGeneSelect : this.onHorizontalAxisGeneSelect}
-                                isLoading={this.geneOptions.isPending}
-                                options={this.geneOptions.isComplete ? this.geneOptions.result : []}
+                                isLoading={this.horzGeneOptions.isPending}
+                                options={this.horzGeneOptions.isComplete ? (vertical ? this.vertGeneOptions : this.horzGeneOptions.result) : []}
                                 clearable={false}
                                 searchable={false}
                                 disabled={axisSelection.dataType === CLIN_ATTR_DATA_TYPE}
                             />
-                            <div style={{marginLeft:7, display:"inline"}}>
-                                {/* this parent div, and the div inside <DefaultTooltip>, are necessary because of issue with <DefaultTooltip> placement */}
-                                <DefaultTooltip
-                                    placement="right"
-                                    overlay={<span>{this.geneLock ? "Gene selection synchronized in both axes" : "Gene selections independent in each axis"}</span>}
-                                >
-                                    <div data-test={`${dataTestWhichAxis}AxisGeneLockButton`}>
-                                        <LockIcon
-                                            locked={this.geneLock}
-                                            disabled={axisSelection.dataType === CLIN_ATTR_DATA_TYPE}
-                                            className="lockIcon"
-                                            onClick={vertical ? this.onVerticalAxisGeneLockClick : this.onHorizontalAxisGeneLockClick}
-                                        />
-                                    </div>
-                                </DefaultTooltip>
-                            </div>
                         </div>
                     </div>
                     <div className="form-group">
