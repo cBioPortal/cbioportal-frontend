@@ -30,7 +30,7 @@ export interface IChartContainerProps {
     filters: any;
     onUserSelection?: any;
     onResetSelection?: any;
-    onDeleteChart: (uniqueKey: string) => void;
+    onDeleteChart: (chartMeta: ChartMeta) => void;
     selectedSamplesMap?: any;
     selectedSamples?: any;
 }
@@ -91,7 +91,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 svgToPdfDownload(`${this.fileName}.pdf`, this.toSVGDOMNode());
             },
             onDeleteChart: () => {
-                this.props.onDeleteChart(this.props.chartMeta.uniqueKey);
+                this.props.onDeleteChart(this.props.chartMeta);
             }
         };
     }

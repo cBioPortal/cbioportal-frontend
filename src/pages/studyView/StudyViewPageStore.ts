@@ -182,12 +182,31 @@ export class StudyViewPageStore {
         this._cnaGeneFilter.alterations = [];
     }
 
-    @action changeChartVisibility(uniqueKey: string, visible: boolean) {
-        if (!visible) {
-            //TODO: Currently clears only clinicalDataEqualityFilters,Need to implement for others
-            this._clinicalDataEqualityFilterSet.delete(uniqueKey);
-        }
+    @action changeChartVisibility(uniqueKey:string, visible: boolean) {
         this._chartVisibility.set(uniqueKey, visible);
+    }
+
+    @action
+    resetFilterAndChangeChartVisibility(chartMeta: ChartMeta, visible: boolean) {
+        if (!visible) {
+            switch (chartMeta.chartType) {
+                case ChartType.MUTATED_GENES_TABLE:
+                    this.resetGeneFilter();
+                    break;
+                case ChartType.CNA_GENES_TABLE:
+                    this.resetCNAGEneFilter();
+                    break;
+                case ChartType.SCATTER:
+                    this.resetCustomCasesFilter();
+                    break;
+                case ChartType.SURVIVAL:
+                    break;
+                default:
+                    this._clinicalDataEqualityFilterSet.delete(chartMeta.uniqueKey);
+                    break;
+            }
+        }
+        this.changeChartVisibility(chartMeta.uniqueKey, visible);
     }
 
     @computed private get emptyFilter(): StudyViewFilter {
