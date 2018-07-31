@@ -137,7 +137,7 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
         let element:any = null
         if (this.props.collapse) {
             element = (
-                <div style={this.props.style||{}}>
+                <div style={Object.assign({ zIndex:10 },this.props.style)}>
                     <DefaultTooltip
                         mouseEnterDelay={0}
                         onVisibleChange={this.onTooltipVisibleChange as any}
