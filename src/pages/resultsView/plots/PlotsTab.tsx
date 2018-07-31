@@ -1,5 +1,5 @@
 import * as React from "react";
-import {action, computed, observable} from "mobx";
+import {action, computed, observable, runInAction} from "mobx";
 import {Observer, observer} from "mobx-react";
 import "./styles.scss";
 import {AlterationTypeConstants, ResultsViewPageStore} from "../ResultsViewPageStore";
@@ -184,7 +184,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 }
             },
             set entrezGeneId(e:number|undefined) {
-                this._entrezGeneId = e;
+                runInAction(()=>{
+                    if (e !== this._entrezGeneId) {
+                        // clear selections if gene changes, because selected profiles may not be available for new gene
+                        this._dataSourceId = undefined;
+                        this._dataType = undefined;
+                    }
+                    this._entrezGeneId = e;
+                });
             },
             get dataType() {
                 if (this.entrezGeneId === undefined || !self.geneToDataTypeOptions.isComplete) {
@@ -409,8 +416,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @action
     public onGeneSelect(vertical:boolean, entrezGeneId:number) {
-        let targetSelection;
-        let otherSelection;
+        let targetSelection:AxisMenuSelection;
+        let otherSelection:AxisMenuSelection;
         if (vertical) {
             targetSelection = this.vertSelection;
             otherSelection = this.horzSelection;
