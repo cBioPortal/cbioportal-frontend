@@ -49,9 +49,10 @@ export function getPercentage(proportion: number, digits: number = 1) {
 /* difference between this function and the previous one is it will display
 percentages less than 1% as <1%
 */
-export function getMutSigPercentage(proportion: number, digits: number = 1) {
-    if (Number(toFixedWithThreshold(100 * proportion, digits)) < 1){
-        return "<1.0%";
+export function getMutSigPercentage(proportion: number, digits: number = 0) {//0.003 -> 0.3
+
+    if (100 * proportion  < 1){
+        return "<1%";
     }
 
     return `${toFixedWithThreshold(100 * proportion, digits)}%`;
