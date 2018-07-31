@@ -11,7 +11,7 @@ import {MobxPromise} from "mobxpromise";
 import {computed, IObservableObject, IObservableValue, observable, ObservableMap, reaction} from "mobx";
 import _ from "lodash";
 import {OncoprintClinicalAttribute, SortMode} from "../ResultsViewOncoprint";
-import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
+import {ClinicalAttribute, MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import Slider from "react-rangeslider";
@@ -20,6 +20,7 @@ import EditableSpan from "shared/components/editableSpan/EditableSpan";
 import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
 import './styles.scss';
 import ErrorIcon from "../../ErrorIcon";
+import {getPercentage} from "../../../lib/FormatUtils";
 const CheckedSelect = require("react-select-checked").CheckedSelect;
 import classNames from "classnames";
 import {SpecialAttribute} from "../../../cache/OncoprintClinicalDataCache";
@@ -84,6 +85,7 @@ export interface IOncoprintControlsState {
 
     sortMode:SortMode,
     clinicalAttributesPromise?:MobxPromise<OncoprintClinicalAttribute[]>,
+    clinicalAttributeSampleCountPromise?:MobxPromise<{[clinicalAttributeId:string]:number}>,
     selectedClinicalAttributeIds?:string[],
     heatmapProfilesPromise?:MobxPromise<MolecularProfile[]>,
     selectedHeatmapProfile?:string;
@@ -102,6 +104,8 @@ export interface IOncoprintControlsState {
     columnMode?:"sample"|"patient";
 
     horzZoom:number;
+
+    sampleCount:number;
 };
 
 export interface IOncoprintControlsProps {
@@ -146,7 +150,6 @@ const EVENT_KEY = {
 @observer
 export default class OncoprintControls extends React.Component<IOncoprintControlsProps, {}> {
     @observable horzZoomSliderState:number;
-    @observable clinicalTracksMenuFocused = false;
 
     constructor(props:IOncoprintControlsProps) {
         super(props);
@@ -171,7 +174,6 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         this.onHorzZoomSliderChange = this.onHorzZoomSliderChange.bind(this);
         this.onHorzZoomSliderSet = this.onHorzZoomSliderSet.bind(this);
         this.onSetHorzZoomTextInput = this.onSetHorzZoomTextInput.bind(this);
-        this.onClinicalTracksMenuFocus = this.onClinicalTracksMenuFocus.bind(this);
 
         this.horzZoomSliderState = props.state.horzZoom;
         reaction(()=>this.props.state.horzZoom,
@@ -355,16 +357,26 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         }
     }
 
-    private onClinicalTracksMenuFocus() {
-        this.clinicalTracksMenuFocused = true;
-    }
-
     @computed get clinicalTrackOptions() {
-        if (this.clinicalTracksMenuFocused && this.props.state.clinicalAttributesPromise && this.props.state.clinicalAttributesPromise.result) {
-            return _.map(this.props.state.clinicalAttributesPromise.result, clinicalAttribute=>({
-                label: clinicalAttribute.displayName,
-                value: clinicalAttribute.clinicalAttributeId
-            }));
+        if (this.props.state.clinicalAttributesPromise &&
+            this.props.state.clinicalAttributesPromise.result &&
+            this.props.state.clinicalAttributeSampleCountPromise &&
+            this.props.state.clinicalAttributeSampleCountPromise.result
+        ) {
+            const clinicalAttributeIdToAvailableSampleCount = this.props.state.clinicalAttributeSampleCountPromise.result;
+            return _.reduce(this.props.state.clinicalAttributesPromise.result, (options:{label:string, value:string}[], next:ClinicalAttribute)=>{
+                const sampleCount = clinicalAttributeIdToAvailableSampleCount[next.clinicalAttributeId];
+                const newOption = {
+                    label: `${next.displayName} (${getPercentage(sampleCount/this.props.state.sampleCount, 0)})`,
+                    value: next.clinicalAttributeId,
+                    disabled: false
+                };
+                if (sampleCount === 0) {
+                    newOption.disabled = true;
+                }
+                options.push(newOption);
+                return options;
+            }, []);
         } else {
             return [];
         }
@@ -382,9 +394,10 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
     }
 
     @computed get clinicalTracksMenuLoading() {
-        return this.clinicalTracksMenuFocused &&
-            this.props.state.clinicalAttributesPromise &&
-            this.props.state.clinicalAttributesPromise.isPending;
+        return ((this.props.state.clinicalAttributesPromise &&
+            this.props.state.clinicalAttributesPromise.isPending) ||
+            (this.props.state.clinicalAttributeSampleCountPromise &&
+            this.props.state.clinicalAttributeSampleCountPromise.isPending));
     }
 
     private getClinicalTracksMenu() {
@@ -394,13 +407,10 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
             // TODO: pass unmodified string array as value prop when possible
             // TODO: remove labelKey specification, leave to default prop, when possible
             return (
-                <div
-                    onFocus={this.onClinicalTracksMenuFocus}
-                >
+                <div>
                     <CheckedSelect
-                        placeholder="Add clinical tracks.."
-                        isLoading={this.clinicalTracksMenuLoading}
-                        noResultsText={this.clinicalTracksMenuLoading ? "Loading..." : "No matching clinical tracks found"}
+                        disabled={this.clinicalTracksMenuLoading}
+                        placeholder={this.clinicalTracksMenuLoading ? "Downloading clinical tracks..." : "Add clinical tracks.."}
                         onChange={this.onChangeSelectedClinicalTracks}
                         options={this.clinicalTrackOptions}
                         value={(this.props.state.selectedClinicalAttributeIds || []).map(x=>({value:x}))}
