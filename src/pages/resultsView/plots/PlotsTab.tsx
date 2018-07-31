@@ -351,14 +351,40 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         this.searchMutation = proteinChange;
     }
 
+    private isAxisMenuLoading(axisSelection:AxisMenuSelection) {
+        return ;
+    }
+
     @autobind
     private getHorizontalAxisMenu() {
-        return this.getAxisMenu(false);
+        if (this.horzSelection.entrezGeneId === undefined ||
+            !this.geneToDataTypeOptions.isComplete ||
+            !this.geneToTypeToDataSourceOptions.isComplete) {
+            return <span></span>;
+        } else {
+            return this.getAxisMenu(
+                false,
+                this.horzSelection.entrezGeneId,
+                this.geneToDataTypeOptions.result,
+                this.geneToTypeToDataSourceOptions.result
+            );
+        }
     }
 
     @autobind
     private getVerticalAxisMenu() {
-        return this.getAxisMenu(true);
+        if (this.vertSelection.entrezGeneId === undefined ||
+            !this.geneToDataTypeOptions.isComplete ||
+            !this.geneToTypeToDataSourceOptions.isComplete) {
+            return <span></span>;
+        } else {
+            return this.getAxisMenu(
+                true,
+                this.vertSelection.entrezGeneId,
+                this.geneToDataTypeOptions.result,
+                this.geneToTypeToDataSourceOptions.result
+            );
+        }
     }
 
     @action
@@ -810,17 +836,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         };
     }
 
-    private getAxisMenu(vertical:boolean) {
+    private getAxisMenu(
+        vertical:boolean,
+        entrezGeneId:number,
+        geneToDataTypeOptions:{[entrezGeneId:number]:{value:string, label:string}[]},
+        geneToTypeToDataSourceOptions:{[entrezGeneId:number]:{[type:string]:{value:string, label:string}[]}}
+    ) {
         const axisSelection = vertical ? this.vertSelection : this.horzSelection;
         const dataTestWhichAxis = vertical ? "Vertical" : "Horizontal";
         let dataTypeOptions:{value:string, label:string}[] = [];
         let dataSourceOptionsByType:{[type:string]:{value:string, label:string}[]} = {};
-        if (!this.geneToDataTypeOptions.isComplete || !this.geneToTypeToDataSourceOptions.isComplete) {
-            return <LoadingIndicator isLoading={true}/>;
-        } else if (axisSelection.entrezGeneId !== undefined) {
-            dataTypeOptions = this.geneToDataTypeOptions.result![axisSelection.entrezGeneId] || [];
-            dataSourceOptionsByType = this.geneToTypeToDataSourceOptions.result![axisSelection.entrezGeneId] || {};
-        }
+        dataTypeOptions = geneToDataTypeOptions[entrezGeneId] || [];
+        dataSourceOptionsByType = geneToTypeToDataSourceOptions[entrezGeneId] || {};
         return (
             <form>
                 <h4>{vertical ? "Vertical" : "Horizontal"} Axis</h4>
@@ -1291,9 +1318,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 </div>
                 <div className={"plotsTab"} style={{display:"flex", flexDirection:"row", maxWidth:"inherit"}}>
                     <div className="leftColumn">
-                        <Observer>
-                            {this.controls}
-                        </Observer>
+                        { (this.horzSelection.entrezGeneId !== undefined &&
+                        this.vertSelection.entrezGeneId !== undefined &&
+                        this.geneToDataTypeOptions.isComplete &&
+                        this.geneToTypeToDataSourceOptions.isComplete) ? (
+                            <Observer>
+                                {this.controls}
+                            </Observer>
+                        ) : <LoadingIndicator isLoading={true}/> }
                     </div>
                     <div style={{overflow:"auto"}}>
                         {this.plot}
