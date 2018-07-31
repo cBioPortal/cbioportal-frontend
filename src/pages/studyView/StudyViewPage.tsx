@@ -36,10 +36,10 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             updateGeneFilter: (entrezGeneId: number) => {
                 this.store.updateGeneFilter(entrezGeneId);
             },
-            resetGeneFilter: (chartMeta: ChartMeta,) => {
+            resetGeneFilter: (chartMeta: ChartMeta) => {
                 this.store.resetGeneFilter();
             },
-            resetCNAGEneFilter: (chartMeta: ChartMeta,) => {
+            resetCNAGEneFilter: (chartMeta: ChartMeta) => {
                 this.store.resetCNAGEneFilter();
             },
             updateCNAGeneFilter: (entrezGeneId: number, alteration: number) => {

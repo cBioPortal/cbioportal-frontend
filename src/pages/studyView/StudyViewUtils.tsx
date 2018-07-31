@@ -2,6 +2,8 @@ import _ from "lodash";
 import * as React from "react";
 import {getSampleViewUrl, getStudySummaryUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
+import {ClinicalDataType} from "./StudyViewPageStore";
+import {ClinicalAttribute} from "../../shared/api/generated/CBioPortalAPI";
 
 //TODO:cleanup
 export const COLORS = [
@@ -120,4 +122,10 @@ export function getPriority(priorities: number[]): number {
 export function isPreSelectedClinicalAttr(attr: string): boolean {
     let result = attr.match(/(os_survival)|(dfs_survival)|(mut_cnt_vs_cna)|(mutated_genes)|(cna_details)|(^age)|(gender)|(sex)|(os_status)|(os_months)|(dfs_status)|(dfs_months)|(race)|(ethnicity)|(sample_type)|(histology)|(tumor_type)|(subtype)|(tumor_site)|(mutation_count)|(copy_number_alterations)|(.*(site|grade|stage).*)/i);
     return _.isArray(result) && result.length > 0;
+}
+
+export function getClinicalAttributeUniqueKey(attr: ClinicalAttribute): string {
+    const clinicalDataType: ClinicalDataType = attr.patientAttribute ? 'PATIENT' : 'SAMPLE';
+    const uniqueKey = clinicalDataType + '_' + attr.clinicalAttributeId;
+    return uniqueKey;
 }
