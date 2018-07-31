@@ -11,7 +11,7 @@ deploy:
   email: cbioportal@gmail.com
   skip_cleanup: true
   api_key:
-    secure: ZC3+VW3XnrUF0wPtTxjYm3IDtfICmFJ8q1LYJVWBR8WTq5xrqXHv3/WRshr+br4CtLWHfUXF+Ii+ThT3A5X6+9LfodAN7HwFy3kTwcS4zxv9UrEcy/fJmeyPNmWzjS2h+ZERHoBV5uHDAtWi+XAqAeNfu+5yLa9Ax7rPhhwXrr4=
+    secure: EVdXGpTxgB6g+8rmWXR7fv3hUgDgbmiUgIYmPAw4In6wOfIymQMwcxQ0rzbZlqPuhMCUKrHjzWo6pcTqoYF862wssfZozy2e8tlIVVbAqJhJ+w9wmFzPuJlCPt4vpXrRe+yBNR5dJqYeX12jZFANWN8Iro6f5wXdq5Jn5H8CTt0=
   on:
     tags: true
     repo: cBioPortal/oncoprintjs
