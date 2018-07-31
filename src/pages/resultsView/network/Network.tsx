@@ -45,7 +45,8 @@ export default class Network extends React.Component<INetworkTabParams, {}> {
             AppConfig.frontendUrl! :
             `//${AppConfig.baseUrl!}`;
 
-        return path + "/reactapp/network/network.htm?apiHost="+ AppConfig.baseUrl +"&networkParams=" + JSON.stringify(networkParams);
+        return path + "/reactapp/network/network.htm?apiHost="+ AppConfig.baseUrl +"&networkParams=" + JSON.stringify(networkParams)
+            + `&${AppConfig.appVersion}`;
     }
 
     render(){
