@@ -45,8 +45,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             updateCNAGeneFilter: (entrezGeneId: number, alteration: number) => {
                 this.store.updateCNAGeneFilter(entrezGeneId, alteration);
             },
-            onDeleteChart: (uniqueKey: string) => {
-                this.store.changeChartVisibility(uniqueKey, false);
+            onDeleteChart: (chartMeta: ChartMeta) => {
+                this.store.resetFilterAndChangeChartVisibility(chartMeta, false);
             },
             updateCustomCasesFilter: (cases: SampleIdentifier[]) => {
                 this.store.updateCustomCasesFilter(cases);
