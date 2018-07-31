@@ -615,8 +615,12 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     domainPadding={{x: [30, 30], y:[10, 10]}}
                     domain={{ x:[0,this.victoryTraces.boxTraces.length + 1]}}
                     padding={{bottom: this.paddingBottom, left: 100, top: 60, right: 10}}
-                    containerComponent={<VictoryContainer width={this.containerWidth} containerRef={(ref: any) => this.svgContainer = ref}
-                                                          responsive={false}/>}
+                    containerComponent={
+                        <VictoryContainer width={this.containerWidth}
+                                          containerRef={(ref: any) => this.svgContainer = ref.children[0]}
+                                          responsive={false}
+                        />
+                    }
                 >
                     <VictoryAxis dependentAxis
                                  tickFormat={this.tickFormat}
