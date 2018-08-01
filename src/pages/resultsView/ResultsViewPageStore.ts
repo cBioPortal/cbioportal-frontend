@@ -97,7 +97,16 @@ export const AlterationTypeConstants = {
     FUSION: 'FUSION',
     GENESET_SCORE: 'GENESET_SCORE',
     METHYLATION: 'METHYLATION'
-}
+};
+
+export const DataTypeConstants = {
+    DISCRETE: "DISCRETE",
+    CONTINUOUS: "CONTINUOUS",
+    ZSCORE: "Z-SCORE",
+    MAF: "MAF",
+    LOGVALUE:"LOG-VALUE",
+    LOG2VALUE:"LOG2-VALUE"
+};
 
 export interface ExtendedAlteration extends Mutation, NumericGeneMolecularData {
     molecularProfileAlterationType: MolecularProfile["molecularAlterationType"];
