@@ -1,19 +1,18 @@
 import * as React from "react";
 import styles from "./styles.module.scss";
-import { observer } from "mobx-react";
-import { action, computed, observable } from "mobx";
+import {observer} from "mobx-react";
+import {action, computed, observable} from "mobx";
 import _ from "lodash";
-import { StudyViewComponentLoader } from "./StudyViewComponentLoader";
-import { ChartHeader, ChartControls } from "pages/studyView/chartHeader/ChartHeader";
-import { ChartType, ChartMeta, ClinicalDataCountWithColor } from "pages/studyView/StudyViewPageStore";
+import {StudyViewComponentLoader} from "./StudyViewComponentLoader";
+import {ChartControls, ChartHeader} from "pages/studyView/chartHeader/ChartHeader";
+import {ChartMeta, ChartType} from "pages/studyView/StudyViewPageStore";
 import fileDownload from 'react-file-download';
 import PieChart from "pages/studyView/charts/pieChart/PieChart";
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
-import classnames from 'classnames';
 import StudyViewClinicalDataCountsCache from "shared/cache/StudyViewClinicalDataCountsCache";
-import { StudyViewFilter } from "shared/api/generated/CBioPortalAPIInternal";
+import {StudyViewFilter} from "shared/api/generated/CBioPortalAPIInternal";
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
-import { bind } from "bind-decorator";
+import {bind} from "bind-decorator";
 
 export interface AbstractChart {
     downloadData: () => string;
@@ -26,6 +25,7 @@ export interface IChartContainerProps {
     filter: StudyViewFilter;
     onUserSelection: (chartMeta: ChartMeta, value: string[]) => void;
     onDeleteChart: (uniqueKey: string) => void;
+    onChangeChartType: (chartMeta: ChartMeta, newChartType: ChartType) => void;
 }
 
 @observer
@@ -62,7 +62,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 this.mouseInChart = true;
             }),
             onMouseLeaveChart: action(() => {
-                this.placement = 'right'
                 this.mouseInChart = false;
             }),
             handleDownloadDataClick: () => {
@@ -78,6 +77,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             },
             onDeleteChart: () => {
                 this.props.onDeleteChart(this.props.chartMeta.uniqueKey);
+            },
+            onChangeChartType: (newChartType: ChartType) => {
+                this.mouseInChart = false;
+                this.props.onChangeChartType(this.props.chartMeta, newChartType)
             }
         };
     }
@@ -136,6 +139,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @bind
     @action changeChartType(chartType: ChartType) {
         this.chartType = chartType;
+        this.handlers.onChangeChartType(chartType);
     }
 
     @computed get chart() {
@@ -164,8 +168,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     public render() {
         return (
-            <div className={classnames(styles.chart, this.chartWidth, this.chartHeight)}
-                onMouseEnter={this.handlers.onMouseEnterChart}
+            <div onMouseEnter={this.handlers.onMouseEnterChart}
                 onMouseLeave={this.handlers.onMouseLeaveChart}>
                 <ChartHeader
                     clinicalAttribute={this.props.chartMeta.clinicalAttribute}

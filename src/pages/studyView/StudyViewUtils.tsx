@@ -1,10 +1,10 @@
-import { ClinicalDataCount, StudyViewFilter } from "shared/api/generated/CBioPortalAPIInternal";
 import _ from "lodash";
-import internalClient from "shared/api/cbioportalInternalClientInstance";
-import { ClinicalAttribute } from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
 import {getSampleViewUrl, getStudySummaryUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
+import {ChartDimension, ChartMeta} from "./StudyViewPageStore";
+import {Layout} from 'react-grid-layout';
+import {Sample} from "shared/api/generated/CBioPortalAPI";
 
 //TODO:cleanup
 export const COLORS = [
@@ -61,23 +61,29 @@ export const COLORS = [
     '#b82e27', '#316397', '#994495', '#22aa93',
     '#aaaa14', '#6633c1', '#e67303', '#8b0705',
     '#651062', '#329267', '#5574a1', '#3b3ea5'
-  ];
+];
 
 export const NA_COLOR = '#CCCCCC'
 
 export const UNSELECTED_COLOR = '#808080'
 
-export function mutationCountVsCnaTooltip(d:{ data:Pick<IStudyViewScatterPlotData, "x"|"y"|"studyId"|"sampleId"|"patientId">[]}) {
+export type LayoutMatrixItem = {
+    notFull: boolean,
+    matrix: string[]
+}
+
+export function mutationCountVsCnaTooltip(d: { data: Pick<IStudyViewScatterPlotData, "x" | "y" | "studyId" | "sampleId" | "patientId">[] }) {
     const rows = [];
     const MAX_SAMPLES = 3;
-    const borderStyle = { borderTop: "1px solid black" };
-    for (let i=0; i<Math.min(MAX_SAMPLES, d.data.length); i++) {
+    const borderStyle = {borderTop: "1px solid black"};
+    for (let i = 0; i < Math.min(MAX_SAMPLES, d.data.length); i++) {
         const datum = d.data[i];
         rows.push(
             <tr key={`${datum.studyId}_${datum.sampleId}`} style={i > 0 ? borderStyle : {}}>
-                <td style={{padding:5}}>
+                <td style={{padding: 5}}>
                     <span>Cancer Study: <a target="_blank" href={getStudySummaryUrl(datum.studyId)}>{datum.studyId}</a></span><br/>
-                    <span>Sample ID: <a target="_blank" href={getSampleViewUrl(datum.studyId, datum.sampleId)}>{datum.sampleId}</a></span><br/>
+                    <span>Sample ID: <a target="_blank"
+                                        href={getSampleViewUrl(datum.studyId, datum.sampleId)}>{datum.sampleId}</a></span><br/>
                     <span>CNA Fraction: {datum.x}</span><br/>
                     <span>Mutation Count: {datum.y}</span>
                 </td>
@@ -87,8 +93,9 @@ export function mutationCountVsCnaTooltip(d:{ data:Pick<IStudyViewScatterPlotDat
     if (d.data.length > 1) {
         rows.push(
             <tr key="see all" style={borderStyle}>
-                <td style={{padding:5}}>
-                    <a target="_blank" href={getSampleViewUrl(d.data[0].studyId, d.data[0].sampleId, d.data)}>View all {d.data.length} patients included in this dot.</a>
+                <td style={{padding: 5}}>
+                    <a target="_blank" href={getSampleViewUrl(d.data[0].studyId, d.data[0].sampleId, d.data)}>View
+                        all {d.data.length} patients included in this dot.</a>
                 </td>
             </tr>
         );
@@ -102,6 +109,140 @@ export function mutationCountVsCnaTooltip(d:{ data:Pick<IStudyViewScatterPlotDat
     );
 }
 
-export function isSelected(datum:{uniqueSampleKey:string}, selectedSamples:{[uniqueSampleKey:string]:any}) {
+export function isSelected(datum: { uniqueSampleKey: string }, selectedSamples: { [uniqueSampleKey: string]: Sample }) {
     return datum.uniqueSampleKey in selectedSamples;
 }
+
+/**
+ * Calculate the layout used by react-grid-layout
+ *
+ * @param {ChartMeta[]} visibleAttributes
+ * @param {number} cols number of grids per row, 6 cols will be the stander when using 13 inch laptop
+ * @param chartsDimension
+ * @returns {ReactGridLayout.Layout[]}
+ */
+export function calculateLayout(visibleAttributes: ChartMeta[], cols: number, chartsDimension: any): Layout[] {
+    let matrix: LayoutMatrixItem[] = [];
+    _.sortBy(visibleAttributes, [(attr: ChartMeta) => attr.clinicalAttribute.priority])
+        .forEach((attr, index) => {
+                let _size = chartsDimension.has(attr.uniqueKey) ? chartsDimension.get(attr.uniqueKey) : {w: 1, h: 1};
+                matrix = getLayoutMatrix(matrix, attr.uniqueKey, _size);
+            }
+        );
+
+    let _layout: Layout[] = [];
+    let x = 0;
+    let y = 0;
+    let plottedCharts: { [id: string]: number } = {};
+    _.forEach(matrix, (group: LayoutMatrixItem, index) => {
+        let _x = x - 1;
+        let _y = y;
+        _.forEach(group.matrix, (uniqueId, _index: number) => {
+            ++_x;
+            if (_index === 2) {
+                _x = x;
+                _y++;
+            }
+            if (!uniqueId) {
+                return;
+            }
+            if (plottedCharts.hasOwnProperty(uniqueId)) {
+                return;
+            }
+            plottedCharts[uniqueId] = 1;
+            let _size = chartsDimension.has(uniqueId) ? chartsDimension.get(uniqueId) : {w: 1, h: 1};
+            _layout.push({
+                i: uniqueId,
+                x: _x,
+                y: _y,
+                w: _size!.w,
+                h: _size!.h,
+                isResizable: false
+            });
+        });
+        x = x + 2;
+        if (x >= cols) {
+            x = 0;
+            y = y + 2;
+        }
+    });
+    return _layout;
+}
+
+/**
+ * Group chart into 4*4 matrix based on description from here
+ * https://github.com/cBioPortal/cbioportal/blob/master/docs/Study-View.md
+ *
+ * @param {LayoutMatrixItem[]} layoutMatrix
+ * @param {string} key The unique key to identify the chart
+ * @param {ChartDimension} chartDimension
+ * @returns {LayoutMatrixItem[]}
+ */
+export function getLayoutMatrix(layoutMatrix: LayoutMatrixItem[], key: string, chartDimension: ChartDimension): LayoutMatrixItem[] {
+    let neighborIndex: number;
+    let foundSpace = false;
+    let chartSize = chartDimension.w * chartDimension.h;
+
+    _.some(layoutMatrix, function (layoutItem) {
+        if (foundSpace) {
+            return true;
+        }
+        if (layoutItem.notFull) {
+            let _matrix = layoutItem.matrix;
+            _.some(_matrix, function (item, _matrixIndex) {
+                if (chartSize === 2) {
+                    let _validIndex = false;
+                    if (chartDimension.h === 2) {
+                        neighborIndex = _matrixIndex + 2;
+                        if (_matrixIndex < 2) {
+                            _validIndex = true;
+                        }
+                    } else {
+                        neighborIndex = _matrixIndex + 1;
+                        if (_matrixIndex % 2 === 0) {
+                            _validIndex = true;
+                        }
+                    }
+                    if (neighborIndex < _matrix.length && _validIndex) {
+                        if (item === '' && _matrix[neighborIndex] === '') {
+                            // Found a place for chart
+                            _matrix[_matrixIndex] = _matrix[neighborIndex] = key;
+                            foundSpace = true;
+                            layoutItem.notFull = _.includes(_matrix, '');
+                            return true;
+                        }
+                    }
+                } else if (chartSize === 1) {
+                    if (item === '') {
+                        // Found a place for chart
+                        _matrix[_matrixIndex] = key;
+                        foundSpace = true;
+                        if (_matrixIndex === _matrix.length - 1) {
+                            layoutItem.notFull = false;
+                        }
+                        return true;
+                    }
+                } else if (chartSize === 4) {
+                    if (item === '' && _matrix[0] === '' && _matrix[1] === '' && _matrix[2] === '' && _matrix[3] === '') {
+                        // Found a place for chart
+                        _matrix = _.fill(Array(4), key);
+                        layoutItem.notFull = false;
+                        foundSpace = true;
+                        return true;
+                    }
+                }
+            });
+            layoutItem.matrix = _matrix;
+        }
+    });
+
+    if (!foundSpace) {
+        layoutMatrix.push({
+            notFull: true,
+            matrix: _.fill(Array(4), '')
+        });
+        layoutMatrix = getLayoutMatrix(layoutMatrix, key, chartDimension);
+    }
+    return layoutMatrix;
+}
+

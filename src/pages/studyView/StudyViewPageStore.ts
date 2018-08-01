@@ -1,31 +1,36 @@
 import * as _ from 'lodash';
-import { remoteData } from "../../shared/api/remoteData";
+import {remoteData} from "../../shared/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import { action, computed, observable, toJS } from "mobx";
+import {action, computed, observable, toJS} from "mobx";
 import {
     ClinicalDataCount,
     ClinicalDataEqualityFilter,
     CopyNumberCountByGene,
     CopyNumberGeneFilter,
-    CopyNumberGeneFilterElement, FractionGenomeAltered, FractionGenomeAlteredFilter,
+    CopyNumberGeneFilterElement,
+    FractionGenomeAltered,
+    FractionGenomeAlteredFilter,
     MutationCountByGene,
     MutationGeneFilter,
     Sample,
-    StudyViewFilter,
-    SampleIdentifier
+    SampleIdentifier,
+    StudyViewFilter
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {
     ClinicalAttribute,
     ClinicalData,
+    ClinicalDataMultiStudyFilter,
     MolecularProfile,
     MolecularProfileFilter,
-    ClinicalDataMultiStudyFilter, MutationCount
+    MutationCount
 } from 'shared/api/generated/CBioPortalAPI';
-import { PatientSurvival } from 'shared/model/PatientSurvival';
-import { getPatientSurvivals } from 'pages/resultsView/SurvivalStoreHelper';
+import {PatientSurvival} from 'shared/model/PatientSurvival';
+import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
-import client from "../../shared/api/cbioportalClientInstance";
+import {Layout} from 'react-grid-layout';
+import windowStore from 'shared/components/window/WindowStore';
+import {calculateLayout} from "./StudyViewUtils";
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT'
 
@@ -35,6 +40,11 @@ export enum ChartType {
     SURVIVAL = 'SURVIVAL',
     TABLE = 'TABLE',
     SCATTER = 'SCATTER'
+}
+
+export type ChartDimension = {
+    w: number,
+    h: number
 }
 
 export type ClinicalDataCountWithColor = ClinicalDataCount & { color: string }
@@ -52,14 +62,59 @@ export type SurvivalType = {
 export type ChartMeta = {
     clinicalAttribute: ClinicalAttribute,
     uniqueKey: string,
-    defaultChartType: ChartType
+    defaultChartType: ChartType,
+    dimension: ChartDimension
+}
+
+export type StudyViewPageLayoutProps = {
+    layout: Layout[],
+    cols:number,
+    rowHeight: number
 }
 
 export class StudyViewPageStore {
 
-    constructor() { }
+    constructor() {
+    }
 
     public studyViewClinicalDataCountsCache = new StudyViewClinicalDataCountsCache()
+
+    readonly defaultChartSetting = {
+        oneGridWidth: 200,
+        oneGridHeight: 200,
+        charts: {
+            'PIE_CHART': {
+                dimension: {
+                    w: 1,
+                    h: 1
+                }
+            },
+            'BAR_CHART': {
+                dimension: {
+                    w: 2,
+                    h: 1
+                }
+            },
+            'SCATTER': {
+                dimension: {
+                    w: 2,
+                    h: 2
+                }
+            },
+            'TABLE': {
+                dimension: {
+                    w: 2,
+                    h: 2
+                }
+            },
+            'SURVIVAL': {
+                dimension: {
+                    w: 2,
+                    h: 2
+                }
+            }
+        }
+    };
 
     @observable studyIds: string[] = [];
 
@@ -77,8 +132,24 @@ export class StudyViewPageStore {
 
     @observable private _chartVisibility = observable.map<boolean>();
 
+    @observable private chartsDimension = observable.map<ChartDimension>();
+
     private _clinicalAttributesMetaSet: { [id: string]: ChartMeta } = {} as any;
 
+    @computed
+    get containerWidth(): number {
+        return this.studyViewPageLayoutProps.cols * this.defaultChartSetting.oneGridWidth;
+    }
+
+    @computed
+    get studyViewPageLayoutProps(): StudyViewPageLayoutProps {
+        let cols:number = Math.floor(windowStore.size.width / this.defaultChartSetting.oneGridWidth);
+        return {
+            cols: cols,
+            rowHeight: this.defaultChartSetting.oneGridHeight,
+            layout: calculateLayout(this.visibleAttributes, cols, this.chartsDimension)
+        };
+    }
 
     @action
     updateClinicalDataEqualityFilters(chartMeta: ChartMeta, values: string[]) {
@@ -179,7 +250,7 @@ export class StudyViewPageStore {
             filters.cnaGenes = [this._cnaGeneFilter];
         }
 
-        if(this._sampleIdentifiers && this._sampleIdentifiers.length>0) {
+        if (this._sampleIdentifiers && this._sampleIdentifiers.length > 0) {
             filters.sampleIdentifiers = this._sampleIdentifiers;
         } else {
             filters.studyIds = this.studyIds
@@ -244,7 +315,13 @@ export class StudyViewPageStore {
                 const uniqueKey = clinicalDataType + '_' + attribute.clinicalAttributeId;
                 //TODO: currently only piechart is handled
                 if (attribute.datatype === 'STRING') {
-                    acc[uniqueKey] = { clinicalAttribute: attribute, uniqueKey: uniqueKey, defaultChartType: ChartType.PIE_CHART };
+                    acc[uniqueKey] = {
+                        clinicalAttribute: attribute,
+                        uniqueKey: uniqueKey,
+                        defaultChartType: ChartType.PIE_CHART,
+                        dimension: this.defaultChartSetting.charts.PIE_CHART.dimension
+                    };
+                    this.chartsDimension.set(attribute.clinicalAttributeId, this.defaultChartSetting.charts.PIE_CHART.dimension);
                 }
                 return acc
             }, {});
@@ -258,11 +335,21 @@ export class StudyViewPageStore {
             if (this._chartVisibility.get(next)) {
                 let chartMeta = this._clinicalAttributesMetaSet[next];
                 if (chartMeta) {
-                    acc.push(chartMeta)
+                    acc.push(chartMeta);
                 }
             }
             return acc;
         }, []);
+    }
+
+    public changeChartType(attr: ChartMeta, newChartType: ChartType) {
+        let newChartSize = this.defaultChartSetting.charts[newChartType].dimension || {w: 1, h: 1};
+        this.changeChartSize(attr, newChartSize);
+    }
+
+    @action
+    changeChartSize(attr: ChartMeta, newSize: ChartDimension) {
+        this.chartsDimension.set(attr.uniqueKey, newSize);
     }
 
     //TODO:cleanup
