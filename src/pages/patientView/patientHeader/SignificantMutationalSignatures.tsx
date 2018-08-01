@@ -2,7 +2,7 @@ import * as React from "react";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import {placeArrowBottomLeft} from "shared/components/defaultTooltip/DefaultTooltip";
 import SimpleTable from "shared/components/simpleTable/SimpleTable";
-import {IMutationalSignature} from "../../../shared/model/MutationalSignature";
+import {IMutationalSignature, IMutationalSignatureMeta, ISignificantMutationalSignaturesBySample} from "../../../shared/model/MutationalSignature";
 import _ from 'lodash';
 import FontAwesome from "react-fontawesome";
 import {computed} from "mobx";
@@ -18,20 +18,18 @@ export type GDDOutput = {
     Diagnosed_Cancer_Type_Detailed: string;
 }
 
-// in percentage
-export const HIGH_CONFIDENCE_PREDICTION = 75;
-export const MEDIUM_CONFIDENCE_PREDICTION = 50;
+export const MIN_NUMBER_OF_MUTATIONS_THRESHOLD = 5;
+export const MIN_NUMBER_OF_MUTATIONS_STATEMENT = "There are not enough mutations to call mutational signatures for this case.";
+export const DUBIOUS_NUMBER_OF_MUTATIONS_THRESHOLD = 15;
+export const MIN_NUMBER_OF_MUTATIONS_STATEMENT = "This case has a low number of mutations, signatures are highly uncertain.";
 
-interface IMutationalSignatureConfidenceProps {
+interface ISignificantMutationalSignaturesProps {
     data: IMutationalSignature[];
 }
 
-interface IMutationalSignatureConfidence{
-    uniqueSampleKey: string;
-    confidence: number;
-    confidenceStatement: string;
-}
-export default class MutationalSignatureConfidence extends React.Component<IMutationalSignatureConfidenceProps, {}> {
+export default class SignificantMutationalSignatures extends React.Component<ISignificantMutationalSignaturesProps, {}> {
+
+
     public render() {
         return (
             <DefaultTooltip
@@ -56,8 +54,8 @@ export default class MutationalSignatureConfidence extends React.Component<IMuta
                 </h6>
                 <SimpleTable
                     headers={[
-                        <th>Mutational Signature</th>,
-                        <th>Confidence</th>
+                        <th>Significant Mutational Signatures</th>,
+                        <th>Exposure</th>
                     ]}
                     rows={[
                         <tr><td>Mutational Signature 1</td><td>{this.progressBar("0.41", false)}</td></tr>,
