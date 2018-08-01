@@ -66,11 +66,6 @@ export type ChartMeta = {
     dimension: ChartDimension
 }
 
-export type layoutMatrixItem = {
-    notFull: boolean,
-    matrix: string[]
-}
-
 export type StudyViewPageLayoutProps = {
     layout: Layout[],
     cols:number,

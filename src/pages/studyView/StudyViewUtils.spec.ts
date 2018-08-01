@@ -1,6 +1,6 @@
 import {assert} from 'chai';
-import {calculateLayout, getLayoutMatrix} from './StudyViewUtils';
-import {ChartDimension, ChartMeta, ChartType, layoutMatrixItem} from './StudyViewPageStore';
+import {calculateLayout, getLayoutMatrix, LayoutMatrixItem} from './StudyViewUtils';
+import {ChartDimension, ChartMeta, ChartType} from './StudyViewPageStore';
 import {Layout} from 'react-grid-layout';
 import {ClinicalAttribute} from "../../shared/api/generated/CBioPortalAPI";
 import {observable} from "mobx";
@@ -30,7 +30,7 @@ describe.only('StudyViewUtils', () => {
 
     describe("getLayoutMatrix", () => {
         it("The result is not expected, the chart should only occupy the first element of the matrix", () => {
-            let result: layoutMatrixItem[] = getLayoutMatrix([], 'test', {w: 1, h: 1});
+            let result: LayoutMatrixItem[] = getLayoutMatrix([], 'test', {w: 1, h: 1});
             assert.equal(result.length, 1);
             assert.isTrue(result[0].notFull);
             assert.equal(result[0].matrix[0], 'test');
@@ -38,7 +38,7 @@ describe.only('StudyViewUtils', () => {
         });
 
         it("The result is not expected, the chart should occupy the first and second elements of the matrix", () => {
-            let result: layoutMatrixItem[] = getLayoutMatrix([], 'test', {w: 2, h: 1});
+            let result: LayoutMatrixItem[] = getLayoutMatrix([], 'test', {w: 2, h: 1});
             assert.equal(result.length, 1);
             assert.isTrue(result[0].notFull);
             assert.equal(result[0].matrix[0], 'test');
@@ -47,7 +47,7 @@ describe.only('StudyViewUtils', () => {
         });
 
         it("The result is not expected, the chart should only occupy the first and third element of the matrix", () => {
-            let result: layoutMatrixItem[] = getLayoutMatrix([], 'test', {w: 1, h: 2});
+            let result: LayoutMatrixItem[] = getLayoutMatrix([], 'test', {w: 1, h: 2});
             assert.equal(result.length, 1);
             assert.isTrue(result[0].notFull);
             assert.equal(result[0].matrix[0], 'test');
@@ -56,7 +56,7 @@ describe.only('StudyViewUtils', () => {
         });
 
         it("The result is not expected, the chart should only occupy the third and forth element of the matrix", () => {
-            let result: layoutMatrixItem[] = getLayoutMatrix([{
+            let result: LayoutMatrixItem[] = getLayoutMatrix([{
                 notFull: true,
                 matrix: ['key', 'key', '', '']
             }], 'test', {w: 2, h: 1});
@@ -69,7 +69,7 @@ describe.only('StudyViewUtils', () => {
         });
 
         it("The result is not expected, the additional matrix should be added when the new chart cannot fit in the original matrix", () => {
-            let result: layoutMatrixItem[] = getLayoutMatrix([{
+            let result: LayoutMatrixItem[] = getLayoutMatrix([{
                 notFull: true,
                 matrix: ['key', 'key', 'key', '']
             }], 'test', {w: 2, h: 1});

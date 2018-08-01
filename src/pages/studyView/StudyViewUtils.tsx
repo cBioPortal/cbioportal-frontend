@@ -2,8 +2,9 @@ import _ from "lodash";
 import * as React from "react";
 import {getSampleViewUrl, getStudySummaryUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
-import {ChartDimension, ChartMeta, layoutMatrixItem} from "./StudyViewPageStore";
+import {ChartDimension, ChartMeta} from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
+import {Sample} from "shared/api/generated/CBioPortalAPI";
 
 //TODO:cleanup
 export const COLORS = [
@@ -66,6 +67,11 @@ export const NA_COLOR = '#CCCCCC'
 
 export const UNSELECTED_COLOR = '#808080'
 
+export type LayoutMatrixItem = {
+    notFull: boolean,
+    matrix: string[]
+}
+
 export function mutationCountVsCnaTooltip(d: { data: Pick<IStudyViewScatterPlotData, "x" | "y" | "studyId" | "sampleId" | "patientId">[] }) {
     const rows = [];
     const MAX_SAMPLES = 3;
@@ -103,7 +109,7 @@ export function mutationCountVsCnaTooltip(d: { data: Pick<IStudyViewScatterPlotD
     );
 }
 
-export function isSelected(datum: { uniqueSampleKey: string }, selectedSamples: { [uniqueSampleKey: string]: any }) {
+export function isSelected(datum: { uniqueSampleKey: string }, selectedSamples: { [uniqueSampleKey: string]: Sample }) {
     return datum.uniqueSampleKey in selectedSamples;
 }
 
@@ -116,7 +122,7 @@ export function isSelected(datum: { uniqueSampleKey: string }, selectedSamples: 
  * @returns {ReactGridLayout.Layout[]}
  */
 export function calculateLayout(visibleAttributes: ChartMeta[], cols: number, chartsDimension: any): Layout[] {
-    let matrix: layoutMatrixItem[] = [];
+    let matrix: LayoutMatrixItem[] = [];
     _.sortBy(visibleAttributes, [(attr: ChartMeta) => attr.clinicalAttribute.priority])
         .forEach((attr, index) => {
                 let _size = chartsDimension.has(attr.uniqueKey) ? chartsDimension.get(attr.uniqueKey) : {w: 1, h: 1};
@@ -127,8 +133,8 @@ export function calculateLayout(visibleAttributes: ChartMeta[], cols: number, ch
     let _layout: Layout[] = [];
     let x = 0;
     let y = 0;
-    let plottedCharts: any = {};
-    _.forEach(matrix, (group: layoutMatrixItem, index) => {
+    let plottedCharts: { [id: string]: number } = {};
+    _.forEach(matrix, (group: LayoutMatrixItem, index) => {
         let _x = x - 1;
         let _y = y;
         _.forEach(group.matrix, (uniqueId, _index: number) => {
@@ -167,12 +173,12 @@ export function calculateLayout(visibleAttributes: ChartMeta[], cols: number, ch
  * Group chart into 4*4 matrix based on description from here
  * https://github.com/cBioPortal/cbioportal/blob/master/docs/Study-View.md
  *
- * @param {layoutMatrixItem[]} layoutMatrix
+ * @param {LayoutMatrixItem[]} layoutMatrix
  * @param {string} key The unique key to identify the chart
  * @param {ChartDimension} chartDimension
- * @returns {layoutMatrixItem[]}
+ * @returns {LayoutMatrixItem[]}
  */
-export function getLayoutMatrix(layoutMatrix: layoutMatrixItem[], key: string, chartDimension: ChartDimension): layoutMatrixItem[] {
+export function getLayoutMatrix(layoutMatrix: LayoutMatrixItem[], key: string, chartDimension: ChartDimension): LayoutMatrixItem[] {
     let neighborIndex: number;
     let foundSpace = false;
     let chartSize = chartDimension.w * chartDimension.h;
@@ -182,10 +188,10 @@ export function getLayoutMatrix(layoutMatrix: layoutMatrixItem[], key: string, c
             return true;
         }
         if (layoutItem.notFull) {
-            var _matrix = layoutItem.matrix;
+            let _matrix = layoutItem.matrix;
             _.some(_matrix, function (item, _matrixIndex) {
                 if (chartSize === 2) {
-                    var _validIndex = false;
+                    let _validIndex = false;
                     if (chartDimension.h === 2) {
                         neighborIndex = _matrixIndex + 2;
                         if (_matrixIndex < 2) {
