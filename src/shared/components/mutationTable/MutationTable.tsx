@@ -501,7 +501,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 : (<span></span>)),
             download: (d: Mutation[]) => DbsnpColumnFormatter.download(
                 d, this.props.genomeNexusEnrichmentCache as GenomeNexusEnrichmentCache),
-            visible: true
+            visible: false
         };
     }
 
