@@ -61,8 +61,7 @@ export type ChartMeta = {
     uniqueKey: string,
     displayName: string,
     description: string,
-    chartType: ChartType,
-    tableColumns?: Column<any>[]
+    chartType: ChartType
 }
 
 export class StudyViewPageStore {
@@ -172,7 +171,7 @@ export class StudyViewPageStore {
     }
 
     @action
-    resetCNAGEneFilter() {
+    resetCNAGeneFilter() {
         this._cnaGeneFilter.alterations = [];
     }
 
@@ -188,7 +187,7 @@ export class StudyViewPageStore {
                     this.resetGeneFilter();
                     break;
                 case ChartType.CNA_GENES_TABLE:
-                    this.resetCNAGEneFilter();
+                    this.resetCNAGeneFilter();
                     break;
                 case ChartType.SCATTER:
                     this.resetCustomCasesFilter();
@@ -242,7 +241,7 @@ export class StudyViewPageStore {
         return this._cnaGeneFilter ? this._cnaGeneFilter.alterations : [];
     }
 
-    public getClinicalDtaFiltersByUniqueKey(uniqueKey: string): string[] {
+    public getClinicalDataFiltersByUniqueKey(uniqueKey: string): string[] {
         let filters = _.filter(this._clinicalDataEqualityFilterSet.values(), filter => _.isEqual(filter.clinicalDataType + '_' + filter.attributeId, uniqueKey));
         return _.isEmpty(filters) ? [] : filters[0].values;
     }
