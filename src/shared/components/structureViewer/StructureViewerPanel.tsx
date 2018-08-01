@@ -548,11 +548,13 @@ export default class StructureViewerPanel extends React.Component<IStructureView
         // if 3Dmol container div is not initialized yet, just set to a default value: width=auto; height=350
         // otherwise toggle the size
         if (this.isIncreasedSize) {
-            width = this._3dMolDiv ? Math.floor(this._3dMolDiv.offsetWidth * (5/3)) : "auto";
+            // TODO: hardocded default value to fix cBioPortal/cbioportal#4561
+            width = this._3dMolDiv ? Math.floor(this._3dMolDiv.offsetWidth * (5/3)) : 698;
             height = this._3dMolDiv ? this._3dMolDiv.offsetHeight * 2 : 350;
         }
         else {
-            width = this._3dMolDiv ? Math.floor(this._3dMolDiv.offsetWidth / (5/3)) : "auto";
+            // TODO: hardcoded default value to fix cBioPortal/cbioportal#4561
+            width = this._3dMolDiv ? Math.floor(this._3dMolDiv.offsetWidth / (5/3)) : 450;
             height = this._3dMolDiv ? this._3dMolDiv.offsetHeight / 2 : 350;
         }
 
