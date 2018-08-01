@@ -142,7 +142,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         } else if (this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE ||
             this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
             // one axis molecular profile
-            return ViewType.MutationType;
+            return ViewType.MutationTypeAndCopyNumber;
         } else {
             // neither axis gene
             return ViewType.None;
