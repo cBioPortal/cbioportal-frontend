@@ -321,6 +321,7 @@ export class StudyViewPageStore {
                         defaultChartType: ChartType.PIE_CHART,
                         dimension: this.defaultChartSetting.charts.PIE_CHART.dimension
                     };
+                    this.chartsDimension.set(attribute.clinicalAttributeId, this.defaultChartSetting.charts.PIE_CHART.dimension);
                 }
                 return acc
             }, {});
@@ -335,7 +336,6 @@ export class StudyViewPageStore {
                 let chartMeta = this._clinicalAttributesMetaSet[next];
                 if (chartMeta) {
                     acc.push(chartMeta);
-                    this.chartsDimension.set(chartMeta.clinicalAttribute.clinicalAttributeId, chartMeta.dimension);
                 }
             }
             return acc;
