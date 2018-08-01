@@ -503,8 +503,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                         <div className="clearfix">
                             <FeatureTitle title="Mutational Signatures" isLoading={ patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />
-                            {  (patientViewPageStore.clinicalDataGroupedBySample.isComplete) && (
-                                <ClinicalInformationMutationalSignatureTable data={patientViewPageStore.mutationalSignatureData()} showTitleBar={true}/>
+                            {  (patientViewPageStore.clinicalDataGroupedBySample.isComplete && patientViewPageStore.mutationalSignatureData.isComplete) && (
+                                <ClinicalInformationMutationalSignatureTable data={patientViewPageStore.mutationalSignatureData.result} showTitleBar={true}/>
                             )
                             }
                         </div>
