@@ -904,7 +904,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 onChange={vertical ? this.onVerticalAxisDataSourceSelect : this.onHorizontalAxisDataSourceSelect}
                                 options={dataSourceOptionsByType[axisSelection.dataType+""] || []}
                                 clearable={false}
-                                searchable={false}
+                                searchable={true}
                             />
                         </div>
                     </div>
