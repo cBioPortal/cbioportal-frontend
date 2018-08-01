@@ -280,7 +280,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.sortedClinicalAttributes;
             },
             get clinicalAttributeSampleCountPromise() {
-                return self.props.store.clinicalAttributeIdToAvailableSampleCount;
+                return undefined;//self.props.store.clinicalAttributeIdToAvailableSampleCount;
             },
             get sortMode() {
                 return self.sortMode;
@@ -817,20 +817,20 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     readonly sortedClinicalAttributes = remoteData({
         await: ()=>[
             this.clinicalAttributes,
-            this.props.store.clinicalAttributeIdToAvailableSampleCount
+            //this.props.store.clinicalAttributeIdToAvailableSampleCount
         ],
         invoke:()=>{
-            const availableSampleCount = this.props.store.clinicalAttributeIdToAvailableSampleCount.result!;
+            //const availableSampleCount = this.props.store.clinicalAttributeIdToAvailableSampleCount.result!;
             let server:OncoprintClinicalAttribute[] = _.sortBy<ClinicalAttribute>(
                 this.clinicalAttributes.result!.server,
                 [
-                    (x:ClinicalAttribute)=>{
+                    /*(x:ClinicalAttribute)=>{
                         let sampleCount = availableSampleCount[x.clinicalAttributeId];
                         if (sampleCount === undefined) {
                             sampleCount = 0;
                         }
                         return -sampleCount;
-                    },
+                    },*/
                     (x:ClinicalAttribute)=>x.displayName
                 ]
             ); // sort server clinical attrs by availability and display name
