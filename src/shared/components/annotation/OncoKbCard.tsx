@@ -481,13 +481,13 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
         const parts = str.split(/pmid|nct/i);
 
         if (parts.length < 2) {
-            return null;
+            return str;
         }
 
         const ids = parts[1].match(/[0-9]+/g);
 
         if (!ids) {
-            return null;
+            return str;
         }
 
         let baseUrl:string|undefined;
@@ -551,7 +551,7 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
             );
         }
         else {
-            return null;
+            return str;
         }
     }
 
@@ -577,7 +577,7 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
             // if delimiter convert to a JSX component
             if(part.match(regex))
             {
-                let component:JSX.Element|null = this.refComponent(part, type);
+                let component:JSX.Element|string = this.refComponent(part, type);
 
                 if (component) {
                     content.push(component);
