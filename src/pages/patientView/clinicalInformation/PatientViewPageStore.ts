@@ -174,9 +174,9 @@ export class PatientViewPageStore {
         return fetchMyCancerGenomeData();
     }
 
-    mutationalSignatureData(): IMutationalSignature[]{
-        return fetchMutationalSignatureData();
-    }
+    readonly mutationalSignatureData = remoteData({
+        invoke: async() => fetchMutationalSignatureData()
+    });
 
     readonly derivedPatientId = remoteData<string>({
         await: () => [this.samples],
