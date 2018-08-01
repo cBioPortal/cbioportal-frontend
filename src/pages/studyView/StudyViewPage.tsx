@@ -39,8 +39,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             resetGeneFilter: (chartMeta: ChartMeta) => {
                 this.store.resetGeneFilter();
             },
-            resetCNAGEneFilter: (chartMeta: ChartMeta) => {
-                this.store.resetCNAGEneFilter();
+            resetCNAGeneFilter: (chartMeta: ChartMeta) => {
+                this.store.resetCNAGeneFilter();
             },
             updateCNAGeneFilter: (entrezGeneId: number, alteration: number) => {
                 this.store.updateCNAGeneFilter(entrezGeneId, alteration);
@@ -87,13 +87,13 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     attribute: chartMeta.clinicalAttribute!,
                     filters: this.store.filters
                 });
-                props.filters = this.store.getClinicalDtaFiltersByUniqueKey(chartMeta.uniqueKey);
+                props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey);
                 props.onUserSelection = this.handlers.onUserSelection;
                 props.onResetSelection = this.handlers.onUserSelection;
                 break;
             }
             case ChartType.TABLE: {
-                props.filters = this.store.getClinicalDtaFiltersByUniqueKey(chartMeta.uniqueKey);
+                props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey);
                 props.promise = this.store.studyViewClinicalDataCountsCache.get({
                     attribute: chartMeta.clinicalAttribute!,
                     filters: this.store.filters
@@ -113,7 +113,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 props.filters = this.store.getCNAGenesTableFilters();
                 props.promise = this.store.cnaGeneData;
                 props.onUserSelection = this.handlers.updateCNAGeneFilter;
-                props.onResetSelection = this.handlers.resetCNAGEneFilter;
+                props.onResetSelection = this.handlers.resetCNAGeneFilter;
                 break;
             }
             case ChartType.SURVIVAL: {
