@@ -1309,7 +1309,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             <DownloadControls
                                 getSvg={this.getSvg}
                                 filename={this.downloadFilename}
-                                buttons={["SVG", "PDF"]}
                                 additionalRightButtons={[{
                                     key:"Data",
                                     content:<span>Data <i className="fa fa-cloud-download" aria-hidden="true"/></span>,
