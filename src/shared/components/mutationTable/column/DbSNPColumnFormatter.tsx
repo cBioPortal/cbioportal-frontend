@@ -4,12 +4,12 @@ import { MyVariantInfo as MyVariantInfoData } from 'shared/api/generated/GenomeN
 import MyVariantInfo from "shared/components/annotation/genomeNexus/MyVariantInfo.tsx";
 import { Mutation, DiscreteCopyNumberData } from "shared/api/generated/CBioPortalAPI";
 
-interface IDbSNPData {
+interface IDbsnpData {
     myVariantInfo: MyVariantInfoData;
 }
-export default class DbSNPColumnFormatter
+export default class DbsnpColumnFormatter
 {
-    private static getData(genomeNexusData: GenomeNexusCacheDataType | null): IDbSNPData | null {
+    private static getData(genomeNexusData: GenomeNexusCacheDataType | null): IDbsnpData | null {
         if (genomeNexusData === null ||
             genomeNexusData.status === "error" ||
             genomeNexusData.data === null) {
@@ -22,7 +22,7 @@ export default class DbSNPColumnFormatter
         return {myVariantInfo};
     }
     public static renderFunction(data: Mutation[], genomeNexusCache: GenomeNexusCache) {
-        const genomeNexusData = DbSNPColumnFormatter.getGenomeNexusData(data, genomeNexusCache);
+        const genomeNexusData = this.getGenomeNexusData(data, genomeNexusCache);
         return (
             <div>
                 {genomeNexusData}
@@ -30,15 +30,15 @@ export default class DbSNPColumnFormatter
         );
     }
     public static download(data: Mutation[], genomeNexusCache: GenomeNexusCache): string {
-        const genomeNexusData = DbSNPColumnFormatter.getGenomeNexusData(data, genomeNexusCache);
-        const dbSNPData = DbSNPColumnFormatter.getData(genomeNexusData);
+        const genomeNexusData = this.getGenomeNexusData(data, genomeNexusCache);
+        const dbsnpData = this.getData(genomeNexusData);
 
-        if (!dbSNPData) {
+        if (!dbsnpData) {
             return "";
         }
 
         return [
-            `MyVariantInfo: ${MyVariantInfo.download(dbSNPData.myVariantInfo)}`
+            `MyVariantInfo: ${MyVariantInfo.download(dbsnpData.myVariantInfo)}`
         ].join(";");
     }
 

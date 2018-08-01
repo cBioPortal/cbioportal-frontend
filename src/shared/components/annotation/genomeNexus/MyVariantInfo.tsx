@@ -12,7 +12,7 @@ export default class MyVariantInfo extends React.Component<IMyVariantInfoProps, 
     public static download(myVariantInfoData: MyVariantInfoData|undefined): string
     {
         if (myVariantInfoData) {
-            return `rsid: ${myVariantInfoData.dbsnp.rsid}`;
+            return `dbsnp: ${myVariantInfoData.dbsnp.rsid}`;
         }
         else {
             return "Error";
@@ -23,8 +23,7 @@ export default class MyVariantInfo extends React.Component<IMyVariantInfoProps, 
         let mviContent: JSX.Element = (
             <span className={`${annotationStyles["annotation-item-text"]}`}/>
         )
-        if (this.props.myVariantInfo && this.props.myVariantInfo.dbsnp !== null) {
-            const mviData = this.props.myVariantInfo;
+        if (this.props.myVariantInfo.dbsnp && this.props.myVariantInfo.dbsnp.rsid !== null) {
             mviContent = (
                 <span className={classNames(annotationStyles["annotation-item-text"])}>
                 </span>
