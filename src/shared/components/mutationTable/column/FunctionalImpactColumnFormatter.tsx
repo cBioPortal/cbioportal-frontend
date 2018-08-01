@@ -1,19 +1,19 @@
-import * as React from 'react';
-import {Circle} from "better-react-spinkit";
+import { Circle } from "better-react-spinkit";
 import classNames from 'classnames';
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import 'rc-tooltip/assets/bootstrap_white.css';
-import GenomeNexusCache, {GenomeNexusCacheDataType} from "shared/cache/GenomeNexusEnrichment";
-import {Mutation, DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
-import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
+import * as React from 'react';
+import { Mutation } from "shared/api/generated/CBioPortalAPI";
+import { MutationAssessor as MutationAssessorData } from 'shared/api/generated/GenomeNexusAPIInternal';
+import GenomeNexusCache, { GenomeNexusCacheDataType } from "shared/cache/GenomeNexusEnrichment";
 import MutationAssessor from "shared/components/annotation/genomeNexus/MutationAssessor";
-import {MutationAssessor as MutationAssessorData} from 'shared/api/generated/GenomeNexusAPIInternal';
-import Sift from "shared/components/annotation/genomeNexus/Sift";
 import PolyPhen2 from "shared/components/annotation/genomeNexus/PolyPhen2";
-import siftStyles from "shared/components/annotation/genomeNexus/styles/siftTooltip.module.scss";
-import polyPhen2Styles from "shared/components/annotation/genomeNexus/styles/polyPhen2Tooltip.module.scss";
+import Sift from "shared/components/annotation/genomeNexus/Sift";
 import mutationAssessorStyles from "shared/components/annotation/genomeNexus/styles/mutationAssessorColumn.module.scss";
+import polyPhen2Styles from "shared/components/annotation/genomeNexus/styles/polyPhen2Tooltip.module.scss";
+import siftStyles from "shared/components/annotation/genomeNexus/styles/siftTooltip.module.scss";
 import annotationStyles from "shared/components/annotation/styles/annotation.module.scss";
+import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import { default as TableCellStatusIndicator, TableCellStatus } from "shared/components/TableCellStatus";
 
 
 type FunctionalImpactColumnTooltipProps = {

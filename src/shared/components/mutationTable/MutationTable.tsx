@@ -28,7 +28,7 @@ import CancerTypeColumnFormatter from "./column/CancerTypeColumnFormatter";
 import ChromosomeColumnFormatter from "./column/ChromosomeColumnFormatter";
 import CohortColumnFormatter from "./column/CohortColumnFormatter";
 import CosmicColumnFormatter from "./column/CosmicColumnFormatter";
-import DbSNPColumnFormatter from "./column/DbSNPColumnFormatter"
+import DbsnpColumnFormatter from "./column/DbsnpColumnFormatter"
 import DiscreteCNAColumnFormatter from "./column/DiscreteCNAColumnFormatter";
 import FunctionalImpactColumnFormatter from "./column/FunctionalImpactColumnFormatter";
 import GeneColumnFormatter from "./column/GeneColumnFormatter";
@@ -61,7 +61,7 @@ export interface IMutationTableProps {
     enableHotspot?: boolean;
     enableCivic?: boolean;
     enableFunctionalImpact?: boolean;
-    enableDbSNP?: boolean;
+    enableDbsnp?: boolean;
     myCancerGenomeData?: IMyCancerGenomeData;
     hotspotData?: IHotspotDataWrapper;
     cosmicData?:ICosmicData;
@@ -495,13 +495,14 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         };
 
         this._columns[MutationTableColumnType.DBSNP] = {
-        name: "RSID",
-        render: (d: Mutation[]) => (this.props.genomeNexusEnrichmentCache
-            ? DbSNPColumnFormatter.renderFunction(d, this.props.genomeNexusEnrichmentCache as GenomeNexusEnrichmentCache)
-            : (<span></span>)),
-        download: (d: Mutation[]) => DbSNPColumnFormatter.download(
-            d, this.props.genomeNexusEnrichmentCache as GenomeNexusEnrichmentCache)
-            };
+            name: "RSID",
+            render: (d: Mutation[]) => (this.props.genomeNexusEnrichmentCache
+                ? DbsnpColumnFormatter.renderFunction(d, this.props.genomeNexusEnrichmentCache as GenomeNexusEnrichmentCache)
+                : (<span></span>)),
+            download: (d: Mutation[]) => DbsnpColumnFormatter.download(
+                d, this.props.genomeNexusEnrichmentCache as GenomeNexusEnrichmentCache),
+            visible: false
+        };
     }
 
     @computed protected get orderedColumns(): MutationTableColumnType[] {
