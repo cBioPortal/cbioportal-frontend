@@ -1,5 +1,8 @@
 import * as _ from 'lodash';
-import {Query, EvidenceQueries, EvidenceQueryRes, Evidence, IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
+import {
+    Citations, Evidence, EvidenceQueries, EvidenceQueryRes, IndicatorQueryResp,
+    Query
+} from "shared/api/generated/OncoKbAPI";
 
 /**
  * @author Selcuk Onur Sumer
@@ -67,10 +70,10 @@ export function generateIdToIndicatorMap(data:IndicatorQueryResp[]): {[queryId:s
     return map;
 }
 
-export function generateEvidenceQuery(queryVariants:Query[]): EvidenceQueries
+export function generateEvidenceQuery(queryVariants:Query[], evidenceTypes:string): EvidenceQueries
 {
     return {
-        evidenceTypes: "GENE_SUMMARY,GENE_BACKGROUND,ONCOGENIC,MUTATION_EFFECT,VUS,MUTATION_SUMMARY,TUMOR_TYPE_SUMMARY,STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY,STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE",
+        evidenceTypes: evidenceTypes ? evidenceTypes : "GENE_SUMMARY,GENE_BACKGROUND,ONCOGENIC,MUTATION_EFFECT,VUS,MUTATION_SUMMARY,TUMOR_TYPE_SUMMARY,STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY,STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE",
         highestLevelOnly: false,
         levels: ['LEVEL_1', 'LEVEL_2A', 'LEVEL_2B', 'LEVEL_3A', 'LEVEL_3B', 'LEVEL_4', 'LEVEL_R1'],
         queries: queryVariants,
@@ -124,23 +127,6 @@ export function generateQueryVariantId(entrezGeneId:number,
 export function extractPmids(evidence:any)
 {
     let refs:number[] = [];
-
-    if (evidence.mutationEffect &&
-        evidence.mutationEffect.refs &&
-        evidence.mutationEffect.refs.length > 0)
-    {
-        refs = refs.concat(evidence.mutationEffect.refs.map((article:any) => {
-            return Number(article.pmid);
-        }));
-    }
-
-    if (evidence.oncogenicRefs &&
-        evidence.oncogenicRefs.length > 0)
-    {
-        refs = refs.concat(evidence.oncogenicRefs.map((article:any) => {
-            return Number(article.pmid);
-        }));
-    }
 
     if (evidence.treatments &&
         _.isArray(evidence.treatments.sensitivity))
@@ -391,14 +377,6 @@ export function generateOncogenicCitations(oncogenicRefs:any):number[]
 {
     return _.isArray(oncogenicRefs) ?
         _.map(oncogenicRefs, (article:any) => {
-            return Number(article.pmid);
-        }).sort() : [];
-}
-
-export function generateMutationEffectCitations(mutationEffectRefs:any):number[]
-{
-    return _.isArray(mutationEffectRefs) ?
-        _.map(mutationEffectRefs, (article:any) => {
             return Number(article.pmid);
         }).sort() : [];
 }
