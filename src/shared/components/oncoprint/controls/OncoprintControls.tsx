@@ -359,21 +359,22 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
 
     @computed get clinicalTrackOptions() {
         if (this.props.state.clinicalAttributesPromise &&
-            this.props.state.clinicalAttributesPromise.result &&
+            this.props.state.clinicalAttributesPromise.result /*&&
             this.props.state.clinicalAttributeSampleCountPromise &&
-            this.props.state.clinicalAttributeSampleCountPromise.result
+            this.props.state.clinicalAttributeSampleCountPromise.result*/
         ) {
-            const clinicalAttributeIdToAvailableSampleCount = this.props.state.clinicalAttributeSampleCountPromise.result;
+            //const clinicalAttributeIdToAvailableSampleCount = this.props.state.clinicalAttributeSampleCountPromise.result;
             return _.reduce(this.props.state.clinicalAttributesPromise.result, (options:{label:string, value:string}[], next:ClinicalAttribute)=>{
-                const sampleCount = clinicalAttributeIdToAvailableSampleCount[next.clinicalAttributeId];
+                //const sampleCount = clinicalAttributeIdToAvailableSampleCount[next.clinicalAttributeId];
                 const newOption = {
-                    label: `${next.displayName} (${getPercentage(sampleCount/this.props.state.sampleCount, 0)})`,
+                    //label: `${next.displayName} (${getPercentage(sampleCount/this.props.state.sampleCount, 0)})`,
+                    label: next.displayName,
                     value: next.clinicalAttributeId,
                     disabled: false
                 };
-                if (sampleCount === 0) {
+                /*if (sampleCount === 0) {
                     newOption.disabled = true;
-                }
+                }*/
                 options.push(newOption);
                 return options;
             }, []);
