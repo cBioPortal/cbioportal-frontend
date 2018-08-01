@@ -165,23 +165,17 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         const x = this.legendX;
         return (
             <g>
-                <text
-                    x={x + approxTextWidth}
-                    y={CORRELATION_INFO_Y}
-                    fontFamily={this.fontFamily}
-                    textAnchor="end"
-                >
-                    {`Pearson: ${(this.props.correlation ? this.props.correlation.pearson : this.pearsonCorr).toFixed(2)}`}
-                </text>
-                <text
-                    x={x + approxTextWidth}
-                    y={CORRELATION_INFO_Y}
-                    fontFamily={this.fontFamily}
-                    textAnchor="end"
-                    dy="1.2em"
-                >
-                    {`Spearman: ${(this.props.correlation ? this.props.correlation.spearman : this.spearmanCorr).toFixed(2)}`}
-                </text>
+                <VictoryLabel  x={x + approxTextWidth}
+                               y={CORRELATION_INFO_Y}
+                               textAnchor="end"
+                               text={`Pearson: ${(this.props.correlation ? this.props.correlation.pearson : this.pearsonCorr).toFixed(2)}`}
+                ></VictoryLabel>
+                <VictoryLabel  x={x + approxTextWidth}
+                               y={CORRELATION_INFO_Y}
+                               textAnchor="end"
+                               dy="2"
+                               text={`Spearman: ${(this.props.correlation ? this.props.correlation.spearman : this.spearmanCorr).toFixed(2)}`}
+                ></VictoryLabel>
             </g>
         );
     }
@@ -348,7 +342,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                                     tickCount={NUM_AXIS_TICKS}
                                     tickFormat={this.tickFormatY}
                                     dependentAxis={true}
-                                    axisLabelComponent={<VictoryLabel dy={-50}/>}
+                                    axisLabelComponent={<VictoryLabel dy={-35}/>}
                                     label={this.props.axisLabelY}
                                 />
                                 <VictoryScatter
