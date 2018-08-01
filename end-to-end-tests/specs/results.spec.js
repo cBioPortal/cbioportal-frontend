@@ -177,8 +177,7 @@ describe('Results Page', function() {
             browser.waitForVisible('.borderedChart svg',10000);
             assert(!browser.isExisting(bannerSelector));
         });
-        it("should be present in mutations tab with explicit query", function(){:q
-
+        it("should be present in mutations tab with explicit query", function(){
             goToUrlAndSetLocalStorage(`${explicitOqlQueryUrl}#mutation_details`);
             browser.waitForExist(bannerSelector, 10000);
             assert(browser.isExisting(bannerSelector));
