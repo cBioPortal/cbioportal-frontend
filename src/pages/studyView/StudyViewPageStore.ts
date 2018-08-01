@@ -44,12 +44,6 @@ export enum ChartType {
     CNA_GENES_TABLE = 'CNA_GENES_TABLE'
 }
 
-export const SpecialChartUniqueKey: { [id: string]: string } = {
-    MUTATED_GENES_TABLE: 'MUTATED_GENES_TABLE',
-    CNA_GENES_TABLE: 'CNA_GENES_TABLE',
-    MUTATION_COUNT_CNA_FRACTION: 'MUTATION_COUNT_CNA_FRACTION'
-};
-
 export type ClinicalDataCountWithColor = ClinicalDataCount & { color: string }
 export type MutatedGenesData = MutationCountByGene[];
 export type CNAGenesData = CopyNumberCountByGene[];
@@ -328,8 +322,8 @@ export class StudyViewPageStore {
         }, _chartMetaSet);
 
         if (!_.isEmpty(this.mutationProfiles.result!)) {
-            _chartMetaSet[SpecialChartUniqueKey.MUTATED_GENES_TABLE] = {
-                uniqueKey: SpecialChartUniqueKey.MUTATED_GENES_TABLE,
+            _chartMetaSet['MUTATED_GENES_TABLE'] = {
+                uniqueKey: 'MUTATED_GENES_TABLE',
                 chartType: ChartType.MUTATED_GENES_TABLE,
                 displayName: 'Mutated Genes',
                 description: ''
@@ -337,16 +331,16 @@ export class StudyViewPageStore {
         }
 
         if (!_.isEmpty(this.cnaProfileIds)) {
-            _chartMetaSet[SpecialChartUniqueKey.CNA_GENES_TABLE] = {
-                uniqueKey: SpecialChartUniqueKey.CNA_GENES_TABLE,
+            _chartMetaSet['CNA_GENES_TABLE'] = {
+                uniqueKey: 'CNA_GENES_TABLE',
                 chartType: ChartType.CNA_GENES_TABLE,
                 displayName: 'CNA Genes',
                 description: ''
             };
         }
 
-        _chartMetaSet[SpecialChartUniqueKey.MUTATION_COUNT_CNA_FRACTION] = {
-            uniqueKey: SpecialChartUniqueKey.MUTATION_COUNT_CNA_FRACTION,
+        _chartMetaSet['MUTATION_COUNT_CNA_FRACTION'] = {
+            uniqueKey: 'MUTATION_COUNT_CNA_FRACTION',
             chartType: ChartType.SCATTER,
             displayName: 'Mutation count Vs. CNA',
             description: ''
