@@ -88,6 +88,10 @@ export function annotateMutation(mutation: Mutation,
 
         if (canonicalTranscript) {
             annotatedMutation.proteinChange = annotatedMutation.proteinChange || canonicalTranscript.hgvspShort;
+            // remove p. prefix if exists
+            if (annotatedMutation.proteinChange) {
+                annotatedMutation.proteinChange = annotatedMutation.proteinChange.replace(/^p./,"");
+            }
             annotatedMutation.mutationType = annotatedMutation.mutationType || canonicalTranscript.variantClassification;
 
             if (canonicalTranscript.proteinPosition) {
