@@ -1314,7 +1314,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         return (
             <div data-test="PlotsTabEntireDiv">
                 <div style={{marginBottom:10, marginTop:7, marginLeft:11.5}}>
-                    {NoOqlWarning}
+                    <NoOqlWarning store={this.props.store}/>
                 </div>
                 <div className={"plotsTab"} style={{display:"flex", flexDirection:"row", maxWidth:"inherit"}}>
                     <div className="leftColumn">

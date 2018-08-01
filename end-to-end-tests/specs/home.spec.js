@@ -1330,7 +1330,7 @@ describe('genetic profile selection in modify query form', function(){
     beforeEach(function(){
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=chol_tcga&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=chol_tcga_all&gene_list=EGFR&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=chol_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=chol_tcga_gistic&genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION=chol_tcga_rppa_Zscores`;
         goToUrlAndSetLocalStorage(url);
-        browser.waitForExist("#modifyQueryBtn", 60000)
+        browser.waitForExist("#modifyQueryBtn", 20000)
     });
 
     it('contains correct selected genetic profiles through a certain use flow involving two studies', ()=>{
