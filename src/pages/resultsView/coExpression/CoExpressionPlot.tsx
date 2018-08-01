@@ -272,11 +272,10 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
 
                 <DownloadControls
                     getSvg={this.getSvg}
-                    buttons={["SVG", "PDF"]}
                     filename="coexpression"
                     dontFade={true}
                     collapse={true}
-                    style={{position:"absolute", top:10, right:10}}
+                    style={{position:"absolute", top:0, right:0}}
                 />
 
             </div>
