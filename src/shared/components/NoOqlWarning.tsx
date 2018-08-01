@@ -6,7 +6,7 @@ const NoOqlWarning = (
     <span style={{color:"#74bedb", fontFamily:"arial", fontSize:"13px", fontWeight:"bold"}}>
         <span style={{marginRight:4, verticalAlign:"middle"}}>
             <i
-                className="glyphicon glyphicon-info-sign"
+                className="fa fa-md fa-info-circle"
             />
         </span>
         This tab does not reflect the OQL specification from your query.
