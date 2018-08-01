@@ -2,7 +2,7 @@ import * as React from "react";
 import {action, computed, observable} from "mobx";
 import {Observer, observer} from "mobx-react";
 import "./styles.scss";
-import {AlterationTypeConstants, ResultsViewPageStore} from "../ResultsViewPageStore";
+import {AlterationTypeConstants, DataTypeConstants, ResultsViewPageStore} from "../ResultsViewPageStore";
 import {FormControl} from "react-bootstrap";
 import LockIcon from "../../../shared/components/LockIcon";
 import ReactSelect from "react-select";
@@ -135,7 +135,21 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
         if (this.sameGeneInBothAxes) {
             // both axes molecular profile, same gene
-            return ViewType.MutationTypeAndCopyNumber;
+            const profileIdToProfile = this.props.store.molecularProfileIdToMolecularProfile;
+            if (!profileIdToProfile.isComplete) {
+                return ViewType.None;
+            } else {
+                const horzProfile = profileIdToProfile.result[this.horzSelection.dataSourceId!];
+                const vertProfile = profileIdToProfile.result[this.vertSelection.dataSourceId!];
+                if ((horzProfile && horzProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && horzProfile.datatype === DataTypeConstants.DISCRETE) ||
+                    (vertProfile && vertProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && vertProfile.datatype === DataTypeConstants.DISCRETE)) {
+                    // if theres a discrete cna profile, redundant to allow showing cna
+                    return ViewType.MutationType;
+                } else {
+                    // otherwise, show either one
+                    return ViewType.MutationTypeAndCopyNumber;
+                }
+            }
         } else if (this.bothAxesMolecularProfile) {
             // both axes molecular profile, different gene
             return ViewType.MutationSummary;
