@@ -9,3 +9,14 @@ export interface IMutationalSignature {
     confidence: number;
 }
 
+export interface IMutationalSignatureMeta{
+    mutationalSignatureId: string;
+    description: string;
+    confidenceStatement: string;
+}
+
+interface ISignificantMutationalSignaturesBySample{
+    uniqueSampleKey: string;
+    numberOfMutations: number;
+    confidenceStatement: string;
+}
