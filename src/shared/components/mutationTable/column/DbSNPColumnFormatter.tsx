@@ -53,26 +53,26 @@ export default class DbsnpColumnFormatter
     }
 
     private static makeDbsnpViz(genomeNexusData:GenomeNexusCacheDataType | null) {
-    let status:TableCellStatus | null = null;
+        let status:TableCellStatus | null = null;
 
-    if (genomeNexusData === null) {
-        status = TableCellStatus.LOADING;
-    } else if (genomeNexusData.status === "error") {
-        status = TableCellStatus.ERROR;
-    } else if (genomeNexusData.data === null) {
-        status = TableCellStatus.NA;
-    } else {
-        const dbsnpData = this.getData(genomeNexusData);
+        if (genomeNexusData === null) {
+            status = TableCellStatus.LOADING;
+        } else if (genomeNexusData.status === "error") {
+            status = TableCellStatus.ERROR;
+        } else if (genomeNexusData.data === null) {
+            status = TableCellStatus.NA;
+        } else {
+            const dbsnpData = this.getData(genomeNexusData);
 
-        return dbsnpData && (
-            <div>
-                
-                <MyVariantInfo
-                    myVariantInfo={dbsnpData.myVariantInfo}>
-                </MyVariantInfo>
+            return dbsnpData && (
+                <div>
+                    
+                    <MyVariantInfo
+                        myVariantInfo={dbsnpData.myVariantInfo}>
+                    </MyVariantInfo>
 
-            </div>
-        );
+                </div>
+            );
         }
     }
 }

@@ -349,8 +349,6 @@ export type Mutation = {
         'referenceAllele': string
 
         'refseqMrnaId': string
-        
-        'rsid': string
 
         'sampleId': string
 

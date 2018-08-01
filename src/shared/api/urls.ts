@@ -82,7 +82,8 @@ export function getOncoKbApiUrl() {
 
 }
 export function getGenomeNexusApiUrl() {
-    let url = AppConfig.genomeNexusApiUrl;
+    return 'http://localhost:38080'
+    /*let url = AppConfig.genomeNexusApiUrl;
     if (typeof url === 'string') {
         // use url if https, otherwise use proxy
         if (url.startsWith('https://')) {
@@ -95,7 +96,7 @@ export function getGenomeNexusApiUrl() {
         }
     } else {
         return undefined;
-    }
+    }*/
 }
 
 export function getSessionServiceApiUrl() {

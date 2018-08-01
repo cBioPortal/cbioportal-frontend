@@ -40,7 +40,6 @@ export function emptyMutation(): Mutation
         proteinPosStart: -1,
         referenceAllele: "",
         refseqMrnaId: "",
-        rsid: "",
         sampleId: "",
         patientId: "",
         studyId: "",
