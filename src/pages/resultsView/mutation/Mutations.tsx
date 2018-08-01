@@ -36,7 +36,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
         return (
             <div>
                 <div style={{marginTop:-4, marginLeft:-3}}>
-                    {NoOqlWarning}
+                    <NoOqlWarning store={this.props.store}/>
                 </div>
                 <Loader isLoading={this.props.store.mutationMapperStores.isPending} />
                 {(this.props.store.mutationMapperStores.isComplete) && (
