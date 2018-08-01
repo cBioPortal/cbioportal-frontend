@@ -318,8 +318,6 @@ describe("plots tab screenshot tests", function() {
     it("plots tab molecular vs molecular same gene", function() {
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "MRNA_EXPRESSION" }); });
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "brca_tcga_mrna" }); });
-        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "MRNA_EXPRESSION" }); });
-        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "brca_tcga_mrna" }); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab molecular vs molecular same gene changed gene", function() {
@@ -337,6 +335,7 @@ describe("plots tab screenshot tests", function() {
         waitForAndCheckPlotsTab();
     });
     it("plots tab molecular vs molecular different genes different profiles", function() {
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "MRNA_EXPRESSION" }); });
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "brca_tcga_rna_seq_v2_mrna" }); });
         waitForAndCheckPlotsTab();
     });
