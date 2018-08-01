@@ -947,7 +947,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 placeholder="Case ID.."
                             />
                         </div>
-                        {this.mutationDataShown && (
+                        {this.mutationDataExists && (
                             <div className="form-group">
                                 <label>Search Mutation(s)</label>
                                 <FormControl
