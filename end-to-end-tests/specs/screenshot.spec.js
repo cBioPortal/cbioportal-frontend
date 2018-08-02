@@ -317,7 +317,7 @@ describe("plots tab screenshot tests", function() {
         waitForAndCheckPlotsTab();
     });
     it("plots tab molecular vs molecular same gene changed gene", function() {
-        browser.execute(function() { resultsViewPlotsTab.onGeneSelect(true, 4193); });
+        browser.execute(function() { resultsViewPlotsTab.test__selectGeneOption(false, 4193); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab copy number view", function() {
@@ -325,8 +325,7 @@ describe("plots tab screenshot tests", function() {
         waitForAndCheckPlotsTab();
     });
     it("plots tab molecular vs molecular different genes", function() {
-        browser.click('[data-test="HorizontalAxisGeneLockButton"]');
-        browser.execute(function() { resultsViewPlotsTab.onGeneSelect(false, 7157); });
+        browser.execute(function() { resultsViewPlotsTab.test__selectGeneOption(true, 7157); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab molecular vs molecular different genes different profiles", function() {
