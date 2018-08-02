@@ -986,7 +986,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                         checked={this.viewMutationType}
                                         onClick={this.onInputClick}
                                         disabled={!this.mutationDataExists.isComplete || !this.mutationDataExists.result}
-                                    /> Mutation Type
+                                    /> Mutation Type *
                                 </label></div>
                             )}
                             {(this.maximumPossibleViewType === ViewType.MutationTypeAndCopyNumber && this.cnaDataExists.result) && (
@@ -1285,36 +1285,29 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             }
             const legendY = (plotType === PlotType.ScatterPlot ? SCATTERPLOT_LEGEND_Y : BOXPLOT_LEGEND_Y);
             return (
-                <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative inlineBlock" style={{position: "relative"}}>
-                    <div style={{display:"flex", flexDirection:"row"}}>
-                    {this.plotExists && (
-                        <DownloadControls
-                            getSvg={this.getSvg}
-                            filename={this.downloadFilename}
-                            buttons={["SVG", "PDF"]}
-                            additionalRightButtons={[{
-                                key:"Data",
-                                content:<span>Data <i className="fa fa-cloud-download" aria-hidden="true"/></span>,
-                                onClick:this.downloadData,
-                                disabled: !this.props.store.entrezGeneIdToGene.isComplete
-                            }]}
-                            dontFade={true}
-                            style={{position:'absolute', right:10, top:10 }}
-                            collapse={true}
-                        />
-                    )}
-                        {plotElt}
-                        { this.plotExists && // only show info if theres an actual plot
-                        (plotType === PlotType.ScatterPlot || plotType === PlotType.BoxPlot) &&
-                        (this.viewType === ViewType.MutationType || this.viewType === ViewType.MutationTypeAndCopyNumber) && (
-                            <div style={{position:"relative", top:legendY + 3.5}}>
-                                <InfoIcon
-                                    tooltip={<span>Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</span>}
-                                    tooltipPlacement="right"
-                                />
-                            </div>
+                <div>
+                    <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative inlineBlock" style={{position: "relative"}}>
+                        <div style={{display:"flex", flexDirection:"row"}}>
+                        {this.plotExists && (
+                            <DownloadControls
+                                getSvg={this.getSvg}
+                                filename={this.downloadFilename}
+                                buttons={["SVG", "PDF"]}
+                                additionalRightButtons={[{
+                                    key:"Data",
+                                    content:<span>Data <i className="fa fa-cloud-download" aria-hidden="true"/></span>,
+                                    onClick:this.downloadData,
+                                    disabled: !this.props.store.entrezGeneIdToGene.isComplete
+                                }]}
+                                dontFade={true}
+                                style={{position:'absolute', right:10, top:10 }}
+                                collapse={true}
+                            />
                         )}
+                            {plotElt}
+                        </div>
                     </div>
+                    <div style={{marginTop:5}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
                 </div>
             );
         }
