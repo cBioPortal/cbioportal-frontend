@@ -16,7 +16,7 @@ import {
     getCnaQueries, getMutationQueries, getScatterPlotDownloadData, getBoxPlotDownloadData, getTablePlotDownloadData,
     mutationRenderPriority, mutationSummaryRenderPriority, MutationSummary, mutationSummaryToAppearance,
     CNA_STROKE_WIDTH, scatterPlotSize, PLOT_SIDELENGTH, CLIN_ATTR_DATA_TYPE,
-    sortScatterPlotDataForZIndex
+    sortScatterPlotDataForZIndex, sortMolecularProfilesForDisplay
 } from "./PlotsTabUtils";
 import {
     ClinicalAttribute, MolecularProfile, Mutation,
@@ -510,11 +510,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 value: SpecialAttribute.FractionGenomeAltered,
                 label: "Fraction Genome Altered"
             });
-            this.props.store.clinicalAttributes.result!.map(attribute=>(
-                _clinicalAttributes.push({
+            _clinicalAttributes = _clinicalAttributes.concat(_.sortBy(this.props.store.clinicalAttributes.result!.map(attribute=>(
+                {
                     value: attribute.clinicalAttributeId,
                     label: attribute.displayName
-                })));
+                }
+            )), o=>o.label));
 
             // to load more quickly, only filter and annotate with data availability once its ready
             // TODO: temporarily disabled because cant figure out a way right now to make this work nicely
@@ -574,7 +575,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             const map = _.mapValues(
                 _.groupBy(profiles, profile=>profile.molecularAlterationType), // create a map from profile type to list of profiles of that type
                 profilesOfType=>(
-                    profilesOfType.map(p=>({value:p.molecularProfileId, label:p.name}))// create options out of those profiles
+                    sortMolecularProfilesForDisplay(profilesOfType).map(p=>({value:p.molecularProfileId, label:p.name}))// create options out of those profiles
                 )
             );
             if (this.clinicalAttributeOptions.result!.length) {
