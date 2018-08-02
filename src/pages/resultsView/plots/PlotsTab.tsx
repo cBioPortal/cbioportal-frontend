@@ -888,21 +888,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             <form>
                 <h4>{vertical ? "Vertical" : "Horizontal"} Axis</h4>
                 <div>
-                    <div className="form-group" style={{opacity:(axisSelection.dataType === CLIN_ATTR_DATA_TYPE ? 0.5 : 1)}}>
-                        <label>Gene</label>
-                        <div style={{display:"flex", flexDirection:"row"}}>
-                            <ReactSelect
-                                name={`${vertical ? "v" : "h"}-gene-selector`}
-                                value={axisSelection.selectedGeneOption ? axisSelection.selectedGeneOption.value : undefined}
-                                onChange={vertical ? this.onVerticalAxisGeneSelect : this.onHorizontalAxisGeneSelect}
-                                isLoading={this.horzGeneOptions.isPending}
-                                options={this.horzGeneOptions.isComplete ? (vertical ? this.vertGeneOptions : this.horzGeneOptions.result) : []}
-                                clearable={false}
-                                searchable={false}
-                                disabled={axisSelection.dataType === CLIN_ATTR_DATA_TYPE}
-                            />
-                        </div>
-                    </div>
                     <div className="form-group">
                         <label>Data Type</label>
                         <ReactSelect
@@ -940,6 +925,21 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             /> Apply Log Scale
                         </label></div>
                     )}
+                    <div className="form-group" style={{opacity:(axisSelection.dataType === CLIN_ATTR_DATA_TYPE ? 0.5 : 1)}}>
+                        <label>Gene</label>
+                        <div style={{display:"flex", flexDirection:"row"}}>
+                            <ReactSelect
+                                name={`${vertical ? "v" : "h"}-gene-selector`}
+                                value={axisSelection.selectedGeneOption ? axisSelection.selectedGeneOption.value : undefined}
+                                onChange={vertical ? this.onVerticalAxisGeneSelect : this.onHorizontalAxisGeneSelect}
+                                isLoading={this.horzGeneOptions.isPending}
+                                options={this.horzGeneOptions.isComplete ? (vertical ? this.vertGeneOptions : this.horzGeneOptions.result) : []}
+                                clearable={false}
+                                searchable={false}
+                                disabled={axisSelection.dataType === CLIN_ATTR_DATA_TYPE}
+                            />
+                        </div>
+                    </div>
                 </div>
             </form>
         );
