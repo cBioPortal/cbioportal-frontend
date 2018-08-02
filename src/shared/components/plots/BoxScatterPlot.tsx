@@ -61,7 +61,7 @@ type BoxModel = {
 const DEFAULT_FONT_FAMILY = "Verdana,Arial,sans-serif";
 const RIGHT_GUTTER = 120; // room for legend
 const NUM_AXIS_TICKS = 8;
-const PLOT_DATA_PADDING_PIXELS = 50;
+const PLOT_DATA_PADDING_PIXELS = 100;
 export const LEGEND_Y = 100; // experimentally determined
 const MIN_LOG_ARGUMENT = 0.01;
 const CATEGORY_LABEL_HORZ_ANGLE = -70;
@@ -214,7 +214,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         }
         let x:number[], y:number[];
         const dataDomain = [min, max];
-        const categoryDomain = [0, this.categoryCoord(this.props.data.length)];
+        const categoryDomain = [this.categoryCoord(0), this.categoryCoord(Math.max(0, this.props.data.length - 1))];
         if (this.props.horizontal) {
             x = dataDomain;
             y = categoryDomain;
@@ -242,7 +242,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     @computed get boxSeparation() {
-        return 0.4*this.boxWidth;
+        return 0.5*this.boxWidth;
     }
 
     @computed get boxWidth() {
@@ -383,7 +383,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     private categoryCoord(index:number) {
-        return (index + 1) * this.boxSeparation;
+        return index * this.boxSeparation;
     }
 
     @computed get categoryTickValues() {
@@ -457,6 +457,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                                 standalone={false}
                                 domainPadding={PLOT_DATA_PADDING_PIXELS}
                                 domain={this.plotDomain}
+                                singleQuadrantDomainPadding={false}
                             >
                                 {this.title}
                                 {this.legend}
