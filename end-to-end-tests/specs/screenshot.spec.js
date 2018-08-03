@@ -98,7 +98,6 @@ function runResultsTestSuite(prefix){
         var res = browser.checkElement('#data_download',{hide:['.qtip'] });
         assertScreenShotMatch(res);
     });
-
 }
 
 describe('result page screenshot tests', function(){
@@ -109,6 +108,15 @@ describe('result page screenshot tests', function(){
 
     runResultsTestSuite('no session')
 
+});
+
+describe('expression tab', function() {
+    it("expression tab with complex oql", ()=>{
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=TP53%253AMUT%253B&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=acc_tcga%2Cchol_tcga%2Cesca_tcga#cc-plots`);
+        browser.waitForExist(".borderedChart svg", 10000);
+        var res = browser.checkElement("div#cc-plots");
+        assertScreenShotMatch(res);
+    });
 });
 
 describe("oncoprint screenshot tests", function() {
