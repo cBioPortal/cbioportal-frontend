@@ -1169,12 +1169,8 @@ export function getCnaQueries(
 
 export function getMutationQueries(
     horzSelection:AxisMenuSelection,
-    vertSelection:AxisMenuSelection,
-    mutationDataShown:boolean
+    vertSelection:AxisMenuSelection
 ) {
-    if (!mutationDataShown) {
-        return [];
-    }
     const queries:{entrezGeneId:number}[] = [];
     let horzEntrezGeneId:number | undefined = undefined;
     if (horzSelection.dataType !== CLIN_ATTR_DATA_TYPE &&
