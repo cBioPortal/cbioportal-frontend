@@ -57,6 +57,13 @@ export enum ViewType {
     None
 }
 
+export enum PotentialViewType {
+    MutationTypeAndCopyNumber,
+    MutationType,
+    MutationSummary,
+    None
+}
+
 export enum PlotType {
     ScatterPlot,
     BoxPlot,
@@ -107,8 +114,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @computed get viewType():ViewType {
         let ret:ViewType = ViewType.None;
-        switch (this.maximumPossibleViewType) {
-            case ViewType.MutationTypeAndCopyNumber:
+        switch (this.potentialViewType) {
+            case PotentialViewType.MutationTypeAndCopyNumber:
                 if (this.viewMutationType && this.viewCopyNumber) {
                     ret = ViewType.MutationTypeAndCopyNumber;
                 } else if (this.viewMutationType) {
@@ -119,14 +126,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     ret = ViewType.None;
                 }
                 break;
-            case ViewType.MutationSummary:
+            case PotentialViewType.MutationSummary:
                 if (this.viewMutationType) {
                     ret = ViewType.MutationSummary;
                 } else {
                     ret = ViewType.None;
                 }
                 break;
-            case ViewType.MutationType:
+            case PotentialViewType.MutationType:
                 if (this.viewMutationType) {
                     ret = ViewType.MutationType;
                 } else {
@@ -137,38 +144,38 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         return ret;
     }
 
-    @computed get maximumPossibleViewType():ViewType {
+    @computed get potentialViewType():PotentialViewType {
         if (this.plotType.result === PlotType.Table) {
             // cant show either in table
-            return ViewType.None;
+            return PotentialViewType.None;
         }
         if (this.sameGeneInBothAxes) {
             // both axes molecular profile, same gene
             const profileIdToProfile = this.props.store.molecularProfileIdToMolecularProfile;
             if (!profileIdToProfile.isComplete) {
-                return ViewType.None;
+                return PotentialViewType.None;
             } else {
                 const horzProfile = profileIdToProfile.result[this.horzSelection.dataSourceId!];
                 const vertProfile = profileIdToProfile.result[this.vertSelection.dataSourceId!];
                 if ((horzProfile && horzProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && horzProfile.datatype === DataTypeConstants.DISCRETE) ||
                     (vertProfile && vertProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && vertProfile.datatype === DataTypeConstants.DISCRETE)) {
                     // if theres a discrete cna profile, redundant to allow showing cna
-                    return ViewType.MutationType;
+                    return PotentialViewType.MutationType;
                 } else {
                     // otherwise, show either one
-                    return ViewType.MutationTypeAndCopyNumber;
+                    return PotentialViewType.MutationTypeAndCopyNumber;
                 }
             }
         } else if (this.bothAxesMolecularProfile) {
             // both axes molecular profile, different gene
-            return ViewType.MutationSummary;
+            return PotentialViewType.MutationSummary;
         } else if (this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE ||
             this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
             // one axis molecular profile
-            return ViewType.MutationTypeAndCopyNumber;
+            return PotentialViewType.MutationTypeAndCopyNumber;
         } else {
             // neither axis gene
-            return ViewType.None;
+            return PotentialViewType.None;
         }
     }
 
@@ -930,7 +937,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @autobind
     private getUtilitiesMenu() {
         const showTopPart = this.plotType.isComplete && this.plotType.result !== PlotType.Table;
-        const showBottomPart = this.maximumPossibleViewType !== ViewType.None;
+        const showBottomPart = this.potentialViewType !== PotentialViewType.None;
         if (!showTopPart && !showBottomPart) {
             return <span></span>;
         }
@@ -964,7 +971,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     {showBottomPart && (
                         <div>
                             <label>Color Samples By</label>
-                            {(this.maximumPossibleViewType !== ViewType.None && this.mutationDataExists.result) && (
+                            {(this.potentialViewType !== PotentialViewType.None && this.mutationDataExists.result) && (
                                 <div className="checkbox"><label>
                                     <input
                                         data-test="ViewMutationType"
@@ -977,7 +984,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     /> Mutation Type *
                                 </label></div>
                             )}
-                            {(this.maximumPossibleViewType === ViewType.MutationTypeAndCopyNumber && this.cnaDataExists.result) && (
+                            {(this.potentialViewType === PotentialViewType.MutationTypeAndCopyNumber && this.cnaDataExists.result) && (
                                 <div className="checkbox"><label>
                                     <input
                                         data-test="ViewCopyNumber"
