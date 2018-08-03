@@ -31,8 +31,11 @@ import {sleep} from "../../../shared/lib/TimeUtils";
 import {mutationRenderPriority} from "../plots/PlotsTabUtils";
 import {getOncoprintMutationType} from "../../../shared/components/oncoprint/DataUtils";
 import {getSampleViewUrl} from "../../../shared/api/urls";
+import {ResultsViewPageStore} from "../ResultsViewPageStore";
+import NoOqlWarning from "../../../shared/components/NoOqlWarning";
 
 export interface ExpressionWrapperProps {
+    store:ResultsViewPageStore;
     studyMap: { [studyId: string]: CancerStudy };
     genes: Gene[];
     data: { [hugeGeneSymbol: string]: NumericGeneMolecularData[][] };
@@ -674,6 +677,9 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     render() {
         return (
             <div>
+                <div style={{marginBottom:10, marginLeft:-2, marginTop:-2}}>
+                    <NoOqlWarning store={this.props.store}/>
+                </div>
                 { (this.studySelectorModalVisible) && this.studySelectionModal }
                 <div style={{marginBottom:15}}>
 
