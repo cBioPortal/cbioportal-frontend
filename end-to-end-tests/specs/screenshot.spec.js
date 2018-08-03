@@ -392,6 +392,15 @@ describe("plots tab screenshot tests", function() {
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "COPY_NUMBER_ALTERATION" }); });
         waitForAndCheckPlotsTab();
     });
+
+
+    it("plots tab one box clinical vs clinical boxplot", function() {
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=lgg_ucsf_2014&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=lgg_ucsf_2014_sequenced&gene_list=SMARCA4%2520CIC&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=lgg_ucsf_2014_mutations&show_samples=true&clinicallist=MUTATION_COUNT#plots`);
+        browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 20000);
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "clinical_attribute" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "CANCER_TYPE" }); });
+        waitForAndCheckPlotsTab();
+    });
 });
 
 describe('result page tabs, loading from session id', function(){
