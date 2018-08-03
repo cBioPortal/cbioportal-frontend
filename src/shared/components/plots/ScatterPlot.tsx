@@ -197,7 +197,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
     }
 
     @computed get plotDomain() {
-        // data extremes plus padding
+        // data extremes
         const max = {x:Number.NEGATIVE_INFINITY, y:Number.NEGATIVE_INFINITY};
         const min = {x:Number.POSITIVE_INFINITY, y:Number.POSITIVE_INFINITY};
         for (const d of this.props.data) {
@@ -326,6 +326,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                                 height={this.props.chartHeight}
                                 standalone={false}
                                 domainPadding={PLOT_DATA_PADDING_PIXELS}
+                                singleQuadrantDomainPadding={false}
                             >
                                 {this.title}
                                 {this.legend}

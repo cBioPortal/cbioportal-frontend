@@ -1332,7 +1332,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             </Observer>
                         ) : <LoadingIndicator isLoading={true}/> }
                     </div>
-                    <div style={{overflow:"auto"}}>
+                    <div style={{overflow:"hidden"}}>
                         {this.plot}
                     </div>
                 </div>
