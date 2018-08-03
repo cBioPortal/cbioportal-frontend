@@ -57,6 +57,13 @@ export enum ViewType {
     None
 }
 
+export enum PotentialViewType {
+    MutationTypeAndCopyNumber,
+    MutationType,
+    MutationSummary,
+    None
+}
+
 export enum PlotType {
     ScatterPlot,
     BoxPlot,
@@ -107,8 +114,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @computed get viewType():ViewType {
         let ret:ViewType = ViewType.None;
-        switch (this.maximumPossibleViewType) {
-            case ViewType.MutationTypeAndCopyNumber:
+        switch (this.potentialViewType) {
+            case PotentialViewType.MutationTypeAndCopyNumber:
                 if (this.viewMutationType && this.viewCopyNumber) {
                     ret = ViewType.MutationTypeAndCopyNumber;
                 } else if (this.viewMutationType) {
@@ -119,14 +126,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     ret = ViewType.None;
                 }
                 break;
-            case ViewType.MutationSummary:
+            case PotentialViewType.MutationSummary:
                 if (this.viewMutationType) {
                     ret = ViewType.MutationSummary;
                 } else {
                     ret = ViewType.None;
                 }
                 break;
-            case ViewType.MutationType:
+            case PotentialViewType.MutationType:
                 if (this.viewMutationType) {
                     ret = ViewType.MutationType;
                 } else {
@@ -137,38 +144,38 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         return ret;
     }
 
-    @computed get maximumPossibleViewType():ViewType {
+    @computed get potentialViewType():PotentialViewType {
         if (this.plotType.result === PlotType.Table) {
             // cant show either in table
-            return ViewType.None;
+            return PotentialViewType.None;
         }
         if (this.sameGeneInBothAxes) {
             // both axes molecular profile, same gene
             const profileIdToProfile = this.props.store.molecularProfileIdToMolecularProfile;
             if (!profileIdToProfile.isComplete) {
-                return ViewType.None;
+                return PotentialViewType.None;
             } else {
                 const horzProfile = profileIdToProfile.result[this.horzSelection.dataSourceId!];
                 const vertProfile = profileIdToProfile.result[this.vertSelection.dataSourceId!];
                 if ((horzProfile && horzProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && horzProfile.datatype === DataTypeConstants.DISCRETE) ||
                     (vertProfile && vertProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && vertProfile.datatype === DataTypeConstants.DISCRETE)) {
                     // if theres a discrete cna profile, redundant to allow showing cna
-                    return ViewType.MutationType;
+                    return PotentialViewType.MutationType;
                 } else {
                     // otherwise, show either one
-                    return ViewType.MutationTypeAndCopyNumber;
+                    return PotentialViewType.MutationTypeAndCopyNumber;
                 }
             }
         } else if (this.bothAxesMolecularProfile) {
             // both axes molecular profile, different gene
-            return ViewType.MutationSummary;
+            return PotentialViewType.MutationSummary;
         } else if (this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE ||
             this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
             // one axis molecular profile
-            return ViewType.MutationTypeAndCopyNumber;
+            return PotentialViewType.MutationTypeAndCopyNumber;
         } else {
             // neither axis gene
-            return ViewType.None;
+            return PotentialViewType.None;
         }
     }
 
@@ -212,8 +219,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             get selectedGeneOption() {
                 const geneOptions = (vertical ? self.vertGeneOptions : self.horzGeneOptions.result) || [];
                 if (this._selectedGeneOption === undefined && geneOptions.length) {
+                    // select default if _selectedGeneOption is undefined and theres defaults to choose from
                     return geneOptions[0];
+                } else if (vertical && this._selectedGeneOption && this._selectedGeneOption.value === SAME_GENE_OPTION_VALUE &&
+                            self.horzSelection.dataType === CLIN_ATTR_DATA_TYPE) {
+                    // if vertical gene option is "same as horizontal", and horizontal is clinical, then use the actual
+                    //      gene option value instead of "Same gene" option value, because that would be slightly weird UX
+                    return self.horzSelection.selectedGeneOption;
                 } else {
+                    // otherwise, return stored value for this variable
                     return this._selectedGeneOption;
                 }
             },
@@ -461,7 +475,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         //  option changes. if its remoteData, theres setTimeout(0)'s in the way and it causes unnecessarily an extra
         //  render which leads to a flash of the loading icon on the screen
         let sameGeneOption = undefined;
-        if (this.horzSelection.selectedGeneOption) {
+        if (this.horzSelection.selectedGeneOption && this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
+            // show "Same gene" option as long as horzSelection has a selected option, and horz isnt clinical attribute, bc
+            //  in that case theres no selected gene displayed so its confusing UX to have "Same gene" as an option
             sameGeneOption = [{ value: SAME_GENE_OPTION_VALUE, label: `Same gene (${this.horzSelection.selectedGeneOption.label})`}];
         }
         return (sameGeneOption || []).concat((this.horzGeneOptions.result || []) as any[]);
@@ -641,6 +657,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             (this.horzSelection.entrezGeneId === this.vertSelection.entrezGeneId);
     }
 
+    @computed get cnaDataCanBeShown() {
+        return this.cnaDataExists && this.potentialViewType === PotentialViewType.MutationTypeAndCopyNumber;
+    }
+
     @computed get cnaDataShown() {
         return this.cnaDataExists && (this.viewType === ViewType.CopyNumber || this.viewType === ViewType.MutationTypeAndCopyNumber);
     }
@@ -671,6 +691,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     });
 
+    @computed get mutationDataCanBeShown() {
+        return this.mutationDataExists.result && this.potentialViewType !== PotentialViewType.None;
+    }
+
     @computed get mutationDataShown() {
         return this.mutationDataExists &&
             (this.viewType === ViewType.MutationType || this.viewType === ViewType.MutationSummary ||
@@ -679,16 +703,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     readonly mutationPromise = remoteData({
         await:()=>this.props.store.putativeDriverAnnotatedMutationCache.getAll(
-            getMutationQueries(this.horzSelection, this.vertSelection, this.mutationDataShown)
+            getMutationQueries(this.horzSelection, this.vertSelection)
         ),
         invoke: ()=>{
-            if (this.mutationDataShown) {
-                return Promise.resolve(_.flatten(this.props.store.putativeDriverAnnotatedMutationCache.getAll(
-                    getMutationQueries(this.horzSelection, this.vertSelection, this.mutationDataShown)
-                ).map(p=>p.result!)).filter(x=>!!x));
-            } else {
-                return Promise.resolve([]);
-            }
+            return Promise.resolve(_.flatten(this.props.store.putativeDriverAnnotatedMutationCache.getAll(
+                getMutationQueries(this.horzSelection, this.vertSelection)
+            ).map(p=>p.result!)).filter(x=>!!x));
         }
     });
 
@@ -934,7 +954,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @autobind
     private getUtilitiesMenu() {
         const showTopPart = this.plotType.isComplete && this.plotType.result !== PlotType.Table;
-        const showBottomPart = this.maximumPossibleViewType !== ViewType.None;
+        const showBottomPart = this.potentialViewType !== PotentialViewType.None;
         if (!showTopPart && !showBottomPart) {
             return <span></span>;
         }
@@ -953,7 +973,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 placeholder="Case ID.."
                             />
                         </div>
-                        {this.mutationDataExists && (
+                        {this.mutationDataCanBeShown && (
                             <div className="form-group">
                                 <label>Search Mutation(s)</label>
                                 <FormControl
@@ -968,7 +988,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     {showBottomPart && (
                         <div>
                             <label>Color Samples By</label>
-                            {(this.maximumPossibleViewType !== ViewType.None && this.mutationDataExists.result) && (
+                            {this.mutationDataCanBeShown && (
                                 <div className="checkbox"><label>
                                     <input
                                         data-test="ViewMutationType"
@@ -981,7 +1001,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     /> Mutation Type *
                                 </label></div>
                             )}
-                            {(this.maximumPossibleViewType === ViewType.MutationTypeAndCopyNumber && this.cnaDataExists.result) && (
+                            {this.cnaDataCanBeShown && (
                                 <div className="checkbox"><label>
                                     <input
                                         data-test="ViewCopyNumber"
@@ -1077,7 +1097,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         vertAxisData,
                         this.props.store.sampleKeyToSample.result!,
                         this.props.store.coverageInformation.result!.samples,
-                        this.mutationDataShown ? {
+                        this.mutationDataExists ? {
                             molecularProfileIds: _.values(this.props.store.studyToMutationMolecularProfile.result!).map(p=>p.molecularProfileId),
                             data: this.mutationPromise.result!
                         } : undefined,
@@ -1142,7 +1162,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         categoryData, numberData,
                         this.props.store.sampleKeyToSample.result!,
                         this.props.store.coverageInformation.result!.samples,
-                        this.mutationDataShown ? {
+                        this.mutationDataExists ? {
                             molecularProfileIds: _.values(this.props.store.studyToMutationMolecularProfile.result!).map(p=>p.molecularProfileId),
                             data: this.mutationPromise.result!
                         } : undefined,
@@ -1305,7 +1325,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             {plotElt}
                             </div>
                     </div>
-                    <div style={{marginTop:5}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
+                    {this.mutationDataCanBeShown && (
+                        <div style={{marginTop:5}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
+                    )}
                 </div>
             );
         }
