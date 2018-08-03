@@ -470,63 +470,40 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly nonMutationMolecularProfileDataAvailability = remoteData<{[molecularProfileId:string]:{[entrezGeneId:number]:number}}>({
+    readonly nonMutationMolecularProfilesWithData = remoteData<MolecularProfile[]>({
         await:()=>[
             this.molecularProfilesInStudies,
             this.studyToDataQueryFilter,
             this.genes
         ],
         invoke:async()=>{
-            const ret:{[molecularProfileId:string]:{[entrezGeneId:number]:number}} = {};
+            const ret:MolecularProfile[] = [];
             const promises = [];
             const studyToDataQueryFilter = this.studyToDataQueryFilter.result!;
             for (const profile of this.molecularProfilesInStudies.result!) {
                 if (profile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED) {
                     continue;
                 }
-                for (const gene of this.genes.result!) {
-                    const molecularDataFilter = {
-                        entrezGeneIds: [gene.entrezGeneId],
-                        ...studyToDataQueryFilter[profile.studyId]
-                    } as MolecularDataFilter;
-                    const molecularProfileId = profile.molecularProfileId;
-                    const projection = "META";
-                    promises.push(client.fetchAllMolecularDataInMolecularProfileUsingPOSTWithHttpInfo({
-                        molecularProfileId,
-                        molecularDataFilter,
-                        projection
-                    }).then(function(response: request.Response) {
-                        ret[molecularProfileId] = ret[molecularProfileId] || {};
-                        ret[molecularProfileId][gene.entrezGeneId] = parseInt(response.header["total-count"], 10);
-                    }));
-                }
+                const molecularDataFilter = {
+                    entrezGeneIds: this.genes.result!.map(g=>g.entrezGeneId),
+                    ...studyToDataQueryFilter[profile.studyId]
+                } as MolecularDataFilter;
+                const molecularProfileId = profile.molecularProfileId;
+                const projection = "META";
+                promises.push(client.fetchAllMolecularDataInMolecularProfileUsingPOSTWithHttpInfo({
+                    molecularProfileId,
+                    molecularDataFilter,
+                    projection
+                }).then(function(response: request.Response) {
+                    const count = parseInt(response.header["total-count"], 10);
+                    if (count > 0) {
+                        // theres data for at least one of the query genes
+                        ret.push(profile);
+                    }
+                }));
             }
             await Promise.all(promises);
             return ret;
-        }
-    });
-
-    readonly nonMutationMolecularProfilesWithData = remoteData<{[entrezGeneId:number]:MolecularProfile[]}>({
-        await:()=>[
-            this.genes,
-            this.molecularProfilesInStudies,
-            this.nonMutationMolecularProfileDataAvailability
-        ],
-        invoke:()=>{
-            const ret:{[entrezGeneId:number]:MolecularProfile[]} = {};
-            const molecularProfilesInStudies = this.molecularProfilesInStudies.result!;
-            const nonMutationMolecularProfileDataAvailability = this.nonMutationMolecularProfileDataAvailability.result!;
-            for (const gene of this.genes.result!) {
-                ret[gene.entrezGeneId] = molecularProfilesInStudies.filter(p=>{
-                    if (p.molecularProfileId in nonMutationMolecularProfileDataAvailability) {
-                        // return false if theres no entry for this profile/gene pair, or if there is an entry and the availabile count is 0
-                        return !!nonMutationMolecularProfileDataAvailability[p.molecularProfileId][gene.entrezGeneId];
-                    } else {
-                        return false;
-                    }
-                });
-            }
-            return Promise.resolve(ret);
         }
     });
 

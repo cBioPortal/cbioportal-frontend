@@ -16,7 +16,7 @@ import {
     getCnaQueries, getMutationQueries, getScatterPlotDownloadData, getBoxPlotDownloadData, getTablePlotDownloadData,
     mutationRenderPriority, mutationSummaryRenderPriority, MutationSummary, mutationSummaryToAppearance,
     CNA_STROKE_WIDTH, scatterPlotSize, PLOT_SIDELENGTH, CLIN_ATTR_DATA_TYPE,
-    sortScatterPlotDataForZIndex
+    sortScatterPlotDataForZIndex, sortMolecularProfilesForDisplay
 } from "./PlotsTabUtils";
 import {
     ClinicalAttribute, MolecularProfile, Mutation,
@@ -221,13 +221,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 this._selectedGeneOption = o;
             },
             get dataType() {
-                if (this.entrezGeneId === undefined || !self.geneToDataTypeOptions.isComplete) {
+                if (this.entrezGeneId === undefined || !self.dataTypeOptions.isComplete) {
                     // if theres no selected gene (this only happens at beginning of initialization),
                     //  or if there are no options to select a default from, then return the stored value for this variable
                     return this._dataType;
                 }
                 // otherwise, pick the default based on sources that have data for the selected gene
-                const dataTypeOptions = self.geneToDataTypeOptions.result![this.entrezGeneId] || [];
+                const dataTypeOptions = self.dataTypeOptions.result!;
                 if (this._dataType === undefined && dataTypeOptions.length) {
                     // return computed default if _dataType is undefined and if there are options to select a default value from
                     if (vertical && !!dataTypeOptions.find(o=>(o.value === AlterationTypeConstants.MRNA_EXPRESSION))) {
@@ -252,14 +252,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 this._dataType = t;
             },
             get dataSourceId() {
-                if (this.entrezGeneId === undefined || !self.geneToTypeToDataSourceOptions.isComplete) {
+                if (this.entrezGeneId === undefined || !self.dataTypeToDataSourceOptions.isComplete) {
                     // if theres no selected gene (this only happens at beginning of initialization),
                     //  or if there are no options to select a default from, then return the stored value for this variable
                     return this._dataSourceId;
                 }
                 // otherwise, pick the default based on the current selected data type, and
                 //  the sources that have data for the selected gene
-                const dataSourceOptionsByType = self.geneToTypeToDataSourceOptions.result![this.entrezGeneId] || {};
+                const dataSourceOptionsByType = self.dataTypeToDataSourceOptions.result!;
                 if (this._dataSourceId === undefined &&
                     this.dataType &&
                     dataSourceOptionsByType[this.dataType] &&
@@ -391,32 +391,28 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @autobind
     private getHorizontalAxisMenu() {
-        if (this.horzSelection.entrezGeneId === undefined ||
-            !this.geneToDataTypeOptions.isComplete ||
-            !this.geneToTypeToDataSourceOptions.isComplete) {
+        if (!this.dataTypeOptions.isComplete ||
+            !this.dataTypeToDataSourceOptions.isComplete) {
             return <span></span>;
         } else {
             return this.getAxisMenu(
                 false,
-                this.horzSelection.entrezGeneId,
-                this.geneToDataTypeOptions.result,
-                this.geneToTypeToDataSourceOptions.result
+                this.dataTypeOptions.result,
+                this.dataTypeToDataSourceOptions.result
             );
         }
     }
 
     @autobind
     private getVerticalAxisMenu() {
-        if (this.vertSelection.entrezGeneId === undefined ||
-            !this.geneToDataTypeOptions.isComplete ||
-            !this.geneToTypeToDataSourceOptions.isComplete) {
+        if (!this.dataTypeOptions.isComplete ||
+            !this.dataTypeToDataSourceOptions.isComplete) {
             return <span></span>;
         } else {
             return this.getAxisMenu(
                 true,
-                this.vertSelection.entrezGeneId,
-                this.geneToDataTypeOptions.result,
-                this.geneToTypeToDataSourceOptions.result
+                this.dataTypeOptions.result,
+                this.dataTypeToDataSourceOptions.result
             );
         }
     }
@@ -514,11 +510,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 value: SpecialAttribute.FractionGenomeAltered,
                 label: "Fraction Genome Altered"
             });
-            this.props.store.clinicalAttributes.result!.map(attribute=>(
-                _clinicalAttributes.push({
+            _clinicalAttributes = _clinicalAttributes.concat(_.sortBy(this.props.store.clinicalAttributes.result!.map(attribute=>(
+                {
                     value: attribute.clinicalAttributeId,
                     label: attribute.displayName
-                })));
+                }
+            )), o=>o.label));
 
             // to load more quickly, only filter and annotate with data availability once its ready
             // TODO: temporarily disabled because cant figure out a way right now to make this work nicely
@@ -539,59 +536,53 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     });
 
-    readonly geneToDataTypeOptions = remoteData<{[entrezGeneId:number]:{value:string, label:string}[]}>({
+    readonly dataTypeOptions = remoteData<{value:string, label:string}[]>({
         await:()=>[
             this.props.store.nonMutationMolecularProfilesWithData,
             this.clinicalAttributeOptions
         ],
         invoke:()=>{
-            return Promise.resolve(_.mapValues(this.props.store.nonMutationMolecularProfilesWithData.result!,
-                profiles=>{
-                    const dataTypeIds:string[] = _.uniq(
-                        profiles.map(profile=>profile.molecularAlterationType)
-                    ).filter(type=>!!dataTypeToDisplayType[type]);
+            const profiles = this.props.store.nonMutationMolecularProfilesWithData.result!;
 
-                    if (this.clinicalAttributeOptions.result!.length) {
-                        dataTypeIds.push(CLIN_ATTR_DATA_TYPE);
-                    }
+            // show only data types we have profiles for
+            const dataTypeIds:string[] = _.uniq(
+                profiles.map(profile=>profile.molecularAlterationType)
+            ).filter(type=>!!dataTypeToDisplayType[type]); // only show profiles of the type we want to show
 
-                    return _.sortBy(dataTypeIds,
-                        type=>dataTypeDisplayOrder.indexOf(type)
-                    ).map(type=>({
-                        value: type,
-                        label: dataTypeToDisplayType[type]
-                    }));
-                }
-            ));
+            if (this.clinicalAttributeOptions.result!.length) {
+                // add "clinical attribute" to list if we have any clinical attribute options
+                dataTypeIds.push(CLIN_ATTR_DATA_TYPE);
+            }
+
+            return Promise.resolve(
+                _.sortBy(dataTypeIds, // sort them into display order
+                    type=>dataTypeDisplayOrder.indexOf(type)
+                ).map(type=>({
+                    value: type,
+                    label: dataTypeToDisplayType[type]
+                })) // output options
+            );
         }
     });
 
-    readonly geneToTypeToDataSourceOptions = remoteData<{[entrezGeneId:number]:{[type:string]:{value:string, label:string}[]}}>({
+    readonly dataTypeToDataSourceOptions = remoteData<{[dataType:string]:{value:string, label:string}[]}>({
         await:()=>[
             this.props.store.nonMutationMolecularProfilesWithData,
-            this.props.store.nonMutationMolecularProfileDataAvailability,
             this.clinicalAttributeOptions
         ],
         invoke:()=>{
-            const sampleCounts = this.props.store.nonMutationMolecularProfileDataAvailability.result!;
-            return Promise.resolve(_.mapValues(this.props.store.nonMutationMolecularProfilesWithData.result!,
-                (profiles, gene)=>{
-                    const map = _.mapValues(
-                        _.groupBy(profiles, profile=>profile.molecularAlterationType),
-                        profilesOfType=>(
-                            profilesOfType.map(p=>{
-                                // sampleCount definitely exists because these profiles are in nonMutationMolecularProfilesWithData
-                                const sampleCount = sampleCounts[p.molecularProfileId][parseInt(gene, 10)];
-                                return {value:p.molecularProfileId, label:`${p.name} (${sampleCount} samples)`};
-                            })
-                        )
-                    );
-                    if (this.clinicalAttributeOptions.result!.length) {
-                        map[CLIN_ATTR_DATA_TYPE] = this.clinicalAttributeOptions.result!;
-                    }
-                    return map;
-                }
-            ));
+            const profiles = this.props.store.nonMutationMolecularProfilesWithData.result!;
+            const map = _.mapValues(
+                _.groupBy(profiles, profile=>profile.molecularAlterationType), // create a map from profile type to list of profiles of that type
+                profilesOfType=>(
+                    sortMolecularProfilesForDisplay(profilesOfType).map(p=>({value:p.molecularProfileId, label:p.name}))// create options out of those profiles
+                )
+            );
+            if (this.clinicalAttributeOptions.result!.length) {
+                // add clinical attributes
+                map[CLIN_ATTR_DATA_TYPE] = this.clinicalAttributeOptions.result!;
+            }
+            return Promise.resolve(map);
         }
     });
 
@@ -874,35 +865,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     private getAxisMenu(
         vertical:boolean,
-        entrezGeneId:number,
-        geneToDataTypeOptions:{[entrezGeneId:number]:{value:string, label:string}[]},
-        geneToTypeToDataSourceOptions:{[entrezGeneId:number]:{[type:string]:{value:string, label:string}[]}}
+        dataTypeOptions:{value:string, label:string}[],
+        dataSourceOptionsByType:{[type:string]:{value:string, label:string}[]}
     ) {
         const axisSelection = vertical ? this.vertSelection : this.horzSelection;
         const dataTestWhichAxis = vertical ? "Vertical" : "Horizontal";
-        let dataTypeOptions:{value:string, label:string}[] = [];
-        let dataSourceOptionsByType:{[type:string]:{value:string, label:string}[]} = {};
-        dataTypeOptions = geneToDataTypeOptions[entrezGeneId] || [];
-        dataSourceOptionsByType = geneToTypeToDataSourceOptions[entrezGeneId] || {};
         return (
             <form>
                 <h4>{vertical ? "Vertical" : "Horizontal"} Axis</h4>
                 <div>
-                    <div className="form-group" style={{opacity:(axisSelection.dataType === CLIN_ATTR_DATA_TYPE ? 0.5 : 1)}}>
-                        <label>Gene</label>
-                        <div style={{display:"flex", flexDirection:"row"}}>
-                            <ReactSelect
-                                name={`${vertical ? "v" : "h"}-gene-selector`}
-                                value={axisSelection.selectedGeneOption ? axisSelection.selectedGeneOption.value : undefined}
-                                onChange={vertical ? this.onVerticalAxisGeneSelect : this.onHorizontalAxisGeneSelect}
-                                isLoading={this.horzGeneOptions.isPending}
-                                options={this.horzGeneOptions.isComplete ? (vertical ? this.vertGeneOptions : this.horzGeneOptions.result) : []}
-                                clearable={false}
-                                searchable={false}
-                                disabled={axisSelection.dataType === CLIN_ATTR_DATA_TYPE}
-                            />
-                        </div>
-                    </div>
                     <div className="form-group">
                         <label>Data Type</label>
                         <ReactSelect
@@ -940,6 +911,21 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             /> Apply Log Scale
                         </label></div>
                     )}
+                    <div className="form-group" style={{opacity:(axisSelection.dataType === CLIN_ATTR_DATA_TYPE ? 0 : 1)}}>
+                        <label>Gene</label>
+                        <div style={{display:"flex", flexDirection:"row"}}>
+                            <ReactSelect
+                                name={`${vertical ? "v" : "h"}-gene-selector`}
+                                value={axisSelection.selectedGeneOption ? axisSelection.selectedGeneOption.value : undefined}
+                                onChange={vertical ? this.onVerticalAxisGeneSelect : this.onHorizontalAxisGeneSelect}
+                                isLoading={this.horzGeneOptions.isPending}
+                                options={this.horzGeneOptions.isComplete ? (vertical ? this.vertGeneOptions : this.horzGeneOptions.result) : []}
+                                clearable={false}
+                                searchable={false}
+                                disabled={axisSelection.dataType === CLIN_ATTR_DATA_TYPE}
+                            />
+                        </div>
+                    </div>
                 </div>
             </form>
         );
@@ -1339,8 +1325,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     <div className="leftColumn">
                         { (this.horzSelection.entrezGeneId !== undefined &&
                         this.vertSelection.entrezGeneId !== undefined &&
-                        this.geneToDataTypeOptions.isComplete &&
-                        this.geneToTypeToDataSourceOptions.isComplete) ? (
+                        this.dataTypeOptions.isComplete &&
+                        this.dataTypeToDataSourceOptions.isComplete) ? (
                             <Observer>
                                 {this.controls}
                             </Observer>
