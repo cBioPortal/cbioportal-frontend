@@ -607,6 +607,11 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     }
 
+    @autobind
+    private getRef(ref:any){
+        this.svgContainer = (ref && ref.children.length) ? ref.children[0] : null
+    }
+
     @computed
     get chart() {
         return (
@@ -620,7 +625,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     padding={{bottom: this.paddingBottom, left: 100, top: 60, right: 10}}
                     containerComponent={
                         <VictoryContainer width={this.containerWidth}
-                                          containerRef={(ref: any) => this.svgContainer = ref.children[0]}
+                                          containerRef={this.getRef}
                                           responsive={false}
                         />
                     }
