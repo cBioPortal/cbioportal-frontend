@@ -679,16 +679,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     readonly mutationPromise = remoteData({
         await:()=>this.props.store.putativeDriverAnnotatedMutationCache.getAll(
-            getMutationQueries(this.horzSelection, this.vertSelection, this.mutationDataShown)
+            getMutationQueries(this.horzSelection, this.vertSelection)
         ),
         invoke: ()=>{
-            if (this.mutationDataShown) {
-                return Promise.resolve(_.flatten(this.props.store.putativeDriverAnnotatedMutationCache.getAll(
-                    getMutationQueries(this.horzSelection, this.vertSelection, this.mutationDataShown)
-                ).map(p=>p.result!)).filter(x=>!!x));
-            } else {
-                return Promise.resolve([]);
-            }
+            return Promise.resolve(_.flatten(this.props.store.putativeDriverAnnotatedMutationCache.getAll(
+                getMutationQueries(this.horzSelection, this.vertSelection)
+            ).map(p=>p.result!)).filter(x=>!!x));
         }
     });
 
@@ -1077,7 +1073,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         vertAxisData,
                         this.props.store.sampleKeyToSample.result!,
                         this.props.store.coverageInformation.result!.samples,
-                        this.mutationDataShown ? {
+                        this.mutationDataExists ? {
                             molecularProfileIds: _.values(this.props.store.studyToMutationMolecularProfile.result!).map(p=>p.molecularProfileId),
                             data: this.mutationPromise.result!
                         } : undefined,
@@ -1142,7 +1138,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         categoryData, numberData,
                         this.props.store.sampleKeyToSample.result!,
                         this.props.store.coverageInformation.result!.samples,
-                        this.mutationDataShown ? {
+                        this.mutationDataExists ? {
                             molecularProfileIds: _.values(this.props.store.studyToMutationMolecularProfile.result!).map(p=>p.molecularProfileId),
                             data: this.mutationPromise.result!
                         } : undefined,
