@@ -98,7 +98,6 @@ function runResultsTestSuite(prefix){
         var res = browser.checkElement('#data_download',{hide:['.qtip'] });
         assertScreenShotMatch(res);
     });
-
 }
 
 describe('result page screenshot tests', function(){
@@ -109,6 +108,15 @@ describe('result page screenshot tests', function(){
 
     runResultsTestSuite('no session')
 
+});
+
+describe('expression tab', function() {
+    it("expression tab with complex oql", ()=>{
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=TP53%253AMUT%253B&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=acc_tcga%2Cchol_tcga%2Cesca_tcga#cc-plots`);
+        browser.waitForExist(".borderedChart svg", 10000);
+        var res = browser.checkElement("div#cc-plots");
+        assertScreenShotMatch(res);
+    });
 });
 
 describe("oncoprint screenshot tests", function() {
@@ -382,6 +390,15 @@ describe("plots tab screenshot tests", function() {
     });
     it("plots tab copy number vs clinical table plot", function() {
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "COPY_NUMBER_ALTERATION" }); });
+        waitForAndCheckPlotsTab();
+    });
+
+
+    it("plots tab one box clinical vs clinical boxplot", function() {
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=lgg_ucsf_2014&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=lgg_ucsf_2014_sequenced&gene_list=SMARCA4%2520CIC&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=lgg_ucsf_2014_mutations&show_samples=true&clinicallist=MUTATION_COUNT#plots`);
+        browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 20000);
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "clinical_attribute" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "CANCER_TYPE" }); });
         waitForAndCheckPlotsTab();
     });
 });
