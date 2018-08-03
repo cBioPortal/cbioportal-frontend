@@ -214,7 +214,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         }
         let x:number[], y:number[];
         const dataDomain = [min, max];
-        const categoryDomain = [this.categoryCoord(0), this.categoryCoord(Math.max(0, this.props.data.length - 1))];
+        const categoryDomain = [this.categoryCoord(0), this.categoryCoord(Math.max(1, this.props.data.length - 1))];
         if (this.props.horizontal) {
             x = dataDomain;
             y = categoryDomain;
