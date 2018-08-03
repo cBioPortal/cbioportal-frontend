@@ -46,6 +46,23 @@ export const dataTypeToDisplayType:{[s:string]:string} = {
 };
 
 export const dataTypeDisplayOrder = [CLIN_ATTR_DATA_TYPE, "MRNA_EXPRESSION", "COPY_NUMBER_ALTERATION", "PROTEIN_LEVEL", "METHYLATION"];
+export function sortMolecularProfilesForDisplay(profiles:MolecularProfile[]) {
+    if (!profiles.length) {
+        return [];
+    }
+
+    const type = profiles[0].molecularAlterationType;
+    let sortBy:(p:MolecularProfile)=>any;
+    switch (type) {
+        case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
+            sortBy = p=>(p.datatype === "DISCRETE" ? 0 : 1);
+            break;
+        default:
+            sortBy = p=>p.name;
+            break;
+    }
+    return _.sortBy<MolecularProfile>(profiles, sortBy);
+}
 
 export const CNA_STROKE_WIDTH = 1.8;
 export const PLOT_SIDELENGTH = 650;
