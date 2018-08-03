@@ -219,8 +219,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             get selectedGeneOption() {
                 const geneOptions = (vertical ? self.vertGeneOptions : self.horzGeneOptions.result) || [];
                 if (this._selectedGeneOption === undefined && geneOptions.length) {
+                    // select default if _selectedGeneOption is undefined and theres defaults to choose from
                     return geneOptions[0];
+                } else if (vertical && this._selectedGeneOption && this._selectedGeneOption.value === SAME_GENE_OPTION_VALUE &&
+                            self.horzSelection.dataType === CLIN_ATTR_DATA_TYPE) {
+                    // if vertical gene option is "same as horizontal", and horizontal is clinical, then use the actual
+                    //      gene option value instead of "Same gene" option value, because that would be slightly weird UX
+                    return self.horzSelection.selectedGeneOption;
                 } else {
+                    // otherwise, return stored value for this variable
                     return this._selectedGeneOption;
                 }
             },
@@ -468,7 +475,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         //  option changes. if its remoteData, theres setTimeout(0)'s in the way and it causes unnecessarily an extra
         //  render which leads to a flash of the loading icon on the screen
         let sameGeneOption = undefined;
-        if (this.horzSelection.selectedGeneOption) {
+        if (this.horzSelection.selectedGeneOption && this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
+            // show "Same gene" option as long as horzSelection has a selected option, and horz isnt clinical attribute, bc
+            //  in that case theres no selected gene displayed so its confusing UX to have "Same gene" as an option
             sameGeneOption = [{ value: SAME_GENE_OPTION_VALUE, label: `Same gene (${this.horzSelection.selectedGeneOption.label})`}];
         }
         return (sameGeneOption || []).concat((this.horzGeneOptions.result || []) as any[]);
