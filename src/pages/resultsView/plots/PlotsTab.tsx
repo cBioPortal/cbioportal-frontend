@@ -648,6 +648,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             (this.horzSelection.entrezGeneId === this.vertSelection.entrezGeneId);
     }
 
+    @computed get cnaDataCanBeShown() {
+        return this.cnaDataExists && this.potentialViewType === PotentialViewType.MutationTypeAndCopyNumber;
+    }
+
     @computed get cnaDataShown() {
         return this.cnaDataExists && (this.viewType === ViewType.CopyNumber || this.viewType === ViewType.MutationTypeAndCopyNumber);
     }
@@ -677,6 +681,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             }
         }
     });
+
+    @computed get mutationDataCanBeShown() {
+        return this.mutationDataExists.result && this.potentialViewType !== PotentialViewType.None;
+    }
 
     @computed get mutationDataShown() {
         return this.mutationDataExists &&
@@ -956,7 +964,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 placeholder="Case ID.."
                             />
                         </div>
-                        {this.mutationDataExists && (
+                        {this.mutationDataCanBeShown && (
                             <div className="form-group">
                                 <label>Search Mutation(s)</label>
                                 <FormControl
@@ -971,7 +979,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     {showBottomPart && (
                         <div>
                             <label>Color Samples By</label>
-                            {(this.potentialViewType !== PotentialViewType.None && this.mutationDataExists.result) && (
+                            {this.mutationDataCanBeShown && (
                                 <div className="checkbox"><label>
                                     <input
                                         data-test="ViewMutationType"
@@ -984,7 +992,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     /> Mutation Type *
                                 </label></div>
                             )}
-                            {(this.potentialViewType === PotentialViewType.MutationTypeAndCopyNumber && this.cnaDataExists.result) && (
+                            {this.cnaDataCanBeShown && (
                                 <div className="checkbox"><label>
                                     <input
                                         data-test="ViewCopyNumber"
@@ -1308,7 +1316,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             {plotElt}
                             </div>
                     </div>
-                    <div style={{marginTop:5}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
+                    {this.mutationDataCanBeShown && (
+                        <div style={{marginTop:5}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
+                    )}
                 </div>
             );
         }
