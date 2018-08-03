@@ -192,6 +192,16 @@ describe('Results Page', function() {
             browser.waitForExist(bannerSelector, 10000);
             assert(browser.isExisting(bannerSelector));
         });
+        it("should not be present in expression tab with simple query", function() {
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=TP53&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=acc_tcga%2Cchol_tcga%2Cesca_tcga#cc-plots`);
+            browser.waitForExist(".borderedChart svg", 10000);
+            assert(!browser.isExisting(bannerSelector));
+        });
+        it("should be present in expression tab with explicit query", function() {
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=TP53%253AMUT%253B&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=acc_tcga%2Cchol_tcga%2Cesca_tcga#cc-plots`);
+            browser.waitForExist(bannerSelector, 10000);
+            assert(browser.isExisting(bannerSelector));
+        });
     });
 
 });
