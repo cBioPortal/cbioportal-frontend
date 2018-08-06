@@ -49,7 +49,12 @@ function createVariantMap(variantArray: Array<TrialMatchAPIGeneVariant>): {[vari
     let variantMap: {[variantName: string]: string} = {};
     if (variantArray && variantArray.length > 0) {
         variantArray.forEach(function(variant) {
-            variantMap[variant.proteinChange] = variant.sampleId;
+            if (!variantMap[variant.proteinChange]) {
+                variantMap[variant.proteinChange] = variant.sampleId;
+            }
+            else {
+                variantMap[variant.proteinChange] += ',' + variant.sampleId;
+            }
         });
     }
     return variantMap;
@@ -73,7 +78,7 @@ export default class TrialMatchAPI {
                     result = [response];
                 }
                 return result.map((record: TrialMatchAPIGene) => ({
-                    name: record.hugoSymbol,
+                    hugoSymbol: record.hugoSymbol,
                     variants: createVariantMap(record.variants)
                 }));
             });

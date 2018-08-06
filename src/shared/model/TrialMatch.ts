@@ -1,5 +1,5 @@
 export interface ITrialMatchGeneData {
-    name: string;
+    hugoSymbol: string;
     variants: {[variantName: string]: string};
 }
 
@@ -23,11 +23,11 @@ export interface ITrialMatchData {
 
 export interface ITrialMatchGene {[name: string]: ITrialMatchGeneData;}
 
-export interface ITrialMatchVariant {[geneName: string]: {[variantName: string]: ITrialMatchVariantData};}
+export interface ITrialMatchVariant {[sampleId:string]:{[geneName: string]: {[variantName: string]: ITrialMatchVariantData}};}
 
 export interface ITrialMatchEntry {
     name: string;
-    variants: {[name: string]: ITrialMatchVariantData};
+    variants: {[id: string]: ITrialMatchVariantData};
 };
 
 export type MobXStatus = "pending" | "error" | "complete";

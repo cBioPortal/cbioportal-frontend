@@ -211,10 +211,13 @@ export default class AnnotationColumnFormatter
                                      trialMatchVariants:ITrialMatchVariant): ITrialMatchEntry | null
     {
         let geneSymbol: string = mutation.gene.hugoGeneSymbol;
+        const sampleId: string = mutation.sampleId;
+        const proteinChange: string = mutation.proteinChange;
         let trialMatchEntry = null;
         //Only search for matching Trial variants if the gene mutation exists in the Trial API
-        if (trialMatchVariants[geneSymbol] && trialMatchVariants[geneSymbol][mutation.proteinChange]) {
-            let geneVariants: {[name: string]: ITrialMatchVariantData} = {[mutation.sampleId]: trialMatchVariants[geneSymbol][mutation.proteinChange]};
+        if (trialMatchVariants[sampleId] && trialMatchVariants[sampleId][geneSymbol] && trialMatchVariants[sampleId][geneSymbol][proteinChange]) {
+            let geneVariants: {[id: string]: ITrialMatchVariantData} =
+                    {[sampleId+"-"+geneSymbol+"-"+proteinChange]: trialMatchVariants[sampleId][geneSymbol][proteinChange]};
             let geneEntry: ITrialMatchGeneData = trialMatchGenes[geneSymbol];
             trialMatchEntry = buildTrialMatchEntry(geneEntry, geneVariants);
         }

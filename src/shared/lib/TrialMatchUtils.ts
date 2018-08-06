@@ -13,10 +13,13 @@ function addTrialMatchVariant(variantMap: ITrialMatchVariant, sampleId: string,
     return trialMatchClient.getVariant(sampleId, variantName, geneSymbol)
         .then(function(result: ITrialMatchVariantData) {
             if (result) {
-                if (!variantMap[geneSymbol]) {
-                    variantMap[geneSymbol] = {};
+                if (!variantMap[sampleId]) {
+                    variantMap[sampleId] = {};
                 }
-                variantMap[geneSymbol][variantName] = result;
+                if (!variantMap[sampleId][geneSymbol]) {
+                    variantMap[sampleId][geneSymbol] = {};
+                }
+                variantMap[sampleId][geneSymbol][variantName] = result;
             }
         });
 }
@@ -60,7 +63,7 @@ export function getTrialMatchGenes(geneSymbols: Array<string>): Promise<ITrialMa
         for (let res in responses) {
             let arrayTrialMatchGenes: Array<ITrialMatchGeneData> = responses[res];
             arrayTrialMatchGenes.forEach((trialMatchGene) => {
-                trialMatchGenes[trialMatchGene.name] = trialMatchGene;
+                trialMatchGenes[trialMatchGene.hugoSymbol] = trialMatchGene;
             });
         }
     }).then(function() {
@@ -90,7 +93,10 @@ export function getTrialMatchVariants(trialMatchGenes: ITrialMatchGene, mutation
                 if (geneEntry && geneEntry.variants[proteinChange]) {
                     if (!calledVariants.has(geneEntry.variants[proteinChange])) { //Avoid calling the same variant,
                         calledVariants.add(geneEntry.variants[proteinChange]);
-                        promises.push(addTrialMatchVariant(trialMatchVariants, geneEntry.variants[proteinChange], proteinChange, geneSymbol));
+                        const sampleIds = geneEntry.variants[proteinChange].split(",");
+                        sampleIds.forEach(sampleId =>
+                            promises.push(addTrialMatchVariant(trialMatchVariants, sampleId, proteinChange, geneSymbol))
+                        );
                     }
                 }
             }
@@ -124,7 +130,7 @@ export function getTrialMatchVariants(trialMatchGenes: ITrialMatchGene, mutation
  */
 export function buildTrialMatchEntry(geneEntry: ITrialMatchGeneData, geneVariants: {[name: string]: ITrialMatchVariantData}) {
     return {
-        name: geneEntry.name,
+        name: geneEntry.hugoSymbol,
         variants: geneVariants
     };
 }
@@ -134,13 +140,13 @@ export function getTrialMatchCNAVariants(copyNumberData:DiscreteCopyNumberData[]
     if (copyNumberData[0].alteration === 2) {
         for (let alteration in trialMatchVariants[geneSymbol]) {
             if (alteration === "AMPLIFICATION") {
-                geneVariants = {[geneSymbol]: trialMatchVariants[geneSymbol][alteration]};
+                geneVariants = {[geneSymbol]: trialMatchVariants[copyNumberData[0].sampleId][geneSymbol][alteration]};
             }
         }
     } else if (copyNumberData[0].alteration === -2) {
         for (let alteration in trialMatchVariants[geneSymbol]) {
             if (alteration === "DELETION") {
-                geneVariants = {[geneSymbol]: trialMatchVariants[geneSymbol][alteration]};
+                geneVariants = {[geneSymbol]: trialMatchVariants[copyNumberData[0].sampleId][geneSymbol][alteration]};
             }
         }
     }

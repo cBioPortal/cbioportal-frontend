@@ -150,7 +150,7 @@ export default class AnnotationColumnFormatter
         let geneVariants:{[name: string]: ITrialMatchVariantData} = getTrialMatchCNAVariants(copyNumberData, geneSymbol, trialMatchVariants);
         let geneEntry: ITrialMatchGeneData = trialMatchGenes[geneSymbol];
         //Only return data for genes with variants or it has a description provided by the Civic API
-        if (!_.isEmpty(geneVariants) || geneEntry && geneEntry.name !== "") {
+        if (!_.isEmpty(geneVariants) || geneEntry && geneEntry.hugoSymbol !== "") {
             trialEntry = buildTrialMatchEntry(geneEntry, geneVariants);
         }
 
