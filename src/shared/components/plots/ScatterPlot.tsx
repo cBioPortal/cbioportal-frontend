@@ -2,7 +2,7 @@ import * as React from "react";
 import {observer} from "mobx-react";
 import bind from "bind-decorator";
 import {computed, observable} from "mobx";
-import CBIOPORTAL_VICTORY_THEME from "../../theme/cBioPoralTheme";
+import CBIOPORTAL_VICTORY_THEME, {baseLabelStyles} from "../../theme/cBioPoralTheme";
 import Timer = NodeJS.Timer;
 import {VictoryChart, VictoryAxis, VictoryScatter, VictoryLegend, VictoryLabel} from "victory";
 import jStat from "jStat";
@@ -163,18 +163,21 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
     private get correlationInfo() {
         const approxTextWidth = 107; // experimentally determined
         const x = this.legendX;
+        const style = {fontFamily: baseLabelStyles.fontFamily, fontSize: baseLabelStyles.fontSize};
         return (
             <g>
                 <VictoryLabel  x={x + approxTextWidth}
                                y={CORRELATION_INFO_Y}
                                textAnchor="end"
                                text={`Pearson: ${(this.props.correlation ? this.props.correlation.pearson : this.pearsonCorr).toFixed(2)}`}
+                               style={style}
                 ></VictoryLabel>
                 <VictoryLabel  x={x + approxTextWidth}
                                y={CORRELATION_INFO_Y}
                                textAnchor="end"
                                dy="2"
                                text={`Spearman: ${(this.props.correlation ? this.props.correlation.spearman : this.spearmanCorr).toFixed(2)}`}
+                               style={style}
                 ></VictoryLabel>
             </g>
         );
