@@ -2,7 +2,7 @@ import * as React from "react";
 import {observer} from "mobx-react";
 import {computed, observable} from "mobx";
 import {bind} from "bind-decorator";
-import CBIOPORTAL_VICTORY_THEME from "../../theme/cBioPoralTheme";
+import CBIOPORTAL_VICTORY_THEME, {axisTickLabelStyles} from "../../theme/cBioPoralTheme";
 import ifndef from "../../lib/ifndef";
 import {BoxPlotModel, calculateBoxPlotModel} from "../../lib/boxPlotUtils";
 import ScatterPlotTooltip from "./ScatterPlotTooltip";
@@ -13,6 +13,7 @@ import {getDeterministicRandomNumber} from "./PlotUtils";
 import {logicalAnd} from "../../lib/LogicUtils";
 import {tickFormatNumeral, wrapTick} from "./TickUtils";
 import {scatterPlotSize} from "./PlotUtils";
+import {getTextWidth} from "../../lib/wrapText";
 
 export interface IBaseBoxScatterPlotPoint {
     value:number;
@@ -66,8 +67,8 @@ export const LEGEND_Y = 100; // experimentally determined
 const MIN_LOG_ARGUMENT = 0.01;
 const CATEGORY_LABEL_HORZ_ANGLE = -30;
 const DEFAULT_LEFT_PADDING = 25;
-const LABEL_GUTTER = 150; // room for axis label when categories on that axis
-const BOTTOM_GUTTER = LABEL_GUTTER;
+const DEFAULT_BOTTOM_PADDING = 10;
+const MAXIMUM_CATEGORY_LABEL_SIZE = 120;
 
 
 const BOX_STYLES = {
@@ -238,7 +239,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     @computed get svgHeight() {
-        return this.chartHeight + BOTTOM_GUTTER;
+        return this.chartHeight + this.bottomPadding;
     }
 
     @computed get boxSeparation() {
@@ -305,7 +306,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
 
     @bind
     private formatCategoryTick(t:number, index:number) {
-        return wrapTick(this.labels[index], LABEL_GUTTER - 30);
+        return wrapTick(this.labels[index], MAXIMUM_CATEGORY_LABEL_SIZE);
     }
 
     @bind
@@ -330,7 +331,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                                                   verticalAnchor={this.props.horizontal ? undefined : "start"}
                                                   textAnchor={this.props.horizontal ? undefined : "end"}
                                   />}
-                axisLabelComponent={<VictoryLabel dy={this.props.horizontal ? 25 : BOTTOM_GUTTER-20 /* leave more room for labels */}/>}
+                axisLabelComponent={<VictoryLabel dy={this.props.horizontal ? 35 : this.biggestCategoryLabelSize + 24}/>}
             />
         );
     }
@@ -346,7 +347,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                 tickValues={this.props.horizontal ? this.categoryTickValues : undefined}
                 tickCount={this.props.horizontal ? undefined : NUM_AXIS_TICKS}
                 tickFormat={this.props.horizontal ? this.formatCategoryTick : this.formatNumericalTick}
-                axisLabelComponent={<VictoryLabel dy={this.props.horizontal ? -1*this.leftPadding /* leave more room for labels */: -50}/>}
+                axisLabelComponent={<VictoryLabel dy={this.props.horizontal ? -1*this.biggestCategoryLabelSize - 24 : -50}/>}
             />
         );
     }
@@ -370,9 +371,31 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     @computed get leftPadding() {
         // more left padding if horizontal, to make room for labels
         if (this.props.horizontal) {
-            return LABEL_GUTTER;
+            return this.biggestCategoryLabelSize;
         } else {
             return DEFAULT_LEFT_PADDING;
+        }
+    }
+
+    @computed get bottomPadding() {
+        if (this.props.horizontal) {
+            return DEFAULT_BOTTOM_PADDING;
+        } else {
+            return this.biggestCategoryLabelSize;
+        }
+    }
+
+    @computed get biggestCategoryLabelSize() {
+        const maxSize = Math.min(
+            Math.max(...this.labels.map(x=>getTextWidth(x, axisTickLabelStyles.fontFamily, axisTickLabelStyles.fontSize+"px"))),
+            MAXIMUM_CATEGORY_LABEL_SIZE
+        );
+        if (this.props.horizontal) {
+            // if horizontal mode, its label width
+            return maxSize;
+        } else {
+            // if vertical mode, its label height when rotated
+            return maxSize*Math.abs(Math.sin((Math.PI/180) * CATEGORY_LABEL_HORZ_ANGLE))
         }
     }
 
