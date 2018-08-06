@@ -1212,7 +1212,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @computed get boxPlotBoxWidth() {
         const SMALL_BOX_WIDTH = 30;
-        const LARGE_BOX_WIDTH = 80;
+        const LARGE_BOX_WIDTH = 60;
 
         if (this.boxPlotData.isComplete) {
             return this.boxPlotData.result.data.length > 7 ? SMALL_BOX_WIDTH : LARGE_BOX_WIDTH;
