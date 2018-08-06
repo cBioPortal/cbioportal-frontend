@@ -2,9 +2,10 @@ import _ from "lodash";
 import measureText from "measure-text";
 import numeral from "numeral";
 import {wrapText} from "../../lib/wrapText";
+import {axisTickLabelStyles} from "../../theme/cBioPoralTheme";
 
 export function wrapTick(label:string, maxWidth:number):string[] {
-    return wrapText(label, maxWidth, "Arial, Helvetica", "12px");
+    return wrapText(label, maxWidth, axisTickLabelStyles.fontFamily, axisTickLabelStyles.fontSize+"px");
 }
 
 function zeroes(times:number) {
