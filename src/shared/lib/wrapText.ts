@@ -1,7 +1,7 @@
 import measureText from "measure-text";
 import _ from "lodash";
 
-function getTextWidth(text:string, fontFamily:string, fontSize:string) {
+export function getTextWidth(text:string, fontFamily:string, fontSize:string) {
     return measureText({text, fontFamily, fontSize, lineHeight: 1}).width.value;
 }
 
