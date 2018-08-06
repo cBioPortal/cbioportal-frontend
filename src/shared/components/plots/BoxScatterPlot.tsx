@@ -314,6 +314,8 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     @computed get horzAxis() {
+        // several props below are undefined in horizontal mode, thats because in horizontal mode
+        //  this axis is for numbers, not categories
         return (
             <VictoryAxis
                 orientation="bottom"
@@ -325,7 +327,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                 tickCount={this.props.horizontal ? NUM_AXIS_TICKS: undefined }
                 tickFormat={this.props.horizontal ? this.formatNumericalTick : this.formatCategoryTick}
                 tickLabelComponent={<VictoryLabel angle={this.props.horizontal ? undefined : CATEGORY_LABEL_HORZ_ANGLE}
-                                                  verticalAnchor={this.props.horizontal ? undefined : "middle"}
+                                                  verticalAnchor={this.props.horizontal ? undefined : "start"}
                                                   textAnchor={this.props.horizontal ? undefined : "end"}
                                   />}
                 axisLabelComponent={<VictoryLabel dy={this.props.horizontal ? 25 : BOTTOM_GUTTER-20 /* leave more room for labels */}/>}
