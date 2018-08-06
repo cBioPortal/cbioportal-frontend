@@ -153,6 +153,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             // both axes molecular profile, same gene
             const profileIdToProfile = this.props.store.molecularProfileIdToMolecularProfile;
             if (!profileIdToProfile.isComplete) {
+                // just show none until profile information is loaded
                 return PotentialViewType.None;
             } else {
                 const horzProfile = profileIdToProfile.result[this.horzSelection.dataSourceId!];
@@ -172,7 +173,26 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         } else if (this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE ||
             this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
             // one axis molecular profile
-            return PotentialViewType.MutationTypeAndCopyNumber;
+            const profileIdToProfile = this.props.store.molecularProfileIdToMolecularProfile;
+            if (!profileIdToProfile.isComplete) {
+                // just show none until profile information is loaded
+                return PotentialViewType.None;
+            } else {
+                let molecularProfileId;
+                if (this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
+                    molecularProfileId = this.horzSelection.dataSourceId!;
+                } else {
+                    molecularProfileId = this.vertSelection.dataSourceId!;
+                }
+                const profile = profileIdToProfile.result[molecularProfileId];
+                if (profile && profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && profile.datatype === DataTypeConstants.DISCRETE) {
+                    // if theres a discrete cna profile, redundant to allow showing cna
+                    return PotentialViewType.MutationType;
+                } else {
+                    // otherwise, show either one
+                    return PotentialViewType.MutationTypeAndCopyNumber;
+                }
+            }
         } else {
             // neither axis gene
             return PotentialViewType.None;
@@ -1192,7 +1212,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @computed get boxPlotBoxWidth() {
         const SMALL_BOX_WIDTH = 30;
-        const LARGE_BOX_WIDTH = 80;
+        const LARGE_BOX_WIDTH = 60;
 
         if (this.boxPlotData.isComplete) {
             return this.boxPlotData.result.data.length > 7 ? SMALL_BOX_WIDTH : LARGE_BOX_WIDTH;
