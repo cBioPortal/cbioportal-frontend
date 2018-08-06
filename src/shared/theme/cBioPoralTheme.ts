@@ -54,6 +54,10 @@ export const baseLabelStyles = {
 const centeredLabelStyles = assign({ textAnchor: "middle" }, baseLabelStyles);
 
 export const axisLabelStyles = assign({}, baseLabelStyles, { fontSize:13, padding })
+export const axisTickLabelStyles = assign({}, baseLabelStyles, {
+    fill: "black",
+    padding:2
+});
 
 // *
 // * Strokes
@@ -97,10 +101,7 @@ const CBIOPORTAL_VICTORY_THEME = {
                 strokeLinecap,
                 strokeLinejoin
             },
-            tickLabels: assign({}, baseLabelStyles, {
-                fill: "black",
-                padding:2
-            })
+            tickLabels: axisTickLabelStyles
         }
     }, baseProps),
     bar: assign({
