@@ -71,7 +71,8 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
 
     @autobind
     private getSvg() {
-        return (this.svgContainer as any).firstChild;
+        // can't see to find type that has children collection
+        return (this.svgContainer as any).children[0];
     }
 
     private get width(){
@@ -270,7 +271,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
         return (
             <div data-test="cancerTypeSummaryChart">
                 <div style={this.overflowStyle} className="borderedChart">
-                    <div ref={(el:HTMLDivElement)=>this.scrollPane=el} style={{fontFamily:"Arial, Helvetica", overflowX:'auto', overflowY:'hidden'}}>
+                    <div ref={(el:HTMLDivElement)=>this.scrollPane=el} style={{overflowX:'auto', overflowY:'hidden'}}>
                     {
                         (this.tooltipModel) && (this.buildTooltip(this.tooltipModel))
                     }
@@ -313,7 +314,6 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                     </div>
                     <DownloadControls
                         getSvg={this.getSvg}
-                        buttons={["SVG", "PNG"]}
                         filename="cancer_types_summary"
                         dontFade={true}
                         collapse={true}
