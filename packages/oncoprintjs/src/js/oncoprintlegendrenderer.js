@@ -188,17 +188,19 @@ var OncoprintLegendView = (function() {
 	    root.appendChild(svgfactory.text(display_range[1], 50, 0, 12, 'Arial', 'normal'));
 	    var mesh = 100;
 	    var points = [];
-        var linear_gradient = svgfactory.linearGradient();
+        var fill = null;
+        var linear_gradient = null;
         if (config.range_type === 'NON_POSITIVE') {
-            linear_gradient.appendChild(svgfactory.stop(100, config.negative_color));
+            fill = config.negative_color;
         } else if (config.range_type === 'NON_NEGATIVE') {
-            linear_gradient.appendChild(svgfactory.stop(100, config.positive_color));
+            fill = config.positive_color;
         } else if (config.range_type === 'ALL') {
+            linear_gradient = svgfactory.linearGradient();
         	var offset = Math.abs(display_range[0]) / (Math.abs(display_range[0]) + display_range[1]) * 100;
             linear_gradient.appendChild(svgfactory.stop(offset, config.negative_color));
             linear_gradient.appendChild(svgfactory.stop(offset, config.positive_color));
+            target_defs.appendChild(linear_gradient);
         }
-        target_defs.appendChild(linear_gradient);
 	    points.push([5, 20]);
 	    for (var i=0; i<mesh; i++) {
 		var t = i/mesh;
@@ -207,7 +209,7 @@ var OncoprintLegendView = (function() {
 		points.push([5 + 40*i/mesh, 20-height]);
 	    }
 	    points.push([45, 20]);
-        root.appendChild(svgfactory.path(points, null, null, linear_gradient));
+        root.appendChild(svgfactory.path(points, fill, fill, linear_gradient));
 	} else if (config.type === 'gradient') {
 	    var num_decimal_digits = 2;
 	    var display_range = config.range.map(function(x) {
