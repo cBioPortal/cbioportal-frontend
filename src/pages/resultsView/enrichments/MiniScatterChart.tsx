@@ -28,7 +28,7 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
     
     @autobind
     @action private svgRef(svgContainer:SVGElement|null) {
-        this.svgContainer = svgContainer;
+        this.svgContainer = (svgContainer && svgContainer.children) ? svgContainer.children[0] : null;
     }
 
     private handleSelection(points: any, bounds: any, props: any) {
@@ -103,7 +103,6 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                     </VictoryChart>
                     <DownloadControls
                         getSvg={() => this.svgContainer}
-                        buttons={["SVG", "PNG"]}
                         filename="enrichments-volcano"
                         dontFade={true}
                         collapse={true}

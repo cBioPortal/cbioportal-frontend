@@ -41,6 +41,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     @observable private yMaxInputFocused:boolean = false;
     private plot:LollipopPlot;
     private handlers:any;
+    private divContainer:HTMLDivElement;
 
     @computed private get showControls(): boolean {
         return (this.yMaxInputFocused || this.mouseInPlot);
@@ -306,32 +307,9 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     }
 
     @autobind
-    public toSVGDOMNode():SVGElement {
-        if (this.plot) {
-            // Get result of plot
-            const plotSvg = this.plot.toSVGDOMNode();
-            // Add label to top left
-            const label =(
-                <text
-                    fill="#2E3436"
-                    textAnchor="start"
-                    dy="1em"
-                    x="2"
-                    y="2"
-                    style={{fontFamily:"verdana", fontSize:"12px", fontWeight:"bold"}}
-                >
-                    {this.hugoGeneSymbol}
-                </text>
-            );
-            const labelGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            ReactDOM.render(label, labelGroup);
-            plotSvg.appendChild(labelGroup);
-
-            return plotSvg as SVGElement;
-        } else {
-            return document.createElementNS("http://www.w3.org/2000/svg", "svg") as SVGElement;
-        }
-        // Add label to top
+    private getSVG(){
+            var svg:SVGElement = $(this.divContainer).find(".lollipop-svgnode")[0] as any;
+            return svg;
     }
 
     @computed get hugoGeneSymbol() {
@@ -467,7 +445,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                                     />
                             </div>
                             <DownloadControls
-                                getSvg={this.toSVGDOMNode}
+                                getSvg={this.getSVG}
                                 filename={`${this.hugoGeneSymbol}_lollipop.svg`}
                                 dontFade={true}
                                 collapse={true}
@@ -483,7 +461,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     render() {
         if (this.props.store.pfamDomainData.isComplete && this.props.store.pfamDomainData.result) {
             return (
-                <div style={{display: "inline-block"}} onMouseEnter={this.handlers.onMouseEnterPlot} onMouseLeave={this.handlers.onMouseLeavePlot}>
+                <div style={{display: "inline-block"}} ref={(div:HTMLDivElement)=>this.divContainer=div} onMouseEnter={this.handlers.onMouseEnterPlot} onMouseLeave={this.handlers.onMouseLeavePlot}>
                     {this.controls}
                     <Collapse isOpened={this.legendShown}>
                         {this.legend}
@@ -496,6 +474,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                         dataStore={this.props.store.dataStore}
                         vizWidth={this.props.geneWidth}
                         vizHeight={130}
+                        hugoGeneSymbol={this.hugoGeneSymbol}
                         xMax={
                             (this.props.store.canonicalTranscript.result &&
                                 this.props.store.canonicalTranscript.result.proteinLength) ||
