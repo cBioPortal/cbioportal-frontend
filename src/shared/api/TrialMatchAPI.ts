@@ -32,12 +32,17 @@ type TrialMatch = {
 /**
  * Returns a map with the different types of evidence and the number of times that each evidence happens.
  */
-function countMatches(trialMatchItems: Array<TrialMatch>): {[trialTitle: string]: string} {
+function countMatches(trialMatchItems: Array<TrialMatch>): {[id: string]: string} {
     const match: {[trialTitle: string]: string} = {};
-    trialMatchItems.forEach(function (trialMatchItem: TrialMatch) {
-        let trialTitle = trialMatchItem.trialTitle;
-        match[trialTitle] = trialMatchItem.nctID + "," + trialMatchItem.trialStatus + "," +
-                            trialMatchItem.code  + "," + trialMatchItem.dose;
+    trialMatchItems.forEach(trialMatchItem => {
+        const id = trialMatchItem.trialTitle + ";" + trialMatchItem.nctID
+                    + ";" + trialMatchItem.trialStatus + ";" + trialMatchItem.code;
+        if (!match[id]) {
+            match[id] = trialMatchItem.dose;
+        } else {
+            match[id] += ";" + trialMatchItem.dose;
+        }
+
     });
     return match;
 };

@@ -27,27 +27,29 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
             if (_.isEmpty(variantMap)) {
                 list.push(this.variantItem());
             } else {
-                for (let name in variantMap) {
-                    let variant = variantMap[name];
-                    let trialTitle: string = '';
-                    let nctId: string = '';
-                    let trialStatus: string = '';
-                    let dose: string = '';
-                    let code: string = '';
+                for (const name in variantMap) {
+                    if (variantMap.hasOwnProperty(name)) {
+                        const variant = variantMap[name];
+                        let trialTitle: string;
+                        let nctId: string;
+                        let trialStatus: string;
+                        let code: string;
 
-                    for (const title in variant.match) {
-                        trialTitle = title;
-                        const trialInfo = variant.match[title].split(",");
-                        nctId = trialInfo[0];
-                        trialStatus = trialInfo[1];
-                        code = trialInfo[2];
-                        if (dose === "" || dose === undefined) {
-                            dose = trialInfo[3].split(":")[0];
+                        for (const trial in variant.match) {
+                            if (variant.match.hasOwnProperty(trial)) {
+                                const trialInfo = trial.split(";");
+                                trialTitle = trialInfo[0];
+                                nctId = trialInfo[1];
+                                trialStatus = trialInfo[2];
+                                code = trialInfo[3];
+                                const drugs = variant.match[trial].split(";");
+                                drugs.forEach(drug => {
+                                    list.push(this.variantItem(variant.name, trialTitle, variant.gene, code,
+                                        variant.oncogenicity, variant.mutEffect, nctId, trialStatus, drug.split(":")[0]));
+                                });
+                            }
                         }
-
                     }
-                    list.push(this.variantItem(variant.name, trialTitle, variant.gene, code, variant.oncogenicity,
-                                               variant.mutEffect, nctId, trialStatus, dose));
                 }
             }
         } else {
