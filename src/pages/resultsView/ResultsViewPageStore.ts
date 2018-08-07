@@ -109,6 +109,7 @@ export const DataTypeConstants = {
 };
 
 export interface ExtendedAlteration extends Mutation, NumericGeneMolecularData {
+    hugoGeneSymbol:string;
     molecularProfileAlterationType: MolecularProfile["molecularAlterationType"];
     // TODO: what is difference molecularProfileAlterationType and
     // alterationType?
@@ -125,6 +126,7 @@ export interface AnnotatedMutation extends Mutation {
 }
 
 export interface AnnotatedNumericGeneMolecularData extends NumericGeneMolecularData {
+    hugoGeneSymbol: string;
     oncoKbOncogenic: string;
 }
 
@@ -523,15 +525,18 @@ export class ResultsViewPageStore {
     readonly unfilteredExtendedAlterations = remoteData<ExtendedAlteration[]>({
         await: ()=>[
             this.unfilteredAlterations,
+            this.entrezGeneIdToGene,
             this.selectedMolecularProfiles,
             this.defaultOQLQuery
         ],
         invoke: () => {
             const acc = new accessors(this.selectedMolecularProfiles.result!);
             const alterations: ExtendedAlteration[] = [];
+            const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
 
             this.unfilteredAlterations.result!.forEach(alteration => {
                 const extendedAlteration: Partial<ExtendedAlteration> = {
+                    hugoGeneSymbol: entrezGeneIdToGene[alteration.entrezGeneId].hugoGeneSymbol,
                     molecularProfileAlterationType: acc.molecularAlterationType(alteration.molecularProfileId),
                     ...Object.assign({}, alteration)
                 };
@@ -1716,10 +1721,12 @@ export class ResultsViewPageStore {
     readonly annotatedMolecularData = remoteData<AnnotatedNumericGeneMolecularData[]>({
         await: ()=>[
             this.molecularData,
+            this.entrezGeneIdToGene,
             this.getOncoKbCnaAnnotationForOncoprint,
             this.molecularProfileIdToMolecularProfile
         ],
         invoke:()=>{
+            const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
             let getOncoKbAnnotation:(datum:NumericGeneMolecularData)=>IndicatorQueryResp|undefined;
             if (this.getOncoKbCnaAnnotationForOncoprint.result! instanceof Error) {
                 getOncoKbAnnotation = ()=>undefined;
@@ -1731,7 +1738,8 @@ export class ResultsViewPageStore {
                     return annotateMolecularDatum(
                         d,
                         getOncoKbAnnotation,
-                        profileIdToProfile
+                        profileIdToProfile,
+                        entrezGeneIdToGene
                     );
                 })
             );

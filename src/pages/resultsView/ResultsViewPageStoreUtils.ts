@@ -210,8 +210,10 @@ export function computeGenePanelInformation(
 export function annotateMolecularDatum(
     molecularDatum:NumericGeneMolecularData,
     getOncoKbCnaAnnotationForOncoprint:(datum:NumericGeneMolecularData)=>IndicatorQueryResp|undefined,
-    molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile}
+    molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile},
+    entrezGeneIdToGene:{[entrezGeneId:number]:Gene}
 ):AnnotatedNumericGeneMolecularData {
+    const hugoGeneSymbol = entrezGeneIdToGene[molecularDatum.entrezGeneId].hugoGeneSymbol;
     let oncogenic = "";
     if (molecularProfileIdToMolecularProfile[molecularDatum.molecularProfileId].molecularAlterationType
         === "COPY_NUMBER_ALTERATION") {
@@ -220,7 +222,7 @@ export function annotateMolecularDatum(
             oncogenic = getOncoKbOncogenic(oncoKbDatum);
         }
     }
-    return Object.assign({oncoKbOncogenic: oncogenic}, molecularDatum);
+    return Object.assign({oncoKbOncogenic: oncogenic, hugoGeneSymbol}, molecularDatum);
 }
 
 export async function fetchQueriedStudies(filteredPhysicalStudies:{[id:string]:CancerStudy},queriedIds:string[]):Promise<CancerStudy[]>{
