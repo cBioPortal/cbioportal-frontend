@@ -5,11 +5,12 @@ import {ChartContainer, IChartContainerProps} from 'pages/studyView/charts/Chart
 import { MSKTab, MSKTabs } from "../../shared/components/MSKTabs/MSKTabs";
 import { reaction, observable } from 'mobx';
 import { If } from 'react-if';
-import {ChartMeta, ChartType, StudyViewPageStore, AnalysisGroup} from 'pages/studyView/StudyViewPageStore';
+import {ChartMeta, ChartType, DataBinMethodConstants, StudyViewPageStore, AnalysisGroup} from 'pages/studyView/StudyViewPageStore';
 import SummaryHeader from 'pages/studyView/SummaryHeader';
 import {Gene, SampleIdentifier, ClinicalAttribute} from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import AppConfig from 'appConfig';
+import {ClinicalDataIntervalFilterValue, DataBin} from "shared/api/generated/CBioPortalAPIInternal";
 import {CopyNumberGeneFilterElement} from "../../shared/api/generated/CBioPortalAPIInternal";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {ClinicalDataTab} from "./tabs/ClinicalDataTab";
@@ -41,8 +42,17 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         setWindowVariable("studyViewPageStore", this.store);
 
         this.handlers = {
-            onUserSelection: (chartMeta: ChartMeta, values: string[]) => {
-                this.store.updateClinicalDataEqualityFilters(chartMeta, values)
+            onValueSelection: (chartMeta: ChartMeta, values: string[]) => {
+                this.store.updateClinicalDataEqualityFilters(chartMeta, values);
+            },
+            onDataBinSelection: (chartMeta: ChartMeta, dataBins: DataBin[]) => {
+                this.store.updateClinicalDataIntervalFilters(chartMeta, dataBins);
+            },
+            onUpdateIntervalFilters: (chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) => {
+                this.store.updateClinicalDataIntervalFiltersByValues(chartMeta, values);
+            },
+            onToggleLogScale: (chartMeta: ChartMeta) => {
+                this.store.toggleLogScale(chartMeta);
             },
             addGeneFilters: (entrezGeneIds: number[]) => {
                 this.store.addGeneFilters(entrezGeneIds);
@@ -90,7 +100,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             updateChartsVisibility: (visibleChartIds: string[]) => {
                 this.store.updateChartsVisibility(visibleChartIds);
             }
-            
+
         }
 
         //TODO: this should be done by a module so that it can be reused on other pages
@@ -124,7 +134,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             analysisGroupsSettings: this.store.analysisGroupsSettings
         };
 
-        // TODO enable data download for bar chart, too
         switch (chartMeta.chartType) {
             case ChartType.PIE_CHART: {
                 props.promise = this.store.studyViewClinicalDataCountsCache.get({
@@ -132,8 +141,34 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     filters: this.store.filters
                 });
                 props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey);
-                props.onUserSelection = this.handlers.onUserSelection;
-                props.onResetSelection = this.handlers.onUserSelection;
+                props.onValueSelection = this.handlers.onValueSelection;
+                props.onResetSelection = this.handlers.onValueSelection;
+                props.download = [
+                    {
+                        initDownload: () => this.store.getClinicalData(chartMeta),
+                        type: 'TSV'
+                    }, {
+                        type: 'SVG'
+                    }, {
+                        type: 'PDF'
+                    }
+                ];
+                break;
+            }
+            case ChartType.BAR_CHART: {
+                props.promise = this.store.studyViewClinicalDataBinCountsCache.get({
+                    attribute: chartMeta.clinicalAttribute!,
+                    filters: this.store.filters,
+                    disableLogScale: this.store.isLogScaleDisabled(chartMeta.uniqueKey),
+                    method: DataBinMethodConstants.STATIC // TODO this.barChartFilters.length > 0 ? 'STATIC' : 'DYNAMIC' (not trivial when multiple filters involved)
+                });
+                props.filters = this.store.getClinicalDataIntervalFiltersByUniqueKey(chartMeta.uniqueKey);
+                props.onDataBinSelection = this.handlers.onDataBinSelection;
+                props.onResetSelection = this.handlers.onDataBinSelection;
+                props.onToggleLogScale = this.handlers.onToggleLogScale;
+                props.showLogScaleToggle = this.store.isLogScaleToggleVisible(
+                    chartMeta.uniqueKey, props.promise.result);
+                props.logScaleChecked = this.store.isLogScaleChecked(chartMeta.uniqueKey);
                 props.download = [
                     {
                         initDownload: () => this.store.getClinicalData(chartMeta),
@@ -152,9 +187,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     attribute: chartMeta.clinicalAttribute!,
                     filters: this.store.filters
                 });
-                props.onUserSelection = this.handlers.onUserSelection;
-                props.onResetSelection = this.handlers.onUserSelection;
-                props.disableGraphicsDownload = true;
+                props.onValueSelection = this.handlers.onValueSelection;
+                props.onResetSelection = this.handlers.onValueSelection;
                 props.download = [
                     {
                         // TODO implement a proper data download function
@@ -167,11 +201,10 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             case ChartType.MUTATED_GENES_TABLE: {
                 props.filters = this.store.getMutatedGenesTableFilters();
                 props.promise = this.store.mutatedGeneData;
-                props.onUserSelection = this.handlers.addGeneFilters;
+                props.onValueSelection = this.handlers.addGeneFilters;
                 props.onResetSelection = this.handlers.resetGeneFilter;
                 props.selectedGenes=this.store.selectedGenes;
                 props.onGeneSelect=this.store.onCheckGene;
-                props.disableGraphicsDownload = true;
                 props.download = [
                     {
                         // TODO implement a proper data download function
@@ -184,11 +217,10 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             case ChartType.CNA_GENES_TABLE: {
                 props.filters = this.store.getCNAGenesTableFilters();
                 props.promise = this.store.cnaGeneData;
-                props.onUserSelection = this.handlers.addCNAGeneFilters;
+                props.onValueSelection = this.handlers.addCNAGeneFilters;
                 props.onResetSelection = this.handlers.resetCNAGeneFilter;
                 props.selectedGenes=this.store.selectedGenes;
                 props.onGeneSelect=this.store.onCheckGene;
-                props.disableGraphicsDownload = true;
                 props.download = [
                     {
                         // TODO implement a proper data download function
@@ -216,7 +248,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 props.promise = this.store.mutationCountVsFractionGenomeAlteredData;
                 props.selectedSamplesMap = this.store.selectedSamplesMap;
                 props.selectedSamples = this.store.selectedSamples;
-                props.onUserSelection = this.handlers.updateCustomCasesFilter;
+                props.onValueSelection = this.handlers.updateCustomCasesFilter;
                 props.onResetSelection = this.handlers.resetCustomCasesFilter;
                 props.sampleToAnalysisGroup = this.store.sampleToAnalysisGroup;
                 break;
@@ -285,7 +317,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                 user={AppConfig.userEmailAddress}
                                 getClinicalData={this.store.getDownloadDataPromise}
                                 onSubmitQuery={()=> this.store.onSubmitQuery()}
-                                updateClinicalDataEqualityFilter={this.handlers.onUserSelection}
+                                updateClinicalDataEqualityFilter={this.handlers.onValueSelection}
+                                updateClinicalDataIntervalFilter={this.handlers.onUpdateIntervalFilters}
                                 clearCNAGeneFilter={this.handlers.clearCNAGeneFilter}
                                 clearGeneFilter={this.handlers.clearGeneFilter}
                                 clearCustomCasesFilter={this.handlers.clearCustomCasesFilter}
@@ -296,7 +329,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                             />
                             <div className={styles.studyViewFlexContainer}>
                                 {this.store.initialClinicalDataCounts.isComplete &&
+                                this.store.initialClinicalDataBins.isComplete &&
                                 this.store.visibleAttributes.map(this.renderAttributeChart)}
+
                             </div>
                         </MSKTab>
                         <MSKTab key={1} id={"clinicalData"} linkText={"Clinical Data"}>

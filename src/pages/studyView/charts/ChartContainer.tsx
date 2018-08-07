@@ -12,16 +12,18 @@ import {
     ClinicalDataCountWithColor,
     StudyViewPageStore
 } from "pages/studyView/StudyViewPageStore";
+import {DataBin} from "shared/api/generated/CBioPortalAPIInternal";
 import PieChart from "pages/studyView/charts/pieChart/PieChart";
 import {svgToPdfPromise} from "shared/lib/svgToPdfDownload";
 import classnames from "classnames";
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
-import {bind} from "bind-decorator";
 import MobxPromise from "mobxpromise";
 import SurvivalChart, {LegendLocation} from "../../resultsView/survival/SurvivalChart";
 import {MutatedGenesTable} from "../table/MutatedGenesTable";
 import {CNAGenesTable} from "../table/CNAGenesTable";
 import StudyViewScatterPlot from "./scatterPlot/StudyViewScatterPlot";
+import { bind } from "bind-decorator";
+import BarChart from "./barChart/BarChart";
 import {CopyNumberGeneFilterElement} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import {makeMutationCountVsCnaTooltip} from "../StudyViewUtils";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
@@ -43,11 +45,14 @@ export interface IChartContainerProps {
     chartMeta: ChartMeta;
     promise: MobxPromise<any>;
     filters: any;
-    disableGraphicsDownload?: boolean;
+    onValueSelection?: any;
+    onDataBinSelection?: any;
     download?: IChartContainerDownloadProps[];
-    onUserSelection?: any;
     onResetSelection?: any;
     onDeleteChart: (chartMeta: ChartMeta) => void;
+    onToggleLogScale?:any;
+    logScaleChecked?:boolean;
+    showLogScaleToggle?:boolean;
     selectedGenes?:any;
     onGeneSelect?:any;
     selectedSamplesMap?: any;
@@ -85,14 +90,22 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             resetFilters: action(() => {
                 this.props.onResetSelection(this.props.chartMeta, []);
             }),
-            onUserSelection: action((values: string[]) => {
-                this.props.onUserSelection(this.props.chartMeta, values);
+            onValueSelection: action((values: string[]) => {
+                this.props.onValueSelection(this.props.chartMeta, values);
+            }),
+            onDataBinSelection: action((dataBins: DataBin[]) => {
+                this.props.onDataBinSelection(this.props.chartMeta, dataBins);
+            }),
+            onToggleLogScale: action(() => {
+                if (this.props.onToggleLogScale) {
+                    this.props.onToggleLogScale(this.props.chartMeta);
+                }
             }),
             updateCNAGeneFilters: action((filters: CopyNumberGeneFilterElement[]) => {
-                this.props.onUserSelection(filters);
+                this.props.onValueSelection(filters);
             }),
             updateGeneFilters: action((value: number[]) => {
-                this.props.onUserSelection(value);
+                this.props.onValueSelection(value);
             }),
             onMouseEnterChart: action((event: React.MouseEvent<any>) => {
                 this.placement = event.nativeEvent.x > 800 ? 'left' : 'right';
@@ -133,7 +146,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @computed
     get chartHeight() {
         let chartHeight = styles.chartHeightTwo;
-        if (this.chartType === ChartType.PIE_CHART) {
+        if (this.chartType === ChartType.PIE_CHART ||
+            this.chartType === ChartType.BAR_CHART)
+        {
             chartHeight = styles.chartHeightOne;
         }
         return chartHeight;
@@ -148,6 +163,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     get chartControls(): ChartControls {
         let controls:Partial<ChartControls> = {};
         switch (this.chartType) {
+            case ChartType.BAR_CHART: {
+                controls = {
+                    showLogScaleToggle: this.props.showLogScaleToggle,
+                    logScaleChecked: this.props.logScaleChecked
+                };
+                break;
+            }
             case ChartType.PIE_CHART: {
                 controls = {showTableIcon: true}
                 break;
@@ -220,7 +242,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             case ChartType.PIE_CHART: {
                 return (<PieChart
                     ref={this.handlers.ref}
-                    onUserSelection={this.handlers.onUserSelection}
+                    onUserSelection={this.handlers.onValueSelection}
                     filters={this.props.filters}
                     data={this.props.promise.result}
                     active={this.mouseInChart}
@@ -228,11 +250,21 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     label={this.props.chartMeta.displayName}
                 />)
             }
+            case ChartType.BAR_CHART: {
+                return (
+                    <BarChart
+                        ref={this.handlers.ref}
+                        onUserSelection={this.handlers.onDataBinSelection}
+                        filters={this.props.filters}
+                        data={this.props.promise.result}
+                    />
+                );
+            }
             case ChartType.TABLE: {
                 return (<ClinicalTable
                     data={this.props.promise.result}
                     filters={this.props.filters}
-                    onUserSelection={this.handlers.onUserSelection}
+                    onUserSelection={this.handlers.onValueSelection}
                     label={this.props.chartMeta.displayName}
                 />)
             }
@@ -311,7 +343,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     <StudyViewScatterPlot
                         width={400}
                         height={380}
-                        onSelection={this.props.onUserSelection}
+                        onSelection={this.props.onValueSelection}
                         data={this.props.promise.result}
                         isLoading={this.props.selectedSamples.isPending}
 
@@ -363,6 +395,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     active={this.mouseInChart}
                     resetChart={this.handlers.resetFilters}
                     deleteChart={this.handlers.onDeleteChart}
+                    toggleLogScale={this.handlers.onToggleLogScale}
                     hideLabel={this.hideLabel}
                     chartControls={this.chartControls}
                     changeChartType={this.changeChartType}
