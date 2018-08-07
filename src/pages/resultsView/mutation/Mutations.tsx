@@ -9,7 +9,7 @@ import "./mutations.scss";
 import {filterCBioPortalWebServiceData} from '../../../shared/lib/oql/oqlfilter';
 import accessors from '../../../shared/lib/oql/accessors';
 import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
-import NoOqlWarning from "../../../shared/components/NoOqlWarning";
+import OqlStatusBanner from "../../../shared/components/OqlStatusBanner";
 
 export interface IMutationsPageProps {
     routing?: any;
@@ -35,9 +35,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
 
         return (
             <div>
-                <div style={{marginTop:-4, marginLeft:-3}}>
-                    <NoOqlWarning store={this.props.store}/>
-                </div>
+                <OqlStatusBanner store={this.props.store} tabReflectsOql={false}/>
                 <Loader isLoading={this.props.store.mutationMapperStores.isPending} />
                 {(this.props.store.mutationMapperStores.isComplete) && (
                     <MSKTabs
