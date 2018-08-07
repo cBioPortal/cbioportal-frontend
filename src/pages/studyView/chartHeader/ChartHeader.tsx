@@ -2,6 +2,7 @@ import * as React from "react";
 import styles from "./styles.module.scss";
 import {If} from 'react-if';
 import {ChartMeta, ChartType} from "pages/studyView/StudyViewPageStore";
+import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import {bind} from "bind-decorator";
 import classnames from 'classnames';
@@ -15,6 +16,7 @@ export interface IChartHeaderProps {
     active           : boolean;
     resetChart       : () => void;
     deleteChart      : () => void;
+    toggleLogScale?  : () => void;
     hideLabel?       : boolean;
     chartControls?   : ChartControls;
     changeChartType  : (chartType: ChartType) => void;
@@ -23,10 +25,12 @@ export interface IChartHeaderProps {
 }
 
 export interface ChartControls {
-    showResetIcon?   : boolean;
-    showTableIcon?    : boolean;
-    showPieIcon?      : boolean;
+    showResetIcon?      : boolean;
+    showTableIcon?      : boolean;
+    showPieIcon?        : boolean;
     showAnalysisGroupsIcon?   : boolean;
+    showLogScaleToggle? : boolean;
+    logScaleChecked?    : boolean;
 }
 
 @observer
@@ -115,6 +119,20 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                 </div>
                 <If condition={this.active}>
                     <div className={styles.controls}>
+                        <div role="group" className="btn-group">
+                            <If condition={this.props.chartControls && this.props.chartControls.showLogScaleToggle}>
+                                <LabeledCheckbox
+                                    checked={this.props.chartControls && this.props.chartControls.logScaleChecked}
+                                    onChange={event => {
+                                        if (this.props.toggleLogScale) {
+                                            this.props.toggleLogScale();
+                                        }
+                                    }}
+                                >
+                                    <span>Log Scale</span>
+                                </LabeledCheckbox>
+                            </If>
+                        </div>
                         <If condition={this.props.chartControls && this.props.chartControls.showResetIcon}>
                             <i className={classnames("fa", "fa-undo", styles.item, styles.clickable, styles.undo)}
                                aria-hidden="true"

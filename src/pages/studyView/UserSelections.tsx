@@ -3,19 +3,20 @@ import * as _ from 'lodash';
 import { observer } from "mobx-react";
 import { computed } from 'mobx';
 import styles from "./styles.module.scss";
-import { StudyViewFilter } from 'shared/api/generated/CBioPortalAPIInternal';
+import {ClinicalDataIntervalFilterValue, StudyViewFilter} from 'shared/api/generated/CBioPortalAPIInternal';
 import { ChartMeta, UniqueKey } from 'pages/studyView/StudyViewPageStore';
-import { isFiltered } from 'pages/studyView/StudyViewUtils';
+import {intervalFiltersDisplayValue, isFiltered} from 'pages/studyView/StudyViewUtils';
 import autobind from 'autobind-decorator';
 
 export interface IUserSelectionsProps {
     filter: StudyViewFilter;
     attributesMetaSet: { [id: string]: ChartMeta };
     updateClinicalDataEqualityFilter: (chartMeta: ChartMeta, value: string[]) => void;
+    updateClinicalDataIntervalFilter: (chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) => void;
     clearGeneFilter: () => void;
     clearCNAGeneFilter: () => void;
     clearCustomCasesFilter: () => void;
-    clearAllFilters: () => void
+    clearAllFilters: () => void;
 }
 
 
@@ -45,6 +46,23 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                 return null;
             }
         })
+    }
+
+    @computed private get clinicalDataIntervalFilters() {
+        return _.map((this.props.filter.clinicalDataIntervalFilters || []), clinicalDataIntervalFilter => {
+            const chartMeta = this.props.attributesMetaSet[clinicalDataIntervalFilter.clinicalDataType + '_' + clinicalDataIntervalFilter.attributeId];
+            if (chartMeta) {
+                return (
+                    <ClinicalDataIntervalFilter
+                        chartMeta={chartMeta}
+                        values={clinicalDataIntervalFilter.values}
+                        updateClinicalDataIntervalFilter={this.props.updateClinicalDataIntervalFilter}
+                    />
+                );
+            } else {
+                return null;
+            }
+        });
     }
 
     @computed private get mutatedGeneFilter() {
@@ -93,14 +111,14 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                     <span>Your selection:</span>
                     <div>
                         {this.clinicalDataEqualityFilters}
+                        {this.clinicalDataIntervalFilters}
                         {this.cnaGeneFilter}
                         {this.mutatedGeneFilter}
                         {this.mutationCountVScnaFilter}
                         <span><button className="btn btn-default btn-xs" onClick={this.props.clearAllFilters}>Clear All</button></span>
                     </div>
                 </div>
-
-            )
+            );
         } else {
             return null;
         }
@@ -117,7 +135,7 @@ export interface IClinicalDataEqualityFilterProps {
 class ClinicalDataEqualityFilter extends React.Component<IClinicalDataEqualityFilterProps, {}> {
 
     @autobind
-    private updateClinicalDataEqualityFilter(value: String) {
+    private updateClinicalDataEqualityFilter(value: string) {
         this.props.updateClinicalDataEqualityFilter(this.props.chartMeta, _.filter(this.props.values, _value => _value !== value))
     }
 
@@ -134,6 +152,32 @@ class ClinicalDataEqualityFilter extends React.Component<IClinicalDataEqualityFi
                 })}
             </span>
         )
+    }
+}
+
+export interface IClinicalDataIntervalFilterProps {
+    chartMeta: ChartMeta;
+    values: ClinicalDataIntervalFilterValue[];
+    updateClinicalDataIntervalFilter: (chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) => void;
+}
+
+class ClinicalDataIntervalFilter extends React.Component<IClinicalDataIntervalFilterProps, {}> {
+
+    @autobind
+    private updateClinicalDataIntervalFilter() {
+        this.props.updateClinicalDataIntervalFilter(this.props.chartMeta, []);
+    }
+
+    render() {
+        return (
+            <span className={styles.filter}>
+                <span className={styles.name}>{this.props.chartMeta.displayName}</span>
+                <IntervalFilter
+                    values={this.props.values}
+                    removeClinicalDataIntervalFilter={this.updateClinicalDataIntervalFilter}
+                />
+            </span>
+        );
     }
 }
 
@@ -158,3 +202,23 @@ class UnitFilter extends React.Component<{ value: string; removeClinicalDataEqua
     }
 }
 
+class IntervalFilter extends React.Component<{ values: ClinicalDataIntervalFilterValue[]; removeClinicalDataIntervalFilter: (values: ClinicalDataIntervalFilterValue[]) => void; }, {}> {
+
+    @autobind
+    private removeClinicalDataIntervalFilter() {
+        this.props.removeClinicalDataIntervalFilter([]);
+    }
+
+    render() {
+        return (
+            <span className={styles.value}>
+                <span className={styles.label}>{intervalFiltersDisplayValue(this.props.values)}</span>
+                <i
+                    className="fa fa-times"
+                    style={{ cursor: "pointer" }}
+                    onClick={this.removeClinicalDataIntervalFilter}
+                />
+            </span>
+        );
+    }
+}
