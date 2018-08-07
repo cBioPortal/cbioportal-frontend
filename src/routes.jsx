@@ -3,6 +3,7 @@ import { Route, Redirect, IndexRedirect } from 'react-router';
 import { inject } from 'mobx-react';
 import Container from 'appShell/App/Container';
 import { restoreRouteAfterRedirect } from './shared/lib/redirectHelpers';
+import AppConfig from "appConfig";
 
 /* HOW TO ADD A NEW ROUTE
 * 1. Import the "page" component using the bundle-loader directives as seen in imports below
@@ -20,7 +21,9 @@ import HomePage from 'bundle-loader?lazy!babel-loader!./pages/home/HomePage';
 import TestimonialsPage from 'pages/staticPages/testimonialsPage/TestimonialsPage';
 import DatasetPage from 'bundle-loader?lazy!babel-loader!./pages/datasetView/DatasetPage';
 import StudyViewPage from 'bundle-loader?lazy!babel-loader!./pages/studyView/StudyViewPage';
+import MutationMapperTool from 'bundle-loader?lazy!babel-loader!./pages/tools/mutationMapper/MutationMapperTool';
 import './globalComponents';
+import {getBasePath} from "shared/api/urls";
 
 // accepts bundle-loader's deferred loader function and defers execution of route's render
 // until chunk is loaded
@@ -48,16 +51,22 @@ let getBlankPage = function(){
     return <div />
 }
 
+console.log(getBasePath());
+
 export const makeRoutes = (routing) => {
     return (<Route path="/" component={Container}>
-        <Route path="/home" getComponent={lazyLoadComponent(HomePage)}/>
-        <Route path="/patient" getComponent={lazyLoadComponent(PatientViewPage)}/>
-        <Route path="/datasets" getComponent={lazyLoadComponent(DatasetPage)} />
-        <Route path="/restore" component={restoreRoute}/>
-        <Route path="/testimonials" component={TestimonialsPage}/>
-        <Route path="/blank" component={getBlankPage}/>
-        <Route path="/results" getComponent={lazyLoadComponent(ResultsViewPage)} />
-        <Route path="/study" getComponent={lazyLoadComponent(StudyViewPage)} />
+                <Route path="/home" getComponent={lazyLoadComponent(HomePage)}/>
+                <Route path="/datasets" getComponent={lazyLoadComponent(DatasetPage)} />
+                <Route path="/restore" component={restoreRoute}/>
+                <Route path="/testimonials" component={TestimonialsPage}/>
+                <Route path="/blank" component={getBlankPage}/>
+                <Route path="/results" getComponent={lazyLoadComponent(ResultsViewPage)} />
+                <Route path={getBasePath()}>
+                    <Route path="patient" getComponent={lazyLoadComponent(PatientViewPage)}/>
+                    <Route path="newstudy" getComponent={lazyLoadComponent(StudyViewPage)} />
+                </Route>
+                <IndexRedirect to={defaultRoute}/>
+                <Route path="/mutation_mapper" getComponent={lazyLoadComponent(MutationMapperTool)} />
         <IndexRedirect to={defaultRoute}/>
     </Route>)
 };

@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import $ from 'jquery';
 import { default as ReactBootstrap} from 'react-bootstrap';
 import GenomicOverview from './genomicOverview/GenomicOverview';
-import { ClinicalData } from "shared/api/generated/CBioPortalAPI";
+import {CancerStudy, ClinicalData} from "shared/api/generated/CBioPortalAPI";
 import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
 import { RequestStatus } from "../../shared/api/api-types-extended";
 import FeatureTitle from '../../shared/components/featureTitle/FeatureTitle';
@@ -35,10 +35,13 @@ import { getMouseIcon } from './SVGIcons';
 
 import './patient.scss';
 import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
+import {getSampleViewUrl} from "../../shared/api/urls";
 
 const patientViewPageStore = new PatientViewPageStore();
 
-(window as any).patientViewPageStore = patientViewPageStore;
+const win:any = (window as any);
+
+win.patientViewPageStore = patientViewPageStore;
 
 export interface IPatientViewPageProps {
     routing: any;
@@ -59,6 +62,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     @observable private cnaTableColumnVisibility: {[columnId: string]: boolean}|undefined;
 
     private updatePageTitleReaction: IReactionDisposer;
+    private updateMetaReaction: IReactionDisposer;
 
     constructor(props: IPatientViewPageProps) {
 
@@ -66,8 +70,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         //TODO: this should be done by a module so that it can be reused on other pages
         const reaction1 = reaction(
-            () => props.routing.location.query,
-            query => {
+            () => [props.routing.location.query, props.routing.location.hash],
+            ([query,hash]) => {
 
                 const validationResult = validateParametersPatientView(query);
 
@@ -85,11 +89,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         patientViewPageStore.setSampleId(query.sampleId as string);
                     }
 
-                    let patientIdsInCohort = ('navCaseIds' in query ? (query.navCaseIds as string).split(",") : []);
+                    // if there is a navCaseId list in url
+                    const navCaseIdMatch = hash.match(/navCaseIds=([^&]*)/);
+                    if (navCaseIdMatch && navCaseIdMatch.length > 1) {
+                        const navCaseIds = navCaseIdMatch[1].split(',');
+                        patientViewPageStore.patientIdsInCohort = navCaseIds.map((entityId:string)=>{
+                            return entityId.includes(':') ? entityId : patientViewPageStore.studyId + ':' + entityId;
+                        });
+                    }
 
-                    patientViewPageStore.patientIdsInCohort = patientIdsInCohort.map(entityId=>{
-                        return entityId.includes(':') ? entityId : patientViewPageStore.studyId + ':' + entityId;
-                    });
                 } else {
                     patientViewPageStore.urlValidationError = validationResult.message;
                 }
@@ -100,37 +108,36 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         this.updatePageTitleReaction = reaction(
             () => patientViewPageStore.pageTitle,
-            (title:string) => ((window as any).document.title = title),
+            (title:string) => {
+                win.document.title = title;
+            },
             { fireImmediately:true }
         );
+
+        this.updateMetaReaction = autorun(
+            () => {
+                const study = patientViewPageStore.studyMetaData.result;
+                if (study) {
+                    // first kill any existing meta tag
+                    $("meta[name=description]").remove();
+                    const id = ((patientViewPageStore.pageMode === "patient") ?
+                        patientViewPageStore.patientId : patientViewPageStore.sampleId);
+                    const content =
+                        `${id} from ${study.name}`;
+                    const meta = $(`<meta name="description" content="${content}">`).prependTo("head");
+                }
+            }
+        );
+
 
         this.onMutationTableColumnVisibilityToggled = this.onMutationTableColumnVisibilityToggled.bind(this);
         this.onCnaTableColumnVisibilityToggled = this.onCnaTableColumnVisibilityToggled.bind(this);
     }
 
-    public componentDidMount() {
-
-        this.exposeComponentRenderersToParentScript();
-
-    }
-
     public componentWillUnmount(){
-
         //dispose reaction
         this.updatePageTitleReaction();
-
-    }
-
-    // this gives the parent (legacy) cbioportal code control to mount
-    // these components whenever and wherever it wants
-    exposeComponentRenderersToParentScript() {
-
-        // exposeComponentRenderer('renderClinicalInformationContainer', ClinicalInformationContainer,
-        //     { store:this.props.store }
-        // );
-        //
-        // exposeComponentRenderer('renderGenomicOverview', GenomicOverview);
-
+        this.updateMetaReaction();
     }
 
     public handleSampleClick(id: string, e: React.MouseEvent<HTMLAnchorElement>) {
@@ -229,7 +236,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         {isPDX && getMouseIcon()}
                                         {isPDX && '\u00A0'}
                                         <a
-                                            href={`case.do?#/patient?sampleId=${sample.id}&studyId=${patientViewPageStore.studyMetaData.result!.studyId}`}
+                                            href={getSampleViewUrl(patientViewPageStore.studyMetaData.result!.studyId, sample.id)}
                                             target="_blank"
                                             onClick={(e: React.MouseEvent<HTMLAnchorElement>) => this.handleSampleClick(sample.id, e)}
                                         >

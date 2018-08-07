@@ -1,8 +1,6 @@
-import { ClinicalDataCount, StudyViewFilter } from "shared/api/generated/CBioPortalAPIInternal";
 import _ from "lodash";
-import { ClinicalAttributeData, ClinicalDataType } from "pages/studyView/StudyViewPageStore";
-import internalClient from "shared/api/cbioportalInternalClientInstance";
-import { ClinicalAttribute } from "shared/api/generated/CBioPortalAPI";
+import { SingleGeneQuery } from "shared/lib/oql/oql-parser";
+import { unparseOQLQueryLine } from "shared/lib/oql/oqlfilter";
 
 //TODO:cleanup
 export const COLORS = [
@@ -59,8 +57,21 @@ export const COLORS = [
     '#b82e27', '#316397', '#994495', '#22aa93',
     '#aaaa14', '#6633c1', '#e67303', '#8b0705',
     '#651062', '#329267', '#5574a1', '#3b3ea5'
-  ];
+];
 
 export const NA_COLOR = '#CCCCCC'
 
 export const UNSELECTED_COLOR = '#808080'
+
+export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: string): string {
+
+    let updatedQueries = _.filter(geneQueries,query=> query.gene !== selectedGene)
+    if(updatedQueries.length === geneQueries.length){
+        updatedQueries.push({
+            gene: selectedGene,
+            alterations: false
+        })
+    }
+    return updatedQueries.map(query=>unparseOQLQueryLine(query)).join('\n');
+
+}

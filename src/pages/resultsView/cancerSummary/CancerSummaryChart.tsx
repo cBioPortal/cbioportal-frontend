@@ -6,6 +6,8 @@ import {observable} from "mobx";
 import {observer} from "mobx-react";
 import {CSSProperties} from "react";
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
+import autobind from "autobind-decorator";
+import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 
 interface CancerSummaryChartProps {
     colors: Record<keyof IAlterationCountMap, string>;
@@ -22,6 +24,7 @@ function percentageRounder(num:number){
     return _.round(num * 100, 2)
 }
 
+//TODO: refactor to use generic tooltip model
 interface ITooltipModel {
     x:number,
     y:number,
@@ -64,6 +67,12 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
     constructor(){
         super();
         this.tickFormat = this.tickFormat.bind(this);
+    }
+
+    @autobind
+    private getSvg() {
+        // can't see to find type that has children collection
+        return (this.svgContainer as any).children[0];
     }
 
     private get width(){
@@ -168,12 +177,12 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                         {
                             target: "data",
                             mutation: (props:any) => {
-                                if (props.datum.x in self.props.countsByGroup) {
+                                if (props.datum.xKey in self.props.countsByGroup) {
                                     self.tooltipModel = {
                                         x:props.x + 20 - this.scrollPane.scrollLeft,
                                         y:props.y - 18,
                                         groupName:props.datum.x,
-                                        alterationData:self.props.countsByGroup[props.datum.x]
+                                        alterationData:self.props.countsByGroup[props.datum.xKey]
                                     };
                                 } else {
                                     self.hideTooltip();
@@ -199,9 +208,9 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
     buildTooltip(tooltipModel: ITooltipModel){
 
         return (
-            <div className="popover right"
+            <div className="popover cbioTooltip right"
                  onMouseLeave={()=>this.hideTooltip()}
-                 style={{display:'block', position:'absolute', top:tooltipModel.y, width:500, left:tooltipModel!.x}}
+                 style={{top:tooltipModel.y, left:tooltipModel!.x}}
             >
                 <div className="arrow" style={{top:30}}></div>
                 <div className="popover-content">
@@ -262,7 +271,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
         return (
             <div data-test="cancerTypeSummaryChart">
                 <div style={this.overflowStyle} className="borderedChart">
-                    <div ref={(el:HTMLDivElement)=>this.scrollPane=el} style={{fontFamily:"Arial, Helvetica", overflowX:'auto', overflowY:'hidden'}}>
+                    <div ref={(el:HTMLDivElement)=>this.scrollPane=el} style={{overflowX:'auto', overflowY:'hidden'}}>
                     {
                         (this.tooltipModel) && (this.buildTooltip(this.tooltipModel))
                     }
@@ -303,6 +312,13 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                         }
                     </VictoryChart>
                     </div>
+                    <DownloadControls
+                        getSvg={this.getSvg}
+                        filename="cancer_types_summary"
+                        dontFade={true}
+                        collapse={true}
+                        style={{position:"absolute", top:10, right:10}}
+                    />
                 </div>
             </div>
         );

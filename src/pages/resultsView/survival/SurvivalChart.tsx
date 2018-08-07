@@ -8,16 +8,17 @@ import { sleep } from "../../../shared/lib/TimeUtils";
 import * as _ from 'lodash';
 import {
     VictoryChart, VictoryContainer, VictoryLine, VictoryTooltip,
-    VictoryAxis, VictoryLegend, VictoryLabel, VictoryScatter, VictoryTheme
+    VictoryAxis, VictoryLegend, VictoryLabel, VictoryScatter, VictoryTheme, VictoryZoomContainer
 } from 'victory';
 import SvgSaver from 'svgsaver';
-import fileDownload from 'react-file-download';
 import {
     getEstimates, getMedian, getLineData, getScatterData, getScatterDataWithOpacity, getStats, calculateLogRank,
-    getDownloadContent, convertScatterDataToDownloadData
+    getDownloadContent, convertScatterDataToDownloadData, downSampling, GroupedScatterData, filteringScatterData
 } from "./SurvivalUtil";
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
+import {getPatientViewUrl} from "../../../shared/api/urls";
+import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 import autobind from "autobind-decorator";
 
 export interface ISurvivalChartProps {
@@ -44,10 +45,15 @@ export type ConfigurableSurvivalChartStyleOpts = {
     height?: number,
 }
 
+// Start to down sampling when there are more than 1000 dots in the plot.
+const SURVIVAL_DOWN_SAMPLING_THRESHOLD = 1000;
+
 @observer
 export default class SurvivalChart extends React.Component<ISurvivalChartProps, {}> {
 
     @observable tooltipModel: any;
+    @observable scatterFilter: any;
+    // The denominator should be determined based on the plot width and height.
     private isTooltipHovered: boolean = false;
     private tooltipCounter: number = 0;
     private alteredLegendText = 'Cases with Alteration(s) in Query Gene(s)';
@@ -87,6 +93,43 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         return configurableOpts;
     }
 
+    @computed
+    get downSamplingDenominators() {
+        return {
+            x: this.styleOpts.width - this.styleOpts.padding.left - this.styleOpts.padding.right,
+            y: this.styleOpts.height - this.styleOpts.padding.top - this.styleOpts.padding.bottom
+        }
+    }
+
+    @computed
+    get allScatterData(): GroupedScatterData {
+        return {
+            altered: {
+                numOfCases: this.sortedAlteredPatientSurvivals.length,
+                line: getLineData(this.sortedAlteredPatientSurvivals, this.alteredEstimates),
+                scatterWithOpacity: getScatterDataWithOpacity(this.sortedAlteredPatientSurvivals, this.alteredEstimates),
+                scatter: getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)
+            },
+            unaltered: {
+                numOfCases: this.sortedUnalteredPatientSurvivals.length,
+                line: getLineData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates),
+                scatterWithOpacity: getScatterDataWithOpacity(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates),
+                scatter: getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)
+            }
+        };
+    }
+
+    // Only recalculate the scatter data based on the plot filter.
+    // The filter is only available when user zooms in the plot.
+    @computed
+    get scatterData(): GroupedScatterData {
+        return filteringScatterData(this.allScatterData, this.scatterFilter, {
+            xDenominator: this.downSamplingDenominators.x,
+            yDenominator: this.downSamplingDenominators.y,
+            threshold: SURVIVAL_DOWN_SAMPLING_THRESHOLD
+        });
+    }
+
     public static defaultProps: Partial<ISurvivalChartProps> = {
         showTable: true,
         showLegend: true,
@@ -97,9 +140,6 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         super(props);
         this.tooltipMouseEnter = this.tooltipMouseEnter.bind(this);
         this.tooltipMouseLeave = this.tooltipMouseLeave.bind(this);
-        this.downloadSvg = this.downloadSvg.bind(this);
-        this.downloadPng = this.downloadPng.bind(this);
-        this.downloadData = this.downloadData.bind(this);
     }
 
     @computed get sortedAlteredPatientSurvivals(): PatientSurvival[] {
@@ -131,18 +171,16 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         this.tooltipModel = null;
     }
 
-    private downloadSvg() {
-        this.svgsaver.asSvg(this.svgContainer.firstChild, this.props.fileName + '.svg');
+    @autobind
+    private getSvg() {
+        return this.svgContainer.firstChild;
     }
 
-    private downloadPng() {
-        this.svgsaver.asPng(this.svgContainer.firstChild, this.props.fileName + '.png');
-    }
-
-    private downloadData() {
-        fileDownload(getDownloadContent(getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates),
+    @autobind
+    private getData() {
+        return getDownloadContent(getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates),
             getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates), this.props.title,
-            this.alteredLegendText, this.unalteredLegendText), this.props.fileName + '.txt');
+            this.alteredLegendText, this.unalteredLegendText);
     }
 
     @autobind
@@ -199,41 +237,45 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                 <div className="borderedChart" data-test={'SurvivalChart'} style={{width: '100%'}}>
 
                     {this.props.showDownloadButtons &&
-                        <div className="btn-group" style={{position:'absolute', zIndex:10, right: 10 }} role="group">
-                            <button className={`btn btn-default btn-xs`} onClick={this.downloadSvg}>
-                                SVG <i className="fa fa-cloud-download" />
-                            </button>
-                            <button className={`btn btn-default btn-xs`} onClick={this.downloadPng}>
-                                PNG <i className="fa fa-cloud-download" />
-                            </button>
-                            <button className={`btn btn-default btn-xs`} onClick={this.downloadData}>
-                                Data <i className="fa fa-cloud-download" />
-                            </button>
-                        </div>
+                        <DownloadControls
+                            dontFade={true}
+                            filename={this.props.fileName}
+                            buttons={["SVG", "PNG", "Data"]}
+                            getSvg={this.getSvg}
+                            getData={this.getData}
+                            style={{position:'absolute', zIndex: 10, right: 10}}
+                            collapse={true}
+                        />
                     }
 
-                    <VictoryChart containerComponent={<VictoryContainer responsive={false}
-                                                                        containerRef={(ref: any) => this.svgContainer = ref}/>}
-                                  height={this.styleOpts.height} width={this.styleOpts.width} padding={this.styleOpts.padding}
-                                  theme={CBIOPORTAL_VICTORY_THEME}>
-                        <VictoryAxis style={this.styleOpts.axis.x} crossAxis={false} tickCount={11} label={this.props.xAxisLabel}/>
+                    <VictoryChart containerComponent={<VictoryZoomContainer responsive={false}
+                                                                            onZoomDomainChange={_.debounce((domain: any) => {
+                                                                                this.scatterFilter = domain;
+                                                                            }, 1000)}
+                                                                            containerRef={(ref: any) => this.svgContainer = ref}/>}
+                                  height={this.styleOpts.height} width={this.styleOpts.width}
+                                  padding={this.styleOpts.padding}
+                                  theme={CBIOPORTAL_VICTORY_THEME}
+                                  domainPadding={{x: [10, 50], y: [20, 20]}}>
+                        <VictoryAxis style={this.styleOpts.axis.x} crossAxis={false} tickCount={11}
+                                     label={this.props.xAxisLabel}/>
                         <VictoryAxis label={this.props.yAxisLabel} dependentAxis={true} tickFormat={(t: any) => `${t}%`}
                                      tickCount={11}
                                      style={this.styleOpts.axis.y} domain={[0, 100]} crossAxis={false}/>
                         <VictoryLine interpolation="stepAfter"
-                                     data={getLineData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
+                                     data={this.scatterData.altered.line}
                                      style={{data: {stroke: "red", strokeWidth: 1}}}/>
                         <VictoryLine interpolation="stepAfter"
-                                     data={getLineData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
+                                     data={this.scatterData.unaltered.line}
                                      style={{data: {stroke: "blue", strokeWidth: 1}}}/>
-                        <VictoryScatter data={getScatterDataWithOpacity(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
+                        <VictoryScatter data={this.scatterData.altered.scatterWithOpacity}
                             symbol="plus" style={{ data: { fill: "red", opacity: (d:any) => d.opacity } }} size={3} />
-                        <VictoryScatter data={getScatterDataWithOpacity(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
+                        <VictoryScatter data={this.scatterData.unaltered.scatterWithOpacity}
                             symbol="plus" style={{ data: { fill: "blue", opacity: (d:any) => d.opacity } }} size={3} />
-                        <VictoryScatter data={getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)}
-                            symbol="circle" style={{ data: { fill: "red", fillOpacity: this.hoverCircleFillOpacity } }} size={10} events={events} />
-                        <VictoryScatter data={getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)}
-                            symbol="circle" style={{ data: { fill: "blue", fillOpacity: this.hoverCircleFillOpacity } }} size={10} events={events} />
+                        <VictoryScatter data={this.scatterData.altered.scatter}
+                            symbol="circle" style={{ data: { fill: "red", fillOpacity: this.hoverCircleFillOpacity} }} size={10} events={events} />
+                        <VictoryScatter data={this.scatterData.unaltered.scatter}
+                            symbol="circle" style={{ data: { fill: "blue", fillOpacity: this.hoverCircleFillOpacity} }} size={10} events={events} />
                         {this.props.showLegend &&
                             <VictoryLegend x={this.styleOpts.legend.x} y={this.styleOpts.legend.y}
                                 data={[
@@ -249,8 +291,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                         positionTop={this.tooltipModel.y - 47}
                         onMouseEnter={this.tooltipMouseEnter} onMouseLeave={this.tooltipMouseLeave}>
                         <div>
-                            Patient ID: <a href={'/case.do#/patient?caseId=' + this.tooltipModel.datum.patientId + '&studyId=' +
-                                this.tooltipModel.datum.studyId} target="_blank">{this.tooltipModel.datum.patientId}</a><br />
+                            Patient ID: <a href={getPatientViewUrl(this.tooltipModel.datum.studyId, this.tooltipModel.datum.patientId)} target="_blank">{this.tooltipModel.datum.patientId}</a><br />
                             {this.props.yLabelTooltip}: {(this.tooltipModel.datum.y).toFixed(2)}%<br />
                             {this.tooltipModel.datum.status ? this.props.xLabelWithEventTooltip :
                                 this.props.xLabelWithoutEventTooltip}

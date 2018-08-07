@@ -462,6 +462,16 @@ th.reactable-header-sort-asc:after {
   padding:10px;
   border-radius:$cornerBorderRadius;
   border:1px dashed $borderColor;
+  position:relative;
+  max-width:100%;
+
+  .chartDownloadButtons {
+    position:absolute;
+    right:10px !important;
+    top:10px !important;
+    z-index:10;
+  }
+
 }
 
 h3.hr {
@@ -480,13 +490,18 @@ h3.hr {
       white-space: nowrap;
     }
 
-    .popover-content {
-      font-size:$font-size-small !important;
+    p {
+      margin-bottom:0 !important;
+    }
+
+    .popover-content, p, td {
+      font-size:11px !important;
     }
   }
 
 }
 
 .inlineBlock {
-  display:inline-block;;
+  display:inline-block;
 }
+
