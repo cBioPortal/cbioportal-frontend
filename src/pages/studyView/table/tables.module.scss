@@ -1,16 +1,26 @@
-.table {
+.studyViewTablesTable {
   width: calc(50% - 20px);
   float: left;
   margin: 5px;
+
+  .selectd {
+    font-weight: bold
+  }
+  .geneSymbol:hover {
+    border: 2px solid #1974b8;
+    cursor: pointer;
+  }
 }
 
-.title {
+.studyViewTablesTitle {
   font-size: 18px;
   color: #000;
   font-weight: 700;
   text-align: center;
 }
 
-.body {
+.studyViewTablesBody {
   margin-top: 5px;
+  position: relative
 }
+

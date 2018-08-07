@@ -2,13 +2,14 @@ import * as React from 'react';
 import {observer} from "mobx-react";
 import {MSKTabs, MSKTab} from "shared/components/MSKTabs/MSKTabs";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
-import MutationMapper from "./MutationMapper";
+import ResultsViewMutationMapper from "./ResultsViewMutationMapper";
 import {observable, computed} from "mobx";
 import AppConfig from 'appConfig';
 import "./mutations.scss";
 import {filterCBioPortalWebServiceData} from '../../../shared/lib/oql/oqlfilter';
 import accessors from '../../../shared/lib/oql/accessors';
 import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
+import NoOqlWarning from "../../../shared/components/NoOqlWarning";
 
 export interface IMutationsPageProps {
     routing?: any;
@@ -34,6 +35,9 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
 
         return (
             <div>
+                <div style={{marginTop:-4, marginLeft:-3}}>
+                    <NoOqlWarning store={this.props.store}/>
+                </div>
                 <Loader isLoading={this.props.store.mutationMapperStores.isPending} />
                 {(this.props.store.mutationMapperStores.isComplete) && (
                     <MSKTabs
@@ -42,7 +46,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                         onTabClick={(id:string) => this.handleTabChange(id)}
                         className="pillTabs resultsPageMutationsGeneTabs"
                         enablePagination={true}
-                        arrowStyle={{'line-height':.8}}
+                        arrowStyle={{'line-height': 0.8}}
                         tabButtonStyle="pills"
                         unmountOnHide={true}
                     >
@@ -64,7 +68,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
             {
                 tabs.push(
                     <MSKTab key={gene} id={gene} linkText={gene}>
-                        <MutationMapper
+                        <ResultsViewMutationMapper
                             store={mutationMapperStore}
                             discreteCNACache={this.props.store.discreteCNACache}
                             genomeNexusEnrichmentCache={this.props.store.genomeNexusEnrichmentCache}

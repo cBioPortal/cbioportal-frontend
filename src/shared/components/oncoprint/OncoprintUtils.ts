@@ -396,7 +396,7 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
             ];
             if (oncoprint.clinicalAttributesById.isComplete) {
                 const attributes = oncoprint.selectedClinicalAttributeIds.keys().map(attrId=>{
-                    return oncoprint.clinicalAttributesById.result[attrId];
+                    return oncoprint.clinicalAttributesById.result![attrId];
                 }).filter(x=>!!x);
                 ret = ret.concat(oncoprint.props.store.oncoprintClinicalDataCache.getAll(attributes));
             }

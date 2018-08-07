@@ -3,7 +3,7 @@ import {
     default as getCanonicalMutationType, CanonicalMutationType,
     ProteinImpactType, getProteinImpactTypeFromCanonical
 } from "./getCanonicalMutationType";
-import {MolecularProfile, Mutation, SampleIdentifier} from "shared/api/generated/CBioPortalAPI";
+import {Gene, MolecularProfile, Mutation, SampleIdentifier} from "shared/api/generated/CBioPortalAPI";
 import {GenomicLocation} from "shared/api/generated/GenomeNexusAPIInternal";
 import {MUTATION_STATUS_GERMLINE, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 import {findFirstMostCommonElt} from "./findFirstMostCommonElt";
@@ -232,15 +232,43 @@ export function somaticMutationRate(hugoGeneSymbol: string, mutations: Mutation[
     }
 }
 
+export function updateMissingGeneInfo(mutations: Partial<Mutation>[],
+                                      genesByHugoSymbol: {[hugoGeneSymbol:string]: Gene})
+{
+    mutations.forEach(mutation => {
+        if (mutation.gene && mutation.gene.hugoGeneSymbol)
+        {
+            const gene = genesByHugoSymbol[mutation.gene.hugoGeneSymbol];
+
+            if (gene) {
+                // keep the existing "mutation.gene" values: only overwrite missing (undefined) values
+                mutation.gene = _.merge({}, gene, mutation.gene);
+                // also update entrezGeneId for the mutation itself
+                mutation.entrezGeneId = mutation.entrezGeneId || gene.entrezGeneId;
+            }
+        }
+    });
+}
+
 export function extractGenomicLocation(mutation: Mutation)
 {
-    return {
-        chromosome: mutation.gene.chromosome.replace("chr", ""),
-        start: mutation.startPosition,
-        end: mutation.endPosition,
-        referenceAllele: mutation.referenceAllele,
-        variantAllele: mutation.variantAllele
-    };
+    if (mutation.gene && mutation.gene.chromosome &&
+        mutation.startPosition &&
+        mutation.endPosition &&
+        mutation.referenceAllele &&
+        mutation.variantAllele)
+    {
+        return {
+            chromosome: mutation.gene.chromosome.replace("chr", ""),
+            start: mutation.startPosition,
+            end: mutation.endPosition,
+            referenceAllele: mutation.referenceAllele,
+            variantAllele: mutation.variantAllele
+        };
+    }
+    else {
+        return undefined;
+    }
 }
 
 export function genomicLocationString(genomicLocation: GenomicLocation)
@@ -253,8 +281,11 @@ export function uniqueGenomicLocations(mutations: Mutation[]): GenomicLocation[]
     const genomicLocationMap: {[key: string]: GenomicLocation} = {};
 
     mutations.map((mutaiton: Mutation) => {
-        const genomicLocation: GenomicLocation = extractGenomicLocation(mutaiton);
-        genomicLocationMap[genomicLocationString(genomicLocation)] = genomicLocation;
+        const genomicLocation: GenomicLocation|undefined = extractGenomicLocation(mutaiton);
+
+        if (genomicLocation) {
+            genomicLocationMap[genomicLocationString(genomicLocation)] = genomicLocation;
+        }
     });
 
     return _.values(genomicLocationMap);
