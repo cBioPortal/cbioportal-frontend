@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'mobx-react';
-import { hashHistory, createMemoryHistory, Router } from 'react-router';
+import { hashHistory, browserHistory, createMemoryHistory, Router } from 'react-router';
 import { RouterStore, syncHistoryWithStore  } from 'mobx-react-router';
 import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
 import {QueryStore} from "./shared/components/query/QueryStore";
@@ -16,6 +16,9 @@ import { validateParametersPatientView } from './shared/lib/validateParameters';
 import AppConfig from "appConfig";
 import browser from 'bowser';
 import './shared/lib/tracking';
+import 'script-loader!raven-js/dist/raven.js';
+import {correctPatientUrl} from "shared/lib/urlCorrection";
+
 
 if (localStorage.localdev === 'true' || localStorage.localdist === 'true') {
     __webpack_public_path__ = "//localhost:3000/"
@@ -51,17 +54,15 @@ if (localStorage.e2etest) {
     });
 }
 
+// this is to support old hash fragment style urls (from first round of 2017 refactoring)
+// we want to convert hash fragment route to HTML5 style route
+if (/#[^\?]*\?/.test(window.location.hash)) {
+    window.history.replaceState(null,null,correctPatientUrl(window.location.href));
+}
+
 // expose version on window
 window.FRONTEND_VERSION = VERSION;
 window.FRONTEND_COMMIT = COMMIT;
-
-import 'script-loader!raven-js/dist/raven.js';
-
-// explose jquery globally if it doesn't exist
-// if (!window.hasOwnProperty("jQuery")) {
-//     window.$ = $;
-//     window.jQuery = $;
-// }
 
 if (/cbioportal\.mskcc\.org|www.cbioportal\.org/.test(window.location.hostname) || window.localStorage.getItem('sentry') === 'true') {
     Raven.config('https://c93645c81c964dd284436dffd1c89551@sentry.io/164574', {
@@ -79,9 +80,25 @@ _.noConflict();
 
 const routingStore = new ExtendedRoutingStore();
 
-//sometimes we need to use memory history where there would be a conflict with
-//existing use of url hashfragment
-const history = (AppConfig.historyType === 'memory') ? createMemoryHistory() : hashHistory;
+//determine history type
+let history;
+switch (window.defaultRoute) {
+    case "/patient":
+        // these pages are going to use state of-the-art browser history
+        // when refactoring is done, all pages will use this
+        history = browserHistory;
+        break;
+    case "/study":
+        // these pages are going to use state of-the-art browser history
+        // when refactoring is done, all pages will use this
+        history = browserHistory;
+        break;
+    default:
+        // legacy pages will use memory history so as not to interfere
+        // with old url params
+        history = createMemoryHistory();
+        break;
+}
 
 const syncedHistory = syncHistoryWithStore(history, routingStore);
 

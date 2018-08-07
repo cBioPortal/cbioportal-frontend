@@ -5,7 +5,6 @@ import {computed, observable} from "mobx";
 import {observer} from "mobx-react";
 import Slider from 'react-rangeslider';
 import {FormGroup, ControlLabel, FormControl} from 'react-bootstrap';
-import jsPDF from 'jspdf';
 import {If, Then, Else} from 'react-if';
 import classnames from 'classnames';
 import SvgSaver from 'svgsaver';
@@ -14,6 +13,8 @@ import 'react-select/dist/react-select.css';
 import 'react-rangeslider/lib/index.css';
 
 import { CancerSummaryChart } from "./CancerSummaryChart";
+import autobind from "autobind-decorator";
+import DownloadControls from "shared/components/downloadControls/DownloadControls"
 
 export const OrderedAlterationLabelMap: Record<keyof IAlterationCountMap, string> = {
     multiple: "Multiple Alterations",
@@ -136,11 +137,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         this.handleTotalInputKeyPress = this.handleTotalInputKeyPress.bind(this);
         this.toggleShowControls = this.toggleShowControls.bind(this);
         this.setPngAnchor = this.setPngAnchor.bind(this);
-        this.downloadSvg = this.downloadSvg.bind(this);
-        this.downloadPng = this.downloadPng.bind(this);
     }
-
-    private svgsaver = new SvgSaver();
 
     private chartComponent:any;
 
@@ -216,8 +213,8 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
                 // if we don't meet the threshold set by the user in the custom controls, don't put data in (default 0)
                 if (meetsAlterationThreshold && meetsSampleTotalThreshold) {
-
                     // now we push label into collection
+
                     if (this.props.labelTransformer) {
                         labels.push(this.props.labelTransformer(groupKey))
                     } else {
@@ -239,13 +236,14 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
                     memo.push({
                         alterationType: alterationKey,
-                        x: groupKey,
+                        x: (this.props.labelTransformer) ? this.props.labelTransformer(groupKey) : groupKey,
+                        xKey: groupKey,
                         y: this.getYValue(alterationCount, alterationData.sampleTotal)
                     });
                 }
 
                 return memo;
-            }, [] as { x: string, y: number, alterationType: string }[]);
+            }, [] as { x: string, y: number, xKey:string, alterationType: string }[]);
         });
 
         return { labels:_.uniq(labels), data: retData, representedAlterations, maxPercentage , maxAbsoluteCount, maxSampleCount };
@@ -353,14 +351,6 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
     public setPngAnchor(href: string) {
         this.pngAnchor = href;
-    }
-
-    private downloadSvg() {
-        this.svgsaver.asSvg(this.chartComponent.svgContainer.firstChild, 'cancer_types_summary' + '.svg');
-    }
-
-    private downloadPng() {
-        this.svgsaver.asPng(this.chartComponent.svgContainer.firstChild, 'cancer_types_summary' + '.png');
     }
 
     @computed public get controls(){
@@ -473,13 +463,6 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                         <div role="group" className="btn-group cancer-summary--chart-buttons">
                             <button onClick={this.toggleShowControls} className="btn btn-default btn-xs">Customize <i
                                 className="fa fa-cog" aria-hidden="true"></i></button>
-                            <button className={`btn btn-default btn-xs`} onClick={this.downloadPng}>
-                                PNG <i className="fa fa-cloud-download" aria-hidden="true"></i>
-                            </button>
-                            <button className={`btn btn-default btn-xs`}
-                               onClick={this.downloadSvg}>
-                                SVG <i className="fa fa-cloud-download" aria-hidden="true"></i>
-                            </button>
                         </div>
 
                         <Panel className={classnames({hidden: !this.showControls}, 'cancer-summary-secondary-options')}>
@@ -497,6 +480,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                                         colors={alterationToColor}
                                         hideGenomicAlterations={this.hideGenomicAlterations}
                                         xLabels={this.chartData.labels}/>
+
                     </div>
                 </Then>
                 <Else>
