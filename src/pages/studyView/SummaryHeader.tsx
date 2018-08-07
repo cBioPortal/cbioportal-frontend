@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { Sample, StudyViewFilter } from 'shared/api/generated/CBioPortalAPIInternal';
+import { Sample, StudyViewFilter, ClinicalDataIntervalFilterValue } from 'shared/api/generated/CBioPortalAPIInternal';
 import { observer } from "mobx-react";
 import { computed, observable, action } from 'mobx';
 import styles from "./styles.module.scss";
@@ -35,6 +35,7 @@ export interface ISummaryHeaderProps {
     getClinicalData: () => Promise<string>;
     onSubmitQuery:() => void
     updateClinicalDataEqualityFilter: (chartMeta: ChartMeta, value: string[]) => void;
+    updateClinicalDataIntervalFilter: (chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) => void;
     clearGeneFilter: () => void;
     clearCNAGeneFilter: () => void;
     clearCustomCasesFilter: () => void;
@@ -265,6 +266,7 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                     filter={this.props.filter}
                     attributesMetaSet={this.props.attributesMetaSet}
                     updateClinicalDataEqualityFilter={this.props.updateClinicalDataEqualityFilter}
+                    updateClinicalDataIntervalFilter={this.props.updateClinicalDataIntervalFilter}
                     clearCNAGeneFilter={this.props.clearCNAGeneFilter}
                     clearGeneFilter={this.props.clearGeneFilter}
                     clearCustomCasesFilter={this.props.clearCustomCasesFilter}

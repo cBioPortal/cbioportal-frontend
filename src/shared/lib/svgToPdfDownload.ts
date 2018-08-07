@@ -29,7 +29,7 @@ export default function (filename:string, svg:Element, servletUrl?: string) {
 }
 
 export function svgToPdfRequest(svg:Element, servletUrl?: string): Request|undefined {
-    const svgelement = "<?xml version='1.0'?>"+(new XMLSerializer()).serializeToString(svg);
+    const svgelement = "<?xml version='1.0'?>"+replaceUnicodeChars((new XMLSerializer()).serializeToString(svg));
     const two_megabyte_limit = 2000000;
 
     if (svgelement.length > two_megabyte_limit) {
@@ -50,4 +50,11 @@ export async function svgToPdfPromise(svg:Element, servletUrl?: string) {
     if(res && res.ok) {
         return base64ToArrayBuffer(res.text);
     }
+}
+
+// TODO add more characters if needed
+function replaceUnicodeChars(svg: string) {
+    return svg
+        .replace(/≤/g, "&lt;=")
+        .replace(/≥/g, "&gt;=");
 }
