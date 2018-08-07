@@ -1,8 +1,17 @@
-import { assert } from 'chai';
-import { PatientSurvival } from "../../../shared/model/PatientSurvival";
+import {assert} from 'chai';
 import {
-    getEstimates, getMedian, getLineData, getScatterData, getScatterDataWithOpacity, getStats, calculateLogRank,
-    getDownloadContent, convertScatterDataToDownloadData
+    calculateLogRank,
+    convertScatterDataToDownloadData,
+    downSampling,
+    filteringScatterData,
+    getDownloadContent,
+    getEstimates,
+    getLineData,
+    getMedian,
+    getScatterData,
+    getScatterDataWithOpacity,
+    getStats,
+    ScatterData
 } from "./SurvivalUtil";
 
 const exampleAlteredPatientSurvivals = [
@@ -44,6 +53,45 @@ const exampleUnalteredPatientSurvivals = [
         patientId: "TCGA-2F-A9KQ",
         studyId: "blca_tcga",
         months: 182.19,
+        status: true
+    }
+];
+
+
+const allScatterData: ScatterData[] = [
+    {
+        x: 0,
+        y: 10,
+        patientId: '',
+        studyId: '',
+        status: true
+    },
+    {
+        x: 0.5,
+        y: 9,
+        patientId: '',
+        studyId: '',
+        status: true
+    },
+    {
+        x: 1,
+        y: 8,
+        patientId: '',
+        studyId: '',
+        status: true
+    },
+    {
+        x: 0,
+        y: 10,
+        patientId: '',
+        studyId: '',
+        status: true
+    },
+    {
+        x: 0,
+        y: 10,
+        patientId: '',
+        studyId: '',
         status: true
     }
 ];
@@ -198,6 +246,285 @@ describe("SurvivalUtil", () => {
                 { "Time (months)": 0.13, "Survival Rate": 0.5333333333333333, "Case ID": "TCGA-2F-A9KP", "Study ID": "blca_tcga", "Status": "censored", "Number at Risk": 2 },
                 { "Time (months)": 182.19, "Survival Rate": 0, "Case ID": "TCGA-2F-A9KQ", "Study ID": "blca_tcga", "Status": "deceased", "Number at Risk": 1 }
             ]);
+        });
+    });
+
+    describe("#downSampling()", () => {
+        it("return empty list for empty list", () => {
+            assert.deepEqual(downSampling([], {
+                xDenominator: 100,
+                yDenominator: 100,
+                threshold: 100
+            }), []);
+        });
+
+        it("when any denominator is 0, return the full data", () => {
+            let opts = {
+                xDenominator: 0,
+                yDenominator: 100,
+                threshold: 100
+            };
+            assert.deepEqual(downSampling(allScatterData, opts), allScatterData);
+        });
+
+        it("when any denominator is negative value, return the full data", () => {
+            let opts = {
+                xDenominator: -1,
+                yDenominator: 100,
+                threshold: 100
+            };
+            assert.deepEqual(downSampling(allScatterData, opts), allScatterData);
+        });
+
+        it("Remove the dot which too close from the last dot", () => {
+            // In this case, the hypotenuse is always 1, keep the threshold at 2.5
+            assert.deepEqual(downSampling([{
+                x: 0,
+                y: 10,
+                opacity: 1,
+                patientId: '',
+                studyId: '',
+                status: true
+            },{
+                x: 2,
+                y: 10,
+                opacity: 1,
+                patientId: '',
+                studyId: '',
+                status: true
+            },{
+                x: 10,
+                y: 10,
+                opacity: 1,
+                patientId: '',
+                studyId: '',
+                status: true
+            }], {
+                xDenominator: 4,
+                yDenominator: 4,
+                threshold: 100
+            }), [{
+                x: 0,
+                y: 10,
+                patientId: '',
+                studyId: '',
+                opacity: 1,
+                status: true
+            },{
+                x: 10,
+                y: 10,
+                opacity: 1,
+                patientId: '',
+                studyId: '',
+                status: true
+            }]);
+        });
+
+        it("Remove the dot which too close from the last dot, ignore the status", () => {
+            // In this case, the hypotenuse is always 1, keep the threshold at 2.5
+            assert.deepEqual(downSampling([{
+                x: 0,
+                y: 10,
+                opacity: 1,
+                patientId: '',
+                studyId: '',
+                status: true
+            },{
+                x: 2,
+                y: 10,
+                opacity: 0,
+                patientId: '',
+                studyId: '',
+                status: false
+            },{
+                x: 10,
+                y: 10,
+                opacity: 1,
+                patientId: '',
+                studyId: '',
+                status: true
+            }], {
+                threshold: 100,
+                xDenominator: 4,
+                yDenominator: 4
+            }), [{
+                x: 0,
+                y: 10,
+                opacity: 1,
+                patientId: '',
+                studyId: '',
+                status: true
+            },{
+                x: 10,
+                y: 10,
+                opacity: 1,
+                patientId: '',
+                studyId: '',
+                status: true
+            }]);
+        });
+
+        it("Remove the dot when the distance from last dot equals to the threshold", () => {
+            // In this case, the hypotenuse is always 1, keep the threshold at 2
+            assert.deepEqual(downSampling([{
+                x: 0,
+                y: 10,
+                opacity: 1,
+                patientId: '',
+                studyId: '',
+                status: true
+            },{
+                x: 2,
+                y: 10,
+                opacity: 1,
+                patientId: '',
+                studyId: '',
+                status: true
+            },{
+                x: 10,
+                y: 10,
+                opacity: 1,
+                patientId: '',
+                studyId: '',
+                status: true
+            }], {
+                threshold: 100,
+                xDenominator: 5,
+                yDenominator: 5
+            }), [{
+                x: 0,
+                y: 10,
+                opacity: 1,
+                patientId: '',
+                studyId: '',
+                status: true
+            },{
+                x: 10,
+                y: 10,
+                opacity: 1,
+                patientId: '',
+                studyId: '',
+                status: true
+            }]);
+        });
+
+        it("when a hidden dot between two visualized dots, the distance between two vis dots should be calculated separately from the hidden dot", () => {
+            // In this case, the hypotenuse is always 1, keep the threshold at 1.25
+            assert.deepEqual(downSampling([{
+                x: 0,
+                y: 10,
+                opacity: 1,
+                patientId: '',
+                studyId: '',
+                status: true
+            },{
+                x: 1,
+                y: 10,
+                opacity: 0,
+                patientId: '',
+                studyId: '',
+                status: false
+            },{
+                x: 2,
+                y: 10,
+                opacity: 1,
+                patientId: '',
+                studyId: '',
+                status: true
+            },{
+                x: 10,
+                y: 10,
+                opacity: 1,
+                patientId: '',
+                studyId: '',
+                status: true
+            }], {
+                threshold: 100,
+                xDenominator: 8,
+                yDenominator: 8
+            }), [{
+                x: 0,
+                y: 10,
+                opacity: 1,
+                patientId: '',
+                studyId: '',
+                status: true
+            },{
+                x: 2,
+                y: 10,
+                opacity: 1,
+                patientId: '',
+                studyId: '',
+                status: true
+            },{
+                x: 10,
+                y: 10,
+                opacity: 1,
+                patientId: '',
+                studyId: '',
+                status: true
+            }]);
+        });
+    });
+
+    describe("filteringScatterData()", () => {
+        it("Return full data if the filers are undefined", () => {
+            let testData = {
+                altered: {
+                    numOfCases: allScatterData.length,
+                    line: [],
+                    scatter: allScatterData,
+                    scatterWithOpacity: allScatterData
+                }
+            };
+            assert.deepEqual(filteringScatterData(testData, undefined, {
+                xDenominator: 100,
+                yDenominator: 100,
+                threshold: 100
+            }), testData);
+        });
+
+        it("return correct data after filtering and down sampling", () => {
+            let testScatterData = [{
+                x: 0,
+                y: 10,
+                patientId: '',
+                studyId: '',
+                status: true
+            }, {
+                x: 0.5,
+                y: 9,
+                patientId: '',
+                studyId: '',
+                status: true
+            }, {
+                x: 1,
+                y: 8,
+                patientId: '',
+                studyId: '',
+                status: true
+            }];
+            let testData = {
+                altered: {
+                    numOfCases: testScatterData.length,
+                    line: [],
+                    scatter: testScatterData,
+                    scatterWithOpacity: testScatterData
+                }
+            };
+            var result = filteringScatterData(testData, {x: [0, 10], y: [9, 10]}, {
+                xDenominator: 2,
+                yDenominator: 2,
+                threshold: 2
+            });
+            assert.deepEqual(result.altered.numOfCases, 2);
+            assert.deepEqual(result.altered.scatter[1], {
+                x: 0.5,
+                y: 9,
+                patientId: '',
+                studyId: '',
+                status: true
+            });
         });
     });
 });

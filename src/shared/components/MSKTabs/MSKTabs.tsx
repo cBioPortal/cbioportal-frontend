@@ -12,6 +12,7 @@ export interface IMSKTabProps {
     activeId?:string;
     className?:string;
     hide?:boolean;
+    datum?:any;
     loading?:boolean;
     anchorStyle?:{[k:string]:string|number|boolean};
 }
@@ -44,7 +45,7 @@ interface IMSKTabsProps {
     className?:string;
     id?:string;
     activeTabId?:string;
-    onTabClick?:(tabId:string)=>void;
+    onTabClick?:(tabId:string, datum:any)=>void;
     enablePagination?:boolean;
     // only used when pagination is true to style arrows
     arrowStyle?:{[k:string]:string|number|boolean};
@@ -83,8 +84,8 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
 
     }
 
-    setActiveTab(id: string){
-        this.props.onTabClick && this.props.onTabClick(id);
+    setActiveTab(id: string, datum?:any){
+        this.props.onTabClick && this.props.onTabClick(id, datum);
     }
 
     navTabsRefHandler(ul: HTMLUListElement) {
@@ -253,7 +254,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                     ref={this.tabRefHandler.bind(this, tab.props.id)}
                     className={activeClass}
                 >
-                    <a onClick={this.setActiveTab.bind(this,tab.props.id)} style={tab.props.anchorStyle}>{tab.props.linkText}</a>
+                    <a onClick={this.setActiveTab.bind(this,tab.props.id, tab.props.datum)} style={tab.props.anchorStyle}>{tab.props.linkText}</a>
                 </li>
             );
         });

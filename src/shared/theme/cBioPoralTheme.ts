@@ -26,7 +26,7 @@ const grey900 = "#212121";
 // *
 const sansSerif = "Arial, Helvetica";
 const letterSpacing = "normal";
-const fontSize = 12;
+const fontSize = 13;
 // *
 // * Layout
 // *
@@ -54,6 +54,10 @@ export const baseLabelStyles = {
 const centeredLabelStyles = assign({ textAnchor: "middle" }, baseLabelStyles);
 
 export const axisLabelStyles = assign({}, baseLabelStyles, { fontSize:13, padding })
+export const axisTickLabelStyles = assign({}, baseLabelStyles, {
+    fill: "black",
+    padding:2
+});
 
 // *
 // * Strokes
@@ -97,10 +101,7 @@ const CBIOPORTAL_VICTORY_THEME = {
                 strokeLinecap,
                 strokeLinejoin
             },
-            tickLabels: assign({}, baseLabelStyles, {
-                fill: "black",
-                padding:2
-            })
+            tickLabels: axisTickLabelStyles
         }
     }, baseProps),
     bar: assign({
@@ -112,6 +113,21 @@ const CBIOPORTAL_VICTORY_THEME = {
             },
             labels: baseLabelStyles
         }
+    }, baseProps),
+    boxplot: assign({
+        style: {
+            max: { padding, stroke: blueGrey700, strokeWidth: 1 },
+            maxLabels: baseLabelStyles,
+            median: { padding, stroke: blueGrey700, strokeWidth: 1 },
+            medianLabels: baseLabelStyles,
+            min: { padding, stroke: blueGrey700, strokeWidth: 1 },
+            minLabels: baseLabelStyles,
+            q1: { padding, fill: blueGrey700 },
+            q1Labels: baseLabelStyles,
+            q3: { padding, fill: blueGrey700 },
+            q3Labels: baseLabelStyles
+        },
+        boxWidth: 20
     }, baseProps),
     candlestick: assign({
         style: {

@@ -1,0 +1,108 @@
+.genesSelection {
+	textarea.default {
+		width: 555px;
+		resize: vertical;
+		border-radius: 2px;
+	}
+	textarea{
+		padding: 5px;
+		border: 1px solid #d3d3d3;
+		&.empty {
+		}
+		&.notEmpty {
+		  text-transform: uppercase;
+		}
+	}
+
+	textarea.studyView {
+		width: 200px;
+		//box-sizing: content-box;
+		height: 30px;
+		transition: height .5s ease-out;
+		//color: darkgrey;
+		border-radius: 5px;
+		outline-offset: -2px;
+		font-size: 11px;
+		resize: none;
+		margin: 0px 3px;
+	}
+
+	textarea.studyViewFocus{
+		height: 5em;
+		font-size: 13px;
+	}
+
+    .GeneSymbolValidator {
+		cursor: default;
+		display: flex;
+		width:200px;
+		align-items: center;
+		padding-top: 5px;
+		white-space: nowrap;
+		span.icon {
+			text-align: center;
+			margin-right: 4px;
+			width: 16px;
+			height: 16px;
+			line-height: 17px;
+		}
+		span.pendingMessage,
+		span.oqlNotice,
+		span.errorMessage {
+			font-size: small;
+			color: $redError;
+			font-weight: bold;
+		}
+		div.validBubble,
+		div.invalidBubble {
+			color: #fff;
+			display: flex;
+			align-items: center;
+			margin: 2px 2px 2px 0;
+			padding: 5px 10px;
+			border-radius: 2px;
+			span.icon {
+				color: #fff;
+				line-height: 17px;
+			}
+		}
+		div.invalidBubble {
+			background: $redError;
+		}
+		div.validBubble {
+			background: $greenSuccess;
+		}
+		div.suggestionBubble {
+			color: rgba(0, 0, 0, 0.5);
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			margin: 2px;
+			padding: 5px 10px;
+			background-color: $lightGrey;
+			border-radius: 2px;
+			&:hover {
+				background-color: $mediumGrey;
+			}
+			span.icon {
+				color: $darkGrey;
+				line-height: 17px;
+			}
+			span.noChoiceLabel {
+				font-weight: normal;
+			}
+			span.singleChoiceLabel {
+				font-weight: bold;
+			}
+			span.multiChoiceLabel {
+				font-weight: normal;
+			}
+			div:global(.Select) {
+				width: 140px;
+				margin-left: 4px;
+				float: left;
+			}
+		}
+  	}
+
+}
