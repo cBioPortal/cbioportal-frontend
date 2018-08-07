@@ -2,72 +2,71 @@ import * as React from "react";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import {placeArrowBottomLeft} from "shared/components/defaultTooltip/DefaultTooltip";
 import SimpleTable from "shared/components/simpleTable/SimpleTable";
-import {IMutationalSignature, IMutationalSignatureMeta, ISignificantMutationalSignaturesBySample} from "../../../shared/model/MutationalSignature";
+import {IMutationalSignature, IMutationalSignatureMeta, ISignificantMutationalSignaturesForSample} from "../../../shared/model/MutationalSignature";
+import LazyMobXTable, {Column} from "shared/components/lazyMobXTable/LazyMobXTable";
+import "../../../shared/components/simpleTable/styles.scss"
 import _ from 'lodash';
+import {getMutationalSignaturePercentage} from "../../../shared/lib/FormatUtils";
 import FontAwesome from "react-fontawesome";
 import {computed} from "mobx";
-
-export type GDDOutput = {
-    Pred1: string;
-    Pred2: string;
-    Pred3: string;
-    Conf1: string;
-    Conf2: string;
-    Conf3: string;
-    Diagnosed_Cancer_Type: string;
-    Diagnosed_Cancer_Type_Detailed: string;
-}
 
 export const MIN_NUMBER_OF_MUTATIONS_THRESHOLD = 5;
 export const MIN_NUMBER_OF_MUTATIONS_STATEMENT = "There are not enough mutations to call mutational signatures for this case.";
 export const DUBIOUS_NUMBER_OF_MUTATIONS_THRESHOLD = 15;
-export const MIN_NUMBER_OF_MUTATIONS_STATEMENT = "This case has a low number of mutations, signatures are highly uncertain.";
+export const DUBIOUS_NUMBER_OF_MUTATIONS_STATEMENT = "This case has a low number of mutations, signatures are highly uncertain.";
 
 interface ISignificantMutationalSignaturesProps {
     data: IMutationalSignature[];
+    metadata: IMutationalSignatureMeta[];
+    uniqueSampleKey: string;
 }
 
 export default class SignificantMutationalSignatures extends React.Component<ISignificantMutationalSignaturesProps, {}> {
-
-
     public render() {
         return (
             <DefaultTooltip
                 placement='bottomLeft'
                 trigger={['hover', 'focus']}
-                overlay={this.tooltipContent()}
+                overlay={this.tooltipContent(this.props.data, this.props.metadata, this.props.uniqueSampleKey)}
                 destroyTooltipOnHide={false}
                 onPopupAlign={placeArrowBottomLeft}
             >
                 <span style={{paddingLeft:2}}>
-                    <a>(Mutational Signatures)</a>
+                    <a>(Significant Mutational Signatures)</a>
                 </span>
             </DefaultTooltip>
         );
     }
 
-    private tooltipContent() {
+    private tooltipContent(mutationalSignatureData: IMutationalSignature[], mutationalSignatureMetaData: IMutationalSignatureMeta[], uniqueSampleKey: string) {
+
+        const significantMutationalSignaturesForSample: ISignificantMutationalSignaturesForSample = prepareMutationalSignaturesForHeader(mutationalSignatureData, mutationalSignatureMetaData, uniqueSampleKey);
+        let hasMutationalSignatures: boolean = true;
+
+        if(_.isEmpty(significantMutationalSignaturesForSample.significantSignatures)){
+            hasMutationalSignatures = false;
+        }
+
         return (
             <div style={{maxWidth:250}}>
-                <h6 style={{textAlign:"center"}}>
-                    Mutational Signature Confidences
-                </h6>
-                <SimpleTable
-                    headers={[
-                        <th>Significant Mutational Signatures</th>,
-                        <th>Exposure</th>
-                    ]}
-                    rows={[
-                        <tr><td>Mutational Signature 1</td><td>{this.progressBar("0.41", false)}</td></tr>,
-                        <tr><td>Mutational Signature 2</td><td>{this.progressBar("0.31", false)}</td></tr>,
-                        <tr><td>Mutational Signature 3</td><td>{this.progressBar("0.21", false)}</td></tr>
-                    ]}
-                />
-                <hr style={{marginTop:10,marginBottom:10}}/>
+                {/*<h6 style={{textAlign:"center"}}>*/}
+                    {/*Mutational Signature Confidences*/}
+                {/*</h6>*/}
                 <span className="small">
-
-                    No significant mutational signatures.
+                    {significantMutationalSignaturesForSample.confidenceStatement}
                 </span>
+                <hr style={{marginTop:10,marginBottom:10}}/>
+                {hasMutationalSignatures &&
+                    <table>
+                    <th>Significant Mutational Signatures</th>
+                        <th>Exposure</th>
+                    {Object.keys(significantMutationalSignaturesForSample.significantSignatures).map((significantSignatureValue)=>
+                        <tr><td style={{paddingTop: 3}}>{significantSignatureValue}</td>
+                        <td style={{paddingTop: 3}}>{this.progressBar(significantMutationalSignaturesForSample.significantSignatures[significantSignatureValue].toString(), false)}</td>
+                        </tr>)}
+                    </table>
+                }
+
             </div>
         );
     }
@@ -95,4 +94,50 @@ export default class SignificantMutationalSignatures extends React.Component<ISi
         );
     }
 
+}
+
+export function prepareMutationalSignaturesForHeader(mutationalSignatureData: IMutationalSignature[], mutationalSignatureMetaData: IMutationalSignatureMeta[],
+                                                     uniqueSampleKey: string): ISignificantMutationalSignaturesForSample{
+    //group data by uniquesamples for now -> this processing will need to be done in patientpageviewstore in the future
+    let mutationalSignatureDataForSample: Array<any> = _(mutationalSignatureData)
+        .filter(["uniqueSampleKey", uniqueSampleKey])
+        .value();
+
+    let significantMutationalSignatureForSample: ISignificantMutationalSignaturesForSample = {
+        numberOfMutations:0,
+        confidenceStatement:"",
+        significantSignatures:{}
+    };
+
+    for (const mutationalSignatureSample of mutationalSignatureDataForSample){
+
+        //for each uniquesample, build significant mutational signature data structure
+        significantMutationalSignatureForSample.numberOfMutations = mutationalSignatureSample.numberOfMutations;
+
+        if(mutationalSignatureSample.confidence > 0.85){ //make a variable called confidence threshold
+            // add significant mutational signatures
+            significantMutationalSignatureForSample.significantSignatures[mutationalSignatureSample.mutationalSignatureId] = mutationalSignatureSample.value;
+
+            //build confidence statement
+            if(significantMutationalSignatureForSample.numberOfMutations <= MIN_NUMBER_OF_MUTATIONS_THRESHOLD){//account for low number of mutations
+                significantMutationalSignatureForSample.confidenceStatement += MIN_NUMBER_OF_MUTATIONS_STATEMENT;
+            }
+            else if(significantMutationalSignatureForSample.numberOfMutations <= DUBIOUS_NUMBER_OF_MUTATIONS_THRESHOLD){
+                significantMutationalSignatureForSample.confidenceStatement += DUBIOUS_NUMBER_OF_MUTATIONS_STATEMENT;
+            }
+
+            for (const mutationalSignature of mutationalSignatureMetaData){ //generate confidence statement depending on the mutational signature
+                if(mutationalSignatureSample.mutationalSignatureId === mutationalSignature.mutationalSignatureId){
+                    significantMutationalSignatureForSample.confidenceStatement += (" " + mutationalSignature.confidenceStatement);
+                }
+            }
+        }
+    }
+
+    //check if any significant signatures were added using lodash
+    if(_.isEmpty(significantMutationalSignatureForSample.significantSignatures)){
+        significantMutationalSignatureForSample.confidenceStatement += "No signatures confidently detected.";
+    }
+
+    return significantMutationalSignatureForSample;
 }

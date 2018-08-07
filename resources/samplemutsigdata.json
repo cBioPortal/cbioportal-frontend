@@ -7,7 +7,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_1",
 		"value": 0.341339866,
-		"confidence": 0.863
+		"confidence": 0.863,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -17,7 +18,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_2",
 		"value": 0.000972538,
-		"confidence": 0.004
+		"confidence": 0.004,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -27,7 +29,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_3",
 		"value": 0.001913222,
-		"confidence": 0.0155
+		"confidence": 0.0155,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -37,7 +40,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_4",
 		"value": 0.003620254,
-		"confidence": 0.0335
+		"confidence": 0.0335,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -47,7 +51,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_5",
 		"value": 0.001418568,
-		"confidence": 0.005
+		"confidence": 0.005,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -57,7 +62,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_6",
 		"value": 0.006080752,
-		"confidence": 0.059
+		"confidence": 0.059,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -67,7 +73,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_7",
 		"value": 0.00451735,
-		"confidence": 0.043
+		"confidence": 0.043,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -77,7 +84,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_8",
 		"value": 0.001704592,
-		"confidence": 0.017
+		"confidence": 0.017,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -87,7 +95,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_9",
 		"value": 0.000951258,
-		"confidence": 0.0055
+		"confidence": 0.0055,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -97,7 +106,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_10",
 		"value": 0.001870896,
-		"confidence": 0.0145
+		"confidence": 0.0145,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -107,7 +117,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_11",
 		"value": 0.005068029,
-		"confidence": 0.0485
+		"confidence": 0.0485,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -117,7 +128,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_12",
 		"value": 0.000982892,
-		"confidence": 0.003
+		"confidence": 0.003,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -127,7 +139,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_13",
 		"value": 0.002622727,
-		"confidence": 0.024
+		"confidence": 0.024,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -137,7 +150,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_14",
 		"value": 0.084106761,
-		"confidence": 0.702
+		"confidence": 0.702,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -147,7 +161,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_15",
 		"value": 0.000826186,
-		"confidence": 0.0025
+		"confidence": 0.0025,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -157,7 +172,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_16",
 		"value": 0.001429341,
-		"confidence": 0.0085
+		"confidence": 0.0085,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -167,7 +183,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_17",
 		"value": 0.000823673,
-		"confidence": 0.004
+		"confidence": 0.004,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -177,7 +194,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_18",
 		"value": 0.002915391,
-		"confidence": 0.028
+		"confidence": 0.028,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -187,7 +205,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_19",
 		"value": 0.007484683,
-		"confidence": 0.0715
+		"confidence": 0.0715,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -197,7 +216,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_20",
 		"value": 0.000572061,
-		"confidence": 0
+		"confidence": 0,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -207,7 +227,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_21",
 		"value": 0.00198798,
-		"confidence": 0.0145
+		"confidence": 0.0145,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -217,7 +238,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_22",
 		"value": 0.001096651,
-		"confidence": 0.008
+		"confidence": 0.008,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -227,7 +249,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_23",
 		"value": 0.004016701,
-		"confidence": 0.0425
+		"confidence": 0.0425,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -237,7 +260,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_24",
 		"value": 0.001632676,
-		"confidence": 0.01
+		"confidence": 0.01,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -247,7 +271,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_25",
 		"value": 0.000997686,
-		"confidence": 0.0045
+		"confidence": 0.0045,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -257,7 +282,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_26",
 		"value": 0.00308292,
-		"confidence": 0.033
+		"confidence": 0.033,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -267,7 +293,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_27",
 		"value": 0.503912181,
-		"confidence": 0.9955
+		"confidence": 0.9955,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -277,7 +304,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_28",
 		"value": 0.003044077,
-		"confidence": 0.027
+		"confidence": 0.027,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -287,7 +315,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_29",
 		"value": 0.007111733,
-		"confidence": 0.075
+		"confidence": 0.075,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T01-IM5",
@@ -297,7 +326,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_30",
 		"value": 0.001896354,
-		"confidence": 0.0155
+		"confidence": 0.0155,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -307,7 +337,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_1",
 		"value": 0.151243448,
-		"confidence": 0.27
+		"confidence": 0.27,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -317,7 +348,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_2",
 		"value": 0.003879945,
-		"confidence": 0.0325
+		"confidence": 0.0325,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -327,7 +359,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_3",
 		"value": 0.005419738,
-		"confidence": 0.047
+		"confidence": 0.047,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -337,7 +370,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_4",
 		"value": 0.008507836,
-		"confidence": 0.055
+		"confidence": 0.055,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -347,7 +381,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_5",
 		"value": 0.00363819,
-		"confidence": 0.033
+		"confidence": 0.033,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -357,7 +392,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_6",
 		"value": 0.010844139,
-		"confidence": 0.061
+		"confidence": 0.061,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -367,7 +403,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_7",
 		"value": 0.034512153,
-		"confidence": 0.1245
+		"confidence": 0.1245,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -377,7 +414,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_8",
 		"value": 0.009953293,
-		"confidence": 0.0745
+		"confidence": 0.0745,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -387,7 +425,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_9",
 		"value": 0.003466513,
-		"confidence": 0.025
+		"confidence": 0.025,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -397,7 +436,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_10",
 		"value": 0.007610197,
-		"confidence": 0.0585
+		"confidence": 0.0585,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -407,7 +447,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_11",
 		"value": 0.012576643,
-		"confidence": 0.0695
+		"confidence": 0.0695,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -417,7 +458,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_12",
 		"value": 0.003347933,
-		"confidence": 0.0305
+		"confidence": 0.0305,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -427,7 +469,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_13",
 		"value": 0.018327265,
-		"confidence": 0.0885
+		"confidence": 0.0885,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -437,7 +480,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_14",
 		"value": 0.008894914,
-		"confidence": 0.0565
+		"confidence": 0.0565,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -447,7 +491,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_15",
 		"value": 0.003358317,
-		"confidence": 0.0285
+		"confidence": 0.0285,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -457,7 +502,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_16",
 		"value": 0.008302825,
-		"confidence": 0.062
+		"confidence": 0.062,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -467,7 +513,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_17",
 		"value": 0.006159875,
-		"confidence": 0.052
+		"confidence": 0.052,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -477,7 +524,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_18",
 		"value": 0.006076796,
-		"confidence": 0.0505
+		"confidence": 0.0505,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -487,7 +535,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_19",
 		"value": 0.014221547,
-		"confidence": 0.088
+		"confidence": 0.088,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -497,7 +546,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_20",
 		"value": 0.004388324,
-		"confidence": 0.034
+		"confidence": 0.034,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -507,7 +557,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_21",
 		"value": 0.003052651,
-		"confidence": 0.0285
+		"confidence": 0.0285,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -517,7 +568,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_22",
 		"value": 0.00959173,
-		"confidence": 0.0665
+		"confidence": 0.0665,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -527,7 +579,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_23",
 		"value": 0.006974826,
-		"confidence": 0.0525
+		"confidence": 0.0525,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -537,7 +590,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_24",
 		"value": 0.004176428,
-		"confidence": 0.0355
+		"confidence": 0.0355,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -547,7 +601,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_25",
 		"value": 0.00535034,
-		"confidence": 0.0445
+		"confidence": 0.0445,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -557,7 +612,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_26",
 		"value": 0.009369821,
-		"confidence": 0.0615
+		"confidence": 0.0615,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -567,7 +623,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_27",
 		"value": 0.617882475,
-		"confidence": 0.812
+		"confidence": 0.812,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -577,7 +634,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_28",
 		"value": 0.0036165,
-		"confidence": 0.031
+		"confidence": 0.031,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -587,7 +645,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_29",
 		"value": 0.008800631,
-		"confidence": 0.059
+		"confidence": 0.059,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T02-IM5",
@@ -597,7 +656,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_30",
 		"value": 0.006454707,
-		"confidence": 0.052
+		"confidence": 0.052,
+		"numberOfMutationsForSample": 6
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -607,7 +667,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_1",
 		"value": 0.063649069,
-		"confidence": 0.2365
+		"confidence": 0.2365,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -617,7 +678,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_2",
 		"value": 0.001628188,
-		"confidence": 0.0125
+		"confidence": 0.0125,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -627,7 +689,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_3",
 		"value": 0.046902463,
-		"confidence": 0.4155
+		"confidence": 0.4155,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -637,7 +700,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_4",
 		"value": 0.006882923,
-		"confidence": 0.054
+		"confidence": 0.054,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -647,7 +711,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_5",
 		"value": 0.00361478,
-		"confidence": 0.021
+		"confidence": 0.021,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -657,7 +722,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_6",
 		"value": 0.014863187,
-		"confidence": 0.083
+		"confidence": 0.083,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -667,7 +733,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_7",
 		"value": 0.010484074,
-		"confidence": 0.0695
+		"confidence": 0.0695,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -677,7 +744,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_8",
 		"value": 0.003026287,
-		"confidence": 0.0245
+		"confidence": 0.0245,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -687,7 +755,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_9",
 		"value": 0.002453355,
-		"confidence": 0.023
+		"confidence": 0.023,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -697,7 +766,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_10",
 		"value": 0.002392524,
-		"confidence": 0.022
+		"confidence": 0.022,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -707,7 +777,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_11",
 		"value": 0.014476329,
-		"confidence": 0.1205
+		"confidence": 0.1205,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -717,7 +788,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_12",
 		"value": 0.007135648,
-		"confidence": 0.0805
+		"confidence": 0.0805,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -727,7 +799,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_13",
 		"value": 0.002942895,
-		"confidence": 0.0235
+		"confidence": 0.0235,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -737,7 +810,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_14",
 		"value": 0.163993342,
-		"confidence": 0.896
+		"confidence": 0.896,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -747,7 +821,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_15",
 		"value": 0.000686919,
-		"confidence": 0.001
+		"confidence": 0.001,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -757,7 +832,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_16",
 		"value": 0.008949491,
-		"confidence": 0.0915
+		"confidence": 0.0915,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -767,7 +843,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_17",
 		"value": 0.001079462,
-		"confidence": 0.0065
+		"confidence": 0.0065,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -777,7 +854,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_18",
 		"value": 0.002625438,
-		"confidence": 0.024
+		"confidence": 0.024,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -787,7 +865,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_19",
 		"value": 0.017866136,
-		"confidence": 0.1115
+		"confidence": 0.1115,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -797,7 +876,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_20",
 		"value": 0.000671284,
-		"confidence": 0.0025
+		"confidence": 0.0025,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -807,7 +887,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_21",
 		"value": 0.0020471,
-		"confidence": 0.0165
+		"confidence": 0.0165,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -817,7 +898,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_22",
 		"value": 0.002319558,
-		"confidence": 0.022
+		"confidence": 0.022,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -827,7 +909,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_23",
 		"value": 0.003747207,
-		"confidence": 0.036
+		"confidence": 0.036,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -837,7 +920,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_24",
 		"value": 0.009046077,
-		"confidence": 0.084
+		"confidence": 0.084,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -847,7 +931,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_25",
 		"value": 0.001463008,
-		"confidence": 0.009
+		"confidence": 0.009,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -857,7 +942,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_26",
 		"value": 0.003301589,
-		"confidence": 0.033
+		"confidence": 0.033,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -867,7 +953,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_27",
 		"value": 0.581148247,
-		"confidence": 0.945
+		"confidence": 0.945,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -877,7 +964,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_28",
 		"value": 0.013454741,
-		"confidence": 0.141
+		"confidence": 0.141,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -887,7 +975,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_29",
 		"value": 0.003818527,
-		"confidence": 0.034
+		"confidence": 0.034,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T03-IM5",
@@ -897,7 +986,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_30",
 		"value": 0.003330149,
-		"confidence": 0.032
+		"confidence": 0.032,
+		"numberOfMutationsForSample": 28
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -907,7 +997,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_1",
 		"value": 0.008049382,
-		"confidence": 0.0675
+		"confidence": 0.0675,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -917,7 +1008,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_2",
 		"value": 0.001105177,
-		"confidence": 0.0045
+		"confidence": 0.0045,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -927,7 +1019,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_3",
 		"value": 0.0036538,
-		"confidence": 0.0365
+		"confidence": 0.0365,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -937,7 +1030,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_4",
 		"value": 0.004620752,
-		"confidence": 0.041
+		"confidence": 0.041,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -947,7 +1041,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_5",
 		"value": 0.003782088,
-		"confidence": 0.0255
+		"confidence": 0.0255,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -957,7 +1052,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_6",
 		"value": 0.003749777,
-		"confidence": 0.0355
+		"confidence": 0.0355,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -967,7 +1063,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_7",
 		"value": 0.003365869,
-		"confidence": 0.029
+		"confidence": 0.029,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -977,7 +1074,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_8",
 		"value": 0.004632342,
-		"confidence": 0.043
+		"confidence": 0.043,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -987,7 +1085,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_9",
 		"value": 0.001719043,
-		"confidence": 0.011
+		"confidence": 0.011,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -997,7 +1096,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_10",
 		"value": 0.001231342,
-		"confidence": 0.0085
+		"confidence": 0.0085,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -1007,7 +1107,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_11",
 		"value": 0.003583696,
-		"confidence": 0.0345
+		"confidence": 0.0345,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -1017,7 +1118,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_12",
 		"value": 0.002815642,
-		"confidence": 0.0235
+		"confidence": 0.0235,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -1027,7 +1129,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_13",
 		"value": 0.004149477,
-		"confidence": 0.038
+		"confidence": 0.038,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -1037,7 +1140,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_14",
 		"value": 0.129747639,
-		"confidence": 0.78
+		"confidence": 0.78,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -1047,7 +1151,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_15",
 		"value": 0.000734112,
-		"confidence": 0.002
+		"confidence": 0.002,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -1057,7 +1162,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_16",
 		"value": 0.00228644,
-		"confidence": 0.021
+		"confidence": 0.021,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -1067,7 +1173,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_17",
 		"value": 0.001002355,
-		"confidence": 0.005
+		"confidence": 0.005,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -1077,7 +1184,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_18",
 		"value": 0.003832217,
-		"confidence": 0.0375
+		"confidence": 0.0375,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -1087,7 +1195,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_19",
 		"value": 0.031776993,
-		"confidence": 0.2185
+		"confidence": 0.2185,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -1097,7 +1206,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_20",
 		"value": 0.001557096,
-		"confidence": 0.0105
+		"confidence": 0.0105,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -1107,7 +1217,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_21",
 		"value": 0.003556415,
-		"confidence": 0.0335
+		"confidence": 0.0335,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -1117,7 +1228,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_22",
 		"value": 0.001487606,
-		"confidence": 0.0115
+		"confidence": 0.0115,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -1127,7 +1239,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_23",
 		"value": 0.003237267,
-		"confidence": 0.0265
+		"confidence": 0.0265,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -1137,7 +1250,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_24",
 		"value": 0.008425291,
-		"confidence": 0.0805
+		"confidence": 0.0805,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -1147,7 +1261,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_25",
 		"value": 0.00114451,
-		"confidence": 0.0065
+		"confidence": 0.0065,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -1157,7 +1272,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_26",
 		"value": 0.003196741,
-		"confidence": 0.0245
+		"confidence": 0.0245,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -1167,7 +1283,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_27",
 		"value": 0.754802788,
-		"confidence": 1
+		"confidence": 1,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -1177,7 +1294,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_28",
 		"value": 0.001975817,
-		"confidence": 0.0145
+		"confidence": 0.0145,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -1187,7 +1305,8 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_29",
 		"value": 0.001780031,
-		"confidence": 0.013
+		"confidence": 0.013,
+		"numberOfMutationsForSample": 26
 	},
 	{
 		"sampleId": "P-0004910-T04-IM5",
@@ -1197,6 +1316,7 @@
 		"studyId": "msk_impact_2017",
 		"mutationalSignatureId": "mutational_signature_30",
 		"value": 0.002998294,
-		"confidence": 0.0285
+		"confidence": 0.0285,
+		"numberOfMutationsForSample": 26
 	}
 ]

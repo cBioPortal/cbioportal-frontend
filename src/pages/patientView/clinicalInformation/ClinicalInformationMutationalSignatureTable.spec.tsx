@@ -13,7 +13,8 @@ const sampleMutationalSignatureData = [
         studyId: 'firstStudy',
         mutationalSignatureId: 'firstMutationalSignature',
         value: 1,
-        confidence: 1},
+        confidence: 0.9,
+        numberOfMutationsForSample: 20},
     {sampleId: 'secondSample',
         uniqueSampleKey: 'secondSample',
         patientId: 'firstPatient',
@@ -21,7 +22,8 @@ const sampleMutationalSignatureData = [
         studyId: 'firstStudy',
         mutationalSignatureId: 'firstMutationalSignature',
         value: 2,
-        confidence: 2},
+        confidence: 0.8,
+        numberOfMutationsForSample: 20},
     {sampleId: 'firstSample',
         uniqueSampleKey: 'firstSample',
         patientId: 'firstPatient',
@@ -29,7 +31,8 @@ const sampleMutationalSignatureData = [
         studyId: 'firstStudy',
         mutationalSignatureId: 'secondMutationalSignature',
         value: 3,
-        confidence: 3}
+        confidence: 0.4,
+        numberOfMutationsForSample: 20}
 ]
 
 describe('ClinicalInformationMutationalSignatureTable', () => {
@@ -49,11 +52,11 @@ describe('ClinicalInformationMutationalSignatureTable', () => {
              sampleValues:{
                 "firstSample":{
                     value: 1,
-                    confidence: 1
+                    confidence: 0.9
                 },
                 "secondSample": {
                     value: 2,
-                    confidence: 2
+                    confidence: 0.8
                 }
              }
              },
@@ -61,7 +64,7 @@ describe('ClinicalInformationMutationalSignatureTable', () => {
                 sampleValues:{
                     "firstSample":{
                         value: 3,
-                        confidence: 3
+                        confidence: 0.4
                     }
                 }
 
