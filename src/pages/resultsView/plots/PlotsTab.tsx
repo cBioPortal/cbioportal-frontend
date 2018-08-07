@@ -38,7 +38,7 @@ import fileDownload from 'react-file-download';
 import onMobxPromise from "../../../shared/lib/onMobxPromise";
 import {logicalOr} from "../../../shared/lib/LogicUtils";
 import {SpecialAttribute} from "../../../shared/cache/OncoprintClinicalDataCache";
-import NoOqlWarning from "../../../shared/components/NoOqlWarning";
+import OqlStatusBanner from "../../../shared/components/OqlStatusBanner";
 import ScrollBar from "../../../shared/components/Scrollbar/ScrollBar";
 
 enum EventKey {
@@ -1359,9 +1359,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     public render() {
         return (
             <div data-test="PlotsTabEntireDiv">
-                <div style={{marginBottom:10, marginTop:7, marginLeft:11.5}}>
-                    <NoOqlWarning store={this.props.store}/>
-                </div>
+                <OqlStatusBanner store={this.props.store} tabReflectsOql={false} style={{marginTop:4}}/>
                 <div className={"plotsTab"} style={{display:"flex", flexDirection:"row", maxWidth:"inherit"}}>
                     <div className="leftColumn">
                         { (this.horzSelection.entrezGeneId !== undefined &&
