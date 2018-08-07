@@ -74,7 +74,7 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
                 <span>{getMutationalSignaturePercentage(data.sampleValues[col.id].value)}</span>,
             download: (data: IMutationalSignatureRow) => `${getMutationalSignaturePercentage(data.sampleValues[col.id].value)}`,
             filter: (data: IMutationalSignatureRow, filterString: string, filterStringUpper: string) =>
-                (data.sampleValues[col.id].value.toString().toUpperCase().indexOf(filterStringUpper) > -1),
+                (getMutationalSignaturePercentage(data.sampleValues[col.id].value).toUpperCase().indexOf(filterStringUpper) > -1),
             sortBy: (data: IMutationalSignatureRow) => data.sampleValues[col.id].value//Number(data.sampleValues[col.id].value.match(/\d+/g)) //extracts digits out of format like 5%
         }
     ))];
