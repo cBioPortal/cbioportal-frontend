@@ -1,1 +1,1 @@
-web: http-server --cors dist/ -p ${PORT}
+web: ls dist.backup || cp -a dist/ dist.backup; cp -a dist.backup dist; for f in $(find dist/); do sed -i "s|replace_me_env_cbioportal_url|${CBIOPORTAL_URL:-http\://www.cbioportal.org}|g" $f; sed -i "s|replace_me_env_genome_nexus_url|${GENOME_NEXUS_URL:-https\://www.genomenexus.org}|g" $f; done && http-server --cors dist/ -p ${PORT}
