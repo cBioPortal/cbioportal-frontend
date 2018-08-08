@@ -25,6 +25,8 @@ import {SortMetric} from "../../lib/ISortMetric";
 import {ILazyMobXTableApplicationDataStore, SimpleLazyMobXTableApplicationDataStore} from "../../lib/ILazyMobXTableApplicationDataStore";
 import {ILazyMobXTableApplicationLazyDownloadDataFetcher} from "../../lib/ILazyMobXTableApplicationLazyDownloadDataFetcher";
 import {maxPage} from "./utils";
+import {AutoSizer, Table as VirTable, Column as VirColumn, TableCellProps} from "react-virtualized";
+import 'react-virtualized/styles.css';
 
 export type SortDirection = 'asc' | 'desc';
 
@@ -819,11 +821,32 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
     private getTable() {
         return (
             <div style={{overflowX: this.props.enableHorizontalScroll ? "auto" : "visible"}}>
-                <SimpleTable
-                    headers={this.store.headers}
-                    rows={this.store.rows}
-                    className={this.props.className}
-                />
+                <AutoSizer disableHeight>
+                    {({width}) => (
+                        <VirTable
+                            width={500}
+                            height={300}
+                            headerHeight={20}
+                            rowHeight={30}
+                            rowCount={this.store.visibleData.length}
+                            rowGetter={({index}) => this.store.visibleData[index]}
+                        >
+                            {(
+                                this.store.visibleColumns.map((column: Column<T>) => {
+                                    return <VirColumn
+                                        dataKey={column.name}
+                                        label={column.name}
+                                        width={width / this.store.visibleColumns.length}
+                                        cellRenderer={function (props: TableCellProps) {
+                                            console.log(props.rowIndex);
+                                            return column.render(props.rowData[props.rowIndex])
+                                        }}
+                                    />
+                                })
+                            )}
+                        </VirTable>
+                    )}
+                </AutoSizer>
             </div>
         );
     }
