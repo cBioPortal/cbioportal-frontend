@@ -34,6 +34,8 @@ export type EnsemblGene = {
 
         'previousSymbols': Array < string >
 
+        'entrezGeneId': string
+
 };
 export type EnsemblTranscript = {
     'transcriptId': string
@@ -800,6 +802,159 @@ export default class GenomeNexusAPI {
         $domain ? : string
     }): Promise < VariantAnnotation > {
         return this.fetchVariantAnnotationGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    fetchCanonicalEnsemblGeneIdByEntrezGeneIdsPOSTURL(parameters: {
+        'entrezGeneIds': Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/ensembl/canonical-gene/entrez';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves canonical Ensembl Gene ID by Entrez Gene Ids
+     * @method
+     * @name GenomeNexusAPI#fetchCanonicalEnsemblGeneIdByEntrezGeneIdsPOST
+     * @param {} entrezGeneIds - List of Entrez Gene Ids. For example ["23140","26009","100131879"]
+     */
+    fetchCanonicalEnsemblGeneIdByEntrezGeneIdsPOSTWithHttpInfo(parameters: {
+        'entrezGeneIds': Array < string > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/ensembl/canonical-gene/entrez';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['entrezGeneIds'] !== undefined) {
+                body = parameters['entrezGeneIds'];
+            }
+
+            if (parameters['entrezGeneIds'] === undefined) {
+                reject(new Error('Missing required  parameter: entrezGeneIds'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Retrieves canonical Ensembl Gene ID by Entrez Gene Ids
+     * @method
+     * @name GenomeNexusAPI#fetchCanonicalEnsemblGeneIdByEntrezGeneIdsPOST
+     * @param {} entrezGeneIds - List of Entrez Gene Ids. For example ["23140","26009","100131879"]
+     */
+    fetchCanonicalEnsemblGeneIdByEntrezGeneIdsPOST(parameters: {
+            'entrezGeneIds': Array < string > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < EnsemblGene >
+        > {
+            return this.fetchCanonicalEnsemblGeneIdByEntrezGeneIdsPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchCanonicalEnsemblGeneIdByEntrezGeneIdGETURL(parameters: {
+        'entrezGeneId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/ensembl/canonical-gene/entrez/{entrezGeneId}';
+
+        path = path.replace('{entrezGeneId}', parameters['entrezGeneId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves Ensembl canonical gene id by Entrez Gene Id
+     * @method
+     * @name GenomeNexusAPI#fetchCanonicalEnsemblGeneIdByEntrezGeneIdGET
+     * @param {string} entrezGeneId - An Entrez Gene Id. For example 23140
+     */
+    fetchCanonicalEnsemblGeneIdByEntrezGeneIdGETWithHttpInfo(parameters: {
+        'entrezGeneId': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/ensembl/canonical-gene/entrez/{entrezGeneId}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{entrezGeneId}', parameters['entrezGeneId'] + '');
+
+            if (parameters['entrezGeneId'] === undefined) {
+                reject(new Error('Missing required  parameter: entrezGeneId'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Retrieves Ensembl canonical gene id by Entrez Gene Id
+     * @method
+     * @name GenomeNexusAPI#fetchCanonicalEnsemblGeneIdByEntrezGeneIdGET
+     * @param {string} entrezGeneId - An Entrez Gene Id. For example 23140
+     */
+    fetchCanonicalEnsemblGeneIdByEntrezGeneIdGET(parameters: {
+        'entrezGeneId': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < EnsemblGene > {
+        return this.fetchCanonicalEnsemblGeneIdByEntrezGeneIdGETWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
