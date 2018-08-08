@@ -1293,7 +1293,7 @@ describe('case set selection in modify query form', function(){
             "Initially selected case set should be as specified from URL"
         );
 
-        // Select all tcga -provisional studies
+        // Select all impact studies
         var input = $(".autosuggest input[type=text]");
         input.waitForExist(10000);
         input.setValue('impact');
@@ -1304,6 +1304,7 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
+        browser.pause(100); // give time for text change to propagate through to the view
         assert.equal(
             browser.getText(selectedCaseSet_sel),
             "All (12997)",
