@@ -14,6 +14,7 @@ export default class CoexpressionTabContainer extends React.Component<{ store:Re
         ) {
             return (
                 <CoExpressionTab
+                    store={this.props.store}
                     molecularProfiles={this.props.store.molecularProfilesInStudies.result}
                     genes={this.props.store.genes.result}
                     studyToDataQueryFilter={this.props.store.studyToDataQueryFilter.result}

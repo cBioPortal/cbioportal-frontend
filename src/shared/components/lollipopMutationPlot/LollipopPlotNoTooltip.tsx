@@ -460,6 +460,7 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
                      ref={this.handlers.ref}
                      width={this.svgWidth}
                      height={this.svgHeight}
+                     className="lollipop-svgnode"
                      onMouseLeave={this.handlers.onSVGMouseLeave}
                 >
                     <rect
@@ -510,7 +511,7 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
                         rangeUpper={this.yMax}
                         ticks={this.yTicks}
                         vertical={true}
-                        label="# Mutations"
+                        label={`# ${this.props.hugoGeneSymbol} Mutations`}
                     />
                 </svg>
             </div>
