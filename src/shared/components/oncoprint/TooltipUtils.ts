@@ -7,7 +7,7 @@ import {
 import client from "shared/api/cbioportalClientInstance";
 import {ClinicalTrackSpec, GeneticTrackDatum} from "./Oncoprint";
 import {
-    AnnotatedExtendedAlteration, AnnotatedMutation,
+    AnnotatedExtendedAlteration, AnnotatedMutation, AnnotatedNumericGeneMolecularData,
     ExtendedAlteration
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import _ from "lodash";
@@ -153,7 +153,7 @@ export function makeGeneticTrackTooltip(
     function listOfMutationOrFusionDataToHTML(data:any[]) {
         return data.map(function(d:any) {
             var ret = $('<span>');
-            ret.append('<b>'+d.amino_acid_change+'</b>');
+            ret.append(`<b>${d.hugo_gene_symbol} ${d.amino_acid_change}</b>`);
             if (d.cancer_hotspots_hotspot) {
                 ret.append('<img src="images/cancer-hotspots.svg" title="Hotspot" style="height:11px; width:11px; margin-left:3px"/>');
             }
@@ -174,7 +174,7 @@ export function makeGeneticTrackTooltip(
     function listOfCNAToHTML(data:any[]) {
         return data.map(function(d:any) {
             var ret = $('<span>');
-            ret.append('<b>'+d.cna+'</b>');
+            ret.append(`<b>${d.hugo_gene_symbol} ${d.cna}</b>`);
             if (d.oncokb_oncogenic) {
                 ret.append('<img src="images/oncokb-oncogenic-1.svg" title="'+d.oncokb_oncogenic+'" style="height:11px; width:11px;margin-left:3px"/>');
             }
@@ -193,15 +193,17 @@ export function makeGeneticTrackTooltip(
         const ret = $('<div>').addClass(TOOLTIP_DIV_CLASS);
         let mutations:any[] = [];
         let cna:any[] = [];
-        const mrna:("UPREGULATED"|"DOWNREGULATED")[] = [];
-        const prot:("UPREGULATED"|"DOWNREGULATED")[] = [];
+        const mrna:{hugo_gene_symbol:string, direction:"UPREGULATED"|"DOWNREGULATED"}[] = [];
+        const prot:typeof mrna = [];
         let fusions:any[] = [];
         for (let i = 0; i < d.data.length; i++) {
             const datum = d.data[i];
             const molecularAlterationType = datum.molecularProfileAlterationType;
+            const hugoGeneSymbol = datum.hugoGeneSymbol;
             switch (molecularAlterationType) {
                 case "MUTATION_EXTENDED":
                     const tooltip_datum:any = {};
+                    tooltip_datum.hugo_gene_symbol = hugoGeneSymbol;
                     tooltip_datum.amino_acid_change = datum.proteinChange;
                     tooltip_datum.driver_filter = datum.driverFilter;
                     tooltip_datum.driver_filter_annotation = datum.driverFilterAnnotation;
@@ -217,9 +219,10 @@ export function makeGeneticTrackTooltip(
                     (datum.alterationSubType === "fusion" ? fusions : mutations).push(tooltip_datum);
                     break;
                 case "COPY_NUMBER_ALTERATION":
-                    if (disp_cna.hasOwnProperty((datum as NumericGeneMolecularData).value)) {
+                    if (disp_cna.hasOwnProperty((datum as AnnotatedNumericGeneMolecularData).value)) {
                         const tooltip_datum:any = {
-                            cna: disp_cna[(datum as NumericGeneMolecularData).value]
+                            cna: disp_cna[(datum as AnnotatedNumericGeneMolecularData).value],
+                            hugo_gene_symbol: hugoGeneSymbol
                         };
                         const oncokb_oncogenic = datum.oncoKbOncogenic;
                         if (oncokb_oncogenic) {
@@ -233,9 +236,9 @@ export function makeGeneticTrackTooltip(
                     let direction = datum.alterationSubType;
                     let array = (molecularAlterationType === "MRNA_EXPRESSION" ? mrna : prot);
                     if (direction === "up") {
-                        array.push("UPREGULATED");
+                        array.push({hugo_gene_symbol: hugoGeneSymbol, direction: "UPREGULATED"});
                     } else if (direction === "down") {
-                        array.push("DOWNREGULATED");
+                        array.push({hugo_gene_symbol: hugoGeneSymbol, direction: "DOWNREGULATED"});
                     }
                     break;
             }
@@ -256,7 +259,7 @@ export function makeGeneticTrackTooltip(
             mutations = listOfMutationOrFusionDataToHTML(mutations);
             for (var i = 0; i < mutations.length; i++) {
                 if (i > 0) {
-                    ret.append(",");
+                    ret.append(", ");
                 }
                 ret.append(mutations[i]);
             }
@@ -270,17 +273,17 @@ export function makeGeneticTrackTooltip(
             cna = listOfCNAToHTML(cna);
             for (var i = 0; i < cna.length; i++) {
                 if (i > 0) {
-                    ret.append(",");
+                    ret.append(", ");
                 }
                 ret.append(cna[i]);
             }
             ret.append('<br>');
         }
         if (mrna.length > 0) {
-            ret.append('MRNA: <b>' + mrna.join(", ") + '</b><br>');
+            ret.append(`MRNA: <b>${mrna.map(x=>`${x.hugo_gene_symbol} ${x.direction}`).join(", ")}</b><br>`);
         }
         if (prot.length > 0) {
-            ret.append('PROT: <b>' + prot.join(", ") + '</b><br>');
+            ret.append(`PROT: <b>${prot.map(x=>`${x.hugo_gene_symbol} ${x.direction}`).join(", ")}</b><br>`);
         }
         // CoverageInformation
         const coverageInformation = makeGeneticTrackTooltip_getCoverageInformation(d.profiled_in, d.not_profiled_in);
