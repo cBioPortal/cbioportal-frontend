@@ -2,6 +2,14 @@
   width: calc(50% - 20px);
   float: left;
   margin: 5px;
+
+  .selectd {
+    font-weight: bold
+  }
+  .geneSymbol:hover {
+    border: 2px solid #1974b8;
+    cursor: pointer;
+  }
 }
 
 .studyViewTablesTitle {
@@ -15,3 +23,4 @@
   margin-top: 5px;
   position: relative
 }
+
