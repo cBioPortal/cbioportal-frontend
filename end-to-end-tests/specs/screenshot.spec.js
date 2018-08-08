@@ -298,7 +298,7 @@ describe("enrichments tab screenshot tests", function() {
     it('enrichments tab coadread_tcga_pub mRNA profile', function(){
         browser.waitForVisible('div[data-test="MutationEnrichmentsTab"]',10000);
         browser.click('a=mRNA');
-        browser.waitForVisible('div[data-test="MRNAEnrichmentsTab"]',10000);
+        browser.waitForVisible('div[data-test="MRNAEnrichmentsTab"]',20000);
         browser.click('b=MERTK');
         var res = browser.checkElement('#enrichementTabDiv', { hide:['.qtip'] } );
         assertScreenShotMatch(res);
