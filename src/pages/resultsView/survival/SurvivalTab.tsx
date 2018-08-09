@@ -4,6 +4,7 @@ import { ResultsViewPageStore } from "../ResultsViewPageStore";
 import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import { observer } from "mobx-react";
 import styles from "./styles.module.scss";
+import OqlStatusBanner from "../../../shared/components/OqlStatusBanner";
 
 export interface ISurvivalTabProps {
     store: ResultsViewPageStore
@@ -83,6 +84,11 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
             content.push(<div className={styles.NotAvailable}>{this.diseaseFreeSurvivalTitleText} not available</div>);
         }
 
-        return <div>{content}</div>;
+        return (
+            <div>
+                <OqlStatusBanner className="survival-oql-status-banner" store={this.props.store} tabReflectsOql={true} style={{marginBottom:15}}/>
+                {content}
+            </div>
+        );
     }
 }
