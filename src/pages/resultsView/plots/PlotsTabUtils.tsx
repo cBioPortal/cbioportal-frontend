@@ -1,4 +1,4 @@
-import {AxisMenuSelection, AxisType, ViewType} from "./PlotsTab";
+import {AxisMenuSelection, ViewType} from "./PlotsTab";
 import {MobxPromise} from "mobxpromise";
 import {
     CancerStudy,
@@ -30,18 +30,43 @@ import {IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPl
 import {AlterationTypeConstants, AnnotatedMutation} from "../ResultsViewPageStore";
 import numeral from "numeral";
 import {getUniqueSampleKeyToCategories} from "../../../shared/components/plots/TablePlotUtils";
+import client from "../../../shared/api/cbioportalClientInstance";
+import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
+import { FractionGenomeAlteredFilter } from "shared/api/generated/CBioPortalAPIInternal";
+import {SpecialAttribute} from "../../../shared/cache/OncoprintClinicalDataCache";
+import {getDeterministicRandomNumber, getJitterForCase} from "../../../shared/components/plots/PlotUtils";
 
-export const molecularProfileTypeToDisplayType:{[s:string]:string} = {
+export const CLIN_ATTR_DATA_TYPE = "clinical_attribute";
+export const dataTypeToDisplayType:{[s:string]:string} = {
     "COPY_NUMBER_ALTERATION": "Copy Number",
     "MRNA_EXPRESSION": "mRNA",
     "PROTEIN_LEVEL": "Protein Level",
-    "METHYLATION": "DNA Methylation"
+    "METHYLATION": "DNA Methylation",
+    [CLIN_ATTR_DATA_TYPE]:"Clinical Attribute"
 };
 
-export const molecularProfileTypeDisplayOrder = ["MRNA_EXPRESSION", "COPY_NUMBER_ALTERATION", "PROTEIN_LEVEL", "METHYLATION"];
+export const dataTypeDisplayOrder = [CLIN_ATTR_DATA_TYPE, "MRNA_EXPRESSION", "COPY_NUMBER_ALTERATION", "PROTEIN_LEVEL", "METHYLATION"];
+export function sortMolecularProfilesForDisplay(profiles:MolecularProfile[]) {
+    if (!profiles.length) {
+        return [];
+    }
+
+    const type = profiles[0].molecularAlterationType;
+    let sortBy:(p:MolecularProfile)=>any;
+    switch (type) {
+        case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
+            sortBy = p=>(p.datatype === "DISCRETE" ? 0 : 1);
+            break;
+        default:
+            sortBy = p=>p.name;
+            break;
+    }
+    return _.sortBy<MolecularProfile>(profiles, sortBy);
+}
 
 export const CNA_STROKE_WIDTH = 1.8;
 export const PLOT_SIDELENGTH = 650;
+
 
 export interface IAxisData {
     data:{
@@ -74,8 +99,10 @@ export enum MutationSummary {
     Neither="Neither", Both="Both", One="One"
 }
 
-const NOT_PROFILED_MUTATION_LEGEND_LABEL = "Not profiled for mutations";
-const NOT_PROFILED_CNA_LEGEND_LABEL = "Not profiled for copy number alterations";
+const NOT_PROFILED_MUTATION_LEGEND_LABEL = ["Not profiled","for mutations"];
+const NOT_PROFILED_CNA_LEGEND_LABEL = ["Not profiled", "for copy number", "alterations"];
+const MUTATION_TYPE_NOT_PROFILED = "not_profiled_mutation";
+const MUTATION_TYPE_NOT_MUTATED = "not_mutated";
 
 export interface IScatterPlotSampleData {
     uniqueSampleKey:string;
@@ -95,6 +122,7 @@ export interface IScatterPlotData extends IScatterPlotSampleData, IBaseScatterPl
 export interface IBoxScatterPlotPoint extends IScatterPlotSampleData {
     category:string;
     value:number;
+    jitter:number;
 }
 
 export function isStringData(d:IAxisData): d is IStringAxisData {
@@ -104,13 +132,64 @@ export function isNumberData(d:IAxisData): d is INumberAxisData {
     return d.datatype === "number";
 }
 
+export function sortScatterPlotDataForZIndex<D extends Pick<IScatterPlotSampleData, "dispMutationType" | "dispMutationSummary" | "profiledMutations">>(
+    data: D[],
+    viewType:ViewType,
+    highlight: (d:D)=>boolean
+) {
+    // sort by render priority
+    switch (viewType) {
+        case ViewType.MutationTypeAndCopyNumber:
+        case ViewType.MutationType:
+            data = _.sortBy<D>(data, d=>{
+                if (d.dispMutationType! in mutationRenderPriority) {
+                    return -mutationRenderPriority[d.dispMutationType!]
+                } else if (!d.dispMutationType) {
+                    return -mutationRenderPriority[MUTATION_TYPE_NOT_MUTATED];
+                } else if (!d.profiledMutations) {
+                    return -mutationRenderPriority[MUTATION_TYPE_NOT_PROFILED];
+                } else {
+                    return Number.NEGATIVE_INFINITY;
+                }
+            });
+            break;
+        case ViewType.MutationSummary:
+            data = _.sortBy<D>(data, d=>{
+                if (d.dispMutationSummary! in mutationSummaryRenderPriority) {
+                    return -mutationSummaryRenderPriority[d.dispMutationSummary!]        ;
+                } else if (!d.profiledMutations) {
+                    return -mutationSummaryRenderPriority[MUTATION_TYPE_NOT_PROFILED];
+                } else {
+                    return Number.NEGATIVE_INFINITY;
+                }
+            });
+            break;
+    }
+    // Now that we've sorted by render order, put highlighted data on top
+    const highlighted = [];
+    const unhighlighted = [];
+    for (const d of data) {
+        if (highlight(d)) {
+            highlighted.push(d);
+        } else {
+            unhighlighted.push(d);
+        }
+    }
+    return unhighlighted.concat(highlighted);
+}
+
 export function scatterPlotSize(
     d:IScatterPlotSampleData,
     active:boolean,
     isHighlighted:boolean
 ) {
-    const big = active || isHighlighted;
-    return big ? 6 : 4;
+    if (isHighlighted) {
+        return 8;
+    } else if (active) {
+        return 6;
+    } else {
+        return 4;
+    }
 }
 
 export function scatterPlotLegendData(
@@ -149,12 +228,13 @@ function scatterPlotMutationSummaryLegendData(
         }).uniq().filter(x=>!!x).value();
     // no data, not profiled
 
-    const legendData = mutationSummaryLegendOrder.filter(x=>(unique.indexOf(x) > -1)).map((x:MutationSummary)=>{
+    const legendData:any[] = mutationSummaryLegendOrder.filter(x=>(unique.indexOf(x) > -1)).map((x:MutationSummary)=>{
         const appearance = mutationSummaryToAppearance[x];
         return {
             name: appearance.legendLabel,
             symbol: {
                 stroke: appearance.stroke,
+                strokeOpacity: appearance.strokeOpacity,
                 fill: appearance.fill,
                 type: "circle"
             }
@@ -165,6 +245,7 @@ function scatterPlotMutationSummaryLegendData(
             name: NOT_PROFILED_MUTATION_LEGEND_LABEL,
             symbol: {
                 stroke: notProfiledAppearance.stroke,
+                strokeOpacity: notProfiledAppearance.strokeOpacity,
                 fill: notProfiledAppearance.fill,
                 type: "circle"
             }
@@ -201,7 +282,7 @@ function scatterPlotMutationLegendData(
             .keyBy(x=>x)
             .value();
 
-    const legendData =
+    const legendData:any[] =
         _.chain(mutationLegendOrder)
         .filter(type=>!!uniqueMutations[type])
         .map(type=>{
@@ -210,7 +291,7 @@ function scatterPlotMutationLegendData(
                 name: appearance.legendLabel,
                 symbol: {
                     stroke: appearance.stroke,
-                    strokeOpacity: +showStroke,
+                    strokeOpacity: (showStroke ? appearance.strokeOpacity : 0),
                     fill: appearance.fill,
                     type: appearance.symbol
                 }
@@ -222,7 +303,7 @@ function scatterPlotMutationLegendData(
             name: noMutationAppearance.legendLabel,
             symbol: {
                 stroke: noMutationAppearance.stroke,
-                strokeOpacity: +showStroke,
+                strokeOpacity: (showStroke ? noMutationAppearance.strokeOpacity : 0),
                 fill: noMutationAppearance.fill,
                 type: noMutationAppearance.symbol
             }
@@ -233,7 +314,7 @@ function scatterPlotMutationLegendData(
             name: NOT_PROFILED_MUTATION_LEGEND_LABEL,
             symbol: {
                 stroke: notProfiledAppearance.stroke,
-                strokeOpacity: +showStroke,
+                strokeOpacity: notProfiledAppearance.strokeOpacity, // always show because its white
                 fill: notProfiledAppearance.fill,
                 type: "circle"
             }
@@ -285,7 +366,8 @@ function scatterPlotCnaLegendData(
             symbol: {
                 stroke: noCnaAppearance.stroke,
                 fillOpacity: 0,
-                type: "circle"
+                type: "circle",
+                strokeWidth: CNA_STROKE_WIDTH
             }
         });
     }
@@ -295,7 +377,8 @@ function scatterPlotCnaLegendData(
             symbol: {
                 stroke: notProfiledAppearance.stroke,
                 fill: notProfiledAppearance.fill,
-                type: "circle"
+                type: "circle",
+                strokeWidth: CNA_STROKE_WIDTH
             }
         });
     }
@@ -306,44 +389,119 @@ function makeAxisDataPromise_Clinical(
     attribute:ClinicalAttribute,
     clinicalDataCache:MobxPromiseCache<ClinicalAttribute, ClinicalData[]>,
     patientKeyToSamples:MobxPromise<{[uniquePatientKey:string]:Sample[]}>,
+    studyToMutationMolecularProfile: MobxPromise<{[studyId: string]: MolecularProfile}>
 ):MobxPromise<IAxisData> {
     const promise = clinicalDataCache.get(attribute);
-    return remoteData({
-        await:()=>[promise, patientKeyToSamples],
-        invoke:()=>{
-            const _patientKeyToSamples = patientKeyToSamples.result!;
-            const data:ClinicalData[] = promise.result!;
-            const axisData:IAxisData = { data:[], datatype:attribute.datatype.toLowerCase() };
-            const shouldParseFloat = attribute.datatype.toLowerCase() === "number";
-            const axisData_Data = axisData.data;
-            if (attribute.patientAttribute) {
-                // produce sample data from patient clinical data
-                for (const d of data) {
-                    const samples = _patientKeyToSamples[d.uniquePatientKey];
-                    for (const sample of samples) {
+    let ret:MobxPromise<IAxisData>;
+    switch(attribute.clinicalAttributeId) {
+        case SpecialAttribute.MutationCount:
+            let mutationCounts = remoteData({
+                await:()=>[patientKeyToSamples, studyToMutationMolecularProfile],
+                invoke:()=>{
+                    const _patientKeyToSamples = patientKeyToSamples.result!;
+                    const _studyToMutationMolecularProfile = studyToMutationMolecularProfile.result!;
+                    // get all samples
+                    let samples = _.flatten(_.values(_patientKeyToSamples));
+                    // produce sample data from patient clinical data
+                    let mutationCounts = client.fetchMutationCountsInMolecularProfileUsingPOST({
+                        molecularProfileId: _studyToMutationMolecularProfile[attribute.studyId].molecularProfileId,
+                        sampleIds: samples.map(s=>s.sampleId)
+                        });
+                    return Promise.resolve(mutationCounts);
+                }
+            });
+            ret = remoteData({
+                await:()=>[mutationCounts],
+                invoke:()=>{
+                    const _mutationCounts = mutationCounts.result!;
+                    const axisData:IAxisData = { data:[], datatype:attribute.datatype.toLowerCase() };
+                    const axisData_Data = axisData.data;
+                    for (const mutationCount of _mutationCounts) {
                         axisData_Data.push({
-                            uniqueSampleKey: sample.uniqueSampleKey,
-                            value: d.value,
+                            uniqueSampleKey: mutationCount.uniqueSampleKey,
+                            value: mutationCount.mutationCount,
                         });
                     }
+                    return Promise.resolve(axisData);
                 }
-            } else {
-                // produce sample data from sample clinical data
-                for (const d of data) {
-                    axisData_Data.push({
-                        uniqueSampleKey: d.uniqueSampleKey,
-                        value: d.value
+            });
+            break;
+        case SpecialAttribute.FractionGenomeAltered:
+            let fractionGenomeAltered = remoteData({
+                await:()=>[patientKeyToSamples, studyToMutationMolecularProfile],
+                invoke:()=>{
+                    const _patientKeyToSamples = patientKeyToSamples.result!;
+                    const _studyToMutationMolecularProfile = studyToMutationMolecularProfile.result!;
+                    const _studyId = attribute.studyId;
+                    // get all samples
+                    let samples = _.flatten(_.values(_patientKeyToSamples));
+                    let sampleIds = samples.map(s=>s.sampleId);
+                    // produce sample data from patient clinical data
+                    let fractionGenomeAltered = internalClient.fetchFractionGenomeAlteredUsingPOST({
+                        studyId: _studyId,
+                        fractionGenomeAlteredFilter: {
+                            sampleIds: sampleIds
+                        } as FractionGenomeAlteredFilter
                     });
+                    return Promise.resolve(fractionGenomeAltered);
                 }
-            }
-            if (shouldParseFloat) {
-                for (const d of axisData_Data) {
-                    d.value = parseFloat(d.value as string); // we know its a string bc all clinical data comes back as string
+            });
+            ret = remoteData({
+                await:()=>[fractionGenomeAltered],
+                invoke:()=>{
+                    const _fractionGenomeAltered = fractionGenomeAltered.result!;
+                    const axisData:IAxisData = { data:[], datatype:attribute.datatype.toLowerCase() };
+                    const axisData_Data = axisData.data;
+                    for (const fractionGenomeAlteredItems of _fractionGenomeAltered) {
+                        axisData_Data.push({
+                            uniqueSampleKey: fractionGenomeAlteredItems.uniqueSampleKey,
+                            value: fractionGenomeAlteredItems.value,
+                        });
+                    }
+                    return Promise.resolve(axisData);
                 }
-            }
-            return Promise.resolve(axisData);
-        }
-    });
+            });
+            break;
+        default:
+            ret = remoteData({
+                await:()=>[promise, patientKeyToSamples],
+                invoke:()=>{
+                    const _patientKeyToSamples = patientKeyToSamples.result!;
+                    const data:ClinicalData[] = promise.result!;
+                    const axisData:IAxisData = { data:[], datatype:attribute.datatype.toLowerCase() };
+                    const shouldParseFloat = attribute.datatype.toLowerCase() === "number";
+                    const axisData_Data = axisData.data;
+                    if (attribute.patientAttribute) {
+                        // produce sample data from patient clinical data
+                        for (const d of data) {
+                            const samples = _patientKeyToSamples[d.uniquePatientKey];
+                            for (const sample of samples) {
+                                axisData_Data.push({
+                                    uniqueSampleKey: sample.uniqueSampleKey,
+                                    value: d.value,
+                                });
+                            }
+                        }
+                    } else {
+                        // produce sample data from sample clinical data
+                        for (const d of data) {
+                            axisData_Data.push({
+                                uniqueSampleKey: d.uniqueSampleKey,
+                                value: d.value
+                            });
+                        }
+                    }
+                    if (shouldParseFloat) {
+                        for (const d of axisData_Data) {
+                            d.value = parseFloat(d.value as string); // we know its a string bc all clinical data comes back as string
+                        }
+                    }
+                    return Promise.resolve(axisData);
+                }
+            });
+        break;
+    }
+    return ret;
 }
 
 function makeAxisDataPromise_Molecular(
@@ -388,26 +546,28 @@ function makeAxisDataPromise_Molecular(
 
 export function makeAxisDataPromise(
     selection:AxisMenuSelection,
-    clinicalAttributeIdToClinicalAttribute:{[clinicalAttributeId:string]:ClinicalAttribute},
+    clinicalAttributeIdToClinicalAttribute:MobxPromise<{[clinicalAttributeId:string]:ClinicalAttribute}>,
     molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>,
     patientKeyToSamples:MobxPromise<{[uniquePatientKey:string]:Sample[]}>,
     entrezGeneIdToGene:MobxPromise<{[entrezGeneId:number]:Gene}>,
     clinicalDataCache:MobxPromiseCache<ClinicalAttribute, ClinicalData[]>,
-    numericGeneMolecularDataCache:MobxPromiseCache<{entrezGeneId:number, molecularProfileId:string}, NumericGeneMolecularData[]>
+    numericGeneMolecularDataCache:MobxPromiseCache<{entrezGeneId:number, molecularProfileId:string}, NumericGeneMolecularData[]>,
+    studyToMutationMolecularProfile: MobxPromise<{[studyId: string]: MolecularProfile}>
 ):MobxPromise<IAxisData> {
 
     let ret:MobxPromise<IAxisData> = remoteData(()=>new Promise<IAxisData>(()=>0)); // always isPending
-    switch (selection.axisType) {
-        case AxisType.clinicalAttribute:
-            if (selection.clinicalAttributeId !== undefined) {
-                const attribute = clinicalAttributeIdToClinicalAttribute[selection.clinicalAttributeId];
-                ret = makeAxisDataPromise_Clinical(attribute, clinicalDataCache, patientKeyToSamples);
+    switch (selection.dataType) {
+        case CLIN_ATTR_DATA_TYPE:
+            if (selection.dataSourceId !== undefined && clinicalAttributeIdToClinicalAttribute.isComplete) {
+                const attribute = clinicalAttributeIdToClinicalAttribute.result![selection.dataSourceId];
+                ret = makeAxisDataPromise_Clinical(attribute, clinicalDataCache, patientKeyToSamples, studyToMutationMolecularProfile);
             }
             break;
-        case AxisType.molecularProfile:
-            if (selection.entrezGeneId !== undefined && selection.molecularProfileId !== undefined) {
+        default:
+            // molecular profile
+            if (selection.entrezGeneId !== undefined && selection.dataSourceId !== undefined) {
                 ret = makeAxisDataPromise_Molecular(
-                    selection.entrezGeneId, selection.molecularProfileId, numericGeneMolecularDataCache,
+                    selection.entrezGeneId, selection.dataSourceId, numericGeneMolecularDataCache,
                     entrezGeneIdToGene, molecularProfileIdToMolecularProfile
                 );
             }
@@ -431,15 +591,16 @@ export function getAxisLabel(
     clinicalAttributeIdToClinicalAttribute:{[clinicalAttributeId:string]:ClinicalAttribute}
 ) {
     let ret = "";
-    switch (selection.axisType) {
-        case AxisType.clinicalAttribute:
-            const attribute = clinicalAttributeIdToClinicalAttribute[selection.clinicalAttributeId!];
+    switch (selection.dataType) {
+        case CLIN_ATTR_DATA_TYPE:
+            const attribute = clinicalAttributeIdToClinicalAttribute[selection.dataSourceId!];
             if (attribute) {
                 ret = attribute.displayName;
             }
             break;
-        case AxisType.molecularProfile:
-            const profile = molecularProfileIdToMolecularProfile[selection.molecularProfileId!];
+        default:
+            // molecular profile
+            const profile = molecularProfileIdToMolecularProfile[selection.dataSourceId!];
             if (profile && selection.entrezGeneId !== undefined) {
                 ret = `${entrezGeneIdToGene[selection.entrezGeneId].hugoGeneSymbol}: ${profile.name}`;
             }
@@ -454,15 +615,16 @@ export function getAxisDescription(
     clinicalAttributeIdToClinicalAttribute:{[clinicalAttributeId:string]:ClinicalAttribute}
 ) {
     let ret = "";
-    switch (selection.axisType) {
-        case AxisType.clinicalAttribute:
-            const attribute = clinicalAttributeIdToClinicalAttribute[selection.clinicalAttributeId!];
+    switch (selection.dataType) {
+        case CLIN_ATTR_DATA_TYPE:
+            const attribute = clinicalAttributeIdToClinicalAttribute[selection.dataSourceId!];
             if (attribute) {
                 ret = attribute.description;
             }
             break;
-        case AxisType.molecularProfile:
-            const profile = molecularProfileIdToMolecularProfile[selection.molecularProfileId!];
+        default:
+            // molecular profile
+            const profile = molecularProfileIdToMolecularProfile[selection.dataSourceId!];
             if (profile) {
                 ret = profile.description;
             }
@@ -471,99 +633,115 @@ export function getAxisDescription(
     return ret;
 }
 
-const oncoprintMutationTypeToAppearanceDrivers:{[mutType:string]:{symbol:string, fill:string, stroke:string, legendLabel:string}}
+const NON_CNA_STROKE_OPACITY = 0.5;
+
+export const oncoprintMutationTypeToAppearanceDrivers:{[mutType:string]:{symbol:string, fill:string, stroke:string, strokeOpacity:number, legendLabel:string}}
 = {
     "inframe": {
         symbol : "circle",
         fill : MUT_COLOR_INFRAME_PASSENGER,
         stroke : "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel : "Inframe (VUS)"
     },
     "inframe.driver": {
         symbol : "circle",
         fill: MUT_COLOR_INFRAME,
         stroke : "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel : "Inframe (Driver)"
     },
     "missense":{
         symbol : "circle",
         fill : MUT_COLOR_MISSENSE_PASSENGER,
         stroke : "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel : "Missense (VUS)"
     },
     "missense.driver":{
         symbol : "circle",
         fill : MUT_COLOR_MISSENSE,
         stroke : "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel : "Missense (Driver)"
     },
     "fusion":{
         symbol: "circle",
         fill: MUT_COLOR_FUSION,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Fusion"
     },
     "trunc":{
         symbol: "circle",
         fill: MUT_COLOR_TRUNC_PASSENGER,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Truncating (VUS)"
     },
     "trunc.driver":{
         symbol: "circle",
         fill: MUT_COLOR_TRUNC,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Truncating (Driver)"
     },
     "promoter":{
         symbol: "circle",
         fill: MUT_COLOR_PROMOTER,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Promoter"
     }
 };
 
-const oncoprintMutationTypeToAppearanceDefault:{[mutType:string]:{symbol:string, fill:string, stroke:string, legendLabel:string}}
+export const oncoprintMutationTypeToAppearanceDefault:{[mutType:string]:{symbol:string, fill:string, stroke:string, strokeOpacity:number, legendLabel:string}}
     = {
     "inframe": {
         symbol : "circle",
         fill: MUT_COLOR_INFRAME,
         stroke : "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel : "Inframe"
     },
     "missense":{
         symbol : "circle",
         fill : MUT_COLOR_MISSENSE,
         stroke : "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel : "Missense"
     },
     "fusion":{
         symbol: "circle",
         fill: MUT_COLOR_FUSION,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Fusion"
     },
     "trunc":{
         symbol: "circle",
         fill: MUT_COLOR_TRUNC,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Truncating"
     },
     "promoter":{
         symbol: "circle",
         fill: MUT_COLOR_PROMOTER,
         stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Promoter"
     }
 };
 
-const notProfiledAppearance = {
+export const notProfiledAppearance = {
     symbol: "circle",
     fill: "#ffffff",
-    stroke: "d3d3d3", // TODO: right grey?
+    stroke: "#000000",
+    strokeOpacity:0.3,
 };
 
-const mutationLegendOrder = [
+export const mutationLegendOrder = [
     "fusion",
     "promoter.driver", "promoter",
     "trunc.driver", "trunc",
@@ -572,13 +750,14 @@ const mutationLegendOrder = [
 ];
 export const mutationRenderPriority = stringListToIndexSet([
     "fusion", "promoter.driver", "trunc.driver", "inframe.driver", "missense.driver",
-    "promoter", "trunc", "inframe", "missense"
+    "promoter", "trunc", "inframe", "missense", MUTATION_TYPE_NOT_MUTATED, MUTATION_TYPE_NOT_PROFILED
 ]);
 
 export const noMutationAppearance = {
     symbol : "circle",
-    fill : "#e3e3e3",
+    fill: "#c4e5f5",
     stroke : "#000000",
+    strokeOpacity:0.3,
     legendLabel : "Not mutated"
 };
 
@@ -586,53 +765,62 @@ export const mutationSummaryToAppearance = {
     "Neither":{
         fill: "#00AAF8",
         stroke: "#0089C6",
+        strokeOpacity:1,
         legendLabel: "Neither mutated"
     },
     "One":{
         fill : "#DBA901",
         stroke : "#886A08",
+        strokeOpacity:1,
         legendLabel : "One Gene mutated"
     },
     "Both":{
         fill : "#FF0000",
         stroke : "#B40404",
+        strokeOpacity:1,
         legendLabel: "Both mutated"
     }
 };
-const mutationSummaryLegendOrder = [MutationSummary.Both, MutationSummary.One, MutationSummary.Neither];
-export const mutationSummaryRenderPriority = stringListToIndexSet(mutationSummaryLegendOrder);
+export const mutationSummaryLegendOrder = [MutationSummary.Both, MutationSummary.One, MutationSummary.Neither];
+export const mutationSummaryRenderPriority = stringListToIndexSet((mutationSummaryLegendOrder as any[]).concat(MUTATION_TYPE_NOT_PROFILED));
 
 const cnaToAppearance = {
     "-2":{
         legendLabel: "Deep Deletion",
         stroke:CNA_COLOR_HOMDEL,
+        strokeOpacity:1,
     },
     "-1":{
         legendLabel: "Shallow Deletion",
         stroke:"#2aced4",
+        strokeOpacity:1,
     },
     "0":{
         legendLabel: "Diploid",
         stroke:DEFAULT_GREY,
+        strokeOpacity:1,
     },
     "1":{
         legendLabel: "Gain",
         stroke: "#ff8c9f",
+        strokeOpacity:1,
     },
     "2":{
         legendLabel: "Amplification",
         stroke: CNA_COLOR_AMP,
+        strokeOpacity:1,
     }
 };
 
 const noCnaAppearance = {
     stroke: "#333333",
+    strokeOpacity:1,
     legendLabel: "No CNA data",
 };
 
 const cnaCategoryOrder = ["-2", "-1", "0", "1", "2"].map(x=>(cnaToAppearance as any)[x].legendLabel);
 
-function getMutationTypeAppearance(d:IScatterPlotSampleData, oncoprintMutationTypeToAppearance:{[mutType:string]:{symbol:string, fill:string, stroke:string, legendLabel:string}}) {
+function getMutationTypeAppearance(d:IScatterPlotSampleData, oncoprintMutationTypeToAppearance:{[mutType:string]:{symbol:string, fill:string, stroke:string, strokeOpacity:number, legendLabel:string}}) {
     if (!d.profiledMutations) {
         return notProfiledAppearance;
     } else if (!d.dispMutationType) {
@@ -656,7 +844,7 @@ export function makeScatterPlotPointAppearance(
     mutationDataExists: MobxPromise<boolean>,
     cnaDataExists: MobxPromise<boolean>,
     driversAnnotated: boolean
-):(d:IScatterPlotSampleData)=>{ stroke:string, fill?:string, symbol?:string} {
+):(d:IScatterPlotSampleData)=>{ stroke:string, strokeOpacity:number, fill?:string, symbol?:string} {
     const oncoprintMutationTypeToAppearance = driversAnnotated ? oncoprintMutationTypeToAppearanceDrivers: oncoprintMutationTypeToAppearanceDefault;
     switch (viewType) {
         case ViewType.MutationTypeAndCopyNumber:
@@ -709,8 +897,8 @@ function tooltipMutationsSection(
     mutations:AnnotatedMutation[],
     entrezGeneIdToGene:{[entrezGeneId:number]:Gene}
 ) {
-    const oncoKbIcon = (mutation:AnnotatedMutation)=>(<img src="images/oncokb-oncogenic-1.svg" title={mutation.oncoKbOncogenic} style={{height:11, width:11, marginBottom: 2}}/>);
-    const hotspotIcon = <img src="images/cancer-hotspots.svg" title="Hotspot" style={{height:11, width:11, marginBottom:3}}/>;
+    const oncoKbIcon = (mutation:AnnotatedMutation)=>(<img src="images/oncokb-oncogenic-1.svg" title={mutation.oncoKbOncogenic} style={{height:11, width:11, marginLeft:2, marginBottom: 2}}/>);
+    const hotspotIcon = <img src="images/cancer-hotspots.svg" title="Hotspot" style={{height:11, width:11, marginLeft:2, marginBottom:3}}/>;
     const mutationsByGene = _.groupBy(mutations.filter(m=>!!m.proteinChange), m=>entrezGeneIdToGene[m.entrezGeneId].hugoGeneSymbol);
     const sorted = _.chain(mutationsByGene).entries().sortBy(x=>x[0]).value();
     return (
@@ -720,10 +908,10 @@ function tooltipMutationsSection(
                 for (const mutation of entry[1]) {
                     proteinChangeComponents.push(
                         <span key={mutation.proteinChange}>
-                            {mutation.proteinChange} {mutation.isHotspot ? hotspotIcon : null} {mutation.oncoKbOncogenic ? oncoKbIcon(mutation) : null}
+                            {mutation.proteinChange}<span style={{marginLeft:1}}>{mutation.isHotspot ? hotspotIcon : null}{mutation.oncoKbOncogenic ? oncoKbIcon(mutation) : null}</span>
                         </span>
                     );
-                    proteinChangeComponents.push(<span>,</span>);
+                    proteinChangeComponents.push(<span>, </span>);
                 }
                 proteinChangeComponents.pop(); // remove last comma
                 return (
@@ -771,10 +959,10 @@ export function boxPlotTooltip(
 export function logScalePossible(
     axisSelection: AxisMenuSelection
 ) {
-    return !!(axisSelection.axisType === AxisType.molecularProfile &&
-        axisSelection.molecularProfileId &&
-        !(/zscore/i.test(axisSelection.molecularProfileId)) &&
-        /rna_seq/i.test(axisSelection.molecularProfileId));
+    return !!(axisSelection.dataType !== CLIN_ATTR_DATA_TYPE &&
+         axisSelection.dataSourceId &&
+        !(/zscore/i.test(axisSelection.dataSourceId)) &&
+        /rna_seq/i.test(axisSelection.dataSourceId));
 }
 
 export function makeBoxScatterPlotData(
@@ -855,7 +1043,7 @@ export function makeScatterPlotData(
         mutations ? _.groupBy(mutations.data, m=>m.uniqueSampleKey) : {};
     const cnaMap:{[uniqueSampleKey:string]:NumericGeneMolecularData[]} =
         copyNumberAlterations? _.groupBy(copyNumberAlterations.data, d=>d.uniqueSampleKey) : {};
-    const dataMap:{[uniqueSampleKey:string]:Partial<IScatterPlotSampleData & { x:string|number, y:number, category:string, value:number }>} = {};
+    const dataMap:{[uniqueSampleKey:string]:Partial<IScatterPlotSampleData & { x:string|number, y:number, category:string, value:number, jitter:number }>} = {};
     for (const d of horzData.data) {
         const sample = uniqueSampleKeyToSample[d.uniqueSampleKey];
         const sampleCopyNumberAlterations:NumericGeneMolecularData[] | undefined = cnaMap[d.uniqueSampleKey];
@@ -937,6 +1125,7 @@ export function makeScatterPlotData(
             // we only care about cases with both x and y data
             datum.y = d.value;
             datum.value = d.value;
+            datum.jitter = getJitterForCase(d.uniqueSampleKey);
             data.push(datum);
         }
     }
@@ -968,8 +1157,12 @@ function makeScatterPlotData_profiledReport(
 
 export function getCnaQueries(
     entrezGeneId:number,
-    studyToMolecularProfileDiscrete:{[studyId:string]:MolecularProfile}
+    studyToMolecularProfileDiscrete:{[studyId:string]:MolecularProfile},
+    cnaDataShown:boolean
 ) {
+    if (!cnaDataShown) {
+        return [];
+    }
     return _.values(studyToMolecularProfileDiscrete)
         .map(p=>({molecularProfileId: p.molecularProfileId, entrezGeneId}));
 }
@@ -980,12 +1173,12 @@ export function getMutationQueries(
 ) {
     const queries:{entrezGeneId:number}[] = [];
     let horzEntrezGeneId:number | undefined = undefined;
-    if (horzSelection.axisType === AxisType.molecularProfile &&
+    if (horzSelection.dataType !== CLIN_ATTR_DATA_TYPE &&
             horzSelection.entrezGeneId !== undefined) {
         horzEntrezGeneId = horzSelection.entrezGeneId;
         queries.push({ entrezGeneId: horzEntrezGeneId });
     }
-    if (vertSelection.axisType === AxisType.molecularProfile &&
+    if (vertSelection.dataType !== CLIN_ATTR_DATA_TYPE &&
             vertSelection.entrezGeneId !== undefined &&
             vertSelection.entrezGeneId !== horzEntrezGeneId) {
         queries.push({ entrezGeneId: vertSelection.entrezGeneId });
