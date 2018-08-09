@@ -59,10 +59,10 @@ export class CoExpressionDataStore extends SimpleGetterLazyMobXTableApplicationD
             let selected;
             switch (this.tableMode) {
                 case TableMode.SHOW_POSITIVE:
-                    selected = (d.pearsonsCorrelation >= 0);
+                    selected = (d.spearmansCorrelation >= 0);
                     break;
                 case TableMode.SHOW_NEGATIVE:
-                    selected = (d.pearsonsCorrelation <= 0);
+                    selected = (d.spearmansCorrelation <= 0);
                     break;
                 default:
                     selected = true;
