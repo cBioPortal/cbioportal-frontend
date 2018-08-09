@@ -155,52 +155,133 @@ describe('Results Page', function() {
 
     });
 
-    describe('no oql warning banner', function() {
-        const bannerSelector = 'span[data-test="OqlStatusBanner"]';
+    describe.only('oql status banner', function() {
+        const yesBannerSelector = 'div[data-test="OqlStatusBannerYes"]';
+        const noBannerSelector = 'div[data-test="OqlStatusBannerNo"]';
         const simpleQueryUrl = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`;
         const explicitOqlQueryUrl = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%2520NRAS%2520%250ABRAF%253AMUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`;
 
-        // alternating simple and explicit url because the only thing changing othewrise is the hash, so it
-        //  doesnt refresh the page, and for some reason that doesnt actually change the tab
-        it("should not be present in plots tab with simple query", function(){
-            goToUrlAndSetLocalStorage(`${simpleQueryUrl}#plots`);
-            browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 10000);
-            assert(!browser.isExisting(bannerSelector));
+        it("should not be present in oncoprint tab with simple query", function() {
+            goToUrlAndSetLocalStorage(simpleQueryUrl);
+            waitForOncoprint(10000);
+            assert(!browser.isVisible(`${yesBannerSelector}.oncoprint-oql-status-banner`));
+            assert(!browser.isVisible(`${noBannerSelector}.oncoprint-oql-status-banner`));
         });
-        it("should be present in plots tab with explicit query", function(){
-            goToUrlAndSetLocalStorage(`${explicitOqlQueryUrl}#plots`);
-            browser.waitForExist(bannerSelector, 10000);
-            assert(browser.isExisting(bannerSelector));
+        it("should not be present in cancer types summary with simple query", function() {
+            browser.click("#cancer-types-result-tab");
+            browser.pause(500);
+            assert(!browser.isVisible(`${yesBannerSelector}.cancer-types-summary-oql-status-banner`));
+            assert(!browser.isVisible(`${noBannerSelector}.cancer-types-summary-oql-status-banner`));
+        });
+        it("should not be present in mutual exclusivity tab with simple query", function() {
+            browser.click("#mutex-result-tab");
+            browser.pause(500);
+            assert(!browser.isVisible(`${yesBannerSelector}.mutex-oql-status-banner`));
+            assert(!browser.isVisible(`${noBannerSelector}.mutex-oql-status-banner`));
+        });
+        it("should not be present in plots tab with simple query", function(){
+            browser.click("#plots-result-tab");
+            browser.pause(500);
+            assert(!browser.isVisible(`${yesBannerSelector}.plots-oql-status-banner`));
+            assert(!browser.isVisible(`${noBannerSelector}.plots-oql-status-banner`));
         });
         it("should not be present in mutations tab with simple query", function(){
-            goToUrlAndSetLocalStorage(`${simpleQueryUrl}#mutation_details`);
-            browser.waitForVisible('.borderedChart svg',10000);
-            assert(!browser.isExisting(bannerSelector));
-        });
-        it("should be present in mutations tab with explicit query", function(){
-            goToUrlAndSetLocalStorage(`${explicitOqlQueryUrl}#mutation_details`);
-            browser.waitForExist(bannerSelector, 10000);
-            assert(browser.isExisting(bannerSelector));
+            browser.click("#mutation-result-tab");
+            browser.pause(500);
+            assert(!browser.isVisible(`${yesBannerSelector}.mutations-oql-status-banner`));
+            assert(!browser.isVisible(`${noBannerSelector}.mutations-oql-status-banner`));
         });
         it("should not be present in coexpression tab with simple query", function(){
-            goToUrlAndSetLocalStorage(`${simpleQueryUrl}#coexp`);
-            browser.waitForVisible('div[data-test="CoExpressionPlot"]',10000);
-            assert(!browser.isExisting(bannerSelector));
+            browser.click("#coexp-result-tab");
+            browser.pause(500);
+            assert(!browser.isVisible(`${yesBannerSelector}.coexp-oql-status-banner`));
+            assert(!browser.isVisible(`${noBannerSelector}.coexp-oql-status-banner`));
         });
-        it("should be present in coexpression tab with explicit query", function(){
-            goToUrlAndSetLocalStorage(`${explicitOqlQueryUrl}#coexp`);
-            browser.waitForExist(bannerSelector, 10000);
-            assert(browser.isExisting(bannerSelector));
+        it("should not be present in enrichments tab with simple query", function(){
+            browser.click("#enrichments-result-tab");
+            browser.pause(500);
+            assert(!browser.isVisible(`${yesBannerSelector}.enrichments-oql-status-banner`));
+            assert(!browser.isVisible(`${noBannerSelector}.enrichments-oql-status-banner`));
+        });
+        it("should not be present in survival tab with simple query", function(){
+            browser.click("#survival-result-tab");
+            browser.pause(500);
+            assert(!browser.isVisible(`${yesBannerSelector}.survival-oql-status-banner`));
+            assert(!browser.isVisible(`${noBannerSelector}.survival-oql-status-banner`));
+        });
+        it("should not be present in download tab with simple query", function(){
+            browser.click("#data-download-result-tab");
+            browser.pause(500);
+            assert(!browser.isVisible(`${yesBannerSelector}.download-oql-status-banner`));
+            assert(!browser.isVisible(`${noBannerSelector}.download-oql-status-banner`));
         });
         it("should not be present in expression tab with simple query", function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=TP53&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=acc_tcga%2Cchol_tcga%2Cesca_tcga#cc-plots`);
-            browser.waitForExist(".borderedChart svg", 10000);
-            assert(!browser.isExisting(bannerSelector));
+            browser.waitForVisible(".borderedChart svg", 10000);
+            assert(!browser.isVisible(`${yesBannerSelector}.expression-oql-status-banner`));
+            assert(!browser.isVisible(`${noBannerSelector}.expression-oql-status-banner`));
+        });
+
+
+        it("should be present in oncoprint tab with simple query", function() {
+            goToUrlAndSetLocalStorage(explicitOqlQueryUrl);
+            waitForOncoprint(10000);
+            assert(browser.isVisible(`${yesBannerSelector}.oncoprint-oql-status-banner`));
+            assert(!browser.isVisible(`${noBannerSelector}.oncoprint-oql-status-banner`));
+        });
+        it("should be present in cancer types summary with simple query", function() {
+            browser.click("#cancer-types-result-tab");
+            browser.waitForVisible(`${yesBannerSelector}.cancer-types-summary-oql-status-banner`, 10000);
+            assert(browser.isVisible(`${yesBannerSelector}.cancer-types-summary-oql-status-banner`));
+            assert(!browser.isVisible(`${noBannerSelector}.cancer-types-summary-oql-status-banner`));
+        });
+        it("should be present in mutual exclusivity tab with simple query", function() {
+            browser.click("#mutex-result-tab");
+            browser.waitForVisible(`${yesBannerSelector}.mutex-oql-status-banner`, 10000);
+            assert(browser.isVisible(`${yesBannerSelector}.mutex-oql-status-banner`));
+            assert(!browser.isVisible(`${noBannerSelector}.mutex-oql-status-banner`));
+        });
+        it("should be present in plots tab with simple query", function(){
+            browser.click("#plots-result-tab");
+            browser.waitForVisible(`${noBannerSelector}.plots-oql-status-banner`, 10000);
+            assert(!browser.isVisible(`${yesBannerSelector}.plots-oql-status-banner`));
+            assert(browser.isVisible(`${noBannerSelector}.plots-oql-status-banner`));
+        });
+        it("should be present in mutations tab with simple query", function(){
+            browser.click("#mutation-result-tab");
+            browser.waitForVisible(`${noBannerSelector}.mutations-oql-status-banner`, 10000);
+            assert(!browser.isVisible(`${yesBannerSelector}.mutations-oql-status-banner`));
+            assert(browser.isVisible(`${noBannerSelector}.mutations-oql-status-banner`));
+        });
+        it("should be present in coexpression tab with simple query", function(){
+            browser.click("#coexp-result-tab");
+            browser.waitForVisible(`${noBannerSelector}.coexp-oql-status-banner`, 10000);
+            assert(!browser.isVisible(`${yesBannerSelector}.coexp-oql-status-banner`));
+            assert(browser.isVisible(`${noBannerSelector}.coexp-oql-status-banner`));
+        });
+        it("should be present in enrichments tab with simple query", function(){
+            browser.click("#enrichments-result-tab");
+            browser.waitForVisible(`${yesBannerSelector}.enrichments-oql-status-banner`, 10000);
+            assert(browser.isVisible(`${yesBannerSelector}.enrichments-oql-status-banner`));
+            assert(!browser.isVisible(`${noBannerSelector}.enrichments-oql-status-banner`));
+        });
+        it("should be present in survival tab with simple query", function(){
+            browser.click("#survival-result-tab");
+            browser.waitForVisible(`${yesBannerSelector}.survival-oql-status-banner`, 10000);
+            assert(browser.isVisible(`${yesBannerSelector}.survival-oql-status-banner`));
+            assert(!browser.isVisible(`${noBannerSelector}.survival-oql-status-banner`));
+        });
+        it("should be present in download tab with simple query", function(){
+            browser.click("#data-download-result-tab");
+            browser.waitForVisible(`${yesBannerSelector}.download-oql-status-banner`, 10000);
+            assert(browser.isVisible(`${yesBannerSelector}.download-oql-status-banner`));
+            assert(!browser.isVisible(`${noBannerSelector}.download-oql-status-banner`));
         });
         it("should be present in expression tab with explicit query", function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=TP53%253AMUT%253B&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=acc_tcga%2Cchol_tcga%2Cesca_tcga#cc-plots`);
-            browser.waitForExist(bannerSelector, 10000);
-            assert(browser.isExisting(bannerSelector));
+            browser.waitForVisible(`${noBannerSelector}.expression-oql-status-banner`, 10000);
+            assert(!browser.isVisible(`${yesBannerSelector}.expression-oql-status-banner`));
+            assert(browser.isVisible(`${noBannerSelector}.expression-oql-status-banner`));
         });
     });
 

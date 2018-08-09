@@ -1359,7 +1359,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     public render() {
         return (
             <div data-test="PlotsTabEntireDiv">
-                <OqlStatusBanner store={this.props.store} tabReflectsOql={false} style={{marginTop:4}}/>
+                <OqlStatusBanner className="plots-oql-status-banner" store={this.props.store} tabReflectsOql={false} style={{marginTop:7}}/>
                 <div className={"plotsTab"} style={{display:"flex", flexDirection:"row", maxWidth:"inherit"}}>
                     <div className="leftColumn">
                         { (this.horzSelection.entrezGeneId !== undefined &&

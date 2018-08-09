@@ -271,7 +271,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
         }
         return (
             <div>
-                <OqlStatusBanner store={this.props.store} tabReflectsOql={false} style={{marginBottom:15}}/>
+                <OqlStatusBanner className="coexp-oql-status-banner" store={this.props.store} tabReflectsOql={false} style={{marginBottom:15}}/>
                 {divContents}
             </div>
         );

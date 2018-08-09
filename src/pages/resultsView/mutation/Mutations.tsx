@@ -35,7 +35,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
 
         return (
             <div>
-                <OqlStatusBanner store={this.props.store} tabReflectsOql={false}/>
+                <OqlStatusBanner className="mutations-oql-status-banner" store={this.props.store} tabReflectsOql={false} style={{marginTop:-2}}/>
                 <Loader isLoading={this.props.store.mutationMapperStores.isPending} />
                 {(this.props.store.mutationMapperStores.isComplete) && (
                     <MSKTabs
