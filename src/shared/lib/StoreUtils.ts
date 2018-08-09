@@ -47,6 +47,7 @@ import {Query, default as OncoKbAPI, Gene as OncoKbGene, CancerGene} from "publi
 import {
     getTrialMatchVariants, getTrialMatchGenes
 } from "shared/lib/TrialMatchUtils";
+import {Query, default as OncoKbAPI, Gene as OncoKbGene} from "shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "shared/lib/CopyNumberUtils";
 import {MobxPromise, MobxPromiseInputUnion} from "mobxpromise";
 import {keywordToCosmic, geneToMyCancerGenome} from "shared/lib/AnnotationUtils";
