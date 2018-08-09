@@ -41,11 +41,11 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
                                 trialTitle = trialInfo[0];
                                 nctId = trialInfo[1];
                                 trialStatus = trialInfo[2];
-                                code = trialInfo[3];
-                                const drugs = variant.match[trial].split(";");
-                                drugs.forEach(drug => {
+                                const arms = variant.match[trial].split(";");
+                                arms.forEach(arm => {
+                                    const matchItems = arm.split(",");
                                     list.push(this.variantItem(variant.name, trialTitle, variant.gene, code,
-                                        variant.oncogenicity, variant.mutEffect, nctId, trialStatus, drug.split(":")[0]));
+                                        variant.oncogenicity, variant.mutEffect, nctId, trialStatus, matchItems[0]));
                                 });
                             }
                         }

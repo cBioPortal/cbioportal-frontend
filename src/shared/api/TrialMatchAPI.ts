@@ -36,11 +36,13 @@ function countMatches(trialMatchItems: Array<TrialMatch>): {[id: string]: string
     const match: {[trialTitle: string]: string} = {};
     trialMatchItems.forEach(trialMatchItem => {
         const id = trialMatchItem.trialTitle + ";" + trialMatchItem.nctID
-                    + ";" + trialMatchItem.trialStatus + ";" + trialMatchItem.code;
+                    + ";" + trialMatchItem.trialStatus;
         if (!match[id]) {
-            match[id] = trialMatchItem.dose;
+            match[id] = trialMatchItem.code + "," + trialMatchItem.dose + "," +
+                        trialMatchItem.matchLevel + "," + trialMatchItem.matchType;
         } else {
-            match[id] += ";" + trialMatchItem.dose;
+            match[id] += ";" + trialMatchItem.code + "," + trialMatchItem.dose + "," +
+                trialMatchItem.matchLevel + "," + trialMatchItem.matchType;
         }
 
     });
