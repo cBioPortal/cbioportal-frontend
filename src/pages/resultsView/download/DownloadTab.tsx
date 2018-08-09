@@ -17,6 +17,7 @@ import {
 
 import styles from "./styles.module.scss";
 import classNames from 'classnames';
+import OqlStatusBanner from "../../../shared/components/OqlStatusBanner";
 
 export interface IDownloadTabProps {
     store: ResultsViewPageStore;
@@ -216,6 +217,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
 
         return (
             <div className="cbioportal-frontend">
+                <OqlStatusBanner className="download-oql-status-banner" store={this.props.store} tabReflectsOql={true} style={{marginBottom:13}}/>
                 <div>
                     <FeatureTitle
                         title="Downloadable Data Files"
