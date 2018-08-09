@@ -23,7 +23,6 @@ import DatasetPage from 'bundle-loader?lazy!babel-loader!./pages/datasetView/Dat
 import SPA from 'bundle-loader?lazy!babel-loader!./pages/resultsView/SPA';
 import StudyViewPage from 'bundle-loader?lazy!babel-loader!./pages/studyView/StudyViewPage';
 import MutationMapperTool from 'bundle-loader?lazy!babel-loader!./pages/tools/mutationMapper/MutationMapperTool';
-import './globalComponents';
 import {getBasePath} from "shared/api/urls";
 import $ from "jquery";
 
