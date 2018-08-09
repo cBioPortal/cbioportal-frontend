@@ -227,8 +227,8 @@ class LazyMobXTableStore<T> {
     @observable private _columnVisibilityOverride:{[columnId: string]: boolean}|undefined;
 
     public _cache = new CellMeasurerCache({
-        defaultWidth: 300,
-        minWidth: 300,
+        defaultWidth: 50,
+        minWidth: 50,
         fixedHeight:true
     });
 
@@ -417,10 +417,11 @@ class LazyMobXTableStore<T> {
 
     @computed get tableColumns() {
         return this.visibleColumns.map((column: Column<T>, index: number) => {
+            console.log(column.name, JSON.stringify(this._cache.columnWidth({index: index})));
             return <VirColumn
                 dataKey={column.name}
                 label={column.name}
-                width={this._cache.columnWidth({index: index})}
+                width={this._cache.columnWidth({index: index}) + 50}
                 headerRenderer={function (prop: TableHeaderProps) {
                     return this.headerRenderer(column);
                 }.bind(this)}
@@ -640,6 +641,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
     private filterInput:HTMLInputElement;
     private filterInputReaction:IReactionDisposer;
     private pageToHighlightReaction:IReactionDisposer;
+    private lastRenderedWidth:number;
 
     public static defaultProps = {
         showFilter: true,
@@ -863,6 +865,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
     }
 
     private getTable() {
+        console.log(JSON.stringify(this.store._cache));
         return (
             <If condition={this.props.showPagination === true}>
                 <Then>
@@ -876,13 +879,18 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
                 </Then>
                 <Else>
                     <AutoSizer disableHeight>
-                        {({width}) => (
+                        {({width}) => {
+                            if (this.lastRenderedWidth != width) {
+                                this.lastRenderedWidth = width;
+                                this.store._cache.clearAll();
+                            }
+                            return (
                             <VirTable
                                 deferredMeasurementCache={this.store._cache}
                                 width={width}
                                 height={300}
-                                headerHeight={20}
-                                rowHeight={35}
+                                headerHeight={30}
+                                rowHeight={30}
                                 rowCount={this.store.visibleData.length}
                                 rowGetter={({index}) => this.store.visibleData[index]}
                             >
@@ -890,7 +898,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
                                     this.store.tableColumns
                                 )}
                             </VirTable>
-                        )}</AutoSizer>
+                        )}}</AutoSizer>
                 </Else>
             </If>
         )
