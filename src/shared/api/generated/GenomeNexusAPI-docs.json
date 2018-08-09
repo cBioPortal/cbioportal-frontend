@@ -259,6 +259,78 @@
         }
       }
     },
+    "/ensembl/canonical-gene/entrez": {
+      "post": {
+        "tags": [
+          "ensembl-controller"
+        ],
+        "summary": "Retrieves canonical Ensembl Gene ID by Entrez Gene Ids",
+        "operationId": "fetchCanonicalEnsemblGeneIdByEntrezGeneIdsPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "entrezGeneIds",
+            "description": "List of Entrez Gene Ids. For example [\"23140\",\"26009\",\"100131879\"]",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/EnsemblGene"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ensembl/canonical-gene/entrez/{entrezGeneId}": {
+      "get": {
+        "tags": [
+          "ensembl-controller"
+        ],
+        "summary": "Retrieves Ensembl canonical gene id by Entrez Gene Id",
+        "operationId": "fetchCanonicalEnsemblGeneIdByEntrezGeneIdGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "entrezGeneId",
+            "in": "path",
+            "description": "An Entrez Gene Id. For example 23140",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/EnsemblGene"
+            }
+          }
+        }
+      }
+    },
     "/ensembl/canonical-gene/hgnc": {
       "post": {
         "tags": [
@@ -837,6 +909,10 @@
           "items": {
             "type": "string"
           }
+        },
+        "entrezGeneId": {
+          "type": "string",
+          "description": "Entrez Gene Id"
         }
       }
     },
