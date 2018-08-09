@@ -318,6 +318,7 @@ export default class AnnotationColumnFormatter
 
         return _.flatten([
             OncoKB.sortValue(annotationData.oncoKbIndicator),
+            Civic.sortValue(annotationData.civicEntry),
             Trial.sortValue(annotationData.trialMatchEntry),
             MyCancerGenome.sortValue(annotationData.myCancerGenomeLinks),
             hotspotAnnotationSortValue(annotationData.isHotspot, annotationData.is3dHotspot), annotationData.isOncoKbCancerGene ? 1 : 0
@@ -419,7 +420,7 @@ export default class AnnotationColumnFormatter
                         status={annotation.hotspotStatus}
                     />
                 </If>
-                <If condition={columnProps.enableTrialMatch || false}>
+                <If condition={columnProps.enableCivic || false}>
                     <Trial
                         trialMatchEntry={annotation.trialMatchEntry}
                         trialMatchStatus={annotation.trialMatchStatus}

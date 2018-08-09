@@ -17,19 +17,14 @@ import oncoKBClient from "shared/api/oncokbClientInstance";
 import {Gene, Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IOncoKbData} from "shared/model/OncoKB";
 import {IHotspotIndex} from "shared/model/CancerHotspots";
-import {ICivicGene, ICivicVariant} from "shared/model/Civic";
-import {ITrialMatchGene, ITrialMatchVariant} from "shared/model/TrialMatch";
 import {IOncoKbDataWrapper} from "shared/model/OncoKB";
 import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
 import ResidueMappingCache from "shared/cache/ResidueMappingCache";
 import {remoteData} from "public-lib/api/remoteData";
 import {
-    fetchCosmicData, fetchOncoKbData,
-    fetchMutationData, generateUniqueSampleKeyToTumorTypeMap, generateDataQueryFilter,
-    ONCOKB_DEFAULT, fetchSwissProtAccession, fetchUniprotId, indexPdbAlignmentData,
-    fetchPfamDomainData, fetchCivicGenes, fetchCivicVariants, fetchTrialMatchGenes, fetchTrialMatchVariants,
-    IDataQueryFilter, fetchCanonicalTranscriptWithFallback, fetchEnsemblTranscriptsByEnsemblFilter,
-    fetchPdbAlignmentData
+    fetchPdbAlignmentData, fetchSwissProtAccession, fetchUniprotId, indexPdbAlignmentData,
+    fetchPfamDomainData, fetchCanonicalTranscriptWithFallback,
+    fetchEnsemblTranscriptsByEnsemblFilter
 } from "shared/lib/StoreUtils";
 import {
     EnsemblTranscript,
@@ -57,15 +52,21 @@ export interface IMutationMapperStoreConfig {
     filterMutationsBySelectedTranscript?:boolean
 }
 
-
 export default class MutationMapperStore
 {
-    readonly cosmicData = remoteData({
-        await: () => [
-            this.mutationData
-        ],
-        invoke: () => fetchCosmicData(this.mutationData)
-    });
+    constructor(
+        protected config: IMutationMapperConfig,
+        public gene:Gene,
+        public mutations:Mutation[],
+        public indexedHotspotData:MobxPromise<IHotspotIndex|undefined>,
+        public oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
+        public oncoKbData:IOncoKbDataWrapper,
+        public uniqueSampleKeyToTumorType:{[uniqueSampleKey:string]:string},
+        protected genomeNexusEnrichmentCache: () => GenomeNexusEnrichmentCache,
+    )
+    {
+        labelMobxPromises(this);
+    }
 
     readonly mutationData = remoteData({
         await: () => {
