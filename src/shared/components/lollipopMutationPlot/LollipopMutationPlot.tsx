@@ -22,12 +22,13 @@ import styles from "./lollipopMutationPlot.module.scss";
 import Collapse from "react-collapse";
 import MutationMapperStore from "shared/components/mutationMapper/MutationMapperStore";
 import EditableSpan from "../editableSpan/EditableSpan";
+import DownloadControls from "../downloadControls/DownloadControls";
+import autobind from "autobind-decorator";
 
 export interface ILollipopMutationPlotProps extends IProteinImpactTypeColors
 {
     store:MutationMapperStore;
     onXAxisOffset?:(offset:number)=>void;
-    svgToPdfServiceUrl?: string;
     geneWidth:number;
 }
 
@@ -40,6 +41,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     @observable private yMaxInputFocused:boolean = false;
     private plot:LollipopPlot;
     private handlers:any;
+    private divContainer:HTMLDivElement;
 
     @computed private get showControls(): boolean {
         return (this.yMaxInputFocused || this.mouseInPlot);
@@ -304,32 +306,10 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         };
     }
 
-    public toSVGDOMNode():Element {
-        if (this.plot) {
-            // Get result of plot
-            const plotSvg = this.plot.toSVGDOMNode();
-            // Add label to top left
-            const label =(
-                <text
-                    fill="#2E3436"
-                    textAnchor="start"
-                    dy="1em"
-                    x="2"
-                    y="2"
-                    style={{fontFamily:"verdana", fontSize:"12px", fontWeight:"bold"}}
-                >
-                    {this.hugoGeneSymbol}
-                </text>
-            );
-            const labelGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-            ReactDOM.render(label, labelGroup);
-            plotSvg.appendChild(labelGroup);
-
-            return plotSvg;
-        } else {
-            return document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        }
-        // Add label to top
+    @autobind
+    private getSVG(){
+            var svg:SVGElement = $(this.divContainer).find(".lollipop-svgnode")[0] as any;
+            return svg;
     }
 
     @computed get hugoGeneSymbol() {
@@ -367,12 +347,6 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                 const value = parseInt(inputValue, 10);
                 this._yMaxInput = value < this.countRange[0] ? this.countRange[0] : value;
             }),
-            handleSVGClick:()=>{
-                fileDownload((new XMLSerializer()).serializeToString(this.toSVGDOMNode()), `${this.hugoGeneSymbol}_lollipop.svg`);
-            },
-            handlePDFClick:()=>{
-                svgToPdfDownload(`${this.hugoGeneSymbol}_lollipop.pdf`, this.toSVGDOMNode(), this.props.svgToPdfServiceUrl);
-            },
             onYMaxInputFocused:()=>{
                 this.yMaxInputFocused = true;
             },
@@ -446,23 +420,11 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         return (
             <div className={ classnames((this.showControls ? styles["fade-in"] : styles["fade-out"])) }>
                 <span>
-                        <div role="group" className="btn-group">
-                            <button className="btn btn-default btn-xs" onClick={this.handlers.handleSVGClick}>
-                                SVG <i className="fa fa-cloud-download" aria-hidden="true"></i>
-                            </button>
-
-
-                            <button className="btn btn-default btn-xs" onClick={this.handlers.handlePDFClick}>
-                                PDF <i className="fa fa-cloud-download" aria-hidden="true"></i>
-                            </button>
-
-
+                        <div style={{display:"flex", alignItems:"center"}}>
                             <button className="btn btn-default btn-xs" onClick={this.handlers.handleToggleLegend}>
                                 Legend <i className="fa fa-eye" aria-hidden="true"></i>
                             </button>
-                        </div>
-
-                        <div className="small" style={{float:'right',display:'flex', alignItems:'center'}}>
+                            <div className="small" style={{display:'flex', alignItems:'center', marginLeft:7}}>
                                 <span>Y-Axis Max:</span>
                                     <input
                                         style={{display:"inline-block", padding:0, width:200, marginLeft:10, marginRight:10}}
@@ -481,6 +443,14 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                                         onFocus={this.handlers.onYMaxInputFocused}
                                         onBlur={this.handlers.onYMaxInputBlurred}
                                     />
+                            </div>
+                            <DownloadControls
+                                getSvg={this.getSVG}
+                                filename={`${this.hugoGeneSymbol}_lollipop.svg`}
+                                dontFade={true}
+                                collapse={true}
+                                style={{marginLeft:"auto"}}
+                            />
                         </div>
                         {'  '}
                 </span>
@@ -491,7 +461,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     render() {
         if (this.props.store.pfamDomainData.isComplete && this.props.store.pfamDomainData.result) {
             return (
-                <div style={{display: "inline-block"}} onMouseEnter={this.handlers.onMouseEnterPlot} onMouseLeave={this.handlers.onMouseLeavePlot}>
+                <div style={{display: "inline-block"}} ref={(div:HTMLDivElement)=>this.divContainer=div} onMouseEnter={this.handlers.onMouseEnterPlot} onMouseLeave={this.handlers.onMouseLeavePlot}>
                     {this.controls}
                     <Collapse isOpened={this.legendShown}>
                         {this.legend}
@@ -504,6 +474,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                         dataStore={this.props.store.dataStore}
                         vizWidth={this.props.geneWidth}
                         vizHeight={130}
+                        hugoGeneSymbol={this.hugoGeneSymbol}
                         xMax={
                             (this.props.store.canonicalTranscript.result &&
                                 this.props.store.canonicalTranscript.result.proteinLength) ||
