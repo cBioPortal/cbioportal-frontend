@@ -4,7 +4,7 @@ import { Provider } from 'mobx-react';
 import { hashHistory, browserHistory, createMemoryHistory, Router } from 'react-router';
 import { RouterStore, syncHistoryWithStore  } from 'mobx-react-router';
 import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
-import {QueryStore} from "./shared/components/query/QueryStore";
+//import {QueryStore} from "./shared/components/query/QueryStore";
 import {computed, extendObservable} from 'mobx';
 import makeRoutes from './routes';
 import * as _ from 'lodash';
@@ -109,29 +109,6 @@ switch (window.defaultRoute) {
 }
 
 const syncedHistory = syncHistoryWithStore(history, routingStore);
-
-function initQueryStore() {
-
-    // lets make query Store since it's used in a lot of places
-    const queryStore = new QueryStore(window, window.location.href);
-
-    queryStore.singlePageAppSubmitRoutine = function(path:string, query:CancerStudyQueryUrlParams) {
-
-        // normalize this
-        query.cancer_study_list = query.cancer_study_list || query.cancer_study_id;
-        delete query.cancer_study_id;
-        window.routingStore.updateRoute(query, "results");
-
-    };
-
-    return queryStore;
-
-}
-
-// lets make query Store since it's used in a lot of places
-//const queryStore = initQueryStore();
-
-
 
 
 const stores = {
