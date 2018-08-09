@@ -51,8 +51,8 @@ export function resolveMissingMutationTypes(mutations: Partial<Mutation>[])
     });
 }
 
-export async function annotateMutations(mutations: Mutation[],
-                                        client: GenomeNexusAPI = genomeNexusClient)
+export async function fetchVariantAnnotationsIndexedByGenomicLocation(mutations: Mutation[],
+                                                                      client: GenomeNexusAPI = genomeNexusClient)
 {
     const genomicLocations = uniqueGenomicLocations(mutations);
 
@@ -63,10 +63,44 @@ export async function annotateMutations(mutations: Mutation[],
         }
     ): [];
 
-    const indexedVariantAnnotations = indexAnnotationsByGenomicLocation(variantAnnotations);
+    return indexAnnotationsByGenomicLocation(variantAnnotations);
+}
 
-    // add annotation values by updating corresponding fileds
+export function annotateMutations(mutations: Mutation[],
+                                  indexedVariantAnnotations: {[genomicLocation: string]: VariantAnnotation})
+{
+    // add annotation values by updating corresponding fields
     return mutations.map(mutation => annotateMutation(mutation, indexedVariantAnnotations));
+}
+
+/** 
+ * Returns those mutations where the most significant impact on a canonical
+ * transcript is affecting the given transcript id.
+ * 
+ * TODO: Once the comoponents downstream are improved to handle multiple
+ * annotations we can change this function to return all mutations that have
+ * any effect on the given transcript.
+*/
+export function filterMutationByTranscriptId(mutation:Mutation,
+                                             ensemblTranscriptId: string,
+                                             indexedVariantAnnotations: {[genomicLocation: string]: VariantAnnotation})
+{
+    const genomicLocation = extractGenomicLocation(mutation);
+    const variantAnnotation = genomicLocation ?
+        indexedVariantAnnotations[genomicLocationString(genomicLocation)] : undefined;
+
+    if (variantAnnotation) {
+        return variantAnnotation.annotation_summary.canonicalTranscriptId === ensemblTranscriptId;
+    } else {
+        return false;
+    }
+}
+
+export function filterMutationsByTranscriptId(mutations: Mutation[],
+                                              ensemblTranscriptId: string,
+                                              indexedVariantAnnotations: {[genomicLocation: string]: VariantAnnotation})
+{
+    return mutations.filter(mutation => filterMutationByTranscriptId(mutation, ensemblTranscriptId, indexedVariantAnnotations));
 }
 
 export function annotateMutation(mutation: Mutation,
