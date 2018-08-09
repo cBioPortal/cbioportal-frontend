@@ -1,0 +1,21 @@
+.studyViewSummaryHeader{
+    margin: 5px;
+    font-size: 16px;
+    color: #555;
+
+    .content {
+        color: #2986e2;
+        padding-right: 5px;
+    }
+    .btn{
+        border: 1px solid #d3d3d3;
+        padding: 5px 10px;
+        margin: 0 3px;
+        height: 30px;
+        font-size: 18px;
+        line-height: 18px;
+    }
+    .btn:active:focus {
+        box-shadow: none; 
+    }
+}

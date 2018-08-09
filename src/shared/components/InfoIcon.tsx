@@ -14,13 +14,15 @@ export default class InfoIcon extends React.Component<IInfoIconProps, {}> {
                overlay={this.props.tooltip}
                placement={this.props.tooltipPlacement || "right"}
            >
-               <i
-                   className="glyphicon glyphicon-info-sign"
-                   style={Object.assign({}, {
-                       color: "#000000",
-                       cursor: "pointer",
-                   }, this.props.style || {})}
-               />
+               <div>
+                   <i
+                       className="glyphicon glyphicon-info-sign"
+                       style={Object.assign({}, {
+                           color: "#000000",
+                           cursor: "pointer",
+                       }, this.props.style || {})}
+                   />
+               </div>
            </DefaultTooltip>
        );
    }

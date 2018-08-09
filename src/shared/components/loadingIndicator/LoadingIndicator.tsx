@@ -16,6 +16,9 @@ export default class Loader extends React.Component<ILoader, {}> {
                 <Then>
                     <div>
                         <ThreeBounce style={this.props.style || { display:'inline-block', marginLeft:10 }} />
+                        {
+                            this.props.children
+                        }
                     </div>
                 </Then>
             </If>

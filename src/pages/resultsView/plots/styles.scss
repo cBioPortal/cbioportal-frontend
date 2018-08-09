@@ -1,0 +1,43 @@
+.lockIcon {
+  color: #000000;
+}
+
+.plotsTab {
+
+  margin-top:$standardMargin;
+
+  .leftColumn {
+    width:25%;
+
+    margin-right:$standardMargin;
+
+    .Select {
+      width:240px;
+    }
+
+    .Select.is-open.is-searchable {
+      .Select-value-label {
+        color:#aaaaaa !important;
+      }
+    }
+
+    /*.Select.data-source-id {
+      .Select-menu-outer {
+        width: 300px;
+      }
+    }*/
+
+    > div > div {
+      padding:10px;
+    }
+
+    .axisBlock {
+      background:#eee;
+      border-radius:4px;
+    }
+
+  }
+
+
+
+}

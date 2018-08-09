@@ -209,7 +209,7 @@ describe('patient page', function(){
 
     it('oncokb indicators show up and hovering produces oncocard', function(){
 
-        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/case.do#/patient?studyId=ucec_tcga_pub&caseId=TCGA-BK-A0CC`);
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/patient?studyId=ucec_tcga_pub&caseId=TCGA-BK-A0CC`);
 
         browser.waitForExist('span=PPP2R1A');
 
@@ -1293,7 +1293,7 @@ describe('case set selection in modify query form', function(){
             "Initially selected case set should be as specified from URL"
         );
 
-        // Select all tcga -provisional studies
+        // Select all impact studies
         var input = $(".autosuggest input[type=text]");
         input.waitForExist(10000);
         input.setValue('impact');
@@ -1304,6 +1304,7 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
+        browser.pause(100); // give time for text change to propagate through to the view
         assert.equal(
             browser.getText(selectedCaseSet_sel),
             "All (12997)",
@@ -1330,7 +1331,7 @@ describe('genetic profile selection in modify query form', function(){
     beforeEach(function(){
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=chol_tcga&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=chol_tcga_all&gene_list=EGFR&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=chol_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=chol_tcga_gistic&genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION=chol_tcga_rppa_Zscores`;
         goToUrlAndSetLocalStorage(url);
-        browser.waitForExist("#modifyQueryBtn", 60000)
+        browser.waitForExist("#modifyQueryBtn", 20000)
     });
 
     it('contains correct selected genetic profiles through a certain use flow involving two studies', ()=>{
