@@ -48,15 +48,15 @@ export default class CoExpressionTable extends React.Component<ICoExpressionTabl
                     return (
                         <span
                             style={{
-                                color:correlationColor(d.pearsonsCorrelation),
+                                color:correlationColor(d.spearmansCorrelation),
                                 textAlign:"right",
                                 float:"right"
                             }}
-                        >{d.pearsonsCorrelation.toFixed(2)}</span>
+                        >{d.spearmansCorrelation.toFixed(2)}</span>
                     );
                 },
-                download:(d:CoExpression)=>d.pearsonsCorrelation+"",
-                sortBy:(d:CoExpression)=>correlationSortBy(d.pearsonsCorrelation),
+                download:(d:CoExpression)=>d.spearmansCorrelation+"",
+                sortBy:(d:CoExpression)=>correlationSortBy(d.spearmansCorrelation),
                 align: "right" as "right"
             },
             {
