@@ -74,6 +74,7 @@ export interface IMutationTableProps {
     dataStore?:ILazyMobXTableApplicationDataStore<Mutation[]>;
     downloadDataFetcher?:ILazyMobXTableApplicationLazyDownloadDataFetcher;
     initialItemsPerPage?:number;
+    showPagination?:boolean;
     itemsLabel?:string;
     itemsLabelPlural?:string;
     userEmailAddress?:string;
@@ -154,8 +155,9 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
     @observable protected _columns:{[columnEnum:number]:MutationTableColumn};
 
     public static defaultProps = {
-        initialItemsPerPage: 25,
+        initialItemsPerPage: -1,
         showCountHeader: true,
+        showPagination: false,
         paginationProps:{ itemsPerPageOptions:[25,50,100] },
         initialSortColumn: "Annotation",
         initialSortDirection: "desc",
