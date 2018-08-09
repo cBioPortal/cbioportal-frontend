@@ -226,10 +226,6 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                 fill={this.fill}
                 strokeWidth={1.2}
                 legendData={this.mutationLegendElements}
-                correlation={{
-                    pearson: this.props.coExpression.pearsonsCorrelation,
-                    spearman: this.props.coExpression.spearmansCorrelation
-                }}
                 logX={this.props.logScale}
                 logY={this.props.logScale}
                 useLogSpaceTicks={true}
