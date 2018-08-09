@@ -5,7 +5,10 @@ import {observer} from "mobx-react";
 import {computed} from "mobx";
 import {transition} from "./DeltaUtils";
 import _ from "lodash";
-import {AnnotatedMutation, ExtendedAlteration} from "../../../pages/resultsView/ResultsViewPageStore";
+import {
+    AnnotatedMutation, AnnotatedNumericGeneMolecularData,
+    ExtendedAlteration
+} from "../../../pages/resultsView/ResultsViewPageStore";
 import "./styles.scss";
 
 export type ClinicalTrackDatum = {
@@ -58,7 +61,7 @@ export type GeneticTrackDatum = {
     patient?:string;
     study_id:string;
     uid:string;
-    data:(ExtendedAlteration&AnnotatedMutation)[];
+    data:(ExtendedAlteration&AnnotatedMutation&AnnotatedNumericGeneMolecularData)[];
     profiled_in?: GenePanelData[];
     not_profiled_in?:GenePanelData[];
     na?: boolean;

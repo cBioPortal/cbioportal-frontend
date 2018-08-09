@@ -365,7 +365,13 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         ) {
             const clinicalAttributeIdToAvailableSampleCount = this.props.state.clinicalAttributeSampleCountPromise.result;
             return _.reduce(this.props.state.clinicalAttributesPromise.result, (options:{label:string, value:string}[], next:ClinicalAttribute)=>{
-                const sampleCount = clinicalAttributeIdToAvailableSampleCount[next.clinicalAttributeId];
+                let sampleCount = clinicalAttributeIdToAvailableSampleCount[next.clinicalAttributeId];
+                if (sampleCount === undefined && next.clinicalAttributeId.startsWith(SpecialAttribute.Profiled)) {
+                    // for 'Profiled In' tracks, we have data for all the samples - gene panel data
+                    // but these tracks have special, locally-constructed clinical attribute ids, and aren't placed in that map.
+                    // TODO: maybe they should be?
+                    sampleCount = this.props.state.sampleCount;
+                }
                 const newOption = {
                     label: `${next.displayName} (${getPercentage(sampleCount/this.props.state.sampleCount, 0)})`,
                     value: next.clinicalAttributeId,
