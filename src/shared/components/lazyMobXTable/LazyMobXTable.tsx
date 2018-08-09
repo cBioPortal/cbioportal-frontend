@@ -28,7 +28,15 @@ import {
 } from "../../lib/ILazyMobXTableApplicationDataStore";
 import {ILazyMobXTableApplicationLazyDownloadDataFetcher} from "../../lib/ILazyMobXTableApplicationLazyDownloadDataFetcher";
 import {maxPage} from "./utils";
-import {Column as VirColumn, Table as VirTable, TableCellProps, TableHeaderProps} from "react-virtualized";
+import {
+    AutoSizer,
+    CellMeasurer,
+    CellMeasurerCache,
+    Column as VirColumn,
+    Table as VirTable,
+    TableCellProps,
+    TableHeaderProps
+} from "react-virtualized";
 import 'react-virtualized/styles.css';
 
 export type SortDirection = 'asc' | 'desc';
@@ -218,6 +226,12 @@ class LazyMobXTableStore<T> {
     // this one keeps the state of the latest action (latest user selection)
     @observable private _columnVisibilityOverride:{[columnId: string]: boolean}|undefined;
 
+    public _cache = new CellMeasurerCache({
+        defaultWidth: 300,
+        minWidth: 300,
+        fixedHeight:true
+    });
+
     @computed public get itemsPerPage() {
         return this._itemsPerPage;
     }
@@ -402,17 +416,26 @@ class LazyMobXTableStore<T> {
     }
 
     @computed get tableColumns() {
-        return this.visibleColumns.map((column: Column<T>) => {
+        return this.visibleColumns.map((column: Column<T>, index: number) => {
             return <VirColumn
                 dataKey={column.name}
                 label={column.name}
-                width={column.width ? Number(column.width) : 400}
+                width={this._cache.columnWidth({index: index})}
                 headerRenderer={function (prop: TableHeaderProps) {
                     return this.headerRenderer(column);
                 }.bind(this)}
                 cellRenderer={function (props: TableCellProps) {
-                    return column.render(props.rowData)
-                }}
+                    return (<CellMeasurer
+                            cache={this._cache}
+                            columnIndex={props.columnIndex}
+                            key={props.dataKey}
+                            parent={props.parent}
+                            rowIndex={props.rowIndex}
+                        >
+                        {column.render(props.rowData)}
+                        </CellMeasurer>
+                    )
+                }.bind(this)}
             />
         })
     }
@@ -852,18 +875,22 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
                     </div>
                 </Then>
                 <Else>
-                    <VirTable
-                        width={1150}
-                        height={300}
-                        headerHeight={20}
-                        rowHeight={35}
-                        rowCount={this.store.visibleData.length}
-                        rowGetter={({index}) => this.store.visibleData[index]}
-                    >
-                        {(
-                            this.store.tableColumns
-                        )}
-                    </VirTable>
+                    <AutoSizer disableHeight>
+                        {({width}) => (
+                            <VirTable
+                                deferredMeasurementCache={this.store._cache}
+                                width={width}
+                                height={300}
+                                headerHeight={20}
+                                rowHeight={35}
+                                rowCount={this.store.visibleData.length}
+                                rowGetter={({index}) => this.store.visibleData[index]}
+                            >
+                                {(
+                                    this.store.tableColumns
+                                )}
+                            </VirTable>
+                        )}</AutoSizer>
                 </Else>
             </If>
         )
