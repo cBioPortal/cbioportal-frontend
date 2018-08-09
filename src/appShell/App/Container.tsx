@@ -8,22 +8,54 @@ import '../../globalStyles/prefixed-global.scss';
 import PortalHeader from "./PortalHeader";
 import PortalFooter from "./PortalFooter";
 import RightBar from "../../shared/components/rightbar/RightBar";
-import {QueryStore} from "../../shared/components/query/QueryStore";
+import {remoteData} from "../../shared/api/remoteData";
+import request from 'superagent';
+import getBrowserWindow from "../../shared/lib/getBrowserWindow";
+import {observer} from "mobx-react";
+import client from "../../shared/api/cbioportalClientInstance";
+import internalClient from "../../shared/api/cbioportalInternalClientInstance";
+import {getCbioPortalApiUrl, getGenomeNexusApiUrl, getOncoKbApiUrl} from "../../shared/api/urls";
+import civicClient from "../../shared/api/civicClientInstance";
+import genomeNexusClient from '../../shared/api/genomeNexusClientInstance';
+import internalGenomeNexusClient from '../../shared/api/genomeNexusInternalClientInstance';
+import oncoKBClient from '../../shared/api/oncokbClientInstance';
 
 interface IContainerProps {
     location: Location;
     children: React.ReactNode;
 }
 
+const configPromise = remoteData(async ()=>{
 
+    // need to use jsonp, so use jquery
+    const config = await $.ajax({
+        url: "http://localhost:8080/config_service.jsp",
+        dataType: "jsonp",
+        jsonpCallback: "callback"
+    });
+
+    // overwrite properties of frontend config
+    Object.assign(getBrowserWindow().frontendConfig, config, getBrowserWindow().frontendConfigOverride);
+
+    // we need to set the domain of our api clients
+    (client as any).domain = getCbioPortalApiUrl();
+    (internalClient as any).domain = getCbioPortalApiUrl();
+    (genomeNexusClient as any).domain = getGenomeNexusApiUrl();
+    (internalGenomeNexusClient as any).domain = getGenomeNexusApiUrl();
+    (oncoKBClient as any).domain = getOncoKbApiUrl();
+
+    return config;
+
+});
+
+@observer
 export default class Container extends React.Component<IContainerProps, {}> {
 
     static contextTypes = {
-        router: React.PropTypes.object,
-        queryStore: QueryStore
+        router: React.PropTypes.object
     };
 
-    context: { router: any, queryStore: QueryStore };
+    context: { router: any };
 
     componentDidMount() {
 
@@ -53,7 +85,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
 
                 <div className="contentWrapper">
                     <UnsupportedBrowserModal/>
-                    {this.renderChildren()}
+                    {(configPromise.isComplete) && this.renderChildren()}
                 </div>
 
                 <PortalFooter/>
