@@ -32,7 +32,7 @@ import MutationCountCache from "shared/cache/MutationCountCache";
 import AppConfig from "appConfig";
 import {
     findMolecularProfileIdDiscrete, ONCOKB_DEFAULT, fetchOncoKbData,
-    fetchCnaOncoKbData, mergeMutations, fetchMyCancerGenomeData, fetchCosmicData,
+    fetchCnaOncoKbData, mergeMutations, fetchMyCancerGenomeData, fetchMutationalSignatureData, fetchCosmicData,
     fetchMutationData, fetchDiscreteCNAData, generateUniqueSampleKeyToTumorTypeMap, findMutationMolecularProfileId,
     findUncalledMutationMolecularProfileId, mergeMutationsIncludingUncalled, fetchGisticData, fetchCopyNumberData,
     fetchMutSigData, findMrnaRankMolecularProfileId, mergeDiscreteCNAData, fetchSamplesForPatient, fetchClinicalData,
@@ -40,6 +40,7 @@ import {
     fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, groupBySampleId, findSamplesWithoutCancerTypeClinicalData,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData, fetchOncoKbAnnotatedGenesSuppressErrors
 } from "shared/lib/StoreUtils";
+import {IMutationalSignature} from "../../../shared/model/MutationalSignature";
 import {indexHotspotsData, fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
 import {stringListToSet} from "../../../shared/lib/StringUtils";
 import {Gene as OncoKbGene} from "../../../shared/api/generated/OncoKbAPI";
@@ -172,6 +173,10 @@ export class PatientViewPageStore {
     @computed get myCancerGenomeData() {
         return fetchMyCancerGenomeData();
     }
+
+    readonly mutationalSignatureData = remoteData({
+        invoke: async() => fetchMutationalSignatureData()
+    });
 
     readonly derivedPatientId = remoteData<string>({
         await: () => [this.samples],
