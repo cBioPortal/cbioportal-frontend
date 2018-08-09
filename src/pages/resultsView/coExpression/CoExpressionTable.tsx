@@ -43,23 +43,6 @@ export default class CoExpressionTable extends React.Component<ICoExpressionTabl
                 width:"30%"
             },
             {
-                name:"Pearson's Correlation",
-                render:(d:CoExpression)=>{
-                    return (
-                        <span
-                            style={{
-                                color:correlationColor(d.spearmansCorrelation),
-                                textAlign:"right",
-                                float:"right"
-                            }}
-                        >{d.spearmansCorrelation.toFixed(2)}</span>
-                    );
-                },
-                download:(d:CoExpression)=>d.spearmansCorrelation+"",
-                sortBy:(d:CoExpression)=>correlationSortBy(d.spearmansCorrelation),
-                align: "right" as "right"
-            },
-            {
                 name:SPEARMANS_CORRELATION_COLUMN_NAME,
                 render:(d:CoExpression)=>{
                     return (
