@@ -155,6 +155,55 @@ describe('Results Page', function() {
 
     });
 
+    describe('no oql warning banner', function() {
+        const bannerSelector = 'span[data-test="NoOqlWarning"]';
+        const simpleQueryUrl = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`;
+        const explicitOqlQueryUrl = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%2520NRAS%2520%250ABRAF%253AMUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`;
+
+        // alternating simple and explicit url because the only thing changing othewrise is the hash, so it
+        //  doesnt refresh the page, and for some reason that doesnt actually change the tab
+        it("should not be present in plots tab with simple query", function(){
+            goToUrlAndSetLocalStorage(`${simpleQueryUrl}#plots`);
+            browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 10000);
+            assert(!browser.isExisting(bannerSelector));
+        });
+        it("should be present in plots tab with explicit query", function(){
+            goToUrlAndSetLocalStorage(`${explicitOqlQueryUrl}#plots`);
+            browser.waitForExist(bannerSelector, 10000);
+            assert(browser.isExisting(bannerSelector));
+        });
+        it("should not be present in mutations tab with simple query", function(){
+            goToUrlAndSetLocalStorage(`${simpleQueryUrl}#mutation_details`);
+            browser.waitForVisible('.borderedChart svg',10000);
+            assert(!browser.isExisting(bannerSelector));
+        });
+        it("should be present in mutations tab with explicit query", function(){
+            goToUrlAndSetLocalStorage(`${explicitOqlQueryUrl}#mutation_details`);
+            browser.waitForExist(bannerSelector, 10000);
+            assert(browser.isExisting(bannerSelector));
+        });
+        it("should not be present in coexpression tab with simple query", function(){
+            goToUrlAndSetLocalStorage(`${simpleQueryUrl}#coexp`);
+            browser.waitForVisible('div[data-test="CoExpressionPlot"]',10000);
+            assert(!browser.isExisting(bannerSelector));
+        });
+        it("should be present in coexpression tab with explicit query", function(){
+            goToUrlAndSetLocalStorage(`${explicitOqlQueryUrl}#coexp`);
+            browser.waitForExist(bannerSelector, 10000);
+            assert(browser.isExisting(bannerSelector));
+        });
+        it("should not be present in expression tab with simple query", function() {
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=TP53&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=acc_tcga%2Cchol_tcga%2Cesca_tcga#cc-plots`);
+            browser.waitForExist(".borderedChart svg", 10000);
+            assert(!browser.isExisting(bannerSelector));
+        });
+        it("should be present in expression tab with explicit query", function() {
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=TP53%253AMUT%253B&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=acc_tcga%2Cchol_tcga%2Cesca_tcga#cc-plots`);
+            browser.waitForExist(bannerSelector, 10000);
+            assert(browser.isExisting(bannerSelector));
+        });
+    });
+
 });
 
 

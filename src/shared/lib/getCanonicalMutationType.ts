@@ -1,4 +1,6 @@
 import {Mutation} from "../api/generated/CBioPortalAPI";
+import * as _ from 'lodash';
+
 
 type MISSENSE = "missense";
 type FRAME_SHIFT_INS = "frame_shift_ins";
@@ -20,6 +22,7 @@ export type CanonicalMutationType =
     MISSENSE | FRAME_SHIFT_INS | FRAME_SHIFT_DEL | FRAMESHIFT |
         NONSENSE | SPLICE_SITE | NONSTART | NONSTOP | IN_FRAME_DEL |
         IN_FRAME_INS | INFRAME | TRUNCATING | FUSION | SILENT | OTHER;
+
 
 export type ProteinImpactType =
     MISSENSE | TRUNCATING | INFRAME | OTHER;
@@ -54,8 +57,12 @@ const canonicalType:{ [lowerCaseType:string]:CanonicalMutationType } = {
     "start_codon_del": "nonstart",
     "nonstop_mutation": "nonstop",
     "stop_lost": "nonstop",
+    "inframe_del": "in_frame_del",
+    "inframe_deletion": "in_frame_del",
     "in_frame_del": "in_frame_del",
     "in_frame_deletion": "in_frame_del",
+    "inframe_ins": "in_frame_ins",
+    "inframe_insertion": "in_frame_ins",
     "in_frame_ins": "in_frame_ins",
     "in_frame_insertion": "in_frame_ins",
     "indel": "in_frame_del",
@@ -63,7 +70,7 @@ const canonicalType:{ [lowerCaseType:string]:CanonicalMutationType } = {
     "nonframeshift": "inframe",
     "nonframeshift insertion": "inframe",
     "nonframeshift_insertion": "inframe",
-    "targeted_region": "inframe",
+    "targeted_region": "other",
     "inframe": "inframe",
     "truncating": "truncating",
     "feature_truncation": "truncating",
@@ -105,4 +112,5 @@ export function getProteinImpactTypeFromCanonical(mutationType:CanonicalMutation
 export default function getCanonicalMutationType(mutationType:string):CanonicalMutationType {
     return canonicalType[mutationType.toLowerCase()];
 }
-  
+
+export const CanonicalMutationTypeList: CanonicalMutationType[] = _.chain(canonicalType).values().uniq().value();
