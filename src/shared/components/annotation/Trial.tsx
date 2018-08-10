@@ -44,9 +44,9 @@ export default class TrialMatch extends React.Component<ITrialMatchProps, {}>
         const variants = _.values(trialMatchEntry.variants);
         const values: string[] = [];
 
-        if (variants && variants.length > 0 && variants[0].match)
+        if (variants && variants.length > 0 && variants[0].matches)
         {
-            _.toPairs(variants[0].match).forEach(pair => {
+            _.toPairs(variants[0].matches).forEach(pair => {
                 values.push(`${pair[0]}: ${pair[1]}`);
             });
         }

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { If, Then, Else } from 'react-if';
-import { ITrialMatchVariantData } from "shared/model/TrialMatch.ts";
+import {ITrialMatchVariantData, TrialMatchData} from "shared/model/TrialMatch.ts";
 import "./styles/trialCard.scss";
 import * as _ from "lodash";
 import {ICache} from "../../lib/SimpleCache";
@@ -33,11 +33,10 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
                     if (variantMap.hasOwnProperty(name)) {
                         const variant = variantMap[name];
 
-                        for (const trial in variant.match) {
-                            if (variant.match.hasOwnProperty(trial)) {
+                        for (const trial in variant.matches) {
+                            if (variant.matches.hasOwnProperty(trial)) {
                                 const trialInfo = trial.split(";");
-                                list.push(this.variantItem(trialInfo[0], trialInfo[1], trialInfo[2],
-                                                           variant.match[trial].split(";")));
+                                list.push(this.variantItem(trial, variant.matches[trial]));
                             }
                         }
                     }
@@ -48,25 +47,25 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
         return list;
     }
 
-    public trialMatchRow(index:number, match: string[])
+    public trialMatchRow(index:number, match: TrialMatchData)
     {
         return (
             <tr key={index}>
-                <td key="arm code">{match[0]}</td>
-                <td key="match level">{match[2]}</td>
-                <td key="match type">{match[3]}</td>
-                <td key="dose">{match[1]}</td>
+                <td key="arm code">{match.code}</td>
+                <td key="match level">{match.matchLevel}</td>
+                <td key="match type">{match.matchType}</td>
+                <td key="dose">{match.dose}</td>
             </tr>
         );
     }
 
-    public generateTrialMatchRows(arms:any[]):JSX.Element[]
+    public generateTrialMatchRows(matches:TrialMatchData[]):JSX.Element[]
     {
         const rows:JSX.Element[] = [];
 
-        arms.forEach((arm:string, index:number) => {
+        matches.forEach((match:TrialMatchData, index:number) => {
             rows.push(
-                this.trialMatchRow(index, arm.split(",")));
+                this.trialMatchRow(index, match));
         });
 
         return rows;
@@ -74,21 +73,19 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
 
     /**
      * Get variant item
-     * @param url
-     * @param name
-     * @param entryTypes
-     * @param description
+     * @param trialTitle
+     * @param matches
      * @returns {any}
      */
-    public variantItem(trialTitle?:string, nctId?:string, trialStatus?:string, arms?:any) {
+    public variantItem(trialTitle:string, matches:TrialMatchData[]) {
         let result;
-        const url: string = "https://clinicaltrials.gov/ct2/show/"+nctId;
-        const img = trialStatus === 'open'? require('./images/open-sign.png') : require('./images/close-sign.png');
-        if (trialTitle || trialStatus || nctId) {
+        const url: string = "https://clinicaltrials.gov/ct2/show/"+matches[0].nctID;
+        const img = matches[0].status === 'open'? require('./images/open-sign.png') : require('./images/close-sign.png');
+        if (matches) {
             result = (
                 <div className="trial-card">
-                    <div className="trial-card-trial-header">
-                        <span className="civic-card-variant-name">
+                    <div className="tip-header">
+                        <span className="trial-card-variant-name">
                             <a href={url}>{trialTitle}
                                 <img src={img} className="trial-logo"/>
                             </a>
@@ -108,7 +105,7 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
                                     </thead>
                                     <tbody>
                                     {
-                                        this.generateTrialMatchRows(arms)
+                                        this.generateTrialMatchRows(matches)
                                     }
                                     </tbody>
                                 </table>
@@ -120,8 +117,8 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
             );
         } else {
             result = (
-                <div className="civic-card-variant">
-                    <div className="civic-card-variant-description summary">Information about the oncogenic activity of
+                <div className="trial-card-variant">
+                    <div className="trial-card-variant-description summary">Information about the oncogenic activity of
                         this alteration is not yet available.
                     </div>
                 </div>

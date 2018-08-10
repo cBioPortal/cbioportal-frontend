@@ -1,9 +1,9 @@
 import * as request from 'superagent';
-import {ITrialMatchGene, ITrialMatchGeneData, ITrialMatchVariant, ITrialMatchVariantData, ITrialMatchData} from "shared/model/TrialMatch.ts";
+import {ITrialMatchGene, ITrialMatchGeneData, ITrialMatchVariant, ITrialMatchVariantData, TrialMatchData} from "shared/model/TrialMatch.ts";
 
 type TrialMatchAPIGene = {
     hugoSymbol: string;
-    variants: Array<TrialMatchAPIGeneVariant>;
+    variants: TrialMatchAPIGeneVariant[];
 };
 
 type TrialMatchAPIGeneVariant = {
@@ -15,7 +15,7 @@ type TrialMatchAPIVariant = {
     name: string;
     oncogenicity: string;
     mutEffect: string;
-    matches: Array<ITrialMatchData>;
+    matches: TrialMatchData[];
 };
 
 type TrialMatch = {
@@ -32,22 +32,25 @@ type TrialMatch = {
 /**
  * Returns a map with the different types of evidence and the number of times that each evidence happens.
  */
-function countMatches(trialMatchItems: Array<TrialMatch>): {[id: string]: string} {
-    const match: {[trialTitle: string]: string} = {};
+function countMatches(trialMatchItems: Array<TrialMatch>): {[title:string]:Array<TrialMatchData>} {
+    const matches: {[title:string]:Array<TrialMatchData>} = {};
+
     trialMatchItems.forEach(trialMatchItem => {
-        const id = trialMatchItem.trialTitle + ";" + trialMatchItem.nctID
-                    + ";" + trialMatchItem.trialStatus;
-        if (!match[id]) {
-            match[id] = trialMatchItem.code + "," + trialMatchItem.dose + "," +
-                        trialMatchItem.matchLevel + "," + trialMatchItem.matchType;
-        } else {
-            match[id] += ";" + trialMatchItem.code + "," + trialMatchItem.dose + "," +
-                trialMatchItem.matchLevel + "," + trialMatchItem.matchType;
+        if (!matches[trialMatchItem.trialTitle]) {
+            matches[trialMatchItem.trialTitle] = [];
         }
+        matches[trialMatchItem.trialTitle].push({
+            title: trialMatchItem.trialTitle,
+            nctID: trialMatchItem.nctID,
+            status: trialMatchItem.trialStatus,
+            code: trialMatchItem.code,
+            matchLevel: trialMatchItem.matchLevel,
+            matchType: trialMatchItem.matchType,
+            dose: trialMatchItem.dose});
 
     });
-    return match;
-};
+    return matches;
+}
 
 /**
  * Returns a map with the different variant names and their variant id.
@@ -104,7 +107,7 @@ export default class TrialMatchAPI {
                     gene,
                     oncogenicity: result[id].oncogenicity,
                     mutEffect: result[id].mutEffect,
-                    match: countMatches(result[id].matches)
+                    matches: countMatches(result[id].matches)
                 };
             });
     }
