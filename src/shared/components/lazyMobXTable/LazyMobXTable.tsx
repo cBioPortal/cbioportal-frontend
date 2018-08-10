@@ -232,8 +232,14 @@ class LazyMobXTableStore<T> {
         fixedHeight:true
     });
 
+    @observable private tableWidth:number;
+
     @computed public get itemsPerPage() {
         return this._itemsPerPage;
+    }
+
+    @action updateTableWidth(newWidth:number) {
+        this.tableWidth = newWidth;
     }
 
     public set itemsPerPage(i:number) {
@@ -415,13 +421,31 @@ class LazyMobXTableStore<T> {
         return this.columns.filter(column=>this.isVisible(column));
     }
 
+    @computed
+    get columnsWidth() {
+        let allValidLength = 0;
+        let columnsWidth = this.visibleColumns.map((column: Column<T>, index: number) => {
+            allValidLength += this._cache.columnWidth({index: index});
+            return this._cache.columnWidth({index: index});
+        });
+
+        if (allValidLength < this.tableWidth) {
+            columnsWidth = columnsWidth.map((column: number, index) => {
+                return column * this.tableWidth / allValidLength
+            });
+        }
+
+        console.log(allValidLength, this.tableWidth, JSON.stringify(columnsWidth));
+        return columnsWidth;
+    }
+
     @computed get tableColumns() {
         return this.visibleColumns.map((column: Column<T>, index: number) => {
             console.log(column.name, JSON.stringify(this._cache.columnWidth({index: index})));
             return <VirColumn
                 dataKey={column.name}
                 label={column.name}
-                width={this._cache.columnWidth({index: index}) + 50}
+                width={this.columnsWidth[index]}
                 headerRenderer={function (prop: TableHeaderProps) {
                     return this.headerRenderer(column);
                 }.bind(this)}
@@ -880,10 +904,11 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
                 <Else>
                     <AutoSizer disableHeight>
                         {({width}) => {
-                            if (this.lastRenderedWidth != width) {
-                                this.lastRenderedWidth = width;
-                                this.store._cache.clearAll();
-                            }
+                            // if (this.lastRenderedWidth != width) {
+                            //     this.lastRenderedWidth = width;
+                            //     this.store._cache.clearAll();
+                            // }
+                            this.store.updateTableWidth(width);
                             return (
                             <VirTable
                                 deferredMeasurementCache={this.store._cache}
