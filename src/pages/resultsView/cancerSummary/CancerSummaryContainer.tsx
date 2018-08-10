@@ -17,9 +17,10 @@ import {
     getAlterationCountsForCancerTypesByGene,
     getAlterationCountsForCancerTypesForAllGenes
 } from "../../../shared/lib/alterationCountHelpers";
+import OqlStatusBanner from "../../../shared/components/OqlStatusBanner";
 
 interface ICancerSummaryContainerProps {
-
+    store:ResultsViewPageStore;
     samplesExtendedWithClinicalData:ExtendedSample[];
     alterationsByGeneBySampleKey:{[hugoGeneSymbol:string]:{ [uniquSampleKey:string]:ExtendedAlteration[] }};
     studies:CancerStudy[];
@@ -136,6 +137,7 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
 
     public render() {
         return <div ref={(el: HTMLDivElement) => this.resultsViewPageContent = el} data-test="cancerTypeSummaryWrapper">
+            <OqlStatusBanner className="cancer-types-summary-oql-status-banner" store={this.props.store} tabReflectsOql={true} style={{marginBottom:15}}/>
                 <MSKTabs onTabClick={this.handleTabClick}
                          enablePagination={true}
                          unmountOnHide={true}
