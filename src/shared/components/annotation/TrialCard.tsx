@@ -3,6 +3,10 @@ import { If, Then, Else } from 'react-if';
 import { ITrialMatchVariantData } from "shared/model/TrialMatch.ts";
 import "./styles/trialCard.scss";
 import * as _ from "lodash";
+import {ICache} from "../../lib/SimpleCache";
+import {ArticleAbstract} from "../../api/generated/OncoKbAPI";
+import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
+import {mergeAlterations} from "../../lib/OncoKbUtils";
 
 export interface ITrialCardProps {
     title: string;
@@ -24,39 +28,48 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
         const list: JSX.Element[] = [];
 
         if (variantMap) {
-            if (_.isEmpty(variantMap)) {
-                list.push(this.variantItem());
-            } else {
+            if (!_.isEmpty(variantMap)) {
                 for (const name in variantMap) {
                     if (variantMap.hasOwnProperty(name)) {
                         const variant = variantMap[name];
-                        let trialTitle: string;
-                        let nctId: string;
-                        let trialStatus: string;
-                        let code: string;
 
                         for (const trial in variant.match) {
                             if (variant.match.hasOwnProperty(trial)) {
                                 const trialInfo = trial.split(";");
-                                trialTitle = trialInfo[0];
-                                nctId = trialInfo[1];
-                                trialStatus = trialInfo[2];
-                                const arms = variant.match[trial].split(";");
-                                arms.forEach(arm => {
-                                    const matchItems = arm.split(",");
-                                    list.push(this.variantItem(variant.name, trialTitle, variant.gene, code,
-                                        variant.oncogenicity, variant.mutEffect, nctId, trialStatus, matchItems[0]));
-                                });
+                                list.push(this.variantItem(trialInfo[0], trialInfo[1], trialInfo[2],
+                                                           variant.match[trial].split(";")));
                             }
                         }
                     }
                 }
             }
-        } else {
-            list.push(this.variantItem());
         }
 
         return list;
+    }
+
+    public trialMatchRow(index:number, match: string[])
+    {
+        return (
+            <tr key={index}>
+                <td key="arm code">{match[0]}</td>
+                <td key="match level">{match[2]}</td>
+                <td key="match type">{match[3]}</td>
+                <td key="dose">{match[1]}</td>
+            </tr>
+        );
+    }
+
+    public generateTrialMatchRows(arms:any[]):JSX.Element[]
+    {
+        const rows:JSX.Element[] = [];
+
+        arms.forEach((arm:string, index:number) => {
+            rows.push(
+                this.trialMatchRow(index, arm.split(",")));
+        });
+
+        return rows;
     }
 
     /**
@@ -67,12 +80,11 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
      * @param description
      * @returns {any}
      */
-    public variantItem(name?: string, trialTitle?: string, gene?: string, code?: string, oncogenicity?:string,
-                       mutEffect?:string, nctId?:string, trialStatus?: string, dose?: string) {
+    public variantItem(trialTitle?:string, nctId?:string, trialStatus?:string, arms?:any) {
         let result;
         const url: string = "https://clinicaltrials.gov/ct2/show/"+nctId;
         const img = trialStatus === 'open'? require('./images/open-sign.png') : require('./images/close-sign.png');
-        if (name || trialTitle || gene || nctId) {
+        if (trialTitle || trialStatus || nctId) {
             result = (
                 <div className="trial-card">
                     <div className="trial-card-trial-header">
@@ -83,30 +95,25 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
                         </span>
                     </div>
                     <div>
-                        <div>
-                            <table className="table" style={{marginTop:6}}>
-                                <thead>
-                                <tr>
-                                    <th key="arm" scope="col">Arm Code</th>
-                                    <th key="match_level" scope="col">Gene</th>
-                                    <th key="alteration" scope="col">Alteration</th>
-                                    <th key="oncogenic" scope="col">Implication</th>
-                                    <th key="mutation_effect" scope="col">Effect</th>
-                                    <th key="dose" scope="col">Drug</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr>
-                                    <td>{code}</td>
-                                    <td>{gene}</td>
-                                    <td>{name}</td>
-                                    <td>{oncogenicity}</td>
-                                    <td>{mutEffect}</td>
-                                    <td>{dose}</td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                        <If condition={this.props.variants} >
+                            <div className="treatments-wrapper">
+                                <table className="table" style={{marginTop:6}}>
+                                    <thead>
+                                    <tr>
+                                        <th key="code" scope="col">Arm Code</th>
+                                        <th key="level" scope="col">Match Level</th>
+                                        <th key="type" scope="col">Match Type</th>
+                                        <th key="Drug" scope="col">Dose</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {
+                                        this.generateTrialMatchRows(arms)
+                                    }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </If>
                     </div>
                 </div>
 
