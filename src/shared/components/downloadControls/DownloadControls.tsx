@@ -53,7 +53,7 @@ function makeMenuItem(spec:ButtonSpec) {
 
 @observer
 export default class DownloadControls extends React.Component<IDownloadControlsProps, {}> {
-    private svgsaver = new SvgSaver({},{});
+    private svgsaver = new SvgSaver();
     @observable private collapsed = true;
 
     @autobind
@@ -124,7 +124,7 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
     }
 
     @computed get buttonSpecs() {
-        const middleButtons = (this.props.buttons || ["SVG", "PNG"]).map(x=>this.downloadControlsButtons[x]);
+        const middleButtons = (this.props.buttons || ["SVG", "PNG", "PDF"]).map(x=>this.downloadControlsButtons[x]);
         return (this.props.additionalLeftButtons || []).concat(middleButtons).concat(this.props.additionalRightButtons || []);
     }
 
