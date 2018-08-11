@@ -32,7 +32,7 @@ import {mutationRenderPriority} from "../plots/PlotsTabUtils";
 import {getOncoprintMutationType} from "../../../shared/components/oncoprint/DataUtils";
 import {getSampleViewUrl} from "../../../shared/api/urls";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
-import NoOqlWarning from "../../../shared/components/NoOqlWarning";
+import OqlStatusBanner from "../../../shared/components/OqlStatusBanner";
 
 export interface ExpressionWrapperProps {
     store:ResultsViewPageStore;
@@ -682,9 +682,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     render() {
         return (
             <div>
-                <div style={{marginBottom:10, marginLeft:-2, marginTop:-2}}>
-                    <NoOqlWarning store={this.props.store}/>
-                </div>
+                <OqlStatusBanner className="expression-oql-status-banner" store={this.props.store} tabReflectsOql={false} style={{marginTop:-1, marginBottom:12}}/>
                 { (this.studySelectorModalVisible) && this.studySelectionModal }
                 <div style={{marginBottom:15}}>
 
