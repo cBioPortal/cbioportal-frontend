@@ -1768,6 +1768,39 @@ export class ResultsViewPageStore {
         }
     });
 
+    public annotatedCnaCache =
+        new MobxPromiseCache<{entrezGeneId:number}, AnnotatedNumericGeneMolecularData[]>(
+            q=>({
+                await: ()=>this.numericGeneMolecularDataCache.await(
+                    [this.studyToMolecularProfileDiscrete, this.entrezGeneIdToGene, this.getOncoKbCnaAnnotationForOncoprint, this.molecularProfileIdToMolecularProfile],
+                    (studyToMolecularProfileDiscrete)=>{
+                        return _.values(studyToMolecularProfileDiscrete).map(p=>({entrezGeneId: q.entrezGeneId, molecularProfileId: p.molecularProfileId}));
+                    }),
+                invoke:()=>{
+                    const results = _.flatten(this.numericGeneMolecularDataCache.getAll(
+                        _.values(this.studyToMolecularProfileDiscrete.result!).map(p=>({entrezGeneId: q.entrezGeneId, molecularProfileId: p.molecularProfileId}))
+                    ).map(p=>p.result!));
+                    const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
+                    let getOncoKbAnnotation:(datum:NumericGeneMolecularData)=>IndicatorQueryResp|undefined;
+                    if (this.getOncoKbCnaAnnotationForOncoprint.result! instanceof Error) {
+                        getOncoKbAnnotation = ()=>undefined;
+                    } else {
+                        getOncoKbAnnotation = this.getOncoKbCnaAnnotationForOncoprint.result! as typeof getOncoKbAnnotation;
+                    }
+                    const profileIdToProfile = this.molecularProfileIdToMolecularProfile.result!;
+                    return Promise.resolve(results.map(d=>{
+                            return annotateMolecularDatum(
+                                d,
+                                getOncoKbAnnotation,
+                                profileIdToProfile,
+                                entrezGeneIdToGene
+                            );
+                        })
+                    );
+                }
+            })
+        );
+
     readonly getPutativeDriverInfo = remoteData({
         await:()=>{
             const toAwait = [];

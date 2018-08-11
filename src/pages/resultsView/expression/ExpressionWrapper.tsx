@@ -1,9 +1,9 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import {observer} from "mobx-react";
+import {observer, Observer} from "mobx-react";
 import './styles.scss';
 import {
-    CancerStudy, Gene, NumericGeneMolecularData, Mutation
+    CancerStudy, Gene, NumericGeneMolecularData, Mutation, MolecularProfile
 } from "../../../shared/api/generated/CBioPortalAPI";
 import {action, computed, observable} from "mobx";
 import getCanonicalMutationType from "../../../shared/lib/getCanonicalMutationType";
@@ -28,28 +28,47 @@ import classNames from 'classnames';
 import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
 import {CoverageInformation, isPanCanStudy, isTCGAProvStudy} from "../ResultsViewPageStoreUtils";
 import {sleep} from "../../../shared/lib/TimeUtils";
-import {mutationRenderPriority} from "../plots/PlotsTabUtils";
+import {
+    CNA_STROKE_WIDTH,
+    getCnaQueries, IBoxScatterPlotPoint, INumberAxisData, IScatterPlotData, IScatterPlotSampleData, IStringAxisData,
+    makeBoxScatterPlotData, makeScatterPlotPointAppearance,
+    mutationRenderPriority, MutationSummary, mutationSummaryToAppearance, scatterPlotLegendData, scatterPlotSize,
+    scatterPlotTooltip, boxPlotTooltip, sortScatterPlotDataForZIndex
+} from "../plots/PlotsTabUtils";
 import {getOncoprintMutationType} from "../../../shared/components/oncoprint/DataUtils";
 import {getSampleViewUrl} from "../../../shared/api/urls";
-import {ResultsViewPageStore} from "../ResultsViewPageStore";
-import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
+import {AnnotatedMutation, ResultsViewPageStore} from "../ResultsViewPageStore";
+import OqlStatusBanner from "../../../shared/components/OqlStatusBanner";
+import {remoteData} from "../../../shared/api/remoteData";
+import MobxPromiseCache from "../../../shared/lib/MobxPromiseCache";
+import {MobxPromise} from "mobxpromise";
+import {stringListToSet} from "../../../shared/lib/StringUtils";
+import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
+import BoxScatterPlot from "../../../shared/components/plots/BoxScatterPlot";
+import {ViewType} from "../plots/PlotsTab";
+import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 
 export interface ExpressionWrapperProps {
     store:ResultsViewPageStore;
+    expressionProfiles:MobxPromise<MolecularProfile[]>;
+    numericGeneMolecularDataCache:MobxPromiseCache<{entrezGeneId:number, molecularProfileId:string}, NumericGeneMolecularData[]>;
     studyMap: { [studyId: string]: CancerStudy };
     genes: Gene[];
-    data: { [hugeGeneSymbol: string]: NumericGeneMolecularData[][] };
-    mutations: Mutation[];
+    mutations: AnnotatedMutation[];
     onRNASeqVersionChange: (version: number) => void;
     RNASeqVersion: number;
     coverageInformation: CoverageInformation
 }
+
+class ExpressionTabBoxPlot extends BoxScatterPlot<IBoxScatterPlotPoint> {}
 
 const SYMBOL_SIZE = 3;
 
 const EXPRESSION_CAP = .01;
 
 const LOGGING_FUNCTION = Math.log2;
+
+const SVG_ID = "expression-tab-plot-svg";
 
 export type ScatterPoint = { x: number, y: NumericGeneMolecularData };
 
@@ -70,7 +89,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     constructor(props: ExpressionWrapperProps) {
         super();
-        this.selectedGene = props.genes[0].hugoGeneSymbol;
+        this.selectedGene = props.genes[0];
         (window as any).box = this;
     }
 
@@ -83,11 +102,13 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @observable.ref tooltipModel: ITooltipModel<ExpressionTooltipModel> | null = null;
 
-    @observable selectedGene: string;
+    @observable.ref selectedGene: Gene;
 
     @observable studySelectorModalVisible = false;
 
     @observable showMutations: boolean = true;
+
+    @observable showCna: boolean = true;
 
     @observable _selectedStudies: { [studyId: string]: boolean } = {};
 
@@ -104,26 +125,8 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     tooltipCounter: number = 0;
 
-    @computed get filteredData() {
-        // filter for selected studies
-        return _.filter(this.props.data[this.selectedGene], (data: NumericGeneMolecularData[]) => this._selectedStudies[data[0].studyId] === true);
-    }
-
-    @computed get dataByStudyId(): { [studyId:string] :  NumericGeneMolecularData[] } {
-        return _.keyBy(this.props.data[this.selectedGene], (data: NumericGeneMolecularData[]) => data[0].studyId);
-    }
-
     @computed get selectedStudies() {
         return _.filter(this.props.studyMap,(study)=>this._selectedStudies[study.studyId] === true);
-    }
-
-    @computed get containerWidth() {
-        const legendBased = (this.legendData.length * 80) + 200;
-        return (legendBased > this.chartWidth) ? legendBased : this.chartWidth;
-    }
-
-    @computed get chartWidth() {
-        return this.sortedLabels.length * (this.widthThreshold ? 30 : 110) + 200;
     }
 
     @computed get widthThreshold(){
@@ -134,26 +137,141 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
         return this.widthThreshold ? 27 : 80;
     }
 
-    @computed get sortedData() {
-        if (this.sortBy === "alphabetic") {
-            return _.sortBy(this.filteredData, [
-                (data: NumericGeneMolecularData[]) => {
-                    return this.props.studyMap[data[0].studyId].shortName
-                }]
+    readonly sampleStudyData = remoteData<IStringAxisData>({
+        await:()=>[this.props.store.samples],
+        invoke: ()=>{
+            // data representing the horizontal axis - which sample is in which study
+            return Promise.resolve(
+                {
+                    data: this.props.store.samples.result!.reduce((_data, sample)=>{
+                        // filter out data for unselected studies
+                        if (this._selectedStudies[sample.studyId]) {
+                            _data.push({
+                                uniqueSampleKey: sample.uniqueSampleKey,
+                                value: this.props.studyMap[sample.studyId].shortName
+                            });
+                        }
+                        return _data;
+                    }, [] as IStringAxisData["data"]),
+                    datatype: "string"
+                }
             );
-        } else {
-            return _.sortBy(this.filteredData, [(data: NumericGeneMolecularData[]) => {
-                //Note: we have to use slice to convert Seamless immutable array to real array, otherwise jStat chokes
-                return jStat.median(Array.prototype.slice((data.map((molecularData: NumericGeneMolecularData) => molecularData.value) as any))) as number;
-            }]);
         }
+    });
+
+    readonly expressionData = remoteData<NumericGeneMolecularData[]>({
+        await:()=>this.props.numericGeneMolecularDataCache.await([this.props.expressionProfiles],
+            profiles=>profiles.map((p:MolecularProfile)=>({ entrezGeneId: this.selectedGene.entrezGeneId, molecularProfileId: p.molecularProfileId }))
+        ),
+        invoke:()=>{
+            // TODO: this cache is leading to some ugly code
+            return Promise.resolve(_.flatten(this.props.numericGeneMolecularDataCache.getAll(
+                this.props.expressionProfiles.result!.map(p=>({ entrezGeneId: this.selectedGene.entrezGeneId, molecularProfileId: p.molecularProfileId }))
+            ).map(promise=>promise.result!)) as NumericGeneMolecularData[]);
+        }
+    });
+
+    readonly studiesWithExpressionData = remoteData<{[studyId:string]:boolean}>({
+        await:()=>[this.expressionData],
+        invoke:()=>{
+            const studyIds = _.chain<NumericGeneMolecularData[]>(this.expressionData.result!)
+                    .map(d=>d.studyId)
+                    .uniq()
+                    .value();
+            return Promise.resolve(stringListToSet(studyIds));
+        }
+    });
+
+    readonly mutationDataExists = remoteData({
+        await: ()=>[this.props.store.studyToMutationMolecularProfile],
+        invoke: ()=>{
+            return Promise.resolve(!!_.values(this.props.store.studyToMutationMolecularProfile).length);
+        }
+    });
+
+    readonly cnaDataExists = remoteData({
+        await: ()=>[this.props.store.studyToMolecularProfileDiscrete],
+        invoke: ()=>{
+            return Promise.resolve(!!_.values(this.props.store.studyToMolecularProfileDiscrete).length);
+        }
+    });
+
+    readonly cnaData = remoteData({
+        await:()=>{
+            if (this.cnaDataShown && this.selectedGene !== undefined) {
+                return [this.props.store.annotatedCnaCache.get({ entrezGeneId: this.selectedGene.entrezGeneId })];
+            } else {
+                return [];
+            }
+        },
+        invoke:()=>{
+            if (this.cnaDataShown && this.selectedGene !== undefined) {
+                return Promise.resolve(this.props.store.annotatedCnaCache.get({ entrezGeneId: this.selectedGene.entrezGeneId }).result!);
+            } else {
+                return Promise.resolve([]);
+            }
+        }
+    });
+
+    @computed get mutationDataShown() {
+        return this.mutationDataExists.result && this.showMutations;
     }
 
-    @computed get sortedStudies() {
-        return _.map(this.sortedData, (data: NumericGeneMolecularData[]) => {
-            return this.props.studyMap[data[0].studyId];
-        });
+    @computed get cnaDataShown() {
+        return this.cnaDataExists.result && this.showCna;
     }
+
+    readonly _unsortedBoxPlotData = remoteData({
+        await:()=>[
+            this.sampleStudyData,
+            this.expressionData,
+            this.props.store.sampleKeyToSample,
+            this.props.store.studyToMutationMolecularProfile,
+            this.props.store.studyToMolecularProfileDiscrete,
+            this.cnaData
+        ],
+        invoke:()=>{
+            return Promise.resolve(makeBoxScatterPlotData(
+                this.sampleStudyData.result!,
+                {
+                    data: this.expressionData.result!,
+                    datatype: "number",
+                    hugoGeneSymbol: this.selectedGene.hugoGeneSymbol
+                } as INumberAxisData,
+                this.props.store.sampleKeyToSample.result!,
+                this.props.coverageInformation.samples,
+                this.mutationDataExists.result ? {
+                    molecularProfileIds: _.values(this.props.store.studyToMutationMolecularProfile.result!).map(p=>p.molecularProfileId),
+                    data: this.props.mutations
+                } : undefined,
+                this.cnaDataShown ? {
+                    molecularProfileIds: _.values(this.props.store.studyToMolecularProfileDiscrete.result!).map(p=>p.molecularProfileId),
+                    data: this.cnaData.result!
+                }: undefined
+            ));
+        }
+    });
+
+    readonly boxPlotData = remoteData({
+        await:()=>[this._unsortedBoxPlotData],
+        invoke:()=>{
+            // sort data order within boxes, for rendering order (z-index)
+            const sortedData = this._unsortedBoxPlotData.result!.map(labelAndData=>({
+                label: labelAndData.label,
+                data: sortScatterPlotDataForZIndex<IBoxScatterPlotPoint>(labelAndData.data, this.viewType)
+            }));
+
+            // sort box order
+            if (this.sortBy === "alphabetic") {
+                return Promise.resolve(_.sortBy<any>(sortedData, d=>d.label));
+            } else {
+                return Promise.resolve(_.sortBy<any>(sortedData, d=>{
+                    //Note: we have to use slice to convert Seamless immutable array to real array, otherwise jStat chokes
+                    return jStat.median(Array.prototype.slice((d.data.map((v:any)=>(v.value as number)))));
+                }));
+            }
+        }
+    });
 
     @computed get studyTypeCounts(){
         const allStudies = _.values(this.props.studyMap);
@@ -161,137 +279,6 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             provisional:allStudies.filter((study)=>isTCGAProvStudy(study.studyId)),
             panCancer:allStudies.filter((study)=>isPanCanStudy(study.studyId))
         }
-    }
-
-    @computed get sortedLabels(){
-        return this.sortedStudies.map((study:CancerStudy)=>study.shortName);
-    }
-
-    @computed get mutationsByGene(){
-        return _.groupBy(this.props.mutations,(mutation:Mutation)=>mutation.gene.hugoGeneSymbol);
-    }
-
-    @computed get mutationsKeyedBySampleId() {
-        const mutations = this.mutationsByGene[this.selectedGene] || [];
-
-        // find if there are any mutations which apply to sample sample
-        const groups = _.groupBy(mutations,(mutation: Mutation) => mutation.uniqueSampleKey);
-
-        const sampleIdToMutationMap = _.mapValues(groups,(mutations:Mutation[])=>{
-            if (mutations.length > 1) {
-                return prioritizeMutations(mutations)[0];
-            } else {
-                return mutations[0];
-            }
-        });
-
-        return sampleIdToMutationMap;
-    }
-
-    @computed
-    get dataTransformer() {
-        function logger(expressionValue: number) {
-            return (expressionValue < EXPRESSION_CAP) ? LOGGING_FUNCTION(EXPRESSION_CAP) : LOGGING_FUNCTION(expressionValue);
-        }
-
-        return (molecularData: NumericGeneMolecularData) =>
-            (this.logScale ? logger(molecularData.value) : molecularData.value);
-    }
-
-    // we need to refactor victoryTraces to make it more easy to test
-
-    @computed get boxTraces(){
-        const boxTraces: Partial<VictoryBoxPlotModel>[] = [];
-        const sortedData = this.sortedData;
-
-        for (let i = 0; i < sortedData.length; i++) {
-            const studyData = sortedData[i];
-
-            let transformedData = studyData;
-
-            transformedData = transformedData.filter((molecularData: NumericGeneMolecularData) => molecularData.value > 0);
-
-            const boxData = calculateBoxPlotModel(transformedData.map(this.dataTransformer));
-
-            // *IMPORTANT* because Victory does not handle outliers,
-            // we are overriding meaning of min and max in order to show whiskers
-            // at quartile +/-IQL * 1.5 instead of true max/min
-            boxTraces.push({
-                realMin: boxData.min,
-                realMax: boxData.max,
-                min: boxData.whiskerLower, // see above
-                median: boxData.median, // see above
-                max: boxData.whiskerUpper,
-                q1: boxData.q1,
-                q3: boxData.q3,
-                x: i,
-            });
-
-        }
-
-        return boxTraces;
-
-    }
-
-    @computed get mutationTraces(){
-        const mutationScatterTraces: { [key: string]: ScatterPoint[] }[] = [];
-        const sortedData = this.sortedData;
-        for (let i = 0; i < sortedData.length; i++) {
-            const studyData = sortedData[i];
-            const buckets = getMolecularDataBuckets(studyData, this.showMutations, this.mutationsKeyedBySampleId, this.props.coverageInformation, this.selectedGene);
-            const mutationTraces = _.mapValues(buckets.mutationBuckets, (molecularData: NumericGeneMolecularData[], canonicalMutationType: string) => {
-                return molecularData.map((datum) => {
-                    return {y: datum, x: i + calculateJitter(datum.uniqueSampleKey)}
-                });
-            });
-            mutationScatterTraces.push(mutationTraces);
-        }
-        return mutationScatterTraces;
-    }
-
-    @computed get molecularDataByMutationType(){
-        return this.sortedData.map((studyData)=>{
-            return getMolecularDataBuckets(studyData, this.showMutations, this.mutationsKeyedBySampleId, this.props.coverageInformation, this.selectedGene);
-        });
-    }
-
-    @computed get unmutatedTraces(){
-        const unMutatedTraces: ScatterPoint[][] = [];
-        const sortedData = this.sortedData;
-        for (let i = 0; i < sortedData.length; i++) {
-            const studyData = sortedData[i];
-            const buckets = this.molecularDataByMutationType[i];
-            const unmutatedTrace = buckets.unmutatedBucket.map((datum: NumericGeneMolecularData) => {
-                return {y: datum, x: i + calculateJitter(datum.uniqueSampleKey)}
-            });
-            unMutatedTraces.push(unmutatedTrace);
-        }
-        return unMutatedTraces;
-    }
-
-    @computed get unsequencedTraces(){
-        const unsequencedTraces: ScatterPoint[][] = [];
-        const sortedData = this.sortedData;
-        for (let i = 0; i < sortedData.length; i++) {
-            // get buckets for this study
-            const buckets = this.molecularDataByMutationType[i];
-            const unsequencedTrace = buckets.unsequencedBucket.map((datum: NumericGeneMolecularData) => {
-                return {y: datum, x: i + calculateJitter(datum.uniqueSampleKey)}
-            });
-            unsequencedTraces.push(unsequencedTrace);
-        }
-        return unsequencedTraces;
-    }
-
-    @computed get victoryTraces() {
-        return {boxTraces:this.boxTraces, mutationScatterTraces: this.mutationTraces, unSequencedTraces:this.unsequencedTraces, unMutatedTraces: this.unmutatedTraces};
-    }
-
-    @computed
-    get domain() {
-        const min = _.min(this.victoryTraces.boxTraces.map(trace => trace.realMin));
-        const max = _.max(this.victoryTraces.boxTraces.map(trace => trace.realMax));
-        return {min, max};
     }
 
     @autobind
@@ -312,9 +299,11 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @autobind
     handleSelectAllStudies(){
-        this.applyStudyFilter((study)=>{
-            return study.studyId in this.dataByStudyId;
-        });
+        if (this.studiesWithExpressionData.isComplete) {
+            this.applyStudyFilter((study)=>{
+                return study.studyId in this.studiesWithExpressionData.result!;
+            });
+        }
     }
 
     @autobind
@@ -325,11 +314,15 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @computed get hasUnselectedStudies(){
-        return undefined !== _.find(this.props.studyMap,(study)=>{
-            const hasData = study.studyId in this.dataByStudyId;
-            const isSelected = this.selectedStudies.includes(study);
-            return hasData && !isSelected;
-        });
+        if (this.studiesWithExpressionData.isComplete) {
+            return undefined !== _.find(this.props.studyMap,(study)=>{
+                const hasData = study.studyId in this.studiesWithExpressionData.result!;
+                const isSelected = this.selectedStudies.includes(study);
+                return hasData && !isSelected;
+            });
+        } else {
+            return false;
+        }
     }
 
     @computed
@@ -357,7 +350,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     </div>
                     {
                         _.map(this.alphabetizedStudies, (study: CancerStudy) => {
-                            const hasData = study.studyId in this.dataByStudyId;
+                            const hasData = (study.studyId in (this.studiesWithExpressionData.result || {}));
                             return (
                                 <div className={classNames('checkbox',{ disabled:!hasData })}>
                                     <label>
@@ -379,99 +372,6 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     }
 
-    @computed
-    get mutationTypesPresent() {
-        const mutationTypes = _.flatMap(this.mutationTraces, (traceMap: {[mutationType:string]:any}) => {
-            return _.keys(traceMap);
-        });
-        return _.uniq(mutationTypes);
-    }
-
-    @computed
-    get legendData() {
-        const legendData = this.mutationTypesPresent.map((mutationType: string) => {
-            let style = getExpressionStyle(mutationType);
-            return {name: style.legendText, symbol: {fill: style.fill, size:SYMBOL_SIZE, stroke:style.stroke, type: style.symbol}}
-        });
-
-        const deDupedLegendData = _.uniqBy(legendData,(item:any)=>item.name);
-
-        // now lets add non-mutated and non-sequenced entries
-        const nonMutStyle = ExpressionStyleSheet.non_mut;
-        const nonSequenced = ExpressionStyleSheet.non_sequenced;
-
-        if (this.showMutations) {
-            deDupedLegendData.push({name: nonMutStyle.legendText, symbol: {fill: nonMutStyle.fill, stroke:nonMutStyle.stroke, size:SYMBOL_SIZE, type: nonMutStyle.symbol}});
-        }
-
-        if (_.flatten(this.victoryTraces.unSequencedTraces).length > 0) {
-            deDupedLegendData.push({name: nonSequenced.legendText,
-                symbol: {
-                    fill: nonSequenced.fill,
-                    size: SYMBOL_SIZE,
-                    stroke: nonSequenced.stroke,
-                    type: nonSequenced.symbol
-                }
-            });
-        }
-        return deDupedLegendData;
-    }
-
-    @autobind
-    async hideTooltip() {
-        await sleep(100);
-        if (this.isTooltipHovered === false && this.tooltipCounter === 1) {
-            this.tooltipModel = null;
-
-        }
-        this.tooltipCounter--;
-    }
-
-    @autobind
-    tooltipMouseLeave(): void {
-        this.isTooltipHovered = false;
-        this.tooltipModel = null;
-    }
-
-    @autobind
-    tooltipMouseEnter(): void {
-        this.isTooltipHovered = true;
-    }
-
-    @autobind
-    makeTooltip(props: any) {
-
-        const geneMolecularData: NumericGeneMolecularData = props.datum.y;
-        const mutation = this.mutationsKeyedBySampleId[geneMolecularData.uniqueSampleKey];
-
-        // determine style based on mutation
-        let expressionStyle: ExpressionStyle;
-        let oncoprintMutationType:string = "";
-        if (mutation) {
-            oncoprintMutationType = getOncoprintMutationType(mutation);
-            expressionStyle = getExpressionStyle(oncoprintMutationType);
-        } else {
-            expressionStyle = ExpressionStyleSheet.non_mut;
-        }
-
-        this.tooltipModel = {
-            x: props.x + 20,
-            y: props.y - 18,
-            data: {
-                studyName: this.props.studyMap[geneMolecularData.studyId].name,
-                sampleId: geneMolecularData.sampleId,
-                studyId: geneMolecularData.studyId,
-                expression: geneMolecularData.value,
-                style: expressionStyle,
-                mutationType:(mutation && oncoprintMutationType) ? oncoprintMutationType : null,
-                proteinChange: (mutation && mutation.proteinChange) ? mutation.proteinChange : null
-            }
-        };
-
-        this.tooltipCounter++;
-
-    }
-
     @autobind
     public applyStudyFilter(test: (study: CancerStudy) => boolean) {
         this._selectedStudies = _.mapValues(this.props.studyMap, (study: CancerStudy, studyId: string) => {
@@ -481,202 +381,127 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @autobind
     public handleTabClick(id: string, datum:Gene) {
-        this.selectedGene = datum.hugoGeneSymbol;
-    }
-
-    @computed
-    get buildUnmutatedTraces() {
-        return this.victoryTraces.unMutatedTraces.map((trace) => this.buildScatter(trace, this.showMutations ? ExpressionStyleSheet.non_mut : ExpressionStyleSheet.not_showing_mut))
-    }
-
-    @computed
-    get buildUnsequencedTraces() {
-        return this.victoryTraces.unSequencedTraces.map((trace) => this.buildScatter(trace, ExpressionStyleSheet.non_sequenced))
-    }
-
-    @computed
-    get buildMutationScatters() {
-        return _.flatMap(this.victoryTraces.mutationScatterTraces, (traces:{[mutationType:string]:ScatterPoint[]}) => {
-            // sort traces by mutation rendering priority
-            const sortedEntries = _.sortBy(_.toPairs(traces), entry=>-1*mutationRenderPriority[entry[0]]);
-            return sortedEntries.map(entry=>{
-                const key = entry[0];
-                const value = entry[1];
-                const style = getExpressionStyle(key);
-                return (this.showMutationType.length === 0 || (this.showMutationType as any).includes(key))
-                    ? this.buildScatter(value, style) : null;
-            })
-        });
-    }
-
-    @computed
-    get tickFormat() {
-        function format(val:number) {
-            if (val >= 1000) {
-                return numeral(val).format('0a');
-            } else {
-                return numeral(val).format('0.[00]');
-            }
-        }
-        return (this.logScale) ? (val:number)=>val : (val:number) => format(val);
-    }
-
-    buildScatter(data: ScatterPoint[], style: ExpressionStyle) {
-        return <VictoryScatter
-            style={{data: {fill: style.fill, stroke: "#666666", strokeWidth: 1}}}
-            symbol={style.symbol}
-            events={[{
-                target: "data",
-                eventHandlers: {
-                    onMouseOver: () => {
-                        return [
-                            {
-                                target: "data",
-                                mutation: this.makeTooltip
-                            }
-                        ];
-                    },
-                    onMouseLeave: () => {
-                        return [
-                            {
-                                target: "data",
-                                mutation: this.hideTooltip
-                            }
-                        ];
-                    }
-                }
-            }]}
-            y={(datum: { y: NumericGeneMolecularData }) => {
-                return this.dataTransformer(datum.y);
-            }}
-            x={(item: ScatterPoint) => item.x + 1}
-            size={3}
-            data={data}
-        />
-    }
-
-    @computed get paddingBottom(){
-        if (!this.sortedLabels.length) {
-            return 10;
-        } else {
-            return _.maxBy(this.sortedLabels,(label:string)=>label.length)!.length * 9;
-        }
+        this.selectedGene = datum;
     }
 
     @computed
     get yAxisLabel() {
         const log = this.logScale ? ' (log2)' : '';
-        return `${this.selectedGene} Expression --- RNA Seq V${this.props.RNASeqVersion}${log}`;
+        return `${this.selectedGene.hugoGeneSymbol} Expression --- RNA Seq V${this.props.RNASeqVersion}${log}`;
     }
 
-    @computed
-    get toolTip() {
-        const style: ExpressionStyle = this.tooltipModel!.data.style as ExpressionStyle;
+    @computed get boxPlotTooltip() {
+        return (d:IBoxScatterPlotPoint)=>{
+            if (this.boxPlotData.isComplete) {
+                return boxPlotTooltip(d, false);
+            } else {
+                return <span>Loading... (this shouldnt appear because the box plot shouldnt be visible)</span>;
+            }
+        }
+    }
 
-        return (
-            <div className="popover right cbioTooltip"
-                 onMouseLeave={this.tooltipMouseLeave}
-                 onMouseEnter={this.tooltipMouseEnter}
-                 style={{top: this.tooltipModel!.y, left: this.tooltipModel!.x-8}}
-            >
-                <div className="arrow" style={{top: 27}}></div>
-                <div className="popover-content">
-                    <strong>Study:</strong> {this.tooltipModel!.data.studyName}<br/>
-                    <strong>Sample ID:</strong>&nbsp;
-                    <a href={getSampleViewUrl(this.tooltipModel!.data.studyId, this.tooltipModel!.data.sampleId)} target="_blank">
-                    {this.tooltipModel!.data.sampleId}</a>
-                    <br/>
-                    <strong>Expression:</strong> {this.tooltipModel!.data.expression}
-                    { this.showMutations && (
-                        <div>
-                            <strong>Mutation type:</strong>
-                            &nbsp;{style.legendText}
-                            <br/>
-                        </div>
-                    )}
-                    {
-                        (this.showMutations && this.tooltipModel!.data.proteinChange) &&
-                        (<div><strong>Mutation detail:</strong> {this.tooltipModel!.data.proteinChange}</div>)
-                    }
+    @computed get fill() {
+        if (this.showCna || this.showMutations) {
+            return (d:IScatterPlotSampleData)=>this.scatterPlotAppearance(d).fill!;
+        } else {
+            return mutationSummaryToAppearance[MutationSummary.Neither].fill;
+        }
+    }
 
+    @computed get fillOpacity() {
+        if (!this.showMutations && this.showCna) {
+            return 0;
+        } else {
+            return 1;
+        }
+    }
 
-                </div>
-            </div>
-
-        )
-
+    @computed get strokeWidth() {
+        if (this.showCna) {
+            return CNA_STROKE_WIDTH;
+        } else {
+            return 1;
+        }
     }
 
     @autobind
-    private getRef(ref:any){
-        this.svgContainer = (ref && ref.children.length) ? ref.children[0] : null
+    private strokeOpacity(d:IScatterPlotSampleData) {
+        return this.scatterPlotAppearance(d).strokeOpacity;
     }
 
-    @computed
-    get chart() {
-        return (
+    @autobind
+    private scatterPlotTooltip(d:IScatterPlotData) {
+        return scatterPlotTooltip(d);
+    }
 
-                <VictoryChart
-                    height={this.height}
-                    width={this.chartWidth}
-                    theme={CBIOPORTAL_VICTORY_THEME}
-                    domainPadding={{x: [30, 30], y:[10, 10]}}
-                    domain={{ x:[0,this.victoryTraces.boxTraces.length + 1]}}
-                    padding={{bottom: this.paddingBottom, left: 100, top: 60, right: 10}}
-                    containerComponent={
-                        <VictoryContainer width={this.containerWidth}
-                                          containerRef={this.getRef}
-                                          responsive={false}
-                        />
-                    }
+    @autobind
+    private stroke(d:IScatterPlotSampleData) {
+        return this.scatterPlotAppearance(d).stroke;
+    }
+
+    @computed get scatterPlotAppearance() {
+        return makeScatterPlotPointAppearance(this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated);
+    }
+
+    @computed get viewType() {
+        if (this.showMutations && this.showCna) {
+            return ViewType.MutationTypeAndCopyNumber;
+        } else if (this.showMutations) {
+            return ViewType.MutationType;
+        } else if (this.showCna) {
+            return ViewType.CopyNumber;
+        } else {
+            return ViewType.None;
+        }
+    }
+
+    @autobind
+    private getChart() {
+        if (this.boxPlotData.isComplete) {
+            return (
+                <ChartContainer
+                    getSVGElement={this.getSvg}
+                    exportFileName={this.exportFileName}
                 >
-                    <VictoryAxis dependentAxis
-                                 tickFormat={this.tickFormat}
-                                 axisLabelComponent={<VictoryLabel dy={-50}/>}
-                                 label={this.yAxisLabel}
-                                 crossAxis={false}
-                    />
-
-                    <VictoryAxis
-                        tickFormat={this.sortedLabels}
-                        orientation={'bottom'}
-                        offsetY={this.paddingBottom}
-                        tickLabelComponent={
-                            <VictoryLabel
-                                angle={-85}
-                                dx={-20}
-                                verticalAnchor="middle"
-                                textAnchor="end"
-                            />
-                        }
-
-                    />
-
-                    <VictoryBoxPlot
+                    <ExpressionTabBoxPlot
+                        svgId={SVG_ID}
                         boxWidth={this.boxWidth}
-                        style={BOX_STYLES}
-                        data={this.victoryTraces.boxTraces}
-                        x={(item: BoxPlotModel) => item.x! + 1}
+                        axisLabelY={this.yAxisLabel}
+                        data={this.boxPlotData.result}
+                        chartBase={550}
+                        tooltip={this.boxPlotTooltip}
+                        horizontal={false}
+                        logScale={this.logScale}
+                        size={scatterPlotSize}
+                        fill={this.fill}
+                        stroke={this.stroke}
+                        strokeOpacity={this.strokeOpacity}
+                        symbol="circle"
+                        fillOpacity={this.fillOpacity}
+                        strokeWidth={this.strokeWidth}
+                        useLogSpaceTicks={true}
+                        legendData={scatterPlotLegendData(
+                            _.flatten(this.boxPlotData.result.map(d=>d.data)), this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated
+                        )}
                     />
-                    {
-                        this.buildUnmutatedTraces
-                    }
+                    {this.mutationDataExists.result && (
+                        <div style={{marginTop:5}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
+                    )}
+                </ChartContainer>
+            );
+        } else {
+            return <span></span>
+        }
+    }
 
-                    {
-                        this.buildUnsequencedTraces
-                    }
+    @autobind
+    private getSvg() {
+        return document.getElementById(SVG_ID) as SVGElement | null;
+    }
 
-                    {
-                        this.buildMutationScatters
-                    }
-                    <VictoryLegend x={0} y={0}
-                                   orientation="horizontal"
-                                   gutter={20}
-                                   data={this.legendData}
-                    />
-
-                </VictoryChart>
-        )
+    @computed get exportFileName() {
+        // TODO: more specific?
+        return "Expression";
     }
 
     render() {
@@ -690,7 +515,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                              enablePagination={true}
                              unmountOnHide={true}
                              tabButtonStyle="pills"
-                             activeTabId={"summaryTab" + this.selectedGene}
+                             activeTabId={"summaryTab" + this.selectedGene.hugoGeneSymbol}
                              className="pillTabs">
                         {
                             this.props.genes.map((gene:Gene)=> {
@@ -727,17 +552,23 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                                        onChange={()=>this.logScale = !this.logScale} title="Log scale"/>
                                 Log scale
                             </label>
-                            <label className="checkbox-inline">
+                            { this.mutationDataExists.result && <label className="checkbox-inline">
                                 <input type="checkbox" checked={this.showMutations}
                                        onChange={() => this.showMutations = !this.showMutations}
-                                       title="Show mutations"/>
-                                Show mutations
-                            </label>
+                                       title="Show mutations *"/>
+                                Show mutations *
+                            </label>}
+                            { this.cnaDataExists.result && <label className="checkbox-inline">
+                                <input type="checkbox" checked={this.showCna}
+                                       onChange={() => this.showCna = !this.showCna}
+                                       title="Show copy number alterations"/>
+                                Show copy number alterations
+                            </label>}
                         </div>
 
                     </form>
 
-                    <div>
+                    { this.studiesWithExpressionData.isComplete && <div>
                         <label>Select studies:</label>&nbsp;
                         <If condition={this.studyTypeCounts.provisional.length > 0}>
                             <button className="btn btn-default btn-xs" style={{marginRight:5}}
@@ -754,28 +585,22 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         <button data-test="ExpressionStudyModalButton"className="btn btn-default btn-xs"
                                 onClick={() => this.studySelectorModalVisible = !this.studySelectorModalVisible}>Custom list</button>
 
-                    </div>
+                    </div>}
+                    { this.studiesWithExpressionData.isPending && <LoadingIndicator isLoading={true} />}
 
                     <div className="collapse">
                         <div className="well"></div>
                     </div>
                 </div>
 
-                <If condition={this.selectedStudies.length > 0}>
+                { this.boxPlotData.isComplete && <If condition={this.selectedStudies.length > 0}>
                     <Then>
-                        <If condition={_.size(this.props.data) > 0}>
+                        <If condition={_.size(this.boxPlotData.result!) > 0}>
                             <Then>
                                 <div className="posRelative">
-
-                                    <ChartContainer
-                                        getSVGElement={()=>this.svgContainer}
-                                        exportFileName="Expression"
-                                    >
-                                        {(this.tooltipModel) && (this.toolTip)}
-                                        {this.chart}
-                                    </ChartContainer>
-
-
+                                    <Observer>
+                                        {this.getChart}
+                                    </Observer>
                                 </div>
                             </Then>
                             <Else>
@@ -790,7 +615,8 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                             No studies selected.
                         </div>
                     </Else>
-                </If>
+                </If>}
+                { this.boxPlotData.isPending && <LoadingIndicator isLoading={true} />}
             </div>
         );
     }
