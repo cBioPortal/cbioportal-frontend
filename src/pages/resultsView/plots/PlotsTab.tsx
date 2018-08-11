@@ -678,33 +678,26 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @computed get cnaDataCanBeShown() {
-        return this.cnaDataExists && this.potentialViewType === PotentialViewType.MutationTypeAndCopyNumber;
+        return !!(this.cnaDataExists.result && this.potentialViewType === PotentialViewType.MutationTypeAndCopyNumber);
     }
 
     @computed get cnaDataShown() {
-        return this.cnaDataExists && (this.viewType === ViewType.CopyNumber || this.viewType === ViewType.MutationTypeAndCopyNumber);
+        return !!(this.cnaDataExists.result && (this.viewType === ViewType.CopyNumber || this.viewType === ViewType.MutationTypeAndCopyNumber));
     }
 
     readonly cnaPromise = remoteData({
-        await:()=>this.props.store.numericGeneMolecularDataCache.await(
-            [this.props.store.studyToMolecularProfileDiscrete],
-            map=>{
-                if (this.cnaDataShown && this.horzSelection.entrezGeneId !== undefined) {
-                    return getCnaQueries(this.horzSelection.entrezGeneId, map, this.cnaDataShown);
-                } else {
-                    return [];
-                }
+        await:()=>{
+            const queries = getCnaQueries(this.horzSelection, this.vertSelection, this.cnaDataShown);
+            if (queries.length > 0) {
+                return this.props.store.annotatedCnaCache.getAll(queries);
+            } else {
+                return [];
             }
-        ),
+        },
         invoke:()=>{
-            if (this.cnaDataShown && this.horzSelection.entrezGeneId !== undefined) {
-                const queries = getCnaQueries(
-                    this.horzSelection.entrezGeneId,
-                    this.props.store.studyToMolecularProfileDiscrete.result!,
-                    this.cnaDataShown
-                );
-                const promises = this.props.store.numericGeneMolecularDataCache.getAll(queries);
-                return Promise.resolve(_.flatten(promises.map(p=>p.result!)).filter(x=>!!x));
+            const queries = getCnaQueries(this.horzSelection, this.vertSelection, this.cnaDataShown);
+            if (queries.length > 0) {
+                return Promise.resolve(_.flatten(this.props.store.annotatedCnaCache.getAll(queries).map(p=>p.result!)));
             } else {
                 return Promise.resolve([]);
             }
@@ -712,13 +705,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     });
 
     @computed get mutationDataCanBeShown() {
-        return this.mutationDataExists.result && this.potentialViewType !== PotentialViewType.None;
+        return !!(this.mutationDataExists.result && this.potentialViewType !== PotentialViewType.None);
     }
 
     @computed get mutationDataShown() {
-        return this.mutationDataExists &&
+        return !!(this.mutationDataExists.result &&
             (this.viewType === ViewType.MutationType || this.viewType === ViewType.MutationSummary ||
-                this.viewType === ViewType.MutationTypeAndCopyNumber);
+                this.viewType === ViewType.MutationTypeAndCopyNumber));
     }
 
     readonly mutationPromise = remoteData({
@@ -861,13 +854,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @autobind
     private scatterPlotTooltip(d:IScatterPlotData) {
-        return scatterPlotTooltip(d, this.props.store.entrezGeneIdToGene);
+        return scatterPlotTooltip(d);
     }
 
     @computed get boxPlotTooltip() {
         return (d:IBoxScatterPlotPoint)=>{
             if (this.boxPlotData.isComplete) {
-                return boxPlotTooltip(d, this.props.store.entrezGeneIdToGene, this.boxPlotData.result.horizontal);
+                return boxPlotTooltip(d, this.boxPlotData.result.horizontal);
             } else {
                 return <span>Loading... (this shouldnt appear because the box plot shouldnt be visible)</span>;
             }
@@ -1117,7 +1110,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         vertAxisData,
                         this.props.store.sampleKeyToSample.result!,
                         this.props.store.coverageInformation.result!.samples,
-                        this.mutationDataExists ? {
+                        this.mutationDataExists.result ? {
                             molecularProfileIds: _.values(this.props.store.studyToMutationMolecularProfile.result!).map(p=>p.molecularProfileId),
                             data: this.mutationPromise.result!
                         } : undefined,
@@ -1182,7 +1175,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         categoryData, numberData,
                         this.props.store.sampleKeyToSample.result!,
                         this.props.store.coverageInformation.result!.samples,
-                        this.mutationDataExists ? {
+                        this.mutationDataExists.result ? {
                             molecularProfileIds: _.values(this.props.store.studyToMutationMolecularProfile.result!).map(p=>p.molecularProfileId),
                             data: this.mutationPromise.result!
                         } : undefined,
