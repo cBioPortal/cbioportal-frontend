@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { Sample } from 'shared/api/generated/CBioPortalAPIInternal';
+import { Sample, StudyViewFilter } from 'shared/api/generated/CBioPortalAPIInternal';
 import { observer } from "mobx-react";
 import { computed, observable, action } from 'mobx';
 import "./styles.scss";
@@ -10,12 +10,19 @@ import CustomCaseSelection from 'pages/studyView/customCaseSelection/CustomCaseS
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
 import GeneSelectionBox, { GeneBoxType } from 'shared/components/GeneSelectionBox/GeneSelectionBox';
+import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import VirtualStudy from 'pages/studyView/virtualStudy/VirtualStudy';
+import { StudyWithSamples } from 'pages/studyView/StudyViewPageStore';
 
 export interface ISummaryHeaderProps {
     geneQuery:string;
     selectedSamples: Sample[];
     updateCustomCasesFilter:(samples:Sample[]) => void;
     updateSelectedGenes: (query: SingleGeneQuery[], genesInQuery: Gene[]) => void;
+    studyWithSamples:StudyWithSamples[];
+    filter: StudyViewFilter;
+    attributeNamesSet: {[id:string]:string};
+    user?: string;
 }
 
 export type GeneReplacement = {alias: string, genes: Gene[]};
@@ -75,7 +82,15 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
         if (status === "complete") {
             this.props.updateSelectedGenes(oql.query, genes.found);
         }
+    }
 
+    @computed get virtualStudyButtonTooltip() {
+        //default value of userEmailAddress is anonymousUser. see my-index.ejs
+        return (
+            (_.isUndefined(this.props.user) ||
+                _.isEmpty(this.props.user) ||
+                _.isEqual(this.props.user.toLowerCase(), 'anonymoususer')
+            ) ? 'Save/' : '') + 'Share Virtual Study';
     }
 
     render() {
@@ -89,12 +104,29 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                             onSubmit={this.onSubmit}/>
                     )
                 }
+                    
                 <div style={{display: "flex"}}>
                     <span>Selected:</span>
                     <span className="content">{this.props.selectedSamples.length} samples / {this.selectedPatientsCount} patients</span>
-                    <button className="btn" onClick={() => null}>
-                        <i className="fa fa-bookmark" aria-hidden="true" title="Virtual Study"></i>
-                    </button>
+                    <DefaultTooltip
+                        trigger={['click']}
+                        destroyTooltipOnHide={true}
+                        overlay={
+                            <VirtualStudy
+                                user={this.props.user}
+                                studyWithSamples={this.props.studyWithSamples}
+                                selectedSamples={this.props.selectedSamples}
+                                filter={this.props.filter}
+                                attributeNamesSet={this.props.attributeNamesSet}
+                            />
+                        }
+                        placement="bottom"
+                    >
+                        <span className="btn" title={this.virtualStudyButtonTooltip}>
+                            <i className="fa fa-bookmark" aria-hidden="true" title="Virtual Study"/>
+                        </span>
+                    </DefaultTooltip>
+                    
                     <button className="btn" onClick={() => this.openCases()}>
                         <i className="fa fa-user-circle-o" aria-hidden="true" title="View selected cases"></i>
                     </button>
