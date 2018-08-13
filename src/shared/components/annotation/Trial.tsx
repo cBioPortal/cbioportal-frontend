@@ -150,7 +150,7 @@ export default class TrialMatch extends React.Component<ITrialMatchProps, {}>
     {
         return (
             <TrialCard
-                title={`Match patient-specific genomic events to clinical trials`}
+                title={`Match Patient-specific Genomic Events to Clinical Trials`}
                 geneName={trialMatchEntry.name}
                 variants={trialMatchEntry.variants}
             />

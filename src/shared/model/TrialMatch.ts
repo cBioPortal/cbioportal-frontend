@@ -7,6 +7,7 @@ export interface ITrialMatchVariantData {
     genomicId: string;
     name: string;
     gene: string;
+    exonNumber: string;
     oncogenicity: string;
     mutEffect: string;
     matches: {[title:string]:TrialMatchData[]};

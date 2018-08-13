@@ -138,13 +138,13 @@ export function buildTrialMatchEntry(geneEntry: ITrialMatchGeneData, geneVariant
 export function getTrialMatchCNAVariants(copyNumberData:DiscreteCopyNumberData[], geneSymbol: string, trialMatchVariants:ITrialMatchVariant): {[name: string]: ITrialMatchVariantData} {
     let geneVariants: {[name: string]: ITrialMatchVariantData} = {};
     if (copyNumberData[0].alteration === 2) {
-        for (let alteration in trialMatchVariants[geneSymbol]) {
+        for (const alteration in trialMatchVariants[geneSymbol]) {
             if (alteration === "AMPLIFICATION") {
                 geneVariants = {[geneSymbol]: trialMatchVariants[copyNumberData[0].sampleId][geneSymbol][alteration]};
             }
         }
     } else if (copyNumberData[0].alteration === -2) {
-        for (let alteration in trialMatchVariants[geneSymbol]) {
+        for (const alteration in trialMatchVariants[geneSymbol]) {
             if (alteration === "DELETION") {
                 geneVariants = {[geneSymbol]: trialMatchVariants[copyNumberData[0].sampleId][geneSymbol][alteration]};
             }

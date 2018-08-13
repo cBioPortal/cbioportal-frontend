@@ -24,12 +24,21 @@
   margin-top: -3px;
   vertical-align: top; }
 .trial-card .tip-header {
-  line-height: 22px;
-  font-size: 16px;
-  background-color: #FF6666;
-  color: #fff;
+  white-space: nowrap;
+  line-height: 14px;
+  font-size: 14px;
+  background-color: lightskyblue;
+  color: white;
   text-align: center;
-  padding: 5px 10px; }
+  padding: 1px 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.oncokb-card .enable-hover > a:hover {
+  opacity: 0.8;
+  cursor: pointer; }
+
 .trial-card-content {
   max-height: 400px;
   overflow: auto;
@@ -39,10 +48,12 @@
   margin: 5px 9px;
 }
 .trial-card-trial-header {
-  font-size: 13px;
+  font-size: 15px;
+  text-align: center;
   margin-bottom: 1px;
   padding: 3px 6px 3px;
-  background: #f2bf78;
+  background: #FF6666;
+  color: #FFF;
 }
 .trial-card-variant-description {
   padding: 3px 6px 3px;

@@ -15,6 +15,7 @@ type TrialMatchAPIVariant = {
     name: string;
     oncogenicity: string;
     mutEffect: string;
+    exonNumber: string;
     matches: TrialMatchData[];
 };
 
@@ -105,6 +106,7 @@ export default class TrialMatchAPI {
                     genomicId: result[id].genomicId,
                     name,
                     gene,
+                    exonNumber: result[id].exonNumber,
                     oncogenicity: result[id].oncogenicity,
                     mutEffect: result[id].mutEffect,
                     matches: countMatches(result[id].matches)

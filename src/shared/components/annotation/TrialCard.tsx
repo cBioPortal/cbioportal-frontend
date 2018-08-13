@@ -54,7 +54,7 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
                 <td key="arm code">{match.code}</td>
                 <td key="match level">{match.matchLevel}</td>
                 <td key="match type">{match.matchType}</td>
-                <td key="dose">{match.dose}</td>
+                <td key="dose">{match.dose.split(":")[0]}</td>
             </tr>
         );
     }
@@ -85,11 +85,7 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
             result = (
                 <div className="trial-card">
                     <div className="tip-header">
-                        <span className="trial-card-variant-name">
-                            <a href={url}>{trialTitle}
-                                <img src={img} className="trial-logo"/>
-                            </a>
-                        </span>
+                        <a href={url}><img src={img} className="trial-logo"/>{trialTitle}</a>
                     </div>
                     <div>
                         <If condition={this.props.variants} >
@@ -100,7 +96,7 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
                                         <th key="code" scope="col">Arm Code</th>
                                         <th key="level" scope="col">Match Level</th>
                                         <th key="type" scope="col">Match Type</th>
-                                        <th key="Drug" scope="col">Dose</th>
+                                        <th key="Drug" scope="col">Drug</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -127,6 +123,35 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
         return result;
     }
 
+    public getTrialTitle(variantMap: { [name: string]: ITrialMatchVariantData }, title:string) {
+        if (variantMap) {
+            if (!_.isEmpty(variantMap)) {
+                for (const name in variantMap) {
+                    if (variantMap.hasOwnProperty(name)) {
+                        const variant = variantMap[name];
+                        if (variant.exonNumber) {
+                            if (variant.oncogenicity && variant.mutEffect) {
+                               return (
+                                   <span>{title}<br />{variant.gene}&nbsp;{variant.name}&nbsp;
+                                       (Exon {variant.exonNumber.replace(".0","")})<br />
+                                       {variant.oncogenicity}&nbsp;&amp;&nbsp;{variant.mutEffect}</span>);
+                            } else {
+                                return (<span>{title}<br />{variant.gene}&nbsp;{variant.name}&nbsp;
+                                    (Exon {variant.exonNumber.replace(".0","")})</span>);
+                            }
+                        } else {
+                            if (variant.oncogenicity && variant.mutEffect) {
+                                return (<span>{title}<br />{variant.gene}&nbsp;{variant.name}<br />
+                                    {variant.oncogenicity}&nbsp;&amp;&nbsp;{variant.mutEffect}</span>);
+                            } else {
+                                return (<span>{title}<br />{variant.gene}&nbsp;{variant.name}</span>);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
     /**
      * Render civic card component
      * @returns {any}
@@ -134,8 +159,8 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
     public render() {
         return (
             <div className="trial-card">
-                <div className="col s12 tip-header">
-                    <span>{this.props.title}</span>
+                <div className="trial-card-trial-header">
+                    {this.getTrialTitle(this.props.variants, this.props.title)}
                 </div>
                 <div className="col s12">
                     <ul>
