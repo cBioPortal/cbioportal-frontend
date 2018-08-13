@@ -1,5 +1,5 @@
 import * as SignificantMutationalSignatures from './SignificantMutationalSignatures';
-import {prepareMutationalSignaturesForHeader} from './SignificantMutationalSignatures';
+import {prepareMutationalSignaturesForHeader} from "../../../shared/lib/MutationalSignaturesUtils";
 import React from 'react';
 import { assert } from 'chai';
 import { shallow, mount } from 'enzyme';
