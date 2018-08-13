@@ -142,7 +142,12 @@ function initStore() {
                     resultsViewPageStore.zScoreThreshold = parseFloat(query.Z_SCORE_THRESHOLD);
                 }
 
-                resultsViewPageStore.cohortIdsList = query.cancer_study_list.split(",");
+                if (!resultsViewPageStore.cohortIdsList || !_.isEqual(resultsViewPageStore.cohortIdsList.slice(), query.cancer_study_list.split(","))) {
+                    resultsViewPageStore.cohortIdsList = query.cancer_study_list.split(",");
+                }
+
+
+
 
                 //resultsViewPageStore.genesetIds = genesetIds;
                 resultsViewPageStore.oqlQuery = oql;
