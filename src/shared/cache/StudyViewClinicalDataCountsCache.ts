@@ -5,7 +5,7 @@ import _ from "lodash";
 import client from "../api/cbioportalClientInstance";
 import internalClient from "../api/cbioportalInternalClientInstance";
 import { ClinicalDataCount, StudyViewFilter } from "shared/api/generated/CBioPortalAPIInternal";
-import { NA_COLOR, COLORS } from "pages/studyView/StudyViewUtils";
+import { NA_COLOR, COLORS, isFiltered } from "pages/studyView/StudyViewUtils";
 import { ClinicalDataCountWithColor } from "pages/studyView/StudyViewPageStore";
 
 type StudyViewClinicalDataCountsQuery = {
@@ -41,10 +41,7 @@ export default class StudyViewClinicalDataCountsCache extends MobxPromiseCache<S
                         this.colorCache[q.attribute.clinicalAttributeId + q.attribute.patientAttribute] = colors;
                     }
 
-                    if (_.isEmpty(result) ||
-                        !(_.isEmpty(q.filters.clinicalDataEqualityFilters) ||
-                            _.isEmpty(q.filters.cnaGenes) ||
-                            _.isEmpty(q.filters.mutatedGenes))) {
+                    if (_.isEmpty(result) || isFiltered(q.filters)) {
                         result = await internalClient.fetchClinicalDataCountsUsingPOST({
                             attributeId: q.attribute.clinicalAttributeId,
                             clinicalDataType: q.attribute.patientAttribute ? 'PATIENT' : 'SAMPLE',
