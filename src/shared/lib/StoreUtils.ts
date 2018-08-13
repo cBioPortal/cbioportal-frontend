@@ -34,7 +34,7 @@ import {IOncoKbData} from "shared/model/OncoKB";
 import {IGisticData} from "shared/model/Gistic";
 import {IMutSigData} from "shared/model/MutSig";
 import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
-import {IMutationalSignature} from "shared/model/MutationalSignature";
+import {IMutationalSignature, IMutationalSignatureMeta} from "shared/model/MutationalSignature";
 import {ICivicGeneData, ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import {MOLECULAR_PROFILE_MUTATIONS_SUFFIX, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 import GenomeNexusAPI from "shared/api/generated/GenomeNexusAPI";
@@ -496,6 +496,10 @@ export function fetchMyCancerGenomeData(): IMyCancerGenomeData
 export function fetchMutationalSignatureData(): IMutationalSignature[]
 {
     return require('../../../resources/samplemutsigdata.json');
+}
+
+export function fetchMutationalSignatureMetaData(): IMutationalSignatureMeta[]{
+    return require('../../../resources/mutsigmetadata.json');
 }
 
 export async function fetchOncoKbAnnotatedGenes(client: OncoKbAPI = oncokbClient): Promise<{[entrezGeneId:number]:boolean}>
