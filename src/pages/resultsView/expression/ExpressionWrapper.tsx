@@ -95,7 +95,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     componentWillMount(){
         // initialize selected study state. study is on except if it does not have any data (doesn't appear in data collection)
-        this._selectedStudies = _.mapValues(this.props.studyMap,(study)=>true);
+        this.selectedStudyIds = _.mapValues(this.props.studyMap,(study)=>true);
     }
 
     svgContainer: SVGElement;
@@ -110,7 +110,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @observable showCna: boolean = true;
 
-    @observable _selectedStudies: { [studyId: string]: boolean } = {};
+    @observable selectedStudyIds: { [studyId: string]: boolean } = {};
 
     @observable height = 700;
 
@@ -126,7 +126,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     tooltipCounter: number = 0;
 
     @computed get selectedStudies() {
-        return _.filter(this.props.studyMap,(study)=>this._selectedStudies[study.studyId] === true);
+        return _.filter(this.props.studyMap,(study)=>this.selectedStudyIds[study.studyId] === true);
     }
 
     @computed get widthThreshold(){
@@ -145,7 +145,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                 {
                     data: this.props.store.samples.result!.reduce((_data, sample)=>{
                         // filter out data for unselected studies
-                        if (this._selectedStudies[sample.studyId]) {
+                        if (this.selectedStudyIds[sample.studyId]) {
                             _data.push({
                                 uniqueSampleKey: sample.uniqueSampleKey,
                                 value: this.props.studyMap[sample.studyId].shortName
@@ -284,7 +284,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     @autobind
     handleStudySelection(event: React.SyntheticEvent<HTMLInputElement>) {
         // toggle state of it
-        this._selectedStudies[event.currentTarget.value] = !this._selectedStudies[event.currentTarget.value];
+        this.selectedStudyIds[event.currentTarget.value] = !this.selectedStudyIds[event.currentTarget.value];
     }
 
     @autobind
@@ -355,7 +355,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                                 <div className={classNames('checkbox',{ disabled:!hasData })}>
                                     <label>
                                         <input type="checkbox"
-                                               checked={hasData && this._selectedStudies[study.studyId] === true}
+                                               checked={hasData && this.selectedStudyIds[study.studyId] === true}
                                                value={study.studyId}
                                                disabled={!hasData}
                                                onChange={(!hasData)? ()=>{} : this.handleStudySelection}/>
@@ -374,7 +374,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @autobind
     public applyStudyFilter(test: (study: CancerStudy) => boolean) {
-        this._selectedStudies = _.mapValues(this.props.studyMap, (study: CancerStudy, studyId: string) => {
+        this.selectedStudyIds = _.mapValues(this.props.studyMap, (study: CancerStudy, studyId: string) => {
             return test(study);
         });
     }
@@ -536,15 +536,17 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                             </select>
                         </div>
 
-                        <div className="form-group">
-                            <h5>Sort By:</h5>
+                        {(this.boxPlotData.isComplete && this.boxPlotData.result.length > 1) && (
+                            <div className="form-group">
+                                <h5>Sort By:</h5>
 
-                            <select className="form-control input-sm" value={this.sortBy}
-                                    onChange={this.handleSortByChange} title="Select profile">
-                                <option value={"alphabetic"}>Cancer Study</option>
-                                <option value={"median"}>Median</option>
-                            </select>
-                        </div>
+                                <select className="form-control input-sm" value={this.sortBy}
+                                        onChange={this.handleSortByChange} title="Select profile">
+                                    <option value={"alphabetic"}>Cancer Study</option>
+                                    <option value={"median"}>Median</option>
+                                </select>
+                            </div>
+                        )}
 
                         <div className="form-group">
                             <label className="checkbox-inline">
