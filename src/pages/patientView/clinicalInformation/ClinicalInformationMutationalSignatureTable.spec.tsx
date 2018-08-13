@@ -3,7 +3,7 @@ import React from 'react';
 import { assert } from 'chai';
 import { shallow, mount } from 'enzyme';
 import sinon from 'sinon';
-import {prepareDataForTable} from "./ClinicalInformationMutationalSignatureTable";
+import {prepareMutationalSignatureDataForTable} from "./ClinicalInformationMutationalSignatureTable";
 
 const sampleMutationalSignatureData = [
     {sampleId: 'firstSample',
@@ -45,7 +45,7 @@ describe('ClinicalInformationMutationalSignatureTable', () => {
     });
 
     it('takes mutational signature sample data and formats it for mutational signature table to render', ()=>{
-        let result = prepareDataForTable(sampleMutationalSignatureData);
+        let result = prepareMutationalSignatureDataForTable(sampleMutationalSignatureData);
 
         assert.deepEqual(result, [
             {mutationalSignatureId: 'firstMutationalSignature',
