@@ -12,6 +12,7 @@ import SampleManager from './sampleManager';
 import SelectCallback = ReactBootstrap.SelectCallback;
 import {ThreeBounce} from 'better-react-spinkit';
 import PatientHeader from './patientHeader/PatientHeader';
+import SignificantMutationalSignatures from './patientHeader/SignificantMutationalSignatures';
 import {PaginationControls} from "../../shared/components/paginationControls/PaginationControls";
 import {IColumnVisibilityDef} from "shared/components/columnVisibilityControls/ColumnVisibilityControls";
 import {toggleColumnVisibility} from "shared/components/lazyMobXTable/ColumnVisibilityResolver";
@@ -226,6 +227,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     sampleManager.clinicalDataLegacyCleanAndDerived[sample.id] &&
                     sampleManager.clinicalDataLegacyCleanAndDerived[sample.id].DERIVED_NORMALIZED_CASE_TYPE === 'Xenograft'
                 );
+
                 return (
                     <div className="patientSample">
                         <span className='clinical-spans'>
@@ -249,6 +251,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 )
                             }
                         </span>
+                        {patientViewPageStore.hasMutationalSignatureData.isComplete &&
+                        <LoadingIndicator isLoading={patientViewPageStore.mutationalSignatureData.isPending && patientViewPageStore.mutationalSignatureMetaData.isPending}/>}
+
+                        {patientViewPageStore.hasMutationalSignatureData.isComplete &&
+                        patientViewPageStore.clinicalDataGroupedBySample.isComplete && patientViewPageStore.mutationalSignatureData.isComplete &&
+                        patientViewPageStore.mutationalSignatureMetaData.isComplete &&
+                        (<SignificantMutationalSignatures data={patientViewPageStore.mutationalSignatureData.result}
+                        metadata={patientViewPageStore.mutationalSignatureMetaData.result} uniqueSampleKey={sample.id}/>)}
+
                     </div>
                 );
             });
@@ -499,10 +510,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         </div>
                     </MSKTab>
 
-                    <MSKTab key={6} id="mutationalSignatureTab" linkText="Mutational Signature Data">
-
+                    <MSKTab key={6} id="mutationalSignatureTab" linkText="Mutational Signature Data" hide={!patientViewPageStore.hasMutationalSignatureData.isComplete}>
                         <div className="clearfix">
                             <FeatureTitle title="Mutational Signatures" isLoading={ patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />
+                            <LoadingIndicator isLoading={patientViewPageStore.mutationalSignatureData.isPending}/>
                             {  (patientViewPageStore.clinicalDataGroupedBySample.isComplete && patientViewPageStore.mutationalSignatureData.isComplete) && (
                                 <ClinicalInformationMutationalSignatureTable data={patientViewPageStore.mutationalSignatureData.result} showTitleBar={true}/>
                             )

@@ -29,7 +29,7 @@ interface IMutationalSignatureRow {
     };
 }
 
-export function prepareDataForTable(mutationalSignatureData: IMutationalSignature[]):IMutationalSignatureRow[] {
+export function prepareMutationalSignatureDataForTable(mutationalSignatureData: IMutationalSignature[]):IMutationalSignatureRow[] {
 
     const tableData: IMutationalSignatureRow[] = [];
 
@@ -46,7 +46,7 @@ export function prepareDataForTable(mutationalSignatureData: IMutationalSignatur
         for (const sample of mutationalSignature.samples){
             mutationalSignatureRowForTable.sampleValues[sample.uniqueSampleKey] =
                 {value: sample.value,
-                confidence: sample.confidence};
+                    confidence: sample.confidence};
         }
         tableData.push(mutationalSignatureRowForTable);
     }
@@ -57,7 +57,7 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
 
     readonly uniqueSamples = _.map(_.uniqBy(this.props.data, "uniqueSampleKey"), (uniqSample => ({id: uniqSample.uniqueSampleKey})));
 
-    readonly tableData = prepareDataForTable(this.props.data);
+    readonly tableData = prepareMutationalSignatureDataForTable(this.props.data);
     readonly firstCol = 'mutationalSignatureId';
     readonly columns:Column<IMutationalSignatureRow>[] = [{
         name: "Mutational Signature",
@@ -74,7 +74,7 @@ export default class ClinicalInformationMutationalSignatureTable extends React.C
                 <span>{getMutationalSignaturePercentage(data.sampleValues[col.id].value)}</span>,
             download: (data: IMutationalSignatureRow) => `${getMutationalSignaturePercentage(data.sampleValues[col.id].value)}`,
             filter: (data: IMutationalSignatureRow, filterString: string, filterStringUpper: string) =>
-                (data.sampleValues[col.id].value.toString().toUpperCase().indexOf(filterStringUpper) > -1),
+                (getMutationalSignaturePercentage(data.sampleValues[col.id].value).toUpperCase().indexOf(filterStringUpper) > -1),
             sortBy: (data: IMutationalSignatureRow) => data.sampleValues[col.id].value//Number(data.sampleValues[col.id].value.match(/\d+/g)) //extracts digits out of format like 5%
         }
     ))];
