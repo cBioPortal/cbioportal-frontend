@@ -29,3 +29,27 @@
     align-items: center;
     justify-content: center;
 }
+.userSelections {
+    font-size: 12px;
+
+    .filter {
+        padding-right: 10px;
+        display: inline;
+        > .name {
+            display: inline;
+            padding-right: 5px;
+        }
+        > .value {
+            padding-right: 5px;
+            font-weight: bold;
+            display: inline;
+
+            > .label {
+                padding-right: 5px;
+            }
+        }
+        &:last-child {
+            padding-right: 0px;
+        }
+    }
+}
