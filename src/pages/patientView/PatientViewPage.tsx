@@ -528,12 +528,46 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                         <br />
 
-                        <div className="clearfix">
-                            <FeatureTitle title="Samples" isLoading={ patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />
-                            {  (patientViewPageStore.clinicalDataGroupedBySample.isComplete) && (
-                                <ClinicalInformationSamples
-                                    samples={patientViewPageStore.clinicalDataGroupedBySample.result!}/>
-                            )
+                            {
+                                (patientViewPageStore.oncoKbAnnotatedGenes.isComplete && patientViewPageStore.mutationData.isComplete && patientViewPageStore.uncalledMutationData.isComplete && !!sampleManager) && (
+                                    <PatientViewMutationTable
+                                        sampleManager={sampleManager}
+                                        sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
+                                        uniqueSampleKeyToTumorType={patientViewPageStore.uniqueSampleKeyToTumorType}
+                                        molecularProfileIdToMolecularProfile={patientViewPageStore.molecularProfileIdToMolecularProfile.result}
+                                        variantCountCache={patientViewPageStore.variantCountCache}
+                                        genomeNexusEnrichmentCache={patientViewPageStore.genomeNexusEnrichmentCache}
+                                        discreteCNACache={patientViewPageStore.discreteCNACache}
+                                        mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
+                                        oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
+                                        pubMedCache={patientViewPageStore.pubMedCache}
+                                        mrnaExprRankMolecularProfileId={patientViewPageStore.mrnaRankMolecularProfileId.result || undefined}
+                                        discreteCNAMolecularProfileId={patientViewPageStore.molecularProfileIdDiscrete.result}
+                                        data={patientViewPageStore.mergedMutationDataIncludingUncalled}
+                                        downloadDataFetcher={patientViewPageStore.downloadDataFetcher}
+                                        mutSigData={patientViewPageStore.mutSigData.result}
+                                        myCancerGenomeData={patientViewPageStore.myCancerGenomeData}
+                                        hotspotData={patientViewPageStore.indexedHotspotData}
+                                        cosmicData={patientViewPageStore.cosmicData.result}
+                                        oncoKbData={patientViewPageStore.oncoKbData}
+                                        oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
+                                        civicGenes={patientViewPageStore.civicGenes}
+                                        civicVariants={patientViewPageStore.civicVariants}
+                                        trialMatchGenes={patientViewPageStore.trialMatchGenes}
+                                        trialMatchVariants={patientViewPageStore.trialMatchVariants}
+                                        userEmailAddress={AppConfig.userEmailAddress}
+                                        enableOncoKb={AppConfig.showOncoKB}
+                                        enableFunctionalImpact={AppConfig.showGenomeNexus}
+                                        enableHotspot={AppConfig.showHotspot}
+                                        enableMyCancerGenome={AppConfig.showMyCancerGenome}
+                                        enableCivic={AppConfig.showCivic}
+                                        enableTrialMatch={AppConfig.showTrialMatch}
+                                        columnVisibility={this.mutationTableColumnVisibility}
+                                        columnVisibilityProps={{
+                                            onColumnToggled: this.onMutationTableColumnVisibilityToggled
+                                        }}
+                                    />
+                                )
                             }
                         </div>
 

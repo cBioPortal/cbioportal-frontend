@@ -130,7 +130,8 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
                     if (variantMap.hasOwnProperty(name)) {
                         const variant = variantMap[name];
                         if (variant.exonNumber) {
-                            if (variant.oncogenicity && variant.mutEffect) {
+                            if (variant.oncogenicity && variant.mutEffect && variant.oncogenicity !== 'Unknown'
+                                    && variant.mutEffect !== 'Unknown') {
                                return (
                                    <span>{title}<br />{variant.gene}&nbsp;{variant.name}&nbsp;
                                        (Exon {variant.exonNumber.replace(".0","")})<br />
@@ -140,7 +141,8 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
                                     (Exon {variant.exonNumber.replace(".0","")})</span>);
                             }
                         } else {
-                            if (variant.oncogenicity && variant.mutEffect) {
+                            if (variant.oncogenicity && variant.mutEffect && variant.oncogenicity !== 'Unknown'
+                                    && variant.mutEffect !== 'Unknown') {
                                 return (<span>{title}<br />{variant.gene}&nbsp;{variant.name}<br />
                                     {variant.oncogenicity}&nbsp;&amp;&nbsp;{variant.mutEffect}</span>);
                             } else {

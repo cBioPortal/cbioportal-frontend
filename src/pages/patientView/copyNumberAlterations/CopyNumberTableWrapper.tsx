@@ -58,7 +58,8 @@ type ICopyNumberTableWrapperProps = {
 export default class CopyNumberTableWrapper extends React.Component<ICopyNumberTableWrapperProps, {}> {
     public static defaultProps = {
         enableOncoKb: true,
-        enableCivic: false
+        enableCivic: false,
+        enableTrialMatch: false
     };
 
     @computed get hugoGeneSymbolToCytoband() {
@@ -127,7 +128,7 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
                 enableCivic: this.props.enableCivic as boolean,
                 trialMatchGenes: this.props.cnaTrialMatchGenes,
                 trialMatchVariants: this.props.cnaTrialMatchVariants,
-                enableTrialMatch: this.props.enableTrialMatch as boolean,
+                enableTrialMatch: false,
                 enableMyCancerGenome: false,
                 enableHotspot: false,
                 userEmailAddress: this.props.userEmailAddress,

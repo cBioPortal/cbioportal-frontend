@@ -32,7 +32,7 @@ export function getTrialMatchGenes(geneSymbols: Array<string>): Promise<ITrialMa
     const trialMatchGenes: ITrialMatchGene = {};
 
     // Assemble a list of promises, each of which will retrieve a batch of genes
-    let promises: Array<Promise<Array<ITrialMatchGeneData>>> = [];
+    const promises: Array<Promise<Array<ITrialMatchGeneData>>> = [];
     let ids: Array<string> = [];
     geneSymbols.forEach(function(geneSymbol: string) {
         //Encode "/" characters
@@ -48,23 +48,25 @@ export function getTrialMatchGenes(geneSymbols: Array<string>): Promise<ITrialMa
         // To prevent the request from growing too large, we send it off
         // when it reaches this limit and start a new one
         if (ids.length >= 400) {
-            let requestIds = ids.join();
+            const requestIds = ids.join();
             promises.push(trialMatchClient.getTrialMatchGenesBatch(requestIds));
             ids = [];
         }
     });
     if (ids.length > 0) {
-        let requestIds = ids.join();
+        const requestIds = ids.join();
         promises.push(trialMatchClient.getTrialMatchGenesBatch(requestIds));
     }
 
     // We're waiting for all promises to finish, then return civicGenes
     return Promise.all(promises).then(function(responses) {
-        for (let res in responses) {
-            let arrayTrialMatchGenes: Array<ITrialMatchGeneData> = responses[res];
-            arrayTrialMatchGenes.forEach((trialMatchGene) => {
-                trialMatchGenes[trialMatchGene.hugoSymbol] = trialMatchGene;
-            });
+        for (const res in responses) {
+            if (responses) {
+                const arrayTrialMatchGenes: Array<ITrialMatchGeneData> = responses[res];
+                arrayTrialMatchGenes.forEach((trialMatchGene) => {
+                    trialMatchGenes[trialMatchGene.hugoSymbol] = trialMatchGene;
+                });
+            }
         }
     }).then(function() {
         return trialMatchGenes;
@@ -77,15 +79,15 @@ export function getTrialMatchGenes(geneSymbols: Array<string>): Promise<ITrialMa
  */
 export function getTrialMatchVariants(trialMatchGenes: ITrialMatchGene, mutationSpecs?: Array<MutationSpec>): Promise<ITrialMatchVariant> {
 
-    let trialMatchVariants: ITrialMatchVariant = {};
-    let promises: Array<Promise<void>> = [];
+    const trialMatchVariants: ITrialMatchVariant = {};
+    const promises: Array<Promise<void>> = [];
 
     if (mutationSpecs) {
-        let calledVariants: Set<any> = new Set([]);
-        for (let mutation of mutationSpecs) {
-            let geneSymbol = mutation.gene.hugoGeneSymbol;
-            let geneEntry = trialMatchGenes[geneSymbol];
-            let proteinChanges = [mutation.proteinChange];
+        const calledVariants: Set<any> = new Set([]);
+        for (const mutation of mutationSpecs) {
+            const geneSymbol = mutation.gene.hugoGeneSymbol;
+            const geneEntry = trialMatchGenes[geneSymbol];
+            const proteinChanges = [mutation.proteinChange];
             // Match any other variants after splitting the name on + or /
             const split = mutation.proteinChange.split(/[+\/]/);
             proteinChanges.push(split[0]);
@@ -103,14 +105,19 @@ export function getTrialMatchVariants(trialMatchGenes: ITrialMatchGene, mutation
         }
     }
     else {
-        for (let geneName in trialMatchGenes) {
-            let geneEntry = trialMatchGenes[geneName];
-            let geneVariants = geneEntry.variants;
-            if (!_.isEmpty(geneVariants)) {
-                for (let variantName in geneVariants) {
-                    // Only retrieve CNA variants
-                    if (variantName === 'AMPLIFICATION' || variantName === 'DELETION') {
-                        promises.push(addTrialMatchVariant(trialMatchVariants, geneVariants[variantName],variantName, geneName));
+        for (const geneName in trialMatchGenes) {
+            if (trialMatchGenes) {
+                const geneEntry = trialMatchGenes[geneName];
+                const geneVariants = geneEntry.variants;
+                if (!_.isEmpty(geneVariants)) {
+                    for (const variantName in geneVariants) {
+                        // Only retrieve CNA variants
+                        if (variantName === 'AMPLIFICATION' || variantName === 'DELETION') {
+                            const sampleIds = geneEntry.variants[variantName].split(",");
+                            sampleIds.forEach(sampleId =>
+                                promises.push(addTrialMatchVariant(trialMatchVariants, sampleId, variantName, geneName))
+                            );
+                        }
                     }
                 }
             }
@@ -140,13 +147,13 @@ export function getTrialMatchCNAVariants(copyNumberData:DiscreteCopyNumberData[]
     if (copyNumberData[0].alteration === 2) {
         for (const alteration in trialMatchVariants[geneSymbol]) {
             if (alteration === "AMPLIFICATION") {
-                geneVariants = {[geneSymbol]: trialMatchVariants[copyNumberData[0].sampleId][geneSymbol][alteration]};
+                geneVariants = {[copyNumberData[0].sampleId]: trialMatchVariants[copyNumberData[0].sampleId][geneSymbol][alteration]};
             }
         }
     } else if (copyNumberData[0].alteration === -2) {
         for (const alteration in trialMatchVariants[geneSymbol]) {
             if (alteration === "DELETION") {
-                geneVariants = {[geneSymbol]: trialMatchVariants[copyNumberData[0].sampleId][geneSymbol][alteration]};
+                geneVariants = {[copyNumberData[0].sampleId]: trialMatchVariants[copyNumberData[0].sampleId][geneSymbol][alteration]};
             }
         }
     }
