@@ -179,9 +179,17 @@ th.reactable-header-sort-asc:after {
 
 .mainTabs {
 
+
+
   > .nav {
     @extend .portalWidth;
     margin:0 auto;
+
+    display:flex;
+
+    > li {
+      white-space:nowrap;
+    }
 
     .active {
       a {
