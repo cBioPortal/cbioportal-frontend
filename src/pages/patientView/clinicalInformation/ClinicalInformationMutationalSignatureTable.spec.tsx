@@ -3,7 +3,7 @@ import React from 'react';
 import { assert } from 'chai';
 import { shallow, mount } from 'enzyme';
 import sinon from 'sinon';
-import {prepareDataForTable} from "./ClinicalInformationMutationalSignatureTable";
+import {prepareMutationalSignatureDataForTable} from "./ClinicalInformationMutationalSignatureTable";
 
 const sampleMutationalSignatureData = [
     {sampleId: 'firstSample',
@@ -13,7 +13,8 @@ const sampleMutationalSignatureData = [
         studyId: 'firstStudy',
         mutationalSignatureId: 'firstMutationalSignature',
         value: 1,
-        confidence: 1},
+        confidence: 0.9,
+        numberOfMutationsForSample: 20},
     {sampleId: 'secondSample',
         uniqueSampleKey: 'secondSample',
         patientId: 'firstPatient',
@@ -21,7 +22,8 @@ const sampleMutationalSignatureData = [
         studyId: 'firstStudy',
         mutationalSignatureId: 'firstMutationalSignature',
         value: 2,
-        confidence: 2},
+        confidence: 0.8,
+        numberOfMutationsForSample: 20},
     {sampleId: 'firstSample',
         uniqueSampleKey: 'firstSample',
         patientId: 'firstPatient',
@@ -29,7 +31,8 @@ const sampleMutationalSignatureData = [
         studyId: 'firstStudy',
         mutationalSignatureId: 'secondMutationalSignature',
         value: 3,
-        confidence: 3}
+        confidence: 0.4,
+        numberOfMutationsForSample: 20}
 ]
 
 describe('ClinicalInformationMutationalSignatureTable', () => {
@@ -42,18 +45,18 @@ describe('ClinicalInformationMutationalSignatureTable', () => {
     });
 
     it('takes mutational signature sample data and formats it for mutational signature table to render', ()=>{
-        let result = prepareDataForTable(sampleMutationalSignatureData);
+        let result = prepareMutationalSignatureDataForTable(sampleMutationalSignatureData);
 
         assert.deepEqual(result, [
             {mutationalSignatureId: 'firstMutationalSignature',
              sampleValues:{
                 "firstSample":{
                     value: 1,
-                    confidence: 1
+                    confidence: 0.9
                 },
                 "secondSample": {
                     value: 2,
-                    confidence: 2
+                    confidence: 0.8
                 }
              }
              },
@@ -61,7 +64,7 @@ describe('ClinicalInformationMutationalSignatureTable', () => {
                 sampleValues:{
                     "firstSample":{
                         value: 3,
-                        confidence: 3
+                        confidence: 0.4
                     }
                 }
 
