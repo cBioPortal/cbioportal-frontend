@@ -183,7 +183,7 @@ export class PatientViewPageStore {
     });
 
     readonly hasMutationalSignatureData = remoteData({
-        invoke: async() => {return true;}
+        invoke: async() => false,
     });
 
     readonly derivedPatientId = remoteData<string>({
