@@ -27,7 +27,7 @@ import {
 import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
-import {getClinicalAttributeUniqueKey, isPreSelectedClinicalAttr} from './StudyViewUtils';
+import {getClinicalAttributeUniqueKey, isPreSelectedClinicalAttr, isFiltered} from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import { bind } from '../../../node_modules/bind-decorator';
@@ -112,8 +112,6 @@ export class StudyViewPageStore {
 
     @observable private _chartVisibility = observable.map<boolean>();
 
-    private _clinicalAttributesMetaSet: { [id: string]: ChartMeta } = {} as any;
-
     @observable geneQueryStr: string;
 
     @observable private geneQueries: SingleGeneQuery[] = [];
@@ -136,6 +134,29 @@ export class StudyViewPageStore {
     @action updateSelectedGenes(query: SingleGeneQuery[], genesInQuery: Gene[]) {
         this.geneQueries = query;
         this.queriedGeneSet = new ObservableMap(stringListToSet(genesInQuery.map(gene => gene.hugoGeneSymbol)))
+    }
+
+    @action
+    clearGeneFilter() {
+        this._mutatedGeneFilter = { entrezGeneIds: [] };
+    }
+    @action
+    clearCNAGeneFilter() {
+        this._cnaGeneFilter = {
+            alterations: []
+        };
+    }
+    @action
+    clearCustomCasesFilter() {
+        this._sampleIdentifiers = []
+    }
+
+    @action
+    clearAllFilters() {
+        this._clinicalDataEqualityFilterSet.clear()
+        this.clearGeneFilter()
+        this.clearCNAGeneFilter()
+        this.clearCustomCasesFilter()
     }
 
     @action
@@ -409,17 +430,6 @@ export class StudyViewPageStore {
         }
 
         return _chartMetaSet;
-    }
-
-    @computed get attributeNamesSet() {
-        //TODO: this should use _clinicalAttributesMetaSet once special charts are included in _clinicalAttributesMetaSet
-        return _.reduce(this.clinicalAttributes.result, (acc: { [id: string]: string }, attribute) => {
-            const uniqueKey = (attribute.patientAttribute ? 'PATIENT' : 'SAMPLE') + '_' + attribute.clinicalAttributeId;
-            if (attribute.datatype === 'STRING') {
-                acc[uniqueKey] = attribute.displayName;
-            }
-            return acc
-        }, {})
     }
 
     @computed
@@ -806,13 +816,7 @@ export class StudyViewPageStore {
             formOps.data_priority = data_priority;
         }
 
-        //TODO:clear this once https://github.com/cBioPortal/cbioportal-frontend/pull/1379 is merged 
-        if (!(_.isEmpty(this.filters) || (
-            _.isEmpty(this.filters.clinicalDataEqualityFilters) &&
-            _.isEmpty(this.filters.cnaGenes) &&
-            _.isEmpty(this.filters.mutatedGenes) &&
-            _.isEmpty(this.filters.sampleIdentifiers)
-        ))) {
+        if (isFiltered(this.filters)) {
             formOps.case_set_id = '-1'
             formOps.case_ids = _.map(this.selectedSamples.result, sample => {
                 return sample.studyId + ":" + sample.sampleId;
