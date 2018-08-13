@@ -15,6 +15,7 @@ import { Sample, Gene , SampleIdentifier} from 'shared/api/generated/CBioPortalA
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import StudyViewScatterPlot from "./charts/scatterPlot/StudyViewScatterPlot";
 import {isSelected, mutationCountVsCnaTooltip} from "./StudyViewUtils";
+import AppConfig from 'appConfig';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -142,6 +143,10 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                 selectedSamples={this.store.selectedSamples.result!}
                                 updateCustomCasesFilter={this.handlers.updateCustomCasesFilter}
                                 updateSelectedGenes={this.handlers.updateSelectedGenes}
+                                studyWithSamples={this.store.studyWithSamples.result}
+                                filter={this.store.filters}
+                                attributeNamesSet={this.store.attributeNamesSet}
+                                user={AppConfig.userEmailAddress}
                             />
                             <div className={styles.studyViewFlexContainer}>
                                 {this.store.initialClinicalDataCounts.isComplete && 
