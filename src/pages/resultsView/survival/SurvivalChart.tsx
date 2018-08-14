@@ -10,7 +10,6 @@ import {
     VictoryChart, VictoryContainer, VictoryLine, VictoryTooltip,
     VictoryAxis, VictoryLegend, VictoryLabel, VictoryScatter, VictoryTheme, VictoryZoomContainer
 } from 'victory';
-import SvgSaver from 'svgsaver';
 import {
     getEstimates, getMedian, getLineData, getScatterData, getScatterDataWithOpacity, getStats, calculateLogRank,
     getDownloadContent, convertScatterDataToDownloadData, downSampling, GroupedScatterData, filteringScatterData
@@ -59,7 +58,6 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     private alteredLegendText = 'Cases with Alteration(s) in Query Gene(s)';
     private unalteredLegendText = 'Cases without Alteration(s) in Query Gene(s)';
     private svgContainer: any;
-    private svgsaver = new SvgSaver();
     private styleOptsDefaultProps:any = {
         width: 900,
         height: 500,
