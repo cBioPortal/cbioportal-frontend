@@ -26,7 +26,7 @@ import {genes, parseOQLQuery} from "shared/lib/oql/oqlfilter.js";
 import Network from "./network/Network";
 
 (Chart as any).plugins.register({
-    beforeDraw: function(chartInstance:any) {
+    beforeDraw: function (chartInstance: any) {
         const ctx = chartInstance.chart.ctx;
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, chartInstance.chart.width, chartInstance.chart.height);
@@ -50,6 +50,7 @@ import RightBar from "../../shared/components/rightbar/RightBar";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import {createQueryStore} from "./SPA";
 import autobind from "autobind-decorator";
+import {ITabConfiguration} from "../../shared/model/ITabConfiguration";
 
 const win = (window as any);
 
@@ -165,52 +166,9 @@ const resultsViewPageStore = initStore();
 
 (window as any).resultsViewPageStore = resultsViewPageStore;
 
-// // following is a bunch of dirty stuff necessary to read state from jsp page
-// // ultimate we will phase this out and this information will be stored in router etc.
-// //const qSession:any = (window as any).QuerySession;
-// var samplesSpecification:any = [];
-// if(_.includes(['all', 'w_mut_cna', 'w_mut', 'w_cna'],serverVars.caseSetProperties.case_set_id)){
-//     var studyToSampleMap = serverVars.studySampleObj;
-//     var studies = Object.keys(studyToSampleMap);
-//     for (var i=0; i<studies.length; i++) {
-//         var study = studies[i];
-//         samplesSpecification = samplesSpecification.concat(studyToSampleMap[study].map(function(sampleId:string) {
-//             return {
-//                 sampleId: sampleId,
-//                 studyId: study
-//             };
-//         }));
-//     }
-// } else if (serverVars.caseIds) {
-//     // populated if custom case list
-//     samplesSpecification = samplesSpecification.concat(serverVars.caseIds.trim().split(/\+/).map((c:string)=>{
-//         const elts = c.split(":");
-//         return {
-//             studyId: elts[0],
-//             sampleId: elts[1]
-//         };
-//     }));
-// } else {
-//     // case set
-//     var studies = Object.keys(serverVars.studySampleListMap);
-//     for (var i=0; i<studies.length; i++) {
-//         samplesSpecification.push({
-//             sampleListId: serverVars.studySampleListMap[studies[i]],
-//             studyId: studies[i]
-//         });
-//     }
-// }
-//
-// resultsViewPageStore.samplesSpecification = samplesSpecification;
-// resultsViewPageStore.hugoGeneSymbols = _.map(parsedOQL, (o: any) => o.gene); //qSession.getQueryGenes();
-// resultsViewPageStore.genesetIds = genesetIds;
-// resultsViewPageStore.selectedMolecularProfileIds = serverVars.molecularProfiles; // qSession.getGeneticProfileIds();
-// resultsViewPageStore.rppaScoreThreshold = serverVars.rppaScoreThreshold; // FIX!
-// resultsViewPageStore.zScoreThreshold = serverVars.zScoreThreshold;
-// resultsViewPageStore.oqlQuery = oqlQuery;
-// resultsViewPageStore.queryStore = queryStore;
-// resultsViewPageStore.cohortIdsList = serverVars.cohortIdsList;
-
+function addOnBecomeVisibleListener(callback:()=>void) {
+    $('#oncoprint-result-tab').click(callback);
+}
 
 export interface IResultsViewPageProps {
     routing: any;
@@ -228,6 +186,8 @@ type OncoprintTabInitProps = {
 function getDirtyServerVar(varName:string){
     return (window as any).serverVars[varName]
 }
+
+
 
 @inject('routing')
 @observer
@@ -268,33 +228,33 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         return win.currentQueryStore;
     }
 
-    public get showPlotsTab(){
-        return !this.queryStore.isVirtualStudyQuery;
-    }
-
-    public get showExpressionTab(){
-        return this.queryStore.isVirtualStudyQuery;
-    }
-
-    public get showCoexpressionTab(){
-        return !this.queryStore.isVirtualStudyQuery;
-    }
-
-    public get showSurvivalTab(){
-        return !this.queryStore.isVirtualStudyQuery;
-    }
-
-    public get showEnrichmentsTab(){
-        return !this.queryStore.isVirtualStudyQuery;
-    }
-
-    public get showNetworkTab(){
-        return !this.queryStore.isVirtualStudyQuery;
-    }
-
-    public get showCNSegmentsTab(){
-        return !this.queryStore.isVirtualStudyQuery;
-    }
+    // public get showPlotsTab(){
+    //     return !this.queryStore.isVirtualStudyQuery;
+    // }
+    //
+    // public get showExpressionTab(){
+    //     return this.queryStore.isVirtualStudyQuery;
+    // }
+    //
+    // public get showCoexpressionTab(){
+    //     return !this.queryStore.isVirtualStudyQuery;
+    // }
+    //
+    // public get showSurvivalTab(){
+    //     return !this.queryStore.isVirtualStudyQuery;
+    // }
+    //
+    // public get showEnrichmentsTab(){
+    //     return !this.queryStore.isVirtualStudyQuery;
+    // }
+    //
+    // public get showNetworkTab(){
+    //     return !this.queryStore.isVirtualStudyQuery;
+    // }
+    //
+    // public get showCNSegmentsTab(){
+    //     return !this.queryStore.isVirtualStudyQuery;
+    // }
 
 
 
@@ -325,13 +285,222 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         }
     }
 
-    public render() {
+    @computed
+    private get tabs() {
+        //, , , , , ,, , IGV
 
         const store = this.resultsViewPageStore;
 
-        function addOnBecomeVisibleListener(callback:()=>void) {
-            $('#oncoprint-result-tab').click(callback);
+        const tabMap:ITabConfiguration[] = [
+
+            {
+                id:"oncoprint",
+                getTab: () => {
+                    return <MSKTab key={0} id="oncoprintTab" linkText="Oncoprint">
+                        <ResultsViewOncoprint
+                            divId={'oncoprintContainer'}
+                            store={store}
+                            routing={this.props.routing}
+                            isVirtualStudy={win.currentQueryStore.isVirtualStudyQuery}
+                            addOnBecomeVisibleListener={addOnBecomeVisibleListener}
+                        />
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:"cancer_types_summary",
+                getTab: () => {
+                    return (<MSKTab key={1} id="cancerTypesSummaryTab" linkText="Cancer Types Summary">
+                        <CancerSummaryContainer
+                            genes={store.genes.result!}
+                            samplesExtendedWithClinicalData={store.samplesExtendedWithClinicalData.result!}
+                            alterationsByGeneBySampleKey={store.alterationsByGeneBySampleKey.result!}
+                            studies={store.studies.result!}
+                            studyMap={store.physicalStudySet}
+                        />
+                    </MSKTab>)
+                }
+            },
+
+            {
+                id:"mutual_exclusivity",
+                getTab: () => {
+                    return <MSKTab key={5} id="mutualExclusivityTab" linkText="Mutual Exclusivity">
+                        <MutualExclusivityTab store={store}/>
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:"plots",
+                hide:()=>{
+                    return this.queryStore.isVirtualStudyQuery;
+                },
+                getTab: () => {
+                    return <MSKTab key={12} id="plots" linkText={'Plots'}>
+                        <PlotsTab store={store}/>
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:"mutations",
+                getTab: () => {
+                    return <MSKTab key={3} id="mutationsTab" linkText="Mutations">
+                        <Mutations store={store}/>
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:"co_expression",
+                hide:()=>{
+                    return this.queryStore.isVirtualStudyQuery;
+                },
+                getTab: () => {
+                    return <MSKTab key={7} id="coexpression" linkText={'Coexpression'}>
+                        <CoExpressionTabContainer store={store}/>
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:"enrichments",
+                hide:()=>{
+                    return this.queryStore.isVirtualStudyQuery;
+                },
+                getTab: () => {
+                    return <MSKTab key={10} id="enrichment" linkText={'Enrichment'}>
+                        <EnrichmentsTab store={store}/>
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:"IGV",
+                hide:()=>{
+                    return this.queryStore.isVirtualStudyQuery;
+                },
+                getTab: () => {
+                    return <MSKTab key={6} id="copyNumberSegmentsTab"
+                                   linkText="CN Segments">
+                        <CNSegments store={store}/>
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:"survival",
+                hide:()=>{
+                    return this.queryStore.isVirtualStudyQuery;
+                },
+                getTab: () => {
+                    return <MSKTab key={4} id="survivalTab" linkText="Survival">
+                        <SurvivalTab store={store}/>
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:"network",
+                hide:()=>{
+                    return this.queryStore.isVirtualStudyQuery;
+                },
+                getTab: () => {
+                    return <MSKTab key={9} id="network"
+                                   loading={store.studies.isPending || store.sampleLists.isPending}
+                                   linkText={'Network'}
+                    >
+                        {
+                            (store.studies.isComplete && store.sampleLists.isComplete) &&
+                            (<Network genes={store.genes.result!}
+                                      profileIds={store.selectedMolecularProfileIds}
+                                      cancerStudyId={store.studies.result[0].studyId}
+                                      zScoreThreshold={store.zScoreThreshold}
+                                      caseSetId={(store.sampleLists.result!.length > 0) ? store.sampleLists.result![0].sampleListId : "-1"}
+                                      caseIdsKey={""}
+                            />)
+                        }
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:"expression",
+                hide:()=> {
+                    return !this.queryStore.isVirtualStudyQuery;
+                },
+                getTab: () => {
+                    return <MSKTab key={8} id="expression"
+                                   loading={(store.rnaSeqMolecularData.isPending || store.studyIdToStudy.isPending || store.mutations.isPending || store.genes.isPending || store.coverageInformation.isPending)}
+                                   linkText={'Expression'}
+                    >
+                        {
+                            (store.rnaSeqMolecularData.isComplete && store.studyIdToStudy.isComplete && store.mutations.isComplete && store.genes.isComplete && store.coverageInformation.isComplete) &&
+                            (<ExpressionWrapper
+                                store={store}
+                                studyMap={store.studyIdToStudy.result}
+                                genes={store.genes.result}
+                                data={store.rnaSeqMolecularData.result}
+                                mutations={store.mutations.result}
+                                RNASeqVersion={store.expressionTabSeqVersion}
+                                coverageInformation={store.coverageInformation.result}
+                                onRNASeqVersionChange={(version: number) => store.expressionTabSeqVersion = version}
+                            />)
+                        }
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:"download",
+                getTab: () => {
+                    return <MSKTab key={11} id="download" linkText={'Download'}>
+                        <DownloadTab store={store}/>
+                    </MSKTab>
+                }
+            },
+
+           {
+                id:"bookmark",
+                getTab: () => {
+                    return <MSKTab key={12} id="bookmark" linkText={'Bookmark'}>
+                        <Bookmark urlPromise={store.bookmarkLinks}/>
+                    </MSKTab>
+                }
+            }
+
+        ];
+
+        let filteredTabs = tabMap.filter(this.evaluateTabInclusion).map((tab)=>tab.getTab());
+
+        // now add custom tabs
+        if (AppConfig.customTabs) {
+            const customResultsTabs = AppConfig.customTabs.filter((tab: any) => tab.location === "RESULTS_PAGE").map((tab: any, i: number) => {
+                return (<MSKTab key={100 + i} id={'customTab' + 1} unmountOnHide={(tab.unmountOnHide === true)}
+                                onTabDidMount={(div) => {
+                                    this.customTabMountCallback(div, tab)
+                                }}
+                                linkText={tab.title}
+                    />
+                )
+            });
+            filteredTabs = filteredTabs.concat(customResultsTabs);
         }
+
+        return filteredTabs;
+
+    }
+
+    public evaluateTabInclusion(tab:ITabConfiguration){
+        const excludedTabs = AppConfig.disabledTabs || [];
+        const isExcludedInList = excludedTabs.includes(tab.id);
+        const isExcluded = (tab.hide) ? tab.hide() : false;
+        return !isExcludedInList && !isExcluded;
+    }
+
+    public render() {
 
         return (
             <PageLayout>
@@ -343,101 +512,13 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                         </div>
                         <MSKTabs activeTabId={this.props.routing.location.query.tab} unmountOnHide={true}
                                  onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
-                            <MSKTab key={0} id="oncoprintTab" linkText="Oncoprint">
-                                <ResultsViewOncoprint
-                                    divId={'oncoprintContainer'}
-                                    store={this.resultsViewPageStore}
-                                    routing={this.props.routing}
-                                    isVirtualStudy={win.currentQueryStore.isVirtualStudyQuery}
-                                    addOnBecomeVisibleListener={addOnBecomeVisibleListener}
-                                />
-                            </MSKTab>
-                            <MSKTab key={1} id="cancerTypesSummaryTab" linkText="Cancer Types Summary">
-                                <CancerSummaryContainer
-                                    store={this.resultsViewPageStore}
-                                    genes={this.resultsViewPageStore.genes.result!}
-                                    samplesExtendedWithClinicalData={this.resultsViewPageStore.samplesExtendedWithClinicalData.result!}
-                                    alterationsByGeneBySampleKey={this.resultsViewPageStore.alterationsByGeneBySampleKey.result!}
-                                    studies={this.resultsViewPageStore.studies.result!}
-                                    studyMap={this.resultsViewPageStore.physicalStudySet}
-                                />
-                            </MSKTab>
-                            <MSKTab key={5} id="mutualExclusivityTab" linkText="Mutual Exclusivity">
-                                <MutualExclusivityTab store={this.resultsViewPageStore}/>
-                            </MSKTab>
 
-                            <MSKTab key={12} id="plots" hide={!this.showPlotsTab} linkText={'Plots'}>
-                                <PlotsTab store={this.resultsViewPageStore}/>
-                            </MSKTab>
-
-                            <MSKTab key={3} id="mutationsTab" linkText="Mutations">
-                                <Mutations store={this.resultsViewPageStore}/>
-                            </MSKTab>
-                            <MSKTab key={7} id="coexpression" hide={!this.showCoexpressionTab} linkText={'Coexpression'}>
-                                <CoExpressionTabContainer store={this.resultsViewPageStore}/>
-                            </MSKTab>
-                            <MSKTab key={10} id="enrichment" hide={!this.showEnrichmentsTab} linkText={'Enrichment'}>
-                                <EnrichmentsTab store={this.resultsViewPageStore}/>
-                            </MSKTab>
-                            <MSKTab key={6} id="copyNumberSegmentsTab" hide={!this.showCNSegmentsTab} linkText="CN Segments">
-                                <CNSegments store={this.resultsViewPageStore}/>
-                            </MSKTab>
-                            <MSKTab key={4} id="survivalTab" hide={!this.showSurvivalTab} linkText="Survival">
-                                <SurvivalTab store={this.resultsViewPageStore}/>
-                            </MSKTab>
-                            <MSKTab key={9} id="network"
-                                    loading={store.studies.isPending || store.sampleLists.isPending}
-                                    linkText={'Network'}
-                                    hide={!this.showNetworkTab}
-                            >
-                                {
-                                    (store.studies.isComplete && store.sampleLists.isComplete) &&
-                                    (<Network genes={store.genes.result!}
-                                              profileIds={store.selectedMolecularProfileIds}
-                                              cancerStudyId={store.studies.result[0].studyId}
-                                              zScoreThreshold={store.zScoreThreshold}
-                                              caseSetId={(store.sampleLists.result!.length > 0) ? store.sampleLists.result![0].sampleListId : "-1"}
-                                              caseIdsKey={""}
-                                    />)
-                                }
-                            </MSKTab>
-                            <MSKTab key={8} id="expression"
-                                    loading={(store.rnaSeqMolecularData.isPending || store.studyIdToStudy.isPending || store.mutations.isPending || store.genes.isPending || store.coverageInformation.isPending)}
-                                    linkText={'Expression'}
-                                    hide={!this.showExpressionTab}
-                            >
-                                {
-                                    (store.studyIdToStudy.isComplete
-                                    && store.putativeDriverAnnotatedMutations.isComplete &&
-                                    store.genes.isComplete && store.coverageInformation.isComplete) {
-                                    return <ExpressionWrapper store={store}
-                                    studyMap={store.studyIdToStudy.result}
-                                    genes={store.genes.result}
-                                    expressionProfiles={store.expressionProfiles}
-                                    numericGeneMolecularDataCache={store.numericGeneMolecularDataCache}
-                                    mutations={store.putativeDriverAnnotatedMutations.result}
-                                    RNASeqVersion={store.expressionTabSeqVersion}
-                                    coverageInformation={store.coverageInformation.result}
-                                    onRNASeqVersionChange={(version:number)=>store.expressionTabSeqVersion=version}
-                                    />)
-                                }
-                            </MSKTab>
-                            <MSKTab key={11} id="download" linkText={'Download'}>
-                                <DownloadTab store={this.resultsViewPageStore}/>
-                            </MSKTab>
-                            <MSKTab key={12} id="bookmark" linkText={'Bookmark'}>
-                                <Bookmark urlPromise={ this.resultsViewPageStore.bookmarkLinks } />
-                            </MSKTab>
 
                             {
-                                (AppConfig.customTabs) && AppConfig.customTabs.filter((tab:any)=>tab.location==="RESULTS_PAGE").map((tab:any, i:number)=>{
-                                    return (<MSKTab key={100+i} id={'customTab'+1} unmountOnHide={(tab.unmountOnHide===true)}
-                                                   onTabDidMount={(div)=>{ this.customTabMountCallback(div, tab) }}
-                                                    linkText={tab.title}
-                                        />
-                                   )
-                                })
+                                this.tabs
                             }
+
+
 
                         </MSKTabs>
                     </div>)
