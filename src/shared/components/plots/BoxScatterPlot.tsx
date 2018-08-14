@@ -69,6 +69,7 @@ const CATEGORY_LABEL_HORZ_ANGLE = -30;
 const DEFAULT_LEFT_PADDING = 25;
 const DEFAULT_BOTTOM_PADDING = 10;
 const MAXIMUM_CATEGORY_LABEL_SIZE = 120;
+const LEGEND_ITEMS_PER_ROW = 5;
 
 
 const BOX_STYLES = {
@@ -182,16 +183,30 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         return this.chartWidth - 20;
     }
 
+    @computed get horizontalLegendHeight() {
+        //height of legend in case its horizontal
+        if (!this.props.legendData) {
+            return 0;
+        } else {
+            const numRows = Math.ceil(this.props.legendData.length / LEGEND_ITEMS_PER_ROW);
+            return 23.7*numRows;
+        }
+    }
+
     private get legend() {
         const x = this.legendX;
         if (this.props.legendData && this.props.legendData.length) {
+            // all the props conditional on this.props.horizontal are because
+            //  we want to put the legend on top of the plot, since the plot
+            //  could be arbitrarily wide with a lot of boxes
             return (
                 <VictoryLegend
-                    orientation="vertical"
+                    orientation={this.props.horizontal ? "vertical" : "horizontal"}
+                    itemsPerRow={this.props.horizontal ? undefined : 5}
+                    rowGutter={this.props.horizontal ? undefined : -5}
                     data={this.props.legendData}
-                    x={x}
-                    y={LEGEND_Y}
-                    width={RIGHT_GUTTER}
+                    x={this.props.horizontal ? x : 0}
+                    y={this.props.horizontal ? LEGEND_Y: -this.horizontalLegendHeight}
                 />
             );
         } else {
@@ -239,7 +254,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     @computed get svgHeight() {
-        return this.chartHeight + this.bottomPadding;
+        return this.topPadding + this.chartHeight + this.bottomPadding;
     }
 
     @computed get boxSeparation() {
@@ -377,6 +392,15 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         }
     }
 
+    @computed get topPadding() {
+        // more top padding if vertical, to make room for legend
+        if (this.props.horizontal) {
+            return 0;
+        } else {
+            return this.horizontalLegendHeight;
+        }
+    }
+
     @computed get bottomPadding() {
         if (this.props.horizontal) {
             return DEFAULT_BOTTOM_PADDING;
@@ -473,7 +497,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                         viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
                     >
                         <g
-                            transform={`translate(${this.leftPadding}, 0)`}
+                            transform={`translate(${this.leftPadding}, ${this.topPadding})`}
                         >
                             <VictoryChart
                                 theme={CBIOPORTAL_VICTORY_THEME}
@@ -520,7 +544,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                         placement={this.props.horizontal ? "bottom" : "right"}
                         container={this.container}
                         targetHovered={this.pointHovered}
-                        targetCoords={{x: this.tooltipModel.x + this.leftPadding, y: this.tooltipModel.y}}
+                        targetCoords={{x: this.tooltipModel.x + this.leftPadding, y: this.tooltipModel.y + this.topPadding}}
                         overlay={this.props.tooltip(this.tooltipModel.datum)}
                     />
                 )}
