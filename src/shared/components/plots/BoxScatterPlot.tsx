@@ -250,7 +250,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     @computed get svgWidth() {
-        return this.leftPadding + this.chartWidth + RIGHT_GUTTER;
+        return this.leftPadding + this.chartWidth + this.rightPadding;
     }
 
     @computed get svgHeight() {
@@ -398,6 +398,15 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
             return 0;
         } else {
             return this.horizontalLegendHeight;
+        }
+    }
+
+    @computed get rightPadding() {
+        // more right padding if horizontal, to make room for legend
+        if (this.props.horizontal) {
+            return RIGHT_GUTTER;
+        } else {
+            return 0;
         }
     }
 
