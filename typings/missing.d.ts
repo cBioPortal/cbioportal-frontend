@@ -3,6 +3,7 @@ declare module '*.scss';
 declare module '*.json';
 
 // these packages are missing typings
+declare module 'save-svg-as-png'
 declare module 'react-file-download';
 declare module 'react-select-checked';
 declare module 'react-zeroclipboard';
