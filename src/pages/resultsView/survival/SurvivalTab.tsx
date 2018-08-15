@@ -4,7 +4,7 @@ import { ResultsViewPageStore } from "../ResultsViewPageStore";
 import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import { observer } from "mobx-react";
 import styles from "./styles.module.scss";
-import OqlStatusBanner from "../../../shared/components/OqlStatusBanner";
+import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 
 export interface ISurvivalTabProps {
     store: ResultsViewPageStore

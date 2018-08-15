@@ -38,7 +38,7 @@ import fileDownload from 'react-file-download';
 import onMobxPromise from "../../../shared/lib/onMobxPromise";
 import {logicalOr} from "../../../shared/lib/LogicUtils";
 import {SpecialAttribute} from "../../../shared/cache/OncoprintClinicalDataCache";
-import OqlStatusBanner from "../../../shared/components/OqlStatusBanner";
+import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import ScrollBar from "../../../shared/components/Scrollbar/ScrollBar";
 
 enum EventKey {
