@@ -80,6 +80,7 @@ import {BookmarkLinks} from "../../shared/model/BookmarkLinks";
 import {getBitlyServiceUrl, getSessionServiceUrl} from "../../shared/api/urls";
 import url from 'url';
 import OncoprintClinicalDataCache, {SpecialAttribute} from "../../shared/cache/OncoprintClinicalDataCache";
+import {getProteinPositionFromProteinChange} from "../../shared/lib/ProteinChangeUtils";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -2045,9 +2046,17 @@ export class ResultsViewPageStore {
             return Promise.resolve((mutation:Mutation):number=>{
                 const keyword = mutation.keyword;
                 const counts = countMap[keyword];
-                if (counts) {
+                const targetPosObj = getProteinPositionFromProteinChange(mutation.proteinChange);
+                if (counts && targetPosObj) {
+                    const targetPos = targetPosObj.start;
                     return counts.reduce((count, next:CosmicMutation)=>{
-                        return count + next.count;
+                        const pos = getProteinPositionFromProteinChange(next.proteinChange);
+                        if (pos && (pos.start === targetPos)) {
+                            // only tally cosmic entries with same keyword and same start position
+                            return count + next.count;
+                        } else {
+                            return count;
+                        }
                     }, 0);
                 } else {
                     return -1;
