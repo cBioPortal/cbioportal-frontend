@@ -39,6 +39,8 @@ import { stringListToSet } from 'shared/lib/StringUtils';
 import { unparseOQLQueryLine } from 'shared/lib/oql/oqlfilter';
 import formSubmit from 'shared/lib/formSubmit';
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
+import sessionServiceClient from "shared/api//sessionServiceInstance";
+import { VirtualStudy } from 'shared/model/VirtualStudy';
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT'
 
@@ -442,10 +444,6 @@ export class StudyViewPageStore {
         })
     }
 
-    @computed private get emptyFilter(): StudyViewFilter {
-        return { studyIds: this.studyIds } as any;
-    }
-
     @computed get clinicalDataEqualityFilters() {
         return this._clinicalDataEqualityFilterSet.values();
     }
@@ -476,7 +474,11 @@ export class StudyViewPageStore {
         if(this._sampleIdentifiers && this._sampleIdentifiers.length>0) {
             filters.sampleIdentifiers = this._sampleIdentifiers;
         } else {
-            filters.studyIds = this.studyIds
+            if(_.isEmpty(this.queriedSampleIdentifiers.result)){
+                filters.studyIds = this.queriedPhysicalStudyIds.result;
+            } else {
+                filters.sampleIdentifiers = this.queriedSampleIdentifiers.result;
+            }
         }
         return filters;
     }
@@ -495,24 +497,160 @@ export class StudyViewPageStore {
     }
 
     readonly molecularProfiles = remoteData<MolecularProfile[]>({
+        await: ()=>[this.queriedPhysicalStudyIds],
         invoke: async () => {
             return await defaultClient.fetchMolecularProfilesUsingPOST({
                 molecularProfileFilter: {
-                    studyIds: this.studyIds
+                    studyIds: this.queriedPhysicalStudyIds.result
                 } as MolecularProfileFilter
             })
         },
         default: []
     });
 
-    readonly studies = remoteData({
+
+    readonly allPhysicalStudies = remoteData({
         invoke: async () => {
-            return await defaultClient.fetchStudiesUsingPOST({
-                studyIds: toJS(this.studyIds)
-            })
+            return await defaultClient.getAllStudiesUsingGET({ projection: 'SUMMARY' });
         },
         default: []
     });
+
+    readonly physicalStudiesSet = remoteData<{[id:string]:CancerStudy}>({
+        await: ()=>[this.allPhysicalStudies],
+        invoke: async () => {
+            return _.keyBy(this.allPhysicalStudies.result, s=>s.studyId);
+        },
+        default: {}
+    });
+
+    // contains queried physical studies
+    readonly filteredPhysicalStudies = remoteData({
+        await: ()=>[this.physicalStudiesSet],
+        invoke: async () => {
+            const physicalStudiesSet = this.physicalStudiesSet.result;
+            return _.reduce(this.studyIds, (acc: CancerStudy[], next) => {
+                if (physicalStudiesSet[next]) {
+                    acc.push(physicalStudiesSet[next]);
+                }
+                return acc;
+            }, []);
+        },
+        default: []
+    });
+
+    // contains queried vaild virtual studies
+    readonly filteredVirtualStudies = remoteData({
+        await: () => [this.filteredPhysicalStudies],
+        invoke: async () => {
+            if (this.filteredPhysicalStudies.result.length === this.studyIds.length) {
+                return [];
+            }
+            let filteredVirtualStudies: VirtualStudy[] = [];
+            let validFilteredPhysicalStudyIds = this.filteredPhysicalStudies.result.map(study => study.studyId);
+            let virtualStudyIds = _.filter(this.studyIds, id => !_.includes(validFilteredPhysicalStudyIds, id));
+
+            await Promise.all(virtualStudyIds.map(id =>
+                sessionServiceClient
+                    .getVirtualStudy(id)
+                    .then((res) => {
+                        filteredVirtualStudies.push(res);
+                    })
+                    .catch(error => { /*do nothing*/ })
+            ));
+            return filteredVirtualStudies;
+        },
+        default: []
+    });
+
+    // includes all physical studies from queried virtual studies
+    readonly queriedPhysicalStudyIds = remoteData({
+        await: ()=>[this.filteredPhysicalStudies, this.filteredVirtualStudies],
+        invoke: async () => {
+            let studyIds = _.reduce(this.filteredPhysicalStudies.result, (acc, next) => {
+                acc[next.studyId] = true;
+                return acc;
+            }, {} as { [id: string]: boolean })
+    
+            this.filteredVirtualStudies.result.forEach(virtualStudy => {
+                virtualStudy.data.studies.forEach(study => {
+                    studyIds[study.id] = true;
+                })
+            });
+    
+            return Object.keys(studyIds);
+        },
+        default: []
+    });
+
+    readonly queriedSampleIdentifiers = remoteData<SampleIdentifier[]>({
+        await: () => [this.filteredPhysicalStudies, this.filteredVirtualStudies],
+        invoke: async () => {
+
+            let result = _.reduce(this.filteredVirtualStudies.result, (acc, next) => {
+                next.data.studies.forEach(study => {
+                    let samples = study.samples;
+                    if (acc[study.id]) {
+                        samples = _.union(acc[study.id], samples);
+                    }
+                    acc[study.id] = samples;
+                })
+                return acc;
+            }, {} as { [id: string]: string[] });
+
+            if (!_.isEmpty(result)) {
+
+                result = _.reduce(this.filteredPhysicalStudies.result, (acc, next) => {
+                    acc[next.studyId] = [];
+                    return acc;
+                }, result);
+
+                let studySamplesToFetch = _.reduce(result, (acc, samples, studyId) => {
+                    if (samples.length === 0) {
+                        acc.push(studyId);
+                    }
+                    return acc;
+                }, [] as string[])
+
+                await Promise.all(_.map(studySamplesToFetch, studyId => {
+                    return defaultClient.getAllSamplesInStudyUsingGET({
+                        studyId: studyId
+                    }).then(samples => {
+                        result[studyId] = samples.map(sample => sample.sampleId);
+                    })
+                }))
+            }
+
+            return _.flatten(_.map(result, (samples, studyId) =>
+                samples.map(sampleId => {
+                    return {
+                        sampleId,
+                        studyId
+                    }
+                })
+            ));
+        },
+        default: []
+    });
+
+    // all queried studies, includes both physcial and virtual studies
+    // this is used in page header(name and description)
+    @computed get queriedStudies() {
+        let filteredVirtualStudies = _.map(this.filteredVirtualStudies.result, virtualStudy => {
+            return {
+                name: virtualStudy.data.name,
+                description: virtualStudy.data.description,
+                studyId: virtualStudy.id,
+            } as CancerStudy;
+        });
+
+        return [...this.filteredPhysicalStudies.result, ...filteredVirtualStudies];
+    }
+
+    @computed get unknownQueriedIds() {
+        const validQueriedIds = this.queriedStudies.map(study => study.studyId);
+        return _.filter(this.studyIds, id => !_.includes(validQueriedIds, id));
+    }
 
     readonly mutationProfiles = remoteData({
         await: ()=>[this.molecularProfiles],
@@ -545,9 +683,9 @@ export class StudyViewPageStore {
     });
 
     readonly clinicalAttributes = remoteData({
-        await: () => [this.studies],
+        await: () => [this.queriedPhysicalStudyIds],
         invoke: () => defaultClient.fetchClinicalAttributesUsingPOST({
-            studyIds: this.studies.result.map(study => study.studyId)
+            studyIds: this.queriedPhysicalStudyIds.result
         }),
         default: [],
         onResult:(clinicalAttributes)=>{
@@ -737,16 +875,17 @@ export class StudyViewPageStore {
     readonly initialClinicalDataCounts = remoteData<{ [id: string]: ClinicalDataCount[] }>({
         await: () => {
             let promises = this.defaultVisibleAttributes.result.map(attribute => {
-                return this.studyViewClinicalDataCountsCache.get({ attribute: attribute, filters: this.emptyFilter })
+                return this.studyViewClinicalDataCountsCache.get({ attribute: attribute, filters: { studyIds: this.queriedPhysicalStudyIds.result } as any })
             })
-            return [this.defaultVisibleAttributes, ...promises]
+            return [this.queriedSampleIdentifiers, this.defaultVisibleAttributes, ...promises]
         },
         invoke: async () => {
+            let studyViewFilter:StudyViewFilter = { studyIds: this.queriedPhysicalStudyIds.result } as any
             return _.reduce(this.defaultVisibleAttributes.result, (acc, next) => {
                 const clinicalDataType: ClinicalDataType = next.patientAttribute ? 'PATIENT' : 'SAMPLE';
                 const uniqueKey = clinicalDataType + '_' + next.clinicalAttributeId;
                 acc[uniqueKey] = this.studyViewClinicalDataCountsCache
-                    .get({ attribute: next, filters: this.emptyFilter })
+                    .get({ attribute: next, filters: studyViewFilter })
                     .result!;
                 return acc;
             }, {} as any);
@@ -764,22 +903,49 @@ export class StudyViewPageStore {
         }
     });
 
-    private readonly samples = remoteData<Sample[]>({
-        await: () => [this.clinicalAttributes],
+    readonly samples = remoteData<Sample[]>({
+        await: () => [this.clinicalAttributes, this.queriedSampleIdentifiers, this.queriedPhysicalStudyIds],
         invoke: () => {
+            let studyViewFilter:StudyViewFilter = {} as any
+            //this logic is need since fetchFilteredSamplesUsingPOST api accepts sampleIdentifiers or studyIds not both
+            if(this.queriedSampleIdentifiers.result.length>0){
+                studyViewFilter.sampleIdentifiers = this.queriedSampleIdentifiers.result
+            } else {
+                studyViewFilter.studyIds = this.queriedPhysicalStudyIds.result
+            }
             return internalClient.fetchFilteredSamplesUsingPOST({
-                studyViewFilter: this.emptyFilter
+                studyViewFilter
             })
         },
         default: []
     });
 
+    readonly invalidSampleIds = remoteData<SampleIdentifier[]>({
+        await: () => [this.queriedSampleIdentifiers, this.samples],
+        invoke: async () => {
+            if(this.queriedSampleIdentifiers.result.length>0 && 
+                this.samples.result.length !== this.queriedSampleIdentifiers.result.length){
+    
+                let validSampleIdentifiers = _.reduce(this.samples.result,(acc, next)=>{
+                    acc[next.studyId+'_'+next.sampleId] = true
+                    return acc;
+                }, {} as {[id:string]:boolean})
+                return _.filter(this.queriedSampleIdentifiers.result,sampleIdentifier=>{
+                    return !validSampleIdentifiers[sampleIdentifier.studyId+'_'+sampleIdentifier.sampleId]
+                })
+            }
+            return []
+        },
+        default: []
+    });
+
     readonly studyWithSamples = remoteData<StudyWithSamples[]>({
-        await: () => [this.studies, this.samples],
+        await: () => [this.physicalStudiesSet, this.queriedPhysicalStudyIds, this.samples],
         invoke: async () => {
             let studySampleSet = _.groupBy(this.samples.result,(sample)=>sample.studyId)
-            return this.studies.result.map(study=>{
-                let samples = studySampleSet[study.studyId]||[];
+            return this.queriedPhysicalStudyIds.result.map(studyId=>{
+                let samples = studySampleSet[studyId]||[];
+                let study = this.physicalStudiesSet.result[studyId]
                 return {...study, uniqueSampleKeys:_.map(samples,sample=>sample.uniqueSampleKey)}
             });
         },
@@ -787,6 +953,7 @@ export class StudyViewPageStore {
     });
 
     readonly selectedSamples = remoteData<Sample[]>({
+        await: () => [this.samples],
         invoke: () => {
             return internalClient.fetchFilteredSamplesUsingPOST({
                 studyViewFilter: this.filters
@@ -796,17 +963,24 @@ export class StudyViewPageStore {
     });
 
     readonly samplesWithNAInSelectedClinicalData = remoteData<Sample[]>({
-        await:()=>[
-            this.samples
-        ],
+        await:()=>[ this.samples, this.queriedSampleIdentifiers, this.queriedPhysicalStudyIds ],
         invoke: async() => {
+
+            let studyViewFilter = {} as any
+            //this logic is need since fetchFilteredSamplesUsingPOST api accepts sampleIdentifiers or studyIds not both
+            if(this.queriedSampleIdentifiers.result.length>0){
+                studyViewFilter.sampleIdentifiers = this.queriedSampleIdentifiers.result
+            } else {
+                studyViewFilter.studyIds = this.queriedPhysicalStudyIds.result
+            }
+            if(!_.isEmpty(this.clinicalDataEqualityFilters)){
+                studyViewFilter.clinicalDataEqualityFilters = this.clinicalDataEqualityFilters.map(
+                    f=>Object.assign({}, f, { values: ["NA"] })
+                ) as any
+            }
             const samplesWithoutNA = await internalClient.fetchFilteredSamplesUsingPOST({
-                studyViewFilter: Object.assign({}, this.emptyFilter, {
-                    clinicalDataEqualityFilters: this.clinicalDataEqualityFilters.map(
-                        f=>Object.assign({}, f, { values: ["NA"] })
-                    ),
-                    filterType: "EXCLUSION"
-                }) as any as StudyViewFilter
+                studyViewFilter: studyViewFilter as StudyViewFilter,
+                filterType: "EXCLUSION"
             });
             const uniqueSampleKeysWithoutNA = _.keyBy(samplesWithoutNA, s=>s.uniqueSampleKey);
             const samplesWithNA = samplesWithoutNA.filter(s=>!(s.uniqueSampleKey in uniqueSampleKeysWithoutNA));
