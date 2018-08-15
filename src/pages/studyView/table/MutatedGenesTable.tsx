@@ -20,6 +20,31 @@ class MutatedGenesTableComponent extends LazyMobXTable<MutationCountByGene> {
 
 @observer
 export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {}> {
+    private _tableColumns = [
+        {
+            name: 'Gene',
+            render: (data: MutationCountByGene) => <span>{data.hugoGeneSymbol}</span>
+        },
+        {
+            name: '# Mut',
+            render: (data: MutationCountByGene) => <span>{data.totalCount}</span>
+        },
+        {
+            name: '#',
+            render: (data: MutationCountByGene) =>
+                <LabeledCheckbox
+                    checked={this.props.filters.indexOf(data.entrezGeneId) !== -1}
+                    onChange={event => this.props.onUserSelection(data.entrezGeneId)}
+                >
+                    {data.countByEntity}
+                </LabeledCheckbox>
+        },
+        {
+            name: 'Freq',
+            render: (data: MutationCountByGene) => <span>{data.frequency + '%'}</span>
+        }
+    ];
+
     public render() {
         return (
             <div className={styles.studyViewTablesTable}>
@@ -28,32 +53,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                     showCopyDownload={false}
                     showColumnVisibility={false}
                     data={this.props.promise.result}
-                    columns={
-                        [
-                            {
-                                name: 'Gene',
-                                render: (data: MutationCountByGene) => <span>{data.hugoGeneSymbol}</span>
-                            },
-                            {
-                                name: '# Mut',
-                                render: (data: MutationCountByGene) => <span>{data.totalCount}</span>
-                            },
-                            {
-                                name: '#',
-                                render: (data: MutationCountByGene) =>
-                                    <LabeledCheckbox
-                                        checked={this.props.filters.indexOf(data.entrezGeneId) !== -1}
-                                        onChange={event => this.props.onUserSelection(data.entrezGeneId)}
-                                    >
-                                        {data.countByEntity}
-                                    </LabeledCheckbox>
-                            },
-                            {
-                                name: 'Freq',
-                                render: (data: MutationCountByGene) => <span>{data.frequency + '%'}</span>
-                            }
-                        ]
-                    }
+                    columns={this._tableColumns}
                 />
             </div>
         );
