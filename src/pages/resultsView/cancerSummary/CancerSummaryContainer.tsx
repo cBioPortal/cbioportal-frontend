@@ -17,7 +17,7 @@ import {
     getAlterationCountsForCancerTypesByGene,
     getAlterationCountsForCancerTypesForAllGenes
 } from "../../../shared/lib/alterationCountHelpers";
-import OqlStatusBanner from "../../../shared/components/OqlStatusBanner";
+import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 
 interface ICancerSummaryContainerProps {
     store:ResultsViewPageStore;
