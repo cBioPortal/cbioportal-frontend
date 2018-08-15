@@ -107,7 +107,7 @@ export function getGenomeNexusApiUrl() {
 }
 
 export function getSessionServiceApiUrl() {
-    return cbioUrl(`/api-legacy/proxy/session/virtual_study`);
+    return AppConfig.sessionServiceUrl!;
 }
 
 export function getConfigurationServiceApiUrl() {
