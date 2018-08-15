@@ -3,6 +3,13 @@ import {GenePanelData, Mutation, NumericGeneMolecularData} from "../../../shared
 import getCanonicalMutationType, {getProteinImpactType} from "../../../shared/lib/getCanonicalMutationType";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 import {isSampleProfiled} from "../../../shared/lib/isSampleProfiled";
+import {getOncoprintMutationType} from "../../../shared/components/oncoprint/DataUtils";
+import {mutationRenderPriority} from "../plots/PlotsTabUtils";
+import {
+    MUT_COLOR_FUSION, MUT_COLOR_INFRAME,
+    MUT_COLOR_MISSENSE, MUT_COLOR_PROMOTER, MUT_COLOR_TRUNC
+} from "../../../shared/components/oncoprint/geneticrules";
+import {getJitterForCase} from "../../../shared/components/plots/PlotUtils";
 
 export type ExpressionStyle = {
     typeName: string;
@@ -32,61 +39,40 @@ enum VictoryShapeType {
 }
 
 export const ExpressionStyleSheet: { [mutationType:string]:ExpressionStyle } = {
-    frameshift: {
-        typeName: "Frameshift",
-        symbol: VictoryShapeType.triangleDown,
-        fill: "#1C1C1C",
-        stroke: "#B40404",
-        legendText: "Frameshift"
-    },
-    nonsense: {
-        typeName: "Nonsense",
-        symbol: VictoryShapeType.diamond,
-        fill: "#1C1C1C",
-        stroke: "#B40404",
-        legendText: "Nonsense"
-    },
-    splice: {
-        typeName: "Splice",
-        symbol: VictoryShapeType.triangleUp,
-        fill: "#A4A4A4",
-        stroke: "#B40404",
-        legendText: "Splice"
-    },
-    in_frame: {
-        typeName: "In_frame",
-        symbol: VictoryShapeType.square,
-        fill: "#DF7401",
-        stroke: "#B40404",
-        legendText: "In-frame"
-    },
-    nonstart: {
-        typeName: "Nonstart",
-        symbol: VictoryShapeType.plus,
-        fill: "#DF7401",
-        stroke: "#B40404",
-        legendText: "Nonstart"
-    },
-    nonstop: {
-        typeName: "Nonstop",
-        symbol: VictoryShapeType.triangleUp,
-        fill: "#1C1C1C",
-        stroke: "#B40404",
-        legendText: "Nonstop"
-    },
     missense: {
         typeName: "Missense",
         symbol: VictoryShapeType.circle,
-        fill: "#DF7401",
-        stroke: "#B40404",
+        fill: MUT_COLOR_MISSENSE,
+        stroke: "#000000",
         legendText: "Missense"
     },
-    other: {
-        typeName: "Other",
-        symbol: VictoryShapeType.square,
-        fill: "#1C1C1C",
-        stroke: "#B40404",
-        legendText: "Other"
+    inframe: {
+        typeName:"Inframe",
+        symbol : VictoryShapeType.circle,
+        fill: MUT_COLOR_INFRAME,
+        stroke : "#000000",
+        legendText : "Inframe"
+    },
+    fusion:{
+        typeName:"Fusion",
+        symbol: VictoryShapeType.circle,
+        fill: MUT_COLOR_FUSION,
+        stroke: "#000000",
+        legendText: "Fusion"
+    },
+    trunc:{
+        typeName:"Truncating",
+        symbol: VictoryShapeType.circle,
+        fill: MUT_COLOR_TRUNC,
+        stroke: "#000000",
+        legendText: "Truncating"
+    },
+    promoter:{
+        typeName:"Promoter",
+        symbol: VictoryShapeType.circle,
+        fill: MUT_COLOR_PROMOTER,
+        stroke: "#000000",
+        legendText: "Promoter"
     },
     one_mut: {
         typeName: "one_mut",
@@ -102,12 +88,19 @@ export const ExpressionStyleSheet: { [mutationType:string]:ExpressionStyle } = {
         stroke: "#B40404",
         legendText: "Both mutated"
     },
-    non_mut: {
-        typeName: "non_mut",
+    not_showing_mut: {
+        typeName: "not_showing_mut",
         symbol: VictoryShapeType.circle,
         fill: "#00AAF8",
         stroke: "#0089C6",
-        legendText: "No Mutation"
+        legendText:"shouldnt be in legend"
+    },
+    non_mut: {
+        typeName: "non_mut",
+        symbol: VictoryShapeType.circle,
+        fill: "#e3e3e3",
+        stroke: "#000000",
+        legendText: "Not mutated"
     },
     non_sequenced: {
         typeName: "non_sequenced",
@@ -120,40 +113,8 @@ export const ExpressionStyleSheet: { [mutationType:string]:ExpressionStyle } = {
 };
 
 export function getExpressionStyle(mutationType: string){
-    const mappedType = mutationVocabularyMap[mutationType] || 'other';
-    return ExpressionStyleSheet[mappedType] || ExpressionStyleSheet.other;
+    return ExpressionStyleSheet[mutationType];
 }
-
-
-export const mutationVocabularyMap: { [key:string] : string } = {
-    "5'flank": "other",
-    "complex_indel": "other",
-    "essential_splice_site": "splice",
-    "exon skipping": "other",
-    "exon14skip": "other",
-    "frame_shift_del": "frameshift",
-    "frame_shift_ins": "frameshift",
-    "frameshift": "frameshift",
-    "frameshift deletion": "frameshift",
-    "frameshift insertion": "frameshift",
-    "frameshift_coding": "frameshift",
-    "frameshift_insertion": "frameshift",
-    "fusion": "other",
-    "in_frame_del": "in_frame",
-    "in_frame_ins": "in_frame",
-    "missense": "missense",
-    "missense_mutation": "missense",
-    "nonsense": "nonsense",
-    "nonsense_mutation": "nonsense",
-    "nonstop_mutation": "nonstop",
-    "splice": "splice",
-    "splice_site": "splice",
-    "splice_site_snp": "splice",
-    "splicing": "splice",
-    "translation_start_site": "nonstart",
-    "viii deletion": "other"
-}
-
 
 // this function classifies molecular data by corresponding mutation type or
 // non-mutated or non-sequenced status
@@ -169,8 +130,8 @@ export function getMolecularDataBuckets(studyData: NumericGeneMolecularData[],
 
         const mutation = mutationsKeyedBySampleId[molecularData.uniqueSampleKey];
         if (mutation) {
-            const canonicalMutationType = getCanonicalMutationType(mutation.mutationType) || "other";
-            const bucket = memo.mutationBuckets[canonicalMutationType] = memo.mutationBuckets[canonicalMutationType] || [];
+            const oncoprintMutationType = getOncoprintMutationType(mutation);
+            const bucket = memo.mutationBuckets[oncoprintMutationType] = memo.mutationBuckets[oncoprintMutationType] || [];
             bucket.push(molecularData);
         } else if (isSampleProfiled(molecularData.uniqueSampleKey,molecularData.molecularProfileId,
                 hugoGeneSymbol, coverageInformation)) {
@@ -197,35 +158,14 @@ export function getMolecularDataBuckets(studyData: NumericGeneMolecularData[],
 
 }
 
-
-function getRandomNumber(seed:number) {
-    // source: https://stackoverflow.com/a/23304189
-    seed = Math.sin(seed)*10000;
-    return seed - Math.floor(seed);
+export function calculateJitter(uniqueSampleKey:string) {
+    return getJitterForCase(uniqueSampleKey) * 0.30;
 }
-
-// private jitter(seed:number) {
-//     // receive seed so jitter for same number is always the same
-//     return varianceSize * (getRandomNumber(seed) - getRandomNumber(seed+1));
-// }
-
-export function calculateJitter(boxWidth: number, seed:number){
-    return (getRandomNumber(seed) - getRandomNumber(seed+1)) * 0.30;
-    //return (Math.random()-0.5)*0.45;
-
-}
-
-
-const mutRenderPriority = {
-    truncating: 1,
-    inframe: 2,
-    missense: 3,
-    other : 4
-};
 
 export function prioritizeMutations(mutations:Mutation[]){
     return _.orderBy(mutations,(mutation:Mutation)=>{
-        const impactType = getProteinImpactType(mutation.mutationType);
-        return mutRenderPriority[impactType] || 10;
-    })
+        const oncoprintMutationType = getOncoprintMutationType(mutation);
+        return mutationRenderPriority[oncoprintMutationType];
+    });
 }
+

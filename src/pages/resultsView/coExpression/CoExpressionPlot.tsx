@@ -21,7 +21,7 @@ import "./styles.scss";
 import {bind} from "bind-decorator";
 import ScatterPlot from "../../../shared/components/plots/ScatterPlot";
 import Timer = NodeJS.Timer;
-import DownloadControls from "../../../shared/components/DownloadControls";
+import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 import {axisLabel, isNotProfiled} from "./CoExpressionPlotUtils";
 import _ from "lodash";
 
@@ -74,19 +74,14 @@ const NOT_PROFILED_FILL = "#ffffff";
 
 function noop() {};
 
+const SVG_ID = "coexpression-plot-svg";
+
 @observer
 export default class CoExpressionPlot extends React.Component<ICoExpressionPlotProps, {}> {
 
-    @observable private svg:SVGElement|null = null;
-
-    @bind
-    @action private svgRef(svg:SVGElement|null) {
-        this.svg = svg;
-    }
-
     @bind
     private getSvg() {
-        return this.svg;
+        return document.getElementById(SVG_ID) as SVGElement | null;
     }
 
     @computed get stroke() {
@@ -222,7 +217,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
         }
         return (
             <CoExpressionScatterPlot
-                svgRef={this.svgRef}
+                svgId={SVG_ID}
                 title={this.title}
                 data={this.data}
                 chartWidth={this.props.width}
@@ -231,10 +226,6 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                 fill={this.fill}
                 strokeWidth={1.2}
                 legendData={this.mutationLegendElements}
-                correlation={{
-                    pearson: this.props.coExpression.pearsonsCorrelation,
-                    spearman: this.props.coExpression.spearmansCorrelation
-                }}
                 logX={this.props.logScale}
                 logY={this.props.logScale}
                 useLogSpaceTicks={true}
@@ -249,7 +240,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
     @bind
     private toolbar() {
         return (
-            <div style={{textAlign:"center"}}>
+            <div style={{textAlign:"center", position:"relative"}}>
                 <div style={{display:"inline-block"}}>
                     {this.props.showMutationControls && (
                         <div className="checkbox coexpression-plot-toolbar-elt"><label>
@@ -276,10 +267,11 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                 </div>
 
                 <DownloadControls
-                    getSvg={this.svg === null ? undefined : this.getSvg}
-                    buttons={["SVG", "PDF"]}
+                    getSvg={this.getSvg}
                     filename="coexpression"
                     dontFade={true}
+                    collapse={true}
+                    style={{position:"absolute", top:0, right:0}}
                 />
 
             </div>

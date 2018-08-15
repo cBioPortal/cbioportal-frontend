@@ -6,7 +6,7 @@
     "title": "cBioPortal web API [Beta]",
     "contact": {
       "name": "cBioPortal",
-      "url": "www.cbioportal.org",
+      "url": "http://www.cbioportal.org",
       "email": "cbioportal@googlegroups.com"
     },
     "license": {
@@ -1443,7 +1443,8 @@
         "cytoband",
         "entrezGeneId",
         "hugoGeneSymbol",
-        "pearsonsCorrelation",
+        "pValue",
+        "qValue",
         "spearmansCorrelation"
       ],
       "properties": {
@@ -1457,7 +1458,10 @@
         "hugoGeneSymbol": {
           "type": "string"
         },
-        "pearsonsCorrelation": {
+        "pValue": {
+          "type": "number"
+        },
+        "qValue": {
           "type": "number"
         },
         "spearmansCorrelation": {

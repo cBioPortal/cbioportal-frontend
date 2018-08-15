@@ -2,7 +2,7 @@ import * as React from "react";
 import {observer} from "mobx-react";
 import {computed, observable} from "mobx";
 import {bind} from "bind-decorator";
-import CBIOPORTAL_VICTORY_THEME from "../../theme/cBioPoralTheme";
+import CBIOPORTAL_VICTORY_THEME, {axisTickLabelStyles} from "../../theme/cBioPoralTheme";
 import ifndef from "../../lib/ifndef";
 import {BoxPlotModel, calculateBoxPlotModel} from "../../lib/boxPlotUtils";
 import ScatterPlotTooltip from "./ScatterPlotTooltip";
@@ -13,9 +13,11 @@ import {getDeterministicRandomNumber} from "./PlotUtils";
 import {logicalAnd} from "../../lib/LogicUtils";
 import {tickFormatNumeral, wrapTick} from "./TickUtils";
 import {scatterPlotSize} from "./PlotUtils";
+import {getTextWidth} from "../../lib/wrapText";
 
 export interface IBaseBoxScatterPlotPoint {
     value:number;
+    jitter?:number; // between -1 and 1
 }
 
 export interface IBoxScatterPlotData<D extends IBaseBoxScatterPlotPoint> {
@@ -24,7 +26,7 @@ export interface IBoxScatterPlotData<D extends IBaseBoxScatterPlotPoint> {
 }
 
 export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
-    svgRef?:(svg:SVGElement|null)=>void;
+    svgId?:string;
     fontFamily?:string;
     title?:string;
     data: IBoxScatterPlotData<D>[];
@@ -34,6 +36,7 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     fill?:string | ((d:D)=>string);
     stroke?:string | ((d:D)=>string);
     fillOpacity?:number | ((d:D)=>number);
+    strokeOpacity?:number | ((d:D)=>number);
     strokeWidth?:number | ((d:D)=>number);
     symbol?: string | ((d:D)=>string); // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
     tooltip?:(d:D)=>JSX.Element;
@@ -59,13 +62,13 @@ type BoxModel = {
 const DEFAULT_FONT_FAMILY = "Verdana,Arial,sans-serif";
 const RIGHT_GUTTER = 120; // room for legend
 const NUM_AXIS_TICKS = 8;
-const PLOT_DATA_PADDING_PIXELS = 50;
+const PLOT_DATA_PADDING_PIXELS = 100;
 export const LEGEND_Y = 100; // experimentally determined
 const MIN_LOG_ARGUMENT = 0.01;
-const CATEGORY_LABEL_HORZ_ANGLE = -70;
+const CATEGORY_LABEL_HORZ_ANGLE = -30;
 const DEFAULT_LEFT_PADDING = 25;
-const LABEL_GUTTER = 150; // room for axis label when categories on that axis
-const BOTTOM_GUTTER = LABEL_GUTTER;
+const DEFAULT_BOTTOM_PADDING = 10;
+const MAXIMUM_CATEGORY_LABEL_SIZE = 120;
 
 
 const BOX_STYLES = {
@@ -83,19 +86,10 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     private mouseEvents:any = this.makeMouseEvents();
 
     @observable.ref private container:HTMLDivElement;
-    private svg:SVGElement|null;
 
     @bind
     private containerRef(container:HTMLDivElement) {
         this.container = container;
-    }
-
-    @bind
-    private svgRef(svg:SVGElement|null) {
-        this.svg = svg;
-        if (this.props.svgRef) {
-            this.props.svgRef(this.svg);
-        }
     }
 
     private makeMouseEvents() {
@@ -221,7 +215,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         }
         let x:number[], y:number[];
         const dataDomain = [min, max];
-        const categoryDomain = [0, this.categoryCoord(this.props.data.length)];
+        const categoryDomain = [this.categoryCoord(0), this.categoryCoord(Math.max(1, this.props.data.length - 1))];
         if (this.props.horizontal) {
             x = dataDomain;
             y = categoryDomain;
@@ -245,11 +239,11 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     @computed get svgHeight() {
-        return this.chartHeight + BOTTOM_GUTTER;
+        return this.chartHeight + this.bottomPadding;
     }
 
     @computed get boxSeparation() {
-        return 0.4*this.boxWidth;
+        return 0.5*this.boxWidth;
     }
 
     @computed get boxWidth() {
@@ -260,27 +254,41 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         return this.boxWidth * (this.props.horizontal ? ((this.plotDomain.y[1] - this.plotDomain.y[0])/this.chartHeight) : ((this.plotDomain.x[1] - this.plotDomain.x[0])/this.chartWidth));
     }
 
-    private jitter(seed:number) {
-        // receive seed so jitter for same number is always the same
-        return 0.5*this.boxWidthDataSpace * getDeterministicRandomNumber(seed, [-1, 1]);
+    private jitter(d:D, randomNumber:number) {
+        // randomNumber: between -1 and 1
+        return 0.5*this.boxWidthDataSpace * randomNumber;
     }
 
     @bind
-    private scatterPlotX(d:IBaseScatterPlotData) {
+    private scatterPlotX(d:IBaseScatterPlotData & D) {
         if (this.props.logScale && this.props.horizontal) {
             return this.logScale(d.x);
         } else {
-            const jitter = this.props.horizontal ? 0 : this.jitter(d.y);
+            let jitter = 0;
+            if (!this.props.horizontal) {
+                let jitterRandomNumber = d.jitter;
+                if (jitterRandomNumber === undefined) {
+                    jitterRandomNumber = getDeterministicRandomNumber(d.y, [-1,1]);
+                }
+                jitter = this.jitter(d, jitterRandomNumber);
+            }
             return d.x + jitter;
         }
     }
 
     @bind
-    private scatterPlotY(d:IBaseScatterPlotData) {
+    private scatterPlotY(d:IBaseScatterPlotData & D) {
         if (this.props.logScale && !this.props.horizontal) {
             return this.logScale(d.y);
         } else {
-            const jitter = this.props.horizontal ? this.jitter(d.x) : 0;
+            let jitter = 0;
+            if (this.props.horizontal) {
+                let jitterRandomNumber = d.jitter;
+                if (jitterRandomNumber === undefined) {
+                    jitterRandomNumber = getDeterministicRandomNumber(d.x, [-1,1]);
+                }
+                jitter = this.jitter(d, jitterRandomNumber);
+            }
             return d.y + jitter;
         }
     }
@@ -298,7 +306,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
 
     @bind
     private formatCategoryTick(t:number, index:number) {
-        return wrapTick(this.labels[index], LABEL_GUTTER - 30);
+        return wrapTick(this.labels[index], MAXIMUM_CATEGORY_LABEL_SIZE);
     }
 
     @bind
@@ -307,6 +315,8 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     @computed get horzAxis() {
+        // several props below are undefined in horizontal mode, thats because in horizontal mode
+        //  this axis is for numbers, not categories
         return (
             <VictoryAxis
                 orientation="bottom"
@@ -318,10 +328,10 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                 tickCount={this.props.horizontal ? NUM_AXIS_TICKS: undefined }
                 tickFormat={this.props.horizontal ? this.formatNumericalTick : this.formatCategoryTick}
                 tickLabelComponent={<VictoryLabel angle={this.props.horizontal ? undefined : CATEGORY_LABEL_HORZ_ANGLE}
-                                                  verticalAnchor={this.props.horizontal ? undefined : "middle"}
+                                                  verticalAnchor={this.props.horizontal ? undefined : "start"}
                                                   textAnchor={this.props.horizontal ? undefined : "end"}
                                   />}
-                axisLabelComponent={<VictoryLabel dy={this.props.horizontal ? 25 : BOTTOM_GUTTER-20 /* leave more room for labels */}/>}
+                axisLabelComponent={<VictoryLabel dy={this.props.horizontal ? 35 : this.biggestCategoryLabelSize + 24}/>}
             />
         );
     }
@@ -337,7 +347,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                 tickValues={this.props.horizontal ? this.categoryTickValues : undefined}
                 tickCount={this.props.horizontal ? undefined : NUM_AXIS_TICKS}
                 tickFormat={this.props.horizontal ? this.formatCategoryTick : this.formatNumericalTick}
-                axisLabelComponent={<VictoryLabel dy={this.props.horizontal ? -1*this.leftPadding /* leave more room for labels */: -50}/>}
+                axisLabelComponent={<VictoryLabel dy={this.props.horizontal ? -1*this.biggestCategoryLabelSize - 24 : -50}/>}
             />
         );
     }
@@ -352,7 +362,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                 data.push(Object.assign({}, d, {
                     [dataAxis]:d.value,
                     [categoryAxis]:categoryCoord,
-                } as {x:number, y:number}));
+                } as {x:number, y:number} & IBaseBoxScatterPlotPoint));
             }
         }
         return data;
@@ -361,9 +371,31 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     @computed get leftPadding() {
         // more left padding if horizontal, to make room for labels
         if (this.props.horizontal) {
-            return LABEL_GUTTER;
+            return this.biggestCategoryLabelSize;
         } else {
             return DEFAULT_LEFT_PADDING;
+        }
+    }
+
+    @computed get bottomPadding() {
+        if (this.props.horizontal) {
+            return DEFAULT_BOTTOM_PADDING;
+        } else {
+            return this.biggestCategoryLabelSize;
+        }
+    }
+
+    @computed get biggestCategoryLabelSize() {
+        const maxSize = Math.min(
+            Math.max(...this.labels.map(x=>getTextWidth(x, axisTickLabelStyles.fontFamily, axisTickLabelStyles.fontSize+"px"))),
+            MAXIMUM_CATEGORY_LABEL_SIZE
+        );
+        if (this.props.horizontal) {
+            // if horizontal mode, its label width
+            return maxSize;
+        } else {
+            // if vertical mode, its label height when rotated
+            return maxSize*Math.abs(Math.sin((Math.PI/180) * CATEGORY_LABEL_HORZ_ANGLE))
         }
     }
 
@@ -376,7 +408,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     private categoryCoord(index:number) {
-        return (index + 1) * this.boxSeparation;
+        return index * this.boxSeparation;
     }
 
     @computed get categoryTickValues() {
@@ -390,14 +422,10 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
             } else {
                 return x.value;
             }
-        }))).filter(box=>{
-            // filter out not well-defined boxes
-            return logicalAnd(
-                ["IQR", "max", "median", "min", "q1", "q2", "q3", "whiskerLower", "whiskerUpper"].map(key=>{
-                    return !isNaN((box as any)[key]);
-                })
-            );
-        }).map((model, i)=>{
+        }))).map((model, i)=>{
+            // create boxes, importantly we dont filter at this step because
+            //  we need the indexes to be intact and correpond to the index in the input data,
+            //  in order to properly determine the x/y coordinates
             const box:BoxModel = {
                 min: model.whiskerLower,
                 max: model.whiskerUpper,
@@ -411,6 +439,13 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                 box.x = this.categoryCoord(i)
             }
             return box;
+        }).filter(box=>{
+            // filter out not well-defined boxes
+            return logicalAnd(
+                ["min", "max", "median", "q1", "q3"].map(key=>{
+                    return !isNaN((box as any)[key]);
+                })
+            );
         });
     }
 
@@ -426,7 +461,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                     style={{width: this.svgWidth, height: this.svgHeight}}
                 >
                     <svg
-                        ref={this.svgRef}
+                        id={this.props.svgId || ""}
                         style={{
                             width: this.svgWidth,
                             height: this.svgHeight,
@@ -447,6 +482,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                                 standalone={false}
                                 domainPadding={PLOT_DATA_PADDING_PIXELS}
                                 domain={this.plotDomain}
+                                singleQuadrantDomainPadding={false}
                             >
                                 {this.title}
                                 {this.legend}
@@ -464,6 +500,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                                             fill: ifndef(this.props.fill, "0x000000"),
                                             stroke: ifndef(this.props.stroke, "0x000000"),
                                             strokeWidth: ifndef(this.props.strokeWidth, 0),
+                                            strokeOpacity: ifndef(this.props.strokeOpacity, 1),
                                             fillOpacity: ifndef(this.props.fillOpacity, 1)
                                         }
                                     }}
