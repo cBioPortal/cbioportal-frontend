@@ -47,6 +47,7 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     horizontal?:boolean; // whether the box plot is horizontal
     useLogSpaceTicks?:boolean; // if log scale for an axis, then this prop determines whether the ticks are shown in post-log coordinate, or original data coordinate space
     boxWidth?:number;
+    legendLocationWidthThreshold?:number; // chart width after which we start putting the legend at the bottom of the plot
 }
 
 type BoxModel = {
@@ -63,13 +64,13 @@ const DEFAULT_FONT_FAMILY = "Verdana,Arial,sans-serif";
 const RIGHT_GUTTER = 120; // room for legend
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 100;
-export const LEGEND_Y = 100; // experimentally determined
 const MIN_LOG_ARGUMENT = 0.01;
 const CATEGORY_LABEL_HORZ_ANGLE = -30;
 const DEFAULT_LEFT_PADDING = 25;
 const DEFAULT_BOTTOM_PADDING = 10;
 const MAXIMUM_CATEGORY_LABEL_SIZE = 120;
-const LEGEND_ITEMS_PER_ROW = 5;
+const LEGEND_ITEMS_PER_ROW = 4;
+const BOTTOM_LEGEND_PADDING = 30;
 
 
 const BOX_STYLES = {
@@ -179,12 +180,21 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         }
     }
 
-    @computed get legendX() {
+    @computed get sideLegendX() {
         return this.chartWidth - 20;
     }
 
-    @computed get horizontalLegendHeight() {
-        //height of legend in case its horizontal
+    @computed get legendLocation() {
+        if (this.props.legendLocationWidthThreshold !== undefined &&
+            this.chartWidth > this.props.legendLocationWidthThreshold) {
+            return "bottom";
+        } else {
+            return "right";
+        }
+    }
+
+    @computed get bottomLegendHeight() {
+        //height of legend in case its on bottom
         if (!this.props.legendData) {
             return 0;
         } else {
@@ -194,19 +204,15 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     private get legend() {
-        const x = this.legendX;
         if (this.props.legendData && this.props.legendData.length) {
-            // all the props conditional on this.props.horizontal are because
-            //  we want to put the legend on top of the plot, since the plot
-            //  could be arbitrarily wide with a lot of boxes
             return (
                 <VictoryLegend
-                    orientation={this.props.horizontal ? "vertical" : "horizontal"}
-                    itemsPerRow={this.props.horizontal ? undefined : 5}
-                    rowGutter={this.props.horizontal ? undefined : -5}
+                    orientation={this.legendLocation === "right" ? "vertical" : "horizontal"}
+                    itemsPerRow={this.legendLocation === "right" ? undefined : LEGEND_ITEMS_PER_ROW}
+                    rowGutter={this.legendLocation === "right" ? undefined : -5}
                     data={this.props.legendData}
-                    x={this.props.horizontal ? x : 0}
-                    y={this.props.horizontal ? LEGEND_Y: -this.horizontalLegendHeight}
+                    x={this.legendLocation === "right" ? this.sideLegendX : 0}
+                    y={this.legendLocation === "right" ? 100 : this.svgHeight-this.bottomLegendHeight}
                 />
             );
         } else {
@@ -393,17 +399,12 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     @computed get topPadding() {
-        // more top padding if vertical, to make room for legend
-        if (this.props.horizontal) {
-            return 0;
-        } else {
-            return this.horizontalLegendHeight;
-        }
+        return 0;
     }
 
     @computed get rightPadding() {
-        // more right padding if horizontal, to make room for legend
-        if (this.props.horizontal) {
+        if (this.legendLocation === "right") {
+            // make room for legend
             return RIGHT_GUTTER;
         } else {
             return 0;
@@ -411,11 +412,19 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     @computed get bottomPadding() {
-        if (this.props.horizontal) {
-            return DEFAULT_BOTTOM_PADDING;
-        } else {
-            return this.biggestCategoryLabelSize;
+        let paddingForLabels = DEFAULT_BOTTOM_PADDING;
+        let paddingForLegend = 0;
+
+        if (!this.props.horizontal) {
+            // more padding if vertical, because category labels extend to bottom
+            paddingForLabels = this.biggestCategoryLabelSize;
         }
+        if (this.legendLocation === "bottom") {
+            // more padding if legend location is "bottom", to make room for legend
+            paddingForLegend = this.bottomLegendHeight + BOTTOM_LEGEND_PADDING;
+        }
+
+        return paddingForLabels + paddingForLegend;
     }
 
     @computed get biggestCategoryLabelSize() {
