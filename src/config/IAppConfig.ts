@@ -52,6 +52,7 @@ export interface IAppConfig {
     // Select hide VUS by default
     oncoprintHideVUSDefault?:boolean;
     sessionServiceIsEnabled?:boolean;
+    sessionServiceUrl?:string;
 }
 
 export type PriorityStudies = {
