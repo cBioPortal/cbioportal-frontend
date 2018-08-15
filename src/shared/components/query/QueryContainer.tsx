@@ -72,7 +72,7 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
                     <UnknownStudiesWarning ids={this.store.unknownStudyIds} />
                 }
 
-				<CancerStudySelector/>
+				<CancerStudySelector queryStore={this.store}/>
 
 				{this.store.isVirtualStudyQuery ?
 					(<DataTypePrioritySelector/>) :

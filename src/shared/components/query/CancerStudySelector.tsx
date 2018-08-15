@@ -11,7 +11,7 @@ import {observer, Observer} from "mobx-react";
 import {action, expr} from 'mobx';
 import memoize from "memoize-weak-decorator";
 import {If, Then, Else} from 'react-if';
-import {QueryStoreComponent} from "./QueryStore";
+import {QueryStore, QueryStoreComponent} from "./QueryStore";
 import SectionHeader from "../sectionHeader/SectionHeader";
 import {Modal, Button} from 'react-bootstrap';
 import Autosuggest from 'react-bootstrap-autosuggest'
@@ -54,10 +54,11 @@ const styles = styles_any as {
 
 export interface ICancerStudySelectorProps {
     style?: React.CSSProperties;
+    queryStore:QueryStore;
 }
 
 @observer
-export default class CancerStudySelector extends QueryStoreComponent<ICancerStudySelectorProps, {}> {
+export default class CancerStudySelector extends React.Component<ICancerStudySelectorProps, {}> {
     private handlers = {
         onSummaryClick: () => {
             this.store.openSummary();
@@ -70,8 +71,11 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
         }
     };
 
+    public store:QueryStore;
+
     constructor(props: ICancerStudySelectorProps) {
         super(props);
+        this.store = this.props.queryStore;
     }
 
     get logic() {
