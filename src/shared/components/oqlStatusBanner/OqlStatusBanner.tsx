@@ -8,6 +8,7 @@ import "./styles.scss";
 interface IOqlStatusBannerProps {
     store:ResultsViewPageStore;
     tabReflectsOql:boolean;
+    isUnaffected?:boolean;
     onToggle?:()=>void;
     className?:string;
     style?:any;
@@ -16,7 +17,7 @@ interface IOqlStatusBannerProps {
 @observer
 export default class OqlStatusBanner extends React.Component<IOqlStatusBannerProps, {}> {
     @computed get toggleButton() {
-        if (this.props.onToggle) {
+        if (this.props.onToggle && !this.props.isUnaffected) {
             return (
                 <span>
                     <button
@@ -47,7 +48,12 @@ export default class OqlStatusBanner extends React.Component<IOqlStatusBannerPro
             let iconClassName:string;
             let dataTest:string;
 
-            if (this.props.tabReflectsOql) {
+            if (this.props.isUnaffected) {
+                className="alert alert-unaffected";
+                message = "The results below are not affected by the OQL specification from your query.";
+                iconClassName = "fa fa-md fa-info-circle";
+                dataTest="OqlStatusBannerUnaffected";
+            } else if (this.props.tabReflectsOql) {
                 className="alert alert-success";
                 message = "The results below reflect the OQL specification from your query.";
                 iconClassName = "fa fa-md fa-check";

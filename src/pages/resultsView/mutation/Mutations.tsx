@@ -30,7 +30,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
 
     @autobind
     private onToggleOql() {
-        this.props.store.mutationsTabUsingOql = !this.props.store.mutationsTabUsingOql;
+        this.props.store.mutationsTabShouldUseOql = !this.props.store.mutationsTabShouldUseOql;
     }
 
     public render() {
@@ -43,7 +43,8 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                 <OqlStatusBanner
                     className="mutations-oql-status-banner"
                     store={this.props.store}
-                    tabReflectsOql={this.props.store.mutationsTabUsingOql}
+                    tabReflectsOql={this.props.store.mutationsTabShouldUseOql}
+                    isUnaffected={!this.props.store.queryContainsMutationOql}
                     style={{marginTop:-2}}
                     onToggle={this.onToggleOql}
                 />
