@@ -11,7 +11,7 @@ import DiscreteCNACache from "../../../shared/cache/DiscreteCNACache";
 import { If, Then, Else } from 'react-if';
 import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import { getCountsText, getData, getFilteredData } from "./MutualExclusivityUtil";
-import OqlStatusBanner from "../../../shared/components/OqlStatusBanner";
+import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 
 export interface IMutualExclusivityTabProps {
     store: ResultsViewPageStore

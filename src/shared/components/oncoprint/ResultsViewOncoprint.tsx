@@ -35,7 +35,7 @@ import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
 import naturalSort from "javascript-natural-sort";
 import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
 import Spec = Mocha.reporters.Spec;
-import OqlStatusBanner from "../OqlStatusBanner";
+import OqlStatusBanner from "../oqlStatusBanner/OqlStatusBanner";
 
 interface IResultsViewOncoprintProps {
     divId: string;
