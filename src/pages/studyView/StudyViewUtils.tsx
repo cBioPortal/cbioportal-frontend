@@ -235,12 +235,13 @@ export function getVirtualStudyDescription(
     return descriptionLines.join('\n');
 }
 
-export function isFiltered(filter: StudyViewFilter) {
+export function isFiltered(filter: StudyViewFilter, includeSampleIdentifiers:boolean = false) {
     return !(_.isEmpty(filter) || (
         _.isEmpty(filter.clinicalDataEqualityFilters) &&
+        _.isEmpty(filter.clinicalDataIntervalFilters) &&
         _.isEmpty(filter.cnaGenes) &&
-        _.isEmpty(filter.mutatedGenes) &&
-        _.isEmpty(filter.sampleIdentifiers)
+        _.isEmpty(filter.mutatedGenes)
+        //&& (includeSampleIdentifiers?_.isEmpty(filter.sampleIdentifiers):true)
     ));
 }
 
