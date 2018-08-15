@@ -118,7 +118,7 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
             (_.isUndefined(this.props.user) ||
                 _.isEmpty(this.props.user) ||
                 _.isEqual(this.props.user.toLowerCase(), 'anonymoususer')
-            ) ? 'Save/' : '') + 'Share Virtual Study';
+            ) ? '' : 'Save/') + 'Share Virtual Study';
     }
 
     @computed get downloadButtonTooltip() {
@@ -187,9 +187,16 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                         }
                         placement="bottom"
                     >
-                        <span className="btn" title={this.virtualStudyButtonTooltip}>
-                            <i className="fa fa-bookmark" aria-hidden="true" title="Virtual Study"/>
+                    <DefaultTooltip
+                        placement={"top"}
+                        trigger={['hover']}
+                        overlay={<span>{this.virtualStudyButtonTooltip}</span>}
+                    >
+                        <span className="btn">
+                            <i className="fa fa-bookmark" aria-hidden="true"/>
                         </span>
+                    </DefaultTooltip>
+                        
                     </DefaultTooltip>
                     
                     <button className="btn" onClick={() => this.openCases()}>
