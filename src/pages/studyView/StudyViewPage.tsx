@@ -1,24 +1,21 @@
 import * as React from 'react';
 import {inject, observer} from "mobx-react";
 import styles from "./styles.module.scss";
-import { MutatedGenesTable } from "./table/MutatedGenesTable";
-import { CNAGenesTable } from "./table/CNAGenesTable";
 import {ChartContainer, IChartContainerProps} from 'pages/studyView/charts/ChartContainer';
-import SurvivalChart from "../resultsView/survival/SurvivalChart";
 import { MSKTab, MSKTabs } from "../../shared/components/MSKTabs/MSKTabs";
-import { StudyViewComponentLoader } from "./charts/StudyViewComponentLoader";
-import { reaction } from 'mobx';
+import { reaction, observable } from 'mobx';
 import { If } from 'react-if';
 import {ChartMeta, ChartType, StudyViewPageStore, AnalysisGroup} from 'pages/studyView/StudyViewPageStore';
 import SummaryHeader from 'pages/studyView/SummaryHeader';
-import {Sample, Gene, SampleIdentifier, ClinicalAttribute} from 'shared/api/generated/CBioPortalAPI';
+import {Gene, SampleIdentifier, ClinicalAttribute} from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import AppConfig from 'appConfig';
-import MobxPromise from "mobxpromise";
 import {CopyNumberGeneFilterElement} from "../../shared/api/generated/CBioPortalAPIInternal";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {ClinicalDataTab} from "./tabs/ClinicalDataTab";
 import setWindowVariable from "../../shared/lib/setWindowVariable";
+import * as _ from 'lodash';
+import ErrorBox from 'shared/components/errorBox/ErrorBox';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -34,6 +31,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     private store: StudyViewPageStore;
     private queryInput: HTMLInputElement;
     private handlers: any;
+
+    @observable showErrorMessage = true;
 
     constructor(props: IStudyViewPageProps) {
         super();
@@ -191,19 +190,24 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     }
 
     render() {
-        if (this.store.studies.isComplete) {
+        if (
+            this.store.queriedSampleIdentifiers.isComplete &&
+            this.store.invalidSampleIds.isComplete &&
+            _.isEmpty(this.store.unknownQueriedIds) &&
+            !_.isEmpty(this.store.queriedStudies)
+            ) {
             return (
                 <div className="studyView">
                     <div className="topBanner">
                         <div className="studyViewHeader">
-                            <If condition={this.store.studies.result.length === 1}>
+                            <If condition={this.store.queriedStudies.length === 1}>
                                 <div>
-                                    <h3>{this.store.studies.result![0].name}</h3>
-                                    <p dangerouslySetInnerHTML={{__html: this.store.studies.result![0].description}}></p>
+                                    <h3>{this.store.queriedStudies![0].name}</h3>
+                                    <p dangerouslySetInnerHTML={{ __html: this.store.queriedStudies![0].description }}></p>
                                 </div>
                             </If>
                             {/*TDOD: currently show as Multiple Studies but should be shandles properly, i.e as in production*/}
-                            <If condition={this.store.studies.result!.length > 1}>
+                            <If condition={this.store.queriedStudies!.length > 1}>
                                 <h3>Multiple Studies</h3>
                             </If>
                         </div>
@@ -213,6 +217,21 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                              className="mainTabs">
 
                         <MSKTab key={0} id="summary" linkText="Summary">
+                            {
+                                this.store.invalidSampleIds.result.length > 0 &&
+                                this.showErrorMessage &&
+                                <div>
+                                    <div className="alert alert-danger">
+                                        <button type="button" className="close" onClick={(event) => this.showErrorMessage = false}>&times;</button>
+                                        The following sample(s) might have been deleted/updated with the recent data updates
+                                        <br />
+
+                                        <ul style={{ listStyle: "none", padding: "10px",     maxHeight: "300px", overflowY: "scroll"}}>
+                                            {this.store.invalidSampleIds.result.map(sample => <li>{sample.studyId + ':' + sample.sampleId}</li>)}
+                                        </ul>
+                                    </div>
+                                </div>
+                            }
                             <SummaryHeader
                                 geneQuery={this.store.geneQueryStr}
                                 selectedSamples={this.store.selectedSamples.result!}
@@ -260,6 +279,13 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             )
         } else {
             //TODO: update with loading
+            if(this.store.filteredVirtualStudies.isComplete && !_.isEmpty(this.store.unknownQueriedIds)) {
+                return (
+                    <div style={{ margin: "0px auto", maxWidth: "50%", fontSize: "16px" }}>
+                        <ErrorBox error={Error(`Unknown/Unauthorized studies ${this.store.unknownQueriedIds.join(', ')}`)} />
+                    </div>
+                )
+            }
             return null;
         }
     }
