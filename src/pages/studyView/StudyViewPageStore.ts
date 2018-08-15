@@ -44,6 +44,12 @@ export enum ChartType {
     CNA_GENES_TABLE = 'CNA_GENES_TABLE'
 }
 
+export enum UniqueKey {
+    MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
+    CNA_GENES_TABLE = 'CNA_GENES_TABLE',
+    MUTATION_COUNT_CNA_FRACTION = 'MUTATION_COUNT_CNA_FRACTION'
+}
+
 export type ClinicalDataCountWithColor = ClinicalDataCount & { color: string }
 export type MutatedGenesData = MutationCountByGene[];
 export type CNAGenesData = CopyNumberCountByGene[];
@@ -85,8 +91,6 @@ export class StudyViewPageStore {
     @observable private _sampleIdentifiers:SampleIdentifier[];
 
     @observable private _chartVisibility = observable.map<boolean>();
-
-    private _survivalClinicalData = observable.map<ClinicalData[]>();
 
     @action
     updateClinicalDataEqualityFilters(chartMeta: ChartMeta, values: string[]) {
@@ -242,8 +246,8 @@ export class StudyViewPageStore {
     }
 
     public getClinicalDataFiltersByUniqueKey(uniqueKey: string): string[] {
-        let filters = _.filter(this._clinicalDataEqualityFilterSet.values(), filter => _.isEqual(filter.clinicalDataType + '_' + filter.attributeId, uniqueKey));
-        return _.isEmpty(filters) ? [] : filters[0].values;
+        let filter = _.find(this._clinicalDataEqualityFilterSet.values(), filter => _.isEqual(filter.clinicalDataType + '_' + filter.attributeId, uniqueKey));
+        return filter ? filter.values : [];
     }
 
     readonly molecularProfiles = remoteData<MolecularProfile[]>({
@@ -321,8 +325,8 @@ export class StudyViewPageStore {
         }, _chartMetaSet);
 
         if (!_.isEmpty(this.mutationProfiles.result!)) {
-            _chartMetaSet['MUTATED_GENES_TABLE'] = {
-                uniqueKey: 'MUTATED_GENES_TABLE',
+            _chartMetaSet[UniqueKey.MUTATED_GENES_TABLE] = {
+                uniqueKey: UniqueKey.MUTATED_GENES_TABLE,
                 chartType: ChartType.MUTATED_GENES_TABLE,
                 displayName: 'Mutated Genes',
                 description: ''
@@ -330,16 +334,16 @@ export class StudyViewPageStore {
         }
 
         if (!_.isEmpty(this.cnaProfileIds)) {
-            _chartMetaSet['CNA_GENES_TABLE'] = {
-                uniqueKey: 'CNA_GENES_TABLE',
+            _chartMetaSet[UniqueKey.CNA_GENES_TABLE] = {
+                uniqueKey: UniqueKey.CNA_GENES_TABLE,
                 chartType: ChartType.CNA_GENES_TABLE,
                 displayName: 'CNA Genes',
                 description: ''
             };
         }
 
-        _chartMetaSet['MUTATION_COUNT_CNA_FRACTION'] = {
-            uniqueKey: 'MUTATION_COUNT_CNA_FRACTION',
+        _chartMetaSet[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = {
+            uniqueKey: UniqueKey.MUTATION_COUNT_CNA_FRACTION,
             chartType: ChartType.SCATTER,
             displayName: 'Mutation count Vs. CNA',
             description: ''
@@ -351,13 +355,12 @@ export class StudyViewPageStore {
     @computed
     get visibleAttributes(): ChartMeta[] {
         const _keys = this._chartVisibility.keys();
-        let _visibleCharts:ChartMeta[] = [];
-        _.each(this.chartMetaSet, (chartMeta:ChartMeta, uniqueKey:string) => {
+        return _.reduce(this.chartMetaSet, (result:ChartMeta[], chartMeta:ChartMeta, uniqueKey:string) => {
             if(!_.includes(_keys, uniqueKey) || this._chartVisibility.get(uniqueKey)) {
-                _visibleCharts.push(chartMeta);
+                result.push(chartMeta);
             }
-        });
-        return _visibleCharts;
+            return result;
+        }, []);
     }
 
     //TODO:cleanup
@@ -564,14 +567,9 @@ export class StudyViewPageStore {
         return remoteData<any>({
             await: () => [this.survivalPlotData],
             invoke: async () => {
-                let matchedSP = {};
-                _.some(this.survivalPlots, (survivalPlot) => {
-                    if(survivalPlot.id === chartMeta.uniqueKey) {
-                        matchedSP = survivalPlot;
-                        return true;
-                    }
-                });
-                return matchedSP;
+                return _.find(this.survivalPlots, (survivalPlot) => {
+                    return survivalPlot.id === chartMeta.uniqueKey;
+                }) || {};
             },
             default: {}
         });
