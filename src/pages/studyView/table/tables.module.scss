@@ -1,2 +1,9 @@
 .studyViewTablesTable {
+  .selectd {
+    font-weight: bold
+  }
+  .geneSymbol:hover {
+    border: 2px solid #1974b8;
+    cursor: pointer;
+  }
 }

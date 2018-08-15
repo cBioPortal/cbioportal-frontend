@@ -1,13 +1,21 @@
 import * as React from 'react';
 import {inject, observer} from "mobx-react";
 import styles from "./styles.module.scss";
-import {ChartContainer, IChartContainerProps} from 'pages/studyView/charts/ChartContainer';
-import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
+import { MutatedGenesTable } from "./table/MutatedGenesTable";
+import { CNAGenesTable } from "./table/CNAGenesTable";
+import { ChartContainer } from 'pages/studyView/charts/ChartContainer';
+import SurvivalChart from "../resultsView/survival/SurvivalChart";
+import { MSKTab, MSKTabs } from "../../shared/components/MSKTabs/MSKTabs";
+import { StudyViewComponentLoader } from "./charts/StudyViewComponentLoader";
+import { reaction } from 'mobx';
+import { If } from 'react-if';
 import {ChartMeta, ChartType, StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
-import {reaction} from 'mobx';
-import {If} from 'react-if';
 import SummaryHeader from 'pages/studyView/SummaryHeader';
-import {SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
+import { Sample, Gene , SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
+import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
+import StudyViewScatterPlot from "./charts/scatterPlot/StudyViewScatterPlot";
+import {isSelected, mutationCountVsCnaTooltip} from "./StudyViewUtils";
+import AppConfig from 'appConfig';
 import MobxPromise from "mobxpromise";
 
 export interface IStudyViewPageProps {
@@ -50,6 +58,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             },
             updateCustomCasesFilter: (cases: SampleIdentifier[]) => {
                 this.store.updateCustomCasesFilter(cases);
+            },
+            updateSelectedGenes:(query: SingleGeneQuery[], genesInQuery: Gene[])=>{
+                this.store.updateSelectedGenes(query, genesInQuery);
             },
             resetCustomCasesFilter: () => {
                 this.store.resetCustomCasesFilter();
@@ -107,6 +118,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 props.promise = this.store.mutatedGeneData;
                 props.onUserSelection = this.handlers.updateGeneFilter;
                 props.onResetSelection = this.handlers.resetGeneFilter;
+                props.selectedGenes=this.store.selectedGenes;
+                props.onGeneSelect=this.store.onCheckGene;
                 break;
             }
             case ChartType.CNA_GENES_TABLE: {
@@ -114,6 +127,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 props.promise = this.store.cnaGeneData;
                 props.onUserSelection = this.handlers.updateCNAGeneFilter;
                 props.onResetSelection = this.handlers.resetCNAGeneFilter;
+                props.selectedGenes=this.store.selectedGenes;
+                props.onGeneSelect=this.store.onCheckGene;
                 break;
             }
             case ChartType.SURVIVAL: {
@@ -158,8 +173,15 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
                         <MSKTab key={0} id="summaryTab" linkText="Summary">
                             <SummaryHeader
+                                geneQuery={this.store.geneQueryStr}
                                 selectedSamples={this.store.selectedSamples.result!}
-                                updateCustomCasesFilter={this.handlers.updateCustomCasesFilter}/>
+                                updateCustomCasesFilter={this.handlers.updateCustomCasesFilter}
+                                updateSelectedGenes={this.handlers.updateSelectedGenes}
+                                studyWithSamples={this.store.studyWithSamples.result}
+                                filter={this.store.filters}
+                                attributeNamesSet={this.store.attributeNamesSet}
+                                user={AppConfig.userEmailAddress}
+                            />
                             <div className={styles.studyViewFlexContainer}>
                                 {this.store.initialClinicalDataCounts.isComplete &&
                                 this.store.visibleAttributes.map(this.renderAttributeChart)}

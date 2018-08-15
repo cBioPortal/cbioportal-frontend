@@ -209,7 +209,7 @@ describe('patient page', function(){
 
     it('oncokb indicators show up and hovering produces oncocard', function(){
 
-        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/case.do#/patient?studyId=ucec_tcga_pub&caseId=TCGA-BK-A0CC`);
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/patient?studyId=ucec_tcga_pub&caseId=TCGA-BK-A0CC`);
 
         browser.waitForExist('span=PPP2R1A');
 
@@ -558,7 +558,7 @@ describe('oncoprint', function() {
             browser.execute(function() { resultsViewOncoprint.setAnnotateCBioPortalInputValue("1"); });
             browser.pause(100); // give time to take effect
             waitForOncoprint(10000);
-            let legendText = browser.getText("#oncoprint-inner svg");
+            let legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
             assert(legendText.indexOf("Inframe Mutation (putative driver)") > -1, "cbio count annotates inframe mutations");
             assert(legendText.indexOf("Missense Mutation (putative driver)") > -1, "cbio count annotates missense mutations");
             assert(legendText.indexOf("Truncating Mutation (putative driver)") > -1, "cbio count annotates truncating mutations");
@@ -1061,6 +1061,63 @@ describe('oncoprint', function() {
             );
         });
     });
+    describe("only show clinical legends for altered cases", function(){
+        const checkboxSelector = '#oncoprint .oncoprint__controls input[type="checkbox"][data-test="onlyShowClinicalLegendsForAltered"]';
+        it("only shows legend items for cases which are altered", function() {
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=-1&case_ids=coadread_tcga_pub%3ATCGA-AA-A00D-01%2Bcoadread_tcga_pub%3ATCGA-A6-2677-01&gene_list=BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&show_samples=false&clinicallist=SEX`);
+            waitForOncoprint(10000);
+            let legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            assert(legendText.indexOf("Male") > -1, "a patient is male");
+            assert(legendText.indexOf("Female") > -1, "a patient is female");
+
+            $('#oncoprint .oncoprint__controls #viewDropdownButton').click(); // open view menu
+            $(checkboxSelector).waitForExist(1000);
+            $(checkboxSelector).click(); // turn off legend for unaltered cases
+            waitForOncoprint(3000); // wait for oncoprint to reset
+            legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            assert(legendText.indexOf("Male") > -1, "altered patient is male");
+            assert(legendText.indexOf("Female") === -1, "altered patient is not female");
+
+            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+            waitForOncoprint(3000); // wait for oncoprint to reset
+            legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            assert(legendText.indexOf("Male") > -1, "altered sample is male");
+            assert(legendText.indexOf("Female") === -1, "altered sample is not female");
+
+            $(checkboxSelector).click(); // turn back on legend for unaltered cases
+            waitForOncoprint(3000); // wait for oncoprint to reset
+            legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            assert(legendText.indexOf("Male") > -1, "a sample is male");
+            assert(legendText.indexOf("Female") > -1, "a sample is female");
+        });
+        it("does not show a legend when no altered cases", function() {
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=-1&case_ids=coadread_tcga_pub%3ATCGA-A6-2677-01&gene_list=BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&show_samples=false&clinicallist=SEX`);
+            waitForOncoprint(10000);
+            let legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            assert(legendText.indexOf("Sex") > -1, "Sex legend is shown (in patient mode)");
+            assert(legendText.indexOf("Female") > -1, "Female item is shown (in patient mode)");
+
+            $('#oncoprint .oncoprint__controls #viewDropdownButton').click(); // open view menu
+            $(checkboxSelector).waitForExist(1000);
+            $(checkboxSelector).click(); // turn off legend for unaltered cases
+            waitForOncoprint(3000); // wait for oncoprint to reset
+            legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            assert(legendText.indexOf("Sex") === -1, "Sex legend is not shown (in patient mode)");
+            assert(legendText.indexOf("Female") === -1, "Female item is not shown (in patient mode)");
+
+            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+            waitForOncoprint(3000); // wait for oncoprint to reset
+            legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            assert(legendText.indexOf("Sex") === -1, "Sex legend is not shown (in sample mode)");
+            assert(legendText.indexOf("Female") === -1, "Female item is not shown (in sample mode)");
+
+            $(checkboxSelector).click(); // turn back on legend for unaltered cases
+            waitForOncoprint(3000); // wait for oncoprint to reset
+            legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            assert(legendText.indexOf("Sex") > -1, "Sex legend is shown (in sample mode)");
+            assert(legendText.indexOf("Female") > -1, "Female item is shown (in sample mode)");
+        });
+    });
 });
 
 describe('case set selection in front page query form', function(){
@@ -1179,8 +1236,8 @@ describe('case set selection in front page query form', function(){
 
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "All (21206)",
-            "All (21206)",
+            "All (21333)",
+            "All (21333)",
         );
 
         // Deselect all tcga -provisional studies
@@ -1293,7 +1350,7 @@ describe('case set selection in modify query form', function(){
             "Initially selected case set should be as specified from URL"
         );
 
-        // Select all tcga -provisional studies
+        // Select all impact studies
         var input = $(".autosuggest input[type=text]");
         input.waitForExist(10000);
         input.setValue('impact');
@@ -1304,6 +1361,7 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
+        browser.pause(100); // give time for text change to propagate through to the view
         assert.equal(
             browser.getText(selectedCaseSet_sel),
             "All (12997)",
@@ -1330,7 +1388,7 @@ describe('genetic profile selection in modify query form', function(){
     beforeEach(function(){
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=chol_tcga&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=chol_tcga_all&gene_list=EGFR&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=chol_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=chol_tcga_gistic&genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION=chol_tcga_rppa_Zscores`;
         goToUrlAndSetLocalStorage(url);
-        browser.waitForExist("#modifyQueryBtn", 60000)
+        browser.waitForExist("#modifyQueryBtn", 20000)
     });
 
     it('contains correct selected genetic profiles through a certain use flow involving two studies', ()=>{

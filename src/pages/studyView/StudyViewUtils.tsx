@@ -1,7 +1,12 @@
 import _ from "lodash";
+import { SingleGeneQuery } from "shared/lib/oql/oql-parser";
+import { unparseOQLQueryLine } from "shared/lib/oql/oqlfilter";
+import { StudyViewFilter } from "shared/api/generated/CBioPortalAPIInternal";
+import { Sample, Gene } from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
 import {getSampleViewUrl, getStudySummaryUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
+import { StudyWithSamples } from "pages/studyView/StudyViewPageStore";
 import {ClinicalDataType} from "./StudyViewPageStore";
 import {ClinicalAttribute} from "../../shared/api/generated/CBioPortalAPI";
 
@@ -60,12 +65,24 @@ export const COLORS = [
     '#b82e27', '#316397', '#994495', '#22aa93',
     '#aaaa14', '#6633c1', '#e67303', '#8b0705',
     '#651062', '#329267', '#5574a1', '#3b3ea5'
-  ];
+];
 
 export const NA_COLOR = '#CCCCCC'
 
 export const UNSELECTED_COLOR = '#808080'
 
+export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: string): string {
+
+    let updatedQueries = _.filter(geneQueries,query=> query.gene !== selectedGene)
+    if(updatedQueries.length === geneQueries.length){
+        updatedQueries.push({
+            gene: selectedGene,
+            alterations: false
+        })
+    }
+    return updatedQueries.map(query=>unparseOQLQueryLine(query)).join('\n');
+
+}
 export function mutationCountVsCnaTooltip(d: { data: Pick<IStudyViewScatterPlotData, "x" | "y" | "studyId" | "sampleId" | "patientId">[] }) {
     const rows = [];
     const MAX_SAMPLES = 3;
@@ -128,4 +145,85 @@ export function getClinicalAttributeUniqueKey(attr: ClinicalAttribute): string {
     const clinicalDataType: ClinicalDataType = attr.patientAttribute ? 'PATIENT' : 'SAMPLE';
     const uniqueKey = clinicalDataType + '_' + attr.clinicalAttributeId;
     return uniqueKey;
+}
+
+export function getCurrentDate() {
+    return new Date().toISOString().slice(0, 10);
+}
+
+export function getVirtualStudyDescription(
+                                            studyWithSamples: StudyWithSamples[],
+                                            selectedSamples: Sample[],
+                                            filter: StudyViewFilter,
+                                            attributeNamesSet: { [id: string]: string },
+                                            genes: Gene[],
+                                            user?: string) {
+    let selectedSampleSet = _.groupBy(selectedSamples, (sample: Sample) => sample.studyId);
+    let descriptionLines: string[] = [];
+
+    let entrezIdSet: { [id: string]: string } = _.reduce(genes, (acc: { [id: string]: string }, next) => {
+        acc[next.entrezGeneId] = next.hugoGeneSymbol
+        return acc
+    }, {})
+    //add to samples and studies count
+    descriptionLines.push(
+        selectedSamples.length +
+        " sample" + (selectedSamples.length > 1 ? 's' : '') +
+        " from " +
+        Object.keys(selectedSampleSet).length +
+        " " +
+        (Object.keys(selectedSampleSet).length > 1 ? 'studies:' : 'study:'));
+    //add individual studies sample count
+    studyWithSamples.forEach(studyObj => {
+        let selectedUniqueSampleKeys = _.map(selectedSampleSet[studyObj.studyId] || [], sample => sample.uniqueSampleKey);
+        let studySelectedSamples = _.intersection(studyObj.uniqueSampleKeys, selectedUniqueSampleKeys);
+        if (studySelectedSamples.length > 0) {
+            descriptionLines.push("- " + studyObj.name + " (" + studySelectedSamples.length + " samples)")
+        }
+    })
+    //add filters
+    let filterLines: string[] = [];
+    if (!_.isEmpty(filter)) {
+        if (filter.cnaGenes && filter.cnaGenes.length > 0) {
+            filterLines.push('- CNA Genes:')
+            filterLines = filterLines.concat(filter.cnaGenes.map(cnaGene => {
+
+                return cnaGene.alterations.map(alteration => {
+                    let geneSymbol = entrezIdSet[alteration.entrezGeneId] || alteration.entrezGeneId
+                    return geneSymbol + "-" + (alteration.alteration === -2 ? 'DEL' : 'AMP')
+                }).join(', ').trim();
+            }).map(line => '  - ' + line));
+        }
+        if (filter.mutatedGenes && filter.mutatedGenes.length > 0) {
+            filterLines.push('- Mutated Genes:')
+            filterLines = filterLines.concat(filter.mutatedGenes.map(mutatedGene => {
+                return mutatedGene.entrezGeneIds.map(entrezGeneId => {
+                    return entrezIdSet[entrezGeneId] || entrezGeneId;
+                }).join(', ').trim();
+            }).map(line => '  - ' + line));
+        }
+        if (filter.clinicalDataEqualityFilters && filter.clinicalDataEqualityFilters.length > 0) {
+            filterLines = filterLines.concat(
+                filter.clinicalDataEqualityFilters.map(clinicalDataEqualityFilter => {
+                    let name = attributeNamesSet[clinicalDataEqualityFilter.clinicalDataType + '_' + clinicalDataEqualityFilter.attributeId] || clinicalDataEqualityFilter.attributeId;
+                    return `  - ${name}: ${clinicalDataEqualityFilter.values.join(', ')}`;
+                }));
+        }
+        /*
+           TODO: currently sampleIdentifiers includes both custom cases and scatter
+           need to update this once the filter handled properly
+        */
+        if (filter.sampleIdentifiers && filter.sampleIdentifiers.length > 0) {
+            filterLines.push('- Select by IDs: ' + filter.sampleIdentifiers.length + ' samples');
+        }
+    }
+    if (filterLines.length > 0) {
+        descriptionLines.push('');
+        descriptionLines.push('Filters:');
+        descriptionLines = descriptionLines.concat(filterLines);
+    }
+    descriptionLines.push('');
+    //add creation and user name
+    descriptionLines.push('Created on ' + getCurrentDate() + (user ? ' by ' + user : ''));
+    return descriptionLines.join('\n');
 }

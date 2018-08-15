@@ -6,7 +6,7 @@ import { Popover } from 'react-bootstrap';
 import CBIOPORTAL_VICTORY_THEME, {axisLabelStyles} from "../../../shared/theme/cBioPoralTheme";
 import { formatLogOddsRatio } from "./EnrichmentsUtil";
 import { toConditionalPrecision, } from 'shared/lib/NumberUtils';
-import DownloadControls from 'shared/components/DownloadControls';
+import DownloadControls from 'shared/components/downloadControls/DownloadControls';
 import autobind from 'autobind-decorator';
 
 export interface IMiniScatterChartProps {
@@ -28,7 +28,7 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
     
     @autobind
     @action private svgRef(svgContainer:SVGElement|null) {
-        this.svgContainer = svgContainer;
+        this.svgContainer = (svgContainer && svgContainer.children) ? svgContainer.children[0] : null;
     }
 
     private handleSelection(points: any, bounds: any, props: any) {
@@ -78,13 +78,7 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
 
         return (
             <div className="posRelative">
-                <div className="borderedChart inlineBlock">
-                    <DownloadControls
-                        getSvg={() => this.svgContainer}
-                        buttons={["SVG", "PNG"]}
-                        filename="enrichments-volcano"
-                        dontFade={true}
-                    />
+                <div className="borderedChart inlineBlock" style={{position:"relative"}}>
                     <VictoryChart containerComponent={<VictorySelectionContainer containerRef={this.svgRef}
                         onSelection={(points: any, bounds: any, props: any) => this.handleSelection(points, bounds, props)} responsive={false}
                         onSelectionCleared={(props:any) => this.handleSelectionCleared(props)}/>} theme={CBIOPORTAL_VICTORY_THEME}
@@ -107,6 +101,13 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                             d.qValue < 0.05 ? "#58ACFA" : "#D3D3D3", fillOpacity: 0.4 } }} 
                             data={this.props.data} symbol="circle" size={(d: any) => d.hovered ? 10 : 3} events={events} />
                     </VictoryChart>
+                    <DownloadControls
+                        getSvg={() => this.svgContainer}
+                        filename="enrichments-volcano"
+                        dontFade={true}
+                        collapse={true}
+                        style={{position:"absolute", top:10, right:10}}
+                    />
                 </div>
                 {this.tooltipModel &&
                     <Popover className={"cbioTooltip"} positionLeft={this.tooltipModel.x + 15}

@@ -31,6 +31,8 @@ export interface IChartContainerProps {
     onUserSelection?: any;
     onResetSelection?: any;
     onDeleteChart: (chartMeta: ChartMeta) => void;
+    selectedGenes?:any;
+    onGeneSelect?:any;
     selectedSamplesMap?: any;
     selectedSamples?: any;
 }
@@ -180,6 +182,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         numOfSelectedSamples={100}
                         filters={this.props.filters}
                         onUserSelection={this.handlers.updateGeneFilter}
+                        onGeneSelect={this.props.onGeneSelect}
+                        selectedGenes={this.props.selectedGenes}
                     />
                 );
             }
@@ -190,6 +194,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         numOfSelectedSamples={100}
                         filters={this.props.filters}
                         onUserSelection={this.handlers.updateCNAGeneFilter}
+                        onGeneSelect={this.props.onGeneSelect}
+                        selectedGenes={this.props.selectedGenes}
                     />
                 );
             }
