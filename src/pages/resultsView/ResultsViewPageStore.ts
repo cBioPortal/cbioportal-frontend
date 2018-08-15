@@ -43,6 +43,7 @@ import {
 import {writeTest} from "../../shared/lib/writeTest";
 import {PatientSurvival} from "../../shared/model/PatientSurvival";
 import {
+    doesQueryContainMutationOQL,
     doesQueryContainOQL,
     filterCBioPortalWebServiceData,
     filterCBioPortalWebServiceDataByOQLLine,
@@ -340,6 +341,10 @@ export class ResultsViewPageStore {
 
     @computed get queryContainsOql() {
         return doesQueryContainOQL(this.oqlQuery);
+    }
+
+    @computed get queryContainsMutationOql() {
+        return doesQueryContainMutationOQL(this.oqlQuery);
     }
 
     private getURL() {
@@ -1177,11 +1182,12 @@ export class ResultsViewPageStore {
 
     });
 
-    @observable public mutationsTabUsingOql = true;
+    @observable public mutationsTabShouldUseOql = true;
 
     @computed get mutationsByGene():{ [hugeGeneSymbol:string]:Mutation[]}{
         let mutations:Mutation[];
-        if (this.mutationsTabUsingOql) {
+        if (this.mutationsTabShouldUseOql && this.queryContainsMutationOql) {
+            // use oql filtering in mutations tab only if query contains mutation oql
             mutations = (this.filteredAlterations.result || []).filter(a=>isMutation(a));
         } else {
             mutations = this.mutations.result || [];
