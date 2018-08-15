@@ -9,7 +9,7 @@ import MRNAEnrichmentsTab from 'pages/resultsView/enrichments/MRNAEnrichmentsTab
 import ProteinEnrichmentsTab from 'pages/resultsView/enrichments/ProteinEnrichmentsTab';
 import Loader from 'shared/components/loadingIndicator/LoadingIndicator';
 import autobind from 'autobind-decorator';
-import OqlStatusBanner from "../../../shared/components/OqlStatusBanner";
+import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 
 export interface IEnrichmentsTabProps {
     store: ResultsViewPageStore

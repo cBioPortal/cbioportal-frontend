@@ -17,7 +17,7 @@ import {
 
 import styles from "./styles.module.scss";
 import classNames from 'classnames';
-import OqlStatusBanner from "../../../shared/components/OqlStatusBanner";
+import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 
 export interface IDownloadTabProps {
     store: ResultsViewPageStore;

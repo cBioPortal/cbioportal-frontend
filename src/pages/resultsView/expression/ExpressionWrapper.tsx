@@ -32,7 +32,7 @@ import {mutationRenderPriority} from "../plots/PlotsTabUtils";
 import {getOncoprintMutationType} from "../../../shared/components/oncoprint/DataUtils";
 import {getSampleViewUrl} from "../../../shared/api/urls";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
-import OqlStatusBanner from "../../../shared/components/OqlStatusBanner";
+import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 
 export interface ExpressionWrapperProps {
     store:ResultsViewPageStore;
