@@ -51,6 +51,7 @@ import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import {createQueryStore} from "./SPA";
 import autobind from "autobind-decorator";
 import {ITabConfiguration} from "../../shared/model/ITabConfiguration";
+import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 
 const win = (window as any);
 
@@ -162,10 +163,6 @@ function initStore() {
 }
 
 
-const resultsViewPageStore = initStore();
-
-(window as any).resultsViewPageStore = resultsViewPageStore;
-
 function addOnBecomeVisibleListener(callback:()=>void) {
     $('#oncoprint-result-tab').click(callback);
 }
@@ -183,12 +180,6 @@ type OncoprintTabInitProps = {
     divId: string;
 };
 
-function getDirtyServerVar(varName:string){
-    return (window as any).serverVars[varName]
-}
-
-
-
 @inject('routing')
 @observer
 export default class ResultsViewPage extends React.Component<IResultsViewPageProps, {}> {
@@ -199,9 +190,9 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     constructor(props: IResultsViewPageProps) {
         super(props);
 
-        this.resultsViewPageStore = resultsViewPageStore;
-        //this.resultsViewPageStore.queryStore = this.props.queryStore;
+        this.resultsViewPageStore = initStore();
 
+        getBrowserWindow().resultsViewPageStore = this.resultsViewPageStore;
     }
 
     get addThisParameters() {
@@ -228,48 +219,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         return win.currentQueryStore;
     }
 
-    // public get showPlotsTab(){
-    //     return !this.queryStore.isVirtualStudyQuery;
-    // }
-    //
-    // public get showExpressionTab(){
-    //     return this.queryStore.isVirtualStudyQuery;
-    // }
-    //
-    // public get showCoexpressionTab(){
-    //     return !this.queryStore.isVirtualStudyQuery;
-    // }
-    //
-    // public get showSurvivalTab(){
-    //     return !this.queryStore.isVirtualStudyQuery;
-    // }
-    //
-    // public get showEnrichmentsTab(){
-    //     return !this.queryStore.isVirtualStudyQuery;
-    // }
-    //
-    // public get showNetworkTab(){
-    //     return !this.queryStore.isVirtualStudyQuery;
-    // }
-    //
-    // public get showCNSegmentsTab(){
-    //     return !this.queryStore.isVirtualStudyQuery;
-    // }
-
-
-
-    // if(isVirtualStudy){
-    //     showCoexpTab = false;
-    //     showIGVtab = false;
-    //     showEnrichmentsTab = false;
-    //     has_survival = false;
-    //     includeNetworks = false;
-    //     showPlotsTab = false;
-    // }
-
-
-
-
     @observable currentQuery = true;
 
     private handleTabChange(id: string) {
@@ -287,7 +236,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
     @computed
     private get tabs() {
-        //, , , , , ,, , IGV
 
         const store = this.resultsViewPageStore;
 
