@@ -26,7 +26,7 @@ import setWindowVariable from "../../../shared/lib/setWindowVariable";
 import {ICoExpressionPlotProps} from "./CoExpressionPlot";
 import {bind} from "bind-decorator";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
-import OqlStatusBanner from "../../../shared/components/OqlStatusBanner";
+import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 
 export interface ICoExpressionTabProps {
     store:ResultsViewPageStore;

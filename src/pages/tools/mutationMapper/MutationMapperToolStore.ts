@@ -143,7 +143,7 @@ export default class MutationMapperToolStore
                 return Promise.resolve(_.reduce(this.genes.result, (map: { [hugoGeneSymbol: string]: MutationMapperStore }, gene: Gene) => {
                     map[gene.hugoGeneSymbol] = new MutationMapperStore(AppConfig,
                         gene,
-                        this.mutationsByGene[gene.hugoGeneSymbol],
+                        ()=>this.mutationsByGene[gene.hugoGeneSymbol],
                         this.indexedHotspotData,
                         this.oncoKbAnnotatedGenes.result || {},
                         this.oncoKbData,
