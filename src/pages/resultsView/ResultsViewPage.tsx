@@ -262,7 +262,8 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
                             if (store.rnaSeqMolecularData.isComplete && store.studyIdToStudy.isComplete
                                 && store.mutations.isComplete && store.genes.isComplete && store.coverageInformation.isComplete) {
-                                return <ExpressionWrapper studyMap={store.studyIdToStudy.result}
+                                return <ExpressionWrapper store={store}
+                                                        studyMap={store.studyIdToStudy.result}
                                                           genes={store.genes.result}
                                                           data={store.rnaSeqMolecularData.result}
                                                           mutations={store.mutations.result}

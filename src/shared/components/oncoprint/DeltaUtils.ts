@@ -662,6 +662,7 @@ function transitionClinicalTrack(
             },
             sort_direction_changeable: true,
             tooltipFn: makeClinicalTrackTooltip(nextSpec, true),
+            important_ids: nextSpec.altered_uids, // only show clinical track legends for altered cases. e.g. if only altered cases are female for the SEX clinical track, then only show 'female' in the SEX legend
             //track_info: "\u23f3",
             sortCmpFn: getClinicalTrackSortComparator(nextSpec),
             init_sort_direction: 0 as 0,
@@ -675,6 +676,10 @@ function transitionClinicalTrack(
         if (nextSpec.data !== prevSpec.data) {
             // shallow equality check
             oncoprint.setTrackData(trackId, nextSpec.data, "uid");
+        }
+        if (nextSpec.altered_uids !== prevSpec.altered_uids) {
+            // shallow equality check
+            oncoprint.setTrackImportantIds(trackId, nextSpec.altered_uids);
         }
         // set tooltip, its cheap
         oncoprint.setTrackTooltipFn(trackId, makeClinicalTrackTooltip(nextSpec, true));
