@@ -158,6 +158,7 @@ describe('Results Page', function() {
     describe.only('oql status banner', function() {
         const yesBannerSelector = 'div[data-test="OqlStatusBannerYes"]';
         const noBannerSelector = 'div[data-test="OqlStatusBannerNo"]';
+        const unaffectedBannerSelector = 'div[data-test="OqlStatusBannerUnaffected"]';
         const simpleQueryUrl = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`;
         const explicitOqlQueryUrl = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%2520NRAS%2520%250ABRAF%253AMUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`;
 
@@ -190,6 +191,7 @@ describe('Results Page', function() {
             browser.pause(500);
             assert(!browser.isVisible(`${yesBannerSelector}.mutations-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.mutations-oql-status-banner`));
+            assert(!browser.isVisible(`${unaffectedBannerSelector}.mutations-oql-status-banner`));
         });
         it("should not be present in coexpression tab with simple query", function(){
             browser.click("#coexp-result-tab");
@@ -249,9 +251,10 @@ describe('Results Page', function() {
         });
         it("should be present in mutations tab with explicit query", function(){
             browser.click("#mutation-result-tab");
-            browser.waitForVisible(`${noBannerSelector}.mutations-oql-status-banner`, 10000);
-            assert(browser.isVisible(`${yesBannerSelector}.mutations-oql-status-banner`));
+            browser.waitForVisible(`${unaffectedBannerSelector}.mutations-oql-status-banner`, 10000);
+            assert(!browser.isVisible(`${yesBannerSelector}.mutations-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.mutations-oql-status-banner`));
+            assert(browser.isVisible(`${unaffectedBannerSelector}.mutations-oql-status-banner`));
         });
         it("should be present in coexpression tab with explicit query", function(){
             browser.click("#coexp-result-tab");

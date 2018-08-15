@@ -2,4 +2,10 @@
   .banner-icon {
     vertical-align:middle !important;
   }
+
+  &.alert-unaffected {
+    background-color: #f3f3f3;
+    border-color: #bce8f1;
+    color: #31708f;
+  }
 }
