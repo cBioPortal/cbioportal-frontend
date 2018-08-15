@@ -2,7 +2,7 @@ import * as React from "react";
 import {observer} from "mobx-react";
 import bind from "bind-decorator";
 import {computed, observable} from "mobx";
-import CBIOPORTAL_VICTORY_THEME from "../../theme/cBioPoralTheme";
+import CBIOPORTAL_VICTORY_THEME, {baseLabelStyles} from "../../theme/cBioPoralTheme";
 import Timer = NodeJS.Timer;
 import {VictoryChart, VictoryAxis, VictoryScatter, VictoryLegend, VictoryLabel} from "victory";
 import jStat from "jStat";
@@ -17,7 +17,7 @@ export interface IBaseScatterPlotData {
 }
 
 export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
-    svgRef?:(svg:SVGElement|null)=>void;
+    svgId?:string;
     title?:string;
     data: D[];
     chartWidth:number;
@@ -27,6 +27,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     stroke?:string | ((d:D)=>string);
     size?:(d:D, active:boolean, isHighlighted?:boolean)=>number;
     fillOpacity?:number | ((d:D)=>number);
+    strokeOpacity?:number | ((d:D)=>number);
     strokeWidth?:number | ((d:D)=>number);
     symbol?: string | ((d:D)=>string); // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
     tooltip?:(d:D)=>JSX.Element;
@@ -60,19 +61,10 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
     private mouseEvents:any = this.makeMouseEvents();
 
     @observable.ref private container:HTMLDivElement;
-    private svg:SVGElement|null;
 
     @bind
     private containerRef(container:HTMLDivElement) {
         this.container = container;
-    }
-
-    @bind
-    private svgRef(svg:SVGElement|null) {
-        this.svg = svg;
-        if (this.props.svgRef) {
-            this.props.svgRef(this.svg);
-        }
     }
 
     private makeMouseEvents() {
@@ -171,25 +163,22 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
     private get correlationInfo() {
         const approxTextWidth = 107; // experimentally determined
         const x = this.legendX;
+        const style = {fontFamily: baseLabelStyles.fontFamily, fontSize: baseLabelStyles.fontSize};
         return (
             <g>
-                <text
-                    x={x + approxTextWidth}
-                    y={CORRELATION_INFO_Y}
-                    fontFamily={this.fontFamily}
-                    textAnchor="end"
-                >
-                    {`Pearson: ${(this.props.correlation ? this.props.correlation.pearson : this.pearsonCorr).toFixed(2)}`}
-                </text>
-                <text
-                    x={x + approxTextWidth}
-                    y={CORRELATION_INFO_Y}
-                    fontFamily={this.fontFamily}
-                    textAnchor="end"
-                    dy="1.2em"
-                >
-                    {`Spearman: ${(this.props.correlation ? this.props.correlation.spearman : this.spearmanCorr).toFixed(2)}`}
-                </text>
+                <VictoryLabel  x={x + approxTextWidth}
+                               y={CORRELATION_INFO_Y}
+                               textAnchor="end"
+                               text={`Pearson: ${(this.props.correlation ? this.props.correlation.pearson : this.pearsonCorr).toFixed(2)}`}
+                               style={style}
+                ></VictoryLabel>
+                <VictoryLabel  x={x + approxTextWidth}
+                               y={CORRELATION_INFO_Y}
+                               textAnchor="end"
+                               dy="2"
+                               text={`Spearman: ${(this.props.correlation ? this.props.correlation.spearman : this.spearmanCorr).toFixed(2)}`}
+                               style={style}
+                ></VictoryLabel>
             </g>
         );
     }
@@ -314,7 +303,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                     style={{width: this.svgWidth, height: this.svgHeight}}
                 >
                     <svg
-                        ref={this.svgRef}
+                        id={this.props.svgId || ""}
                         style={{
                             width: this.svgWidth,
                             height: this.svgHeight,
@@ -334,6 +323,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                                 height={this.props.chartHeight}
                                 standalone={false}
                                 domainPadding={PLOT_DATA_PADDING_PIXELS}
+                                singleQuadrantDomainPadding={false}
                             >
                                 {this.title}
                                 {this.legend}
@@ -355,7 +345,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                                     tickCount={NUM_AXIS_TICKS}
                                     tickFormat={this.tickFormatY}
                                     dependentAxis={true}
-                                    axisLabelComponent={<VictoryLabel dy={-50}/>}
+                                    axisLabelComponent={<VictoryLabel dy={-35}/>}
                                     label={this.props.axisLabelY}
                                 />
                                 <VictoryScatter
@@ -364,6 +354,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                                             fill: ifndef(this.props.fill, "0x000000"),
                                             stroke: ifndef(this.props.stroke, "0x000000"),
                                             strokeWidth: ifndef(this.props.strokeWidth, 0),
+                                            strokeOpacity: ifndef(this.props.strokeOpacity, 1),
                                             fillOpacity: ifndef(this.props.fillOpacity, 1),
                                         }
                                     }}

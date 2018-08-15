@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import {remoteData} from "../../shared/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import {action, computed, observable, toJS} from "mobx";
+import { action, computed, observable, toJS, ObservableMap } from "mobx";
 import {
     ClinicalDataCount,
     ClinicalDataEqualityFilter,
@@ -23,7 +23,9 @@ import {
     ClinicalDataMultiStudyFilter,
     MolecularProfile,
     MolecularProfileFilter,
-    MutationCount
+    Gene,
+    MutationCount,
+    CancerStudy
 } from 'shared/api/generated/CBioPortalAPI';
 import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
@@ -31,6 +33,11 @@ import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalData
 import {getClinicalAttributeUniqueKey, isPreSelectedClinicalAttr} from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {Column} from "../../shared/components/lazyMobXTable/LazyMobXTable";
+import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
+import { bind } from '../../../node_modules/bind-decorator';
+import { updateGeneQuery } from 'pages/studyView/StudyViewUtils';
+import { stringListToSet } from 'shared/lib/StringUtils';
+import client from "../../shared/api/cbioportalClientInstance";
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT'
 
@@ -70,6 +77,10 @@ export type ChartMeta = {
     chartType: ChartType
 }
 
+export type StudyWithSamples = CancerStudy & {
+    uniqueSampleKeys : string[]
+}
+
 export class StudyViewPageStore {
 
     constructor() { }
@@ -91,6 +102,30 @@ export class StudyViewPageStore {
     @observable private _sampleIdentifiers:SampleIdentifier[];
 
     @observable private _chartVisibility = observable.map<boolean>();
+
+    private _clinicalAttributesMetaSet: { [id: string]: ChartMeta } = {} as any;
+
+    @observable geneQueryStr: string;
+
+    @observable private geneQueries: SingleGeneQuery[] = [];
+
+    @observable private queriedGeneSet = observable.map<boolean>();
+
+    @bind
+    @action onCheckGene(hugoGeneSymbol: string) {
+        //only update geneQueryStr whenever a table gene is clicked.
+        this.geneQueryStr = updateGeneQuery(this.geneQueries, hugoGeneSymbol);
+        this.queriedGeneSet.set(hugoGeneSymbol,!this.queriedGeneSet.get(hugoGeneSymbol));
+    }
+
+    @computed get selectedGenes(): string[] {
+        return this.queriedGeneSet.keys().filter(gene=>!!this.queriedGeneSet.get(gene));
+    }
+
+    @action updateSelectedGenes(query: SingleGeneQuery[], genesInQuery: Gene[]) {
+        this.geneQueries = query;
+        this.queriedGeneSet = new ObservableMap(stringListToSet(genesInQuery.map(gene => gene.hugoGeneSymbol)))
+    }
 
     @action
     updateClinicalDataEqualityFilters(chartMeta: ChartMeta, values: string[]) {
@@ -352,6 +387,17 @@ export class StudyViewPageStore {
         return _chartMetaSet;
     }
 
+    @computed get attributeNamesSet() {
+        //TODO: this should use _clinicalAttributesMetaSet once special charts are included in _clinicalAttributesMetaSet
+        return _.reduce(this.clinicalAttributes.result, (acc: { [id: string]: string }, attribute) => {
+            const uniqueKey = (attribute.patientAttribute ? 'PATIENT' : 'SAMPLE') + '_' + attribute.clinicalAttributeId;
+            if (attribute.datatype === 'STRING') {
+                acc[uniqueKey] = attribute.displayName;
+            }
+            return acc
+        }, {})
+    }
+
     @computed
     get visibleAttributes(): ChartMeta[] {
         const _keys = this._chartVisibility.keys();
@@ -452,6 +498,18 @@ export class StudyViewPageStore {
         },
         default: []
     })
+
+    readonly studyWithSamples = remoteData<StudyWithSamples[]>({
+        await: () => [this.studies, this.samples],
+        invoke: async () => {
+            let studySampleSet = _.groupBy(this.samples.result,(sample)=>sample.studyId)
+            return this.studies.result.map(study=>{
+                let samples = studySampleSet[study.studyId]||[];
+                return {...study, uniqueSampleKeys:_.map(samples,sample=>sample.uniqueSampleKey)}
+            });
+        },
+        default: []
+    });
 
     readonly selectedSamples = remoteData<Sample[]>({
         invoke: () => {
