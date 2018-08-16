@@ -27,10 +27,10 @@ export interface IBoxScatterPlotData<D extends IBaseBoxScatterPlotPoint> {
 
 export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     svgId?:string;
-    fontFamily?:string;
     title?:string;
     data: IBoxScatterPlotData<D>[];
     chartBase:number;
+    domainPadding?:number; // see https://formidable.com/open-source/victory/docs/victory-chart/#domainpadding
     highlight?:(d:D)=>boolean;
     size?:(d:D, active:boolean, isHighlighted?:boolean)=>number;
     fill?:string | ((d:D)=>string);
@@ -61,7 +61,6 @@ type BoxModel = {
     y?:number
 };
 
-const DEFAULT_FONT_FAMILY = "Verdana,Arial,sans-serif";
 const RIGHT_GUTTER = 120; // room for legend
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 100;
@@ -141,17 +140,13 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         }];
     }
 
-    @computed get fontFamily() {
-        return this.props.fontFamily || DEFAULT_FONT_FAMILY;
-    }
-
     private get title() {
         if (this.props.title) {
             return (
                 <VictoryLabel
                     style={{
                         fontWeight:"bold",
-                        fontFamily: this.fontFamily,
+                        fontFamily: axisTickLabelStyles.fontFamily,
                         textAnchor: "middle"
                     }}
                     x={this.svgWidth/2}
@@ -234,7 +229,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     @computed get plotDomain() {
-        // data extremes plus padding
+        // data extremes
         let max = Number.NEGATIVE_INFINITY;
         let min = Number.POSITIVE_INFINITY;
         for (const d of this.props.data) {
@@ -260,12 +255,20 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         return { x, y };
     }
 
+    @computed get domainPadding() {
+        if (this.props.domainPadding === undefined) {
+            return PLOT_DATA_PADDING_PIXELS;
+        } else {
+            return this.props.domainPadding;
+        }
+    }
+
     @computed get chartExtent() {
-        const miscPadding = 200; // specifying chart width in victory doesnt translate directly to the actual graph size
+        const miscPadding = 100; // specifying chart width in victory doesnt translate directly to the actual graph size
         const numBoxes = this.props.data.length;
-        const computedExtent = numBoxes*this.boxWidth + (numBoxes-1)*this.boxSeparation + miscPadding;
-        const ret = Math.max(computedExtent, this.props.chartBase);
-        return ret;
+        return 2*this.domainPadding + numBoxes*this.boxWidth + (numBoxes-1)*this.boxSeparation + miscPadding;
+        //const ret = Math.max(computedExtent, this.props.chartBase);
+        //return ret;
     }
 
     @computed get svgWidth() {
@@ -473,7 +476,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     @computed get boxPlotData():BoxModel[] {
         const boxCalculationFilter = this.props.boxCalculationFilter;
         return this.props.data.map(d=>calculateBoxPlotModel(d.data.reduce((data, next)=>{
-            if (!boxCalculationFilter || (boxCalculationFilter && boxCalculationFilter(next.value))) {
+            if (!boxCalculationFilter || (boxCalculationFilter && boxCalculationFilter(next))) {
                 // filter out values in calculating boxes, if a filter is specified ^^
                 if (this.props.logScale) {
                     data.push(this.logScale(next.value));
@@ -482,7 +485,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                 }
             }
             return data;
-        }, []))).map((model, i)=>{
+        }, [] as number[]))).map((model, i)=>{
             // create boxes, importantly we dont filter at this step because
             //  we need the indexes to be intact and correpond to the index in the input data,
             //  in order to properly determine the x/y coordinates
@@ -540,7 +543,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                                 width={this.chartWidth}
                                 height={this.chartHeight}
                                 standalone={false}
-                                domainPadding={PLOT_DATA_PADDING_PIXELS}
+                                domainPadding={this.domainPadding}
                                 domain={this.plotDomain}
                                 singleQuadrantDomainPadding={false}
                             >
