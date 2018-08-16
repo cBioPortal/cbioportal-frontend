@@ -486,7 +486,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         legendLocationWidthThreshold={900}
                 />
                     {this.mutationDataExists.result && (
-                        <div style={{marginTop:5}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
+                        <div style={{marginTop:20}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
                     )}
                 </ChartContainer>
             );
