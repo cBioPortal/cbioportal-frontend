@@ -68,9 +68,8 @@ const MIN_LOG_ARGUMENT = 0.01;
 const CATEGORY_LABEL_HORZ_ANGLE = -30;
 const DEFAULT_LEFT_PADDING = 25;
 const DEFAULT_BOTTOM_PADDING = 10;
-const MAXIMUM_CATEGORY_LABEL_SIZE = 120;
 const LEGEND_ITEMS_PER_ROW = 4;
-const BOTTOM_LEGEND_PADDING = 30;
+const BOTTOM_LEGEND_PADDING = 15;
 
 
 const BOX_STYLES = {
@@ -340,7 +339,8 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
 
     @bind
     private formatCategoryTick(t:number, index:number) {
-        return wrapTick(this.labels[index], MAXIMUM_CATEGORY_LABEL_SIZE);
+        //return wrapTick(this.labels[index], MAXIMUM_CATEGORY_LABEL_SIZE);
+        return this.labels[index];
     }
 
     @bind
@@ -441,16 +441,15 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     @computed get biggestCategoryLabelSize() {
-        const maxSize = Math.min(
-            Math.max(...this.labels.map(x=>getTextWidth(x, axisTickLabelStyles.fontFamily, axisTickLabelStyles.fontSize+"px"))),
-            MAXIMUM_CATEGORY_LABEL_SIZE
+        const maxSize = Math.max(
+            ...this.labels.map(x=>getTextWidth(x, axisTickLabelStyles.fontFamily, axisTickLabelStyles.fontSize+"px"))
         );
         if (this.props.horizontal) {
             // if horizontal mode, its label width
             return maxSize;
         } else {
             // if vertical mode, its label height when rotated
-            return maxSize*Math.abs(Math.sin((Math.PI/180) * CATEGORY_LABEL_HORZ_ANGLE))
+            return maxSize*Math.abs(Math.sin((Math.PI/180) * CATEGORY_LABEL_HORZ_ANGLE));
         }
     }
 
