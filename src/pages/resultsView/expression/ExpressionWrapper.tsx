@@ -455,6 +455,11 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
         }
     }
 
+    private boxCalculationFilter(d:IBoxScatterPlotPoint) {
+        // filter out zero values from box calculation
+        return d.value !== 0;
+    }
+
     @autobind
     private getChart() {
         if (this.boxPlotData.isComplete) {
@@ -484,6 +489,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                             _.flatten(this.boxPlotData.result.map(d=>d.data)), this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated
                         )}
                         legendLocationWidthThreshold={900}
+                        boxCalculationFilter={this.boxCalculationFilter}
                 />
                     {this.mutationDataExists.result && (
                         <div style={{marginTop:20}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
