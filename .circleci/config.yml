@@ -43,7 +43,7 @@ jobs:
           paths:
             - common-dist
             - dist
-          key: asset-cache-{{ .Environment.CIRCLE_SHA1 }}
+          key: asset-cache-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
 
 
   api_sync:
@@ -69,7 +69,7 @@ jobs:
           - v1-dependencies-
       - restore_cache:
           keys:
-          - asset-cache-{{ .Environment.CIRCLE_SHA1 }}
+          - asset-cache-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
       # run tests!
       - run:
           command: "npm test"
@@ -93,7 +93,7 @@ jobs:
           - v1-dependencies-
       - restore_cache:
           keys:
-          - asset-cache-{{ .Environment.CIRCLE_SHA1 }}
+          - asset-cache-{{ .Branch }}-{{ .Environment.CIRCLE_SHA1 }}
       - run:
           name: "Install http server"
           command: "npm i http-server"
