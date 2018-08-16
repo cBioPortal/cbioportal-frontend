@@ -45,12 +45,24 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
     private get singleStudyUI() {
         return <div>
             <h4 style={{fontSize:14}}><StudyLink study={this.props.store.queriedStudies.result[0]}/></h4>
-            <span>
-                {this.props.store.sampleLists.result![0].name}&nbsp;
+            {(this.props.store.sampleLists.result!.length > 0) && (<span>
+                        {this.props.store.sampleLists.result![0].name}&nbsp;
                 (<strong>{this.props.store.sampleLists.result![0].sampleCount}</strong> samples)
-                 / <strong data-test='QuerySummaryGeneCount'>{this.props.store.hugoGeneSymbols.length}</strong> Genes
-            </span>
+                        / <strong data-test='QuerySummaryGeneCount'>{this.props.store.hugoGeneSymbols.length}</strong> { (this.props.store.hugoGeneSymbols.length === 1) ? "Gene" : "Genes"  }
+                    </span>)
+            }
+            {
+                (this.props.store.sampleLists.result!.length === 0) && (
+                    <span>User-defined Patient List&nbsp;
+                        ({this.props.store.samples.result!.length} samples)&nbsp;/&nbsp;
+                        {this.props.store.genes.result!.length} { (this.props.store.hugoGeneSymbols.length === 1) ? "Gene" : "Genes"  }
+                    </span>)
+            }
         </div>
+
+
+
+
     }
 
     @autobind
@@ -92,7 +104,7 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
         if (!this.props.store.totalAlterationStats.isError && !this.props.store.queriedStudies.isError) {
 
-            const loadingComplete = this.props.store.totalAlterationStats.isComplete && this.props.store.queriedStudies.isComplete && this.props.store.sampleLists.isComplete;
+            const loadingComplete = this.props.store.totalAlterationStats.isComplete && this.props.store.queriedStudies.isComplete && this.props.store.samples.isComplete;
 
             let alterationPercentage = (loadingComplete) ?
                 (this.props.store.totalAlterationStats.result!.alteredSampleCount / this.props.store.totalAlterationStats.result!.sampleCount * 100) : 0;
