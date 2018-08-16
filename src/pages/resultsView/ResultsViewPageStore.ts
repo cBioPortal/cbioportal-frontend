@@ -43,6 +43,7 @@ import {
 import {writeTest} from "../../shared/lib/writeTest";
 import {PatientSurvival} from "../../shared/model/PatientSurvival";
 import {
+    doesQueryContainOQL,
     filterCBioPortalWebServiceData,
     filterCBioPortalWebServiceDataByOQLLine,
     filterCBioPortalWebServiceDataByUnflattenedOQLLine,
@@ -96,9 +97,19 @@ export const AlterationTypeConstants = {
     FUSION: 'FUSION',
     GENESET_SCORE: 'GENESET_SCORE',
     METHYLATION: 'METHYLATION'
-}
+};
+
+export const DataTypeConstants = {
+    DISCRETE: "DISCRETE",
+    CONTINUOUS: "CONTINUOUS",
+    ZSCORE: "Z-SCORE",
+    MAF: "MAF",
+    LOGVALUE:"LOG-VALUE",
+    LOG2VALUE:"LOG2-VALUE"
+};
 
 export interface ExtendedAlteration extends Mutation, NumericGeneMolecularData {
+    hugoGeneSymbol:string;
     molecularProfileAlterationType: MolecularProfile["molecularAlterationType"];
     // TODO: what is difference molecularProfileAlterationType and
     // alterationType?
@@ -107,6 +118,7 @@ export interface ExtendedAlteration extends Mutation, NumericGeneMolecularData {
 };
 
 export interface AnnotatedMutation extends Mutation {
+    hugoGeneSymbol:string;
     putativeDriver: boolean;
     oncoKbOncogenic:string;
     isHotspot:boolean;
@@ -114,6 +126,7 @@ export interface AnnotatedMutation extends Mutation {
 }
 
 export interface AnnotatedNumericGeneMolecularData extends NumericGeneMolecularData {
+    hugoGeneSymbol: string;
     oncoKbOncogenic: string;
 }
 
@@ -323,6 +336,10 @@ export class ResultsViewPageStore {
     @observable.ref selectedEnrichmentMRNAProfile: MolecularProfile;
     @observable.ref selectedEnrichmentProteinProfile: MolecularProfile;
 
+    @computed get queryContainsOql() {
+        return doesQueryContainOQL(this.oqlQuery);
+    }
+
     private getURL() {
         const shareURL = window.location.href;
 
@@ -424,7 +441,6 @@ export class ResultsViewPageStore {
             this.samples
         ],
         invoke: () => {
-
             // we get mutations with mutations endpoint, all other alterations with this one, so filter out mutation genetic profile
             const profilesWithoutMutationProfile = _.filter(this.selectedMolecularProfiles.result, (profile: MolecularProfile) => profile.molecularAlterationType !== 'MUTATION_EXTENDED');
             const genes = this.genes.result;
@@ -456,6 +472,43 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly nonMutationMolecularProfilesWithData = remoteData<MolecularProfile[]>({
+        await:()=>[
+            this.molecularProfilesInStudies,
+            this.studyToDataQueryFilter,
+            this.genes
+        ],
+        invoke:async()=>{
+            const ret:MolecularProfile[] = [];
+            const promises = [];
+            const studyToDataQueryFilter = this.studyToDataQueryFilter.result!;
+            for (const profile of this.molecularProfilesInStudies.result!) {
+                if (profile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED) {
+                    continue;
+                }
+                const molecularDataFilter = {
+                    entrezGeneIds: this.genes.result!.map(g=>g.entrezGeneId),
+                    ...studyToDataQueryFilter[profile.studyId]
+                } as MolecularDataFilter;
+                const molecularProfileId = profile.molecularProfileId;
+                const projection = "META";
+                promises.push(client.fetchAllMolecularDataInMolecularProfileUsingPOSTWithHttpInfo({
+                    molecularProfileId,
+                    molecularDataFilter,
+                    projection
+                }).then(function(response: request.Response) {
+                    const count = parseInt(response.header["total-count"], 10);
+                    if (count > 0) {
+                        // theres data for at least one of the query genes
+                        ret.push(profile);
+                    }
+                }));
+            }
+            await Promise.all(promises);
+            return ret;
+        }
+    });
+
     readonly unfilteredAlterations = remoteData<(Mutation|NumericGeneMolecularData)[]>({
         await: ()=>[
             this.mutations,
@@ -472,15 +525,18 @@ export class ResultsViewPageStore {
     readonly unfilteredExtendedAlterations = remoteData<ExtendedAlteration[]>({
         await: ()=>[
             this.unfilteredAlterations,
+            this.entrezGeneIdToGene,
             this.selectedMolecularProfiles,
             this.defaultOQLQuery
         ],
         invoke: () => {
             const acc = new accessors(this.selectedMolecularProfiles.result!);
             const alterations: ExtendedAlteration[] = [];
+            const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
 
             this.unfilteredAlterations.result!.forEach(alteration => {
                 const extendedAlteration: Partial<ExtendedAlteration> = {
+                    hugoGeneSymbol: entrezGeneIdToGene[alteration.entrezGeneId].hugoGeneSymbol,
                     molecularProfileAlterationType: acc.molecularAlterationType(alteration.molecularProfileId),
                     ...Object.assign({}, alteration)
                 };
@@ -1640,10 +1696,11 @@ export class ResultsViewPageStore {
     readonly putativeDriverAnnotatedMutations = remoteData<AnnotatedMutation[]>({
         await:()=>[
             this.mutations,
-            this.getPutativeDriverInfo
+            this.getPutativeDriverInfo,
+            this.entrezGeneIdToGene
         ],
         invoke:()=>{
-            return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutations.result!, this.getPutativeDriverInfo.result!, !!this.mutationAnnotationSettings.ignoreUnknown));
+            return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutations.result!, this.getPutativeDriverInfo.result!, this.entrezGeneIdToGene.result!, !!this.mutationAnnotationSettings.ignoreUnknown));
         }
     });
 
@@ -1652,10 +1709,11 @@ export class ResultsViewPageStore {
             q=>({
                 await: ()=>[
                     this.mutationCache.get(q),
-                    this.getPutativeDriverInfo
+                    this.getPutativeDriverInfo,
+                    this.entrezGeneIdToGene
                 ],
                 invoke: ()=>{
-                    return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutationCache.get(q).result!, this.getPutativeDriverInfo.result!, !!this.mutationAnnotationSettings.ignoreUnknown));
+                    return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutationCache.get(q).result!, this.getPutativeDriverInfo.result!, this.entrezGeneIdToGene.result!, !!this.mutationAnnotationSettings.ignoreUnknown));
                 }
             })
         );
@@ -1663,10 +1721,12 @@ export class ResultsViewPageStore {
     readonly annotatedMolecularData = remoteData<AnnotatedNumericGeneMolecularData[]>({
         await: ()=>[
             this.molecularData,
+            this.entrezGeneIdToGene,
             this.getOncoKbCnaAnnotationForOncoprint,
             this.molecularProfileIdToMolecularProfile
         ],
         invoke:()=>{
+            const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
             let getOncoKbAnnotation:(datum:NumericGeneMolecularData)=>IndicatorQueryResp|undefined;
             if (this.getOncoKbCnaAnnotationForOncoprint.result! instanceof Error) {
                 getOncoKbAnnotation = ()=>undefined;
@@ -1678,7 +1738,8 @@ export class ResultsViewPageStore {
                     return annotateMolecularDatum(
                         d,
                         getOncoKbAnnotation,
-                        profileIdToProfile
+                        profileIdToProfile,
+                        entrezGeneIdToGene
                     );
                 })
             );

@@ -28,9 +28,14 @@ import classNames from 'classnames';
 import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
 import {CoverageInformation, isPanCanStudy, isTCGAProvStudy} from "../ResultsViewPageStoreUtils";
 import {sleep} from "../../../shared/lib/TimeUtils";
-import PortalLink from "../../../shared/components/PortalLink/PortalLink";
+import {mutationRenderPriority} from "../plots/PlotsTabUtils";
+import {getOncoprintMutationType} from "../../../shared/components/oncoprint/DataUtils";
+import {getSampleViewUrl} from "../../../shared/api/urls";
+import {ResultsViewPageStore} from "../ResultsViewPageStore";
+import NoOqlWarning from "../../../shared/components/NoOqlWarning";
 
 export interface ExpressionWrapperProps {
+    store:ResultsViewPageStore;
     studyMap: { [studyId: string]: CancerStudy };
     genes: Gene[];
     data: { [hugeGeneSymbol: string]: NumericGeneMolecularData[][] };
@@ -54,6 +59,7 @@ type ExpressionTooltipModel = {
     studyName: string;
     studyId:string;
     mutationType:string | null;
+    proteinChange:string | null;
     sampleId: string;
     expression: number,
     style: ExpressionStyle
@@ -108,7 +114,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @computed get selectedStudies() {
-        return _.filter(this._selectedStudies, (isSelected: boolean, study: CancerStudy) => isSelected);
+        return _.filter(this.props.studyMap,(study)=>this._selectedStudies[study.studyId] === true);
     }
 
     @computed get containerWidth() {
@@ -117,7 +123,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @computed get chartWidth() {
-        return this.sortedLabels.length * (this.widthThreshold ? 25 : 110) + 200;
+        return this.sortedLabels.length * (this.widthThreshold ? 30 : 110) + 200;
     }
 
     @computed get widthThreshold(){
@@ -201,10 +207,11 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
         for (let i = 0; i < sortedData.length; i++) {
             const studyData = sortedData[i];
 
-            // we don't want to let zero values affect the distribution markers
-            //const withoutZeros = studyData.filter((molecularData: NumericGeneMolecularData) => molecularData.value > 0);
+            let transformedData = studyData;
 
-            const boxData = calculateBoxPlotModel(studyData.map(this.dataTransformer));
+            transformedData = transformedData.filter((molecularData: NumericGeneMolecularData) => molecularData.value > 0);
+
+            const boxData = calculateBoxPlotModel(transformedData.map(this.dataTransformer));
 
             // *IMPORTANT* because Victory does not handle outliers,
             // we are overriding meaning of min and max in order to show whiskers
@@ -234,7 +241,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             const buckets = getMolecularDataBuckets(studyData, this.showMutations, this.mutationsKeyedBySampleId, this.props.coverageInformation, this.selectedGene);
             const mutationTraces = _.mapValues(buckets.mutationBuckets, (molecularData: NumericGeneMolecularData[], canonicalMutationType: string) => {
                 return molecularData.map((datum) => {
-                    return {y: datum, x: i + calculateJitter(this.boxWidth, datum.value)}
+                    return {y: datum, x: i + calculateJitter(datum.uniqueSampleKey)}
                 });
             });
             mutationScatterTraces.push(mutationTraces);
@@ -255,7 +262,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             const studyData = sortedData[i];
             const buckets = this.molecularDataByMutationType[i];
             const unmutatedTrace = buckets.unmutatedBucket.map((datum: NumericGeneMolecularData) => {
-                return {y: datum, x: i + calculateJitter(this.boxWidth, datum.value)}
+                return {y: datum, x: i + calculateJitter(datum.uniqueSampleKey)}
             });
             unMutatedTraces.push(unmutatedTrace);
         }
@@ -269,7 +276,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             // get buckets for this study
             const buckets = this.molecularDataByMutationType[i];
             const unsequencedTrace = buckets.unsequencedBucket.map((datum: NumericGeneMolecularData) => {
-                return {y: datum, x: i + calculateJitter(this.boxWidth, datum.value)}
+                return {y: datum, x: i + calculateJitter(datum.uniqueSampleKey)}
             });
             unsequencedTraces.push(unsequencedTrace);
         }
@@ -303,10 +310,39 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
         this.sortBy = event.currentTarget.value as any;
     }
 
+    @autobind
+    handleSelectAllStudies(){
+        this.applyStudyFilter((study)=>{
+            return study.studyId in this.dataByStudyId;
+        });
+    }
+
+    @autobind
+    handleDeselectAllStudies(){
+        this.applyStudyFilter((study)=>{
+            return false;
+        });
+    }
+
+    @computed get hasUnselectedStudies(){
+        return undefined !== _.find(this.props.studyMap,(study)=>{
+            const hasData = study.studyId in this.dataByStudyId;
+            const isSelected = this.selectedStudies.includes(study);
+            return hasData && !isSelected;
+        });
+    }
+
+    @computed
+    get alphabetizedStudies(){
+        return _.chain(this.props.studyMap).values().sortBy(
+            (study:CancerStudy)=>study.name
+        ).value();
+    }
+
     @computed
     get studySelectionModal() {
 
-        return (<Modal show={this.studySelectorModalVisible} onHide={() => {
+        return (<Modal data-test="ExpressionStudyModal" show={true} onHide={() => {
             this.studySelectorModalVisible = false
         }} className="cbioportal-frontend">
             <Modal.Header closeButton>
@@ -314,8 +350,13 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             </Modal.Header>
             <Modal.Body>
                 <div>
+                    <div>
+                        <a data-test="ExpressionStudySelectAll" className={classNames({hidden:!this.hasUnselectedStudies})} onClick={this.handleSelectAllStudies}>Select all</a>
+                        <span className={classNames({hidden:!this.hasUnselectedStudies || this.selectedStudies.length === 0})}>&nbsp;|&nbsp;</span>
+                        <a data-test="ExpressionStudyUnselectAll" className={classNames({hidden:this.selectedStudies.length === 0})} onClick={this.handleDeselectAllStudies}>Deselect all</a>
+                    </div>
                     {
-                        _.map(this.props.studyMap, (study: CancerStudy) => {
+                        _.map(this.alphabetizedStudies, (study: CancerStudy) => {
                             const hasData = study.studyId in this.dataByStudyId;
                             return (
                                 <div className={classNames('checkbox',{ disabled:!hasData })}>
@@ -359,7 +400,9 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
         const nonMutStyle = ExpressionStyleSheet.non_mut;
         const nonSequenced = ExpressionStyleSheet.non_sequenced;
 
-        deDupedLegendData.push({name: nonMutStyle.legendText, symbol: {fill: nonMutStyle.fill, stroke:nonMutStyle.stroke, size:SYMBOL_SIZE, type: nonMutStyle.symbol}});
+        if (this.showMutations) {
+            deDupedLegendData.push({name: nonMutStyle.legendText, symbol: {fill: nonMutStyle.fill, stroke:nonMutStyle.stroke, size:SYMBOL_SIZE, type: nonMutStyle.symbol}});
+        }
 
         if (_.flatten(this.victoryTraces.unSequencedTraces).length > 0) {
             deDupedLegendData.push({name: nonSequenced.legendText,
@@ -403,9 +446,10 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
         // determine style based on mutation
         let expressionStyle: ExpressionStyle;
+        let oncoprintMutationType:string = "";
         if (mutation) {
-            const canonicalMutationType = getCanonicalMutationType(mutation.mutationType) || "other";
-            expressionStyle = getExpressionStyle(canonicalMutationType);
+            oncoprintMutationType = getOncoprintMutationType(mutation);
+            expressionStyle = getExpressionStyle(oncoprintMutationType);
         } else {
             expressionStyle = ExpressionStyleSheet.non_mut;
         }
@@ -419,7 +463,8 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                 studyId: geneMolecularData.studyId,
                 expression: geneMolecularData.value,
                 style: expressionStyle,
-                mutationType:(mutation) ? mutation.mutationType : null
+                mutationType:(mutation && oncoprintMutationType) ? oncoprintMutationType : null,
+                proteinChange: (mutation && mutation.proteinChange) ? mutation.proteinChange : null
             }
         };
 
@@ -441,7 +486,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @computed
     get buildUnmutatedTraces() {
-        return this.victoryTraces.unMutatedTraces.map((trace) => this.buildScatter(trace, ExpressionStyleSheet.non_mut))
+        return this.victoryTraces.unMutatedTraces.map((trace) => this.buildScatter(trace, this.showMutations ? ExpressionStyleSheet.non_mut : ExpressionStyleSheet.not_showing_mut))
     }
 
     @computed
@@ -452,7 +497,11 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     @computed
     get buildMutationScatters() {
         return _.flatMap(this.victoryTraces.mutationScatterTraces, (traces:{[mutationType:string]:ScatterPoint[]}) => {
-            return _.map(traces, (value, key) => {
+            // sort traces by mutation rendering priority
+            const sortedEntries = _.sortBy(_.toPairs(traces), entry=>-1*mutationRenderPriority[entry[0]]);
+            return sortedEntries.map(entry=>{
+                const key = entry[0];
+                const value = entry[1];
                 const style = getExpressionStyle(key);
                 return (this.showMutationType.length === 0 || (this.showMutationType as any).includes(key))
                     ? this.buildScatter(value, style) : null;
@@ -507,7 +556,11 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @computed get paddingBottom(){
-        return _.maxBy(this.sortedLabels,(label:string)=>label.length)!.length * 9;
+        if (!this.sortedLabels.length) {
+            return 10;
+        } else {
+            return _.maxBy(this.sortedLabels,(label:string)=>label.length)!.length * 9;
+        }
     }
 
     @computed
@@ -520,39 +573,43 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     get toolTip() {
         const style: ExpressionStyle = this.tooltipModel!.data.style as ExpressionStyle;
 
-        const mutationType = (this.tooltipModel!.data.mutationType)
-            ? this.tooltipModel!.data.mutationType!.replace("_"," ") : this.tooltipModel!.data.style.legendText;
-
         return (
             <div className="popover right cbioTooltip"
                  onMouseLeave={this.tooltipMouseLeave}
                  onMouseEnter={this.tooltipMouseEnter}
-                 style={{top: this.tooltipModel!.y, width:300, left: this.tooltipModel!.x}}
+                 style={{top: this.tooltipModel!.y, left: this.tooltipModel!.x-8}}
             >
-                <div className="arrow" style={{top: 30}}></div>
+                <div className="arrow" style={{top: 27}}></div>
                 <div className="popover-content">
-                    <svg height="10" width="10" style={{marginTop:3}}>
-                        <svg height={8} width={8}><Point size={3} x={4} y={4} symbol={style.symbol} style={{ fill:style.fill, stroke:style.stroke }} /></svg>
-                    </svg>
-                    &nbsp;{mutationType}
-                    <br/>
                     <strong>Study:</strong> {this.tooltipModel!.data.studyName}<br/>
                     <strong>Sample ID:</strong>&nbsp;
-                    <PortalLink to={{
-                        pathname: 'patient',
-                        search: `studyId=${this.tooltipModel!.data.studyId}&sampleId=${this.tooltipModel!.data.sampleId}`,
-                        basepath: 'case.do',
-                        newTab:true
-                    }}>
-                        {this.tooltipModel!.data.sampleId}<br/>
-                    </PortalLink>
-
+                    <a href={getSampleViewUrl(this.tooltipModel!.data.studyId, this.tooltipModel!.data.sampleId)} target="_blank">
+                    {this.tooltipModel!.data.sampleId}</a>
+                    <br/>
                     <strong>Expression:</strong> {this.tooltipModel!.data.expression}
+                    { this.showMutations && (
+                        <div>
+                            <strong>Mutation type:</strong>
+                            &nbsp;{style.legendText}
+                            <br/>
+                        </div>
+                    )}
+                    {
+                        (this.showMutations && this.tooltipModel!.data.proteinChange) &&
+                        (<div><strong>Mutation detail:</strong> {this.tooltipModel!.data.proteinChange}</div>)
+                    }
+
+
                 </div>
             </div>
 
         )
 
+    }
+
+    @autobind
+    private getRef(ref:any){
+        this.svgContainer = (ref && ref.children.length) ? ref.children[0] : null
     }
 
     @computed
@@ -564,10 +621,14 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     width={this.chartWidth}
                     theme={CBIOPORTAL_VICTORY_THEME}
                     domainPadding={{x: [30, 30], y:[10, 10]}}
-                    domain={{y: [this.domain.min, this.domain.max], x:[0,this.victoryTraces.boxTraces.length + 1]}}
+                    domain={{ x:[0,this.victoryTraces.boxTraces.length + 1]}}
                     padding={{bottom: this.paddingBottom, left: 100, top: 60, right: 10}}
-                    containerComponent={<VictoryContainer width={this.containerWidth} containerRef={(ref: any) => this.svgContainer = ref}
-                                                          responsive={false}/>}
+                    containerComponent={
+                        <VictoryContainer width={this.containerWidth}
+                                          containerRef={this.getRef}
+                                          responsive={false}
+                        />
+                    }
                 >
                     <VictoryAxis dependentAxis
                                  tickFormat={this.tickFormat}
@@ -619,14 +680,13 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     render() {
-
         return (
             <div>
-                {this.studySelectionModal}
+                <div style={{marginBottom:10, marginLeft:-2, marginTop:-2}}>
+                    <NoOqlWarning store={this.props.store}/>
+                </div>
+                { (this.studySelectorModalVisible) && this.studySelectionModal }
                 <div style={{marginBottom:15}}>
-
-
-
 
                     <MSKTabs onTabClick={this.handleTabClick}
                              enablePagination={true}
@@ -680,20 +740,21 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     </form>
 
                     <div>
+                        <label>Select studies:</label>&nbsp;
                         <If condition={this.studyTypeCounts.provisional.length > 0}>
                             <button className="btn btn-default btn-xs" style={{marginRight:5}}
                                     onClick={() => this.applyStudyFilter((study: CancerStudy) => isTCGAProvStudy(study.studyId))}>
-                                Select TCGA Provisional ({this.studyTypeCounts.provisional.length})
+                                 TCGA Provisional ({this.studyTypeCounts.provisional.length})
                             </button>
                         </If>
                         <If condition={this.studyTypeCounts.panCancer.length > 0}>
                             <button className="btn btn-default btn-xs" style={{marginRight:5}}
                                     onClick={() => this.applyStudyFilter((study: CancerStudy) => isPanCanStudy(study.studyId))}>
-                                Select TCGA Pan-Can Atlas ({this.studyTypeCounts.panCancer.length})
+                                TCGA Pan-Can Atlas ({this.studyTypeCounts.panCancer.length})
                             </button>
                         </If>
-                        <button className="btn btn-default btn-xs"
-                                onClick={() => this.studySelectorModalVisible = !this.studySelectorModalVisible}>Custom</button>
+                        <button data-test="ExpressionStudyModalButton"className="btn btn-default btn-xs"
+                                onClick={() => this.studySelectorModalVisible = !this.studySelectorModalVisible}>Custom list</button>
 
                     </div>
 
@@ -732,9 +793,6 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         </div>
                     </Else>
                 </If>
-
-
-
             </div>
         );
     }

@@ -10,12 +10,16 @@ import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledC
 import MobxPromise from "mobxpromise";
 import {If} from 'react-if';
 import {StudyViewComponentLoader} from "../charts/StudyViewComponentLoader";
+import classnames from 'classnames';
+import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 
 export interface ICNAGenesTablePros {
     promise: MobxPromise<CNAGenesData>;
     filters: CopyNumberGeneFilterElement[];
     toggleSelection: (entrezGeneId: number, alteration: number) => void;
     numOfSelectedSamples: number;
+    onGeneSelect:(hugoGeneSymbol:string)=>void;
+    selectedGenes: string[]
 }
 
 class CNAGenesTableComponent extends LazyMobXTable<CopyNumberCountByGene> {
@@ -51,16 +55,34 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                                 [
                                     {
                                         name: 'Gene',
-                                        render: (data: CopyNumberCountByGene) => <span>{data.hugoGeneSymbol}</span>
+                                        render: (data: CopyNumberCountByGene) => {
+                                            const overlay = () => <span>{`Click ${data.hugoGeneSymbol} to ${_.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? 'remove' : 'add'} from your query`}</span>;
+                                            return (
+                                                <DefaultTooltip
+                                                    placement="left"
+                                                    overlay={overlay}
+                                                    destroyTooltipOnHide={true}
+                                                >
+                                                    <span
+                                                        className={classnames(styles.geneSymbol, _.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? styles.selectd : undefined)}
+                                                        onClick={() => this.props.onGeneSelect(data.hugoGeneSymbol)}>
+                                                        {data.hugoGeneSymbol}
+                                                    </span>
+                                                </DefaultTooltip>
+                                            )
+                                        },
+                                        width: "40%"
                                     },
                                     {
                                         name: 'Cytoband',
-                                        render: (data: CopyNumberCountByGene) => <span>{data.cytoband}</span>
+                                        render: (data: CopyNumberCountByGene) => <span>{data.cytoband}</span>,
+                                        width: "20%"
                                     },
                                     {
                                         name: 'CNA',
                                         render: (data: CopyNumberCountByGene) =>
-                                            <span>{data.alteration === -2 ? 'DEL' : 'AMP'}</span>
+                                            <span>{data.alteration === -2 ? 'DEL' : 'AMP'}</span>,
+                                        width: "20%"
                                     },
                                     {
                                         name: '#',
@@ -70,11 +92,13 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                                                 onChange={event => this.props.toggleSelection(data.entrezGeneId, data.alteration)}
                                             >
                                                 {data.countByEntity}
-                                            </LabeledCheckbox>
+                                            </LabeledCheckbox>,
+                                        width: "20%"
                                     },
                                     {
                                         name: 'Freq',
-                                        render: (data: CopyNumberCountByGene) => <span>{data.frequency + '%'}</span>
+                                        render: (data: CopyNumberCountByGene) => <span>{data.frequency + '%'}</span>,
+                                        width: "20%"
                                     }
                                 ]
                             }
