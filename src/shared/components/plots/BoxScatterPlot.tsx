@@ -48,6 +48,7 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     useLogSpaceTicks?:boolean; // if log scale for an axis, then this prop determines whether the ticks are shown in post-log coordinate, or original data coordinate space
     boxWidth?:number;
     legendLocationWidthThreshold?:number; // chart width after which we start putting the legend at the bottom of the plot
+    boxCalculationFilter?:(d:D)=>boolean; // determines which points are used for calculating the box
 }
 
 type BoxModel = {
@@ -470,13 +471,18 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     @computed get boxPlotData():BoxModel[] {
-        return this.props.data.map(d=>calculateBoxPlotModel(d.data.map(x=>{
-            if (this.props.logScale) {
-                return this.logScale(x.value);
-            } else {
-                return x.value;
+        const boxCalculationFilter = this.props.boxCalculationFilter;
+        return this.props.data.map(d=>calculateBoxPlotModel(d.data.reduce((data, next)=>{
+            if (!boxCalculationFilter || (boxCalculationFilter && boxCalculationFilter(next.value))) {
+                // filter out values in calculating boxes, if a filter is specified ^^
+                if (this.props.logScale) {
+                    data.push(this.logScale(next.value));
+                } else {
+                    data.push(next.value);
+                }
             }
-        }))).map((model, i)=>{
+            return data;
+        }, []))).map((model, i)=>{
             // create boxes, importantly we dont filter at this step because
             //  we need the indexes to be intact and correpond to the index in the input data,
             //  in order to properly determine the x/y coordinates
