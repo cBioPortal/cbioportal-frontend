@@ -11,7 +11,6 @@ const DUBIOUS_NUMBER_OF_MUTATIONS_STATEMENT = "This case has a low number of mut
 export function progressBar(confidence:string, determineColor:boolean) {
     let confidencePerc = Math.round(parseFloat(confidence) * 100);
 
-    // Coloring same as CVR as discussed with @anoopbr
     let progressBarClassName:string = "progress-bar-info";
     let progressBarStyle:{ [s:string]:string; } = {"backgroundColor":"darkgray"};
 

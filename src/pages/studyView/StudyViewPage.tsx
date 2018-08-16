@@ -7,13 +7,15 @@ import { ChartContainer } from 'pages/studyView/charts/ChartContainer';
 import SurvivalChart from "../resultsView/survival/SurvivalChart";
 import { MSKTab, MSKTabs } from "../../shared/components/MSKTabs/MSKTabs";
 import { StudyViewComponentLoader } from "./charts/StudyViewComponentLoader";
-import { StudyViewPageStore, ClinicalDataType, SurvivalType, ChartMeta, ChartType } from 'pages/studyView/StudyViewPageStore';
+import { StudyViewPageStore, SurvivalType, ChartMeta } from 'pages/studyView/StudyViewPageStore';
 import { reaction } from 'mobx';
 import { If } from 'react-if';
 import SummaryHeader from 'pages/studyView/SummaryHeader';
-import {Sample, SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
+import { Sample, Gene , SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
+import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import StudyViewScatterPlot from "./charts/scatterPlot/StudyViewScatterPlot";
 import {isSelected, mutationCountVsCnaTooltip} from "./StudyViewUtils";
+import AppConfig from 'appConfig';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -49,6 +51,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             },
             updateCustomCasesFilter: (cases: SampleIdentifier[]) => {
                 this.store.updateCustomCasesFilter(cases);
+            },
+            updateSelectedGenes:(query: SingleGeneQuery[], genesInQuery: Gene[])=>{
+                this.store.updateSelectedGenes(query, genesInQuery);
             }
         }
 
@@ -134,8 +139,15 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
                         <MSKTab key={0} id="summaryTab" linkText="Summary">
                             <SummaryHeader
+                                geneQuery={this.store.geneQueryStr}
                                 selectedSamples={this.store.selectedSamples.result!}
-                                updateCustomCasesFilter={this.handlers.updateCustomCasesFilter}/>
+                                updateCustomCasesFilter={this.handlers.updateCustomCasesFilter}
+                                updateSelectedGenes={this.handlers.updateSelectedGenes}
+                                studyWithSamples={this.store.studyWithSamples.result}
+                                filter={this.store.filters}
+                                attributeNamesSet={this.store.attributeNamesSet}
+                                user={AppConfig.userEmailAddress}
+                            />
                             <div className={styles.studyViewFlexContainer}>
                                 {this.store.initialClinicalDataCounts.isComplete && 
                                     this.store.visibleAttributes.map(this.renderAttributeChart)}
@@ -149,12 +161,16 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     numOfSelectedSamples={100}
                                     filters={this.store.getMutatedGenesTableFilters()}
                                     toggleSelection={this.handlers.updateGeneFilter}
+                                    selectedGenes={this.store.selectedGenes}
+                                    onGeneSelect={this.store.onCheckGene}
                                 />
                                 <CNAGenesTable
                                     promise={this.store.cnaGeneData}
                                     numOfSelectedSamples={100}
                                     filters={this.store.getCNAGenesTableFilters()}
                                     toggleSelection={this.handlers.updateCNAGeneFilter}
+                                    selectedGenes={this.store.selectedGenes}
+                                    onGeneSelect={this.store.onCheckGene}
                                 />
                                 {this.store.mutationCountVsFractionGenomeAlteredData.isComplete && (
                                     <StudyViewScatterPlot

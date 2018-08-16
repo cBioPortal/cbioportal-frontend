@@ -319,7 +319,6 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
                             pdbHeaderCache={this.store.pdbHeaderCache}
                             genomeNexusEnrichmentCache={this.store.genomeNexusEnrichmentCache}
                             myCancerGenomeData={this.store.myCancerGenomeData}
-                            svgToPdfServiceUrl="http://www.cbioportal.org/svgtopdf.do"
                             config={AppConfig}
                         />
                     </MSKTab>
