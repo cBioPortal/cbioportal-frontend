@@ -604,12 +604,12 @@ export async function queryOncoKbData(queryVariants: Query[],
                                       uniqueSampleKeyToTumorType: {[sampleId: string]: string},
                                       client: OncoKbAPI = oncokbClient)
 {
-    const onkokbSearch = await client.searchPostUsingPOST(
-        {body: generateEvidenceQuery(queryVariants)});
+    const oncokbSearch = await client.searchPostUsingPOST(
+        {body: generateEvidenceQuery(queryVariants, '')});
 
     const oncoKbData: IOncoKbData = {
         uniqueSampleKeyToTumorType: uniqueSampleKeyToTumorType,
-        indicatorMap: generateIdToIndicatorMap(onkokbSearch)
+        indicatorMap: generateIdToIndicatorMap(oncokbSearch)
     };
 
     return oncoKbData;
