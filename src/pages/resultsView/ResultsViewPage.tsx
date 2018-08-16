@@ -1,75 +1,48 @@
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
 import $ from 'jquery';
 import {observer, inject, Observer} from "mobx-react";
 import {reaction, computed, observable, runInAction} from "mobx";
-import validateParameters from 'shared/lib/validateParameters';
-import ValidationAlert from "shared/components/ValidationAlert";
-import AjaxErrorModal from "shared/components/AjaxErrorModal";
-import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
 import {ResultsViewPageStore, SamplesSpecificationElement} from "./ResultsViewPageStore";
 import CancerSummaryContainer from "pages/resultsView/cancerSummary/CancerSummaryContainer";
 import Mutations from "./mutation/Mutations";
-import {stringListToSet} from "../../shared/lib/StringUtils";
 import MutualExclusivityTab from "./mutualExclusivity/MutualExclusivityTab";
 import SurvivalTab from "./survival/SurvivalTab";
 import DownloadTab from "./download/DownloadTab";
-import Chart from 'chart.js';
-import {CancerStudy, Gene, MolecularProfile, Sample} from "../../shared/api/generated/CBioPortalAPI";
 import AppConfig from 'appConfig';
-import getOverlappingStudies from "../../shared/lib/getOverlappingStudies";
-import OverlappingStudiesWarning from "../../shared/components/overlappingStudiesWarning/OverlappingStudiesWarning";
 import CNSegments from "./cnSegments/CNSegments";
 import './styles.scss';
 import {genes, parseOQLQuery} from "shared/lib/oql/oqlfilter.js";
 import Network from "./network/Network";
-
-(Chart as any).plugins.register({
-    beforeDraw: function (chartInstance: any) {
-        const ctx = chartInstance.chart.ctx;
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, chartInstance.chart.width, chartInstance.chart.height);
-    }
-});
-import Oncoprint from "shared/components/oncoprint/Oncoprint";
-import {QuerySession} from "../../shared/lib/QuerySession";
 import ResultsViewOncoprint from "shared/components/oncoprint/ResultsViewOncoprint";
 import QuerySummary from "./querySummary/QuerySummary";
-import {QueryStore} from "../../shared/components/query/QueryStore";
-import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
-import {getGAInstance} from "../../shared/lib/tracking";
 import ExpressionWrapper from "./expression/ExpressionWrapper";
 import CoExpressionTabContainer from "./coExpression/CoExpressionTabContainer";
 import EnrichmentsTab from 'pages/resultsView/enrichments/EnrichmentsTab';
 import {Bookmark} from "./bookmark/Bookmark";
 import PlotsTab from "./plots/PlotsTab";
-import QueryAndDownloadTabs from "../../shared/components/query/QueryAndDownloadTabs";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
-import RightBar from "../../shared/components/rightbar/RightBar";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import {createQueryStore} from "./SPA";
 import autobind from "autobind-decorator";
 import {ITabConfiguration} from "../../shared/model/ITabConfiguration";
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 
-const win = (window as any);
-
 function initStore() {
 
     const resultsViewPageStore = new ResultsViewPageStore();
 
-    if (!win.currentQueryStore) {
-        win.currentQueryStore = createQueryStore();
+    if (!getBrowserWindow().currentQueryStore) {
+        getBrowserWindow().currentQueryStore = createQueryStore();
     }
 
     const reaction1 = reaction(
         () => {
-            return win.globalStores.routing.location.query
+            return getBrowserWindow().globalStores.routing.location.query
         },
         query => {
 
-            if (!win.globalStores.routing.location.pathname.includes("/results")) {
+            if (!getBrowserWindow().globalStores.routing.location.pathname.includes("/results")) {
                return;
             }
 
@@ -81,7 +54,16 @@ function initStore() {
 
             let samplesSpecification: SamplesSpecificationElement[];
 
-            if (query.case_set_id !== "all") {
+            if (query.case_ids && query.case_ids.length > 0) {
+                const case_ids = query.case_ids.split("+");
+                samplesSpecification = case_ids.map((item:string)=>{
+                    const split = item.split(":");
+                    return {
+                       studyId:split[0],
+                       sampleId:split[1]
+                    }
+                });
+            } else if (query.case_set_id !== "all") {
                 // by definition if there is a case_set_id, there is only one study
                 samplesSpecification = [
                     {
@@ -171,15 +153,6 @@ export interface IResultsViewPageProps {
     routing: any;
 }
 
-type MutationsTabInitProps = {
-    genes: string[];
-    samplesSpecification: SamplesSpecificationElement[]
-};
-
-type OncoprintTabInitProps = {
-    divId: string;
-};
-
 @inject('routing')
 @observer
 export default class ResultsViewPage extends React.Component<IResultsViewPageProps, {}> {
@@ -195,28 +168,10 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         getBrowserWindow().resultsViewPageStore = this.resultsViewPageStore;
     }
 
-    get addThisParameters() {
-        const passthrough = this.showTwitter ? {
-            twitter: {
-                hashtags: "cbioportal"
-            }
-        } : {};
-        return {
-            setup: function (url: string) {
-                return {
-                    url,
-                    passthrough
-                };
-            },
-            className: "addthis_inline_share_toolbox" + (!this.showTwitter ? '_ubww' : '')
-        };
-
-    }
-
     // this needs to be replaced.  we shouldn't need queryStore reference
     // because queryStore and results store should only interact via url
     get queryStore(){
-        return win.currentQueryStore;
+        return getBrowserWindow().currentQueryStore;
     }
 
     @observable currentQuery = true;
@@ -227,8 +182,8 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
     @autobind
     private customTabMountCallback(div:HTMLDivElement,tab:any){
-        if (typeof win[tab.mountCallbackName] === 'function'){
-            win[tab.mountCallbackName](div, this.props.routing.location, this.resultsViewPageStore, tab.customParameters || {});
+        if (typeof getBrowserWindow()[tab.mountCallbackName] === 'function'){
+            getBrowserWindow()[tab.mountCallbackName](div, this.props.routing.location, this.resultsViewPageStore, tab.customParameters || {});
         } else {
             alert(`Tab mount callback not implemented for ${tab.title}`)
         }
@@ -249,7 +204,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                             divId={'oncoprintContainer'}
                             store={store}
                             routing={this.props.routing}
-                            isVirtualStudy={win.currentQueryStore.isVirtualStudyQuery}
+                            isVirtualStudy={getBrowserWindow().currentQueryStore.isVirtualStudyQuery}
                             addOnBecomeVisibleListener={addOnBecomeVisibleListener}
                         />
                     </MSKTab>
@@ -456,7 +411,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     (this.currentQuery) && (<div>
 
                         <div style={{margin:"0 20px 10px 20px"}}>
-                            <QuerySummary queryStore={win.currentQueryStore} store={this.resultsViewPageStore}/>
+                            <QuerySummary queryStore={getBrowserWindow().currentQueryStore} store={this.resultsViewPageStore}/>
                         </div>
                         <MSKTabs activeTabId={this.props.routing.location.query.tab} unmountOnHide={true}
                                  onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
