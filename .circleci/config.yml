@@ -39,12 +39,6 @@ jobs:
       - run:
           name: "Run build"
           command: 'npm run build'
-      - save_cache:
-          paths:
-            - common-dist
-            - dist
-          key: asset-cache-{{ .Environment.CIRCLE_SHA1 }}
-
 
   api_sync:
     <<: *defaults
@@ -67,9 +61,9 @@ jobs:
           - v1-dependencies-{{ checksum "package-lock.json" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
-      - restore_cache:
-          keys:
-          - asset-cache-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: "Run build"
+          command: 'npm run build'
       # run tests!
       - run:
           command: "npm test"
@@ -91,9 +85,9 @@ jobs:
           - v1-dependencies-{{ checksum "package-lock.json" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
-      - restore_cache:
-          keys:
-          - asset-cache-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: "Run build"
+          command: 'npm run build'
       - run:
           name: "Install http server"
           command: "npm i http-server"
