@@ -98,7 +98,6 @@ function runResultsTestSuite(prefix){
         var res = browser.checkElement('#data_download',{hide:['.qtip'] });
         assertScreenShotMatch(res);
     });
-
 }
 
 describe('result page screenshot tests', function(){
@@ -109,6 +108,15 @@ describe('result page screenshot tests', function(){
 
     runResultsTestSuite('no session')
 
+});
+
+describe('expression tab', function() {
+    it("expression tab with complex oql", ()=>{
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=TP53%253AMUT%253B&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=acc_tcga%2Cchol_tcga%2Cesca_tcga#cc-plots`);
+        browser.waitForExist(".borderedChart svg", 10000);
+        var res = browser.checkElement("div#cc-plots");
+        assertScreenShotMatch(res);
+    });
 });
 
 describe("oncoprint screenshot tests", function() {
@@ -202,7 +210,7 @@ describe("download tab screenshot tests", function() {
 
 describe('patient view page screenshot test', function(){
     before(function(){
-        var url = `${CBIOPORTAL_URL}/case.do#/patient?studyId=lgg_ucsf_2014&caseId=P04`;
+        var url = `${CBIOPORTAL_URL}/patient?studyId=lgg_ucsf_2014&caseId=P04`;
         goToUrlAndSetLocalStorage(url);
     });
 
@@ -246,7 +254,7 @@ describe("coexpression tab screenshot tests", function() {
         goToUrlAndSetLocalStorage(url);
     });
     it('coexpression tab coadread_tcga_pub initial load', function() {
-        browser.waitForExist('div[data-test="CoExpressionPlot"]', 10000); // wait for plot to show up
+        browser.waitForExist('div[data-test="CoExpressionPlot"]', 20000); // wait for plot to show up
         var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
         assertScreenShotMatch(res);
     });
@@ -263,20 +271,20 @@ describe("coexpression tab screenshot tests", function() {
     it('coexpression tab coadread_tcga_pub switch tabs', function() {
         browser.click('#coexpressionTabGeneTabs>ul>li:nth-child(2)>a');// click on NRAS
         browser.pause(100); // give time to start loading
-        browser.waitForExist('div[data-test="CoExpressionPlot"]', 10000); // wait for plot to show up
+        browser.waitForExist('div[data-test="CoExpressionPlot"]', 20000); // wait for plot to show up
         var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
         assertScreenShotMatch(res);
     });
     it('coexpression tab coadread_tcga_pub switch profiles', function() {
         browser.execute(function() { resultsViewCoExpressionTab.onSelectDataSet({ value: "coadread_tcga_pub_mrna"}); });
         browser.pause(100); // give time to start loading
-        browser.waitForExist('div[data-test="CoExpressionPlot"]', 10000); // wait for plot to show up
+        browser.waitForExist('div[data-test="CoExpressionPlot"]', 20000); // wait for plot to show up
         var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
         assertScreenShotMatch(res);
     });
     it('coexpression tab coadread_tcga_pub with a lot of genes', function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=AKR1C3%2520AR%2520CYB5A%2520CYP11A1%2520CYP11B1%2520CYP11B2%2520CYP17A1%2520CYP19A1%2520CYP21A2%2520HSD17B1%2520HSD17B10%2520HSD17B11%2520HSD17B12%2520HSD17B13%2520HSD17B14%2520HSD17B2%2520HSD17B3%2520HSD17B4%2520HSD17B6%2520HSD17B7%2520HSD17B8%2520HSD3B1%2520HSD3B2%2520HSD3B7%2520RDH5%2520SHBG%2520SRD5A1%2520SRD5A2%2520SRD5A3%2520STAR&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic#coexp`);
-        browser.waitForExist('div[data-test="CoExpressionPlot"]', 10000); // wait for plot to show up
+        browser.waitForExist('div[data-test="CoExpressionPlot"]', 20000); // wait for plot to show up
         var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
         assertScreenShotMatch(res);
     });
@@ -290,7 +298,7 @@ describe("enrichments tab screenshot tests", function() {
     it('enrichments tab coadread_tcga_pub mRNA profile', function(){
         browser.waitForVisible('div[data-test="MutationEnrichmentsTab"]',10000);
         browser.click('a=mRNA');
-        browser.waitForVisible('div[data-test="MRNAEnrichmentsTab"]',10000);
+        browser.waitForVisible('div[data-test="MRNAEnrichmentsTab"]',20000);
         browser.click('b=MERTK');
         var res = browser.checkElement('#enrichementTabDiv', { hide:['.qtip'] } );
         assertScreenShotMatch(res);
@@ -308,36 +316,28 @@ describe("plots tab screenshot tests", function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=brca_tcga&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=brca_tcga_cnaseq&gene_list=TP53%2520MDM2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_tcga_gistic#plots`);
         browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 20000);
     });
-    it("plots tab mutation type and copy number view", function() {
-        waitForAndCheckPlotsTab();
-    });
     it("plots tab mutation type view", function() {
-        browser.click('input[data-test="ViewCopyNumber"]');
         waitForAndCheckPlotsTab();
     });
     it("plots tab molecular vs molecular same gene", function() {
-        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisProfileTypeSelect({ value: "MRNA_EXPRESSION" }); });
-        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisProfileIdSelect({ value: "brca_tcga_mrna" }); });
-        browser.execute(function() { resultsViewPlotsTab.onVerticalAxisProfileTypeSelect({ value: "MRNA_EXPRESSION" }); });
-        browser.execute(function() { resultsViewPlotsTab.onVerticalAxisProfileIdSelect({ value: "brca_tcga_mrna" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "MRNA_EXPRESSION" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "brca_tcga_mrna" }); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab molecular vs molecular same gene changed gene", function() {
-        browser.execute(function() { resultsViewPlotsTab.onGeneSelect(true, 4193); });
+        browser.execute(function() { resultsViewPlotsTab.test__selectGeneOption(false, 4193); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab copy number view", function() {
         browser.click('input[data-test="ViewMutationType"]');
-        browser.click('input[data-test="ViewCopyNumber"]');
         waitForAndCheckPlotsTab();
     });
     it("plots tab molecular vs molecular different genes", function() {
-        browser.click('[data-test="HorizontalAxisGeneLockButton"]');
-        browser.execute(function() { resultsViewPlotsTab.onGeneSelect(false, 7157); });
+        browser.execute(function() { resultsViewPlotsTab.test__selectGeneOption(true, 7157); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab molecular vs molecular different genes different profiles", function() {
-        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisProfileIdSelect({ value: "brca_tcga_rna_seq_v2_mrna" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "brca_tcga_rna_seq_v2_mrna" }); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab molecular vs molecular swapped axes", function() {
@@ -345,11 +345,12 @@ describe("plots tab screenshot tests", function() {
         waitForAndCheckPlotsTab();
     });
     it("plots tab search case id", function() {
-        browser.execute(function() { resultsViewPlotsTab.executeSearchCase("TCGA-E2"); });
+        browser.click('input[data-test="ViewMutationType"]');
+        browser.execute(function() { resultsViewPlotsTab.executeSearchCase("TCGA-E2 TCGA-A8-A08G"); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab search case id and mutation", function() {
-        browser.execute(function() { resultsViewPlotsTab.executeSearchMutation("I195T"); });
+        browser.execute(function() { resultsViewPlotsTab.executeSearchMutation("I195T H179R apsdoifjapsoid"); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab search mutation", function() {
@@ -361,11 +362,12 @@ describe("plots tab screenshot tests", function() {
         waitForAndCheckPlotsTab();
     });
     it("plots tab clinical vs molecular", function() {
-        browser.click('input[data-test="HorizontalAxisClinicalAttributeRadio"]');
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "clinical_attribute" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "AGE" }); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab clinical vs molecular boxplot", function() {
-        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisClinicalAttributeSelect({ value: "AJCC_PATHOLOGIC_TUMOR_STAGE" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "AJCC_PATHOLOGIC_TUMOR_STAGE" }); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab molecular vs clinical boxplot, mutation search off", function() {
@@ -374,19 +376,29 @@ describe("plots tab screenshot tests", function() {
         waitForAndCheckPlotsTab();
     });
     it("plots tab clinical vs clinical boxplot", function() {
-        browser.click('input[data-test="HorizontalAxisClinicalAttributeRadio"]');
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "clinical_attribute" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "AGE" }); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab search case id in clinical vs clinical boxplot", function() {
-        browser.execute(function() { resultsViewPlotsTab.executeSearchCase("TCGA-B6"); });
+        browser.execute(function() { resultsViewPlotsTab.executeSearchCase("kjpoij12     TCGA-B6 asdfas TCGA-A7-A13"); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab clinical vs clinical table plot", function() {
-        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisClinicalAttributeSelect({ value: "AJCC_TUMOR_PATHOLOGIC_PT" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "AJCC_TUMOR_PATHOLOGIC_PT" }); });
         waitForAndCheckPlotsTab();
     });
     it("plots tab copy number vs clinical table plot", function() {
-        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisProfileTypeSelect({ value: "COPY_NUMBER_ALTERATION" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "COPY_NUMBER_ALTERATION" }); });
+        waitForAndCheckPlotsTab();
+    });
+
+
+    it("plots tab one box clinical vs clinical boxplot", function() {
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=lgg_ucsf_2014&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=lgg_ucsf_2014_sequenced&gene_list=SMARCA4%2520CIC&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=lgg_ucsf_2014_mutations&show_samples=true&clinicallist=MUTATION_COUNT#plots`);
+        browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 20000);
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "clinical_attribute" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "CANCER_TYPE" }); });
         waitForAndCheckPlotsTab();
     });
 });
