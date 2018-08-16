@@ -11,7 +11,6 @@ import {
     VictoryAxis, VictoryLegend, VictoryLabel, VictoryScatter, VictoryTheme, VictoryZoomContainer
 } from 'victory';
 import SvgSaver from 'svgsaver';
-import fileDownload from 'react-file-download';
 import {
     getEstimates, getMedian, getLineData, getScatterData, getScatterDataWithOpacity, getStats, calculateLogRank,
     getDownloadContent, convertScatterDataToDownloadData, downSampling, GroupedScatterData, filteringScatterData
@@ -19,6 +18,8 @@ import {
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import {getPatientViewUrl} from "../../../shared/api/urls";
+import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
+import autobind from "autobind-decorator";
 
 export interface ISurvivalChartProps {
     alteredPatientSurvivals: PatientSurvival[];
@@ -139,9 +140,6 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         super(props);
         this.tooltipMouseEnter = this.tooltipMouseEnter.bind(this);
         this.tooltipMouseLeave = this.tooltipMouseLeave.bind(this);
-        this.downloadSvg = this.downloadSvg.bind(this);
-        this.downloadPng = this.downloadPng.bind(this);
-        this.downloadData = this.downloadData.bind(this);
     }
 
     @computed get sortedAlteredPatientSurvivals(): PatientSurvival[] {
@@ -173,18 +171,28 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         this.tooltipModel = null;
     }
 
-    private downloadSvg() {
-        this.svgsaver.asSvg(this.svgContainer.firstChild, this.props.fileName + '.svg');
+    @autobind
+    private getSvg() {
+        return this.svgContainer.firstChild;
     }
 
-    private downloadPng() {
-        this.svgsaver.asPng(this.svgContainer.firstChild, this.props.fileName + '.png');
-    }
-
-    private downloadData() {
-        fileDownload(getDownloadContent(getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates),
+    @autobind
+    private getData() {
+        return getDownloadContent(getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates),
             getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates), this.props.title,
-            this.alteredLegendText, this.unalteredLegendText), this.props.fileName + '.txt');
+            this.alteredLegendText, this.unalteredLegendText);
+    }
+
+    @autobind
+    private hoverCircleFillOpacity(datum:any, active:any) {
+        if (active ||
+            (this.isTooltipHovered && this.tooltipModel &&
+            this.tooltipModel.datum.studyId === datum.studyId &&
+                this.tooltipModel.datum.patientId === datum.patientId)) {
+            return 0.3;
+        } else {
+            return 0;
+        }
     }
 
     public render() {
@@ -229,17 +237,15 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                 <div className="borderedChart" data-test={'SurvivalChart'} style={{width: '100%'}}>
 
                     {this.props.showDownloadButtons &&
-                        <div className="btn-group" style={{position:'absolute', zIndex:10, right: 10 }} role="group">
-                            <button className={`btn btn-default btn-xs`} onClick={this.downloadSvg}>
-                                SVG <i className="fa fa-cloud-download" />
-                            </button>
-                            <button className={`btn btn-default btn-xs`} onClick={this.downloadPng}>
-                                PNG <i className="fa fa-cloud-download" />
-                            </button>
-                            <button className={`btn btn-default btn-xs`} onClick={this.downloadData}>
-                                Data <i className="fa fa-cloud-download" />
-                            </button>
-                        </div>
+                        <DownloadControls
+                            dontFade={true}
+                            filename={this.props.fileName}
+                            buttons={["SVG", "PNG", "Data"]}
+                            getSvg={this.getSvg}
+                            getData={this.getData}
+                            style={{position:'absolute', zIndex: 10, right: 10}}
+                            collapse={true}
+                        />
                     }
 
                     <VictoryChart containerComponent={<VictoryZoomContainer responsive={false}
@@ -263,13 +269,13 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                                      data={this.scatterData.unaltered.line}
                                      style={{data: {stroke: "blue", strokeWidth: 1}}}/>
                         <VictoryScatter data={this.scatterData.altered.scatterWithOpacity}
-                            symbol="plus" style={{ data: { fill: "red" , opacity: (d:any) => d.opacity} }} size={3} />
+                            symbol="plus" style={{ data: { fill: "red", opacity: (d:any) => d.opacity } }} size={3} />
                         <VictoryScatter data={this.scatterData.unaltered.scatterWithOpacity}
-                            symbol="plus" style={{ data: { fill: "blue" , opacity: (d:any) => d.opacity} }} size={3} />
+                            symbol="plus" style={{ data: { fill: "blue", opacity: (d:any) => d.opacity } }} size={3} />
                         <VictoryScatter data={this.scatterData.altered.scatter}
-                            symbol="circle" style={{ data: { fill: "red", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0} } } size={10} events={events} />
+                            symbol="circle" style={{ data: { fill: "red", fillOpacity: this.hoverCircleFillOpacity} }} size={10} events={events} />
                         <VictoryScatter data={this.scatterData.unaltered.scatter}
-                            symbol="circle" style={{ data: { fill: "blue", fillOpacity: (datum: any, active: any) => active ? 0.3 : 0 } }} size={10} events={events} />
+                            symbol="circle" style={{ data: { fill: "blue", fillOpacity: this.hoverCircleFillOpacity} }} size={10} events={events} />
                         {this.props.showLegend &&
                             <VictoryLegend x={this.styleOpts.legend.x} y={this.styleOpts.legend.y}
                                 data={[
@@ -280,9 +286,9 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     </VictoryChart>
                 </div>
                 {this.tooltipModel &&
-                    <Popover arrowOffsetTop={56} className={styles.Tooltip} positionLeft={this.tooltipModel.x + 15}
+                    <Popover arrowOffsetTop={56} className={styles.Tooltip} positionLeft={this.tooltipModel.x + 10}
                              { ...{container:this} }
-                        positionTop={this.tooltipModel.y - 60}
+                        positionTop={this.tooltipModel.y - 47}
                         onMouseEnter={this.tooltipMouseEnter} onMouseLeave={this.tooltipMouseLeave}>
                         <div>
                             Patient ID: <a href={getPatientViewUrl(this.tooltipModel.datum.studyId, this.tooltipModel.datum.patientId)} target="_blank">{this.tooltipModel.datum.patientId}</a><br />

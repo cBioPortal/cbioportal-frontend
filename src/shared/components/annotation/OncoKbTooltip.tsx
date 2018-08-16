@@ -3,12 +3,10 @@ import OncoKbCard from "./OncoKbCard";
 import {observer} from "mobx-react";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import OncokbPubMedCache from "shared/cache/PubMedCache";
-import {ICacheData, ICache} from "shared/lib/SimpleCache";
+import {ICache, ICacheData} from "shared/lib/SimpleCache";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
 import {IEvidence} from "shared/model/OncoKB";
-import {
-    generateTreatments, generateOncogenicCitations, generateMutationEffectCitations, extractPmids
-} from "shared/lib/OncoKbUtils";
+import {extractPmids, generateOncogenicCitations, generateTreatments} from "shared/lib/OncoKbUtils";
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 
 export interface IOncoKbTooltipProps {
@@ -45,9 +43,10 @@ export default class OncoKbTooltip extends React.Component<IOncoKbTooltipProps, 
 
     public get pmidData():ICache<any>
     {
-        if (this.props.pubMedCache && this.evidenceCacheData)
-        {
-            const refs = extractPmids(this.evidenceCacheData.data);
+        if (this.props.pubMedCache && this.evidenceCacheData) {
+            let mutationEffectPmids = (this.props.indicator && this.props.indicator.mutationEffect) ?
+                this.props.indicator.mutationEffect.citations.pmids.map(pmid => Number(pmid)) : [];
+            const refs = extractPmids(this.evidenceCacheData.data).concat(mutationEffectPmids);
 
             for (const ref of refs) {
                 this.props.pubMedCache.get(ref);
@@ -86,14 +85,18 @@ export default class OncoKbTooltip extends React.Component<IOncoKbTooltipProps, 
                     geneNotExist={this.props.geneNotExist}
                     title={`${this.props.indicator.query.hugoSymbol} ${this.props.indicator.query.alteration} in ${this.props.indicator.query.tumorType}`}
                     gene={this.props.indicator.geneExist ? this.props.indicator.query.hugoSymbol : ''}
+                    variant={this.props.indicator.query.alteration ? this.props.indicator.query.alteration : ''}
                     oncogenicity={this.props.indicator.oncogenic}
                     oncogenicityPmids={generateOncogenicCitations(evidence.oncogenicRefs)}
-                    mutationEffect={evidence.mutationEffect.knownEffect}
-                    mutationEffectPmids={generateMutationEffectCitations(evidence.mutationEffect.refs)}
+                    mutationEffect={this.props.indicator.mutationEffect ? this.props.indicator.mutationEffect.knownEffect : ''}
+                    mutationEffectCitations={this.props.indicator.mutationEffect ? this.props.indicator.mutationEffect.citations : {
+                        abstracts: [],
+                        pmids: []
+                    }}
                     geneSummary={this.props.indicator.geneSummary}
                     variantSummary={this.props.indicator.variantSummary}
                     tumorTypeSummary={this.props.indicator.tumorTypeSummary}
-                    biologicalSummary={evidence.mutationEffect.description}
+                    biologicalSummary={this.props.indicator.mutationEffect ? this.props.indicator.mutationEffect.description : ''}
                     treatments={generateTreatments(evidence.treatments)}
                     pmidData={pmidData}
                     handleFeedbackOpen={this.props.handleFeedbackOpen}
