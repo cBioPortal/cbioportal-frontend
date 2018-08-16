@@ -8,7 +8,7 @@ import {
 import {action, computed, observable} from "mobx";
 import getCanonicalMutationType from "../../../shared/lib/getCanonicalMutationType";
 import {
-    calculateJitter, ExpressionStyle, ExpressionStyleSheet, getExpressionStyle,
+    calculateJitter, ExpressionStyle, ExpressionStyleSheet, expressionTooltip, getExpressionStyle,
     getMolecularDataBuckets, prioritizeMutations
 } from "./expressionHelpers";
 import {Modal} from "react-bootstrap";
@@ -394,16 +394,6 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
         return `${this.selectedGene.hugoGeneSymbol} Expression --- RNA Seq V${this.props.RNASeqVersion}${log}`;
     }
 
-    @computed get boxPlotTooltip() {
-        return (d:IBoxScatterPlotPoint)=>{
-            if (this.boxPlotData.isComplete) {
-                return boxPlotTooltip(d, false);
-            } else {
-                return <span>Loading... (this shouldnt appear because the box plot shouldnt be visible)</span>;
-            }
-        }
-    }
-
     @computed get fill() {
         if (this.showCna || this.showMutations) {
             return (d:IScatterPlotSampleData)=>this.scatterPlotAppearance(d).fill!;
@@ -434,11 +424,6 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @autobind
-    private scatterPlotTooltip(d:IScatterPlotData) {
-        return scatterPlotTooltip(d);
-    }
-
-    @autobind
     private stroke(d:IScatterPlotSampleData) {
         return this.scatterPlotAppearance(d).stroke;
     }
@@ -465,6 +450,21 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @autobind
+    private tooltip(d:IBoxScatterPlotPoint) {
+        let content;
+        if (this.props.store.studyIdToStudy.isComplete) {
+            content = expressionTooltip(d, this.props.store.studyIdToStudy.result!);
+        } else {
+            content = "Loading...";
+        }
+        return (
+            <div className="cbioportal-frontend cbioTooltip">
+                {content}
+            </div>
+        );
+    }
+
+    @autobind
     private getChart() {
         if (this.boxPlotData.isComplete) {
             return (
@@ -479,7 +479,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         axisLabelY={this.yAxisLabel}
                         data={this.boxPlotData.result}
                         chartBase={550}
-                        tooltip={this.boxPlotTooltip}
+                        tooltip={this.tooltip}
                         horizontal={false}
                         logScale={this.logScale}
                         size={scatterPlotSize}
