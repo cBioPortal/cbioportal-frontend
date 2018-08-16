@@ -5,7 +5,7 @@ import {
 } from "../../../shared/api/generated/CBioPortalAPI";
 import {action, autorun, computed, IReactionDisposer, observable, ObservableMap} from "mobx";
 import {observer, Observer} from "mobx-react";
-import {AlterationTypeConstants} from "../ResultsViewPageStore";
+import {AlterationTypeConstants, ResultsViewPageStore} from "../ResultsViewPageStore";
 import Select from "react-select";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import {remoteData} from "../../../shared/api/remoteData";
@@ -26,8 +26,10 @@ import setWindowVariable from "../../../shared/lib/setWindowVariable";
 import {ICoExpressionPlotProps} from "./CoExpressionPlot";
 import {bind} from "bind-decorator";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
+import NoOqlWarning from "../../../shared/components/NoOqlWarning";
 
 export interface ICoExpressionTabProps {
+    store:ResultsViewPageStore;
     molecularProfiles:MolecularProfile[];
     genes:Gene[];
     studyToDataQueryFilter:{[studyId:string]:IDataQueryFilter}
@@ -248,8 +250,9 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
     }
 
     render() {
+        let divContents = null;
         if (this.profiles.length) {
-            return (
+            divContents = (
                 <div>
                     <Observer>
                         {this.header}
@@ -260,11 +263,19 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                 </div>
             );
         } else {
-            return (
+            divContents = (
                 <div>
                     <span>There are no available profiles in the queried studies.</span>
                 </div>
             );
         }
+        return (
+            <div>
+                <div style={{marginBottom:10}}>
+                    <NoOqlWarning store={this.props.store}/>
+                </div>
+                {divContents}
+            </div>
+        );
     }
 }
