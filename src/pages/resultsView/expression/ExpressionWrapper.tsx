@@ -38,7 +38,7 @@ import {
 import {getOncoprintMutationType} from "../../../shared/components/oncoprint/DataUtils";
 import {getSampleViewUrl} from "../../../shared/api/urls";
 import {AnnotatedMutation, ResultsViewPageStore} from "../ResultsViewPageStore";
-import OqlStatusBanner from "../../../shared/components/OqlStatusBanner";
+import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import {remoteData} from "../../../shared/api/remoteData";
 import MobxPromiseCache from "../../../shared/lib/MobxPromiseCache";
 import {MobxPromise} from "mobxpromise";
@@ -483,7 +483,8 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         legendData={scatterPlotLegendData(
                             _.flatten(this.boxPlotData.result.map(d=>d.data)), this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated
                         )}
-                    />
+                        legendLocationWidthThreshold={900}
+                />
                     {this.mutationDataExists.result && (
                         <div style={{marginTop:5}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
                     )}

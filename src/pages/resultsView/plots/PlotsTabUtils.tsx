@@ -100,7 +100,7 @@ export enum MutationSummary {
 }
 
 const NOT_PROFILED_MUTATION_LEGEND_LABEL = ["Not profiled","for mutations"];
-const NOT_PROFILED_CNA_LEGEND_LABEL = ["Not profiled", "for copy number", "alterations"];
+const NOT_PROFILED_CNA_LEGEND_LABEL = ["Not profiled", "for CNA"];
 const MUTATION_TYPE_NOT_PROFILED = "not_profiled_mutation";
 const MUTATION_TYPE_NOT_MUTATED = "not_mutated";
 const CNA_TYPE_NOT_PROFILED = "not_profiled_cna";

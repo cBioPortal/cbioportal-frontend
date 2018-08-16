@@ -40,7 +40,7 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     strokeWidth?:number | ((d:D)=>number);
     symbol?: string | ((d:D)=>string); // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
     tooltip?:(d:D)=>JSX.Element;
-    legendData?:{name:string, symbol:any}[]; // see http://formidable.com/open-source/victory/docs/victory-legend/#data
+    legendData?:{name:string|string[], symbol:any}[]; // see http://formidable.com/open-source/victory/docs/victory-legend/#data
     logScale?:boolean; // log scale along the point data axis
     axisLabelX?:string;
     axisLabelY?:string;
@@ -205,12 +205,25 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
 
     private get legend() {
         if (this.props.legendData && this.props.legendData.length) {
+            let legendData = this.props.legendData;
+            if (this.legendLocation === "bottom") {
+                // if legend is at bottom then flatten labels
+                legendData = legendData.map(x=>{
+                    let name = x.name;
+                    if (Array.isArray(x.name)) {
+                        name = (name as string[]).join(" "); // flatten labels by joining with space
+                    }
+                    return {
+                        name, symbol: x.symbol
+                    };
+                });
+            }
             return (
                 <VictoryLegend
                     orientation={this.legendLocation === "right" ? "vertical" : "horizontal"}
                     itemsPerRow={this.legendLocation === "right" ? undefined : LEGEND_ITEMS_PER_ROW}
                     rowGutter={this.legendLocation === "right" ? undefined : -5}
-                    data={this.props.legendData}
+                    data={legendData}
                     x={this.legendLocation === "right" ? this.sideLegendX : 0}
                     y={this.legendLocation === "right" ? 100 : this.svgHeight-this.bottomLegendHeight}
                 />
