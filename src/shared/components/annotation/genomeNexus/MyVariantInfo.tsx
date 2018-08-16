@@ -25,6 +25,7 @@ export default class MyVariantInfo extends React.Component<IMyVariantInfoProps, 
         if (this.props.myVariantInfo && this.props.myVariantInfo.dbsnp && this.props.myVariantInfo.dbsnp.rsid !== null) {
             mviContent = (
                 <span className={classNames(annotationStyles["annotation-item-text"])}>
+                    {this.props.myVariantInfo.dbsnp.rsid}
                 </span>
             );
         }

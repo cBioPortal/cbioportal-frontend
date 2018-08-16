@@ -495,13 +495,13 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         };
 
         this._columns[MutationTableColumnType.DBSNP] = {
-            name: "dbSNP ID",
+            name: "dbSNP",
             render: (d: Mutation[]) => (this.props.genomeNexusEnrichmentCache
                 ? DbsnpColumnFormatter.renderFunction(d, this.props.genomeNexusEnrichmentCache as GenomeNexusEnrichmentCache)
                 : (<span></span>)),
             download: (d: Mutation[]) => DbsnpColumnFormatter.download(
                 d, this.props.genomeNexusEnrichmentCache as GenomeNexusEnrichmentCache),
-            visible: false
+            visible: true
         };
     }
 
