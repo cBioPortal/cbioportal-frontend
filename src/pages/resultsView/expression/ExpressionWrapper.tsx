@@ -134,7 +134,11 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @computed get boxWidth(){
-        return this.widthThreshold ? 27 : 80;
+        // linearly decrease 40 with 1 box->minimum 18 with 33 boxes
+        // calbirated to fit all 33 tcga pan-can atlas studies
+        const m = -22/32;
+        const b = 40 - m;
+        return Math.max(m * this.selectedStudies.length + b, 18);
     }
 
     readonly sampleStudyData = remoteData<IStringAxisData>({
@@ -470,6 +474,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                 >
                     <ExpressionTabBoxPlot
                         svgId={SVG_ID}
+                        domainPadding={50}
                         boxWidth={this.boxWidth}
                         axisLabelY={this.yAxisLabel}
                         data={this.boxPlotData.result}
