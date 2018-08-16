@@ -23,13 +23,13 @@ import {
     NumericGeneMolecularData
 } from "../../../shared/api/generated/CBioPortalAPI";
 import Timer = NodeJS.Timer;
-import ScatterPlot, {LEGEND_Y as SCATTERPLOT_LEGEND_Y} from "shared/components/plots/ScatterPlot";
+import ScatterPlot from "shared/components/plots/ScatterPlot";
 import TablePlot from "shared/components/plots/TablePlot";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import InfoIcon from "../../../shared/components/InfoIcon";
 import {remoteData} from "../../../shared/api/remoteData";
 import {MobxPromise} from "mobxpromise";
-import BoxScatterPlot, {LEGEND_Y as BOXPLOT_LEGEND_Y, IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPlot";
+import BoxScatterPlot, {IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPlot";
 import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import setWindowVariable from "../../../shared/lib/setWindowVariable";
@@ -1309,6 +1309,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 legendData={scatterPlotLegendData(
                                     _.flatten(this.boxPlotData.result.data.map(d=>d.data)), this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated
                                 )}
+                                legendLocationWidthThreshold={550}
                             />
                         );
                         break;
@@ -1320,7 +1321,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 default:
                     return <span>Not implemented yet</span>
             }
-            const legendY = (plotType === PlotType.ScatterPlot ? SCATTERPLOT_LEGEND_Y : BOXPLOT_LEGEND_Y);
             return (
                 <div>
                     <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative">
