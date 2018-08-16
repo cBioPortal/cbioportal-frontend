@@ -392,7 +392,9 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
             let ret:MobxPromise<any>[] = [
                 oncoprint.props.store.samples,
                 oncoprint.props.store.patients,
-                oncoprint.clinicalAttributesById
+                oncoprint.clinicalAttributesById,
+                oncoprint.props.store.alteredSampleKeys,
+                oncoprint.props.store.alteredPatientKeys
             ];
             if (oncoprint.clinicalAttributesById.isComplete) {
                 const attributes = oncoprint.selectedClinicalAttributeIds.keys().map(attrId=>{
@@ -411,6 +413,10 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
             }).filter(x=>!!x);
             return attributes.map((attribute:ClinicalAttribute)=>{
                 const data = oncoprint.props.store.oncoprintClinicalDataCache.get(attribute).result!;
+                let altered_uids = undefined;
+                if (oncoprint.onlyShowClinicalLegendForAlteredCases) {
+                    altered_uids = (sampleMode ? oncoprint.props.store.alteredSampleKeys.result! : oncoprint.props.store.alteredPatientKeys.result!);
+                }
                 const ret:Partial<ClinicalTrackSpec> = {
                     key: oncoprint.clinicalAttributeIdToTrackKey(attribute.clinicalAttributeId),
                     label: attribute.displayName,
@@ -420,6 +426,7 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
                         sampleMode ? oncoprint.props.store.samples.result! : oncoprint.props.store.patients.result!,
                         data
                     ),
+                    altered_uids
                 };
                 if (attribute.datatype === "NUMBER") {
                     ret.datatype = "number";

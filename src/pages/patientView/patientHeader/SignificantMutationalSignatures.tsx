@@ -45,9 +45,6 @@ export default class SignificantMutationalSignatures extends React.Component<ISi
 
         return (
             <div style={{maxWidth:250}}>
-                {/*<h6 style={{textAlign:"center"}}>*/}
-                    {/*Mutational Signature Confidences*/}
-                {/*</h6>*/}
                 <span className="small">
                     {significantMutationalSignaturesForSample.confidenceStatement}
                 </span>

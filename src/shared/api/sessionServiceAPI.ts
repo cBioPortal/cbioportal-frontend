@@ -2,7 +2,7 @@ import * as request from 'superagent';
 import {getSessionServiceApiUrl} from "./urls";
 import {VirtualStudy} from "shared/model/VirtualStudy";
 
-export default class sessionSeriveAPI {
+export default class sessionServiceAPI {
     /**
      * Retrieve Virtual Studies
      */
@@ -32,5 +32,17 @@ export default class sessionSeriveAPI {
         return request
                 .get(`${getSessionServiceApiUrl()}/add/${id}`)
                              
+    }
+    
+    saveVirtualStudy(object: any, save: boolean) {
+        return request
+            .post(getSessionServiceApiUrl() + (save ? '/save' : ''))
+            .send(object)
+            .then((res) => {
+                let result = res.body;
+                   return {
+                       id:result.id
+                   }
+            });
     }
 }
