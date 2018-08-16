@@ -101,10 +101,12 @@ export function annotateMutationPutativeDriver(
 export function computePutativeDriverAnnotatedMutations(
     mutations: Mutation[],
     getPutativeDriverInfo:(mutation:Mutation)=>{oncoKb:string, hotspots:boolean, cbioportalCount:boolean, cosmicCount:boolean, customDriverBinary:boolean, customDriverTier?:string},
+    entrezGeneIdToGene:{[entrezGeneId:number]:Gene},
     ignoreUnknown:boolean
 ):AnnotatedMutation[] {
     return mutations.reduce((annotated:AnnotatedMutation[], mutation:Mutation)=>{
         const annotatedMutation = annotateMutationPutativeDriver(mutation, getPutativeDriverInfo(mutation)); // annotate
+        annotatedMutation.hugoGeneSymbol = entrezGeneIdToGene[mutation.entrezGeneId].hugoGeneSymbol;
         if (annotatedMutation.putativeDriver || !ignoreUnknown) {
             annotated.push(annotatedMutation);
         }
@@ -208,8 +210,10 @@ export function computeGenePanelInformation(
 export function annotateMolecularDatum(
     molecularDatum:NumericGeneMolecularData,
     getOncoKbCnaAnnotationForOncoprint:(datum:NumericGeneMolecularData)=>IndicatorQueryResp|undefined,
-    molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile}
+    molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile},
+    entrezGeneIdToGene:{[entrezGeneId:number]:Gene}
 ):AnnotatedNumericGeneMolecularData {
+    const hugoGeneSymbol = entrezGeneIdToGene[molecularDatum.entrezGeneId].hugoGeneSymbol;
     let oncogenic = "";
     if (molecularProfileIdToMolecularProfile[molecularDatum.molecularProfileId].molecularAlterationType
         === "COPY_NUMBER_ALTERATION") {
@@ -218,7 +222,7 @@ export function annotateMolecularDatum(
             oncogenic = getOncoKbOncogenic(oncoKbDatum);
         }
     }
-    return Object.assign({oncoKbOncogenic: oncogenic}, molecularDatum);
+    return Object.assign({oncoKbOncogenic: oncogenic, hugoGeneSymbol}, molecularDatum);
 }
 
 export async function fetchQueriedStudies(filteredPhysicalStudies:{[id:string]:CancerStudy},queriedIds:string[]):Promise<CancerStudy[]>{
