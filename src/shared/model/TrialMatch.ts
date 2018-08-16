@@ -20,6 +20,7 @@ export type TrialMatchData = {
     code: string;
     matchLevel: string;
     matchType: string;
+    matchCancerType: string,
     dose: string;
 };
 

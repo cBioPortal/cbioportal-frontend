@@ -52,8 +52,8 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
         return (
             <tr key={index}>
                 <td key="arm code">{match.code}</td>
-                <td key="match level">{match.matchLevel}</td>
                 <td key="match type">{match.matchType}</td>
+                <td key="cancer type">{match.matchCancerType}</td>
                 <td key="dose">{match.dose.split(":")[0]}</td>
             </tr>
         );
@@ -94,9 +94,9 @@ export default class TrialCard extends React.Component<ITrialCardProps, {}> {
                                     <thead>
                                     <tr>
                                         <th key="code" scope="col">Arm Code</th>
-                                        <th key="level" scope="col">Match Level</th>
                                         <th key="type" scope="col">Match Type</th>
-                                        <th key="Drug" scope="col">Drug</th>
+                                        <th key="cancerType" scope="col">Match Cancer Type</th>
+                                        <th key="drug" scope="col">Drug</th>
                                     </tr>
                                     </thead>
                                     <tbody>

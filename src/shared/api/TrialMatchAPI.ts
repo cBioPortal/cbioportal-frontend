@@ -26,6 +26,7 @@ type TrialMatch = {
     code: string;
     matchLevel: string;
     matchType: string;
+    matchCancerType: string;
     dose: string;
     [propName: string]: any;
 };
@@ -47,7 +48,9 @@ function countMatches(trialMatchItems: Array<TrialMatch>): {[title:string]:Array
             code: trialMatchItem.code,
             matchLevel: trialMatchItem.matchLevel,
             matchType: trialMatchItem.matchType,
-            dose: trialMatchItem.dose});
+            dose: trialMatchItem.dose,
+            matchCancerType: trialMatchItem.matchCancerType
+        });
 
     });
     return matches;
