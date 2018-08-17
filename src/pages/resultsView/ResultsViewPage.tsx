@@ -38,7 +38,7 @@ function initStore() {
 
     const reaction1 = reaction(
         () => {
-            return getBrowserWindow().globalStores.routing.location.query
+            return getBrowserWindow().globalStores.routing.query
         },
         query => {
 
@@ -108,7 +108,6 @@ function initStore() {
 
                 const geneSymbols = parseOQLQuery(oql).map((o: any) => o.gene);
                 if (!resultsViewPageStore.hugoGeneSymbols || !_.isEqual(resultsViewPageStore.hugoGeneSymbols.slice(), geneSymbols)) {
-                    console.log("settings genes");
                     resultsViewPageStore.hugoGeneSymbols = geneSymbols;
                 }
 
@@ -177,7 +176,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     @observable currentQuery = true;
 
     private handleTabChange(id: string) {
-        this.props.routing.updateRoute({ tab: id });
+        this.props.routing.updateRoute({},`results/${id}`);
     }
 
     @autobind
@@ -403,6 +402,10 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         return !isExcludedInList && !isExcluded;
     }
 
+    public currentTab(pathname:string):string {
+        return pathname.split('/')[2];
+    }
+
     public render() {
 
         return (
@@ -413,7 +416,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                         <div style={{margin:"0 20px 10px 20px"}}>
                             <QuerySummary queryStore={getBrowserWindow().currentQueryStore} store={this.resultsViewPageStore}/>
                         </div>
-                        <MSKTabs activeTabId={this.props.routing.location.query.tab} unmountOnHide={true}
+                        <MSKTabs activeTabId={this.currentTab(this.props.routing.location.pathname)} unmountOnHide={true}
                                  onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
 
 
