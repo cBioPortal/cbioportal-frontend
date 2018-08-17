@@ -110,7 +110,6 @@ switch (window.defaultRoute) {
 
 const syncedHistory = syncHistoryWithStore(history, routingStore);
 
-
 const stores = {
     // Key can be whatever you want
     routing: routingStore,
