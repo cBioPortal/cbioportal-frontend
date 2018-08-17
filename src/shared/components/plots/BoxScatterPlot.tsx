@@ -266,7 +266,8 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     @computed get chartExtent() {
         const miscPadding = 100; // specifying chart width in victory doesnt translate directly to the actual graph size
         const numBoxes = this.props.data.length;
-        return 2*this.domainPadding + numBoxes*this.boxWidth + (numBoxes-1)*this.boxSeparation + miscPadding;
+        return this.categoryCoord(numBoxes - 1) + 2*this.domainPadding + miscPadding;
+        //return 2*this.domainPadding + numBoxes*this.boxWidth + (numBoxes-1)*this.boxSeparation;
         //const ret = Math.max(computedExtent, this.props.chartBase);
         //return ret;
     }
@@ -466,7 +467,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     private categoryCoord(index:number) {
-        return index * this.boxSeparation;
+        return index * (this.boxWidth + this.boxSeparation); // half box + separation + half box
     }
 
     @computed get categoryTickValues() {
