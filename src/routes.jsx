@@ -64,7 +64,7 @@ export const makeRoutes = (routing) => {
                 <Route path="/restore" onEnter={()=>{$(document).scrollTop(0)}} component={restoreRoute}/>
                 <Route path="/testimonials" onEnter={()=>{$(document).scrollTop(0)}} component={TestimonialsPage}/>
                 <Route path="/blank" onEnter={()=>{$(document).scrollTop(0)}} component={getBlankPage}/>
-                <Route path="/results" onEnter={()=>{$(document).scrollTop(0)}} onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(ResultsViewPage)} />
+                <Route path="/results(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(ResultsViewPage)} />
                 <Route path="/patient" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(PatientViewPage)}/>
                 <Route path="/spa" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(SPA)} />
                 <Route path="/study" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(StudyViewPage)} />
