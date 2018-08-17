@@ -24,6 +24,7 @@ import civicClient from "../../shared/api/civicClientInstance";
 import genomeNexusClient from '../../shared/api/genomeNexusClientInstance';
 import internalGenomeNexusClient from '../../shared/api/genomeNexusInternalClientInstance';
 import oncoKBClient from '../../shared/api/oncokbClientInstance';
+import {getSessionKey} from "../../shared/lib/ExtendedRouterStore";
 
 interface IContainerProps {
     location: Location;
@@ -53,6 +54,7 @@ const configPromise = remoteData(async ()=>{
 
 });
 
+
 @observer
 export default class Container extends React.Component<IContainerProps, {}> {
 
@@ -62,14 +64,8 @@ export default class Container extends React.Component<IContainerProps, {}> {
 
     context: { router: any };
 
-    componentDidMount() {
-
-        const headerNode = document.getElementById("reactHeader");
-        if (headerNode !== null) {
-            ReactDOM.render(<PageHeader router={this.context.router} currentRoutePath={this.props.location.pathname}/>,
-                headerNode);
-        }
-
+    private get routingStore(){
+        return getBrowserWindow().routingStore;
     }
 
     renderChildren() {
@@ -80,6 +76,11 @@ export default class Container extends React.Component<IContainerProps, {}> {
     }
 
     render() {
+        let configComplete = configPromise.isComplete;
+        if (this.routingStore.location.query.sessionId && !this.routingStore._session) {
+            configComplete = configComplete && this.routingStore.remoteSessionData.isComplete;
+        }
+
         return (
             <div>
                 <div className="pageTopContainer">
@@ -90,7 +91,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
 
                 <div className="contentWrapper">
                     <UnsupportedBrowserModal/>
-                    {(configPromise.isComplete) && this.renderChildren()}
+                    {(configComplete) && this.renderChildren()}
                 </div>
 
                 <PortalFooter/>
