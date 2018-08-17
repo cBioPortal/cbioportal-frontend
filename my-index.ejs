@@ -12,30 +12,29 @@
         window.defaultRoute = "/spa";
         window.frontendConfig = {
             configurationServiceUrl:"http://localhost:8080/config_service.jsp",
-
-
-            customTabs:[
-                {
-                    "title": "Custom Tab",
-                    "location": "RESULTS_PAGE",
-                    "mountCallbackName": "renderCustomTab1",
-                    "pathsToJs":["http://127.0.0.1:8080/customTab1.js"],
-                    "showWithMultipleStudies": true,
-                    "customParameters": { example:1 },
-                    "unmountOnHide":false
-                }
-            ]
+            // customTabs:[
+            //     {
+            //         "title": "Custom Tab",
+            //         "location": "RESULTS_PAGE",
+            //         "mountCallbackName": "renderCustomTab1",
+            //         "pathsToJs":["http://127.0.0.1:8080/customTab1.js"],
+            //         "showWithMultipleStudies": true,
+            //         "customParameters": { example:1 },
+            //         "unmountOnHide":false
+            //     }
+            // ]
         };
 
         window.frontendConfigOverride = {
             frontendUrl:'//'+window.location.host + '/',
-            apiRoot:'www.cbioportal.org/rc',
-            sessionServiceUrl:'https://cbioportal-session-service.herokuapp.com/session_service/api/sessions/heroku_portal/'
+            apiRoot:'www.cbioportal.org/beta',
+            sessionServiceUrl:'https://cbioportal-session-service.herokuapp.com/session_service/api/sessions/heroku_portal/',
+            disabledTabs:[]
         };
 
     </script>
     <script>
-        window.frontendConfig.customTabs.forEach(function(tab){
+        window.frontendConfig.customTabs && window.frontendConfig.customTabs.forEach(function(tab){
             if (tab.pathsToJs) {
                 tab.pathsToJs.forEach(function(src){
                     document.write('<scr'+'ipt type="text/javascript" src="'+ src +'"></sc'+'ript>');
@@ -43,8 +42,8 @@
             }
         });
     </script>
-    <script src="reactapp/common.bundle.js"></script>
-    <link href="reactapp/prefixed-bootstrap.min.css" rel="stylesheet"></link>
+    <script src="/reactapp/common.bundle.js"></script>
+    <link href="/reactapp/prefixed-bootstrap.min.css" rel="stylesheet"></link>
 </head>
 <body class="cbioOnePageApp">
 
