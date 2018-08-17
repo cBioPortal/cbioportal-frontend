@@ -1,12 +1,14 @@
-
 import _ from "lodash";
 import { SingleGeneQuery } from "shared/lib/oql/oql-parser";
 import { unparseOQLQueryLine } from "shared/lib/oql/oqlfilter";
 import { StudyViewFilter } from "shared/api/generated/CBioPortalAPIInternal";
 import { Sample, Gene } from "shared/api/generated/CBioPortalAPI";
+import * as React from "react";
 import {getSampleViewUrl, getStudySummaryUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 import { StudyWithSamples } from "pages/studyView/StudyViewPageStore";
+import {ClinicalDataType} from "./StudyViewPageStore";
+import {ClinicalAttribute} from "../../shared/api/generated/CBioPortalAPI";
 
 //TODO:cleanup
 export const COLORS = [
@@ -81,17 +83,18 @@ export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: st
     return updatedQueries.map(query=>unparseOQLQueryLine(query)).join('\n');
 
 }
-export function mutationCountVsCnaTooltip(d:{ data:Pick<IStudyViewScatterPlotData, "x"|"y"|"studyId"|"sampleId"|"patientId">[]}) {
+export function mutationCountVsCnaTooltip(d: { data: Pick<IStudyViewScatterPlotData, "x" | "y" | "studyId" | "sampleId" | "patientId">[] }) {
     const rows = [];
     const MAX_SAMPLES = 3;
-    const borderStyle = { borderTop: "1px solid black" };
-    for (let i=0; i<Math.min(MAX_SAMPLES, d.data.length); i++) {
+    const borderStyle = {borderTop: "1px solid black"};
+    for (let i = 0; i < Math.min(MAX_SAMPLES, d.data.length); i++) {
         const datum = d.data[i];
         rows.push(
             <tr key={`${datum.studyId}_${datum.sampleId}`} style={i > 0 ? borderStyle : {}}>
-                <td style={{padding:5}}>
+                <td style={{padding: 5}}>
                     <span>Cancer Study: <a target="_blank" href={getStudySummaryUrl(datum.studyId)}>{datum.studyId}</a></span><br/>
-                    <span>Sample ID: <a target="_blank" href={getSampleViewUrl(datum.studyId, datum.sampleId)}>{datum.sampleId}</a></span><br/>
+                    <span>Sample ID: <a target="_blank"
+                                        href={getSampleViewUrl(datum.studyId, datum.sampleId)}>{datum.sampleId}</a></span><br/>
                     <span>CNA Fraction: {datum.x}</span><br/>
                     <span>Mutation Count: {datum.y}</span>
                 </td>
@@ -101,8 +104,9 @@ export function mutationCountVsCnaTooltip(d:{ data:Pick<IStudyViewScatterPlotDat
     if (d.data.length > 1) {
         rows.push(
             <tr key="see all" style={borderStyle}>
-                <td style={{padding:5}}>
-                    <a target="_blank" href={getSampleViewUrl(d.data[0].studyId, d.data[0].sampleId, d.data)}>View all {d.data.length} patients included in this dot.</a>
+                <td style={{padding: 5}}>
+                    <a target="_blank" href={getSampleViewUrl(d.data[0].studyId, d.data[0].sampleId, d.data)}>View
+                        all {d.data.length} patients included in this dot.</a>
                 </td>
             </tr>
         );
@@ -116,8 +120,31 @@ export function mutationCountVsCnaTooltip(d:{ data:Pick<IStudyViewScatterPlotDat
     );
 }
 
-export function isSelected(datum:{uniqueSampleKey:string}, selectedSamples:{[uniqueSampleKey:string]:any}) {
+export function isSelected(datum: { uniqueSampleKey: string }, selectedSamples: { [uniqueSampleKey: string]: any }) {
     return datum.uniqueSampleKey in selectedSamples;
+}
+
+export function getPriority(priorities: number[]): number {
+    let priority = 0;
+    _.some(priorities, _priority => {
+        if (_priority === 0) {
+            priority = 0;
+            return true;
+        }
+        priority = (_priority + priority) / 2;
+    });
+    return priority;
+}
+
+export function isPreSelectedClinicalAttr(attr: string): boolean {
+    let result = attr.match(/(os_survival)|(dfs_survival)|(mut_cnt_vs_cna)|(mutated_genes)|(cna_details)|(^age)|(gender)|(sex)|(os_status)|(os_months)|(dfs_status)|(dfs_months)|(race)|(ethnicity)|(sample_type)|(histology)|(tumor_type)|(subtype)|(tumor_site)|(mutation_count)|(copy_number_alterations)|(.*(site|grade|stage).*)/i);
+    return _.isArray(result) && result.length > 0;
+}
+
+export function getClinicalAttributeUniqueKey(attr: ClinicalAttribute): string {
+    const clinicalDataType: ClinicalDataType = attr.patientAttribute ? 'PATIENT' : 'SAMPLE';
+    const uniqueKey = clinicalDataType + '_' + attr.clinicalAttributeId;
+    return uniqueKey;
 }
 
 export function getCurrentDate() {
