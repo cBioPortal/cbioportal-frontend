@@ -1,5 +1,4 @@
 import * as React from "react";
-import SvgSaver from 'svgsaver';
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 import FadeInteraction from "../fadeInteraction/FadeInteraction";
 import {observer} from "mobx-react";
@@ -9,6 +8,7 @@ import fileDownload from 'react-file-download';
 import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import classnames from "classnames";
 import styles from "./DownloadControls.module.scss";
+import {saveSvg, saveSvgAsPng} from "save-svg-as-png";
 
 type ButtonSpec = { key:string, content:JSX.Element, onClick:()=>void, disabled?: boolean };
 
@@ -53,7 +53,6 @@ function makeMenuItem(spec:ButtonSpec) {
 
 @observer
 export default class DownloadControls extends React.Component<IDownloadControlsProps, {}> {
-    private svgsaver = new SvgSaver();
     @observable private collapsed = true;
 
     @autobind
@@ -61,7 +60,7 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
         if (this.props.getSvg) {
             const svg = this.props.getSvg();
             if (svg) {
-                this.svgsaver.asSvg(svg, `${this.props.filename}.svg`);
+                saveSvg(svg, `${this.props.filename}.svg`);
             }
         }
     }
@@ -71,7 +70,7 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
         if (this.props.getSvg) {
             const svg = this.props.getSvg();
             if (svg) {
-                this.svgsaver.asPng(svg, `${this.props.filename}.png`);
+                saveSvgAsPng(svg, `${this.props.filename}.png`, {backgroundColor:"#ffffff"});
             }
         }
     }
