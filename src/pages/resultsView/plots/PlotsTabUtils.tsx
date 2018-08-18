@@ -1071,8 +1071,8 @@ export function makeScatterPlotData(
             dispMutationType = selectDisplayValue(counts, mutationRenderPriority) as OncoprintMutationType;
         }
         const sampleCoverageInfo = coverageInformation[d.uniqueSampleKey];
-        let profiledMutations = true;
-        let profiledCna = true;
+        let profiledMutations = undefined;
+        let profiledCna = undefined;
         if (mutations || copyNumberAlterations) {
             const profiledReport = makeScatterPlotData_profiledReport(
                 horzData.hugoGeneSymbol,
@@ -1126,7 +1126,11 @@ export function makeScatterPlotData(
             datum.y = d.value;
             datum.value = d.value;
             datum.jitter = getJitterForCase(d.uniqueSampleKey);
-            data.push(datum);
+
+            // filter out NaN number values
+            if (!Number.isNaN(datum.x as any) && !Number.isNaN(datum.y as any)) {
+                data.push(datum);
+            }
         }
     }
     return data;

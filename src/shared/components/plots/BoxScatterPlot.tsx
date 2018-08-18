@@ -47,6 +47,7 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     horizontal?:boolean; // whether the box plot is horizontal
     useLogSpaceTicks?:boolean; // if log scale for an axis, then this prop determines whether the ticks are shown in post-log coordinate, or original data coordinate space
     boxWidth?:number;
+    legendLocationWidthThreshold?:number; // chart width after which we start putting the legend at the bottom of the plot
 }
 
 type BoxModel = {
@@ -63,12 +64,13 @@ const DEFAULT_FONT_FAMILY = "Verdana,Arial,sans-serif";
 const RIGHT_GUTTER = 120; // room for legend
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 100;
-export const LEGEND_Y = 100; // experimentally determined
 const MIN_LOG_ARGUMENT = 0.01;
 const CATEGORY_LABEL_HORZ_ANGLE = -30;
 const DEFAULT_LEFT_PADDING = 25;
 const DEFAULT_BOTTOM_PADDING = 10;
 const MAXIMUM_CATEGORY_LABEL_SIZE = 120;
+const LEGEND_ITEMS_PER_ROW = 4;
+const BOTTOM_LEGEND_PADDING = 30;
 
 
 const BOX_STYLES = {
@@ -178,20 +180,39 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         }
     }
 
-    @computed get legendX() {
+    @computed get sideLegendX() {
         return this.chartWidth - 20;
     }
 
+    @computed get legendLocation() {
+        if (this.props.legendLocationWidthThreshold !== undefined &&
+            this.chartWidth > this.props.legendLocationWidthThreshold) {
+            return "bottom";
+        } else {
+            return "right";
+        }
+    }
+
+    @computed get bottomLegendHeight() {
+        //height of legend in case its on bottom
+        if (!this.props.legendData) {
+            return 0;
+        } else {
+            const numRows = Math.ceil(this.props.legendData.length / LEGEND_ITEMS_PER_ROW);
+            return 23.7*numRows;
+        }
+    }
+
     private get legend() {
-        const x = this.legendX;
         if (this.props.legendData && this.props.legendData.length) {
             return (
                 <VictoryLegend
-                    orientation="vertical"
+                    orientation={this.legendLocation === "right" ? "vertical" : "horizontal"}
+                    itemsPerRow={this.legendLocation === "right" ? undefined : LEGEND_ITEMS_PER_ROW}
+                    rowGutter={this.legendLocation === "right" ? undefined : -5}
                     data={this.props.legendData}
-                    x={x}
-                    y={LEGEND_Y}
-                    width={RIGHT_GUTTER}
+                    x={this.legendLocation === "right" ? this.sideLegendX : 0}
+                    y={this.legendLocation === "right" ? 100 : this.svgHeight-this.bottomLegendHeight}
                 />
             );
         } else {
@@ -235,11 +256,11 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     @computed get svgWidth() {
-        return this.leftPadding + this.chartWidth + RIGHT_GUTTER;
+        return this.leftPadding + this.chartWidth + this.rightPadding;
     }
 
     @computed get svgHeight() {
-        return this.chartHeight + this.bottomPadding;
+        return this.topPadding + this.chartHeight + this.bottomPadding;
     }
 
     @computed get boxSeparation() {
@@ -377,12 +398,33 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         }
     }
 
-    @computed get bottomPadding() {
-        if (this.props.horizontal) {
-            return DEFAULT_BOTTOM_PADDING;
+    @computed get topPadding() {
+        return 0;
+    }
+
+    @computed get rightPadding() {
+        if (this.legendLocation === "right") {
+            // make room for legend
+            return RIGHT_GUTTER;
         } else {
-            return this.biggestCategoryLabelSize;
+            return 0;
         }
+    }
+
+    @computed get bottomPadding() {
+        let paddingForLabels = DEFAULT_BOTTOM_PADDING;
+        let paddingForLegend = 0;
+
+        if (!this.props.horizontal) {
+            // more padding if vertical, because category labels extend to bottom
+            paddingForLabels = this.biggestCategoryLabelSize;
+        }
+        if (this.legendLocation === "bottom") {
+            // more padding if legend location is "bottom", to make room for legend
+            paddingForLegend = this.bottomLegendHeight + BOTTOM_LEGEND_PADDING;
+        }
+
+        return paddingForLabels + paddingForLegend;
     }
 
     @computed get biggestCategoryLabelSize() {
@@ -473,7 +515,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                         viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
                     >
                         <g
-                            transform={`translate(${this.leftPadding}, 0)`}
+                            transform={`translate(${this.leftPadding}, ${this.topPadding})`}
                         >
                             <VictoryChart
                                 theme={CBIOPORTAL_VICTORY_THEME}
@@ -520,7 +562,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                         placement={this.props.horizontal ? "bottom" : "right"}
                         container={this.container}
                         targetHovered={this.pointHovered}
-                        targetCoords={{x: this.tooltipModel.x + this.leftPadding, y: this.tooltipModel.y}}
+                        targetCoords={{x: this.tooltipModel.x + this.leftPadding, y: this.tooltipModel.y + this.topPadding}}
                         overlay={this.props.tooltip(this.tooltipModel.datum)}
                     />
                 )}

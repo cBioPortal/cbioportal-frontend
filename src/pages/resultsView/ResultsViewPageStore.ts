@@ -43,6 +43,7 @@ import {
 import {writeTest} from "../../shared/lib/writeTest";
 import {PatientSurvival} from "../../shared/model/PatientSurvival";
 import {
+    doesQueryContainMutationOQL,
     doesQueryContainOQL,
     filterCBioPortalWebServiceData,
     filterCBioPortalWebServiceDataByOQLLine,
@@ -80,6 +81,8 @@ import {BookmarkLinks} from "../../shared/model/BookmarkLinks";
 import {getBitlyServiceUrl, getSessionServiceUrl} from "../../shared/api/urls";
 import url from 'url';
 import OncoprintClinicalDataCache, {SpecialAttribute} from "../../shared/cache/OncoprintClinicalDataCache";
+import {getProteinPositionFromProteinChange} from "../../shared/lib/ProteinChangeUtils";
+import {isMutation} from "../../shared/lib/CBioPortalAPIUtils";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -340,6 +343,10 @@ export class ResultsViewPageStore {
         return doesQueryContainOQL(this.oqlQuery);
     }
 
+    @computed get queryContainsMutationOql() {
+        return doesQueryContainMutationOQL(this.oqlQuery);
+    }
+
     private getURL() {
         const shareURL = window.location.href;
 
@@ -418,6 +425,12 @@ export class ResultsViewPageStore {
                 map[next.clinicalAttributeId] += next.count;
                 return map;
             }, {});
+            // add count = 0 for any remaining clinical attributes, since service doesnt return count 0
+            for (const clinicalAttribute of this.clinicalAttributes.result!) {
+                if (!(clinicalAttribute.clinicalAttributeId in ret)) {
+                    ret[clinicalAttribute.clinicalAttributeId] = 0;
+                }
+            }
             // add counts for "special" clinical attributes
             ret[SpecialAttribute.StudyOfOrigin] = this.samples.result!.length;
             let samplesWithMutationData = 0, samplesWithCNAData = 0;
@@ -1169,8 +1182,17 @@ export class ResultsViewPageStore {
 
     });
 
+    @observable public mutationsTabShouldUseOql = true;
+
     @computed get mutationsByGene():{ [hugeGeneSymbol:string]:Mutation[]}{
-        return _.groupBy(this.mutations.result,(mutation:Mutation)=>mutation.gene.hugoGeneSymbol);
+        let mutations:Mutation[];
+        if (this.mutationsTabShouldUseOql && this.queryContainsMutationOql) {
+            // use oql filtering in mutations tab only if query contains mutation oql
+            mutations = (this.filteredAlterations.result || []).filter(a=>isMutation(a));
+        } else {
+            mutations = this.mutations.result || [];
+        }
+        return _.groupBy(mutations,(mutation:Mutation)=>mutation.gene.hugoGeneSymbol);
     }
 
     readonly mutationMapperStores = remoteData<{ [hugoGeneSymbol: string]: ResultsViewMutationMapperStore }>({
@@ -1185,7 +1207,7 @@ export class ResultsViewPageStore {
                         gene,
                         this.samples,
                         this.oncoKbAnnotatedGenes.result || {},
-                        this.mutationsByGene[gene.hugoGeneSymbol],
+                        () => this.mutationsByGene[gene.hugoGeneSymbol],
                         () => (this.genomeNexusEnrichmentCache),
                         () => (this.mutationCountCache),
                         this.studyIdToStudy,
@@ -2039,9 +2061,17 @@ export class ResultsViewPageStore {
             return Promise.resolve((mutation:Mutation):number=>{
                 const keyword = mutation.keyword;
                 const counts = countMap[keyword];
-                if (counts) {
+                const targetPosObj = getProteinPositionFromProteinChange(mutation.proteinChange);
+                if (counts && targetPosObj) {
+                    const targetPos = targetPosObj.start;
                     return counts.reduce((count, next:CosmicMutation)=>{
-                        return count + next.count;
+                        const pos = getProteinPositionFromProteinChange(next.proteinChange);
+                        if (pos && (pos.start === targetPos)) {
+                            // only tally cosmic entries with same keyword and same start position
+                            return count + next.count;
+                        } else {
+                            return count;
+                        }
                     }, 0);
                 } else {
                     return -1;
