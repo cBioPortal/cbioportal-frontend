@@ -18,9 +18,11 @@ export type TrialMatchData = {
     nctID: string;
     status: string;
     code: string;
+    hugoSymbol: string;
     matchLevel: string;
-    matchType: string;
+    matchMolecularType: string;
     matchCancerType: string,
+    mutEffect: string,
     dose: string;
 };
 
