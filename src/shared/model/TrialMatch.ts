@@ -24,6 +24,7 @@ export type TrialMatchData = {
     matchCancerType: string,
     mutEffect: string,
     dose: string;
+    variantClassification: string;
 };
 
 export interface ITrialMatchGene {[name: string]: ITrialMatchGeneData;}

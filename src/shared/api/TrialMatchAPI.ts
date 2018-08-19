@@ -30,6 +30,7 @@ type TrialMatch = {
     matchCancerType: string;
     mutEffect: string;
     dose: string;
+    variantClassification: string;
     [propName: string]: any;
 };
 
@@ -44,17 +45,18 @@ function countMatches(trialMatchItems: Array<TrialMatch>): {[title:string]:Array
             matches[trialMatchItem.trialTitle] = [];
         }
         let matchMolecularType: string;
+        const variantClassification = trialMatchItem.variantClassification.replace("_"," ");
         switch (trialMatchItem.mutEffect) {
             case 'Gain-of-function':
             case 'Likely Gain-of-function':
-                matchMolecularType = "Activating " + trialMatchItem.hugoSymbol + " mutation";
+                matchMolecularType = "Activating " + trialMatchItem.hugoSymbol + " " + variantClassification;
                 break;
             case 'Loss-of-function':
             case 'Likely Loss-of-function':
-                matchMolecularType = "Inactivating " + trialMatchItem.hugoSymbol + " mutation";
+                matchMolecularType = "Inactivating " + trialMatchItem.hugoSymbol + " " + variantClassification;
                 break;
             default:
-                matchMolecularType = trialMatchItem.hugoSymbol + " mutation";
+                matchMolecularType = trialMatchItem.hugoSymbol + " " + variantClassification;
         }
         matches[trialMatchItem.trialTitle].push({
             title: trialMatchItem.trialTitle,
@@ -66,7 +68,8 @@ function countMatches(trialMatchItems: Array<TrialMatch>): {[title:string]:Array
             matchMolecularType: matchMolecularType,
             dose: trialMatchItem.dose,
             matchCancerType: trialMatchItem.matchCancerType,
-            mutEffect: trialMatchItem.mutEffect
+            mutEffect: trialMatchItem.mutEffect,
+            variantClassification: trialMatchItem.variantClassification
         });
 
     });
