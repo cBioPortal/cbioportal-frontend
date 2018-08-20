@@ -65,7 +65,7 @@ export function createQueryStore() {
     const win:any = window;
 
     // lets make query Store since it's used in a lot of places
-    const queryStore = new QueryStore(win, win.location.href);
+    const queryStore = new QueryStore(win, window.routingStore.query);
 
     queryStore.singlePageAppSubmitRoutine = function(path:string, query:CancerStudyQueryUrlParams) {
 
