@@ -1492,10 +1492,16 @@ export class QueryStore
 		}
 	}
 
-	@action setParamsFromUrl(url:string)
+	@action setParamsFromUrl(url:string|{[k:string]:Partial<CancerStudyQueryUrlParams>})
 	{
-		let urlParts = URL.parse(url, true);
-		let params = urlParts.query as Partial<CancerStudyQueryUrlParams>;
+		let params:Partial<CancerStudyQueryUrlParams>;
+		if (typeof url === 'string') {
+            let urlParts = URL.parse(url, true);
+            params = urlParts.query as Partial<CancerStudyQueryUrlParams>;
+		} else {
+			params = url; // already an object
+		}
+
 		let profileIds = [
 			params.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
 			params.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
