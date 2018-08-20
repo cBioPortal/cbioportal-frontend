@@ -134,12 +134,13 @@ export function isNumberData(d:IAxisData): d is INumberAxisData {
     return d.datatype === "number";
 }
 
-export function sortScatterPlotDataForZIndex<D extends Pick<IScatterPlotSampleData, "dispMutationType" | "dispMutationSummary" | "profiledMutations" | "dispCna" | "profiledCna">>(
-    data: D[],
+export function scatterPlotZIndexSortBy<D extends Pick<IScatterPlotSampleData, "dispMutationType" | "dispMutationSummary" | "profiledMutations" | "dispCna" | "profiledCna">>(
     viewType:ViewType,
     highlight?: (d:D)=>boolean
 ) {
     // sort by render priority
+    const sortByHighlight = highlight ? ((d:D)=>(highlight(d) ? 1 : 0)) : ((d:D)=>0);
+
     const sortByMutation = (d:D)=>{
         if (!d.profiledMutations) {
             return -mutationRenderPriority[MUTATION_TYPE_NOT_PROFILED];
@@ -164,18 +165,19 @@ export function sortScatterPlotDataForZIndex<D extends Pick<IScatterPlotSampleDa
         }
     };
 
+    let sortBy;
     switch (viewType) {
         case ViewType.MutationTypeAndCopyNumber:
-            data = _.sortBy<D>(data, [sortByMutation, sortByCna]);
+            sortBy = [sortByHighlight, sortByMutation, sortByCna];
             break;
         case ViewType.MutationType:
-            data = _.sortBy<D>(data, sortByMutation);
+            sortBy = [sortByHighlight, sortByMutation];
             break;
         case ViewType.CopyNumber:
-            data = _.sortBy<D>(data, sortByCna);
+            sortBy = [sortByHighlight, sortByCna];
             break;
         case ViewType.MutationSummary:
-            data = _.sortBy<D>(data, d=>{
+            sortBy = [sortByHighlight, (d:D)=>{
                 if (d.dispMutationSummary! in mutationSummaryRenderPriority) {
                     return -mutationSummaryRenderPriority[d.dispMutationSummary!]        ;
                 } else if (!d.profiledMutations) {
@@ -183,25 +185,10 @@ export function sortScatterPlotDataForZIndex<D extends Pick<IScatterPlotSampleDa
                 } else {
                     return Number.NEGATIVE_INFINITY;
                 }
-            });
+            }];
             break;
     }
-    if (highlight) {
-        // Now that we've sorted by render order, put highlighted data on top
-        const highlighted = [];
-        const unhighlighted = [];
-        for (const d of data) {
-            if (highlight(d)) {
-                highlighted.push(d);
-            } else {
-                unhighlighted.push(d);
-            }
-        }
-        return unhighlighted.concat(highlighted);
-    } else {
-        // if no highlight function, then just return data
-        return data;
-    }
+    return sortBy;
 }
 
 export function scatterPlotSize(
