@@ -39,6 +39,7 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     fillOpacity?:number | ((d:D)=>number);
     strokeOpacity?:number | ((d:D)=>number);
     strokeWidth?:number | ((d:D)=>number);
+    zIndexSortBy?:((d:D)=>any)[]; // second argument to _.sortBy
     symbol?: string | ((d:D)=>string); // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
     tooltip?:(d:D)=>JSX.Element;
     legendData?:{name:string|string[], symbol:any}[]; // see http://formidable.com/open-source/victory/docs/victory-legend/#data
@@ -395,7 +396,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     @computed get scatterPlotData() {
         let dataAxis:"x"|"y" = this.props.horizontal ? "x" : "y";
         let categoryAxis:"x"|"y" = this.props.horizontal ? "y" : "x";
-        const data:{x:number, y:number}[] = [];
+        const data:(D&{x:number, y:number})[] = [];
         for (let i=0; i<this.props.data.length; i++) {
             const categoryCoord = this.categoryCoord(i);
             for (const d of this.props.data[i].data) {
@@ -405,13 +406,14 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                 } as {x:number, y:number} & IBaseBoxScatterPlotPoint));
             }
         }
-        return separateScatterDataByAppearance(
+        return separateScatterDataByAppearance<D>(
             data,
             ifndef(this.props.fill, "0x000000"),
             ifndef(this.props.stroke, "0x000000"),
             ifndef(this.props.strokeWidth, 0),
             ifndef(this.props.strokeOpacity, 1),
-            ifndef(this.props.fillOpacity, 1)
+            ifndef(this.props.fillOpacity, 1),
+            this.props.zIndexSortBy
         );
     }
 

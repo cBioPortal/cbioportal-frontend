@@ -16,7 +16,7 @@ import {
     getCnaQueries, getMutationQueries, getScatterPlotDownloadData, getBoxPlotDownloadData, getTablePlotDownloadData,
     mutationRenderPriority, mutationSummaryRenderPriority, MutationSummary, mutationSummaryToAppearance,
     CNA_STROKE_WIDTH, scatterPlotSize, PLOT_SIDELENGTH, CLIN_ATTR_DATA_TYPE,
-    sortScatterPlotDataForZIndex, sortMolecularProfilesForDisplay
+    sortMolecularProfilesForDisplay, scatterPlotZIndexSortBy
 } from "./PlotsTabUtils";
 import {
     ClinicalAttribute, MolecularProfile, Mutation,
@@ -1087,7 +1087,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     });
 
-    readonly _unsortedScatterPlotData = remoteData<IScatterPlotData[]>({
+    readonly scatterPlotData = remoteData<IScatterPlotData[]>({
         await: ()=>[
             this.horzAxisDataPromise,
             this.vertAxisDataPromise,
@@ -1126,19 +1126,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     });
 
-    readonly scatterPlotData = remoteData<IScatterPlotData[]>({
-        await:()=>[this._unsortedScatterPlotData],
-        invoke:()=>{
-            // Sort data to put some data on top (z-index order)
-            return Promise.resolve(sortScatterPlotDataForZIndex<IScatterPlotData>(
-                this._unsortedScatterPlotData.result!,
-                this.viewType,
-                this.scatterPlotHighlight
-            ));
-        }
-    });
-
-    readonly _unsortedBoxPlotData = remoteData<{horizontal:boolean, data:IBoxScatterPlotData<IBoxScatterPlotPoint>[]}>({
+    readonly boxPlotData = remoteData<{horizontal:boolean, data:IBoxScatterPlotData<IBoxScatterPlotPoint>[]}>({
         await: ()=>[
             this.horzAxisDataPromise,
             this.vertAxisDataPromise,
@@ -1189,19 +1177,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         },
     });
 
-    readonly boxPlotData = remoteData<{horizontal:boolean, data:IBoxScatterPlotData<IBoxScatterPlotPoint>[]}>({
-        await: ()=>[this._unsortedBoxPlotData],
-        invoke:()=>{
-            // Sort data to put some data on top (z-index order)
-            const horizontal = this._unsortedBoxPlotData.result!.horizontal;
-            let boxPlotData = this._unsortedBoxPlotData.result!.data;
-            boxPlotData = boxPlotData.map(labelAndData=>({
-                label: labelAndData.label,
-                data: sortScatterPlotDataForZIndex<IBoxScatterPlotPoint>(labelAndData.data, this.viewType, this.scatterPlotHighlight)
-            }));
-            return Promise.resolve({ horizontal, data: boxPlotData });
-        }
-    });
+    @computed get zIndexSortBy() {
+        return scatterPlotZIndexSortBy<IScatterPlotSampleData>(
+            this.viewType,
+            this.scatterPlotHighlight
+        );
+    }
 
     @computed get boxPlotBoxWidth() {
         const SMALL_BOX_WIDTH = 30;
@@ -1261,6 +1242,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 fill={this.scatterPlotFill}
                                 stroke={this.scatterPlotStroke}
                                 strokeOpacity={this.scatterPlotStrokeOpacity}
+                                zIndexSortBy={this.zIndexSortBy}
                                 symbol="circle"
                                 fillOpacity={this.scatterPlotFillOpacity}
                                 strokeWidth={this.scatterPlotStrokeWidth}
@@ -1296,6 +1278,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 fill={this.scatterPlotFill}
                                 stroke={this.scatterPlotStroke}
                                 strokeOpacity={this.scatterPlotStrokeOpacity}
+                                zIndexSortBy={this.zIndexSortBy}
                                 symbol="circle"
                                 fillOpacity={this.scatterPlotFillOpacity}
                                 strokeWidth={this.scatterPlotStrokeWidth}
