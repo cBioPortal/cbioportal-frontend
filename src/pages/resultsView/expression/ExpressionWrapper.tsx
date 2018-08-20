@@ -33,7 +33,7 @@ import {
     getCnaQueries, IBoxScatterPlotPoint, INumberAxisData, IScatterPlotData, IScatterPlotSampleData, IStringAxisData,
     makeBoxScatterPlotData, makeScatterPlotPointAppearance,
     mutationRenderPriority, MutationSummary, mutationSummaryToAppearance, scatterPlotLegendData, scatterPlotSize,
-    scatterPlotTooltip, boxPlotTooltip, sortScatterPlotDataForZIndex
+    scatterPlotTooltip, boxPlotTooltip, scatterPlotZIndexSortBy
 } from "../plots/PlotsTabUtils";
 import {getOncoprintMutationType} from "../../../shared/components/oncoprint/DataUtils";
 import {getSampleViewUrl} from "../../../shared/api/urls";
@@ -259,11 +259,12 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     readonly boxPlotData = remoteData({
         await:()=>[this._unsortedBoxPlotData],
         invoke:()=>{
-            // sort data order within boxes, for rendering order (z-index)
+            /*// sort data order within boxes, for rendering order (z-index)
             const sortedData = this._unsortedBoxPlotData.result!.map(labelAndData=>({
                 label: labelAndData.label,
                 data: sortScatterPlotDataForZIndex<IBoxScatterPlotPoint>(labelAndData.data, this.viewType)
-            }));
+            }));*/
+            const sortedData = this._unsortedBoxPlotData.result!;
 
             // sort box order
             if (this.sortBy === "alphabetic") {
@@ -464,6 +465,12 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
         );
     }
 
+    @computed get zIndexSortBy() {
+        return scatterPlotZIndexSortBy<IScatterPlotSampleData>(
+            this.viewType
+        );
+    }
+
     @autobind
     private getChart() {
         if (this.boxPlotData.isComplete) {
@@ -486,6 +493,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         fill={this.fill}
                         stroke={this.stroke}
                         strokeOpacity={this.strokeOpacity}
+                        zIndexSortBy={this.zIndexSortBy}
                         symbol="circle"
                         fillOpacity={this.fillOpacity}
                         strokeWidth={this.strokeWidth}
