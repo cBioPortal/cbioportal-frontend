@@ -1108,7 +1108,7 @@ export class QueryStore
 		else if (mutSelect && !cnaSelect && !expSelect && !rppaSelect)
 			sampleListId = studyId + "_sequenced";
 		else if (!mutSelect && cnaSelect && !expSelect && !rppaSelect)
-			sampleListId = studyId + "_acgh";
+			sampleListId = studyId + "_cna";
 		else if (!mutSelect && !cnaSelect && expSelect && !rppaSelect)
 		{
 			if (this.isProfileSelected(studyId + '_mrna_median_Zscores'))

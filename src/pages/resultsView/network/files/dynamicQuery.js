@@ -502,7 +502,7 @@ function updateDefaultCaseList() {
     } else if (mutSelect && !cnaSelect && !expSelect && !rppaSelect) {
         defaultCaseList = selectedCancerStudy+"_sequenced";
     } else if (!mutSelect && cnaSelect && !expSelect && !rppaSelect) {
-        defaultCaseList = selectedCancerStudy+"_acgh";
+        defaultCaseList = selectedCancerStudy+"_cna";
     } else if (!mutSelect && !cnaSelect && expSelect && !rppaSelect) {
         if ($('#'+selectedCancerStudy+'_mrna_median_Zscores').prop('checked')) {
             defaultCaseList = selectedCancerStudy+"_mrna";
