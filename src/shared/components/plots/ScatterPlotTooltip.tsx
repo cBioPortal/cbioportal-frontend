@@ -35,7 +35,6 @@ export default class ScatterPlotTooltip extends React.Component<IScatterPlotTool
         if (this.props.targetHovered || this.isHovered) {
             return (
                 <Popover
-                    id="Scatter Plot Tooltip"
                     className={this.props.className}
                     positionLeft={this.props.targetCoords.x + this.props.container.offsetLeft + leftPadding - (!horizontal ? arrowOffsetLeft + 6 : 0)}
                     positionTop={this.props.targetCoords.y + this.props.container.offsetTop - (horizontal ? arrowOffsetTop : -5)}
