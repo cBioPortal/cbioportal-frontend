@@ -1,5 +1,5 @@
 import * as React from "react";
-import {observer} from "mobx-react";
+import {observer, Observer} from "mobx-react";
 import {computed, observable} from "mobx";
 import {bind} from "bind-decorator";
 import CBIOPORTAL_VICTORY_THEME, {axisTickLabelStyles} from "../../theme/cBioPoralTheme";
@@ -9,11 +9,12 @@ import ScatterPlotTooltip from "./ScatterPlotTooltip";
 import Timer = NodeJS.Timer;
 import {VictoryBoxPlot, VictoryChart, VictoryAxis, VictoryScatter, VictoryLegend, VictoryLabel} from "victory";
 import {IBaseScatterPlotData} from "./ScatterPlot";
-import {getDeterministicRandomNumber} from "./PlotUtils";
+import {getDeterministicRandomNumber, separateScatterDataByAppearance} from "./PlotUtils";
 import {logicalAnd} from "../../lib/LogicUtils";
 import {tickFormatNumeral, wrapTick} from "./TickUtils";
 import {scatterPlotSize} from "./PlotUtils";
 import {getTextWidth} from "../../lib/wrapText";
+import autobind from "autobind-decorator";
 
 export interface IBaseBoxScatterPlotPoint {
     value:number;
@@ -82,7 +83,7 @@ const BOX_STYLES = {
 
 @observer
 export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends React.Component<IBoxScatterPlotProps<D>, {}> {
-    @observable tooltipModel:any|null = null;
+    @observable.ref tooltipModel:any|null = null;
     @observable pointHovered:boolean = false;
     private mouseEvents:any = this.makeMouseEvents();
 
@@ -404,7 +405,14 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                 } as {x:number, y:number} & IBaseBoxScatterPlotPoint));
             }
         }
-        return data;
+        return separateScatterDataByAppearance(
+            data,
+            ifndef(this.props.fill, "0x000000"),
+            ifndef(this.props.stroke, "0x000000"),
+            ifndef(this.props.strokeWidth, 0),
+            ifndef(this.props.strokeOpacity, 1),
+            ifndef(this.props.fillOpacity, 1)
+        );
     }
 
     @computed get leftPadding() {
@@ -513,6 +521,74 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         });
     }
 
+    @autobind
+    private getChart() {
+        return (
+            <div
+                ref={this.containerRef}
+                style={{width: this.svgWidth, height: this.svgHeight}}
+            >
+                <svg
+                    id={this.props.svgId || ""}
+                    style={{
+                        width: this.svgWidth,
+                        height: this.svgHeight,
+                        pointerEvents: "all"
+                    }}
+                    height={this.svgHeight}
+                    width={this.svgWidth}
+                    role="img"
+                    viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
+                >
+                    <g
+                        transform={`translate(${this.leftPadding}, ${this.topPadding})`}
+                    >
+                        <VictoryChart
+                            theme={CBIOPORTAL_VICTORY_THEME}
+                            width={this.chartWidth}
+                            height={this.chartHeight}
+                            standalone={false}
+                            domainPadding={this.domainPadding}
+                            domain={this.plotDomain}
+                            singleQuadrantDomainPadding={false}
+                        >
+                            {this.title}
+                            {this.legend}
+                            {this.horzAxis}
+                            {this.vertAxis}
+                            <VictoryBoxPlot
+                                boxWidth={this.boxWidth}
+                                style={BOX_STYLES}
+                                data={this.boxPlotData}
+                                horizontal={this.props.horizontal}
+                            />
+                            {this.scatterPlotData.map(dataWithAppearance=>(
+                                <VictoryScatter
+                                    key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity}`}
+                                    style={{
+                                        data: {
+                                            fill: dataWithAppearance.fill,
+                                            stroke: dataWithAppearance.stroke,
+                                            strokeWidth: dataWithAppearance.strokeWidth,
+                                            strokeOpacity: dataWithAppearance.strokeOpacity,
+                                            fillOpacity: dataWithAppearance.fillOpacity
+                                        }
+                                    }}
+                                    size={this.scatterPlotSize}
+                                    symbol={this.props.symbol || "circle"}
+                                    data={dataWithAppearance.data}
+                                    events={this.mouseEvents}
+                                    x={this.scatterPlotX}
+                                    y={this.scatterPlotY}
+                                />
+                            ))}
+                        </VictoryChart>
+                    </g>
+                </svg>
+            </div>
+        );
+    }
+
 
     render() {
         if (!this.props.data.length) {
@@ -520,65 +596,9 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         }
         return (
             <div>
-                <div
-                    ref={this.containerRef}
-                    style={{width: this.svgWidth, height: this.svgHeight}}
-                >
-                    <svg
-                        id={this.props.svgId || ""}
-                        style={{
-                            width: this.svgWidth,
-                            height: this.svgHeight,
-                            pointerEvents: "all"
-                        }}
-                        height={this.svgHeight}
-                        width={this.svgWidth}
-                        role="img"
-                        viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
-                    >
-                        <g
-                            transform={`translate(${this.leftPadding}, ${this.topPadding})`}
-                        >
-                            <VictoryChart
-                                theme={CBIOPORTAL_VICTORY_THEME}
-                                width={this.chartWidth}
-                                height={this.chartHeight}
-                                standalone={false}
-                                domainPadding={this.domainPadding}
-                                domain={this.plotDomain}
-                                singleQuadrantDomainPadding={false}
-                            >
-                                {this.title}
-                                {this.legend}
-                                {this.horzAxis}
-                                {this.vertAxis}
-                                <VictoryBoxPlot
-                                    boxWidth={this.boxWidth}
-                                    style={BOX_STYLES}
-                                    data={this.boxPlotData}
-                                    horizontal={this.props.horizontal}
-                                />
-                                <VictoryScatter
-                                    style={{
-                                        data: {
-                                            fill: ifndef(this.props.fill, "0x000000"),
-                                            stroke: ifndef(this.props.stroke, "0x000000"),
-                                            strokeWidth: ifndef(this.props.strokeWidth, 0),
-                                            strokeOpacity: ifndef(this.props.strokeOpacity, 1),
-                                            fillOpacity: ifndef(this.props.fillOpacity, 1)
-                                        }
-                                    }}
-                                    size={this.scatterPlotSize}
-                                    symbol={this.props.symbol || "circle"}
-                                    data={this.scatterPlotData}
-                                    events={this.mouseEvents}
-                                    x={this.scatterPlotX}
-                                    y={this.scatterPlotY}
-                                />
-                            </VictoryChart>
-                        </g>
-                    </svg>
-                </div>
+                <Observer>
+                    {this.getChart}
+                </Observer>
                 {this.container && this.tooltipModel && this.props.tooltip && (
                     <ScatterPlotTooltip
                         placement={this.props.horizontal ? "bottom" : "right"}
