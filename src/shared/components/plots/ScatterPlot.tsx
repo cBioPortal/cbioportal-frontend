@@ -29,6 +29,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     fillOpacity?:number | ((d:D)=>number);
     strokeOpacity?:number | ((d:D)=>number);
     strokeWidth?:number | ((d:D)=>number);
+    zIndexSortBy?:((d:D)=>any)[]; // second argument to _.sortBy
     symbol?: string | ((d:D)=>string); // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
     tooltip?:(d:D)=>JSX.Element;
     legendData?:{name:string|string[], symbol:any}[]; // see http://formidable.com/open-source/victory/docs/victory-legend/#data
@@ -299,7 +300,8 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
             ifndef(this.props.stroke, "0x000000"),
             ifndef(this.props.strokeWidth, 0),
             ifndef(this.props.strokeOpacity, 1),
-            ifndef(this.props.fillOpacity, 1)
+            ifndef(this.props.fillOpacity, 1),
+            this.props.zIndexSortBy
         );
     }
 
