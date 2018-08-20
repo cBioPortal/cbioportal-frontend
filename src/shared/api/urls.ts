@@ -82,22 +82,21 @@ export function getOncoKbApiUrl() {
 
 }
 export function getGenomeNexusApiUrl() {
-    return 'http://localhost:38080'
-//     let url = AppConfig.genomeNexusApiUrl;
+    let url = AppConfig.genomeNexusApiUrl;
 
-//     if (typeof url === 'string') {
-//         // use url if https, otherwise use proxy
-//         if (url.startsWith('https://')) {
-//             return url
-//         } else {
-//             // we need to support legacy configuration values
-//             url = url.replace(/^http[s]?:\/\//,''); // get rid of protocol
-//             url = url.replace(/\/$/,""); // get rid of trailing slashes
-//             return cbioUrl(`proxy/${url}`)
-//         }
-//     } else {
-//         return undefined;
-//     }
+    if (typeof url === 'string') {
+        // use url if https, otherwise use proxy
+        if (url.startsWith('https://')) {
+            return url
+        } else {
+            // we need to support legacy configuration values
+            url = url.replace(/^http[s]?:\/\//,''); // get rid of protocol
+            url = url.replace(/\/$/,""); // get rid of trailing slashes
+            return cbioUrl(`proxy/${url}`)
+        }
+    } else {
+        return undefined;
+    }
 }
 
 export function getSessionServiceApiUrl() {
