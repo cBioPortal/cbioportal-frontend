@@ -407,6 +407,7 @@ describe("MutationAnnotator", () => {
 
             fetchVariantAnnotationsIndexedByGenomicLocation(
                 _.cloneDeep(mutationsWithGenomicLocation),
+                ["annotation_summary"],
                 "uniprot",
                 genomeNexusClient
             ).then((indexedVariantAnnotations: {[genomicLocation: string]: VariantAnnotation}) => {
