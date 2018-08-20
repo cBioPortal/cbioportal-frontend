@@ -757,24 +757,34 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             this.props.store.selectedMolecularProfiles
         ],
         invoke:()=>{
+            // determine which Profiled In tracks will exist in this query.
+            // A Profiled In <alteration type> track only exists if theres a sample in the query
+            //  which is not profiled in any selected profiles for that type.
             const groupedSelectedMolecularProfiles:{[alterationType:string]:MolecularProfile[]} =
                 _.groupBy(this.props.store.selectedMolecularProfiles.result!, "molecularAlterationType");
+            const selectedMolecularProfilesMap = _.keyBy(this.props.store.selectedMolecularProfiles.result!, p=>p.molecularProfileId);
 
             const existsUnprofiled:{[alterationType:string]:boolean} = {};
             const coverageInfo = this.props.store.coverageInformation.result!.samples;
             const molecularProfileIdToMolecularProfile = this.props.store.molecularProfileIdToMolecularProfile.result!;
             for (const uniqueSampleKey of Object.keys(coverageInfo)) {
                 for (const gpData of coverageInfo[uniqueSampleKey].notProfiledAllGenes) {
-                    existsUnprofiled[
-                        molecularProfileIdToMolecularProfile[gpData.molecularProfileId].molecularAlterationType
-                    ] = true;
+                    if (gpData.molecularProfileId in selectedMolecularProfilesMap) {
+                        // mark existsUnprofiled for this type because this is a selected profile
+                        existsUnprofiled[
+                            molecularProfileIdToMolecularProfile[gpData.molecularProfileId].molecularAlterationType
+                        ] = true;
+                    }
                 }
                 const byGene = coverageInfo[uniqueSampleKey].notProfiledByGene;
                 for (const gene of Object.keys(byGene)) {
                     for (const gpData of byGene[gene]) {
-                        existsUnprofiled[
-                            molecularProfileIdToMolecularProfile[gpData.molecularProfileId].molecularAlterationType
-                        ] = true;
+                        if (gpData.molecularProfileId in selectedMolecularProfilesMap) {
+                            // mark existsUnprofiled for this type because this is a selected profile
+                            existsUnprofiled[
+                                molecularProfileIdToMolecularProfile[gpData.molecularProfileId].molecularAlterationType
+                            ] = true;
+                        }
                     }
                 }
             }
@@ -819,6 +829,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             return Promise.resolve(attributes);
         },
         onResult:(result:OncoprintClinicalAttribute[]|undefined)=>{
+            // automatically select these tracks when the page loads
+            // TODO: do this differently for single page application? in general it will be good to look at onResult everywhere
             for (const attr of (result || [])) {
                 this.selectedClinicalAttributeIds.set(attr.clinicalAttributeId, true);
             }
