@@ -22,17 +22,19 @@
     // if this fails, we are NOT in production, so allow anything
     // as a rule, we always load network.htm from WAR file (main page host)
     // so it should always be same domain as regular page
-    try {
-        // if the passed host matches, then we're safe
-        if (validateHost(queryParams.apiHost, window.parent.location.href)) {
-            apiHost = "//" + queryParams.apiHost
-        } else {
-            alert("invalid apihost for network tab");
-        }
+    // try {
+    //     // if the passed host matches, then we're safe
+    //     if (validateHost(queryParams.apiHost, window.parent.location.href)) {
+    //         apiHost = "//" + queryParams.apiHost
+    //     } else {
+    //         alert("invalid apihost for network tab");
+    //     }
+    //
+    // } catch (exc){
+    //     apiHost = "//" + queryParams.apiHost;
+    // }
 
-    } catch (exc){
-        apiHost = "//" + queryParams.apiHost;
-    }
+    apiHost = "//" + queryParams.apiHost;
 
     function writeScriptTag(path) {
         document.write('<script src="' + host + "/" + path + '"></' + 'script>');
