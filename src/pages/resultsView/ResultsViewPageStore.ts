@@ -15,7 +15,6 @@ import PubMedCache from "shared/cache/PubMedCache";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
-import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import {
     findMolecularProfileIdDiscrete, fetchMyCancerGenomeData,
@@ -83,6 +82,8 @@ import url from 'url';
 import OncoprintClinicalDataCache, {SpecialAttribute} from "../../shared/cache/OncoprintClinicalDataCache";
 import {getProteinPositionFromProteinChange} from "../../shared/lib/ProteinChangeUtils";
 import {isMutation} from "../../shared/lib/CBioPortalAPIUtils";
+import { fetchVariantAnnotationsIndexedByGenomicLocation } from "shared/lib/MutationAnnotator";
+import { VariantAnnotation } from "shared/api/generated/GenomeNexusAPI";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -1208,7 +1209,6 @@ export class ResultsViewPageStore {
                         this.samples,
                         this.oncoKbAnnotatedGenes.result || {},
                         () => this.mutationsByGene[gene.hugoGeneSymbol],
-                        () => (this.genomeNexusEnrichmentCache),
                         () => (this.mutationCountCache),
                         this.studyIdToStudy,
                         this.molecularProfileIdToMolecularProfile,
@@ -1216,6 +1216,7 @@ export class ResultsViewPageStore {
                         this.studiesForSamplesWithoutCancerTypeClinicalData,
                         this.germlineConsentedSamples,
                         this.indexedHotspotData,
+                        this.indexedVariantAnnotations,
                         this.uniqueSampleKeyToTumorType.result!,
                         this.oncoKbData
                     );
@@ -1868,6 +1869,17 @@ export class ResultsViewPageStore {
     });
 
     // Mutation annotation
+    // genome nexus
+    readonly indexedVariantAnnotations = remoteData<{[genomicLocation: string]: VariantAnnotation} | undefined>({
+        await:()=>[
+            this.mutations
+        ],
+        invoke: async () => this.mutations.result? await fetchVariantAnnotationsIndexedByGenomicLocation(this.mutations.result, ["annotation_summary", "hotspots"], AppConfig.isoformOverrideSource) : undefined,
+        onError: (err: Error) => {
+            // fail silently, leave the error handling responsibility to the data consumer
+        }
+    }, undefined);
+
     // Hotspots
     readonly hotspotData = remoteData({
         await:()=>[
@@ -2325,10 +2337,6 @@ export class ResultsViewPageStore {
 
     @cached get discreteCNACache() {
         return new DiscreteCNACache(this.studyToMolecularProfileDiscrete.result);
-    }
-
-    @cached get genomeNexusEnrichmentCache() {
-        return new GenomeNexusEnrichmentCache();
     }
 
     @cached get cancerTypeCache() {
