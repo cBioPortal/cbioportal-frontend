@@ -854,16 +854,26 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @autobind
     private scatterPlotTooltip(d:IScatterPlotData) {
-        return scatterPlotTooltip(d);
+        return (
+            <div className="cbioportal-frontend cbioTooltip">
+                {scatterPlotTooltip(d)}
+            </div>
+        );
     }
 
     @computed get boxPlotTooltip() {
         return (d:IBoxScatterPlotPoint)=>{
+            let content;
             if (this.boxPlotData.isComplete) {
-                return boxPlotTooltip(d, this.boxPlotData.result.horizontal);
+                content = boxPlotTooltip(d, this.boxPlotData.result.horizontal);
             } else {
-                return <span>Loading... (this shouldnt appear because the box plot shouldnt be visible)</span>;
+                content = <span>Loading... (this shouldnt appear because the box plot shouldnt be visible)</span>;
             }
+            return (
+                <div className="cbioportal-frontend cbioTooltip">
+                    {content}
+                </div>
+            );
         }
     }
 
