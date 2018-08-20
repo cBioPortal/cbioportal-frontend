@@ -237,7 +237,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"plots",
                 hide:()=>{
-                    return this.queryStore.isVirtualStudyQuery;
+                    return this.resultsViewPageStore.studies.result!.length > 1;
                 },
                 getTab: () => {
                     return <MSKTab key={12} id="plots" linkText={'Plots'}>
@@ -258,7 +258,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"co_expression",
                 hide:()=>{
-                    return this.queryStore.isVirtualStudyQuery;
+                    return this.resultsViewPageStore.studies.result!.length > 1;
                 },
                 getTab: () => {
                     return <MSKTab key={7} id="coexpression" linkText={'Coexpression'}>
@@ -270,7 +270,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"enrichments",
                 hide:()=>{
-                    return this.queryStore.isVirtualStudyQuery;
+                    return this.resultsViewPageStore.studies.result!.length > 1;
                 },
                 getTab: () => {
                     return <MSKTab key={10} id="enrichment" linkText={'Enrichment'}>
@@ -282,7 +282,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"IGV",
                 hide:()=>{
-                    return this.queryStore.isVirtualStudyQuery;
+                    return this.resultsViewPageStore.studies.result!.length > 1;
                 },
                 getTab: () => {
                     return <MSKTab key={6} id="copyNumberSegmentsTab"
@@ -295,7 +295,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"survival",
                 hide:()=>{
-                    return this.queryStore.isVirtualStudyQuery;
+                    return this.resultsViewPageStore.studies.result!.length > 1;
                 },
                 getTab: () => {
                     return <MSKTab key={4} id="survivalTab" linkText="Survival">
@@ -307,7 +307,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"network",
                 hide:()=>{
-                    return this.queryStore.isVirtualStudyQuery;
+                    return this.resultsViewPageStore.studies.result!.length > 1;
                 },
                 getTab: () => {
                     return <MSKTab key={9} id="network"
@@ -331,7 +331,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"expression",
                 hide:()=> {
-                    return !this.queryStore.isVirtualStudyQuery;
+                    return this.resultsViewPageStore.studies.result!.length === 1;
                 },
                 getTab: () => {
                     return <MSKTab key={8} id="expression"
@@ -416,17 +416,17 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                         <div style={{margin:"0 20px 10px 20px"}}>
                             <QuerySummary queryStore={getBrowserWindow().currentQueryStore} store={this.resultsViewPageStore}/>
                         </div>
-                        <MSKTabs activeTabId={this.currentTab(this.props.routing.location.pathname)} unmountOnHide={true}
-                                 onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
+                        {
+                            (this.resultsViewPageStore.studies.isComplete) && (
+                                <MSKTabs activeTabId={this.currentTab(this.props.routing.location.pathname)} unmountOnHide={true}
+                                         onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
+                                    {
+                                        this.tabs
+                                    }
+                                </MSKTabs>
+                            )
+                        }
 
-
-                            {
-                                this.tabs
-                            }
-
-
-
-                        </MSKTabs>
                     </div>)
                 }
             </PageLayout>
