@@ -9,21 +9,22 @@ import { MSKTab, MSKTabs } from "../../shared/components/MSKTabs/MSKTabs";
 import { StudyViewComponentLoader } from "./charts/StudyViewComponentLoader";
 import { reaction } from 'mobx';
 import { If } from 'react-if';
-import {ChartMeta, ChartType, StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
+import {ChartMeta, ChartType, StudyViewPageStore, SurvivalAnalysisGroup} from 'pages/studyView/StudyViewPageStore';
 import SummaryHeader from 'pages/studyView/SummaryHeader';
-import { Sample, Gene , SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
+import {Sample, Gene, SampleIdentifier, ClinicalAttribute} from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import StudyViewScatterPlot from "./charts/scatterPlot/StudyViewScatterPlot";
 import {isSelected, mutationCountVsCnaTooltip} from "./StudyViewUtils";
 import AppConfig from 'appConfig';
 import MobxPromise from "mobxpromise";
+import setWindowVariable from "../../shared/lib/setWindowVariable";
 
 export interface IStudyViewPageProps {
     routing: any;
 }
 
 // making this an observer (mobx-react) causes this component to re-render any time
-// there is a change to any observable value which is referenced in its render method. 
+// there is a change to any observable value which is referenced in its render method.
 // Even if this value is referenced deep within some helper method
 @inject('routing')
 @observer
@@ -36,6 +37,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     constructor(props: IStudyViewPageProps) {
         super();
         this.store = new StudyViewPageStore();
+
+        setWindowVariable("studyViewPageStore", this.store);
 
         this.handlers = {
             onUserSelection: (chartMeta: ChartMeta, values: string[]) => {
@@ -90,7 +93,10 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         let props:any = {
             chartMeta: chartMeta,
             filters: [],
-            onDeleteChart: this.handlers.onDeleteChart
+            onDeleteChart: this.handlers.onDeleteChart,
+            setSurvivalAnalysisSettings: (attribute:ClinicalAttribute, grps:ReadonlyArray<SurvivalAnalysisGroup>)=>{
+                this.store.updateSurvivalAnalysisSettings(attribute, grps);
+            }
         };
         switch (chartMeta.chartType) {
             case ChartType.PIE_CHART: {
@@ -133,6 +139,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             }
             case ChartType.SURVIVAL: {
                 props.promise = this.store.getSurvivalData(chartMeta);
+                props.survivalAnalysisSettings = this.store.survivalAnalysisSettings;
+                props.patientToSurvivalAnalysisGroup = this.store.patientToSurvivalAnalysisGroup;
                 break;
             }
             case ChartType.SCATTER: {

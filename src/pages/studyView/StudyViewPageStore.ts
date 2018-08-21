@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import {remoteData} from "../../shared/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import {action, computed, observable, ObservableMap, toJS} from "mobx";
+import {action, computed, observable, toJS, ObservableMap, reaction} from "mobx";
 import {
     ClinicalDataCount,
     ClinicalDataEqualityFilter,
@@ -23,6 +23,8 @@ import {
     Gene,
     MolecularProfile,
     MolecularProfileFilter
+    MutationCount,
+    CancerStudy, Patient, PatientFilter
 } from 'shared/api/generated/CBioPortalAPI';
 import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
@@ -56,6 +58,7 @@ export const MUTATION_COUNT = 'MUTATION_COUNT';
 export const FRACTION_GENOME_ALTERED = 'FRACTION_GENOME_ALTERED';
 
 export type ClinicalDataCountWithColor = ClinicalDataCount & { color: string }
+export type SurvivalAnalysisGroup = { value:string, color:string};
 export type MutatedGenesData = MutationCountByGene[];
 export type CNAGenesData = CopyNumberCountByGene[];
 export type SurvivalType = {
@@ -90,7 +93,9 @@ type MutationCountVsFGADatum = {
 
 export class StudyViewPageStore {
 
-    constructor() { }
+    constructor() {
+        reaction(()=>this.filters, ()=>this.clearSurvivalAnalysisSettings()); // whenever any data filters change, reset survival analysis settings
+    }
 
     public studyViewClinicalDataCountsCache = new StudyViewClinicalDataCountsCache()
 
@@ -118,6 +123,9 @@ export class StudyViewPageStore {
 
     @observable private queriedGeneSet = observable.map<boolean>();
 
+    @observable.ref private _survivalAnalysisClinicalAttribute:ClinicalAttribute|undefined;
+    @observable.ref private _survivalAnalysisGroups:ReadonlyArray<SurvivalAnalysisGroup>|undefined;
+
     @bind
     @action onCheckGene(hugoGeneSymbol: string) {
         //only update geneQueryStr whenever a table gene is clicked.
@@ -133,6 +141,62 @@ export class StudyViewPageStore {
         this.geneQueries = query;
         this.queriedGeneSet = new ObservableMap(stringListToSet(genesInQuery.map(gene => gene.hugoGeneSymbol)))
     }
+
+    @action
+    updateSurvivalAnalysisSettings(attribute:ClinicalAttribute, groups:ReadonlyArray<SurvivalAnalysisGroup>) {
+        this._survivalAnalysisClinicalAttribute = attribute;
+        this._survivalAnalysisGroups = groups;
+    }
+
+    @action
+    clearSurvivalAnalysisSettings() {
+        this._survivalAnalysisClinicalAttribute = undefined;
+        this._survivalAnalysisGroups = undefined;
+    }
+
+    @computed
+    get survivalAnalysisSettings() {
+        if (this._survivalAnalysisClinicalAttribute) {
+            return {
+                clinicalAttribute: this._survivalAnalysisClinicalAttribute,
+                groups: this._survivalAnalysisGroups
+            };
+        } else {
+            return undefined;
+        }
+    }
+
+    readonly patientToSurvivalAnalysisGroup = remoteData({
+        await:()=>[this.selectedSamples, this.selectedPatients],
+        invoke:async()=>{
+            if (this.survivalAnalysisSettings) {
+                const attr = this.survivalAnalysisSettings.clinicalAttribute;
+                const data = await client.fetchClinicalDataUsingPOST({
+                    clinicalDataType: attr.patientAttribute ? "PATIENT" : "SAMPLE",
+                    clinicalDataMultiStudyFilter:{
+                        attributeIds: [attr.clinicalAttributeId],
+                        identifiers: attr.patientAttribute ?
+                            this.selectedPatients.result!.map(p=>({entityId:p.patientId, studyId:p.studyId})) :
+                            this.selectedSamples.result!.map(p=>({entityId:p.sampleId, studyId:p.studyId}))
+                    },
+                    projection: "SUMMARY"
+                });
+                const ret = data.reduce((map, clinData)=>{
+                    map[clinData.uniquePatientKey] = clinData.value;
+                    return map;
+                }, {} as {[patientKey:string]:string});
+                // add NA entries
+                for (const patient of this.selectedPatients.result!) {
+                    if (!(patient.uniquePatientKey in ret)) {
+                        ret[patient.uniquePatientKey] = "NA";
+                    }
+                }
+                return ret;
+            } else {
+                return undefined;
+            }
+        }
+    });
 
     @action
     updateClinicalDataEqualityFilters(chartMeta: ChartMeta, values: string[]) {
@@ -544,21 +608,32 @@ export class StudyViewPageStore {
         return _.keyBy(this.selectedSamples.result!, s=>s.uniqueSampleKey);
     }
 
-    readonly selectedPatientIds = remoteData<string[]>({
+    readonly selectedPatientKeys = remoteData<string[]>({
         await: () => [this.selectedSamples],
         invoke: async () => {
-            return _.uniq(this.selectedSamples.result.map(sample => sample.patientId));
+            return _.uniq(this.selectedSamples.result.map(sample => sample.uniquePatientKey));
         },
         default: []
     });
 
-    readonly unSelectedPatientIds = remoteData<string[]>({
-        await: () => [this.samples, this.selectedPatientIds],
+    readonly selectedPatients = remoteData<Patient[]>({
+        await:()=>[this.selectedSamples],
+        invoke:()=>{
+            return client.fetchPatientsUsingPOST({
+                patientFilter: {
+                    uniquePatientKeys: this.selectedSamples.result!.map(s=>s.uniquePatientKey)
+                } as PatientFilter
+            });
+        }
+    });
+
+    readonly unSelectedPatientKeys = remoteData<string[]>({
+        await: () => [this.samples, this.selectedPatientKeys],
         invoke: async () => {
 
             const unselectedPatientSet = _.reduce(this.samples.result, (acc: { [id: string]: boolean }, next) => {
-                if (!_.includes(this.selectedPatientIds.result, next.patientId)) {
-                    acc[next.patientId] = true;
+                if (!_.includes(this.selectedPatientKeys.result, next.uniquePatientKey)) {
+                    acc[next.uniquePatientKey] = true;
                 }
                 return acc;
             }, {});
@@ -652,16 +727,16 @@ export class StudyViewPageStore {
         });
     }
     readonly survivalPlotData = remoteData<SurvivalType[]>({
-        await: () => [this.survivalData, this.selectedPatientIds, this.unSelectedPatientIds],
+        await: () => [this.survivalData, this.selectedPatientKeys, this.unSelectedPatientKeys],
         invoke: async () => {
 
             return this.survivalPlots.map(obj => {
                 obj.alteredGroup = getPatientSurvivals(
                     this.survivalData.result,
-                    this.selectedPatientIds.result!, obj.associatedAttrs[0], obj.associatedAttrs[1], s => obj.filter.indexOf(s) !== -1);
+                    this.selectedPatientKeys.result!, obj.associatedAttrs[0], obj.associatedAttrs[1], s => obj.filter.indexOf(s) !== -1);
                 obj.unalteredGroup = getPatientSurvivals(
                     this.survivalData.result,
-                    this.unSelectedPatientIds.result!, obj.associatedAttrs[0], obj.associatedAttrs[1], s => obj.filter.indexOf(s) !== -1);
+                    this.unSelectedPatientKeys.result!, obj.associatedAttrs[0], obj.associatedAttrs[1], s => obj.filter.indexOf(s) !== -1);
                 return obj
             });
         },
@@ -686,7 +761,7 @@ export class StudyViewPageStore {
                 clinicalDataMultiStudyFilter: filter
             })
 
-            return _.groupBy(data, 'patientId')
+            return _.groupBy(data, 'uniquePatientKey')
         },
         default: {}
     });

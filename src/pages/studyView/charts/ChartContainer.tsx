@@ -5,7 +5,10 @@ import {action, computed, observable} from "mobx";
 import _ from "lodash";
 import {StudyViewComponentLoader} from "./StudyViewComponentLoader";
 import {ChartControls, ChartHeader} from "pages/studyView/chartHeader/ChartHeader";
-import {ChartMeta, ChartType} from "pages/studyView/StudyViewPageStore";
+import {
+    ChartMeta, ChartType, ClinicalDataCountWithColor,
+    SurvivalAnalysisGroup
+} from "pages/studyView/StudyViewPageStore";
 import fileDownload from 'react-file-download';
 import PieChart from "pages/studyView/charts/pieChart/PieChart";
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
@@ -18,6 +21,7 @@ import {MutatedGenesTable} from "../table/MutatedGenesTable";
 import {CNAGenesTable} from "../table/CNAGenesTable";
 import StudyViewScatterPlot from "./scatterPlot/StudyViewScatterPlot";
 import {isSelected, mutationCountVsCnaTooltip} from '../StudyViewUtils';
+import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 
 export interface AbstractChart {
     downloadData: () => string;
@@ -35,6 +39,9 @@ export interface IChartContainerProps {
     onGeneSelect?:any;
     selectedSamplesMap?: any;
     selectedSamples?: any;
+    setSurvivalAnalysisSettings?: (attribute:ClinicalAttribute, grp:ReadonlyArray<SurvivalAnalysisGroup>)=>void;
+    survivalAnalysisSettings?:{ clinicalAttribute:ClinicalAttribute, groups:ReadonlyArray<SurvivalAnalysisGroup>};
+    patientToSurvivalAnalysisGroup?:MobxPromise<{[uniquePatientKey:string]:string}>;
 }
 
 @observer
@@ -46,6 +53,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @observable mouseInChart: boolean = false;
     @observable placement: 'left' | 'right' = 'right';
     @observable chartType: ChartType
+
+    @observable hideNASurvivalCurve = true; // only relevant for survival charts
 
     @computed
     get fileName() {
@@ -132,7 +141,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @computed
     get chartControls(): ChartControls {
-        let controls = {};
+        let controls:Partial<ChartControls> = {};
         switch (this.chartType) {
             case ChartType.PIE_CHART: {
                 controls = {showTableIcon: true}
@@ -145,13 +154,36 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 break;
             }
         }
-        return {...controls, showResetIcon: this.props.filters && this.props.filters.length > 0};
+        if (this.survivalAnalysisPossible) {
+            controls.showSurvivalAnalysisIcon = true;
+        }
+        return {...controls, showResetIcon: this.props.filters && this.props.filters.length > 0} as ChartControls;
     }
 
     @bind
     @action
     changeChartType(chartType: ChartType) {
         this.chartType = chartType;
+    }
+
+
+    @computed
+    get survivalAnalysisPossible() {
+        return (this.chartType === ChartType.PIE_CHART || this.chartType === ChartType.TABLE) && this.props.chartMeta.clinicalAttribute;
+    }
+
+    @bind
+    @action
+    doSurvivalAnalysis() {
+        if (this.survivalAnalysisPossible && this.props.setSurvivalAnalysisSettings) {
+            this.props.setSurvivalAnalysisSettings(this.props.chartMeta.clinicalAttribute!, this.props.promise.result as ClinicalDataCountWithColor[]);
+        }
+    }
+
+    @bind
+    @action
+    toggleHideNASurvivalCurve() {
+        this.hideNASurvivalCurve = !this.hideNASurvivalCurve;
     }
 
     @computed
@@ -203,6 +235,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 return (
                     <SurvivalChart alteredPatientSurvivals={this.props.promise.result.alteredGroup}
                                    unalteredPatientSurvivals={this.props.promise.result.unalteredGroup}
+                                   patientToAnalysisGroup={this.props.patientToSurvivalAnalysisGroup && this.props.patientToSurvivalAnalysisGroup.result}
+                                   analysisGroups={this.props.survivalAnalysisSettings && this.props.survivalAnalysisSettings.groups}
+                                   analysisClinicalAttribute={this.props.survivalAnalysisSettings && this.props.survivalAnalysisSettings.clinicalAttribute}
+                                   hideNACurve={this.hideNASurvivalCurve}
+                                   toggleHideNACurve={this.toggleHideNASurvivalCurve}
                                    title={'test'}
                                    xAxisLabel="Months Survival"
                                    yAxisLabel="Surviving"
@@ -244,6 +281,17 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         }
     }
 
+    @computed get loadingPromises() {
+        const ret = [this.props.promise];
+        if (this.chartType === ChartType.SURVIVAL
+            && this.props.survivalAnalysisSettings !== undefined
+            && this.props.patientToSurvivalAnalysisGroup !== undefined) {
+
+            ret.push(this.props.patientToSurvivalAnalysisGroup);
+        }
+        return ret;
+    }
+
     public render() {
         return (
             <div className={classnames(styles.chart, this.chartWidth, this.chartHeight)}
@@ -257,8 +305,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     hideLabel={this.hideLabel}
                     chartControls={this.chartControls}
                     changeChartType={this.changeChartType}
+                    doSurvivalAnalysis={this.doSurvivalAnalysis}
                 />
-                <StudyViewComponentLoader promise={this.props.promise}>
+                <StudyViewComponentLoader promises={this.loadingPromises}>
                     {this.chart}
                 </StudyViewComponentLoader>
             </div>

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { observer } from "mobx-react";
 import { PatientSurvival } from "../../../shared/model/PatientSurvival";
-import { computed, observable } from "mobx";
+import {action, computed, observable, runInAction} from "mobx";
 import { Popover, Table } from 'react-bootstrap';
 import styles from "./styles.module.scss";
 import { sleep } from "../../../shared/lib/TimeUtils";
@@ -12,17 +12,27 @@ import {
 } from 'victory';
 import {
     getEstimates, getMedian, getLineData, getScatterData, getScatterDataWithOpacity, getStats, calculateLogRank,
-    getDownloadContent, convertScatterDataToDownloadData, downSampling, GroupedScatterData, filteringScatterData
+    getDownloadContent, convertScatterDataToDownloadData, downSampling, GroupedScatterData, filterScatterData,
+    SurvivalPlotFilters
 } from "./SurvivalUtil";
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import {getPatientViewUrl} from "../../../shared/api/urls";
 import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 import autobind from "autobind-decorator";
+import {SurvivalAnalysisGroup} from "../../studyView/StudyViewPageStore";
+import classnames from "classnames";
+import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
+import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 
 export interface ISurvivalChartProps {
     alteredPatientSurvivals: PatientSurvival[];
     unalteredPatientSurvivals: PatientSurvival[];
+    patientToAnalysisGroup?:{[uniquePatientKey:string]:string};
+    analysisGroups?:ReadonlyArray<SurvivalAnalysisGroup>;
+    analysisClinicalAttribute?:ClinicalAttribute;
+    hideNACurve?:boolean; // if true, then hide analysis group data curve corresponding to value "NA"
+    toggleHideNACurve?:()=>void;
     totalCasesHeader: string;
     statusCasesHeader: string;
     medianMonthsHeader: string;
@@ -50,8 +60,9 @@ const SURVIVAL_DOWN_SAMPLING_THRESHOLD = 1000;
 @observer
 export default class SurvivalChart extends React.Component<ISurvivalChartProps, {}> {
 
-    @observable tooltipModel: any;
-    @observable scatterFilter: any;
+    @observable.ref tooltipModel: any;
+    @observable scatterFilter: SurvivalPlotFilters;
+    @observable highlightedCurve = "";
     // The denominator should be determined based on the plot width and height.
     private isTooltipHovered: boolean = false;
     private tooltipCounter: number = 0;
@@ -83,6 +94,39 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         }
     };
 
+    private events = [{
+        target: "data",
+        eventHandlers: {
+            onMouseOver: () => {
+                return [
+                    {
+                        target: "data",
+                        mutation: (props: any) => {
+                            this.tooltipModel = props;
+                            this.tooltipCounter++;
+                            return { active: true };
+                        }
+                    }
+                ];
+            },
+            onMouseOut: () => {
+                return [
+                    {
+                        target: "data",
+                        mutation: async () => {
+                            await sleep(100);
+                            if (!this.isTooltipHovered && this.tooltipCounter === 1) {
+                                this.tooltipModel = null;
+                            }
+                            this.tooltipCounter--;
+                            return { active: false };
+                        }
+                    }
+                ];
+            }
+        }
+    }];
+
     @computed
     get styleOpts() {
         let configurableOpts: any = _.merge({}, this.styleOptsDefaultProps, this.props.styleOpts);
@@ -100,15 +144,15 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     }
 
     @computed
-    get allScatterData(): GroupedScatterData {
+    get scatterDataByAltered(): GroupedScatterData {
         return {
-            altered: {
+            Altered: {
                 numOfCases: this.sortedAlteredPatientSurvivals.length,
                 line: getLineData(this.sortedAlteredPatientSurvivals, this.alteredEstimates),
                 scatterWithOpacity: getScatterDataWithOpacity(this.sortedAlteredPatientSurvivals, this.alteredEstimates),
                 scatter: getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)
             },
-            unaltered: {
+            Unaltered: {
                 numOfCases: this.sortedUnalteredPatientSurvivals.length,
                 line: getLineData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates),
                 scatterWithOpacity: getScatterDataWithOpacity(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates),
@@ -117,11 +161,49 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         };
     }
 
+    @computed
+    get scatterDataByAnalysisGroup(): GroupedScatterData | null {
+        if (this.props.analysisGroups && this.props.patientToAnalysisGroup) {
+            // if there are analysis groups
+            const patientToAnalysisGroup = this.props.patientToAnalysisGroup;
+            const allSurvivals = this.props.alteredPatientSurvivals.concat(this.props.unalteredPatientSurvivals);
+            const survivalsByAnalysisGroup = _.groupBy(allSurvivals, s=>patientToAnalysisGroup[s.uniquePatientKey]);
+
+            if (this.props.hideNACurve) {
+                // dont show any curve for "NA"
+                delete survivalsByAnalysisGroup["NA"];
+            }
+
+            // map through groups and generate plot data for each
+            return _.mapValues(survivalsByAnalysisGroup, (survivals, group)=>{
+                const sortedSurvivals = _.sortBy(survivals, s=>s.months);
+                const estimates = getEstimates(sortedSurvivals);
+                return {
+                    numOfCases: sortedSurvivals.length,
+                    line: getLineData(sortedSurvivals, estimates),
+                    scatterWithOpacity: getScatterDataWithOpacity(sortedSurvivals, estimates),
+                    scatter: getScatterData(sortedSurvivals, estimates)
+                };
+            });
+        } else {
+            return null;
+        }
+    }
+
     // Only recalculate the scatter data based on the plot filter.
     // The filter is only available when user zooms in the plot.
     @computed
     get scatterData(): GroupedScatterData {
-        return filteringScatterData(this.allScatterData, this.scatterFilter, {
+        let groupedData;
+        if (this.scatterDataByAnalysisGroup) {
+            // if there are groups passed in props, make data based on those groups
+            groupedData = this.scatterDataByAnalysisGroup;
+        } else {
+            // otherwise, make groups based on altered status
+            groupedData = this.scatterDataByAltered;
+        }
+
+        return filterScatterData(groupedData, this.scatterFilter, {
             xDenominator: this.downSamplingDenominators.x,
             yDenominator: this.downSamplingDenominators.y,
             threshold: SURVIVAL_DOWN_SAMPLING_THRESHOLD
@@ -193,98 +275,130 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         }
     }
 
-    public render() {
+    @computed get plotAnalysisGroups() {
+        let analysisGroups;
+        if (this.props.analysisGroups && this.scatterDataByAnalysisGroup) {
+            // make plots for analysis groups
+            analysisGroups = this.props.analysisGroups;
+        } else {
+            // make plots for altered vs unaltered
+            analysisGroups = [{value:"Altered", color:"red"}, {value:"Unaltered", color:"blue"}];
+        }
+        analysisGroups = analysisGroups.filter(grp=>((grp.value in this.scatterData) && (this.scatterData[grp.value].numOfCases > 0)));
 
-        const events = [{
-            target: "data",
-            eventHandlers: {
-                onMouseOver: () => {
-                    return [
-                        {
-                            target: "data",
-                            mutation: (props: any) => {
-                                this.tooltipModel = props;
-                                this.tooltipCounter++;
-                                return { active: true };
-                            }
-                        }
-                    ];
-                },
-                onMouseOut: () => {
-                    return [
-                        {
-                            target: "data",
-                            mutation: async () => {
-                                await sleep(100);
-                                if (!this.isTooltipHovered && this.tooltipCounter === 1) {
-                                    this.tooltipModel = null;
-                                }
-                                this.tooltipCounter--;
-                                return { active: false };
-                            }
-                        }
-                    ];
+        return analysisGroups;
+    }
+
+    @computed get scattersAndLines() {
+        // sort highlighted group to the end to show its elements on top
+        let plotAnalysisGroups = this.plotAnalysisGroups;
+        plotAnalysisGroups = _.sortBy(plotAnalysisGroups, grp=>(this.highlightedCurve === grp.value ? 1 : 0));
+
+        const lineElements = plotAnalysisGroups.map(grp=>(
+            <VictoryLine key={grp.value} interpolation="stepAfter" data={this.scatterData[grp.value].line}
+                        style={{data:{
+                            stroke:grp.color,
+                            strokeWidth: this.highlightedCurve === grp.value ? 4 : 1,
+                            fill:"#000000",
+                            fillOpacity:0
+                        }}}
+            />
+        ));
+        const scatterWithOpacityElements = plotAnalysisGroups.map(grp=>(
+            <VictoryScatter key={grp.value} data={this.scatterData[grp.value].scatterWithOpacity}
+                            symbol="plus" style={{ data: { fill: grp.color, opacity: (d:any) => d.opacity } }}
+                            size={3} />
+        ));
+        const scatterElements = plotAnalysisGroups.map(grp=>(
+            <VictoryScatter key={grp.value} data={this.scatterData[grp.value].scatter}
+                            symbol="circle" style={{ data: { fill: grp.color, fillOpacity: this.hoverCircleFillOpacity} }}
+                            size={10} events={this.events} />
+        ));
+        return lineElements.concat(scatterWithOpacityElements).concat(scatterElements);
+    }
+
+    @computed
+    get chart() {
+        return (
+            <div className="borderedChart" data-test={'SurvivalChart'} style={{width: '100%'}}>
+
+                {this.props.showDownloadButtons &&
+                <DownloadControls
+                    dontFade={true}
+                    filename={this.props.fileName}
+                    buttons={["SVG", "PNG", "PDF", "Data"]}
+                    getSvg={this.getSvg}
+                    getData={this.getData}
+                    style={{position:'absolute', zIndex: 10, right: 10}}
+                    collapse={true}
+                />
                 }
-            }
-        }];
 
+                <VictoryChart containerComponent={<VictoryZoomContainer responsive={false}
+                                                                        onZoomDomainChange={_.debounce((domain: any) => {
+                                                                            this.scatterFilter = domain as SurvivalPlotFilters;
+                                                                        }, 1000)}
+                                                                        containerRef={(ref: any) => this.svgContainer = ref}/>}
+                              height={this.styleOpts.height} width={this.styleOpts.width}
+                              padding={this.styleOpts.padding}
+                              theme={CBIOPORTAL_VICTORY_THEME}
+                              domainPadding={{x: [10, 50], y: [20, 20]}}>
+                    <VictoryAxis style={this.styleOpts.axis.x} crossAxis={false} tickCount={11}
+                                 label={this.props.xAxisLabel}/>
+                    <VictoryAxis label={this.props.yAxisLabel} dependentAxis={true} tickFormat={(t: any) => `${t}%`}
+                                 tickCount={11}
+                                 style={this.styleOpts.axis.y} domain={[0, 100]} crossAxis={false}/>
+                    {this.scattersAndLines}
+                    {this.props.showLegend &&
+                    <VictoryLegend x={this.styleOpts.legend.x} y={this.styleOpts.legend.y}
+                                   data={[
+                                       { name: this.alteredLegendText, symbol: { fill: "red", type: "square" } },
+                                       { name: this.unalteredLegendText, symbol: { fill: "blue", type: "square" } },
+                                       { name: `Logrank Test P-Value: ${toConditionalPrecision(this.logRank, 3, 0.001)}`, symbol: { opacity: 0 } }]} />
+                    }
+                </VictoryChart>
+            </div>
+        );
+    }
+
+    @computed get chartTooltip() {
+        return (
+            <div style={{maxWidth: 250}}>
+                {this.plotAnalysisGroups.map(group=>(
+                    <span
+                        key={group.value}
+                        style={{display:"inline-block", marginRight:12, fontWeight: this.highlightedCurve === group.value ? "bold" : "initial", cursor:"pointer"}}
+                        onClick={()=>{ this.highlightedCurve = (this.highlightedCurve === group.value ? "" : group.value)}}
+                    >
+                        <div style={{width:10, height:10, display:"inline-block", backgroundColor:group.color, marginRight:5}}/>
+                        {group.value}
+                    </span>
+                ))}
+                { this.props.toggleHideNACurve && (
+                    <div className="checkbox"><label>
+                        <input
+                            type="checkbox"
+                            checked={this.props.hideNACurve}
+                            onClick={this.props.toggleHideNACurve}
+                        /> Exclude patients with NA for any of the selected attributes.
+                    </label></div>
+                )}
+            </div>
+        );
+    }
+
+    public render() {
         return (
 
             <div className="posRelative" style={{width: (this.styleOpts.width + 20)}}>
-
-                <div className="borderedChart" data-test={'SurvivalChart'} style={{width: '100%'}}>
-
-                    {this.props.showDownloadButtons &&
-                        <DownloadControls
-                            dontFade={true}
-                            filename={this.props.fileName}
-                            buttons={["SVG", "PNG", "PDF", "Data"]}
-                            getSvg={this.getSvg}
-                            getData={this.getData}
-                            style={{position:'absolute', zIndex: 10, right: 10}}
-                            collapse={true}
-                        />
-                    }
-
-                    <VictoryChart containerComponent={<VictoryZoomContainer responsive={false}
-                                                                            onZoomDomainChange={_.debounce((domain: any) => {
-                                                                                this.scatterFilter = domain;
-                                                                            }, 1000)}
-                                                                            containerRef={(ref: any) => this.svgContainer = ref}/>}
-                                  height={this.styleOpts.height} width={this.styleOpts.width}
-                                  padding={this.styleOpts.padding}
-                                  theme={CBIOPORTAL_VICTORY_THEME}
-                                  domainPadding={{x: [10, 50], y: [20, 20]}}>
-                        <VictoryAxis style={this.styleOpts.axis.x} crossAxis={false} tickCount={11}
-                                     label={this.props.xAxisLabel}/>
-                        <VictoryAxis label={this.props.yAxisLabel} dependentAxis={true} tickFormat={(t: any) => `${t}%`}
-                                     tickCount={11}
-                                     style={this.styleOpts.axis.y} domain={[0, 100]} crossAxis={false}/>
-                        <VictoryLine interpolation="stepAfter"
-                                     data={this.scatterData.altered.line}
-                                     style={{data: {stroke: "red", strokeWidth: 1,  fill:"#000000", fillOpacity:0}}}/>
-                        <VictoryLine interpolation="stepAfter"
-                                     data={this.scatterData.unaltered.line}
-                                     style={{data: {stroke: "blue", strokeWidth: 1,  fill:"#000000", fillOpacity:0}}}/>
-                        <VictoryScatter data={this.scatterData.altered.scatterWithOpacity}
-                            symbol="plus" style={{ data: { fill: "red", opacity: (d:any) => d.opacity } }} size={3} />
-                        <VictoryScatter data={this.scatterData.unaltered.scatterWithOpacity}
-                            symbol="plus" style={{ data: { fill: "blue", opacity: (d:any) => d.opacity } }} size={3} />
-                        <VictoryScatter data={this.scatterData.altered.scatter}
-                            symbol="circle" style={{ data: { fill: "red", fillOpacity: this.hoverCircleFillOpacity} }} size={10} events={events} />
-                        <VictoryScatter data={this.scatterData.unaltered.scatter}
-                            symbol="circle" style={{ data: { fill: "blue", fillOpacity: this.hoverCircleFillOpacity} }} size={10} events={events} />
-                        {this.props.showLegend &&
-                            <VictoryLegend x={this.styleOpts.legend.x} y={this.styleOpts.legend.y}
-                                data={[
-                                    { name: this.alteredLegendText, symbol: { fill: "red", type: "square" } },
-                                    { name: this.unalteredLegendText, symbol: { fill: "blue", type: "square" } },
-                                    { name: `Logrank Test P-Value: ${toConditionalPrecision(this.logRank, 3, 0.001)}`, symbol: { opacity: 0 } }]} />
-                        }
-                    </VictoryChart>
-                </div>
+                <DefaultTooltip
+                    placement="right"
+                    overlay={this.chartTooltip}
+                >
+                    {this.chart}
+                </DefaultTooltip>
                 {this.tooltipModel &&
-                    <Popover arrowOffsetTop={56} className={styles.Tooltip} positionLeft={this.tooltipModel.x + 10}
+                    <Popover arrowOffsetTop={56} className={classnames("cbioportal-frontend", "cbioTooltip", styles.Tooltip)} positionLeft={this.tooltipModel.x + 10}
                              { ...{container:this} }
                         positionTop={this.tooltipModel.y - 47}
                         onMouseEnter={this.tooltipMouseEnter} onMouseLeave={this.tooltipMouseLeave}>
@@ -294,7 +408,12 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                             {this.tooltipModel.datum.status ? this.props.xLabelWithEventTooltip :
                                 this.props.xLabelWithoutEventTooltip}
                             : {this.tooltipModel.datum.x.toFixed(2)} months {this.tooltipModel.datum.status ? "" :
-                                "(censored)"}
+                            "(censored)"}<br/>
+                            {this.props.patientToAnalysisGroup && this.props.analysisClinicalAttribute && (
+                                <span>
+                                    {this.props.analysisClinicalAttribute.displayName}: {this.props.patientToAnalysisGroup[this.tooltipModel.datum.uniquePatientKey]}
+                                </span>
+                            )}
                         </div>
                     </Popover>
                 }

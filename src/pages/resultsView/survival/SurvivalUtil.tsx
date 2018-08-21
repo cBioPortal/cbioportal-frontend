@@ -81,6 +81,7 @@ export function getScatterData(patientSurvivals: PatientSurvival[], estimates: n
         return {
             x: patientSurvival.months, y: estimates[index] * 100,
             patientId: patientSurvival.patientId, studyId: patientSurvival.studyId,
+            uniquePatientKey: patientSurvival.uniquePatientKey,
             status: patientSurvival.status
         };
     });
@@ -243,7 +244,7 @@ export function downSampling(data: ScatterData[], opts: DownSamplingOpts): Scatt
     });
 }
 
-export function filteringScatterData(allScatterData: GroupedScatterData, filters: SurvivalPlotFilters | undefined, downSamplingOpts: DownSamplingOpts):GroupedScatterData {
+export function filterScatterData(allScatterData: GroupedScatterData, filters: SurvivalPlotFilters | undefined, downSamplingOpts: DownSamplingOpts):GroupedScatterData {
     let filteredData = _.cloneDeep(allScatterData);
     _.forEach(filteredData, (value:SurvivalCurveData) => {
         if (value.numOfCases > downSamplingOpts.threshold) {
