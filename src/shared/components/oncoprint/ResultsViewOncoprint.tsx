@@ -106,6 +106,13 @@ type HeatmapTrackGroupRecord = {
     molecularProfileId:string
 };
 
+export const alterationTypeToName:{[alterationType:string]:string} = {
+    "MUTATION_EXTENDED": "mutations",
+    "COPY_NUMBER_ALTERATION": "copy number alterations",
+    "MRNA_EXPRESSION": "mRNA expression",
+    "PROTEIN_LEVEL": "protein expression"
+};
+
 /* fields and methods in the class below are ordered based on roughly
 /* chronological setup concerns, rather than on encapsulation and public API */
 /* tslint:disable: member-ordering */
@@ -801,13 +808,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 }
             }
             // make a clinical attribute for each profile type which not every sample is profiled in
-            const alterationTypeToName:{[alterationType:string]:string} = {
-                "MUTATION_EXTENDED": "mutations",
-                "COPY_NUMBER_ALTERATION": "copy number alterations",
-                "MRNA_EXPRESSION": "mRNA expression",
-                "PROTEIN_LEVEL": "protein expression"
-            };
-
             const existsUnprofiled = Object.keys(existsProfiledCount).filter(alterationType=>{
                 return existsProfiledCount[alterationType] < this.props.store.samples.result!.length;
             });
@@ -1116,6 +1116,14 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return "";
     }
 
+    @computed get alterationTypesInQuery() {
+        if (this.props.store.selectedMolecularProfiles.isComplete) {
+            return _.uniq(this.props.store.selectedMolecularProfiles.result.map(x=>x.molecularAlterationType));
+        } else {
+            return [];
+        }
+    }
+
     public render() {
         return (
             <div style={{position:'relative', minHeight:this.isHidden ? this.loadingIndicatorHeight : "auto"}} className="cbioportal-frontend">
@@ -1163,6 +1171,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 onReleaseRendering={this.onReleaseRendering}
                                 hiddenIds={!this.showUnalteredColumns ? this.unalteredKeys.result : undefined}
                                 molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
+                                alterationTypesInQuery={this.alterationTypesInQuery}
 
                                 horzZoomToFitIds={this.horzZoomToFitIds}
                                 distinguishMutationType={this.distinguishMutationType}
