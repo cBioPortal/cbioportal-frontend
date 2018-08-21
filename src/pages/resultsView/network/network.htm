@@ -150,11 +150,7 @@
 
                 <script type="text/javascript">
 
-                    console.log(window.location.hash);
-
                     var networkParams = JSON.parse(decodeURIComponent(window.location.hash).replace(/^#/,""));
-
-                    console.log("params",networkParams);
 
                     $(document).ready(function () {
                         showNetwork(networkParams);
@@ -189,8 +185,6 @@
                     }
 
                     var showNetwork = function (networkParams) {
-
-                        console.log("networkParam", networkParams);
 
                         $.ajax({
                             type:"POST",
