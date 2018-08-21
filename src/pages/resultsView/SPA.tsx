@@ -43,6 +43,7 @@ import ExtendedRouterStore from "../../shared/lib/ExtendedRouterStore";
 import {parseOQLQuery} from "../../shared/lib/oql/oqlfilter";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import RightBar from "../../shared/components/rightbar/RightBar";
+import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 
 
 const win = (window as any);
@@ -65,7 +66,7 @@ export function createQueryStore() {
     const win:any = window;
 
     // lets make query Store since it's used in a lot of places
-    const queryStore = new QueryStore(win, window.routingStore.query);
+    const queryStore = new QueryStore(win, getBrowserWindow().routingStore.query);
 
     queryStore.singlePageAppSubmitRoutine = function(path:string, query:CancerStudyQueryUrlParams) {
 
