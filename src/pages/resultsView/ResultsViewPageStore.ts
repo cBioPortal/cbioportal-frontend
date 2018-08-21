@@ -78,7 +78,7 @@ import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alt
 import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
 import {isSampleProfiledInMultiple} from "../../shared/lib/isSampleProfiled";
 import {BookmarkLinks} from "../../shared/model/BookmarkLinks";
-import {getBitlyServiceUrl, getSessionServiceUrl} from "../../shared/api/urls";
+import {getBitlyServiceUrl} from "../../shared/api/urls";
 import url from 'url';
 import OncoprintClinicalDataCache, {SpecialAttribute} from "../../shared/cache/OncoprintClinicalDataCache";
 import {getDefaultMolecularProfiles} from "../../shared/lib/getDefaultMolecularProfiles";
