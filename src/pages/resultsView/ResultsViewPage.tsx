@@ -118,11 +118,11 @@ function initStore() {
                     resultsViewPageStore.selectedMolecularProfileIds = profiles;
                 }
 
-                if (_.isEqual(query.RPPA_SCORE_THRESHOLD, resultsViewPageStore.rppaScoreThreshold)) {
+                if (!_.isEqual(query.RPPA_SCORE_THRESHOLD, resultsViewPageStore.rppaScoreThreshold)) {
                     resultsViewPageStore.rppaScoreThreshold = parseFloat(query.RPPA_SCORE_THRESHOLD);
                 }
 
-                if (_.isEqual(query.Z_SCORE_THRESHOLD, resultsViewPageStore.zScoreThreshold)) {
+                if (!_.isEqual(query.Z_SCORE_THRESHOLD, resultsViewPageStore.zScoreThreshold)) {
                     resultsViewPageStore.zScoreThreshold = parseFloat(query.Z_SCORE_THRESHOLD);
                 }
 
@@ -315,12 +315,13 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                                    linkText={'Network'}
                     >
                         {
-                            (store.studies.isComplete && store.sampleLists.isComplete) &&
+                            (store.studies.isComplete && store.sampleLists.isComplete && store.samples.isComplete) &&
                             (<Network genes={store.genes.result!}
                                       profileIds={store.selectedMolecularProfileIds}
                                       cancerStudyId={store.studies.result[0].studyId}
                                       zScoreThreshold={store.zScoreThreshold}
                                       caseSetId={(store.sampleLists.result!.length > 0) ? store.sampleLists.result![0].sampleListId : "-1"}
+                                      sampleIds={store.samples.result.map((sample)=>sample.sampleId)}
                                       caseIdsKey={""}
                             />)
                         }
