@@ -150,7 +150,11 @@
 
                 <script type="text/javascript">
 
-                    var networkParams = JSON.parse(queryParams.networkParams);
+                    console.log(window.location.hash);
+
+                    var networkParams = JSON.parse(decodeURIComponent(window.location.hash).replace(/^#/,""));
+
+                    console.log("params",networkParams);
 
                     $(document).ready(function () {
                         showNetwork(networkParams);
@@ -186,35 +190,69 @@
 
                     var showNetwork = function (networkParams) {
 
-                        // get the graphml data from the server
-                        $.post(window.apiHost + "/network.do",
-                            networkParams,
-                            function (graphml) {
-                                var gml2jsonConverter = new GraphMLToJSon(graphml);
-                                var json = gml2jsonConverter.toJSON();
-                                window.networkGraphJSON = json;
+                        console.log("networkParam", networkParams);
 
-                                $("#networkLoading").hide();
-                                $("#network").css({ background:"#ffffff" });
-                                $("#network_wrapper").show();
+                        $.ajax({
+                            type:"POST",
+                            url:window.apiHost + "/network.do",
+                            data:networkParams
+                        }).then(function(graphml){
 
-                                if (typeof graphml !== "string") {
-                                    if (window.ActiveXObject) { // IE
-                                        graphml = (new XMLSerializer()).serializeToString(graphml);
-                                    } else { // Other browsers
-                                        graphml = (new XMLSerializer()).serializeToString(graphml);
-                                    }
+                            var gml2jsonConverter = new GraphMLToJSon(graphml);
+                            var json = gml2jsonConverter.toJSON();
+                            window.networkGraphJSON = json;
+
+                            $("#networkLoading").hide();
+                            $("#network").css({ background:"#ffffff" });
+                            $("#network_wrapper").show();
+
+                            if (typeof graphml !== "string") {
+                                if (window.ActiveXObject) { // IE
+                                    graphml = (new XMLSerializer()).serializeToString(graphml);
+                                } else { // Other browsers
+                                    graphml = (new XMLSerializer()).serializeToString(graphml);
                                 }
+                            }
 
-                                //show debug message !
-                                showXDebug(graphml);
-                                showNetworkMessage(graphml, "#network #netmsg");
+                            //show debug message !
+                            showXDebug(graphml);
+                            showNetworkMessage(graphml, "#network #netmsg");
 
-                                $("#network").show();
+                            $("#network").show();
 
-                                // when the data is available call send2cytoscapeweb
-                                send2cytoscapeweb(window.networkGraphJSON, "cytoscapeweb", "network");
-                            });
+                            // when the data is available call send2cytoscapeweb
+                            send2cytoscapeweb(window.networkGraphJSON, "cytoscapeweb", "network");
+                        });
+
+                        // get the graphml data from the server
+                        // $.post(window.apiHost + "/network.do",
+                        //     networkParams,
+                        //     function (graphml) {
+                        //         var gml2jsonConverter = new GraphMLToJSon(graphml);
+                        //         var json = gml2jsonConverter.toJSON();
+                        //         window.networkGraphJSON = json;
+                        //
+                        //         $("#networkLoading").hide();
+                        //         $("#network").css({ background:"#ffffff" });
+                        //         $("#network_wrapper").show();
+                        //
+                        //         if (typeof graphml !== "string") {
+                        //             if (window.ActiveXObject) { // IE
+                        //                 graphml = (new XMLSerializer()).serializeToString(graphml);
+                        //             } else { // Other browsers
+                        //                 graphml = (new XMLSerializer()).serializeToString(graphml);
+                        //             }
+                        //         }
+                        //
+                        //         //show debug message !
+                        //         showXDebug(graphml);
+                        //         showNetworkMessage(graphml, "#network #netmsg");
+                        //
+                        //         $("#network").show();
+                        //
+                        //         // when the data is available call send2cytoscapeweb
+                        //         send2cytoscapeweb(window.networkGraphJSON, "cytoscapeweb", "network");
+                        //     });
                     }
 
 
