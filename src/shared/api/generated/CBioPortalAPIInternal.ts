@@ -33,6 +33,22 @@ export type ClinicalDataEqualityFilter = {
         'values': Array < string >
 
 };
+export type ClinicalDataIntervalFilter = {
+    'attributeId': string
+
+        'clinicalDataType': "SAMPLE" | "PATIENT"
+
+        'values': Array < ClinicalDataIntervalFilterValue >
+
+};
+export type ClinicalDataIntervalFilterValue = {
+    'end': number
+
+        'start': number
+
+        'value': string
+
+};
 export type CoExpression = {
     'cytoband': string
 
@@ -91,6 +107,18 @@ export type CosmicMutation = {
         'proteinChange': string
 
 };
+export type DataBin = {
+    'attributeId': string
+
+        'count': number
+
+        'end': number
+
+        'specialValue': string
+
+        'start': number
+
+};
 export type EnrichmentFilter = {
     'alteredIds': Array < string >
 
@@ -117,26 +145,6 @@ export type ExpressionEnrichment = {
         'standardDeviationInAlteredGroup': number
 
         'standardDeviationInUnalteredGroup': number
-
-};
-export type FractionGenomeAltered = {
-    'patientId': string
-
-        'sampleId': string
-
-        'studyId': string
-
-        'uniquePatientKey': string
-
-        'uniqueSampleKey': string
-
-        'value': number
-
-};
-export type FractionGenomeAlteredFilter = {
-    'sampleIds': Array < string >
-
-        'sampleListId': string
 
 };
 export type Geneset = {
@@ -358,6 +366,8 @@ export type SampleIdentifier = {
 export type StudyViewFilter = {
     'clinicalDataEqualityFilters': Array < ClinicalDataEqualityFilter >
 
+        'clinicalDataIntervalFilters': Array < ClinicalDataIntervalFilter >
+
         'cnaGenes': Array < CopyNumberGeneFilter >
 
         'mutatedGenes': Array < MutationGeneFilter >
@@ -442,6 +452,122 @@ export default class CBioPortalAPIInternal {
         });
     }
 
+    fetchClinicalDataBinCountsUsingPOSTURL(parameters: {
+        'attributeId': string,
+        'clinicalDataType' ? : "SAMPLE" | "PATIENT",
+        'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/attributes/{attributeId}/clinical-data-bin-counts/fetch';
+
+        path = path.replace('{attributeId}', parameters['attributeId'] + '');
+        if (parameters['clinicalDataType'] !== undefined) {
+            queryParameters['clinicalDataType'] = parameters['clinicalDataType'];
+        }
+
+        if (parameters['dataBinMethod'] !== undefined) {
+            queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch clinical data bin counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchClinicalDataBinCountsUsingPOST
+     * @param {string} attributeId - Attribute ID e.g. AGE
+     * @param {string} clinicalDataType - Type of the clinical data
+     * @param {string} dataBinMethod - Method for data binning
+     * @param {} studyViewFilter - Study view filter
+     */
+    fetchClinicalDataBinCountsUsingPOSTWithHttpInfo(parameters: {
+        'attributeId': string,
+        'clinicalDataType' ? : "SAMPLE" | "PATIENT",
+        'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/attributes/{attributeId}/clinical-data-bin-counts/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{attributeId}', parameters['attributeId'] + '');
+
+            if (parameters['attributeId'] === undefined) {
+                reject(new Error('Missing required  parameter: attributeId'));
+                return;
+            }
+
+            if (parameters['clinicalDataType'] !== undefined) {
+                queryParameters['clinicalDataType'] = parameters['clinicalDataType'];
+            }
+
+            if (parameters['dataBinMethod'] !== undefined) {
+                queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
+            }
+
+            if (parameters['studyViewFilter'] !== undefined) {
+                body = parameters['studyViewFilter'];
+            }
+
+            if (parameters['studyViewFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: studyViewFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch clinical data bin counts by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchClinicalDataBinCountsUsingPOST
+     * @param {string} attributeId - Attribute ID e.g. AGE
+     * @param {string} clinicalDataType - Type of the clinical data
+     * @param {string} dataBinMethod - Method for data binning
+     * @param {} studyViewFilter - Study view filter
+     */
+    fetchClinicalDataBinCountsUsingPOST(parameters: {
+            'attributeId': string,
+            'clinicalDataType' ? : "SAMPLE" | "PATIENT",
+            'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+            'studyViewFilter': StudyViewFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < DataBin >
+        > {
+            return this.fetchClinicalDataBinCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
     fetchClinicalDataCountsUsingPOSTURL(parameters: {
         'attributeId': string,
         'clinicalDataType' ? : "SAMPLE" | "PATIENT",
@@ -773,83 +899,6 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < Sample >
         > {
             return this.fetchFilteredSamplesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    fetchFractionGenomeAlteredInMultipleStudiesUsingPOSTURL(parameters: {
-        'sampleIdentifiers': Array < SampleIdentifier > ,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/fraction-genome-altered/fetch';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Fetch fraction genome altered in multiple studies
-     * @method
-     * @name CBioPortalAPIInternal#fetchFractionGenomeAlteredInMultipleStudiesUsingPOST
-     * @param {} sampleIdentifiers - List of Sample Identifiers
-     */
-    fetchFractionGenomeAlteredInMultipleStudiesUsingPOSTWithHttpInfo(parameters: {
-        'sampleIdentifiers': Array < SampleIdentifier > ,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/fraction-genome-altered/fetch';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['sampleIdentifiers'] !== undefined) {
-                body = parameters['sampleIdentifiers'];
-            }
-
-            if (parameters['sampleIdentifiers'] === undefined) {
-                reject(new Error('Missing required  parameter: sampleIdentifiers'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Fetch fraction genome altered in multiple studies
-     * @method
-     * @name CBioPortalAPIInternal#fetchFractionGenomeAlteredInMultipleStudiesUsingPOST
-     * @param {} sampleIdentifiers - List of Sample Identifiers
-     */
-    fetchFractionGenomeAlteredInMultipleStudiesUsingPOST(parameters: {
-            'sampleIdentifiers': Array < SampleIdentifier > ,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < FractionGenomeAltered >
-        > {
-            return this.fetchFractionGenomeAlteredInMultipleStudiesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
@@ -2414,97 +2463,6 @@ export default class CBioPortalAPIInternal {
             return response.body;
         });
     };
-    fetchFractionGenomeAlteredUsingPOSTURL(parameters: {
-        'studyId': string,
-        'fractionGenomeAlteredFilter': FractionGenomeAlteredFilter,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/studies/{studyId}/fraction-genome-altered/fetch';
-
-        path = path.replace('{studyId}', parameters['studyId'] + '');
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Fetch fraction genome altered
-     * @method
-     * @name CBioPortalAPIInternal#fetchFractionGenomeAlteredUsingPOST
-     * @param {string} studyId - Study ID e.g. acc_tcga
-     * @param {} fractionGenomeAlteredFilter - List of Sample IDs/Sample List ID
-     */
-    fetchFractionGenomeAlteredUsingPOSTWithHttpInfo(parameters: {
-        'studyId': string,
-        'fractionGenomeAlteredFilter': FractionGenomeAlteredFilter,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/studies/{studyId}/fraction-genome-altered/fetch';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            path = path.replace('{studyId}', parameters['studyId'] + '');
-
-            if (parameters['studyId'] === undefined) {
-                reject(new Error('Missing required  parameter: studyId'));
-                return;
-            }
-
-            if (parameters['fractionGenomeAlteredFilter'] !== undefined) {
-                body = parameters['fractionGenomeAlteredFilter'];
-            }
-
-            if (parameters['fractionGenomeAlteredFilter'] === undefined) {
-                reject(new Error('Missing required  parameter: fractionGenomeAlteredFilter'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Fetch fraction genome altered
-     * @method
-     * @name CBioPortalAPIInternal#fetchFractionGenomeAlteredUsingPOST
-     * @param {string} studyId - Study ID e.g. acc_tcga
-     * @param {} fractionGenomeAlteredFilter - List of Sample IDs/Sample List ID
-     */
-    fetchFractionGenomeAlteredUsingPOST(parameters: {
-            'studyId': string,
-            'fractionGenomeAlteredFilter': FractionGenomeAlteredFilter,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < FractionGenomeAltered >
-        > {
-            return this.fetchFractionGenomeAlteredUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
     getSignificantCopyNumberRegionsUsingGETURL(parameters: {
         'studyId': string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
