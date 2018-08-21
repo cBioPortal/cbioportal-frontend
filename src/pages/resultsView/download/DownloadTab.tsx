@@ -73,7 +73,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
     }
 
     @computed get caseAlterationData(): ICaseAlteration[] {
-        if (this.props.store.selectedMolecularProfiles.isComplete) {
+        if (this.props.store.selectedMolecularProfiles.isComplete && this.props.store.coverageInformation.isComplete) {
             return generateCaseAlterationData(
                 this.props.store.selectedMolecularProfiles.result,
                 this.caseAggregatedDataByOQLLine,
