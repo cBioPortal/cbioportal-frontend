@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import {remoteData} from "../../shared/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import {action, computed, observable, ObservableMap, toJS} from "mobx";
+import {action, computed, observable, toJS, ObservableMap, reaction} from "mobx";
 import {
     ClinicalDataCount,
     ClinicalDataEqualityFilter,
@@ -20,12 +20,16 @@ import {
     ClinicalDataMultiStudyFilter,
     Gene,
     MolecularProfile,
-    MolecularProfileFilter
+    MolecularProfileFilter,
+    Patient, PatientFilter
 } from 'shared/api/generated/CBioPortalAPI';
 import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
-import {getClinicalAttributeUniqueKey, isPreSelectedClinicalAttr, isFiltered} from './StudyViewUtils';
+import {
+    getClinicalAttributeUniqueKey, isPreSelectedClinicalAttr, isFiltered,
+    makePatientToClinicalAnalysisGroup
+} from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import { bind } from '../../../node_modules/bind-decorator';
@@ -49,13 +53,23 @@ export enum ChartType {
 export enum UniqueKey {
     MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
     CNA_GENES_TABLE = 'CNA_GENES_TABLE',
-    MUTATION_COUNT_CNA_FRACTION = 'MUTATION_COUNT_CNA_FRACTION'
+    MUTATION_COUNT_CNA_FRACTION = 'MUTATION_COUNT_CNA_FRACTION',
+    DISEASE_FREE_SURVIVAL = 'dfs_survival',
+    OVERALL_SURVIVAL = 'os_survival'
 }
 
 export const MUTATION_COUNT = 'MUTATION_COUNT';
 export const FRACTION_GENOME_ALTERED = 'FRACTION_GENOME_ALTERED';
+export const OS_STATUS = "OS_STATUS";
+export const OS_MONTHS = "OS_MONTHS";
+export const DFS_STATUS = "DFS_STATUS";
+export const DFS_MONTHS = "DFS_MONTHS";
+
+export const SELECTED_ANALYSIS_GROUP_VALUE = "Selected";
+export const UNSELECTED_ANALYSIS_GROUP_VALUE = "Unselected";
 
 export type ClinicalDataCountWithColor = ClinicalDataCount & { color: string }
+export type AnalysisGroup = { value:string, color:string, legendText?:string};
 export type MutatedGenesData = MutationCountByGene[];
 export type CNAGenesData = CopyNumberCountByGene[];
 export type SurvivalType = {
@@ -90,7 +104,9 @@ type MutationCountVsFGADatum = {
 
 export class StudyViewPageStore {
 
-    constructor() { }
+    constructor() {
+        reaction(()=>this.filters, ()=>this.clearAnalysisGroupsSettings()); // whenever any data filters change, reset survival analysis settings
+    }
 
     public studyViewClinicalDataCountsCache = new StudyViewClinicalDataCountsCache()
 
@@ -117,6 +133,9 @@ export class StudyViewPageStore {
     @observable private queriedGeneSet = observable.map<boolean>();
 
     private clinicalDataCache:ClinicalDataCache = new ClinicalDataCache()
+
+    @observable.ref private _analysisGroupsClinicalAttribute:ClinicalAttribute|undefined;
+    @observable.ref private _analysisGroups:ReadonlyArray<AnalysisGroup>|undefined;
 
     @bind
     @action onCheckGene(hugoGeneSymbol: string) {
@@ -154,6 +173,172 @@ export class StudyViewPageStore {
         this.clearCNAGeneFilter()
         this.clearCustomCasesFilter()
     }
+
+    @action
+    updateAnalysisGroupsSettings(attribute:ClinicalAttribute, groups:ReadonlyArray<AnalysisGroup>) {
+        this._analysisGroupsClinicalAttribute = attribute;
+        this._analysisGroups = groups;
+    }
+
+    @action
+    clearAnalysisGroupsSettings() {
+        this._analysisGroupsClinicalAttribute = undefined;
+        this._analysisGroups = undefined;
+    }
+
+    @computed
+    get analysisGroupsSettings() {
+        if (this._analysisGroupsClinicalAttribute && this._analysisGroups) {
+            return {
+                clinicalAttribute: this._analysisGroupsClinicalAttribute,
+                groups: this._analysisGroups
+            };
+        } else {
+            // analysis groups for selected/unselected
+            return {
+                groups: [{
+                    value: SELECTED_ANALYSIS_GROUP_VALUE,
+                    color: "red",
+                    legendText: "Selected patients"
+                },{
+                    value: UNSELECTED_ANALYSIS_GROUP_VALUE,
+                    color: "blue",
+                    legendText: "Unselected patients"
+                }] as AnalysisGroup[]
+            }
+        }
+    }
+
+    readonly sampleToAnalysisGroup = remoteData({
+        await:()=>{
+            if (this.analysisGroupsSettings.clinicalAttribute) {
+                return [this.sampleToClinicalAnalysisGroup];
+            } else {
+                return [this.samples, this.selectedSamples];
+            }
+        },
+        invoke:()=>{
+            if (this.analysisGroupsSettings.clinicalAttribute) {
+                return Promise.resolve(this.sampleToClinicalAnalysisGroup.result!);
+            } else {
+                const selectedSamplesMap = _.keyBy(this.selectedSamples.result!, s=>s.uniqueSampleKey);
+                return Promise.resolve(_.reduce(this.samples.result!, (map, nextSample)=>{
+                    const sampleKey = nextSample.uniqueSampleKey;
+                    if (sampleKey in selectedSamplesMap) {
+                        map[sampleKey] = SELECTED_ANALYSIS_GROUP_VALUE;
+                    } else {
+                        map[sampleKey] = UNSELECTED_ANALYSIS_GROUP_VALUE;
+                    }
+                    return map;
+                }, {} as {[sampleKey:string]:string}));
+            }
+        }
+    });
+
+    readonly patientToAnalysisGroup = remoteData<{[patientKey:string]:string}>({
+        await:()=>{
+            if (this.analysisGroupsSettings.clinicalAttribute) {
+                return [this.patientToClinicalAnalysisGroup];
+            } else {
+                return [this.samples, this.selectedPatientKeys];
+            }
+        },
+        invoke:()=>{
+            if (this.analysisGroupsSettings.clinicalAttribute) {
+                return Promise.resolve(this.patientToClinicalAnalysisGroup.result!);
+            } else {
+                const selectedPatientsMap = _.keyBy(this.selectedPatientKeys.result!);
+                return Promise.resolve(_.reduce(this.samples.result!, (map, nextSample)=>{
+                    const patientKey = nextSample.uniquePatientKey;
+                    if (patientKey in selectedPatientsMap) {
+                        map[patientKey] = SELECTED_ANALYSIS_GROUP_VALUE;
+                    } else {
+                        map[patientKey] = UNSELECTED_ANALYSIS_GROUP_VALUE;
+                    }
+                    return map;
+                }, {} as {[patientKey:string]:string}));
+            }
+        }
+    });
+
+    readonly clinicalAnalysisGroupsData = remoteData({
+        await:()=>[this.selectedSamples, this.selectedPatients],
+        invoke:async()=>{
+            if (this.analysisGroupsSettings.clinicalAttribute !== undefined) {
+                const attr = this.analysisGroupsSettings.clinicalAttribute;
+                const data = await defaultClient.fetchClinicalDataUsingPOST({
+                    clinicalDataType: attr.patientAttribute ? "PATIENT" : "SAMPLE",
+                    clinicalDataMultiStudyFilter:{
+                        attributeIds: [attr.clinicalAttributeId],
+                        identifiers: attr.patientAttribute ?
+                            this.selectedPatients.result!.map(p=>({entityId:p.patientId, studyId:p.studyId})) :
+                            this.selectedSamples.result!.map(p=>({entityId:p.sampleId, studyId:p.studyId}))
+                    },
+                    projection: "SUMMARY"
+                });
+                const ret = data.reduce((map, clinData)=>{
+                    if (attr.patientAttribute) {
+                        map[clinData.uniquePatientKey] = clinData.value;
+                    } else {
+                        map[clinData.uniqueSampleKey] = clinData.value;
+                    }
+                    return map;
+                }, {} as {[caseKey:string]:string});
+                // add NA entries
+                if (attr.patientAttribute) {
+                    for (const patient of this.selectedPatients.result!) {
+                        if (!(patient.uniquePatientKey in ret)) {
+                            ret[patient.uniquePatientKey] = "NA";
+                        }
+                    }
+                } else {
+                    for (const sample of this.selectedSamples.result!) {
+                        if (!(sample.uniqueSampleKey in ret)) {
+                            ret[sample.uniqueSampleKey] = "NA";
+                        }
+                    }
+                }
+                // by the end, there is an entry for every selected patient or selected sample (depending on whether its patient attribute)
+                return {
+                    patientAttribute: attr.patientAttribute,
+                    caseToAnalysisGroup: ret
+                }
+            } else {
+                return new Promise<any>(()=>{}); // stay pending
+            }
+        }
+    });
+
+    readonly patientToClinicalAnalysisGroup = remoteData({
+        await:()=>[this.selectedSamples, this.clinicalAnalysisGroupsData],
+        invoke:()=>{
+            const data = this.clinicalAnalysisGroupsData.result!;
+            if (data.patientAttribute) {
+                return Promise.resolve(data.caseToAnalysisGroup);
+            } else {
+                return Promise.resolve(makePatientToClinicalAnalysisGroup(
+                    this.selectedSamples.result!,
+                    this.clinicalAnalysisGroupsData.result!.caseToAnalysisGroup
+                ));
+            }
+        }
+    });
+
+    readonly sampleToClinicalAnalysisGroup = remoteData({
+        await:()=>[this.selectedSamples, this.clinicalAnalysisGroupsData],
+        invoke:()=>{
+            const data = this.clinicalAnalysisGroupsData.result!;
+            if (!data.patientAttribute) {
+                return Promise.resolve(data.caseToAnalysisGroup);
+            } else {
+                const patientToAnalysisGroup = data.caseToAnalysisGroup;
+                return Promise.resolve(_.reduce(this.selectedSamples.result!, (map, sample)=>{
+                    map[sample.uniqueSampleKey] = patientToAnalysisGroup[sample.uniquePatientKey];
+                    return map;
+                }, {} as {[sampleKey:string]:string}));
+            }
+        }
+    });
 
     @action
     updateClinicalDataEqualityFilters(chartMeta: ChartMeta, values: string[]) {
@@ -240,15 +425,19 @@ export class StudyViewPageStore {
         return { studyIds: this.studyIds } as any;
     }
 
+    @computed get clinicalDataEqualityFilters() {
+        return this._clinicalDataEqualityFilterSet.values();
+    }
+
     @computed
     get filters() {
         let filters: StudyViewFilter = {} as any;
 
-        let clinicalDataEqualityFilter = this._clinicalDataEqualityFilterSet.values();
+        const clinicalDataEqualityFilters = this.clinicalDataEqualityFilters;
 
         //checking for empty since the api throws error when the clinicalDataEqualityFilter array is empty
-        if (clinicalDataEqualityFilter.length > 0) {
-            filters.clinicalDataEqualityFilters = clinicalDataEqualityFilter;
+        if (clinicalDataEqualityFilters.length > 0) {
+            filters.clinicalDataEqualityFilters = clinicalDataEqualityFilters;
         }
 
         if (this._mutatedGeneFilter.length > 0) {
@@ -327,6 +516,20 @@ export class StudyViewPageStore {
         }),
         default: []
     });
+
+    @computed get analysisGroupsPossible() {
+        // analysis groups possible iff there are visible analysis groups-capable charts
+        const analysisGroupsCharts =
+            [UniqueKey.MUTATION_COUNT_CNA_FRACTION, UniqueKey.DISEASE_FREE_SURVIVAL, UniqueKey.OVERALL_SURVIVAL] as string[];
+        let ret = false;
+        for (const chartMeta of this.visibleAttributes) {
+            if (analysisGroupsCharts.indexOf(chartMeta.uniqueKey) > -1) {
+                ret = true;
+                break;
+            }
+        }
+        return ret;
+    }
 
     @computed
     get chartMetaSet(): { [id: string]: ChartMeta } {
@@ -499,7 +702,7 @@ export class StudyViewPageStore {
             })
         },
         default: []
-    })
+    });
 
     readonly studyWithSamples = remoteData<StudyWithSamples[]>({
         await: () => [this.studies, this.samples],
@@ -522,26 +725,66 @@ export class StudyViewPageStore {
         default: []
     });
 
+    readonly samplesWithNAInSelectedClinicalData = remoteData<Sample[]>({
+        await:()=>[
+            this.samples
+        ],
+        invoke: async() => {
+            const samplesWithoutNA = await internalClient.fetchFilteredSamplesUsingPOST({
+                studyViewFilter: Object.assign({}, this.emptyFilter, {
+                    clinicalDataEqualityFilters: this.clinicalDataEqualityFilters.map(
+                        f=>Object.assign({}, f, { values: ["NA"] })
+                    ),
+                    filterType: "EXCLUSION"
+                }) as any as StudyViewFilter
+            });
+            const uniqueSampleKeysWithoutNA = _.keyBy(samplesWithoutNA, s=>s.uniqueSampleKey);
+            const samplesWithNA = samplesWithoutNA.filter(s=>!(s.uniqueSampleKey in uniqueSampleKeysWithoutNA));
+            return samplesWithNA;
+        },
+        default: []
+    });
+
+    readonly patientKeysWithNAInSelectedClinicalData = remoteData<string[]>({
+        await:()=>[this.samplesWithNAInSelectedClinicalData],
+        invoke:()=>{
+            return Promise.resolve(
+                _.uniq(this.samplesWithNAInSelectedClinicalData.result!.map(s=>s.uniquePatientKey))
+            );
+        }
+    });
+
     @computed
     get selectedSamplesMap() {
         return _.keyBy(this.selectedSamples.result!, s=>s.uniqueSampleKey);
     }
 
-    readonly selectedPatientIds = remoteData<string[]>({
+    readonly selectedPatientKeys = remoteData<string[]>({
         await: () => [this.selectedSamples],
         invoke: async () => {
-            return _.uniq(this.selectedSamples.result.map(sample => sample.patientId));
+            return _.uniq(this.selectedSamples.result.map(sample => sample.uniquePatientKey));
         },
         default: []
     });
 
-    readonly unSelectedPatientIds = remoteData<string[]>({
-        await: () => [this.samples, this.selectedPatientIds],
+    readonly selectedPatients = remoteData<Patient[]>({
+        await:()=>[this.selectedSamples],
+        invoke:()=>{
+            return defaultClient.fetchPatientsUsingPOST({
+                patientFilter: {
+                    uniquePatientKeys: this.selectedSamples.result!.map(s=>s.uniquePatientKey)
+                } as PatientFilter
+            });
+        }
+    });
+
+    readonly unSelectedPatientKeys = remoteData<string[]>({
+        await: () => [this.samples, this.selectedPatientKeys],
         invoke: async () => {
 
             const unselectedPatientSet = _.reduce(this.samples.result, (acc: { [id: string]: boolean }, next) => {
-                if (!_.includes(this.selectedPatientIds.result, next.patientId)) {
-                    acc[next.patientId] = true;
+                if (!_.includes(this.selectedPatientKeys.result, next.uniquePatientKey)) {
+                    acc[next.uniquePatientKey] = true;
                 }
                 return acc;
             }, {});
@@ -587,22 +830,22 @@ export class StudyViewPageStore {
         let survivalTypes: SurvivalType[] = [];
 
         this.clinicalAttributes.result.forEach(obj => {
-            if (obj.clinicalAttributeId === 'OS_STATUS') {
+            if (obj.clinicalAttributeId === OS_STATUS) {
                 osStatusFlag = true;
-            } else if (obj.clinicalAttributeId === 'OS_MONTHS') {
+            } else if (obj.clinicalAttributeId === OS_MONTHS) {
                 osMonthsFlag = true;
-            } else if (obj.clinicalAttributeId === 'DFS_STATUS') {
+            } else if (obj.clinicalAttributeId === DFS_STATUS) {
                 dfsStatusFlag = true;
-            } else if (obj.clinicalAttributeId === 'DFS_MONTHS') {
+            } else if (obj.clinicalAttributeId === DFS_MONTHS) {
                 dfsMonthsFlag = true;
             }
         });
 
         if (osStatusFlag && osMonthsFlag) {
             survivalTypes.push({
-                id: 'os_survival',
+                id: UniqueKey.OVERALL_SURVIVAL,
                 title: 'Overall Survival',
-                associatedAttrs: ['OS_STATUS', 'OS_MONTHS'],
+                associatedAttrs: [OS_STATUS, OS_MONTHS],
                 filter: ['DECEASED'],
                 alteredGroup: [],
                 unalteredGroup: []
@@ -611,9 +854,9 @@ export class StudyViewPageStore {
         }
         if (dfsStatusFlag && dfsMonthsFlag) {
             survivalTypes.push({
-                id: 'dfs_survival',
+                id: UniqueKey.DISEASE_FREE_SURVIVAL,
                 title: 'Disease Free Survival',
-                associatedAttrs: ['DFS_STATUS', 'DFS_MONTHS'],
+                associatedAttrs: [DFS_STATUS, DFS_MONTHS],
                 filter: ['Recurred/Progressed', 'Recurred'],
                 alteredGroup: [],
                 unalteredGroup: []
@@ -635,16 +878,16 @@ export class StudyViewPageStore {
         });
     }
     readonly survivalPlotData = remoteData<SurvivalType[]>({
-        await: () => [this.survivalData, this.selectedPatientIds, this.unSelectedPatientIds],
+        await: () => [this.survivalData, this.selectedPatientKeys, this.unSelectedPatientKeys],
         invoke: async () => {
 
             return this.survivalPlots.map(obj => {
                 obj.alteredGroup = getPatientSurvivals(
                     this.survivalData.result,
-                    this.selectedPatientIds.result!, obj.associatedAttrs[0], obj.associatedAttrs[1], s => obj.filter.indexOf(s) !== -1);
+                    this.selectedPatientKeys.result!, obj.associatedAttrs[0], obj.associatedAttrs[1], s => obj.filter.indexOf(s) !== -1);
                 obj.unalteredGroup = getPatientSurvivals(
                     this.survivalData.result,
-                    this.unSelectedPatientIds.result!, obj.associatedAttrs[0], obj.associatedAttrs[1], s => obj.filter.indexOf(s) !== -1);
+                    this.unSelectedPatientKeys.result!, obj.associatedAttrs[0], obj.associatedAttrs[1], s => obj.filter.indexOf(s) !== -1);
                 return obj
             });
         },
@@ -669,7 +912,7 @@ export class StudyViewPageStore {
                 clinicalDataMultiStudyFilter: filter
             })
 
-            return _.groupBy(data, 'patientId')
+            return _.groupBy(data, 'uniquePatientKey')
         },
         default: {}
     });
