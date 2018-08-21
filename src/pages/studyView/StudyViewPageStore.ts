@@ -2,15 +2,13 @@ import * as _ from 'lodash';
 import {remoteData} from "../../shared/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import { action, computed, observable, toJS, ObservableMap } from "mobx";
+import {action, computed, observable, ObservableMap, toJS} from "mobx";
 import {
     ClinicalDataCount,
     ClinicalDataEqualityFilter,
     CopyNumberCountByGene,
     CopyNumberGeneFilter,
     CopyNumberGeneFilterElement,
-    FractionGenomeAltered,
-    FractionGenomeAlteredFilter,
     MutationCountByGene,
     MutationGeneFilter,
     Sample,
@@ -18,26 +16,23 @@ import {
     StudyViewFilter
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {
+    CancerStudy,
     ClinicalAttribute,
     ClinicalData,
     ClinicalDataMultiStudyFilter,
-    MolecularProfile,
-    MolecularProfileFilter,
     Gene,
-    MutationCount,
-    CancerStudy
+    MolecularProfile,
+    MolecularProfileFilter
 } from 'shared/api/generated/CBioPortalAPI';
 import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
 import {getClinicalAttributeUniqueKey, isPreSelectedClinicalAttr} from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
-import {Column} from "../../shared/components/lazyMobXTable/LazyMobXTable";
-import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
-import { bind } from '../../../node_modules/bind-decorator';
-import { updateGeneQuery } from 'pages/studyView/StudyViewUtils';
-import { stringListToSet } from 'shared/lib/StringUtils';
-import client from "../../shared/api/cbioportalClientInstance";
+import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
+import {bind} from '../../../node_modules/bind-decorator';
+import {updateGeneQuery} from 'pages/studyView/StudyViewUtils';
+import {stringListToSet} from 'shared/lib/StringUtils';
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT'
 
@@ -377,12 +372,17 @@ export class StudyViewPageStore {
             };
         }
 
-        _chartMetaSet[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = {
-            uniqueKey: UniqueKey.MUTATION_COUNT_CNA_FRACTION,
-            chartType: ChartType.SCATTER,
-            displayName: 'Mutation count Vs. CNA',
-            description: ''
-        };
+        const allAttrs = this.clinicalAttributes.result.map(attr => attr.clinicalAttributeId);
+        if (_.every(['MUTATION_COUNT', 'FRACTION_GENOME_ALTERED'], attr => {
+                return _.includes(allAttrs, attr);
+            })) {
+            _chartMetaSet[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = {
+                uniqueKey: UniqueKey.MUTATION_COUNT_CNA_FRACTION,
+                chartType: ChartType.SCATTER,
+                displayName: 'Mutation count Vs. CNA',
+                description: ''
+            };
+        }
 
         return _chartMetaSet;
     }
@@ -672,76 +672,46 @@ export class StudyViewPageStore {
         default: {}
     });
 
-    readonly mutationCounts = remoteData<MutationCount[]>({
-        await:()=>[
-            this.samples,
-            this.mutationProfiles
-        ],
-        invoke:async()=>{
-            const studyToSamples = _.groupBy(this.samples.result!, s=>s.studyId);
-            return _.flatten(await Promise.all(
-                this.mutationProfiles.result!.map(mutationProfile=>{
-                    const samples = studyToSamples[mutationProfile.studyId];
-                    if (samples && samples.length) {
-                        return defaultClient.fetchMutationCountsInMolecularProfileUsingPOST({
-                            molecularProfileId: mutationProfile.molecularProfileId,
-                            sampleIds: samples.map(s=>s.sampleId)
-                        });
-                    } else {
-                        return Promise.resolve([]);
-                    }
-                })
-            ));
-        }
-    });
-
-    readonly fractionGenomeAltered = remoteData<FractionGenomeAltered[]>({
-        await:()=>[
-            this.samples
-        ],
-        invoke:async()=>{
-            const studyToSamples = _.groupBy(this.samples.result!, s=>s.studyId);
-            return _.flatten(await Promise.all(
-                _.map(studyToSamples, (samples, studyId)=>{
-                    if (samples && samples.length) {
-                        return internalClient.fetchFractionGenomeAlteredUsingPOST({
-                            studyId,
-                            fractionGenomeAlteredFilter: {
-                                sampleIds: samples.map(s=>s.sampleId)
-                            } as FractionGenomeAlteredFilter
-                        });
-                    } else {
-                        return Promise.resolve([]);
-                    }
-                })
-            ));
-        }
-    });
-
     readonly mutationCountVsFractionGenomeAlteredData = remoteData({
-        await:()=>[
-            this.mutationCounts,
-            this.fractionGenomeAltered
-        ],
-        invoke: ()=>{
-            const sampleToMutationCount = _.keyBy(this.mutationCounts.result!, c=>c.uniqueSampleKey);
-            const sampleToFga = _.keyBy(this.fractionGenomeAltered.result!, f=>f.uniqueSampleKey);
-            const data = [];
-            for (const sampleKey of Object.keys(sampleToMutationCount)) {
-                const mutationCount = sampleToMutationCount[sampleKey];
-                const fga = sampleToFga[sampleKey];
-                if (mutationCount && fga) {
-                    data.push({
-                        x: fga.value,
-                        y: mutationCount.mutationCount,
-                        studyId: mutationCount.studyId,
-                        sampleId: mutationCount.sampleId,
-                        patientId: mutationCount.patientId,
-                        uniqueSampleKey: mutationCount.uniqueSampleKey
+        await:()=>[this.clinicalAttributes, this.samples],
+        invoke: async ()=>{
+            const filter: ClinicalDataMultiStudyFilter = {
+                attributeIds: ['MUTATION_COUNT', 'FRACTION_GENOME_ALTERED'],
+                identifiers: _.map(this.samples.result!, obj => {
+                    return {
+                        "entityId": obj.sampleId,
+                        "studyId": obj.studyId
+                    }
+                })
+            };
+
+            let data:ClinicalData[] = await defaultClient.fetchClinicalDataUsingPOST({
+                clinicalDataType: "SAMPLE",
+                clinicalDataMultiStudyFilter: filter
+            })
+
+            let sampleScatterData: { [id: string]: { [id: string]: ClinicalData } } = {};
+            _.each(data, datum => {
+                if (!_.has(sampleScatterData, datum.uniqueSampleKey)) {
+                    sampleScatterData[datum.uniqueSampleKey] = {};
+                }
+                sampleScatterData[datum.uniqueSampleKey][datum.clinicalAttributeId] = datum;
+            })
+
+            let result: any = [];
+            _.each(sampleScatterData, datum => {
+                if (_.isObject(datum['MUTATION_COUNT']) && _.isObject(datum['FRACTION_GENOME_ALTERED'])) {
+                    result.push({
+                        x: Number(datum.FRACTION_GENOME_ALTERED.value),
+                        y: Number(datum.MUTATION_COUNT.value),
+                        studyId: datum.MUTATION_COUNT.studyId,
+                        sampleId: datum.MUTATION_COUNT.sampleId,
+                        patientId: datum.MUTATION_COUNT.patientId,
+                        uniqueSampleKey: datum.MUTATION_COUNT.uniqueSampleKey
                     });
                 }
-            }
-            return Promise.resolve(data);
+            });
+            return Promise.resolve(result);
         }
     });
 }
