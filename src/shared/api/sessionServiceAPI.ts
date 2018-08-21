@@ -45,4 +45,21 @@ export default class sessionServiceAPI {
                    }
             });
     }
+
+    saveSession(data:any) {
+        return request
+            .post(getSessionServiceApiUrl())
+            .send(data)
+            .then((res) => {
+                return res.body
+            });
+    }
+
+    getSession(sessionId:string) {
+        return request
+            .get(`${getSessionServiceApiUrl()}/${sessionId}`)
+            .then((res) => {
+                return res.body
+            });
+    }
 }
