@@ -146,7 +146,7 @@ th.reactable-header-sort-asc:after {
 .pillTabs {
   > .nav.nav-pills {
 
-    margin-bottom:5px;
+    margin-bottom:$standardMargin;
 
     li {
       a {
@@ -507,3 +507,10 @@ h3.hr {
   display:inline-block;
 }
 
+.noOqlWarning {
+  color:#74bedb;
+}
+
+.tabMessageContainer {
+  padding-bottom:$standardMargin;
+}
