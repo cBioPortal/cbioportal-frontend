@@ -3,6 +3,9 @@ import {action, computed, observable, runInAction} from 'mobx';
 import * as _ from 'lodash';
 import URL, {QueryParams} from 'url';
 import {remoteData} from "../api/remoteData";
+import {getSessionServiceApiUrl} from "../api/urls";
+import request from 'superagent';
+import sessionClient from "../api/sessionServiceInstance";
 
 export function getSessionKey(hash:string){
     return `session_${hash}`
@@ -14,6 +17,13 @@ export interface PortalSession {
     path:string;
 }
 
+function saveRemoteSession(data:any){
+    return sessionClient.saveSession(data);
+}
+
+function getRemoteSession(sessionId:string){
+    return sessionClient.getSession(sessionId)
+}
 
 export default class ExtendedRouterStore extends RouterStore {
 
@@ -24,23 +34,37 @@ export default class ExtendedRouterStore extends RouterStore {
         return this.location.query.sessionId;
     }
 
-    remoteSessionData = remoteData({
-        invoke: () => {
-            if (this.sessionId) {
-                console.log("fetching session");
-                const p = new Promise((resolve) => {
-                    setTimeout(() => {
-                        resolve()
-                    }, 0);
-                });
-                return p;
-            } else {
-                return Promise.resolve({});
-            }
+    // localStorageSessionData = remoteData({
+    //     invoke: () => {
+    //         if (this.sessionId) {
+    //             console.log("fetching session");
+    //             const p = new Promise((resolve) => {
+    //                 setTimeout(() => {
+    //                     resolve()
+    //                 }, 0);
+    //             });
+    //             return p;
+    //         } else {
+    //             return Promise.resolve({});
+    //         }
+    //
+    //     },
+    //     onResult:()=>{
+    //         this._session = JSON.parse(localStorage.getItem(getSessionKey(this.location.query.sessionId!))!);
+    //     }
+    // });
 
+    remoteSessionData = remoteData({
+        invoke: async () => {
+            const sessionData = await getRemoteSession(this.sessionId);
+            return sessionData;
         },
         onResult:()=>{
-            this._session = JSON.parse(localStorage.getItem(getSessionKey(this.location.query.sessionId!))!);
+            this._session = {
+                id:this.remoteSessionData.result!.id,
+                query:this.remoteSessionData.result!.data,
+                path:this.location.pathname
+            }
         }
     });
 
@@ -68,17 +92,23 @@ export default class ExtendedRouterStore extends RouterStore {
 
         let session:any = null;
 
-
-
         // if we're changing the query AND query meets a certain threshold, switch to session
         if (this.sessionEnabledForPath(path) && _.size(newParams) > 0 && JSON.stringify(newQuery).length > 10) {
             session = {
-                id:Date.now(),
+                id:'pending',
                 query:newQuery,
                 path:path
             };
             this._session = session;
-            localStorage.setItem(getSessionKey(session.id), JSON.stringify(session));
+
+            saveRemoteSession(session.query).then((key)=>{
+                this.push( URL.format({pathname: path, query: {sessionId:key.id}, hash:this.location.hash}) );
+                //localStorage.setItem(getSessionKey(session.id), JSON.stringify(session));
+            });
+
+
+            // for local storage, wrap this in a promse
+
         }
 
         // if we have a session then we want to push it's id to url
@@ -89,7 +119,6 @@ export default class ExtendedRouterStore extends RouterStore {
         this.push( URL.format({pathname: path, query: pushToUrl, hash:this.location.hash}) );
     }
 
-    //@observable public _query = undefined;
     @observable public _session:PortalSession | null = null;
 
     @computed
