@@ -213,7 +213,10 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"cancer_types_summary",
                 getTab: () => {
-                    return (<MSKTab key={1} id="cancerTypesSummaryTab" linkText="Cancer Types Summary">
+
+                    const isComplete = store.samplesExtendedWithClinicalData.isComplete && store.alterationsByGeneBySampleKey.isComplete && store.studies.isComplete;
+
+                    return (<MSKTab key={1} id="cancerTypesSummaryTab" loading={!isComplete} linkText="Cancer Types Summary">
                         <CancerSummaryContainer
                             genes={store.genes.result!}
                             samplesExtendedWithClinicalData={store.samplesExtendedWithClinicalData.result!}
@@ -228,7 +231,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"mutual_exclusivity",
                 getTab: () => {
-                    return <MSKTab key={5} id="mutualExclusivityTab" linkText="Mutual Exclusivity">
+                    return <MSKTab key={5} id="mutualExclusivityTab" loading={!store.isSampleAlteredMap.isComplete} linkText="Mutual Exclusivity">
                         <MutualExclusivityTab store={store}/>
                     </MSKTab>
                 }
