@@ -236,3 +236,32 @@ export function isFiltered(filter: StudyViewFilter) {
         _.isEmpty(filter.sampleIdentifiers)
     ));
 }
+
+export function makePatientToClinicalAnalysisGroup(
+    samples:Pick<Sample, "uniqueSampleKey"|"uniquePatientKey">[],
+    sampleToAnalysisGroup:{[sampleKey:string]:string}
+) {
+    // only include a patient if all its samples are in the same analysis group
+    const badPatients:{[patientKey:string]:boolean} = {};
+    return _.reduce(samples, (map, sample)=>{
+        const patientKey = sample.uniquePatientKey;
+        if (!(patientKey in badPatients)) {
+            // weve not already determined that not all this patients samples are in the same group
+
+            const sampleGroup = sampleToAnalysisGroup[sample.uniqueSampleKey];
+            if (patientKey in map) {
+                if (map[patientKey] !== sampleGroup) {
+                    // this means that weve seen another sample for this patient thats not
+                    //  in the same group. therefore, not all this patients samples are in
+                    //  the same group, so we're going to omit it
+                    delete map[patientKey];
+                    badPatients[patientKey] = true;
+                } // otherwise, we already have the right group, so dont do anything
+            } else {
+                // this is the first sample weve seen from this patient
+                map[patientKey] = sampleGroup;
+            }
+        }
+        return map;
+    }, {} as {[patientKey:string]:string});
+}
