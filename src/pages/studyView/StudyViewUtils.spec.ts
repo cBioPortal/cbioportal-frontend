@@ -1,5 +1,5 @@
 import { assert } from 'chai';
-import { updateGeneQuery } from 'pages/studyView/StudyViewUtils';
+import {makePatientToClinicalAnalysisGroup, updateGeneQuery} from 'pages/studyView/StudyViewUtils';
 import { getVirtualStudyDescription } from 'pages/studyView/StudyViewUtils';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
 import { StudyViewFilter } from 'shared/api/generated/CBioPortalAPIInternal';
@@ -96,6 +96,40 @@ describe('StudyViewUtils', () => {
                     [],
                     'user1'
                 ).endsWith('by user1'));
+        });
+    });
+
+    describe('makePatientToClinicalAnalysisGroup', ()=>{
+        it("returns correct result on empty input", ()=>{
+            assert.deepEqual(makePatientToClinicalAnalysisGroup([], {}), {});
+        });
+        it("returns correct result with no conflicting samples", ()=>{
+            assert.deepEqual(
+                makePatientToClinicalAnalysisGroup(
+                    [{ uniqueSampleKey: "sample1.1", uniquePatientKey: "patient1"},
+                    { uniqueSampleKey: "sample1.2", uniquePatientKey: "patient1"},
+                        { uniqueSampleKey: "sample2.1", uniquePatientKey: "patient2"},
+                        { uniqueSampleKey: "sample3.1", uniquePatientKey: "patient3"},
+                        { uniqueSampleKey: "sample3.2", uniquePatientKey: "patient3"}
+                    ],
+                    { "sample1.1":"a", "sample1.2":"a", "sample2.1":"b", "sample3.1":"c", "sample3.2":"c"}
+                ),
+                { "patient1":"a", "patient2":"b", "patient3":"c"}
+            );
+        });
+        it("omits patients with samples in different analysis groups", ()=>{
+            assert.deepEqual(
+                makePatientToClinicalAnalysisGroup(
+                    [{ uniqueSampleKey: "sample1.1", uniquePatientKey: "patient1"},
+                        { uniqueSampleKey: "sample1.2", uniquePatientKey: "patient1"},
+                        { uniqueSampleKey: "sample2.1", uniquePatientKey: "patient2"},
+                        { uniqueSampleKey: "sample3.1", uniquePatientKey: "patient3"},
+                        { uniqueSampleKey: "sample3.2", uniquePatientKey: "patient3"}
+                    ],
+                    { "sample1.1":"a", "sample1.2":"b", "sample2.1":"b", "sample3.1":"c", "sample3.2":"c"}
+                ),
+                { "patient2":"b", "patient3":"c"}
+            );
         });
     });
 });
