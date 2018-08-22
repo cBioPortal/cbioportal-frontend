@@ -171,7 +171,7 @@ export default class MutationMapperToolStore
                         this.canonicalTranscriptsByHugoSymbol.result[gene.hugoGeneSymbol].transcriptId : undefined;
                     
                     const getMutations = () => {
-                        if (canonicalTranscriptId && this.indexedVariantAnnotations.result) {
+                        if (canonicalTranscriptId && this.indexedVariantAnnotations.result && !_.isEmpty(this.indexedVariantAnnotations.result)) {
                             return filterMutationsByTranscriptId(this.mutations.result, canonicalTranscriptId, this.indexedVariantAnnotations.result);
                         } else {
                             return this.mutationsByGene[gene.hugoGeneSymbol];
