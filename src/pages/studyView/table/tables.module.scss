@@ -1,9 +1,33 @@
 .studyViewTablesTable {
-  .selectd {
-    font-weight: bold
-  }
-  .geneSymbol:hover {
-    border: 2px solid #1974b8;
-    cursor: pointer;
-  }
+  padding: 0 1px;
 }
+
+.geneSymbol:hover {
+  border: 2px solid #1974b8;
+  cursor: pointer;
+}
+
+.selected {
+  font-weight: bold
+}
+
+span {
+  white-space: nowrap;
+  overflow: hidden;
+  -ms-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+}
+
+.headerColumn {
+  text-transform: none;
+  font-size: 12px;
+}
+
+.headerRow {
+  border-bottom: 1px solid #d1d1d1;
+}
+
+.oddRow {
+  background-color: #f9f9f9;
+}
+

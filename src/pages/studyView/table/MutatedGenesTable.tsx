@@ -1,6 +1,5 @@
 import * as React from "react";
 import {MutatedGenesData} from "pages/studyView/StudyViewPageStore";
-import {default as LazyMobXTable} from "shared/components/lazyMobXTable/LazyMobXTable";
 import {observer} from "mobx-react";
 import styles from "./tables.module.scss";
 import {MutationCountByGene} from "shared/api/generated/CBioPortalAPIInternal";
@@ -10,17 +9,18 @@ import {If} from 'react-if';
 import * as _ from 'lodash';
 import classnames from 'classnames';
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
+import FixedHeaderTable from "./FixedHeaderTable";
 
 export interface IMutatedGenesTablePros {
     promise: MobxPromise<MutatedGenesData>;
     filters: number[];
     onUserSelection: (value: number) => void;
     numOfSelectedSamples: number;
-    onGeneSelect:(hugoGeneSymbol:string)=>void;
+    onGeneSelect: (hugoGeneSymbol: string) => void;
     selectedGenes: string[]
 }
 
-class MutatedGenesTableComponent extends LazyMobXTable<MutationCountByGene> {
+class MutatedGenesTableComponent extends FixedHeaderTable<MutationCountByGene> {
 }
 
 @observer
@@ -29,7 +29,8 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         {
             name: 'Gene',
             render: (data: MutationCountByGene) => {
-                const overlay = () => <span>{`Click ${data.hugoGeneSymbol} to ${_.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? 'remove' : 'add'} from your query`}</span>;
+                const overlay = () =>
+                    <span>{`Click ${data.hugoGeneSymbol} to ${_.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? 'remove' : 'add'} from your query`}</span>;
                 return (
                     <DefaultTooltip
                         placement="left"
@@ -37,19 +38,29 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                         destroyTooltipOnHide={true}
                     >
                                                     <span
-                                                        className={classnames(styles.geneSymbol, _.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? styles.selectd : undefined)}
+                                                        className={classnames(styles.geneSymbol, _.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? styles.selected : undefined)}
                                                         onClick={() => this.props.onGeneSelect(data.hugoGeneSymbol)}>
                                                         {data.hugoGeneSymbol}
                                                     </span>
                     </DefaultTooltip>
                 )
             },
-            width: "40%"
+            sortBy: (data: MutationCountByGene) => data.hugoGeneSymbol,
+            defaultSortDirection: 'asc' as 'asc',
+            filter: (data: MutationCountByGene, filterString: string, filterStringUpper: string) => {
+                return data.hugoGeneSymbol.indexOf(filterStringUpper) > -1;
+            },
+            width: 160
         },
         {
             name: '# Mut',
             render: (data: MutationCountByGene) => <span>{data.totalCount}</span>,
-            width: "20%"
+            sortBy: (data: MutationCountByGene) => data.totalCount,
+            defaultSortDirection: 'desc' as 'desc',
+            filter: (data: MutationCountByGene, filterString: string, filterStringUpper: string) => {
+                return _.toString(data.totalCount).indexOf(filterStringUpper) > -1;
+            },
+            width: 80
         },
         {
             name: '#',
@@ -60,26 +71,31 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                 >
                     {data.countByEntity}
                 </LabeledCheckbox>,
-            width: "20%"
+            sortBy: (data: MutationCountByGene) => data.countByEntity,
+            defaultSortDirection: 'desc' as 'desc',
+            filter: (data: MutationCountByGene, filterString: string, filterStringUpper: string) => {
+                return _.toString(data.countByEntity).indexOf(filterStringUpper) > -1;
+            },
+            width: 80
         },
         {
             name: 'Freq',
             render: (data: MutationCountByGene) => <span>{data.frequency + '%'}</span>,
-            width: "20%"
+            sortBy: (data: MutationCountByGene) => data.frequency,
+            defaultSortDirection: 'desc' as 'desc',
+            filter: (data: MutationCountByGene, filterString: string, filterStringUpper: string) => {
+                return _.toString(data.frequency).indexOf(filterStringUpper) > -1;
+            },
+            width: 80
         }
     ];
 
     public render() {
         return (
-            <div className={styles.studyViewTablesTable}>
-                <MutatedGenesTableComponent
-                    initialItemsPerPage={10}
-                    showCopyDownload={false}
-                    showColumnVisibility={false}
-                    data={this.props.promise.result}
-                    columns={this._tableColumns}
-                />
-            </div>
+            <MutatedGenesTableComponent
+                data={this.props.promise.result || []}
+                columns={this._tableColumns}
+            />
         );
     }
 }
