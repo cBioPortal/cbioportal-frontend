@@ -5,6 +5,7 @@ import {ThreeBounce} from 'better-react-spinkit';
 import ReactResizeDetector from 'react-resize-detector';
 import './styles.scss';
 import autobind from "autobind-decorator";
+import Spinner from "react-spinkit";
 
 export interface IMSKTabProps {
     inactive?:boolean;
@@ -57,6 +58,7 @@ export class MSKTab extends React.Component<IMSKTabProps,{}> {
 }
 
 interface IMSKTabsState {
+    isSwitchingTab:boolean;
     activeTabId:string;
     currentPage:number;
     pageBreaks:string[];
@@ -79,6 +81,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
     private shownTabs:string[] = [];
     private navTabsRef: HTMLUListElement;
     private tabRefs: {id:string, element:HTMLLIElement}[] = [];
+    private isSwitchingTab = false;
 
     public static defaultProps: Partial<IMSKTabsProps> = {
         unmountOnHide: true
@@ -88,6 +91,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
         super();
 
         this.state = {
+            isSwitchingTab:false,
             currentPage: 1,
             pageBreaks: [] as string[]
         } as IMSKTabsState;
@@ -111,6 +115,9 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
 
     setActiveTab(id: string, datum?:any){
         this.props.onTabClick && this.props.onTabClick(id, datum);
+        this.setState({
+            isSwitchingTab: true
+        } as IMSKTabsState);
     }
 
     navTabsRefHandler(ul: HTMLUListElement) {
@@ -188,6 +195,16 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                 effectiveActiveTab = tabElement.props.id;
             }
 
+            let tabContent = arr;
+            if (this.state.isSwitchingTab) {
+                tabContent = [<div className={"tabLoader"}><Spinner className={"bigSpinner"} fadeIn="quarter" name="line-scale-pulse-out" color="steelblue"/></div>];
+                setTimeout(()=>{
+                    this.setState({
+                        isSwitchingTab: false
+                    } as IMSKTabsState);
+                });
+            }
+
 
             return (
                 <div
@@ -195,7 +212,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                     className={ classnames('msk-tabs', this.props.className) }
                 >
                     {this.navTabs(children, effectiveActiveTab)}
-                    <div className="tab-content">{arr}</div>
+                    <div className="tab-content">{tabContent}</div>
                 </div>
             );
         } else {

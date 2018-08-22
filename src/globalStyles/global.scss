@@ -187,8 +187,6 @@ th.reactable-header-sort-asc:after {
 
 .mainTabs {
 
-
-
   > .nav {
     @extend .portalWidth;
     margin:0 auto;
@@ -197,12 +195,21 @@ th.reactable-header-sort-asc:after {
 
     > li {
       white-space:nowrap;
+
+      &:not(.active) {
+       a:hover {
+         background:none !important;
+         border-color:transparent !important;
+       }
+      }
+
     }
 
     .active {
       a {
         border-top: 3px solid $brand-primary !important;
         padding-top: 9px;
+        text-decoration:none !important;
       }
     }
 
@@ -215,6 +222,12 @@ th.reactable-header-sort-asc:after {
     border-bottom:1px solid #ddd;
     margin-top:-1px;
     min-height:500px;
+
+    .tabLoader {
+      position:relative;
+      left:50%;
+      top:50%;
+    }
 
     h4 {
       color:$brand-primary;
@@ -523,5 +536,19 @@ h3.hr {
   padding-bottom:$standardMargin;
   &:empty {
     display:none;
+  }
+}
+
+.bigSpinner {
+  > div {
+    height:100px;
+    width:8px;
+    margin:4px;
+  }
+}
+
+.spinnerColor {
+  > div {
+    color:$brand-primary !important;
   }
 }
