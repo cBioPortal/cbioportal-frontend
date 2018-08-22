@@ -504,9 +504,6 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         legendLocationWidthThreshold={900}
                         boxCalculationFilter={this.boxCalculationFilter}
                 />
-                    {this.mutationDataExists.result && (
-                        <div style={{marginTop:20}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
-                    )}
                 </ChartContainer>
             );
         } else {
@@ -623,6 +620,9 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                                     <Observer>
                                         {this.getChart}
                                     </Observer>
+                                    {this.mutationDataExists.result && (
+                                        <div style={{marginTop:20}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
+                                    )}
                                 </div>
                             </Then>
                             <Else>
