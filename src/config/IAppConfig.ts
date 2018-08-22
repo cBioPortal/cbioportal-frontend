@@ -34,6 +34,8 @@ export interface IAppConfig {
     skinRightNavShowTestimonials?: boolean;
     skinRightNavExamplesHTML?: string;
     skinRightNavWhatsNewBlurb?: string;
+    skinShowDataSetsTab?: boolean;
+    skinShowNewsTab?: boolean;
     userEmailAddress?: string;
     querySetsOfGenes?: {"id": string, "genes":string[]}[];
     // labels to be displayed in oncoprint "Mutation color" menu for custom annotation of driver and passenger mutations in the oncoprint.
