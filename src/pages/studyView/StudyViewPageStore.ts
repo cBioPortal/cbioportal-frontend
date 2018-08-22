@@ -32,12 +32,10 @@ import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
 import {getClinicalAttributeUniqueKey, isPreSelectedClinicalAttr} from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
-import {Column} from "../../shared/components/lazyMobXTable/LazyMobXTable";
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import { bind } from '../../../node_modules/bind-decorator';
 import { updateGeneQuery } from 'pages/studyView/StudyViewUtils';
 import { stringListToSet } from 'shared/lib/StringUtils';
-import client from "../../shared/api/cbioportalClientInstance";
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT'
 
@@ -110,6 +108,10 @@ export class StudyViewPageStore {
     @observable private geneQueries: SingleGeneQuery[] = [];
 
     @observable private queriedGeneSet = observable.map<boolean>();
+
+    private _fetchedClinicalDataSamples: string[] = [];
+
+    private _sampleClinicalDataSet: { [uniqueSampleKey: string]: { [id: string]: string; }; } = {};
 
     @bind
     @action onCheckGene(hugoGeneSymbol: string) {
@@ -491,12 +493,23 @@ export class StudyViewPageStore {
     });
 
     private readonly samples = remoteData<Sample[]>({
+        await: () => [this.clinicalAttributes],
         invoke: () => {
             return internalClient.fetchFilteredSamplesUsingPOST({
                 studyViewFilter: this.emptyFilter
             })
         },
-        default: []
+        default: [],
+        onResult: (result) => {
+            this._sampleClinicalDataSet = _.reduce(result, (acc, next) => {
+                acc[next.uniqueSampleKey] = {
+                    studyId: next.studyId,
+                    patientId: next.patientId,
+                    sampleId: next.sampleId,
+                };
+                return acc;
+            }, {} as { [uniqueSampleKey: string]: { [id: string]: string } })
+        }
     })
 
     readonly studyWithSamples = remoteData<StudyWithSamples[]>({
@@ -744,4 +757,99 @@ export class StudyViewPageStore {
             return Promise.resolve(data);
         }
     });
+
+    @computed get patientSamples() {
+        return _.groupBy(this.samples.result, (sample) => sample.uniquePatientKey);
+    }
+
+    @bind
+    public async getDownloadDataPromise() {
+
+        const samplesDataToFetch = _.reduce(this.selectedSamples.result, (acc, next) => {
+            if (!_.includes(this._fetchedClinicalDataSamples, next.uniqueSampleKey)) {
+                acc.push(next);
+            }
+            return acc;
+        }, [] as Sample[])
+
+        if (!_.isEmpty(samplesDataToFetch)) {
+
+            let sampleAttributeIds = _.keys(_.reduce(this.clinicalAttributes.result, (acc, next) => {
+                if (!next.patientAttribute)
+                    acc[next.clinicalAttributeId] = true;
+                return acc;
+            }, {} as { [id: string]: boolean }));
+
+            let patientAttributeIds = _.keys(_.reduce(this.clinicalAttributes.result, (acc, next) => {
+                if (next.patientAttribute)
+                    acc[next.clinicalAttributeId] = true;
+                return acc;
+            }, {} as { [id: string]: boolean }));
+
+            let sampleClinicalData = await defaultClient.fetchClinicalDataUsingPOST({
+                'clinicalDataType': "SAMPLE",
+                'clinicalDataMultiStudyFilter': {
+                    'attributeIds': sampleAttributeIds,
+                    'identifiers': _.map(samplesDataToFetch, sample => {
+                        return {
+                            entityId: sample.sampleId,
+                            studyId: sample.studyId
+                        }
+                    })
+                }
+            });
+
+            _.forEach(sampleClinicalData, clinicalData => {
+                if (this._sampleClinicalDataSet[clinicalData.uniqueSampleKey]) {
+                    this._sampleClinicalDataSet[clinicalData.uniqueSampleKey]['SAMPLE_' + clinicalData.clinicalAttributeId] = clinicalData.value;
+                }
+            })
+
+            let patientClinicalData = await defaultClient.fetchClinicalDataUsingPOST({
+                'clinicalDataType': "PATIENT",
+                'clinicalDataMultiStudyFilter': {
+                    'attributeIds': patientAttributeIds,
+                    'identifiers': _.map(samplesDataToFetch, sample => {
+                        return {
+                            entityId: sample.patientId,
+                            studyId: sample.studyId
+                        }
+                    })
+                }
+            });
+
+            _.forEach(patientClinicalData, clinicalData => {
+                (this.patientSamples[clinicalData.uniquePatientKey] || []).forEach(sample => {
+                    if (this._sampleClinicalDataSet[sample.uniqueSampleKey]) {
+                        this._sampleClinicalDataSet[sample.uniqueSampleKey]['PATIENT_' + clinicalData.clinicalAttributeId] = clinicalData.value;
+                    }
+                });
+            })
+            this._fetchedClinicalDataSamples = _.uniq([...this._fetchedClinicalDataSamples, ...samplesDataToFetch.map(sample => sample.uniqueSampleKey)]);
+        }
+
+        let clinicalAttributesNameSet = _.reduce(this.clinicalAttributes.result, (acc, next) => {
+            let id = (next.patientAttribute ? 'PATIENT' : 'SAMPLE') + '_' + next.clinicalAttributeId
+            acc[id] = next.displayName;
+            return acc;
+        }, {
+            studyId: 'Study ID',
+            patientId: 'Patient ID',
+            sampleId: 'Sample ID',
+        } as { [id: string]: string })
+
+        let dataRows = _.reduce(this.selectedSamples.result, (acc, next) => {
+            let sampleData = this._sampleClinicalDataSet[next.uniqueSampleKey];
+            if (sampleData) {
+                let _data: string[] = [];
+                _.forEach(Object.keys(clinicalAttributesNameSet), (attributrId) => {
+                    _data.push(sampleData[attributrId] || 'NA');
+                });
+                acc.push(_data);
+            }
+            return acc
+        }, [_.values(clinicalAttributesNameSet)]);
+
+        return dataRows.map(mutation => mutation.join('\t')).join('\n');
+    }
 }
