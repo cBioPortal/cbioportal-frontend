@@ -1,28 +1,31 @@
 import SimpleTable from "../simpleTable/SimpleTable";
 import * as React from 'react';
-import {observable, computed, action, reaction, IReactionDisposer, autorun} from "mobx";
+import {action, computed, IReactionDisposer, observable, reaction} from "mobx";
 import {observer, Observer} from "mobx-react";
 import './styles.scss';
 import {
-    SHOW_ALL_PAGE_SIZE as PAGINATION_SHOW_ALL, PaginationControls, IPaginationControlsProps
+    IPaginationControlsProps,
+    PaginationControls,
+    SHOW_ALL_PAGE_SIZE as PAGINATION_SHOW_ALL
 } from "../paginationControls/PaginationControls";
 import {
-    ColumnVisibilityControls, IColumnVisibilityDef, IColumnVisibilityControlsProps
+    ColumnVisibilityControls,
+    IColumnVisibilityControlsProps,
+    IColumnVisibilityDef
 } from "../columnVisibilityControls/ColumnVisibilityControls";
-import {
-    CopyDownloadControls, ICopyDownloadData
-} from "../copyDownloadControls/CopyDownloadControls";
-import {
-    resolveColumnVisibility, resolveColumnVisibilityByColumnDefinition
-} from "./ColumnVisibilityResolver";
+import {CopyDownloadControls, ICopyDownloadData} from "../copyDownloadControls/CopyDownloadControls";
+import {resolveColumnVisibility, resolveColumnVisibilityByColumnDefinition} from "./ColumnVisibilityResolver";
 import {ICopyDownloadControlsProps} from "../copyDownloadControls/ICopyDownloadControls";
 import {SimpleCopyDownloadControls} from "../copyDownloadControls/SimpleCopyDownloadControls";
 import {serializeData} from "shared/lib/Serializer";
 import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import {ButtonToolbar} from "react-bootstrap";
-import { If } from 'react-if';
+import {If} from 'react-if';
 import {SortMetric} from "../../lib/ISortMetric";
-import {ILazyMobXTableApplicationDataStore, SimpleLazyMobXTableApplicationDataStore} from "../../lib/ILazyMobXTableApplicationDataStore";
+import {
+    ILazyMobXTableApplicationDataStore,
+    SimpleLazyMobXTableApplicationDataStore
+} from "../../lib/ILazyMobXTableApplicationDataStore";
 import {ILazyMobXTableApplicationLazyDownloadDataFetcher} from "../../lib/ILazyMobXTableApplicationLazyDownloadDataFetcher";
 import {maxPage} from "./utils";
 
@@ -195,7 +198,7 @@ function getDownloadObject<T>(columns: Column<T>[], rowData: T) {
     return downloadObject;
 }
 
-class LazyMobXTableStore<T> {
+export class LazyMobXTableStore<T> {
     public filterString:string|undefined;
     @observable private _page:number;
     @observable private _itemsPerPage:number;
@@ -336,22 +339,25 @@ class LazyMobXTableStore<T> {
         }
     }
 
-    @computed get headers():JSX.Element[] {
+    @action
+    public defaultHeaderClick(column: Column<T>) {
+        this.sortAscending = this.getNextSortAscending(column);
+        this.dataStore.sortAscending = this.sortAscending;
+
+        this.sortColumn = column.name;
+        this.dataStore.sortMetric = this.sortMetric;
+        this.page = 0;
+    }
+
+    @computed
+    get headers():JSX.Element[] {
         return this.visibleColumns.map((column:Column<T>)=>{
             const headerProps:{role?:"button",
                 className?:"multilineHeader sort-asc"|"multilineHeader sort-des",
                 onClick?:()=>void} = {};
             if (column.sortBy) {
                 headerProps.role = "button";
-                headerProps.onClick = ()=>{
-                    this.sortAscending = this.getNextSortAscending(column);
-                    this.dataStore.sortAscending = this.sortAscending;
-
-                    this.sortColumn = column.name;
-                    this.dataStore.sortMetric = this.sortMetric;
-
-                    this.page = 0;
-                };
+                headerProps.onClick = () => this.defaultHeaderClick(column);
             }
             if (this.sortColumn === column.name) {
                 headerProps.className = (this.sortAscending ? "multilineHeader sort-asc" : "multilineHeader sort-des");
