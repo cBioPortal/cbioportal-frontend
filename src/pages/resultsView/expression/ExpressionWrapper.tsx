@@ -456,13 +456,9 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
         if (this.props.store.studyIdToStudy.isComplete) {
             content = expressionTooltip(d, this.props.store.studyIdToStudy.result!);
         } else {
-            content = "Loading...";
+            content = <span>Loading...</span>;
         }
-        return (
-            <div className="cbioportal-frontend cbioTooltip">
-                {content}
-            </div>
-        );
+        return content;
     }
 
     @computed get zIndexSortBy() {
