@@ -67,7 +67,7 @@ const RIGHT_GUTTER = 120; // room for legend
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 100;
 const MIN_LOG_ARGUMENT = 0.01;
-const CATEGORY_LABEL_HORZ_ANGLE = -30;
+const CATEGORY_LABEL_HORZ_ANGLE = 50;
 const DEFAULT_LEFT_PADDING = 25;
 const DEFAULT_BOTTOM_PADDING = 10;
 const LEGEND_ITEMS_PER_ROW = 4;
@@ -371,7 +371,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                 tickFormat={this.props.horizontal ? this.formatNumericalTick : this.formatCategoryTick}
                 tickLabelComponent={<VictoryLabel angle={this.props.horizontal ? undefined : CATEGORY_LABEL_HORZ_ANGLE}
                                                   verticalAnchor={this.props.horizontal ? undefined : "start"}
-                                                  textAnchor={this.props.horizontal ? undefined : "end"}
+                                                  textAnchor={this.props.horizontal ? undefined : "start"}
                                   />}
                 axisLabelComponent={<VictoryLabel dy={this.props.horizontal ? 35 : this.biggestCategoryLabelSize + 24}/>}
             />
