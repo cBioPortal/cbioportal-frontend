@@ -321,7 +321,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
 
     render() {
         return (
-            <div className="borderedChart" data-test="CoExpressionPlot">
+            <div className="borderedChart inlineBlock" data-test="CoExpressionPlot">
                 <Observer>
                     {this.toolbar}
                 </Observer>
