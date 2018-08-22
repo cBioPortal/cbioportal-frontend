@@ -1,7 +1,40 @@
 import * as React from 'react';
 import { Link } from 'react-router';
+import AppConfig from "appConfig";
 
 export default class PortalHeader extends React.Component<{}, {}> {
+
+    private tabs(){
+
+        return [
+
+            {
+                id:"datasets",
+                text:"Data Sets",
+                address:"datasets",
+                internal:true,
+                hide:()=>AppConfig.skinShowDataSetsTab !== true
+            }
+
+
+        ];
+
+
+    }
+
+    private getTabs(){
+        const shownTabs = this.tabs().filter((t)=>{
+            return !t.hide()
+        });
+        return shownTabs.map((tab)=>{
+            return <li>
+                {
+                    (tab.internal) ? <Link to={tab.address}>{tab.text}</Link> :  <a href={tab.address}>{tab.text}</a>
+                }
+            </li>
+        })
+
+    }
 
     render(){
         return <header>
@@ -9,9 +42,10 @@ export default class PortalHeader extends React.Component<{}, {}> {
                 <Link to="/spa" id="cbioportal-logo"><img src={require("./cbioportal_logo.png")} alt="cBioPortal Logo"/></Link>
                 <nav id="main-nav">
                     <ul>
-                        <li className="internal">
-                            <a href="data_sets.jsp">Data Sets</a>
-                        </li>
+
+                        {
+                           this.getTabs()
+                        }
 
                         <li className="internal">
                             <a href="web_api.jsp">Web API</a>
