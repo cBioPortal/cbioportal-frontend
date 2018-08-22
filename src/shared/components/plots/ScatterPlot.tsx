@@ -48,7 +48,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
 const DEFAULT_FONT_FAMILY = "Verdana,Arial,sans-serif";
 const CORRELATION_INFO_Y = 100; // experimentally determined
 export const LEGEND_Y = CORRELATION_INFO_Y + 30 /* approximate correlation info height */ + 30 /* top padding*/
-const RIGHT_GUTTER = 120; // room for correlation info and legend
+const RIGHT_PADDING = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 50;
 const MIN_LOG_ARGUMENT = 0.01;
@@ -153,7 +153,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                     data={this.props.legendData}
                     x={x}
                     y={LEGEND_Y}
-                    width={RIGHT_GUTTER}
+                    width={RIGHT_PADDING}
                 />
             );
         } else {
@@ -234,8 +234,12 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         return jStat.spearmancoeff(this.splitData.x, this.splitData.y);
     }
 
+    @computed get rightPadding() {
+        return RIGHT_PADDING;
+    }
+
     @computed get svgWidth() {
-        return LEFT_PADDING + this.props.chartWidth + RIGHT_GUTTER;
+        return LEFT_PADDING + this.props.chartWidth + this.rightPadding;
     }
 
     @computed get svgHeight() {
