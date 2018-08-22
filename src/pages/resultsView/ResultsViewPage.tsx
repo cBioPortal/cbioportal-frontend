@@ -276,7 +276,15 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     return this.resultsViewPageStore.studies.result!.length > 1;
                 },
                 getTab: () => {
-                    return <MSKTab key={10} id="enrichment" linkText={'Enrichment'}>
+
+                    const isLoading = store.mutationEnrichmentProfiles.isPending ||
+                        store.unalteredSampleKeys.isPending ||
+                        store.mutationEnrichmentProfiles.isPending ||
+                        store.copyNumberEnrichmentProfiles.isPending ||
+                        store.mRNAEnrichmentProfiles.isPending ||
+                        store.proteinEnrichmentProfiles.isPending
+
+                    return <MSKTab key={10} id="enrichment" loading={isLoading} linkText={'Enrichment'}>
                         <EnrichmentsTab store={store}/>
                     </MSKTab>
                 }
