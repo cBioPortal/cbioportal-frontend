@@ -72,6 +72,7 @@ const DEFAULT_LEFT_PADDING = 25;
 const DEFAULT_BOTTOM_PADDING = 10;
 const LEGEND_ITEMS_PER_ROW = 4;
 const BOTTOM_LEGEND_PADDING = 15;
+const RIGHT_PADDING_FOR_LONG_LABELS = 50;
 
 
 const BOX_STYLES = {
@@ -431,11 +432,11 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     @computed get rightPadding() {
-        if (this.legendLocation === "right") {
+        if (this.props.legendData && this.props.legendData.length > 0 && this.legendLocation === "right") {
             // make room for legend
-            return RIGHT_GUTTER;
+            return Math.max(RIGHT_GUTTER, RIGHT_PADDING_FOR_LONG_LABELS);
         } else {
-            return 0;
+            return RIGHT_PADDING_FOR_LONG_LABELS;
         }
     }
 
