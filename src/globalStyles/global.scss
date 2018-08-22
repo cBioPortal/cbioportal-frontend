@@ -117,22 +117,30 @@ th.reactable-header-sort-asc:after {
 
 .secondaryTabs {
 
+  .nav-tabs {
+    border-bottom:none !important;
+  }
+
   li {
     a {
 
       font-size: 12px;
       padding: 4px 6px !important;
       margin-right: 8px !important;
-      text-decoration: none;
+      background:none !important;
 
       &:hover {
-        text-decoration: none !important;
+        text-decoration: underline;
+        border-color:transparent;
       }
 
     }
 
     &.active a {
       background:#eee !important;
+      border-bottom-color:$borderColor !important; // undoes bootstrap
+      border-radius:4px !important;
+      text-decoration:none !important;
     }
 
   }
