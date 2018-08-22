@@ -67,7 +67,7 @@
     "@types/react-redux": "4.4.44",
     "@types/react-router": "3.0.2",
     "@types/react-select": "^1.0.54",
-    "@types/react-spinkit": "^1.1.29",
+    "@types/react-spinkit": "^1.1.35",
     "@types/react-transition-group": "1.1.0",
     "@types/react-virtualized": "^9.18.7",
     "@types/recompose": "^0.20.4",

@@ -421,7 +421,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     public render() {
 
         return (
-            <PageLayout>
+            <PageLayout noMargin={true}>
                 {
                     (this.currentQuery) && (<div>
 

@@ -106,16 +106,13 @@ export default class SinglePageApp extends React.Component<IResultsViewPageProps
     }
 
     private handleTabChange(id: string) {
-
         this.props.routing.updateRoute({ tab: id });
-
     }
 
     public render() {
 
         return (
-
-            <PageLayout rightBar={<RightBar queryStore={this.queryStore} />}>
+            <PageLayout noMargin={true} rightBar={<RightBar queryStore={this.queryStore} />}>
                 <div style={{padding:"0 15px"}}>
                     <p style={{marginBottom:15}}>The cBioPortal for Cancer Genomics provides <b>visualization</b>, <b>analysis</b> and <b>download</b> of large-scale <b>cancer genomics</b> data sets.
                         <br />
