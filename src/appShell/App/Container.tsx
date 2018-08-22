@@ -1,7 +1,5 @@
 import * as _ from 'lodash';
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import PageHeader from '../../pages/pageHeader/PageHeader';
 import UnsupportedBrowserModal from "shared/components/unsupportedBrowserModal/UnsupportedBrowserModal";
 
 import '../../globalStyles/prefixed-global.scss';

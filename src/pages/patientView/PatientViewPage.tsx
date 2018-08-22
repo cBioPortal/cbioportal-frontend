@@ -291,7 +291,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         }
 
         return (
-            <PageLayout>
+            <PageLayout noMargin={true}>
                 <div className="patientViewPage">
 
                 {/*<AjaxErrorModal*/}

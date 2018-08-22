@@ -11,8 +11,7 @@ export interface ILoader {
 export default class Loader extends React.Component<ILoader, {}> {
 
     public render() {
-       return (
-
+        return (
             <If condition={this.props.isLoading}>
                 <Then>
                     <div>
@@ -23,7 +22,6 @@ export default class Loader extends React.Component<ILoader, {}> {
                     </div>
                 </Then>
             </If>
-
         );
     }
 }
