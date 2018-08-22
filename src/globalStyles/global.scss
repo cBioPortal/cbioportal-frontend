@@ -521,4 +521,7 @@ h3.hr {
 
 .tabMessageContainer {
   padding-bottom:$standardMargin;
+  &:empty {
+    display:none;
+  }
 }
