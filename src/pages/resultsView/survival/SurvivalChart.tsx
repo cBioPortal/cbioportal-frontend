@@ -383,7 +383,9 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
             <div className="posRelative" style={{width: (this.styleOpts.width + 20)}}>
                 { this.props.showChartTooltip ? (
                     <DefaultTooltip
-                        placement="right"
+                        mouseEnterDelay={0}
+                        mouseLeaveDelay={0.5}
+                        placement="rightBottom"
                         overlay={this.chartTooltip}
                     >
                         {this.chart}

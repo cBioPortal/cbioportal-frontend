@@ -25,6 +25,7 @@ import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import {remoteData} from "../../../shared/api/remoteData";
 import {PatientSurvival} from "../../../shared/model/PatientSurvival";
 import {ALTERED_GROUP_VALUE} from "../../resultsView/survival/SurvivalUtil";
+import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
 
 export interface AbstractChart {
     downloadData: () => string;
@@ -44,11 +45,8 @@ export interface IChartContainerProps {
     selectedSamples?: any;
     setSurvivalAnalysisSettings?: (attribute:ClinicalAttribute, grp:ReadonlyArray<SurvivalAnalysisGroup>)=>void;
     survivalAnalysisSettings?:{ clinicalAttribute:ClinicalAttribute, groups:ReadonlyArray<SurvivalAnalysisGroup>};
-    patientToSurvivalAnalysisGroup:MobxPromise<{[uniquePatientKey:string]:string}>;
+    patientToSurvivalAnalysisGroup?:MobxPromise<{[uniquePatientKey:string]:string}>;
 }
-
-export const SELECTED_GROUP_VALUE = "Selected";
-export const UNSELECTED_GROUP_VALUE = "Unselected";
 
 @observer
 export class ChartContainer extends React.Component<IChartContainerProps, {}> {
@@ -207,35 +205,15 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 return new Promise<any>(()=>{});// return always pending
             }
 
-            let patientToAnalysisGroup:{[patientKey:string]:string};
-            let patientSurvivals:PatientSurvival[] = this.props.promise.result!.alteredGroup.concat(this.props.promise.result!.unalteredGroup);
-            let analysisGroups:ReadonlyArray<SurvivalAnalysisGroup>;
-            if (this.props.survivalAnalysisSettings && this.props.patientToSurvivalAnalysisGroup) {
-                // make data for groups
-                patientToAnalysisGroup = this.props.patientToSurvivalAnalysisGroup.result!;
-                analysisGroups = this.props.survivalAnalysisSettings.groups;
-            } else {
-                // otherwise, make data for selected vs unselected
-                patientToAnalysisGroup = {};
-                for (const s of this.props.promise.result!.alteredGroup) {
-                    patientToAnalysisGroup[s.uniquePatientKey] = SELECTED_GROUP_VALUE;
-                }
-                for (const s of this.props.promise.result!.unalteredGroup) {
-                    patientToAnalysisGroup[s.uniquePatientKey] = UNSELECTED_GROUP_VALUE;
-                }
-                analysisGroups = [{
-                    value: SELECTED_GROUP_VALUE,
-                    color: "red",
-                    legendText: "Selected patients"
-                },{
-                    value: UNSELECTED_GROUP_VALUE,
-                    color: "blue",
-                    legendText: "Unselected patients"
-                }];
-            }
-            return Promise.resolve({
-                patientToAnalysisGroup, patientSurvivals, analysisGroups
-            });
+            return Promise.resolve(
+                makeSurvivalChartData(
+                    this.props.promise.result!.alteredGroup,
+                    this.props.promise.result!.unalteredGroup,
+                    this.naCasesHiddenInSurvival,
+                    this.props.survivalAnalysisSettings,
+                    this.props.patientToSurvivalAnalysisGroup
+                )
+            );
         }
     });
 
