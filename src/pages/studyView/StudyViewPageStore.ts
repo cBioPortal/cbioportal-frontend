@@ -52,6 +52,9 @@ export enum UniqueKey {
     MUTATION_COUNT_CNA_FRACTION = 'MUTATION_COUNT_CNA_FRACTION'
 }
 
+export const MUTATION_COUNT = 'MUTATION_COUNT';
+export const FRACTION_GENOME_ALTERED = 'FRACTION_GENOME_ALTERED';
+
 export type ClinicalDataCountWithColor = ClinicalDataCount & { color: string }
 export type MutatedGenesData = MutationCountByGene[];
 export type CNAGenesData = CopyNumberCountByGene[];
@@ -74,6 +77,15 @@ export type ChartMeta = {
 
 export type StudyWithSamples = CancerStudy & {
     uniqueSampleKeys : string[]
+}
+
+type MutationCountVsFGADatum = {
+    studyId: string;
+    sampleId: string;
+    patientId: string;
+    uniqueSampleKey: string;
+    x: number;
+    y: number;
 }
 
 export class StudyViewPageStore {
@@ -372,10 +384,17 @@ export class StudyViewPageStore {
             };
         }
 
-        const allAttrs = this.clinicalAttributes.result.map(attr => attr.clinicalAttributeId);
-        if (_.every(['MUTATION_COUNT', 'FRACTION_GENOME_ALTERED'], attr => {
-                return _.includes(allAttrs, attr);
-            })) {
+        const scatterRequiredParams = _.reduce(this.clinicalAttributes.result, (acc, next) => {
+            if (MUTATION_COUNT === next.clinicalAttributeId) {
+                acc[MUTATION_COUNT] = true
+            }
+            if (FRACTION_GENOME_ALTERED === next.clinicalAttributeId) {
+                acc[FRACTION_GENOME_ALTERED] = true
+            }
+            return acc;
+        }, {[MUTATION_COUNT]: false, [FRACTION_GENOME_ALTERED]: false});
+
+        if (scatterRequiredParams[MUTATION_COUNT] && scatterRequiredParams[FRACTION_GENOME_ALTERED]) {
             _chartMetaSet[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = {
                 uniqueKey: UniqueKey.MUTATION_COUNT_CNA_FRACTION,
                 chartType: ChartType.SCATTER,
@@ -676,7 +695,7 @@ export class StudyViewPageStore {
         await:()=>[this.clinicalAttributes, this.samples],
         invoke: async ()=>{
             const filter: ClinicalDataMultiStudyFilter = {
-                attributeIds: ['MUTATION_COUNT', 'FRACTION_GENOME_ALTERED'],
+                attributeIds: [MUTATION_COUNT, FRACTION_GENOME_ALTERED],
                 identifiers: _.map(this.samples.result!, obj => {
                     return {
                         "entityId": obj.sampleId,
@@ -688,30 +707,29 @@ export class StudyViewPageStore {
             let data:ClinicalData[] = await defaultClient.fetchClinicalDataUsingPOST({
                 clinicalDataType: "SAMPLE",
                 clinicalDataMultiStudyFilter: filter
-            })
-
-            let sampleScatterData: { [id: string]: { [id: string]: ClinicalData } } = {};
-            _.each(data, datum => {
-                if (!_.has(sampleScatterData, datum.uniqueSampleKey)) {
-                    sampleScatterData[datum.uniqueSampleKey] = {};
-                }
-                sampleScatterData[datum.uniqueSampleKey][datum.clinicalAttributeId] = datum;
-            })
-
-            let result: any = [];
-            _.each(sampleScatterData, datum => {
-                if (_.isObject(datum['MUTATION_COUNT']) && _.isObject(datum['FRACTION_GENOME_ALTERED'])) {
-                    result.push({
-                        x: Number(datum.FRACTION_GENOME_ALTERED.value),
-                        y: Number(datum.MUTATION_COUNT.value),
-                        studyId: datum.MUTATION_COUNT.studyId,
-                        sampleId: datum.MUTATION_COUNT.sampleId,
-                        patientId: datum.MUTATION_COUNT.patientId,
-                        uniqueSampleKey: datum.MUTATION_COUNT.uniqueSampleKey
-                    });
-                }
             });
-            return Promise.resolve(result);
+
+            return _.reduce(_.groupBy(data, datum => datum.uniqueSampleKey), (acc, data) => {
+                if (data.length == 2) { // 2 => number of attribute ids
+                    let _datum: MutationCountVsFGADatum = {
+                        studyId: data[0].studyId,
+                        sampleId: data[0].sampleId,
+                        patientId: data[0].patientId,
+                        uniqueSampleKey: data[0].uniqueSampleKey,
+                        x: 0,
+                        y: 0
+                    };
+                    _.forEach(data, datum => {
+                        if (datum.clinicalAttributeId === MUTATION_COUNT) {
+                            _datum.y = Number(datum.value)
+                        } else if (datum.clinicalAttributeId === FRACTION_GENOME_ALTERED) {
+                            _datum.x = Number(datum.value)
+                        }
+                    });
+                    acc.push(_datum)
+                }
+                return acc
+            }, [] as MutationCountVsFGADatum[]);
         }
     });
 }
