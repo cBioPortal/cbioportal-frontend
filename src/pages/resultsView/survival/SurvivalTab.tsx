@@ -1,7 +1,7 @@
 import * as React from 'react';
 import SurvivalChart from "./SurvivalChart";
 import { ResultsViewPageStore } from "../ResultsViewPageStore";
-import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
+import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import { observer } from "mobx-react";
 import styles from "./styles.module.scss";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
@@ -22,7 +22,7 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
             this.props.store.overallUnalteredPatientSurvivals.isPending ||
             this.props.store.diseaseFreeAlteredPatientSurvivals.isPending ||
             this.props.store.diseaseFreeUnalteredPatientSurvivals.isPending) {
-            return <Loader isLoading={true} />;
+            return <LoadingIndicator isLoading={true} isGlobal={true} />;
         }
 
         let content: any = [];
