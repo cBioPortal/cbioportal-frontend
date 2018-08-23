@@ -25,6 +25,11 @@ export function buildCBioPortalUrl(pathnameOrParams:string | BuildUrlParams, que
 
 const cbioUrl = buildCBioPortalUrl;
 
+// this gives us the root of the instance (.e.g. //www.bioportal.org/beta)
+export function buildCBioLink(path:string){
+    return '//' + AppConfig.baseUrl + '/' + path;
+}
+
 export function getCbioPortalApiUrl() {
     return cbioUrl('api');
 }
@@ -74,7 +79,7 @@ export function getMutationAlignerUrl() {
     return cbioUrl(`getMutationAligner.json`);
 }
 export function getOncoQueryDocUrl() {
-    return cbioUrl('onco_query_lang_desc.jsp');
+    return buildCBioLink("oql");
 }
 export function getOncoKbApiUrl() {
     let url = AppConfig.oncoKBApiUrl;
@@ -141,4 +146,13 @@ export function getLegacyCopyNumberUrl(){
 
 export function getBasePath(){
     return AppConfig.baseUrl!.replace(/[^\/]*/,"");
+}
+
+export function getDocsUrl(sourceUrl:string,docsBaseUrl?:string): string {
+    // if it's complete url, then return it, otherwise, prefix with base url
+    if (/^http/.test(sourceUrl)) {
+        return sourceUrl;
+    } else {
+        return docsBaseUrl + "/" + sourceUrl;
+    }
 }
