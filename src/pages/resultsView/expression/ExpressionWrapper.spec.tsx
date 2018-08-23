@@ -18,30 +18,8 @@ describe('Expression Wrapper',()=>{
         instance = wrapper.instance() as ExpressionWrapper;
     });
 
-
-   it('data transformer returns correct value based on logScale state',()=>{
-
-       instance.logScale = true;
-       assert.equal(instance.dataTransformer({value: 100} as NumericGeneMolecularData), 6.643856189774724);
-
-       instance.logScale = false;
-       assert.equal(instance.dataTransformer({value: 100} as NumericGeneMolecularData), 100);
-
-   });
-
-    it('data transformer caps expression value >= constant',()=>{
-
-        instance.logScale = true;
-        assert.equal(instance.dataTransformer({value: 0.0001} as NumericGeneMolecularData), -6.643856189774724, 'value less than cap');
-        assert.equal(instance.dataTransformer({value: 0} as NumericGeneMolecularData), -6.643856189774724, 'zero value');
-
-        instance.logScale = false;
-        assert.equal(instance.dataTransformer({value: 0.0001} as NumericGeneMolecularData), .0001, 'non log');
-        assert.equal(instance.dataTransformer({value: 0} as NumericGeneMolecularData), 0, 'non log zero');
-    });
-
     // this is failing. we need new data to debug
-    it.skip('studies are sorted properly depending on sortBy setting',()=>{
+    /*it.skip('studies are sorted properly depending on sortBy setting',()=>{
 
         instance.sortBy = "alphabetic";
         assert.equal(instance.sortedData[2][0].studyId,  'chol_tcga', 'sorting is alphabetical');
@@ -49,6 +27,6 @@ describe('Expression Wrapper',()=>{
         instance.sortBy = "median";
         assert.equal(instance.sortedData[2][0].studyId,  'laml_tcga', 'sort according to median values');
 
-    });
+    });*/
 
 });
