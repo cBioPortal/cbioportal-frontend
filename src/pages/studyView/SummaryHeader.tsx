@@ -37,7 +37,7 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
     @observable private isQueryButtonDisabled = false;
 
     @observable downloadingData = false;
-    @observable showErrorMessage = false;
+    @observable showDownloadErrorMessage = false;
 
     @computed
     get selectedPatientsCount() {
@@ -47,13 +47,13 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
     @bind
     private handleDownload() {
         this.downloadingData = true;
-        this.showErrorMessage = false;
+        this.showDownloadErrorMessage = false;
         this.props.getClinicalData().then(text => {
             this.downloadingData = false;
             fileDownload(text, 'data.tsv');
         }).catch(() => {
             this.downloadingData = false;
-            this.showErrorMessage = true;
+            this.showDownloadErrorMessage = true;
         });
     }
 
@@ -113,7 +113,7 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
     }
 
     @computed get downloadButtonTooltip() {
-        if(this.showErrorMessage){
+        if(this.showDownloadErrorMessage){
             return "An error occurred while downloading the data. Please try again.";
         }
         return 'Download clinical data for the selected cases';
