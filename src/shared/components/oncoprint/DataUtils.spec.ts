@@ -1350,36 +1350,6 @@ describe("DataUtils", ()=>{
                     attr_val: 2.5
                 }
             );
-
-            assert.deepEqual(
-                fillClinicalTrackDatum(
-                    {},
-                    {clinicalAttributeId:"clinicalAttribute", datatype:"number"} as any,
-                    {sampleId:"sample", studyId:"study"} as Sample,
-                    [{mutationCount:3}] as any[]
-                ),
-                {
-                    attr_id: "clinicalAttribute",
-                    study_id: "study",
-                    attr_val_counts:{3:1},
-                    attr_val: 3
-                }
-            );
-
-            assert.deepEqual(
-                fillClinicalTrackDatum(
-                    {},
-                    {clinicalAttributeId:"clinicalAttribute", datatype:"number"} as any,
-                    {sampleId:"sample", studyId:"study"} as Sample,
-                    [{mutationCount:3}, {mutationCount:2}] as any[]
-                ),
-                {
-                    attr_id: "clinicalAttribute",
-                    study_id: "study",
-                    attr_val_counts:{2.5:1},
-                    attr_val: 2.5
-                }
-            );
         });
         it("creates data correctly for string data",()=>{
             assert.deepEqual(
