@@ -28,7 +28,7 @@ export default class EnrichmentsTab extends React.Component<IEnrichmentsTabProps
     public render() {
 
         if (this.props.store.alteredSampleKeys.isPending || this.props.store.unalteredSampleKeys.isPending) {
-            return <Loader isLoading={true} />;
+            return <Loader isLoading={true} isGlobal={true} />;
         }
 
         if (this.props.store.alteredSampleKeys.result!.length === 0 || this.props.store.unalteredSampleKeys.result!.length === 0) {
@@ -39,7 +39,7 @@ export default class EnrichmentsTab extends React.Component<IEnrichmentsTabProps
             this.props.store.copyNumberEnrichmentProfiles.isPending ||
             this.props.store.mRNAEnrichmentProfiles.isPending ||
             this.props.store.proteinEnrichmentProfiles.isPending) {
-            return <Loader isLoading={true} />;
+            return <Loader isLoading={true} isGlobal={true} />;
         }
 
         return (

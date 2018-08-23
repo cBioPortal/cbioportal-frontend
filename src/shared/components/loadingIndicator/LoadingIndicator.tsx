@@ -40,7 +40,7 @@ export class GlobalLoader extends React.Component<ILoader,{}> {
 
     public render(){
         return <Portal isOpened={this.props.isLoading}>
-            <Spinner className={"globalSpinner"} fadeIn="quarter" name="line-scale-pulse-out" color="steelblue"/>
+            <Spinner className={"globalSpinner"} fadeIn="none" name="line-scale-pulse-out" color="steelblue"/>
         </Portal>
     }
 
