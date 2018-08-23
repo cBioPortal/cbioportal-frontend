@@ -539,7 +539,13 @@ h3.hr {
   }
 }
 
-.bigSpinner {
+.globalSpinner {
+
+  position: fixed;
+  top: 350px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+
   > div {
     height:100px;
     width:8px;
