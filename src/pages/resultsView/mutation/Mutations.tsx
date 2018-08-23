@@ -50,7 +50,6 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                     />
                 </div>
 
-                <Loader isLoading={this.props.store.mutationMapperStores.isPending} />
                 {(this.props.store.mutationMapperStores.isComplete) && (
                     <MSKTabs
                         id="mutationsPageTabs"

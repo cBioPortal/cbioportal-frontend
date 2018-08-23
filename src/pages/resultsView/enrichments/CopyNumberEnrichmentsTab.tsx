@@ -23,7 +23,7 @@ export default class CopyNumberEnrichmentsTab extends React.Component<ICopyNumbe
     public render() {
 
         if (this.props.store.copyNumberHomdelEnrichmentData.isPending || this.props.store.copyNumberAmpEnrichmentData.isPending) {
-            return <Loader isLoading={true} style={{ display:'inline-block', marginLeft:10, marginTop: 20 }} />;
+            return <Loader isLoading={true} isGlobal={true} />;
         }
 
         return (
