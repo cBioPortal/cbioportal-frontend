@@ -1,7 +1,7 @@
 import * as React from 'react';
 import SurvivalChart from "./SurvivalChart";
 import { ResultsViewPageStore } from "../ResultsViewPageStore";
-import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
+import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import { observer } from "mobx-react";
 import styles from "./styles.module.scss";
 import {remoteData} from "../../../shared/api/remoteData";
@@ -58,7 +58,7 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
 
         if (this.overallPatientSurvivalData.isPending ||
             this.diseaseFreePatientSurvivalData.isPending) {
-            return <Loader isLoading={true} />;
+            return <LoadingIndicator isLoading={true} isGlobal={true} />;
         }
 
         let content: any = [];

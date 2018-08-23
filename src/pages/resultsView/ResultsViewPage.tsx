@@ -17,7 +17,6 @@ import Network from "./network/Network";
 import ResultsViewOncoprint from "shared/components/oncoprint/ResultsViewOncoprint";
 import QuerySummary from "./querySummary/QuerySummary";
 import ExpressionWrapper from "./expression/ExpressionWrapper";
-import CoExpressionTabContainer from "./coExpression/CoExpressionTabContainer";
 import EnrichmentsTab from 'pages/resultsView/enrichments/EnrichmentsTab';
 import {Bookmark} from "./bookmark/Bookmark";
 import PlotsTab from "./plots/PlotsTab";
@@ -27,6 +26,7 @@ import {createQueryStore} from "./SPA";
 import autobind from "autobind-decorator";
 import {ITabConfiguration} from "../../shared/model/ITabConfiguration";
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
+import CoExpressionTab from "./coExpression/CoExpressionTab";
 
 function initStore() {
 
@@ -252,7 +252,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"mutations",
                 getTab: () => {
-                    return <MSKTab key={3} id="mutationsTab" linkText="Mutations">
+                    return <MSKTab key={3} id="mutationsTab" loading={store.mutationMapperStores.isPending} linkText="Mutations">
                         <Mutations store={store}/>
                     </MSKTab>
                 }
@@ -264,11 +264,28 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     return this.resultsViewPageStore.studies.result!.length > 1;
                 },
                 getTab: () => {
-                    return <MSKTab key={7} id="coexpression" linkText={'Coexpression'}>
-                        <CoExpressionTabContainer store={store}/>
+
+                    const isLoading = store.molecularProfilesInStudies.isPending ||
+                    store.genes.isPending ||
+                    store.studyToDataQueryFilter.isPending ||
+                    store.geneMolecularDataCache.isPending;
+
+                    return <MSKTab key={7} id="coexpression" loading={isLoading} linkText={'Coexpression'}>
+                        <CoExpressionTab
+                            store={store}
+                            molecularProfiles={store.molecularProfilesInStudies.result}
+                            genes={store.genes.result!}
+                            studyToDataQueryFilter={store.studyToDataQueryFilter.result}
+                            numericGeneMolecularDataCache={store.numericGeneMolecularDataCache}
+                            mutationCache={store.mutationCache}
+                            molecularProfileIdToProfiledSampleCount={store.molecularProfileIdToProfiledSampleCount}
+                            coverageInformation={store.coverageInformation}
+                            studyToMutationMolecularProfile={store.studyToMutationMolecularProfile}
+                        />
                     </MSKTab>
                 }
             },
+
 
             {
                 id:"enrichments",
