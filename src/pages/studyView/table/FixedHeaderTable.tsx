@@ -12,6 +12,7 @@ import {action, observable} from "mobx";
 import styles from "./tables.module.scss";
 import * as _ from 'lodash';
 import {observer} from "mobx-react";
+import classnames from 'classnames';
 
 export type IFixedHeaderTableProps<T> = {
     columns: Column<T>[],
@@ -19,6 +20,9 @@ export type IFixedHeaderTableProps<T> = {
     sortBy?: string;
     width?: number;
     height?: number;
+    // This property is just used to force to rerender the table when selectedGenes is modified.
+    // We don't actually use the property anywhere in the table.
+    selectedGenes?: string[]
 };
 
 @observer
@@ -115,7 +119,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                     }
                 </RVTable>
                 <input placeholder={"Search..."} type="text" onInput={this._onFilterTextChange()}
-                       className="form-control tableSearchInput" style={{width: 200}}/>
+                       className={classnames('form-control', styles.tableSearchInput)} style={{width: 200}}/>
             </div>
         );
     }

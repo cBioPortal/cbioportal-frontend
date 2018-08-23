@@ -2,6 +2,19 @@
   padding: 0 1px;
 }
 
+.tableSearchInput{
+  width: 150px;
+  margin-right: 5px;
+}
+
+.labelContent {
+  overflow: hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  display:inline-block;
+  width: 150px;
+}
+
 .geneSymbol:hover {
   border: 2px solid #1974b8;
   cursor: pointer;
@@ -11,11 +24,15 @@
   font-weight: bold
 }
 
-span {
+.ellipsisText {
   white-space: nowrap;
   overflow: hidden;
   -ms-text-overflow: ellipsis;
   text-overflow: ellipsis;
+}
+
+.shortenTextWithOneIcon {
+  width: calc(100% - 10px);
 }
 
 .headerColumn {
@@ -31,3 +48,15 @@ span {
   background-color: #f9f9f9;
 }
 
+.gistic, .mutSig {
+  height: 10px;
+  margin: 0 1px;
+}
+
+.displayFlex {
+  display: flex;
+}
+
+.noFlexShrink {
+  flex-shrink: 0;
+}
