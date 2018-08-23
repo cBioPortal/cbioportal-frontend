@@ -29,20 +29,33 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         {
             name: 'Gene',
             render: (data: MutationCountByGene) => {
-                const overlay = () =>
+                const addGeneOverlay = () =>
                     <span>{`Click ${data.hugoGeneSymbol} to ${_.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? 'remove' : 'add'} from your query`}</span>;
+                const qvalOverlay = () =>
+                    <div><b>MutSig</b><br/><i>Q-value: </i><span>{data.qValue}</span></div>;
                 return (
-                    <DefaultTooltip
-                        placement="left"
-                        overlay={overlay}
-                        destroyTooltipOnHide={true}
-                    >
-                                                    <span
-                                                        className={classnames(styles.geneSymbol, _.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? styles.selected : undefined)}
-                                                        onClick={() => this.props.onGeneSelect(data.hugoGeneSymbol)}>
-                                                        {data.hugoGeneSymbol}
-                                                    </span>
-                    </DefaultTooltip>
+                    <div className={styles.ellipsisText}>
+                        <DefaultTooltip
+                            placement="left"
+                            overlay={addGeneOverlay}
+                            destroyTooltipOnHide={true}
+                        >
+                            <span
+                                className={classnames(styles.geneSymbol, styles.ellipsisText, _.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? styles.selected : undefined, _.isUndefined(data.qValue) ? undefined : styles.shortenText)}
+                                onClick={() => this.props.onGeneSelect(data.hugoGeneSymbol)}>
+                                {data.hugoGeneSymbol}
+                            </span>
+                        </DefaultTooltip>
+                        <If condition={!_.isUndefined(data.qValue)}>
+                            <DefaultTooltip
+                                placement="right"
+                                overlay={qvalOverlay}
+                                destroyTooltipOnHide={true}
+                            >
+                                <img src={require("./images/mutsig.png")} className={styles.mutSig}></img>
+                            </DefaultTooltip>
+                        </If>
+                    </div>
                 )
             },
             sortBy: (data: MutationCountByGene) => data.hugoGeneSymbol,

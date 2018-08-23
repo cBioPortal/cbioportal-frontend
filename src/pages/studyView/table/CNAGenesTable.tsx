@@ -26,33 +26,45 @@ class CNAGenesTableComponent extends FixedHeaderTable<CopyNumberCountByGene> {
 
 @observer
 export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
-    private columns = [
-        {
-            name: 'Gene',
-            render: (data: CopyNumberCountByGene) => {
-                const overlay = () =>
-                    <span>{`Click ${data.hugoGeneSymbol} to ${_.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? 'remove' : 'add'} from your query`}</span>;
-                return (
+    private _columns = [{
+        name: 'Gene',
+        render: (data: CopyNumberCountByGene) => {
+            const addGeneOverlay = () =>
+                <span>{`Click ${data.hugoGeneSymbol} to ${_.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? 'remove' : 'add'} from your query`}</span>;
+            const qvalOverlay = () =>
+                <div><b>Gistic</b><br/><i>Q-value: </i><span>{data.qValue}</span></div>;
+            return (
+                <div className={classnames(styles.noFlexShrink, styles.displayFlex)}>
                     <DefaultTooltip
                         placement="left"
-                        overlay={overlay}
+                        overlay={addGeneOverlay}
                         destroyTooltipOnHide={true}
                     >
-                                                    <span
-                                                        className={classnames(styles.geneSymbol, _.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? styles.selected : undefined)}
-                                                        onClick={() => this.props.onGeneSelect(data.hugoGeneSymbol)}>
-                                                        {data.hugoGeneSymbol}
-                                                    </span>
+                            <span
+                                className={classnames(styles.geneSymbol, styles.ellipsisText, _.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? styles.selected : undefined, _.isUndefined(data.qValue) ? undefined : styles.shortenText)}
+                                onClick={() => this.props.onGeneSelect(data.hugoGeneSymbol)}>
+                                {data.hugoGeneSymbol}
+                            </span>
                     </DefaultTooltip>
-                )
-            },
-            sortBy: (data: CopyNumberCountByGene) => data.hugoGeneSymbol,
-            defaultSortDirection: 'asc' as 'asc',
-            filter: (data: CopyNumberCountByGene, filterString: string, filterStringUpper: string) => {
-                return data.hugoGeneSymbol.indexOf(filterStringUpper) > -1;
-            },
-            width: 85
+                    <If condition={!_.isUndefined(data.qValue)}>
+                        <DefaultTooltip
+                            placement="right"
+                            overlay={qvalOverlay}
+                            destroyTooltipOnHide={true}
+                        >
+                            <img src={require("./images/gistic.png")} className={styles.mutSig}></img>
+                        </DefaultTooltip>
+                    </If>
+                </div>
+            )
         },
+        sortBy: (data: CopyNumberCountByGene) => data.hugoGeneSymbol,
+        defaultSortDirection: 'asc' as 'asc',
+        filter: (data: CopyNumberCountByGene, filterString: string, filterStringUpper: string) => {
+            return data.hugoGeneSymbol.indexOf(filterStringUpper) > -1;
+        },
+        width: 85
+    },
         {
             name: 'Cytoband',
             render: (data: CopyNumberCountByGene) => <span>{data.cytoband}</span>,
@@ -119,7 +131,8 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         return (
             <CNAGenesTableComponent
                 data={this.props.promise.result || []}
-                columns={this.columns}
+                columns={this._columns}
+                selectedGenes={this.props.selectedGenes}
             />
         );
     }

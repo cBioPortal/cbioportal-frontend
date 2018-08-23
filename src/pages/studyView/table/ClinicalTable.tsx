@@ -5,7 +5,6 @@ import {bind} from "bind-decorator";
 import _ from "lodash";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
-import "./styles.scss";
 import FixedHeaderTable from "./FixedHeaderTable";
 
 export interface IClinicalTableProps {
