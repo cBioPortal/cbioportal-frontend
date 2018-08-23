@@ -1,15 +1,23 @@
 import * as _ from 'lodash';
-import {GenePanelData, Mutation, NumericGeneMolecularData} from "../../../shared/api/generated/CBioPortalAPI";
+import {
+    CancerStudy, GenePanelData, Mutation,
+    NumericGeneMolecularData
+} from "../../../shared/api/generated/CBioPortalAPI";
 import getCanonicalMutationType, {getProteinImpactType} from "../../../shared/lib/getCanonicalMutationType";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 import {isSampleProfiled} from "../../../shared/lib/isSampleProfiled";
 import {getOncoprintMutationType} from "../../../shared/components/oncoprint/DataUtils";
-import {mutationRenderPriority} from "../plots/PlotsTabUtils";
+import {
+    IBoxScatterPlotPoint, mutationRenderPriority, tooltipCnaSection,
+    tooltipMutationsSection
+} from "../plots/PlotsTabUtils";
 import {
     MUT_COLOR_FUSION, MUT_COLOR_INFRAME,
     MUT_COLOR_MISSENSE, MUT_COLOR_PROMOTER, MUT_COLOR_TRUNC
 } from "../../../shared/components/oncoprint/geneticrules";
 import {getJitterForCase} from "../../../shared/components/plots/PlotUtils";
+import * as React from "react";
+import {getSampleViewUrl, getStudySummaryUrl} from "../../../shared/api/urls";
 
 export type ExpressionStyle = {
     typeName: string;
@@ -169,3 +177,30 @@ export function prioritizeMutations(mutations:Mutation[]){
     });
 }
 
+export function expressionTooltip(d:IBoxScatterPlotPoint, studyIdToStudy:{[studyId:string]:CancerStudy}) {
+    let mutations = null;
+    let cna = null;
+
+    if (d.mutations.length > 0) {
+        mutations = tooltipMutationsSection(d.mutations);
+    }
+
+    if (d.copyNumberAlterations.length > 0) {
+        cna = tooltipCnaSection(d.copyNumberAlterations);
+    }
+
+    return (
+        <div>
+            <span><b>Study:</b> <a href={getStudySummaryUrl(d.studyId)}>{studyIdToStudy[d.studyId].name}</a></span><br/>
+            <span><b>Sample ID:</b> <a href={getSampleViewUrl(d.studyId, d.sampleId)}>{d.sampleId}</a></span><br/>
+            <span><b>Expression:</b> {d.value}</span><br/>
+            { !!mutations && (
+                <span><b>Mutations:</b> {mutations}</span>
+            )}
+            { !!mutations && <br/> }
+            { !!cna && (
+                <span><b>CNA:</b> {cna}</span>
+            )}
+        </div>
+    );
+}
