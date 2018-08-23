@@ -420,7 +420,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
             // TODO: pass unmodified string array as value prop when possible
             // TODO: remove labelKey specification, leave to default prop, when possible
             return (
-                <div>
+                <div className="clinical-track-selector">
                     <CheckedSelect
                         disabled={this.clinicalTracksMenuLoading}
                         placeholder={this.clinicalTracksMenuLoading ? "Downloading clinical tracks..." : "Add clinical tracks.."}
