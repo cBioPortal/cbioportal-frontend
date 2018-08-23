@@ -35,7 +35,7 @@ export default class DatasetPage extends React.Component<{}, {}> {
         const header:JSX.Element|null = AppConfig.skinDatasetHeader? <p style={{marginBottom:"20px"}} dangerouslySetInnerHTML={{__html: AppConfig.skinDatasetHeader}}></p> : null;
         const footer:JSX.Element|null = AppConfig.skinDatasetFooter? <p style={{marginTop:"20px"}} dangerouslySetInnerHTML={{__html: AppConfig.skinDatasetFooter}}></p> : null;
 
-        return <PageLayout>
+        return <PageLayout className={"whiteBackground"}>
             <div className={styles.dataSets}>
                 <h1>Datasets</h1>
 
@@ -52,7 +52,7 @@ export default class DatasetPage extends React.Component<{}, {}> {
 
                 {
                     (this.store.data.isPending) && (
-                        <LoadingIndicator isLoading={true}></LoadingIndicator>
+                        <LoadingIndicator isLoading={true} isGlobal={true}></LoadingIndicator>
                     )
                 }
 
