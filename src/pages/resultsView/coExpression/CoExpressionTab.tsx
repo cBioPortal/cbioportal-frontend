@@ -151,7 +151,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                 </div>
             );
         } else {
-            return <LoadingIndicator isLoading={true}/>;
+            return <LoadingIndicator isLoading={true} isGlobal={true}/>;
         }
     }
 
@@ -219,9 +219,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
             );
         } else {
             return (
-                <div style={{position:"relative"}}>
-                    <LoadingIndicator isLoading={true} style={{position:"absolute", left:"50%", top:100, transform:"translate(-50%,0)"}}/>
-                </div>
+                <LoadingIndicator isLoading={true} isGlobal={true}/>
             );
         }
     }
