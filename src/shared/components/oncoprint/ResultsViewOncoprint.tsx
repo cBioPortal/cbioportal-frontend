@@ -65,20 +65,6 @@ export interface IGenesetExpansionRecord {
 
 const specialClinicalAttributes:OncoprintClinicalAttribute[] = [
     {
-        clinicalAttributeId: SpecialAttribute.FractionGenomeAltered,
-        datatype: "NUMBER",
-        description: "Fraction of the genome with copy number alterations.",
-        displayName: "Fraction Genome Altered",
-        patientAttribute: false,
-    },
-    {
-        clinicalAttributeId: SpecialAttribute.MutationCount,
-        datatype: "NUMBER",
-        description: "Number of mutations.",
-        displayName: "Total mutations",
-        patientAttribute: false,
-    },
-    {
         clinicalAttributeId: SpecialAttribute.StudyOfOrigin,
         datatype: "STRING",
         description: "Study which the sample is a part of.",
@@ -842,6 +828,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                         }
                         return -sampleCount;
                     },
+                    (x:ClinicalAttribute)=>-x.priority
+                    ,
                     (x:ClinicalAttribute)=>x.displayName
                 ]
             ); // sort server clinical attrs by availability and display name
