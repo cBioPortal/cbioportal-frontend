@@ -109,9 +109,7 @@ export class StudyViewPageStore {
 
     @observable private queriedGeneSet = observable.map<boolean>();
 
-    private _fetchedClinicalDataSamples: string[] = [];
-
-    private _sampleClinicalDataSet: { [uniqueSampleKey: string]: { [id: string]: string; }; } = {};
+    private clinicalDataCache:ClinicalDataCache = new ClinicalDataCache()
 
     @bind
     @action onCheckGene(hugoGeneSymbol: string) {
@@ -499,17 +497,7 @@ export class StudyViewPageStore {
                 studyViewFilter: this.emptyFilter
             })
         },
-        default: [],
-        onResult: (result) => {
-            this._sampleClinicalDataSet = _.reduce(result, (acc, next) => {
-                acc[next.uniqueSampleKey] = {
-                    studyId: next.studyId,
-                    patientId: next.patientId,
-                    sampleId: next.sampleId,
-                };
-                return acc;
-            }, {} as { [uniqueSampleKey: string]: { [id: string]: string } })
-        }
+        default: []
     })
 
     readonly studyWithSamples = remoteData<StudyWithSamples[]>({
@@ -758,78 +746,13 @@ export class StudyViewPageStore {
         }
     });
 
-    @computed get patientSamples() {
-        return _.groupBy(this.samples.result, (sample) => sample.uniquePatientKey);
-    }
-
     @bind
     public async getDownloadDataPromise() {
 
-        const samplesDataToFetch = _.reduce(this.selectedSamples.result, (acc, next) => {
-            if (!_.includes(this._fetchedClinicalDataSamples, next.uniqueSampleKey)) {
-                acc.push(next);
-            }
-            return acc;
-        }, [] as Sample[])
-
-        if (!_.isEmpty(samplesDataToFetch)) {
-
-            let sampleAttributeIds = _.keys(_.reduce(this.clinicalAttributes.result, (acc, next) => {
-                if (!next.patientAttribute)
-                    acc[next.clinicalAttributeId] = true;
-                return acc;
-            }, {} as { [id: string]: boolean }));
-
-            let patientAttributeIds = _.keys(_.reduce(this.clinicalAttributes.result, (acc, next) => {
-                if (next.patientAttribute)
-                    acc[next.clinicalAttributeId] = true;
-                return acc;
-            }, {} as { [id: string]: boolean }));
-
-            let sampleClinicalData = await defaultClient.fetchClinicalDataUsingPOST({
-                'clinicalDataType': "SAMPLE",
-                'clinicalDataMultiStudyFilter': {
-                    'attributeIds': sampleAttributeIds,
-                    'identifiers': _.map(samplesDataToFetch, sample => {
-                        return {
-                            entityId: sample.sampleId,
-                            studyId: sample.studyId
-                        }
-                    })
-                }
-            });
-
-            _.forEach(sampleClinicalData, clinicalData => {
-                if (this._sampleClinicalDataSet[clinicalData.uniqueSampleKey]) {
-                    this._sampleClinicalDataSet[clinicalData.uniqueSampleKey]['SAMPLE_' + clinicalData.clinicalAttributeId] = clinicalData.value;
-                }
-            })
-
-            let patientClinicalData = await defaultClient.fetchClinicalDataUsingPOST({
-                'clinicalDataType': "PATIENT",
-                'clinicalDataMultiStudyFilter': {
-                    'attributeIds': patientAttributeIds,
-                    'identifiers': _.map(samplesDataToFetch, sample => {
-                        return {
-                            entityId: sample.patientId,
-                            studyId: sample.studyId
-                        }
-                    })
-                }
-            });
-
-            _.forEach(patientClinicalData, clinicalData => {
-                (this.patientSamples[clinicalData.uniquePatientKey] || []).forEach(sample => {
-                    if (this._sampleClinicalDataSet[sample.uniqueSampleKey]) {
-                        this._sampleClinicalDataSet[sample.uniqueSampleKey]['PATIENT_' + clinicalData.clinicalAttributeId] = clinicalData.value;
-                    }
-                });
-            })
-            this._fetchedClinicalDataSamples = _.uniq([...this._fetchedClinicalDataSamples, ...samplesDataToFetch.map(sample => sample.uniqueSampleKey)]);
-        }
+        let sampleClinicalDataMap = await this.clinicalDataCache.get(this.selectedSamples.result)
 
         let clinicalAttributesNameSet = _.reduce(this.clinicalAttributes.result, (acc, next) => {
-            let id = (next.patientAttribute ? 'PATIENT' : 'SAMPLE') + '_' + next.clinicalAttributeId
+            let id = (next.patientAttribute ? 'PATIENT' : 'SAMPLE') + '_' + next.clinicalAttributeId;
             acc[id] = next.displayName;
             return acc;
         }, {
@@ -839,17 +762,88 @@ export class StudyViewPageStore {
         } as { [id: string]: string })
 
         let dataRows = _.reduce(this.selectedSamples.result, (acc, next) => {
-            let sampleData = this._sampleClinicalDataSet[next.uniqueSampleKey];
-            if (sampleData) {
-                let _data: string[] = [];
-                _.forEach(Object.keys(clinicalAttributesNameSet), (attributrId) => {
-                    _data.push(sampleData[attributrId] || 'NA');
-                });
-                acc.push(_data);
-            }
-            return acc
+
+            let sampleData: { [attributeId: string]: string; } = {
+                studyId: next.studyId,
+                patientId: next.patientId,
+                sampleId: next.sampleId,
+                ...(sampleClinicalDataMap[next.uniqueSampleKey] || {})
+            };
+
+            acc.push(
+                _.map(Object.keys(clinicalAttributesNameSet), (attributrId) => {
+                    return sampleData[attributrId] || 'NA';
+                })
+            );
+            return acc;
         }, [_.values(clinicalAttributesNameSet)]);
 
         return dataRows.map(mutation => mutation.join('\t')).join('\n');
+    }
+}
+
+
+//this could be used in clinical data tab
+class ClinicalDataCache {
+
+    private cache: { [uniqueSampleKey: string]: { [attributeId: string]: string } } = {};
+
+    private fetchedSamplesUniqueKeySet: { [id: string]: boolean } = {};
+
+    public async get(samples: Sample[]) {
+        const samplesToFetchData = _.filter(samples, sample => {
+            return _.isUndefined(this.fetchedSamplesUniqueKeySet[sample.uniqueSampleKey]);
+        })
+
+        if (!_.isEmpty(samplesToFetchData)) { // empty indicates data is already fetched
+
+            let sampleClinicalData = await defaultClient.fetchClinicalDataUsingPOST({
+                'clinicalDataType': "SAMPLE",
+                'clinicalDataMultiStudyFilter': {
+                    'identifiers': _.map(samplesToFetchData, sample => {
+                        return {
+                            entityId: sample.sampleId,
+                            studyId: sample.studyId
+                        }
+                    })
+                } as ClinicalDataMultiStudyFilter
+            });
+
+            _.forEach(sampleClinicalData, clinicalData => {
+                this.cache[clinicalData.uniqueSampleKey] = { ...(this.cache[clinicalData.uniqueSampleKey] || {}), ['SAMPLE_' + clinicalData.clinicalAttributeId]: clinicalData.value };
+            })
+
+            let patientClinicalData = await defaultClient.fetchClinicalDataUsingPOST({
+                'clinicalDataType': "PATIENT",
+                'clinicalDataMultiStudyFilter': {
+                    'identifiers': _.map(samplesToFetchData, sample => {
+                        return {
+                            entityId: sample.patientId,
+                            studyId: sample.studyId
+                        }
+                    })
+                } as ClinicalDataMultiStudyFilter
+            });
+
+            const patientSamplesMap = _.groupBy(samples, sample => sample.uniquePatientKey);
+
+            _.forEach(patientClinicalData, clinicalData => {
+                (patientSamplesMap[clinicalData.uniquePatientKey] || []).forEach(sample => {
+                    this.cache[sample.uniqueSampleKey] = { ...(this.cache[sample.uniqueSampleKey] || {}), ['PATIENT_' + clinicalData.clinicalAttributeId]: clinicalData.value };
+                });
+            })
+
+            //update fetched samples set
+            samplesToFetchData.forEach(sample => {
+                this.fetchedSamplesUniqueKeySet[sample.uniqueSampleKey] = true;
+            })
+        }
+
+        return _.reduce(samples, (acc, sample) => {
+            if (!_.isUndefined(this.cache[sample.uniqueSampleKey])) {
+                acc[sample.uniqueSampleKey] = this.cache[sample.uniqueSampleKey]
+            }
+            return acc
+        }, {} as { [key: string]: { [attributeId: string]: string } })
     }
 }
