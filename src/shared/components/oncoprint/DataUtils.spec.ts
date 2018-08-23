@@ -1304,20 +1304,6 @@ describe("DataUtils", ()=>{
                     na: true
                 }, "NA in general"
             );
-
-            assert.deepEqual(
-                fillClinicalTrackDatum(
-                    {},
-                    {clinicalAttributeId:SpecialAttribute.MutationCount} as any,
-                    {sampleId:"sample", studyId:"study"} as Sample
-                ),
-                {
-                    attr_id: SpecialAttribute.MutationCount,
-                    study_id:"study",
-                    attr_val_counts: {},
-                    attr_val: 0
-                }, "0 for Mutation Count"
-            );
         });
         it("creates data correctly for number data",()=>{
             assert.deepEqual(
