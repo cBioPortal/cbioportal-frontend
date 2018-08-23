@@ -79,6 +79,15 @@ export type StudyWithSamples = CancerStudy & {
     uniqueSampleKeys : string[]
 }
 
+type MutationCountVsFGADatum = {
+    studyId: string;
+    sampleId: string;
+    patientId: string;
+    uniqueSampleKey: string;
+    x: number;
+    y: number;
+}
+
 export class StudyViewPageStore {
 
     constructor() { }
@@ -383,7 +392,7 @@ export class StudyViewPageStore {
                 acc[FRACTION_GENOME_ALTERED] = true
             }
             return acc;
-        }, {MUTATION_COUNT: false, FRACTION_GENOME_ALTERED: false});
+        }, {[MUTATION_COUNT]: false, [FRACTION_GENOME_ALTERED]: false});
 
         if (scatterRequiredParams[MUTATION_COUNT] && scatterRequiredParams[FRACTION_GENOME_ALTERED]) {
             _chartMetaSet[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = {
@@ -702,11 +711,13 @@ export class StudyViewPageStore {
 
             return _.reduce(_.groupBy(data, datum => datum.uniqueSampleKey), (acc, data) => {
                 if (data.length == 2) { // 2 => number of attribute ids
-                    let _datum: { [id: string]: string | number } = {
+                    let _datum: MutationCountVsFGADatum = {
                         studyId: data[0].studyId,
                         sampleId: data[0].sampleId,
                         patientId: data[0].patientId,
-                        uniqueSampleKey: data[0].uniqueSampleKey
+                        uniqueSampleKey: data[0].uniqueSampleKey,
+                        x: 0,
+                        y: 0
                     };
                     _.forEach(data, datum => {
                         if (datum.clinicalAttributeId === MUTATION_COUNT) {
@@ -714,7 +725,7 @@ export class StudyViewPageStore {
                         } else if (datum.clinicalAttributeId === FRACTION_GENOME_ALTERED) {
                             _datum.x = Number(datum.value)
                         }
-                    })
+                    });
                     acc.push(_datum)
                 }
                 return acc
