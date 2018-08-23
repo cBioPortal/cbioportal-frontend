@@ -267,3 +267,24 @@ function filterBasedOnCoordinates(filters: SurvivalPlotFilters, _val:ScatterData
     }
     return false;
 }
+
+
+export const ALTERED_GROUP_VALUE = "Altered";
+export const UNALTERED_GROUP_VALUE = "Unaltered";
+
+export function getSurvivalChartDataByAltered(
+    alteredSurvivals:PatientSurvival[],
+    unalteredSurvivals:PatientSurvival[]
+) {
+    const patientToAnalysisGroup:{[patientKey:string]:string} = {};
+    for (const s of alteredSurvivals) {
+        patientToAnalysisGroup[s.uniquePatientKey] = ALTERED_GROUP_VALUE;
+    }
+    for (const s of unalteredSurvivals) {
+        patientToAnalysisGroup[s.uniquePatientKey] = UNALTERED_GROUP_VALUE;
+    }
+    return {
+        patientSurvivals: alteredSurvivals.concat(unalteredSurvivals),
+        patientToAnalysisGroup
+    };
+}

@@ -139,6 +139,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             }
             case ChartType.SURVIVAL: {
                 props.promise = this.store.getSurvivalData(chartMeta);
+                // only want to pass these in when necessary, otherwise charts will unnecessarily update when they change
                 props.survivalAnalysisSettings = this.store.survivalAnalysisSettings;
                 props.patientToSurvivalAnalysisGroup = this.store.patientToSurvivalAnalysisGroup;
                 break;

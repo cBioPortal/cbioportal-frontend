@@ -58,7 +58,7 @@ export const MUTATION_COUNT = 'MUTATION_COUNT';
 export const FRACTION_GENOME_ALTERED = 'FRACTION_GENOME_ALTERED';
 
 export type ClinicalDataCountWithColor = ClinicalDataCount & { color: string }
-export type SurvivalAnalysisGroup = { value:string, color:string};
+export type SurvivalAnalysisGroup = { value:string, color:string, legendText?:string};
 export type MutatedGenesData = MutationCountByGene[];
 export type CNAGenesData = CopyNumberCountByGene[];
 export type SurvivalType = {

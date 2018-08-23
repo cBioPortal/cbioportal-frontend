@@ -26,13 +26,12 @@ import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 
 export interface ISurvivalChartProps {
-    alteredPatientSurvivals: PatientSurvival[];
-    unalteredPatientSurvivals: PatientSurvival[];
-    patientToAnalysisGroup?:{[uniquePatientKey:string]:string};
-    analysisGroups?:ReadonlyArray<SurvivalAnalysisGroup>;
+    patientSurvivals:PatientSurvival[];
+    patientToAnalysisGroup:{[uniquePatientKey:string]:string};
+    analysisGroups:ReadonlyArray<SurvivalAnalysisGroup>; // identified by `value`
     analysisClinicalAttribute?:ClinicalAttribute;
-    hideNACurve?:boolean; // if true, then hide analysis group data curve corresponding to value "NA"
-    toggleHideNACurve?:()=>void;
+    naCasesHidden?:boolean;
+    toggleHideNACases?:()=>void;
     totalCasesHeader: string;
     statusCasesHeader: string;
     medianMonthsHeader: string;
@@ -45,13 +44,16 @@ export interface ISurvivalChartProps {
     fileName: string;
     showTable?: boolean;
     showLegend?: boolean;
+    showLogRankPVal?:boolean;
     showDownloadButtons?: boolean;
+    showChartTooltip?:boolean;
     styleOpts?: ConfigurableSurvivalChartStyleOpts;
 }
 
 export type ConfigurableSurvivalChartStyleOpts = {
     width?: number,
     height?: number,
+    legend?:{ x?:number, y?:number}
 }
 
 // Start to down sampling when there are more than 1000 dots in the plot.
@@ -66,8 +68,6 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     // The denominator should be determined based on the plot width and height.
     private isTooltipHovered: boolean = false;
     private tooltipCounter: number = 0;
-    private alteredLegendText = 'Cases with Alteration(s) in Query Gene(s)';
-    private unalteredLegendText = 'Cases without Alteration(s) in Query Gene(s)';
     private svgContainer: any;
     private styleOptsDefaultProps:any = {
         width: 900,
@@ -131,7 +131,10 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     get styleOpts() {
         let configurableOpts: any = _.merge({}, this.styleOptsDefaultProps, this.props.styleOpts);
         configurableOpts.padding.right = this.props.showLegend ? 300 : configurableOpts.padding.right;
-        configurableOpts.legend.x = configurableOpts.width - configurableOpts.padding.right;
+        if (!this.props.styleOpts || !this.props.styleOpts.legend || this.props.styleOpts.legend.x === undefined) {
+            // only set legend x if its not passed in
+            configurableOpts.legend.x = configurableOpts.width - configurableOpts.padding.right;
+        }
         return configurableOpts;
     }
 
@@ -143,67 +146,35 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         }
     }
 
-    @computed
-    get scatterDataByAltered(): GroupedScatterData {
-        return {
-            Altered: {
-                numOfCases: this.sortedAlteredPatientSurvivals.length,
-                line: getLineData(this.sortedAlteredPatientSurvivals, this.alteredEstimates),
-                scatterWithOpacity: getScatterDataWithOpacity(this.sortedAlteredPatientSurvivals, this.alteredEstimates),
-                scatter: getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates)
-            },
-            Unaltered: {
-                numOfCases: this.sortedUnalteredPatientSurvivals.length,
-                line: getLineData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates),
-                scatterWithOpacity: getScatterDataWithOpacity(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates),
-                scatter: getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates)
-            }
-        };
+    @computed get sortedGroupedSurvivals():{[groupValue:string]:PatientSurvival[]} {
+        const patientToAnalysisGroup = this.props.patientToAnalysisGroup;
+        const survivalsByAnalysisGroup = _.groupBy(this.props.patientSurvivals, s=>patientToAnalysisGroup[s.uniquePatientKey]);
+        return _.mapValues(survivalsByAnalysisGroup, survivals=>_.sortBy(survivals, s=>s.months));
+    }
+
+    @computed get estimates():{[groupValue:string]:number[]} {
+        return _.mapValues(this.sortedGroupedSurvivals, survivals=>getEstimates(survivals));
     }
 
     @computed
-    get scatterDataByAnalysisGroup(): GroupedScatterData | null {
-        if (this.props.analysisGroups && this.props.patientToAnalysisGroup) {
-            // if there are analysis groups
-            const patientToAnalysisGroup = this.props.patientToAnalysisGroup;
-            const allSurvivals = this.props.alteredPatientSurvivals.concat(this.props.unalteredPatientSurvivals);
-            const survivalsByAnalysisGroup = _.groupBy(allSurvivals, s=>patientToAnalysisGroup[s.uniquePatientKey]);
-
-            if (this.props.hideNACurve) {
-                // dont show any curve for "NA"
-                delete survivalsByAnalysisGroup["NA"];
-            }
-
-            // map through groups and generate plot data for each
-            return _.mapValues(survivalsByAnalysisGroup, (survivals, group)=>{
-                const sortedSurvivals = _.sortBy(survivals, s=>s.months);
-                const estimates = getEstimates(sortedSurvivals);
-                return {
-                    numOfCases: sortedSurvivals.length,
-                    line: getLineData(sortedSurvivals, estimates),
-                    scatterWithOpacity: getScatterDataWithOpacity(sortedSurvivals, estimates),
-                    scatter: getScatterData(sortedSurvivals, estimates)
-                };
-            });
-        } else {
-            return null;
-        }
+    get unfilteredScatterData(): GroupedScatterData {
+        // map through groups and generate plot data for each
+        return _.mapValues(this.sortedGroupedSurvivals, (survivals, group)=>{
+            const estimates = this.estimates[group];
+            return {
+                numOfCases: survivals.length,
+                line: getLineData(survivals, estimates),
+                scatterWithOpacity: getScatterDataWithOpacity(survivals, estimates),
+                scatter: getScatterData(survivals, estimates)
+            };
+        });
     }
 
     // Only recalculate the scatter data based on the plot filter.
     // The filter is only available when user zooms in the plot.
     @computed
     get scatterData(): GroupedScatterData {
-        let groupedData;
-        if (this.scatterDataByAnalysisGroup) {
-            // if there are groups passed in props, make data based on those groups
-            groupedData = this.scatterDataByAnalysisGroup;
-        } else {
-            // otherwise, make groups based on altered status
-            groupedData = this.scatterDataByAltered;
-        }
-
-        return filterScatterData(groupedData, this.scatterFilter, {
+        return filterScatterData(this.unfilteredScatterData, this.scatterFilter, {
             xDenominator: this.downSamplingDenominators.x,
             yDenominator: this.downSamplingDenominators.y,
             threshold: SURVIVAL_DOWN_SAMPLING_THRESHOLD
@@ -213,7 +184,9 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     public static defaultProps: Partial<ISurvivalChartProps> = {
         showTable: true,
         showLegend: true,
-        showDownloadButtons: true
+        showLogRankPVal: true,
+        showDownloadButtons: true,
+        showChartTooltip: false
     };
 
     constructor(props: ISurvivalChartProps) {
@@ -222,24 +195,34 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         this.tooltipMouseLeave = this.tooltipMouseLeave.bind(this);
     }
 
-    @computed get sortedAlteredPatientSurvivals(): PatientSurvival[] {
-        return this.props.alteredPatientSurvivals.sort((a, b) => a.months - b.months);
+
+    @computed get logRankTestPVal(): number | null {
+        if (this.analysisGroupsWithData.length === 2) {
+            // log rank test only makes sense with two groups
+            const survivals = _.values(this.sortedGroupedSurvivals);
+            return calculateLogRank(survivals[0], survivals[1]);
+        } else {
+            return null;
+        }
     }
 
-    @computed get sortedUnalteredPatientSurvivals(): PatientSurvival[] {
-        return this.props.unalteredPatientSurvivals.sort((a, b) => a.months - b.months);
-    }
-
-    @computed get alteredEstimates(): number[] {
-        return getEstimates(this.sortedAlteredPatientSurvivals);
-    }
-
-    @computed get unalteredEstimates(): number[] {
-        return getEstimates(this.sortedUnalteredPatientSurvivals);
-    }
-
-    @computed get logRank(): number {
-        return calculateLogRank(this.sortedAlteredPatientSurvivals, this.sortedUnalteredPatientSurvivals);
+    @computed get victoryLegendData() {
+        const data:any = [];
+        if (this.props.showLegend) {
+            for (const grp of this.props.analysisGroups) {
+                data.push({
+                    name: !!grp.legendText ? grp.legendText : grp.value,
+                    symbol: { fill: grp.color, type: "square" }
+                });
+            }
+        }
+        if (this.props.showLogRankPVal && this.logRankTestPVal !== null) {
+            data.push({
+                name: `Logrank Test P-Value: ${toConditionalPrecision(this.logRankTestPVal, 3, 0.001)}`,
+                symbol: { opacity: 0 }
+            });
+        }
+        return data;
     }
 
     private tooltipMouseEnter(): void {
@@ -258,9 +241,14 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
     @autobind
     private getData() {
-        return getDownloadContent(getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates),
+        /*return getDownloadContent(getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates),
             getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates), this.props.title,
-            this.alteredLegendText, this.unalteredLegendText);
+            this.alteredLegendText, this.unalteredLegendText);*/
+        if (Math.random() > 0) {
+            // this is all to obfuscate so that we dont get any type errors but can still leave this placeholder code
+            throw "NOT IMPLEMENTED";
+        }
+        return "";
     }
 
     @autobind
@@ -275,26 +263,19 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         }
     }
 
-    @computed get plotAnalysisGroups() {
-        let analysisGroups;
-        if (this.props.analysisGroups && this.scatterDataByAnalysisGroup) {
-            // make plots for analysis groups
-            analysisGroups = this.props.analysisGroups;
-        } else {
-            // make plots for altered vs unaltered
-            analysisGroups = [{value:"Altered", color:"red"}, {value:"Unaltered", color:"blue"}];
-        }
+    @computed get analysisGroupsWithData() {
+        let analysisGroups = this.props.analysisGroups;
+        // filter out groups with no data
         analysisGroups = analysisGroups.filter(grp=>((grp.value in this.scatterData) && (this.scatterData[grp.value].numOfCases > 0)));
-
         return analysisGroups;
     }
 
     @computed get scattersAndLines() {
         // sort highlighted group to the end to show its elements on top
-        let plotAnalysisGroups = this.plotAnalysisGroups;
-        plotAnalysisGroups = _.sortBy(plotAnalysisGroups, grp=>(this.highlightedCurve === grp.value ? 1 : 0));
+        let analysisGroupsWithData = this.analysisGroupsWithData;
+        analysisGroupsWithData = _.sortBy(analysisGroupsWithData, grp=>(this.highlightedCurve === grp.value ? 1 : 0));
 
-        const lineElements = plotAnalysisGroups.map(grp=>(
+        const lineElements = analysisGroupsWithData.map(grp=>(
             <VictoryLine key={grp.value} interpolation="stepAfter" data={this.scatterData[grp.value].line}
                         style={{data:{
                             stroke:grp.color,
@@ -304,12 +285,12 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                         }}}
             />
         ));
-        const scatterWithOpacityElements = plotAnalysisGroups.map(grp=>(
+        const scatterWithOpacityElements = analysisGroupsWithData.map(grp=>(
             <VictoryScatter key={grp.value} data={this.scatterData[grp.value].scatterWithOpacity}
                             symbol="plus" style={{ data: { fill: grp.color, opacity: (d:any) => d.opacity } }}
                             size={3} />
         ));
-        const scatterElements = plotAnalysisGroups.map(grp=>(
+        const scatterElements = analysisGroupsWithData.map(grp=>(
             <VictoryScatter key={grp.value} data={this.scatterData[grp.value].scatter}
                             symbol="circle" style={{ data: { fill: grp.color, fillOpacity: this.hoverCircleFillOpacity} }}
                             size={10} events={this.events} />
@@ -349,12 +330,9 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                                  tickCount={11}
                                  style={this.styleOpts.axis.y} domain={[0, 100]} crossAxis={false}/>
                     {this.scattersAndLines}
-                    {this.props.showLegend &&
+                    {(this.props.showLegend || this.props.showLogRankPVal) &&
                     <VictoryLegend x={this.styleOpts.legend.x} y={this.styleOpts.legend.y}
-                                   data={[
-                                       { name: this.alteredLegendText, symbol: { fill: "red", type: "square" } },
-                                       { name: this.unalteredLegendText, symbol: { fill: "blue", type: "square" } },
-                                       { name: `Logrank Test P-Value: ${toConditionalPrecision(this.logRank, 3, 0.001)}`, symbol: { opacity: 0 } }]} />
+                                   data={this.victoryLegendData} />
                     }
                 </VictoryChart>
             </div>
@@ -364,22 +342,22 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     @computed get chartTooltip() {
         return (
             <div style={{maxWidth: 250}}>
-                {this.plotAnalysisGroups.map(group=>(
+                {this.analysisGroupsWithData.map(group=>(
                     <span
                         key={group.value}
                         style={{display:"inline-block", marginRight:12, fontWeight: this.highlightedCurve === group.value ? "bold" : "initial", cursor:"pointer"}}
                         onClick={()=>{ this.highlightedCurve = (this.highlightedCurve === group.value ? "" : group.value)}}
                     >
                         <div style={{width:10, height:10, display:"inline-block", backgroundColor:group.color, marginRight:5}}/>
-                        {group.value}
+                        {!!group.legendText ? group.legendText : group.value}
                     </span>
                 ))}
-                { this.props.toggleHideNACurve && (
+                { this.props.toggleHideNACases && (
                     <div className="checkbox"><label>
                         <input
                             type="checkbox"
-                            checked={this.props.hideNACurve}
-                            onClick={this.props.toggleHideNACurve}
+                            checked={this.props.naCasesHidden}
+                            onClick={this.props.toggleHideNACases}
                         /> Exclude patients with NA for any of the selected attributes.
                     </label></div>
                 )}
@@ -387,16 +365,30 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         );
     }
 
+    @computed get tableRows() {
+        return this.props.analysisGroups.map(grp=>(
+            <tr>
+                <td>{!!grp.legendText ? grp.legendText : grp.value}</td>
+                {
+                    getStats(this.sortedGroupedSurvivals[grp.value], this.estimates[grp.value]).map(stat =>
+                        <td><b>{stat}</b></td>)
+                }
+            </tr>
+        ));
+    }
+
     public render() {
         return (
 
             <div className="posRelative" style={{width: (this.styleOpts.width + 20)}}>
-                <DefaultTooltip
-                    placement="right"
-                    overlay={this.chartTooltip}
-                >
-                    {this.chart}
-                </DefaultTooltip>
+                { this.props.showChartTooltip ? (
+                    <DefaultTooltip
+                        placement="right"
+                        overlay={this.chartTooltip}
+                    >
+                        {this.chart}
+                    </DefaultTooltip>
+                ) : this.chart }
                 {this.tooltipModel &&
                     <Popover arrowOffsetTop={56} className={classnames("cbioportal-frontend", "cbioTooltip", styles.Tooltip)} positionLeft={this.tooltipModel.x + 10}
                              { ...{container:this} }
@@ -409,7 +401,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                                 this.props.xLabelWithoutEventTooltip}
                             : {this.tooltipModel.datum.x.toFixed(2)} months {this.tooltipModel.datum.status ? "" :
                             "(censored)"}<br/>
-                            {this.props.patientToAnalysisGroup && this.props.analysisClinicalAttribute && (
+                            {this.props.analysisClinicalAttribute && (
                                 <span>
                                     {this.props.analysisClinicalAttribute.displayName}: {this.props.patientToAnalysisGroup[this.tooltipModel.datum.uniquePatientKey]}
                                 </span>
@@ -426,20 +418,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                                 <td>{this.props.statusCasesHeader}</td>
                                 <td>{this.props.medianMonthsHeader}</td>
                             </tr>
-                            <tr>
-                                <td>{this.alteredLegendText}</td>
-                                {
-                                    getStats(this.sortedAlteredPatientSurvivals, this.alteredEstimates).map(stat =>
-                                        <td><b>{stat}</b></td>)
-                                }
-                            </tr>
-                            <tr>
-                                <td>{this.unalteredLegendText}</td>
-                                {
-                                    getStats(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates).map(stat =>
-                                        <td><b>{stat}</b></td>)
-                                }
-                            </tr>
+                            {this.tableRows}
                         </tbody>
                     </table>
                 }

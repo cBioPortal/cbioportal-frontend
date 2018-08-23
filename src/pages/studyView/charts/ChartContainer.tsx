@@ -20,8 +20,11 @@ import SurvivalChart from "../../resultsView/survival/SurvivalChart";
 import {MutatedGenesTable} from "../table/MutatedGenesTable";
 import {CNAGenesTable} from "../table/CNAGenesTable";
 import StudyViewScatterPlot from "./scatterPlot/StudyViewScatterPlot";
-import {isSelected, mutationCountVsCnaTooltip} from '../StudyViewUtils';
+import {isSelected, mutationCountVsCnaTooltip, UNSELECTED_COLOR} from '../StudyViewUtils';
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
+import {remoteData} from "../../../shared/api/remoteData";
+import {PatientSurvival} from "../../../shared/model/PatientSurvival";
+import {ALTERED_GROUP_VALUE} from "../../resultsView/survival/SurvivalUtil";
 
 export interface AbstractChart {
     downloadData: () => string;
@@ -41,8 +44,11 @@ export interface IChartContainerProps {
     selectedSamples?: any;
     setSurvivalAnalysisSettings?: (attribute:ClinicalAttribute, grp:ReadonlyArray<SurvivalAnalysisGroup>)=>void;
     survivalAnalysisSettings?:{ clinicalAttribute:ClinicalAttribute, groups:ReadonlyArray<SurvivalAnalysisGroup>};
-    patientToSurvivalAnalysisGroup?:MobxPromise<{[uniquePatientKey:string]:string}>;
+    patientToSurvivalAnalysisGroup:MobxPromise<{[uniquePatientKey:string]:string}>;
 }
+
+export const SELECTED_GROUP_VALUE = "Selected";
+export const UNSELECTED_GROUP_VALUE = "Unselected";
 
 @observer
 export class ChartContainer extends React.Component<IChartContainerProps, {}> {
@@ -54,7 +60,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @observable placement: 'left' | 'right' = 'right';
     @observable chartType: ChartType
 
-    @observable hideNASurvivalCurve = true; // only relevant for survival charts
+    @observable naCasesHiddenInSurvival = true; // only relevant for survival charts - whether cases with NA clinical value are shown
 
     @computed
     get fileName() {
@@ -182,9 +188,56 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @bind
     @action
-    toggleHideNASurvivalCurve() {
-        this.hideNASurvivalCurve = !this.hideNASurvivalCurve;
+    toggleSurvivalHideNACases() {
+        this.naCasesHiddenInSurvival = !this.naCasesHiddenInSurvival;
     }
+
+    readonly survivalChartData = remoteData({
+        await:()=>{
+            const ret:MobxPromise<any>[] = [];
+            ret.push(this.props.promise);
+            if (this.props.patientToSurvivalAnalysisGroup) {
+                ret.push(this.props.patientToSurvivalAnalysisGroup);
+            }
+            return ret;
+        },
+        invoke:()=>{
+            if (!this.props.promise.isComplete || (this.props.patientToSurvivalAnalysisGroup && !this.props.patientToSurvivalAnalysisGroup.isComplete)) {
+                // TODO: have to check this because of mobxpromise bug - lastInvokeId should be @computed not @cached. aaron has fixed that in his SPA PR i think
+                return new Promise<any>(()=>{});// return always pending
+            }
+
+            let patientToAnalysisGroup:{[patientKey:string]:string};
+            let patientSurvivals:PatientSurvival[] = this.props.promise.result!.alteredGroup.concat(this.props.promise.result!.unalteredGroup);
+            let analysisGroups:ReadonlyArray<SurvivalAnalysisGroup>;
+            if (this.props.survivalAnalysisSettings && this.props.patientToSurvivalAnalysisGroup) {
+                // make data for groups
+                patientToAnalysisGroup = this.props.patientToSurvivalAnalysisGroup.result!;
+                analysisGroups = this.props.survivalAnalysisSettings.groups;
+            } else {
+                // otherwise, make data for selected vs unselected
+                patientToAnalysisGroup = {};
+                for (const s of this.props.promise.result!.alteredGroup) {
+                    patientToAnalysisGroup[s.uniquePatientKey] = SELECTED_GROUP_VALUE;
+                }
+                for (const s of this.props.promise.result!.unalteredGroup) {
+                    patientToAnalysisGroup[s.uniquePatientKey] = UNSELECTED_GROUP_VALUE;
+                }
+                analysisGroups = [{
+                    value: SELECTED_GROUP_VALUE,
+                    color: "red",
+                    legendText: "Selected patients"
+                },{
+                    value: UNSELECTED_GROUP_VALUE,
+                    color: "blue",
+                    legendText: "Unselected patients"
+                }];
+            }
+            return Promise.resolve({
+                patientToAnalysisGroup, patientSurvivals, analysisGroups
+            });
+        }
+    });
 
     @computed
     get chart() {
@@ -232,32 +285,41 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 );
             }
             case ChartType.SURVIVAL: {
-                return (
-                    <SurvivalChart alteredPatientSurvivals={this.props.promise.result.alteredGroup}
-                                   unalteredPatientSurvivals={this.props.promise.result.unalteredGroup}
-                                   patientToAnalysisGroup={this.props.patientToSurvivalAnalysisGroup && this.props.patientToSurvivalAnalysisGroup.result}
-                                   analysisGroups={this.props.survivalAnalysisSettings && this.props.survivalAnalysisSettings.groups}
-                                   analysisClinicalAttribute={this.props.survivalAnalysisSettings && this.props.survivalAnalysisSettings.clinicalAttribute}
-                                   hideNACurve={this.hideNASurvivalCurve}
-                                   toggleHideNACurve={this.toggleHideNASurvivalCurve}
-                                   title={'test'}
-                                   xAxisLabel="Months Survival"
-                                   yAxisLabel="Surviving"
-                                   totalCasesHeader="Number of Cases, Total"
-                                   statusCasesHeader="Number of Cases, Deceased"
-                                   medianMonthsHeader="Median Months Survival"
-                                   yLabelTooltip="Survival estimate"
-                                   xLabelWithEventTooltip="Time of death"
-                                   xLabelWithoutEventTooltip="Time of last observation"
-                                   showDownloadButtons={false}
-                                   showTable={false}
-                                   showLegend={false}
-                                   styleOpts={{
-                                       width: 400,
-                                       height: 380
-                                   }}
-                                   fileName="Overall_Survival"/>
-                )
+                if (this.survivalChartData.isComplete) {
+                    // this.survivalChartData should be complete at this point, barring transient race-condition-caused errors, because of loadingPromises and StudyViewComponentLoader (see render())
+                    return (
+                        <SurvivalChart patientSurvivals={this.survivalChartData.result!.patientSurvivals}
+                                       patientToAnalysisGroup={this.survivalChartData.result!.patientToAnalysisGroup}
+                                       analysisGroups={this.survivalChartData.result!.analysisGroups}
+                                       analysisClinicalAttribute={this.props.survivalAnalysisSettings && this.props.survivalAnalysisSettings.clinicalAttribute}
+                                       naCasesHidden={this.naCasesHiddenInSurvival}
+                                       toggleHideNACases={this.toggleSurvivalHideNACases}
+                                       showChartTooltip={true}
+                                       title={'test'}
+                                       xAxisLabel="Months Survival"
+                                       yAxisLabel="Surviving"
+                                       totalCasesHeader="Number of Cases, Total"
+                                       statusCasesHeader="Number of Cases, Deceased"
+                                       medianMonthsHeader="Median Months Survival"
+                                       yLabelTooltip="Survival estimate"
+                                       xLabelWithEventTooltip="Time of death"
+                                       xLabelWithoutEventTooltip="Time of last observation"
+                                       showDownloadButtons={false}
+                                       showTable={false}
+                                       showLegend={false}
+                                       styleOpts={{
+                                           width: 400,
+                                           height: 380,
+                                           legend: {
+                                               x: 190,
+                                               y: 12
+                                           }
+                                       }}
+                                       fileName="Overall_Survival"/>
+                    );
+                } else {
+                    return null;
+                }
             }
             case ChartType.SCATTER: {
                 return (
@@ -283,11 +345,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @computed get loadingPromises() {
         const ret = [this.props.promise];
-        if (this.chartType === ChartType.SURVIVAL
-            && this.props.survivalAnalysisSettings !== undefined
-            && this.props.patientToSurvivalAnalysisGroup !== undefined) {
-
-            ret.push(this.props.patientToSurvivalAnalysisGroup);
+        if (this.chartType === ChartType.SURVIVAL) {
+            ret.push(this.survivalChartData);
         }
         return ret;
     }
