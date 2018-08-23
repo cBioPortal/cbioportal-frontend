@@ -54,6 +54,8 @@ export type Hotspot = {
 
         'spliceCount': number
 
+        'transcriptId': string
+
         'truncatingCount': number
 
         'tumorCount': number
