@@ -13,9 +13,64 @@ export default class PortalHeader extends React.Component<{}, {}> {
                 text:"Data Sets",
                 address:"datasets",
                 internal:true,
-                hide:()=>AppConfig.skinShowDataSetsTab !== true
-            }
+                hide:()=>AppConfig.skinShowDataSetsTab === false
+            },
 
+            {
+                id:"webAPI",
+                text:"Web API",
+                address:"webAPI",
+                internal:true,
+                hide:()=>AppConfig.skinShowWebAPITab === false
+            },
+
+            {
+                id:"rMatlab",
+                text:"R/MATLAB",
+                address:"rmatlab",
+                internal:true,
+                hide:()=>AppConfig.skinShowRmatLABTab === false
+            },
+
+            {
+                id:"tutorials",
+                text:"Tutorials",
+                address:"tutorials",
+                internal:true,
+                hide:()=>AppConfig.skinShowTutorialsTab === false
+            },
+
+            {
+                id:"faq",
+                text:"FAQ",
+                address:"faq",
+                internal:true,
+                hide:()=>AppConfig.skinShowFAQSTab === false
+            },
+
+            {
+                id:"news",
+                text:"News",
+                address:"news",
+                internal:true,
+                hide:()=>AppConfig.skinShowNewsTab === false
+            },
+
+            {
+                id:"visualize",
+                text:"Visualize Your Data",
+                address:"visualize",
+                internal:true,
+                hide:()=>AppConfig.skinShowToolsTab === false
+            },
+
+            {
+                id:"about",
+                text:"About",
+                address:"about",
+                internal:true,
+                hide:()=>AppConfig.skinShowAboutTab === false
+            },
 
         ];
 
@@ -26,10 +81,13 @@ export default class PortalHeader extends React.Component<{}, {}> {
         const shownTabs = this.tabs().filter((t)=>{
             return !t.hide()
         });
+
+        console.log(shownTabs);
+
         return shownTabs.map((tab)=>{
             return <li>
                 {
-                    (tab.internal) ? <Link to={tab.address}>{tab.text}</Link> :  <a href={tab.address}>{tab.text}</a>
+                    (tab.internal) ? <Link activeClassName={'selected'} to={tab.address}>{tab.text}</Link> :  <a href={tab.address}>{tab.text}</a>
                 }
             </li>
         })
@@ -47,35 +105,7 @@ export default class PortalHeader extends React.Component<{}, {}> {
                            this.getTabs()
                         }
 
-                        <li className="internal">
-                            <a href="web_api.jsp">Web API</a>
-                        </li>
 
-                        <li className="internal">
-                            <a href="cgds_r.jsp">R/MATLAB</a>
-                        </li>
-
-                        <li className="internal">
-                            <a href="tutorial.jsp">Tutorials</a>
-                        </li>
-
-
-                        <li className="internal">
-                            <a href="faq.jsp">FAQ</a>
-                        </li>
-
-
-                        <li className="internal">
-                            <a href="news.jsp">News</a>
-                        </li>
-
-                        <li className="internal">
-                            <a href="tools.jsp">Visualize Your Data</a>
-                        </li>
-
-                        <li className="internal">
-                            <a href="about_us.jsp">About</a>
-                        </li>
                     </ul>
                 </nav>
             </div>

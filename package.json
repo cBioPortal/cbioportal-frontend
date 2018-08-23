@@ -173,6 +173,7 @@
     "react-grid-layout": "^0.16.6",
     "react-height": "^2.2.0",
     "react-if": "^2.1.0",
+    "react-markdown": "^3.4.1",
     "react-motion": "^0.4.7",
     "react-overlays": "0.7.4",
     "react-portal": "^3.2.0",

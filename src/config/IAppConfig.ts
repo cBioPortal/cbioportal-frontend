@@ -34,8 +34,16 @@ export interface IAppConfig {
     skinRightNavShowTestimonials?: boolean;
     skinRightNavExamplesHTML?: string;
     skinRightNavWhatsNewBlurb?: string;
+
     skinShowDataSetsTab?: boolean;
+    skinShowWebAPITab?: boolean;
+    skinShowRmatLABTab?: boolean;
+    skinShowTutorialsTab?: boolean;
     skinShowNewsTab?: boolean;
+    skinShowToolsTab?: boolean;
+    skinShowAboutTab?: boolean;
+    skinShowFAQSTab?: boolean;
+
     userEmailAddress?: string;
     querySetsOfGenes?: {"id": string, "genes":string[]}[];
     // labels to be displayed in oncoprint "Mutation color" menu for custom annotation of driver and passenger mutations in the oncoprint.
@@ -55,6 +63,14 @@ export interface IAppConfig {
     oncoprintHideVUSDefault?:boolean;
     sessionServiceIsEnabled?:boolean;
     sessionServiceUrl?:string;
+
+    skinIsMarkdownDocumentation?:boolean;
+    skinDocumentationBaseUrl?: string;
+    skinFaqSourceURL?: string;
+    skinAboutSourceURL?: string;
+    skinNewsSourceURL?: string;
+    skinOQLSourceURL?: string;
+
 }
 
 export type PriorityStudies = {
