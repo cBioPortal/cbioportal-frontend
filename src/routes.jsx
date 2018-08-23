@@ -23,6 +23,16 @@ import DatasetPage from 'bundle-loader?lazy!babel-loader!./pages/datasetView/Dat
 import SPA from 'bundle-loader?lazy!babel-loader!./pages/resultsView/SPA';
 import StudyViewPage from 'bundle-loader?lazy!babel-loader!./pages/studyView/StudyViewPage';
 import MutationMapperTool from 'bundle-loader?lazy!babel-loader!./pages/tools/mutationMapper/MutationMapperTool';
+import WebAPIPage from 'bundle-loader?lazy!babel-loader!./pages/webAPI/WebAPIPage';
+import RMATLAB from 'bundle-loader?lazy!babel-loader!./pages/rmatlab/RMatLAB';
+import Tutorials from 'bundle-loader?lazy!babel-loader!./pages/tutorials/Tutorials';
+import Visualize from 'bundle-loader?lazy!babel-loader!./pages/visualize/Visualize';
+import AboutUs from 'bundle-loader?lazy!babel-loader!./pages/aboutus/AboutUs';
+import News from 'bundle-loader?lazy!babel-loader!./pages/news/News';
+import FAQ from 'bundle-loader?lazy!babel-loader!./pages/faq/FAQ';
+import OQL from 'bundle-loader?lazy!babel-loader!./pages/oql/OQL';
+
+
 import {getBasePath} from "shared/api/urls";
 import $ from "jquery";
 
@@ -68,12 +78,16 @@ export const makeRoutes = (routing) => {
                 <Route path="/patient" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(PatientViewPage)}/>
                 <Route path="/spa" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(SPA)} />
                 <Route path="/study" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(StudyViewPage)} />
-
-
-
-                <IndexRedirect to={defaultRoute}/>
+                <Route path="/webAPI" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(WebAPIPage)} />
+                <Route path="/rmatlab" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(RMATLAB)} />
+                <Route path="/tutorials" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(Tutorials)} />
+                <Route path="/visualize" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(Visualize)} />
+                <Route path="/about" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(AboutUs)} />
+                <Route path="/news" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(News)} />
+                <Route path="/faq" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(FAQ)} />
+                <Route path="/oql" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(OQL)} />
                 <Route path="/mutation_mapper" getComponent={lazyLoadComponent(MutationMapperTool)} />
-        <IndexRedirect to={defaultRoute}/>
+                <IndexRedirect to={defaultRoute}/>
     </Route>)
 };
 

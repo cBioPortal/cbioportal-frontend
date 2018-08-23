@@ -35,3 +35,12 @@ $headerColor: #3786C2;
 $cornerBorderRadius: 5px;
 
 $standardMargin:15px;
+
+.framedImage {
+  margin:20px 0;
+  border:1px solid #eee !important;
+  border-radius:$cornerBorderRadius;
+  padding:10px;
+  display:block;
+  box-shadow: 1px 1px 1px 0px rgba(0,0,0,0.21);
+}
