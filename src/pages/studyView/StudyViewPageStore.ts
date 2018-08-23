@@ -729,7 +729,7 @@ export class StudyViewPageStore {
                     acc.push(_datum)
                 }
                 return acc
-            }, [] as { [id: string]: string | number }[]);
+            }, [] as MutationCountVsFGADatum[]);
         }
     });
 }
