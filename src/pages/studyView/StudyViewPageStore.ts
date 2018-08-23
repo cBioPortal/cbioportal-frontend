@@ -333,31 +333,31 @@ export class StudyViewPageStore {
         let _chartMetaSet: { [id: string]: ChartMeta } = {};
         // Add meta information for each of the clinical attribute
         // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
-        _.reduce(this.clinicalAttributes.result, (acc: { [id: string]: ChartMeta }, attribute) => {
-            const uniqueKey = getClinicalAttributeUniqueKey(attribute);
-            //TODO: currently only piechart is handled
-            if (attribute.datatype === 'STRING') {
-                acc[uniqueKey] = {
-                    displayName: attribute.displayName,
-                    uniqueKey: uniqueKey,
-                    chartType: ChartType.PIE_CHART,
-                    description: attribute.description,
-                    clinicalAttribute: attribute
-                };
-            }
-            return acc
-        }, _chartMetaSet);
+        // _.reduce(this.clinicalAttributes.result, (acc: { [id: string]: ChartMeta }, attribute) => {
+        //     const uniqueKey = getClinicalAttributeUniqueKey(attribute);
+        //     //TODO: currently only piechart is handled
+        //     if (attribute.datatype === 'STRING') {
+        //         acc[uniqueKey] = {
+        //             displayName: attribute.displayName,
+        //             uniqueKey: uniqueKey,
+        //             chartType: ChartType.PIE_CHART,
+        //             description: attribute.description,
+        //             clinicalAttribute: attribute
+        //         };
+        //     }
+        //     return acc
+        // }, _chartMetaSet);
 
 
-        _.reduce(this.survivalPlots, (acc: { [id: string]: ChartMeta }, survivalPlot) => {
-            acc[survivalPlot.id] = {
-                uniqueKey: survivalPlot.id,
-                chartType: ChartType.SURVIVAL,
-                displayName: survivalPlot.title,
-                description: ''
-            };
-            return acc;
-        }, _chartMetaSet);
+        // _.reduce(this.survivalPlots, (acc: { [id: string]: ChartMeta }, survivalPlot) => {
+        //     acc[survivalPlot.id] = {
+        //         uniqueKey: survivalPlot.id,
+        //         chartType: ChartType.SURVIVAL,
+        //         displayName: survivalPlot.title,
+        //         description: ''
+        //     };
+        //     return acc;
+        // }, _chartMetaSet);
 
         if (!_.isEmpty(this.mutationProfiles.result!)) {
             _chartMetaSet[UniqueKey.MUTATED_GENES_TABLE] = {
@@ -377,12 +377,12 @@ export class StudyViewPageStore {
             };
         }
 
-        _chartMetaSet[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = {
-            uniqueKey: UniqueKey.MUTATION_COUNT_CNA_FRACTION,
-            chartType: ChartType.SCATTER,
-            displayName: 'Mutation count Vs. CNA',
-            description: ''
-        };
+        // _chartMetaSet[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = {
+        //     uniqueKey: UniqueKey.MUTATION_COUNT_CNA_FRACTION,
+        //     chartType: ChartType.SCATTER,
+        //     displayName: 'Mutation count Vs. CNA',
+        //     description: ''
+        // };
 
         return _chartMetaSet;
     }
