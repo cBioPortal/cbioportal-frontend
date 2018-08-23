@@ -129,6 +129,9 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
         };
 
         const options = {
+            animation:{
+                duration:0
+            },
             title: {
                 display: true,
                 text: 'Cases by Top 20 Primary Sites',

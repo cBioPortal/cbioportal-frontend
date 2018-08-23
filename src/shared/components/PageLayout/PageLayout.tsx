@@ -5,8 +5,6 @@ import classNames from 'classnames';
 
 export class PageLayout extends React.Component<{ rightBar?:any, className?:string, noMargin?:boolean },{}> {
 
-
-
     render(){
 
         const noMargin = this.props.noMargin ? "noMargin" : "";
