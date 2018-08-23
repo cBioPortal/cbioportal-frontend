@@ -6,6 +6,7 @@ import ReactResizeDetector from 'react-resize-detector';
 import './styles.scss';
 import autobind from "autobind-decorator";
 import Spinner from "react-spinkit";
+import LoadingIndicator from "../loadingIndicator/LoadingIndicator";
 
 export interface IMSKTabProps {
     inactive?:boolean;
@@ -74,6 +75,7 @@ interface IMSKTabsProps {
     arrowStyle?:{[k:string]:string|number|boolean};
     tabButtonStyle?:string;
     unmountOnHide?:boolean;
+    loadingComponent?:JSX.Element;
 }
 
 export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
@@ -84,7 +86,8 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
     private isSwitchingTab = false;
 
     public static defaultProps: Partial<IMSKTabsProps> = {
-        unmountOnHide: true
+        unmountOnHide: true,
+        loadingComponent:<LoadingIndicator isLoading={true} isGlobal={true}/>
     };
 
     constructor(){
@@ -102,7 +105,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
             return React.cloneElement(
                 tab,
                 { inactive } as Partial<IMSKTabProps>,
-                (<ThreeBounce className="default-spinner center-block text-center" />)
+                (this.props.loadingComponent!)
             );
         } else {
             return React.cloneElement(
@@ -197,7 +200,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
 
             let tabContent = arr;
             if (this.state.isSwitchingTab) {
-                tabContent = [<div className={"tabLoader"}><Spinner className={"bigSpinner"} fadeIn="quarter" name="line-scale-pulse-out" color="steelblue"/></div>];
+                tabContent = [this.props.loadingComponent!];
                 setTimeout(()=>{
                     this.setState({
                         isSwitchingTab: false

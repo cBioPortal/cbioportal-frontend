@@ -34,3 +34,4 @@ declare module 'universal-ga';
 declare module 'mixpanel-browser';
 declare module 'measure-text';
 declare module 'react-spinkit';
+declare module 'react-portal';
