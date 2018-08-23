@@ -1,10 +1,9 @@
 import MobxPromiseCache from "../lib/MobxPromiseCache";
 import {
     CancerStudy, ClinicalAttribute, ClinicalData, GenePanelData, MolecularProfile,
-    MutationCount, Patient, Sample
+    Patient, Sample
 } from "../api/generated/CBioPortalAPI";
 import {
-    FractionGenomeAltered, FractionGenomeAlteredFilter,
     MutationSpectrum, MutationSpectrumFilter
 } from "../api/generated/CBioPortalAPIInternal";
 import {MobxPromise} from "mobxpromise";
@@ -16,14 +15,12 @@ import {OncoprintClinicalAttribute} from "../components/oncoprint/ResultsViewOnc
 import {logicalOr} from "../lib/LogicUtils";
 
 export enum SpecialAttribute {
-    MutationCount = "MUTATION_COUNT",
-    FractionGenomeAltered = "FRACTION_GENOME_ALTERED",
     MutationSpectrum = "NO_CONTEXT_MUTATION_SIGNATURE",
     StudyOfOrigin = "CANCER_STUDY",
     Profiled = "PROFILED_IN"
 }
 
-type OncoprintClinicalData = ClinicalData[]|MutationCount[]|FractionGenomeAltered[]|MutationSpectrum[];
+type OncoprintClinicalData = ClinicalData[]|MutationSpectrum[];
 
 function makeProfiledData(
     attribute: OncoprintClinicalAttribute,
@@ -66,36 +63,6 @@ async function fetch(
     let ret:OncoprintClinicalData;
     let studyToSamples:{[studyId:string]:Sample[]};
     switch(attribute.clinicalAttributeId) {
-        case SpecialAttribute.MutationCount:
-            studyToSamples = _.groupBy(samples, sample=>sample.studyId);
-            ret = _.flatten(await Promise.all(Object.keys(studyToMutationMolecularProfile).map(studyId=>{
-                const samplesInStudy = studyToSamples[studyId];
-                if (samplesInStudy.length) {
-                    return client.fetchMutationCountsInMolecularProfileUsingPOST({
-                        molecularProfileId: studyToMutationMolecularProfile[studyId].molecularProfileId,
-                        sampleIds: samplesInStudy.map(s=>s.sampleId)
-                    });
-                } else {
-                    return Promise.resolve([]);
-                }
-            })));
-            break;
-        case SpecialAttribute.FractionGenomeAltered:
-            studyToSamples = _.groupBy(samples, sample=>sample.studyId);
-            ret = _.flatten(await Promise.all(Object.keys(studyToSamples).map(studyId=>{
-                const samplesInStudy = studyToSamples[studyId];
-                if (samplesInStudy.length) {
-                    return internalClient.fetchFractionGenomeAlteredUsingPOST({
-                        studyId,
-                        fractionGenomeAlteredFilter: {
-                            sampleIds: samplesInStudy.map(s=>s.sampleId)
-                        } as FractionGenomeAlteredFilter
-                    });
-                } else {
-                    return Promise.resolve([]);
-                }
-            })));
-            break;
         case SpecialAttribute.MutationSpectrum:
             studyToSamples = _.groupBy(samples, sample=>sample.studyId);
             ret = _.flatten(await Promise.all(Object.keys(studyToMutationMolecularProfile).map(studyId=>{
