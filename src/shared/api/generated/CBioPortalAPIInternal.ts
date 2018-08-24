@@ -456,6 +456,7 @@ export default class CBioPortalAPIInternal {
         'attributeId': string,
         'clinicalDataType' ? : "SAMPLE" | "PATIENT",
         'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+        'disableLogScale' ? : boolean,
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any
     }): string {
@@ -469,6 +470,10 @@ export default class CBioPortalAPIInternal {
 
         if (parameters['dataBinMethod'] !== undefined) {
             queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
+        }
+
+        if (parameters['disableLogScale'] !== undefined) {
+            queryParameters['disableLogScale'] = parameters['disableLogScale'];
         }
 
         if (parameters.$queryParameters) {
@@ -488,12 +493,14 @@ export default class CBioPortalAPIInternal {
      * @param {string} attributeId - Attribute ID e.g. AGE
      * @param {string} clinicalDataType - Type of the clinical data
      * @param {string} dataBinMethod - Method for data binning
+     * @param {boolean} disableLogScale - Whether to disable log scaling
      * @param {} studyViewFilter - Study view filter
      */
     fetchClinicalDataBinCountsUsingPOSTWithHttpInfo(parameters: {
         'attributeId': string,
         'clinicalDataType' ? : "SAMPLE" | "PATIENT",
         'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+        'disableLogScale' ? : boolean,
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any,
         $domain ? : string
@@ -525,6 +532,10 @@ export default class CBioPortalAPIInternal {
                 queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
             }
 
+            if (parameters['disableLogScale'] !== undefined) {
+                queryParameters['disableLogScale'] = parameters['disableLogScale'];
+            }
+
             if (parameters['studyViewFilter'] !== undefined) {
                 body = parameters['studyViewFilter'];
             }
@@ -553,12 +564,14 @@ export default class CBioPortalAPIInternal {
      * @param {string} attributeId - Attribute ID e.g. AGE
      * @param {string} clinicalDataType - Type of the clinical data
      * @param {string} dataBinMethod - Method for data binning
+     * @param {boolean} disableLogScale - Whether to disable log scaling
      * @param {} studyViewFilter - Study view filter
      */
     fetchClinicalDataBinCountsUsingPOST(parameters: {
             'attributeId': string,
             'clinicalDataType' ? : "SAMPLE" | "PATIENT",
             'dataBinMethod' ? : "STATIC" | "DYNAMIC",
+            'disableLogScale' ? : boolean,
             'studyViewFilter': StudyViewFilter,
             $queryParameters ? : any,
             $domain ? : string
