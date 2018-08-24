@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import {remoteData} from "../../shared/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import { action, computed, observable, toJS, ObservableMap } from "mobx";
+import {action, computed, observable, ObservableMap, toJS} from "mobx";
 import {
     ClinicalDataCount,
     ClinicalDataEqualityFilter,
@@ -18,26 +18,24 @@ import {
     StudyViewFilter
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {
+    CancerStudy,
     ClinicalAttribute,
     ClinicalData,
     ClinicalDataMultiStudyFilter,
+    Gene,
     MolecularProfile,
     MolecularProfileFilter,
-    Gene,
-    MutationCount,
-    CancerStudy
+    MutationCount
 } from 'shared/api/generated/CBioPortalAPI';
 import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
 import {getClinicalAttributeUniqueKey, isPreSelectedClinicalAttr} from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
-import {Column} from "../../shared/components/lazyMobXTable/LazyMobXTable";
-import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
-import { bind } from '../../../node_modules/bind-decorator';
-import { updateGeneQuery } from 'pages/studyView/StudyViewUtils';
-import { stringListToSet } from 'shared/lib/StringUtils';
-import client from "../../shared/api/cbioportalClientInstance";
+import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
+import {bind} from '../../../node_modules/bind-decorator';
+import {updateGeneQuery} from 'pages/studyView/StudyViewUtils';
+import {stringListToSet} from 'shared/lib/StringUtils';
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT'
 
@@ -143,18 +141,13 @@ export class StudyViewPageStore {
     }
 
     @action
-    updateGeneFilter(entrezGeneId: number) {
+    updateGeneFilters(entrezGeneIds: number[]) {
         let mutatedGeneFilter = this._mutatedGeneFilter;
         if (!mutatedGeneFilter) {
             //TODO: all elements instead of one
             mutatedGeneFilter = { entrezGeneIds: [] };
         }
-        let _index = mutatedGeneFilter.entrezGeneIds.indexOf(entrezGeneId);
-        if (_index === -1) {
-            mutatedGeneFilter.entrezGeneIds.push(entrezGeneId);
-        } else {
-            mutatedGeneFilter.entrezGeneIds.splice(_index, 1);
-        }
+        mutatedGeneFilter.entrezGeneIds = _.xor(mutatedGeneFilter.entrezGeneIds, entrezGeneIds);
         this._mutatedGeneFilter = mutatedGeneFilter;
     }
 
@@ -183,7 +176,7 @@ export class StudyViewPageStore {
     }
 
     @action
-    updateCNAGeneFilter(entrezGeneId: number, alteration: number) {
+    updateCNAGeneFilters(filters: CopyNumberGeneFilterElement[]) {
         let _cnaGeneFilter = this._cnaGeneFilter;
         if (!_cnaGeneFilter) {
             //TODO: all elements instead of one
@@ -191,21 +184,7 @@ export class StudyViewPageStore {
                 alterations: []
             }
         }
-        var _index = -1;
-        _.every(_cnaGeneFilter.alterations, (val: CopyNumberGeneFilterElement, index: number) => {
-            if (val.entrezGeneId === entrezGeneId && val.alteration === alteration) {
-                _index = index;
-                return false;
-            }
-        });
-        if (_index === -1) {
-            _cnaGeneFilter.alterations.push({
-                entrezGeneId: entrezGeneId,
-                alteration: alteration
-            });
-        } else {
-            _cnaGeneFilter.alterations.splice(_index, 1);
-        }
+        _cnaGeneFilter.alterations = _.xor(_cnaGeneFilter.alterations, filters);
         this._cnaGeneFilter = _cnaGeneFilter;
     }
 
@@ -333,31 +312,31 @@ export class StudyViewPageStore {
         let _chartMetaSet: { [id: string]: ChartMeta } = {};
         // Add meta information for each of the clinical attribute
         // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
-        // _.reduce(this.clinicalAttributes.result, (acc: { [id: string]: ChartMeta }, attribute) => {
-        //     const uniqueKey = getClinicalAttributeUniqueKey(attribute);
-        //     //TODO: currently only piechart is handled
-        //     if (attribute.datatype === 'STRING') {
-        //         acc[uniqueKey] = {
-        //             displayName: attribute.displayName,
-        //             uniqueKey: uniqueKey,
-        //             chartType: ChartType.PIE_CHART,
-        //             description: attribute.description,
-        //             clinicalAttribute: attribute
-        //         };
-        //     }
-        //     return acc
-        // }, _chartMetaSet);
+        _.reduce(this.clinicalAttributes.result, (acc: { [id: string]: ChartMeta }, attribute) => {
+            const uniqueKey = getClinicalAttributeUniqueKey(attribute);
+            //TODO: currently only piechart is handled
+            if (attribute.datatype === 'STRING') {
+                acc[uniqueKey] = {
+                    displayName: attribute.displayName,
+                    uniqueKey: uniqueKey,
+                    chartType: ChartType.PIE_CHART,
+                    description: attribute.description,
+                    clinicalAttribute: attribute
+                };
+            }
+            return acc
+        }, _chartMetaSet);
 
 
-        // _.reduce(this.survivalPlots, (acc: { [id: string]: ChartMeta }, survivalPlot) => {
-        //     acc[survivalPlot.id] = {
-        //         uniqueKey: survivalPlot.id,
-        //         chartType: ChartType.SURVIVAL,
-        //         displayName: survivalPlot.title,
-        //         description: ''
-        //     };
-        //     return acc;
-        // }, _chartMetaSet);
+        _.reduce(this.survivalPlots, (acc: { [id: string]: ChartMeta }, survivalPlot) => {
+            acc[survivalPlot.id] = {
+                uniqueKey: survivalPlot.id,
+                chartType: ChartType.SURVIVAL,
+                displayName: survivalPlot.title,
+                description: ''
+            };
+            return acc;
+        }, _chartMetaSet);
 
         if (!_.isEmpty(this.mutationProfiles.result!)) {
             _chartMetaSet[UniqueKey.MUTATED_GENES_TABLE] = {
@@ -377,12 +356,12 @@ export class StudyViewPageStore {
             };
         }
 
-        // _chartMetaSet[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = {
-        //     uniqueKey: UniqueKey.MUTATION_COUNT_CNA_FRACTION,
-        //     chartType: ChartType.SCATTER,
-        //     displayName: 'Mutation count Vs. CNA',
-        //     description: ''
-        // };
+        _chartMetaSet[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = {
+            uniqueKey: UniqueKey.MUTATION_COUNT_CNA_FRACTION,
+            chartType: ChartType.SCATTER,
+            displayName: 'Mutation count Vs. CNA',
+            description: ''
+        };
 
         return _chartMetaSet;
     }

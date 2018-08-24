@@ -6,6 +6,7 @@ import _ from "lodash";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
 import FixedHeaderTable from "./FixedHeaderTable";
+import styles from "./tables.module.scss";
 
 export interface IClinicalTableProps {
     data: ClinicalDataCountWithColor[];
@@ -28,12 +29,18 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
         super(props);
     }
 
+    static defaultProps = {
+        width: 300,
+        height: 200,
+        label: ''
+    };
+
     private _columns = [{
         name: this.props.label ? this.props.label : 'Category',
         render: (data: ClinicalDataCountWithColor) => {
             return (
                 <div
-                    className={"labelContent"}
+                    className={styles.labelContent}
                     onMouseEnter={event => {
                         this.tooltipLabelMouseEnter(data.value)
                     }}
@@ -43,7 +50,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
                             <rect x="0" y="0" width="12" height="12" fill={data.color}/>
                         </g>
                     </svg>
-                    <span title={data.value}>{data.value}</span>
+                    <span className={styles.ellipsisText} title={data.value}>{data.value}</span>
                 </div>
             )
         },
@@ -115,6 +122,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
                 height={this.props.height}
                 data={this.props.data || []}
                 columns={this._columns}
+                sortBy='#'
             />
         )
     }
