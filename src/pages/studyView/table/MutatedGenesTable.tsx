@@ -10,14 +10,20 @@ import * as _ from 'lodash';
 import classnames from 'classnames';
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import FixedHeaderTable from "./FixedHeaderTable";
+import {action, observable} from "mobx";
 
 export interface IMutatedGenesTablePros {
     promise: MobxPromise<MutatedGenesData>;
     filters: number[];
-    onUserSelection: (value: number) => void;
+    onUserSelection: (value: number[]) => void;
     numOfSelectedSamples: number;
     onGeneSelect: (hugoGeneSymbol: string) => void;
     selectedGenes: string[]
+}
+
+type MutatedGenesTableUserSelectionWithIndex = {
+    entrezGeneId: number;
+    rowIndex: number;
 }
 
 class MutatedGenesTableComponent extends FixedHeaderTable<MutationCountByGene> {
@@ -25,6 +31,15 @@ class MutatedGenesTableComponent extends FixedHeaderTable<MutationCountByGene> {
 
 @observer
 export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {}> {
+    @observable private selectedRows: number[] = [];
+    @observable private preSelectedRows: MutatedGenesTableUserSelectionWithIndex[] = [];
+
+    constructor(props:IMutatedGenesTablePros) {
+        super(props);
+        this.afterSelectingRows = this.afterSelectingRows.bind(this);
+        this.togglePreSelectRow = this.togglePreSelectRow.bind(this);
+    }
+
     private _tableColumns = [
         {
             name: 'Gene',
@@ -79,8 +94,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             name: '#',
             render: (data: MutationCountByGene) =>
                 <LabeledCheckbox
-                    checked={this.props.filters.indexOf(data.entrezGeneId) !== -1}
-                    onChange={event => this.props.onUserSelection(data.entrezGeneId)}
+                    onChange={event => this.togglePreSelectRow(data.entrezGeneId)}
                 >
                     {data.countByEntity}
                 </LabeledCheckbox>,
@@ -103,11 +117,61 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         }
     ];
 
+    @action
+    isChecked(entrezGeneId: number) {
+        var flag = false;
+        _.every(this.preSelectedRows, (val: MutatedGenesTableUserSelectionWithIndex, index: number) => {
+            if (val.entrezGeneId === entrezGeneId) {
+                flag = true;
+                return false;
+            }
+            return true;
+        });
+        return flag;
+    }
+
+    @action
+    togglePreSelectRow(entrezGeneId: number) {
+        let record: MutatedGenesTableUserSelectionWithIndex | undefined = _.find(this.preSelectedRows, (row: MutatedGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId);
+        if (_.isUndefined(record)) {
+            let dataIndex = -1;
+            // definitely there is a match
+            let datum: MutationCountByGene | undefined = _.find(this.props.promise.result, (row: MutationCountByGene, index: number) => {
+                let exist = row.entrezGeneId === entrezGeneId;
+                if (exist) {
+                    dataIndex = index;
+                }
+                return exist;
+            });
+
+            if (!_.isUndefined(datum)) {
+                this.preSelectedRows.push({
+                    rowIndex: dataIndex,
+                    entrezGeneId: datum.entrezGeneId
+                })
+            }
+        } else {
+            this.preSelectedRows = _.xorBy(this.preSelectedRows, [record], 'rowIndex');
+        }
+    }
+
+
+    @action
+    afterSelectingRows() {
+        this.props.onUserSelection(this.preSelectedRows.map(row => row.entrezGeneId));
+        this.selectedRows = this.preSelectedRows.map(row => row.rowIndex);
+    }
+
     public render() {
         return (
             <MutatedGenesTableComponent
                 data={this.props.promise.result || []}
                 columns={this._tableColumns}
+                selectedGenes={this.props.selectedGenes}
+                selectedRows={this.selectedRows}
+                showSelectSamples={true && this.preSelectedRows.length > 0}
+                afterSelectingRows={this.afterSelectingRows}
+                sortBy='#'
             />
         );
     }
