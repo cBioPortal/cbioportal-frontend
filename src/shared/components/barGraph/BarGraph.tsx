@@ -16,6 +16,7 @@ interface ICancerTypeStudy {
 
 export interface IBarGraphProps {
     data:ICancerTypeStudy[];
+    openStudy:(studyId:string)=>void;
 };
 
 export default class BarGraph extends React.Component<IBarGraphProps, {}> {
@@ -128,6 +129,8 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
             datasets
         };
 
+        var self = this;
+
         const options = {
             animation:{
                 duration:0
@@ -141,7 +144,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
             onClick: function (e: Event) {
                 if (this.getElementAtEvent(e)[0]) {
                     const {studyId} = datasets[this.getElementAtEvent(e)[0]._datasetIndex];
-                    window.location.href = 'study?id=' + studyId + '#summary';
+                    self.props.openStudy(studyId);
                 }
                 return false;
             },

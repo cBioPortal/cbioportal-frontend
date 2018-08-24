@@ -8,6 +8,8 @@ import AppConfig from "appConfig";
 import {QueryStore} from "shared/components/query/QueryStore";
 import { Timeline } from 'react-twitter-widgets';
 import { Link } from 'react-router';
+import getBrowserWindow from "../../lib/getBrowserWindow";
+import ExtendedRouterStore from "../../lib/ExtendedRouterStore";
 
 
 interface IRightBarProps
@@ -156,6 +158,9 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
                                 <p>The portal contains {this.studyStore.cancerStudies.result.length} cancer studies <a href="data_sets.jsp">(details)</a></p>
 
                                 <BarGraph data={this.CancerTypeDescendantStudies(this.CancerTypeList())}
+                                    openStudy={(studyId)=>{
+                                        (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute({ id:studyId },"study");
+                                    }}
                                 />
 
                             </div>
