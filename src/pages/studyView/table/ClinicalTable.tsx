@@ -29,12 +29,6 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
         super(props);
     }
 
-    static defaultProps = {
-        width: 300,
-        height: 200,
-        label: ''
-    };
-
     private _columns = [{
         name: this.props.label ? this.props.label : 'Category',
         render: (data: ClinicalDataCountWithColor) => {
