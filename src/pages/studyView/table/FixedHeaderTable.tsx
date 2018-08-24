@@ -13,6 +13,7 @@ import styles from "./tables.module.scss";
 import * as _ from 'lodash';
 import {observer} from "mobx-react";
 import classnames from 'classnames';
+import {If} from 'react-if';
 
 export type IFixedHeaderTableProps<T> = {
     columns: Column<T>[],
@@ -22,7 +23,10 @@ export type IFixedHeaderTableProps<T> = {
     height?: number;
     // This property is just used to force to rerender the table when selectedGenes is modified.
     // We don't actually use the property anywhere in the table.
-    selectedGenes?: string[]
+    selectedGenes?: string[];
+    selectedRows?: number[];
+    showSelectSamples?: boolean;
+    afterSelectingRows?: () => void;
 };
 
 @observer
@@ -31,12 +35,23 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
     @observable private _sortBy: string;
     @observable private _sortDirection: RVSortDirectionType;
 
+    public static defaultProps = {
+        showSelectSamples: false,
+        selectedRows: [],
+        selectedGenes: [],
+        width : 398,
+        height: 350,
+        sortBy: ''
+    };
+
     constructor(props: IFixedHeaderTableProps<T>) {
         super(props);
         this._rowGetter = this._rowGetter.bind(this);
         this._sort = this._sort.bind(this);
         this._getColumn = this._getColumn.bind(this);
         this._onFilterTextChange = this._onFilterTextChange.bind(this);
+        this._rowClassName = this._rowClassName.bind(this);
+        this._afterSelectingRows=this._afterSelectingRows.bind(this);
         this._sortBy = props.sortBy || 'Freq';
         this._sortDirection = RVSortDirection.DESC;
 
@@ -51,9 +66,10 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
         });
     }
 
-
-    static _rowClassName({index}: any) {
-        if (index < 0) {
+    _rowClassName({index}: any) {
+        if (_.includes(this.props.selectedRows, index)) {
+            return styles.highlightedRow;
+        } else if (index < 0) {
             return styles.headerRow;
         } else {
             return index % 2 === 0 ? styles.evenRow : styles.oddRow;
@@ -91,18 +107,24 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
         };
     }
 
+    _afterSelectingRows() {
+        if (_.isFunction(this.props.afterSelectingRows)) {
+            this.props.afterSelectingRows();
+        }
+    }
+
     public render() {
         return (
             <div className={styles.studyViewTablesTable}>
                 <RVTable
-                    width={this.props.width || 398}
-                    height={this.props.height || 350}
+                    width={this.props.width!}
+                    height={this.props.height!}
                     headerHeight={20}
                     rowHeight={25}
                     rowCount={this._store.dataStore.sortedFilteredData.length}
                     rowGetter={this._rowGetter}
                     className={styles.studyViewTablesBody}
-                    rowClassName={FixedHeaderTable._rowClassName}
+                    rowClassName={this._rowClassName}
                     headerClassName={styles.headerColumn}
                     sort={this._sort}
                     sortDirection={this._sortDirection}
@@ -118,8 +140,13 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                         })
                     }
                 </RVTable>
-                <input placeholder={"Search..."} type="text" onInput={this._onFilterTextChange()}
-                       className={classnames('form-control', styles.tableSearchInput)} style={{width: 200}}/>
+                <div className={classnames(styles.bottomTools)}>
+                    <input placeholder={"Search..."} type="text" onInput={this._onFilterTextChange()}
+                           className={classnames('form-control', styles.tableSearchInput)}/>
+                    <If condition={this.props.showSelectSamples}>
+                        <button className="btn btn-primary btn-sm" onClick={this._afterSelectingRows}>Select Samples</button>
+                    </If>
+                </div>
             </div>
         );
     }

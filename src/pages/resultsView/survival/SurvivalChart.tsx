@@ -232,7 +232,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
         return (
 
-            <div className="posRelative" style={{width: (this.styleOpts.width + 20)}}>
+            <div className="posRelative" style={{width: (this.styleOpts.width)}}>
 
                 <div className="borderedChart" data-test={'SurvivalChart'} style={{width: '100%'}}>
 

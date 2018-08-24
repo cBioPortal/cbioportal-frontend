@@ -162,7 +162,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                         <div className="popover-content">
                             <ClinicalTable
                                 width={300}
-                                height={200}
+                                height={150}
                                 data={this.props.data}
                                 filters={this.props.filters}
                                 highlightedRow={this.highlightedRow}

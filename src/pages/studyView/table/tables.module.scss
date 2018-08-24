@@ -1,18 +1,33 @@
 .studyViewTablesTable {
   padding: 0 1px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }
 
-.tableSearchInput{
-  width: 150px;
-  margin-right: 5px;
+// The current portal is wrapped a class .cbioportal-frontend to overwrite the legacy styles
+// May need to come back to clean up the important statements after in SPA
+.tableSearchInput {
+  width: 200px !important;
+  height: 30px !important;
 }
 
 .labelContent {
   overflow: hidden;
-  white-space:nowrap;
-  text-overflow:ellipsis;
-  display:inline-block;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  display: inline-block;
   width: 150px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.bottomTools {
+  display: flex;
+  justify-content: space-between;
+  padding: 1px 5px 2px 5px;
+  flex-grow: 1;
 }
 
 .geneSymbol:hover {
@@ -46,6 +61,14 @@
 
 .oddRow {
   background-color: #f9f9f9;
+}
+
+.evenRow {
+  background-color: #ffffff;
+}
+
+.highlightedRow {
+  background-color: gray;
 }
 
 .gistic, .mutSig {
