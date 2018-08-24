@@ -1128,6 +1128,10 @@
           "format": "int32",
           "description": "Splice mutation count"
         },
+        "transcriptId": {
+          "type": "string",
+          "description": "Ensembl Transcript Id"
+        },
         "truncatingCount": {
           "type": "integer",
           "format": "int32",
