@@ -260,13 +260,14 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
                             const store = this.resultsViewPageStore;
 
-                            if (store.rnaSeqMolecularData.isComplete && store.studyIdToStudy.isComplete
-                                && store.mutations.isComplete && store.genes.isComplete && store.coverageInformation.isComplete) {
+                            if (store.studyIdToStudy.isComplete
+                                && store.putativeDriverAnnotatedMutations.isComplete && store.genes.isComplete && store.coverageInformation.isComplete) {
                                 return <ExpressionWrapper store={store}
                                                         studyMap={store.studyIdToStudy.result}
                                                           genes={store.genes.result}
-                                                          data={store.rnaSeqMolecularData.result}
-                                                          mutations={store.mutations.result}
+                                                          expressionProfiles={store.expressionProfiles}
+                                                          numericGeneMolecularDataCache={store.numericGeneMolecularDataCache}
+                                                          mutations={store.putativeDriverAnnotatedMutations.result}
                                                           RNASeqVersion={store.expressionTabSeqVersion}
                                                           coverageInformation={store.coverageInformation.result}
                                                           onRNASeqVersionChange={(version:number)=>store.expressionTabSeqVersion=version}
@@ -365,6 +366,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                                     }}
                                 />
                                 <CancerSummaryContainer
+                                    store={this.resultsViewPageStore}
                                     genes={this.resultsViewPageStore.genes.result!}
                                     samplesExtendedWithClinicalData={this.resultsViewPageStore.samplesExtendedWithClinicalData.result!}
                                     alterationsByGeneBySampleKey={this.resultsViewPageStore.alterationsByGeneBySampleKey.result!}
