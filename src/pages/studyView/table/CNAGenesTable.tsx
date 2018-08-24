@@ -12,22 +12,16 @@ import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import FixedHeaderTable from "./FixedHeaderTable";
 import {bind} from "bind-decorator";
-import {SortDirection} from "react-virtualized";
 
 
-type CNAGenesTableUserSelection = {
-    entrezGeneId: number;
-    alteration: number;
-}
-
-export type  CNAGenesTableUserSelectionWithIndex = CNAGenesTableUserSelection & {
+export type  CNAGenesTableUserSelectionWithIndex = CopyNumberGeneFilterElement & {
     rowIndex: number;
 }
 
 export interface ICNAGenesTablePros {
     promise: MobxPromise<CNAGenesData>;
     filters: CopyNumberGeneFilterElement[];
-    onUserSelection: (selection: CNAGenesTableUserSelection[]) => void;
+    onUserSelection: (selection: CopyNumberGeneFilterElement[]) => void;
     numOfSelectedSamples: number;
     onGeneSelect: (hugoGeneSymbol: string) => void;
     selectedGenes: string[]
@@ -97,7 +91,8 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         {
             name: 'CNA',
             render: (data: CopyNumberCountByGene) =>
-                <span className={classnames(data.alteration === -2 ? styles.del : styles.amp)}>{data.alteration === -2 ? 'DEL' : 'AMP'}</span>,
+                <span
+                    className={classnames(data.alteration === -2 ? styles.del : styles.amp)}>{data.alteration === -2 ? 'DEL' : 'AMP'}</span>,
             sortBy: (data: CopyNumberCountByGene) => data.alteration,
             defaultSortDirection: 'asc' as 'asc',
             filter: (data: CopyNumberCountByGene, filterString: string, filterStringUpper: string) => {
