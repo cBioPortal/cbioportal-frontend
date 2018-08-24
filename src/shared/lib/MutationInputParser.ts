@@ -65,9 +65,9 @@ export type MutationInput = Mutation & ClinicalInput;
  * @param header    header line (first line) of the input
  * @returns {object} map of <header name, index> pairs
  */
-export function buildIndexMap(header: string): {[columnName:string]: number}
+export function buildIndexMap(header: string, separator: string): {[columnName:string]: number}
 {
-    const columns = header.split("\t");
+    const columns = header.split(separator);
     const map:{[columnName:string]: number}  = {};
 
     columns.forEach((columnName: string, index: number) => {
@@ -88,12 +88,12 @@ export function buildIndexMap(header: string): {[columnName:string]: number}
  */
 export function parseLine(line: string,
                           indexMap: {[columnName:string]: number},
+                          separator: string,
                           headerMap: {[attrName:string]: string} = MODEL_TO_HEADER): Partial<MutationInput>
 {
     const mutation: Partial<MutationInput> = {};
 
-    // assuming values are separated by tabs
-    const values = line.split("\t");
+    const values = line.split(separator);
 
     // find the corresponding column for each field, and set the value
     Object.keys(headerMap).forEach((key: keyof MutationInput | keyof Gene) => {
@@ -150,19 +150,22 @@ export function parseInput(input: string): Partial<MutationInput>[]
 {
     const mutationData: Partial<MutationInput>[] = [];
 
+    // use tab as column separator unless there are no tabs, then use space
+    const separator = (input.indexOf("\t") > 0)? "\t" : " ";
+
     const lines = input.split("\n");
 
     if (lines.length > 0)
     {
         // assuming first line is a header
         // TODO allow comments?
-        const indexMap = buildIndexMap(lines[0]);
+        const indexMap = buildIndexMap(lines[0], separator);
 
         // rest should be data
         lines.slice(1).forEach(line => {
             // skip empty lines
             if (line.length > 0) {
-                mutationData.push(parseLine(line, indexMap));
+                mutationData.push(parseLine(line, indexMap, separator));
             }
         });
     }

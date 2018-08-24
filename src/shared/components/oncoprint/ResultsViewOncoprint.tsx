@@ -35,6 +35,7 @@ import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
 import naturalSort from "javascript-natural-sort";
 import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
 import Spec = Mocha.reporters.Spec;
+import OqlStatusBanner from "../oqlStatusBanner/OqlStatusBanner";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -1091,6 +1092,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     public render() {
         return (
             <div style={{position:'relative', minHeight:this.isHidden ? this.loadingIndicatorHeight : "auto"}} className="cbioportal-frontend">
+                <OqlStatusBanner className="oncoprint-oql-status-banner" store={this.props.store} tabReflectsOql={true} style={{marginBottom:12}}/>
             {
                     <div
                         className={ classNames('oncoprintLoadingIndicator', { 'hidden': !this.isHidden }) }
