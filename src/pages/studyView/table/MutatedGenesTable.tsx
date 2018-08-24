@@ -10,7 +10,8 @@ import * as _ from 'lodash';
 import classnames from 'classnames';
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import FixedHeaderTable from "./FixedHeaderTable";
-import {action, observable} from "mobx";
+import {action, computed, observable} from "mobx";
+import {bind} from "bind-decorator";
 
 export interface IMutatedGenesTablePros {
     promise: MobxPromise<MutatedGenesData>;
@@ -31,13 +32,10 @@ class MutatedGenesTableComponent extends FixedHeaderTable<MutationCountByGene> {
 
 @observer
 export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {}> {
-    @observable private selectedRows: number[] = [];
     @observable private preSelectedRows: MutatedGenesTableUserSelectionWithIndex[] = [];
 
-    constructor(props:IMutatedGenesTablePros) {
+    constructor(props: IMutatedGenesTablePros) {
         super(props);
-        this.afterSelectingRows = this.afterSelectingRows.bind(this);
-        this.togglePreSelectRow = this.togglePreSelectRow.bind(this);
     }
 
     private _tableColumns = [
@@ -94,6 +92,8 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             name: '#',
             render: (data: MutationCountByGene) =>
                 <LabeledCheckbox
+                    checked={this.isChecked(data.entrezGeneId)}
+                    disabled={this.isDisabled(data.entrezGeneId)}
                     onChange={event => this.togglePreSelectRow(data.entrezGeneId)}
                 >
                     {data.countByEntity}
@@ -117,19 +117,24 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         }
     ];
 
+    @bind
     @action
     isChecked(entrezGeneId: number) {
-        var flag = false;
-        _.every(this.preSelectedRows, (val: MutatedGenesTableUserSelectionWithIndex, index: number) => {
-            if (val.entrezGeneId === entrezGeneId) {
-                flag = true;
-                return false;
-            }
+        let record = _.find(this.preSelectedRows, (row: MutatedGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId);
+        if (_.isUndefined(record)) {
+            return this.selectedRows.length > 0 && !_.isUndefined(_.find(this.selectedRows, (row: MutatedGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId));
+        } else {
             return true;
-        });
-        return flag;
+        }
     }
 
+    @bind
+    @action
+    isDisabled(entrezGeneId: number) {
+        return !_.isUndefined(_.find(this.selectedRows, (row: MutatedGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId));
+    }
+
+    @bind
     @action
     togglePreSelectRow(entrezGeneId: number) {
         let record: MutatedGenesTableUserSelectionWithIndex | undefined = _.find(this.preSelectedRows, (row: MutatedGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId);
@@ -156,10 +161,28 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
     }
 
 
+    @bind
     @action
     afterSelectingRows() {
         this.props.onUserSelection(this.preSelectedRows.map(row => row.entrezGeneId));
-        this.selectedRows = this.preSelectedRows.map(row => row.rowIndex);
+        this.preSelectedRows = [];
+    }
+
+    @computed
+    get selectedRows() {
+        if (this.props.filters.length === 0) {
+            return [];
+        } else {
+            return _.reduce(this.props.promise.result, (acc: MutatedGenesTableUserSelectionWithIndex[], row: MutationCountByGene, index: number) => {
+                if (_.includes(this.props.filters, row.entrezGeneId)) {
+                    acc.push({
+                        rowIndex: index,
+                        entrezGeneId: row.entrezGeneId
+                    });
+                }
+                return acc;
+            }, []);
+        }
     }
 
     public render() {
@@ -168,7 +191,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                 data={this.props.promise.result || []}
                 columns={this._tableColumns}
                 selectedGenes={this.props.selectedGenes}
-                selectedRows={this.selectedRows}
+                selectedRows={_.map(_.union(this.selectedRows, this.preSelectedRows), row => row.rowIndex)}
                 showSelectSamples={true && this.preSelectedRows.length > 0}
                 afterSelectingRows={this.afterSelectingRows}
                 sortBy='#'

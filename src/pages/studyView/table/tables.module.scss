@@ -68,12 +68,24 @@
 }
 
 .highlightedRow {
-  background-color: gray;
+  background-color: #d3d3d3;
 }
 
 .gistic, .mutSig {
   height: 10px;
   margin: 0 1px;
+}
+
+.amp {
+  color: red;
+}
+
+.del {
+  color: #0000ff;
+}
+
+.amp, .del {
+  font-weight: bold;
 }
 
 .displayFlex {
