@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as _ from "lodash";
 import {CNAGenesData} from "pages/studyView/StudyViewPageStore";
-import {action, observable} from "mobx";
+import {action, computed, observable} from "mobx";
 import {observer} from "mobx-react";
 import styles from "./tables.module.scss";
 import {CopyNumberCountByGene, CopyNumberGeneFilterElement} from "shared/api/generated/CBioPortalAPIInternal";
@@ -11,6 +11,8 @@ import classnames from 'classnames';
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import FixedHeaderTable from "./FixedHeaderTable";
+import {bind} from "bind-decorator";
+import {SortDirection} from "react-virtualized";
 
 
 type CNAGenesTableUserSelection = {
@@ -36,13 +38,10 @@ class CNAGenesTableComponent extends FixedHeaderTable<CopyNumberCountByGene> {
 
 @observer
 export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
-    @observable private selectedRows: number[] = [];
     @observable private preSelectedRows: CNAGenesTableUserSelectionWithIndex[] = [];
 
     constructor(props: ICNAGenesTablePros) {
         super(props);
-        this.afterSelectingRows = this.afterSelectingRows.bind(this);
-        this.togglePreSelectRow = this.togglePreSelectRow.bind(this);
     }
 
     private _columns = [
@@ -98,7 +97,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         {
             name: 'CNA',
             render: (data: CopyNumberCountByGene) =>
-                <span>{data.alteration === -2 ? 'DEL' : 'AMP'}</span>,
+                <span className={classnames(data.alteration === -2 ? styles.del : styles.amp)}>{data.alteration === -2 ? 'DEL' : 'AMP'}</span>,
             sortBy: (data: CopyNumberCountByGene) => data.alteration,
             defaultSortDirection: 'asc' as 'asc',
             filter: (data: CopyNumberCountByGene, filterString: string, filterStringUpper: string) => {
@@ -110,6 +109,8 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             name: '#',
             render: (data: CopyNumberCountByGene) =>
                 <LabeledCheckbox
+                    checked={this.isChecked(data.entrezGeneId, data.alteration)}
+                    disabled={this.isDisabled(data.entrezGeneId, data.alteration)}
                     onChange={event => this.togglePreSelectRow(data.entrezGeneId, data.alteration)}
                 >
                     {data.countByEntity}
@@ -133,19 +134,24 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         }
     ];
 
+    @bind
     @action
     isChecked(entrezGeneId: number, alteration: number) {
-        var flag = false;
-        _.every(this.preSelectedRows, (val: CopyNumberGeneFilterElement, index: number) => {
-            if (val.entrezGeneId === entrezGeneId && val.alteration === alteration) {
-                flag = true;
-                return false;
-            }
+        let record = _.find(this.preSelectedRows, (row: CNAGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId && row.alteration === alteration);
+        if (_.isUndefined(record)) {
+            return this.selectedRows.length > 0 && !_.isUndefined(_.find(this.selectedRows, (row: CNAGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId && row.alteration === alteration));
+        } else {
             return true;
-        });
-        return flag;
+        }
     }
 
+    @bind
+    @action
+    isDisabled(entrezGeneId: number, alteration: number) {
+        return !_.isUndefined(_.find(this.selectedRows, (row: CNAGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId && row.alteration === alteration));
+    }
+
+    @bind
     @action
     togglePreSelectRow(entrezGeneId: number, alteration: number) {
         let record: CNAGenesTableUserSelectionWithIndex | undefined = _.find(this.preSelectedRows, (row: CNAGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId && row.alteration === alteration);
@@ -172,6 +178,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         }
     }
 
+    @bind
     @action
     afterSelectingRows() {
         this.props.onUserSelection(this.preSelectedRows.map(row => {
@@ -180,7 +187,25 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                 alteration: row.alteration
             };
         }));
-        this.selectedRows = this.preSelectedRows.map(row => row.rowIndex);
+        this.preSelectedRows = [];
+    }
+
+    @computed
+    get selectedRows() {
+        if (this.props.filters.length === 0) {
+            return [];
+        } else {
+            return _.reduce(this.props.promise.result, (acc: CNAGenesTableUserSelectionWithIndex[], row: CopyNumberCountByGene, index: number) => {
+                if (_.includes(this.props.filters, {entrezGeneId: row.entrezGeneId, alteration: row.alteration})) {
+                    acc.push({
+                        rowIndex: index,
+                        entrezGeneId: row.entrezGeneId,
+                        alteration: row.alteration
+                    });
+                }
+                return acc;
+            }, []);
+        }
     }
 
     public render() {
@@ -189,7 +214,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                 data={this.props.promise.result || []}
                 columns={this._columns}
                 selectedGenes={this.props.selectedGenes}
-                selectedRows={this.selectedRows}
+                selectedRows={_.map(_.union(this.selectedRows, this.preSelectedRows), row => row.rowIndex)}
                 showSelectSamples={true && this.preSelectedRows.length > 0}
                 afterSelectingRows={this.afterSelectingRows}
                 sortBy='#'
