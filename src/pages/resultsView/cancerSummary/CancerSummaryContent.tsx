@@ -7,7 +7,6 @@ import Slider from 'react-rangeslider';
 import {FormGroup, ControlLabel, FormControl} from 'react-bootstrap';
 import {If, Then, Else} from 'react-if';
 import classnames from 'classnames';
-import SvgSaver from 'svgsaver';
 
 import 'react-select/dist/react-select.css';
 import 'react-rangeslider/lib/index.css';

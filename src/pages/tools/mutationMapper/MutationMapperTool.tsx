@@ -115,9 +115,9 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
             return (
                 <div className="standalone-mutation-input">
                     <p>
-                        Please input <b>tab-delimited</b> mutation data. (Load example data:
-                        <span> <a onClick={this.handleLoadExampleGenomicCoordinates}>Genomic Changes</a></span>,
-                        <span> <a onClick={this.handleLoadExampleGeneAndProteinChange}>Protein Changes</a></span>,
+                        Please input <b>tab-delimited</b> or <b>space-delimited</b> mutation data. (Load example data:
+                        <span> <a onClick={this.handleLoadExampleGenomicCoordinates} data-test="GenomicChangesExampleButton">Genomic Changes</a></span>,
+                        <span> <a onClick={this.handleLoadExampleGeneAndProteinChange} data-test="ProteinChangesExampleButton">Protein Changes</a></span>,
                         <span> <a onClick={this.handleLoadExamplePartiallyAnnotated}>Genomic and Protein Changes</a></span>)
                     </p>
 
@@ -147,6 +147,7 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
                         className="btn btn-lg btn-primary"
                         onClick={this.handleVisualize}
                         disabled={this.inputContent.length === 0}
+                        data-test="MutationMapperToolVisualizeButton"
                     >
                         Visualize
                     </button>
