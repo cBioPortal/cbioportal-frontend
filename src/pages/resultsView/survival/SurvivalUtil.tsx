@@ -272,7 +272,7 @@ function filterBasedOnCoordinates(filters: SurvivalPlotFilters, _val:ScatterData
 export const ALTERED_GROUP_VALUE = "Altered";
 export const UNALTERED_GROUP_VALUE = "Unaltered";
 
-export function getSurvivalChartDataByAltered(
+export function getSurvivalChartDataByAlteredStatus(
     alteredSurvivals:PatientSurvival[],
     unalteredSurvivals:PatientSurvival[]
 ) {

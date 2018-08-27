@@ -5,7 +5,7 @@ import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator
 import { observer } from "mobx-react";
 import styles from "./styles.module.scss";
 import {remoteData} from "../../../shared/api/remoteData";
-import {getSurvivalChartDataByAltered} from "./SurvivalUtil";
+import {getSurvivalChartDataByAlteredStatus} from "./SurvivalUtil";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 
 export interface ISurvivalTabProps {
@@ -34,7 +34,7 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
             this.props.store.overallUnalteredPatientSurvivals,
         ],
         invoke:()=>{
-            return Promise.resolve(getSurvivalChartDataByAltered(
+            return Promise.resolve(getSurvivalChartDataByAlteredStatus(
                 this.props.store.overallAlteredPatientSurvivals.result!,
                 this.props.store.overallUnalteredPatientSurvivals.result!
             ));
@@ -47,7 +47,7 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
             this.props.store.diseaseFreeUnalteredPatientSurvivals,
         ],
         invoke:()=>{
-            return Promise.resolve(getSurvivalChartDataByAltered(
+            return Promise.resolve(getSurvivalChartDataByAlteredStatus(
                 this.props.store.diseaseFreeAlteredPatientSurvivals.result!,
                 this.props.store.diseaseFreeUnalteredPatientSurvivals.result!
             ));
