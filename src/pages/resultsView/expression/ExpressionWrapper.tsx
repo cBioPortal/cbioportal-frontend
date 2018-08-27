@@ -47,6 +47,7 @@ import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicato
 import BoxScatterPlot from "../../../shared/components/plots/BoxScatterPlot";
 import {ViewType} from "../plots/PlotsTab";
 import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
+import {maxPage} from "../../../shared/components/lazyMobXTable/utils";
 
 export interface ExpressionWrapperProps {
     store:ResultsViewPageStore;
@@ -134,11 +135,14 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @computed get boxWidth(){
-        // linearly decrease 40 with 1 box->minimum 18 with 33 boxes
-        // calbirated to fit all 33 tcga pan-can atlas studies
-        const m = -22/32;
-        const b = 40 - m;
-        return Math.max(m * this.selectedStudies.length + b, 18);
+        const maxWidth = 80; // width with 1 box
+        const minWidth = 18; // width with 33 boxes - value of 18 is calibrated to fit all 33 tcga pan-can atlas studies
+
+        // solving linear equation for maxWidth at 1 and minWidth at 33
+        const m = (minWidth - maxWidth)/32;
+        const b = maxWidth - m;
+
+        return Math.max(m * this.selectedStudies.length + b, minWidth);
     }
 
     readonly sampleStudyData = remoteData<IStringAxisData>({
