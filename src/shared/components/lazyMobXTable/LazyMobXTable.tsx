@@ -828,7 +828,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
 
     render() {
         return (
-            <div>
+            <div data-test="LazyMobXTable">
                 <Observer>
                     {this.getTopToolbar}
                 </Observer>

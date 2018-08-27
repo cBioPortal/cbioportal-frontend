@@ -7,6 +7,7 @@ import CosmicMutationTable from "shared/components/cosmic/CosmicMutationTable";
 import styles from "./cosmic.module.scss";
 import {ICosmicData} from "shared/model/Cosmic";
 import generalStyles from "./styles.module.scss";
+import {getProteinPositionFromProteinChange} from "../../../lib/ProteinChangeUtils";
 
 export function placeArrow(tooltipEl: any) {
     const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
@@ -45,13 +46,10 @@ export default class CosmicColumnFormatter
 
     public static extractPosition(proteinChange:string)
     {
-        const position:RegExp = /[0-9]+/g;
-        const matched:RegExpMatchArray|null = proteinChange.match(position);
-
-        if (matched) {
-            return matched[0];
-        }
-        else {
+        const pos = getProteinPositionFromProteinChange(proteinChange);
+        if (pos) {
+            return pos.start;
+        } else {
             return null;
         }
     }

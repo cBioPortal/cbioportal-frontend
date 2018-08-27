@@ -50,7 +50,7 @@ export default class Sequence extends React.Component<ISequenceProps, {}> {
                     y={this.props.y}
                     width={this.props.width}
                     height={this.props.height}
-                    fill="rgba(0,0,0,0)"
+                    style={{opacity:0}}
                 />
             </g>
         );

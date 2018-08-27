@@ -1,26 +1,13 @@
 import * as React from 'react';
-import SvgSaver from 'svgsaver';
 import autobind from "autobind-decorator";
 import DownloadControls from "../downloadControls/DownloadControls";
 
 interface IChartContainer {
-    getSVGElement?:()=>SVGElement;
+    getSVGElement?:()=>SVGElement|null;
     exportFileName?:string;
 }
 
 export default class ChartContainer extends React.Component<IChartContainer, {}> {
-
-    @autobind
-    private downloadSvg() {
-        this.svgsaver.asSvg(this.props.getSVGElement!(), this.props.exportFileName + '.svg');
-    }
-
-    @autobind
-    private downloadPng() {
-        this.svgsaver.asPng(this.props.getSVGElement!(), this.props.exportFileName + '.png');
-    }
-
-    private svgsaver = new SvgSaver();
 
     render(){
 
