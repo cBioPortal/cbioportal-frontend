@@ -43,6 +43,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     private handlers: any;
     private plot: AbstractChart;
 
+    private cachedData:any
+
     @observable mouseInChart: boolean = false;
     @observable placement: 'left' | 'right' = 'right';
     @observable chartType: ChartType
@@ -154,6 +156,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         this.chartType = chartType;
     }
 
+    @computed get chartData(){
+        if(this.props.promise.isComplete){
+            this.cachedData = this.props.promise.result;
+        }
+        return this.cachedData;
+    }
+
     @computed
     get chart() {
         switch (this.chartType) {
@@ -162,14 +171,14 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     ref={this.handlers.ref}
                     onUserSelection={this.handlers.onUserSelection}
                     filters={this.props.filters}
-                    data={this.props.promise.result}
+                    data={this.chartData}
                     active={this.mouseInChart}
                     placement={this.placement}
                 />)
             }
             case ChartType.TABLE: {
                 return (<ClinicalTable
-                    data={this.props.promise.result}
+                    data={this.chartData}
                     filters={this.props.filters}
                     onUserSelection={this.handlers.onUserSelection}
                     label={this.props.chartMeta.displayName}
@@ -178,7 +187,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             case ChartType.MUTATED_GENES_TABLE: {
                 return (
                     <MutatedGenesTable
-                        promise={this.props.promise}
+                        data={this.chartData}
                         numOfSelectedSamples={100}
                         filters={this.props.filters}
                         onUserSelection={this.handlers.updateGeneFilter}
@@ -190,7 +199,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             case ChartType.CNA_GENES_TABLE: {
                 return (
                     <CNAGenesTable
-                        promise={this.props.promise}
+                        data={this.chartData}
                         numOfSelectedSamples={100}
                         filters={this.props.filters}
                         onUserSelection={this.handlers.updateCNAGeneFilter}
@@ -201,8 +210,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }
             case ChartType.SURVIVAL: {
                 return (
-                    <SurvivalChart alteredPatientSurvivals={this.props.promise.result.alteredGroup}
-                                   unalteredPatientSurvivals={this.props.promise.result.unalteredGroup}
+                    <SurvivalChart alteredPatientSurvivals={this.chartData? this.chartData.alteredGroup : []}
+                                   unalteredPatientSurvivals={this.chartData? this.chartData.unalteredGroup : []}
                                    title={'test'}
                                    xAxisLabel="Months Survival"
                                    yAxisLabel="Surviving"
@@ -228,7 +237,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         width={400}
                         height={380}
                         onSelection={this.props.onUserSelection}
-                        data={this.props.promise.result}
+                        data={this.chartData}
                         isSelected={d => isSelected(d, this.props.selectedSamplesMap)}
                         isLoading={this.props.selectedSamples.isPending}
                         selectedFill="#ff0000"
@@ -258,7 +267,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     chartControls={this.chartControls}
                     changeChartType={this.changeChartType}
                 />
-                <StudyViewComponentLoader promise={this.props.promise}>
+                <StudyViewComponentLoader promise={this.props.promise} isInitialLoaded={!_.isUndefined(this.chartData)}>
                     {this.chart}
                 </StudyViewComponentLoader>
             </div>

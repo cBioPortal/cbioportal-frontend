@@ -12,7 +12,7 @@ import classnames from 'classnames';
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 
 export interface IMutatedGenesTablePros {
-    promise: MobxPromise<MutatedGenesData>;
+    data: MutatedGenesData;
     filters: number[];
     onUserSelection: (value: number) => void;
     numOfSelectedSamples: number;
@@ -76,7 +76,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                     initialItemsPerPage={10}
                     showCopyDownload={false}
                     showColumnVisibility={false}
-                    data={this.props.promise.result}
+                    data={this.props.data}
                     columns={this._tableColumns}
                 />
             </div>

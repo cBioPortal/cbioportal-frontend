@@ -13,7 +13,7 @@ import classnames from 'classnames';
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 
 export interface ICNAGenesTablePros {
-    promise: MobxPromise<CNAGenesData>;
+    data: CNAGenesData;
     filters: CopyNumberGeneFilterElement[];
     onUserSelection: (entrezGeneId: number, alteration: number) => void;
     numOfSelectedSamples: number;
@@ -97,7 +97,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                     initialItemsPerPage={10}
                     showCopyDownload={false}
                     showColumnVisibility={false}
-                    data={this.props.promise.result}
+                    data={this.props.data}
                     columns= {this._tableColumns}
                 />
             </div>
