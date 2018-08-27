@@ -25,38 +25,63 @@ function getRemoteSession(sessionId:string){
     return sessionClient.getSession(sessionId)
 }
 
+function normalizeLegacySession(sessionData:any){
+    // legacy sessions were stored with values as first item in arrays, so undo this
+    sessionData.data = _.mapValues(sessionData.data, (value: any) => {
+        if (_.isArray(value)) {
+            return value[0];
+        } else {
+            return value;
+        }
+    });
+
+    // convert cancer_study_id to cancer_study_list and get rid of cancer_study_id
+    if (sessionData.data.cancer_study_id && !sessionData.data.cancer_study_list) {
+        sessionData.data.cancer_study_list = sessionData.data.cancer_study_id;
+    }
+    delete sessionData.data.cancer_study_id;
+
+    return sessionData;
+}
+
+
 export default class ExtendedRouterStore extends RouterStore {
 
     // this has to be computed to avoid annoying problem where
     // remoteSessionData fires every time new route is pushed, even
     // if sessionId has stayed the same
     @computed get sessionId(){
-        return this.location.query.sessionId;
+        return this.location.query.session_id;
     }
 
-    // localStorageSessionData = remoteData({
-    //     invoke: () => {
-    //         if (this.sessionId) {
-    //             console.log("fetching session");
-    //             const p = new Promise((resolve) => {
-    //                 setTimeout(() => {
-    //                     resolve()
-    //                 }, 0);
-    //             });
-    //             return p;
-    //         } else {
-    //             return Promise.resolve({});
-    //         }
-    //
-    //     },
-    //     onResult:()=>{
-    //         this._session = JSON.parse(localStorage.getItem(getSessionKey(this.location.query.sessionId!))!);
-    //     }
-    // });
+    localStorageSessionData = remoteData({
+        invoke: () => {
+            if (this.sessionId) {
+                const p = new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve()
+                    }, 0);
+                });
+                return p;
+            } else {
+                return Promise.resolve({});
+            }
+
+        },
+        onResult:()=>{
+            this._session = JSON.parse(localStorage.getItem(getSessionKey(this.location.query.sessionId!))!);
+        }
+    });
 
     remoteSessionData = remoteData({
         invoke: async () => {
-            const sessionData = await getRemoteSession(this.sessionId);
+            let sessionData = await getRemoteSession(this.sessionId);
+
+            // if it has no version, it's a legacy session and needs to be normalized
+            if (sessionData.version === undefined) {
+                sessionData = normalizeLegacySession(sessionData);
+            }
+
             return sessionData;
         },
         onResult:()=>{
@@ -99,22 +124,23 @@ export default class ExtendedRouterStore extends RouterStore {
                 query:newQuery,
                 path:path
             };
+
+            // add session version
+            session.query.version = 2;
+
             this._session = session;
 
             saveRemoteSession(session.query).then((key)=>{
-                this.push( URL.format({pathname: path, query: {sessionId:key.id}, hash:this.location.hash}) );
+                this.push( URL.format({pathname: path, query: {session_id:key.id}, hash:this.location.hash}) );
                 //localStorage.setItem(getSessionKey(session.id), JSON.stringify(session));
             });
-
-
-            // for local storage, wrap this in a promse
 
         }
 
         // if we have a session then we want to push it's id to url
         // otherwise, we are employing url as source of truth, so push real query to it
-        const sessionId = (session) ? session.id : (this.location.query.sessionId);
-        const pushToUrl = sessionId ? {sessionId:sessionId} : newQuery;
+        const sessionId = (session) ? session.id : (this.location.query.session_id);
+        const pushToUrl = sessionId ? {session_id:sessionId} : newQuery;
 
         this.push( URL.format({pathname: path, query: pushToUrl, hash:this.location.hash}) );
     }
@@ -123,7 +149,7 @@ export default class ExtendedRouterStore extends RouterStore {
 
     @computed
     public get query(){
-        if (this.location.query.sessionId && this._session) {
+        if (this.location.query.session_id && this._session) {
             return this._session.query;
         } else {
             return this.location.query;
