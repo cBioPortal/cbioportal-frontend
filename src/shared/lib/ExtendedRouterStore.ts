@@ -3,8 +3,6 @@ import {action, computed, observable, runInAction} from 'mobx';
 import * as _ from 'lodash';
 import URL, {QueryParams} from 'url';
 import {remoteData} from "../api/remoteData";
-import {getSessionServiceApiUrl} from "../api/urls";
-import request from 'superagent';
 import sessionClient from "../api/sessionServiceInstance";
 
 export function getSessionKey(hash:string){

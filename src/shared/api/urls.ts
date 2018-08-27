@@ -111,9 +111,14 @@ export function getGenomeNexusApiUrl() {
     }
 }
 
-export function getSessionServiceApiUrl() {
-    return AppConfig.sessionServiceUrl!;
+export function getVirtualStudyServiceUrl() {
+    return `${AppConfig.sessionServiceUrl!}/virtual_study`;
 }
+
+export function getSessionServiceUrl() {
+    return `${AppConfig.sessionServiceUrl!}/main_session`;
+}
+
 
 export function getConfigurationServiceApiUrl() {
     return AppConfig.configurationServiceUrl;
