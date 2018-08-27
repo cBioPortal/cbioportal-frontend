@@ -131,6 +131,14 @@
             ]
           },
           {
+            "name": "disableLogScale",
+            "in": "query",
+            "description": "Whether to disable log scaling",
+            "required": false,
+            "type": "boolean",
+            "default": false
+          },
+          {
             "in": "body",
             "name": "studyViewFilter",
             "description": "Study view filter",
