@@ -133,6 +133,31 @@ export function doesQueryContainOQL(oql_query) {
     return ret;
 }
 
+export function doesQueryContainMutationOQL(oql_query) {
+    /* In: oql_query, a string, an OQL query (which could just be genes with no specified alterations)
+     Out: boolean, true iff the query has explicit mutation OQL (e.g. `BRCA1: MISSENSE` as opposed to just `BRCA1` or `BRCA1: MUT`)
+     */
+
+    const parsedQuery = parseOQLQuery(oql_query);
+    let ret = false;
+    for (const singleGeneQuery of parsedQuery) {
+        if (singleGeneQuery.alterations !== false) {
+            for (const alteration of singleGeneQuery.alterations) {
+                if (alteration.alteration_type === "mut" &&
+                        alteration.constr_rel !== undefined) {
+                    // nontrivial mutation specification
+                    ret = true;
+                    break;
+                }
+            }
+            if (ret) {
+                break;
+            }
+        }
+    }
+    return ret;
+}
+
 var parsedOQLAlterationToSourceOQL = function(alteration) {
     if (alteration.alteration_type === "cna") {
         if (alteration.constr_rel === "=") {

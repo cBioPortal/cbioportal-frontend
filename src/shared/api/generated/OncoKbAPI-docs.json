@@ -912,7 +912,6 @@
       },
       "post": {
         "tags": [
-          "Evidences",
           "Search"
         ],
         "summary": "searchPost",

@@ -143,7 +143,8 @@ describe("MutationInputParser", () => {
     });
 
     it("extracts mutation input headers", () => {
-        const richInputIndexMap = buildIndexMap(partiallyAnnotatedMutationInput.split("\n")[0]);
+        const separator = "\t";
+        const richInputIndexMap = buildIndexMap(partiallyAnnotatedMutationInput.split("\n")[0], separator);
         assert.equal(richInputIndexMap["hugo_symbol"], 0);
         assert.equal(richInputIndexMap["sample_id"], 1);
         assert.equal(richInputIndexMap["protein_change"], 2);
@@ -154,7 +155,7 @@ describe("MutationInputParser", () => {
         assert.equal(richInputIndexMap["reference_allele"], 7);
         assert.equal(richInputIndexMap["variant_allele"], 8);
 
-        const basicInputIndexMap = buildIndexMap(basicMutationInput.split("\n")[0]);
+        const basicInputIndexMap = buildIndexMap(basicMutationInput.split("\n")[0], separator);
         assert.equal(basicInputIndexMap["sample_id"], 0);
         assert.equal(basicInputIndexMap["chromosome"], 1);
         assert.equal(basicInputIndexMap["start_position"], 2);
@@ -162,11 +163,11 @@ describe("MutationInputParser", () => {
         assert.equal(basicInputIndexMap["reference_allele"], 4);
         assert.equal(basicInputIndexMap["variant_allele"], 5);
 
-        const minimalInputIndexMap = buildIndexMap(minimalMutationInput.split("\n")[0])
+        const minimalInputIndexMap = buildIndexMap(minimalMutationInput.split("\n")[0], separator);
         assert.equal(minimalInputIndexMap["hugo_symbol"], 0);
         assert.equal(minimalInputIndexMap["protein_change"], 1);
 
-        const clinicalInputIndexMap = buildIndexMap(mutationInputWithClinicalData.split("\n")[0]);
+        const clinicalInputIndexMap = buildIndexMap(mutationInputWithClinicalData.split("\n")[0], separator);
         assert.equal(clinicalInputIndexMap["sample_id"], 0);
         assert.equal(clinicalInputIndexMap["cancer_type"], 1);
     });
