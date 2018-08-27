@@ -101,6 +101,7 @@ export default class Domain extends React.Component<DomainProps, {}> {
         if (reference) {
             props.ref=this.handlers.textRef;
             props.visibility="hidden";
+            props.style={opacity:0};
             props.className=this.props.hitzoneClassName;
         }
         return (<text {...props}>{text}</text>);
@@ -124,7 +125,7 @@ export default class Domain extends React.Component<DomainProps, {}> {
                     y={this.props.y}
                     width={this.props.width}
                     height={this.props.height}
-                    fill="rgba(0,0,0,0)"
+                    style={{opacity:0}}
                 />
             </g>
         );
