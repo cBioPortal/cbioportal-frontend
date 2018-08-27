@@ -80,11 +80,11 @@ export default class Lollipop extends React.Component<LollipopProps, {}> {
                 />
                 <circle
                     className={this.props.hitzoneClassName}
-                    fill="rgba(0,0,0,0)"
                     r={this.props.hoverHeadRadius}
                     cx={this.circleX}
                     cy={this.circleY}
                     cursor="pointer"
+                    style={{opacity:0}}
                 />
                 {label}
             </g>

@@ -46,6 +46,10 @@ export declare function doesQueryContainOQL(
     oql_query:string
 ):boolean;
 
+export declare function doesQueryContainMutationOQL(
+    oql_query:string
+):boolean;
+
 export declare function filterCBioPortalWebServiceData(oql_query:string, data:(Mutation | NumericGeneMolecularData)[], accessors:any, default_oql:string): ExtendedAlteration[];
 
 export declare function filterCBioPortalWebServiceDataByOQLLine(oql_query:string, data:(AnnotatedMutation | NumericGeneMolecularData)[], accessors:any, default_oql:string): OQLLineFilterOutput<ExtendedAlteration&AnnotatedMutation>[];

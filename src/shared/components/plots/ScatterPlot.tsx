@@ -1,5 +1,5 @@
 import * as React from "react";
-import {observer} from "mobx-react";
+import {observer, Observer} from "mobx-react";
 import bind from "bind-decorator";
 import {computed, observable} from "mobx";
 import CBIOPORTAL_VICTORY_THEME, {baseLabelStyles} from "../../theme/cBioPoralTheme";
@@ -9,7 +9,7 @@ import jStat from "jStat";
 import ScatterPlotTooltip from "./ScatterPlotTooltip";
 import ifndef from "shared/lib/ifndef";
 import {tickFormatNumeral} from "./TickUtils";
-import {scatterPlotSize} from "./PlotUtils";
+import {scatterPlotSize, separateScatterDataByAppearance} from "./PlotUtils";
 
 export interface IBaseScatterPlotData {
     x:number;
@@ -29,6 +29,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     fillOpacity?:number | ((d:D)=>number);
     strokeOpacity?:number | ((d:D)=>number);
     strokeWidth?:number | ((d:D)=>number);
+    zIndexSortBy?:((d:D)=>any)[]; // second argument to _.sortBy
     symbol?: string | ((d:D)=>string); // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
     tooltip?:(d:D)=>JSX.Element;
     legendData?:{name:string|string[], symbol:any}[]; // see http://formidable.com/open-source/victory/docs/victory-legend/#data
@@ -47,7 +48,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
 const DEFAULT_FONT_FAMILY = "Verdana,Arial,sans-serif";
 const CORRELATION_INFO_Y = 100; // experimentally determined
 export const LEGEND_Y = CORRELATION_INFO_Y + 30 /* approximate correlation info height */ + 30 /* top padding*/
-const RIGHT_GUTTER = 120; // room for correlation info and legend
+const RIGHT_PADDING = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 50;
 const MIN_LOG_ARGUMENT = 0.01;
@@ -56,7 +57,7 @@ const LEFT_PADDING = 25;
 
 @observer
 export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.Component<IScatterPlotProps<D>, {}> {
-    @observable tooltipModel:any|null = null;
+    @observable.ref tooltipModel:any|null = null;
     @observable pointHovered:boolean = false;
     private mouseEvents:any = this.makeMouseEvents();
 
@@ -152,7 +153,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                     data={this.props.legendData}
                     x={x}
                     y={LEGEND_Y}
-                    width={RIGHT_GUTTER}
+                    width={RIGHT_PADDING}
                 />
             );
         } else {
@@ -233,8 +234,12 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         return jStat.spearmancoeff(this.splitData.x, this.splitData.y);
     }
 
+    @computed get rightPadding() {
+        return RIGHT_PADDING;
+    }
+
     @computed get svgWidth() {
-        return LEFT_PADDING + this.props.chartWidth + RIGHT_GUTTER;
+        return LEFT_PADDING + this.props.chartWidth + this.rightPadding;
     }
 
     @computed get svgHeight() {
@@ -292,84 +297,109 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         return this.tickFormat(t, ticks, !!this.props.logY);
     }
 
+    @computed get data() {
+        return separateScatterDataByAppearance(
+            this.props.data,
+            ifndef(this.props.fill, "0x000000"),
+            ifndef(this.props.stroke, "0x000000"),
+            ifndef(this.props.strokeWidth, 0),
+            ifndef(this.props.strokeOpacity, 1),
+            ifndef(this.props.fillOpacity, 1),
+            this.props.zIndexSortBy
+        );
+    }
+
+
+    @bind
+    private getChart() {
+        return (
+            <div
+                ref={this.containerRef}
+                style={{width: this.svgWidth, height: this.svgHeight}}
+            >
+                <svg
+                    id={this.props.svgId || ""}
+                    style={{
+                        width: this.svgWidth,
+                        height: this.svgHeight,
+                        pointerEvents: "all"
+                    }}
+                    height={this.svgHeight}
+                    width={this.svgWidth}
+                    role="img"
+                    viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
+                >
+                    <g
+                        transform={`translate(${LEFT_PADDING},0)`}
+                    >
+                        <VictoryChart
+                            theme={CBIOPORTAL_VICTORY_THEME}
+                            width={this.props.chartWidth}
+                            height={this.props.chartHeight}
+                            standalone={false}
+                            domainPadding={PLOT_DATA_PADDING_PIXELS}
+                            singleQuadrantDomainPadding={false}
+                        >
+                            {this.title}
+                            {this.legend}
+                            <VictoryAxis
+                                domain={this.plotDomain.x}
+                                orientation="bottom"
+                                offsetY={50}
+                                crossAxis={false}
+                                tickCount={NUM_AXIS_TICKS}
+                                tickFormat={this.tickFormatX}
+                                axisLabelComponent={<VictoryLabel dy={25}/>}
+                                label={this.props.axisLabelX}
+                            />
+                            <VictoryAxis
+                                domain={this.plotDomain.y}
+                                offsetX={50}
+                                orientation="left"
+                                crossAxis={false}
+                                tickCount={NUM_AXIS_TICKS}
+                                tickFormat={this.tickFormatY}
+                                dependentAxis={true}
+                                axisLabelComponent={<VictoryLabel dy={-35}/>}
+                                label={this.props.axisLabelY}
+                            />
+                            { this.data.map(dataWithAppearance=>(
+                                <VictoryScatter
+                                    key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity}`}
+                                    style={{
+                                        data: {
+                                            fill: dataWithAppearance.fill,
+                                            stroke: dataWithAppearance.stroke,
+                                            strokeWidth: dataWithAppearance.strokeWidth,
+                                            strokeOpacity: dataWithAppearance.strokeOpacity,
+                                            fillOpacity: dataWithAppearance.fillOpacity
+                                        }
+                                    }}
+                                    size={this.size}
+                                    symbol={this.props.symbol || "circle"}
+                                    data={dataWithAppearance.data}
+                                    events={this.mouseEvents}
+                                    x={this.x}
+                                    y={this.y}
+                                />
+                            ))}
+                        </VictoryChart>
+                        {this.correlationInfo}
+                    </g>
+                </svg>
+            </div>
+        );
+    }
+
     render() {
         if (!this.props.data.length) {
             return <span>No data to plot.</span>;
         }
         return (
             <div>
-                <div
-                    ref={this.containerRef}
-                    style={{width: this.svgWidth, height: this.svgHeight}}
-                >
-                    <svg
-                        id={this.props.svgId || ""}
-                        style={{
-                            width: this.svgWidth,
-                            height: this.svgHeight,
-                            pointerEvents: "all"
-                        }}
-                        height={this.svgHeight}
-                        width={this.svgWidth}
-                        role="img"
-                        viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
-                    >
-                        <g
-                            transform={`translate(${LEFT_PADDING},0)`}
-                        >
-                            <VictoryChart
-                                theme={CBIOPORTAL_VICTORY_THEME}
-                                width={this.props.chartWidth}
-                                height={this.props.chartHeight}
-                                standalone={false}
-                                domainPadding={PLOT_DATA_PADDING_PIXELS}
-                                singleQuadrantDomainPadding={false}
-                            >
-                                {this.title}
-                                {this.legend}
-                                <VictoryAxis
-                                    domain={this.plotDomain.x}
-                                    orientation="bottom"
-                                    offsetY={50}
-                                    crossAxis={false}
-                                    tickCount={NUM_AXIS_TICKS}
-                                    tickFormat={this.tickFormatX}
-                                    axisLabelComponent={<VictoryLabel dy={25}/>}
-                                    label={this.props.axisLabelX}
-                                />
-                                <VictoryAxis
-                                    domain={this.plotDomain.y}
-                                    offsetX={50}
-                                    orientation="left"
-                                    crossAxis={false}
-                                    tickCount={NUM_AXIS_TICKS}
-                                    tickFormat={this.tickFormatY}
-                                    dependentAxis={true}
-                                    axisLabelComponent={<VictoryLabel dy={-35}/>}
-                                    label={this.props.axisLabelY}
-                                />
-                                <VictoryScatter
-                                    style={{
-                                        data: {
-                                            fill: ifndef(this.props.fill, "0x000000"),
-                                            stroke: ifndef(this.props.stroke, "0x000000"),
-                                            strokeWidth: ifndef(this.props.strokeWidth, 0),
-                                            strokeOpacity: ifndef(this.props.strokeOpacity, 1),
-                                            fillOpacity: ifndef(this.props.fillOpacity, 1),
-                                        }
-                                    }}
-                                    size={this.size}
-                                    symbol={this.props.symbol || "circle"}
-                                    data={this.props.data}
-                                    events={this.mouseEvents}
-                                    x={this.x}
-                                    y={this.y}
-                                />
-                            </VictoryChart>
-                            {this.correlationInfo}
-                        </g>
-                    </svg>
-                </div>
+                <Observer>
+                    {this.getChart}
+                </Observer>
                 {this.container && this.tooltipModel && this.props.tooltip && (
                     <ScatterPlotTooltip
                         container={this.container}
