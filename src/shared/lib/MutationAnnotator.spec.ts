@@ -2,9 +2,10 @@ import {assert} from "chai";
 import sinon from 'sinon';
 import * as _ from 'lodash';
 
-import {annotateMutations, resolveMissingProteinPositions} from "./MutationAnnotator";
+import {annotateMutations, resolveMissingProteinPositions, fetchVariantAnnotationsIndexedByGenomicLocation} from "./MutationAnnotator";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {initMutation} from "test/MutationMockUtils";
+import { VariantAnnotation } from "shared/api/generated/GenomeNexusAPI";
 
 describe("MutationAnnotator", () => {
     const fetchStubResponse = [
@@ -362,7 +363,11 @@ describe("MutationAnnotator", () => {
                 fetchVariantAnnotationByGenomicLocationPOST: fetchStub
             };
 
-            annotateMutations([], genomeNexusClient).then((data: Mutation[]) => {
+            fetchVariantAnnotationsIndexedByGenomicLocation(
+                [],
+                genomeNexusClient
+            ).then((indexedVariantAnnotations: {[genomicLocation: string]: VariantAnnotation}) => {
+                const data = annotateMutations([], indexedVariantAnnotations);
                 assert.equal(data.length, 0, "annotated mutation data should be empty");
                 assert.isFalse(fetchStub.called, "variant annotation fetcher should NOT be called");
                 done();
@@ -377,7 +382,12 @@ describe("MutationAnnotator", () => {
                 fetchVariantAnnotationByGenomicLocationPOST: fetchStub
             };
 
-            annotateMutations(_.cloneDeep(mutationsWithNoGenomicLocation), genomeNexusClient).then((data: Mutation[]) => {
+            fetchVariantAnnotationsIndexedByGenomicLocation(
+                _.cloneDeep(mutationsWithNoGenomicLocation),
+                genomeNexusClient
+            ).then((indexedVariantAnnotations: {[genomicLocation: string]: VariantAnnotation}) => {
+                const data = annotateMutations(_.cloneDeep(mutationsWithNoGenomicLocation), indexedVariantAnnotations);
+
                 assert.deepEqual(data, mutationsWithNoGenomicLocation,
                     "annotated mutation data should be identical to the initial input");
                 assert.isFalse(fetchStub.called,
@@ -395,7 +405,12 @@ describe("MutationAnnotator", () => {
                 fetchVariantAnnotationByGenomicLocationPOST: fetchStub
             };
 
-            annotateMutations(_.cloneDeep(mutationsWithGenomicLocation), genomeNexusClient).then((data: Mutation[]) => {
+            fetchVariantAnnotationsIndexedByGenomicLocation(
+                _.cloneDeep(mutationsWithGenomicLocation),
+                genomeNexusClient
+            ).then((indexedVariantAnnotations: {[genomicLocation: string]: VariantAnnotation}) => {
+                const data = annotateMutations(_.cloneDeep(mutationsWithGenomicLocation), indexedVariantAnnotations);
+
                 assert.notDeepEqual(data, mutationsWithGenomicLocation,
                     "annotated mutation data should be different than the initial input");
                 assert.isTrue(fetchStub.called,

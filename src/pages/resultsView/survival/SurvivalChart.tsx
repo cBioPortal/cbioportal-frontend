@@ -10,7 +10,6 @@ import {
     VictoryChart, VictoryContainer, VictoryLine, VictoryTooltip,
     VictoryAxis, VictoryLegend, VictoryLabel, VictoryScatter, VictoryTheme, VictoryZoomContainer
 } from 'victory';
-import SvgSaver from 'svgsaver';
 import {
     getEstimates, getMedian, getLineData, getScatterData, getScatterDataWithOpacity, getStats, calculateLogRank,
     getDownloadContent, convertScatterDataToDownloadData, downSampling, GroupedScatterData, filteringScatterData
@@ -59,7 +58,6 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     private alteredLegendText = 'Cases with Alteration(s) in Query Gene(s)';
     private unalteredLegendText = 'Cases without Alteration(s) in Query Gene(s)';
     private svgContainer: any;
-    private svgsaver = new SvgSaver();
     private styleOptsDefaultProps:any = {
         width: 900,
         height: 500,
@@ -240,7 +238,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                         <DownloadControls
                             dontFade={true}
                             filename={this.props.fileName}
-                            buttons={["SVG", "PNG", "Data"]}
+                            buttons={["SVG", "PNG", "PDF", "Data"]}
                             getSvg={this.getSvg}
                             getData={this.getData}
                             style={{position:'absolute', zIndex: 10, right: 10}}
@@ -264,10 +262,10 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                                      style={this.styleOpts.axis.y} domain={[0, 100]} crossAxis={false}/>
                         <VictoryLine interpolation="stepAfter"
                                      data={this.scatterData.altered.line}
-                                     style={{data: {stroke: "red", strokeWidth: 1}}}/>
+                                     style={{data: {stroke: "red", strokeWidth: 1,  fill:"#000000", fillOpacity:0}}}/>
                         <VictoryLine interpolation="stepAfter"
                                      data={this.scatterData.unaltered.line}
-                                     style={{data: {stroke: "blue", strokeWidth: 1}}}/>
+                                     style={{data: {stroke: "blue", strokeWidth: 1,  fill:"#000000", fillOpacity:0}}}/>
                         <VictoryScatter data={this.scatterData.altered.scatterWithOpacity}
                             symbol="plus" style={{ data: { fill: "red", opacity: (d:any) => d.opacity } }} size={3} />
                         <VictoryScatter data={this.scatterData.unaltered.scatterWithOpacity}

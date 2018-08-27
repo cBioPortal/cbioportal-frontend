@@ -13,6 +13,8 @@ import GeneSelectionBox, { GeneBoxType } from 'shared/components/GeneSelectionBo
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import VirtualStudy from 'pages/studyView/virtualStudy/VirtualStudy';
 import { StudyWithSamples } from 'pages/studyView/StudyViewPageStore';
+import fileDownload from 'react-file-download';
+import { If, Then, Else } from 'react-if';
 
 export interface ISummaryHeaderProps {
     geneQuery:string;
@@ -23,6 +25,7 @@ export interface ISummaryHeaderProps {
     filter: StudyViewFilter;
     attributeNamesSet: {[id:string]:string};
     user?: string;
+    getClinicalData: () => Promise<string>;
 }
 
 export type GeneReplacement = {alias: string, genes: Gene[]};
@@ -33,9 +36,25 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
     @observable private isCustomCaseBoxOpen = false;
     @observable private isQueryButtonDisabled = false;
 
+    @observable downloadingData = false;
+    @observable showDownloadErrorMessage = false;
+
     @computed
     get selectedPatientsCount() {
         return _.uniq(this.props.selectedSamples.map(sample => sample.uniquePatientKey)).length;
+    }
+
+    @bind
+    private handleDownload() {
+        this.downloadingData = true;
+        this.showDownloadErrorMessage = false;
+        this.props.getClinicalData().then(text => {
+            this.downloadingData = false;
+            fileDownload(text, 'data.tsv');
+        }).catch(() => {
+            this.downloadingData = false;
+            this.showDownloadErrorMessage = true;
+        });
     }
 
     @bind
@@ -93,6 +112,13 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
             ) ? 'Save/' : '') + 'Share Virtual Study';
     }
 
+    @computed get downloadButtonTooltip() {
+        if(this.showDownloadErrorMessage){
+            return "An error occurred while downloading the data. Please try again.";
+        }
+        return 'Download clinical data for the selected cases';
+    }
+
     render() {
         return (
             <div className="studyViewSummaryHeader">
@@ -130,9 +156,23 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                     <button className="btn" onClick={() => this.openCases()}>
                         <i className="fa fa-user-circle-o" aria-hidden="true" title="View selected cases"></i>
                     </button>
-                    <button className="btn" onClick={() => null}>
-                        <i className="fa fa-download" aria-hidden="true" title="Download clinical data for selected cases"></i>
-                    </button>
+                    <DefaultTooltip
+                        trigger={["hover"]}
+                        placement={"top"}
+                        overlay={<span>{this.downloadButtonTooltip}</span>}
+                    >
+                        <button className="btn" onClick={() => this.handleDownload()}>
+                            <If condition={this.downloadingData}>
+                                <Then>
+                                    <i className="fa fa-spinner fa-spin" aria-hidden="true"></i>
+                                </Then>
+                                <Else>
+                                    <i className="fa fa-download" aria-hidden="true"></i>
+                                </Else>
+                            </If>
+                        </button>
+                    </DefaultTooltip>
+                    
                     <GeneSelectionBox
                         inputGeneQuery={this.props.geneQuery}
                         callback={this.updateSelectedGenes}

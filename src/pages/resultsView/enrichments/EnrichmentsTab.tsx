@@ -9,6 +9,7 @@ import MRNAEnrichmentsTab from 'pages/resultsView/enrichments/MRNAEnrichmentsTab
 import ProteinEnrichmentsTab from 'pages/resultsView/enrichments/ProteinEnrichmentsTab';
 import Loader from 'shared/components/loadingIndicator/LoadingIndicator';
 import autobind from 'autobind-decorator';
+import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 
 export interface IEnrichmentsTabProps {
     store: ResultsViewPageStore
@@ -42,20 +43,23 @@ export default class EnrichmentsTab extends React.Component<IEnrichmentsTabProps
         }
 
         return (
-            <MSKTabs activeTabId={this.currentTabId} onTabClick={this.handleTabChange} className="secondaryTabs">
-                {(this.props.store.mutationEnrichmentProfiles.result!.length > 0) && <MSKTab id="mutations" linkText="Mutations">
-                    <MutationEnrichmentsTab store={this.props.store}/>
-                </MSKTab>}
-                {(this.props.store.copyNumberEnrichmentProfiles.result!.length > 0) && <MSKTab id="copynumber" linkText="Copy-number">
-                    <CopyNumberEnrichmentsTab store={this.props.store}/>
-                </MSKTab>}
-                {(this.props.store.mRNAEnrichmentProfiles.result!.length > 0) && <MSKTab id="mrna" linkText="mRNA">
-                    <MRNAEnrichmentsTab store={this.props.store}/>
-                </MSKTab>}
-                {(this.props.store.proteinEnrichmentProfiles.result!.length > 0) && <MSKTab id="protein" linkText="Protein">
-                    <ProteinEnrichmentsTab store={this.props.store}/>
-                </MSKTab>}
-            </MSKTabs>
+            <div>
+                <OqlStatusBanner className="enrichments-oql-status-banner" store={this.props.store} tabReflectsOql={true}/>
+                <MSKTabs activeTabId={this.currentTabId} onTabClick={this.handleTabChange} className="secondaryTabs">
+                    {(this.props.store.mutationEnrichmentProfiles.result!.length > 0) && <MSKTab id="mutations" linkText="Mutations">
+                        <MutationEnrichmentsTab store={this.props.store}/>
+                    </MSKTab>}
+                    {(this.props.store.copyNumberEnrichmentProfiles.result!.length > 0) && <MSKTab id="copynumber" linkText="Copy-number">
+                        <CopyNumberEnrichmentsTab store={this.props.store}/>
+                    </MSKTab>}
+                    {(this.props.store.mRNAEnrichmentProfiles.result!.length > 0) && <MSKTab id="mrna" linkText="mRNA">
+                        <MRNAEnrichmentsTab store={this.props.store}/>
+                    </MSKTab>}
+                    {(this.props.store.proteinEnrichmentProfiles.result!.length > 0) && <MSKTab id="protein" linkText="Protein">
+                        <ProteinEnrichmentsTab store={this.props.store}/>
+                    </MSKTab>}
+                </MSKTabs>
+            </div>
         );
     }
 }
