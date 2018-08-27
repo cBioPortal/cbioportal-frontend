@@ -32,12 +32,10 @@ import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
 import {getClinicalAttributeUniqueKey, isPreSelectedClinicalAttr} from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
-import {Column} from "../../shared/components/lazyMobXTable/LazyMobXTable";
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import { bind } from '../../../node_modules/bind-decorator';
 import { updateGeneQuery } from 'pages/studyView/StudyViewUtils';
 import { stringListToSet } from 'shared/lib/StringUtils';
-import client from "../../shared/api/cbioportalClientInstance";
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT'
 
@@ -110,6 +108,8 @@ export class StudyViewPageStore {
     @observable private geneQueries: SingleGeneQuery[] = [];
 
     @observable private queriedGeneSet = observable.map<boolean>();
+
+    private clinicalDataCache:ClinicalDataCache = new ClinicalDataCache()
 
     @bind
     @action onCheckGene(hugoGeneSymbol: string) {
@@ -491,6 +491,7 @@ export class StudyViewPageStore {
     });
 
     private readonly samples = remoteData<Sample[]>({
+        await: () => [this.clinicalAttributes],
         invoke: () => {
             return internalClient.fetchFilteredSamplesUsingPOST({
                 studyViewFilter: this.emptyFilter
@@ -744,4 +745,105 @@ export class StudyViewPageStore {
             return Promise.resolve(data);
         }
     });
+
+    @bind
+    public async getDownloadDataPromise() {
+
+        let sampleClinicalDataMap = await this.clinicalDataCache.get(this.selectedSamples.result)
+
+        let clinicalAttributesNameSet = _.reduce(this.clinicalAttributes.result, (acc, next) => {
+            let id = (next.patientAttribute ? 'PATIENT' : 'SAMPLE') + '_' + next.clinicalAttributeId;
+            acc[id] = next.displayName;
+            return acc;
+        }, {
+            studyId: 'Study ID',
+            patientId: 'Patient ID',
+            sampleId: 'Sample ID',
+        } as { [id: string]: string })
+
+        let dataRows = _.reduce(this.selectedSamples.result, (acc, next) => {
+
+            let sampleData: { [attributeId: string]: string; } = {
+                studyId: next.studyId,
+                patientId: next.patientId,
+                sampleId: next.sampleId,
+                ...(sampleClinicalDataMap[next.uniqueSampleKey] || {})
+            };
+
+            acc.push(
+                _.map(Object.keys(clinicalAttributesNameSet), (attributrId) => {
+                    return sampleData[attributrId] || 'NA';
+                })
+            );
+            return acc;
+        }, [_.values(clinicalAttributesNameSet)]);
+
+        return dataRows.map(mutation => mutation.join('\t')).join('\n');
+    }
+}
+
+
+//this could be used in clinical data tab
+class ClinicalDataCache {
+
+    private cache: { [uniqueSampleKey: string]: { [attributeId: string]: string } } = {};
+
+    private fetchedSamplesUniqueKeySet: { [id: string]: boolean } = {};
+
+    public async get(samples: Sample[]) {
+        const samplesToFetchData = _.filter(samples, sample => {
+            return _.isUndefined(this.fetchedSamplesUniqueKeySet[sample.uniqueSampleKey]);
+        })
+
+        if (!_.isEmpty(samplesToFetchData)) { // empty indicates data is already fetched
+
+            let sampleClinicalData = await defaultClient.fetchClinicalDataUsingPOST({
+                'clinicalDataType': "SAMPLE",
+                'clinicalDataMultiStudyFilter': {
+                    'identifiers': _.map(samplesToFetchData, sample => {
+                        return {
+                            entityId: sample.sampleId,
+                            studyId: sample.studyId
+                        }
+                    })
+                } as ClinicalDataMultiStudyFilter
+            });
+
+            _.forEach(sampleClinicalData, clinicalData => {
+                this.cache[clinicalData.uniqueSampleKey] = { ...(this.cache[clinicalData.uniqueSampleKey] || {}), ['SAMPLE_' + clinicalData.clinicalAttributeId]: clinicalData.value };
+            })
+
+            let patientClinicalData = await defaultClient.fetchClinicalDataUsingPOST({
+                'clinicalDataType': "PATIENT",
+                'clinicalDataMultiStudyFilter': {
+                    'identifiers': _.map(samplesToFetchData, sample => {
+                        return {
+                            entityId: sample.patientId,
+                            studyId: sample.studyId
+                        }
+                    })
+                } as ClinicalDataMultiStudyFilter
+            });
+
+            const patientSamplesMap = _.groupBy(samples, sample => sample.uniquePatientKey);
+
+            _.forEach(patientClinicalData, clinicalData => {
+                (patientSamplesMap[clinicalData.uniquePatientKey] || []).forEach(sample => {
+                    this.cache[sample.uniqueSampleKey] = { ...(this.cache[sample.uniqueSampleKey] || {}), ['PATIENT_' + clinicalData.clinicalAttributeId]: clinicalData.value };
+                });
+            })
+
+            //update fetched samples set
+            samplesToFetchData.forEach(sample => {
+                this.fetchedSamplesUniqueKeySet[sample.uniqueSampleKey] = true;
+            })
+        }
+
+        return _.reduce(samples, (acc, sample) => {
+            if (!_.isUndefined(this.cache[sample.uniqueSampleKey])) {
+                acc[sample.uniqueSampleKey] = this.cache[sample.uniqueSampleKey]
+            }
+            return acc
+        }, {} as { [key: string]: { [attributeId: string]: string } })
+    }
 }
