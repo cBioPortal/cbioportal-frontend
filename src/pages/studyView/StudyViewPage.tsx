@@ -94,6 +94,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             chartMeta: chartMeta,
             filters: [],
             onDeleteChart: this.handlers.onDeleteChart,
+            survivalAnalysisPossible:this.store.survivalAnalysisPossible,
             setSurvivalAnalysisSettings: (attribute:ClinicalAttribute, grps:ReadonlyArray<SurvivalAnalysisGroup>)=>{
                 this.store.updateSurvivalAnalysisSettings(attribute, grps);
             }

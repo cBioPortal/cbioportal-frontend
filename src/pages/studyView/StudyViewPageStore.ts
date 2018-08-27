@@ -51,7 +51,9 @@ export enum ChartType {
 export enum UniqueKey {
     MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
     CNA_GENES_TABLE = 'CNA_GENES_TABLE',
-    MUTATION_COUNT_CNA_FRACTION = 'MUTATION_COUNT_CNA_FRACTION'
+    MUTATION_COUNT_CNA_FRACTION = 'MUTATION_COUNT_CNA_FRACTION',
+    DISEASE_FREE_SURVIVAL = 'dfs_survival',
+    OVERALL_SURVIVAL = 'os_survival'
 }
 
 export const MUTATION_COUNT = 'MUTATION_COUNT';
@@ -442,6 +444,20 @@ export class StudyViewPageStore {
         default: []
     });
 
+    @computed get survivalAnalysisPossible() {
+        // survival analysis is possible iff there is a visible survival clinical attribute
+        const survivalUniqueKeys = [UniqueKey.DISEASE_FREE_SURVIVAL, UniqueKey.OVERALL_SURVIVAL];
+        let ret = false;
+        for (const chartMeta of this.visibleAttributes) {
+            if (survivalUniqueKeys.indexOf(chartMeta.uniqueKey) > -1) {
+                // if there is a visible attribute which is a clinical attribute and whose id is in survivalAttributes
+                ret = true;
+                break;
+            }
+        }
+        return ret;
+    }
+
     @computed
     get chartMetaSet(): { [id: string]: ChartMeta } {
         let _chartMetaSet: { [id: string]: ChartMeta } = {};
@@ -756,7 +772,7 @@ export class StudyViewPageStore {
 
         if (osStatusFlag && osMonthsFlag) {
             survivalTypes.push({
-                id: 'os_survival',
+                id: UniqueKey.OVERALL_SURVIVAL,
                 title: 'Overall Survival',
                 associatedAttrs: ['OS_STATUS', 'OS_MONTHS'],
                 filter: ['DECEASED'],
@@ -767,7 +783,7 @@ export class StudyViewPageStore {
         }
         if (dfsStatusFlag && dfsMonthsFlag) {
             survivalTypes.push({
-                id: 'dfs_survival',
+                id: UniqueKey.DISEASE_FREE_SURVIVAL,
                 title: 'Disease Free Survival',
                 associatedAttrs: ['DFS_STATUS', 'DFS_MONTHS'],
                 filter: ['Recurred/Progressed', 'Recurred'],

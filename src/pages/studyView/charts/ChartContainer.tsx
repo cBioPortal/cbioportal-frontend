@@ -43,6 +43,7 @@ export interface IChartContainerProps {
     onGeneSelect?:any;
     selectedSamplesMap?: any;
     selectedSamples?: any;
+    survivalAnalysisPossible?:boolean;
     patientKeysWithNAInSelectedClinicalData?:MobxPromise<string[]>; // patients which have NA values for filtered clinical attributes
     setSurvivalAnalysisSettings?: (attribute:ClinicalAttribute, grp:ReadonlyArray<SurvivalAnalysisGroup>)=>void;
     survivalAnalysisSettings?:{ clinicalAttribute:ClinicalAttribute, groups:ReadonlyArray<SurvivalAnalysisGroup>};
@@ -174,7 +175,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @computed
     get survivalAnalysisPossible() {
-        return (this.chartType === ChartType.PIE_CHART || this.chartType === ChartType.TABLE) && this.props.chartMeta.clinicalAttribute;
+        return !!this.props.survivalAnalysisPossible &&
+            (this.chartType === ChartType.PIE_CHART || this.chartType === ChartType.TABLE) &&
+            !!this.props.chartMeta.clinicalAttribute;
     }
 
     @bind
