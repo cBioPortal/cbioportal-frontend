@@ -43,6 +43,7 @@ export interface IChartContainerProps {
     onGeneSelect?:any;
     selectedSamplesMap?: any;
     selectedSamples?: any;
+    patientKeysWithNAInSelectedClinicalData?:MobxPromise<string[]>; // patients which have NA values for filtered clinical attributes
     setSurvivalAnalysisSettings?: (attribute:ClinicalAttribute, grp:ReadonlyArray<SurvivalAnalysisGroup>)=>void;
     survivalAnalysisSettings?:{ clinicalAttribute:ClinicalAttribute, groups:ReadonlyArray<SurvivalAnalysisGroup>};
     patientToSurvivalAnalysisGroup?:MobxPromise<{[uniquePatientKey:string]:string}>;
@@ -58,7 +59,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @observable placement: 'left' | 'right' = 'right';
     @observable chartType: ChartType
 
-    @observable naCasesHiddenInSurvival = true; // only relevant for survival charts - whether cases with NA clinical value are shown
+    @observable naPatientsHiddenInSurvival = true; // only relevant for survival charts - whether cases with NA clinical value are shown
 
     @computed
     get fileName() {
@@ -186,8 +187,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @bind
     @action
-    toggleSurvivalHideNACases() {
-        this.naCasesHiddenInSurvival = !this.naCasesHiddenInSurvival;
+    toggleSurvivalHideNAPatients() {
+        this.naPatientsHiddenInSurvival = !this.naPatientsHiddenInSurvival;
     }
 
     readonly survivalChartData = remoteData({
@@ -209,7 +210,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 makeSurvivalChartData(
                     this.props.promise.result!.alteredGroup,
                     this.props.promise.result!.unalteredGroup,
-                    this.naCasesHiddenInSurvival,
+                    this.naPatientsHiddenInSurvival,
+                    this.props.patientKeysWithNAInSelectedClinicalData,
                     this.props.survivalAnalysisSettings,
                     this.props.patientToSurvivalAnalysisGroup
                 )
@@ -270,8 +272,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                        patientToAnalysisGroup={this.survivalChartData.result!.patientToAnalysisGroup}
                                        analysisGroups={this.survivalChartData.result!.analysisGroups}
                                        analysisClinicalAttribute={this.props.survivalAnalysisSettings && this.props.survivalAnalysisSettings.clinicalAttribute}
-                                       naCasesHidden={this.naCasesHiddenInSurvival}
-                                       toggleHideNACases={this.toggleSurvivalHideNACases}
+                                       naPatientsHiddenInSurvival={this.naPatientsHiddenInSurvival}
+                                       toggleSurvivalHideNAPatients={this.toggleSurvivalHideNAPatients}
                                        showChartTooltip={true}
                                        title={'test'}
                                        xAxisLabel="Months Survival"

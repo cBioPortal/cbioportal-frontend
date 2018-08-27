@@ -30,8 +30,8 @@ export interface ISurvivalChartProps {
     patientToAnalysisGroup:{[uniquePatientKey:string]:string};
     analysisGroups:ReadonlyArray<SurvivalAnalysisGroup>; // identified by `value`
     analysisClinicalAttribute?:ClinicalAttribute;
-    naCasesHidden?:boolean;
-    toggleHideNACases?:()=>void;
+    naPatientsHiddenInSurvival?:boolean;
+    toggleSurvivalHideNAPatients?:()=>void;
     totalCasesHeader: string;
     statusCasesHeader: string;
     medianMonthsHeader: string;
@@ -352,12 +352,12 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                         {!!group.legendText ? group.legendText : group.value}
                     </span>
                 ))}
-                { this.props.toggleHideNACases && (
+                { this.props.toggleSurvivalHideNAPatients && (
                     <div className="checkbox"><label>
                         <input
                             type="checkbox"
-                            checked={this.props.naCasesHidden}
-                            onClick={this.props.toggleHideNACases}
+                            checked={this.props.naPatientsHiddenInSurvival}
+                            onClick={this.props.toggleSurvivalHideNAPatients}
                         /> Exclude patients with NA for any of the selected attributes.
                     </label></div>
                 )}
@@ -378,53 +378,57 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     }
 
     public render() {
-        return (
+        if (this.props.patientSurvivals.length === 0) {
+            return <div>No data to plot.</div>;
+        } else {
+            return (
 
-            <div className="posRelative" style={{width: (this.styleOpts.width + 20)}}>
-                { this.props.showChartTooltip ? (
-                    <DefaultTooltip
-                        mouseEnterDelay={0}
-                        mouseLeaveDelay={0.5}
-                        placement="rightBottom"
-                        overlay={this.chartTooltip}
-                    >
-                        {this.chart}
-                    </DefaultTooltip>
-                ) : this.chart }
-                {this.tooltipModel &&
-                    <Popover arrowOffsetTop={56} className={classnames("cbioportal-frontend", "cbioTooltip", styles.Tooltip)} positionLeft={this.tooltipModel.x + 10}
-                             { ...{container:this} }
-                        positionTop={this.tooltipModel.y - 47}
-                        onMouseEnter={this.tooltipMouseEnter} onMouseLeave={this.tooltipMouseLeave}>
-                        <div>
-                            Patient ID: <a href={getPatientViewUrl(this.tooltipModel.datum.studyId, this.tooltipModel.datum.patientId)} target="_blank">{this.tooltipModel.datum.patientId}</a><br />
-                            {this.props.yLabelTooltip}: {(this.tooltipModel.datum.y).toFixed(2)}%<br />
-                            {this.tooltipModel.datum.status ? this.props.xLabelWithEventTooltip :
-                                this.props.xLabelWithoutEventTooltip}
-                            : {this.tooltipModel.datum.x.toFixed(2)} months {this.tooltipModel.datum.status ? "" :
-                            "(censored)"}<br/>
-                            {this.props.analysisClinicalAttribute && (
-                                <span>
-                                    {this.props.analysisClinicalAttribute.displayName}: {this.props.patientToAnalysisGroup[this.tooltipModel.datum.uniquePatientKey]}
-                                </span>
-                            )}
-                        </div>
-                    </Popover>
-                }
-                {this.props.showTable &&
-                    <table className="table table-striped" style={{marginTop:20, width: '100%'}}>
-                        <tbody>
-                            <tr>
-                                <td />
-                                <td>{this.props.totalCasesHeader}</td>
-                                <td>{this.props.statusCasesHeader}</td>
-                                <td>{this.props.medianMonthsHeader}</td>
-                            </tr>
-                            {this.tableRows}
-                        </tbody>
-                    </table>
-                }
-            </div>
-        );
+                <div className="posRelative" style={{width: (this.styleOpts.width + 20)}}>
+                    { this.props.showChartTooltip ? (
+                        <DefaultTooltip
+                            mouseEnterDelay={0}
+                            mouseLeaveDelay={0.5}
+                            placement="rightBottom"
+                            overlay={this.chartTooltip}
+                        >
+                            {this.chart}
+                        </DefaultTooltip>
+                    ) : this.chart }
+                    {this.tooltipModel &&
+                        <Popover arrowOffsetTop={56} className={classnames("cbioportal-frontend", "cbioTooltip", styles.Tooltip)} positionLeft={this.tooltipModel.x + 10}
+                                 { ...{container:this} }
+                            positionTop={this.tooltipModel.y - 47}
+                            onMouseEnter={this.tooltipMouseEnter} onMouseLeave={this.tooltipMouseLeave}>
+                            <div>
+                                Patient ID: <a href={getPatientViewUrl(this.tooltipModel.datum.studyId, this.tooltipModel.datum.patientId)} target="_blank">{this.tooltipModel.datum.patientId}</a><br />
+                                {this.props.yLabelTooltip}: {(this.tooltipModel.datum.y).toFixed(2)}%<br />
+                                {this.tooltipModel.datum.status ? this.props.xLabelWithEventTooltip :
+                                    this.props.xLabelWithoutEventTooltip}
+                                : {this.tooltipModel.datum.x.toFixed(2)} months {this.tooltipModel.datum.status ? "" :
+                                "(censored)"}<br/>
+                                {this.props.analysisClinicalAttribute && (
+                                    <span>
+                                        {this.props.analysisClinicalAttribute.displayName}: {this.props.patientToAnalysisGroup[this.tooltipModel.datum.uniquePatientKey]}
+                                    </span>
+                                )}
+                            </div>
+                        </Popover>
+                    }
+                    {this.props.showTable &&
+                        <table className="table table-striped" style={{marginTop:20, width: '100%'}}>
+                            <tbody>
+                                <tr>
+                                    <td />
+                                    <td>{this.props.totalCasesHeader}</td>
+                                    <td>{this.props.statusCasesHeader}</td>
+                                    <td>{this.props.medianMonthsHeader}</td>
+                                </tr>
+                                {this.tableRows}
+                            </tbody>
+                        </table>
+                    }
+                </div>
+            );
+        }
     }
 }

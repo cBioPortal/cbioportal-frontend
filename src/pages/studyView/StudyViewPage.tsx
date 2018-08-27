@@ -142,6 +142,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 // only want to pass these in when necessary, otherwise charts will unnecessarily update when they change
                 props.survivalAnalysisSettings = this.store.survivalAnalysisSettings;
                 props.patientToSurvivalAnalysisGroup = this.store.patientToSurvivalAnalysisGroup;
+                props.patientKeysWithNAInSelectedClinicalData = this.store.patientKeysWithNAInSelectedClinicalData;
                 break;
             }
             case ChartType.SCATTER: {

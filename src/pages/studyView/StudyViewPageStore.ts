@@ -198,6 +198,45 @@ export class StudyViewPageStore {
         }
     });
 
+    readonly clinicalNAPatientKeys = remoteData({
+        await:()=>[this.selectedSamples, this.selectedPatients],
+        invoke:async()=>{
+            const attributes:ClinicalDataEqualityFilter[] = this._clinicalDataEqualityFilterSet.values();
+            if (attributes.length > 0) {
+                const patientsWithNA:{[patientKey:string]:boolean} = {};
+                await Promise.all(attributes.map(attr=>new Promise(async(resolve)=>{
+                    const data = await client.fetchClinicalDataUsingPOST({
+                        clinicalDataType: attr.clinicalDataType,
+                        clinicalDataMultiStudyFilter:{
+                            attributeIds: [attr.attributeId],
+                            identifiers: attr.clinicalDataType === "PATIENT" ?
+                                this.selectedPatients.result!.map(p=>({entityId:p.patientId, studyId:p.studyId})) :
+                                this.selectedSamples.result!.map(p=>({entityId:p.sampleId, studyId:p.studyId}))
+                        },
+                        projection: "SUMMARY"
+                    });
+                    const patientsWithData = data.reduce((map, clinData)=>{
+                        map[clinData.uniquePatientKey] = true;
+                        if (clinData.value === "NA") {
+                            patientsWithNA[clinData.uniquePatientKey] = true;
+                        }
+                        return map;
+                    }, {} as {[patientKey:string]:boolean});
+                    // add NA entries
+                    for (const patient of this.selectedPatients.result!) {
+                        if (!(patient.uniquePatientKey in patientsWithData)) {
+                            patientsWithNA[patient.uniquePatientKey] = true;
+                        }
+                    }
+                    resolve();
+                })));
+                return Object.keys(patientsWithNA);
+            } else {
+                return [];
+            }
+        }
+    });
+
     @action
     updateClinicalDataEqualityFilters(chartMeta: ChartMeta, values: string[]) {
         if (values.length > 0) {
@@ -316,15 +355,19 @@ export class StudyViewPageStore {
         return { studyIds: this.studyIds } as any;
     }
 
+    @computed get clinicalDataEqualityFilters() {
+        return this._clinicalDataEqualityFilterSet.values();
+    }
+
     @computed
     get filters() {
         let filters: StudyViewFilter = {} as any;
 
-        let clinicalDataEqualityFilter = this._clinicalDataEqualityFilterSet.values();
+        const clinicalDataEqualityFilters = this.clinicalDataEqualityFilters;
 
         //checking for empty since the api throws error when the clinicalDataEqualityFilter array is empty
-        if (clinicalDataEqualityFilter.length > 0) {
-            filters.clinicalDataEqualityFilters = clinicalDataEqualityFilter;
+        if (clinicalDataEqualityFilters.length > 0) {
+            filters.clinicalDataEqualityFilters = clinicalDataEqualityFilters;
         }
 
         if (this._mutatedGeneFilter && this._mutatedGeneFilter.entrezGeneIds.length > 0) {
@@ -580,7 +623,7 @@ export class StudyViewPageStore {
             })
         },
         default: []
-    })
+    });
 
     readonly studyWithSamples = remoteData<StudyWithSamples[]>({
         await: () => [this.studies, this.samples],
@@ -601,6 +644,27 @@ export class StudyViewPageStore {
             })
         },
         default: []
+    });
+
+    readonly samplesWithNAInSelectedClinicalData = remoteData<Sample[]>({
+        invoke: () => {
+            return internalClient.fetchFilteredSamplesUsingPOST({
+                studyViewFilter: Object.assign({}, this.emptyFilter, {
+                    clinicalDataEqualityFilters: this.clinicalDataEqualityFilters
+                    // TODO: add option here
+                }) as any as StudyViewFilter
+            })
+        },
+        default: []
+    });
+
+    readonly patientKeysWithNAInSelectedClinicalData = remoteData<string[]>({
+        await:()=>[this.samplesWithNAInSelectedClinicalData],
+        invoke:()=>{
+            return Promise.resolve(
+                _.uniq(this.samplesWithNAInSelectedClinicalData.result!.map(s=>s.uniquePatientKey))
+            );
+        }
     });
 
     @computed
