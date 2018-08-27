@@ -324,7 +324,7 @@ export class ResultsViewPageStore {
     @observable samplesSpecification: SamplesSpecificationElement[] = [];
 
     //queried id(any combination of physical and virtual studies)
-    @observable cohortIdsList: string[] = []
+    @observable cohortIdsList: string[] = [];
 
     @observable zScoreThreshold: number;
 
