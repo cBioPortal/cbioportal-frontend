@@ -6,7 +6,7 @@ import {
 import {
     ClinicalAttribute,
     ClinicalData,
-    NumericGeneMolecularData, GenePanelData, MolecularProfile, Mutation, MutationCount, Patient,
+    NumericGeneMolecularData, GenePanelData, MolecularProfile, Mutation, Patient,
     Sample
 } from "../../api/generated/CBioPortalAPI";
 import {
@@ -15,10 +15,10 @@ import {
     IBaseHeatmapTrackDatum,
     IGeneHeatmapTrackDatum,
 } from "./Oncoprint";
-import {isMutationCount, isSample, isSampleList} from "../../lib/CBioPortalAPIUtils";
+import {isSample, isSampleList} from "../../lib/CBioPortalAPIUtils";
 import {getSimplifiedMutationType, SimplifiedMutationType} from "../../lib/oql/accessors";
 import _ from "lodash";
-import {FractionGenomeAltered, MutationSpectrum} from "../../api/generated/CBioPortalAPIInternal";
+import {MutationSpectrum} from "../../api/generated/CBioPortalAPIInternal";
 import {OncoprintClinicalAttribute} from "./ResultsViewOncoprint";
 import {CoverageInformation} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
 import { MUTATION_STATUS_GERMLINE } from "shared/constants";
@@ -332,7 +332,7 @@ function fillNoDataValue(
     trackDatum:Partial<ClinicalTrackDatum>,
     attribute:OncoprintClinicalAttribute,
 ) {
-    if (attribute.clinicalAttributeId === SpecialAttribute.MutationCount) {
+    if (attribute.clinicalAttributeId === "MUTATION_COUNT") {
         trackDatum.attr_val = 0;
     } else {
         trackDatum.na = true;
@@ -342,7 +342,7 @@ export function fillClinicalTrackDatum(
     trackDatum:Partial<ClinicalTrackDatum>,
     attribute:OncoprintClinicalAttribute,
     case_:Sample|Patient,
-    data?:(ClinicalData|MutationCount|FractionGenomeAltered|MutationSpectrum)[],
+    data?:(ClinicalData|MutationSpectrum)[],
 ) {
     trackDatum.attr_id = attribute.clinicalAttributeId;
     trackDatum.study_id = case_.studyId;
@@ -355,15 +355,10 @@ export function fillClinicalTrackDatum(
             let numValCount = 0;
             let numValSum = 0;
             for (const x of data) {
-                if (isMutationCount(x)) {
+                const newVal = parseFloat((x as ClinicalData).value+"");
+                if (!isNaN(newVal)) {
                     numValCount += 1;
-                    numValSum += x.mutationCount;
-                } else {
-                    const newVal = parseFloat((x as ClinicalData|FractionGenomeAltered).value+"");
-                    if (!isNaN(newVal)) {
-                        numValCount += 1;
-                        numValSum += newVal;
-                    }
+                    numValSum += newVal;
                 }
             }
             if (numValCount === 0) {
@@ -421,8 +416,8 @@ export function fillClinicalTrackDatum(
 function makeGetDataForCase(
     attribute: ClinicalAttribute,
     queryBy:"sample"|"patient",
-    data: (ClinicalData|MutationCount|FractionGenomeAltered|MutationSpectrum)[]
-):(case_:Sample|Patient)=>(ClinicalData|MutationCount|FractionGenomeAltered|MutationSpectrum)[] {
+    data: (ClinicalData|MutationSpectrum)[]
+):(case_:Sample|Patient)=>(ClinicalData|MutationSpectrum)[] {
     if (attribute.patientAttribute) {
         const uniqueKeyToData = _.groupBy(data, datum=>datum.uniquePatientKey);
         return function(case_:Sample|Patient) {
@@ -442,10 +437,10 @@ function makeGetDataForCase(
 export function makeClinicalTrackData(
     attribute:ClinicalAttribute,
     cases:Sample[]|Patient[],
-    data: (ClinicalData|MutationCount|FractionGenomeAltered|MutationSpectrum)[],
+    data: (ClinicalData|MutationSpectrum)[],
 ):ClinicalTrackDatum[] {
     // First collect all the data by id
-    const uniqueKeyToData:{[uniqueKey:string]:(ClinicalData|MutationCount|FractionGenomeAltered|MutationSpectrum)[]}
+    const uniqueKeyToData:{[uniqueKey:string]:(ClinicalData|MutationSpectrum)[]}
         = _.groupBy(data,
         isSampleList(cases) ?
             datum=>datum.uniqueSampleKey :
