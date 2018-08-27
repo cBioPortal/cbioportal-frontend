@@ -16,20 +16,20 @@ import {
     getCnaQueries, getMutationQueries, getScatterPlotDownloadData, getBoxPlotDownloadData, getTablePlotDownloadData,
     mutationRenderPriority, mutationSummaryRenderPriority, MutationSummary, mutationSummaryToAppearance,
     CNA_STROKE_WIDTH, scatterPlotSize, PLOT_SIDELENGTH, CLIN_ATTR_DATA_TYPE,
-    sortScatterPlotDataForZIndex, sortMolecularProfilesForDisplay
+    sortMolecularProfilesForDisplay, scatterPlotZIndexSortBy
 } from "./PlotsTabUtils";
 import {
     ClinicalAttribute, MolecularProfile, Mutation,
     NumericGeneMolecularData
 } from "../../../shared/api/generated/CBioPortalAPI";
 import Timer = NodeJS.Timer;
-import ScatterPlot, {LEGEND_Y as SCATTERPLOT_LEGEND_Y} from "shared/components/plots/ScatterPlot";
+import ScatterPlot from "shared/components/plots/ScatterPlot";
 import TablePlot from "shared/components/plots/TablePlot";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import InfoIcon from "../../../shared/components/InfoIcon";
 import {remoteData} from "../../../shared/api/remoteData";
 import {MobxPromise} from "mobxpromise";
-import BoxScatterPlot, {LEGEND_Y as BOXPLOT_LEGEND_Y, IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPlot";
+import BoxScatterPlot, {IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPlot";
 import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import setWindowVariable from "../../../shared/lib/setWindowVariable";
@@ -38,7 +38,7 @@ import fileDownload from 'react-file-download';
 import onMobxPromise from "../../../shared/lib/onMobxPromise";
 import {logicalOr} from "../../../shared/lib/LogicUtils";
 import {SpecialAttribute} from "../../../shared/cache/OncoprintClinicalDataCache";
-import NoOqlWarning from "../../../shared/components/NoOqlWarning";
+import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import ScrollBar from "../../../shared/components/Scrollbar/ScrollBar";
 
 enum EventKey {
@@ -652,33 +652,26 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @computed get cnaDataCanBeShown() {
-        return this.cnaDataExists && this.potentialViewType === PotentialViewType.MutationTypeAndCopyNumber;
+        return !!(this.cnaDataExists.result && this.potentialViewType === PotentialViewType.MutationTypeAndCopyNumber);
     }
 
     @computed get cnaDataShown() {
-        return this.cnaDataExists && (this.viewType === ViewType.CopyNumber || this.viewType === ViewType.MutationTypeAndCopyNumber);
+        return !!(this.cnaDataExists.result && (this.viewType === ViewType.CopyNumber || this.viewType === ViewType.MutationTypeAndCopyNumber));
     }
 
     readonly cnaPromise = remoteData({
-        await:()=>this.props.store.numericGeneMolecularDataCache.await(
-            [this.props.store.studyToMolecularProfileDiscrete],
-            map=>{
-                if (this.cnaDataShown && this.horzSelection.entrezGeneId !== undefined) {
-                    return getCnaQueries(this.horzSelection.entrezGeneId, map, this.cnaDataShown);
-                } else {
-                    return [];
-                }
+        await:()=>{
+            const queries = getCnaQueries(this.horzSelection, this.vertSelection, this.cnaDataShown);
+            if (queries.length > 0) {
+                return this.props.store.annotatedCnaCache.getAll(queries);
+            } else {
+                return [];
             }
-        ),
+        },
         invoke:()=>{
-            if (this.cnaDataShown && this.horzSelection.entrezGeneId !== undefined) {
-                const queries = getCnaQueries(
-                    this.horzSelection.entrezGeneId,
-                    this.props.store.studyToMolecularProfileDiscrete.result!,
-                    this.cnaDataShown
-                );
-                const promises = this.props.store.numericGeneMolecularDataCache.getAll(queries);
-                return Promise.resolve(_.flatten(promises.map(p=>p.result!)).filter(x=>!!x));
+            const queries = getCnaQueries(this.horzSelection, this.vertSelection, this.cnaDataShown);
+            if (queries.length > 0) {
+                return Promise.resolve(_.flatten(this.props.store.annotatedCnaCache.getAll(queries).map(p=>p.result!)));
             } else {
                 return Promise.resolve([]);
             }
@@ -686,13 +679,13 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     });
 
     @computed get mutationDataCanBeShown() {
-        return this.mutationDataExists.result && this.potentialViewType !== PotentialViewType.None;
+        return !!(this.mutationDataExists.result && this.potentialViewType !== PotentialViewType.None);
     }
 
     @computed get mutationDataShown() {
-        return this.mutationDataExists &&
+        return !!(this.mutationDataExists.result &&
             (this.viewType === ViewType.MutationType || this.viewType === ViewType.MutationSummary ||
-                this.viewType === ViewType.MutationTypeAndCopyNumber);
+                this.viewType === ViewType.MutationTypeAndCopyNumber));
     }
 
     readonly mutationPromise = remoteData({
@@ -835,16 +828,18 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @autobind
     private scatterPlotTooltip(d:IScatterPlotData) {
-        return scatterPlotTooltip(d, this.props.store.entrezGeneIdToGene);
+        return scatterPlotTooltip(d);
     }
 
     @computed get boxPlotTooltip() {
         return (d:IBoxScatterPlotPoint)=>{
+            let content;
             if (this.boxPlotData.isComplete) {
-                return boxPlotTooltip(d, this.props.store.entrezGeneIdToGene, this.boxPlotData.result.horizontal);
+                content = boxPlotTooltip(d, this.boxPlotData.result.horizontal);
             } else {
-                return <span>Loading... (this shouldnt appear because the box plot shouldnt be visible)</span>;
+                content = <span>Loading... (this shouldnt appear because the box plot shouldnt be visible)</span>;
             }
+            return content;
         }
     }
 
@@ -1068,7 +1063,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     });
 
-    readonly _unsortedScatterPlotData = remoteData<IScatterPlotData[]>({
+    readonly scatterPlotData = remoteData<IScatterPlotData[]>({
         await: ()=>[
             this.horzAxisDataPromise,
             this.vertAxisDataPromise,
@@ -1091,7 +1086,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         vertAxisData,
                         this.props.store.sampleKeyToSample.result!,
                         this.props.store.coverageInformation.result!.samples,
-                        this.mutationDataExists ? {
+                        this.mutationDataExists.result ? {
                             molecularProfileIds: _.values(this.props.store.studyToMutationMolecularProfile.result!).map(p=>p.molecularProfileId),
                             data: this.mutationPromise.result!
                         } : undefined,
@@ -1107,19 +1102,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     });
 
-    readonly scatterPlotData = remoteData<IScatterPlotData[]>({
-        await:()=>[this._unsortedScatterPlotData],
-        invoke:()=>{
-            // Sort data to put some data on top (z-index order)
-            return Promise.resolve(sortScatterPlotDataForZIndex<IScatterPlotData>(
-                this._unsortedScatterPlotData.result!,
-                this.viewType,
-                this.scatterPlotHighlight
-            ));
-        }
-    });
-
-    readonly _unsortedBoxPlotData = remoteData<{horizontal:boolean, data:IBoxScatterPlotData<IBoxScatterPlotPoint>[]}>({
+    readonly boxPlotData = remoteData<{horizontal:boolean, data:IBoxScatterPlotData<IBoxScatterPlotPoint>[]}>({
         await: ()=>[
             this.horzAxisDataPromise,
             this.vertAxisDataPromise,
@@ -1156,7 +1139,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         categoryData, numberData,
                         this.props.store.sampleKeyToSample.result!,
                         this.props.store.coverageInformation.result!.samples,
-                        this.mutationDataExists ? {
+                        this.mutationDataExists.result ? {
                             molecularProfileIds: _.values(this.props.store.studyToMutationMolecularProfile.result!).map(p=>p.molecularProfileId),
                             data: this.mutationPromise.result!
                         } : undefined,
@@ -1170,19 +1153,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         },
     });
 
-    readonly boxPlotData = remoteData<{horizontal:boolean, data:IBoxScatterPlotData<IBoxScatterPlotPoint>[]}>({
-        await: ()=>[this._unsortedBoxPlotData],
-        invoke:()=>{
-            // Sort data to put some data on top (z-index order)
-            const horizontal = this._unsortedBoxPlotData.result!.horizontal;
-            let boxPlotData = this._unsortedBoxPlotData.result!.data;
-            boxPlotData = boxPlotData.map(labelAndData=>({
-                label: labelAndData.label,
-                data: sortScatterPlotDataForZIndex<IBoxScatterPlotPoint>(labelAndData.data, this.viewType, this.scatterPlotHighlight)
-            }));
-            return Promise.resolve({ horizontal, data: boxPlotData });
-        }
-    });
+    @computed get zIndexSortBy() {
+        return scatterPlotZIndexSortBy<IScatterPlotSampleData>(
+            this.viewType,
+            this.scatterPlotHighlight
+        );
+    }
 
     @computed get boxPlotBoxWidth() {
         const SMALL_BOX_WIDTH = 30;
@@ -1242,6 +1218,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 fill={this.scatterPlotFill}
                                 stroke={this.scatterPlotStroke}
                                 strokeOpacity={this.scatterPlotStrokeOpacity}
+                                zIndexSortBy={this.zIndexSortBy}
                                 symbol="circle"
                                 fillOpacity={this.scatterPlotFillOpacity}
                                 strokeWidth={this.scatterPlotStrokeWidth}
@@ -1263,6 +1240,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         plotElt = (
                             <PlotsTabBoxPlot
                                 svgId={SVG_ID}
+                                domainPadding={75}
                                 boxWidth={this.boxPlotBoxWidth}
                                 axisLabelX={this.horzLabel.result! + (horizontal ? this.horzLabelLogSuffix : "")}
                                 axisLabelY={this.vertLabel.result! + (!horizontal ? this.vertLabelLogSuffix : "")}
@@ -1276,6 +1254,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 fill={this.scatterPlotFill}
                                 stroke={this.scatterPlotStroke}
                                 strokeOpacity={this.scatterPlotStrokeOpacity}
+                                zIndexSortBy={this.zIndexSortBy}
                                 symbol="circle"
                                 fillOpacity={this.scatterPlotFillOpacity}
                                 strokeWidth={this.scatterPlotStrokeWidth}
@@ -1283,6 +1262,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 legendData={scatterPlotLegendData(
                                     _.flatten(this.boxPlotData.result.data.map(d=>d.data)), this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated
                                 )}
+                                legendLocationWidthThreshold={550}
                             />
                         );
                         break;
@@ -1294,7 +1274,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 default:
                     return <span>Not implemented yet</span>
             }
-            const legendY = (plotType === PlotType.ScatterPlot ? SCATTERPLOT_LEGEND_Y : BOXPLOT_LEGEND_Y);
             return (
                 <div>
                     <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative">
@@ -1333,9 +1312,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     public render() {
         return (
             <div data-test="PlotsTabEntireDiv">
-                <div style={{marginBottom:10, marginTop:7, marginLeft:11.5}}>
-                    <NoOqlWarning store={this.props.store}/>
-                </div>
+                <OqlStatusBanner className="plots-oql-status-banner" store={this.props.store} tabReflectsOql={false} style={{marginTop:7}}/>
                 <div className={"plotsTab"} style={{display:"flex", flexDirection:"row", maxWidth:"inherit"}}>
                     <div className="leftColumn">
                         { (this.horzSelection.entrezGeneId !== undefined &&

@@ -26,7 +26,7 @@ import setWindowVariable from "../../../shared/lib/setWindowVariable";
 import {ICoExpressionPlotProps} from "./CoExpressionPlot";
 import {bind} from "bind-decorator";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
-import NoOqlWarning from "../../../shared/components/NoOqlWarning";
+import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 
 export interface ICoExpressionTabProps {
     store:ResultsViewPageStore;
@@ -271,9 +271,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
         }
         return (
             <div>
-                <div style={{marginBottom:10}}>
-                    <NoOqlWarning store={this.props.store}/>
-                </div>
+                <OqlStatusBanner className="coexp-oql-status-banner" store={this.props.store} tabReflectsOql={false} style={{marginBottom:15}}/>
                 {divContents}
             </div>
         );
