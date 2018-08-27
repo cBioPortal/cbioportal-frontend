@@ -446,7 +446,7 @@ export class StudyViewPageStore {
 
     @computed get survivalAnalysisPossible() {
         // survival analysis is possible iff there is a visible survival clinical attribute
-        const survivalUniqueKeys = [UniqueKey.DISEASE_FREE_SURVIVAL, UniqueKey.OVERALL_SURVIVAL];
+        const survivalUniqueKeys = [UniqueKey.DISEASE_FREE_SURVIVAL, UniqueKey.OVERALL_SURVIVAL] as string[];
         let ret = false;
         for (const chartMeta of this.visibleAttributes) {
             if (survivalUniqueKeys.indexOf(chartMeta.uniqueKey) > -1) {
