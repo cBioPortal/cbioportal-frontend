@@ -1,5 +1,5 @@
 import * as request from 'superagent';
-import {getSessionServiceApiUrl} from "./urls";
+import {getSessionServiceUrl, getVirtualStudyServiceUrl} from "./urls";
 import {VirtualStudy} from "shared/model/VirtualStudy";
 
 export default class sessionServiceAPI {
@@ -8,7 +8,7 @@ export default class sessionServiceAPI {
      */
     getUserVirtualStudies(): Promise<Array<VirtualStudy>> {
         return request
-                .get(getSessionServiceApiUrl())
+                .get(getVirtualStudyServiceUrl())
                 .then((res) => {
                     return res.body;
                 });              
@@ -16,7 +16,7 @@ export default class sessionServiceAPI {
 
     getVirtualStudy(id:string): Promise<VirtualStudy> {
         return request
-                .get(`${getSessionServiceApiUrl()}/${id}`)
+                .get(`${getVirtualStudyServiceUrl()}/${id}`)
                 .then((res) => {
                     return res.body;
                 });              
@@ -24,19 +24,19 @@ export default class sessionServiceAPI {
 
     deleteVirtualStudy(id:string){
         return request
-                .get(`${getSessionServiceApiUrl()}/delete/${id}`)
+                .get(`${getVirtualStudyServiceUrl()}/delete/${id}`)
                              
     }
 
     addVirtualStudy(id:string){
         return request
-                .get(`${getSessionServiceApiUrl()}/add/${id}`)
+                .get(`${getVirtualStudyServiceUrl()}/add/${id}`)
                              
     }
     
     saveVirtualStudy(object: any, save: boolean) {
         return request
-            .post(getSessionServiceApiUrl() + (save ? '/save' : ''))
+            .post(getVirtualStudyServiceUrl() + (save ? '/save' : ''))
             .send(object)
             .then((res) => {
                 let result = res.body;
@@ -48,7 +48,7 @@ export default class sessionServiceAPI {
 
     saveSession(data:any) {
         return request
-            .post(getSessionServiceApiUrl())
+            .post(getSessionServiceUrl())
             .send(data)
             .then((res) => {
                 return res.body
@@ -57,7 +57,7 @@ export default class sessionServiceAPI {
 
     getSession(sessionId:string) {
         return request
-            .get(`${getSessionServiceApiUrl()}/${sessionId}`)
+            .get(`${getSessionServiceUrl()}/${sessionId}`)
             .then((res) => {
                 return res.body
             });
