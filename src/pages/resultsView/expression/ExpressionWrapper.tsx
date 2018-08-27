@@ -250,7 +250,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                 this.props.coverageInformation.samples,
                 this.mutationDataExists.result ? {
                     molecularProfileIds: _.values(this.props.store.studyToMutationMolecularProfile.result!).map(p=>p.molecularProfileId),
-                    data: this.props.mutations
+                    data: this.props.mutations.filter(m=>m.entrezGeneId === this.selectedGene.entrezGeneId)
                 } : undefined,
                 this.cnaDataShown ? {
                     molecularProfileIds: _.values(this.props.store.studyToMolecularProfileDiscrete.result!).map(p=>p.molecularProfileId),
