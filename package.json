@@ -212,7 +212,7 @@
     "svgsaver": "0.9.0",
     "swagger-client": "^2.1.32",
     "ts-loader": "^2.0.0",
-    "typescript": "^2.7.2",
+    "typescript": "2.8.4",
     "underscore": "^1.8.3",
     "universal-ga": "^1.2.0",
     "url": "^0.11.0",
