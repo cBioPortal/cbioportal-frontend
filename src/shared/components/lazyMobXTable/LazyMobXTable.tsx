@@ -28,6 +28,7 @@ import {
 } from "../../lib/ILazyMobXTableApplicationDataStore";
 import {ILazyMobXTableApplicationLazyDownloadDataFetcher} from "../../lib/ILazyMobXTableApplicationLazyDownloadDataFetcher";
 import {maxPage} from "./utils";
+import {inputBoxChangeTimeoutEvent} from "../../lib/EventUtils";
 
 export type SortDirection = 'asc' | 'desc';
 
@@ -662,18 +663,9 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
 
         this.handlers = {
             onFilterTextChange: (() => {
-                let searchTimeout:number|null = null;
-                return (evt:any)=>{
-                    if (searchTimeout !== null) {
-                        window.clearTimeout(searchTimeout);
-                        searchTimeout = null;
-                    }
-
-                    const filterValue = evt.currentTarget.value;
-                    searchTimeout = window.setTimeout(()=>{
-                        this.store.setFilterString(filterValue);
-                    }, 400);
-                };
+                return inputBoxChangeTimeoutEvent((filterValue) => {
+                    this.store.setFilterString(filterValue);
+                }, 400)
             })(),
             visibilityToggle:(columnId: string):void => {
                 // toggle visibility
