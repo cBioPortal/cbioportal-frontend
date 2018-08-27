@@ -14,6 +14,7 @@ import {observer} from "mobx-react";
 import classnames from 'classnames';
 import {If} from 'react-if';
 import {bind} from "bind-decorator";
+import {inputBoxChangeTimeoutEvent} from "../../../shared/lib/EventUtils";
 
 export type IFixedHeaderTableProps<T> = {
     columns: Column<T>[],
@@ -100,18 +101,9 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
     @bind
     @action
     onFilterTextChange() {
-        let searchTimeout: number | null = null;
-        return (evt: any) => {
-            if (searchTimeout !== null) {
-                window.clearTimeout(searchTimeout);
-                searchTimeout = null;
-            }
-
-            const filterValue = evt.currentTarget.value;
-            searchTimeout = window.setTimeout(() => {
-                this._store.setFilterString(filterValue);
-            }, 400);
-        };
+        return inputBoxChangeTimeoutEvent((filterValue) => {
+            this._store.setFilterString(filterValue);
+        }, 400);
     }
 
     @bind
@@ -142,9 +134,9 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                     {
                         this.props.columns.map(column => {
                             return <RVColumn label={column.name} dataKey={column.name} width={Number(column.width)}
-                                             cellRenderer={function (props: TableCellProps) {
+                                             cellRenderer={(props: TableCellProps) => {
                                                  return column.render(props.rowData);
-                                             }.bind(this)}/>;
+                                             }}/>;
                         })
                     }
                 </RVTable>

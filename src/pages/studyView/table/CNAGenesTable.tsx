@@ -91,8 +91,9 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         {
             name: 'CNA',
             render: (data: CopyNumberCountByGene) =>
-                <span
-                    className={classnames(data.alteration === -2 ? styles.del : styles.amp)}>{data.alteration === -2 ? 'DEL' : 'AMP'}</span>,
+                <span className={classnames(data.alteration === -2 ? styles.del : styles.amp)}>
+                    {data.alteration === -2 ? 'DEL' : 'AMP'}
+                </span>,
             sortBy: (data: CopyNumberCountByGene) => data.alteration,
             defaultSortDirection: 'asc' as 'asc',
             filter: (data: CopyNumberCountByGene, filterString: string, filterStringUpper: string) => {
