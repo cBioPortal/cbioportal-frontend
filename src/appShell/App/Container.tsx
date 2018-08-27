@@ -75,7 +75,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
 
     render() {
         let configComplete = configPromise.isComplete;
-        if (this.routingStore.location.query.sessionId && !this.routingStore._session) {
+        if (this.routingStore.location.query.session_id && !this.routingStore._session) {
             configComplete = configComplete && this.routingStore.remoteSessionData.isComplete;
         }
 
