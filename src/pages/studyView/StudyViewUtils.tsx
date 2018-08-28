@@ -67,9 +67,9 @@ export const COLORS = [
     '#651062', '#329267', '#5574a1', '#3b3ea5'
 ];
 
-export const NA_COLOR = '#CCCCCC'
-
-export const UNSELECTED_COLOR = '#808080'
+export const NA_COLOR = '#CCCCCC';
+export const UNSELECTED_COLOR = '#808080';
+export const NA_DATA = "NA";
 
 export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: string): string {
 
