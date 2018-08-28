@@ -1,6 +1,6 @@
 import * as React from "react";
 import { observer } from "mobx-react";
-import { VictoryPie, VictoryContainer, VictoryLabel, Slice } from 'victory';
+import { VictoryPie, VictoryContainer, VictoryLabel, VictoryLegend, Slice } from 'victory';
 import { observable, computed, action, toJS } from "mobx";
 import _ from "lodash";
 import { UNSELECTED_COLOR } from "pages/studyView/StudyViewUtils";
@@ -19,12 +19,13 @@ export interface IPieChartProps {
     onUserSelection: (values: string[]) => void;
     active: boolean;
     placement: 'left' | 'right';
+    label?: string;
 }
 
 @observer
 export default class PieChart extends React.Component<IPieChartProps, {}> implements AbstractChart {
 
-    private svgContainer: any;
+    private svg: SVGElement;
 
     constructor(props: IPieChartProps) {
         super(props);
@@ -77,7 +78,34 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     }
 
     public toSVGDOMNode(): Element {
-        return this.svgContainer.firstChild
+        const svg = this.svg.cloneNode(true) as Element;
+        const legend = $(this.svg).find(".studyViewPieChartLegend").get(0);
+        const legendBBox = legend.getBoundingClientRect();
+
+        const height = + $(this.svg).height() + legendBBox.height;
+        const width = Math.max($(this.svg).width(), legendBBox.width);
+
+        // adjust width and height to make sure that the legend is fully visible
+        $(svg).attr("height", height + 5);
+        $(svg).attr("width", width);
+
+
+        // center elements
+
+        const widthDiff = Math.abs($(this.svg).width() - legendBBox.width);
+        const shift = widthDiff / 2;
+        const transform = `translate(${shift}, 0)`;
+
+        if ($(this.svg).width() > legendBBox.width) {
+            // legend needs to be centered wrt the pie chart
+            $(svg).find(".studyViewPieChartLegend").attr("transform", transform);
+        }
+        else {
+            // pie chart needs to be centered wrt the legend
+            $(svg).find(".studyViewPieChartGroup").attr("transform", transform);
+        }
+
+        return svg;
     }
 
     @computed get totalCount() {
@@ -145,6 +173,69 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         return ((d.count * 360) / this.totalCount) < 20 ? '' : d.count;
     }
 
+    private victoryPie() {
+        return (
+            <VictoryPie
+                standalone={false}
+                theme={CBIOPORTAL_VICTORY_THEME}
+                containerComponent={<VictoryContainer responsive={false} />}
+                groupComponent={<g className="studyViewPieChartGroup" />}
+                width={190}
+                height={180}
+                labelRadius={30}
+                padding={30}
+                labels={this.label}
+                data={this.props.data}
+                dataComponent={<CustomSlice />}
+                labelComponent={<VictoryLabel />}
+                events={this.userEvents}
+                style={{
+                    data: {
+                        fill: ifndef(this.fill, "#cccccc"),
+                        stroke: ifndef(this.stroke, "0x000000"),
+                        strokeWidth: ifndef(this.strokeWidth, 0),
+                        fillOpacity: ifndef(this.fillOpacity, 1)
+                    },
+                    labels: {
+                        fill: "white"
+                    }
+                }}
+                x={this.x}
+                y={this.y}
+            />
+        );
+    }
+
+    private victoryLegend() {
+        const legendData = this.props.data.map(data =>
+            ({name: `${data.value}: ${data.count} (${(100 * data.count / this.totalCount).toFixed(2)}%)`}));
+        const colorScale = this.props.data.map(data => data.color);
+
+        // override the legend style without mutating the actual theme object
+        const theme = _.cloneDeep(CBIOPORTAL_VICTORY_THEME);
+        theme.legend.style.data = {
+            type: "square",
+            size: 5,
+            strokeWidth: 0,
+            stroke: "black"
+        };
+
+        return (
+            <VictoryLegend
+                standalone={false}
+                theme={theme}
+                colorScale={colorScale}
+                x={0} y={181}
+                rowGutter={-10}
+                title={this.props.label || "Legend"}
+                centerTitle
+                style={{ title: { fontWeight: "bold" } }}
+                data={legendData}
+                groupComponent={<g className="studyViewPieChartLegend" />}
+            />
+        );
+    }
+
     public render() {
         // 350px => width of tooltip
         // 195px => width of chart
@@ -172,36 +263,14 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                     </div>
                 </If>
 
-
-                <VictoryPie
-                    theme={CBIOPORTAL_VICTORY_THEME}
-                    containerComponent={<VictoryContainer
-                        responsive={false}
-                        containerRef={(ref: any) => this.svgContainer = ref}
-                    />}
+                <svg
                     width={190}
                     height={180}
-                    labelRadius={30}
-                    padding={30}
-                    labels={this.label}
-                    data={this.props.data}
-                    dataComponent={<CustomSlice />}
-                    labelComponent={<VictoryLabel />}
-                    events={this.userEvents}
-                    style={{
-                        data: {
-                            fill: ifndef(this.fill, "#cccccc"),
-                            stroke: ifndef(this.stroke, "0x000000"),
-                            strokeWidth: ifndef(this.strokeWidth, 0),
-                            fillOpacity: ifndef(this.fillOpacity, 1)
-                        },
-                        labels: {
-                            fill: "white"
-                        }
-                    }}
-                    x={this.x}
-                    y={this.y}
-                />
+                    ref={(ref: any) => this.svg = ref}
+                >
+                    {this.victoryPie()}
+                    {this.victoryLegend()}
+                </svg>
             </div>
         );
     }
