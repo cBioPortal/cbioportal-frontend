@@ -65,6 +65,18 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             },
             resetCustomCasesFilter: () => {
                 this.store.resetCustomCasesFilter();
+            },
+            clearCNAGeneFilter: () => {
+                this.store.clearCNAGeneFilter();
+            },
+            clearGeneFilter: () => {
+                this.store.clearGeneFilter();
+            },
+            clearCustomCasesFilter: () => {
+                this.store.clearCustomCasesFilter();
+            },
+            clearAllFilters: () => {
+                this.store.clearAllFilters();
             }
         }
 
@@ -180,9 +192,15 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                 updateSelectedGenes={this.handlers.updateSelectedGenes}
                                 studyWithSamples={this.store.studyWithSamples.result}
                                 filter={this.store.filters}
-                                attributeNamesSet={this.store.attributeNamesSet}
+                                attributesMetaSet={this.store.chartMetaSet}
                                 user={AppConfig.userEmailAddress}
                                 getClinicalData={this.store.getDownloadDataPromise}
+                                onSubmitQuery={()=> this.store.onSubmitQuery()}
+                                updateClinicalDataEqualityFilter={this.handlers.onUserSelection}
+                                clearCNAGeneFilter={this.handlers.clearCNAGeneFilter}
+                                clearGeneFilter={this.handlers.clearGeneFilter}
+                                clearCustomCasesFilter={this.handlers.clearCustomCasesFilter}
+                                clearAllFilters={this.handlers.clearAllFilters}
                             />
                             <div className={styles.studyViewFlexContainer}>
                                 {this.store.initialClinicalDataCounts.isComplete &&
