@@ -22,9 +22,8 @@ import {
     ClinicalDataMultiStudyFilter,
     Gene,
     MolecularProfile,
-    MolecularProfileFilter
-    MutationCount,
-    CancerStudy, Patient, PatientFilter
+    MolecularProfileFilter,
+    Patient, PatientFilter
 } from 'shared/api/generated/CBioPortalAPI';
 import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
@@ -173,7 +172,7 @@ export class StudyViewPageStore {
         invoke:async()=>{
             if (this.survivalAnalysisSettings) {
                 const attr = this.survivalAnalysisSettings.clinicalAttribute;
-                const data = await client.fetchClinicalDataUsingPOST({
+                const data = await defaultClient.fetchClinicalDataUsingPOST({
                     clinicalDataType: attr.patientAttribute ? "PATIENT" : "SAMPLE",
                     clinicalDataMultiStudyFilter:{
                         attributeIds: [attr.clinicalAttributeId],
@@ -196,45 +195,6 @@ export class StudyViewPageStore {
                 return ret;
             } else {
                 return undefined;
-            }
-        }
-    });
-
-    readonly clinicalNAPatientKeys = remoteData({
-        await:()=>[this.selectedSamples, this.selectedPatients],
-        invoke:async()=>{
-            const attributes:ClinicalDataEqualityFilter[] = this._clinicalDataEqualityFilterSet.values();
-            if (attributes.length > 0) {
-                const patientsWithNA:{[patientKey:string]:boolean} = {};
-                await Promise.all(attributes.map(attr=>new Promise(async(resolve)=>{
-                    const data = await client.fetchClinicalDataUsingPOST({
-                        clinicalDataType: attr.clinicalDataType,
-                        clinicalDataMultiStudyFilter:{
-                            attributeIds: [attr.attributeId],
-                            identifiers: attr.clinicalDataType === "PATIENT" ?
-                                this.selectedPatients.result!.map(p=>({entityId:p.patientId, studyId:p.studyId})) :
-                                this.selectedSamples.result!.map(p=>({entityId:p.sampleId, studyId:p.studyId}))
-                        },
-                        projection: "SUMMARY"
-                    });
-                    const patientsWithData = data.reduce((map, clinData)=>{
-                        map[clinData.uniquePatientKey] = true;
-                        if (clinData.value === "NA") {
-                            patientsWithNA[clinData.uniquePatientKey] = true;
-                        }
-                        return map;
-                    }, {} as {[patientKey:string]:boolean});
-                    // add NA entries
-                    for (const patient of this.selectedPatients.result!) {
-                        if (!(patient.uniquePatientKey in patientsWithData)) {
-                            patientsWithNA[patient.uniquePatientKey] = true;
-                        }
-                    }
-                    resolve();
-                })));
-                return Object.keys(patientsWithNA);
-            } else {
-                return [];
             }
         }
     });
@@ -699,7 +659,7 @@ export class StudyViewPageStore {
     readonly selectedPatients = remoteData<Patient[]>({
         await:()=>[this.selectedSamples],
         invoke:()=>{
-            return client.fetchPatientsUsingPOST({
+            return defaultClient.fetchPatientsUsingPOST({
                 patientFilter: {
                     uniquePatientKeys: this.selectedSamples.result!.map(s=>s.uniquePatientKey)
                 } as PatientFilter

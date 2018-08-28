@@ -69,6 +69,7 @@ const allScatterData: ScatterData[] = [
         x: 0,
         y: 10,
         patientId: '',
+        uniquePatientKey: '',
         studyId: '',
         status: true
     },
@@ -76,6 +77,7 @@ const allScatterData: ScatterData[] = [
         x: 0.5,
         y: 9,
         patientId: '',
+        uniquePatientKey: '',
         studyId: '',
         status: true
     },
@@ -83,6 +85,7 @@ const allScatterData: ScatterData[] = [
         x: 1,
         y: 8,
         patientId: '',
+        uniquePatientKey: '',
         studyId: '',
         status: true
     },
@@ -90,6 +93,7 @@ const allScatterData: ScatterData[] = [
         x: 0,
         y: 10,
         patientId: '',
+        uniquePatientKey: '',
         studyId: '',
         status: true
     },
@@ -97,6 +101,7 @@ const allScatterData: ScatterData[] = [
         x: 0,
         y: 10,
         patientId: '',
+        uniquePatientKey: '',
         studyId: '',
         status: true
     }
@@ -154,12 +159,12 @@ describe("SurvivalUtil", () => {
 
         it("returns correct scatter data for the example data", () => {
             assert.deepEqual(getScatterData(examplePatientSurvivals, exampleEstimates), [
-                { x: 5.09, y: 100, patientId: "TCGA-OR-A5J1", studyId: "acc_tcga", status: false },
-                { x: 0.09, y: 80, patientId: "TCGA-OR-A5J2", studyId: "acc_tcga", status: true },
-                { x: 0, y: 80, patientId: "TCGA-OR-A5J3", studyId: "acc_tcga", status: false },
-                { x: 63.83, y: 53.3333333333333333, patientId: "TCGA-2F-A9KO", studyId: "blca_tcga", status: true },
-                { x: 0.13, y: 53.3333333333333333, patientId: "TCGA-2F-A9KP", studyId: "blca_tcga", status: false },
-                { x: 182.19, y: 0, patientId: "TCGA-2F-A9KQ", studyId: "blca_tcga", status: true }
+                { x: 5.09, y: 100, patientId: "TCGA-OR-A5J1", uniquePatientKey: "TCGA-OR-A5J1", studyId: "acc_tcga", status: false },
+                { x: 0.09, y: 80, patientId: "TCGA-OR-A5J2", uniquePatientKey: "TCGA-OR-A5J2", studyId: "acc_tcga", status: true },
+                { x: 0, y: 80, patientId: "TCGA-OR-A5J3", uniquePatientKey: "TCGA-OR-A5J3", studyId: "acc_tcga", status: false },
+                { x: 63.83, y: 53.3333333333333333, patientId: "TCGA-2F-A9KO", uniquePatientKey: "TCGA-2F-A9KO", studyId: "blca_tcga", status: true },
+                { x: 0.13, y: 53.3333333333333333, patientId: "TCGA-2F-A9KP", uniquePatientKey: "TCGA-2F-A9KP", studyId: "blca_tcga", status: false },
+                { x: 182.19, y: 0, patientId: "TCGA-2F-A9KQ", uniquePatientKey: "TCGA-2F-A9KQ", studyId: "blca_tcga", status: true }
             ]);
         });
     });
@@ -171,12 +176,12 @@ describe("SurvivalUtil", () => {
 
         it("returns correct scatter data with opacity for the example data", () => {
             assert.deepEqual(getScatterDataWithOpacity(examplePatientSurvivals, exampleEstimates), [
-                { x: 5.09, y: 100, patientId: "TCGA-OR-A5J1", studyId: "acc_tcga", status: false, opacity: 1 },
-                { x: 0.09, y: 80, patientId: "TCGA-OR-A5J2", studyId: "acc_tcga", status: true, opacity: 0 },
-                { x: 0, y: 80, patientId: "TCGA-OR-A5J3", studyId: "acc_tcga", status: false, opacity: 1 },
-                { x: 63.83, y: 53.3333333333333333, patientId: "TCGA-2F-A9KO", studyId: "blca_tcga", status: true, opacity: 0 },
-                { x: 0.13, y: 53.3333333333333333, patientId: "TCGA-2F-A9KP", studyId: "blca_tcga", status: false, opacity: 1 },
-                { x: 182.19, y: 0, patientId: "TCGA-2F-A9KQ", studyId: "blca_tcga", status: true, opacity: 0 }
+                { x: 5.09, y: 100, patientId: "TCGA-OR-A5J1", uniquePatientKey: "TCGA-OR-A5J1", studyId: "acc_tcga", status: false, opacity: 1 },
+                { x: 0.09, y: 80, patientId: "TCGA-OR-A5J2", uniquePatientKey: "TCGA-OR-A5J2", studyId: "acc_tcga", status: true, opacity: 0 },
+                { x: 0, y: 80, patientId: "TCGA-OR-A5J3", uniquePatientKey: "TCGA-OR-A5J3", studyId: "acc_tcga", status: false, opacity: 1 },
+                { x: 63.83, y: 53.3333333333333333, patientId: "TCGA-2F-A9KO", uniquePatientKey: "TCGA-2F-A9KO", studyId: "blca_tcga", status: true, opacity: 0 },
+                { x: 0.13, y: 53.3333333333333333, patientId: "TCGA-2F-A9KP", uniquePatientKey: "TCGA-2F-A9KP", studyId: "blca_tcga", status: false, opacity: 1 },
+                { x: 182.19, y: 0, patientId: "TCGA-2F-A9KQ", uniquePatientKey: "TCGA-2F-A9KQ", studyId: "blca_tcga", status: true, opacity: 0 }
             ]);
         });
     });
@@ -228,13 +233,23 @@ describe("SurvivalUtil", () => {
 
     describe("#getDownloadContent()", () => {
         it("returns correct download content for the example data", () => {
-            assert.equal(getDownloadContent(getScatterData(exampleAlteredPatientSurvivals, exampleAlteredEstimates),
-                getScatterData(exampleUnalteredPatientSurvivals, exampleUnalteredEstimates),
-                "test_main_title", "test_altered_title", "test_unaltered_title"), "test_main_title\n\ntest_altered_title\nCase ID\tStudy ID\t" +
+            const data = [];
+            data.push({
+                scatterData: getScatterData(exampleAlteredPatientSurvivals, exampleAlteredEstimates),
+                title:"test_altered_title"
+            });
+            data.push({
+                scatterData:getScatterData(exampleUnalteredPatientSurvivals, exampleUnalteredEstimates),
+                title:"test_unaltered_title"
+            });
+
+            const targetDownloadContent = "test_main_title\n\ntest_altered_title\nCase ID\tStudy ID\t" +
                 "Number at Risk\tStatus\tSurvival Rate\tTime (months)\nTCGA-OR-A5J1\tacc_tcga\t2\tcensored\t1\t5.09\nTCGA-OR-A5J2\tacc_tcga\t1\t" +
                 "deceased\t0.8\t0.09\n\ntest_unaltered_title\nCase ID\tStudy ID\tNumber at Risk\tStatus\tSurvival Rate\tTime (months)\nTCGA-OR-A5J3\t" +
                 "acc_tcga\t4\tcensored\t0.8\t0\nTCGA-2F-A9KO\tblca_tcga\t3\tdeceased\t0.5333333333333333\t63.83\nTCGA-2F-A9KP\tblca_tcga\t2\tcensored\t" +
-                "0.5333333333333333\t0.13\nTCGA-2F-A9KQ\tblca_tcga\t1\tdeceased\t0\t182.19");
+                "0.5333333333333333\t0.13\nTCGA-2F-A9KQ\tblca_tcga\t1\tdeceased\t0\t182.19";
+
+            assert.equal(getDownloadContent(data, "test_main_title"), targetDownloadContent);
         });
     });
 

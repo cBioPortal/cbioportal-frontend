@@ -241,14 +241,14 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
     @autobind
     private getData() {
-        /*return getDownloadContent(getScatterData(this.sortedAlteredPatientSurvivals, this.alteredEstimates),
-            getScatterData(this.sortedUnalteredPatientSurvivals, this.unalteredEstimates), this.props.title,
-            this.alteredLegendText, this.unalteredLegendText);*/
-        if (Math.random() > 0) {
-            // this is all to obfuscate so that we dont get any type errors but can still leave this placeholder code
-            throw "NOT IMPLEMENTED";
+        const data = [];
+        for (const group of this.analysisGroupsWithData) {
+            data.push({
+                scatterData:getScatterData(this.sortedGroupedSurvivals[group.value], this.estimates[group.value]),
+                title: group.legendText !== undefined ? group.legendText : group.value
+            });
         }
-        return "";
+        return getDownloadContent(data, this.props.title);
     }
 
     @autobind

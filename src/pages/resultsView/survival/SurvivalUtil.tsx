@@ -7,6 +7,7 @@ export type ScatterData = {
     x: number,
     y: number,
     patientId: string,
+    uniquePatientKey:string,
     studyId: string,
     status: boolean,
     opacity?: number
@@ -164,12 +165,15 @@ export function calculateLogRank(alteredPatientSurvivals: PatientSurvival[],
     return 1 - jStat.chisquare.cdf(chiSquareScore, 1);
 }
 
-export function getDownloadContent(alteredPatientData: any[], unalteredPatientData: any[], mainTitle: string,
-    alteredTitle: string, unalteredTitle: string): string {
+export function getDownloadContent(data:{ scatterData: ScatterData[], title:string}[], mainTitle:string):string {
 
-    let content: string = mainTitle + '\n\n' + alteredTitle + '\n';
-    content += tsvFormat(convertScatterDataToDownloadData(alteredPatientData)) + '\n\n' + unalteredTitle + '\n';
-    content += tsvFormat(convertScatterDataToDownloadData(unalteredPatientData));
+    let content: string = mainTitle;// + '\n\n';// + alteredTitle + '\n';
+    for (const d of data) {
+        content += '\n\n';
+        content += d.title;
+        content += '\n';
+        content += tsvFormat(convertScatterDataToDownloadData(d.scatterData));
+    }
     return content;
 }
 
