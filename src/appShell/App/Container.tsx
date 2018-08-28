@@ -14,7 +14,7 @@ import client from "../../shared/api/cbioportalClientInstance";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
 import {
     getCbioPortalApiUrl,
-    getConfigurationServiceApiUrl,
+    getConfigurationServiceApiUrl, getG2SApiUrl,
     getGenomeNexusApiUrl,
     getOncoKbApiUrl
 } from "../../shared/api/urls";
@@ -22,6 +22,7 @@ import civicClient from "../../shared/api/civicClientInstance";
 import genomeNexusClient from '../../shared/api/genomeNexusClientInstance';
 import internalGenomeNexusClient from '../../shared/api/genomeNexusInternalClientInstance';
 import oncoKBClient from '../../shared/api/oncokbClientInstance';
+import genome2StructureClient from '../../shared/api/g2sClientInstance';
 import {getSessionKey} from "../../shared/lib/ExtendedRouterStore";
 
 interface IContainerProps {
@@ -47,6 +48,7 @@ const configPromise = remoteData(async ()=>{
     (genomeNexusClient as any).domain = getGenomeNexusApiUrl();
     (internalGenomeNexusClient as any).domain = getGenomeNexusApiUrl();
     (oncoKBClient as any).domain = getOncoKbApiUrl();
+    (genome2StructureClient as any).domain = getG2SApiUrl();
 
     return config;
 
