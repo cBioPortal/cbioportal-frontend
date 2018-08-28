@@ -227,3 +227,12 @@ export function getVirtualStudyDescription(
     descriptionLines.push('Created on ' + getCurrentDate() + (user ? ' by ' + user : ''));
     return descriptionLines.join('\n');
 }
+
+export function isFiltered(filter: StudyViewFilter) {
+    return !(_.isEmpty(filter) || (
+        _.isEmpty(filter.clinicalDataEqualityFilters) &&
+        _.isEmpty(filter.cnaGenes) &&
+        _.isEmpty(filter.mutatedGenes) &&
+        _.isEmpty(filter.sampleIdentifiers)
+    ));
+}
