@@ -11,5 +11,15 @@ module.exports = {
     },
     plugins: [
         new WebpackShellPlugin({onBuildStart:['mkdir -p '+path.resolve(__dirname, 'dist'), 'rm -rf '+path.resolve(__dirname, 'dist'), 'mkdir '+path.resolve(__dirname, 'dist')]})
-    ]
+    ],
+    module: {
+        rules:[
+            {
+                test: /\.(png|jp(e*)g|svg)$/,  
+                use: [{
+                    loader: 'url-loader',
+                }]
+            }
+        ]
+    }
 };

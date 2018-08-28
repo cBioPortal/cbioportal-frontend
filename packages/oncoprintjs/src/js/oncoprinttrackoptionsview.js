@@ -1,4 +1,5 @@
 var $ = require('jquery');
+var menuDotsIcon = require('../img/menudots.svg');
 
 var TOGGLE_BTN_CLASS = "oncoprintjs__track_options__toggle_btn_img";
 var TOGGLE_BTN_OPEN_CLASS = "oncoprintjs__track_options__open";
@@ -150,7 +151,7 @@ var OncoprintTrackOptionsView = (function () {
 	$div = $('<div>').appendTo(view.$buttons_ctr).css({'position': 'absolute', 'left': '0px', 'top': top + 'px', 'white-space': 'nowrap'});
 	$img = $('<img/>').appendTo($div)
 		.attr({
-			'src': 'images/menudots.svg',
+			'src': menuDotsIcon,
 			'width': view.img_size,
 			'height': view.img_size
 		})

@@ -1,6 +1,7 @@
 var gl_matrix = require('gl-matrix');
 var OncoprintZoomSlider = require('./oncoprintzoomslider.js');
 var $ = require('jquery');
+var zoomToFitIcon = require('../img/zoomtofit.svg');
 
 var arrayFindIndex = function (arr, callback, start_index) {
     start_index = start_index || 0;
@@ -215,6 +216,8 @@ var OncoprintMinimapView = (function () {
 		'top': self.layout_numbers.canvas_top + height + padding,
 		'background-size': (btn_width - 4) + 'px '+ (btn_height - 4) + 'px',
 		'background-position': '2px 2px',
+                'background-image': 'url('+zoomToFitIcon+')',
+		'background-repeat': 'no-repeat',
 		'cursor': 'pointer'}).addClass('oncoprint-zoomtofit-btn')
 		    .appendTo($div);
 	    $btn.hover(function () {
