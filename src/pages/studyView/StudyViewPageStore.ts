@@ -365,14 +365,23 @@ export class StudyViewPageStore {
     }
 
     @action
-    updateCustomCasesFilter(cases: SampleIdentifier[]) {
-
-        this._sampleIdentifiers = _.map(cases, obj => {
+    updateCustomCasesFilter(cases: SampleIdentifier[], keepCurrent?:boolean) {
+        const newSampleIdentifiers = _.map(cases, obj => {
             return {
                 "sampleId": obj.sampleId,
                 "studyId": obj.studyId
             }
-        })
+        });
+        const newSampleIdentifiersMap = _.keyBy(newSampleIdentifiers, s=>`${s.studyId}:${s.sampleId}`);
+        if (keepCurrent) {
+            // if we should keep the current selection, go through and add samples back, taking care not to duplicate
+            for (const s of this._sampleIdentifiers) {
+                if (!(`${s.studyId}:${s.sampleId}` in newSampleIdentifiersMap)) {
+                    newSampleIdentifiers.push(s);
+                }
+            }
+        }
+        this._sampleIdentifiers = newSampleIdentifiers;
     }
 
     @action

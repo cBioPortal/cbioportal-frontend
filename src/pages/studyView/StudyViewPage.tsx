@@ -13,7 +13,6 @@ import {ChartMeta, ChartType, StudyViewPageStore, AnalysisGroup} from 'pages/stu
 import SummaryHeader from 'pages/studyView/SummaryHeader';
 import {Sample, Gene, SampleIdentifier, ClinicalAttribute} from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
-import StudyViewScatterPlot from "./charts/scatterPlot/StudyViewScatterPlot";
 import {isSelected, mutationCountVsCnaTooltip} from "./StudyViewUtils";
 import AppConfig from 'appConfig';
 import MobxPromise from "mobxpromise";
@@ -62,8 +61,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             onDeleteChart: (chartMeta: ChartMeta) => {
                 this.store.resetFilterAndChangeChartVisibility(chartMeta, false);
             },
-            updateCustomCasesFilter: (cases: SampleIdentifier[]) => {
-                this.store.updateCustomCasesFilter(cases);
+            updateCustomCasesFilter: (cases: SampleIdentifier[], keepCurrent?:boolean) => {
+                this.store.updateCustomCasesFilter(cases, keepCurrent);
             },
             updateSelectedGenes:(query: SingleGeneQuery[], genesInQuery: Gene[])=>{
                 this.store.updateSelectedGenes(query, genesInQuery);
