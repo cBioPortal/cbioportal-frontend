@@ -24,12 +24,12 @@ describe("ResultsViewOncoprintUtils",()=>{
             };
             const selectedMolecularProfiles = [molecularProfileIdToMolecularProfile.mutations];
             assert.deepEqual(
-                makeProfiledInClinicalAttributes(coverageInformation, molecularProfileIdToMolecularProfile, selectedMolecularProfiles, true),
+                makeProfiledInClinicalAttributes(coverageInformation, molecularProfileIdToMolecularProfile, selectedMolecularProfiles, 1, true),
                 [],
                 "single study"
             );
             assert.deepEqual(
-                makeProfiledInClinicalAttributes(coverageInformation, molecularProfileIdToMolecularProfile, selectedMolecularProfiles, false),
+                makeProfiledInClinicalAttributes(coverageInformation, molecularProfileIdToMolecularProfile, selectedMolecularProfiles, 1, false),
                 [],
                 "multiple study"
             );
@@ -51,7 +51,7 @@ describe("ResultsViewOncoprintUtils",()=>{
             };
             const selectedMolecularProfiles = [molecularProfileIdToMolecularProfile.mutations];
             assert.deepEqual(
-                makeProfiledInClinicalAttributes(coverageInformation, molecularProfileIdToMolecularProfile, selectedMolecularProfiles, true),
+                makeProfiledInClinicalAttributes(coverageInformation, molecularProfileIdToMolecularProfile, selectedMolecularProfiles, 2, true),
                 [{
                     clinicalAttributeId: `${SpecialAttribute.Profiled}_mutations`,
                     datatype: "STRING",
@@ -63,7 +63,7 @@ describe("ResultsViewOncoprintUtils",()=>{
                 "single study"
             );
             assert.deepEqual(
-                makeProfiledInClinicalAttributes(coverageInformation, molecularProfileIdToMolecularProfile, selectedMolecularProfiles, false),
+                makeProfiledInClinicalAttributes(coverageInformation, molecularProfileIdToMolecularProfile, selectedMolecularProfiles, 2, false),
                 [{
                     clinicalAttributeId: `${SpecialAttribute.Profiled}_${AlterationTypeConstants.MUTATION_EXTENDED}`,
                     datatype: "STRING",
@@ -92,12 +92,12 @@ describe("ResultsViewOncoprintUtils",()=>{
             };
             const selectedMolecularProfiles = [molecularProfileIdToMolecularProfile.linearCna];
             assert.deepEqual(
-                makeProfiledInClinicalAttributes(coverageInformation, molecularProfileIdToMolecularProfile, selectedMolecularProfiles, true),
+                makeProfiledInClinicalAttributes(coverageInformation, molecularProfileIdToMolecularProfile, selectedMolecularProfiles, 2, true),
                 [],
                 "single study"
             );
             assert.deepEqual(
-                makeProfiledInClinicalAttributes(coverageInformation, molecularProfileIdToMolecularProfile, selectedMolecularProfiles, false),
+                makeProfiledInClinicalAttributes(coverageInformation, molecularProfileIdToMolecularProfile, selectedMolecularProfiles, 2, false),
                 [],
                 "multiple study"
             );
@@ -119,7 +119,7 @@ describe("ResultsViewOncoprintUtils",()=>{
             };
             const selectedMolecularProfiles = [molecularProfileIdToMolecularProfile.mutations, molecularProfileIdToMolecularProfile.mrna];
             const singleStudyAttributes =
-                makeProfiledInClinicalAttributes(coverageInformation, molecularProfileIdToMolecularProfile, selectedMolecularProfiles, true);
+                makeProfiledInClinicalAttributes(coverageInformation, molecularProfileIdToMolecularProfile, selectedMolecularProfiles, 2, true);
             assert.deepEqual(singleStudyAttributes.find(x=>x.clinicalAttributeId.indexOf("mutations") > -1), {
                     clinicalAttributeId: `${SpecialAttribute.Profiled}_mutations`,
                     datatype: "STRING",
@@ -138,7 +138,7 @@ describe("ResultsViewOncoprintUtils",()=>{
                 }, "single study, mrna attribute");
 
             const multipleStudyAttributes =
-                makeProfiledInClinicalAttributes(coverageInformation, molecularProfileIdToMolecularProfile, selectedMolecularProfiles, false);
+                makeProfiledInClinicalAttributes(coverageInformation, molecularProfileIdToMolecularProfile, selectedMolecularProfiles, 2, false);
             assert.deepEqual(multipleStudyAttributes.find(x=>x.clinicalAttributeId.indexOf(AlterationTypeConstants.MUTATION_EXTENDED) > -1), {
                     clinicalAttributeId: `${SpecialAttribute.Profiled}_${AlterationTypeConstants.MUTATION_EXTENDED}`,
                     datatype: "STRING",
