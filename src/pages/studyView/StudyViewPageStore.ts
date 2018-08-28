@@ -25,12 +25,14 @@ import {
 import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
-import {getClinicalAttributeUniqueKey, isPreSelectedClinicalAttr} from './StudyViewUtils';
+import {getClinicalAttributeUniqueKey, isPreSelectedClinicalAttr, isFiltered} from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
-import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
-import {bind} from '../../../node_modules/bind-decorator';
-import {updateGeneQuery} from 'pages/studyView/StudyViewUtils';
-import {stringListToSet} from 'shared/lib/StringUtils';
+import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
+import { bind } from '../../../node_modules/bind-decorator';
+import { updateGeneQuery } from 'pages/studyView/StudyViewUtils';
+import { stringListToSet } from 'shared/lib/StringUtils';
+import { unparseOQLQueryLine } from 'shared/lib/oql/oqlfilter';
+import formSubmit from 'shared/lib/formSubmit';
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT'
 
@@ -108,8 +110,6 @@ export class StudyViewPageStore {
 
     @observable private _chartVisibility = observable.map<boolean>();
 
-    private _clinicalAttributesMetaSet: { [id: string]: ChartMeta } = {} as any;
-
     @observable geneQueryStr: string;
 
     @observable private geneQueries: SingleGeneQuery[] = [];
@@ -132,6 +132,29 @@ export class StudyViewPageStore {
     @action updateSelectedGenes(query: SingleGeneQuery[], genesInQuery: Gene[]) {
         this.geneQueries = query;
         this.queriedGeneSet = new ObservableMap(stringListToSet(genesInQuery.map(gene => gene.hugoGeneSymbol)))
+    }
+
+    @action
+    clearGeneFilter() {
+        this._mutatedGeneFilter = { entrezGeneIds: [] };
+    }
+    @action
+    clearCNAGeneFilter() {
+        this._cnaGeneFilter = {
+            alterations: []
+        };
+    }
+    @action
+    clearCustomCasesFilter() {
+        this._sampleIdentifiers = []
+    }
+
+    @action
+    clearAllFilters() {
+        this._clinicalDataEqualityFilterSet.clear()
+        this.clearGeneFilter()
+        this.clearCNAGeneFilter()
+        this.clearCustomCasesFilter()
     }
 
     @action
@@ -287,7 +310,8 @@ export class StudyViewPageStore {
         await: ()=>[this.molecularProfiles],
         invoke:()=>Promise.resolve(
             this.molecularProfiles.result!.filter(profile => profile.molecularAlterationType === "MUTATION_EXTENDED")
-        )
+        ),
+        default: []
     });
 
     @computed
@@ -375,17 +399,6 @@ export class StudyViewPageStore {
         }
 
         return _chartMetaSet;
-    }
-
-    @computed get attributeNamesSet() {
-        //TODO: this should use _clinicalAttributesMetaSet once special charts are included in _clinicalAttributesMetaSet
-        return _.reduce(this.clinicalAttributes.result, (acc: { [id: string]: string }, attribute) => {
-            const uniqueKey = (attribute.patientAttribute ? 'PATIENT' : 'SAMPLE') + '_' + attribute.clinicalAttributeId;
-            if (attribute.datatype === 'STRING') {
-                acc[uniqueKey] = attribute.displayName;
-            }
-            return acc
-        }, {})
     }
 
     @computed
@@ -739,6 +752,59 @@ export class StudyViewPageStore {
 
         return dataRows.map(mutation => mutation.join('\t')).join('\n');
     }
+
+    @bind
+    onSubmitQuery() {
+
+        //TODO: support virtual study. wait for https://github.com/cBioPortal/cbioportal-frontend/pull/1386
+        let formOps: { [id: string]: string } = {
+            cancer_study_list: this.studyIds.join(','),
+            tab_index: 'tab_visualize',
+        }
+
+        if (this.studyIds.length === 1) {
+            if (!_.isEmpty(this.mutationProfiles.result)) {
+                formOps['genetic_profile_ids_PROFILE_MUTATION_EXTENDED'] = this.mutationProfiles.result[0].molecularProfileId
+            }
+            if (!_.isEmpty(this.cnaProfileIds)) {
+                formOps['genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION'] = this.cnaProfileIds[0]
+            }
+        } else {
+
+            let data_priority = '0';
+            let { mutation, cna } = {
+                mutation: !_.isEmpty(this.mutationProfiles.result),
+                cna: !_.isEmpty(this.cnaProfileIds)
+            };
+            if (mutation && cna)
+                data_priority = '0';
+            else if (mutation)
+                data_priority = '1';
+            else if (cna)
+                data_priority = '2';
+            formOps.data_priority = data_priority;
+        }
+
+        if (isFiltered(this.filters)) {
+            formOps.case_set_id = '-1'
+            formOps.case_ids = _.map(this.selectedSamples.result, sample => {
+                return sample.studyId + ":" + sample.sampleId;
+            }).join('+');
+        } else {
+            if (this.studyIds.length === 1) {
+                formOps.case_set_id = this.studyIds[0] + '_all';
+            } else {
+                formOps.case_set_id = 'all';
+            }
+        }
+
+        if (!_.isEmpty(this.geneQueries)) {
+            formOps.Action = 'Submit';
+            formOps.gene_list = this.geneQueries.map(query => unparseOQLQueryLine(query)).join('\n');
+        }
+
+        formSubmit('index.do', formOps, "_blank", 'post');
+    }
 }
 
 
@@ -804,5 +870,6 @@ class ClinicalDataCache {
             }
             return acc
         }, {} as { [key: string]: { [attributeId: string]: string } })
+
     }
 }
