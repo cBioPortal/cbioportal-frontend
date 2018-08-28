@@ -28,7 +28,7 @@ import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
 import {
-    getClinicalAttributeUniqueKey, isPreSelectedClinicalAttr, isFiltered,
+    getClinicalAttributeUniqueKey, isPreSelectedClinicalAttr, isFiltered, NA_DATA,
     makePatientToClinicalAnalysisGroup
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
@@ -1122,6 +1122,97 @@ export class StudyViewPageStore {
             default: {}
         });
     }
+
+    public async getClinicalData(chartMeta: ChartMeta) {
+        if (chartMeta.clinicalAttribute && this.samples.result) {
+            const clinicalDataList = await defaultClient.fetchClinicalDataUsingPOST({
+                clinicalDataType: chartMeta.clinicalAttribute.patientAttribute ? 'PATIENT' : 'SAMPLE',
+                clinicalDataMultiStudyFilter: {
+                    attributeIds: [chartMeta.clinicalAttribute.clinicalAttributeId],
+                    identifiers: this.samples.result.map(sample => ({
+                        entityId: chartMeta.clinicalAttribute!.patientAttribute ? sample.patientId : sample.sampleId,
+                        studyId: sample.studyId
+                    }))
+                }
+            });
+
+            const header: string[] = ["Study ID", "Patient ID"];
+
+            if (!chartMeta.clinicalAttribute!.patientAttribute) {
+                header.push("Sample ID");
+            }
+
+            header.push(chartMeta.clinicalAttribute.displayName);
+
+            let data = [header.join("\t")];
+
+            data = data.concat(clinicalDataList.map(clinicalData => {
+                const row = [clinicalData.studyId || NA_DATA, clinicalData.patientId || NA_DATA];
+
+                if (!chartMeta.clinicalAttribute!.patientAttribute) {
+                    row.push(clinicalData.sampleId || NA_DATA);
+                }
+
+                row.push(clinicalData.value || NA_DATA);
+
+                return row.join("\t");
+            }));
+
+            return data.join("\n");
+        }
+        else {
+            return "";
+        }
+    }
+
+    public async getSurvivalDownloadData(chartMeta: ChartMeta)
+    {
+        if (this.survivalData.result)
+        {
+            const data: string[] = [];
+
+            // find the unique clinical attribute ids
+            const uniqueClinicalAttributeIds: {[clinicalAttributeId: string]: string} = _.reduce(
+                this.survivalData.result,
+                (map: {[clinicalAttributeId: string]: string}, clinicalDataList: ClinicalData[]) => {
+                    clinicalDataList.forEach(clinicalData => {
+                        if (clinicalData.clinicalAttributeId) {
+                            map[clinicalData.clinicalAttributeId] = clinicalData.clinicalAttributeId;
+                        }
+                    });
+
+                    return map;
+                },
+                {}
+            );
+
+            // add the header row
+            data.push(["Study ID", "Patient ID", ..._.values(uniqueClinicalAttributeIds)].join("\t"));
+
+            // add the data rows
+            _.each(this.survivalData.result, clinicalDataList => {
+                const row: string[] = [];
+
+                if (clinicalDataList.length > 0) {
+                    row.push(clinicalDataList[0].studyId || NA_DATA);
+                    row.push(clinicalDataList[0].patientId || NA_DATA);
+                    const keyed = _.keyBy(clinicalDataList, 'clinicalAttributeId');
+
+                    _.each(uniqueClinicalAttributeIds, id => {
+                        row.push(keyed[id] ? keyed[id].value || NA_DATA : NA_DATA);
+                    });
+                }
+
+                data.push(row.join("\t"));
+            });
+
+            return data.join("\n");
+        }
+        else {
+            return "";
+        }
+    }
+
     readonly survivalPlotData = remoteData<SurvivalType[]>({
         await: () => [this.survivalData, this.selectedPatientKeys, this.unSelectedPatientKeys],
         invoke: async () => {
@@ -1330,7 +1421,7 @@ export class StudyViewPageStore {
 
             acc.push(
                 _.map(Object.keys(clinicalAttributesNameSet), (attributrId) => {
-                    return sampleData[attributrId] || 'NA';
+                    return sampleData[attributrId] || NA_DATA;
                 })
             );
             return acc;
