@@ -258,6 +258,15 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         return { x, y };
     }
 
+    @computed get categoryAxisDomainPadding() {
+        // padding needs to be at least half a box width plus a bit
+        return Math.max(this.boxWidth/2 + 30, this.domainPadding);
+    }
+
+    @computed get dataAxisDomainPadding() {
+        return this.domainPadding;
+    }
+
     @computed get domainPadding() {
         if (this.props.domainPadding === undefined) {
             return PLOT_DATA_PADDING_PIXELS;
@@ -266,10 +275,25 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         }
     }
 
+    @computed get chartDomainPadding() {
+        let dataDomain, categoryDomain;
+        if (this.props.horizontal) {
+            dataDomain = "x";
+            categoryDomain = "y";
+        } else {
+            dataDomain = "y";
+            categoryDomain = "x";
+        }
+        return {
+            [dataDomain]:this.dataAxisDomainPadding,
+            [categoryDomain]:this.categoryAxisDomainPadding
+        };
+    }
+
     @computed get chartExtent() {
         const miscPadding = 100; // specifying chart width in victory doesnt translate directly to the actual graph size
         const numBoxes = this.props.data.length;
-        return this.categoryCoord(numBoxes - 1) + 2*this.domainPadding + miscPadding;
+        return this.categoryCoord(numBoxes - 1) + 2*this.categoryAxisDomainPadding + miscPadding;
         //return 2*this.domainPadding + numBoxes*this.boxWidth + (numBoxes-1)*this.boxSeparation;
         //const ret = Math.max(computedExtent, this.props.chartBase);
         //return ret;
@@ -551,7 +575,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                             width={this.chartWidth}
                             height={this.chartHeight}
                             standalone={false}
-                            domainPadding={this.domainPadding}
+                            domainPadding={this.chartDomainPadding}
                             domain={this.plotDomain}
                             singleQuadrantDomainPadding={false}
                         >
