@@ -52,41 +52,31 @@ export default class ExtendedRouterStore extends RouterStore {
         return this.location.query.session_id;
     }
 
-    localStorageSessionData = remoteData({
-        invoke: () => {
-            if (this.sessionId) {
-                const p = new Promise((resolve) => {
-                    setTimeout(() => {
-                        resolve()
-                    }, 0);
-                });
-                return p;
-            } else {
-                return Promise.resolve({});
-            }
-
-        },
-        onResult:()=>{
-            this._session = JSON.parse(localStorage.getItem(getSessionKey(this.location.query.sessionId!))!);
-        }
-    });
-
     remoteSessionData = remoteData({
         invoke: async () => {
-            let sessionData = await getRemoteSession(this.sessionId);
+            if (this.sessionId) {
+                let sessionData = await getRemoteSession(this.sessionId);
 
-            // if it has no version, it's a legacy session and needs to be normalized
-            if (sessionData.version === undefined) {
-                sessionData = normalizeLegacySession(sessionData);
+                // if it has no version, it's a legacy session and needs to be normalized
+                if (sessionData.version === undefined) {
+                    sessionData = normalizeLegacySession(sessionData);
+                }
+
+                return sessionData;
+            } else {
+                return undefined;
             }
 
-            return sessionData;
         },
-        onResult:()=>{
-            this._session = {
-                id:this.remoteSessionData.result!.id,
-                query:this.remoteSessionData.result!.data,
-                path:this.location.pathname
+        onResult:()=> {
+            if (this.remoteSessionData.result) {
+                this._session = {
+                    id: this.remoteSessionData.result!.id,
+                    query: this.remoteSessionData.result!.data,
+                    path: this.location.pathname
+                }
+            } else {
+                delete this._session;
             }
         }
     });
@@ -126,12 +116,14 @@ export default class ExtendedRouterStore extends RouterStore {
             // add session version
             session.query.version = 2;
 
-            this._session = session;
+            //this._session = session;
 
             saveRemoteSession(session.query).then((key)=>{
                 this.push( URL.format({pathname: path, query: {session_id:key.id}, hash:this.location.hash}) );
                 //localStorage.setItem(getSessionKey(session.id), JSON.stringify(session));
             });
+
+            return;
 
         }
 
