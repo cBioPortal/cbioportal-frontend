@@ -32,17 +32,32 @@ describe('Mutation Mapper Tool', function() {
 
             // check total number of mutations (this gets Showing 1-25 of 122
             // Mutations)
-            const mutationCount = browser.getText('.//*[text()[contains(.,"122 Mutations")]]')
+            let mutationCount = browser.getText('.//*[text()[contains(.,"122 Mutations")]]')
             assert.ok(mutationCount.length > 0);
 
             const brca1 = browser.getText('.//*[text()[contains(.,"BRCA1")]]')
             assert.ok(brca1.length > 0);
+            browser.elements(".nav-pill").click("a*=BRCA1")
+            // check total number of mutations (this gets Showing 1-25 of 85
+            // Mutations)
+            mutationCount = browser.getText('.//*[text()[contains(.,"85 Mutations")]]')
+            assert.ok(mutationCount.length > 0);
 
             const brca2 = browser.getText('.//*[text()[contains(.,"BRCA2")]]')
             assert.ok(brca2.length > 0);
+            browser.elements(".nav-pill").click("a*=BRCA2")
+            // check total number of mutations (this gets Showing 1-25 of 113
+            // Mutations)
+            mutationCount = browser.getText('.//*[text()[contains(.,"113 Mutations")]]')
+            assert.ok(mutationCount.length > 0);
 
             const pten = browser.getText('.//*[text()[contains(.,"PTEN")]]')
             assert.ok(pten.length > 0);
+            browser.elements(".nav-pill").click("a*=PTEN")
+            // check total number of mutations (this gets Showing 1-25 of 136
+            // Mutations)
+            mutationCount = browser.getText('.//*[text()[contains(.,"136 Mutations")]]')
+            assert.ok(mutationCount.length > 0);
         });
 
         it('should correctly annotate the protein changes example and display the results', ()=>{
