@@ -55,3 +55,13 @@
         border: 1px solid grey;
     }
 }
+
+.studyViewChartHeaderDownloadControls {
+    display: flex;
+    flex-direction: column;
+
+    button {
+        margin-top: 2px;
+        margin-bottom: 2px;
+    }
+}
