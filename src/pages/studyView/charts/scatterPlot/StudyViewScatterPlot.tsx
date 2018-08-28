@@ -12,6 +12,7 @@ import ScatterPlotTooltip from "../../../../shared/components/plots/ScatterPlotT
 import {DOWNSAMPLE_PIXEL_DISTANCE_THRESHOLD, getGroupedData, MAX_DOT_SIZE} from "./StudyViewScatterPlotUtils";
 import {SampleIdentifier} from "../../../../shared/api/generated/CBioPortalAPI";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator"
+import $ from "jquery";
 
 export interface IStudyViewScatterPlotData {
     x:number;
@@ -29,7 +30,7 @@ export interface IStudyViewScatterPlotProps {
     isSelected:(d:IStudyViewScatterPlotData)=>boolean;
     selectedFill:string;
     unselectedFill:string;
-    onSelection:(sampleIdentifiers:SampleIdentifier[])=>void;
+    onSelection:(sampleIdentifiers:SampleIdentifier[], keepCurrent:boolean)=>void;
 
     isLoading?:boolean;
     svgRef?:(svg:SVGElement|null)=>void;
@@ -47,6 +48,7 @@ export default class StudyViewScatterPlot extends React.Component<IStudyViewScat
     @observable tooltipModel:any|null = null;
     @observable pointHovered:boolean = false;
     @observable mouseIsDown:boolean = false;
+    @observable shiftPressed:boolean = false;
     public mouseEvents:any = makeMouseEvents(this);
 
     @observable.ref private container:HTMLDivElement;
@@ -65,6 +67,30 @@ export default class StudyViewScatterPlot extends React.Component<IStudyViewScat
         }
     }
 
+    @autobind
+    private onKeyDown(e: JQueryKeyEventObject) {
+        if (e.which === 16) {
+            this.shiftPressed = true;
+        }
+    }
+
+    @autobind
+    private onKeyUp(e: JQueryKeyEventObject) {
+        if (e.which === 16) {
+            this.shiftPressed = false;
+        }
+    }
+
+    componentDidMount() {
+        // Make it so that if you hold down shift, you can select more than one region at once
+        $(document).on("keydown",this.onKeyDown);
+        $(document).on("keyup", this.onKeyUp);
+    }
+
+    componentWillUnmount() {
+        $(document).off("keydown",this.onKeyDown);
+        $(document).off("keyup", this.onKeyUp);
+    }
 
     private get title() {
         if (this.props.title) {
@@ -152,10 +178,12 @@ export default class StudyViewScatterPlot extends React.Component<IStudyViewScat
 
     @autobind
     private onSelection(points:any) {
-        this.props.onSelection(_.flatten(points[0].data.map((p:any)=>p.data.map((d:IStudyViewScatterPlotData)=>({
+        const selectedSamples = _.flatten(points[0].data.map((p:any)=>p.data.map((d:IStudyViewScatterPlotData)=>({
             sampleId: d.sampleId,
             studyId: d.studyId
-        })))) as SampleIdentifier[]);
+        })))) as SampleIdentifier[];
+
+        this.props.onSelection(selectedSamples, this.shiftPressed); // keep other selection if shift pressed
     }
 
     @computed get data() {
