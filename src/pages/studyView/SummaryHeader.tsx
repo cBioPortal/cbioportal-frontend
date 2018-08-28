@@ -12,9 +12,10 @@ import { Gene } from 'shared/api/generated/CBioPortalAPI';
 import GeneSelectionBox, { GeneBoxType } from 'shared/components/GeneSelectionBox/GeneSelectionBox';
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import VirtualStudy from 'pages/studyView/virtualStudy/VirtualStudy';
-import { StudyWithSamples } from 'pages/studyView/StudyViewPageStore';
 import fileDownload from 'react-file-download';
 import { If, Then, Else } from 'react-if';
+import { StudyWithSamples, ChartMeta } from 'pages/studyView/StudyViewPageStore';
+import UserSelections from 'pages/studyView/UserSelections';
 
 export interface ISummaryHeaderProps {
     geneQuery:string;
@@ -23,9 +24,15 @@ export interface ISummaryHeaderProps {
     updateSelectedGenes: (query: SingleGeneQuery[], genesInQuery: Gene[]) => void;
     studyWithSamples:StudyWithSamples[];
     filter: StudyViewFilter;
-    attributeNamesSet: {[id:string]:string};
+    attributesMetaSet: {[id:string]:ChartMeta};
     user?: string;
     getClinicalData: () => Promise<string>;
+    onSubmitQuery:() => void
+    updateClinicalDataEqualityFilter: (chartMeta: ChartMeta, value: string[]) => void;
+    clearGeneFilter: () => void;
+    clearCNAGeneFilter: () => void;
+    clearCustomCasesFilter: () => void;
+    clearAllFilters:() => void;
 }
 
 export type GeneReplacement = {alias: string, genes: Gene[]};
@@ -34,7 +41,7 @@ export type GeneReplacement = {alias: string, genes: Gene[]};
 export default class SummaryHeader extends React.Component<ISummaryHeaderProps, {}> {
 
     @observable private isCustomCaseBoxOpen = false;
-    @observable private isQueryButtonDisabled = false;
+    @observable private _isQueryButtonDisabled = false;
 
     @observable downloadingData = false;
     @observable showDownloadErrorMessage = false;
@@ -97,7 +104,7 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
         },
         queryStr: string,
         status: "pending" | "error" | "complete") {
-        this.isQueryButtonDisabled = (status === 'pending') || !_.isUndefined(oql.error) || genes.suggestions.length === 0;
+        this._isQueryButtonDisabled = (status === 'pending') || !_.isUndefined(oql.error) || genes.suggestions.length !== 0;
         if (status === "complete") {
             this.props.updateSelectedGenes(oql.query, genes.found);
         }
@@ -143,7 +150,7 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                                 studyWithSamples={this.props.studyWithSamples}
                                 selectedSamples={this.props.selectedSamples}
                                 filter={this.props.filter}
-                                attributeNamesSet={this.props.attributeNamesSet}
+                                attributesMetaSet={this.props.attributesMetaSet}
                             />
                         }
                         placement="bottom"
@@ -178,10 +185,10 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                         callback={this.updateSelectedGenes}
                         location={GeneBoxType.STUDY_VIEW_PAGE}
                     />
-                    {/* <span style={{ margin: "0px 5px" }}><i className="fa fa-arrow-right fa-lg" aria-hidden="true"></i></span>
-                    <button disabled={this.isQueryButtonDisabled} className="btn" onClick={() => null}>
+                    <span style={{ margin: "0px 5px" }}><i className="fa fa-arrow-right fa-lg" aria-hidden="true"></i></span>
+                    <button disabled={this._isQueryButtonDisabled} className="btn" onClick={() => this.props.onSubmitQuery()}>
                         Query
-                    </button> */}
+                    </button>
                     <button
                         className="btn"
                         onClick={()=>this.isCustomCaseBoxOpen = true}
@@ -189,6 +196,16 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                         Select cases
                     </button>
                 </div>
+
+                <UserSelections
+                    filter={this.props.filter}
+                    attributesMetaSet={this.props.attributesMetaSet}
+                    updateClinicalDataEqualityFilter={this.props.updateClinicalDataEqualityFilter}
+                    clearCNAGeneFilter={this.props.clearCNAGeneFilter}
+                    clearGeneFilter={this.props.clearGeneFilter}
+                    clearCustomCasesFilter={this.props.clearCustomCasesFilter}
+                    clearAllFilters={this.props.clearAllFilters}
+                />
             </div>
         )
     }
