@@ -123,6 +123,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             },
             analysisGroupsSettings: this.store.analysisGroupsSettings
         };
+
+        // TODO enable data download for bar chart, too
         switch (chartMeta.chartType) {
             case ChartType.PIE_CHART: {
                 props.promise = this.store.studyViewClinicalDataCountsCache.get({
@@ -132,6 +134,16 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey);
                 props.onUserSelection = this.handlers.onUserSelection;
                 props.onResetSelection = this.handlers.onUserSelection;
+                props.download = [
+                    {
+                        initDownload: () => this.store.getClinicalData(chartMeta),
+                        type: 'TSV'
+                    }, {
+                        type: 'SVG'
+                    }, {
+                        type: 'PDF'
+                    }
+                ];
                 break;
             }
             case ChartType.TABLE: {
@@ -142,6 +154,14 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 });
                 props.onUserSelection = this.handlers.onUserSelection;
                 props.onResetSelection = this.handlers.onUserSelection;
+                props.disableGraphicsDownload = true;
+                props.download = [
+                    {
+                        // TODO implement a proper data download function
+                        initDownload: () => Promise.resolve("NA"),
+                        type: 'TSV'
+                    }
+                ];
                 break;
             }
             case ChartType.MUTATED_GENES_TABLE: {
@@ -151,6 +171,14 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 props.onResetSelection = this.handlers.resetGeneFilter;
                 props.selectedGenes=this.store.selectedGenes;
                 props.onGeneSelect=this.store.onCheckGene;
+                props.disableGraphicsDownload = true;
+                props.download = [
+                    {
+                        // TODO implement a proper data download function
+                        initDownload: () => Promise.resolve("NA"),
+                        type: 'TSV'
+                    }
+                ];
                 break;
             }
             case ChartType.CNA_GENES_TABLE: {
@@ -160,10 +188,24 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 props.onResetSelection = this.handlers.resetCNAGeneFilter;
                 props.selectedGenes=this.store.selectedGenes;
                 props.onGeneSelect=this.store.onCheckGene;
+                props.disableGraphicsDownload = true;
+                props.download = [
+                    {
+                        // TODO implement a proper data download function
+                        initDownload: () => Promise.resolve("NA"),
+                        type: 'TSV'
+                    }
+                ];
                 break;
             }
             case ChartType.SURVIVAL: {
                 props.promise = this.store.getSurvivalData(chartMeta);
+                props.download = [
+                    {
+                        initDownload: () => this.store.getSurvivalDownloadData(chartMeta),
+                        type: 'TSV'
+                    }
+                ];
                 // only want to pass these in when necessary, otherwise charts will unnecessarily update when they change
                 props.patientKeysWithNAInSelectedClinicalData = this.store.patientKeysWithNAInSelectedClinicalData;
                 props.patientToAnalysisGroup = this.store.patientToAnalysisGroup;

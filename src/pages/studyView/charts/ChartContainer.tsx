@@ -12,9 +12,8 @@ import {
     ClinicalDataCountWithColor,
     StudyViewPageStore
 } from "pages/studyView/StudyViewPageStore";
-import fileDownload from "react-file-download";
 import PieChart from "pages/studyView/charts/pieChart/PieChart";
-import svgToPdfDownload from "shared/lib/svgToPdfDownload";
+import {svgToPdfPromise} from "shared/lib/svgToPdfDownload";
 import classnames from "classnames";
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
 import {bind} from "bind-decorator";
@@ -30,14 +29,22 @@ import {remoteData} from "../../../shared/api/remoteData";
 import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
 
 export interface AbstractChart {
-    downloadData: () => string;
-    toSVGDOMNode: () => Element
+    toSVGDOMNode: () => Element;
+}
+
+export type ChartDownloadType = 'TSV' | 'SVG' | 'PDF';
+
+export interface IChartContainerDownloadProps {
+    type: ChartDownloadType;
+    initDownload?: () => Promise<string>;
 }
 
 export interface IChartContainerProps {
     chartMeta: ChartMeta;
     promise: MobxPromise<any>;
     filters: any;
+    disableGraphicsDownload?: boolean;
+    download?: IChartContainerDownloadProps[];
     onUserSelection?: any;
     onResetSelection?: any;
     onDeleteChart: (chartMeta: ChartMeta) => void;
@@ -62,14 +69,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @observable mouseInChart: boolean = false;
     @observable placement: 'left' | 'right' = 'right';
-    @observable chartType: ChartType
+    @observable chartType: ChartType;
 
     @observable naPatientsHiddenInSurvival = true; // only relevant for survival charts - whether cases with NA clinical value are shown
-
-    @computed
-    get fileName() {
-        return this.props.chartMeta.displayName.replace(/[ \t]/g, '_');
-    }
 
     constructor(props: IChartContainerProps) {
         super(props);
@@ -100,16 +102,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 this.placement = 'right'
                 this.mouseInChart = false;
             }),
-            handleDownloadDataClick: () => {
-                let firstLine = this.props.chartMeta.displayName + '\tCount'
-                fileDownload(firstLine + '\n' + this.plot.downloadData(), this.fileName);
-
-            },
-            handleSVGClick: () => {
-                fileDownload((new XMLSerializer()).serializeToString(this.toSVGDOMNode()), `${this.fileName}.svg`);
-            },
-            handlePDFClick: () => {
-                svgToPdfDownload(`${this.fileName}.pdf`, this.toSVGDOMNode());
+            defaultDownload: {
+                SVG: () => Promise.resolve((new XMLSerializer()).serializeToString(this.toSVGDOMNode())),
+                PDF: () => svgToPdfPromise(this.toSVGDOMNode())
             },
             onDeleteChart: () => {
                 this.props.onDeleteChart(this.props.chartMeta);
@@ -167,7 +162,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         if (this.analysisGroupsPossible) {
             controls.showAnalysisGroupsIcon = true;
         }
-        return {...controls, showResetIcon: this.props.filters && this.props.filters.length > 0} as ChartControls;
+        return {
+            ...controls,
+            showResetIcon: this.props.filters && this.props.filters.length > 0
+        } as ChartControls;
     }
 
     @bind
@@ -225,6 +223,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     data={this.props.promise.result}
                     active={this.mouseInChart}
                     placement={this.placement}
+                    label={this.props.chartMeta.displayName}
                 />)
             }
             case ChartType.TABLE: {
@@ -363,6 +362,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     hideLabel={this.hideLabel}
                     chartControls={this.chartControls}
                     changeChartType={this.changeChartType}
+                    download={this.generateHeaderDownloadProps(this.props.download)}
                     setAnalysisGroups={this.setAnalysisGroups}
                 />
                 <StudyViewComponentLoader promises={this.loadingPromises}>
@@ -370,5 +370,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 </StudyViewComponentLoader>
             </div>
         );
+    }
+
+    private generateHeaderDownloadProps(download?: IChartContainerDownloadProps[]): IChartContainerDownloadProps[] {
+        return download && download.length > 0 ? download.map(props => ({
+                type: props.type,
+                initDownload: props.initDownload ? props.initDownload : this.handlers.defaultDownload[props.type]
+            })
+        ) : [];
     }
 }
