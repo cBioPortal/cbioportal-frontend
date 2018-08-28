@@ -24,6 +24,7 @@ import internalGenomeNexusClient from '../../shared/api/genomeNexusInternalClien
 import oncoKBClient from '../../shared/api/oncokbClientInstance';
 import genome2StructureClient from '../../shared/api/g2sClientInstance';
 import {getSessionKey} from "../../shared/lib/ExtendedRouterStore";
+import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 
 interface IContainerProps {
     location: Location;
@@ -92,6 +93,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
                 <div className="contentWrapper">
                     <UnsupportedBrowserModal/>
                     {(configComplete) && this.renderChildren()}
+                    <LoadingIndicator isLoading={!configComplete} isGlobal={true}/>
                 </div>
 
                 <PortalFooter/>
