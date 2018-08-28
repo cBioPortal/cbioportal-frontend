@@ -26,7 +26,7 @@ export function getJitterForCase(uniqueKey:string) {
     return getDeterministicRandomNumber(seed, [-1,1]);
 }
 
-export function scatterPlotSize<D>(
+export function makeScatterPlotSizeFunction<D>(
     highlight?:(d:D)=>boolean,
     size?:(d:D, active:Boolean, isHighlighted?:boolean)=>number
 ) {
@@ -43,6 +43,21 @@ export function scatterPlotSize<D>(
         };
     }
 }
+
+export function scatterPlotSize(
+    d:any,
+    active:boolean,
+    isHighlighted:boolean
+) {
+    if (isHighlighted) {
+        return 8;
+    } else if (active) {
+        return 6;
+    } else {
+        return 4;
+    }
+}
+
 
 export function separateScatterDataByAppearance<D>(
     data:D[],
