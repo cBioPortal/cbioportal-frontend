@@ -1,6 +1,7 @@
 export interface IAppConfig {
     apiRoot?: string;
     baseUrl?:string;
+    basePath?:string;
     disabledTabs?:string[],
     frontendUrl?: string;
     genomespaceEnabled: boolean;

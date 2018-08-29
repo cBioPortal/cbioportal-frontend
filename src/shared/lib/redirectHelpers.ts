@@ -1,4 +1,5 @@
 import ExtendedRouterStore from "./ExtendedRouterStore";
+import getBrowserWindow from "./getBrowserWindow";
 
 export function restoreRouteAfterRedirect(injected: { routing:ExtendedRouterStore }){
 
@@ -13,4 +14,16 @@ export function restoreRouteAfterRedirect(injected: { routing:ExtendedRouterStor
     }
     return null;
 
+}
+
+
+export function handleLegacySubmission(){
+    const legacySubmission = localStorage.getItem("legacyStudySubmission");
+    localStorage.removeItem("legacyStudySubmission");
+    if (legacySubmission) {
+        const parsedSubmission:any = JSON.parse(legacySubmission);
+        if (parsedSubmission.Action) {
+            (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(parsedSubmission, "results");
+        }
+    }
 }
