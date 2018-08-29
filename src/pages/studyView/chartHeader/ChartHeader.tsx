@@ -11,12 +11,14 @@ export interface IChartHeaderProps {
     hideLabel?       : boolean;
     chartControls?   : ChartControls;
     changeChartType  : (chartType: ChartType) => void;
+    doSurvivalAnalysis  : () => void;
 }
 
 export interface ChartControls {
     showResetIcon?   : boolean;
     showTableIcon?    : boolean;
     showPieIcon?      : boolean;
+    showSurvivalAnalysisIcon?   : boolean;
 }
 
 export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
@@ -52,6 +54,11 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             <If condition={this.props.chartControls && this.props.chartControls.showPieIcon}>
                                 <button className="btn btn-xs"  onClick={() => this.props.changeChartType(ChartType.PIE_CHART)}>
                                     <i className="fa fa-pie-chart" aria-hidden="true" title="Convert to Pie chart"></i>
+                                </button>
+                            </If>
+                            <If condition={this.props.chartControls && this.props.chartControls.showSurvivalAnalysisIcon}>
+                                <button className="btn btn-xs"  onClick={this.props.doSurvivalAnalysis}>
+                                    <img src="images/survival_icon.svg" style={{verticalAlign:"initial"}} width="10" height="10" className="icon hover" alt="Survival Analysis"/>
                                 </button>
                             </If>
                             <button className="btn btn-xs"  onClick={() => this.props.deleteChart()}>
