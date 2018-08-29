@@ -226,7 +226,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
         return observable({
             get entrezGeneId() {
-                if (this.selectedGeneOption) {
+                if (this.dataType !== CLIN_ATTR_DATA_TYPE && this.selectedGeneOption) {
                     if (this.selectedGeneOption.value === SAME_GENE_OPTION_VALUE) {
                         return self.horzSelection.entrezGeneId;
                     } else {
@@ -255,12 +255,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 this._selectedGeneOption = o;
             },
             get dataType() {
-                if (this.entrezGeneId === undefined || !self.dataTypeOptions.isComplete) {
-                    // if theres no selected gene (this only happens at beginning of initialization),
-                    //  or if there are no options to select a default from, then return the stored value for this variable
+                if (!self.dataTypeOptions.isComplete) {
+                    // if there are no options to select a default from, then return the stored value for this variable
                     return this._dataType;
                 }
-                // otherwise, pick the default based on sources that have data for the selected gene
+                // otherwise, pick the default based on available options
                 const dataTypeOptions = self.dataTypeOptions.result!;
                 if (this._dataType === undefined && dataTypeOptions.length) {
                     // return computed default if _dataType is undefined and if there are options to select a default value from
@@ -286,13 +285,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 this._dataType = t;
             },
             get dataSourceId() {
-                if (this.entrezGeneId === undefined || !self.dataTypeToDataSourceOptions.isComplete) {
-                    // if theres no selected gene (this only happens at beginning of initialization),
-                    //  or if there are no options to select a default from, then return the stored value for this variable
+                if (!self.dataTypeToDataSourceOptions.isComplete) {
+                    // if there are no options to select a default from, then return the stored value for this variable
                     return this._dataSourceId;
                 }
-                // otherwise, pick the default based on the current selected data type, and
-                //  the sources that have data for the selected gene
+                // otherwise, pick the default based on the current selected data type, and available sources
                 const dataSourceOptionsByType = self.dataTypeToDataSourceOptions.result!;
                 if (this._dataSourceId === undefined &&
                     this.dataType &&
@@ -1315,9 +1312,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 <OqlStatusBanner className="plots-oql-status-banner" store={this.props.store} tabReflectsOql={false} style={{marginTop:7}}/>
                 <div className={"plotsTab"} style={{display:"flex", flexDirection:"row", maxWidth:"inherit"}}>
                     <div className="leftColumn">
-                        { (this.horzSelection.entrezGeneId !== undefined &&
-                        this.vertSelection.entrezGeneId !== undefined &&
-                        this.dataTypeOptions.isComplete &&
+                        { (this.dataTypeOptions.isComplete &&
                         this.dataTypeToDataSourceOptions.isComplete) ? (
                             <Observer>
                                 {this.controls}
