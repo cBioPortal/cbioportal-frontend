@@ -131,7 +131,6 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
     ];
 
     @bind
-    @action
     isChecked(entrezGeneId: number, alteration: number) {
         let record = _.find(this.preSelectedRows, (row: CNAGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId && row.alteration === alteration);
         if (_.isUndefined(record)) {
@@ -142,7 +141,6 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
     }
 
     @bind
-    @action
     isDisabled(entrezGeneId: number, alteration: number) {
         return !_.isUndefined(_.find(this.selectedRows, (row: CNAGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId && row.alteration === alteration));
     }
