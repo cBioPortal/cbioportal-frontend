@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, Redirect, IndexRedirect } from 'react-router';
+import { Route, Redirect, IndexRoute } from 'react-router';
 import { inject } from 'mobx-react';
 import Container from 'appShell/App/Container';
 import { restoreRouteAfterRedirect } from './shared/lib/redirectHelpers';
@@ -69,25 +69,27 @@ lazyLoadComponent(ResultsViewPage).call();
 
 export const makeRoutes = (routing) => {
     return (<Route path="/"component={Container}>
-                <Route path="/home" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(HomePage)}/>
-                <Route path="/datasets" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(DatasetPage)} />
+                <IndexRoute onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(SPA)}/>
+
                 <Route path="/restore" onEnter={()=>{$(document).scrollTop(0)}} component={restoreRoute}/>
-                <Route path="/testimonials" onEnter={()=>{$(document).scrollTop(0)}} component={TestimonialsPage}/>
-                <Route path="/blank" onEnter={()=>{$(document).scrollTop(0)}} component={getBlankPage}/>
                 <Route path="/results(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(ResultsViewPage)} />
                 <Route path="/patient" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(PatientViewPage)}/>
                 <Route path="/spa" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(SPA)} />
                 <Route path="/study" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(StudyViewPage)} />
-                <Route path="/webAPI" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(WebAPIPage)} />
-                <Route path="/rmatlab" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(RMATLAB)} />
-                <Route path="/tutorials" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(Tutorials)} />
-                <Route path="/visualize" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(Visualize)} />
-                <Route path="/about" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(AboutUs)} />
-                <Route path="/news" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(News)} />
-                <Route path="/faq" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(FAQ)} />
-                <Route path="/oql" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(OQL)} />
                 <Route path="/mutation_mapper" getComponent={lazyLoadComponent(MutationMapperTool)} />
-                <IndexRedirect to={defaultRoute}/>
+
+
+                <Route path="/s/webAPI" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(WebAPIPage)} />
+                <Route path="/s/rmatlab" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(RMATLAB)} />
+                <Route path="/s/datasets" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(DatasetPage)} />
+                <Route path="/s/tutorials" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(Tutorials)} />
+                <Route path="/s/visualize" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(Visualize)} />
+                <Route path="/s/about" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(AboutUs)} />
+                <Route path="/s/news" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(News)} />
+                <Route path="/s/faq" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(FAQ)} />
+                <Route path="/s/oql" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(OQL)} />
+                <Route path="/s/testimonials" onEnter={()=>{$(document).scrollTop(0)}} component={TestimonialsPage}/>
+
     </Route>)
 };
 
