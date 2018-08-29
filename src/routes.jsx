@@ -38,14 +38,15 @@ import $ from "jquery";
 
 // accepts bundle-loader's deferred loader function and defers execution of route's render
 // until chunk is loaded
-function lazyLoadComponent(loader) {
+function lazyLoadComponent(loader, loadingCallback) {
 
     return (location, cb) => {
         loader(module => {
             if (cb) cb(null, module.default);
-            if (typeof window.onReactAppReady === 'function') {
-                window.onReactAppReady();
-            }
+            if (loadingCallback) loadingCallback();
+            // if (typeof window.onReactAppReady === 'function') {
+            //     window.onReactAppReady();
+            // }
         });
 
     };
@@ -65,16 +66,17 @@ let getBlankPage = function(){
 // we want to preload ResultsViewPage to prevent delay due to lazy loading bundle
 // note, because we bundle, and bundles are loaded async, this does NOT affect time to render of default route
 // results will load in background while user plays with query interface
-lazyLoadComponent(ResultsViewPage).call();
+function preloadImportantComponents(){
+    lazyLoadComponent(ResultsViewPage).call();
+}
 
 export const makeRoutes = (routing) => {
     return (<Route path="/"component={Container}>
-                <IndexRoute onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(SPA)}/>
+                <IndexRoute onEnter={()=>{$(document).scrollTop(0);}} getComponent={lazyLoadComponent(SPA,preloadImportantComponents)}/>
 
                 <Route path="/restore" onEnter={()=>{$(document).scrollTop(0)}} component={restoreRoute}/>
                 <Route path="/results(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(ResultsViewPage)} />
                 <Route path="/patient" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(PatientViewPage)}/>
-                <Route path="/spa" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(SPA)} />
                 <Route path="/study" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(StudyViewPage)} />
                 <Route path="/mutation_mapper" getComponent={lazyLoadComponent(MutationMapperTool)} />
 

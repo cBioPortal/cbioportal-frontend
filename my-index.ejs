@@ -25,25 +25,9 @@
             // ]
         };
 
-        window.frontendConfigOverride = {
-            frontendUrl:  '//localhost:3000', // '//'+window.location.host + '/',
-            apiRoot:'www.cbioportal.org/rc',
-            sessionServiceUrl:'http://www.cbioportal.org/rc/api-legacy/proxy/session/',
-            disabledTabs:[],
-            skinShowDataSetsTab:true,
-            skinShowWebAPITab:true,
-            skinShowRmatLABTab:true,
-            skinShowTutorialsTab:true,
-            skinShowAboutTab:true,
-            skinIsMarkdownDocumentation:true,
-            skinDocumentationBaseUrl:"https://raw.githubusercontent.com/cbioportal/cbioportal/release-1.15.0/docs",
-            skinFaqSourceURL:"https://docs.google.com/document/d/e/2PACX-1vSWTtIJZF2tuBimihr8ke-d00DpKh7fydFIQb5xYpE_bMYM9hZyY9OP1Vz1Ts0ow7ob-3h2S19cuB5O/pub?embedded=true",
-            skinRightNavWhatsNewBlurb : '<p> &bull;<a href="news"> <b>New data and features released</b></a><br/> &bull;<a href="visualize"> <b>New tools released</b></a> </p> <form action="http://groups.google.com/group/cbioportal-news/boxsubscribe"> &nbsp;&nbsp;&nbsp;&nbsp;<b>Sign up for low-volume email news alerts:</b></br> &nbsp;&nbsp;&nbsp;&nbsp;<input type="text" name="email"> <input type="submit" name="sub" value="Subscribe"> </form> &nbsp;&nbsp;&nbsp;&nbsp;<b>Or follow us <a href="http://www.twitter.com/cbioportal"><i>@cbioportal</i></a> on Twitter</b>',
-        };
-
         window.frontendConfig = {
             configurationServiceUrl:"http://www.cbioportal.org/rc/config_service.jsp",
-            frontendUrl:  '//localhost:3000', // '//'+window.location.host + '/',
+            frontendUrl:'//'+window.location.host + '/',
             apiRoot:'www.cbioportal.org/rc',
             sessionServiceUrl:'http://www.cbioportal.org/rc/api-legacy/proxy/session/',
             disabledTabs:[],
@@ -56,24 +40,6 @@
             skinDocumentationBaseUrl:"https://raw.githubusercontent.com/cbioportal/cbioportal/release-1.15.0/docs",
             skinFaqSourceURL:"https://docs.google.com/document/d/e/2PACX-1vSWTtIJZF2tuBimihr8ke-d00DpKh7fydFIQb5xYpE_bMYM9hZyY9OP1Vz1Ts0ow7ob-3h2S19cuB5O/pub?embedded=true",
             skinRightNavWhatsNewBlurb : '<p> &bull;<a href="news"> <b>New data and features released</b></a><br/> &bull;<a href="visualize"> <b>New tools released</b></a> </p> <form action="http://groups.google.com/group/cbioportal-news/boxsubscribe"> &nbsp;&nbsp;&nbsp;&nbsp;<b>Sign up for low-volume email news alerts:</b></br> &nbsp;&nbsp;&nbsp;&nbsp;<input type="text" name="email"> <input type="submit" name="sub" value="Subscribe"> </form> &nbsp;&nbsp;&nbsp;&nbsp;<b>Or follow us <a href="http://www.twitter.com/cbioportal"><i>@cbioportal</i></a> on Twitter</b>',
-        };
-
-
-        function loadReactApp(config) {
-
-            if (!window.frontendConfig.frontendUrl) {
-                window.frontendConfig.frontendUrl = "/reactapp/";
-            } else {
-                window.frontendConfig.frontendUrl = frontendConfig.frontendUrl;
-            }
-            document.write('<link rel="stylesheet" type="text/css" href="' + window.frontendConfig.frontendUrl + '/reactapp/prefixed-bootstrap.min.css?'+ window.frontendConfig.appVersion +'" />');
-            // localdev gets styling in another manner
-            //if (!window.localdev) {
-            //    document.write('<link rel="stylesheet" type="text/css" href="' + window.frontendConfig.frontendUrl + 'reactapp/styles.css?'+ window.frontendConfig.appVersion +'" />');
-            //}
-            document.write('<script src="' + window.frontendConfig.frontendUrl + '/reactapp/common.bundle.js?'+ window.frontendConfig.appVersion +'"></scr' + 'ipt>');
-            document.write('<script src="' + window.frontendConfig.frontendUrl + '/reactapp/main.app.js?'+ window.frontendConfig.appVersion +'"></scr' + 'ipt>');
-
         };
 
     </script>
@@ -86,17 +52,10 @@
             }
         });
     </script>
-
-    <script>
-        loadReactApp(window.frontendConfig);
-    </script>
-    <!--<script src="/reactapp/common.bundle.js"></script>-->
-    <!--<link href="/reactapp/prefixed-bootstrap.min.css" rel="stylesheet"></link>-->
-    <!--<link href="reactapp/styles.css" rel="stylesheet"></head>-->
-    <!--<body class="cbioOnePageApp">-->
-
-
-<body class="twoColumn">
+    <script src="/reactapp/common.bundle.js"></script>
+    <link href="/reactapp/prefixed-bootstrap.min.css" rel="stylesheet"></link>
+</head>
+<body>
 
 <div id="reactRoot"></div>
 
