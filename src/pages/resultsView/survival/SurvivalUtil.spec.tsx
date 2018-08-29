@@ -304,6 +304,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 1,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: true
             },{
@@ -311,6 +312,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 1,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: true
             },{
@@ -318,6 +320,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 1,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: true
             }], {
@@ -328,6 +331,7 @@ describe("SurvivalUtil", () => {
                 x: 0,
                 y: 10,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 opacity: 1,
                 status: true
@@ -336,6 +340,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 1,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: true
             }]);
@@ -348,6 +353,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 1,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: true
             },{
@@ -355,6 +361,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 0,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: false
             },{
@@ -362,6 +369,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 1,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: true
             }], {
@@ -373,6 +381,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 1,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: true
             },{
@@ -380,6 +389,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 1,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: true
             }]);
@@ -392,6 +402,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 1,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: true
             },{
@@ -399,6 +410,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 1,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: true
             },{
@@ -406,6 +418,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 1,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: true
             }], {
@@ -417,6 +430,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 1,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: true
             },{
@@ -424,6 +438,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 1,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: true
             }]);
@@ -436,6 +451,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 1,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: true
             },{
@@ -443,6 +459,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 0,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: false
             },{
@@ -450,6 +467,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 1,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: true
             },{
@@ -457,6 +475,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 1,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: true
             }], {
@@ -468,6 +487,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 1,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: true
             },{
@@ -475,6 +495,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 1,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: true
             },{
@@ -482,6 +503,7 @@ describe("SurvivalUtil", () => {
                 y: 10,
                 opacity: 1,
                 patientId: '',
+                uniquePatientKey: '',
                 studyId: '',
                 status: true
             }]);
