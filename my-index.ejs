@@ -25,7 +25,8 @@
             // ]
         };
 
-        window.frontendConfigOverride = {
+        window.frontendConfig = {
+            configurationServiceUrl:"http://www.cbioportal.org/rc/config_service.jsp",
             frontendUrl:'//'+window.location.host + '/',
             apiRoot:'www.cbioportal.org/rc',
             sessionServiceUrl:'http://www.cbioportal.org/rc/api-legacy/proxy/session/',
@@ -54,12 +55,9 @@
     <script src="/reactapp/common.bundle.js"></script>
     <link href="/reactapp/prefixed-bootstrap.min.css" rel="stylesheet"></link>
 </head>
-<body class="cbioOnePageApp">
+<body>
 
-
-<body class="twoColumn">
-
-    <div id="reactRoot"></div>
+<div id="reactRoot"></div>
 
 </body>
 </html>

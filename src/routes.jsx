@@ -62,7 +62,7 @@ let getBlankPage = function(){
 }
 
 // we want to preload ResultsViewPage to prevent delay due to lazy loading bundle
-// note, because we bundle, and bundles are loaded async, this does NOT affect time to render of default route
+// note: because we bundle, and bundles are loaded async, this does NOT affect time to render of default route
 // results will load in background while user plays with query interface
 function preloadImportantComponents(){
     lazyLoadComponent(ResultsViewPage).call();
@@ -91,7 +91,7 @@ export const makeRoutes = (routing) => {
                 <Route path="/s/news" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(News)} />
                 <Route path="/s/faq" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(FAQ)} />
                 <Route path="/s/oql" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(OQL)} />
-                <Route path="/s/testimonials" onEnter={()=>{$(document).scrollTop(0)}} component={TestimonialsPage} />
+                <Route path="/s/testimonials" onEnter={()=>{$(document).scrollTop(0)}} component={TestimonialsPage}/>
 
     </Route>)
 };
