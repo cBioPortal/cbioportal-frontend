@@ -21,7 +21,10 @@ import {MutatedGenesTable} from "../table/MutatedGenesTable";
 import {CNAGenesTable} from "../table/CNAGenesTable";
 import StudyViewScatterPlot from "./scatterPlot/StudyViewScatterPlot";
 import {CopyNumberGeneFilterElement} from "../../../shared/api/generated/CBioPortalAPIInternal";
-import {isSelected, mutationCountVsCnaTooltip, UNSELECTED_COLOR} from '../StudyViewUtils';
+import {
+    isSelected, makeMutationCountVsCnaTooltip,
+    UNSELECTED_COLOR
+} from '../StudyViewUtils';
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import {remoteData} from "../../../shared/api/remoteData";
 import {PatientSurvival} from "../../../shared/model/PatientSurvival";
@@ -50,6 +53,7 @@ export interface IChartContainerProps {
     analysisGroupsPossible?:boolean;
     analysisGroupsSettings?:StudyViewPageStore["analysisGroupsSettings"];
     patientToAnalysisGroup?:MobxPromise<{[uniquePatientKey:string]:string}>;
+    sampleToAnalysisGroup?:MobxPromise<{[uniqueSampleKey:string]:string}>;
 }
 
 @observer
@@ -260,11 +264,12 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             case ChartType.SURVIVAL: {
                 if (this.survivalChartData.isComplete) {
                     // this.survivalChartData should be complete at this point, barring transient race-condition-caused errors, because of loadingPromises and StudyViewComponentLoader (see render())
+                    // analysisGroupsSettings must not be undefined
                     return (
                         <SurvivalChart patientSurvivals={this.survivalChartData.result!.patientSurvivals}
                                        patientToAnalysisGroup={this.survivalChartData.result!.patientToAnalysisGroup}
                                        analysisGroups={this.survivalChartData.result!.analysisGroups}
-                                       analysisClinicalAttribute={this.props.analysisGroupsSettings && this.props.analysisGroupsSettings.clinicalAttribute}
+                                       analysisClinicalAttribute={this.props.analysisGroupsSettings!.clinicalAttribute}
                                        naPatientsHiddenInSurvival={this.naPatientsHiddenInSurvival}
                                        toggleSurvivalHideNAPatients={this.toggleSurvivalHideNAPatients}
                                        legendLocation={LegendLocation.TOOLTIP}
@@ -294,19 +299,23 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 }
             }
             case ChartType.SCATTER: {
+                // sampleToAnalysisGroup is complete because of loadingPromises and StudyViewComponentLoader
+                // analysisGroupsSettings must not be undefined
                 return (
                     <StudyViewScatterPlot
                         width={400}
                         height={380}
                         onSelection={this.props.onUserSelection}
                         data={this.props.promise.result}
-                        isSelected={d => isSelected(d, this.props.selectedSamplesMap)}
                         isLoading={this.props.selectedSamples.isPending}
-                        selectedFill="#ff0000"
-                        unselectedFill="#0000ff"
+
+                        sampleToAnalysisGroup={this.props.sampleToAnalysisGroup!.result!}
+                        analysisGroups={this.props.analysisGroupsSettings!.groups}
+                        analysisClinicalAttribute={this.props.analysisGroupsSettings!.clinicalAttribute}
+
                         axisLabelX="Fraction of copy number altered genome"
                         axisLabelY="# of mutations"
-                        tooltip={mutationCountVsCnaTooltip}
+                        tooltip={this.mutationCountVsCnaTooltip}
                     />
                 )
             }
@@ -315,10 +324,19 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         }
     }
 
+    @computed get mutationCountVsCnaTooltip() {
+        return makeMutationCountVsCnaTooltip(this.props.sampleToAnalysisGroup!.result, this.props.analysisGroupsSettings!.clinicalAttribute);
+    }
+
     @computed get loadingPromises() {
         const ret = [this.props.promise];
-        if (this.chartType === ChartType.SURVIVAL) {
-            ret.push(this.survivalChartData);
+        switch (this.chartType) {
+            case ChartType.SURVIVAL:
+                ret.push(this.survivalChartData);
+                break;
+            case ChartType.SCATTER:
+                ret.push(this.props.sampleToAnalysisGroup!);
+                break;
         }
         return ret;
     }
