@@ -250,9 +250,9 @@ function scatterPlotMutationSummaryLegendData(
         legendData.push({
             name: NOT_PROFILED_MUTATION_LEGEND_LABEL,
             symbol: {
-                stroke: notProfiledAppearance.stroke,
-                strokeOpacity: notProfiledAppearance.strokeOpacity,
-                fill: notProfiledAppearance.fill,
+                stroke: notProfiledMutationsAppearance.stroke,
+                strokeOpacity: notProfiledMutationsAppearance.strokeOpacity,
+                fill: notProfiledMutationsAppearance.fill,
                 type: "circle"
             }
         });
@@ -319,9 +319,9 @@ function scatterPlotMutationLegendData(
         legendData.push({
             name: NOT_PROFILED_MUTATION_LEGEND_LABEL,
             symbol: {
-                stroke: notProfiledAppearance.stroke,
-                strokeOpacity: notProfiledAppearance.strokeOpacity, // always show because its white
-                fill: notProfiledAppearance.fill,
+                stroke: notProfiledMutationsAppearance.stroke,
+                strokeOpacity: notProfiledMutationsAppearance.strokeOpacity, // always show because its white
+                fill: notProfiledMutationsAppearance.fill,
                 type: "circle"
             }
         });
@@ -368,8 +368,8 @@ function scatterPlotCnaLegendData(
         legendData.push({
             name: NOT_PROFILED_CNA_LEGEND_LABEL,
             symbol: {
-                stroke: notProfiledAppearance.stroke,
-                fill: notProfiledAppearance.fill,
+                stroke: notProfiledCnaAppearance.stroke,
+                fillOpacity:0,
                 type: "circle",
                 strokeWidth: CNA_STROKE_WIDTH
             }
@@ -655,12 +655,12 @@ export const oncoprintMutationTypeToAppearanceDefault:{[mutType:string]:{symbol:
     }
 };
 
-export const notProfiledAppearance = {
+export const notProfiledCnaAppearance = {
     symbol: "circle",
-    fill: "#ffffff",
     stroke: "#000000",
     strokeOpacity:0.3,
 };
+export const notProfiledMutationsAppearance = Object.assign({}, {fill: "#ffffff"}, notProfiledCnaAppearance);
 
 export const mutationLegendOrder = [
     "fusion",
@@ -741,7 +741,7 @@ export const cnaRenderPriority = stringListToIndexSet([
 
 function getMutationTypeAppearance(d:IScatterPlotSampleData, oncoprintMutationTypeToAppearance:{[mutType:string]:{symbol:string, fill:string, stroke:string, strokeOpacity:number, legendLabel:string}}) {
     if (!d.profiledMutations) {
-        return notProfiledAppearance;
+        return notProfiledMutationsAppearance;
     } else if (!d.dispMutationType) {
         return noMutationAppearance;
     } else {
@@ -750,7 +750,7 @@ function getMutationTypeAppearance(d:IScatterPlotSampleData, oncoprintMutationTy
 }
 function getCopyNumberAppearance(d:IScatterPlotSampleData) {
     if (!d.profiledCna || !d.dispCna) {
-        return notProfiledAppearance;
+        return notProfiledCnaAppearance;
     } else {
         return cnaToAppearance[d.dispCna.value as -2 | -1 | 0 | 1 | 2];
     }
@@ -787,7 +787,7 @@ export function makeScatterPlotPointAppearance(
             if (mutationDataExists.isComplete && mutationDataExists.result) {
                 return (d:IScatterPlotSampleData)=>{
                     if (!d.profiledMutations) {
-                        return notProfiledAppearance;
+                        return notProfiledMutationsAppearance;
                     } else if (!d.dispMutationSummary) {
                         return noMutationAppearance;
                     } else {
