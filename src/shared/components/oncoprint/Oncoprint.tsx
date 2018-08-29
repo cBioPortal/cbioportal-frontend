@@ -127,6 +127,8 @@ export interface IOncoprintProps {
 
     hiddenIds?:string[];
 
+    alterationTypesInQuery?:string[];
+
     distinguishMutationType?:boolean;
     distinguishDrivers?:boolean;
 

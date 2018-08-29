@@ -1,5 +1,5 @@
 import * as React from "react";
-import {observer} from "mobx-react";
+import {observer, Observer} from "mobx-react";
 import {computed, observable} from "mobx";
 import {bind} from "bind-decorator";
 import CBIOPORTAL_VICTORY_THEME, {axisTickLabelStyles} from "../../theme/cBioPoralTheme";
@@ -9,11 +9,12 @@ import ScatterPlotTooltip from "./ScatterPlotTooltip";
 import Timer = NodeJS.Timer;
 import {VictoryBoxPlot, VictoryChart, VictoryAxis, VictoryScatter, VictoryLegend, VictoryLabel} from "victory";
 import {IBaseScatterPlotData} from "./ScatterPlot";
-import {getDeterministicRandomNumber} from "./PlotUtils";
+import {getDeterministicRandomNumber, separateScatterDataByAppearance} from "./PlotUtils";
 import {logicalAnd} from "../../lib/LogicUtils";
 import {tickFormatNumeral, wrapTick} from "./TickUtils";
 import {scatterPlotSize} from "./PlotUtils";
 import {getTextWidth} from "../../lib/wrapText";
+import autobind from "autobind-decorator";
 
 export interface IBaseBoxScatterPlotPoint {
     value:number;
@@ -27,10 +28,10 @@ export interface IBoxScatterPlotData<D extends IBaseBoxScatterPlotPoint> {
 
 export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     svgId?:string;
-    fontFamily?:string;
     title?:string;
     data: IBoxScatterPlotData<D>[];
     chartBase:number;
+    domainPadding?:number; // see https://formidable.com/open-source/victory/docs/victory-chart/#domainpadding
     highlight?:(d:D)=>boolean;
     size?:(d:D, active:boolean, isHighlighted?:boolean)=>number;
     fill?:string | ((d:D)=>string);
@@ -38,15 +39,18 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     fillOpacity?:number | ((d:D)=>number);
     strokeOpacity?:number | ((d:D)=>number);
     strokeWidth?:number | ((d:D)=>number);
+    zIndexSortBy?:((d:D)=>any)[]; // second argument to _.sortBy
     symbol?: string | ((d:D)=>string); // see http://formidable.com/open-source/victory/docs/victory-scatter/#symbol for options
     tooltip?:(d:D)=>JSX.Element;
-    legendData?:{name:string, symbol:any}[]; // see http://formidable.com/open-source/victory/docs/victory-legend/#data
+    legendData?:{name:string|string[], symbol:any}[]; // see http://formidable.com/open-source/victory/docs/victory-legend/#data
     logScale?:boolean; // log scale along the point data axis
     axisLabelX?:string;
     axisLabelY?:string;
     horizontal?:boolean; // whether the box plot is horizontal
     useLogSpaceTicks?:boolean; // if log scale for an axis, then this prop determines whether the ticks are shown in post-log coordinate, or original data coordinate space
     boxWidth?:number;
+    legendLocationWidthThreshold?:number; // chart width after which we start putting the legend at the bottom of the plot
+    boxCalculationFilter?:(d:D)=>boolean; // determines which points are used for calculating the box
 }
 
 type BoxModel = {
@@ -59,16 +63,16 @@ type BoxModel = {
     y?:number
 };
 
-const DEFAULT_FONT_FAMILY = "Verdana,Arial,sans-serif";
 const RIGHT_GUTTER = 120; // room for legend
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 100;
-export const LEGEND_Y = 100; // experimentally determined
 const MIN_LOG_ARGUMENT = 0.01;
-const CATEGORY_LABEL_HORZ_ANGLE = -30;
+const CATEGORY_LABEL_HORZ_ANGLE = 50;
 const DEFAULT_LEFT_PADDING = 25;
 const DEFAULT_BOTTOM_PADDING = 10;
-const MAXIMUM_CATEGORY_LABEL_SIZE = 120;
+const LEGEND_ITEMS_PER_ROW = 4;
+const BOTTOM_LEGEND_PADDING = 15;
+const RIGHT_PADDING_FOR_LONG_LABELS = 50;
 
 
 const BOX_STYLES = {
@@ -81,7 +85,7 @@ const BOX_STYLES = {
 
 @observer
 export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends React.Component<IBoxScatterPlotProps<D>, {}> {
-    @observable tooltipModel:any|null = null;
+    @observable.ref tooltipModel:any|null = null;
     @observable pointHovered:boolean = false;
     private mouseEvents:any = this.makeMouseEvents();
 
@@ -139,17 +143,13 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         }];
     }
 
-    @computed get fontFamily() {
-        return this.props.fontFamily || DEFAULT_FONT_FAMILY;
-    }
-
     private get title() {
         if (this.props.title) {
             return (
                 <VictoryLabel
                     style={{
                         fontWeight:"bold",
-                        fontFamily: this.fontFamily,
+                        fontFamily: axisTickLabelStyles.fontFamily,
                         textAnchor: "middle"
                     }}
                     x={this.svgWidth/2}
@@ -178,20 +178,52 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         }
     }
 
-    @computed get legendX() {
+    @computed get sideLegendX() {
         return this.chartWidth - 20;
     }
 
+    @computed get legendLocation() {
+        if (this.props.legendLocationWidthThreshold !== undefined &&
+            this.chartWidth > this.props.legendLocationWidthThreshold) {
+            return "bottom";
+        } else {
+            return "right";
+        }
+    }
+
+    @computed get bottomLegendHeight() {
+        //height of legend in case its on bottom
+        if (!this.props.legendData) {
+            return 0;
+        } else {
+            const numRows = Math.ceil(this.props.legendData.length / LEGEND_ITEMS_PER_ROW);
+            return 23.7*numRows;
+        }
+    }
+
     private get legend() {
-        const x = this.legendX;
         if (this.props.legendData && this.props.legendData.length) {
+            let legendData = this.props.legendData;
+            if (this.legendLocation === "bottom") {
+                // if legend is at bottom then flatten labels
+                legendData = legendData.map(x=>{
+                    let name = x.name;
+                    if (Array.isArray(x.name)) {
+                        name = (name as string[]).join(" "); // flatten labels by joining with space
+                    }
+                    return {
+                        name, symbol: x.symbol
+                    };
+                });
+            }
             return (
                 <VictoryLegend
-                    orientation="vertical"
-                    data={this.props.legendData}
-                    x={x}
-                    y={LEGEND_Y}
-                    width={RIGHT_GUTTER}
+                    orientation={this.legendLocation === "right" ? "vertical" : "horizontal"}
+                    itemsPerRow={this.legendLocation === "right" ? undefined : LEGEND_ITEMS_PER_ROW}
+                    rowGutter={this.legendLocation === "right" ? undefined : -5}
+                    data={legendData}
+                    x={this.legendLocation === "right" ? this.sideLegendX : 0}
+                    y={this.legendLocation === "right" ? 100 : this.svgHeight-this.bottomLegendHeight}
                 />
             );
         } else {
@@ -200,7 +232,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     @computed get plotDomain() {
-        // data extremes plus padding
+        // data extremes
         let max = Number.NEGATIVE_INFINITY;
         let min = Number.POSITIVE_INFINITY;
         for (const d of this.props.data) {
@@ -226,20 +258,53 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         return { x, y };
     }
 
+    @computed get categoryAxisDomainPadding() {
+        // padding needs to be at least half a box width plus a bit
+        return Math.max(this.boxWidth/2 + 30, this.domainPadding);
+    }
+
+    @computed get dataAxisDomainPadding() {
+        return this.domainPadding;
+    }
+
+    @computed get domainPadding() {
+        if (this.props.domainPadding === undefined) {
+            return PLOT_DATA_PADDING_PIXELS;
+        } else {
+            return this.props.domainPadding;
+        }
+    }
+
+    @computed get chartDomainPadding() {
+        let dataDomain, categoryDomain;
+        if (this.props.horizontal) {
+            dataDomain = "x";
+            categoryDomain = "y";
+        } else {
+            dataDomain = "y";
+            categoryDomain = "x";
+        }
+        return {
+            [dataDomain]:this.dataAxisDomainPadding,
+            [categoryDomain]:this.categoryAxisDomainPadding
+        };
+    }
+
     @computed get chartExtent() {
-        const miscPadding = 200; // specifying chart width in victory doesnt translate directly to the actual graph size
+        const miscPadding = 100; // specifying chart width in victory doesnt translate directly to the actual graph size
         const numBoxes = this.props.data.length;
-        const computedExtent = numBoxes*this.boxWidth + (numBoxes-1)*this.boxSeparation + miscPadding;
-        const ret = Math.max(computedExtent, this.props.chartBase);
-        return ret;
+        return this.categoryCoord(numBoxes - 1) + 2*this.categoryAxisDomainPadding + miscPadding;
+        //return 2*this.domainPadding + numBoxes*this.boxWidth + (numBoxes-1)*this.boxSeparation;
+        //const ret = Math.max(computedExtent, this.props.chartBase);
+        //return ret;
     }
 
     @computed get svgWidth() {
-        return this.leftPadding + this.chartWidth + RIGHT_GUTTER;
+        return this.leftPadding + this.chartWidth + this.rightPadding;
     }
 
     @computed get svgHeight() {
-        return this.chartHeight + this.bottomPadding;
+        return this.topPadding + this.chartHeight + this.bottomPadding;
     }
 
     @computed get boxSeparation() {
@@ -306,7 +371,8 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
 
     @bind
     private formatCategoryTick(t:number, index:number) {
-        return wrapTick(this.labels[index], MAXIMUM_CATEGORY_LABEL_SIZE);
+        //return wrapTick(this.labels[index], MAXIMUM_CATEGORY_LABEL_SIZE);
+        return this.labels[index];
     }
 
     @bind
@@ -329,7 +395,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                 tickFormat={this.props.horizontal ? this.formatNumericalTick : this.formatCategoryTick}
                 tickLabelComponent={<VictoryLabel angle={this.props.horizontal ? undefined : CATEGORY_LABEL_HORZ_ANGLE}
                                                   verticalAnchor={this.props.horizontal ? undefined : "start"}
-                                                  textAnchor={this.props.horizontal ? undefined : "end"}
+                                                  textAnchor={this.props.horizontal ? undefined : "start"}
                                   />}
                 axisLabelComponent={<VictoryLabel dy={this.props.horizontal ? 35 : this.biggestCategoryLabelSize + 24}/>}
             />
@@ -355,7 +421,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     @computed get scatterPlotData() {
         let dataAxis:"x"|"y" = this.props.horizontal ? "x" : "y";
         let categoryAxis:"x"|"y" = this.props.horizontal ? "y" : "x";
-        const data:{x:number, y:number}[] = [];
+        const data:(D&{x:number, y:number})[] = [];
         for (let i=0; i<this.props.data.length; i++) {
             const categoryCoord = this.categoryCoord(i);
             for (const d of this.props.data[i].data) {
@@ -365,7 +431,15 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                 } as {x:number, y:number} & IBaseBoxScatterPlotPoint));
             }
         }
-        return data;
+        return separateScatterDataByAppearance<D>(
+            data,
+            ifndef(this.props.fill, "0x000000"),
+            ifndef(this.props.stroke, "0x000000"),
+            ifndef(this.props.strokeWidth, 0),
+            ifndef(this.props.strokeOpacity, 1),
+            ifndef(this.props.fillOpacity, 1),
+            this.props.zIndexSortBy
+        );
     }
 
     @computed get leftPadding() {
@@ -377,25 +451,45 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         }
     }
 
-    @computed get bottomPadding() {
-        if (this.props.horizontal) {
-            return DEFAULT_BOTTOM_PADDING;
+    @computed get topPadding() {
+        return 0;
+    }
+
+    @computed get rightPadding() {
+        if (this.props.legendData && this.props.legendData.length > 0 && this.legendLocation === "right") {
+            // make room for legend
+            return Math.max(RIGHT_GUTTER, RIGHT_PADDING_FOR_LONG_LABELS);
         } else {
-            return this.biggestCategoryLabelSize;
+            return RIGHT_PADDING_FOR_LONG_LABELS;
         }
     }
 
+    @computed get bottomPadding() {
+        let paddingForLabels = DEFAULT_BOTTOM_PADDING;
+        let paddingForLegend = 0;
+
+        if (!this.props.horizontal) {
+            // more padding if vertical, because category labels extend to bottom
+            paddingForLabels = this.biggestCategoryLabelSize;
+        }
+        if (this.legendLocation === "bottom") {
+            // more padding if legend location is "bottom", to make room for legend
+            paddingForLegend = this.bottomLegendHeight + BOTTOM_LEGEND_PADDING;
+        }
+
+        return paddingForLabels + paddingForLegend;
+    }
+
     @computed get biggestCategoryLabelSize() {
-        const maxSize = Math.min(
-            Math.max(...this.labels.map(x=>getTextWidth(x, axisTickLabelStyles.fontFamily, axisTickLabelStyles.fontSize+"px"))),
-            MAXIMUM_CATEGORY_LABEL_SIZE
+        const maxSize = Math.max(
+            ...this.labels.map(x=>getTextWidth(x, axisTickLabelStyles.fontFamily, axisTickLabelStyles.fontSize+"px"))
         );
         if (this.props.horizontal) {
             // if horizontal mode, its label width
             return maxSize;
         } else {
             // if vertical mode, its label height when rotated
-            return maxSize*Math.abs(Math.sin((Math.PI/180) * CATEGORY_LABEL_HORZ_ANGLE))
+            return maxSize*Math.abs(Math.sin((Math.PI/180) * CATEGORY_LABEL_HORZ_ANGLE));
         }
     }
 
@@ -408,7 +502,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     private categoryCoord(index:number) {
-        return index * this.boxSeparation;
+        return index * (this.boxWidth + this.boxSeparation); // half box + separation + half box
     }
 
     @computed get categoryTickValues() {
@@ -416,13 +510,18 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
     }
 
     @computed get boxPlotData():BoxModel[] {
-        return this.props.data.map(d=>calculateBoxPlotModel(d.data.map(x=>{
-            if (this.props.logScale) {
-                return this.logScale(x.value);
-            } else {
-                return x.value;
+        const boxCalculationFilter = this.props.boxCalculationFilter;
+        return this.props.data.map(d=>calculateBoxPlotModel(d.data.reduce((data, next)=>{
+            if (!boxCalculationFilter || (boxCalculationFilter && boxCalculationFilter(next))) {
+                // filter out values in calculating boxes, if a filter is specified ^^
+                if (this.props.logScale) {
+                    data.push(this.logScale(next.value));
+                } else {
+                    data.push(next.value);
+                }
             }
-        }))).map((model, i)=>{
+            return data;
+        }, [] as number[]))).map((model, i)=>{
             // create boxes, importantly we dont filter at this step because
             //  we need the indexes to be intact and correpond to the index in the input data,
             //  in order to properly determine the x/y coordinates
@@ -449,6 +548,74 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         });
     }
 
+    @autobind
+    private getChart() {
+        return (
+            <div
+                ref={this.containerRef}
+                style={{width: this.svgWidth, height: this.svgHeight}}
+            >
+                <svg
+                    id={this.props.svgId || ""}
+                    style={{
+                        width: this.svgWidth,
+                        height: this.svgHeight,
+                        pointerEvents: "all"
+                    }}
+                    height={this.svgHeight}
+                    width={this.svgWidth}
+                    role="img"
+                    viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
+                >
+                    <g
+                        transform={`translate(${this.leftPadding}, ${this.topPadding})`}
+                    >
+                        <VictoryChart
+                            theme={CBIOPORTAL_VICTORY_THEME}
+                            width={this.chartWidth}
+                            height={this.chartHeight}
+                            standalone={false}
+                            domainPadding={this.chartDomainPadding}
+                            domain={this.plotDomain}
+                            singleQuadrantDomainPadding={false}
+                        >
+                            {this.title}
+                            {this.legend}
+                            {this.horzAxis}
+                            {this.vertAxis}
+                            <VictoryBoxPlot
+                                boxWidth={this.boxWidth}
+                                style={BOX_STYLES}
+                                data={this.boxPlotData}
+                                horizontal={this.props.horizontal}
+                            />
+                            {this.scatterPlotData.map(dataWithAppearance=>(
+                                <VictoryScatter
+                                    key={`${dataWithAppearance.fill},${dataWithAppearance.stroke},${dataWithAppearance.strokeWidth},${dataWithAppearance.strokeOpacity},${dataWithAppearance.fillOpacity}`}
+                                    style={{
+                                        data: {
+                                            fill: dataWithAppearance.fill,
+                                            stroke: dataWithAppearance.stroke,
+                                            strokeWidth: dataWithAppearance.strokeWidth,
+                                            strokeOpacity: dataWithAppearance.strokeOpacity,
+                                            fillOpacity: dataWithAppearance.fillOpacity
+                                        }
+                                    }}
+                                    size={this.scatterPlotSize}
+                                    symbol={this.props.symbol || "circle"}
+                                    data={dataWithAppearance.data}
+                                    events={this.mouseEvents}
+                                    x={this.scatterPlotX}
+                                    y={this.scatterPlotY}
+                                />
+                            ))}
+                        </VictoryChart>
+                    </g>
+                </svg>
+            </div>
+        );
+    }
+
 
     render() {
         if (!this.props.data.length) {
@@ -456,71 +623,15 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         }
         return (
             <div>
-                <div
-                    ref={this.containerRef}
-                    style={{width: this.svgWidth, height: this.svgHeight}}
-                >
-                    <svg
-                        id={this.props.svgId || ""}
-                        style={{
-                            width: this.svgWidth,
-                            height: this.svgHeight,
-                            pointerEvents: "all"
-                        }}
-                        height={this.svgHeight}
-                        width={this.svgWidth}
-                        role="img"
-                        viewBox={`0 0 ${this.svgWidth} ${this.svgHeight}`}
-                    >
-                        <g
-                            transform={`translate(${this.leftPadding}, 0)`}
-                        >
-                            <VictoryChart
-                                theme={CBIOPORTAL_VICTORY_THEME}
-                                width={this.chartWidth}
-                                height={this.chartHeight}
-                                standalone={false}
-                                domainPadding={PLOT_DATA_PADDING_PIXELS}
-                                domain={this.plotDomain}
-                                singleQuadrantDomainPadding={false}
-                            >
-                                {this.title}
-                                {this.legend}
-                                {this.horzAxis}
-                                {this.vertAxis}
-                                <VictoryBoxPlot
-                                    boxWidth={this.boxWidth}
-                                    style={BOX_STYLES}
-                                    data={this.boxPlotData}
-                                    horizontal={this.props.horizontal}
-                                />
-                                <VictoryScatter
-                                    style={{
-                                        data: {
-                                            fill: ifndef(this.props.fill, "0x000000"),
-                                            stroke: ifndef(this.props.stroke, "0x000000"),
-                                            strokeWidth: ifndef(this.props.strokeWidth, 0),
-                                            strokeOpacity: ifndef(this.props.strokeOpacity, 1),
-                                            fillOpacity: ifndef(this.props.fillOpacity, 1)
-                                        }
-                                    }}
-                                    size={this.scatterPlotSize}
-                                    symbol={this.props.symbol || "circle"}
-                                    data={this.scatterPlotData}
-                                    events={this.mouseEvents}
-                                    x={this.scatterPlotX}
-                                    y={this.scatterPlotY}
-                                />
-                            </VictoryChart>
-                        </g>
-                    </svg>
-                </div>
+                <Observer>
+                    {this.getChart}
+                </Observer>
                 {this.container && this.tooltipModel && this.props.tooltip && (
                     <ScatterPlotTooltip
                         placement={this.props.horizontal ? "bottom" : "right"}
                         container={this.container}
                         targetHovered={this.pointHovered}
-                        targetCoords={{x: this.tooltipModel.x + this.leftPadding, y: this.tooltipModel.y}}
+                        targetCoords={{x: this.tooltipModel.x + this.leftPadding, y: this.tooltipModel.y + this.topPadding}}
                         overlay={this.props.tooltip(this.tooltipModel.datum)}
                     />
                 )}

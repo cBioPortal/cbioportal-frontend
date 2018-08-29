@@ -1,6 +1,6 @@
 import * as React from "react";
 import LazyLoadedTableCell from "shared/lib/LazyLoadedTableCell";
-import {Mutation, MutationCount} from "../../../api/generated/CBioPortalAPI";
+import {Mutation, ClinicalData} from "../../../api/generated/CBioPortalAPI";
 import MutationCountCache from "../../../cache/MutationCountCache";
 import MutationTable, {IMutationTableProps} from "../MutationTable";
 import generalStyles from "./styles.module.scss";
@@ -11,7 +11,7 @@ export default class MutationCountColumnFormatter {
             (d:Mutation[])=>{
                 const mutationCountCache:MutationCountCache|undefined = table.props.mutationCountCache;
                 if (mutationCountCache) {
-                    return mutationCountCache.get({sampleId:d[0].sampleId, molecularProfileId:d[0].molecularProfileId});
+                    return mutationCountCache.get({sampleId:d[0].sampleId, studyId:d[0].studyId});
                 } else {
                     return {
                         status: "error",
@@ -19,7 +19,7 @@ export default class MutationCountColumnFormatter {
                     };
                 }
             },
-            (t:MutationCount)=>(<div className={generalStyles["integer-data"]}>{t.mutationCount}</div>),
+            (t:ClinicalData)=>(<div className={generalStyles["integer-data"]}>{t.value}</div>),
             "Mutation count not available for this sample."
         );
     }
@@ -27,9 +27,9 @@ export default class MutationCountColumnFormatter {
     public static sortBy(d:Mutation[], mutationCountCache?:MutationCountCache) {
         let ret;
         if (mutationCountCache) {
-            const cacheDatum = mutationCountCache.get({sampleId:d[0].sampleId, molecularProfileId:d[0].molecularProfileId});
+            const cacheDatum = mutationCountCache.get({sampleId:d[0].sampleId, studyId:d[0].studyId});
             if (cacheDatum && cacheDatum.data) {
-                ret = cacheDatum.data.mutationCount;
+                ret = cacheDatum.data.value;
             } else {
                 ret = null;
             }

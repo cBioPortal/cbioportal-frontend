@@ -11,6 +11,7 @@ import {
     ExtendedAlteration
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import _ from "lodash";
+import {alterationTypeToProfiledForText} from "./ResultsViewOncoprintUtils";
 
 export const TOOLTIP_DIV_CLASS = "oncoprint__tooltip";
 
@@ -114,6 +115,8 @@ export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile
 export function makeGeneticTrackTooltip_getCoverageInformation(
     profiled_in: {genePanelId?:string, molecularProfileId:string}[]|undefined,
     not_profiled_in: {genePanelId?:string, molecularProfileId:string}[]|undefined,
+    alterationTypesInQuery?: string[],
+    molecularProfileIdToMolecularProfile?: {[molecularProfileId:string]:MolecularProfile}
 ):{
     dispProfiledGenePanelIds: string[];
     dispNotProfiledGenePanelIds: string[];
@@ -128,14 +131,27 @@ export function makeGeneticTrackTooltip_getCoverageInformation(
     let dispProfiledInMap:{[molecularProfileId:string]:string} = {};
     let dispNotProfiledIn:string[]|undefined = undefined;
     let dispNotProfiledGenePanelIds:string[] = [];
+    let profiledInTypes:{[type:string]:string}|undefined = undefined;
     if (profiled_in) {
         dispProfiledGenePanelIds = _.uniq((profiled_in.map(x=>x.genePanelId) as (string|undefined)[]).filter(x=>!!x) as string[]);
         dispProfiledIn = _.uniq(profiled_in.map(x=>x.molecularProfileId));
+        if (molecularProfileIdToMolecularProfile) {
+            profiledInTypes = _.keyBy(dispProfiledIn, molecularProfileId=>molecularProfileIdToMolecularProfile[molecularProfileId].molecularAlterationType);
+        }
         dispProfiledInMap = _.keyBy(dispProfiledIn);
         dispProfiledGenePanelIdsMap = _.keyBy(dispProfiledGenePanelIds);
     }
     if (not_profiled_in) {
         dispNotProfiledIn = _.uniq(not_profiled_in.map(x=>x.molecularProfileId)).filter(x=>!dispProfiledInMap[x]); // filter out profiles in profiled_in to avoid confusing tooltip (this occurs e.g. w multiple samples, one profiled one not)
+        if (profiledInTypes && alterationTypesInQuery && molecularProfileIdToMolecularProfile) {
+            let notProfiledInTypes = _.keyBy(dispNotProfiledIn, molecularProfileId=>molecularProfileIdToMolecularProfile[molecularProfileId].molecularAlterationType);
+            // add an entry to 'not profiled in' for each alteration type in the query iff the sample is not profiled in a profile of that type, and that type is not already accounted for.
+            // This is for the case of multiple study query - eg one study has CNA profile, the other doesnt, and we want to show in a tooltip from the other study that
+            //      the sample is not profiled for CNA. If the study actually has a CNA profile, then we wont show "not profiled for copy number alterations" because
+            //      that will be filtered out below because its in profiledInTypes or notProfiledInTypes. Otherwise, CNA will be in alterationTypesInQuery,
+            //      and it wont be covered in profiledInTypes or notProfiledInTypes, so it will make sense to say "copy number alterations" in that generality.
+            dispNotProfiledIn = dispNotProfiledIn.concat(alterationTypesInQuery.filter(t=>(!profiledInTypes![t] && !notProfiledInTypes[t])).map(t=>alterationTypeToProfiledForText[t]));
+        }
         dispNotProfiledGenePanelIds = _.uniq(not_profiled_in.map(x=>x.genePanelId)).filter(x=>(!!x && !dispProfiledGenePanelIdsMap[x])) as string[] ;
     }
     const dispAllProfiled = !!(dispProfiledIn && dispProfiledIn.length && dispNotProfiledIn && !dispNotProfiledIn.length);
@@ -147,7 +163,8 @@ export function makeGeneticTrackTooltip_getCoverageInformation(
 
 export function makeGeneticTrackTooltip(
     link_id?:boolean,
-    getMolecularProfileMap?:()=>{[molecularProfileId:string]:MolecularProfile}|undefined
+    getMolecularProfileMap?:()=>{[molecularProfileId:string]:MolecularProfile}|undefined,
+    alterationTypesInQuery?:string[],
 ) {
     // TODO: all the data here is old API data
     function listOfMutationOrFusionDataToHTML(data:any[]) {
@@ -286,7 +303,8 @@ export function makeGeneticTrackTooltip(
             ret.append(`PROT: <b>${prot.map(x=>`${x.hugo_gene_symbol} ${x.direction}`).join(", ")}</b><br>`);
         }
         // CoverageInformation
-        const coverageInformation = makeGeneticTrackTooltip_getCoverageInformation(d.profiled_in, d.not_profiled_in);
+        const molecularProfileMap = getMolecularProfileMap && getMolecularProfileMap();
+        const coverageInformation = makeGeneticTrackTooltip_getCoverageInformation(d.profiled_in, d.not_profiled_in, alterationTypesInQuery, molecularProfileMap);
         if (coverageInformation.dispProfiledGenePanelIds.length || coverageInformation.dispNotProfiledGenePanelIds.length) {
             ret.append("Gene Panels: ");
             let needsCommaFirst = false;
@@ -313,11 +331,9 @@ export function makeGeneticTrackTooltip(
             ret.append('Not profiled in selected molecular profiles.');
             ret.append('<br>');
         } else {
-            const molecularProfileMap = getMolecularProfileMap && getMolecularProfileMap();
-
             if (coverageInformation.dispProfiledIn && coverageInformation.dispProfiledIn.length) {
                 ret.append("Profiled in: "+coverageInformation.dispProfiledIn.map(x=>{
-                        if (molecularProfileMap) {
+                        if (molecularProfileMap && (x in molecularProfileMap)) {
                             return molecularProfileMap[x].name;
                         } else {
                             return x;
@@ -327,7 +343,7 @@ export function makeGeneticTrackTooltip(
             }
             if (coverageInformation.dispNotProfiledIn && coverageInformation.dispNotProfiledIn.length) {
                 ret.append("<span style='color:red; font-weight:bold'>Not profiled in: "+coverageInformation.dispNotProfiledIn.map(x=>{
-                        if (molecularProfileMap) {
+                        if (molecularProfileMap && (x in molecularProfileMap)) {
                             return molecularProfileMap[x].name;
                         } else {
                             return x;

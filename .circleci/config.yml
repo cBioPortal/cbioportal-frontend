@@ -31,7 +31,7 @@ jobs:
           command: "git diff --exit-code package-lock.json || sed -i 's/http:/https:/g' package-lock.json"
       - run:
           name: "Make sure lock file is still the same"
-          command: 'git diff --exit-code package-lock.json || (echo -e "New package lock file at $(cat package-lock.json | curl -F c=@- https://ptpb.pw | grep url) (include this file in your PR to fix this test)" && exit 1)'
+          command: 'git diff --exit-code package-lock.json > /dev/null || (echo -e "New package lock file at $(cat package-lock.json | curl -F c=@- https://ptpb.pw | grep url) (include this file in your PR to fix this test)"; git diff --exit-code package-lock.json; exit 1)'
       - save_cache:
           paths:
             - node_modules
@@ -39,12 +39,6 @@ jobs:
       - run:
           name: "Run build"
           command: 'npm run build'
-      - save_cache:
-          paths:
-            - common-dist
-            - dist
-          key: asset-cache-{{ .Environment.CIRCLE_SHA1 }}
-
 
   api_sync:
     <<: *defaults
@@ -67,9 +61,9 @@ jobs:
           - v1-dependencies-{{ checksum "package-lock.json" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
-      - restore_cache:
-          keys:
-          - asset-cache-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: "Run build"
+          command: 'npm run build'
       # run tests!
       - run:
           command: "npm test"
@@ -91,9 +85,9 @@ jobs:
           - v1-dependencies-{{ checksum "package-lock.json" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
-      - restore_cache:
-          keys:
-          - asset-cache-{{ .Environment.CIRCLE_SHA1 }}
+      - run:
+          name: "Run build"
+          command: 'npm run build'
       - run:
           name: "Install http server"
           command: "npm i http-server"
@@ -122,8 +116,8 @@ jobs:
             FRONTEND_TEST_USE_LOCAL_DIST: true
           when: always
       - run:
-          name: "Make sure all screenshots are tracked (otherwise the test will always be succesful)"
-          command: 'for f in end-to-end-tests/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || echo -e "\033[0;31m $f not tracked \033[0m"; done'
+          name: "Make sure all screenshots are tracked (otherwise the test will always be successful)"
+          command: 'for f in end-to-end-tests/screenshots/reference/*.png; do git ls-files --error-unmatch $f > /dev/null 2> /dev/null || (echo -e "\033[0;31m $f not tracked \033[0m" && touch screenshots_not_tracked); done; ls screenshots_not_tracked > /dev/null 2> /dev/null && exit 1 || exit 0'
       -  store_artifacts:
           path: ~/repo/end-to-end-tests/screenshots
           destination: /screenshots
