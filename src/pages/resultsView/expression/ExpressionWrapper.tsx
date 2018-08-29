@@ -32,7 +32,7 @@ import {
     CNA_STROKE_WIDTH,
     getCnaQueries, IBoxScatterPlotPoint, INumberAxisData, IScatterPlotData, IScatterPlotSampleData, IStringAxisData,
     makeBoxScatterPlotData, makeScatterPlotPointAppearance,
-    mutationRenderPriority, MutationSummary, mutationSummaryToAppearance, scatterPlotLegendData, scatterPlotSize,
+    mutationRenderPriority, MutationSummary, mutationSummaryToAppearance, scatterPlotLegendData,
     scatterPlotTooltip, boxPlotTooltip, scatterPlotZIndexSortBy
 } from "../plots/PlotsTabUtils";
 import {getOncoprintMutationType} from "../../../shared/components/oncoprint/DataUtils";
@@ -48,6 +48,7 @@ import BoxScatterPlot from "../../../shared/components/plots/BoxScatterPlot";
 import {ViewType} from "../plots/PlotsTab";
 import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 import {maxPage} from "../../../shared/components/lazyMobXTable/utils";
+import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
 
 export interface ExpressionWrapperProps {
     store:ResultsViewPageStore;

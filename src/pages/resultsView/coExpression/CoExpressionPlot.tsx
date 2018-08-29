@@ -23,6 +23,7 @@ import Timer = NodeJS.Timer;
 import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 import {axisLabel, isNotProfiled} from "./CoExpressionPlotUtils";
 import _ from "lodash";
+import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
 
 type GeneId = { hugoGeneSymbol:string, entrezGeneId: number, cytoband:string};
 
@@ -219,6 +220,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                 svgId={SVG_ID}
                 title={this.title}
                 data={this.data}
+                size={scatterPlotSize}
                 chartWidth={this.props.width}
                 chartHeight={this.props.height}
                 stroke={this.stroke}
