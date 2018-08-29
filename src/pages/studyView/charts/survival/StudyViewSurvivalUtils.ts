@@ -22,3 +22,7 @@ export function makeSurvivalChartData(
         patientToAnalysisGroup, patientSurvivals, analysisGroups
     };
 }
+
+export function makeScatterPlotData(
+) {
+}
