@@ -130,7 +130,7 @@ export default class MutationMapperToolStore
     }, []);
 
     readonly indexedVariantAnnotations = remoteData<{[genomicLocation: string]: VariantAnnotation} | undefined>({
-        invoke: async () => await fetchVariantAnnotationsIndexedByGenomicLocation(this.rawMutations),
+        invoke: async () => await fetchVariantAnnotationsIndexedByGenomicLocation(this.rawMutations, AppConfig.isoformOverrideSource),
         onError: (err: Error) => {
             this.criticalErrors.push(err);
         }
