@@ -89,7 +89,6 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
     }
 
     @bind
-    @action
     private tooltipLabelMouseEnter(value: string): void {
         if (this.props.highlightedRow) {
             this.props.highlightedRow(value);
@@ -97,7 +96,6 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
     }
 
     @bind
-    @action
     private tooltipLabelMouseLeave(): void {
         if (this.props.highlightedRow) {
             this.props.highlightedRow(undefined);
