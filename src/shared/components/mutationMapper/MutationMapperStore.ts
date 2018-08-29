@@ -28,7 +28,7 @@ export default class MutationMapperStore
     constructor(
         protected config: IMutationMapperConfig,
         public gene:Gene,
-        public mutations:Mutation[],
+        private getMutations:()=>Mutation[],
         public indexedHotspotData:MobxPromise<IHotspotIndex|undefined>,
         public oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
         public oncoKbData:IOncoKbDataWrapper,
@@ -37,6 +37,10 @@ export default class MutationMapperStore
     )
     {
         labelMobxPromises(this);
+    }
+
+    public get mutations() {
+        return this.getMutations();
     }
 
     readonly mutationData = remoteData({
