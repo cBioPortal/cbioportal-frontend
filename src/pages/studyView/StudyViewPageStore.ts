@@ -7,10 +7,8 @@ import {
     ClinicalDataCount,
     ClinicalDataEqualityFilter,
     CopyNumberCountByGene,
-    CopyNumberGeneFilter,
     CopyNumberGeneFilterElement,
     MutationCountByGene,
-    MutationGeneFilter,
     Sample,
     SampleIdentifier,
     StudyViewFilter
@@ -104,9 +102,9 @@ export class StudyViewPageStore {
 
     private _clinicalDataEqualityFilterSet = observable.map<ClinicalDataEqualityFilter>();
 
-    @observable private _mutatedGeneFilter: MutationGeneFilter;
+    @observable.ref private _mutatedGeneFilter: number[] = [];
 
-    @observable private _cnaGeneFilter: CopyNumberGeneFilter;
+    @observable.ref private _cnaGeneFilter: CopyNumberGeneFilterElement[] = [];
 
     @observable private _sampleIdentifiers:SampleIdentifier[];
 
@@ -138,13 +136,11 @@ export class StudyViewPageStore {
 
     @action
     clearGeneFilter() {
-        this._mutatedGeneFilter = { entrezGeneIds: [] };
+        this._mutatedGeneFilter = [];
     }
     @action
     clearCNAGeneFilter() {
-        this._cnaGeneFilter = {
-            alterations: []
-        };
+        this._cnaGeneFilter = [];
     }
     @action
     clearCustomCasesFilter() {
@@ -175,23 +171,12 @@ export class StudyViewPageStore {
     }
 
     @action
-    updateGeneFilter(entrezGeneId: number) {
-        let mutatedGeneFilter = this._mutatedGeneFilter;
-        if (!mutatedGeneFilter) {
-            //TODO: all elements instead of one
-            mutatedGeneFilter = { entrezGeneIds: [] };
-        }
-        let _index = mutatedGeneFilter.entrezGeneIds.indexOf(entrezGeneId);
-        if (_index === -1) {
-            mutatedGeneFilter.entrezGeneIds.push(entrezGeneId);
-        } else {
-            mutatedGeneFilter.entrezGeneIds.splice(_index, 1);
-        }
-        this._mutatedGeneFilter = mutatedGeneFilter;
+    updateGeneFilters(entrezGeneIds: number[]) {
+        this._mutatedGeneFilter = _.xor(this._mutatedGeneFilter, entrezGeneIds);
     }
 
     @action resetGeneFilter() {
-        this._mutatedGeneFilter.entrezGeneIds = [];
+        this._mutatedGeneFilter = [];
     }
 
     @action
@@ -215,35 +200,13 @@ export class StudyViewPageStore {
     }
 
     @action
-    updateCNAGeneFilter(entrezGeneId: number, alteration: number) {
-        let _cnaGeneFilter = this._cnaGeneFilter;
-        if (!_cnaGeneFilter) {
-            //TODO: all elements instead of one
-            _cnaGeneFilter = {
-                alterations: []
-            }
-        }
-        var _index = -1;
-        _.every(_cnaGeneFilter.alterations, (val: CopyNumberGeneFilterElement, index: number) => {
-            if (val.entrezGeneId === entrezGeneId && val.alteration === alteration) {
-                _index = index;
-                return false;
-            }
-        });
-        if (_index === -1) {
-            _cnaGeneFilter.alterations.push({
-                entrezGeneId: entrezGeneId,
-                alteration: alteration
-            });
-        } else {
-            _cnaGeneFilter.alterations.splice(_index, 1);
-        }
-        this._cnaGeneFilter = _cnaGeneFilter;
+    updateCNAGeneFilters(filters: CopyNumberGeneFilterElement[]) {
+        this._cnaGeneFilter = _.xor(this._cnaGeneFilter, filters);
     }
 
     @action
     resetCNAGeneFilter() {
-        this._cnaGeneFilter.alterations = [];
+        this._cnaGeneFilter = [];
     }
 
     @action changeChartVisibility(uniqueKey:string, visible: boolean) {
@@ -288,12 +251,16 @@ export class StudyViewPageStore {
             filters.clinicalDataEqualityFilters = clinicalDataEqualityFilter;
         }
 
-        if (this._mutatedGeneFilter && this._mutatedGeneFilter.entrezGeneIds.length > 0) {
-            filters.mutatedGenes = [this._mutatedGeneFilter];
+        if (this._mutatedGeneFilter.length > 0) {
+            filters.mutatedGenes = [{
+                entrezGeneIds: this._mutatedGeneFilter
+            }];
         }
 
-        if (this._cnaGeneFilter && this._cnaGeneFilter.alterations.length > 0) {
-            filters.cnaGenes = [this._cnaGeneFilter];
+        if (this._cnaGeneFilter.length > 0) {
+            filters.cnaGenes = [{
+                alterations: this._cnaGeneFilter
+            }];
         }
 
         if(this._sampleIdentifiers && this._sampleIdentifiers.length>0) {
@@ -305,11 +272,11 @@ export class StudyViewPageStore {
     }
 
     public getMutatedGenesTableFilters(): number[] {
-        return this._mutatedGeneFilter ? this._mutatedGeneFilter.entrezGeneIds : [];
+        return this._mutatedGeneFilter;
     }
 
     public getCNAGenesTableFilters(): CopyNumberGeneFilterElement[] {
-        return this._cnaGeneFilter ? this._cnaGeneFilter.alterations : [];
+        return this._cnaGeneFilter;
     }
 
     public getClinicalDataFiltersByUniqueKey(uniqueKey: string): string[] {
