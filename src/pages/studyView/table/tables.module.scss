@@ -1,9 +1,97 @@
 .studyViewTablesTable {
-  .selectd {
-    font-weight: bold
-  }
-  .geneSymbol:hover {
-    border: 2px solid #1974b8;
-    cursor: pointer;
-  }
+  padding: 0 1px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+// The current portal is wrapped a class .cbioportal-frontend to overwrite the legacy styles
+// May need to come back to clean up the important statements after in SPA
+.tableSearchInput {
+  width: 200px !important;
+  height: 30px !important;
+}
+
+.labelContent {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  display: inline-block;
+  width: 150px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+
+.bottomTools {
+  display: flex;
+  justify-content: space-between;
+  padding: 1px 5px 2px 5px;
+  flex-grow: 1;
+}
+
+.geneSymbol:hover {
+  border: 2px solid #1974b8;
+  cursor: pointer;
+}
+
+.selected {
+  font-weight: bold
+}
+
+.ellipsisText {
+  white-space: nowrap;
+  overflow: hidden;
+  -ms-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+}
+
+.shortenTextWithOneIcon {
+  width: calc(100% - 10px);
+}
+
+.headerColumn {
+  text-transform: none;
+  font-size: 12px;
+}
+
+.headerRow {
+  border-bottom: 1px solid #d1d1d1;
+}
+
+.oddRow {
+  background-color: #f9f9f9;
+}
+
+.evenRow {
+  background-color: #ffffff;
+}
+
+.highlightedRow {
+  background-color: #d3d3d3;
+}
+
+.gistic, .mutSig {
+  height: 10px;
+  margin: 0 1px;
+}
+
+.amp {
+  color: red;
+}
+
+.del {
+  color: #0000ff;
+}
+
+.amp, .del {
+  font-weight: bold;
+}
+
+.displayFlex {
+  display: flex;
+}
+
+.noFlexShrink {
+  flex-shrink: 0;
 }

@@ -18,6 +18,7 @@ import {MutatedGenesTable} from "../table/MutatedGenesTable";
 import {CNAGenesTable} from "../table/CNAGenesTable";
 import StudyViewScatterPlot from "./scatterPlot/StudyViewScatterPlot";
 import {isSelected, mutationCountVsCnaTooltip} from '../StudyViewUtils';
+import {CopyNumberGeneFilterElement} from "../../../shared/api/generated/CBioPortalAPIInternal";
 
 export interface AbstractChart {
     downloadData: () => string;
@@ -67,10 +68,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             onUserSelection: action((values: string[]) => {
                 this.props.onUserSelection(this.props.chartMeta, values);
             }),
-            updateCNAGeneFilter: action((entrezGeneId: number, alteration: number) => {
-                this.props.onUserSelection(entrezGeneId, alteration);
+            updateCNAGeneFilters: action((filters: CopyNumberGeneFilterElement[]) => {
+                this.props.onUserSelection(filters);
             }),
-            updateGeneFilter: action((value: number) => {
+            updateGeneFilters: action((value: number[]) => {
                 this.props.onUserSelection(value);
             }),
             onMouseEnterChart: action((event: React.MouseEvent<any>) => {
@@ -181,7 +182,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         promise={this.props.promise}
                         numOfSelectedSamples={100}
                         filters={this.props.filters}
-                        onUserSelection={this.handlers.updateGeneFilter}
+                        onUserSelection={this.handlers.updateGeneFilters}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                     />
@@ -193,7 +194,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         promise={this.props.promise}
                         numOfSelectedSamples={100}
                         filters={this.props.filters}
-                        onUserSelection={this.handlers.updateCNAGeneFilter}
+                        onUserSelection={this.handlers.updateCNAGeneFilters}
                         onGeneSelect={this.props.onGeneSelect}
                         selectedGenes={this.props.selectedGenes}
                     />

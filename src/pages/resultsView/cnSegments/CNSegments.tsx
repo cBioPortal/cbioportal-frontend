@@ -85,9 +85,11 @@ class CNASegmentIframe extends React.Component<CNSegmentsIframeProps,{}>{
            height:630,
            border:'none'
         }).appendTo($(this.iframeDiv).empty());
-        iframe.contentWindow.document.open();
-        iframe.contentWindow.document.write(this.getIframeBody());
-        iframe.contentWindow.document.close();
+        if (iframe.contentWindow) {
+            iframe.contentWindow.document.open();
+            iframe.contentWindow.document.write(this.getIframeBody());
+            iframe.contentWindow.document.close();
+        }
     }
     
     render(){
