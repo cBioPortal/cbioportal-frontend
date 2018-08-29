@@ -142,6 +142,32 @@ export async function fetchCanonicalTranscript(hugoSymbol: string,
     });
 }
 
+export async function fetchCanonicalTranscripts(hugoSymbols: string[],
+                                                isoformOverrideSource: string,
+                                                client:GenomeNexusAPI = genomeNexusClient)
+{
+    return await client.fetchCanonicalEnsemblTranscriptsByHugoSymbolsPOST({
+        hugoSymbols, isoformOverrideSource
+    });
+}
+
+export async function getCanonicalTranscriptsByHugoSymbol(hugoSymbols: string[],
+                                                          isoformOverrideSource: string,
+                                                          client:GenomeNexusAPI = genomeNexusClient)
+{
+    const transcripts = await fetchCanonicalTranscripts(hugoSymbols, isoformOverrideSource, client);
+    return transcripts? _.zipObject(hugoSymbols, transcripts) : undefined;
+}
+
+export async function fetchCanonicalEnsemblGeneIds(hugoSymbols: string[],
+                                                   isoformOverrideSource: string,
+                                                   client:GenomeNexusAPI = genomeNexusClient)
+{
+    // TODO: this endpoint should accept isoformOverrideSource
+    return await client.fetchCanonicalEnsemblGeneIdByHugoSymbolsPOST({
+        hugoSymbols});
+}
+
 export async function fetchEnsemblTranscriptsByEnsemblFilter(ensemblFilter: Partial<EnsemblFilter>,
                                                              client:GenomeNexusAPI = genomeNexusClient)
 {
