@@ -118,7 +118,6 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
     ];
 
     @bind
-    @action
     isChecked(entrezGeneId: number) {
         let record = _.find(this.preSelectedRows, (row: MutatedGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId);
         if (_.isUndefined(record)) {
@@ -129,13 +128,11 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
     }
 
     @bind
-    @action
     isDisabled(entrezGeneId: number) {
         return !_.isUndefined(_.find(this.selectedRows, (row: MutatedGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId));
     }
 
     @bind
-    @action
     togglePreSelectRow(entrezGeneId: number) {
         let record: MutatedGenesTableUserSelectionWithIndex | undefined = _.find(this.preSelectedRows, (row: MutatedGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId);
         if (_.isUndefined(record)) {
