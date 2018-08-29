@@ -18,6 +18,8 @@ import {isSelected, mutationCountVsCnaTooltip} from "./StudyViewUtils";
 import AppConfig from 'appConfig';
 import MobxPromise from "mobxpromise";
 import {CopyNumberGeneFilterElement} from "../../shared/api/generated/CBioPortalAPIInternal";
+import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
+import {ClinicalDataTab} from "./tabs/ClinicalDataTab";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -163,6 +165,10 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         return <ChartContainer key={chartMeta.uniqueKey} {...props}/>;
     };
 
+    private handleTabChange(id: string) {
+        this.props.routing.updateRoute({ tab: id });
+    }
+
     render() {
         if (this.store.studies.isComplete) {
             return (
@@ -182,9 +188,10 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                         </div>
                     </div>
                     <MSKTabs id="studyViewTabs" activeTabId={this.props.routing.location.query.tab}
+                             onTabClick={(id:string)=>this.handleTabChange(id)}
                              className="mainTabs">
 
-                        <MSKTab key={0} id="summaryTab" linkText="Summary">
+                        <MSKTab key={0} id="summary" linkText="Summary">
                             <SummaryHeader
                                 geneQuery={this.store.geneQueryStr}
                                 selectedSamples={this.store.selectedSamples.result!}
@@ -206,6 +213,23 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                 {this.store.initialClinicalDataCounts.isComplete &&
                                 this.store.visibleAttributes.map(this.renderAttributeChart)}
                             </div>
+                        </MSKTab>
+                        <MSKTab key={1} id={"clinicalData"} linkText={"Clinical Data"}>
+                            <If condition={this.store.getDataForClinicalDataTab.isPending}>
+                                <LoadingIndicator
+                                    isLoading={!!this.store.getDataForClinicalDataTab.isPending}
+                                />
+                            </If>
+                            <If condition={this.store.getDataForClinicalDataTab.isError}>
+                                <div>Error when loading data.</div>
+                            </If>
+                            <If condition={this.store.getDataForClinicalDataTab.isComplete}>
+                                <ClinicalDataTab
+                                    data={this.store.getDataForClinicalDataTab.result}
+                                    clinicalAttributes={this.store.clinicalAttributes.result}
+                                    selectedSamples={this.store.selectedSamples.result!}
+                                />
+                            </If>
                         </MSKTab>
                     </MSKTabs>
                 </div>
