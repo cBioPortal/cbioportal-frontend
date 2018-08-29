@@ -82,7 +82,11 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             },
             clearAllFilters: () => {
                 this.store.clearAllFilters();
+            },
+            updateChartsVisibility: (visibleChartIds: string[]) => {
+                this.store.updateChartsVisibility(visibleChartIds);
             }
+            
         }
 
         //TODO: this should be done by a module so that it can be reused on other pages
@@ -219,6 +223,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                 clearGeneFilter={this.handlers.clearGeneFilter}
                                 clearCustomCasesFilter={this.handlers.clearCustomCasesFilter}
                                 clearAllFilters={this.handlers.clearAllFilters}
+                                clinicalAttributesWithCountPromise={this.store.clinicalAttributesWithCount}
+                                visibleAttributeIds={this.store.visibleAttributes}
+                                onChangeChartsVisibility={this.handlers.updateChartsVisibility}
                             />
                             <div className={styles.studyViewFlexContainer}>
                                 {this.store.initialClinicalDataCounts.isComplete &&

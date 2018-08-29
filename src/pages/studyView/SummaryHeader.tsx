@@ -17,6 +17,9 @@ import { If, Then, Else } from 'react-if';
 import { StudyWithSamples, ChartMeta } from 'pages/studyView/StudyViewPageStore';
 import UserSelections from 'pages/studyView/UserSelections';
 import SelectedInfo from "./SelectedInfo/SelectedInfo";
+import { getPercentage } from 'shared/lib/FormatUtils';
+import MobxPromise from 'mobxpromise';
+const CheckedSelect = require("react-select-checked").CheckedSelect;
 
 export interface ISummaryHeaderProps {
     geneQuery:string;
@@ -34,6 +37,9 @@ export interface ISummaryHeaderProps {
     clearCNAGeneFilter: () => void;
     clearCustomCasesFilter: () => void;
     clearAllFilters:() => void;
+    clinicalAttributesWithCountPromise: MobxPromise<{ [clinicalAttributeId: string]: number }>;
+    visibleAttributeIds: ChartMeta[];
+    onChangeChartsVisibility: (visibleChartIds: string[]) => void;
 }
 
 export type GeneReplacement = {alias: string, genes: Gene[]};
@@ -122,6 +128,37 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
         return 'Download clinical data for the selected cases';
     }
 
+    @computed get chartOptions() {
+        let options = _.reduce(this.props.clinicalAttributesWithCountPromise.result || {}, (options, sampleCount: number, key: string) => {
+            const newOption = {
+                label: `${this.props.attributesMetaSet[key].displayName} (${getPercentage(sampleCount / this.props.selectedSamples.length, 0)})`,
+                value: key,
+                disabled: false,
+                count: sampleCount
+            };
+            if (sampleCount === 0) {
+                newOption.disabled = true;
+            }
+            options.push(newOption);
+            return options;
+        }, [] as { label: string, value: string, count: number, disabled?: boolean }[]);
+        return options.sort((a, b) => {
+            if (a.count === b.count) {
+                //sort alphabetically
+                if (a.label < b.label) return -1;
+                if (a.label > b.label) return 1;
+                return 0;
+            }
+            return b.count - a.count;
+        });
+    }
+
+    @bind
+    @action
+    private onChangeSelectedCharts(options: { label: string, value: string }[]) {
+        this.props.onChangeChartsVisibility(options.map(option => option.value));
+    }
+
     render() {
         return (
             <div className="studyViewSummaryHeader">
@@ -190,6 +227,17 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                     >
                         Select cases
                     </button>
+
+                    <CheckedSelect
+                        disabled={this.props.clinicalAttributesWithCountPromise.isPending}
+                        placeholder={"Add Chart"}
+                        onChange={this.onChangeSelectedCharts}
+                        options={this.chartOptions}
+                        value={(this.props.visibleAttributeIds || []).map(chartMeta=>({value:chartMeta.uniqueKey}))}
+                        labelKey="label"
+                    />
+
+                    
                 </div>
 
                 <UserSelections

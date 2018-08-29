@@ -13,6 +13,44 @@
     .btn:active:focus {
         box-shadow: none; 
     }
+
+    .Select {
+        width: 220px;
+        height: 30px;
+
+        .Select-control {
+            height:30px;
+        }
+    
+        .Select-input {
+            height:30px;
+            input {
+                padding: 0px 5px;
+                line-height: 30px;
+            }
+        }
+    
+        .Select-menu-outer {
+            width: 300px;
+            max-height: 400px;
+        }
+
+        .Select-placeholder {
+            line-height: 30px;
+        }
+
+        .Select-menu {
+            max-height: 398px; // needs to be 2 less than Select-menu-outer height to not hide border. Irrelevant
+                              //    as long as & > div > div:nth-child(2) max-height is less
+            overflow:hidden;
+      
+            & > div > div:nth-child(2){
+                max-height:350px !important;
+                overflow-x:hidden !important;
+                overflow-y:scroll !important;
+            }
+        }
+    }
 }
 
 .studyView .borderedChart {
