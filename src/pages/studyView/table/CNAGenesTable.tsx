@@ -204,6 +204,13 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         }
     }
 
+    @bind
+    isSelectedRow(data: CopyNumberCountByGene) {
+        return !_.isUndefined(_.find(_.union(this.selectedRows, this.preSelectedRows), function (row) {
+            return row.entrezGeneId === data.entrezGeneId && row.alteration === data.alteration;
+        }));
+    }
+
     public render() {
         return (
             <CNAGenesTableComponent
@@ -213,6 +220,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                 selectedRows={_.map(_.union(this.selectedRows, this.preSelectedRows), row => row.rowIndex)}
                 showSelectSamples={true && this.preSelectedRows.length > 0}
                 afterSelectingRows={this.afterSelectingRows}
+                isSelectedRow={this.isSelectedRow}
                 sortBy='#'
             />
         );
