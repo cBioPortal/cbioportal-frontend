@@ -11,7 +11,7 @@ export default class PortalHeader extends React.Component<{}, {}> {
             {
                 id:"datasets",
                 text:"Data Sets",
-                address:"datasets",
+                address:"/s/datasets",
                 internal:true,
                 hide:()=>AppConfig.skinShowDataSetsTab === false
             },
@@ -19,7 +19,7 @@ export default class PortalHeader extends React.Component<{}, {}> {
             {
                 id:"webAPI",
                 text:"Web API",
-                address:"webAPI",
+                address:"/s/webAPI",
                 internal:true,
                 hide:()=>AppConfig.skinShowWebAPITab === false
             },
@@ -27,7 +27,7 @@ export default class PortalHeader extends React.Component<{}, {}> {
             {
                 id:"rMatlab",
                 text:"R/MATLAB",
-                address:"rmatlab",
+                address:"/s/rmatlab",
                 internal:true,
                 hide:()=>AppConfig.skinShowRmatLABTab === false
             },
@@ -35,7 +35,7 @@ export default class PortalHeader extends React.Component<{}, {}> {
             {
                 id:"tutorials",
                 text:"Tutorials",
-                address:"tutorials",
+                address:"/s/tutorials",
                 internal:true,
                 hide:()=>AppConfig.skinShowTutorialsTab === false
             },
@@ -43,7 +43,7 @@ export default class PortalHeader extends React.Component<{}, {}> {
             {
                 id:"faq",
                 text:"FAQ",
-                address:"faq",
+                address:"/s/faq",
                 internal:true,
                 hide:()=>AppConfig.skinShowFAQSTab === false
             },
@@ -51,7 +51,7 @@ export default class PortalHeader extends React.Component<{}, {}> {
             {
                 id:"news",
                 text:"News",
-                address:"news",
+                address:"/s/news",
                 internal:true,
                 hide:()=>AppConfig.skinShowNewsTab === false
             },
@@ -59,7 +59,7 @@ export default class PortalHeader extends React.Component<{}, {}> {
             {
                 id:"visualize",
                 text:"Visualize Your Data",
-                address:"visualize",
+                address:"/s/visualize",
                 internal:true,
                 hide:()=>AppConfig.skinShowToolsTab === false
             },
@@ -67,7 +67,7 @@ export default class PortalHeader extends React.Component<{}, {}> {
             {
                 id:"about",
                 text:"About",
-                address:"about",
+                address:"/s/about",
                 internal:true,
                 hide:()=>AppConfig.skinShowAboutTab === false
             },
@@ -82,8 +82,6 @@ export default class PortalHeader extends React.Component<{}, {}> {
             return !t.hide()
         });
 
-        console.log(shownTabs);
-
         return shownTabs.map((tab)=>{
             return <li>
                 {
@@ -97,7 +95,7 @@ export default class PortalHeader extends React.Component<{}, {}> {
     render(){
         return <header>
             <div id="leftHeaderContent">
-                <Link to="/spa" id="cbioportal-logo"><img src={require("./cbioportal_logo.png")} alt="cBioPortal Logo"/></Link>
+                <Link to="/" id="cbioportal-logo"><img src={require("./cbioportal_logo.png")} alt="cBioPortal Logo"/></Link>
                 <nav id="main-nav">
                     <ul>
 
