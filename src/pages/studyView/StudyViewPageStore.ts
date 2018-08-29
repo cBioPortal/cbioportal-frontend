@@ -623,13 +623,21 @@ export class StudyViewPageStore {
     });
 
     readonly samplesWithNAInSelectedClinicalData = remoteData<Sample[]>({
-        invoke: () => {
-            return internalClient.fetchFilteredSamplesUsingPOST({
+        await:()=>[
+            this.samples
+        ],
+        invoke: async() => {
+            const samplesWithoutNA = await internalClient.fetchFilteredSamplesUsingPOST({
                 studyViewFilter: Object.assign({}, this.emptyFilter, {
-                    clinicalDataEqualityFilters: this.clinicalDataEqualityFilters
-                    // TODO: add option here
+                    clinicalDataEqualityFilters: this.clinicalDataEqualityFilters.map(
+                        f=>Object.assign({}, f, { values: ["NA"] })
+                    ),
+                    filterType: "EXCLUSION"
                 }) as any as StudyViewFilter
-            })
+            });
+            const uniqueSampleKeysWithoutNA = _.keyBy(samplesWithoutNA, s=>s.uniqueSampleKey);
+            const samplesWithNA = samplesWithoutNA.filter(s=>!(s.uniqueSampleKey in uniqueSampleKeysWithoutNA));
+            return samplesWithNA;
         },
         default: []
     });

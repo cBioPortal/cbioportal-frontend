@@ -839,11 +839,15 @@ export default class CBioPortalAPIInternal {
             });
         };
     fetchFilteredSamplesUsingPOSTURL(parameters: {
+        'filterType' ? : "INCLUSION" | "EXCLUSION",
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/filtered-samples/fetch';
+        if (parameters['filterType'] !== undefined) {
+            queryParameters['filterType'] = parameters['filterType'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -859,12 +863,14 @@ export default class CBioPortalAPIInternal {
      * Fetch sample IDs by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchFilteredSamplesUsingPOST
+     * @param {string} filterType - Filter type
      * @param {} studyViewFilter - Study view filter
      */
     fetchFilteredSamplesUsingPOSTWithHttpInfo(parameters: {
+        'filterType' ? : "INCLUSION" | "EXCLUSION",
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any,
-        $domain ? : string
+            $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
@@ -877,6 +883,10 @@ export default class CBioPortalAPIInternal {
         return new Promise(function(resolve, reject) {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
+
+            if (parameters['filterType'] !== undefined) {
+                queryParameters['filterType'] = parameters['filterType'];
+            }
 
             if (parameters['studyViewFilter'] !== undefined) {
                 body = parameters['studyViewFilter'];
@@ -903,12 +913,14 @@ export default class CBioPortalAPIInternal {
      * Fetch sample IDs by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchFilteredSamplesUsingPOST
+     * @param {string} filterType - Filter type
      * @param {} studyViewFilter - Study view filter
      */
     fetchFilteredSamplesUsingPOST(parameters: {
+            'filterType' ? : "INCLUSION" | "EXCLUSION",
             'studyViewFilter': StudyViewFilter,
             $queryParameters ? : any,
-            $domain ? : string
+                $domain ? : string
         }): Promise < Array < Sample >
         > {
             return this.fetchFilteredSamplesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
@@ -2418,7 +2430,7 @@ export default class CBioPortalAPIInternal {
     };
 
     /**
-     * Fetch sample IDs by study view filter
+     * Fetch sample counts by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchMolecularProfileSampleCountsUsingPOST
      * @param {} studyViewFilter - Study view filter
@@ -2462,7 +2474,7 @@ export default class CBioPortalAPIInternal {
     };
 
     /**
-     * Fetch sample IDs by study view filter
+     * Fetch sample counts by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchMolecularProfileSampleCountsUsingPOST
      * @param {} studyViewFilter - Study view filter
