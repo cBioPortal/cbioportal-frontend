@@ -28,6 +28,7 @@ export type IFixedHeaderTableProps<T> = {
     selectedRows?: number[];
     showSelectSamples?: boolean;
     afterSelectingRows?: () => void;
+    isSelectedRow?: (data:T) => boolean;
 };
 
 const RVSDTtoStrType = {
@@ -71,7 +72,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
 
     @bind
     rowClassName({index}: any) {
-        if (_.includes(this.props.selectedRows, index)) {
+        if (index > -1 && this.isSelectedRow(this._store.dataStore.sortedFilteredData[index])) {
             return styles.highlightedRow;
         } else if (index < 0) {
             return styles.headerRow;
@@ -110,6 +111,15 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
     afterSelectingRows() {
         if (_.isFunction(this.props.afterSelectingRows)) {
             this.props.afterSelectingRows();
+        }
+    }
+
+    @bind
+    isSelectedRow(data: T) {
+        if (_.isFunction(this.props.isSelectedRow)) {
+            return this.props.isSelectedRow(data);
+        } else {
+            return false;
         }
     }
 
