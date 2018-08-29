@@ -136,13 +136,11 @@ export class StudyViewPageStore {
 
     @action
     clearGeneFilter() {
-        this._mutatedGeneFilter = { entrezGeneIds: [] };
+        this._mutatedGeneFilter = [];
     }
     @action
     clearCNAGeneFilter() {
-        this._cnaGeneFilter = {
-            alterations: []
-        };
+        this._cnaGeneFilter = [];
     }
     @action
     clearCustomCasesFilter() {

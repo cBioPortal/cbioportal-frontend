@@ -185,6 +185,14 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         }
     }
 
+    @bind
+    isSelectedRow(data:MutationCountByGene) {
+        let record = _.find(_.union(this.selectedRows, this.preSelectedRows), function (row) {
+            return row.entrezGeneId === data.entrezGeneId;
+        });
+        return !_.isUndefined(record);
+    }
+
     public render() {
         return (
             <MutatedGenesTableComponent
@@ -193,6 +201,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                 selectedGenes={this.props.selectedGenes}
                 selectedRows={_.map(_.union(this.selectedRows, this.preSelectedRows), row => row.rowIndex)}
                 showSelectSamples={true && this.preSelectedRows.length > 0}
+                isSelectedRow={this.isSelectedRow}
                 afterSelectingRows={this.afterSelectingRows}
                 sortBy='#'
             />
