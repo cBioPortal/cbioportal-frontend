@@ -22,7 +22,7 @@ export type IFixedHeaderTableProps<T> = {
     sortBy?: string;
     width?: number;
     height?: number;
-    // This property is just used to force to rerender the table when selectedGenes is modified.
+    // TODO: These properties are just used to force to rerender the table when selectedGenes is modified.
     // We don't actually use the property anywhere in the table.
     selectedGenes?: string[];
     selectedRows?: number[];
