@@ -41,7 +41,7 @@ const configPromise = remoteData(async ()=>{
     });
 
     // overwrite properties of frontend config
-    Object.assign(getBrowserWindow().frontendConfig, config, getBrowserWindow().frontendConfigOverride);
+    Object.assign(getBrowserWindow().frontendConfig, config, getBrowserWindow().frontendConfig);
 
     // we need to set the domain of our api clients
     (client as any).domain = getCbioPortalApiUrl();
