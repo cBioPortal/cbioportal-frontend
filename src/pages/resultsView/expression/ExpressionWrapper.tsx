@@ -277,7 +277,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             } else {
                 return Promise.resolve(_.sortBy<any>(sortedData, d=>{
                     //Note: we have to use slice to convert Seamless immutable array to real array, otherwise jStat chokes
-                    return jStat.median(Array.prototype.slice((d.data.map((v:any)=>(v.value as number)))));
+                    return jStat.median(Array.prototype.slice.apply((d.data.map((v:any)=>(v.value as number)))));
                 }));
             }
         }
