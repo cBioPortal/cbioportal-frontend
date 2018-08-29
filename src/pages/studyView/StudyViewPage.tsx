@@ -17,6 +17,7 @@ import StudyViewScatterPlot from "./charts/scatterPlot/StudyViewScatterPlot";
 import {isSelected, mutationCountVsCnaTooltip} from "./StudyViewUtils";
 import AppConfig from 'appConfig';
 import MobxPromise from "mobxpromise";
+import {CopyNumberGeneFilterElement} from "../../shared/api/generated/CBioPortalAPIInternal";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -41,8 +42,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             onUserSelection: (chartMeta: ChartMeta, values: string[]) => {
                 this.store.updateClinicalDataEqualityFilters(chartMeta, values)
             },
-            updateGeneFilter: (entrezGeneId: number) => {
-                this.store.updateGeneFilter(entrezGeneId);
+            updateGeneFilters: (entrezGeneIds: number[]) => {
+                this.store.updateGeneFilters(entrezGeneIds);
             },
             resetGeneFilter: (chartMeta: ChartMeta) => {
                 this.store.resetGeneFilter();
@@ -50,8 +51,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             resetCNAGeneFilter: (chartMeta: ChartMeta) => {
                 this.store.resetCNAGeneFilter();
             },
-            updateCNAGeneFilter: (entrezGeneId: number, alteration: number) => {
-                this.store.updateCNAGeneFilter(entrezGeneId, alteration);
+            updateCNAGeneFilters: (filters:CopyNumberGeneFilterElement[]) => {
+                this.store.updateCNAGeneFilters(filters);
             },
             onDeleteChart: (chartMeta: ChartMeta) => {
                 this.store.resetFilterAndChangeChartVisibility(chartMeta, false);
@@ -128,7 +129,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             case ChartType.MUTATED_GENES_TABLE: {
                 props.filters = this.store.getMutatedGenesTableFilters();
                 props.promise = this.store.mutatedGeneData;
-                props.onUserSelection = this.handlers.updateGeneFilter;
+                props.onUserSelection = this.handlers.updateGeneFilters;
                 props.onResetSelection = this.handlers.resetGeneFilter;
                 props.selectedGenes=this.store.selectedGenes;
                 props.onGeneSelect=this.store.onCheckGene;
@@ -137,7 +138,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             case ChartType.CNA_GENES_TABLE: {
                 props.filters = this.store.getCNAGenesTableFilters();
                 props.promise = this.store.cnaGeneData;
-                props.onUserSelection = this.handlers.updateCNAGeneFilter;
+                props.onUserSelection = this.handlers.updateCNAGeneFilters;
                 props.onResetSelection = this.handlers.resetCNAGeneFilter;
                 props.selectedGenes=this.store.selectedGenes;
                 props.onGeneSelect=this.store.onCheckGene;
