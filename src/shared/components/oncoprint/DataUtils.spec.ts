@@ -1304,20 +1304,6 @@ describe("DataUtils", ()=>{
                     na: true
                 }, "NA in general"
             );
-
-            assert.deepEqual(
-                fillClinicalTrackDatum(
-                    {},
-                    {clinicalAttributeId:SpecialAttribute.MutationCount} as any,
-                    {sampleId:"sample", studyId:"study"} as Sample
-                ),
-                {
-                    attr_id: SpecialAttribute.MutationCount,
-                    study_id:"study",
-                    attr_val_counts: {},
-                    attr_val: 0
-                }, "0 for Mutation Count"
-            );
         });
         it("creates data correctly for number data",()=>{
             assert.deepEqual(
@@ -1356,36 +1342,6 @@ describe("DataUtils", ()=>{
                     {clinicalAttributeId:"clinicalAttribute", datatype:"number"} as any,
                     {sampleId:"sample", studyId:"study"} as Sample,
                     [{value:3}, {value:2}] as any[]
-                ),
-                {
-                    attr_id: "clinicalAttribute",
-                    study_id: "study",
-                    attr_val_counts:{2.5:1},
-                    attr_val: 2.5
-                }
-            );
-
-            assert.deepEqual(
-                fillClinicalTrackDatum(
-                    {},
-                    {clinicalAttributeId:"clinicalAttribute", datatype:"number"} as any,
-                    {sampleId:"sample", studyId:"study"} as Sample,
-                    [{mutationCount:3}] as any[]
-                ),
-                {
-                    attr_id: "clinicalAttribute",
-                    study_id: "study",
-                    attr_val_counts:{3:1},
-                    attr_val: 3
-                }
-            );
-
-            assert.deepEqual(
-                fillClinicalTrackDatum(
-                    {},
-                    {clinicalAttributeId:"clinicalAttribute", datatype:"number"} as any,
-                    {sampleId:"sample", studyId:"study"} as Sample,
-                    [{mutationCount:3}, {mutationCount:2}] as any[]
                 ),
                 {
                     attr_id: "clinicalAttribute",

@@ -12,7 +12,7 @@ import OncoprintControls, {
     IOncoprintControlsHandlers,
     IOncoprintControlsState
 } from "shared/components/oncoprint/controls/OncoprintControls";
-import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
+import {AlterationTypeConstants, ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
 import {ClinicalAttribute, Gene, MolecularProfile, Mutation, Sample} from "../../api/generated/CBioPortalAPI";
 import {
     percentAltered, makeGeneticTracksMobxPromise,
@@ -35,6 +35,8 @@ import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
 import naturalSort from "javascript-natural-sort";
 import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
 import Spec = Mocha.reporters.Spec;
+import OqlStatusBanner from "../oqlStatusBanner/OqlStatusBanner";
+import {makeProfiledInClinicalAttributes} from "./ResultsViewOncoprintUtils";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -63,20 +65,6 @@ export interface IGenesetExpansionRecord {
 }
 
 const specialClinicalAttributes:OncoprintClinicalAttribute[] = [
-    {
-        clinicalAttributeId: SpecialAttribute.FractionGenomeAltered,
-        datatype: "NUMBER",
-        description: "Fraction of the genome with copy number alterations.",
-        displayName: "Fraction Genome Altered",
-        patientAttribute: false,
-    },
-    {
-        clinicalAttributeId: SpecialAttribute.MutationCount,
-        datatype: "NUMBER",
-        description: "Number of mutations.",
-        displayName: "Total mutations",
-        patientAttribute: false,
-    },
     {
         clinicalAttributeId: SpecialAttribute.StudyOfOrigin,
         datatype: "STRING",
@@ -751,73 +739,26 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     readonly clinicalAttributes_profiledIn = remoteData<OncoprintClinicalAttribute[]>({
         await:()=>[
+            this.props.store.samples,
             this.props.store.coverageInformation,
             this.props.store.molecularProfileIdToMolecularProfile,
-            this.props.store.selectedMolecularProfiles
+            this.props.store.selectedMolecularProfiles,
+            this.props.store.studyIds
         ],
         invoke:()=>{
-            const groupedSelectedMolecularProfiles:{[alterationType:string]:MolecularProfile[]} =
-                _.groupBy(this.props.store.selectedMolecularProfiles.result!, "molecularAlterationType");
-
-            const existsUnprofiled:{[alterationType:string]:boolean} = {};
-            const coverageInfo = this.props.store.coverageInformation.result!.samples;
-            const molecularProfileIdToMolecularProfile = this.props.store.molecularProfileIdToMolecularProfile.result!;
-            for (const uniqueSampleKey of Object.keys(coverageInfo)) {
-                for (const gpData of coverageInfo[uniqueSampleKey].notProfiledAllGenes) {
-                    existsUnprofiled[
-                        molecularProfileIdToMolecularProfile[gpData.molecularProfileId].molecularAlterationType
-                    ] = true;
-                }
-                const byGene = coverageInfo[uniqueSampleKey].notProfiledByGene;
-                for (const gene of Object.keys(byGene)) {
-                    for (const gpData of byGene[gene]) {
-                        existsUnprofiled[
-                            molecularProfileIdToMolecularProfile[gpData.molecularProfileId].molecularAlterationType
-                        ] = true;
-                    }
-                }
-            }
-            // make a clinical attribute for each profile type which not every sample is profiled in
-            const alterationTypeToName:{[alterationType:string]:string} = {
-                "MUTATION_EXTENDED": "mutations",
-                "COPY_NUMBER_ALTERATION": "copy number alterations",
-                "MRNA_EXPRESSION": "mRNA expression",
-                "PROTEIN_LEVEL": "protein expression"
-            };
-
-            const attributes:OncoprintClinicalAttribute[] = (Object.keys(existsUnprofiled).map(alterationType=>{
-                const group = groupedSelectedMolecularProfiles[alterationType];
-                if (!group) {
-                    // No selected profiles of that type, skip it
-                    return null;
-                } else if (group.length === 1) {
-                    // If only one profile of type, it gets its own attribute
-                    const profile = group[0];
-                    return {
-                        clinicalAttributeId: `${SpecialAttribute.Profiled}_${profile.molecularProfileId}`,
-                        datatype: "STRING",
-                        description: `Profiled in ${profile.name}: ${profile.description}`,
-                        displayName: `Profiled in ${profile.name}`,
-                        molecularProfileIds: [profile.molecularProfileId],
-                        patientAttribute: false
-                    };
-                } else {
-                    // If more than one, merge it
-                    return {
-                        clinicalAttributeId: `${SpecialAttribute.Profiled}_${alterationType}`,
-                        datatype: "STRING",
-                        description: "",
-                        displayName: `Profiled for ${alterationTypeToName[alterationType]}`,
-                        molecularProfileIds: group.map(p=>p.molecularProfileId),
-                        patientAttribute: false
-                    };
-                }
-            }) as (OncoprintClinicalAttribute|null)[]).filter(x=>!!x) as OncoprintClinicalAttribute[];// filter out null
-
-            attributes.sort((a,b)=>naturalSort(a.displayName, b.displayName));
-            return Promise.resolve(attributes);
+            return Promise.resolve(
+                makeProfiledInClinicalAttributes(
+                    this.props.store.coverageInformation.result!.samples,
+                    this.props.store.molecularProfileIdToMolecularProfile.result!,
+                    this.props.store.selectedMolecularProfiles.result!,
+                    this.props.store.samples.result!.length,
+                    this.props.store.studyIds.result!.length === 1
+                )
+            );
         },
         onResult:(result:OncoprintClinicalAttribute[]|undefined)=>{
+            // automatically select these tracks when the page loads
+            // TODO: do this differently for single page application? in general it will be good to look at onResult everywhere
             for (const attr of (result || [])) {
                 this.selectedClinicalAttributeIds.set(attr.clinicalAttributeId, true);
             }
@@ -841,6 +782,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                         }
                         return -sampleCount;
                     },
+                    (x:ClinicalAttribute)=>-x.priority
+                    ,
                     (x:ClinicalAttribute)=>x.displayName
                 ]
             ); // sort server clinical attrs by availability and display name
@@ -1088,9 +1031,18 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         return "";
     }
 
+    @computed get alterationTypesInQuery() {
+        if (this.props.store.selectedMolecularProfiles.isComplete) {
+            return _.uniq(this.props.store.selectedMolecularProfiles.result.map(x=>x.molecularAlterationType));
+        } else {
+            return [];
+        }
+    }
+
     public render() {
         return (
             <div style={{position:'relative', minHeight:this.isHidden ? this.loadingIndicatorHeight : "auto"}} className="cbioportal-frontend">
+                <OqlStatusBanner className="oncoprint-oql-status-banner" store={this.props.store} tabReflectsOql={true} style={{marginBottom:12}}/>
             {
                     <div
                         className={ classNames('oncoprintLoadingIndicator', { 'hidden': !this.isHidden }) }
@@ -1134,6 +1086,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 onReleaseRendering={this.onReleaseRendering}
                                 hiddenIds={!this.showUnalteredColumns ? this.unalteredKeys.result : undefined}
                                 molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
+                                alterationTypesInQuery={this.alterationTypesInQuery}
 
                                 horzZoomToFitIds={this.horzZoomToFitIds}
                                 distinguishMutationType={this.distinguishMutationType}

@@ -19,3 +19,13 @@
 .studyViewSurvivalPlotBody {
     position: relative
 }
+
+.studyViewAutoMargin {
+    margin: auto;
+}
+
+.studyViewLoadingIndicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

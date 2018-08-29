@@ -1,11 +1,10 @@
 import * as React from "react";
 import "./styles.scss";
-import {ClinicalAttribute} from "shared/api/generated/CBioPortalAPI";
 import {If} from 'react-if';
-import { ChartType } from "pages/studyView/StudyViewPageStore";
+import {ChartMeta, ChartType} from "pages/studyView/StudyViewPageStore";
 
 export interface IChartHeaderProps {
-    clinicalAttribute: ClinicalAttribute;
+    chartMeta: ChartMeta;
     active           : boolean;
     resetChart       : () => void;
     deleteChart      : () => void;
@@ -29,7 +28,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
         return (
             <div className='studyViewPageChartHeader'>
                 <div className='name'>
-                { !this.props.hideLabel && <span>{this.props.clinicalAttribute.displayName}</span>}
+                { !this.props.hideLabel && <span>{this.props.chartMeta.displayName}</span>}
                 </div>
                 <div className='controls'>
                     <If condition={this.props.active}>
@@ -39,10 +38,12 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                     <i className="fa fa-undo" aria-hidden="true" title="Reset filters in chart"></i>
                                 </button>
                             </If>
-                            <button className="btn btn-xs">
-                                <i className="fa fa-info-circle" aria-hidden="true"
-                                   title={this.props.clinicalAttribute.description}></i>
-                            </button>
+                            <If condition={!!this.props.chartMeta.description}>
+                                <button className="btn btn-xs">
+                                    <i className="fa fa-info-circle" aria-hidden="true"
+                                       title={this.props.chartMeta.description}></i>
+                                </button>
+                            </If>
                             <If condition={this.props.chartControls && this.props.chartControls.showTableIcon}>
                                 <button className="btn btn-xs"  onClick={() => this.props.changeChartType(ChartType.TABLE)}>
                                     <i className="fa fa-table" aria-hidden="true" title="Convert to table"></i>

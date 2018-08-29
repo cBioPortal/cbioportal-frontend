@@ -1,8 +1,4 @@
 .studyViewTablesTable {
-  width: calc(50% - 20px);
-  float: left;
-  margin: 5px;
-
   .selectd {
     font-weight: bold
   }
@@ -11,16 +7,3 @@
     cursor: pointer;
   }
 }
-
-.studyViewTablesTitle {
-  font-size: 18px;
-  color: #000;
-  font-weight: 700;
-  text-align: center;
-}
-
-.studyViewTablesBody {
-  margin-top: 5px;
-  position: relative
-}
-

@@ -1,7 +1,9 @@
 import * as React from "react";
 import {If} from 'react-if';
-import {ThreeBounce} from 'better-react-spinkit';
 import MobxPromise from "mobxpromise";
+import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator"
+import styles from "../styles.module.scss";
+import classNames from 'classnames';
 
 export interface StudyViewComponentLoaderProps {
     promise: MobxPromise<any>
@@ -10,9 +12,11 @@ export interface StudyViewComponentLoaderProps {
 export class StudyViewComponentLoader extends React.Component<StudyViewComponentLoaderProps> {
     public render() {
         return (
-            <div>
+            <div className={classNames(this.props.promise.isPending ? styles.studyViewAutoMargin : null, styles.studyViewLoadingIndicator)}>
                 <If condition={this.props.promise.isPending}>
-                    <ThreeBounce className="center-block text-center"/>
+                    <LoadingIndicator
+                        isLoading={!!this.props.promise.isPending}
+                    />
                 </If>
                 <If condition={this.props.promise.isError}>
                     <div>Error when loading data.</div>
