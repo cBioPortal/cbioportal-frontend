@@ -13,7 +13,6 @@ import {ChartMeta, ChartType, StudyViewPageStore, AnalysisGroup} from 'pages/stu
 import SummaryHeader from 'pages/studyView/SummaryHeader';
 import {Sample, Gene, SampleIdentifier, ClinicalAttribute} from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
-import {isSelected, mutationCountVsCnaTooltip} from "./StudyViewUtils";
 import AppConfig from 'appConfig';
 import MobxPromise from "mobxpromise";
 import {CopyNumberGeneFilterElement} from "../../shared/api/generated/CBioPortalAPIInternal";
@@ -167,6 +166,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 props.selectedSamples = this.store.selectedSamples;
                 props.onUserSelection = this.handlers.updateCustomCasesFilter;
                 props.onResetSelection = this.handlers.resetCustomCasesFilter;
+                props.analysisGroupsSettings = this.store.analysisGroupsSettings;
+                props.sampleToAnalysisGroup = this.store.sampleToAnalysisGroup;
                 break;
             }
             default:

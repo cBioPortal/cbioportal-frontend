@@ -7,12 +7,13 @@ import autobind from "autobind-decorator";
 import {tickFormatNumeral} from "../../../../shared/components/plots/TickUtils";
 import {makeMouseEvents} from "../../../../shared/components/plots/PlotUtils";
 import _ from "lodash";
-import {downsampleByGrouping, GroupedData} from "../../../../shared/components/plots/downsampleByGrouping";
+import {downsampleByGrouping, DSData} from "../../../../shared/components/plots/downsampleByGrouping";
 import ScatterPlotTooltip from "../../../../shared/components/plots/ScatterPlotTooltip";
-import {DOWNSAMPLE_PIXEL_DISTANCE_THRESHOLD, getGroupedData, MAX_DOT_SIZE} from "./StudyViewScatterPlotUtils";
-import {SampleIdentifier} from "../../../../shared/api/generated/CBioPortalAPI";
+import {DOWNSAMPLE_PIXEL_DISTANCE_THRESHOLD, getDownsampledData, MAX_DOT_SIZE} from "./StudyViewScatterPlotUtils";
+import {ClinicalAttribute, SampleIdentifier} from "../../../../shared/api/generated/CBioPortalAPI";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator"
 import $ from "jquery";
+import {AnalysisGroup} from "../../StudyViewPageStore";
 
 export interface IStudyViewScatterPlotData {
     x:number;
@@ -27,17 +28,18 @@ export interface IStudyViewScatterPlotProps {
     width:number;
     height:number;
     data:IStudyViewScatterPlotData[]
-    isSelected:(d:IStudyViewScatterPlotData)=>boolean;
-    selectedFill:string;
-    unselectedFill:string;
     onSelection:(sampleIdentifiers:SampleIdentifier[], keepCurrent:boolean)=>void;
 
     isLoading?:boolean;
     svgRef?:(svg:SVGElement|null)=>void;
-    tooltip?:(d:GroupedData<IStudyViewScatterPlotData>)=>JSX.Element;
+    tooltip?:(d:DSData<IStudyViewScatterPlotData>)=>JSX.Element;
     axisLabelX?: string;
     axisLabelY?: string;
     title?:string;
+
+    sampleToAnalysisGroup:{[uniqueSampleKey:string]:string};
+    analysisGroups:ReadonlyArray<AnalysisGroup>; // identified by `value`
+    analysisClinicalAttribute?:ClinicalAttribute;
 }
 
 const NUM_AXIS_TICKS = 8;
@@ -187,17 +189,41 @@ export default class StudyViewScatterPlot extends React.Component<IStudyViewScat
     }
 
     @computed get data() {
-        return getGroupedData(this.props.data, this.props.isSelected, this.dataSpaceToPixelSpace);
+        return getDownsampledData(this.props.data, this.props.sampleToAnalysisGroup, this.dataSpaceToPixelSpace);
+    }
+
+    @computed get scatters() {
+        // sort NA to the beginning - it should be rendered at the bottom
+        // otherwise, order doesnt matter. here we'll just use the same order as given in the prop, bc _.sortBy is stable sort
+        const sortedAnalysisGroups = _.sortBy(this.props.analysisGroups, g=>(g.value === "NA" ? 0 : 1));
+        return _.reduce(sortedAnalysisGroups, (scatters, group)=>{
+            const groupData = this.data[group.value];
+            if (groupData && groupData.length > 0) {
+                // add a scatter if theres data for this group
+                scatters.push(
+                    <VictoryScatter
+                        key={group.value}
+                        style={{
+                            data: {
+                                fill: group.color,
+                                stroke: "black",
+                                strokeWidth: 1,
+                                strokeOpacity: 0
+                            }
+                        }}
+                        size={this.size}
+                        symbol="circle"
+                        data={groupData}
+                        events={this.mouseEvents}
+                    />
+                );
+            }
+            return scatters;
+        }, [] as JSX.Element[]);
     }
 
     @autobind
-    private fill(d:GroupedData<IStudyViewScatterPlotData>) {
-        // we only need to check if first element is selected because selected and unselected points are grouped separately
-        return (this.props.isSelected(d.data[0]) ? this.props.selectedFill : this.props.unselectedFill);
-    }
-
-    @autobind
-    private size(d:GroupedData<IStudyViewScatterPlotData>) {
+    private size(d:DSData<IStudyViewScatterPlotData>) {
         const baseSize = 3;
         const increment = 0.5;
         return Math.min(MAX_DOT_SIZE, (baseSize - increment) + increment*d.data.length);
@@ -246,20 +272,7 @@ export default class StudyViewScatterPlot extends React.Component<IStudyViewScat
                             axisLabelComponent={<VictoryLabel dy={-30}/>}
                             label={this.props.axisLabelY}
                         />
-                        <VictoryScatter
-                            style={{
-                                data: {
-                                    fill: this.fill,
-                                    stroke: "black",
-                                    strokeWidth: 1,
-                                    strokeOpacity:0
-                                }
-                            }}
-                            size={this.size}
-                            symbol="circle"
-                            data={this.data}
-                            events={this.mouseEvents}
-                        />
+                        {this.scatters}
                     </VictoryChart>
                     <span
                         style={{

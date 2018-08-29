@@ -37,6 +37,7 @@ import { updateGeneQuery } from 'pages/studyView/StudyViewUtils';
 import { stringListToSet } from 'shared/lib/StringUtils';
 import { unparseOQLQueryLine } from 'shared/lib/oql/oqlfilter';
 import formSubmit from 'shared/lib/formSubmit';
+import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT'
 
@@ -91,15 +92,6 @@ export type ChartMeta = {
 
 export type StudyWithSamples = CancerStudy & {
     uniqueSampleKeys : string[]
-}
-
-type MutationCountVsFGADatum = {
-    studyId: string;
-    sampleId: string;
-    patientId: string;
-    uniqueSampleKey: string;
-    x: number;
-    y: number;
 }
 
 export class StudyViewPageStore {
@@ -946,7 +938,7 @@ export class StudyViewPageStore {
 
             return _.reduce(_.groupBy(data, datum => datum.uniqueSampleKey), (acc, data) => {
                 if (data.length == 2) { // 2 => number of attribute ids
-                    let _datum: MutationCountVsFGADatum = {
+                    let _datum: IStudyViewScatterPlotData = {
                         studyId: data[0].studyId,
                         sampleId: data[0].sampleId,
                         patientId: data[0].patientId,
@@ -964,7 +956,7 @@ export class StudyViewPageStore {
                     acc.push(_datum)
                 }
                 return acc
-            }, [] as MutationCountVsFGADatum[]);
+            }, [] as IStudyViewScatterPlotData[]);
         }
     });
 
