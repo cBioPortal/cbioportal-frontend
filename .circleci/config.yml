@@ -31,7 +31,7 @@ jobs:
           command: "git diff --exit-code package-lock.json || sed -i 's/http:/https:/g' package-lock.json"
       - run:
           name: "Make sure lock file is still the same"
-          command: 'git diff --exit-code package-lock.json || (echo -e "New package lock file at $(cat package-lock.json | curl -F c=@- https://ptpb.pw | grep url) (include this file in your PR to fix this test)" && exit 1)'
+          command: 'git diff --exit-code package-lock.json > /dev/null || (echo -e "New package lock file at $(cat package-lock.json | curl -F c=@- https://ptpb.pw | grep url) (include this file in your PR to fix this test)"; git diff --exit-code package-lock.json; exit 1)'
       - save_cache:
           paths:
             - node_modules
