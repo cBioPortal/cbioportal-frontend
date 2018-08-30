@@ -185,8 +185,9 @@ export function expressionTooltip(d:IBoxScatterPlotPoint, studyIdToStudy:{[study
         mutations = tooltipMutationsSection(d.mutations);
     }
 
-    if (d.copyNumberAlterations.length > 0) {
-        cna = tooltipCnaSection(d.copyNumberAlterations);
+    const nonDiploidCna = d.copyNumberAlterations.filter(x=>x.value !== 0);
+    if (nonDiploidCna.length > 0) {
+        cna = tooltipCnaSection(nonDiploidCna);
     }
 
     return (
