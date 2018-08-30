@@ -5,7 +5,6 @@ import MobxPromise, {cached, labelMobxPromises} from "mobxpromise";
 import {Gene, Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IHotspotIndex} from "shared/model/CancerHotspots";
 import {IOncoKbDataWrapper} from "shared/model/OncoKB";
-import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
 import ResidueMappingCache from "shared/cache/ResidueMappingCache";
 import {remoteData} from "shared/api/remoteData";
 import {
@@ -13,7 +12,7 @@ import {
     fetchPfamDomainData, fetchCanonicalTranscriptWithFallback,
     fetchEnsemblTranscriptsByEnsemblFilter
 } from "shared/lib/StoreUtils";
-import {EnsemblTranscript, PfamDomain, PfamDomainRange} from "shared/api/generated/GenomeNexusAPI";
+import {EnsemblTranscript, PfamDomain, PfamDomainRange, VariantAnnotation} from "shared/api/generated/GenomeNexusAPI";
 import {IPdbChain, PdbAlignmentIndex} from "shared/model/Pdb";
 import {calcPdbIdNumericalValue, mergeIndexedPdbAlignments} from "shared/lib/PdbUtils";
 import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
@@ -29,11 +28,12 @@ export default class MutationMapperStore
         protected config: IMutationMapperConfig,
         public gene:Gene,
         private getMutations:()=>Mutation[],
+        // TODO: we could merge indexedVariantAnnotations and indexedHotspotData
         public indexedHotspotData:MobxPromise<IHotspotIndex|undefined>,
+        public indexedVariantAnnotations:MobxPromise<{[genomicLocation: string]: VariantAnnotation}|undefined>,
         public oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
         public oncoKbData:IOncoKbDataWrapper,
         public uniqueSampleKeyToTumorType:{[uniqueSampleKey:string]:string},
-        protected genomeNexusEnrichmentCache: () => GenomeNexusEnrichmentCache,
     )
     {
         labelMobxPromises(this);
@@ -182,7 +182,7 @@ export default class MutationMapperStore
     }
 
     @cached get downloadDataFetcher(): MutationTableDownloadDataFetcher {
-        return new MutationTableDownloadDataFetcher(this.mutationData, this.genomeNexusEnrichmentCache);
+        return new MutationTableDownloadDataFetcher(this.mutationData);
     }
 
     @cached get pdbChainDataStore(): PdbChainDataStore {
