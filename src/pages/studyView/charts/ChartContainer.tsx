@@ -287,6 +287,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                            legend: {
                                                x: 190,
                                                y: 12
+                                           },
+                                           axis: {
+                                               y: {
+                                                   axisLabel: {
+                                                       padding: 35
+                                                   }
+                                               }
                                            }
                                        }}
                                        fileName="Overall_Survival"/>
