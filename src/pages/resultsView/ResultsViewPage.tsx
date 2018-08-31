@@ -126,8 +126,13 @@ function initStore() {
                     resultsViewPageStore.zScoreThreshold = parseFloat(query.Z_SCORE_THRESHOLD);
                 }
 
-                if (!resultsViewPageStore.cohortIdsList || !_.isEqual(resultsViewPageStore.cohortIdsList.slice(), query.cancer_study_list.split(","))) {
-                    resultsViewPageStore.cohortIdsList = query.cancer_study_list.split(",");
+                // we need figure out why cancer_study_list is sometimes not defined
+                try {
+                    if (!resultsViewPageStore.cohortIdsList || !_.isEqual(resultsViewPageStore.cohortIdsList.slice(), query.cancer_study_list.split(","))) {
+                        resultsViewPageStore.cohortIdsList = query.cancer_study_list.split(",");
+                    }
+                } catch(ex) {
+                     console.log("ERROR SETTING QUERY", ex);
                 }
 
 
