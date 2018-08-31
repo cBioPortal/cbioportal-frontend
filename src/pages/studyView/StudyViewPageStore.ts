@@ -716,6 +716,27 @@ export class StudyViewPageStore {
         }
     });
 
+    readonly getDataForClinicalDataTab = remoteData({
+        await: () => [this.clinicalAttributes, this.selectedSamples],
+        invoke: async () => {
+            // { [attributeId: string]: { [attributeId: string]: string; } }
+            let sampleClinicalDataMap: { [attributeId: string]: { [attributeId: string]: string; } } = await this.clinicalDataCache.get(this.selectedSamples.result)
+            return _.reduce(this.selectedSamples.result, (acc, next) => {
+
+                let sampleData: { [attributeId: string]: string; } = {
+                    studyId: next.studyId,
+                    patientId: next.patientId,
+                    sampleId: next.sampleId,
+                    ...(sampleClinicalDataMap[next.uniqueSampleKey] || {})
+                };
+
+                acc.push(sampleData);
+                return acc;
+            }, [] as { [id: string]: string }[]);
+        },
+        default: []
+    });
+
     @bind
     public async getDownloadDataPromise() {
 
