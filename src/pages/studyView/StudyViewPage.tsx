@@ -13,8 +13,6 @@ import {ChartMeta, ChartType, StudyViewPageStore, AnalysisGroup} from 'pages/stu
 import SummaryHeader from 'pages/studyView/SummaryHeader';
 import {Sample, Gene, SampleIdentifier, ClinicalAttribute} from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
-import StudyViewScatterPlot from "./charts/scatterPlot/StudyViewScatterPlot";
-import {isSelected, mutationCountVsCnaTooltip} from "./StudyViewUtils";
 import AppConfig from 'appConfig';
 import MobxPromise from "mobxpromise";
 import {CopyNumberGeneFilterElement} from "../../shared/api/generated/CBioPortalAPIInternal";
@@ -60,10 +58,17 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 this.store.updateCNAGeneFilters(filters);
             },
             onDeleteChart: (chartMeta: ChartMeta) => {
+                // reset analysis groups settings if theyre based on this chart
+                if (this.store.analysisGroupsSettings.clinicalAttribute &&
+                        chartMeta.clinicalAttribute &&
+                        chartMeta.clinicalAttribute.clinicalAttributeId === this.store.analysisGroupsSettings.clinicalAttribute.clinicalAttributeId) {
+                    this.store.clearAnalysisGroupsSettings();
+                }
+
                 this.store.resetFilterAndChangeChartVisibility(chartMeta, false);
             },
-            updateCustomCasesFilter: (cases: SampleIdentifier[]) => {
-                this.store.updateCustomCasesFilter(cases);
+            updateCustomCasesFilter: (cases: SampleIdentifier[], keepCurrent?:boolean) => {
+                this.store.updateCustomCasesFilter(cases, keepCurrent);
             },
             updateSelectedGenes:(query: SingleGeneQuery[], genesInQuery: Gene[])=>{
                 this.store.updateSelectedGenes(query, genesInQuery);
@@ -105,7 +110,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     }
 
     renderAttributeChart = (chartMeta: ChartMeta) => {
-        let props:Partial<IChartContainerProps> = {
+        const props:Partial<IChartContainerProps> = {
             chartMeta: chartMeta,
             filters: [],
             onDeleteChart: this.handlers.onDeleteChart,
@@ -113,6 +118,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             setAnalysisGroupsSettings: (attribute:ClinicalAttribute, grps:ReadonlyArray<AnalysisGroup>)=>{
                 this.store.updateAnalysisGroupsSettings(attribute, grps);
             },
+            analysisGroupsSettings: this.store.analysisGroupsSettings
         };
         switch (chartMeta.chartType) {
             case ChartType.PIE_CHART: {
@@ -157,7 +163,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 props.promise = this.store.getSurvivalData(chartMeta);
                 // only want to pass these in when necessary, otherwise charts will unnecessarily update when they change
                 props.patientKeysWithNAInSelectedClinicalData = this.store.patientKeysWithNAInSelectedClinicalData;
-                props.analysisGroupsSettings = this.store.analysisGroupsSettings;
                 props.patientToAnalysisGroup = this.store.patientToAnalysisGroup;
                 break;
             }
@@ -168,6 +173,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 props.selectedSamples = this.store.selectedSamples;
                 props.onUserSelection = this.handlers.updateCustomCasesFilter;
                 props.onResetSelection = this.handlers.resetCustomCasesFilter;
+                props.sampleToAnalysisGroup = this.store.sampleToAnalysisGroup;
                 break;
             }
             default:

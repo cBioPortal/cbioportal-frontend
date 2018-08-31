@@ -51,13 +51,7 @@ export interface ISurvivalChartProps {
     legendLocation?:LegendLocation;
     showLogRankPVal?:boolean;
     showDownloadButtons?: boolean;
-    styleOpts?: ConfigurableSurvivalChartStyleOpts;
-}
-
-export type ConfigurableSurvivalChartStyleOpts = {
-    width?: number,
-    height?: number,
-    legend?:{ x?:number, y?:number}
+    styleOpts?: any; // see victory styles, and styleOptsDefaultProps for examples
 }
 
 // Start to down sampling when there are more than 1000 dots in the plot.

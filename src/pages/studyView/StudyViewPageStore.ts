@@ -37,6 +37,7 @@ import { updateGeneQuery } from 'pages/studyView/StudyViewUtils';
 import { stringListToSet } from 'shared/lib/StringUtils';
 import { unparseOQLQueryLine } from 'shared/lib/oql/oqlfilter';
 import formSubmit from 'shared/lib/formSubmit';
+import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT'
 
@@ -91,15 +92,6 @@ export type ChartMeta = {
 
 export type StudyWithSamples = CancerStudy & {
     uniqueSampleKeys : string[]
-}
-
-type MutationCountVsFGADatum = {
-    studyId: string;
-    sampleId: string;
-    patientId: string;
-    uniqueSampleKey: string;
-    x: number;
-    y: number;
 }
 
 export class StudyViewPageStore {
@@ -195,15 +187,16 @@ export class StudyViewPageStore {
             };
         } else {
             // analysis groups for selected/unselected
+            // unselected goes on bottom, selected should be rendered on top
             return {
                 groups: [{
-                    value: SELECTED_ANALYSIS_GROUP_VALUE,
-                    color: "red",
-                    legendText: "Selected patients"
-                },{
                     value: UNSELECTED_ANALYSIS_GROUP_VALUE,
                     color: "blue",
                     legendText: "Unselected patients"
+                },{
+                    value: SELECTED_ANALYSIS_GROUP_VALUE,
+                    color: "red",
+                    legendText: "Selected patients"
                 }] as AnalysisGroup[]
             }
         }
@@ -365,14 +358,23 @@ export class StudyViewPageStore {
     }
 
     @action
-    updateCustomCasesFilter(cases: SampleIdentifier[]) {
-
-        this._sampleIdentifiers = _.map(cases, obj => {
+    updateCustomCasesFilter(cases: SampleIdentifier[], keepCurrent?:boolean) {
+        const newSampleIdentifiers = _.map(cases, obj => {
             return {
                 "sampleId": obj.sampleId,
                 "studyId": obj.studyId
             }
-        })
+        });
+        const newSampleIdentifiersMap = _.keyBy(newSampleIdentifiers, s=>`${s.studyId}:${s.sampleId}`);
+        if (keepCurrent) {
+            // if we should keep the current selection, go through and add samples back, taking care not to duplicate
+            for (const s of this._sampleIdentifiers) {
+                if (!(`${s.studyId}:${s.sampleId}` in newSampleIdentifiersMap)) {
+                    newSampleIdentifiers.push(s);
+                }
+            }
+        }
+        this._sampleIdentifiers = newSampleIdentifiers;
     }
 
     @action
@@ -937,7 +939,7 @@ export class StudyViewPageStore {
 
             return _.reduce(_.groupBy(data, datum => datum.uniqueSampleKey), (acc, data) => {
                 if (data.length == 2) { // 2 => number of attribute ids
-                    let _datum: MutationCountVsFGADatum = {
+                    let _datum: IStudyViewScatterPlotData = {
                         studyId: data[0].studyId,
                         sampleId: data[0].sampleId,
                         patientId: data[0].patientId,
@@ -955,7 +957,7 @@ export class StudyViewPageStore {
                     acc.push(_datum)
                 }
                 return acc
-            }, [] as MutationCountVsFGADatum[]);
+            }, [] as IStudyViewScatterPlotData[]);
         }
     });
 
