@@ -187,15 +187,16 @@ export class StudyViewPageStore {
             };
         } else {
             // analysis groups for selected/unselected
+            // unselected goes on bottom, selected should be rendered on top
             return {
                 groups: [{
-                    value: SELECTED_ANALYSIS_GROUP_VALUE,
-                    color: "red",
-                    legendText: "Selected patients"
-                },{
                     value: UNSELECTED_ANALYSIS_GROUP_VALUE,
                     color: "blue",
                     legendText: "Unselected patients"
+                },{
+                    value: SELECTED_ANALYSIS_GROUP_VALUE,
+                    color: "red",
+                    legendText: "Selected patients"
                 }] as AnalysisGroup[]
             }
         }
