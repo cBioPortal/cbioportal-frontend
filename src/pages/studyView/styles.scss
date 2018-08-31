@@ -1,49 +1,45 @@
-.studyViewSummaryHeader{
-    margin: 5px;
-    font-size: 16px;
-    color: #555;
-    .btn{
-        border: 1px solid #d3d3d3;
-        padding: 5px 10px;
-        margin: 0 3px;
-        height: 30px;
-        font-size: 18px;
-        line-height: 18px;
-    }
-    .btn:active:focus {
-        box-shadow: none; 
-    }
+$selectHeight: 30px;
+$selectHeightInner: $selectHeight - 2px;
 
+.studyViewSummaryHeader{
     .Select {
         width: 220px;
-        height: 30px;
+        height: $selectHeight;
 
         .Select-control {
-            height:30px;
+            height:$selectHeightInner;
         }
-    
+
         .Select-input {
-            height:30px;
+            height:$selectHeightInner;
             input {
                 padding: 0px 5px;
-                line-height: 30px;
+                line-height: $selectHeightInner;
             }
         }
-    
+
+        .Select-value {
+          line-height: $selectHeightInner !important;
+
+          .Select-value-label {
+            line-height: $selectHeightInner;
+          }
+        }
+
         .Select-menu-outer {
             width: 300px;
             max-height: 400px;
         }
 
         .Select-placeholder {
-            line-height: 30px;
+            line-height: $selectHeightInner;
         }
 
         .Select-menu {
             max-height: 398px; // needs to be 2 less than Select-menu-outer height to not hide border. Irrelevant
                               //    as long as & > div > div:nth-child(2) max-height is less
             overflow:hidden;
-      
+
             & > div > div:nth-child(2){
                 max-height:350px !important;
                 overflow-x:hidden !important;
@@ -51,9 +47,4 @@
             }
         }
     }
-}
-
-.studyView .borderedChart {
-    padding: 0;
-    border: 0;
 }

@@ -1,9 +1,10 @@
 import * as React from "react";
-import "./styles.scss";
+import styles from "./styles.module.scss";
 import {If} from 'react-if';
 import {ChartMeta, ChartType} from "pages/studyView/StudyViewPageStore";
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
-import bind from "bind-decorator";
+import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import {bind} from "bind-decorator";
+import classnames from 'classnames';
 import fileDownload from 'react-file-download';
 import {action, computed, observable} from "mobx";
 import {observer} from "mobx-react";
@@ -48,9 +49,9 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
 
     private downloadControls() {
         const overlay = (
-            <div className="studyViewChartHeaderDownloadControls">
+            <div className={styles.downloadControl}>
                 {
-                    this.props.download && this.props.download.map( props =>
+                    this.props.download && this.props.download.map(props =>
                         <button
                             key={props.type}
                             className="btn btn-xs"
@@ -67,7 +68,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 });
                             }}
                         >
-                            {this.downloadPending[props.type] ? <i className="fa fa-spinner fa-spin" aria-hidden="true" /> : props.type}
+                            {this.downloadPending[props.type] ?
+                                <i className="fa fa-spinner fa-spin" aria-hidden="true"/> : props.type}
                         </button>
                     )
                 }
@@ -82,9 +84,9 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                 onVisibleChange={this.onTooltipVisibleChange as any}
                 trigger={["click"]}
             >
-                <button className="btn btn-xs">
-                    <i className="fa fa-download" aria-hidden="true" title="Download" />
-                </button>
+                <i className={classnames("fa", "fa-download", styles.item, styles.clickable)}
+                   aria-hidden="true"
+                   title="Download"></i>
             </DefaultTooltip>
         );
     }
@@ -100,49 +102,56 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
     }
 
     public render() {
+        const overlay = () => {
+            return <div style={{maxWidth: '250px'}}>
+                <b>{this.props.chartMeta.displayName}</b><br/>
+                {this.props.chartMeta.description}
+            </div>
+        };
         return (
-            <div className='studyViewPageChartHeader'>
-                <div className='name'>
-                { !this.props.hideLabel && <span>{this.props.chartMeta.displayName}</span>}
+            <div className={styles.header}>
+                <div className={styles.name}>
+                    {!this.props.hideLabel && <span>{this.props.chartMeta.displayName}</span>}
                 </div>
-                <div className='controls'>
-                    <If condition={this.active}>
-                        <div role="group" className="btn-group">
-                            <If condition={this.props.chartControls && this.props.chartControls.showResetIcon}>
-                                <button className="btn btn-xs" onClick={() => this.props.resetChart()}>
-                                    <i className="fa fa-undo" aria-hidden="true" title="Reset filters in chart"></i>
-                                </button>
-                            </If>
-                            <If condition={!!this.props.chartMeta.description}>
-                                <button className="btn btn-xs">
-                                    <i className="fa fa-info-circle" aria-hidden="true"
-                                       title={this.props.chartMeta.description}></i>
-                                </button>
-                            </If>
-                            <If condition={this.props.chartControls && this.props.chartControls.showTableIcon}>
-                                <button className="btn btn-xs"  onClick={() => this.props.changeChartType(ChartType.TABLE)}>
-                                    <i className="fa fa-table" aria-hidden="true" title="Convert to table"></i>
-                                </button>
-                            </If>
-                            <If condition={this.props.chartControls && this.props.chartControls.showPieIcon}>
-                                <button className="btn btn-xs"  onClick={() => this.props.changeChartType(ChartType.PIE_CHART)}>
-                                    <i className="fa fa-pie-chart" aria-hidden="true" title="Convert to Pie chart"></i>
-                                </button>
-                            </If>
-                            <If condition={this.props.chartControls && this.props.chartControls.showAnalysisGroupsIcon}>
-                                <button className="btn btn-xs"  onClick={this.props.setAnalysisGroups}>
-                                    <img src="images/survival_icon.svg" style={{verticalAlign:"initial"}} width="10" height="10" className="icon hover" alt="Survival Analysis"/>
-                                </button>
-                            </If>
-                            <If condition={this.props.download && this.props.download.length > 0}>
-                                {this.downloadControls()}
-                            </If>
-                            <button className="btn btn-xs"  onClick={() => this.props.deleteChart()}>
-                                <i className="fa fa-times" aria-hidden="true" title="Delete chart"></i>
-                            </button>
-                        </div>
-                    </If>
-                </div>
+                <If condition={this.active}>
+                    <div className={styles.controls}>
+                        <If condition={this.props.chartControls && this.props.chartControls.showResetIcon}>
+                            <i className={classnames("fa", "fa-undo", styles.item, styles.clickable, styles.undo)}
+                               aria-hidden="true"
+                               title="Reset filters in chart" onClick={() => this.props.resetChart()}></i>
+                        </If>
+                        <If condition={!!this.props.chartMeta.description}>
+                            <DefaultTooltip
+                                placement="top"
+                                overlay={overlay}
+                                destroyTooltipOnHide={true}
+                            >
+                                <i className={classnames("fa", "fa-info-circle", styles.item)} aria-hidden="true"
+                                   title={this.props.chartMeta.description}></i>
+                            </DefaultTooltip>
+                        </If>
+                        <If condition={this.props.chartControls && this.props.chartControls.showTableIcon}>
+                            <i className={classnames("fa", "fa-table", styles.item, styles.clickable)}
+                               aria-hidden="true"
+                               title="Convert to table"
+                               onClick={() => this.props.changeChartType(ChartType.TABLE)}></i>
+                        </If>
+                        <If condition={this.props.chartControls && this.props.chartControls.showPieIcon}>
+                            <i className={classnames("fa", "fa-pie-chart", styles.item, styles.clickable)}
+                               aria-hidden="true"
+                               title="Convert to Pie chart"
+                               onClick={() => this.props.changeChartType(ChartType.PIE_CHART)}></i>
+                        </If>
+                        <If condition={this.props.chartControls && this.props.chartControls.showAnalysisGroupsIcon}>
+                            <img src="images/survival_icon.svg" className={classnames(styles.survivalIcon, styles.item, styles.clickable)} style={{verticalAlign:"initial"}} alt="Survival Analysis" onClick={this.props.setAnalysisGroups}/>
+                        </If>
+                        <If condition={this.props.download && this.props.download.length > 0}>
+                            {this.downloadControls()}
+                        </If>
+                        <i className={classnames("fa", "fa-times", styles.item, styles.clickable)}
+                           aria-hidden="true" title="Delete chart" onClick={() => this.props.deleteChart()}></i>
+                    </div>
+                </If>
             </div>
         );
     }
