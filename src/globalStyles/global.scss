@@ -507,6 +507,15 @@ h3.hr {
   &:empty {
     display:none;
   }
+
+  >:last-child {
+    margin-bottom:0 !important;
+  }
+
+}
+
+.alert {
+  padding:5px 10px !important;
 }
 
 .globalSpinner {

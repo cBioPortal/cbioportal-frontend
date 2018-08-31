@@ -262,14 +262,16 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
             );
         } else {
             divContents = (
-                <div>
-                    <span>There are no available profiles in the queried studies.</span>
+                <div className={'alert alert-info'}>
+                    There are no available profiles in the queried studies.
                 </div>
             );
         }
         return (
             <div>
-                <OqlStatusBanner className="coexp-oql-status-banner" store={this.props.store} tabReflectsOql={false} style={{marginBottom:15}}/>
+                <div className={"tabMessageContainer"}>
+                    <OqlStatusBanner className="coexp-oql-status-banner" store={this.props.store} tabReflectsOql={false}/>
+                </div>
                 {divContents}
             </div>
         );
