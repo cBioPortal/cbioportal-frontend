@@ -15,7 +15,7 @@ import {
     makeBoxScatterPlotData, IScatterPlotSampleData, noMutationAppearance, IBoxScatterPlotPoint, boxPlotTooltip,
     getCnaQueries, getMutationQueries, getScatterPlotDownloadData, getBoxPlotDownloadData, getTablePlotDownloadData,
     mutationRenderPriority, mutationSummaryRenderPriority, MutationSummary, mutationSummaryToAppearance,
-    CNA_STROKE_WIDTH, scatterPlotSize, PLOT_SIDELENGTH, CLIN_ATTR_DATA_TYPE,
+    CNA_STROKE_WIDTH, PLOT_SIDELENGTH, CLIN_ATTR_DATA_TYPE,
     sortMolecularProfilesForDisplay, scatterPlotZIndexSortBy
 } from "./PlotsTabUtils";
 import {
@@ -40,6 +40,7 @@ import {logicalOr} from "../../../shared/lib/LogicUtils";
 import {SpecialAttribute} from "../../../shared/cache/OncoprintClinicalDataCache";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import ScrollBar from "../../../shared/components/Scrollbar/ScrollBar";
+import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
 
 enum EventKey {
     horz_logScale,
