@@ -12,7 +12,7 @@ import {IBaseScatterPlotData} from "./ScatterPlot";
 import {getDeterministicRandomNumber, separateScatterDataByAppearance} from "./PlotUtils";
 import {logicalAnd} from "../../lib/LogicUtils";
 import {tickFormatNumeral, wrapTick} from "./TickUtils";
-import {scatterPlotSize} from "./PlotUtils";
+import {makeScatterPlotSizeFunction} from "./PlotUtils";
 import {getTextWidth} from "../../lib/wrapText";
 import autobind from "autobind-decorator";
 
@@ -362,7 +362,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         const highlight = this.props.highlight;
         const size = this.props.size;
         // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
-        return scatterPlotSize(highlight, size);
+        return makeScatterPlotSizeFunction(highlight, size);
     }
 
     @computed get labels() {
