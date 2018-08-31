@@ -212,7 +212,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         this.searchCaseInput = "";
         this.searchMutationInput = "";
 
-        setWindowVariable("resultsViewPlotsTab", this); // for e2e testing
     }
 
     @autobind
