@@ -96,7 +96,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                         {this.cnaGeneFilter}
                         {this.mutatedGeneFilter}
                         {this.mutationCountVScnaFilter}
-                        <span><button className="btn-xs" onClick={this.props.clearAllFilters}>Clear All</button></span>
+                        <span><button className="btn btn-default btn-xs" onClick={this.props.clearAllFilters}>Clear All</button></span>
                     </div>
                 </div>
 
