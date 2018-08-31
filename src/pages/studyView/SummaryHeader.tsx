@@ -3,6 +3,7 @@ import * as _ from 'lodash';
 import { Sample, StudyViewFilter } from 'shared/api/generated/CBioPortalAPIInternal';
 import { observer } from "mobx-react";
 import { computed, observable, action } from 'mobx';
+import styles from "./styles.module.scss";
 import "./styles.scss";
 import { bind } from 'bind-decorator';
 import { buildCBioPortalUrl } from 'shared/api/urls';
@@ -17,6 +18,7 @@ import { If, Then, Else } from 'react-if';
 import { StudyWithSamples, ChartMeta } from 'pages/studyView/StudyViewPageStore';
 import UserSelections from 'pages/studyView/UserSelections';
 import SelectedInfo from "./SelectedInfo/SelectedInfo";
+import classnames from "classnames";
 import { getPercentage } from 'shared/lib/FormatUtils';
 import MobxPromise from 'mobxpromise';
 const CheckedSelect = require("react-select-checked").CheckedSelect;
@@ -170,8 +172,8 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                             onSubmit={this.onSubmit}/>
                     )
                 }
-                    
-                <div style={{display: "flex"}}>
+
+                <div className={styles.summaryHeader}>
                     <SelectedInfo selectedSamples={this.props.selectedSamples}/>
                     <DefaultTooltip
                         trigger={['click']}
@@ -187,64 +189,76 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                         }
                         placement="bottom"
                     >
+                        <DefaultTooltip
+                            placement={"top"}
+                            trigger={['hover']}
+                            overlay={<span>{this.virtualStudyButtonTooltip}</span>}
+                        >
+                            <button
+                                className={classnames('btn btn-default btn-sm', styles.summaryHeaderBtn, styles.summaryHeaderItem)}
+                                title={this.virtualStudyButtonTooltip}>
+                                <i className="fa fa-bookmark fa-lg" aria-hidden="true" title="Virtual Study"/>
+                            </button>
+                        </DefaultTooltip>
+                    </DefaultTooltip>
+
                     <DefaultTooltip
+                        trigger={["hover"]}
                         placement={"top"}
-                        trigger={['hover']}
-                        overlay={<span>{this.virtualStudyButtonTooltip}</span>}
+                        overlay={<span>View selected cases</span>}
                     >
-                        <span className="btn">
-                            <i className="fa fa-bookmark" aria-hidden="true"/>
-                        </span>
+                        <button
+                            className={classnames('btn btn-default btn-sm', styles.summaryHeaderBtn, styles.summaryHeaderItem)}
+                            onClick={() => this.openCases()}>
+                            <i className="fa fa-user-circle-o fa-lg" aria-hidden="true" title="View selected cases"></i>
+                        </button>
                     </DefaultTooltip>
-                        
-                    </DefaultTooltip>
-                    
-                    <button className="btn" onClick={() => this.openCases()}>
-                        <i className="fa fa-user-circle-o" aria-hidden="true" title="View selected cases"></i>
-                    </button>
+
                     <DefaultTooltip
                         trigger={["hover"]}
                         placement={"top"}
                         overlay={<span>{this.downloadButtonTooltip}</span>}
                     >
-                        <button className="btn" onClick={() => this.handleDownload()}>
+                        <button className={classnames('btn btn-default btn-sm', styles.summaryHeaderBtn, styles.summaryHeaderItem)} onClick={() => this.handleDownload()}>
                             <If condition={this.downloadingData}>
                                 <Then>
-                                    <i className="fa fa-spinner fa-spin" aria-hidden="true"></i>
+                                    <i className="fa fa-spinner fa-spin fa-lg" aria-hidden="true"></i>
                                 </Then>
                                 <Else>
-                                    <i className="fa fa-download" aria-hidden="true"></i>
+                                    <i className="fa fa-download fa-lg" aria-hidden="true"></i>
                                 </Else>
                             </If>
                         </button>
                     </DefaultTooltip>
-                    
+
                     <GeneSelectionBox
                         inputGeneQuery={this.props.geneQuery}
                         callback={this.updateSelectedGenes}
                         location={GeneBoxType.STUDY_VIEW_PAGE}
                     />
-                    <span style={{ margin: "0px 5px" }}><i className="fa fa-arrow-right fa-lg" aria-hidden="true"></i></span>
-                    <button disabled={this._isQueryButtonDisabled} className="btn" onClick={() => this.props.onSubmitQuery()}>
+                    <span className={classnames(styles.summaryHeaderItem)}><i className="fa fa-arrow-right fa-lg" aria-hidden="true"></i></span>
+                    <button disabled={this._isQueryButtonDisabled} className={classnames(styles.summaryHeaderBtn, 'btn btn-default btn-sm', styles.summaryHeaderItem)} onClick={() => this.props.onSubmitQuery()}>
                         Query
                     </button>
                     <button
-                        className="btn"
-                        onClick={()=>this.isCustomCaseBoxOpen = true}
+                        className={classnames('btn btn-default btn-sm', styles.summaryHeaderBtn, styles.summaryHeaderItem)}
+                        onClick={() => this.isCustomCaseBoxOpen = true}
                     >
                         Select cases
                     </button>
 
-                    <CheckedSelect
-                        disabled={this.props.clinicalAttributesWithCountPromise.isPending}
-                        placeholder={"Add Chart"}
-                        onChange={this.onChangeSelectedCharts}
-                        options={this.chartOptions}
-                        value={(this.props.visibleAttributeIds || []).map(chartMeta=>({value:chartMeta.uniqueKey}))}
-                        labelKey="label"
-                    />
+                    <div className={classnames(styles.summaryHeaderItem)}>
+                        <CheckedSelect
+                            disabled={this.props.clinicalAttributesWithCountPromise.isPending}
+                            placeholder={"Add Chart"}
+                            onChange={this.onChangeSelectedCharts}
+                            options={this.chartOptions}
+                            value={(this.props.visibleAttributeIds || []).map(chartMeta => ({value: chartMeta.uniqueKey}))}
+                            labelKey="label"
+                        />
+                    </div>
 
-                    
+
                 </div>
 
                 <UserSelections

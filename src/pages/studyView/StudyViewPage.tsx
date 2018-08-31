@@ -44,8 +44,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             onUserSelection: (chartMeta: ChartMeta, values: string[]) => {
                 this.store.updateClinicalDataEqualityFilters(chartMeta, values)
             },
-            updateGeneFilters: (entrezGeneIds: number[]) => {
-                this.store.updateGeneFilters(entrezGeneIds);
+            addGeneFilters: (entrezGeneIds: number[]) => {
+                this.store.addGeneFilters(entrezGeneIds);
             },
             resetGeneFilter: (chartMeta: ChartMeta) => {
                 this.store.resetGeneFilter();
@@ -53,8 +53,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             resetCNAGeneFilter: (chartMeta: ChartMeta) => {
                 this.store.resetCNAGeneFilter();
             },
-            updateCNAGeneFilters: (filters:CopyNumberGeneFilterElement[]) => {
-                this.store.updateCNAGeneFilters(filters);
+            addCNAGeneFilters: (filters:CopyNumberGeneFilterElement[]) => {
+                this.store.addCNAGeneFilters(filters);
             },
             onDeleteChart: (chartMeta: ChartMeta) => {
                 // reset analysis groups settings if theyre based on this chart
@@ -167,7 +167,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             case ChartType.MUTATED_GENES_TABLE: {
                 props.filters = this.store.getMutatedGenesTableFilters();
                 props.promise = this.store.mutatedGeneData;
-                props.onUserSelection = this.handlers.updateGeneFilters;
+                props.onUserSelection = this.handlers.addGeneFilters;
                 props.onResetSelection = this.handlers.resetGeneFilter;
                 props.selectedGenes=this.store.selectedGenes;
                 props.onGeneSelect=this.store.onCheckGene;
@@ -184,7 +184,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             case ChartType.CNA_GENES_TABLE: {
                 props.filters = this.store.getCNAGenesTableFilters();
                 props.promise = this.store.cnaGeneData;
-                props.onUserSelection = this.handlers.updateCNAGeneFilters;
+                props.onUserSelection = this.handlers.addCNAGeneFilters;
                 props.onResetSelection = this.handlers.resetCNAGeneFilter;
                 props.selectedGenes=this.store.selectedGenes;
                 props.onGeneSelect=this.store.onCheckGene;

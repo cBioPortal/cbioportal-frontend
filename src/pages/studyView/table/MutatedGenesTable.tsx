@@ -184,10 +184,9 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
 
     @bind
     isSelectedRow(data:MutationCountByGene) {
-        let record = _.find(_.union(this.selectedRows, this.preSelectedRows), function (row) {
+        return !_.isUndefined(_.find(_.union(this.selectedRows, this.preSelectedRows), function (row) {
             return row.entrezGeneId === data.entrezGeneId;
-        });
-        return !_.isUndefined(record);
+        }));
     }
 
     public render() {
