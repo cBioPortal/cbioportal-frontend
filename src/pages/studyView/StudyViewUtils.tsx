@@ -83,41 +83,48 @@ export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: st
     return updatedQueries.map(query=>unparseOQLQueryLine(query)).join('\n');
 
 }
-export function mutationCountVsCnaTooltip(d: { data: Pick<IStudyViewScatterPlotData, "x" | "y" | "studyId" | "sampleId" | "patientId">[] }) {
-    const rows = [];
-    const MAX_SAMPLES = 3;
-    const borderStyle = {borderTop: "1px solid black"};
-    for (let i = 0; i < Math.min(MAX_SAMPLES, d.data.length); i++) {
-        const datum = d.data[i];
-        rows.push(
-            <tr key={`${datum.studyId}_${datum.sampleId}`} style={i > 0 ? borderStyle : {}}>
-                <td style={{padding: 5}}>
-                    <span>Cancer Study: <a target="_blank" href={getStudySummaryUrl(datum.studyId)}>{datum.studyId}</a></span><br/>
-                    <span>Sample ID: <a target="_blank"
-                                        href={getSampleViewUrl(datum.studyId, datum.sampleId)}>{datum.sampleId}</a></span><br/>
-                    <span>CNA Fraction: {datum.x}</span><br/>
-                    <span>Mutation Count: {datum.y}</span>
-                </td>
-            </tr>
+export function makeMutationCountVsCnaTooltip(sampleToAnalysisGroup?:{[sampleKey:string]:string}, analysisClinicalAttribute?:ClinicalAttribute) {
+    return (d: { data: Pick<IStudyViewScatterPlotData, "x" | "y" | "studyId" | "sampleId" | "patientId" | "uniqueSampleKey">[] })=>{
+        const rows = [];
+        const MAX_SAMPLES = 3;
+        const borderStyle = {borderTop: "1px solid black"};
+        for (let i = 0; i < Math.min(MAX_SAMPLES, d.data.length); i++) {
+            const datum = d.data[i];
+            rows.push(
+                <tr key={`${datum.studyId}_${datum.sampleId}`} style={i > 0 ? borderStyle : {}}>
+                    <td style={{padding: 5}}>
+                        <span>Cancer Study: <a target="_blank" href={getStudySummaryUrl(datum.studyId)}>{datum.studyId}</a></span><br/>
+                        <span>Sample ID: <a target="_blank"
+                                            href={getSampleViewUrl(datum.studyId, datum.sampleId)}>{datum.sampleId}</a></span><br/>
+                        <span>CNA Fraction: {datum.x}</span><br/>
+                        <span>Mutation Count: {datum.y}</span>
+                        {!!analysisClinicalAttribute && !!sampleToAnalysisGroup && (
+                            <div>
+                                {analysisClinicalAttribute.displayName}: {sampleToAnalysisGroup[datum.uniqueSampleKey]}
+                            </div>
+                        )}
+                    </td>
+                </tr>
+            );
+        }
+        if (d.data.length > 1) {
+            rows.push(
+                <tr key="see all" style={borderStyle}>
+                    <td style={{padding: 5}}>
+                        <a target="_blank" href={getSampleViewUrl(d.data[0].studyId, d.data[0].sampleId, d.data)}>View
+                            all {d.data.length} patients included in this dot.</a>
+                    </td>
+                </tr>
+            );
+        }
+        return (
+            <div>
+                <table>
+                    {rows}
+                </table>
+            </div>
         );
-    }
-    if (d.data.length > 1) {
-        rows.push(
-            <tr key="see all" style={borderStyle}>
-                <td style={{padding: 5}}>
-                    <a target="_blank" href={getSampleViewUrl(d.data[0].studyId, d.data[0].sampleId, d.data)}>View
-                        all {d.data.length} patients included in this dot.</a>
-                </td>
-            </tr>
-        );
-    }
-    return (
-        <div>
-            <table>
-                {rows}
-            </table>
-        </div>
-    );
+    };
 }
 
 export function isSelected(datum: { uniqueSampleKey: string }, selectedSamples: { [uniqueSampleKey: string]: any }) {
