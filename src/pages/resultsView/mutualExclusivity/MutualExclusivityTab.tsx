@@ -60,7 +60,7 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
             if (_.size(this.props.store.isSampleAlteredMap.result) > 1) {
                 return (
                     <div>
-                        <OqlStatusBanner className="mutex-oql-status-banner" store={this.props.store} tabReflectsOql={true} style={{marginBottom:12, marginTop:-10}}/>
+                        <OqlStatusBanner className="mutex-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
                         {getCountsText(this.data)}
                         <div className={styles.Checkboxes}>
                             <Checkbox checked={this.mutualExclusivityFilter}
@@ -80,7 +80,9 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
                     </div>
                 );
             } else {
-                return <div>Mutual exclusivity analysis cannot be provided when only a single gene is selected.</div>
+                return <div className={"tabMessageContainer"}>
+                            <div className={"alert alert-info"}>Mutual exclusivity analysis cannot be provided when only a single gene is selected.</div>
+                        </div>
             }
         } else {
             return null;
