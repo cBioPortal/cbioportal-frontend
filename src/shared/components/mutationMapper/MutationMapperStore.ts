@@ -1,5 +1,5 @@
 import * as _ from "lodash";
-import {computed} from "mobx";
+import {computed, observable} from "mobx";
 import MobxPromise, {cached, labelMobxPromises} from "mobxpromise";
 
 import {Gene, Mutation} from "shared/api/generated/CBioPortalAPI";
@@ -12,7 +12,7 @@ import {
     fetchPfamDomainData, fetchCanonicalTranscriptWithFallback,
     fetchEnsemblTranscriptsByEnsemblFilter
 } from "shared/lib/StoreUtils";
-import {EnsemblTranscript, PfamDomain, PfamDomainRange, VariantAnnotation} from "shared/api/generated/GenomeNexusAPI";
+import {EnsemblTranscript, PfamDomain, PfamDomainRange, VariantAnnotation, GenomicLocation, TranscriptConsequence} from "shared/api/generated/GenomeNexusAPI";
 import {IPdbChain, PdbAlignmentIndex} from "shared/model/Pdb";
 import {calcPdbIdNumericalValue, mergeIndexedPdbAlignments} from "shared/lib/PdbUtils";
 import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
@@ -21,9 +21,14 @@ import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownload
 import PdbChainDataStore from "./PdbChainDataStore";
 import MutationMapperDataStore from "./MutationMapperDataStore";
 import {IMutationMapperConfig} from "./MutationMapper";
+import { uniqueGenomicLocations, genomicLocationString } from "shared/lib/MutationUtils";
+import { getMutationsToTranscriptId } from "shared/lib/MutationAnnotator";
+import Mutations from "pages/resultsView/mutation/Mutations";
 
 export default class MutationMapperStore
 {
+    @observable public activeTranscript: string | undefined = undefined;
+
     constructor(
         protected config: IMutationMapperConfig,
         public gene:Gene,
@@ -39,11 +44,33 @@ export default class MutationMapperStore
         labelMobxPromises(this);
     }
 
+
     public get mutations() {
-        return this.getMutations();
+        const canonicalTranscriptId = this.canonicalTranscript.result &&
+            this.canonicalTranscript.result.transcriptId;
+        
+        if (canonicalTranscriptId && this.activeTranscript === undefined) {
+            this.activeTranscript = canonicalTranscriptId;
+        }
+
+        if (this.config.filterMutationsBySelectedTranscript && this.indexedVariantAnnotations.result && !_.isEmpty(this.indexedVariantAnnotations.result) && this.activeTranscript) {
+            if (this.transcriptsWithAnnotations && this.transcriptsWithAnnotations.length > 0 && !this.transcriptsWithAnnotations.includes(this.activeTranscript)) {
+                // if there are annotated transcripts and activeTranscipt does
+                // not have any, change the active transcript
+                this.activeTranscript = this.transcriptsWithAnnotations[0];
+            }
+            return getMutationsToTranscriptId(this.getMutations(), this.activeTranscript, this.indexedVariantAnnotations.result);
+        } else {
+            return this.getMutations();
+        }
     }
 
+
     readonly mutationData = remoteData({
+        await: () => [
+            this.canonicalTranscript,
+            this.indexedVariantAnnotations
+        ],
         invoke: async () => {
             return this.mutations;
         }
@@ -107,11 +134,14 @@ export default class MutationMapperStore
 
     readonly pfamDomainData = remoteData<PfamDomain[] | undefined>({
         await: ()=>[
-            this.canonicalTranscript
+            this.canonicalTranscript,
+            this.allTranscripts,
+            this.indexedVariantAnnotations,
         ],
         invoke: async()=>{
-            if (this.canonicalTranscript.result && this.canonicalTranscript.result.pfamDomains && this.canonicalTranscript.result.pfamDomains.length > 0) {
-                return fetchPfamDomainData(this.canonicalTranscript.result.pfamDomains.map((x: PfamDomainRange) => x.pfamDomainId));
+            if (this.allTranscripts.result && this.indexedVariantAnnotations.result) {
+                const domainRanges = [].concat.apply([], _.compact(this.transcriptsWithProteinLength.map((transcriptId:string) => this.transcriptsByTranscriptId[transcriptId].pfamDomains)));
+                return fetchPfamDomainData(domainRanges.map((x: PfamDomainRange) => x.pfamDomainId));
             } else {
                 return undefined;
             }
@@ -147,6 +177,39 @@ export default class MutationMapperStore
         }
     }, undefined);
 
+    @computed get transcriptsWithAnnotations(): string[] {
+        if (this.indexedVariantAnnotations.result && this.allTranscripts.result && this.transcriptsWithProteinLength.length > 0) {
+            // ignore transcripts without protein length
+            // TODO: better solution is to show only mutations table, not
+            // lollipop plot for those transcripts
+            let transcripts:string[] = _.uniq([].concat.apply([], (uniqueGenomicLocations(this.getMutations()).map((gl:GenomicLocation) => {
+                return this.indexedVariantAnnotations.result && this.indexedVariantAnnotations.result[genomicLocationString(gl)]? this.indexedVariantAnnotations.result[genomicLocationString(gl)].transcript_consequences.map((tc:TranscriptConsequence) => tc.transcript_id).filter((transcriptId: string) => this.transcriptsWithProteinLength.includes(transcriptId)) : [];
+            }))));
+            // makes sure the annotations are actually of the form we are
+            // displaying (e.g. nonsynonymous)
+            transcripts = transcripts.filter((t:string) => (
+                getMutationsToTranscriptId(this.getMutations(),
+                                           t,
+                                           this.indexedVariantAnnotations.result!!).length > 0
+            ));
+            transcripts.sort();
+            return transcripts;
+        } else {
+            return [];
+        }
+    }
+
+    @computed get transcriptsWithProteinLength(): string[] {
+        if (this.indexedVariantAnnotations.result && this.allTranscripts.result) {
+            // ignore transcripts without protein length
+            // TODO: better solution is to show only mutations table, not
+            // lollipop plot for those transcripts
+            return _.compact(this.allTranscripts.result.map((et: EnsemblTranscript) => et.proteinLength && et.transcriptId)).sort();
+        } else {
+            return [];
+        }
+    }
+
     @computed get isoformOverrideSource(): string {
         return this.config.isoformOverrideSource || "uniprot";
     }
@@ -175,6 +238,30 @@ export default class MutationMapperStore
         ];
 
         return lazyMobXTableSort(this.mergedAlignmentData, sortMetric, false);
+    }
+
+    @computed get transcriptsByTranscriptId(): {[transcriptId:string]: EnsemblTranscript} {
+        return _.keyBy(this.allTranscripts.result, ((transcript: EnsemblTranscript) => transcript.transcriptId));
+    }
+
+    @computed get mutationsByTranscriptId(): {[transcriptId:string]: Mutations[]} {
+        if (this.indexedVariantAnnotations.result) {
+            return _.fromPairs(this.transcriptsWithAnnotations.map((t:string) => (
+                                  [t,
+                                   getMutationsToTranscriptId(this.getMutations(),
+                                                              t,
+                                                              this.indexedVariantAnnotations.result!!)
+                                  ]
+                               ))
+                   );
+        } else {
+            return {};
+        }
+    }
+
+    @computed get numberOfMutationsTotal(): number {
+        // number of mutations regardless of transcript
+        return this.getMutations().length;
     }
 
     @cached get dataStore():MutationMapperDataStore {

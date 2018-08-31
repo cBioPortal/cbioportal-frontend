@@ -38,6 +38,11 @@ describe('Mutation Mapper Tool', function() {
             const brca1 = browser.getText('.//*[text()[contains(.,"BRCA1")]]')
             assert.ok(brca1.length > 0);
             browser.elements(".nav-pill").click("a*=BRCA1")
+
+            // mutations table should be visiable after oncokb icon shows up,
+            // also need to wait for mutations to be sorted properly
+            browser.waitForVisible("[data-test=oncogenic-icon-image]",20000);
+
             // check total number of mutations (this gets Showing 1-25 of 85
             // Mutations)
             mutationCount = browser.getText('.//*[text()[contains(.,"85 Mutations")]]')
@@ -48,16 +53,14 @@ describe('Mutation Mapper Tool', function() {
             browser.elements(".nav-pill").click("a*=BRCA2")
             // check total number of mutations (this gets Showing 1-25 of 113
             // Mutations)
-            mutationCount = browser.getText('.//*[text()[contains(.,"113 Mutations")]]')
-            assert.ok(mutationCount.length > 0);
+            browser.waitForText('.//*[text()[contains(.,"113 Mutations")]]')
 
             const pten = browser.getText('.//*[text()[contains(.,"PTEN")]]')
             assert.ok(pten.length > 0);
             browser.elements(".nav-pill").click("a*=PTEN")
             // check total number of mutations (this gets Showing 1-25 of 136
             // Mutations)
-            mutationCount = browser.getText('.//*[text()[contains(.,"136 Mutations")]]')
-            assert.ok(mutationCount.length > 0);
+            browser.waitForText('.//*[text()[contains(.,"136 Mutations")]]')
         });
 
         it('should correctly annotate the protein changes example and display the results', ()=>{
@@ -96,13 +99,48 @@ describe('Mutation Mapper Tool', function() {
 
             browser.waitForVisible("[class=borderedChart]",20000);
 
-            const transcriptId = browser.getText('.//*[text()[contains(.,"ENST00000396980")]]')
-            assert.ok(transcriptId.length > 0, "the canonical transcript id for HIST1H2BN should be ENST00000396980");
+            // the canonical transcript id for HIST1H2BN is ENST00000396980, but
+            // this mutation only applies to ENST00000606613
+            browser.waitForText('.//*[text()[contains(.,"ENST00000606613")]]')
 
+            browser.waitForText('.//*[text()[contains(.,"1 Mutation")]]');
 
-            const mutationCount = browser.getText('.//*[text()[contains(.,"There are no results")]]');
-            assert.ok(mutationCount.length > 0, "there shouldn't be any mutations visible");
+        });
 
+        it('should show a warning when certain lines were not annotated', ()=>{
+            var input = $("#standaloneMutationTextInput");
+            input.setValue(
+                "Sample_ID Cancer_Type Chromosome Start_Position End_Position Reference_Allele Variant_Allele\nTCGA-O2-A52N-01 Lung_Squamous_Cell_Carcinoma 7 -1 -1 NA\nTCGA-33-4566-01 Lung_Squamous_Cell_Carcinoma 7 55269425 55269425 C T"
+            );
+
+            browser.click('[data-test=MutationMapperToolVisualizeButton]');
+
+            browser.waitForVisible("[class=borderedChart]",20000);
+
+            const warning = browser.getText('.//*[text()[contains(.,"Failed to annotate")]]')
+            assert.ok(warning.length > 0, "there should be a warning indicating one mutation failed annotation");
+
+            browser.click('[data-test=ShowWarningsButton]');
+
+            const failingRecord = browser.getText('.//*[text()[contains(.,"TCGA-33-4566-01")]]');
+            assert.ok(failingRecord.length > 0, "there should be a warning indicating which sample is failing");
+        });
+
+        // based on HLA-A user question
+        // https://groups.google.com/forum/?utm_medium=email&utm_source=footer#!msg/cbioportal/UQP41OIT5HI/1AaX24AcAwAJ
+        it('should not show the canonical transcript when there are no matching annotations', ()=>{
+            var input = $("#standaloneMutationTextInput");
+            const hla = require("./data/hla_a_test_mutation_mapper_tool.txt");
+
+            input.setValue(hla);
+            browser.click('[data-test=MutationMapperToolVisualizeButton]');
+
+            browser.waitForVisible("[class=borderedChart]",20000);
+
+            // check total number of mutations (this gets Showing 1-12 of 12
+            // Mutations)
+            const mutationCount = browser.getText('.//*[text()[contains(.,"12 Mutations")]]')
+            assert.ok(mutationCount.length > 0);
         });
     });
 

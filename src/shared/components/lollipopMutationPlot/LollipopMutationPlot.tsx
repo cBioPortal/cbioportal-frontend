@@ -1,7 +1,7 @@
 import * as React from "react";
 import LollipopPlot from "./LollipopPlot";
 import {Mutation} from "../../api/generated/CBioPortalAPI";
-import {PfamDomain, PfamDomainRange} from "shared/api/generated/GenomeNexusAPI";
+import {PfamDomain, PfamDomainRange, EnsemblTranscript} from "shared/api/generated/GenomeNexusAPI";
 import {LollipopSpec, DomainSpec, SequenceSpec} from "./LollipopPlotNoTooltip";
 import {remoteData} from "../../api/remoteData";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
@@ -49,10 +49,11 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
 
     readonly mutationAlignerLinks = remoteData<{[pfamAccession:string]:string}>({
         await: ()=>[
-            this.props.store.canonicalTranscript
+            this.props.store.canonicalTranscript,
+            this.props.store.allTranscripts,
         ],
         invoke: ()=>(new Promise((resolve,reject)=>{
-            const regions = this.props.store.canonicalTranscript.result? this.props.store.canonicalTranscript.result.pfamDomains : undefined;
+            const regions = this.props.store.allTranscripts.result && this.props.store.activeTranscript? this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript].pfamDomains : undefined;
             const responsePromises:Promise<Response>[] = [];
             for (let i=0; regions && i<regions.length; i++) {
                 // have to do a for loop because seamlessImmutable will make result of .map immutable,
@@ -185,10 +186,11 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
 
             if (isNaN(codon) ||
                 codon < 0 ||
-                (this.props.store.canonicalTranscript.isComplete &&
-                    this.props.store.canonicalTranscript.result &&
+                (this.props.store.allTranscripts.isComplete &&
+                    this.props.store.allTranscripts.result &&
+                    this.props.store.activeTranscript &&
                     // we want to show the stop codon too (so we allow proteinLength +1 as well)
-                    (codon > this.props.store.canonicalTranscript.result.proteinLength + 1)))
+                    (codon > this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript].proteinLength + 1)))
             {
                 // invalid position
                 continue;
@@ -242,13 +244,15 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         if (!this.props.store.pfamDomainData.isComplete ||
             !this.props.store.pfamDomainData.result ||
             this.props.store.pfamDomainData.result.length === 0 ||
-            !this.props.store.canonicalTranscript.isComplete ||
-            !this.props.store.canonicalTranscript.result ||
-            this.props.store.canonicalTranscript.result.pfamDomains.length === 0)
+            !this.props.store.allTranscripts.isComplete ||
+            !this.props.store.allTranscripts.result ||
+            !this.props.store.activeTranscript ||
+            !this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript].pfamDomains ||
+            this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript].pfamDomains.length === 0)
         {
             return [];
         } else {
-            return this.props.store.canonicalTranscript.result.pfamDomains.map((range:PfamDomainRange)=>{
+            return this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript].pfamDomains.map((range:PfamDomainRange)=>{
                 const domain = this.domainMap[range.pfamDomainId];
                 return {
                     startCodon: range.pfamDomainStart,
@@ -263,11 +267,12 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
 
     @computed private get domainColorMap(): {[pfamAccession:string]: string}
     {
-        if (!this.props.store.canonicalTranscript.isPending && 
-            this.props.store.canonicalTranscript.result && 
-            this.props.store.canonicalTranscript.result.pfamDomains && 
-            this.props.store.canonicalTranscript.result.pfamDomains.length > 0) {
-            return generatePfamDomainColorMap(this.props.store.canonicalTranscript.result.pfamDomains);
+        if (!this.props.store.allTranscripts.isPending &&
+            this.props.store.allTranscripts.result &&
+            this.props.store.activeTranscript &&
+            this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript].pfamDomains && 
+            this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript].pfamDomains.length > 0) {
+            return generatePfamDomainColorMap(this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript].pfamDomains);
         }
         else {
             return {};
@@ -476,8 +481,10 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                         vizHeight={130}
                         hugoGeneSymbol={this.hugoGeneSymbol}
                         xMax={
-                            (this.props.store.canonicalTranscript.result &&
-                                this.props.store.canonicalTranscript.result.proteinLength) ||
+                            (this.props.store.allTranscripts.result &&
+                             this.props.store.activeTranscript &&
+                             this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript] &&
+                             this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript].proteinLength) ||
                             (this.props.store.gene.length / 3)
                         }
                         yMax={this.yMaxInput}

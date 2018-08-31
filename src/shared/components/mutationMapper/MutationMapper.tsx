@@ -14,6 +14,9 @@ import ProteinImpactTypePanel from "shared/components/mutationTypePanel/ProteinI
 import ProteinChainPanel from "shared/components/proteinChainPanel/ProteinChainPanel";
 
 import MutationMapperStore from "./MutationMapperStore";
+import { DropdownButton, MenuItem } from 'react-bootstrap';
+import { EnsemblTranscript } from 'shared/api/generated/GenomeNexusAPI';
+import Mutations from 'pages/resultsView/mutation/Mutations';
 
 // Anything from App config will be included in mutation mapper config
 export interface IMutationMapperConfig {
@@ -24,6 +27,8 @@ export interface IMutationMapperConfig {
     showOncoKB?: boolean;
     showGenomeNexus?: boolean;
     isoformOverrideSource?: string;
+    // non App config (maybe need to split in separate config?)
+    filterMutationsBySelectedTranscript?: boolean;
 }
 
 export interface IMutationMapperProps {
@@ -34,6 +39,8 @@ export interface IMutationMapperProps {
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     pdbHeaderCache?: PdbHeaderCache;
     pubMedCache?:PubMedCache;
+    showDropDown?: boolean;
+    showOnlyAnnotatedTranscriptsInDropdown?: boolean;
 }
 
 @observer
@@ -59,15 +66,59 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
         };
     }
 
+    // tslint:disable-next-line:cyclomatic-complexity
     @computed get geneSummary():JSX.Element {
         const hugoGeneSymbol = this.props.store.gene.hugoGeneSymbol;
         const uniprotId = this.props.store.uniprotId.result;
-        const transcriptId = this.props.store.canonicalTranscript.result &&
-            this.props.store.canonicalTranscript.result.transcriptId;
+        const store = this.props.store;
+        const showDropDown = this.props.showDropDown;
+        const showOnlyAnnotatedTranscriptsInDropdown = this.props.showOnlyAnnotatedTranscriptsInDropdown;
+        const canonicalTranscriptId = store.canonicalTranscript.result &&
+            store.canonicalTranscript.result.transcriptId;
+        const transcript = store.activeTranscript && (store.activeTranscript === canonicalTranscriptId)? store.canonicalTranscript.result : store.transcriptsByTranscriptId[store.activeTranscript!!];
+        const refseqMrnaId = transcript && transcript.refseqMrnaId;
 
         return (
             <div style={{'paddingBottom':10}}>
                 <h4>{hugoGeneSymbol}</h4>
+                {(showDropDown && showOnlyAnnotatedTranscriptsInDropdown && store.indexedVariantAnnotations.result && Object.keys(store.indexedVariantAnnotations.result).length > 0 && store.transcriptsWithAnnotations && canonicalTranscriptId) && (
+                    <div style={{paddingBottom:10}}>
+                        {this.renderDropdownTranscripts(store.activeTranscript || canonicalTranscriptId,
+                                                        store.transcriptsWithAnnotations,
+                                                        canonicalTranscriptId,
+                                                        store.transcriptsByTranscriptId,
+                                                        store.mutationsByTranscriptId)}
+                    </div>
+                )}
+                {(showDropDown && !showOnlyAnnotatedTranscriptsInDropdown && store.transcriptsWithProteinLength && store.transcriptsWithProteinLength.length > 0 && canonicalTranscriptId) && (
+                    <div style={{paddingBottom:10}}>
+                        {this.renderDropdownTranscripts(store.activeTranscript || canonicalTranscriptId,
+                                                        store.transcriptsWithProteinLength,
+                                                        canonicalTranscriptId,
+                                                        store.transcriptsByTranscriptId)}
+                    </div>
+                )}
+                {(!showDropDown && canonicalTranscriptId) && (
+                    <div>
+                    <span>Transcript: </span>
+                    <a
+                        href={`http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=${canonicalTranscriptId}`}
+                        target="_blank"
+                    >
+                        {canonicalTranscriptId}
+                    </a>
+                </div>
+                )}
+                <div className={refseqMrnaId? '' : 'invisible'}>
+                    <span data-test="GeneSummaryRefSeq">{'RefSeq: '}
+                        <a
+                            href={`https://www.ncbi.nlm.nih.gov/nuccore/${refseqMrnaId}`}
+                            target="_blank"
+                        >
+                            {refseqMrnaId}
+                        </a>
+                    </span>
+                </div>
                 <div className={this.props.store.uniprotId.result ? '' : 'invisible'}>
                     <span data-test="GeneSummaryUniProt">{'UniProt: '}
                         <a
@@ -78,16 +129,46 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                         </a>
                     </span>
                 </div>
-                <div className={this.props.store.canonicalTranscript.result ? '' : 'invisible'}>
-                    <span>Transcript: </span>
-                    <a
-                        href={`http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=${transcriptId}`}
-                        target="_blank"
-                    >
-                        {transcriptId}
-                    </a>
-                </div>
             </div>
+        );
+    }
+
+    renderDropdownTranscripts(activeTranscript:string ,
+                              allTranscripts:string[],
+                              canonicalTranscript:string,
+                              transcriptsByTranscriptId:{[transcriptId:string]: EnsemblTranscript},
+                              mutationsByTranscriptId?: {[transcriptId:string]: Mutations[]}) {
+        const activeIndex = allTranscripts.indexOf(activeTranscript);
+
+        return (
+          <div>
+            <DropdownButton
+                bsStyle="default"
+                title={activeTranscript}
+                key={activeTranscript}
+                id={`dropdown-basic-${activeIndex}`}
+            >
+                <h6 className="dropdown-header" style={{padding:5,margin:0}}>Select transcript ({this.props.store.numberOfMutationsTotal} mutations total)</h6>
+                {allTranscripts.map((t, i) => {
+                        const length = transcriptsByTranscriptId[t].proteinLength;
+                        const refseqMrnaId = transcriptsByTranscriptId[t].refseqMrnaId;
+                        const nrOfMutations = mutationsByTranscriptId && mutationsByTranscriptId[t] && mutationsByTranscriptId[t].length;
+                        return (<MenuItem onSelect={(e:any) => {this.props.store.activeTranscript = e; this.close3dPanel(); }} eventKey={t} active={i === activeIndex}>
+                            {t} {refseqMrnaId? `(${refseqMrnaId})` : ""} {length? `(${length} amino acids)` : ""} {nrOfMutations? `(${nrOfMutations} mutations)` : ""} {t === canonicalTranscript? " (default)" : ""}
+                        </MenuItem>);
+                    }
+                )}
+            </DropdownButton>
+            <a
+                href={`http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=${activeTranscript}`}
+                target="_blank"
+            >
+                <img
+                    src={require("./ensembl_icon.png")}
+                    style={{paddingLeft: 8, cursor:"pointer"}}
+                />
+            </a>
+        </div>
         );
     }
 
@@ -164,10 +245,15 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
 
     protected view3dButton(): JSX.Element|null
     {
+        const canonicalTranscriptId = this.props.store.canonicalTranscript.result &&
+            this.props.store.canonicalTranscript.result.transcriptId;
+
         return (
             <button
                 className="btn btn-default btn-sm"
-                disabled={this.props.store.pdbChainDataStore.allData.length === 0}
+                // 3D only works for canonical uniprot transcript. G2S needs to
+                // be updated to support alignments for other transcripts
+                disabled={this.props.store.pdbChainDataStore.allData.length === 0 || (this.props.store.activeTranscript !== canonicalTranscriptId)}
                 onClick={this.toggle3dPanel}
                 data-test="view3DStructure"
             >
