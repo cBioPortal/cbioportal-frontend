@@ -137,7 +137,9 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
 
     public render() {
         return <div ref={(el: HTMLDivElement) => this.resultsViewPageContent = el} data-test="cancerTypeSummaryWrapper">
-            <OqlStatusBanner className="cancer-types-summary-oql-status-banner" store={this.props.store} tabReflectsOql={true} style={{marginBottom:15}}/>
+                <div className={"tabMessageContainer"}>
+                    <OqlStatusBanner className="cancer-types-summary-oql-status-banner" store={this.props.store} tabReflectsOql={true}/>
+                </div>
                 <MSKTabs onTabClick={this.handleTabClick}
                          enablePagination={true}
                          unmountOnHide={true}

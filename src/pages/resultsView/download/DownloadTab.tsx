@@ -217,7 +217,9 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
 
         return (
             <div className="cbioportal-frontend">
-                <OqlStatusBanner className="download-oql-status-banner" store={this.props.store} tabReflectsOql={true} style={{marginBottom:13}}/>
+                <div className={"tabMessageContainer"}>
+                    <OqlStatusBanner className="download-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
+                </div>
                 <div>
                     <FeatureTitle
                         title="Downloadable Data Files"
