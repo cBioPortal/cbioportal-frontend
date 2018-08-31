@@ -16,6 +16,7 @@ import fileDownload from 'react-file-download';
 import { If, Then, Else } from 'react-if';
 import { StudyWithSamples, ChartMeta } from 'pages/studyView/StudyViewPageStore';
 import UserSelections from 'pages/studyView/UserSelections';
+import SelectedInfo from "./SelectedInfo/SelectedInfo";
 
 export interface ISummaryHeaderProps {
     geneQuery:string;
@@ -45,11 +46,6 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
 
     @observable downloadingData = false;
     @observable showDownloadErrorMessage = false;
-
-    @computed
-    get selectedPatientsCount() {
-        return _.uniq(this.props.selectedSamples.map(sample => sample.uniquePatientKey)).length;
-    }
 
     @bind
     private handleDownload() {
@@ -139,8 +135,7 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                 }
                     
                 <div style={{display: "flex"}}>
-                    <span>Selected:</span>
-                    <span className="content">{this.props.selectedSamples.length} samples / {this.selectedPatientsCount} patients</span>
+                    <SelectedInfo selectedSamples={this.props.selectedSamples}/>
                     <DefaultTooltip
                         trigger={['click']}
                         destroyTooltipOnHide={true}
