@@ -54,7 +54,7 @@ describe('SignificantMutationalSignatures', () => {
         let result = prepareMutationalSignaturesForHeader(sampleMutationalSignatureData, sampleMutationalSignatureMetaData, 'firstSample');
 
         assert.deepEqual(result, {
-                numberOfMutations: 20,
+                numberOfMutationsForSample: 20,
                 confidenceStatement: "Signature 1, the aging signature, is detected in this case.",
                 significantSignatures:{
                     "firstMutationalSignature": 1

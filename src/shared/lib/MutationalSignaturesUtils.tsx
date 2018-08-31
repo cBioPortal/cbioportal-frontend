@@ -33,30 +33,30 @@ export function progressBar(confidence:string, determineColor:boolean) {
 export function prepareMutationalSignaturesForHeader(mutationalSignatureData: IMutationalSignature[], mutationalSignatureMetaData: IMutationalSignatureMeta[],
                                                      uniqueSampleKey: string): ISignificantMutationalSignaturesForSample{
     //group data by uniquesamples for now -> this processing will need to be done in patientpageviewstore in the future
-    let mutationalSignatureDataForSample: Array<any> = _(mutationalSignatureData)
+    let mutationalSignatureDataForUniqueSample: Array<any> = _(mutationalSignatureData)
         .filter(["uniqueSampleKey", uniqueSampleKey])
         .value();
 
     let significantMutationalSignatureForSample: ISignificantMutationalSignaturesForSample = {
-        numberOfMutations:0,
+        numberOfMutationsForSample:0,
         confidenceStatement:"",
         significantSignatures:{}
     };
 
-    for (const mutationalSignatureSample of mutationalSignatureDataForSample){
+    for (const mutationalSignatureSample of mutationalSignatureDataForUniqueSample){
 
         //for each uniquesample, build significant mutational signature data structure
-        significantMutationalSignatureForSample.numberOfMutations = mutationalSignatureSample.numberOfMutationsForSample;
+        significantMutationalSignatureForSample.numberOfMutationsForSample = mutationalSignatureSample.numberOfMutationsForSample;
 
         if(mutationalSignatureSample.confidence > 0.85){ //make a variable called confidence threshold
             // add significant mutational signatures
             significantMutationalSignatureForSample.significantSignatures[mutationalSignatureSample.mutationalSignatureId] = mutationalSignatureSample.value;
 
             //build confidence statement
-            if(significantMutationalSignatureForSample.numberOfMutations <= MIN_NUMBER_OF_MUTATIONS_THRESHOLD){//account for low number of mutations
+            if(significantMutationalSignatureForSample.numberOfMutationsForSample <= MIN_NUMBER_OF_MUTATIONS_THRESHOLD){//account for low number of mutations
                 significantMutationalSignatureForSample.confidenceStatement += MIN_NUMBER_OF_MUTATIONS_STATEMENT;
             }
-            else if(significantMutationalSignatureForSample.numberOfMutations <= DUBIOUS_NUMBER_OF_MUTATIONS_THRESHOLD){
+            else if(significantMutationalSignatureForSample.numberOfMutationsForSample <= DUBIOUS_NUMBER_OF_MUTATIONS_THRESHOLD){
                 significantMutationalSignatureForSample.confidenceStatement += DUBIOUS_NUMBER_OF_MUTATIONS_STATEMENT;
             }
 
