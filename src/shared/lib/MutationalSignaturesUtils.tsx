@@ -46,7 +46,7 @@ export function prepareMutationalSignaturesForHeader(mutationalSignatureData: IM
     for (const mutationalSignatureSample of mutationalSignatureDataForSample){
 
         //for each uniquesample, build significant mutational signature data structure
-        significantMutationalSignatureForSample.numberOfMutations = mutationalSignatureSample.numberOfMutations;
+        significantMutationalSignatureForSample.numberOfMutations = mutationalSignatureSample.numberOfMutationsForSample;
 
         if(mutationalSignatureSample.confidence > 0.85){ //make a variable called confidence threshold
             // add significant mutational signatures
@@ -73,5 +73,6 @@ export function prepareMutationalSignaturesForHeader(mutationalSignatureData: IM
         significantMutationalSignatureForSample.confidenceStatement += "No signatures confidently detected.";
     }
 
+    significantMutationalSignatureForSample.confidenceStatement = significantMutationalSignatureForSample.confidenceStatement.trim();
     return significantMutationalSignatureForSample;
 }
