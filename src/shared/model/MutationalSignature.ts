@@ -17,7 +17,7 @@ export interface IMutationalSignatureMeta{
 }
 
 export interface ISignificantMutationalSignaturesForSample{
-    numberOfMutations: number;
+    numberOfMutationsForSample: number;
     confidenceStatement: string;
     significantSignatures: {
         [mutationalSignatureId: string]: number

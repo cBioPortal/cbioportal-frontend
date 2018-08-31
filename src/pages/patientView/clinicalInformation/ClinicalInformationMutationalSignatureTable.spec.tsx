@@ -33,7 +33,7 @@ const sampleMutationalSignatureData = [
         value: 3,
         confidence: 0.4,
         numberOfMutationsForSample: 20}
-]
+];
 
 describe('ClinicalInformationMutationalSignatureTable', () => {
 
