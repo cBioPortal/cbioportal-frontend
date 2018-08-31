@@ -80,13 +80,15 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
         }
 
         if (overallNotAvailable && diseaseFreeNotAvailable) {
-            content.push(<div className={styles.NotAvailable}>{this.overallSurvivalTitleText} not available</div>);
-            content.push(<div className={styles.NotAvailable}>{this.diseaseFreeSurvivalTitleText} not available</div>);
+            content.push(<div className={'alert alert-info'}>{this.overallSurvivalTitleText} not available</div>);
+            content.push(<div className={'alert alert-info'}>{this.diseaseFreeSurvivalTitleText} not available</div>);
         }
 
         return (
             <div>
-                <OqlStatusBanner className="survival-oql-status-banner" store={this.props.store} tabReflectsOql={true} style={{marginBottom:15}}/>
+                <div className={"tabMessageContainer"}>
+                    <OqlStatusBanner className="survival-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
+                </div>
                 {content}
             </div>
         );
