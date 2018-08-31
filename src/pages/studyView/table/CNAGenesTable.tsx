@@ -190,7 +190,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             return [];
         } else {
             return _.reduce(this.props.promise.result, (acc: CNAGenesTableUserSelectionWithIndex[], row: CopyNumberCountByGene, index: number) => {
-                if (_.includes(this.props.filters, {entrezGeneId: row.entrezGeneId, alteration: row.alteration})) {
+                if (_.some(this.props.filters, {entrezGeneId: row.entrezGeneId, alteration: row.alteration})) {
                     acc.push({
                         rowIndex: index,
                         entrezGeneId: row.entrezGeneId,

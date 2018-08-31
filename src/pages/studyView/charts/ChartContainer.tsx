@@ -198,17 +198,19 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     readonly survivalChartData = remoteData({
         // patientToAnalysisGroup assumed defined, since we're calling survivalChartData
-        await:()=>[this.props.promise, this.props.patientToAnalysisGroup!],
-        invoke:()=>{
-            return Promise.resolve(
-                makeSurvivalChartData(
-                    this.props.promise.result!.alteredGroup.concat(this.props.promise.result!.unalteredGroup),
-                    this.props.analysisGroupsSettings.groups,
-                    this.props.patientToAnalysisGroup!.result!,
-                    this.naPatientsHiddenInSurvival,
-                    this.props.patientKeysWithNAInSelectedClinicalData,
-                )
-            );
+        await: () => [this.props.promise, this.props.patientToAnalysisGroup!],
+        invoke: async () => {
+            if (this.props.promise.result === undefined) {
+                return undefined;
+            } else {
+                return makeSurvivalChartData(
+                        this.props.promise.result!.alteredGroup.concat(this.props.promise.result!.unalteredGroup),
+                        this.props.analysisGroupsSettings.groups,
+                        this.props.patientToAnalysisGroup!.result!,
+                        this.naPatientsHiddenInSurvival,
+                        this.props.patientKeysWithNAInSelectedClinicalData,
+                    );
+            }
         }
     });
 
@@ -261,7 +263,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             case ChartType.SURVIVAL: {
                 if (this.survivalChartData.isComplete) {
                     // this.survivalChartData should be complete at this point, barring transient race-condition-caused errors, because of loadingPromises and StudyViewComponentLoader (see render())
-                    return (
+                    if (this.survivalChartData.result === undefined)
+                        return null;
+                    else return (
                         <SurvivalChart patientSurvivals={this.survivalChartData.result!.patientSurvivals}
                                        patientToAnalysisGroup={this.survivalChartData.result!.patientToAnalysisGroup}
                                        analysisGroups={this.survivalChartData.result!.analysisGroups}
@@ -290,7 +294,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                            axis: {
                                                y: {
                                                    axisLabel: {
-                                                       padding: 35
+                                                       padding: 40
                                                    }
                                                }
                                            }
