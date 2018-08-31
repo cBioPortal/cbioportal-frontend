@@ -6,13 +6,16 @@ import _ from "lodash";
 import {StudyViewComponentLoader} from "./StudyViewComponentLoader";
 import {ChartControls, ChartHeader} from "pages/studyView/chartHeader/ChartHeader";
 import {
-    ChartMeta, ChartType, ClinicalDataCountWithColor,
-    AnalysisGroup, StudyViewPageStore
+    AnalysisGroup,
+    ChartMeta,
+    ChartType,
+    ClinicalDataCountWithColor,
+    StudyViewPageStore
 } from "pages/studyView/StudyViewPageStore";
-import fileDownload from 'react-file-download';
+import fileDownload from "react-file-download";
 import PieChart from "pages/studyView/charts/pieChart/PieChart";
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
-import classnames from 'classnames';
+import classnames from "classnames";
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
 import {bind} from "bind-decorator";
 import MobxPromise from "mobxpromise";
@@ -21,14 +24,9 @@ import {MutatedGenesTable} from "../table/MutatedGenesTable";
 import {CNAGenesTable} from "../table/CNAGenesTable";
 import StudyViewScatterPlot from "./scatterPlot/StudyViewScatterPlot";
 import {CopyNumberGeneFilterElement} from "../../../shared/api/generated/CBioPortalAPIInternal";
-import {
-    isSelected, makeMutationCountVsCnaTooltip,
-    UNSELECTED_COLOR
-} from '../StudyViewUtils';
+import {makeMutationCountVsCnaTooltip} from "../StudyViewUtils";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import {remoteData} from "../../../shared/api/remoteData";
-import {PatientSurvival} from "../../../shared/model/PatientSurvival";
-import {ALTERED_GROUP_VALUE} from "../../resultsView/survival/SurvivalUtil";
 import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
 
 export interface AbstractChart {
@@ -49,9 +47,9 @@ export interface IChartContainerProps {
     selectedSamples?: any;
 
     setAnalysisGroupsSettings: (attribute:ClinicalAttribute, grp:ReadonlyArray<AnalysisGroup>)=>void;
+    analysisGroupsSettings:StudyViewPageStore["analysisGroupsSettings"];
     patientKeysWithNAInSelectedClinicalData?:MobxPromise<string[]>; // patients which have NA values for filtered clinical attributes
     analysisGroupsPossible?:boolean;
-    analysisGroupsSettings?:StudyViewPageStore["analysisGroupsSettings"];
     patientToAnalysisGroup?:MobxPromise<{[uniquePatientKey:string]:string}>;
     sampleToAnalysisGroup?:MobxPromise<{[uniqueSampleKey:string]:string}>;
 }
@@ -201,13 +199,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     readonly survivalChartData = remoteData({
-        // analysisGroupsSettings and patientToAnalysisGroup are assumed defined, since we're calling survivalChartData
+        // patientToAnalysisGroup assumed defined, since we're calling survivalChartData
         await:()=>[this.props.promise, this.props.patientToAnalysisGroup!],
         invoke:()=>{
             return Promise.resolve(
                 makeSurvivalChartData(
                     this.props.promise.result!.alteredGroup.concat(this.props.promise.result!.unalteredGroup),
-                    this.props.analysisGroupsSettings!.groups,
+                    this.props.analysisGroupsSettings.groups,
                     this.props.patientToAnalysisGroup!.result!,
                     this.naPatientsHiddenInSurvival,
                     this.props.patientKeysWithNAInSelectedClinicalData,
@@ -264,12 +262,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             case ChartType.SURVIVAL: {
                 if (this.survivalChartData.isComplete) {
                     // this.survivalChartData should be complete at this point, barring transient race-condition-caused errors, because of loadingPromises and StudyViewComponentLoader (see render())
-                    // analysisGroupsSettings must not be undefined
                     return (
                         <SurvivalChart patientSurvivals={this.survivalChartData.result!.patientSurvivals}
                                        patientToAnalysisGroup={this.survivalChartData.result!.patientToAnalysisGroup}
                                        analysisGroups={this.survivalChartData.result!.analysisGroups}
-                                       analysisClinicalAttribute={this.props.analysisGroupsSettings!.clinicalAttribute}
+                                       analysisClinicalAttribute={this.props.analysisGroupsSettings.clinicalAttribute}
                                        naPatientsHiddenInSurvival={this.naPatientsHiddenInSurvival}
                                        toggleSurvivalHideNAPatients={this.toggleSurvivalHideNAPatients}
                                        legendLocation={LegendLocation.TOOLTIP}
@@ -300,7 +297,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }
             case ChartType.SCATTER: {
                 // sampleToAnalysisGroup is complete because of loadingPromises and StudyViewComponentLoader
-                // analysisGroupsSettings must not be undefined
                 return (
                     <StudyViewScatterPlot
                         width={400}
@@ -310,8 +306,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         isLoading={this.props.selectedSamples.isPending}
 
                         sampleToAnalysisGroup={this.props.sampleToAnalysisGroup!.result!}
-                        analysisGroups={this.props.analysisGroupsSettings!.groups}
-                        analysisClinicalAttribute={this.props.analysisGroupsSettings!.clinicalAttribute}
+                        analysisGroups={this.props.analysisGroupsSettings.groups}
+                        analysisClinicalAttribute={this.props.analysisGroupsSettings.clinicalAttribute}
 
                         axisLabelX="Fraction of copy number altered genome"
                         axisLabelY="# of mutations"
@@ -325,7 +321,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     @computed get mutationCountVsCnaTooltip() {
-        return makeMutationCountVsCnaTooltip(this.props.sampleToAnalysisGroup!.result, this.props.analysisGroupsSettings!.clinicalAttribute);
+        return makeMutationCountVsCnaTooltip(this.props.sampleToAnalysisGroup!.result, this.props.analysisGroupsSettings.clinicalAttribute);
     }
 
     @computed get loadingPromises() {
@@ -341,9 +337,15 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         return ret;
     }
 
+    @computed get isAnalysisTarget() {
+        return this.props.analysisGroupsSettings.clinicalAttribute &&
+                this.props.chartMeta.clinicalAttribute &&
+            (this.props.analysisGroupsSettings.clinicalAttribute.clinicalAttributeId === this.props.chartMeta.clinicalAttribute.clinicalAttributeId);
+    }
+
     public render() {
         return (
-            <div className={classnames(styles.chart, this.chartWidth, this.chartHeight)}
+            <div className={classnames(styles.chart, this.chartWidth, this.chartHeight, { [styles.analysisTarget]:this.isAnalysisTarget })}
                  onMouseEnter={this.handlers.onMouseEnterChart}
                  onMouseLeave={this.handlers.onMouseLeaveChart}>
                 <ChartHeader

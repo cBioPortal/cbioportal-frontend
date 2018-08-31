@@ -103,7 +103,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     }
 
     renderAttributeChart = (chartMeta: ChartMeta) => {
-        let props:Partial<IChartContainerProps> = {
+        const props:Partial<IChartContainerProps> = {
             chartMeta: chartMeta,
             filters: [],
             onDeleteChart: this.handlers.onDeleteChart,
@@ -111,6 +111,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             setAnalysisGroupsSettings: (attribute:ClinicalAttribute, grps:ReadonlyArray<AnalysisGroup>)=>{
                 this.store.updateAnalysisGroupsSettings(attribute, grps);
             },
+            analysisGroupsSettings: this.store.analysisGroupsSettings
         };
         switch (chartMeta.chartType) {
             case ChartType.PIE_CHART: {
@@ -155,7 +156,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 props.promise = this.store.getSurvivalData(chartMeta);
                 // only want to pass these in when necessary, otherwise charts will unnecessarily update when they change
                 props.patientKeysWithNAInSelectedClinicalData = this.store.patientKeysWithNAInSelectedClinicalData;
-                props.analysisGroupsSettings = this.store.analysisGroupsSettings;
                 props.patientToAnalysisGroup = this.store.patientToAnalysisGroup;
                 break;
             }
@@ -166,7 +166,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 props.selectedSamples = this.store.selectedSamples;
                 props.onUserSelection = this.handlers.updateCustomCasesFilter;
                 props.onResetSelection = this.handlers.resetCustomCasesFilter;
-                props.analysisGroupsSettings = this.store.analysisGroupsSettings;
                 props.sampleToAnalysisGroup = this.store.sampleToAnalysisGroup;
                 break;
             }
