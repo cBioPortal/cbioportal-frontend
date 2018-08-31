@@ -58,6 +58,13 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 this.store.updateCNAGeneFilters(filters);
             },
             onDeleteChart: (chartMeta: ChartMeta) => {
+                // reset analysis groups settings if theyre based on this chart
+                if (this.store.analysisGroupsSettings.clinicalAttribute &&
+                        chartMeta.clinicalAttribute &&
+                        chartMeta.clinicalAttribute.clinicalAttributeId === this.store.analysisGroupsSettings.clinicalAttribute.clinicalAttributeId) {
+                    this.store.clearAnalysisGroupsSettings();
+                }
+
                 this.store.resetFilterAndChangeChartVisibility(chartMeta, false);
             },
             updateCustomCasesFilter: (cases: SampleIdentifier[], keepCurrent?:boolean) => {
