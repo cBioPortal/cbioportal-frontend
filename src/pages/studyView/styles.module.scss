@@ -55,3 +55,19 @@
         }
     }
 }
+
+.summaryHeader{
+    margin: 5px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    line-height: 12px !important;
+}
+
+.summaryHeaderBtn {
+    background-image: none !important;
+}
+
+.summaryHeaderItem {
+    margin: 0 2px !important;
+}

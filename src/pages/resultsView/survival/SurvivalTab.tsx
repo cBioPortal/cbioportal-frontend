@@ -70,20 +70,23 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
             content.push(
                 <div style={{marginBottom:40}}>
                     <h4 className='forceHeaderStyle h4'>{this.overallSurvivalTitleText}</h4>
-                    <SurvivalChart
-                        patientSurvivals = {this.overallPatientSurvivalData.result.patientSurvivals}
-                        analysisGroups={analysisGroups}
-                        patientToAnalysisGroup={this.overallPatientSurvivalData.result.patientToAnalysisGroup}
-                        title={this.overallSurvivalTitleText}
-                        xAxisLabel="Months Survival"
-                        yAxisLabel="Overall Survival"
-                        totalCasesHeader="Number of Cases, Total"
-                        statusCasesHeader="Number of Cases, Deceased"
-                        medianMonthsHeader="Median Months Survival"
-                        yLabelTooltip="Survival estimate"
-                        xLabelWithEventTooltip="Time of death"
-                        xLabelWithoutEventTooltip="Time of last observation"
-                        fileName="Overall_Survival" />
+                    <div style={{width: '920px'}}>
+                        <SurvivalChart
+                            className='borderedChart'
+                            patientSurvivals = {this.overallPatientSurvivalData.result.patientSurvivals}
+                            analysisGroups={analysisGroups}
+                            patientToAnalysisGroup={this.overallPatientSurvivalData.result.patientToAnalysisGroup}
+                            title={this.overallSurvivalTitleText}
+                            xAxisLabel="Months Survival"
+                            yAxisLabel="Overall Survival"
+                            totalCasesHeader="Number of Cases, Total"
+                            statusCasesHeader="Number of Cases, Deceased"
+                            medianMonthsHeader="Median Months Survival"
+                            yLabelTooltip="Survival estimate"
+                            xLabelWithEventTooltip="Time of death"
+                            xLabelWithoutEventTooltip="Time of last observation"
+                            fileName="Overall_Survival" />
+                    </div>
                 </div>
             );
         } else {

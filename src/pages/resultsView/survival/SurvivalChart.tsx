@@ -52,6 +52,7 @@ export interface ISurvivalChartProps {
     showLogRankPVal?:boolean;
     showDownloadButtons?: boolean;
     styleOpts?: any; // see victory styles, and styleOptsDefaultProps for examples
+    className?: string;
 }
 
 // Start to down sampling when there are more than 1000 dots in the plot.
@@ -309,7 +310,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     @computed
     get chart() {
         return (
-            <div className="borderedChart" data-test={'SurvivalChart'} style={{width: '100%'}}>
+            <div className={this.props.className} data-test={'SurvivalChart'}>
 
                 {this.props.showDownloadButtons &&
                 <DownloadControls
@@ -391,7 +392,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         } else {
             return (
 
-                <div className="posRelative" style={{width: (this.styleOpts.width + 20)}}>
+                <div>
                     { (this.props.legendLocation === LegendLocation.TOOLTIP) ? (
                         <DefaultTooltip
                             mouseEnterDelay={0}

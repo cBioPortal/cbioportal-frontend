@@ -7,8 +7,10 @@ import {
     ClinicalDataCount,
     ClinicalDataEqualityFilter,
     CopyNumberCountByGene,
+    CopyNumberGeneFilter,
     CopyNumberGeneFilterElement,
     MutationCountByGene,
+    MutationGeneFilter,
     Sample,
     SampleIdentifier,
     StudyViewFilter
@@ -113,9 +115,9 @@ export class StudyViewPageStore {
 
     private _clinicalDataEqualityFilterSet = observable.map<ClinicalDataEqualityFilter>();
 
-    @observable.ref private _mutatedGeneFilter: number[] = [];
+    @observable.ref private _mutatedGeneFilter: MutationGeneFilter[] = [];
 
-    @observable.ref private _cnaGeneFilter: CopyNumberGeneFilterElement[] = [];
+    @observable.ref private _cnaGeneFilter: CopyNumberGeneFilter[] = [];
 
     @observable private _sampleIdentifiers:SampleIdentifier[];
 
@@ -352,8 +354,8 @@ export class StudyViewPageStore {
     }
 
     @action
-    updateGeneFilters(entrezGeneIds: number[]) {
-        this._mutatedGeneFilter = _.xor(this._mutatedGeneFilter, entrezGeneIds);
+    addGeneFilters(entrezGeneIds: number[]) {
+        this._mutatedGeneFilter = [...this._mutatedGeneFilter, {entrezGeneIds: entrezGeneIds}];
     }
 
     @action resetGeneFilter() {
@@ -390,8 +392,8 @@ export class StudyViewPageStore {
     }
 
     @action
-    updateCNAGeneFilters(filters: CopyNumberGeneFilterElement[]) {
-        this._cnaGeneFilter = _.xor(this._cnaGeneFilter, filters);
+    addCNAGeneFilters(filters: CopyNumberGeneFilterElement[]) {
+        this._cnaGeneFilter = [...this._cnaGeneFilter , {alterations: filters}];
     }
 
     @action
@@ -460,15 +462,11 @@ export class StudyViewPageStore {
         }
 
         if (this._mutatedGeneFilter.length > 0) {
-            filters.mutatedGenes = [{
-                entrezGeneIds: this._mutatedGeneFilter
-            }];
+            filters.mutatedGenes = this._mutatedGeneFilter;;
         }
 
         if (this._cnaGeneFilter.length > 0) {
-            filters.cnaGenes = [{
-                alterations: this._cnaGeneFilter
-            }];
+            filters.cnaGenes = this._cnaGeneFilter;
         }
 
         if(this._sampleIdentifiers && this._sampleIdentifiers.length>0) {
@@ -484,11 +482,11 @@ export class StudyViewPageStore {
     }
 
     public getMutatedGenesTableFilters(): number[] {
-        return this._mutatedGeneFilter;
+        return _.flatMap(this._mutatedGeneFilter, filter => filter.entrezGeneIds);
     }
 
     public getCNAGenesTableFilters(): CopyNumberGeneFilterElement[] {
-        return this._cnaGeneFilter;
+        return _.flatMap(this._cnaGeneFilter, filter => filter.alterations);
     }
 
     public getClinicalDataFiltersByUniqueKey(uniqueKey: string): string[] {
@@ -1117,9 +1115,8 @@ export class StudyViewPageStore {
             invoke: async () => {
                 return _.find(this.survivalPlotData.result, (survivalPlot) => {
                     return survivalPlot.id === chartMeta.uniqueKey;
-                }) || {};
-            },
-            default: {}
+                });
+            }
         });
     }
 
