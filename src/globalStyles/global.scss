@@ -538,6 +538,15 @@ h3.hr {
   }
 }
 
+.spinnerSmall {
+  > div {
+    width:3px;
+    margin:0 2px;
+    height:12px;
+    width:3px;
+  }
+}
+
 .whiteBackground {
   background:#fff;
 }
