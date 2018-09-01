@@ -10,6 +10,7 @@ import { Timeline } from 'react-twitter-widgets';
 import { Link } from 'react-router';
 import getBrowserWindow from "../../lib/getBrowserWindow";
 import ExtendedRouterStore from "../../lib/ExtendedRouterStore";
+import LoadingIndicator from "../loadingIndicator/LoadingIndicator";
 
 
 interface IRightBarProps
@@ -89,7 +90,7 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
                     </div>
                     <div>
                         {this.state.twitterLoading &&
-                             (<ThreeBounce className="center-block text-center" />) ||
+                             (<span style={{textAlign:"center"}}><LoadingIndicator isLoading={true} small={true}/></span>) ||
                              (
                                 <div style={{paddingTop:5}}>
                                     <p style={{textAlign:'center'}}>Sign up for low-volume email news alerts</p>
@@ -168,7 +169,7 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
                     }
                     {
                         (this.studyStore.cancerStudies.isPending) && (
-                            <ThreeBounce className="center-block text-center" />
+                            <span style={{textAlign:"center"}}><LoadingIndicator isLoading={true} small={true}/></span>
                         )
                     }
                 </div>
