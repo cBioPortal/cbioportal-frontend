@@ -9,6 +9,7 @@ import styles from './styles.module.scss';
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
+import Helmet from "react-helmet";
 
 export class DatasetPageStore {
 
@@ -37,6 +38,11 @@ export default class DatasetPage extends React.Component<{}, {}> {
 
         return <PageLayout className={"whiteBackground"}>
             <div className={styles.dataSets}>
+
+                <Helmet>
+                    <title>{'cBioPortal for Cancer Genomics::Datasets'}</title>
+                </Helmet>
+
                 <h1>Datasets</h1>
 
                 {
