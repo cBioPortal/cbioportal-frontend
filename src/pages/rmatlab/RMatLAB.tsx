@@ -2,6 +2,7 @@ import * as React from 'react';
 import {observer} from 'mobx-react';
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import './styles.scss';
+import Helmet from "react-helmet";
 
 @observer
 export default class CGDS extends React.Component<{}, {}> {
@@ -9,7 +10,9 @@ export default class CGDS extends React.Component<{}, {}> {
     public render() {
 
         return <PageLayout className={'whiteBackground'}>
-
+            <Helmet>
+                <title>{'cBioPortal for Cancer Genomics::R/MATLAB'}</title>
+            </Helmet>
             <h1>R/MATLAB</h1>
 
             <h2 id="cgds-r-package">CGDS-R Package</h2>

@@ -87,6 +87,12 @@ export default class Container extends React.Component<IContainerProps, {}> {
 
         return (
             <div>
+                <Helmet>
+                    <meta charSet="utf-8" />
+                    <title>cBioPortal for Cancer Genomics</title>
+                    <meta name="description" content="The cBioPortal for Cancer Genomics provides visualization, analysis and download of large-scale cancer genomics data sets" />
+                </Helmet>
+
                 <div className="pageTopContainer">
                     <div className="contentWidth">
                         <PortalHeader/>

@@ -27,6 +27,7 @@ import autobind from "autobind-decorator";
 import {ITabConfiguration} from "../../shared/model/ITabConfiguration";
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 import CoExpressionTab from "./coExpression/CoExpressionTab";
+import Helmet from "react-helmet";
 
 function initStore() {
 
@@ -449,6 +450,11 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
         return (
             <PageLayout noMargin={true}>
+
+                <Helmet>
+                    <title>{'cBioPortal for Cancer Genomics::Results'}</title>
+                </Helmet>
+
                 {
                     (this.currentQuery) && (<div>
 
