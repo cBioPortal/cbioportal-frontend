@@ -3,10 +3,8 @@ import * as _ from 'lodash';
 import {CancerStudy} from 'shared/api/generated/CBioPortalAPI';
 import {ThreeBounce} from 'better-react-spinkit';
 import request from 'superagent';
-import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
-import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
-import {getStudyDownloadListUrl} from "../../shared/api/urls";
+import {getStudyDownloadListUrl} from "../../../shared/api/urls";
 
 
 interface IDataTableRow {

@@ -17,20 +17,19 @@ import AppConfig from "appConfig";
 // see article http://henleyedition.com/implicit-code-splitting-with-react-router-and-webpack/
 import PatientViewPage from 'bundle-loader?lazy!babel-loader!./pages/patientView/PatientViewPage';
 import ResultsViewPage from 'bundle-loader?lazy!babel-loader!./pages/resultsView/ResultsViewPage';
-import HomePage from 'bundle-loader?lazy!babel-loader!./pages/home/HomePage';
 import TestimonialsPage from 'pages/staticPages/testimonialsPage/TestimonialsPage';
-import DatasetPage from 'bundle-loader?lazy!babel-loader!./pages/datasetView/DatasetPage';
-import SPA from 'bundle-loader?lazy!babel-loader!./pages/resultsView/SPA';
+import DatasetPage from 'bundle-loader?lazy!babel-loader!./pages/staticPages/datasetView/DatasetPage';
+import Homepage from 'bundle-loader?lazy!babel-loader!./pages/home/HomePage';
 import StudyViewPage from 'bundle-loader?lazy!babel-loader!./pages/studyView/StudyViewPage';
-import MutationMapperTool from 'bundle-loader?lazy!babel-loader!./pages/tools/mutationMapper/MutationMapperTool';
-import WebAPIPage from 'bundle-loader?lazy!babel-loader!./pages/webAPI/WebAPIPage';
-import RMATLAB from 'bundle-loader?lazy!babel-loader!./pages/rmatlab/RMatLAB';
-import Tutorials from 'bundle-loader?lazy!babel-loader!./pages/tutorials/Tutorials';
-import Visualize from 'bundle-loader?lazy!babel-loader!./pages/visualize/Visualize';
-import AboutUs from 'bundle-loader?lazy!babel-loader!./pages/aboutus/AboutUs';
-import News from 'bundle-loader?lazy!babel-loader!./pages/news/News';
-import FAQ from 'bundle-loader?lazy!babel-loader!./pages/faq/FAQ';
-import OQL from 'bundle-loader?lazy!babel-loader!./pages/oql/OQL';
+import MutationMapperTool from 'bundle-loader?lazy!babel-loader!./pages/staticPages/tools/mutationMapper/MutationMapperTool';
+import WebAPIPage from 'bundle-loader?lazy!babel-loader!./pages/staticPages/webAPI/WebAPIPage';
+import RMATLAB from 'bundle-loader?lazy!babel-loader!./pages/staticPages/rmatlab/RMatLAB';
+import Tutorials from 'bundle-loader?lazy!babel-loader!./pages/staticPages/tutorials/Tutorials';
+import Visualize from 'bundle-loader?lazy!babel-loader!./pages/staticPages/visualize/Visualize';
+import AboutUs from 'bundle-loader?lazy!babel-loader!./pages/staticPages/aboutus/AboutUs';
+import News from 'bundle-loader?lazy!babel-loader!./pages/staticPages/news/News';
+import FAQ from 'bundle-loader?lazy!babel-loader!./pages/staticPages/faq/FAQ';
+import OQL from 'bundle-loader?lazy!babel-loader!./pages/staticPages/oql/OQL';
 
 
 import {getBasePath} from "shared/api/urls";
@@ -70,7 +69,7 @@ function preloadImportantComponents(){
 
 export const makeRoutes = (routing) => {
     return (<Route path="/"component={Container}>
-                <IndexRoute onEnter={()=>{$(document).scrollTop(0);}} getComponent={lazyLoadComponent(SPA,preloadImportantComponents)}/>
+                <IndexRoute onEnter={()=>{$(document).scrollTop(0);}} getComponent={lazyLoadComponent(Homepage,preloadImportantComponents)}/>
 
                 <Route path="/restore" onEnter={()=>{$(document).scrollTop(0)}} component={restoreRoute}/>
 
