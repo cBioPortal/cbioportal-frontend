@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {observer} from 'mobx-react';
-import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
+import {PageLayout} from "../../../shared/components/PageLayout/PageLayout";
 import './styles.scss';
 import Helmet from "react-helmet";
 
