@@ -2,6 +2,7 @@ import * as React from 'react';
 import {observer} from 'mobx-react';
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import './styles.scss';
+import Helmet from "react-helmet";
 
 @observer
 export default class Tutorials extends React.Component<{}, {}> {
@@ -9,7 +10,9 @@ export default class Tutorials extends React.Component<{}, {}> {
     public render() {
 
         return <PageLayout className={'whiteBackground'}>
-
+            <Helmet>
+                <title>{'cBioPortal for Cancer Genomics::Tutorials'}</title>
+            </Helmet>
             <h1>Tutorials</h1>
 
             <h2>Step-by-step Guide to cBioPortal: a Protocol Paper</h2>
