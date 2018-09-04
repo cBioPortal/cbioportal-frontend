@@ -25,6 +25,9 @@ import oncoKBClient from '../../shared/api/oncokbClientInstance';
 import genome2StructureClient from '../../shared/api/g2sClientInstance';
 import {getSessionKey} from "../../shared/lib/ExtendedRouterStore";
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
+import AppConfig from "appConfig";
+import Helmet from "react-helmet";
+import {updateConfig} from "../../config/config";
 
 interface IContainerProps {
     location: Location;
@@ -41,7 +44,7 @@ const configPromise = remoteData(async ()=>{
     });
 
     // overwrite properties of frontend config
-    Object.assign(getBrowserWindow().frontendConfig, config, getBrowserWindow().frontendConfig);
+    updateConfig(config);
 
     // we need to set the domain of our api clients
     (client as any).domain = getCbioPortalApiUrl();
