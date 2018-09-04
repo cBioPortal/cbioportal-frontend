@@ -107,11 +107,6 @@ function initStore() {
                     resultsViewPageStore.profileFilter = parseInt(query.data_priority,10);
                 }
 
-                const geneSymbols = parseOQLQuery(oql).map((o: any) => o.gene);
-                if (!resultsViewPageStore.hugoGeneSymbols || !_.isEqual(resultsViewPageStore.hugoGeneSymbols.slice(), geneSymbols)) {
-                    resultsViewPageStore.hugoGeneSymbols = geneSymbols;
-                }
-
                 // note that this could be zero length if we have multiple studies
                 // in that case we derive default selected profiles
                 const profiles = getMolecularProfiles(query);
@@ -136,11 +131,10 @@ function initStore() {
                      console.log("ERROR SETTING QUERY", ex);
                 }
 
+                if (resultsViewPageStore.oqlQuery !== oql) {
+                    resultsViewPageStore.oqlQuery = oql;
+                }
 
-
-
-                //resultsViewPageStore.genesetIds = genesetIds;
-                resultsViewPageStore.oqlQuery = oql;
             });
         },
         {fireImmediately: true}
@@ -208,6 +202,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                         <ResultsViewOncoprint
                             divId={'oncoprintContainer'}
                             store={store}
+                            key={store.hugoGeneSymbols.join(",")}
                             routing={this.props.routing}
                             isVirtualStudy={getBrowserWindow().currentQueryStore.isVirtualStudyQuery}
                             addOnBecomeVisibleListener={addOnBecomeVisibleListener}
