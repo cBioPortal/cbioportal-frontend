@@ -1,7 +1,7 @@
 import * as React from 'react';
-import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
+import {PageLayout} from "../../../shared/components/PageLayout/PageLayout";
 import AppConfig from "appConfig";
-import StaticContent from "../../shared/components/staticContent/StaticContent";
+import StaticContent from "../../../shared/components/staticContent/StaticContent";
 import './styles.scss';
 import Helmet from "react-helmet";
 
