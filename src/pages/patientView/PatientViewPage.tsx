@@ -38,6 +38,7 @@ import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
 import {getSampleViewUrl} from "../../shared/api/urls";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
+import Helmet from "react-helmet";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -62,9 +63,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     @observable private mutationTableColumnVisibility: {[columnId: string]: boolean}|undefined;
     @observable private cnaTableColumnVisibility: {[columnId: string]: boolean}|undefined;
-
-    private updatePageTitleReaction: IReactionDisposer;
-    private updateMetaReaction: IReactionDisposer;
 
     constructor(props: IPatientViewPageProps) {
 
@@ -113,38 +111,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             { fireImmediately:true }
         );
 
-        this.updatePageTitleReaction = reaction(
-            () => patientViewPageStore.pageTitle,
-            (title:string) => {
-                win.document.title = title;
-            },
-            { fireImmediately:true }
-        );
-
-        this.updateMetaReaction = autorun(
-            () => {
-                const study = patientViewPageStore.studyMetaData.result;
-                if (study) {
-                    // first kill any existing meta tag
-                    $("meta[name=description]").remove();
-                    const id = ((patientViewPageStore.pageMode === "patient") ?
-                        patientViewPageStore.patientId : patientViewPageStore.sampleId);
-                    const content =
-                        `${id} from ${study.name}`;
-                    const meta = $(`<meta name="description" content="${content}">`).prependTo("head");
-                }
-            }
-        );
-
-
         this.onMutationTableColumnVisibilityToggled = this.onMutationTableColumnVisibilityToggled.bind(this);
         this.onCnaTableColumnVisibilityToggled = this.onCnaTableColumnVisibilityToggled.bind(this);
-    }
-
-    public componentWillUnmount(){
-        //dispose reaction
-        this.updatePageTitleReaction();
-        this.updateMetaReaction();
     }
 
     public handleSampleClick(id: string, e: React.MouseEvent<HTMLAnchorElement>) {
@@ -298,6 +266,14 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         return (
             <PageLayout noMargin={true}>
+                {
+                    (patientViewPageStore.patientViewData.isComplete) && (
+                        <Helmet>
+                            <title>{patientViewPageStore.pageTitle}</title>
+                            <meta name="description" content={patientViewPageStore.metaDescription} />
+                        </Helmet>
+                    )
+                }
                 <div className="patientViewPage">
 
                 {/*<AjaxErrorModal*/}
