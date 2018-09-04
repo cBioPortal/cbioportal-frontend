@@ -3,11 +3,9 @@ import DatasetList from './DatasetList';
 import {observer} from 'mobx-react';
 import client from "shared/api/cbioportalClientInstance";
 import {remoteData, addErrorHandler} from "shared/api/remoteData";
-import { CancerStudy } from 'shared/api/generated/CBioPortalAPI';
 import AppConfig from "appConfig";
 import styles from './styles.module.scss';
-import getBrowserWindow from "../../shared/lib/getBrowserWindow";
-import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
+import {PageLayout} from "../../../shared/components/PageLayout/PageLayout";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import Helmet from "react-helmet";
 
