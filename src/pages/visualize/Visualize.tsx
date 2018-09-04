@@ -2,6 +2,7 @@ import * as React from 'react';
 import {observer} from 'mobx-react';
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import './styles.scss';
+import Helmet from "react-helmet";
 
 @observer
 export default class Visualize extends React.Component<{}, {}> {
@@ -9,7 +10,9 @@ export default class Visualize extends React.Component<{}, {}> {
     public render() {
 
         return <PageLayout className={'whiteBackground'}>
-
+            <Helmet>
+                <title>{'cBioPortal for Cancer Genomics::Visualize Your Data'}</title>
+            </Helmet>
 
             <h1>Visualise Your Data</h1>
             <p>If you want to visualize your own data in cBioPortal, you have the following options:</p>
