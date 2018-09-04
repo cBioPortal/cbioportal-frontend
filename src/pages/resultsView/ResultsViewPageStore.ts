@@ -47,7 +47,7 @@ import {
     filterCBioPortalWebServiceData,
     filterCBioPortalWebServiceDataByOQLLine,
     filterCBioPortalWebServiceDataByUnflattenedOQLLine,
-    OQLLineFilterOutput,
+    OQLLineFilterOutput, parseOQLQuery,
     UnflattenedOQLLineFilterOutput,
 } from "../../shared/lib/oql/oqlfilter";
 import GeneMolecularDataCache from "../../shared/cache/GeneMolecularDataCache";
@@ -320,7 +320,8 @@ export class ResultsViewPageStore {
 
     @observable ajaxErrors: Error[] = [];
 
-    @observable hugoGeneSymbols: string[];
+
+
     @observable genesetIds: string[];
     @observable samplesSpecification: SamplesSpecificationElement[] = [];
 
@@ -344,6 +345,14 @@ export class ResultsViewPageStore {
     @observable.ref selectedEnrichmentCopyNumberProfile: MolecularProfile;
     @observable.ref selectedEnrichmentMRNAProfile: MolecularProfile;
     @observable.ref selectedEnrichmentProteinProfile: MolecularProfile;
+
+    @observable _hugoGeneSymbols: string[];
+
+    @computed get hugoGeneSymbols(){
+
+        return parseOQLQuery(this.oqlQuery).map((o: any) => o.gene);
+
+    }
 
     @computed get queryContainsOql() {
         return doesQueryContainOQL(this.oqlQuery);
