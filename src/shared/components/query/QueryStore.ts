@@ -450,7 +450,6 @@ export class QueryStore
 	@observable showGisticPopup = false;
 	@observable showGenesetsHierarchyPopup = false;
 	@observable showGenesetsVolcanoPopup = false;
-	@observable.ref searchTextPresets:ReadonlyArray<string> = AppConfig.skinExampleStudyQueries;
 	@observable priorityStudies = AppConfig.priorityStudies;
 	@observable showSelectedStudiesOnly:boolean = false;
 	@observable.shallow selectedCancerTypeIds:string[] = [];

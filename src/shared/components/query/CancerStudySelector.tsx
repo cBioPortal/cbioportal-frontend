@@ -18,6 +18,7 @@ import Autosuggest from 'react-bootstrap-autosuggest'
 import ReactElement = React.ReactElement;
 import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import FontAwesome from "react-fontawesome";
+import AppConfig from "appConfig";
 
 const styles = styles_any as {
     SelectedStudiesWindow: string,
@@ -235,7 +236,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
                     <Observer>
                         {() => {
-                            let searchTextOptions = this.store.searchTextPresets;
+                            let searchTextOptions = AppConfig.skinExampleStudyQueries;
                             if (this.store.searchText && searchTextOptions.indexOf(this.store.searchText) < 0)
                                 searchTextOptions = [this.store.searchText].concat(searchTextOptions as string[]);
                             let searchTimeout: number | null = null;
