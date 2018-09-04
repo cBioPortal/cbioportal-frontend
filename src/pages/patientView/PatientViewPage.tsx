@@ -37,6 +37,7 @@ import './patient.scss';
 import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
 import {getSampleViewUrl} from "../../shared/api/urls";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
+import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -71,8 +72,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         //TODO: this should be done by a module so that it can be reused on other pages
         const reaction1 = reaction(
-            () => [props.routing.location.query, props.routing.location.hash],
-            ([query,hash]) => {
+            () => [props.routing.location.query, props.routing.location.hash, props.routing.location.pathname],
+            ([query,hash,pathname]) => {
+
+                // we don't want to update patient if we aren't on a patient page route
+                if (!pathname.includes("/patient")) {
+                    return;
+                }
 
                 const validationResult = validateParametersPatientView(query);
 
