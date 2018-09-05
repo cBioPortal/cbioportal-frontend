@@ -4,6 +4,7 @@ import * as _ from 'lodash';
 import URL, {QueryParams} from 'url';
 import {remoteData} from "../api/remoteData";
 import sessionClient from "../api/sessionServiceInstance";
+import AppConfig from "appConfig";
 
 export function getSessionKey(hash:string){
     return `session_${hash}`
@@ -54,7 +55,7 @@ export default class ExtendedRouterStore extends RouterStore {
 
     remoteSessionData = remoteData({
         invoke: async () => {
-            if (this.sessionId) {
+            if (this.sessionId && this.sessionId !== "pending") {
                 let sessionData = await getRemoteSession(this.sessionId);
 
                 // if it has no version, it's a legacy session and needs to be normalized
@@ -74,9 +75,9 @@ export default class ExtendedRouterStore extends RouterStore {
                     id: this.remoteSessionData.result!.id,
                     query: this.remoteSessionData.result!.data,
                     path: this.location.pathname
-                }
+                };
             } else {
-                delete this._session;
+                if (this._session && this._session.id !== "pending") delete this._session;
             }
         }
     });
@@ -103,36 +104,31 @@ export default class ExtendedRouterStore extends RouterStore {
         // put a leading slash if there isn't one
         path = URL.resolve('/', path);
 
-        let session:any = null;
-
-        // if we're changing the query AND query meets a certain threshold, switch to session
-        if (this.sessionEnabledForPath(path) && _.size(newParams) > 0 && JSON.stringify(newQuery).length > 10) {
-            session = {
-                id:'pending',
-                query:newQuery,
-                path:path
-            };
-
-            // add session version
-            session.query.version = 2;
-
-            //this._session = session;
-
-            saveRemoteSession(session.query).then((key)=>{
-                this.push( URL.format({pathname: path, query: {session_id:key.id}, hash:this.location.hash}) );
-                //localStorage.setItem(getSessionKey(session.id), JSON.stringify(session));
-            });
-
-            return;
-
+        // we don't use session
+        if (!this.sessionEnabledForPath(path) || JSON.stringify(newQuery).length < (AppConfig.urlLengthThresholdForSession || 10)){
+            this.push( URL.format({pathname: path, query: newQuery, hash:this.location.hash}) );
+        } else {
+            // we are using session: do we need to make a new session?
+            if (!this._session || _.size(newParams) > 0) {
+                const pendingSession = {
+                    id:'pending',
+                    query:newQuery,
+                    path:path
+                };
+                // add session version
+                pendingSession.query.version = 2;
+                this._session = pendingSession;
+                this.push( URL.format({pathname: path, query: { session_id:'pending'}, hash:this.location.hash}) );
+                saveRemoteSession(pendingSession.query).then((key)=>{
+                    this._session!.id = key.id;
+                    // we use replace because we don't want the pending state in the history
+                    this.replace( URL.format({pathname: path, query: {session_id:key.id}, hash:this.location.hash}) );
+                });
+            } else { // we already have a session but we only need to update path or hash
+                this.push( URL.format({pathname: path, query: {session_id:this._session.id}, hash:this.location.hash}) );
+            }
         }
 
-        // if we have a session then we want to push it's id to url
-        // otherwise, we are employing url as source of truth, so push real query to it
-        const sessionId = (session) ? session.id : (this.location.query.session_id);
-        const pushToUrl = sessionId ? {session_id:sessionId} : newQuery;
-
-        this.push( URL.format({pathname: path, query: pushToUrl, hash:this.location.hash}) );
     }
 
     @observable public _session:PortalSession | null = null;
