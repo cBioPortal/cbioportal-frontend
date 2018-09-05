@@ -1,5 +1,6 @@
 import ExtendedRouterStore from "./ExtendedRouterStore";
 import getBrowserWindow from "./getBrowserWindow";
+import {QueryParams} from "url";
 
 export function restoreRouteAfterRedirect(injected: { routing:ExtendedRouterStore }){
 
@@ -31,7 +32,7 @@ export function handleLegacySubmission(){
 export function handleIndexDO(){
     if (/Action=Submit/i.test(window.location.search)) {
 
-        let data: { [key: string]: string | number | undefined } = {};
+        let data: QueryParams = {};
 
         // ALL QUERIES NOW HAVE cancer_study_list. if we have a legacy cancer_study_id but not a cancer_study_list, copy it over
         if (!getBrowserWindow().routingStore.location.query.cancer_study_list && getBrowserWindow().routingStore.location.query.cancer_study_id) {

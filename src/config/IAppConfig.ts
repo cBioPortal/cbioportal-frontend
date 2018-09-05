@@ -72,6 +72,8 @@ export interface IAppConfig {
     skinNewsSourceURL?: string;
     skinOQLSourceURL?: string;
 
+    urlLengthThresholdForSession?:number;
+
 }
 
 export type PriorityStudies = {
