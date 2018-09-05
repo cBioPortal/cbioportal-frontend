@@ -123,30 +123,4 @@ describe("QueryStore", ()=>{
             // },1000)  
         });
     });
-
-    describe("Multiple studies selected", ()=>{
-        let selectableStudiesSetStub:any;
-
-        before(() => {
-            selectableStudiesSetStub = Sinon.stub(QueryStore.prototype,"selectableStudiesSet").get(()=>{
-                return {study1:['study1'],study2:['study2']};
-            });
-        });
-
-        it("should show an error when both mutation and cna datatype checkboxes are unchecked", ()=>{
-            const store = new QueryStore(
-                {
-                    cohortIdsList:["study1","study2"]
-                } as any
-            );
-            store.dataTypePriority = {mutation:false,cna:false};
-            assert.equal(store.submitError,"Please select one or more molecular profiles.");
-            store.dataTypePriority = {mutation:true,cna:false};
-            assert.notEqual(store.submitError,"Please select one or more molecular profiles.");
-        });
-
-        after(()=>{
-            selectableStudiesSetStub.restore();
-        });
-    });
 });
