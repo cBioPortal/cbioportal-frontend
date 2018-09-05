@@ -2,7 +2,7 @@ import React from 'react';
 import { Route, Redirect, IndexRoute } from 'react-router';
 import { inject } from 'mobx-react';
 import Container from 'appShell/App/Container';
-import {handleLegacySubmission, restoreRouteAfterRedirect} from './shared/lib/redirectHelpers';
+import {handleIndexDO, handleLegacySubmission, restoreRouteAfterRedirect} from './shared/lib/redirectHelpers';
 import AppConfig from "appConfig";
 
 /* HOW TO ADD A NEW ROUTE
@@ -71,14 +71,17 @@ export const makeRoutes = (routing) => {
     return (<Route path="/"component={Container}>
                 <IndexRoute onEnter={()=>{$(document).scrollTop(0);}} getComponent={lazyLoadComponent(Homepage,preloadImportantComponents)}/>
 
+                <Route path="/index.do" onEnter={handleIndexDO} />
+
                 <Route path="/restore" onEnter={()=>{$(document).scrollTop(0)}} component={restoreRoute}/>
 
-                <Route path="results/legacy_submission" onEnter={handleLegacySubmission} component={getBlankPage()} />
+                <Route path="/results/legacy_submission" onEnter={handleLegacySubmission} component={getBlankPage()} />
 
                 <Route path="/results(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(ResultsViewPage)} />
                 <Route path="/patient" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(PatientViewPage)}/>
                 <Route path="/newstudy" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(StudyViewPage)} />
                 <Route path="/study" component={getBlankPage()} />
+
                 <Route path="/mutation_mapper" getComponent={lazyLoadComponent(MutationMapperTool)} />
 
                 <Route path="/s/webAPI" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(WebAPIPage)} />
