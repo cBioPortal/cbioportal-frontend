@@ -27,3 +27,22 @@ export function handleLegacySubmission(){
         }
     }
 }
+
+export function handleIndexDO(){
+    if (/Action=Submit/i.test(window.location.search)) {
+
+        let data: { [key: string]: string | number | undefined } = {};
+
+        // ALL QUERIES NOW HAVE cancer_study_list. if we have a legacy cancer_study_id but not a cancer_study_list, copy it over
+        if (!getBrowserWindow().routingStore.location.query.cancer_study_list && getBrowserWindow().routingStore.location.query.cancer_study_id) {
+            data.cancer_study_list = getBrowserWindow().routingStore.location.query.cancer_study_id;
+            data.cancer_study_id = undefined;
+        }
+
+        (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(data, "/results");
+    } else if (/session_id/.test(window.location.search)) {
+        (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute({}, "/results");
+    } else {
+        (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute({}, "/");
+    }
+}
