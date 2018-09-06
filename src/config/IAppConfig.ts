@@ -7,6 +7,9 @@ export interface IAppConfig {
     genomespaceEnabled: boolean;
     skinExampleStudyQueries: string[]; // in query the example searches
     priorityStudies: PriorityStudies;
+
+    googleAnalyticsProfile?: string;
+
     maxTreeDepth: number;
     //priorityStudies: {
     //    'Shared institutional Data Sets': ['mskimpact', 'cellline_mskcc'],
