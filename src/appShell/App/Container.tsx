@@ -5,7 +5,6 @@ import UnsupportedBrowserModal from "shared/components/unsupportedBrowserModal/U
 import '../../globalStyles/prefixed-global.scss';
 import PortalHeader from "./PortalHeader";
 import PortalFooter from "./PortalFooter";
-import RightBar from "../../shared/components/rightbar/RightBar";
 import {remoteData} from "../../shared/api/remoteData";
 import request from 'superagent';
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
@@ -28,6 +27,7 @@ import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIn
 import AppConfig from "appConfig";
 import Helmet from "react-helmet";
 import {updateConfig} from "../../config/config";
+import {embedGoogleAnalytics} from "../../shared/lib/tracking";
 
 interface IContainerProps {
     location: Location;
@@ -53,6 +53,10 @@ const configPromise = remoteData(async ()=>{
     (internalGenomeNexusClient as any).domain = getGenomeNexusApiUrl();
     (oncoKBClient as any).domain = getOncoKbApiUrl();
     (genome2StructureClient as any).domain = getG2SApiUrl();
+
+    if (AppConfig.googleAnalyticsProfile && AppConfig.googleAnalyticsProfile.length > 0) {
+        embedGoogleAnalytics();
+    }
 
     return config;
 
