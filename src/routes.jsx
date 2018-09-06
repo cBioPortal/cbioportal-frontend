@@ -4,6 +4,7 @@ import { inject } from 'mobx-react';
 import Container from 'appShell/App/Container';
 import {handleIndexDO, handleLegacySubmission, restoreRouteAfterRedirect} from './shared/lib/redirectHelpers';
 import AppConfig from "appConfig";
+import PageNotFound from './shared/components/pageNotFound/PageNotFound';
 
 /* HOW TO ADD A NEW ROUTE
 * 1. Import the "page" component using the bundle-loader directives as seen in imports below
@@ -94,6 +95,8 @@ export const makeRoutes = (routing) => {
                 <Route path="/s/faq" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(FAQ)} />
                 <Route path="/s/oql" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(OQL)} />
                 <Route path="/s/testimonials" onEnter={()=>{$(document).scrollTop(0)}} component={TestimonialsPage}/>
+
+                <Route path="/*" component={<PageNotFound />} />
 
     </Route>)
 };
