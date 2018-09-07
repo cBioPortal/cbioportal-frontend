@@ -437,12 +437,27 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         return !isExcludedInList && !isExcluded;
     }
 
-    public currentTab(pathname:string):string {
+    public pathToTab(pathname: string): string | undefined {
         return pathname.split('/')[2];
     }
 
-    public render() {
+    // if it's undefined, MSKTabs will default to first
+    public currentTab(pathname:string):string | undefined {
+        const pathToTab = this.pathToTab(pathname);
+        // if we have no tab defined (query submission, no tab click)
+        // we need to evaluate which should be the default tab
+        if (pathToTab === undefined) {
+            if (this.resultsViewPageStore.studies.result!.length > 1 && this.resultsViewPageStore.hugoGeneSymbols.length === 1) {
+                return "cancerTypesSummaryTab"; // cancer type study
+            } else {
+                return pathToTab
+            }
+        } else {
+            return pathToTab;
+        }
+    }
 
+    public render() {
         return (
             <PageLayout noMargin={true}>
 
