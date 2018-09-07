@@ -208,7 +208,6 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                 });
             }
 
-
             return (
                 <div
                     id={(this.props.id) ? this.props.id : ''}
@@ -280,7 +279,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
         let currentPage = 1;
 
         React.Children.forEach(children, (tab: React.ReactElement<IMSKTabProps>) => {
-            if (!tab || tab.props.hide || (tab.props.loading && (effectiveActiveTab !== tab.props.id))) {
+            if (!tab || tab.props.hide) {
                 return;
             }
 
