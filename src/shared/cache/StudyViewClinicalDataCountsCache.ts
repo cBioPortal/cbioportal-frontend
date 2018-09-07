@@ -49,7 +49,7 @@ export default class StudyViewClinicalDataCountsCache extends MobxPromiseCache<S
                     }
 
                     //fetch data if its not already fetched
-                    if (_.isEmpty(result) || isFiltered(q.filters) || !_.isUndefined(q.filters.sampleIdentifiers)) {
+                    if (_.isEmpty(result) || isFiltered(q.filters as any) || !_.isUndefined(q.filters.sampleIdentifiers)) {
                         result = await internalClient.fetchClinicalDataCountsUsingPOST({
                             attributeId: q.attribute.clinicalAttributeId,
                             clinicalDataType: q.attribute.patientAttribute ? 'PATIENT' : 'SAMPLE',
