@@ -7,8 +7,8 @@ import * as React from "react";
 import {getSampleViewUrl, getStudySummaryUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 import { BarDatum} from "./charts/barChart/BarChart";
-import {ClinicalDataTypeConstants,StudyWithSamples } from "pages/studyView/StudyViewPageStore";
-import {ChartType,ClinicalDataType} from "./StudyViewPageStore";
+import {ClinicalDataTypeConstants, StudyWithSamples, StudyViewFilterWithSampleIdentifierFilters} from "pages/studyView/StudyViewPageStore";
+import {ChartType, ClinicalDataType} from "./StudyViewPageStore";
 
 //TODO:cleanup
 export const COLORS = [
@@ -252,13 +252,13 @@ export function getVirtualStudyDescription(
     return descriptionLines.join('\n');
 }
 
-export function isFiltered(filter: StudyViewFilter, includeSampleIdentifiers:boolean = false) {
+export function isFiltered(filter: StudyViewFilterWithSampleIdentifierFilters) {
     return !(_.isEmpty(filter) || (
         _.isEmpty(filter.clinicalDataEqualityFilters) &&
         _.isEmpty(filter.clinicalDataIntervalFilters) &&
         _.isEmpty(filter.cnaGenes) &&
-        _.isEmpty(filter.mutatedGenes)
-        //&& (includeSampleIdentifiers?_.isEmpty(filter.sampleIdentifiers):true)
+        _.isEmpty(filter.mutatedGenes) &&
+        _.isEmpty(filter.sampleIdentifiersSet)
     ));
 }
 
