@@ -24,6 +24,7 @@ import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 import {molecularProfileParams} from "shared/components/query/QueryStoreUtils";
 import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
 import superagentCache from 'superagent-cache';
+import getBrowserWindow from "shared/lib/getBrowserWindow";
 
 superagentCache(superagent);
 
@@ -100,6 +101,17 @@ const routingStore = new ExtendedRoutingStore();
 //         break;
 // }
 
+if (/index\.do/.test(window.location.pathname)){
+    if (/Action=Submit/i.test(window.location.search)) {
+        window.history.replaceState(null, "", window.location.href.replace(/index.do/i,'results'));
+    } else if (/session_id/i.test(window.location.search)) {
+        window.history.replaceState(null, "", window.location.href.replace(/index.do/i,'results'));
+    } else {
+        window.history.replaceState(null, "", window.location.href.replace(/index.do/i,''));
+    }
+}
+
+
 const history = useRouterHistory(createHistory)({
     basename: AppConfig.basePath || ""
 });
@@ -146,7 +158,6 @@ if (/\/patient$/.test(window.location.pathname)) {
         routingStore.updateRoute(newParams);
     }
 }
-
 
 superagent.Request.prototype.end = function (callback) {
     return end.call(this, (error, response) => {
