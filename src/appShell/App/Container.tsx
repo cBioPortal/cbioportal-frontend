@@ -83,7 +83,18 @@ export default class Container extends React.Component<IContainerProps, {}> {
             c => React.cloneElement(c as React.ReactElement<any>, childProps));
     }
 
+    isConfigComplete(){
+        // if we have session_id, we need to wait for session info to be fetched from session service
+        if (this.routingStore.location.query.session_id && !this.routingStore._session) {
+            return configPromise.isComplete && this.routingStore.remoteSessionData.isComplete;
+        } else {
+            return configPromise.isComplete;
+        }
+    }
+
     render() {
+
+        // if we have session_id, we need to wait for session info to be fetched from session service
         let configComplete = configPromise.isComplete;
         if (this.routingStore.location.query.session_id && !this.routingStore._session) {
             configComplete = configComplete && this.routingStore.remoteSessionData.isComplete;
