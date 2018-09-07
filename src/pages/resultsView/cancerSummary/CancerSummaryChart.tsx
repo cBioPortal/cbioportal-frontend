@@ -85,7 +85,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
 
     private get rightPadding(){
         if (this.bodyWidth > this.legendWidth) {
-            return 20;
+            return 200;
         } else {
             return this.legendWidth - this.bodyWidth + 20;
         }
@@ -288,9 +288,9 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
                             tickFormat={this.props.xLabels}
                             tickLabelComponent={
                                 <VictoryLabel
-                                    angle={-85}
-                                    verticalAnchor="middle"
-                                    textAnchor="end"
+                                    angle={50}
+                                    verticalAnchor="start"
+                                    textAnchor="start"
                                 />
                             }
 
