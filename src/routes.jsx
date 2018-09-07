@@ -71,9 +71,6 @@ function preloadImportantComponents(){
 export const makeRoutes = (routing) => {
     return (<Route path="/"component={Container}>
                 <IndexRoute onEnter={()=>{$(document).scrollTop(0);}} getComponent={lazyLoadComponent(Homepage,preloadImportantComponents)}/>
-
-                <Route path="/index.do" onEnter={handleIndexDO} />
-
                 <Route path="/restore" onEnter={()=>{$(document).scrollTop(0)}} component={restoreRoute}/>
 
                 <Route path="/results/legacy_submission" onEnter={handleLegacySubmission} component={getBlankPage()} />
@@ -95,7 +92,6 @@ export const makeRoutes = (routing) => {
                 <Route path="/s/faq" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(FAQ)} />
                 <Route path="/s/oql" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(OQL)} />
                 <Route path="/s/testimonials" onEnter={()=>{$(document).scrollTop(0)}} component={TestimonialsPage}/>
-
                 <Route path="/*" component={<PageNotFound />} />
 
     </Route>)

@@ -47,8 +47,8 @@ function initStore() {
                return;
             }
 
-            console.log("running reaction for results");
-            console.log("submitted query", query);
+            // normalize cancer_study_list this handles legacy sessions/urls where queries with single study had different param name
+            const cancer_study_list = query.cancer_study_list || query.cancer_study_id;
 
             const oql = decodeURIComponent(query.gene_list);
 
@@ -68,13 +68,13 @@ function initStore() {
                 // by definition if there is a case_set_id, there is only one study
                 samplesSpecification = [
                     {
-                        studyId:query.cancer_study_list,
+                        studyId:cancer_study_list,
                         sampleListId:query.case_set_id,
                         sampleId:undefined
                     }
                 ]
             } else {
-                samplesSpecification = query.cancer_study_list.split(",").map((studyId:string)=>{
+                samplesSpecification = cancer_study_list.split(",").map((studyId:string)=>{
                     return {
                         studyId,
                         sampleListId:`${studyId}_all`,
@@ -99,6 +99,8 @@ function initStore() {
 
             runInAction(() => {
 
+
+
                 if (!resultsViewPageStore.samplesSpecification || !_.isEqual(resultsViewPageStore.samplesSpecification.slice(), samplesSpecification)) {
                     resultsViewPageStore.samplesSpecification = samplesSpecification;
                 }
@@ -122,10 +124,11 @@ function initStore() {
                     resultsViewPageStore.zScoreThreshold = parseFloat(query.Z_SCORE_THRESHOLD);
                 }
 
+
                 // we need figure out why cancer_study_list is sometimes not defined
                 try {
-                    if (!resultsViewPageStore.cohortIdsList || !_.isEqual(resultsViewPageStore.cohortIdsList.slice(), query.cancer_study_list.split(","))) {
-                        resultsViewPageStore.cohortIdsList = query.cancer_study_list.split(",");
+                    if (!resultsViewPageStore.cohortIdsList || !_.isEqual(resultsViewPageStore.cohortIdsList.slice(), cancer_study_list.split(","))) {
+                        resultsViewPageStore.cohortIdsList = cancer_study_list.split(",");
                     }
                 } catch(ex) {
                      console.log("ERROR SETTING QUERY", ex);
