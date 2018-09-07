@@ -106,10 +106,12 @@ export default class ExtendedRouterStore extends RouterStore {
 
         // we don't use session
         if (!this.sessionEnabledForPath(path) || JSON.stringify(newQuery).length < (AppConfig.urlLengthThresholdForSession || 10)){
+            // if there happens to be session, kill it because we're going URL, baby
+            delete this._session;
             this.push( URL.format({pathname: path, query: newQuery, hash:this.location.hash}) );
         } else {
             // we are using session: do we need to make a new session?
-            if (!this._session || _.size(newParams) > 0) {
+            if (!this._session || !_.isEqual(this._session.query,newQuery) || _.size(newParams) > 0) {
                 const pendingSession = {
                     id:'pending',
                     query:newQuery,
