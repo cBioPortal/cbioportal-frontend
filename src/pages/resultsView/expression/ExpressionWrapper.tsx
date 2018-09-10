@@ -484,6 +484,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     <ExpressionTabBoxPlot
                         svgId={SVG_ID}
                         domainPadding={50}
+                        startDataAxisAtZero={true}
                         boxWidth={this.boxWidth}
                         axisLabelY={this.yAxisLabel}
                         data={this.boxPlotData.result}
