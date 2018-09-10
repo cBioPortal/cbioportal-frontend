@@ -40,7 +40,9 @@ export type CoExpression = {
 
         'hugoGeneSymbol': string
 
-        'pearsonsCorrelation': number
+        'pValue': number
+
+        'qValue': number
 
         'spearmansCorrelation': number
 
