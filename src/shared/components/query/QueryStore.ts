@@ -1675,7 +1675,7 @@ export class QueryStore
             }
 
             if (parsedSubmission.cancer_study_list)
-            for (const studyId of parsedSubmission.cancer_study_list) {
+            for (const studyId of parsedSubmission.cancer_study_list.split(",")) {
                 if (studyId !== "null") {
                     this.setStudyIdSelected(studyId, true);
                     this._defaultSelectedIds.set(studyId, true);
