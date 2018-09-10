@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import {remoteData} from "../../shared/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import {action, computed, observable, toJS, ObservableMap, reaction} from "mobx";
+import {action, computed, observable, ObservableMap, reaction} from "mobx";
 import {
     ClinicalDataCount,
     ClinicalDataEqualityFilter,
@@ -11,6 +11,8 @@ import {
     CopyNumberGeneFilterElement,
     MutationCountByGene,
     MutationGeneFilter,
+    Gistic,
+    MutSig,
     Sample,
     SampleIdentifier,
     StudyViewFilter
@@ -18,31 +20,37 @@ import {
 import {
     CancerStudy,
     ClinicalAttribute,
+    ClinicalAttributeFilter,
     ClinicalData,
     ClinicalDataMultiStudyFilter,
     Gene,
     MolecularProfile,
     MolecularProfileFilter,
-    Patient, PatientFilter,
-    ClinicalAttributeFilter
+    Patient,
+    PatientFilter
 } from 'shared/api/generated/CBioPortalAPI';
 import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
 import {
-    getClinicalAttributeUniqueKey, isPreSelectedClinicalAttr, isFiltered, NA_DATA,
-    makePatientToClinicalAnalysisGroup
+    getClinicalAttributeUniqueKey,
+    isFiltered,
+    isPreSelectedClinicalAttr,
+    makePatientToClinicalAnalysisGroup,
+    NA_DATA
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
-import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
-import { bind } from '../../../node_modules/bind-decorator';
-import { updateGeneQuery } from 'pages/studyView/StudyViewUtils';
-import { stringListToSet } from 'shared/lib/StringUtils';
-import { unparseOQLQueryLine } from 'shared/lib/oql/oqlfilter';
+import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
+import {bind} from '../../../node_modules/bind-decorator';
+import {updateGeneQuery} from 'pages/studyView/StudyViewUtils';
+import {stringListToSet} from 'shared/lib/StringUtils';
+import {unparseOQLQueryLine} from 'shared/lib/oql/oqlfilter';
 import formSubmit from 'shared/lib/formSubmit';
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
-import { VirtualStudy } from 'shared/model/VirtualStudy';
+import {VirtualStudy} from 'shared/model/VirtualStudy';
+import {MutationsTabTableRow} from "./tabs/MutationsTab";
+import {CNATabTableRow} from "./tabs/CNATab";
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT'
 
@@ -569,13 +577,13 @@ export class StudyViewPageStore {
                 acc[next.studyId] = true;
                 return acc;
             }, {} as { [id: string]: boolean })
-    
+
             this.filteredVirtualStudies.result.forEach(virtualStudy => {
                 virtualStudy.data.studies.forEach(study => {
                     studyIds[study.id] = true;
                 })
             });
-    
+
             return Object.keys(studyIds);
         },
         default: []
@@ -650,6 +658,14 @@ export class StudyViewPageStore {
         return _.filter(this.studyIds, id => !_.includes(validQueriedIds, id));
     }
 
+    @computed get mutationsTabDisabled() {
+        return this.queriedPhysicalStudyIds.result.length !== 1 || _.isEmpty(this.mutationProfiles.result);
+    }
+
+    @computed get CNATabDisabled() {
+        return this.queriedPhysicalStudyIds.result.length !== 1 || _.isEmpty(this.cnaProfiles.result);
+    }
+
     readonly mutationProfiles = remoteData({
         await: ()=>[this.molecularProfiles],
         invoke: async ()=>{
@@ -663,14 +679,13 @@ export class StudyViewPageStore {
         }
     });
 
-
     readonly cnaProfiles = remoteData({
         await: ()=>[this.molecularProfiles],
         invoke: async ()=>{
             return  this.molecularProfiles
             .result
             .filter(profile => profile.molecularAlterationType === "COPY_NUMBER_ALTERATION" && profile.datatype === "DISCRETE")
-        
+
         },
         default: [],
         onResult:(cnaProfiles)=>{
@@ -722,6 +737,13 @@ export class StudyViewPageStore {
                 this._chartVisibility.set(UniqueKey.MUTATION_COUNT_CNA_FRACTION, true);
             }
         }
+    });
+
+    readonly allGenes = remoteData<Gene[]>({
+        invoke: async () => {
+            return await defaultClient.getAllGenesUsingGET({})
+        },
+        default: []
     });
 
     @computed get analysisGroupsPossible() {
@@ -921,9 +943,9 @@ export class StudyViewPageStore {
     readonly invalidSampleIds = remoteData<SampleIdentifier[]>({
         await: () => [this.queriedSampleIdentifiers, this.samples],
         invoke: async () => {
-            if(this.queriedSampleIdentifiers.result.length>0 && 
+            if(this.queriedSampleIdentifiers.result.length>0 &&
                 this.samples.result.length !== this.queriedSampleIdentifiers.result.length){
-    
+
                 let validSampleIdentifiers = _.reduce(this.samples.result,(acc, next)=>{
                     acc[next.studyId+'_'+next.sampleId] = true
                     return acc;
@@ -1031,6 +1053,17 @@ export class StudyViewPageStore {
                 return acc;
             }, {});
             return Object.keys(unselectedPatientSet);
+        },
+        default: []
+    });
+
+    readonly allMutatedGeneData = remoteData<MutatedGenesData>({
+        invoke: async () => {
+            return await internalClient.fetchMutatedGenesUsingPOST({
+                studyViewFilter: {
+                    'studyIds': this.queriedPhysicalStudyIds.result
+                } as StudyViewFilter
+            });
         },
         default: []
     });
@@ -1241,7 +1274,7 @@ export class StudyViewPageStore {
                         }
                     })
                 };
-    
+
                 let data = await defaultClient.fetchClinicalDataUsingPOST({
                     clinicalDataType: "PATIENT",
                     clinicalDataMultiStudyFilter: filter
@@ -1313,6 +1346,55 @@ export class StudyViewPageStore {
                 acc.push(sampleData);
                 return acc;
             }, [] as { [id: string]: string }[]);
+        },
+        default: []
+    });
+
+    readonly getDataForMutationsTab = remoteData({
+        await: () => [this.queriedPhysicalStudyIds, this.allGenes, this.allMutatedGeneData],
+        invoke: async () => {
+            let keyBasedGenes = _.keyBy(this.allGenes.result, 'entrezGeneId');
+            return _.reduce(this.allMutatedGeneData.result, function (acc, record:MutationCountByGene) {
+                let matchedGene = keyBasedGenes[record.entrezGeneId];
+                if(matchedGene) {
+                    acc.push({
+                        gene: record.hugoGeneSymbol,
+                        cytoband: matchedGene.cytoband,
+                        geneSize: matchedGene.length,
+                        numberOfMutations: record.totalCount,
+                        density: record.totalCount / matchedGene.length,
+                        qValue: record.qValue
+                    });
+                }
+                return acc;
+            }, [] as MutationsTabTableRow[]);
+        },
+        default: []
+    });
+
+    readonly getSignificantCNR = remoteData({
+        await: () => [this.queriedPhysicalStudyIds],
+        invoke: async () => {
+            return await internalClient.getSignificantCopyNumberRegionsUsingGET({
+                studyId: this.queriedPhysicalStudyIds.result[0]
+            })
+        }
+    });
+
+    readonly getDataForCNATab = remoteData({
+        await: () => [this.getSignificantCNR],
+        invoke: async () => {
+            return _.reduce(this.getSignificantCNR.result, function (acc, record: Gistic) {
+                acc.push({
+                    alteration: record.amp ? 'AMP' : 'DEL',
+                    chromosome: record.chromosome,
+                    cytoband: record.cytoband,
+                    numberOfGenes: record.genes.length,
+                    genes: record.genes.map(gene => gene.hugoGeneSymbol).sort().join(' '),
+                    qValue: record.qValue
+                });
+                return acc;
+            }, [] as CNATabTableRow[]);
         },
         default: []
     });
@@ -1478,6 +1560,24 @@ export class StudyViewPageStore {
         }
 
         formSubmit('index.do', formOps, "_blank", 'post');
+    }
+
+    @bind
+    getSingleGeneQuery(gene: string) {
+        // The query is for one single physical study only
+        if (gene && this.queriedPhysicalStudyIds.result.length === 1) {
+            let queryURL = [`index.do?tab_index=tab_visualize&Action=Submit&case_set_id=${this.queriedPhysicalStudyIds.result[0]}_all&cancer_study_id=${this.queriedPhysicalStudyIds.result[0]}`];
+
+            if (!_.isEmpty(this.mutationProfiles.result)) {
+                queryURL.push(`&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=${this.mutationProfiles.result[0].molecularProfileId}`);
+            }
+            if (!_.isEmpty(this.cnaProfiles.result)) {
+                queryURL.push(`&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=${this.cnaProfiles.result[0].molecularProfileId}`);
+            }
+            queryURL.push(`&gene_list=${gene}`);
+            return queryURL.join('');
+        }
+        return '';
     }
 }
 

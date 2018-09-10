@@ -13,9 +13,12 @@ import AppConfig from 'appConfig';
 import {CopyNumberGeneFilterElement} from "../../shared/api/generated/CBioPortalAPIInternal";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {ClinicalDataTab} from "./tabs/ClinicalDataTab";
+import {MutationsTab} from "./tabs/MutationsTab";
 import setWindowVariable from "../../shared/lib/setWindowVariable";
 import * as _ from 'lodash';
 import ErrorBox from 'shared/components/errorBox/ErrorBox';
+import {StudyViewComponentLoader} from "./charts/StudyViewComponentLoader";
+import {CNATab} from "./tabs/CNATab";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -90,7 +93,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             updateChartsVisibility: (visibleChartIds: string[]) => {
                 this.store.updateChartsVisibility(visibleChartIds);
             }
-            
+
         }
 
         //TODO: this should be done by a module so that it can be reused on other pages
@@ -315,6 +318,23 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     selectedSamples={this.store.selectedSamples.result!}
                                 />
                             </If>
+                        </MSKTab>
+                        <MSKTab key={2} id={"mutations"} linkText={"Mutated Genes"}
+                                hide={this.store.mutationsTabDisabled}>
+                            <StudyViewComponentLoader promises={this.store.getDataForMutationsTab}>
+                                <MutationsTab
+                                    data={this.store.getDataForMutationsTab.result}
+                                    getGeneQueryURL={this.store.getSingleGeneQuery}
+                                />
+                            </StudyViewComponentLoader>
+                        </MSKTab>
+                        <MSKTab key={3} id={"cna"} linkText={"Copy Number Alterations"}
+                                hide={this.store.CNATabDisabled}>
+                            <StudyViewComponentLoader promises={this.store.getDataForCNATab}>
+                                <CNATab
+                                    data={this.store.getDataForCNATab.result}
+                                />
+                            </StudyViewComponentLoader>
                         </MSKTab>
                     </MSKTabs>
                 </div>
