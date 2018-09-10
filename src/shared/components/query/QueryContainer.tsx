@@ -69,7 +69,9 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
         return (
 			<FlexCol padded overflow className={styles.QueryContainer}>
                 {
-                    <UnknownStudiesWarning ids={this.store.unknownStudyIds} />
+					(this.store.unknownStudyIds.isComplete)
+                	&&
+					(<UnknownStudiesWarning ids={this.store.unknownStudyIds.result} />)
                 }
 
 				<CancerStudySelector queryStore={this.store}/>

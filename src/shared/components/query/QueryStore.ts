@@ -939,14 +939,22 @@ export class QueryStore
 		return this.selectableSelectedStudyIds.map(id => this.treeData.map_studyId_cancerStudy.get(id) as CancerStudy).filter(_.identity);
 	}
 
-	// get all selected ids(that are set) that are not selectable in the cancer tree
-	// this may be any unknow and unauthorized studies trying to query
-	@computed get unknownStudyIds()
-	{
-		const selectableStudiesSet = this.selectableStudiesSet;
-		let ids:string[] = this._allSelectedStudyIds.keys();
-		return ids.filter(id=>!(id in selectableStudiesSet));
-	}
+	readonly unknownStudyIds = remoteData({
+        await: () => [
+        	this.cancerStudies,
+			this.virtualStudies,
+			this.sharedQueriedStudiesSet
+		],
+        invoke: () => {
+            // get all selected ids(that are set) that are not selectable in the cancer tree
+            // this may be any unknow and unauthorized studies trying to query
+			const selectableStudiesSet = this.selectableStudiesSet;
+			let ids:string[] = this._allSelectedStudyIds.keys();
+			return Promise.resolve(ids.filter(id=>!(id in selectableStudiesSet)));
+        }
+
+    });
+
 
 	public isVirtualStudy(studyId:string):boolean {
 		// if the study id doesn't correspond to one in this.cancerStudies, then its a virtual Study
