@@ -410,9 +410,10 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @computed get fillOpacity() {
         if (!this.showMutations && this.showCna) {
+            // no fill for CNA mode
             return 0;
         } else {
-            return 1;
+            return 0.7;
         }
     }
 
