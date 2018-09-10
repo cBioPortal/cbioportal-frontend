@@ -110,7 +110,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @observable showMutations: boolean = true;
 
-    @observable showCna: boolean = true;
+    @observable showCna: boolean = false;
 
     @observable selectedStudyIds: { [studyId: string]: boolean } = {};
 
@@ -490,7 +490,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         tooltip={this.tooltip}
                         horizontal={false}
                         logScale={this.logScale}
-                        size={scatterPlotSize}
+                        size={4}
                         fill={this.fill}
                         stroke={this.stroke}
                         strokeOpacity={this.strokeOpacity}
