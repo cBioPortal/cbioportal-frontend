@@ -122,6 +122,8 @@ export class QueryStore
 		if (urlWithInitialParams)
 			this.setParamsFromUrl(urlWithInitialParams);
 
+        this.setParamsFromLocalStorage();
+
 		this.addParamsFromWindow(_window);
 
 		// need to create initialNonMolecularProfileParams using caseIds obtained from page, because
@@ -1530,6 +1532,59 @@ export class QueryStore
 		this.initiallySelected.profileIds = true;
 		this.initiallySelected.sampleListId = true;
 	}
+
+    @action setParamsFromLocalStorage()
+    {
+
+        let legacySubmission: any = localStorage.getItem("legacyStudySubmission");
+
+        localStorage.removeItem("legacyStudySubmission");
+
+        if (legacySubmission) {
+
+            const parsedSubmission:any = JSON.parse(legacySubmission);
+            // Populate OQL
+            const dataPriority = parsedSubmission.dataPriority;
+            if (typeof dataPriority !== "undefined") {
+                this.dataTypePriorityCode = (dataPriority + '') as '0'|'1'|'2';
+            }
+
+            const selectedMolecularProfiles = parsedSubmission.molecularProfiles;
+            if (selectedMolecularProfiles !== undefined) {
+                this.selectedProfileIds = selectedMolecularProfiles;
+            }
+
+            const zScoreThreshold =  parsedSubmission.zScoreThreshold;
+            if (zScoreThreshold !== undefined) {
+                this.zScoreThreshold = zScoreThreshold;
+            }
+
+            const rppaScoreThreshold =  parsedSubmission.rppaScoreThreshold;
+            if (rppaScoreThreshold !== undefined) {
+                this.rppaScoreThreshold = rppaScoreThreshold;
+            }
+
+            const caseIds = parsedSubmission.case_ids;
+            if (caseIds) {
+                if (parsedSubmission.case_set_id == CUSTOM_CASE_LIST_ID) {
+                    this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
+                    this.caseIdsMode = 'sample';
+                    this.caseIds = caseIds.replace(/\+/g, "\n");
+                }
+            }
+
+            if (parsedSubmission.cancer_study_list)
+            for (const studyId of parsedSubmission.cancer_study_list) {
+                if (studyId !== "null") {
+                    this.setStudyIdSelected(studyId, true);
+                    this._defaultSelectedIds.set(studyId, true);
+                }
+            }
+
+        }
+
+    }
+
 
 	@action selectCancerType(cancerType:CancerType, multiSelect?:boolean)
 	{
