@@ -29,6 +29,7 @@ import CoExpressionTab from "./coExpression/CoExpressionTab";
 import Helmet from "react-helmet";
 import {createQueryStore} from "../home/HomePage";
 
+
 function initStore() {
 
     const resultsViewPageStore = new ResultsViewPageStore();
@@ -41,7 +42,8 @@ function initStore() {
         () => {
             return getBrowserWindow().globalStores.routing.query
         },
-        query => {
+        (query) => {
+
 
             if (!getBrowserWindow().globalStores.routing.location.pathname.includes("/results")) {
                return;
@@ -85,6 +87,7 @@ function initStore() {
 
 
 
+
             function getMolecularProfiles(query:any){
                 //if there's only one study, we read profiles from query params and filter out udfine
                 const molecularProfiles = [
@@ -99,13 +102,11 @@ function initStore() {
 
             runInAction(() => {
 
-
-
                 if (!resultsViewPageStore.samplesSpecification || !_.isEqual(resultsViewPageStore.samplesSpecification.slice(), samplesSpecification)) {
                     resultsViewPageStore.samplesSpecification = samplesSpecification;
                 }
 
-                if (query.data_priority && query.data_priority !== resultsViewPageStore.profileFilter) {
+                if (query.data_priority !== undefined && parseInt(query.data_priority,10) !== resultsViewPageStore.profileFilter) {
                     resultsViewPageStore.profileFilter = parseInt(query.data_priority,10);
                 }
 
@@ -124,14 +125,16 @@ function initStore() {
                     resultsViewPageStore.zScoreThreshold = parseFloat(query.Z_SCORE_THRESHOLD);
                 }
 
-
-                // we need figure out why cancer_study_list is sometimes not defined
-                try {
-                    if (!resultsViewPageStore.cohortIdsList || !_.isEqual(resultsViewPageStore.cohortIdsList.slice(), cancer_study_list.split(","))) {
-                        resultsViewPageStore.cohortIdsList = cancer_study_list.split(",");
+                if (query.geneset_list) {
+                    // we have to trim because for some reason we get a single space from submission
+                    const parsedGeneSetList = query.geneset_list.trim().length ? (query.geneset_list.trim().split(/\s+/)) : [];
+                    if (!_.isEqual(parsedGeneSetList, resultsViewPageStore.genesetIds)) {
+                        resultsViewPageStore.genesetIds = parsedGeneSetList;
                     }
-                } catch(ex) {
-                     console.log("ERROR SETTING QUERY", ex);
+                }
+
+                if (!resultsViewPageStore.cohortIdsList || !_.isEqual(resultsViewPageStore.cohortIdsList.slice(), cancer_study_list.split(","))) {
+                    resultsViewPageStore.cohortIdsList = cancer_study_list.split(",");
                 }
 
                 if (resultsViewPageStore.oqlQuery !== oql) {
