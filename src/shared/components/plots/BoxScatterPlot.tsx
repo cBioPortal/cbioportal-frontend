@@ -31,6 +31,7 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     title?:string;
     data: IBoxScatterPlotData<D>[];
     chartBase:number;
+    startDataAxisAtZero?:boolean;
     domainPadding?:number; // see https://formidable.com/open-source/victory/docs/victory-chart/#domainpadding
     highlight?:(d:D)=>boolean;
     size?:number | ((d:D, active:boolean, isHighlighted?:boolean)=>number);
@@ -235,6 +236,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         // data extremes
         let max = Number.NEGATIVE_INFINITY;
         let min = Number.POSITIVE_INFINITY;
+
         for (const d of this.props.data) {
             for (const d2 of d.data) {
                 max = Math.max(d2.value, max);
@@ -244,6 +246,9 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         if (this.props.logScale) {
             min = this.logScale(min);
             max = this.logScale(max);
+        }
+        if (this.props.startDataAxisAtZero) {
+            min = Math.min(0, min);
         }
         let x:number[], y:number[];
         const dataDomain = [min, max];
@@ -275,18 +280,26 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         }
     }
 
-    @computed get chartDomainPadding() {
-        let dataDomain, categoryDomain;
+    @computed get dataAxis():"x"|"y" {
         if (this.props.horizontal) {
-            dataDomain = "x";
-            categoryDomain = "y";
+            return "x";
         } else {
-            dataDomain = "y";
-            categoryDomain = "x";
+            return "y";
         }
+    }
+
+    @computed get categoryAxis():"x"|"y" {
+        if (this.props.horizontal) {
+            return "y";
+        } else {
+            return "x";
+        }
+    }
+
+    @computed get chartDomainPadding() {
         return {
-            [dataDomain]:this.dataAxisDomainPadding,
-            [categoryDomain]:this.categoryAxisDomainPadding
+            [this.dataAxis]:this.dataAxisDomainPadding,
+            [this.categoryAxis]:this.categoryAxisDomainPadding
         };
     }
 
@@ -577,7 +590,10 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                             standalone={false}
                             domainPadding={this.chartDomainPadding}
                             domain={this.plotDomain}
-                            singleQuadrantDomainPadding={false}
+                            singleQuadrantDomainPadding={{
+                                [this.dataAxis]:!!this.props.startDataAxisAtZero,
+                                [this.categoryAxis]:false
+                            }}
                         >
                             {this.title}
                             {this.legend}
