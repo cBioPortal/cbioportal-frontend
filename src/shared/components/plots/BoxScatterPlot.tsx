@@ -33,7 +33,7 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     chartBase:number;
     domainPadding?:number; // see https://formidable.com/open-source/victory/docs/victory-chart/#domainpadding
     highlight?:(d:D)=>boolean;
-    size?:(d:D, active:boolean, isHighlighted?:boolean)=>number;
+    size?:number | ((d:D, active:boolean, isHighlighted?:boolean)=>number);
     fill?:string | ((d:D)=>string);
     stroke?:string | ((d:D)=>string);
     fillOpacity?:number | ((d:D)=>number);
@@ -616,6 +616,23 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         );
     }
 
+    @autobind
+    private getTooltip() {
+        if (this.container && this.tooltipModel && this.props.tooltip) {
+            return (
+                <ScatterPlotTooltip
+                    placement={this.props.horizontal ? "bottom" : "right"}
+                    container={this.container}
+                    targetHovered={this.pointHovered}
+                    targetCoords={{x: this.tooltipModel.x + this.leftPadding, y: this.tooltipModel.y + this.topPadding}}
+                    overlay={this.props.tooltip(this.tooltipModel.datum)}
+                />
+            );
+        } else {
+            return <span></span>;
+        }
+    }
+
 
     render() {
         if (!this.props.data.length) {
@@ -626,15 +643,9 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                 <Observer>
                     {this.getChart}
                 </Observer>
-                {this.container && this.tooltipModel && this.props.tooltip && (
-                    <ScatterPlotTooltip
-                        placement={this.props.horizontal ? "bottom" : "right"}
-                        container={this.container}
-                        targetHovered={this.pointHovered}
-                        targetCoords={{x: this.tooltipModel.x + this.leftPadding, y: this.tooltipModel.y + this.topPadding}}
-                        overlay={this.props.tooltip(this.tooltipModel.datum)}
-                    />
-                )}
+                <Observer>
+                    {this.getTooltip}
+                </Observer>
             </div>
         );
     }
