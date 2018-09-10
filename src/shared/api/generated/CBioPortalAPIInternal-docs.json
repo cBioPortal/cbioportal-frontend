@@ -309,6 +309,18 @@
         ],
         "parameters": [
           {
+            "name": "filterType",
+            "in": "query",
+            "description": "Filter type",
+            "required": false,
+            "type": "string",
+            "default": "INCLUSION",
+            "enum": [
+              "INCLUSION",
+              "EXCLUSION"
+            ]
+          },
+          {
             "in": "body",
             "name": "studyViewFilter",
             "description": "Study view filter",
@@ -1123,7 +1135,7 @@
         "tags": [
           "Study View"
         ],
-        "summary": "Fetch sample IDs by study view filter",
+        "summary": "Fetch sample counts by study view filter",
         "operationId": "fetchMolecularProfileSampleCountsUsingPOST",
         "consumes": [
           "application/json"
