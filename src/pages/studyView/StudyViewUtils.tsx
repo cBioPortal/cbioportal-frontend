@@ -6,9 +6,9 @@ import { Sample, Gene, ClinicalAttribute } from "shared/api/generated/CBioPortal
 import * as React from "react";
 import {getSampleViewUrl, getStudySummaryUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
-import {BarDatum} from "./charts/barChart/BarChart";
-import {ClinicalDataTypeConstants, StudyWithSamples} from "pages/studyView/StudyViewPageStore";
-import {ClinicalDataType} from "./StudyViewPageStore";
+import { BarDatum} from "./charts/barChart/BarChart";
+import {ClinicalDataTypeConstants,StudyWithSamples } from "pages/studyView/StudyViewPageStore";
+import {ChartType,ClinicalDataType} from "./StudyViewPageStore";
 
 //TODO:cleanup
 export const COLORS = [
@@ -70,6 +70,13 @@ export const COLORS = [
 export const NA_COLOR = '#CCCCCC';
 export const UNSELECTED_COLOR = '#808080';
 export const NA_DATA = "NA";
+export const EXPONENTIAL_FRACTION_DIGITS = 3;
+
+// ---- These are the settings from configs.json in the previous study view ----
+// TODO: figure out a way to custom the following settings
+export const DEFAULT_ATTRS_SHOW_AS_TABLE = ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'];
+export const PIE_TO_TABLE_LIMIT = 20;
+// -----------------------------------------------------------------------------
 
 const OPERATOR_MAP: {[op:string]: string} = {
     "<=": "≤",
@@ -613,4 +620,28 @@ export function toFixedDigit(value: number)
         Math.floor(absLogValue) - 1 : Math.floor(absLogValue);
 
     return `${Number(value.toFixed(numberOfLeadingDecimalZeroes + 2))}`;
+}
+
+
+export function getCNAByAlteration(alteration: number) {
+    if ([-2, 2].includes(alteration))
+        return alteration === -2 ? 'DEL' : 'AMP';
+    return '';
+}
+
+export function getDefaultChartTypeByClinicalAttribute(clinicalAttribute: ClinicalAttribute): ChartType | undefined {
+    if (DEFAULT_ATTRS_SHOW_AS_TABLE.includes(clinicalAttribute.clinicalAttributeId)) {
+        return ChartType.TABLE;
+    }
+
+    // TODO: update logic when number of categories above PIE_TO_TABLE_LIMIT
+    if (clinicalAttribute.datatype === 'STRING') {
+        return ChartType.PIE_CHART;
+    }
+
+    if (clinicalAttribute.datatype === 'NUMBER') {
+        return ChartType.BAR_CHART;
+    }
+
+    return undefined;
 }

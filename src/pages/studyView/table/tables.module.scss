@@ -23,6 +23,10 @@
   align-items: center;
 }
 
+.labelContentSVG {
+  flex-shrink: 0;
+}
+
 .bottomTools {
   display: flex;
   justify-content: space-between;

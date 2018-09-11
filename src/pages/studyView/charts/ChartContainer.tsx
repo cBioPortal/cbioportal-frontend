@@ -43,6 +43,7 @@ export interface IChartContainerDownloadProps {
 
 export interface IChartContainerProps {
     chartMeta: ChartMeta;
+    title: string;
     promise: MobxPromise<any>;
     filters: any;
     onValueSelection?: any;
@@ -392,6 +393,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                  onMouseLeave={this.handlers.onMouseLeaveChart}>
                 <ChartHeader
                     chartMeta={this.props.chartMeta}
+                    title={this.props.title}
                     active={this.mouseInChart}
                     resetChart={this.handlers.resetFilters}
                     deleteChart={this.handlers.onDeleteChart}
