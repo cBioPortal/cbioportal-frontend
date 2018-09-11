@@ -12,6 +12,7 @@ import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import FixedHeaderTable from "./FixedHeaderTable";
 import {bind} from "bind-decorator";
+import {EXPONENTIAL_FRACTION_DIGITS, getCNAByAlteration} from "../StudyViewUtils";
 
 
 export type  CNAGenesTableUserSelectionWithIndex = CopyNumberGeneFilterElement & {
@@ -45,7 +46,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                 const addGeneOverlay = () =>
                     <span>{`Click ${data.hugoGeneSymbol} to ${_.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? 'remove' : 'add'} from your query`}</span>;
                 const qvalOverlay = () =>
-                    <div><b>Gistic</b><br/><i>Q-value: </i><span>{data.qValue}</span></div>;
+                    <div><b>Gistic</b><br/><i>Q-value: </i><span>{data.qValue.toExponential(EXPONENTIAL_FRACTION_DIGITS)}</span></div>;
                 return (
                     <div className={classnames(styles.noFlexShrink, styles.displayFlex)}>
                         <DefaultTooltip
@@ -92,12 +93,12 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             name: 'CNA',
             render: (data: CopyNumberCountByGene) =>
                 <span className={classnames(data.alteration === -2 ? styles.del : styles.amp)}>
-                    {data.alteration === -2 ? 'DEL' : 'AMP'}
+                    {getCNAByAlteration(data.alteration)}
                 </span>,
             sortBy: (data: CopyNumberCountByGene) => data.alteration,
             defaultSortDirection: 'asc' as 'asc',
             filter: (data: CopyNumberCountByGene, filterString: string, filterStringUpper: string) => {
-                return (data.alteration === -2 ? 'DEL' : 'AMP').indexOf(filterStringUpper) > -1;
+                return getCNAByAlteration(data.alteration).indexOf(filterStringUpper) > -1;
             },
             width: 65
         },

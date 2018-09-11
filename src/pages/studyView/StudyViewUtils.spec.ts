@@ -3,11 +3,14 @@ import {
     calcIntervalBinValues, filterCategoryBins, filterIntervalBins, filterNumericalBins,
     generateCategoricalData, generateNumericalData, isLogScaleByDataBins, isLogScaleByValues,
     getClinicalDataIntervalFilterValues, makePatientToClinicalAnalysisGroup, updateGeneQuery, formatNumericalTickValues,
-    intervalFiltersDisplayValue
+    intervalFiltersDisplayValue,
+    getCNAByAlteration,
+    getDefaultChartTypeByClinicalAttribute,
+    getVirtualStudyDescription
 } from 'pages/studyView/StudyViewUtils';
-import { getVirtualStudyDescription } from 'pages/studyView/StudyViewUtils';
-import { Gene } from 'shared/api/generated/CBioPortalAPI';
 import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue} from 'shared/api/generated/CBioPortalAPIInternal';
+import {ClinicalAttribute, Gene} from 'shared/api/generated/CBioPortalAPI';
+import {ChartType} from "./StudyViewPageStore";
 
 describe('StudyViewUtils', () => {
 
@@ -693,4 +696,43 @@ describe('StudyViewUtils', () => {
             assert.equal(value, "> 10, NA, REDACTED");
         });
     });
+
+    describe('getCNAByAlteration', ()=>{
+        it('return proper string from proper alteration', ()=>{
+            assert.isTrue(getCNAByAlteration(-2) === 'DEL');
+            assert.isTrue(getCNAByAlteration(2) === 'AMP');
+        });
+
+        it('return empty string when alteration is not 2 or -2', ()=>{
+            assert.isTrue(getCNAByAlteration(0) === '');
+            assert.isTrue(getCNAByAlteration(1) === '');
+            assert.isTrue(getCNAByAlteration(-1) === '');
+        });
+    });
+
+    describe('getDefaultChartTypeByClinicalAttribute', () => {
+        it('return TABLE when the clinical attributes are pre-defined as table', () => {
+            let attr: ClinicalAttribute = {
+                clinicalAttributeId: 'CANCER_TYPE'
+            } as ClinicalAttribute;
+            assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartType.TABLE);
+
+            attr.clinicalAttributeId = 'CANCER_TYPE_DETAILED';
+            assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartType.TABLE);
+        });
+
+        it('return PIE_CHART when clinical attribute has data type as STRING', () => {
+            const attr:ClinicalAttribute = {
+                datatype: 'STRING'
+            } as ClinicalAttribute;
+            assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartType.PIE_CHART);
+        });
+
+        it('return BAR_CHART when clinical attribute has data type as STRING', () => {
+            const attr:ClinicalAttribute = {
+                datatype: 'NUMBER'
+            } as ClinicalAttribute;
+            assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartType.BAR_CHART);
+        });
+    })
 });

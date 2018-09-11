@@ -9,6 +9,7 @@ import {
     CopyNumberCountByGene,
     CopyNumberGeneFilter,
     CopyNumberGeneFilterElement,
+    MolecularProfileSampleCount,
     MutationCountByGene,
     MutationGeneFilter,
     Sample,
@@ -33,8 +34,17 @@ import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import StudyViewClinicalDataCountsCache from 'shared/cache/StudyViewClinicalDataCountsCache';
 import StudyViewClinicalDataBinCountsCache from "shared/cache/StudyViewClinicalDataBinCountsCache";
 import {
-    getClinicalAttributeUniqueKey,getClinicalDataType, isLogScaleByDataBins, isPreSelectedClinicalAttr, isFiltered, NA_DATA,
-    makePatientToClinicalAnalysisGroup, getClinicalDataIntervalFilterValues
+    getClinicalAttributeUniqueKey,
+    getClinicalDataType,
+    isLogScaleByDataBins,
+    isFiltered,
+    getClinicalDataIntervalFilterValues,
+    isPreSelectedClinicalAttr,
+    makePatientToClinicalAnalysisGroup,
+    NA_DATA,
+    EXPONENTIAL_FRACTION_DIGITS,
+    getCNAByAlteration,
+    getDefaultChartTypeByClinicalAttribute
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -45,7 +55,7 @@ import { unparseOQLQueryLine } from 'shared/lib/oql/oqlfilter';
 import formSubmit from 'shared/lib/formSubmit';
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
-import { VirtualStudy } from 'shared/model/VirtualStudy';
+import {VirtualStudy} from 'shared/model/VirtualStudy';
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
 
@@ -840,11 +850,12 @@ export class StudyViewPageStore {
         _.reduce(this.clinicalAttributes.result, (acc: { [id: string]: ChartMeta }, attribute) => {
             const uniqueKey = getClinicalAttributeUniqueKey(attribute);
             //TODO: currently only piechart is handled
-            if (attribute.datatype === ClinicalAttributeDataTypeConstants.STRING) {
+            const chartType = getDefaultChartTypeByClinicalAttribute(attribute);
+            if (attribute.datatype === 'STRING' && chartType !== undefined) {
                 acc[uniqueKey] = {
                     displayName: attribute.displayName,
                     uniqueKey: uniqueKey,
-                    chartType: ChartType.PIE_CHART,
+                    chartType: chartType,
                     description: attribute.description,
                     clinicalAttribute: attribute
                 };
@@ -1161,7 +1172,7 @@ export class StudyViewPageStore {
     });
 
     readonly mutatedGeneData = remoteData<MutatedGenesData>({
-        await:()=>[this.mutationProfiles],
+        await: () => [this.mutationProfiles],
         invoke: async () => {
             if (!_.isEmpty(this.mutationProfiles.result!)) {
                 //TDOD: get data for all profiles
@@ -1335,6 +1346,35 @@ export class StudyViewPageStore {
         }
     }
 
+    public async getMutatedGenesDownloadData() {
+        if (this.mutatedGeneData.result) {
+            let data = [['Gene', 'MutSig(Q-value)', '# Mut', '#', 'Freq'].join('\t')];
+            _.each(this.mutatedGeneData.result, function (record: MutationCountByGene) {
+                data.push([
+                    record.hugoGeneSymbol,
+                    record.qValue === undefined ? '' : record.qValue.toExponential(EXPONENTIAL_FRACTION_DIGITS),
+                    record.totalCount, record.countByEntity, record.frequency + '%'].join("\t"));
+            });
+            return data.join("\n");
+        } else
+            return '';
+    }
+
+    public async getGenesCNADownloadData() {
+        if (this.cnaGeneData.result) {
+            let data = [['Gene', 'Gistic(Q-value)', 'Cytoband', 'CNA', '#', 'Freq'].join('\t')];
+            _.each(this.cnaGeneData.result, function (record: CopyNumberCountByGene) {
+                data.push([
+                    record.hugoGeneSymbol,
+                    record.qValue === undefined ? '' : record.qValue.toExponential(EXPONENTIAL_FRACTION_DIGITS),
+                    record.cytoband, getCNAByAlteration(record.alteration),
+                    record.countByEntity, record.frequency + '%'].join("\t"));
+            });
+            return data.join("\n");
+        } else
+            return '';
+    }
+
     readonly survivalPlotData = remoteData<SurvivalType[]>({
         await: () => [this.survivalData, this.selectedPatientKeys, this.unSelectedPatientKeys],
         invoke: async () => {
@@ -1442,7 +1482,7 @@ export class StudyViewPageStore {
         default: []
     });
 
-    readonly molecularProfileSampleCounts = remoteData({
+    readonly molecularProfileSampleCounts = remoteData<MolecularProfileSampleCount>({
         invoke: async () => {
             return internalClient.fetchMolecularProfileSampleCountsUsingPOST({
                 studyViewFilter: this.filters
