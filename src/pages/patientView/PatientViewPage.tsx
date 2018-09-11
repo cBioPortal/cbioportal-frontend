@@ -377,6 +377,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             {
                                 (patientViewPageStore.oncoKbAnnotatedGenes.isComplete && patientViewPageStore.mutationData.isComplete && patientViewPageStore.uncalledMutationData.isComplete && !!sampleManager) && (
                                     <PatientViewMutationTable
+                                        initialItemsPerPage = {-1}
+                                        showPagination={false}
                                         sampleManager={sampleManager}
                                         sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
                                         uniqueSampleKeyToTumorType={patientViewPageStore.uniqueSampleKeyToTumorType}

@@ -1,30 +1,43 @@
 import SimpleTable from "../simpleTable/SimpleTable";
 import * as React from 'react';
-import {observable, computed, action, reaction, IReactionDisposer, autorun} from "mobx";
+import {action, computed, IReactionDisposer, observable, reaction} from "mobx";
 import {observer, Observer} from "mobx-react";
 import './styles.scss';
 import {
-    SHOW_ALL_PAGE_SIZE as PAGINATION_SHOW_ALL, PaginationControls, IPaginationControlsProps
+    IPaginationControlsProps,
+    PaginationControls,
+    SHOW_ALL_PAGE_SIZE as PAGINATION_SHOW_ALL
 } from "../paginationControls/PaginationControls";
 import {
-    ColumnVisibilityControls, IColumnVisibilityDef, IColumnVisibilityControlsProps
+    ColumnVisibilityControls,
+    IColumnVisibilityControlsProps,
+    IColumnVisibilityDef
 } from "../columnVisibilityControls/ColumnVisibilityControls";
-import {
-    CopyDownloadControls, ICopyDownloadData
-} from "../copyDownloadControls/CopyDownloadControls";
-import {
-    resolveColumnVisibility, resolveColumnVisibilityByColumnDefinition
-} from "./ColumnVisibilityResolver";
+import {CopyDownloadControls, ICopyDownloadData} from "../copyDownloadControls/CopyDownloadControls";
+import {resolveColumnVisibility, resolveColumnVisibilityByColumnDefinition} from "./ColumnVisibilityResolver";
 import {ICopyDownloadControlsProps} from "../copyDownloadControls/ICopyDownloadControls";
 import {SimpleCopyDownloadControls} from "../copyDownloadControls/SimpleCopyDownloadControls";
 import {serializeData} from "shared/lib/Serializer";
 import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import {ButtonToolbar} from "react-bootstrap";
-import { If } from 'react-if';
+import {Else, If, Then} from 'react-if';
 import {SortMetric} from "../../lib/ISortMetric";
-import {ILazyMobXTableApplicationDataStore, SimpleLazyMobXTableApplicationDataStore} from "../../lib/ILazyMobXTableApplicationDataStore";
+import {
+    ILazyMobXTableApplicationDataStore,
+    SimpleLazyMobXTableApplicationDataStore
+} from "../../lib/ILazyMobXTableApplicationDataStore";
 import {ILazyMobXTableApplicationLazyDownloadDataFetcher} from "../../lib/ILazyMobXTableApplicationLazyDownloadDataFetcher";
 import {maxPage} from "./utils";
+import {
+    AutoSizer,
+    CellMeasurer,
+    CellMeasurerCache,
+    Column as VirColumn,
+    Table as VirTable,
+    TableCellProps,
+    TableHeaderProps
+} from "react-virtualized";
+import 'react-virtualized/styles.css';
 
 export type SortDirection = 'asc' | 'desc';
 
@@ -213,8 +226,20 @@ class LazyMobXTableStore<T> {
     // this one keeps the state of the latest action (latest user selection)
     @observable private _columnVisibilityOverride:{[columnId: string]: boolean}|undefined;
 
+    public _cache = new CellMeasurerCache({
+        defaultWidth: 50,
+        minWidth: 50,
+        fixedHeight:true
+    });
+
+    @observable private tableWidth:number;
+
     @computed public get itemsPerPage() {
         return this._itemsPerPage;
+    }
+
+    @action updateTableWidth(newWidth:number) {
+        this.tableWidth = newWidth;
     }
 
     public set itemsPerPage(i:number) {
@@ -336,8 +361,7 @@ class LazyMobXTableStore<T> {
         }
     }
 
-    @computed get headers():JSX.Element[] {
-        return this.visibleColumns.map((column:Column<T>)=>{
+    private headerRenderer(column:Column<T>) {
             const headerProps:{role?:"button",
                 className?:"multilineHeader sort-asc"|"multilineHeader sort-des",
                 onClick?:()=>void} = {};
@@ -387,11 +411,58 @@ class LazyMobXTableStore<T> {
                     {thContents}
                 </th>
             );
-        });
+    }
+
+    @computed get headers():JSX.Element[] {
+        return this.visibleColumns.map(this.headerRenderer.bind(this));
     }
 
     @computed get visibleColumns():Column<T>[] {
         return this.columns.filter(column=>this.isVisible(column));
+    }
+
+    @computed
+    get columnsWidth() {
+        let allValidLength = 0;
+        let columnsWidth = this.visibleColumns.map((column: Column<T>, index: number) => {
+            allValidLength += this._cache.columnWidth({index: index});
+            return this._cache.columnWidth({index: index});
+        });
+
+        if (allValidLength < this.tableWidth) {
+            columnsWidth = columnsWidth.map((column: number, index) => {
+                return column * this.tableWidth / allValidLength
+            });
+        }
+
+        console.log(allValidLength, this.tableWidth, JSON.stringify(columnsWidth));
+        return columnsWidth;
+    }
+
+    @computed get tableColumns() {
+        return this.visibleColumns.map((column: Column<T>, index: number) => {
+            console.log(column.name, JSON.stringify(this._cache.columnWidth({index: index})));
+            return <VirColumn
+                dataKey={column.name}
+                label={column.name}
+                width={this.columnsWidth[index]}
+                headerRenderer={function (prop: TableHeaderProps) {
+                    return this.headerRenderer(column);
+                }.bind(this)}
+                cellRenderer={function (props: TableCellProps) {
+                    return (<CellMeasurer
+                            cache={this._cache}
+                            columnIndex={props.columnIndex}
+                            key={props.dataKey}
+                            parent={props.parent}
+                            rowIndex={props.rowIndex}
+                        >
+                        {column.render(props.rowData)}
+                        </CellMeasurer>
+                    )
+                }.bind(this)}
+            />
+        })
     }
 
     @computed get colVisProp(): IColumnVisibilityDef[]
@@ -594,11 +665,12 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
     private filterInput:HTMLInputElement;
     private filterInputReaction:IReactionDisposer;
     private pageToHighlightReaction:IReactionDisposer;
+    private lastRenderedWidth:number;
 
     public static defaultProps = {
         showFilter: true,
         showCopyDownload: true,
-        showPagination: true,
+        showPagination: false,
         showColumnVisibility: true,
 		showPaginationAtTop: false,
         showCountHeader: false
@@ -817,15 +889,44 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
     }
 
     private getTable() {
+        console.log(JSON.stringify(this.store._cache));
         return (
-            <div style={{overflowX: this.props.enableHorizontalScroll ? "auto" : "visible"}}>
-                <SimpleTable
-                    headers={this.store.headers}
-                    rows={this.store.rows}
-                    className={this.props.className}
-                />
-            </div>
-        );
+            <If condition={this.props.showPagination === true}>
+                <Then>
+                    <div style={{overflowX: this.props.enableHorizontalScroll ? "auto" : "visible"}}>
+                        <SimpleTable
+                            headers={this.store.headers}
+                            rows={this.store.rows}
+                            className={this.props.className}
+                        />
+                    </div>
+                </Then>
+                <Else>
+                    <AutoSizer disableHeight>
+                        {({width}) => {
+                            // if (this.lastRenderedWidth != width) {
+                            //     this.lastRenderedWidth = width;
+                            //     this.store._cache.clearAll();
+                            // }
+                            this.store.updateTableWidth(width);
+                            return (
+                            <VirTable
+                                deferredMeasurementCache={this.store._cache}
+                                width={width}
+                                height={300}
+                                headerHeight={30}
+                                rowHeight={30}
+                                rowCount={this.store.visibleData.length}
+                                rowGetter={({index}) => this.store.visibleData[index]}
+                            >
+                                {(
+                                    this.store.tableColumns
+                                )}
+                            </VirTable>
+                        )}}</AutoSizer>
+                </Else>
+            </If>
+        )
     }
 
     render() {
