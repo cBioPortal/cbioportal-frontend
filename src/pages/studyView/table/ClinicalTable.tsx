@@ -39,7 +39,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
                         this.tooltipLabelMouseEnter(data.value)
                     }}
                     onMouseLeave={this.tooltipLabelMouseLeave}>
-                    <svg width="18" height="12">
+                    <svg width="18" height="12" className={styles.labelContentSVG}>
                         <g>
                             <rect x="0" y="0" width="12" height="12" fill={data.color}/>
                         </g>
@@ -48,7 +48,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
                 </div>
             )
         },
-        filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => (d.value.indexOf(filterStringUpper) > -1),
+        filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => (d.value.toUpperCase().indexOf(filterStringUpper) > -1),
         sortBy: (d: ClinicalDataCountWithColor) => d.value,
         defaultSortDirection: 'asc' as 'asc',
         width: 180
@@ -60,7 +60,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
                 onChange={event => this.onUserSelection(data.value)}>
                 {data.count}
             </LabeledCheckbox>,
-        filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => (d.count.toString().indexOf(filterStringUpper) > -1),
+        filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => (d.count.toString().indexOf(f) > -1),
         sortBy: (d: ClinicalDataCountWithColor) => d.count,
         defaultSortDirection: 'desc' as 'desc',
         width: 60

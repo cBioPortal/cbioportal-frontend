@@ -12,6 +12,7 @@ import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import FixedHeaderTable from "./FixedHeaderTable";
 import {action, computed, observable} from "mobx";
 import {bind} from "bind-decorator";
+import {EXPONENTIAL_FRACTION_DIGITS} from "../StudyViewUtils";
 
 export interface IMutatedGenesTablePros {
     promise: MobxPromise<MutatedGenesData>;
@@ -45,7 +46,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                 const addGeneOverlay = () =>
                     <span>{`Click ${data.hugoGeneSymbol} to ${_.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? 'remove' : 'add'} from your query`}</span>;
                 const qvalOverlay = () =>
-                    <div><b>MutSig</b><br/><i>Q-value: </i><span>{data.qValue}</span></div>;
+                    <div><b>MutSig</b><br/><i>Q-value: </i><span>{data.qValue.toExponential(EXPONENTIAL_FRACTION_DIGITS)}</span></div>;
                 return (
                     <div className={styles.ellipsisText}>
                         <DefaultTooltip

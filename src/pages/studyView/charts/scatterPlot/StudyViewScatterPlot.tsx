@@ -180,10 +180,13 @@ export default class StudyViewScatterPlot extends React.Component<IStudyViewScat
 
     @autobind
     private onSelection(points:any) {
-        const selectedSamples = _.flatten(points[0].data.map((p:any)=>p.data.map((d:IStudyViewScatterPlotData)=>({
-            sampleId: d.sampleId,
-            studyId: d.studyId
-        })))) as SampleIdentifier[];
+        const selectedSamples = _.reduce(points, function (acc, point) {
+            _.each(point.data, datum => _.each(datum.data, (d: IStudyViewScatterPlotData) => acc.push({
+                sampleId: d.sampleId,
+                studyId: d.studyId
+            })));
+            return acc;
+        }, [] as SampleIdentifier[]);
 
         this.props.onSelection(selectedSamples, this.shiftPressed); // keep other selection if shift pressed
     }
