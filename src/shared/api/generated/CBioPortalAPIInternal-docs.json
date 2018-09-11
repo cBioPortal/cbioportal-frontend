@@ -309,16 +309,12 @@
         ],
         "parameters": [
           {
-            "name": "filterType",
+            "name": "negateFilters",
             "in": "query",
-            "description": "Filter type",
+            "description": "Whether to negate the study view filters",
             "required": false,
-            "type": "string",
-            "default": "INCLUSION",
-            "enum": [
-              "INCLUSION",
-              "EXCLUSION"
-            ]
+            "type": "boolean",
+            "default": false
           },
           {
             "in": "body",
