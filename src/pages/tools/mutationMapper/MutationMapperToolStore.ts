@@ -20,7 +20,6 @@ import {fetchHotspotsData, indexHotspotsData} from "shared/lib/CancerHotspotsUti
 import {IHotspotIndex} from "shared/model/CancerHotspots";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
-import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import MutationMapperStore from "shared/components/mutationMapper/MutationMapperStore";
 import { VariantAnnotation, EnsemblTranscript } from "shared/api/generated/GenomeNexusAPI";
@@ -130,7 +129,7 @@ export default class MutationMapperToolStore
     }, []);
 
     readonly indexedVariantAnnotations = remoteData<{[genomicLocation: string]: VariantAnnotation} | undefined>({
-        invoke: async () => await fetchVariantAnnotationsIndexedByGenomicLocation(this.rawMutations),
+        invoke: async () => await fetchVariantAnnotationsIndexedByGenomicLocation(this.rawMutations, ["annotation_summary","hotspots"], AppConfig.isoformOverrideSource),
         onError: (err: Error) => {
             this.criticalErrors.push(err);
         }
@@ -182,10 +181,10 @@ export default class MutationMapperToolStore
                         gene,
                         getMutations,
                         this.indexedHotspotData,
+                        this.indexedVariantAnnotations,
                         this.oncoKbAnnotatedGenes.result || {},
                         this.oncoKbData,
                         this.uniqueSampleKeyToTumorType.result || {},
-                        () => (this.genomeNexusEnrichmentCache),
                     );
                     return map;
                 }, {}));
@@ -227,10 +226,6 @@ export default class MutationMapperToolStore
 
     @cached get pubMedCache() {
         return new PubMedCache();
-    }
-
-    @cached get genomeNexusEnrichmentCache() {
-        return new GenomeNexusEnrichmentCache();
     }
 
     @cached get pdbHeaderCache() {

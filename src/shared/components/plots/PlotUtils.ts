@@ -1,3 +1,5 @@
+import _ from "lodash";
+
 export function getDeterministicRandomNumber(seed:number, range?:[number, number]) {
     // source: https://stackoverflow.com/a/23304189
     seed = Math.sin(seed)*10000;
@@ -24,7 +26,7 @@ export function getJitterForCase(uniqueKey:string) {
     return getDeterministicRandomNumber(seed, [-1,1]);
 }
 
-export function scatterPlotSize<D>(
+export function makeScatterPlotSizeFunction<D>(
     highlight?:(d:D)=>boolean,
     size?:(d:D, active:Boolean, isHighlighted?:boolean)=>number
 ) {
@@ -40,4 +42,89 @@ export function scatterPlotSize<D>(
             return (active || !!(highlight && highlight(d)) ? 6 : 3);
         };
     }
+}
+
+export function scatterPlotSize(
+    d:any,
+    active:boolean,
+    isHighlighted:boolean
+) {
+    if (isHighlighted) {
+        return 8;
+    } else if (active) {
+        return 6;
+    } else {
+        return 4;
+    }
+}
+
+
+export function separateScatterDataByAppearance<D>(
+    data:D[],
+    fill:string | ((d:D)=>string),
+    stroke:string | ((d:D)=>string),
+    strokeWidth:number | ((d:D)=>number),
+    strokeOpacity:number | ((d:D)=>number),
+    fillOpacity:number | ((d:D)=>number),
+    zIndexSortBy?:((d:D)=>any)[] // second argument to _.sortBy
+):{
+    data:D[],
+    fill:string,
+    stroke:string,
+    strokeWidth:number,
+    strokeOpacity:number,
+    fillOpacity:number
+}[] {
+    let buckets:{
+        data:D[],
+        fill:string,
+        stroke:string,
+        strokeWidth:number,
+        strokeOpacity:number,
+        fillOpacity:number,
+        sortBy:any[]
+    }[] = [];
+
+    let d_fill:string, d_stroke:string, d_strokeWidth:number, d_strokeOpacity:number, d_fillOpacity:number,
+        d_sortBy:any[], bucketFound:boolean;
+
+    for (const datum of data) {
+        // compute appearance for datum
+        d_fill = (typeof fill === "function" ? fill(datum) : fill);
+        d_stroke = (typeof stroke === "function" ? stroke(datum) : stroke);
+        d_strokeWidth = (typeof strokeWidth === "function" ? strokeWidth(datum) : strokeWidth);
+        d_strokeOpacity = (typeof strokeOpacity === "function" ? strokeOpacity(datum) : strokeOpacity);
+        d_fillOpacity = (typeof fillOpacity === "function" ? fillOpacity(datum) : fillOpacity);
+        d_sortBy = (zIndexSortBy ? zIndexSortBy.map(f=>f(datum)) : [1]);
+
+        // look for existing bucket to put datum
+        bucketFound = false;
+        for (const bucket of buckets) {
+            if (bucket.fill === d_fill && bucket.stroke === d_stroke && bucket.strokeWidth === d_strokeWidth &&
+                    bucket.strokeOpacity === d_strokeOpacity && bucket.fillOpacity === d_fillOpacity &&
+                    _.isEqual(bucket.sortBy, d_sortBy)) {
+                // if bucket with matching appearance exists, add to bucket
+                bucket.data.push(datum);
+                // mark bucket has been found so we dont need to add a bucket
+                bucketFound = true;
+                break;
+            }
+        }
+        if (!bucketFound) {
+            // if no bucket found, add bucket, and put datum in it
+            buckets.push({
+                data: [datum],
+                fill: d_fill, stroke: d_stroke, strokeWidth: d_strokeWidth,
+                strokeOpacity: d_strokeOpacity, fillOpacity: d_fillOpacity,
+                sortBy: d_sortBy
+            });
+        }
+    }
+
+    if (zIndexSortBy) {
+        // sort by sortBy
+        const sortBy = zIndexSortBy.map((f, index)=>((bucket:typeof buckets[0])=>bucket.sortBy[index]));
+        buckets = _.sortBy<typeof buckets[0]>(buckets, sortBy);
+    }
+    return buckets;
 }

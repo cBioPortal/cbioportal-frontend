@@ -107,7 +107,7 @@ switch (window.defaultRoute) {
 const syncedHistory = syncHistoryWithStore(history, routingStore);
 
 // lets make query Store since it's used in a lot of places
-const queryStore = new QueryStore(window, window.location.href);
+const queryStore = (/\/patient$/.test(window.location.pathname)) ? {} : new QueryStore(window, window.location.href);
 
 const stores = {
     // Key can be whatever you want
