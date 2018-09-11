@@ -1,12 +1,12 @@
 import _ from "lodash";
-import { SingleGeneQuery } from "shared/lib/oql/oql-parser";
-import { unparseOQLQueryLine } from "shared/lib/oql/oqlfilter";
-import { StudyViewFilter } from "shared/api/generated/CBioPortalAPIInternal";
-import { Sample, Gene } from "shared/api/generated/CBioPortalAPI";
+import {SingleGeneQuery} from "shared/lib/oql/oql-parser";
+import {unparseOQLQueryLine} from "shared/lib/oql/oqlfilter";
+import {StudyViewFilter} from "shared/api/generated/CBioPortalAPIInternal";
+import {Gene, Sample} from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
 import {getSampleViewUrl, getStudySummaryUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
-import { StudyWithSamples } from "pages/studyView/StudyViewPageStore";
+import {StudyWithSamples} from "pages/studyView/StudyViewPageStore";
 import {ClinicalDataType} from "./StudyViewPageStore";
 import {ClinicalAttribute} from "../../shared/api/generated/CBioPortalAPI";
 
