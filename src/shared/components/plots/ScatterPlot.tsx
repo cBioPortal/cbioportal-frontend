@@ -25,7 +25,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     highlight?:(d:D)=>boolean;
     fill?:string | ((d:D)=>string);
     stroke?:string | ((d:D)=>string);
-    size?:(d:D, active:boolean, isHighlighted?:boolean)=>number;
+    size?:number | ((d:D, active:boolean, isHighlighted?:boolean)=>number);
     fillOpacity?:number | ((d:D)=>number);
     strokeOpacity?:number | ((d:D)=>number);
     strokeWidth?:number | ((d:D)=>number);
