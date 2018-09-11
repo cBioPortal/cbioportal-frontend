@@ -2,6 +2,10 @@ import {default as URL, QueryParams} from "url";
 import AppConfig from "appConfig";
 import formSubmit from "shared/lib/formSubmit";
 
+export function trimTrailingSlash(str:string){
+   return str.replace(/^\/|\/$/g,"");
+}
+
 export function getHost(){
     if (typeof AppConfig.apiRoot === 'string') {
         return AppConfig.apiRoot.replace(/^http[s]?:\/\//,'').replace(/\/$/,""); // get rid of protocol and trailing slashes
@@ -112,13 +116,14 @@ export function getGenomeNexusApiUrl() {
 }
 
 export function getVirtualStudyServiceUrl() {
-    return `${AppConfig.sessionServiceUrl!}/virtual_study`;
+    const base = trimTrailingSlash(AppConfig.sessionServiceUrl!);
+    return `${base}/virtual_study`;
 }
 
 export function getSessionServiceUrl() {
-    return `${AppConfig.sessionServiceUrl!}/main_session`;
+    const base = trimTrailingSlash(AppConfig.sessionServiceUrl!);
+    return `${base}/main_session`;
 }
-
 
 export function getConfigurationServiceApiUrl() {
     return AppConfig.configurationServiceUrl;
