@@ -184,20 +184,6 @@ export function scatterPlotZIndexSortBy<D extends Pick<IScatterPlotSampleData, "
     return sortBy;
 }
 
-export function scatterPlotSize(
-    d:IScatterPlotSampleData,
-    active:boolean,
-    isHighlighted:boolean
-) {
-    if (isHighlighted) {
-        return 8;
-    } else if (active) {
-        return 6;
-    } else {
-        return 4;
-    }
-}
-
 export function scatterPlotLegendData(
     data:IScatterPlotSampleData[],
     viewType:ViewType,
