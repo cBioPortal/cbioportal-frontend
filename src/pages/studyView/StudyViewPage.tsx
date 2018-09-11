@@ -125,6 +125,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     renderAttributeChart = (chartMeta: ChartMeta) => {
         const props:Partial<IChartContainerProps> = {
             chartMeta: chartMeta,
+            title: chartMeta.displayName,
             filters: [],
             onDeleteChart: this.handlers.onDeleteChart,
             analysisGroupsPossible:this.store.analysisGroupsPossible,
@@ -205,10 +206,11 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 props.onResetSelection = this.handlers.resetGeneFilter;
                 props.selectedGenes=this.store.selectedGenes;
                 props.onGeneSelect=this.store.onCheckGene;
+                props.title = props.title + ( !this.store.molecularProfileSampleCounts.isComplete || this.store.molecularProfileSampleCounts.result === undefined ? '' : ` (${this.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples} profiled samples)`),
                 props.download = [
                     {
                         // TODO implement a proper data download function
-                        initDownload: () => Promise.resolve("NA"),
+                        initDownload: () => this.store.getMutatedGenesDownloadData(),
                         type: 'TSV'
                     }
                 ];
@@ -221,10 +223,11 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 props.onResetSelection = this.handlers.resetCNAGeneFilter;
                 props.selectedGenes=this.store.selectedGenes;
                 props.onGeneSelect=this.store.onCheckGene;
+                props.title = props.title + ( !this.store.molecularProfileSampleCounts.isComplete || this.store.molecularProfileSampleCounts.result === undefined ? '' : ` (${this.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples} profiled samples)`),
                 props.download = [
                     {
                         // TODO implement a proper data download function
-                        initDownload: () => Promise.resolve("NA"),
+                        initDownload: () => this.store.getGenesCNADownloadData(),
                         type: 'TSV'
                     }
                 ];
