@@ -52,6 +52,8 @@ export function resolveMissingMutationTypes(mutations: Partial<Mutation>[])
 }
 
 export async function fetchVariantAnnotationsIndexedByGenomicLocation(mutations: Mutation[],
+                                                                      fields:string[] = ["annotation_summary"],
+                                                                      isoformOverrideSource: string = "uniprot",
                                                                       client: GenomeNexusAPI = genomeNexusClient)
 {
     const genomicLocations = uniqueGenomicLocations(mutations);
@@ -59,7 +61,8 @@ export async function fetchVariantAnnotationsIndexedByGenomicLocation(mutations:
     const variantAnnotations = genomicLocations.length > 0 ? await client.fetchVariantAnnotationByGenomicLocationPOST(
         {
             genomicLocations,
-            fields: ['annotation_summary']
+            fields,
+            isoformOverrideSource
         }
     ): [];
 

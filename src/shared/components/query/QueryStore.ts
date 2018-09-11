@@ -117,6 +117,7 @@ export class QueryStore
 
 	constructor(_window:Window, urlWithInitialParams?:string)
 	{
+
 		labelMobxPromises(this);
 		if (urlWithInitialParams)
 			this.setParamsFromUrl(urlWithInitialParams);
@@ -153,7 +154,7 @@ export class QueryStore
 					let userSelectableIds:{[studyId:string]:boolean} = Object.assign({}, physicalStudyIdsSet, virtualStudyIdsSet);
 					let sharedIds:string[] = [];
 					let unknownIds:string[] = [];
-			
+
 					this._defaultSelectedIds.keys().forEach(id=>{
 						if(selectableStudiesSet[id]){
 							if(!userSelectableIds[id]){
@@ -492,7 +493,13 @@ export class QueryStore
 		default: {},
 	});
 
-	readonly virtualStudies = remoteData(sessionServiceClient.getUserVirtualStudies(), []);
+	readonly virtualStudies = remoteData(async ()=>{
+		if (AppConfig.sessionServiceIsEnabled) {
+			return sessionServiceClient.getUserVirtualStudies();
+		} else {
+			return [];
+		}
+	}, []);
 
 	@computed get selectableStudiesSet():{[studyId:string]:string[]} {
 		return  Object.assign({}, this.physicalStudiesIdsSet.result, this.virtualStudiesIdsSet.result, this.sharedQueriedStudiesSet.result);

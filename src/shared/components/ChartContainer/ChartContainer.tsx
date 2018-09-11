@@ -3,7 +3,7 @@ import autobind from "autobind-decorator";
 import DownloadControls from "../downloadControls/DownloadControls";
 
 interface IChartContainer {
-    getSVGElement?:()=>SVGElement;
+    getSVGElement?:()=>SVGElement|null;
     exportFileName?:string;
 }
 
