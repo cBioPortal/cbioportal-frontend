@@ -343,13 +343,13 @@ config.module.rules.push(
 
 if (isDev) {
     // add for testwriter
-    config.module.rules.push(
-        {
-            test: /\.ts|tsx/,
-            use:[{loader: 'testwriter'}]
-        }
-    );
-    config.entry.push(`${path.join(src, 'testWriter.js')}`);
+    // config.module.rules.push(
+    //     {
+    //         test: /\.ts|tsx/,
+    //         use:[{loader: 'testwriter'}]
+    //     }
+    // );
+    // config.entry.push(`${path.join(src, 'testWriter.js')}`);
 
     config.plugins.push(
         new webpack.NamedModulesPlugin(),
