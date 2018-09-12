@@ -18,13 +18,11 @@ import AppConfig from 'appConfig';
 import {gsUploadByGet} from "../../api/gsuploadwindow";
 import {ComponentGetsStoreContext} from "../../lib/ContextUtils";
 import URL from 'url';
-import {buildCBioPortalUrl, BuildUrlParams, getHost, openStudySummaryFormSubmit} from "../../api/urls";
+import { openStudySummaryFormSubmit} from "../../api/urls";
 import StudyListLogic from "./StudyListLogic";
 import {QuerySession} from "../../lib/QuerySession";
 import {stringListToIndexSet, stringListToSet} from "../../lib/StringUtils";
 import chunkMapReduce from "shared/lib/chunkMapReduce";
-import request, {Response} from "superagent";
-import formSubmit from "shared/lib/formSubmit";
 import {
 	MolecularProfileQueryParams, NonMolecularProfileQueryParams, queryUrl,
 	nonMolecularProfileParams, currentQueryParams, molecularProfileParams, queryParams, profileAvailability, categorizedSamplesCount
@@ -1841,22 +1839,8 @@ export class QueryStore
 
 		let urlParams = this.asyncUrlParams.result;
 
-		//TODO this is currently broken because of mobx-react-router
-		// this is supposed to allow you to go back in the browser history to
-		// return to the query page and restore the QueryStore state from the URL.
-		/*let historyUrl = URL.format({...urlParams, pathname: window.location.href.split('?')[0]});
+		this.singlePageAppSubmitRoutine(urlParams.pathname, urlParams.query);
 
-		// TODO remove this temporary HACK to make back button work
-		historyUrl = historyUrl.split('#crosscancer').join('#/home#crosscancer');
-
-		let newUrl = buildCBioPortalUrl(urlParams);
-		if (historyUrl != newUrl)
-			window.history.pushState(null, window.document.title, historyUrl);*/
-		if (this.singlePageAppSubmitRoutine) {
-			this.singlePageAppSubmitRoutine(urlParams.pathname, urlParams.query);
-		} else {
-            formSubmit(urlParams.pathname, urlParams.query, undefined, "smart");
-        }
 	}
 
 	@action openSummary() {
@@ -1878,24 +1862,7 @@ export class QueryStore
 
 			const urlParams = queryParams(nonProfileParams, profileParams, this.initialQueryParams.pathname);
 
-            if (this.singlePageAppSubmitRoutine) {
-                this.singlePageAppSubmitRoutine(urlParams.pathname, urlParams.query);
-            } else {
-                formSubmit(urlParams.pathname, urlParams.query);
-            }
-		});
-	}
-
-	@action sendToGenomeSpace()
-	{
-		if (!this.submitEnabled || !this.asyncUrlParams.isComplete)
-			return;
-
-		gsUploadByGet({
-			url: buildCBioPortalUrl(this.asyncUrlParams.result),
-			filename: this.downloadDataFilename,
-			successCallback: savePath => alert('Saved to GenomeSpace as ' + savePath),
-			errorCallback: savePath => alert('ERROR saving to GenomeSpace as ' + savePath),
+			this.singlePageAppSubmitRoutine(urlParams.pathname, urlParams.query);
 		});
 	}
 
