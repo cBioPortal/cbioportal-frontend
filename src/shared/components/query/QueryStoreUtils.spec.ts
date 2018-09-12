@@ -42,16 +42,6 @@ describe('QueryStoreUtils', ()=>{
                 assert.equal(nonMolecularProfileParams(store).gene_list, encodeURIComponent(normalizeQuery(query)), `got encoded, normalized query for query ${query}`);
             }
         });
-
-        it.skip("correctly sets study parameters in case of single study", ()=>{
-            let store = new QueryStore({} as Window);
-            selectableStudiesSetStub = Sinon.stub(store, "selectableStudiesSet").get(() => {
-                return {"a":["a"], "b":["b"]};
-            });
-            store.selectableSelectedStudyIds = ["a"];
-            assert.equal(nonMolecularProfileParams(store).cancer_study_id, "a");
-            assert.equal(nonMolecularProfileParams(store).cancer_study_list, undefined);
-        });
     });
     describe("profileAvailability", ()=>{
         it("returns correct profile availability result in case of zero profiles", ()=>{

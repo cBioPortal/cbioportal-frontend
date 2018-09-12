@@ -1554,14 +1554,12 @@ export class StudyViewPageStore {
 
     @bind
     onSubmitQuery() {
-
-        //TODO: support virtual study. wait for https://github.com/cBioPortal/cbioportal-frontend/pull/1386
         let formOps: { [id: string]: string } = {
             cancer_study_list: this.studyIds.join(','),
             tab_index: 'tab_visualize',
         }
 
-        if (this.studyIds.length === 1) {
+        if (this.filteredVirtualStudies.result.length === 0 && this.studyIds.length === 1) {
             if (!_.isEmpty(this.mutationProfiles.result)) {
                 formOps['genetic_profile_ids_PROFILE_MUTATION_EXTENDED'] = this.mutationProfiles.result[0].molecularProfileId
             }
@@ -1569,7 +1567,6 @@ export class StudyViewPageStore {
                 formOps['genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION'] = this.cnaProfiles.result[0].molecularProfileId
             }
         } else {
-
             let data_priority = '0';
             let { mutation, cna } = {
                 mutation: !_.isEmpty(this.mutationProfiles.result),
@@ -1590,7 +1587,7 @@ export class StudyViewPageStore {
                 return sample.studyId + ":" + sample.sampleId;
             }).join('+');
         } else {
-            if (this.studyIds.length === 1) {
+            if (this.filteredVirtualStudies.result.length === 0 && this.studyIds.length === 1) {
                 formOps.case_set_id = this.studyIds[0] + '_all';
             } else {
                 formOps.case_set_id = 'all';
