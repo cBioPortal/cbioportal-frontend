@@ -144,39 +144,6 @@ export class QueryStore
 				this.studiesHaveChangedSinceInitialization = true;
 			}
 		);
-
-		reaction(
-			()=>this.selectableStudiesSet,
-			selectableStudiesSet=>{
-				if(this.selectedSampleListId !== CUSTOM_CASE_LIST_ID) {
-					let virtualStudyIdsSet = stringListToSet(this.virtualStudies.result.map(x=>x.id));
-					let physicalStudyIdsSet = stringListToSet(this.cancerStudies.result.map(x=>x.studyId))
-					let userSelectableIds:{[studyId:string]:boolean} = Object.assign({}, physicalStudyIdsSet, virtualStudyIdsSet);
-					let sharedIds:string[] = [];
-					let unknownIds:string[] = [];
-
-					this._defaultSelectedIds.keys().forEach(id=>{
-						if(selectableStudiesSet[id]){
-							if(!userSelectableIds[id]){
-								sharedIds.push(id)
-							}
-						}else{
-							unknownIds.push(id);
-						}
-					});
-					//this block is executed when the query is a saved virtual study query is shared to other user
-					//in this scenario we override some parameters to correctly show selected cases to user
-					if(!_.isEmpty(sharedIds) && _.isEmpty(unknownIds)){
-						this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
-						this.caseIdsMode = 'sample';
-						let studySampleMap = this._defaultStudySampleMap
-						this.caseIds = _.flatten<string>(Object.keys(studySampleMap).map(studyId=>{
-							return studySampleMap[studyId].map((sampleId:string)=>`${studyId}:${sampleId}`);
-						})).join("\n");
-					}
-				}
-			}
-		);
 	}
 
 	@observable studiesHaveChangedSinceInitialization:boolean = false;
@@ -275,7 +242,7 @@ export class QueryStore
 	@computed get selectableSelectedStudyIds():string[]
 	{
 		let ids:string[] = this._allSelectedStudyIds.keys();
-		const selectableStudies = this.selectableStudiesSet;
+		const selectableStudies = this.selectableStudiesSet.result;
 		ids = ids.reduce((obj:string[],next)=>{
 			if(selectableStudies[next]){
 				return obj.concat(selectableStudies[next])
@@ -283,39 +250,12 @@ export class QueryStore
 			return obj;
 
 		},[]);
+		ids = _.uniq(ids)
 		return this.forDownloadTab ? ids.slice(-1) : ids;
 	}
 
-	//this is mainly used when custom case set is selected
-	@computed get selectedStudyToSampleSet():{[id:string]:{[id:string]:boolean}}
-	{
-		let studyToSampleSet:{[id:string]:{[id:string]:boolean}} = {}
-		this.selectableSelectedStudyIds.forEach(id => {
-			if(this.virtualStudiesMap[id]){
-				let virtualStudy = this.virtualStudiesMap[id]
-				virtualStudy.data.studies.forEach(study => {
-					if(studyToSampleSet[study.id]){
-						if(Object.keys(studyToSampleSet[study.id]).length > 0){
-							studyToSampleSet[study.id] = Object.assign({}, studyToSampleSet[study.id], stringListToSet(study.samples))
-						}
-					}else {
-						studyToSampleSet[study.id] = stringListToSet(study.samples)
-					}
-				});
-			} else {
-				studyToSampleSet[id] = {} //an empty list indicates all to select all samples
-			}
-		});
-		return studyToSampleSet;
-	}
-
 	set selectableSelectedStudyIds(val:string[]) {
-		//surrounded with action block to indicate that state is going to be modified
-		action(()=>{
-			//filter out deleted virtual study
-			const filteredStudies = val.filter(id => !_.includes(this.deletedVirtualStudies,id))
-			this._allSelectedStudyIds = observable.map(stringListToSet(filteredStudies));
-		})()
+		this._allSelectedStudyIds = observable.map(stringListToSet(val));
 	}
 
 	@action public setStudyIdSelected(studyId:string, selected:boolean) {
@@ -501,10 +441,6 @@ export class QueryStore
 		}
 	}, []);
 
-	@computed get selectableStudiesSet():{[studyId:string]:string[]} {
-		return  Object.assign({}, this.physicalStudiesIdsSet.result, this.virtualStudiesIdsSet.result, this.sharedQueriedStudiesSet.result);
-	}
-
 	private readonly physicalStudiesIdsSet = remoteData<{[studyId:string]:string[]}>({
 		await: ()=>[this.cancerStudies],
 		invoke: async ()=>{
@@ -562,6 +498,180 @@ export class QueryStore
 		},
 		default: {}
 	});
+
+
+	private readonly physicalStudiesSet = remoteData<{[studyId:string]:CancerStudy}>({
+		await: ()=>[this.cancerStudies],
+		invoke: async ()=>{
+			return  this.cancerStudies.result.reduce((obj:{[studyId:string]:CancerStudy}, item) =>{
+				obj[item.studyId] = item
+				return obj
+			}, {} as {[studyId:string]:CancerStudy});
+
+		},
+		default: {},
+	})
+
+	readonly userVirtualStudies = remoteData(async ()=>{
+		if (AppConfig.sessionServiceIsEnabled) {
+			return sessionServiceClient.getUserVirtualStudies();
+		} else {
+			return [];
+		}
+	}, []);
+
+	private readonly userVirtualStudiesSet = remoteData<{[studyId:string]:VirtualStudy}>({
+		await: ()=>[this.userVirtualStudies],
+		invoke: async ()=>{
+			return  this.userVirtualStudies.result.reduce((obj:{[studyId:string]:VirtualStudy}, item) =>{
+				obj[item.id] = item
+				return obj
+			}, {});
+
+		},
+		default: {},
+	})
+
+	private readonly sharedVirtualStudiesSet = remoteData<{[studyId:string]:VirtualStudy}>({
+		await: ()=>[this.physicalStudiesSet, this.userVirtualStudiesSet],
+		invoke: async ()=>{
+			let physicalStudiesIdsSet = this.physicalStudiesSet.result
+			let virtualStudiesIdsSet = this.userVirtualStudiesSet.result
+
+			let knownSelectableIds = Object.assign([], Object.keys(physicalStudiesIdsSet), Object.keys(virtualStudiesIdsSet));
+
+			//queried id that are not selectable(this would mostly be shared virtual study)
+			const unknownQueriedIds:string[] = this._defaultSelectedIds.keys().filter(id => !_.includes(knownSelectableIds,id));
+
+			let result:{[studyId:string]:VirtualStudy} = {}
+			
+			await Promise.all(unknownQueriedIds.map(id =>{
+				return new Promise((resolve, reject) => {
+					sessionServiceClient.getVirtualStudy(id).then((virtualStudy)=>{
+						//physical study ids iin virtual study
+						let ids = virtualStudy.data.studies.map(study=>study.id);
+						//unknown/unauthorized studies within virtual study
+						let unKnownPhysicalStudyIds = ids.filter(id => !physicalStudiesIdsSet[id]);
+						if(unKnownPhysicalStudyIds.length === 0){
+							result[id] = virtualStudy;
+						}
+						resolve();
+					}).catch(() => {//error is thrown when the id is not found
+						resolve();
+					});
+				});
+			}));
+			return result;
+		},
+		default: {}
+	});
+
+	//this is mainly used when custom case set is selected
+	private readonly selectedStudyToSampleSet = remoteData<{[id:string]:{[id:string]:boolean}}>({
+		await: ()=>[this.userVirtualStudiesSet, this.sharedVirtualStudiesSet],
+		invoke: async ()=>{
+			let studyToSampleSet:{[id:string]:{[id:string]:boolean}} = {};
+
+			const physicalStudyIds = _.filter(this.allSelectedStudyIds, studyId => this.physicalStudiesSet.result[studyId]);
+
+			if(this._allSelectedStudyIds.keys().length !== physicalStudyIds.length){
+				await Promise.all(_.map(physicalStudyIds, studyId => {
+					return client.getAllSamplesInStudyUsingGET({
+						studyId: studyId
+					}).then(samples => {
+						studyToSampleSet[studyId] = stringListToSet(samples.map(sample => sample.sampleId));
+					})
+				}));
+	
+				const _vs = {...this.userVirtualStudiesSet.result, ...this.sharedVirtualStudiesSet.result};
+
+				this._allSelectedStudyIds.keys().forEach(id=>{
+					if(_vs[id]){
+						let virtualStudy = _vs[id];
+						virtualStudy.data.studies.forEach(study => {
+							if(studyToSampleSet[study.id] === undefined){
+								studyToSampleSet[study.id] = stringListToSet(study.samples)
+							}
+						});
+					}
+				});
+			} else {
+				physicalStudyIds.forEach(studyId=>{
+					studyToSampleSet[studyId] = {}
+				})
+			}
+			return studyToSampleSet;
+		},
+		default: {}
+	})
+
+	private readonly selectableStudiesSet = remoteData<{[studyId:string]:string[]}>({
+		await: ()=>[this.physicalStudiesSet, this.selectedStudyToSampleSet],
+		invoke: async () => {
+			let result: { [studyId: string]: string[] } = {};
+
+			_.each(this.physicalStudiesSet.result, (study, studyId) => {
+				result[studyId] = [studyId];
+			});
+
+			_.each(this.userVirtualStudiesSet.result, (virtualStudy, studyId) => {
+				result[studyId] = [studyId];
+			});
+
+			_.each(this.sharedVirtualStudiesSet.result, (virtualStudy, studyId) => {
+				result[studyId] = virtualStudy.data.studies.map(study => study.id);
+			});
+
+			return result;
+		},
+		default: {},
+		onResult: () => {
+			// set case ids when case_set_id is not CUSTOM_CASE_LIST_ID(-1)
+			if (this.selectedSampleListId !== CUSTOM_CASE_LIST_ID) {
+				const sharedVirtualStudiesSet = this.sharedVirtualStudiesSet.result;
+				let sharedIds: string[] = _.filter(this._allSelectedStudyIds.keys(), id => sharedVirtualStudiesSet[id] !== undefined)
+
+				//this block is executed when shared virtual study is queried and case_set_id is not set
+				//in this scenario we override some parameters to correctly show selected cases to user
+				if (!_.isEmpty(sharedIds)) {
+					let studySampleMap = this._defaultStudySampleMap;
+					if (studySampleMap === undefined || _.isEmpty(studySampleMap)) {
+						studySampleMap = _.reduce(this.selectedStudyToSampleSet.result, (acc, next, studyId) => {
+							acc[studyId] = _.keys(next);
+							return acc;
+						}, {} as { [id: string]: string[] })
+					}
+
+					if (_.some(studySampleMap, (samples) => samples.length > 0)) {
+						this.setCaseIds(studySampleMap);
+					}
+				} else {
+					this.caseIds = '';
+				}
+			}
+		}
+	});
+
+	@action setCaseIds(studySampleMap: {[id: string]: string[]}) {
+		this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
+		this.caseIdsMode = 'sample';
+		this.caseIds = _.flatten<string>(Object.keys(studySampleMap).map(studyId => {
+			return studySampleMap[studyId].map((sampleId: string) => `${studyId}:${sampleId}`);
+		})).join("\n");
+	}
+
+	// get all selected ids(that are set) that are not selectable in the cancer tree
+	// this may be any unknow and unauthorized studies trying to query
+	readonly unknownStudyIds = remoteData<string[]>({
+		await: ()=>[this.selectableStudiesSet],
+		invoke: async ()=>{
+			const _selectableStudiesSet = this.selectableStudiesSet.result;
+			let ids:string[] = this._allSelectedStudyIds.keys();
+			return ids.filter(id=>!(id in _selectableStudiesSet));
+		},
+		default: []
+	});
+
 
 	readonly molecularProfiles = remoteData<MolecularProfile[]>({
 		invoke: async () => {
@@ -866,7 +976,7 @@ export class QueryStore
 
 			invalidIds = invalidIds.concat(cases.filter(x=>(!validIds[`${x.study}:${x.id}`])));
 
-			let selectedStudyToSampleSet = this.selectedStudyToSampleSet;
+			let selectedStudyToSampleSet = this.selectedStudyToSampleSet.result;
 
 			//check if the valid samples are in selectable samples set
 			//this is when a virtual study(which would have subset of samples) is selected
@@ -934,15 +1044,6 @@ export class QueryStore
 	@computed get selectableSelectedStudies()
 	{
 		return this.selectableSelectedStudyIds.map(id => this.treeData.map_studyId_cancerStudy.get(id) as CancerStudy).filter(_.identity);
-	}
-
-	// get all selected ids(that are set) that are not selectable in the cancer tree
-	// this may be any unknow and unauthorized studies trying to query
-	@computed get unknownStudyIds()
-	{
-		const selectableStudiesSet = this.selectableStudiesSet;
-		let ids:string[] = this._allSelectedStudyIds.keys();
-		return ids.filter(id=>!(id in selectableStudiesSet));
 	}
 
 	public isVirtualStudy(studyId:string):boolean {
