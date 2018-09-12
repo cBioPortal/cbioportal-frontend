@@ -33,21 +33,23 @@ export class StudySummaryRecord extends React.Component<CancerStudy, {}> {
 
     render() {
         return (
-            <div className={classnames("panel panel-default", styles.studySummary)}>
-                <div className="panel-heading">
-                    <span className={styles.studyName}>
-                        <i
-                            className={`fa fa-${this.showDescription ? 'minus' : 'plus'}-circle`}
-                            onClick={() => this.showDescription = !this.showDescription}
-                        />
-                        {this.props.name}
-                    </span>
-                    <a target="_blank" href={`newstudy?id=${this.props.studyId}`}>
-                        <i className="fa fa-external-link" aria-hidden="true"></i>
-                    </a>
-                </div>
-                <div className={styles.studyDescription} style={{ display: this.showDescription ? 'block' : 'none' }}>
-                    <span dangerouslySetInnerHTML={{ __html: `${this.props.description.replace(/\r?\n/g, '<br/>')}` }} />
+            <div className={styles.studySummary}>
+                <div className="panel panel-default">
+                    <div className="panel-heading">
+                        <span className={styles.studyName}>
+                            <i
+                                className={`fa fa-${this.showDescription ? 'minus' : 'plus'}-circle`}
+                                onClick={() => this.showDescription = !this.showDescription}
+                            />
+                            {this.props.name}
+                        </span>
+                        <a target="_blank" href={`newstudy?id=${this.props.studyId}`}>
+                            <i className="fa fa-external-link" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                    <div className={styles.studyDescription} style={{ display: this.showDescription ? 'block' : 'none' }}>
+                        <span dangerouslySetInnerHTML={{ __html: `${this.props.description.replace(/\r?\n/g, '<br/>')}` }} />
+                    </div>
                 </div>
             </div>
         )
@@ -108,6 +110,7 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
     }, undefined);
 
     @computed get virtualStudyUrl() {
+        // TODO: update path name once fully refactored
         return buildCBioPortalUrl({pathname:'newstudy', query: {id: this.virtualStudy.result ? this.virtualStudy.result.id : ''}});
     }
 
@@ -175,7 +178,6 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
         onResult: (genes) => {
             this.description = getVirtualStudyDescription(
                 this.props.studyWithSamples,
-                this.props.selectedSamples,
                 this.props.filter,
                 this.attributeNamesSet,
                 genes,
