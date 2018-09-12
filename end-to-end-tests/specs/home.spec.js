@@ -1324,7 +1324,7 @@ describe('case set selection in modify query form', function(){
         assert.equal(
             browser.getText(selectedCaseSet_sel),
             "All (368)",
-            "All (368)",
+            "Expect: All (368), but got " + browser.getText(selectedCaseSet_sel),
         );
 
         // Uncheck study
