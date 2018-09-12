@@ -9,7 +9,7 @@ import jStat from "jStat";
 import ScatterPlotTooltip from "./ScatterPlotTooltip";
 import ifndef from "shared/lib/ifndef";
 import {tickFormatNumeral} from "./TickUtils";
-import {scatterPlotSize, separateScatterDataByAppearance} from "./PlotUtils";
+import {makeScatterPlotSizeFunction, separateScatterDataByAppearance} from "./PlotUtils";
 
 export interface IBaseScatterPlotData {
     x:number;
@@ -276,7 +276,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         const highlight = this.props.highlight;
         const size = this.props.size;
         // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
-        return scatterPlotSize(highlight, size);
+        return makeScatterPlotSizeFunction(highlight, size);
     }
     
     private tickFormat(t:number, ticks:number[], logScale:boolean) {
