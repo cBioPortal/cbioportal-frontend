@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { assert } from 'chai';
 import {toFixedWithThreshold, formatLogOddsRatio, formatSignificanceValueWithStyle, roundLogRatio } from "shared/lib/FormatUtils";
 import expect from 'expect';
