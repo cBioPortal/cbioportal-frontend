@@ -113,11 +113,6 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 					<button style={{paddingLeft:50, paddingRight:50, marginRight:50 }} disabled={!this.store.submitEnabled} className="btn btn-primary btn-lg" onClick={() => this.handleSubmit()} data-test='queryButton'>
 						{!this.store.forDownloadTab ? "Submit Query": "Download"}
 					</button>
-					{!!(this.store.forDownloadTab && AppConfig.genomespaceEnabled) && (
-						<button disabled={!this.store.submitEnabled} className={styles.genomeSpace} onClick={ ()=>this.store.sendToGenomeSpace() }>
-							Send to GenomeSpace
-						</button>
-					)}
 					<FlexCol>
 						{!!(this.store.submitError) && (
 							<span className={styles.errorMessage} data-test="oqlErrorMessage">
