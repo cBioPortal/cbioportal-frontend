@@ -11,7 +11,7 @@ import { computed, observable, action } from 'mobx';
 import styles from "./styles.module.scss";
 import "./styles.scss";
 import { bind } from 'bind-decorator';
-import { buildCBioPortalUrl } from 'shared/api/urls';
+import {buildCBioPortalPageUrl} from 'shared/api/urls';
 import CustomCaseSelection from 'pages/studyView/customCaseSelection/CustomCaseSelection';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
@@ -88,7 +88,7 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
 
             let navCaseIds = _.map(this.props.selectedSamples, sample => (includeStudyId ? sample.studyId : '') + sample.sampleId).join(',')
 
-            window.open(buildCBioPortalUrl(
+            window.open(buildCBioPortalPageUrl(
                 'patient',
                 {
                     sampleId: firstSample.sampleId,

@@ -8,7 +8,6 @@ import {CancerStudy} from "../../../shared/api/generated/CBioPortalAPI";
 import classNames from 'classnames';
 import './styles.scss';
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
-import formSubmit from '../../../shared/lib/formSubmit';
 import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import {action, observable} from "mobx";
 import {QueryStore} from "../../../shared/components/query/QueryStore";
