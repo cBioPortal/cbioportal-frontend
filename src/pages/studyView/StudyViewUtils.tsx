@@ -390,11 +390,18 @@ export function isLogScaleByValues(values: number[]) {
         // empty list is not considered log scale
         values.length > 0 &&
         values.find(value =>
-            // any value between -1 and 1 indicates that this is not a log scale
-            (-1 < value && value < 1) ||
+            // any value between -1 and 1 (except 0) indicates that this is not a log scale
+            (value !== 0 && -1 < value && value < 1) ||
             // any value not in the form of 10^0.5, 10^2, etc. also indicates that this is not a log scale
-            value !== 0 && Number(Math.log10(Math.abs(value)).toFixed(1)) % 0.5 !== 0
+            (value !== 0 && getExponent(value) % 0.5 !== 0)
         ) === undefined
+    );
+}
+
+export function isEveryBinDistinct(data?: DataBin[]) {
+    return (
+        data && data.length > 0 &&
+        data.find(dataBin => dataBin.start !== dataBin.end) === undefined
     );
 }
 
@@ -408,12 +415,12 @@ export function isLogScaleByDataBins(data?: DataBin[]) {
     const values = calcIntervalBinValues(intervalBins);
 
     // use only interval bin values when determining logScale
-    return isLogScaleByValues(values);
+    return !isEveryBinDistinct(intervalBins) && isLogScaleByValues(values);
 }
 
 export function isScientificSmallValue(value: number) {
-    // value should be between -0.001 and 0.001 to be considered as scientific small number
-    return -0.001 < value && value < 0.001;
+    // value should be between -0.001 and 0.001 (except 0) to be considered as scientific small number
+    return value !== 0 && -0.001 < value && value < 0.001;
 }
 
 export function formatNumericalTickValues(numericalBins: DataBin[]) {
@@ -427,7 +434,7 @@ export function formatNumericalTickValues(numericalBins: DataBin[]) {
     let values = calcIntervalBinValues(intervalBins);
 
     // use only interval bin values when determining logScale
-    const isLogScale = isLogScaleByValues(values);
+    const isLogScale = !isEveryBinDistinct(intervalBins) && isLogScaleByValues(values);
 
     if (firstBin.start === undefined) {
         values = [firstBin.end, ...values];
@@ -478,29 +485,20 @@ export function formatNumericalTickValues(numericalBins: DataBin[]) {
 }
 
 export function formatLinearScaleValues(values: number[]) {
-    return values.map(value => {
-        let displayValue = `${value}`;
-
-        // we need to make sure that we only show certain number of decimals for numbers smaller than 1
-        if (value < 1 && value > -1 && value !== 0) {
-            displayValue = toFixedDigit(value);
-        }
-
-        return displayValue;
-    });
+    return values.map(value => toFixedDigit(value));
 }
 
 export function formatLogScaleValues(values: number[]) {
     return values.map(value => {
         let displayValue;
 
-        if (value === -10 || value === -1 || value === 1 || value === 10) {
+        if (value === -10 || value === -1 || value === 0 || value === 1 || value === 10) {
             displayValue = `${value}`;
         }
         else {
-            const exponent = Number(Math.log10(Math.abs(value)).toFixed(1));
+            const exponent = getExponent(value);
 
-            if (exponent % 1 === 0) {
+            if (Number.isInteger(exponent)) {
                 displayValue = `10^${exponent.toFixed(0)}`;
             }
             else if (exponent % 0.5 === 0) {
@@ -527,7 +525,7 @@ export function isIntegerPowerOfTen(value: number) {
     if (value) {
         const absLogValue = Math.log10(Math.abs(value));
 
-        if (absLogValue % 1 === 0) {
+        if (Number.isInteger(absLogValue)) {
             result = true;
         }
     }
@@ -608,18 +606,33 @@ export function formatValue(value: number|undefined) {
     return formatted;
 }
 
-export function toFixedDigit(value: number)
+export function toFixedDigit(value: number, fractionDigits: number = 2)
 {
     if (!value) {
         return `${value}`;
     }
 
-    const absLogValue = Math.log10(Math.abs(value));
+    const absValue = Math.abs(value);
 
-    const numberOfLeadingDecimalZeroes = absLogValue % 1 === 0 ?
+    // no need to format integers
+    if (Number.isInteger(absValue)) {
+        return `${value}`;
+    }
+
+    const absLogValue = Math.abs(Math.log10(absValue % 1));
+
+    const numberOfLeadingDecimalZeroes = Number.isInteger(absLogValue) ?
         Math.floor(absLogValue) - 1 : Math.floor(absLogValue);
 
-    return `${Number(value.toFixed(numberOfLeadingDecimalZeroes + 2))}`;
+    return `${Number(value.toFixed(numberOfLeadingDecimalZeroes + fractionDigits))}`;
+}
+
+export function getExponent(value: number): number
+{
+    // less precision for values like 3 and 31
+    const fractionDigits = Math.abs(value) < 50 ? 1 : 2;
+
+    return Number(Math.log10(Math.abs(value)).toFixed(fractionDigits));
 }
 
 
