@@ -15,6 +15,7 @@ import { cytobandFilter } from "pages/resultsView/ResultsViewTableUtils";
 import {PotentialViewType} from "../plots/PlotsTab";
 import {PLOT_SIDELENGTH} from "../plots/PlotsTabUtils";
 import { toConditionalPrecision } from "shared/lib/NumberUtils";
+import { formatSignificanceValueWithStyle } from "shared/lib/FormatUtils";
 
 export interface ICoExpressionTableProps {
     referenceGene:{hugoGeneSymbol:string, cytoband:string};
@@ -25,6 +26,7 @@ export interface ICoExpressionTableProps {
 
 const SPEARMANS_CORRELATION_COLUMN_NAME = "Spearman's Correlation";
 const P_VALUE_COLUMN_NAME = "P-value";
+const Q_VALUE_COLUMN_NAME = "Q-value";
 
 const COLUMNS = [
     {
@@ -43,12 +45,12 @@ const COLUMNS = [
         sortBy:(d:CoExpression)=>d.cytoband,
         width:"30%"
     },
-    makeNumberColumn(SPEARMANS_CORRELATION_COLUMN_NAME, "spearmansCorrelation"),
-    makeNumberColumn(P_VALUE_COLUMN_NAME, "pValue"),
-    makeNumberColumn("Q-value", "qValue"),
+    makeNumberColumn(SPEARMANS_CORRELATION_COLUMN_NAME, "spearmansCorrelation", false),
+    makeNumberColumn(P_VALUE_COLUMN_NAME, "pValue", false),
+    makeNumberColumn(Q_VALUE_COLUMN_NAME, "qValue", true),
 ];
 
-function makeNumberColumn(name:string, key:keyof CoExpression) {
+function makeNumberColumn(name:string, key:keyof CoExpression, formatSignificance: boolean) {
     return {
         name:name,
         render:(d:CoExpression)=>{
@@ -60,7 +62,7 @@ function makeNumberColumn(name:string, key:keyof CoExpression) {
                         float:"right",
                         whiteSpace:"nowrap"
                     }}
-                >{toConditionalPrecision((d[key] as number), 3, 0.01)}</span>
+                >{formatSignificance? formatSignificanceValueWithStyle(d[key] as number) : toConditionalPrecision((d[key] as number), 3, 0.01)}</span>
             );
         },
         download:(d:CoExpression)=>(d[key] as number).toString()+"",
@@ -160,7 +162,7 @@ export default class CoExpressionTable extends React.Component<ICoExpressionTabl
                     />
                 </div>
                 <LazyMobXTable
-                    initialSortColumn={P_VALUE_COLUMN_NAME}
+                    initialSortColumn={Q_VALUE_COLUMN_NAME}
                     initialSortDirection="asc"
                     columns={COLUMNS}
                     showColumnVisibility={false}
