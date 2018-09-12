@@ -4,7 +4,6 @@ import {computed, action, observable} from "mobx";
 
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import StructureViewerPanel from "shared/components/structureViewer/StructureViewerPanel";
-import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
@@ -32,7 +31,6 @@ export interface IMutationMapperProps {
     config: IMutationMapperConfig;
     studyId?: string;
     myCancerGenomeData?: IMyCancerGenomeData;
-    genomeNexusEnrichmentCache?:GenomeNexusEnrichmentCache;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     pdbHeaderCache?: PdbHeaderCache;
     pubMedCache?:PubMedCache;
