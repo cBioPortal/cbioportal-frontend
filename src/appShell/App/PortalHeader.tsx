@@ -1,6 +1,10 @@
 import * as React from 'react';
+import * as _ from 'lodash';
 import { Link } from 'react-router';
 import AppConfig from "appConfig";
+import {getLogoutURL} from "../../shared/api/urls";
+import {If, Then, Else} from 'react-if';
+import {openSocialAuthWindow} from "../../shared/lib/openSocialAuthWindow";
 
 export default class PortalHeader extends React.Component<{}, {}> {
 
@@ -108,7 +112,30 @@ export default class PortalHeader extends React.Component<{}, {}> {
                 </nav>
             </div>
 
-            <div id="rightHeaderContent"></div>
+            <div id="rightHeaderContent">
+                <If condition={!_.isEmpty(AppConfig.authUserName)}>
+                    <Then>
+                        <div className="identity">Logged in as <span dangerouslySetInnerHTML={{__html:AppConfig.authUserName!}}></span>
+                            &nbsp;|&nbsp;
+                            {
+                                (!_.isEmpty(AppConfig.authLogoutUrl)) && (
+                                    <a href={getLogoutURL()}>Sign out</a>
+                                )
+                            }
+                        </div>
+                    </Then>
+                    <Else>
+                        <If condition={AppConfig.authGoogleLogin}>
+                            <div className="identity"><button className="btn btn-default" onClick={openSocialAuthWindow}>Login</button></div>
+                        </If>
+                    </Else>
+                </If>
+
+                <If condition={!_.isEmpty(AppConfig.skinRightLogo)}>
+                    <img id="institute-logo" src={AppConfig.skinRightLogo} alt="Institute Logo" />
+                </If>
+
+            </div>
         </header>
     }
 

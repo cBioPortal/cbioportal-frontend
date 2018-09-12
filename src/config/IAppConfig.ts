@@ -10,6 +10,11 @@ export interface IAppConfig {
 
     googleAnalyticsProfile?: string;
 
+    authLogoutUrl?: string;
+    authUserName?: string;
+    authGoogleLogin?: string;
+
+
     maxTreeDepth: number;
     //priorityStudies: {
     //    'Shared institutional Data Sets': ['mskimpact', 'cellline_mskcc'],
@@ -38,7 +43,7 @@ export interface IAppConfig {
     skinRightNavShowTestimonials?: boolean;
     skinRightNavExamplesHTML?: string;
     skinRightNavWhatsNewBlurb?: string;
-
+    skinRightLogo?: string;
     skinShowDataSetsTab?: boolean;
     skinShowWebAPITab?: boolean;
     skinShowRmatLABTab?: boolean;
