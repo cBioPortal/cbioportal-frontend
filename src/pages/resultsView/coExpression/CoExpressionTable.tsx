@@ -25,8 +25,8 @@ export interface ICoExpressionTableProps {
 }
 
 const SPEARMANS_CORRELATION_COLUMN_NAME = "Spearman's Correlation";
-const P_VALUE_COLUMN_NAME = "P-value";
-const Q_VALUE_COLUMN_NAME = "Q-value";
+const P_VALUE_COLUMN_NAME = "p-Value";
+const Q_VALUE_COLUMN_NAME = "q-Value";
 
 const COLUMNS = [
     {
