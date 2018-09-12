@@ -3,7 +3,7 @@ import {
     calcIntervalBinValues, filterCategoryBins, filterIntervalBins, filterNumericalBins,
     generateCategoricalData, generateNumericalData, isLogScaleByDataBins, isLogScaleByValues,
     getClinicalDataIntervalFilterValues, makePatientToClinicalAnalysisGroup, updateGeneQuery, formatNumericalTickValues,
-    intervalFiltersDisplayValue,
+    intervalFiltersDisplayValue, isEveryBinDistinct, toFixedDigit, getExponent,
     getCNAByAlteration,
     getDefaultChartTypeByClinicalAttribute,
     getVirtualStudyDescription
@@ -697,6 +697,121 @@ describe('StudyViewUtils', () => {
         });
     });
 
+    describe('isEveryBinDistinct', () => {
+        const noBinDistinct = [
+            {start: 10, end: 20},
+            {start: 20, end: 30},
+            {start: 30, end: 40},
+            {start: 40, end: 50}
+        ] as DataBin[];
+
+        const everyBinDistinct = [
+            {start: 0, end: 0},
+            {start: 10, end: 10},
+            {start: 20, end: 20},
+            {start: 30, end: 30}
+        ] as DataBin[];
+
+        const someBinsDistinct = [
+            {start: 0, end: 0},
+            {start: 10, end: 10},
+            {start: 20, end: 30},
+            {start: 30, end: 40}
+        ] as DataBin[];
+
+        it ('accepts a list of bins with all distinct values', () => {
+            assert.isTrue(isEveryBinDistinct(everyBinDistinct),
+                "should be true when every bin is distinct");
+        });
+
+        it ('rejects an empty list', () => {
+            assert.isFalse(isEveryBinDistinct([]),
+                "empty list should not be classified as distinct");
+        });
+
+        it ('rejects a list of bins with no distinct values', () => {
+            assert.isFalse(isEveryBinDistinct(noBinDistinct),
+                "should be false when no bin is distinct");
+        });
+
+        it ('rejects a list of bins with some distinct values', () => {
+            assert.isFalse(isEveryBinDistinct(someBinsDistinct),
+                "should be false when some bins are distinct");
+        });
+    });
+
+    describe('toFixedDigit', () => {
+        const negativeValues = [
+            -666.666,
+            -3,
+            -2.2499999999999,
+            -1,
+            -0.6000000000000001,
+            -0.002499999998
+        ];
+
+        const positiveValues = [
+            0.002499999998,
+            0.6000000000000001,
+            1,
+            1.5999999999999999,
+            1.7999999999999998,
+            16.99999999999998,
+            666.666
+        ];
+
+        it ('handles negative values properly', () => {
+            assert.equal(toFixedDigit(negativeValues[0]), "-666.67");
+            assert.equal(toFixedDigit(negativeValues[1]), "-3");
+            assert.equal(toFixedDigit(negativeValues[2]), "-2.25");
+            assert.equal(toFixedDigit(negativeValues[3]), "-1");
+            assert.equal(toFixedDigit(negativeValues[4]), "-0.6");
+            assert.equal(toFixedDigit(negativeValues[5]), "-0.0025");
+        });
+
+        it ('handles zero properly', () => {
+            assert.equal(toFixedDigit(0), "0");
+        });
+
+        it ('handles positive values properly', () => {
+            //assert.equal(toFixedDigit(positiveValues[0]), "0.0025");
+            assert.equal(toFixedDigit(positiveValues[0]), "0.0025");
+            assert.equal(toFixedDigit(positiveValues[1]), "0.6");
+            assert.equal(toFixedDigit(positiveValues[2]), "1");
+            assert.equal(toFixedDigit(positiveValues[3]), "1.6");
+            assert.equal(toFixedDigit(positiveValues[4]), "1.8");
+            assert.equal(toFixedDigit(positiveValues[5]), "17");
+            assert.equal(toFixedDigit(positiveValues[6]), "666.67");
+        });
+    });
+
+    describe('getExponent', () => {
+        it ('handles negative values properly', () => {
+            assert.equal(getExponent(-1), 0);
+            assert.equal(getExponent(-3), 0.5);
+            assert.equal(getExponent(-10), 1);
+            assert.equal(getExponent(-31), 1.5);
+            assert.equal(getExponent(-100), 2);
+            assert.equal(getExponent(-316), 2.5);
+            assert.equal(getExponent(-1000), 3);
+        });
+
+        it ('handles zero properly', () => {
+            assert.equal(getExponent(0), -Infinity);
+        });
+
+        it ('handles positive values properly', () => {
+            //assert.equal(toFixedDigit(positiveValues[0]), "0.0025");
+            assert.equal(getExponent(1), 0);
+            assert.equal(getExponent(3), 0.5);
+            assert.equal(getExponent(10), 1);
+            assert.equal(getExponent(31), 1.5);
+            assert.equal(getExponent(100), 2);
+            assert.equal(getExponent(316), 2.5);
+            assert.equal(getExponent(1000), 3);
+        });
+    });
+
     describe('getCNAByAlteration', ()=>{
         it('return proper string from proper alteration', ()=>{
             assert.isTrue(getCNAByAlteration(-2) === 'DEL');
@@ -734,5 +849,5 @@ describe('StudyViewUtils', () => {
             } as ClinicalAttribute;
             assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartType.BAR_CHART);
         });
-    })
+    });
 });

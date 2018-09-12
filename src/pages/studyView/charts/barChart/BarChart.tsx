@@ -142,6 +142,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                     />
                     <VictoryAxis
                         dependentAxis={true}
+                        tickFormat={(t: number) => Number.isInteger(t) ? t.toFixed(0) : ''}
                     />
                     <VictoryBar
                         style={{
