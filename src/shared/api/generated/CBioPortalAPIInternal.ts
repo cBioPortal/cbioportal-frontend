@@ -839,14 +839,14 @@ export default class CBioPortalAPIInternal {
             });
         };
     fetchFilteredSamplesUsingPOSTURL(parameters: {
-        'filterType' ? : "INCLUSION" | "EXCLUSION",
+        'negateFilters' ? : boolean,
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/filtered-samples/fetch';
-        if (parameters['filterType'] !== undefined) {
-            queryParameters['filterType'] = parameters['filterType'];
+        if (parameters['negateFilters'] !== undefined) {
+            queryParameters['negateFilters'] = parameters['negateFilters'];
         }
 
         if (parameters.$queryParameters) {
@@ -863,11 +863,11 @@ export default class CBioPortalAPIInternal {
      * Fetch sample IDs by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchFilteredSamplesUsingPOST
-     * @param {string} filterType - Filter type
+     * @param {boolean} negateFilters - Whether to negate the study view filters
      * @param {} studyViewFilter - Study view filter
      */
     fetchFilteredSamplesUsingPOSTWithHttpInfo(parameters: {
-        'filterType' ? : "INCLUSION" | "EXCLUSION",
+        'negateFilters' ? : boolean,
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any,
             $domain ? : string
@@ -884,8 +884,8 @@ export default class CBioPortalAPIInternal {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            if (parameters['filterType'] !== undefined) {
-                queryParameters['filterType'] = parameters['filterType'];
+            if (parameters['negateFilters'] !== undefined) {
+                queryParameters['negateFilters'] = parameters['negateFilters'];
             }
 
             if (parameters['studyViewFilter'] !== undefined) {
@@ -913,11 +913,11 @@ export default class CBioPortalAPIInternal {
      * Fetch sample IDs by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchFilteredSamplesUsingPOST
-     * @param {string} filterType - Filter type
+     * @param {boolean} negateFilters - Whether to negate the study view filters
      * @param {} studyViewFilter - Study view filter
      */
     fetchFilteredSamplesUsingPOST(parameters: {
-            'filterType' ? : "INCLUSION" | "EXCLUSION",
+            'negateFilters' ? : boolean,
             'studyViewFilter': StudyViewFilter,
             $queryParameters ? : any,
                 $domain ? : string
