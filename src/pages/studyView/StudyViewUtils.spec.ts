@@ -656,6 +656,33 @@ describe('StudyViewUtils', () => {
             {value: "REDACTED"}
         ] as ClinicalDataIntervalFilterValue[];
 
+        const filterValuesWithSpecialValuesOnly = [
+            {value: "NA"},
+            {value: "REDACTED"}
+        ] as ClinicalDataIntervalFilterValue[];
+
+        const filterValuesWithDistinctNumerals = [
+            {start: 20, end: 20},
+            {start: 30, end: 30},
+            {start: 40, end: 40}
+        ] as ClinicalDataIntervalFilterValue[];
+
+        const filterValuesWithDistinctNumeralsAndSpecialValues = [
+            ...filterValuesWithDistinctNumerals,
+            {value: "NA"},
+            {value: "REDACTED"}
+        ] as ClinicalDataIntervalFilterValue[];
+
+        const filterValuesWithSingleDistinctValue = [
+            {start: 666, end: 666}
+        ] as ClinicalDataIntervalFilterValue[];
+
+        const filterValuesWithSingleDistinctValueAndSpecialValues = [
+            ...filterValuesWithSingleDistinctValue,
+            {value: "NA"},
+            {value: "REDACTED"}
+        ] as ClinicalDataIntervalFilterValue[];
+
         it ('generates display value for filter values with both ends closed', () => {
             const value = intervalFiltersDisplayValue(filterValuesWithBothEndsClosed);
             assert.equal(value, "10 < ~ ≤ 50");
@@ -694,6 +721,31 @@ describe('StudyViewUtils', () => {
         it ('generates display value for filter values with start closed, end open, with special values', () => {
             const value = intervalFiltersDisplayValue(filterValuesWithEndOpenAndSpecialValues);
             assert.equal(value, "> 10, NA, REDACTED");
+        });
+
+        it ('generates display value for filter values with special values only', () => {
+            const value = intervalFiltersDisplayValue(filterValuesWithSpecialValuesOnly);
+            assert.equal(value, "NA, REDACTED");
+        });
+
+        it ('generates display value for filter values with distinct values only', () => {
+            const value = intervalFiltersDisplayValue(filterValuesWithDistinctNumerals);
+            assert.equal(value, "20 ≤ ~ ≤ 40");
+        });
+
+        it ('generates display value for filter values with distinct values and special values', () => {
+            const value = intervalFiltersDisplayValue(filterValuesWithDistinctNumeralsAndSpecialValues);
+            assert.equal(value, "20 ≤ ~ ≤ 40, NA, REDACTED");
+        });
+
+        it ('generates display value for filter values with a single distinct value', () => {
+            const value = intervalFiltersDisplayValue(filterValuesWithSingleDistinctValue);
+            assert.equal(value, "666");
+        });
+
+        it ('generates display value for filter values with a single distinct value and special values', () => {
+            const value = intervalFiltersDisplayValue(filterValuesWithSingleDistinctValueAndSpecialValues);
+            assert.equal(value, "666, NA, REDACTED");
         });
     });
 

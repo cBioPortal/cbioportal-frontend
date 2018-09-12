@@ -562,30 +562,36 @@ export function intervalFiltersDisplayValue(values: ClinicalDataIntervalFilterVa
     const start = numericals.length > 0 ? numericals[0].start : undefined;
     const end = numericals.length > 0 ? numericals[numericals.length - 1].end : undefined;
 
-    let displayValue;
+    let displayValues: string[] = [];
 
     if (numericals.length > 0) {
         // both ends open
         if (start === undefined && end === undefined) {
-            displayValue = "All Numbers";
+            displayValues.push("All Numbers");
         }
         else if (start === undefined) {
-            displayValue = `≤ ${formatValue(end)}`;
+            displayValues.push(`≤ ${formatValue(end)}`);
         }
         else if (end === undefined) {
-            displayValue = `> ${formatValue(start)}`;
+            displayValues.push(`> ${formatValue(start)}`);
+        }
+        else if (start === end) {
+            displayValues.push(`${formatValue(start)}`);
+        }
+        else if (numericals[0].start === numericals[0].end) {
+            displayValues.push(`${formatValue(start)} ≤ ~ ≤ ${formatValue(end)}`);
         }
         else {
-            displayValue = `${formatValue(start)} < ~ ≤ ${formatValue(end)}`;
+            displayValues.push(`${formatValue(start)} < ~ ≤ ${formatValue(end)}`);
         }
     }
 
     // copy categories as is
     if (categories.length > 0) {
-        displayValue = `${displayValue}, ${categories.join(", ")}`;
+        displayValues = displayValues.concat(categories);
     }
 
-    return displayValue;
+    return displayValues.length > 0 ? displayValues.join(", ") : "";
 }
 
 export function formatValue(value: number|undefined) {
