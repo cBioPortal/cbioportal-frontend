@@ -14,6 +14,7 @@ import {bind} from "bind-decorator";
 import { cytobandFilter } from "pages/resultsView/ResultsViewTableUtils";
 import {PotentialViewType} from "../plots/PlotsTab";
 import {PLOT_SIDELENGTH} from "../plots/PlotsTabUtils";
+import { toConditionalPrecision } from "shared/lib/NumberUtils";
 
 export interface ICoExpressionTableProps {
     referenceGene:{hugoGeneSymbol:string, cytoband:string};
@@ -56,9 +57,10 @@ function makeNumberColumn(name:string, key:keyof CoExpression) {
                     style={{
                         color:correlationColor(d[key] as number),
                         textAlign:"right",
-                        float:"right"
+                        float:"right",
+                        whiteSpace:"nowrap"
                     }}
-                >{(d[key] as number).toFixed(2)}</span>
+                >{toConditionalPrecision((d[key] as number), 3, 0.01)}</span>
             );
         },
         download:(d:CoExpression)=>(d[key] as number).toString()+"",
