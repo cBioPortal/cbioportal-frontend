@@ -7,7 +7,12 @@ import * as React from "react";
 import {getSampleViewUrl, getStudySummaryUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 import { BarDatum} from "./charts/barChart/BarChart";
-import {ClinicalDataTypeConstants, StudyWithSamples, StudyViewFilterWithSampleIdentifierFilters} from "pages/studyView/StudyViewPageStore";
+import {
+    ClinicalDataTypeConstants,
+    StudyWithSamples,
+    StudyViewFilterWithSampleIdentifierFilters,
+    AnalysisGroup
+} from "pages/studyView/StudyViewPageStore";
 import {ChartType, ClinicalDataType} from "./StudyViewPageStore";
 
 //TODO:cleanup
@@ -139,6 +144,48 @@ export function makeMutationCountVsCnaTooltip(sampleToAnalysisGroup?:{[sampleKey
             </div>
         );
     };
+}
+
+export function generateScatterPlotDownloadData(data: IStudyViewScatterPlotData[],
+                                                sampleToAnalysisGroup?: {[sampleKey:string]:string},
+                                                analysisClinicalAttribute?: ClinicalAttribute,
+                                                analysisGroups?: AnalysisGroup[])
+{
+    const header = ["Cancer Study", "Patient ID", "Sample ID", "Mutation Count", "CNA Fraction"];
+    let valueToGroup: {[value: string] : AnalysisGroup};
+
+    if (analysisClinicalAttribute !== undefined && sampleToAnalysisGroup !== undefined) {
+        header.push(analysisClinicalAttribute.displayName);
+
+        if (analysisGroups !== undefined) {
+            header.push("Color");
+            valueToGroup = _.keyBy(analysisGroups, 'value');
+        }
+    }
+
+    const rows = data.map(datum => {
+        const row = [
+            `${datum.studyId}`,
+            `${datum.patientId}`,
+            `${datum.sampleId}`,
+            `${datum.y}`,
+            `${datum.x}`
+        ];
+
+        if (analysisClinicalAttribute !== undefined && sampleToAnalysisGroup !== undefined) {
+            const value = sampleToAnalysisGroup[datum.uniqueSampleKey];
+
+            row.push(value !== undefined ? `${value}` : 'NA');
+
+            if (analysisGroups !== undefined && value !== undefined) {
+                row.push(valueToGroup[value] !== undefined ? valueToGroup[value].color : 'NA');
+            }
+        }
+
+        return row;
+    });
+
+    return [header].concat(rows).map(row => row.join("\t")).join("\n");
 }
 
 export function isSelected(datum: { uniqueSampleKey: string }, selectedSamples: { [uniqueSampleKey: string]: any }) {
@@ -289,6 +336,42 @@ export function makePatientToClinicalAnalysisGroup(
         }
         return map;
     }, {} as {[patientKey:string]:string});
+}
+
+export function toSvgDomNodeWithLegend(svgElement: SVGElement,
+                                       legendGroupSelector: string,
+                                       chartGroupSelector?: string,
+                                       centerLegend: boolean = false)
+{
+    const svg = svgElement.cloneNode(true) as Element;
+    const legend = $(svgElement).find(legendGroupSelector).get(0);
+    const legendBBox = legend.getBoundingClientRect();
+
+    const height = + $(svgElement).height() + legendBBox.height;
+    const width = Math.max($(svgElement).width(), legendBBox.width);
+
+    // adjust width and height to make sure that the legend is fully visible
+    $(svg).attr("height", height + 5);
+    $(svg).attr("width", width);
+    $(svg).css({height: height + 5, width});
+
+    // center elements
+    if (centerLegend) {
+        const widthDiff = Math.abs($(svgElement).width() - legendBBox.width);
+        const shift = widthDiff / 2;
+        const transform = `translate(${shift}, 0)`;
+
+        if ($(svgElement).width() > legendBBox.width) {
+            // legend needs to be centered wrt the chart
+            $(svg).find(legendGroupSelector).attr("transform", transform);
+        }
+        else if (chartGroupSelector) {
+            // chart needs to be centered wrt the legend
+            $(svg).find(chartGroupSelector).attr("transform", transform);
+        }
+    }
+
+    return svg;
 }
 
 export function getClinicalDataIntervalFilterValues(data: DataBin[]): ClinicalDataIntervalFilterValue[]

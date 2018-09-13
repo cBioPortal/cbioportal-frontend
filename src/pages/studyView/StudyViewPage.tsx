@@ -236,6 +236,10 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     {
                         initDownload: () => this.store.getSurvivalDownloadData(chartMeta),
                         type: 'TSV'
+                    }, {
+                        type: 'SVG'
+                    }, {
+                        type: 'PDF'
                     }
                 ];
                 // only want to pass these in when necessary, otherwise charts will unnecessarily update when they change
@@ -255,6 +259,17 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     this.handlers.updateChartSampleIdentifierFilter(props.chartMeta?props.chartMeta.uniqueKey:'',[]);
                 }
                 props.sampleToAnalysisGroup = this.store.sampleToAnalysisGroup;
+                props.download = [
+                    {
+                        initDownload: () => this.store.getScatterDownloadData(chartMeta),
+                        type: 'TSV'
+                    }, {
+                        type: 'SVG'
+                    }, {
+                        type: 'PDF'
+                    }
+                ];
+
                 break;
             }
             default:

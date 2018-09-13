@@ -44,7 +44,7 @@ import {
     NA_DATA,
     EXPONENTIAL_FRACTION_DIGITS,
     getCNAByAlteration,
-    getDefaultChartTypeByClinicalAttribute
+    getDefaultChartTypeByClinicalAttribute, generateScatterPlotDownloadData
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -1322,6 +1322,21 @@ export class StudyViewPageStore {
             }));
 
             return data.join("\n");
+        }
+        else {
+            return "";
+        }
+    }
+
+    public async getScatterDownloadData(chartMeta: ChartMeta)
+    {
+        if (this.mutationCountVsFractionGenomeAlteredData.result) {
+            return generateScatterPlotDownloadData(
+                this.mutationCountVsFractionGenomeAlteredData.result,
+                this.sampleToAnalysisGroup.result,
+                this.analysisGroupsSettings.clinicalAttribute,
+                this.analysisGroupsSettings.groups as AnalysisGroup[]
+            );
         }
         else {
             return "";
