@@ -1900,11 +1900,51 @@
       "type": "object",
       "required": [
         "dbVersion",
+        "gitBranch",
+        "gitCommitId",
+        "gitCommitIdAbbrev",
+        "gitCommitIdDescribe",
+        "gitCommitIdDescribeShort",
+        "gitCommitMessageFull",
+        "gitCommitMessageShort",
+        "gitCommitMessageUserEmail",
+        "gitCommitMessageUserName",
+        "gitDirty",
         "portalVersion"
       ],
       "properties": {
         "dbVersion": {
           "type": "string"
+        },
+        "gitBranch": {
+          "type": "string"
+        },
+        "gitCommitId": {
+          "type": "string"
+        },
+        "gitCommitIdAbbrev": {
+          "type": "string"
+        },
+        "gitCommitIdDescribe": {
+          "type": "string"
+        },
+        "gitCommitIdDescribeShort": {
+          "type": "string"
+        },
+        "gitCommitMessageFull": {
+          "type": "string"
+        },
+        "gitCommitMessageShort": {
+          "type": "string"
+        },
+        "gitCommitMessageUserEmail": {
+          "type": "string"
+        },
+        "gitCommitMessageUserName": {
+          "type": "string"
+        },
+        "gitDirty": {
+          "type": "boolean"
         },
         "portalVersion": {
           "type": "string"
@@ -2139,9 +2179,6 @@
         "studyId"
       ],
       "properties": {
-        "cancerTypeId": {
-          "type": "string"
-        },
         "copyNumberSegmentPresent": {
           "type": "boolean"
         },
