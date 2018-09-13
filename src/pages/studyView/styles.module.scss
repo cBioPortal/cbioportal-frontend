@@ -28,4 +28,46 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-grow: 1;
+    flex-direction: column;
+}
+.userSelections {
+    font-size: 12px;
+
+    .filter {
+        padding-right: 10px;
+        display: inline;
+        > .name {
+            display: inline;
+            padding-right: 5px;
+        }
+        > .value {
+            padding-right: 5px;
+            font-weight: bold;
+            display: inline;
+
+            > .label {
+                padding-right: 5px;
+            }
+        }
+        &:last-child {
+            padding-right: 0px;
+        }
+    }
+}
+
+.summaryHeader{
+    margin: 5px;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    line-height: 12px !important;
+}
+
+.summaryHeaderBtn {
+    background-image: none !important;
+}
+
+.summaryHeaderItem {
+    margin: 0 2px !important;
 }

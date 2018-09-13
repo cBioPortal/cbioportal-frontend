@@ -1,14 +1,14 @@
 import _ from "lodash";
 import { SingleGeneQuery } from "shared/lib/oql/oql-parser";
 import { unparseOQLQueryLine } from "shared/lib/oql/oqlfilter";
-import { StudyViewFilter } from "shared/api/generated/CBioPortalAPIInternal";
-import { Sample, Gene } from "shared/api/generated/CBioPortalAPI";
+import { StudyViewFilter, DataBin, ClinicalDataIntervalFilterValue } from "shared/api/generated/CBioPortalAPIInternal";
+import { Sample, Gene, ClinicalAttribute } from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
 import {getSampleViewUrl, getStudySummaryUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
-import { StudyWithSamples } from "pages/studyView/StudyViewPageStore";
-import {ClinicalDataType} from "./StudyViewPageStore";
-import {ClinicalAttribute} from "../../shared/api/generated/CBioPortalAPI";
+import { BarDatum} from "./charts/barChart/BarChart";
+import {ClinicalDataTypeConstants, StudyWithSamples, StudyViewFilterWithSampleIdentifierFilters} from "pages/studyView/StudyViewPageStore";
+import {ChartType, ClinicalDataType} from "./StudyViewPageStore";
 
 //TODO:cleanup
 export const COLORS = [
@@ -67,9 +67,23 @@ export const COLORS = [
     '#651062', '#329267', '#5574a1', '#3b3ea5'
 ];
 
-export const NA_COLOR = '#CCCCCC'
+export const NA_COLOR = '#CCCCCC';
+export const UNSELECTED_COLOR = '#808080';
+export const NA_DATA = "NA";
+export const EXPONENTIAL_FRACTION_DIGITS = 3;
 
-export const UNSELECTED_COLOR = '#808080'
+// ---- These are the settings from configs.json in the previous study view ----
+// TODO: figure out a way to custom the following settings
+export const DEFAULT_ATTRS_SHOW_AS_TABLE = ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'];
+export const PIE_TO_TABLE_LIMIT = 20;
+// -----------------------------------------------------------------------------
+
+const OPERATOR_MAP: {[op:string]: string} = {
+    "<=": "≤",
+    "<" : "<",
+    ">=": "≥",
+    ">": ">"
+};
 
 export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: string): string {
 
@@ -83,41 +97,48 @@ export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: st
     return updatedQueries.map(query=>unparseOQLQueryLine(query)).join('\n');
 
 }
-export function mutationCountVsCnaTooltip(d: { data: Pick<IStudyViewScatterPlotData, "x" | "y" | "studyId" | "sampleId" | "patientId">[] }) {
-    const rows = [];
-    const MAX_SAMPLES = 3;
-    const borderStyle = {borderTop: "1px solid black"};
-    for (let i = 0; i < Math.min(MAX_SAMPLES, d.data.length); i++) {
-        const datum = d.data[i];
-        rows.push(
-            <tr key={`${datum.studyId}_${datum.sampleId}`} style={i > 0 ? borderStyle : {}}>
-                <td style={{padding: 5}}>
-                    <span>Cancer Study: <a target="_blank" href={getStudySummaryUrl(datum.studyId)}>{datum.studyId}</a></span><br/>
-                    <span>Sample ID: <a target="_blank"
-                                        href={getSampleViewUrl(datum.studyId, datum.sampleId)}>{datum.sampleId}</a></span><br/>
-                    <span>CNA Fraction: {datum.x}</span><br/>
-                    <span>Mutation Count: {datum.y}</span>
-                </td>
-            </tr>
+export function makeMutationCountVsCnaTooltip(sampleToAnalysisGroup?:{[sampleKey:string]:string}, analysisClinicalAttribute?:ClinicalAttribute) {
+    return (d: { data: Pick<IStudyViewScatterPlotData, "x" | "y" | "studyId" | "sampleId" | "patientId" | "uniqueSampleKey">[] })=>{
+        const rows = [];
+        const MAX_SAMPLES = 3;
+        const borderStyle = {borderTop: "1px solid black"};
+        for (let i = 0; i < Math.min(MAX_SAMPLES, d.data.length); i++) {
+            const datum = d.data[i];
+            rows.push(
+                <tr key={`${datum.studyId}_${datum.sampleId}`} style={i > 0 ? borderStyle : {}}>
+                    <td style={{padding: 5}}>
+                        <span>Cancer Study: <a target="_blank" href={getStudySummaryUrl(datum.studyId)}>{datum.studyId}</a></span><br/>
+                        <span>Sample ID: <a target="_blank"
+                                            href={getSampleViewUrl(datum.studyId, datum.sampleId)}>{datum.sampleId}</a></span><br/>
+                        <span>CNA Fraction: {datum.x}</span><br/>
+                        <span>Mutation Count: {datum.y}</span>
+                        {!!analysisClinicalAttribute && !!sampleToAnalysisGroup && (
+                            <div>
+                                {analysisClinicalAttribute.displayName}: {sampleToAnalysisGroup[datum.uniqueSampleKey]}
+                            </div>
+                        )}
+                    </td>
+                </tr>
+            );
+        }
+        if (d.data.length > 1) {
+            rows.push(
+                <tr key="see all" style={borderStyle}>
+                    <td style={{padding: 5}}>
+                        <a target="_blank" href={getSampleViewUrl(d.data[0].studyId, d.data[0].sampleId, d.data)}>View
+                            all {d.data.length} patients included in this dot.</a>
+                    </td>
+                </tr>
+            );
+        }
+        return (
+            <div>
+                <table>
+                    {rows}
+                </table>
+            </div>
         );
-    }
-    if (d.data.length > 1) {
-        rows.push(
-            <tr key="see all" style={borderStyle}>
-                <td style={{padding: 5}}>
-                    <a target="_blank" href={getSampleViewUrl(d.data[0].studyId, d.data[0].sampleId, d.data)}>View
-                        all {d.data.length} patients included in this dot.</a>
-                </td>
-            </tr>
-        );
-    }
-    return (
-        <div>
-            <table>
-                {rows}
-            </table>
-        </div>
-    );
+    };
 }
 
 export function isSelected(datum: { uniqueSampleKey: string }, selectedSamples: { [uniqueSampleKey: string]: any }) {
@@ -141,10 +162,13 @@ export function isPreSelectedClinicalAttr(attr: string): boolean {
     return _.isArray(result) && result.length > 0;
 }
 
-export function getClinicalAttributeUniqueKey(attr: ClinicalAttribute): string {
-    const clinicalDataType: ClinicalDataType = attr.patientAttribute ? 'PATIENT' : 'SAMPLE';
-    const uniqueKey = clinicalDataType + '_' + attr.clinicalAttributeId;
-    return uniqueKey;
+export function getClinicalDataType(patientAttribute: boolean): ClinicalDataType {
+    return patientAttribute ? ClinicalDataTypeConstants.PATIENT : ClinicalDataTypeConstants.SAMPLE;
+}
+
+export function getClinicalAttributeUniqueKey(attribute: ClinicalAttribute): string {
+    const clinicalDataType = getClinicalDataType(attribute.patientAttribute);
+    return clinicalDataType + '_' + attribute.clinicalAttributeId;
 }
 
 export function getCurrentDate() {
@@ -226,4 +250,417 @@ export function getVirtualStudyDescription(
     //add creation and user name
     descriptionLines.push('Created on ' + getCurrentDate() + (user ? ' by ' + user : ''));
     return descriptionLines.join('\n');
+}
+
+export function isFiltered(filter: StudyViewFilterWithSampleIdentifierFilters) {
+    return !(_.isEmpty(filter) || (
+        _.isEmpty(filter.clinicalDataEqualityFilters) &&
+        _.isEmpty(filter.clinicalDataIntervalFilters) &&
+        _.isEmpty(filter.cnaGenes) &&
+        _.isEmpty(filter.mutatedGenes) &&
+        _.isEmpty(filter.sampleIdentifiersSet)
+    ));
+}
+
+export function makePatientToClinicalAnalysisGroup(
+    samples:Pick<Sample, "uniqueSampleKey"|"uniquePatientKey">[],
+    sampleToAnalysisGroup:{[sampleKey:string]:string}
+) {
+    // only include a patient if all its samples are in the same analysis group
+    const badPatients:{[patientKey:string]:boolean} = {};
+    return _.reduce(samples, (map, sample)=>{
+        const patientKey = sample.uniquePatientKey;
+        if (!(patientKey in badPatients)) {
+            // weve not already determined that not all this patients samples are in the same group
+
+            const sampleGroup = sampleToAnalysisGroup[sample.uniqueSampleKey];
+            if (patientKey in map) {
+                if (map[patientKey] !== sampleGroup) {
+                    // this means that weve seen another sample for this patient thats not
+                    //  in the same group. therefore, not all this patients samples are in
+                    //  the same group, so we're going to omit it
+                    delete map[patientKey];
+                    badPatients[patientKey] = true;
+                } // otherwise, we already have the right group, so dont do anything
+            } else {
+                // this is the first sample weve seen from this patient
+                map[patientKey] = sampleGroup;
+            }
+        }
+        return map;
+    }, {} as {[patientKey:string]:string});
+}
+
+export function getClinicalDataIntervalFilterValues(data: DataBin[]): ClinicalDataIntervalFilterValue[]
+{
+    const values: Partial<ClinicalDataIntervalFilterValue>[] = data.map(dataBin => ({
+        start: dataBin.start,
+        end: dataBin.end,
+        value: dataBin.start === undefined && dataBin.end === undefined ? dataBin.specialValue : undefined
+    }));
+
+    return values as ClinicalDataIntervalFilterValue[];
+}
+
+export function filterNumericalBins(data: DataBin[]) {
+    return data.filter(dataBin => dataBin.start !== undefined || dataBin.end !== undefined);
+}
+
+export function filterCategoryBins(data: DataBin[]) {
+    return data.filter(dataBin => dataBin.start === undefined && dataBin.end === undefined);
+}
+
+export function filterIntervalBins(numericalBins: DataBin[]) {
+    return numericalBins.filter(dataBin => dataBin.start !== undefined && dataBin.end !== undefined);
+}
+
+export function calcIntervalBinValues(intervalBins: DataBin[]) {
+    const values = intervalBins.map(dataBin => dataBin.start);
+
+    if (intervalBins.length > 0) {
+        const lastIntervalBin = intervalBins[intervalBins.length - 1];
+
+        if (lastIntervalBin.start !== lastIntervalBin.end) {
+            values.push(lastIntervalBin.end);
+        }
+    }
+
+    return values;
+}
+
+export function generateNumericalData(numericalBins: DataBin[]): BarDatum[] {
+    // by default shift all x values by 1 -- we do not want to show a value right on the origin (zero)
+    // additional possible shift for log scale
+    const xShift = (
+        isLogScaleByDataBins(numericalBins) &&
+        numericalBins[0].start !== undefined &&
+        !isIntegerPowerOfTen(numericalBins[0].start)
+    ) ? 2 : 1;
+
+    return numericalBins.map((dataBin: DataBin, index: number) => {
+        let x;
+
+        // we want to show special values (< or <=) right on the tick
+        if (index === 0 && dataBin.start === undefined) {
+            x = index;
+        }
+        // we want to show special values (> or >=) right on the tick (or next tick depending on the prev bin end)
+        else if (index === numericalBins.length - 1 && dataBin.end === undefined) {
+            x = index;
+
+            // in case the previous data bin is a single value data bin (i.e start === end),
+            // no need to add 1 (no interval needed for the previous value)
+            if (index - 1 > 0 &&
+                numericalBins[index -1].start !== numericalBins[index -1].end)
+            {
+                x++;
+            }
+        }
+        // we want to show single values right on the tick
+        else if (dataBin.start === dataBin.end) {
+            x = index;
+        }
+        // we want to show range values in between 2 ticks
+        else {
+            x = index + 0.5;
+        }
+
+        // x is not the actual data value, it is the normalized data for representation
+        // y is the actual count value
+        return {
+            x: x + xShift,
+            y: dataBin.count,
+            dataBin
+        };
+    });
+}
+
+export function generateCategoricalData(categoryBins: DataBin[], startIndex: number): BarDatum[] {
+    // x is not the actual data value, it is the normalized data for representation
+    // y is the actual count value
+    return categoryBins.map((dataBin: DataBin, index: number) => ({
+        x: startIndex + index + 1,
+        y: dataBin.count,
+        dataBin
+    }));
+}
+
+export function isLogScaleByValues(values: number[]) {
+    return (
+        // empty list is not considered log scale
+        values.length > 0 &&
+        values.find(value =>
+            // any value between -1 and 1 (except 0) indicates that this is not a log scale
+            (value !== 0 && -1 < value && value < 1) ||
+            // any value not in the form of 10^0.5, 10^2, etc. also indicates that this is not a log scale
+            (value !== 0 && getExponent(value) % 0.5 !== 0)
+        ) === undefined
+    );
+}
+
+export function isEveryBinDistinct(data?: DataBin[]) {
+    return (
+        data && data.length > 0 &&
+        data.find(dataBin => dataBin.start !== dataBin.end) === undefined
+    );
+}
+
+export function isLogScaleByDataBins(data?: DataBin[]) {
+    if (!data) {
+        return false;
+    }
+
+    const numericalBins = filterNumericalBins(data);
+    const intervalBins = filterIntervalBins(numericalBins);
+    const values = calcIntervalBinValues(intervalBins);
+
+    // use only interval bin values when determining logScale
+    return !isEveryBinDistinct(intervalBins) && isLogScaleByValues(values);
+}
+
+export function isScientificSmallValue(value: number) {
+    // value should be between -0.001 and 0.001 (except 0) to be considered as scientific small number
+    return value !== 0 && -0.001 < value && value < 0.001;
+}
+
+export function formatNumericalTickValues(numericalBins: DataBin[]) {
+    if (numericalBins.length === 0) {
+        return [];
+    }
+
+    const firstBin = numericalBins[0];
+    const lastBin = numericalBins[numericalBins.length - 1];
+    const intervalBins = filterIntervalBins(numericalBins);
+    let values = calcIntervalBinValues(intervalBins);
+
+    // use only interval bin values when determining logScale
+    const isLogScale = !isEveryBinDistinct(intervalBins) && isLogScaleByValues(values);
+
+    if (firstBin.start === undefined) {
+        values = [firstBin.end, ...values];
+    }
+    else if (isLogScale && firstBin.start !== 0)
+    {
+        // we don't want to start with a value like 10^0.5, -10^3.5, etc. we prefer integer powers of 10
+        if (!isIntegerPowerOfTen(firstBin.start)) {
+            values = [closestIntegerPowerOfTen(firstBin.start, DataBinPosition.LEADING), ...values];
+        }
+    }
+
+    if (lastBin.end === undefined) {
+        values.push(lastBin.start);
+    }
+    else if (isLogScale && lastBin.end !== 0)
+    {
+        // we don't want to end with a value like 10^3.5, -10^0.5, etc. we prefer integer powers of 10
+        if (!isIntegerPowerOfTen(lastBin.end)) {
+            values.push(closestIntegerPowerOfTen(lastBin.end, DataBinPosition.TRAILING));
+        }
+    }
+
+    let formatted: string[];
+
+    if (isLogScale) {
+        formatted = formatLogScaleValues(values);
+    }
+    else if (intervalBins.length > 0 && isScientificSmallValue(intervalBins[intervalBins.length - 1].end))
+    {
+        // scientific notation
+        formatted = values.map(value => value.toExponential(0));
+    }
+    else {
+        formatted = formatLinearScaleValues(values);
+    }
+
+    if (firstBin.start === undefined) {
+        formatted[0] = `${OPERATOR_MAP[firstBin.specialValue] || firstBin.specialValue}${formatted[0]}`;
+    }
+
+    if (lastBin.end === undefined) {
+        formatted[formatted.length - 1] =
+            `${OPERATOR_MAP[lastBin.specialValue] || lastBin.specialValue}${formatted[formatted.length - 1]}`;
+    }
+
+    return formatted;
+}
+
+export function formatLinearScaleValues(values: number[]) {
+    return values.map(value => toFixedDigit(value));
+}
+
+export function formatLogScaleValues(values: number[]) {
+    return values.map(value => {
+        let displayValue;
+
+        if (value === -10 || value === -1 || value === 0 || value === 1 || value === 10) {
+            displayValue = `${value}`;
+        }
+        else {
+            const exponent = getExponent(value);
+
+            if (Number.isInteger(exponent)) {
+                displayValue = `10^${exponent.toFixed(0)}`;
+            }
+            else if (exponent % 0.5 === 0) {
+                // hide non integer powers of 10 (but we still show the tick itself)
+                displayValue = "";
+            }
+            else {
+                // show special outliers (if any) as is
+                displayValue = `${value}`;
+            }
+
+            if (displayValue && value < 0) {
+                displayValue = `-${displayValue}`;
+            }
+        }
+
+        return displayValue;
+    });
+}
+
+export function isIntegerPowerOfTen(value: number) {
+    let result = false;
+
+    if (value) {
+        const absLogValue = Math.log10(Math.abs(value));
+
+        if (Number.isInteger(absLogValue)) {
+            result = true;
+        }
+    }
+
+    return result;
+}
+
+export enum DataBinPosition {
+    LEADING = 1,
+    TRAILING = -1
+}
+
+export function closestIntegerPowerOfTen(value: number, dataBinPosition: DataBinPosition) {
+    if (value) {
+        const absLogValue = Math.log10(Math.abs(value));
+        const power = value * dataBinPosition > 0 ? Math.floor(absLogValue) : Math.ceil(absLogValue);
+        const integerPower = Math.pow(10, power);
+
+        return Math.sign(value) * integerPower;
+    }
+    else {
+        return 1;
+    }
+}
+
+export function intervalFiltersDisplayValue(values: ClinicalDataIntervalFilterValue[]) {
+    const categories = values
+        .filter(value => value.start === undefined && value.end === undefined)
+        .map(value => value.value);
+
+    const numericals = values.filter(value => value.start !== undefined || value.end !== undefined);
+
+    // merge numericals into one interval
+    const start = numericals.length > 0 ? numericals[0].start : undefined;
+    const end = numericals.length > 0 ? numericals[numericals.length - 1].end : undefined;
+
+    let displayValues: string[] = [];
+
+    if (numericals.length > 0) {
+        // both ends open
+        if (start === undefined && end === undefined) {
+            displayValues.push("All Numbers");
+        }
+        else if (start === undefined) {
+            displayValues.push(`≤ ${formatValue(end)}`);
+        }
+        else if (end === undefined) {
+            displayValues.push(`> ${formatValue(start)}`);
+        }
+        else if (start === end) {
+            displayValues.push(`${formatValue(start)}`);
+        }
+        else if (numericals[0].start === numericals[0].end) {
+            displayValues.push(`${formatValue(start)} ≤ ~ ≤ ${formatValue(end)}`);
+        }
+        else {
+            displayValues.push(`${formatValue(start)} < ~ ≤ ${formatValue(end)}`);
+        }
+    }
+
+    // copy categories as is
+    if (categories.length > 0) {
+        displayValues = displayValues.concat(categories);
+    }
+
+    return displayValues.length > 0 ? displayValues.join(", ") : "";
+}
+
+export function formatValue(value: number|undefined) {
+    let formatted;
+
+    if (value !== undefined) {
+        if (isScientificSmallValue(value)) {
+            formatted = value.toExponential(0);
+        }
+        else if (value < 1 && value > -1 && value !== 0) {
+            formatted = toFixedDigit(value);
+        }
+        else {
+            formatted = `${value}`;
+        }
+    }
+
+    return formatted;
+}
+
+export function toFixedDigit(value: number, fractionDigits: number = 2)
+{
+    if (!value) {
+        return `${value}`;
+    }
+
+    const absValue = Math.abs(value);
+
+    // no need to format integers
+    if (Number.isInteger(absValue)) {
+        return `${value}`;
+    }
+
+    const absLogValue = Math.abs(Math.log10(absValue % 1));
+
+    const numberOfLeadingDecimalZeroes = Number.isInteger(absLogValue) ?
+        Math.floor(absLogValue) - 1 : Math.floor(absLogValue);
+
+    return `${Number(value.toFixed(numberOfLeadingDecimalZeroes + fractionDigits))}`;
+}
+
+export function getExponent(value: number): number
+{
+    // less precision for values like 3 and 31
+    const fractionDigits = Math.abs(value) < 50 ? 1 : 2;
+
+    return Number(Math.log10(Math.abs(value)).toFixed(fractionDigits));
+}
+
+
+export function getCNAByAlteration(alteration: number) {
+    if ([-2, 2].includes(alteration))
+        return alteration === -2 ? 'DEL' : 'AMP';
+    return '';
+}
+
+export function getDefaultChartTypeByClinicalAttribute(clinicalAttribute: ClinicalAttribute): ChartType | undefined {
+    if (DEFAULT_ATTRS_SHOW_AS_TABLE.includes(clinicalAttribute.clinicalAttributeId)) {
+        return ChartType.TABLE;
+    }
+
+    // TODO: update logic when number of categories above PIE_TO_TABLE_LIMIT
+    if (clinicalAttribute.datatype === 'STRING') {
+        return ChartType.PIE_CHART;
+    }
+
+    if (clinicalAttribute.datatype === 'NUMBER') {
+        return ChartType.BAR_CHART;
+    }
+
+    return undefined;
 }
