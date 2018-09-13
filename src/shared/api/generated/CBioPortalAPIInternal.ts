@@ -238,6 +238,26 @@ export type GisticToGene = {
 export type Info = {
     'dbVersion': string
 
+        'gitBranch': string
+
+        'gitCommitId': string
+
+        'gitCommitIdAbbrev': string
+
+        'gitCommitIdDescribe': string
+
+        'gitCommitIdDescribeShort': string
+
+        'gitCommitMessageFull': string
+
+        'gitCommitMessageShort': string
+
+        'gitCommitMessageUserEmail': string
+
+        'gitCommitMessageUserName': string
+
+        'gitDirty': boolean
+
         'portalVersion': string
 
 };
@@ -338,9 +358,7 @@ export type MutationSpectrumFilter = {
 
 };
 export type Sample = {
-    'cancerTypeId': string
-
-        'copyNumberSegmentPresent': boolean
+    'copyNumberSegmentPresent': boolean
 
         'patientId': string
 
