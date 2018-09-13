@@ -76,14 +76,11 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
                 this.store.resetFilterAndChangeChartVisibility(chartMeta, false);
             },
-            updateCustomCasesFilter: (cases: SampleIdentifier[], keepCurrent?:boolean) => {
-                this.store.updateCustomCasesFilter(cases, keepCurrent);
+            updateChartSampleIdentifierFilter: (uniqueKey:string, cases: SampleIdentifier[], keepCurrent?:boolean) => {
+                this.store.updateChartSampleIdentifierFilter(uniqueKey, cases, keepCurrent);
             },
             updateSelectedGenes:(query: SingleGeneQuery[], genesInQuery: Gene[])=>{
                 this.store.updateSelectedGenes(query, genesInQuery);
-            },
-            resetCustomCasesFilter: () => {
-                this.store.resetCustomCasesFilter();
             },
             clearCNAGeneFilter: () => {
                 this.store.clearCNAGeneFilter();
@@ -91,8 +88,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             clearGeneFilter: () => {
                 this.store.clearGeneFilter();
             },
-            clearCustomCasesFilter: () => {
-                this.store.clearCustomCasesFilter();
+            clearChartSampleIdentifierFilter: (chartMeta: ChartMeta) => {
+                this.store.clearChartSampleIdentifierFilter(chartMeta);
             },
             clearAllFilters: () => {
                 this.store.clearAllFilters();
@@ -247,12 +244,16 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 break;
             }
             case ChartType.SCATTER: {
-                props.filters = this.store.getCustomCasesFilter();
+                props.filters = this.store.getChartSampleIdentifiersFilter(props.chartMeta?props.chartMeta.uniqueKey:'');
                 props.promise = this.store.mutationCountVsFractionGenomeAlteredData;
                 props.selectedSamplesMap = this.store.selectedSamplesMap;
                 props.selectedSamples = this.store.selectedSamples;
-                props.onValueSelection = this.handlers.updateCustomCasesFilter;
-                props.onResetSelection = this.handlers.resetCustomCasesFilter;
+                props.onValueSelection = (cases: SampleIdentifier[], keepCurrent?:boolean)=>{
+                    this.handlers.updateChartSampleIdentifierFilter(props.chartMeta?props.chartMeta.uniqueKey:'',cases,keepCurrent);
+                }
+                props.onResetSelection = ()=>{
+                    this.handlers.updateChartSampleIdentifierFilter(props.chartMeta?props.chartMeta.uniqueKey:'',[]);
+                }
                 props.sampleToAnalysisGroup = this.store.sampleToAnalysisGroup;
                 break;
             }
@@ -312,10 +313,12 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                             <SummaryHeader
                                 geneQuery={this.store.geneQueryStr}
                                 selectedSamples={this.store.selectedSamples.result!}
-                                updateCustomCasesFilter={this.handlers.updateCustomCasesFilter}
+                                updateCustomCasesFilter={(cases: SampleIdentifier[], keepCurrent?:boolean)=>{
+                                    this.handlers.updateChartSampleIdentifierFilter('customFilters',cases,keepCurrent);
+                                }}
                                 updateSelectedGenes={this.handlers.updateSelectedGenes}
                                 studyWithSamples={this.store.studyWithSamples.result}
-                                filter={this.store.filters}
+                                filter={this.store.userSelections}
                                 attributesMetaSet={this.store.chartMetaSet}
                                 user={AppConfig.userEmailAddress}
                                 getClinicalData={this.store.getDownloadDataPromise}
@@ -324,7 +327,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                 updateClinicalDataIntervalFilter={this.handlers.onUpdateIntervalFilters}
                                 clearCNAGeneFilter={this.handlers.clearCNAGeneFilter}
                                 clearGeneFilter={this.handlers.clearGeneFilter}
-                                clearCustomCasesFilter={this.handlers.clearCustomCasesFilter}
+                                clearChartSampleIdentifierFilter={this.handlers.clearChartSampleIdentifierFilter}
                                 clearAllFilters={this.handlers.clearAllFilters}
                                 clinicalAttributesWithCountPromise={this.store.clinicalAttributesWithCount}
                                 visibleAttributeIds={this.store.visibleAttributes}

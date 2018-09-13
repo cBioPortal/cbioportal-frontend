@@ -4,19 +4,19 @@ import { observer } from "mobx-react";
 import { computed } from 'mobx';
 import styles from "./styles.module.scss";
 import {ClinicalDataIntervalFilterValue, StudyViewFilter} from 'shared/api/generated/CBioPortalAPIInternal';
-import { ChartMeta, UniqueKey } from 'pages/studyView/StudyViewPageStore';
+import { ChartMeta, UniqueKey, StudyViewFilterWithSampleIdentifierFilters} from 'pages/studyView/StudyViewPageStore';
 import {intervalFiltersDisplayValue, isFiltered} from 'pages/studyView/StudyViewUtils';
 import autobind from 'autobind-decorator';
 
 export interface IUserSelectionsProps {
-    filter: StudyViewFilter;
+    filter: StudyViewFilterWithSampleIdentifierFilters;
     attributesMetaSet: { [id: string]: ChartMeta };
     updateClinicalDataEqualityFilter: (chartMeta: ChartMeta, value: string[]) => void;
     updateClinicalDataIntervalFilter: (chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) => void;
     clearGeneFilter: () => void;
     clearCNAGeneFilter: () => void;
-    clearCustomCasesFilter: () => void;
-    clearAllFilters: () => void;
+    clearChartSampleIdentifierFilter: (chartMeta: ChartMeta) => void;
+    clearAllFilters: () => void
 }
 
 
@@ -32,20 +32,18 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
     }
 
     @computed private get clinicalDataEqualityFilters() {
-        return _.map((this.props.filter.clinicalDataEqualityFilters || []), clinicalDataEqualityFilter => {
+        return _.reduce((this.props.filter.clinicalDataEqualityFilters || []), (acc,clinicalDataEqualityFilter) => {
             let chartMeta = this.props.attributesMetaSet[clinicalDataEqualityFilter.clinicalDataType + '_' + clinicalDataEqualityFilter.attributeId];
             if (chartMeta) {
-                return (
-                    <ClinicalDataEqualityFilter
-                        chartMeta={chartMeta}
-                        values={clinicalDataEqualityFilter.values}
-                        updateClinicalDataEqualityFilter={this.props.updateClinicalDataEqualityFilter}
-                    />
-                )
-            } else {
-                return null;
+                let labelValueSet = _.keyBy(clinicalDataEqualityFilter.values);
+                acc.push(<ChartFilter
+                    chartMeta={chartMeta}
+                    labelValueSet={labelValueSet}
+                    updateFilter={this.props.updateClinicalDataEqualityFilter}
+                />);
             }
-        })
+            return acc;
+        },[] as JSX.Element[])
     }
 
     @computed private get clinicalDataIntervalFilters() {
@@ -69,11 +67,10 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
         let chartMeta = this.props.attributesMetaSet[UniqueKey.MUTATED_GENES_TABLE];
         if (chartMeta && !_.isEmpty(this.props.filter.mutatedGenes)) {
             return (
-                <span className={styles.filter}>
-                    <span className={styles.name}>{chartMeta.displayName}</span>
-                    <i className="fa fa-times" style={{ cursor: "pointer" }} onClick={this.props.clearGeneFilter}></i>
-                </span>
-            )
+                <ChartFilter
+                    chartMeta={chartMeta}
+                    clearFilter={this.props.clearGeneFilter}
+                />)
         }
         return null;
     }
@@ -82,26 +79,25 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
         let chartMeta = this.props.attributesMetaSet[UniqueKey.CNA_GENES_TABLE];
         if (chartMeta && !_.isEmpty(this.props.filter.cnaGenes)) {
             return (
-                <span className={styles.filter}>
-                    <span className={styles.name}>{chartMeta.displayName}</span>
-                    <i className="fa fa-times" style={{ cursor: "pointer" }} onClick={this.props.clearCNAGeneFilter}></i>
-                </span>
-            )
+                <ChartFilter
+                    chartMeta={chartMeta}
+                    clearFilter={this.props.clearCNAGeneFilter}
+                />)
         }
         return null;
     }
 
-    @computed private get mutationCountVScnaFilter() {
-        let chartMeta = this.props.attributesMetaSet[UniqueKey.MUTATION_COUNT_CNA_FRACTION];
-        if (chartMeta && !_.isEmpty(this.props.filter.sampleIdentifiers)) {
-            return (
-                <span className={styles.filter}>
-                    <span className={styles.name}>{chartMeta.displayName}</span>
-                    <i className="fa fa-times" style={{ cursor: "pointer" }} onClick={this.props.clearCustomCasesFilter}></i>
-                </span>
-            )
-        }
-        return null;
+    @computed private get sampleIdentifiersFilters() {
+        return _.reduce(this.props.filter.sampleIdentifiersSet, (acc, sampleIdentifiers, chartUniqKey) => {
+            let chartMeta = this.props.attributesMetaSet[chartUniqKey];
+            if (chartMeta) {
+                acc.push(<ChartFilter
+                    chartMeta={chartMeta}
+                    clearFilter={this.props.clearChartSampleIdentifierFilter}
+                />)
+            }
+            return acc;
+        },[] as JSX.Element[])
     }
 
     render() {
@@ -114,7 +110,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                         {this.clinicalDataIntervalFilters}
                         {this.cnaGeneFilter}
                         {this.mutatedGeneFilter}
-                        {this.mutationCountVScnaFilter}
+                        {this.sampleIdentifiersFilters}
                         <span><button className="btn btn-default btn-xs" onClick={this.props.clearAllFilters}>Clear All</button></span>
                     </div>
                 </div>
@@ -126,30 +122,50 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
 }
 
 
-export interface IClinicalDataEqualityFilterProps {
+export interface IChartFilterProps {
     chartMeta: ChartMeta;
-    values: string[];
-    updateClinicalDataEqualityFilter: (chartMeta: ChartMeta, value: string[]) => void;
+    labelValueSet?: { [id: string]: any };
+    updateFilter?: (chartMeta: ChartMeta, value: any[]) => void;
+    clearFilter?: (chartMeta: ChartMeta) => void; // could be used if we want to remove all filters for that particular chart
 }
 
-class ClinicalDataEqualityFilter extends React.Component<IClinicalDataEqualityFilterProps, {}> {
+@observer
+class ChartFilter extends React.Component<IChartFilterProps, {}> {
 
     @autobind
-    private updateClinicalDataEqualityFilter(value: string) {
-        this.props.updateClinicalDataEqualityFilter(this.props.chartMeta, _.filter(this.props.values, _value => _value !== value))
+    private updateFilter(displayLabel: string) {
+        if (this.props.updateFilter) {
+            let filteredValues = _.filter(this.props.labelValueSet || {}, (_value, _displayLabel) => _displayLabel !== displayLabel);
+            this.props.updateFilter(this.props.chartMeta, filteredValues);
+        }
+    }
+
+    @autobind
+    private clearFilter() {
+        if (this.props.clearFilter) {
+            this.props.clearFilter(this.props.chartMeta)
+        }
     }
 
     render() {
         return (
             <span className={styles.filter}>
                 <span className={styles.name}>{this.props.chartMeta.displayName}</span>
-                {_.map(this.props.values, value => {
+                {this.props.labelValueSet && _.map(this.props.labelValueSet, (value, displayLabel) => {
                     return (
                         <UnitFilter
                             value={value}
-                            removeClinicalDataEqualityFilter={this.updateClinicalDataEqualityFilter} />
+                            displayLabel={displayLabel}
+                            removeFilter={this.updateFilter} />
                     )
                 })}
+                {!this.props.labelValueSet &&
+                    <i
+                        className="fa fa-times"
+                        style={{ cursor: "pointer" }}
+                        onClick={this.clearFilter}
+                    />
+                }
             </span>
         )
     }
@@ -181,21 +197,28 @@ class ClinicalDataIntervalFilter extends React.Component<IClinicalDataIntervalFi
     }
 }
 
-class UnitFilter extends React.Component<{ value: string; removeClinicalDataEqualityFilter: (value: string) => void; }, {}> {
+export interface IUnitFilterProps {
+    value: string;
+    displayLabel: string
+    removeFilter: (value: string) => void
+}
+
+@observer
+class UnitFilter extends React.Component<IUnitFilterProps, {}> {
 
     @autobind
-    private removeClinicalDataEqualityFilter() {
-        this.props.removeClinicalDataEqualityFilter(this.props.value)
+    private removeFilter() {
+        this.props.removeFilter(this.props.displayLabel)
     }
 
     render() {
         return (
             <span className={styles.value}>
-                <span className={styles.label}>{this.props.value}</span>
+                <span className={styles.label}>{this.props.displayLabel}</span>
                 <i
                     className="fa fa-times"
                     style={{ cursor: "pointer" }}
-                    onClick={this.removeClinicalDataEqualityFilter}
+                    onClick={this.removeFilter}
                 />
             </span>
         )
