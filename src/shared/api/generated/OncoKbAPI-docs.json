@@ -912,6 +912,7 @@
       },
       "post": {
         "tags": [
+          "Evidences",
           "Search"
         ],
         "summary": "searchPost",
@@ -1701,13 +1702,13 @@
             "LEVEL_R1",
             "LEVEL_R2",
             "LEVEL_R3",
-            "LEVEL_P1",
-            "LEVEL_P2",
-            "LEVEL_P3",
-            "LEVEL_P4",
-            "LEVEL_D1",
-            "LEVEL_D2",
-            "LEVEL_D3"
+            "LEVEL_Px1",
+            "LEVEL_Px2",
+            "LEVEL_Px3",
+            "LEVEL_Px4",
+            "LEVEL_Dx1",
+            "LEVEL_Dx2",
+            "LEVEL_Dx3"
           ]
         },
         "oncoTreeType": {
@@ -1756,13 +1757,13 @@
             "LEVEL_R1",
             "LEVEL_R2",
             "LEVEL_R3",
-            "LEVEL_P1",
-            "LEVEL_P2",
-            "LEVEL_P3",
-            "LEVEL_P4",
-            "LEVEL_D1",
-            "LEVEL_D2",
-            "LEVEL_D3"
+            "LEVEL_Px1",
+            "LEVEL_Px2",
+            "LEVEL_Px3",
+            "LEVEL_Px4",
+            "LEVEL_Dx1",
+            "LEVEL_Dx2",
+            "LEVEL_Dx3"
           ]
         },
         "highestSensitiveLevel": {
@@ -1779,13 +1780,13 @@
             "LEVEL_R1",
             "LEVEL_R2",
             "LEVEL_R3",
-            "LEVEL_P1",
-            "LEVEL_P2",
-            "LEVEL_P3",
-            "LEVEL_P4",
-            "LEVEL_D1",
-            "LEVEL_D2",
-            "LEVEL_D3"
+            "LEVEL_Px1",
+            "LEVEL_Px2",
+            "LEVEL_Px3",
+            "LEVEL_Px4",
+            "LEVEL_Dx1",
+            "LEVEL_Dx2",
+            "LEVEL_Dx3"
           ]
         },
         "hotspot": {
@@ -1816,13 +1817,13 @@
               "LEVEL_R1",
               "LEVEL_R2",
               "LEVEL_R3",
-              "LEVEL_P1",
-              "LEVEL_P2",
-              "LEVEL_P3",
-              "LEVEL_P4",
-              "LEVEL_D1",
-              "LEVEL_D2",
-              "LEVEL_D3"
+              "LEVEL_Px1",
+              "LEVEL_Px2",
+              "LEVEL_Px3",
+              "LEVEL_Px4",
+              "LEVEL_Dx1",
+              "LEVEL_Dx2",
+              "LEVEL_Dx3"
             ]
           }
         },
@@ -1842,13 +1843,13 @@
               "LEVEL_R1",
               "LEVEL_R2",
               "LEVEL_R3",
-              "LEVEL_P1",
-              "LEVEL_P2",
-              "LEVEL_P3",
-              "LEVEL_P4",
-              "LEVEL_D1",
-              "LEVEL_D2",
-              "LEVEL_D3"
+              "LEVEL_Px1",
+              "LEVEL_Px2",
+              "LEVEL_Px3",
+              "LEVEL_Px4",
+              "LEVEL_Dx1",
+              "LEVEL_Dx2",
+              "LEVEL_Dx3"
             ]
           }
         },
@@ -1988,13 +1989,13 @@
               "LEVEL_R1",
               "LEVEL_R2",
               "LEVEL_R3",
-              "LEVEL_P1",
-              "LEVEL_P2",
-              "LEVEL_P3",
-              "LEVEL_P4",
-              "LEVEL_D1",
-              "LEVEL_D2",
-              "LEVEL_D3"
+              "LEVEL_Px1",
+              "LEVEL_Px2",
+              "LEVEL_Px3",
+              "LEVEL_Px4",
+              "LEVEL_Dx1",
+              "LEVEL_Dx2",
+              "LEVEL_Dx3"
             ]
           }
         },
@@ -2123,13 +2124,13 @@
             "LEVEL_R1",
             "LEVEL_R2",
             "LEVEL_R3",
-            "LEVEL_P1",
-            "LEVEL_P2",
-            "LEVEL_P3",
-            "LEVEL_P4",
-            "LEVEL_D1",
-            "LEVEL_D2",
-            "LEVEL_D3"
+            "LEVEL_Px1",
+            "LEVEL_Px2",
+            "LEVEL_Px3",
+            "LEVEL_Px4",
+            "LEVEL_Dx1",
+            "LEVEL_Dx2",
+            "LEVEL_Dx3"
           ]
         },
         "pmids": {
@@ -2262,13 +2263,13 @@
               "LEVEL_R1",
               "LEVEL_R2",
               "LEVEL_R3",
-              "LEVEL_P1",
-              "LEVEL_P2",
-              "LEVEL_P3",
-              "LEVEL_P4",
-              "LEVEL_D1",
-              "LEVEL_D2",
-              "LEVEL_D3"
+              "LEVEL_Px1",
+              "LEVEL_Px2",
+              "LEVEL_Px3",
+              "LEVEL_Px4",
+              "LEVEL_Dx1",
+              "LEVEL_Dx2",
+              "LEVEL_Dx3"
             ]
           }
         },
