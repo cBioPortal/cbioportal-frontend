@@ -1,8 +1,16 @@
 import { assert } from 'chai';
-import { updateGeneQuery } from 'pages/studyView/StudyViewUtils';
-import { getVirtualStudyDescription } from 'pages/studyView/StudyViewUtils';
-import { Gene } from 'shared/api/generated/CBioPortalAPI';
-import { StudyViewFilter } from 'shared/api/generated/CBioPortalAPIInternal';
+import {
+    calcIntervalBinValues, filterCategoryBins, filterIntervalBins, filterNumericalBins,
+    generateCategoricalData, generateNumericalData, isLogScaleByDataBins, isLogScaleByValues,
+    getClinicalDataIntervalFilterValues, makePatientToClinicalAnalysisGroup, updateGeneQuery, formatNumericalTickValues,
+    intervalFiltersDisplayValue, isEveryBinDistinct, toFixedDigit, getExponent,
+    getCNAByAlteration,
+    getDefaultChartTypeByClinicalAttribute,
+    getVirtualStudyDescription
+} from 'pages/studyView/StudyViewUtils';
+import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue} from 'shared/api/generated/CBioPortalAPIInternal';
+import {ClinicalAttribute, Gene} from 'shared/api/generated/CBioPortalAPI';
+import {ChartType} from "./StudyViewPageStore";
 
 describe('StudyViewUtils', () => {
 
@@ -96,6 +104,802 @@ describe('StudyViewUtils', () => {
                     [],
                     'user1'
                 ).endsWith('by user1'));
+        });
+    });
+
+    describe('makePatientToClinicalAnalysisGroup', ()=>{
+        it("returns correct result on empty input", ()=>{
+            assert.deepEqual(makePatientToClinicalAnalysisGroup([], {}), {});
+        });
+        it("returns correct result with no conflicting samples", ()=>{
+            assert.deepEqual(
+                makePatientToClinicalAnalysisGroup(
+                    [{ uniqueSampleKey: "sample1.1", uniquePatientKey: "patient1"},
+                    { uniqueSampleKey: "sample1.2", uniquePatientKey: "patient1"},
+                        { uniqueSampleKey: "sample2.1", uniquePatientKey: "patient2"},
+                        { uniqueSampleKey: "sample3.1", uniquePatientKey: "patient3"},
+                        { uniqueSampleKey: "sample3.2", uniquePatientKey: "patient3"}
+                    ],
+                    { "sample1.1":"a", "sample1.2":"a", "sample2.1":"b", "sample3.1":"c", "sample3.2":"c"}
+                ),
+                { "patient1":"a", "patient2":"b", "patient3":"c"}
+            );
+        });
+        it("omits patients with samples in different analysis groups", ()=>{
+            assert.deepEqual(
+                makePatientToClinicalAnalysisGroup(
+                    [{ uniqueSampleKey: "sample1.1", uniquePatientKey: "patient1"},
+                        { uniqueSampleKey: "sample1.2", uniquePatientKey: "patient1"},
+                        { uniqueSampleKey: "sample2.1", uniquePatientKey: "patient2"},
+                        { uniqueSampleKey: "sample3.1", uniquePatientKey: "patient3"},
+                        { uniqueSampleKey: "sample3.2", uniquePatientKey: "patient3"}
+                    ],
+                    { "sample1.1":"a", "sample1.2":"b", "sample2.1":"b", "sample3.1":"c", "sample3.2":"c"}
+                ),
+                { "patient2":"b", "patient3":"c"}
+            );
+        });
+    });
+
+    describe('processDataBins', () => {
+        const linearScaleDataBinsWithNa = [
+            {
+                "attributeId": "PB_BLAST_PERCENTAGE",
+                "specialValue": "<=",
+                "end": 20,
+                "count": 70
+            },
+            {
+                "attributeId": "PB_BLAST_PERCENTAGE",
+                "start": 20,
+                "end": 40,
+                "count": 3
+            },
+            {
+                "attributeId": "PB_BLAST_PERCENTAGE",
+                "start": 40,
+                "end": 60,
+                "count": 5
+            },
+            {
+                "attributeId": "PB_BLAST_PERCENTAGE",
+                "start": 60,
+                "end": 80,
+                "count": 11
+            },
+            {
+                "attributeId": "PB_BLAST_PERCENTAGE",
+                "start": 80,
+                "end": 100,
+                "count": 69
+            },
+            {
+                "attributeId": "PB_BLAST_PERCENTAGE",
+                "specialValue": "NA",
+                "count": 2
+            }
+        ] as any;
+
+        const logScaleDataBinsWithNaAndSpecialValues = [
+            {
+                "attributeId": "DAYS_TO_LAST_FOLLOWUP",
+                "specialValue": "<=",
+                "end": 10,
+                "count": 1
+            },
+            {
+                "attributeId": "DAYS_TO_LAST_FOLLOWUP",
+                "start": 10,
+                "end": 31,
+                "count": 3
+            },
+            {
+                "attributeId": "DAYS_TO_LAST_FOLLOWUP",
+                "start": 31,
+                "end": 100,
+                "count": 5
+            },
+            {
+                "attributeId": "DAYS_TO_LAST_FOLLOWUP",
+                "start": 100,
+                "end": 316,
+                "count": 23
+            },
+            {
+                "attributeId": "DAYS_TO_LAST_FOLLOWUP",
+                "start": 316,
+                "end": 1000,
+                "count": 67
+            },
+            {
+                "attributeId": "DAYS_TO_LAST_FOLLOWUP",
+                "start": 1000,
+                "end": 3162,
+                "count": 55
+            },
+            {
+                "attributeId": "DAYS_TO_LAST_FOLLOWUP",
+                "start": 3162,
+                "end": 10000,
+                "count": 6
+            },
+            {
+                "attributeId": "DAYS_TO_LAST_FOLLOWUP",
+                "specialValue": ">",
+                "start": 10000,
+                "count": 16
+            },
+            {
+                "attributeId": "DAYS_TO_LAST_FOLLOWUP",
+                "specialValue": "NA",
+                "count": 66
+            },
+            {
+                "attributeId": "DAYS_TO_LAST_FOLLOWUP",
+                "specialValue": "REDACTED",
+                "count": 666
+            }
+        ] as any;
+
+        const scientificSmallNumberBins = [
+            {
+                "attributeId": "SILENT_RATE",
+                "start": 1E-8,
+                "end": 1E-7,
+                "count": 1
+            },
+            {
+                "attributeId": "SILENT_RATE",
+                "start": 1E-7,
+                "end": 1E-6,
+                "count": 16
+            },
+            {
+                "attributeId": "SILENT_RATE",
+                "start": 1E-6,
+                "end": 1E-5,
+                "count": 32
+            },
+            {
+                "attributeId": "SILENT_RATE",
+                "specialValue": ">",
+                "start": 1E-5,
+                "count": 1
+            }
+        ] as any;
+
+        const noNumericalDataBins = [
+            {
+                "attributeId": "CANCER_TYPE",
+                "specialValue": "BREAST",
+                "count": 1
+            },
+            {
+                "attributeId": "CANCER_TYPE",
+                "specialValue": "SKIN",
+                "count": 11
+            },
+            {
+                "attributeId": "CANCER_TYPE",
+                "specialValue": "BRAIN",
+                "count": 121
+            },
+            {
+                "attributeId": "CANCER_TYPE",
+                "specialValue": "NA",
+                "count": 66
+            },
+            {
+                "attributeId": "CANCER_TYPE",
+                "specialValue": "REDACTED",
+                "count": 666
+            }
+        ] as any;
+
+        const logScaleDataBinsWithNegativeAndNaAndSpecialValues = [
+            {
+                "attributeId": "DAYS_TO_BIRTH",
+                "start": -31622,
+                "end": -10000,
+                "count": 78
+            },
+            {
+                "attributeId": "DAYS_TO_BIRTH",
+                "start": -10000,
+                "end": -3162,
+                "count": 14
+            },
+            {
+                "attributeId": "DAYS_TO_BIRTH",
+                "start": -3162,
+                "end": -1000,
+                "count": 31
+            },
+            {
+                "attributeId": "DAYS_TO_BIRTH",
+                "start": -1000,
+                "end": -316,
+                "count": 12
+            },
+            {
+                "attributeId": "DAYS_TO_BIRTH",
+                "start": -316,
+                "end": -100,
+                "count": 6
+            },
+            {
+                "attributeId": "DAYS_TO_BIRTH",
+                "start": -100,
+                "end": -31,
+                "count": 2
+            },
+            {
+                "attributeId": "DAYS_TO_BIRTH",
+                "start": -31,
+                "end": -10,
+                "count": 2
+            },
+            {
+                "attributeId": "DAYS_TO_BIRTH",
+                "start": -10,
+                "end": -1,
+                "count": 0
+            },
+            {
+                "attributeId": "DAYS_TO_BIRTH",
+                "start": -1,
+                "end": 1,
+                "count": 0
+            },
+            {
+                "attributeId": "DAYS_TO_BIRTH",
+                "start": 1,
+                "end": 10,
+                "count": 2
+            },
+            {
+                "attributeId": "DAYS_TO_BIRTH",
+                "start": 10,
+                "end": 31,
+                "count": 7
+            },
+            {
+                "attributeId": "DAYS_TO_BIRTH",
+                "specialValue": "NA",
+                "count": 66
+            },
+            {
+                "attributeId": "DAYS_TO_BIRTH",
+                "specialValue": "REDACTED",
+                "count": 666
+            }
+        ] as any;
+
+        const noGroupingDataBinsWithNa = [
+            {
+                "attributeId": "ACTIONABLE_ALTERATIONS",
+                "start": 0,
+                "end": 0,
+                "count": 16
+            },
+            {
+                "attributeId": "ACTIONABLE_ALTERATIONS",
+                "start": 1,
+                "end": 1,
+                "count": 6
+            },
+            {
+                "attributeId": "ACTIONABLE_ALTERATIONS",
+                "start": 2,
+                "end": 2,
+                "count": 4
+            },
+            {
+                "attributeId": "ACTIONABLE_ALTERATIONS",
+                "start": 3,
+                "end": 3,
+                "count": 1
+            },
+            {
+                "attributeId": "ACTIONABLE_ALTERATIONS",
+                "start": 5,
+                "end": 5,
+                "count": 1
+            },
+            {
+                "attributeId": "ACTIONABLE_ALTERATIONS",
+                "specialValue": "NA",
+                "count": 4
+            },
+        ] as any;
+
+        it('generates clinical data interval filter values from data bins', () => {
+            const values: ClinicalDataIntervalFilterValue[] = getClinicalDataIntervalFilterValues(
+                [linearScaleDataBinsWithNa[0], linearScaleDataBinsWithNa[2], linearScaleDataBinsWithNa[5]] as any);
+
+            assert.deepEqual(values, [
+                {end: 20, start: undefined, value: undefined},
+                {start: 40, end: 60, value: undefined},
+                {value: "NA", start: undefined, end: undefined}
+            ] as any);
+        });
+
+        it('processes linear scaled data bins including NA count', () => {
+            const numericalBins = filterNumericalBins(linearScaleDataBinsWithNa);
+            assert.equal(numericalBins.length, 5, "NA should be filtered out");
+
+            const formattedTickValues = formatNumericalTickValues(numericalBins);
+            assert.deepEqual(formattedTickValues, ["≤20", "20", "40", "60", "80", "100"]);
+
+            const intervalBins = filterIntervalBins(numericalBins);
+            assert.equal(intervalBins.length, 4, "First bin with the special values (<=) should be filtered out");
+
+            const intervalBinValues = calcIntervalBinValues(intervalBins);
+            assert.deepEqual(intervalBinValues, [20, 40, 60, 80, 100]);
+
+            const isLogScale = isLogScaleByValues(intervalBinValues);
+            assert.isFalse(isLogScale);
+
+            const categoryBins = filterCategoryBins(linearScaleDataBinsWithNa);
+            assert.equal(categoryBins.length, 1, "Only the bin with NA special value should be included");
+
+            const normalizedNumericalData = generateNumericalData(numericalBins);
+            assert.deepEqual(normalizedNumericalData.map(data => data.x), [1, 2.5, 3.5, 4.5, 5.5]);
+
+            const normalizedCategoryData = generateCategoricalData(categoryBins, 6);
+            assert.deepEqual(normalizedCategoryData.map(data => data.x), [7]);
+        });
+
+        it('processes log scaled data bins including NA and REDACTED counts', () => {
+            const numericalBins = filterNumericalBins(logScaleDataBinsWithNaAndSpecialValues);
+            assert.equal(numericalBins.length, 8, "NA and REDACTED should be filtered out");
+
+            const formattedTickValues = formatNumericalTickValues(numericalBins);
+            assert.deepEqual(formattedTickValues, ["≤10", "10", "", "10^2", "", "10^3", "", "10^4", ">10^4"]);
+
+            const intervalBins = filterIntervalBins(numericalBins);
+            assert.equal(intervalBins.length, 6,
+                "First and last bins with the special values (<= and >) should be filtered out");
+
+            const intervalBinValues = calcIntervalBinValues(intervalBins);
+            assert.deepEqual(intervalBinValues, [10, 31, 100, 316, 1000, 3162, 10000]);
+
+            const isLogScale = isLogScaleByValues(intervalBinValues);
+            assert.isTrue(isLogScale);
+
+            const categoryBins = filterCategoryBins(logScaleDataBinsWithNaAndSpecialValues);
+            assert.equal(categoryBins.length, 2,
+                "Only the bins with NA and REDACTED special values should be included");
+
+            const normalizedNumericalData = generateNumericalData(numericalBins);
+            assert.deepEqual(normalizedNumericalData.map(data => data.x),
+                [1, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 9]);
+
+            const normalizedCategoryData = generateCategoricalData(categoryBins, 9);
+            assert.deepEqual(normalizedCategoryData.map(data => data.x), [10, 11]);
+        });
+
+        it('processes log scaled data bins including negative values and NA and REDACTED counts', () => {
+            const numericalBins = filterNumericalBins(logScaleDataBinsWithNegativeAndNaAndSpecialValues);
+            assert.equal(numericalBins.length, 11, "NA and REDACTED should be filtered out");
+
+            const formattedTickValues = formatNumericalTickValues(numericalBins);
+            assert.deepEqual(formattedTickValues, ["-10^5", "", "-10^4", "", "-10^3", "", "-10^2", "", "-10", "-1", "1", "10", "", "10^2"]);
+
+            const intervalBins = filterIntervalBins(numericalBins);
+            assert.equal(intervalBins.length, 11,
+                "Should be same as the number of mumerical bins");
+
+            const intervalBinValues = calcIntervalBinValues(intervalBins);
+            assert.deepEqual(intervalBinValues, [-31622, -10000, -3162, -1000, -316, -100, -31, -10, -1, 1, 10, 31]);
+
+            const isLogScale = isLogScaleByValues(intervalBinValues);
+            assert.isTrue(isLogScale);
+
+            const categoryBins = filterCategoryBins(logScaleDataBinsWithNegativeAndNaAndSpecialValues);
+            assert.equal(categoryBins.length, 2,
+                "Only the bins with NA and REDACTED special values should be included");
+
+            const normalizedNumericalData = generateNumericalData(numericalBins);
+            assert.deepEqual(normalizedNumericalData.map(data => data.x),
+                [2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5]);
+
+            const normalizedCategoryData = generateCategoricalData(categoryBins, 13);
+            assert.deepEqual(normalizedCategoryData.map(data => data.x), [14, 15]);
+        });
+
+        it('processes scientific small numbers data bins', () => {
+            const numericalBins = filterNumericalBins(scientificSmallNumberBins);
+            assert.equal(numericalBins.length, 4, "all bins should be included");
+
+            const formattedTickValues = formatNumericalTickValues(numericalBins);
+            assert.deepEqual(formattedTickValues, ["1e-8", "1e-7", "1e-6", "1e-5", ">1e-5"]);
+
+            const intervalBins = filterIntervalBins(numericalBins);
+            assert.equal(intervalBins.length, 3,
+                "Last bin with the special values (>) should be filtered out");
+
+            const intervalBinValues = calcIntervalBinValues(intervalBins);
+            assert.deepEqual(intervalBinValues, [1E-8, 1E-7, 1E-6, 1E-5]);
+
+            const isLogScale = isLogScaleByValues(intervalBinValues);
+            assert.isFalse(isLogScale);
+
+            const categoryBins = filterCategoryBins(scientificSmallNumberBins);
+            assert.equal(categoryBins.length, 0, "There should not be any category bin");
+
+            const normalizedNumericalData = generateNumericalData(numericalBins);
+            assert.deepEqual(normalizedNumericalData.map(data => data.x),
+                [1.5, 2.5, 3.5, 5]);
+
+            const normalizedCategoryData = generateCategoricalData(categoryBins, 5);
+            assert.equal(normalizedCategoryData.length, 0);
+        });
+
+        it('processes no grouping data bins including NA count', () => {
+            const numericalBins = filterNumericalBins(noGroupingDataBinsWithNa);
+            assert.equal(numericalBins.length, 5, "NA should be filtered out");
+
+            const formattedTickValues = formatNumericalTickValues(numericalBins);
+            assert.deepEqual(formattedTickValues, ["0", "1", "2", "3", "5"]);
+
+            const intervalBins = filterIntervalBins(numericalBins);
+            assert.equal(intervalBins.length, 5, "should be equal to number of numerical bins");
+
+            const intervalBinValues = calcIntervalBinValues(intervalBins);
+            assert.deepEqual(intervalBinValues, [0, 1, 2, 3, 5]);
+
+            const isLogScale = isLogScaleByValues(intervalBinValues);
+            assert.isFalse(isLogScale);
+
+            const categoryBins = filterCategoryBins(noGroupingDataBinsWithNa);
+            assert.equal(categoryBins.length, 1,
+                "Only the bin with NA special value should be included");
+
+            const normalizedNumericalData = generateNumericalData(numericalBins);
+            assert.deepEqual(normalizedNumericalData.map(data => data.x),
+                [1, 2, 3, 4, 5]);
+
+            const normalizedCategoryData = generateCategoricalData(categoryBins, 5);
+            assert.deepEqual(normalizedCategoryData.map(data => data.x), [6]);
+        });
+
+        it('processes no numerical data bins', () => {
+            const numericalBins = filterNumericalBins(noNumericalDataBins);
+            assert.equal(numericalBins.length, 0, "all bins should be filtered out");
+
+            const formattedTickValues = formatNumericalTickValues(numericalBins);
+            assert.equal(formattedTickValues.length, 0, "there should be no numerical tick values");
+
+            const intervalBins = filterIntervalBins(numericalBins);
+            assert.equal(intervalBins.length, 0, "should be equal to number of numerical bins");
+
+            const intervalBinValues = calcIntervalBinValues(intervalBins);
+            assert.equal(intervalBinValues.length, 0, "there should be no interval bin values");
+
+            const isLogScale = isLogScaleByValues(intervalBinValues);
+            assert.isFalse(isLogScale);
+
+            const categoryBins = filterCategoryBins(noNumericalDataBins);
+            assert.equal(categoryBins.length, 5, "all bins should be included");
+
+            const normalizedNumericalData = generateNumericalData(numericalBins);
+            assert.deepEqual(normalizedNumericalData.map(data => data.x), []);
+
+            const normalizedCategoryData = generateCategoricalData(categoryBins, 0);
+            assert.deepEqual(normalizedCategoryData.map(data => data.x), [1, 2, 3, 4, 5]);
+        });
+
+        it('determines log scale from an array of data bins', () => {
+            assert.isFalse(isLogScaleByDataBins(linearScaleDataBinsWithNa));
+            assert.isFalse(isLogScaleByDataBins(noGroupingDataBinsWithNa));
+            assert.isFalse(isLogScaleByDataBins(noNumericalDataBins));
+            assert.isTrue(isLogScaleByDataBins(logScaleDataBinsWithNaAndSpecialValues));
+            assert.isTrue(isLogScaleByDataBins(logScaleDataBinsWithNegativeAndNaAndSpecialValues));
+        });
+    });
+
+    describe('intervalFiltersDisplayValue', () => {
+        const filterValuesWithBothEndsClosed = [
+            {start: 10, end: 20},
+            {start: 20, end: 30},
+            {start: 30, end: 40},
+            {start: 40, end: 50}
+        ] as ClinicalDataIntervalFilterValue[];
+
+        const filterValuesWithBothEndsClosedAndSpecialValues = [
+            ...filterValuesWithBothEndsClosed,
+            {value: "NA"},
+            {value: "REDACTED"}
+        ] as ClinicalDataIntervalFilterValue[];
+
+        const filterValuesWithBothEndsOpen = [
+            {end: 10},
+            {start: 10, end: 20},
+            {start: 20, end: 30},
+            {start: 30, end: 40},
+            {start: 40, end: 50},
+            {start: 50}
+        ] as ClinicalDataIntervalFilterValue[];
+
+        const filterValuesWithBothEndsOpenAndSpecialValues = [
+            ...filterValuesWithBothEndsOpen,
+            {value: "NA"},
+            {value: "REDACTED"}
+        ] as ClinicalDataIntervalFilterValue[];
+
+        const filterValuesWithStartOpen = [
+            {end: 10},
+            {start: 10, end: 20},
+            {start: 20, end: 30},
+            {start: 30, end: 40},
+            {start: 40, end: 50},
+        ] as ClinicalDataIntervalFilterValue[];
+
+        const filterValuesWithStartOpenAndSpecialValues = [
+            ...filterValuesWithStartOpen,
+            {value: "NA"},
+            {value: "REDACTED"}
+        ] as ClinicalDataIntervalFilterValue[];
+
+        const filterValuesWithEndOpen = [
+            {start: 10, end: 20},
+            {start: 20, end: 30},
+            {start: 30, end: 40},
+            {start: 40, end: 50},
+            {start: 50}
+        ] as ClinicalDataIntervalFilterValue[];
+
+        const filterValuesWithEndOpenAndSpecialValues = [
+            ...filterValuesWithEndOpen,
+            {value: "NA"},
+            {value: "REDACTED"}
+        ] as ClinicalDataIntervalFilterValue[];
+
+        const filterValuesWithSpecialValuesOnly = [
+            {value: "NA"},
+            {value: "REDACTED"}
+        ] as ClinicalDataIntervalFilterValue[];
+
+        const filterValuesWithDistinctNumerals = [
+            {start: 20, end: 20},
+            {start: 30, end: 30},
+            {start: 40, end: 40}
+        ] as ClinicalDataIntervalFilterValue[];
+
+        const filterValuesWithDistinctNumeralsAndSpecialValues = [
+            ...filterValuesWithDistinctNumerals,
+            {value: "NA"},
+            {value: "REDACTED"}
+        ] as ClinicalDataIntervalFilterValue[];
+
+        const filterValuesWithSingleDistinctValue = [
+            {start: 666, end: 666}
+        ] as ClinicalDataIntervalFilterValue[];
+
+        const filterValuesWithSingleDistinctValueAndSpecialValues = [
+            ...filterValuesWithSingleDistinctValue,
+            {value: "NA"},
+            {value: "REDACTED"}
+        ] as ClinicalDataIntervalFilterValue[];
+
+        it ('generates display value for filter values with both ends closed', () => {
+            const value = intervalFiltersDisplayValue(filterValuesWithBothEndsClosed);
+            assert.equal(value, "10 < ~ ≤ 50");
+        });
+
+        it ('generates display value for filter values with both ends closed, with special values', () => {
+            const value = intervalFiltersDisplayValue(filterValuesWithBothEndsClosedAndSpecialValues);
+            assert.equal(value, "10 < ~ ≤ 50, NA, REDACTED");
+        });
+
+        it ('generates display value for filter values with both ends open', () => {
+            const value = intervalFiltersDisplayValue(filterValuesWithBothEndsOpen);
+            assert.equal(value, "All Numbers");
+        });
+
+        it ('generates display value for filter values with both ends open, with special values', () => {
+            const value = intervalFiltersDisplayValue(filterValuesWithBothEndsOpenAndSpecialValues);
+            assert.equal(value, "All Numbers, NA, REDACTED");
+        });
+
+        it ('generates display value for filter values with start open, end closed', () => {
+            const value = intervalFiltersDisplayValue(filterValuesWithStartOpen);
+            assert.equal(value, "≤ 50");
+        });
+
+        it ('generates display value for filter values with start open, end closed, with special values', () => {
+            const value = intervalFiltersDisplayValue(filterValuesWithStartOpenAndSpecialValues);
+            assert.equal(value, "≤ 50, NA, REDACTED");
+        });
+
+        it ('generates display value for filter values with start closed, end open', () => {
+            const value = intervalFiltersDisplayValue(filterValuesWithEndOpen);
+            assert.equal(value, "> 10");
+        });
+
+        it ('generates display value for filter values with start closed, end open, with special values', () => {
+            const value = intervalFiltersDisplayValue(filterValuesWithEndOpenAndSpecialValues);
+            assert.equal(value, "> 10, NA, REDACTED");
+        });
+
+        it ('generates display value for filter values with special values only', () => {
+            const value = intervalFiltersDisplayValue(filterValuesWithSpecialValuesOnly);
+            assert.equal(value, "NA, REDACTED");
+        });
+
+        it ('generates display value for filter values with distinct values only', () => {
+            const value = intervalFiltersDisplayValue(filterValuesWithDistinctNumerals);
+            assert.equal(value, "20 ≤ ~ ≤ 40");
+        });
+
+        it ('generates display value for filter values with distinct values and special values', () => {
+            const value = intervalFiltersDisplayValue(filterValuesWithDistinctNumeralsAndSpecialValues);
+            assert.equal(value, "20 ≤ ~ ≤ 40, NA, REDACTED");
+        });
+
+        it ('generates display value for filter values with a single distinct value', () => {
+            const value = intervalFiltersDisplayValue(filterValuesWithSingleDistinctValue);
+            assert.equal(value, "666");
+        });
+
+        it ('generates display value for filter values with a single distinct value and special values', () => {
+            const value = intervalFiltersDisplayValue(filterValuesWithSingleDistinctValueAndSpecialValues);
+            assert.equal(value, "666, NA, REDACTED");
+        });
+    });
+
+    describe('isEveryBinDistinct', () => {
+        const noBinDistinct = [
+            {start: 10, end: 20},
+            {start: 20, end: 30},
+            {start: 30, end: 40},
+            {start: 40, end: 50}
+        ] as DataBin[];
+
+        const everyBinDistinct = [
+            {start: 0, end: 0},
+            {start: 10, end: 10},
+            {start: 20, end: 20},
+            {start: 30, end: 30}
+        ] as DataBin[];
+
+        const someBinsDistinct = [
+            {start: 0, end: 0},
+            {start: 10, end: 10},
+            {start: 20, end: 30},
+            {start: 30, end: 40}
+        ] as DataBin[];
+
+        it ('accepts a list of bins with all distinct values', () => {
+            assert.isTrue(isEveryBinDistinct(everyBinDistinct),
+                "should be true when every bin is distinct");
+        });
+
+        it ('rejects an empty list', () => {
+            assert.isFalse(isEveryBinDistinct([]),
+                "empty list should not be classified as distinct");
+        });
+
+        it ('rejects a list of bins with no distinct values', () => {
+            assert.isFalse(isEveryBinDistinct(noBinDistinct),
+                "should be false when no bin is distinct");
+        });
+
+        it ('rejects a list of bins with some distinct values', () => {
+            assert.isFalse(isEveryBinDistinct(someBinsDistinct),
+                "should be false when some bins are distinct");
+        });
+    });
+
+    describe('toFixedDigit', () => {
+        const negativeValues = [
+            -666.666,
+            -3,
+            -2.2499999999999,
+            -1,
+            -0.6000000000000001,
+            -0.002499999998
+        ];
+
+        const positiveValues = [
+            0.002499999998,
+            0.6000000000000001,
+            1,
+            1.5999999999999999,
+            1.7999999999999998,
+            16.99999999999998,
+            666.666
+        ];
+
+        it ('handles negative values properly', () => {
+            assert.equal(toFixedDigit(negativeValues[0]), "-666.67");
+            assert.equal(toFixedDigit(negativeValues[1]), "-3");
+            assert.equal(toFixedDigit(negativeValues[2]), "-2.25");
+            assert.equal(toFixedDigit(negativeValues[3]), "-1");
+            assert.equal(toFixedDigit(negativeValues[4]), "-0.6");
+            assert.equal(toFixedDigit(negativeValues[5]), "-0.0025");
+        });
+
+        it ('handles zero properly', () => {
+            assert.equal(toFixedDigit(0), "0");
+        });
+
+        it ('handles positive values properly', () => {
+            //assert.equal(toFixedDigit(positiveValues[0]), "0.0025");
+            assert.equal(toFixedDigit(positiveValues[0]), "0.0025");
+            assert.equal(toFixedDigit(positiveValues[1]), "0.6");
+            assert.equal(toFixedDigit(positiveValues[2]), "1");
+            assert.equal(toFixedDigit(positiveValues[3]), "1.6");
+            assert.equal(toFixedDigit(positiveValues[4]), "1.8");
+            assert.equal(toFixedDigit(positiveValues[5]), "17");
+            assert.equal(toFixedDigit(positiveValues[6]), "666.67");
+        });
+    });
+
+    describe('getExponent', () => {
+        it ('handles negative values properly', () => {
+            assert.equal(getExponent(-1), 0);
+            assert.equal(getExponent(-3), 0.5);
+            assert.equal(getExponent(-10), 1);
+            assert.equal(getExponent(-31), 1.5);
+            assert.equal(getExponent(-100), 2);
+            assert.equal(getExponent(-316), 2.5);
+            assert.equal(getExponent(-1000), 3);
+        });
+
+        it ('handles zero properly', () => {
+            assert.equal(getExponent(0), -Infinity);
+        });
+
+        it ('handles positive values properly', () => {
+            //assert.equal(toFixedDigit(positiveValues[0]), "0.0025");
+            assert.equal(getExponent(1), 0);
+            assert.equal(getExponent(3), 0.5);
+            assert.equal(getExponent(10), 1);
+            assert.equal(getExponent(31), 1.5);
+            assert.equal(getExponent(100), 2);
+            assert.equal(getExponent(316), 2.5);
+            assert.equal(getExponent(1000), 3);
+        });
+    });
+
+    describe('getCNAByAlteration', ()=>{
+        it('return proper string from proper alteration', ()=>{
+            assert.isTrue(getCNAByAlteration(-2) === 'DEL');
+            assert.isTrue(getCNAByAlteration(2) === 'AMP');
+        });
+
+        it('return empty string when alteration is not 2 or -2', ()=>{
+            assert.isTrue(getCNAByAlteration(0) === '');
+            assert.isTrue(getCNAByAlteration(1) === '');
+            assert.isTrue(getCNAByAlteration(-1) === '');
+        });
+    });
+
+    describe('getDefaultChartTypeByClinicalAttribute', () => {
+        it('return TABLE when the clinical attributes are pre-defined as table', () => {
+            let attr: ClinicalAttribute = {
+                clinicalAttributeId: 'CANCER_TYPE'
+            } as ClinicalAttribute;
+            assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartType.TABLE);
+
+            attr.clinicalAttributeId = 'CANCER_TYPE_DETAILED';
+            assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartType.TABLE);
+        });
+
+        it('return PIE_CHART when clinical attribute has data type as STRING', () => {
+            const attr:ClinicalAttribute = {
+                datatype: 'STRING'
+            } as ClinicalAttribute;
+            assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartType.PIE_CHART);
+        });
+
+        it('return BAR_CHART when clinical attribute has data type as STRING', () => {
+            const attr:ClinicalAttribute = {
+                datatype: 'NUMBER'
+            } as ClinicalAttribute;
+            assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartType.BAR_CHART);
         });
     });
 });
