@@ -10,7 +10,7 @@ import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { If, Then, Else } from 'react-if';
 import { getStudySummaryUrl, buildCBioPortalUrl } from 'shared/api/urls';
 import { StudyViewFilter } from 'shared/api/generated/CBioPortalAPIInternal';
-import { StudyWithSamples } from 'pages/studyView/StudyViewPageStore';
+import { StudyWithSamples, ChartMeta } from 'pages/studyView/StudyViewPageStore';
 import { getVirtualStudyDescription, getCurrentDate } from 'pages/studyView/StudyViewUtils';
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import autobind from 'autobind-decorator';
@@ -23,7 +23,7 @@ export interface IVirtualStudyProps {
     studyWithSamples: StudyWithSamples[];
     selectedSamples: Sample[];
     filter: StudyViewFilter;
-    attributeNamesSet: { [id: string]: string };
+    attributesMetaSet: { [id: string]: ChartMeta };
     user?: string;
 }
 
@@ -108,7 +108,7 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
     }, undefined);
 
     @computed get virtualStudyUrl() {
-        return getStudySummaryUrl(this.virtualStudy.result ? this.virtualStudy.result.id : '');
+        return buildCBioPortalUrl({pathname:'newstudy', query: {id: this.virtualStudy.result ? this.virtualStudy.result.id : ''}});
     }
 
     @autobind
@@ -158,6 +158,13 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
         return entrezIds;
     }
 
+    @computed get attributeNamesSet() {
+        return _.reduce(this.props.attributesMetaSet, (acc: { [id: string]: string }, next, key) => {
+            acc[key] = next.displayName
+            return acc
+        }, {});
+    }
+
     readonly genes = remoteData({
         invoke: async () => {
             if(!_.isEmpty(this.entrezIds)){
@@ -170,7 +177,7 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
                 this.props.studyWithSamples,
                 this.props.selectedSamples,
                 this.props.filter,
-                this.props.attributeNamesSet,
+                this.attributeNamesSet,
                 genes,
                 this.props.user);
         },

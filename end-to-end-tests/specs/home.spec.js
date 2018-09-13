@@ -1324,7 +1324,7 @@ describe('case set selection in modify query form', function(){
         assert.equal(
             browser.getText(selectedCaseSet_sel),
             "All (368)",
-            "All (368)",
+            "Expect: All (368), but got " + browser.getText(selectedCaseSet_sel),
         );
 
         // Uncheck study
@@ -1361,11 +1361,11 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
-        browser.pause(200); // give time for text change to propagate through to the view
+        browser.pause(1000); // give time for text change to propagate through to the view
         assert.equal(
             browser.getText(selectedCaseSet_sel),
             "All (12997)",
-            "All (12997)",
+            "Expect: All (12997), but got '" + browser.getText(selectedCaseSet_sel) + "'",
         );
 
         // Deselect all tcga -provisional studies
