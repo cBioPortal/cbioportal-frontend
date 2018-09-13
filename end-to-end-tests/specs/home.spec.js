@@ -1365,7 +1365,7 @@ describe('case set selection in modify query form', function(){
         assert.equal(
             browser.getText(selectedCaseSet_sel),
             "All (12997)",
-            "All (12997)",
+            "Expect: All (12997), but got '" + browser.getText(selectedCaseSet_sel) + "'",
         );
 
         // Deselect all tcga -provisional studies
