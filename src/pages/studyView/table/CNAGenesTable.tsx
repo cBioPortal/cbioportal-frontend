@@ -21,6 +21,8 @@ export type  CNAGenesTableUserSelectionWithIndex = CopyNumberGeneFilterElement &
 
 export interface ICNAGenesTablePros {
     promise: MobxPromise<CNAGenesData>;
+    width?: number;
+    height?: number;
     filters: CopyNumberGeneFilterElement[];
     onUserSelection: (selection: CopyNumberGeneFilterElement[]) => void;
     numOfSelectedSamples: number;
@@ -214,6 +216,8 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         return (
             <CNAGenesTableComponent
                 data={this.props.promise.result || []}
+                width={this.props.width}
+                height={this.props.height}
                 columns={this._columns}
                 selectedGenes={this.props.selectedGenes}
                 selectedRows={_.map(_.union(this.selectedRows, this.preSelectedRows), row => row.rowIndex)}

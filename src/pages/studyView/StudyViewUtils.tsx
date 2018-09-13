@@ -11,9 +11,11 @@ import {
     ClinicalDataTypeConstants,
     StudyWithSamples,
     StudyViewFilterWithSampleIdentifierFilters,
-    AnalysisGroup
+    AnalysisGroup,
+    DEFAULT_LAYOUT_PROPS
 } from "pages/studyView/StudyViewPageStore";
-import {ChartType, ClinicalDataType} from "./StudyViewPageStore";
+import {ChartDimension, ChartMeta, ChartType, ChartTypeEnum, ClinicalDataType} from "./StudyViewPageStore";
+import {Layout} from 'react-grid-layout';
 
 //TODO:cleanup
 export const COLORS = [
@@ -76,11 +78,32 @@ export const NA_COLOR = '#CCCCCC';
 export const UNSELECTED_COLOR = '#808080';
 export const NA_DATA = "NA";
 export const EXPONENTIAL_FRACTION_DIGITS = 3;
+export const ONE_GRID_TABLE_ROWS = 8;
 
 // ---- These are the settings from configs.json in the previous study view ----
 // TODO: figure out a way to custom the following settings
-export const DEFAULT_ATTRS_SHOW_AS_TABLE = ['CANCER_TYPE', 'CANCER_TYPE_DETAILED'];
 export const PIE_TO_TABLE_LIMIT = 20;
+export const DEFAULT_ATTRS_SHOW_AS_TABLE = ['SAMPLE_CANCER_TYPE', 'SAMPLE_CANCER_TYPE_DETAILED'];
+export const ALWAYS_SHOWN_ATTRS = ['SAMPLE_CANCER_TYPE', 'SAMPLE_CANCER_TYPE_DETAILED'];
+export const DEFAULT_PRIORITIES:{[id:string]:number} = {
+    "SAMPLE_CANCER_TYPE": 3000,
+    "SAMPLE_CANCER_TYPE_DETAILED": 2000,
+    "OS_SURVIVAL": 400,
+    "DFS_SURVIVAL": 300,
+    "MUTATION_COUNT_CNA_FRACTION": 200,
+    "MUTATED_GENES_TABLE": 90,
+    "CNA_GENES_TABLE": 80,
+    "STUDY_ID": 70,
+    "SEQUENCED": 60,
+    "HAS_CNA_DATA": 50,
+    "SAMPLE_COUNT_PATIENT": 40,
+    "MUTATION_COUNT": 30,
+    "FRACTION_GENOME_ALTERED": 20,
+    "PATIENT_GENDER": 9,
+    "PATIENT_SEX": 9,
+    "PATIENT_AGE": 9
+};
+
 // -----------------------------------------------------------------------------
 
 const OPERATOR_MAP: {[op:string]: string} = {
@@ -89,6 +112,11 @@ const OPERATOR_MAP: {[op:string]: string} = {
     ">=": "≥",
     ">": ">"
 };
+
+export type LayoutMatrixItem = {
+    notFull: boolean,
+    matrix: string[]
+}
 
 export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: string): string {
 
@@ -732,18 +760,161 @@ export function getCNAByAlteration(alteration: number) {
 }
 
 export function getDefaultChartTypeByClinicalAttribute(clinicalAttribute: ClinicalAttribute): ChartType | undefined {
-    if (DEFAULT_ATTRS_SHOW_AS_TABLE.includes(clinicalAttribute.clinicalAttributeId)) {
-        return ChartType.TABLE;
+    if (DEFAULT_ATTRS_SHOW_AS_TABLE.includes(getClinicalAttributeUniqueKey(clinicalAttribute))) {
+        return ChartTypeEnum.TABLE;
     }
 
     // TODO: update logic when number of categories above PIE_TO_TABLE_LIMIT
     if (clinicalAttribute.datatype === 'STRING') {
-        return ChartType.PIE_CHART;
+        return ChartTypeEnum.PIE_CHART;
     }
 
     if (clinicalAttribute.datatype === 'NUMBER') {
-        return ChartType.BAR_CHART;
+        return ChartTypeEnum.BAR_CHART;
     }
 
     return undefined;
+}
+
+
+/**
+ * Calculate the layout used by react-grid-layout
+ *
+ * @param {ChartMeta[]} visibleAttributes
+ * @param {number} cols number of grids per row, 6 cols will be the stander when using 13 inch laptop
+ * @param {[id: string]: ChartDimension} chartsDimension
+ * @returns {ReactGridLayout.Layout[]}
+ */
+export function calculateLayout(visibleAttributes: ChartMeta[], cols: number): Layout[] {
+    let sizes:{[id:string]:ChartDimension} = {};
+    let matrixGroup = _.reduce(visibleAttributes.sort((a, b) => b.priority - a.priority), function (acc, next) {
+        acc = getLayoutMatrix(acc, next.uniqueKey, next.dimension!);
+        sizes[next.uniqueKey] = next.dimension!;
+        return acc;
+    }, [] as LayoutMatrixItem[]);
+    let layout: Layout[] = [];
+    let x = 0;
+    let y = 0;
+    let plottedCharts: { [id: string]: number } = {};
+    _.forEach(matrixGroup, (group: LayoutMatrixItem, index) => {
+        let _x = x - 1;
+        let _y = y;
+        _.forEach(group.matrix, (uniqueId, _index: number) => {
+            ++_x;
+            if (_index === 2) {
+                _x = x;
+                _y++;
+            }
+            if (!uniqueId) {
+                return;
+            }
+            if (plottedCharts.hasOwnProperty(uniqueId)) {
+                return;
+            }
+            plottedCharts[uniqueId] = 1;
+            const _size = sizes[uniqueId];
+            layout.push({
+                i: uniqueId,
+                x: _x,
+                y: _y,
+                w: _size!.w,
+                h: _size!.h,
+                isResizable: false
+            });
+        });
+        x = x + 2;
+        if (x + 2 > cols) {
+            x = 0;
+            y = y + 2;
+        }
+    });
+    return layout;
+}
+/**
+ * Group chart into 4*4 matrix based on description from here
+ * https://github.com/cBioPortal/cbioportal/blob/master/docs/Study-View.md
+ *
+ * @param {LayoutMatrixItem[]} layoutMatrix
+ * @param {string} key The unique key to identify the chart
+ * @param {ChartDimension} chartDimension
+ * @returns {LayoutMatrixItem[]}
+ */
+export function getLayoutMatrix(layoutMatrix: LayoutMatrixItem[], key: string, chartDimension: ChartDimension): LayoutMatrixItem[] {
+    let neighborIndex: number;
+    let foundSpace = false;
+    const chartSize = chartDimension.w * chartDimension.h;
+    _.some(layoutMatrix, function (layoutItem) {
+        if (foundSpace) {
+            return true;
+        }
+        if (layoutItem.notFull) {
+            let _matrix = layoutItem.matrix;
+            _.some(_matrix, function (item, _matrixIndex) {
+                if (chartSize === 2) {
+                    let _validIndex = false;
+                    if (chartDimension.h === 2) {
+                        neighborIndex = _matrixIndex + 2;
+                        if (_matrixIndex < 2) {
+                            _validIndex = true;
+                        }
+                    } else {
+                        neighborIndex = _matrixIndex + 1;
+                        if (_matrixIndex % 2 === 0) {
+                            _validIndex = true;
+                        }
+                    }
+                    if (neighborIndex < _matrix.length && _validIndex) {
+                        if (item === '' && _matrix[neighborIndex] === '') {
+                            // Found a place for chart
+                            _matrix[_matrixIndex] = _matrix[neighborIndex] = key;
+                            foundSpace = true;
+                            layoutItem.notFull = _.includes(_matrix, '');
+                            return true;
+                        }
+                    }
+                } else if (chartSize === 1) {
+                    if (item === '') {
+                        // Found a place for chart
+                        _matrix[_matrixIndex] = key;
+                        foundSpace = true;
+                        if (_matrixIndex === _matrix.length - 1) {
+                            layoutItem.notFull = false;
+                        }
+                        return true;
+                    }
+                } else if (chartSize === 4) {
+                    if (item === '' && _matrix[0] === '' && _matrix[1] === '' && _matrix[2] === '' && _matrix[3] === '') {
+                        // Found a place for chart
+                        _matrix = _.fill(Array(4), key);
+                        layoutItem.notFull = false;
+                        foundSpace = true;
+                        return true;
+                    }
+                }
+            });
+            layoutItem.matrix = _matrix;
+        }
+    });
+    if (!foundSpace) {
+        layoutMatrix.push({
+            notFull: true,
+            matrix: _.fill(Array(4), '')
+        });
+        layoutMatrix = getLayoutMatrix(layoutMatrix, key, chartDimension);
+    }
+    return layoutMatrix;
+}
+
+export function getDefaultPriorityByUniqueKey(uniqueKey: string): number {
+    return DEFAULT_PRIORITIES[uniqueKey] === undefined ? 1 : DEFAULT_PRIORITIES[uniqueKey];
+}
+
+// Grid includes 10px margin
+export function getTableWidthByDimension(chartDimension: ChartDimension) {
+    return DEFAULT_LAYOUT_PROPS.grid.w * chartDimension.w - 10;
+}
+
+// Grid includes 15px header and 35px tool section
+export function getTableHeightByDimension(chartDimension: ChartDimension) {
+    return DEFAULT_LAYOUT_PROPS.grid.h * chartDimension.h - 50;
 }

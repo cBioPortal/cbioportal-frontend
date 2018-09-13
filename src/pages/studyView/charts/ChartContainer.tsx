@@ -9,6 +9,7 @@ import {
     AnalysisGroup,
     ChartMeta,
     ChartType,
+    ChartTypeEnum,
     ClinicalDataCountWithColor,
     StudyViewPageStore
 } from "pages/studyView/StudyViewPageStore";
@@ -25,7 +26,7 @@ import StudyViewScatterPlot from "./scatterPlot/StudyViewScatterPlot";
 import { bind } from "bind-decorator";
 import BarChart from "./barChart/BarChart";
 import {CopyNumberGeneFilterElement} from "../../../shared/api/generated/CBioPortalAPIInternal";
-import {makeMutationCountVsCnaTooltip} from "../StudyViewUtils";
+import {getTableHeightByDimension, getTableWidthByDimension, makeMutationCountVsCnaTooltip} from "../StudyViewUtils";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import {remoteData} from "../../../shared/api/remoteData";
 import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
@@ -51,6 +52,7 @@ export interface IChartContainerProps {
     download?: IChartContainerDownloadProps[];
     onResetSelection?: any;
     onDeleteChart: (chartMeta: ChartMeta) => void;
+    onChangeChartType: (chartMeta: ChartMeta, newChartType: ChartType) => void;
     onToggleLogScale?:any;
     logScaleChecked?:boolean;
     showLogScaleToggle?:boolean;
@@ -120,6 +122,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 SVG: () => Promise.resolve((new XMLSerializer()).serializeToString(this.toSVGDOMNode())),
                 PDF: () => svgToPdfPromise(this.toSVGDOMNode())
             },
+            onChangeChartType: (newChartType: ChartType) => {
+                this.mouseInChart = false;
+                this.props.onChangeChartType(this.props.chartMeta, newChartType)
+            },
             onDeleteChart: () => {
                 this.props.onDeleteChart(this.props.chartMeta);
             }
@@ -138,7 +144,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @computed
     get chartWidth() {
         let chartWidth = styles.chartWidthTwo;
-        if (this.chartType === ChartType.PIE_CHART) {
+        if (this.chartType === ChartTypeEnum.PIE_CHART) {
             chartWidth = styles.chartWidthOne;
         }
         return chartWidth;
@@ -147,8 +153,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @computed
     get chartHeight() {
         let chartHeight = styles.chartHeightTwo;
-        if (this.chartType === ChartType.PIE_CHART ||
-            this.chartType === ChartType.BAR_CHART)
+        if (this.chartType === ChartTypeEnum.PIE_CHART ||
+            this.chartType === ChartTypeEnum.BAR_CHART)
         {
             chartHeight = styles.chartHeightOne;
         }
@@ -157,26 +163,26 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     @computed
     get hideLabel() {
-        return this.chartType === ChartType.TABLE;
+        return this.chartType === ChartTypeEnum.TABLE;
     }
 
     @computed
     get chartControls(): ChartControls {
         let controls:Partial<ChartControls> = {};
         switch (this.chartType) {
-            case ChartType.BAR_CHART: {
+            case ChartTypeEnum.BAR_CHART: {
                 controls = {
                     showLogScaleToggle: this.props.showLogScaleToggle,
                     logScaleChecked: this.props.logScaleChecked
                 };
                 break;
             }
-            case ChartType.PIE_CHART: {
+            case ChartTypeEnum.PIE_CHART: {
                 controls = {showTableIcon: true}
                 break;
             }
-            case ChartType.TABLE: {
-                if (!_.isEqual(this.props.chartMeta.chartType, ChartType.TABLE)) {
+            case ChartTypeEnum.TABLE: {
+                if (!_.isEqual(this.props.chartMeta.chartType, ChartTypeEnum.TABLE)) {
                     controls = {showPieIcon: true}
                 }
                 break;
@@ -195,13 +201,14 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @action
     changeChartType(chartType: ChartType) {
         this.chartType = chartType;
+        this.handlers.onChangeChartType(chartType);
     }
 
 
     @computed
     get analysisGroupsPossible() {
         return !!this.props.analysisGroupsPossible &&
-            (this.chartType === ChartType.PIE_CHART || this.chartType === ChartType.TABLE) &&
+            (this.chartType === ChartTypeEnum.PIE_CHART || this.chartType === ChartTypeEnum.TABLE) &&
             !!this.props.chartMeta.clinicalAttribute;
     }
 
@@ -240,7 +247,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @computed
     get chart() {
         switch (this.chartType) {
-            case ChartType.PIE_CHART: {
+            case ChartTypeEnum.PIE_CHART: {
                 return (<PieChart
                     ref={this.handlers.ref}
                     onUserSelection={this.handlers.onValueSelection}
@@ -251,7 +258,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     label={this.props.title}
                 />);
             }
-            case ChartType.BAR_CHART: {
+            case ChartTypeEnum.BAR_CHART: {
                 return (
                     <BarChart
                         ref={this.handlers.ref}
@@ -261,18 +268,22 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     />
                 );
             }
-            case ChartType.TABLE: {
+            case ChartTypeEnum.TABLE: {
                 return (<ClinicalTable
                     data={this.props.promise.result}
+                    width={getTableWidthByDimension(this.props.chartMeta.dimension)}
+                    height={getTableHeightByDimension(this.props.chartMeta.dimension)}
                     filters={this.props.filters}
                     onUserSelection={this.handlers.onValueSelection}
                     label={this.props.title}
                 />);
             }
-            case ChartType.MUTATED_GENES_TABLE: {
+            case ChartTypeEnum.MUTATED_GENES_TABLE: {
                 return (
                     <MutatedGenesTable
                         promise={this.props.promise}
+                        width={getTableWidthByDimension(this.props.chartMeta.dimension)}
+                        height={getTableHeightByDimension(this.props.chartMeta.dimension)}
                         numOfSelectedSamples={100}
                         filters={this.props.filters}
                         onUserSelection={this.handlers.updateGeneFilters}
@@ -281,10 +292,12 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     />
                 );
             }
-            case ChartType.CNA_GENES_TABLE: {
+            case ChartTypeEnum.CNA_GENES_TABLE: {
                 return (
                     <CNAGenesTable
                         promise={this.props.promise}
+                        width={getTableWidthByDimension(this.props.chartMeta.dimension)}
+                        height={getTableHeightByDimension(this.props.chartMeta.dimension)}
                         numOfSelectedSamples={100}
                         filters={this.props.filters}
                         onUserSelection={this.handlers.updateCNAGeneFilters}
@@ -293,7 +306,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     />
                 );
             }
-            case ChartType.SURVIVAL: {
+            case ChartTypeEnum.SURVIVAL: {
                 if (this.survivalChartData.isComplete) {
                     // this.survivalChartData should be complete at this point, barring transient race-condition-caused errors, because of loadingPromises and StudyViewComponentLoader (see render())
                     if (this.survivalChartData.result === undefined)
@@ -340,7 +353,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     return null;
                 }
             }
-            case ChartType.SCATTER: {
+            case ChartTypeEnum.SCATTER: {
                 // sampleToAnalysisGroup is complete because of loadingPromises and StudyViewComponentLoader
                 return (
                     <StudyViewScatterPlot
@@ -373,10 +386,10 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @computed get loadingPromises() {
         const ret = [this.props.promise];
         switch (this.chartType) {
-            case ChartType.SURVIVAL:
+            case ChartTypeEnum.SURVIVAL:
                 ret.push(this.survivalChartData);
                 break;
-            case ChartType.SCATTER:
+            case ChartTypeEnum.SCATTER:
                 ret.push(this.props.sampleToAnalysisGroup!);
                 break;
         }
@@ -391,7 +404,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     public render() {
         return (
-            <div className={classnames(styles.chart, this.chartWidth, this.chartHeight, { [styles.analysisTarget]:this.isAnalysisTarget })}
+            <div className={classnames(styles.chart, { [styles.analysisTarget]:this.isAnalysisTarget })}
                  onMouseEnter={this.handlers.onMouseEnterChart}
                  onMouseLeave={this.handlers.onMouseLeaveChart}>
                 <ChartHeader
