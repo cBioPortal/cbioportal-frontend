@@ -97,10 +97,6 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
         return _.keyBy(this.profiles, profile=>profile.molecularProfileId);
     }
     
-    private sortCoExpressionData(data: any[]): any[] {
-        return _.sortBy(data, ["pValue", "hugoGeneSymbol"]);
-    }
-
     private coExpressionCache:CoExpressionCache = new CoExpressionCache(
         q=>({
             invoke: ()=>{
@@ -118,7 +114,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                         coExpressionFilter: dataQueryFilter as CoExpressionFilter,
                         entrezGeneId: q.entrezGeneId,
                         threshold
-                    }).then((x) => this.sortCoExpressionData(x));
+                    })
                 } else {
                     return Promise.resolve([]);
                 }

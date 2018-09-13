@@ -47,7 +47,7 @@ const COLUMNS = [
     },
     makeNumberColumn(SPEARMANS_CORRELATION_COLUMN_NAME, "spearmansCorrelation", false),
     makeNumberColumn(P_VALUE_COLUMN_NAME, "pValue", false),
-    makeNumberColumn(Q_VALUE_COLUMN_NAME, "qValue", true),
+    Object.assign(makeNumberColumn(Q_VALUE_COLUMN_NAME, "qValue", true), {sortBy:(d:CoExpression) => [d.qValue, d.pValue]}),
 ];
 
 function makeNumberColumn(name:string, key:keyof CoExpression, formatSignificance: boolean) {
