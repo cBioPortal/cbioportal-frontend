@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { Sample, StudyViewFilter, ClinicalDataIntervalFilterValue } from 'shared/api/generated/CBioPortalAPIInternal';
+import { Sample, ClinicalDataIntervalFilterValue, SampleIdentifier } from 'shared/api/generated/CBioPortalAPIInternal';
 import { observer } from "mobx-react";
 import { computed, observable, action } from 'mobx';
 import styles from "./styles.module.scss";
@@ -15,7 +15,7 @@ import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import VirtualStudy from 'pages/studyView/virtualStudy/VirtualStudy';
 import fileDownload from 'react-file-download';
 import { If, Then, Else } from 'react-if';
-import { StudyWithSamples, ChartMeta } from 'pages/studyView/StudyViewPageStore';
+import { StudyWithSamples, ChartMeta, StudyViewFilterWithSampleIdentifierFilters } from 'pages/studyView/StudyViewPageStore';
 import UserSelections from 'pages/studyView/UserSelections';
 import SelectedInfo from "./SelectedInfo/SelectedInfo";
 import classnames from "classnames";
@@ -26,10 +26,10 @@ const CheckedSelect = require("react-select-checked").CheckedSelect;
 export interface ISummaryHeaderProps {
     geneQuery:string;
     selectedSamples: Sample[];
-    updateCustomCasesFilter:(samples:Sample[]) => void;
+    updateCustomCasesFilter:(samples:SampleIdentifier[]) => void;
     updateSelectedGenes: (query: SingleGeneQuery[], genesInQuery: Gene[]) => void;
     studyWithSamples:StudyWithSamples[];
-    filter: StudyViewFilter;
+    filter: StudyViewFilterWithSampleIdentifierFilters;
     attributesMetaSet: {[id:string]:ChartMeta};
     user?: string;
     getClinicalData: () => Promise<string>;
@@ -38,7 +38,7 @@ export interface ISummaryHeaderProps {
     updateClinicalDataIntervalFilter: (chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) => void;
     clearGeneFilter: () => void;
     clearCNAGeneFilter: () => void;
-    clearCustomCasesFilter: () => void;
+    clearChartSampleIdentifierFilter: (chartMeta: ChartMeta) => void;
     clearAllFilters:() => void;
     clinicalAttributesWithCountPromise: MobxPromise<{ [clinicalAttributeId: string]: number }>;
     visibleAttributeIds: ChartMeta[];
@@ -92,7 +92,12 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
     @bind
     @action
     private onSubmit(cases:Sample[]) {
-        this.props.updateCustomCasesFilter(cases);
+        this.props.updateCustomCasesFilter(_.map(cases, obj => {
+            return {
+                "sampleId": obj.sampleId,
+                "studyId": obj.studyId
+            }
+        }));
         this.isCustomCaseBoxOpen = false;
     }
 
@@ -269,7 +274,7 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                     updateClinicalDataIntervalFilter={this.props.updateClinicalDataIntervalFilter}
                     clearCNAGeneFilter={this.props.clearCNAGeneFilter}
                     clearGeneFilter={this.props.clearGeneFilter}
-                    clearCustomCasesFilter={this.props.clearCustomCasesFilter}
+                    clearChartSampleIdentifierFilter={this.props.clearChartSampleIdentifierFilter}
                     clearAllFilters={this.props.clearAllFilters}
                 />
             </div>
