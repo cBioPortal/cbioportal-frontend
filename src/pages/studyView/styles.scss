@@ -48,3 +48,7 @@ $selectHeightInner: $selectHeight - 2px;
         }
     }
 }
+
+.react-grid-item:hover {
+    z-index: 1;
+}

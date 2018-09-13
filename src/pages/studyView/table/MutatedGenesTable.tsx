@@ -16,11 +16,13 @@ import {EXPONENTIAL_FRACTION_DIGITS} from "../StudyViewUtils";
 
 export interface IMutatedGenesTablePros {
     promise: MobxPromise<MutatedGenesData>;
+    width?: number;
+    height?: number;
     filters: number[];
     onUserSelection: (value: number[]) => void;
     numOfSelectedSamples: number;
     onGeneSelect: (hugoGeneSymbol: string) => void;
-    selectedGenes: string[]
+    selectedGenes: string[];
 }
 
 type MutatedGenesTableUserSelectionWithIndex = {
@@ -194,6 +196,8 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         return (
             <MutatedGenesTableComponent
                 data={this.props.promise.result || []}
+                width={this.props.width}
+                height={this.props.height}
                 columns={this._tableColumns}
                 selectedGenes={this.props.selectedGenes}
                 selectedRows={_.map(_.union(this.selectedRows, this.preSelectedRows), row => row.rowIndex)}
