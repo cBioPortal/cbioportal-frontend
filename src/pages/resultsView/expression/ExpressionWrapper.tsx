@@ -110,7 +110,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @observable showMutations: boolean = true;
 
-    @observable showCna: boolean = true;
+    @observable showCna: boolean = false;
 
     @observable selectedStudyIds: { [studyId: string]: boolean } = {};
 
@@ -410,9 +410,10 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @computed get fillOpacity() {
         if (!this.showMutations && this.showCna) {
+            // no fill for CNA mode
             return 0;
         } else {
-            return 1;
+            return 0.7;
         }
     }
 
@@ -483,6 +484,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     <ExpressionTabBoxPlot
                         svgId={SVG_ID}
                         domainPadding={50}
+                        startDataAxisAtZero={true}
                         boxWidth={this.boxWidth}
                         axisLabelY={this.yAxisLabel}
                         data={this.boxPlotData.result}
@@ -490,7 +492,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         tooltip={this.tooltip}
                         horizontal={false}
                         logScale={this.logScale}
-                        size={scatterPlotSize}
+                        size={4}
                         fill={this.fill}
                         stroke={this.stroke}
                         strokeOpacity={this.strokeOpacity}
