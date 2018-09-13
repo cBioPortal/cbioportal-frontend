@@ -54,6 +54,14 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
     private get multipleStudyUI() {
         return <div>
+            <h4>
+                <a
+                    href={`study?id=${this.props.store.queriedStudies.result.map(study => study.studyId).join(',')}`}
+                    target="_blank"
+                >
+                    {`Combined Study (${this.props.store.samples.result.length} samples)`}
+                </a>
+            </h4>
             <span>
                 Querying {this.props.store.samples.result.length} samples in {this.props.store.queriedStudies.result.length} studies
                  &nbsp;
