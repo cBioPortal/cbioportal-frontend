@@ -66,7 +66,8 @@ export enum ChartType {
     TABLE = 'TABLE',
     SCATTER = 'SCATTER',
     MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
-    CNA_GENES_TABLE = 'CNA_GENES_TABLE'
+    CNA_GENES_TABLE = 'CNA_GENES_TABLE',
+    NONE = 'NONE'
 }
 
 export enum UniqueKey {
@@ -108,10 +109,16 @@ export type ChartMeta = {
     chartType: ChartType
 }
 
+export const SpecialCharts: ChartMeta[] = [{
+    uniqueKey: 'customFilters',
+    displayName: 'Select by IDs',
+    description: 'Select by IDs',
+    chartType: ChartType.NONE
+}]
+
 export type StudyWithSamples = CancerStudy & {
     uniqueSampleKeys : string[]
 }
-
 export const ClinicalDataTypeConstants: {[key: string]: ClinicalDataType}= {
     SAMPLE: 'SAMPLE',
     PATIENT: 'PATIENT'
@@ -126,6 +133,10 @@ export const DataBinMethodConstants: {[key: string]: 'DYNAMIC' | 'STATIC'}= {
     STATIC: 'STATIC',
     DYNAMIC: 'DYNAMIC'
 };
+
+export type StudyViewFilterWithSampleIdentifierFilters = StudyViewFilter & {
+    sampleIdentifiersSet: { [id: string]: SampleIdentifier[] }
+}
 
 export class StudyViewPageStore {
 
@@ -151,8 +162,6 @@ export class StudyViewPageStore {
 
     @observable.ref private _cnaGeneFilter: CopyNumberGeneFilter[] = [];
 
-    @observable private _sampleIdentifiers:SampleIdentifier[];
-
     @observable private _chartVisibility = observable.map<boolean>();
 
     @observable geneQueryStr: string;
@@ -165,6 +174,8 @@ export class StudyViewPageStore {
 
     @observable.ref private _analysisGroupsClinicalAttribute:ClinicalAttribute|undefined;
     @observable.ref private _analysisGroups:ReadonlyArray<AnalysisGroup>|undefined;
+
+    private _chartSampleIdentifiersFilterSet =  observable.map<SampleIdentifier[]>();
 
     @bind
     @action onCheckGene(hugoGeneSymbol: string) {
@@ -191,8 +202,8 @@ export class StudyViewPageStore {
         this._cnaGeneFilter = [];
     }
     @action
-    clearCustomCasesFilter() {
-        this._sampleIdentifiers = []
+    clearChartSampleIdentifierFilter(chartMeta: ChartMeta) {
+        this._chartSampleIdentifiersFilterSet.delete(chartMeta.uniqueKey)
     }
 
     @action
@@ -201,7 +212,7 @@ export class StudyViewPageStore {
         this._clinicalDataIntervalFilterSet.clear();
         this.clearGeneFilter();
         this.clearCNAGeneFilter();
-        this.clearCustomCasesFilter();
+        this._chartSampleIdentifiersFilterSet.clear();
     }
 
     @action
@@ -417,32 +428,30 @@ export class StudyViewPageStore {
     }
 
     @action
-    updateCustomCasesFilter(cases: SampleIdentifier[], keepCurrent?:boolean) {
-        const newSampleIdentifiers = _.map(cases, obj => {
-            return {
-                "sampleId": obj.sampleId,
-                "studyId": obj.studyId
-            }
-        });
+    updateChartSampleIdentifierFilter(chartKey:string, cases: SampleIdentifier[], keepCurrent?:boolean) {
+
+        let newSampleIdentifiers:SampleIdentifier[] = cases;
         const newSampleIdentifiersMap = _.keyBy(newSampleIdentifiers, s=>`${s.studyId}:${s.sampleId}`);
         if (keepCurrent) {
             // if we should keep the current selection, go through and add samples back, taking care not to duplicate
-            for (const s of this._sampleIdentifiers) {
+            newSampleIdentifiers = _.reduce(this._chartSampleIdentifiersFilterSet.get(chartKey)|| [],(acc, s)=>{
                 if (!(`${s.studyId}:${s.sampleId}` in newSampleIdentifiersMap)) {
-                    newSampleIdentifiers.push(s);
+                    acc.push(s);
                 }
-            }
+                return acc
+            }, newSampleIdentifiers);
         }
-        this._sampleIdentifiers = newSampleIdentifiers;
+
+        if(_.isEmpty(newSampleIdentifiers)){
+            this._chartSampleIdentifiersFilterSet.delete(chartKey)
+        } else {
+            this._chartSampleIdentifiersFilterSet.set(chartKey,newSampleIdentifiers)
+        }
     }
 
-    @action
-    resetCustomCasesFilter() {
-        this._sampleIdentifiers = [];
-    };
-
-    public getCustomCasesFilter() {
-        return this._sampleIdentifiers;
+    public getChartSampleIdentifiersFilter(chartKey:string) {
+        //return this._sampleIdentifiers;
+        return this._chartSampleIdentifiersFilterSet.get(chartKey)|| [];
     }
 
     @action
@@ -475,7 +484,7 @@ export class StudyViewPageStore {
                     this.resetCNAGeneFilter();
                     break;
                 case ChartType.SCATTER:
-                    this.resetCustomCasesFilter();
+                    this._chartSampleIdentifiersFilterSet.delete(chartMeta.uniqueKey)
                     break;
                 case ChartType.SURVIVAL:
                     break;
@@ -562,8 +571,18 @@ export class StudyViewPageStore {
             filters.cnaGenes = this._cnaGeneFilter;
         }
 
-        if(this._sampleIdentifiers && this._sampleIdentifiers.length>0) {
-            filters.sampleIdentifiers = this._sampleIdentifiers;
+        let _sampleIdentifiers =_.reduce(this._chartSampleIdentifiersFilterSet.entries(),(acc, next, key)=>{
+            let [chartKey,sampleIdentifiers] = next
+            if(key === 0){
+                acc = sampleIdentifiers
+            } else {
+                acc = _.intersectionWith(acc,sampleIdentifiers, _.isEqual) as SampleIdentifier[];
+            }
+            return acc
+        },[] as SampleIdentifier[]);
+
+        if(_sampleIdentifiers && _sampleIdentifiers.length>0) {
+            filters.sampleIdentifiers = _sampleIdentifiers;
         } else {
             if(_.isEmpty(this.queriedSampleIdentifiers.result)){
                 filters.studyIds = this.queriedPhysicalStudyIds.result;
@@ -573,6 +592,16 @@ export class StudyViewPageStore {
         }
 
         return filters as StudyViewFilter;
+    }
+
+    @computed
+    get userSelections() {
+
+        let sampleIdentifiersSet:{[id:string]:SampleIdentifier[]} = this._chartSampleIdentifiersFilterSet.toJS()
+        //let filters:StudyViewFilterWithCustomFilters =  Object.assign({}, this.filters,  {sampleIdentifiersSet:sampleIdentifiersSet})
+
+        return {...this.filters, sampleIdentifiersSet}
+
     }
 
     public getMutatedGenesTableFilters(): number[] {
@@ -844,7 +873,8 @@ export class StudyViewPageStore {
 
     @computed
     get chartMetaSet(): { [id: string]: ChartMeta } {
-        let _chartMetaSet: { [id: string]: ChartMeta } = {};
+        
+        let _chartMetaSet: { [id: string]: ChartMeta } = _.keyBy(SpecialCharts,(specialChart)=>specialChart.uniqueKey);
         // Add meta information for each of the clinical attribute
         // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
         _.reduce(this.clinicalAttributes.result, (acc: { [id: string]: ChartMeta }, attribute) => {
@@ -1621,7 +1651,7 @@ export class StudyViewPageStore {
             formOps.data_priority = data_priority;
         }
 
-        if (isFiltered(this.filters)) {
+        if (isFiltered(this.userSelections)) {
             formOps.case_set_id = '-1'
             formOps.case_ids = _.map(this.selectedSamples.result, sample => {
                 return sample.studyId + ":" + sample.sampleId;
