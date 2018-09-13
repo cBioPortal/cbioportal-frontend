@@ -248,8 +248,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     data={this.props.promise.result}
                     active={this.mouseInChart}
                     placement={this.placement}
-                    label={this.props.chartMeta.displayName}
-                />)
+                    label={this.props.title}
+                />);
             }
             case ChartType.BAR_CHART: {
                 return (
@@ -266,8 +266,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     data={this.props.promise.result}
                     filters={this.props.filters}
                     onUserSelection={this.handlers.onValueSelection}
-                    label={this.props.chartMeta.displayName}
-                />)
+                    label={this.props.title}
+                />);
             }
             case ChartType.MUTATED_GENES_TABLE: {
                 return (
@@ -299,14 +299,15 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     if (this.survivalChartData.result === undefined)
                         return null;
                     else return (
-                        <SurvivalChart patientSurvivals={this.survivalChartData.result!.patientSurvivals}
+                        <SurvivalChart ref={this.handlers.ref}
+                                       patientSurvivals={this.survivalChartData.result!.patientSurvivals}
                                        patientToAnalysisGroup={this.survivalChartData.result!.patientToAnalysisGroup}
                                        analysisGroups={this.survivalChartData.result!.analysisGroups}
                                        analysisClinicalAttribute={this.props.analysisGroupsSettings.clinicalAttribute}
                                        naPatientsHiddenInSurvival={this.naPatientsHiddenInSurvival}
                                        toggleSurvivalHideNAPatients={this.toggleSurvivalHideNAPatients}
                                        legendLocation={LegendLocation.TOOLTIP}
-                                       title={'test'}
+                                       title={this.props.title}
                                        xAxisLabel="Months Survival"
                                        yAxisLabel="Surviving"
                                        totalCasesHeader="Number of Cases, Total"
@@ -332,7 +333,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                                }
                                            }
                                        }}
-                                       fileName="Overall_Survival"/>
+                                       fileName="Overall_Survival"
+                        />
                     );
                 } else {
                     return null;
@@ -342,6 +344,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 // sampleToAnalysisGroup is complete because of loadingPromises and StudyViewComponentLoader
                 return (
                     <StudyViewScatterPlot
+                        ref={this.handlers.ref}
                         width={400}
                         height={380}
                         onSelection={this.props.onValueSelection}
@@ -356,7 +359,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         axisLabelY="# of mutations"
                         tooltip={this.mutationCountVsCnaTooltip}
                     />
-                )
+                );
             }
             default:
                 return null;
