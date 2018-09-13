@@ -77,11 +77,11 @@ export function makeMouseEvents(self:{ tooltipModel: any, pointHovered: boolean}
 
 export function makeScatterPlotSizeFunction<D>(
     highlight?:(d:D)=>boolean,
-    size?:(d:D, active:Boolean, isHighlighted?:boolean)=>number
+    size?:number | ((d:D, active:Boolean, isHighlighted?:boolean)=>number)
 ) {
     // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
     if (size) {
-        if (highlight) {
+        if (highlight && typeof size === "function") {
             return (d:D, active:boolean)=>size(d, active, highlight(d));
         } else {
             return size;
