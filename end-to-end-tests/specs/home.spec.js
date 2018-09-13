@@ -1361,7 +1361,7 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
-        browser.pause(200); // give time for text change to propagate through to the view
+        browser.pause(1000); // give time for text change to propagate through to the view
         assert.equal(
             browser.getText(selectedCaseSet_sel),
             "All (12997)",
