@@ -24,6 +24,7 @@ export interface IGeneSymbolValidatorProps {
 	geneQuery:string;
 	updateGeneQuery:(query:string)=>void;
 	hideSuccessMessage?:boolean
+	hideValidatingMessage?:boolean
 }
 
 @observer
@@ -55,7 +56,7 @@ export default class GeneSymbolValidator extends React.Component<IGeneSymbolVali
 				</div>
 			);
 
-		if (this.props.genes.isPending && this.props.genes.result!.suggestions.length == 0)
+		if (!this.props.hideValidatingMessage && this.props.genes.isPending && this.props.genes.result!.suggestions.length === 0)
 			return (
 				<div className={styles.GeneSymbolValidator}>
 					<span className={styles.pendingMessage}>
