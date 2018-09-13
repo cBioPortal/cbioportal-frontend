@@ -1103,7 +1103,7 @@ export class StudyViewPageStore {
             }
             const samplesWithoutNA = await internalClient.fetchFilteredSamplesUsingPOST({
                 studyViewFilter: studyViewFilter as StudyViewFilter,
-                filterType: "EXCLUSION"
+                negateFilters: true
             });
             const uniqueSampleKeysWithoutNA = _.keyBy(samplesWithoutNA, s=>s.uniqueSampleKey);
             const samplesWithNA = samplesWithoutNA.filter(s=>!(s.uniqueSampleKey in uniqueSampleKeysWithoutNA));
