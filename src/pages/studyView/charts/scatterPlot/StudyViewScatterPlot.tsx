@@ -14,6 +14,7 @@ import {ClinicalAttribute, SampleIdentifier} from "../../../../shared/api/genera
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator"
 import $ from "jquery";
 import {AnalysisGroup} from "../../StudyViewPageStore";
+import {AbstractChart} from "../ChartContainer";
 
 export interface IStudyViewScatterPlotData {
     x:number;
@@ -46,7 +47,7 @@ const NUM_AXIS_TICKS = 8;
 const DOMAIN_PADDING = 50;
 
 @observer
-export default class StudyViewScatterPlot extends React.Component<IStudyViewScatterPlotProps, {}> {
+export default class StudyViewScatterPlot extends React.Component<IStudyViewScatterPlotProps, {}> implements AbstractChart {
     @observable tooltipModel:any|null = null;
     @observable pointHovered:boolean = false;
     @observable mouseIsDown:boolean = false;
@@ -92,6 +93,10 @@ export default class StudyViewScatterPlot extends React.Component<IStudyViewScat
     componentWillUnmount() {
         $(document).off("keydown",this.onKeyDown);
         $(document).off("keyup", this.onKeyUp);
+    }
+
+    public toSVGDOMNode(): Element {
+        return this.svg!;
     }
 
     private get title() {
@@ -247,6 +252,11 @@ export default class StudyViewScatterPlot extends React.Component<IStudyViewScat
                             <VictorySelectionContainer
                                 activateSelectedData={false}
                                 onSelection={this.onSelection}
+                                containerRef={(ref: any) => {
+                                    if (ref) {
+                                        this.svgRef(ref.firstChild);
+                                    }
+                                }}
                             />
                         }
                         width={this.props.width}
