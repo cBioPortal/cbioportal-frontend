@@ -58,7 +58,6 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
                 oncoKbAnnotatedGenes={this.props.store.oncoKbAnnotatedGenes}
                 discreteCNACache={this.props.discreteCNACache}
                 studyIdToStudy={this.props.store.studyIdToStudy.result}
-                genomeNexusEnrichmentCache={this.props.genomeNexusEnrichmentCache}
                 molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
                 oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
                 pubMedCache={this.props.pubMedCache}
@@ -68,6 +67,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
                 downloadDataFetcher={this.props.store.downloadDataFetcher}
                 myCancerGenomeData={this.props.myCancerGenomeData}
                 hotspotData={this.props.store.indexedHotspotData}
+                indexedVariantAnnotations={this.props.store.indexedVariantAnnotations}
                 cosmicData={this.props.store.cosmicData.result}
                 oncoKbData={this.props.store.oncoKbData}
                 civicGenes={this.props.store.civicGenes}
