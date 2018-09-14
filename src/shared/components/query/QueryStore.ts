@@ -458,7 +458,7 @@ export class QueryStore
 		}
 	}, []);
 
-	readonly cancerStudies = remoteData(client.getAllStudiesUsingGET({}), []);
+	readonly cancerStudies = remoteData(client.getAllStudiesUsingGET({ projection: 'SUMMARY' }), []);
 	readonly cancerStudyIdsSet = remoteData<{[studyId:string]:boolean}>({
 		await: ()=>[this.cancerStudies],
 		invoke: async ()=>{

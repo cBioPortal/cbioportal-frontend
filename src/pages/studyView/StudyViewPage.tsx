@@ -362,12 +362,13 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             ) {
             return (
                 <div className="studyView">
+                    <LoadingIndicator isLoading={(this.store.queriedSampleIdentifiers.isPending ||this.store.invalidSampleIds.isPending)} isGlobal={true}/>
                     <StudySummary
                         studies={this.store.displayedStudies.result}
                         originStudies={this.store.originStudies}
                         showOriginStudiesInSummaryDescription={this.store.showOriginStudiesInSummaryDescription}
                     />
-                    
+
                     <MSKTabs id="studyViewTabs" activeTabId={this.props.routing.location.query.tab}
                              onTabClick={(id:string)=>this.handleTabChange(id)}
                              className="mainTabs">
@@ -453,7 +454,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 </div>
             )
         } else {
-            //TODO: update with loading
+            <LoadingIndicator isLoading={this.store.filteredVirtualStudies.isPending} isGlobal={true}/>
             if (this.store.filteredVirtualStudies.isComplete &&
                 this.store.unknownQueriedIds.isComplete &&
                 !_.isEmpty(this.store.unknownQueriedIds.result)) {
