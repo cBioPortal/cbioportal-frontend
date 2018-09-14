@@ -219,23 +219,25 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         this.naPatientsHiddenInSurvival = !this.naPatientsHiddenInSurvival;
     }
 
-    readonly survivalChartData = remoteData({
-        // patientToAnalysisGroup assumed defined, since we're calling survivalChartData
-        await: () => [this.props.promise, this.props.patientToAnalysisGroup!],
-        invoke: async () => {
-            if (this.props.promise.result === undefined) {
-                return undefined;
-            } else {
-                return makeSurvivalChartData(
-                        this.props.promise.result!.alteredGroup.concat(this.props.promise.result!.unalteredGroup),
-                        this.props.analysisGroupsSettings.groups,
-                        this.props.patientToAnalysisGroup!.result!,
-                        this.naPatientsHiddenInSurvival,
-                        this.props.patientKeysWithNAInSelectedClinicalData,
-                    );
-            }
+    @computed get survivalChartData() {
+        // need to put this in @computed instead of a remoteData, because in a remoteData any changes to props trigger
+        //   a rerender with delay
+        if (this.props.promise.isComplete && this.props.patientToAnalysisGroup && this.props.patientToAnalysisGroup.isComplete &&
+            (!this.props.patientKeysWithNAInSelectedClinicalData || this.props.patientKeysWithNAInSelectedClinicalData.isComplete)) {
+            const survivalData = _.find(this.props.promise.result!, (survivalPlot) => {
+                return survivalPlot.id === this.props.chartMeta.uniqueKey;
+            });
+            return makeSurvivalChartData(
+                survivalData.alteredGroup.concat(survivalData.unalteredGroup),
+                this.props.analysisGroupsSettings.groups,
+                this.props.patientToAnalysisGroup!.result!,
+                this.naPatientsHiddenInSurvival,
+                this.props.patientKeysWithNAInSelectedClinicalData && this.props.patientKeysWithNAInSelectedClinicalData.result!,
+            );
+        } else {
+            return undefined;
         }
-    });
+    };
 
     @computed
     get chart() {
@@ -294,14 +296,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 );
             }
             case ChartType.SURVIVAL: {
-                if (this.survivalChartData.isComplete) {
-                    // this.survivalChartData should be complete at this point, barring transient race-condition-caused errors, because of loadingPromises and StudyViewComponentLoader (see render())
-                    if (this.survivalChartData.result === undefined)
-                        return null;
-                    else return (
-                        <SurvivalChart patientSurvivals={this.survivalChartData.result!.patientSurvivals}
-                                       patientToAnalysisGroup={this.survivalChartData.result!.patientToAnalysisGroup}
-                                       analysisGroups={this.survivalChartData.result!.analysisGroups}
+                if (this.survivalChartData) {
+                    return (
+                        <SurvivalChart patientSurvivals={this.survivalChartData.patientSurvivals}
+                                       patientToAnalysisGroup={this.survivalChartData.patientToAnalysisGroup}
+                                       analysisGroups={this.survivalChartData.analysisGroups}
                                        analysisClinicalAttribute={this.props.analysisGroupsSettings.clinicalAttribute}
                                        naPatientsHiddenInSurvival={this.naPatientsHiddenInSurvival}
                                        toggleSurvivalHideNAPatients={this.toggleSurvivalHideNAPatients}
@@ -370,9 +369,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @computed get loadingPromises() {
         const ret = [this.props.promise];
         switch (this.chartType) {
-            case ChartType.SURVIVAL:
-                ret.push(this.survivalChartData);
-                break;
             case ChartType.SCATTER:
                 ret.push(this.props.sampleToAnalysisGroup!);
                 break;

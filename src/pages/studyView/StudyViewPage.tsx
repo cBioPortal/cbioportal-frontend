@@ -241,7 +241,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 break;
             }
             case ChartType.SURVIVAL: {
-                props.promise = this.store.getSurvivalData(chartMeta);
+                props.promise = this.store.survivalPlotData;
                 props.download = [
                     {
                         initDownload: () => this.store.getSurvivalDownloadData(chartMeta),

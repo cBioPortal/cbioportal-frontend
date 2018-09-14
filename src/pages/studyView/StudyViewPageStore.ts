@@ -1275,17 +1275,6 @@ export class StudyViewPageStore {
         return survivalTypes;
     }
 
-    public getSurvivalData(chartMeta: ChartMeta):MobxPromise<any> {
-        return remoteData<any>({
-            await: () => [this.survivalPlotData],
-            invoke: async () => {
-                return _.find(this.survivalPlotData.result, (survivalPlot) => {
-                    return survivalPlot.id === chartMeta.uniqueKey;
-                });
-            }
-        });
-    }
-
     public async getClinicalData(chartMeta: ChartMeta) {
         if (chartMeta.clinicalAttribute && this.samples.result) {
             const clinicalDataList = await defaultClient.fetchClinicalDataUsingPOST({
