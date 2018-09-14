@@ -56,7 +56,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         super();
         this.store = new StudyViewPageStore();
 
-        setWindowVariable("studyViewPageStore", this.store);
+        //setWindowVariable("studyViewPageStore", this.store);
 
         this.handlers = {
             onValueSelection: (chartMeta: ChartMeta, values: string[]) => {
@@ -366,7 +366,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                              onTabClick={(id:string)=>this.handleTabChange(id)}
                              className="mainTabs">
 
-                        <MSKTab key={0} id="summary" linkText="Summary">
+                        <MSKTab key={0} id="summary" loading={ this.store.initialClinicalDataBins.isPending } linkText="Summary">
                             {
                                 this.store.invalidSampleIds.result.length > 0 &&
                                 this.showErrorMessage &&
