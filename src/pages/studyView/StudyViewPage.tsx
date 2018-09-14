@@ -3,7 +3,7 @@ import {inject, observer} from "mobx-react";
 import styles from "./styles.module.scss";
 import {ChartContainer, IChartContainerProps} from 'pages/studyView/charts/ChartContainer';
 import { MSKTab, MSKTabs } from "../../shared/components/MSKTabs/MSKTabs";
-import { reaction, observable } from 'mobx';
+import {reaction, observable, runInAction} from 'mobx';
 import { If } from 'react-if';
 import {ChartMeta, ChartType, DataBinMethodConstants, StudyViewPageStore, AnalysisGroup} from 'pages/studyView/StudyViewPageStore';
 import SummaryHeader from 'pages/studyView/SummaryHeader';
@@ -17,6 +17,7 @@ import {ClinicalDataTab} from "./tabs/ClinicalDataTab";
 import setWindowVariable from "../../shared/lib/setWindowVariable";
 import * as _ from 'lodash';
 import ErrorBox from 'shared/components/errorBox/ErrorBox';
+import {stringListToSet} from "../../shared/lib/StringUtils";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -104,15 +105,24 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         reaction(
             () => props.routing.location.query,
             query => {
+                let newStudyIds:string[]|null = null;
                 if ('studyId' in query) {
-                    this.store.studyIds = (query.studyId as string).split(",");
+                    newStudyIds = (query.studyId as string).split(",");
                 }
                 if ('id' in query) {
-                    this.store.studyIds = (query.id as string).split(",");
+                    newStudyIds = (query.id as string).split(",");
                 }
-                if (this.store.studyIds) {
-                    this.store.sampleAttrIds = ('sampleAttrIds' in query ? (query.sampleAttrIds as string).split(",") : []);
-                    this.store.patientAttrIds = ('patientAttrIds' in query ? (query.patientAttrIds as string).split(",") : []);
+                if (newStudyIds !== null) {
+                    const newStudyIdsMap = stringListToSet(newStudyIds);
+                    const existingStudyIdsMap = stringListToSet(this.store.studyIds);
+                    if (!_.isEqual(newStudyIdsMap, existingStudyIdsMap)) {
+                        // if new study ids in routing location, update store
+                        runInAction(()=>{
+                            this.store.studyIds = newStudyIds!;
+                            this.store.sampleAttrIds = ('sampleAttrIds' in query ? (query.sampleAttrIds as string).split(",") : []);
+                            this.store.patientAttrIds = ('patientAttrIds' in query ? (query.patientAttrIds as string).split(",") : []);
+                        });
+                    }
                 }
             },
             {fireImmediately: true}
@@ -292,7 +302,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     </div>
                     <MSKTabs id="studyViewTabs" activeTabId={this.props.routing.location.query.tab}
                              onTabClick={(id:string)=>this.handleTabChange(id)}
-                             className="mainTabs">
+                             className="mainTabs"
+                    >
 
                         <MSKTab key={0} id="summary" linkText="Summary">
                             {
