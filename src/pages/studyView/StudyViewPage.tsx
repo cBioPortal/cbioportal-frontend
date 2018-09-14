@@ -26,6 +26,7 @@ import {ClinicalDataTab} from "./tabs/ClinicalDataTab";
 import setWindowVariable from "../../shared/lib/setWindowVariable";
 import * as _ from 'lodash';
 import ErrorBox from 'shared/components/errorBox/ErrorBox';
+import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 import ReactGridLayout from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -133,6 +134,11 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         reaction(
             () => props.routing.location.query,
             query => {
+
+                if (!getBrowserWindow().globalStores.routing.location.pathname.includes("/newstudy")) {
+                    return;
+                }
+
                 let newStudyIdsString;
                 if ('studyId' in query) {
                     newStudyIdsString = (query.studyId as string);
