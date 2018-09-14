@@ -66,6 +66,7 @@ let getBlankPage = function(){
 // results will load in background while user plays with query interface
 function preloadImportantComponents(){
     lazyLoadComponent(ResultsViewPage).call();
+    lazyLoadComponent(StudyViewPage).call();
 }
 
 export const makeRoutes = (routing) => {
