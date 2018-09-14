@@ -72,19 +72,20 @@ describe('homepage', function() {
         var input = $(".autosuggest input[type=text]");
         input.setValue('breast');
         browser.pause(500);
-        var checkBox = $('[data-test="StudySelect"]');
-        checkBox.waitForExist(10000);
-        browser.click('[data-test="StudySelect"]');
+
+        browser.element('[data-test=selectAllStudies]').click();
 
         var oqlEntrySel = 'textarea[data-test="geneSet"]';
         browser.setValue(oqlEntrySel, 'PTEN: EXP>1');
 
         var errorMessageSel = 'span[data-test="oqlErrorMessage"]';
         browser.waitForExist(errorMessageSel);
+
         assert.equal(
             browser.getText(errorMessageSel),
             "Expression filtering in the gene list (the EXP command) is not supported when doing cross cancer queries."
         );
+
 
         var submitButtonSel = 'button[data-test="queryButton"]';
         assert.equal(
