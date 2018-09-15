@@ -15,9 +15,10 @@ import { getHost } from './shared/api/urls';
 import { validateParametersPatientView } from './shared/lib/validateParameters';
 import AppConfig from "appConfig";
 import browser from 'bowser';
-import './shared/lib/tracking';
+
 import 'script-loader!raven-js/dist/raven.js';
 import {correctPatientUrl} from "shared/lib/urlCorrection";
+import {activateAnalytics} from "shared/lib/tracking";
 
 
 if (localStorage.localdev === 'true' || localStorage.localdist === 'true') {
@@ -173,6 +174,8 @@ window.routingStore = routingStore;
 
 
 let render = () => {
+
+    activateAnalytics();
 
     const rootNode = document.getElementById("reactRoot");
 

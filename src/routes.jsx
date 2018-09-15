@@ -51,8 +51,6 @@ let getBlankPage = function(){
     return <div />
 }
 
-console.log(getBasePath());
-
 export const makeRoutes = (routing) => {
     return (<Route path="/" component={Container}>
                 <Route path="/home" getComponent={lazyLoadComponent(HomePage)}/>
