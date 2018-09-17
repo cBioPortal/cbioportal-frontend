@@ -145,38 +145,38 @@ export class QueryStore
 			}
 		);
 
-		reaction(
-			()=>this.selectableStudiesSet,
-			selectableStudiesSet=>{
-				if(this.selectedSampleListId !== CUSTOM_CASE_LIST_ID) {
-					let virtualStudyIdsSet = stringListToSet(this.virtualStudies.result.map(x=>x.id));
-					let physicalStudyIdsSet = stringListToSet(this.cancerStudies.result.map(x=>x.studyId))
-					let userSelectableIds:{[studyId:string]:boolean} = Object.assign({}, physicalStudyIdsSet, virtualStudyIdsSet);
-					let sharedIds:string[] = [];
-					let unknownIds:string[] = [];
-
-					this._defaultSelectedIds.keys().forEach(id=>{
-						if(selectableStudiesSet[id]){
-							if(!userSelectableIds[id]){
-								sharedIds.push(id)
-							}
-						}else{
-							unknownIds.push(id);
-						}
-					});
-					//this block is executed when the query is a saved virtual study query is shared to other user
-					//in this scenario we override some parameters to correctly show selected cases to user
-					if(!_.isEmpty(sharedIds) && _.isEmpty(unknownIds)){
-						this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
-						this.caseIdsMode = 'sample';
-						let studySampleMap = this._defaultStudySampleMap
-						this.caseIds = _.flatten<string>(Object.keys(studySampleMap).map(studyId=>{
-							return studySampleMap[studyId].map((sampleId:string)=>`${studyId}:${sampleId}`);
-						})).join("\n");
-					}
-				}
-			}
-		);
+		// reaction(
+		// 	()=>this.selectableStudiesSet,
+		// 	selectableStudiesSet=>{
+		// 		if(this.selectedSampleListId !== CUSTOM_CASE_LIST_ID) {
+		// 			let virtualStudyIdsSet = stringListToSet(this.virtualStudies.result.map(x=>x.id));
+		// 			let physicalStudyIdsSet = stringListToSet(this.cancerStudies.result.map(x=>x.studyId))
+		// 			let userSelectableIds:{[studyId:string]:boolean} = Object.assign({}, physicalStudyIdsSet, virtualStudyIdsSet);
+		// 			let sharedIds:string[] = [];
+		// 			let unknownIds:string[] = [];
+        //
+		// 			this._defaultSelectedIds.keys().forEach(id=>{
+		// 				if(selectableStudiesSet[id]){
+		// 					if(!userSelectableIds[id]){
+		// 						sharedIds.push(id)
+		// 					}
+		// 				}else{
+		// 					unknownIds.push(id);
+		// 				}
+		// 			});
+		// 			//this block is executed when the query is a saved virtual study query is shared to other user
+		// 			//in this scenario we override some parameters to correctly show selected cases to user
+		// 			if(!_.isEmpty(sharedIds) && _.isEmpty(unknownIds)){
+		// 				this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
+		// 				this.caseIdsMode = 'sample';
+		// 				let studySampleMap = this._defaultStudySampleMap
+		// 				this.caseIds = _.flatten<string>(Object.keys(studySampleMap).map(studyId=>{
+		// 					return studySampleMap[studyId].map((sampleId:string)=>`${studyId}:${sampleId}`);
+		// 				})).join("\n");
+		// 			}
+		// 		}
+		// 	}
+		// );
 	}
 
 	public singlePageAppSubmitRoutine: (path:string, query:CancerStudyQueryUrlParams)=>void;
