@@ -5,7 +5,7 @@ import _ from "lodash";
 import client from "../api/cbioportalClientInstance";
 import internalClient from "../api/cbioportalInternalClientInstance";
 import { ClinicalDataCount, StudyViewFilter } from "shared/api/generated/CBioPortalAPIInternal";
-import { NA_COLOR, COLORS, isFiltered } from "pages/studyView/StudyViewUtils";
+import {NA_COLOR, COLORS, isFiltered, isNAClinicalValue} from "pages/studyView/StudyViewUtils";
 import { ClinicalDataCountWithColor } from "pages/studyView/StudyViewPageStore";
 
 type StudyViewClinicalDataCountsQuery = {
@@ -36,8 +36,14 @@ export default class StudyViewClinicalDataCountsCache extends MobxPromiseCache<S
                             clinicalDataType: q.attribute.patientAttribute ? 'PATIENT' : 'SAMPLE',
                             studyViewFilter: { studyIds: studyIds } as any
                         });
-                        colors = _.reduce(result, (acc: { [id: string]: string }, slice) => {
-                            if (slice.value.toLowerCase().includes('na')) {
+                        colors = _.reduce(result.sort((a, b) => {
+                            if (isNAClinicalValue(a.value))
+                                return isNAClinicalValue(b.value) ? 0 : 1;
+                            if (isNAClinicalValue(b.value))
+                                return -1;
+                            return b.count - a.count;
+                        }), (acc: { [id: string]: string }, slice) => {
+                            if (isNAClinicalValue(slice.value)) {
                                 acc[slice.value] = NA_COLOR;
                             } else {
                                 acc[slice.value] = COLORS[count];
