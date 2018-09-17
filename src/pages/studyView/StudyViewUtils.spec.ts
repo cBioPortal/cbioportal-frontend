@@ -6,7 +6,7 @@ import {
     intervalFiltersDisplayValue, isEveryBinDistinct, toFixedDigit, getExponent,
     getCNAByAlteration,
     getDefaultChartTypeByClinicalAttribute,
-    getVirtualStudyDescription, calculateLayout, getLayoutMatrix, LayoutMatrixItem, getQValue
+    getVirtualStudyDescription, calculateLayout, getLayoutMatrix, LayoutMatrixItem, getQValue, pickClinicalDataColors
 } from 'pages/studyView/StudyViewUtils';
 import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue} from 'shared/api/generated/CBioPortalAPIInternal';
 import {ClinicalAttribute, Gene} from 'shared/api/generated/CBioPortalAPI';
@@ -921,6 +921,99 @@ describe('StudyViewUtils', () => {
             assert.equal(toFixedDigit(positiveValues[4]), "1.8");
             assert.equal(toFixedDigit(positiveValues[5]), "17");
             assert.equal(toFixedDigit(positiveValues[6]), "666.67");
+        });
+    });
+
+    describe('pickClinicalDataColors', () => {
+        const clinicalDataCountWithFixedValues = [
+            {
+                "value": "FALSE",
+                "count": 26
+            },
+            {
+                "value": "TRUE",
+                "count": 66
+            },
+            {
+                "value": "NA",
+                "count": 16
+            }
+        ];
+
+        const clinicalDataCountWithFixedMixedCaseValues = [
+            {
+                "value": "Yes",
+                "count": 26
+            },
+            {
+                "value": "No",
+                "count": 66
+            },
+            {
+                "value": "Male",
+                "count": 36
+            },
+            {
+                "value": "F",
+                "count": 26
+            },
+            {
+                "value": "Na",
+                "count": 16
+            }
+        ];
+
+        const clinicalDataCountWithBothFixedAndOtherValues = [
+            {
+                "value": "Yes",
+                "count": 26
+            },
+            {
+                "value": "NO",
+                "count": 66
+            },
+            {
+                "value": "na",
+                "count": 16
+            },
+            {
+                "value": "maybe",
+                "count": 46
+            },
+            {
+                "value": "WHY",
+                "count": 36
+            }
+        ];
+
+        it ('picks predefined colors for known clinical attribute values', () => {
+            const colors = pickClinicalDataColors(clinicalDataCountWithFixedValues);
+
+            assert.equal(colors["TRUE"], "#66aa00");
+            assert.equal(colors["FALSE"], "#666666");
+            assert.equal(colors["NA"], "#CCCCCC");
+        });
+
+        it ('picks predefined colors for known clinical attribute values in mixed letter case', () => {
+            const colors = pickClinicalDataColors(clinicalDataCountWithFixedMixedCaseValues);
+
+            assert.equal(colors["Yes"], "#66aa00");
+            assert.equal(colors["No"], "#666666");
+            assert.equal(colors["Na"], "#CCCCCC");
+            assert.equal(colors["Male"], "#316395");
+            assert.equal(colors["F"], "#b82e2e");
+        });
+
+        it ('does not pick already picked colors again for non-fixed values', () => {
+            const availableColors = ["#66aa00", "#666666", "#2986e2", "#CCCCCC", "#dc3912", "#f88508", "#109618"]
+
+            const colors = pickClinicalDataColors(clinicalDataCountWithBothFixedAndOtherValues, availableColors);
+
+            assert.equal(colors["Yes"], "#66aa00");
+            assert.equal(colors["NO"], "#666666");
+            assert.equal(colors["na"], "#CCCCCC");
+            assert.equal(colors["maybe"], "#2986e2");
+            assert.equal(colors["WHY"], "#dc3912");
         });
     });
 
