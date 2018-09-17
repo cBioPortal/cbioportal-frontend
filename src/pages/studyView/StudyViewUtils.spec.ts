@@ -6,7 +6,7 @@ import {
     intervalFiltersDisplayValue, isEveryBinDistinct, toFixedDigit, getExponent,
     getCNAByAlteration,
     getDefaultChartTypeByClinicalAttribute,
-    getVirtualStudyDescription, calculateLayout, getLayoutMatrix, LayoutMatrixItem
+    getVirtualStudyDescription, calculateLayout, getLayoutMatrix, LayoutMatrixItem, getQValue
 } from 'pages/studyView/StudyViewUtils';
 import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue} from 'shared/api/generated/CBioPortalAPIInternal';
 import {ClinicalAttribute, Gene} from 'shared/api/generated/CBioPortalAPI';
@@ -1118,5 +1118,11 @@ describe('StudyViewUtils', () => {
             assert.equal(layout[2].x, 2);
             assert.equal(layout[2].y, 0);
         });
+
+        it("Test getQValue", () => {
+            assert.equal(getQValue(0), '0');
+            assert.equal(getQValue(0.00001), '1.000e-5');
+            assert.equal(getQValue(-0.01), '-1.000e-2');
+        })
     });
 });
