@@ -5,7 +5,7 @@ import {ChartContainer, IChartContainerProps} from 'pages/studyView/charts/Chart
 import { MSKTab, MSKTabs } from "../../shared/components/MSKTabs/MSKTabs";
 import { reaction, observable } from 'mobx';
 import { If } from 'react-if';
-import {ChartMeta, ChartType, ChartTypeEnum, DataBinMethodConstants, StudyViewPageStore, AnalysisGroup} from 'pages/studyView/StudyViewPageStore';
+import {ChartMeta, ChartType, ChartTypeEnum, DataBinMethodConstants, StudyViewPageStore, AnalysisGroup, UniqueKey, CUSTOM_CHART_KEYS} from 'pages/studyView/StudyViewPageStore';
 import SummaryHeader from 'pages/studyView/SummaryHeader';
 import {Gene, SampleIdentifier, ClinicalAttribute} from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -101,7 +101,10 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             },
             updateChartsVisibility: (visibleChartIds: string[]) => {
                 this.store.updateChartsVisibility(visibleChartIds);
-            }
+            },
+            setCustomChartFilters: (chartMeta: ChartMeta, values: string[]) => {
+                this.store.setCustomChartFilters(chartMeta, values);
+            },
 
         }
 
@@ -139,13 +142,29 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
         switch (chartMeta.chartType) {
             case ChartTypeEnum.PIE_CHART: {
-                props.promise = this.store.studyViewClinicalDataCountsCache.get({
-                    attribute: chartMeta.clinicalAttribute!,
-                    filters: this.store.filters
-                });
-                props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey);
-                props.onValueSelection = this.handlers.onValueSelection;
-                props.onResetSelection = this.handlers.onValueSelection;
+
+                //if the chart is one of the custom charts then get the appropriate promise
+                if (_.includes(CUSTOM_CHART_KEYS, chartMeta.uniqueKey)) {
+                    props.filters = this.store.getCustomChartFilters(props.chartMeta ? props.chartMeta.uniqueKey : '');
+                    props.onValueSelection = this.handlers.setCustomChartFilters;
+                    props.onResetSelection = this.handlers.setCustomChartFilters;
+
+                    if (chartMeta.uniqueKey === UniqueKey.SAMPLES_PER_PATIENT) {
+                        props.promise = this.store.samplesPerPatientData;
+                    } else if (chartMeta.uniqueKey === UniqueKey.WITH_MUTATION_DATA) {
+                        props.promise = this.store.withMutationData;
+                    } else if (chartMeta.uniqueKey === UniqueKey.WITH_CNA_DATA) {
+                        props.promise = this.store.withCnaData;
+                    }
+                } else {
+                    props.promise = this.store.studyViewClinicalDataCountsCache.get({
+                        attribute: chartMeta.clinicalAttribute!,
+                        filters: this.store.filters
+                    });
+                    props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey);
+                    props.onValueSelection = this.handlers.onValueSelection;
+                    props.onResetSelection = this.handlers.onValueSelection;
+                }
                 props.onChangeChartType = this.handlers.onChangeChartType;
                 props.download = [
                     {
