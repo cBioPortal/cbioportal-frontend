@@ -18,13 +18,14 @@
 		width: 200px;
 		//box-sizing: content-box;
 		height: 30px;
-		transition: height .5s ease-out;
 		//color: darkgrey;
-		border-radius: 5px;
+		border-radius: $border-radius-base;
 		outline-offset: -2px;
-		font-size: 11px;
+		font-size:12px;
 		resize: none;
 		margin: 0px 3px;
+		line-height:18px;
+		padding-left:10px;
 	}
 
 	textarea.studyViewFocus{
