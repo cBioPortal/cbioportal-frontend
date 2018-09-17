@@ -1,7 +1,9 @@
 import _ from "lodash";
 import { SingleGeneQuery } from "shared/lib/oql/oql-parser";
 import { unparseOQLQueryLine } from "shared/lib/oql/oqlfilter";
-import { StudyViewFilter, DataBin, ClinicalDataIntervalFilterValue } from "shared/api/generated/CBioPortalAPIInternal";
+import {
+    StudyViewFilter, DataBin, ClinicalDataIntervalFilterValue, ClinicalDataCount
+} from "shared/api/generated/CBioPortalAPIInternal";
 import { Sample, Gene, ClinicalAttribute } from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
 import {getSampleViewUrl, getStudySummaryUrl} from "../../shared/api/urls";
@@ -73,6 +75,17 @@ export const COLORS = [
     '#aaaa14', '#6633c1', '#e67303', '#8b0705',
     '#651062', '#329267', '#5574a1', '#3b3ea5'
 ];
+
+export const FIXED_COLORS: {[clinicalAttribute: string]: string} = {
+    TRUE: "#66aa00",
+    FALSE: "#666666",
+    YES: "#66aa00",
+    NO: "#666666",
+    FEMALE: "#b82e2e",
+    MALE: "#316395",
+    F: "#b82e2e",
+    M: "#316395"
+};
 
 export const NA_COLOR = '#CCCCCC';
 export const UNSELECTED_COLOR = '#808080';
@@ -926,6 +939,56 @@ export function getQValue(qvalue: number):string {
     } else {
         return qvalue.toExponential(EXPONENTIAL_FRACTION_DIGITS)
     }
+}
+
+export function getClinicalAttrFixedColor(value: string): string
+{
+    return FIXED_COLORS[value.replace(/\s/g, '').toUpperCase()];
+}
+
+export function pickClinicalAttrFixedColors(data: ClinicalDataCount[]): {[attribute: string]: string}
+{
+    return _.reduce(data, (acc: { [id: string]: string }, slice) => {
+        // pick a fixed color if predefined
+        const fixed = isNAClinicalValue(slice.value) ? NA_COLOR : getClinicalAttrFixedColor(slice.value);
+
+        if (fixed) {
+            // update the map
+            acc[slice.value] = fixed;
+        }
+
+        return acc;
+    }, {});
+}
+
+export function pickClinicalAttrColorsByIndex(data: ClinicalDataCount[],
+                                              availableColors: string[]): {[attribute: string]: string}
+{
+    let colorIndex = 0;
+
+    return _.reduce(data, (acc: { [id: string]: string }, slice) => {
+        if (!isNAClinicalValue(slice.value) && !getClinicalAttrFixedColor(slice.value)) {
+            acc[slice.value] = availableColors[colorIndex];
+            colorIndex++;
+        }
+        return acc;
+    }, {});
+}
+
+export function pickClinicalDataColors(data: ClinicalDataCount[],
+                                       colors: string[] = COLORS): {[attribute: string]: string}
+{
+    let availableColors = _.cloneDeep(colors);
+
+    // pick colors for the fixed clinical attribute values first
+    const fixedColors = pickClinicalAttrFixedColors(data);
+
+    // remove the picked color from the available colors list,
+    // so that we won't pick it again for the same chart
+    availableColors = _.difference(availableColors, _.values(fixedColors));
+
+    // then pick colors for the remaining attributes
+    return {...pickClinicalAttrColorsByIndex(data, availableColors), ...fixedColors};
 }
 
 export function isNAClinicalValue(value:string) {
