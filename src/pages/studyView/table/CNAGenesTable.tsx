@@ -12,7 +12,7 @@ import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import FixedHeaderTable from "./FixedHeaderTable";
 import {bind} from "bind-decorator";
-import {EXPONENTIAL_FRACTION_DIGITS, getCNAByAlteration} from "../StudyViewUtils";
+import {getCNAByAlteration, getQValue} from "../StudyViewUtils";
 
 
 export type  CNAGenesTableUserSelectionWithIndex = CopyNumberGeneFilterElement & {
@@ -48,7 +48,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                 const addGeneOverlay = () =>
                     <span>{`Click ${data.hugoGeneSymbol} to ${_.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? 'remove' : 'add'} from your query`}</span>;
                 const qvalOverlay = () =>
-                    <div><b>Gistic</b><br/><i>Q-value: </i><span>{data.qValue.toExponential(EXPONENTIAL_FRACTION_DIGITS)}</span></div>;
+                    <div><b>Gistic</b><br/><i>Q-value: </i><span>{getQValue(data.qValue)}</span></div>;
                 return (
                     <div className={classnames(styles.noFlexShrink, styles.displayFlex)}>
                         <DefaultTooltip
@@ -216,8 +216,6 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         return (
             <CNAGenesTableComponent
                 data={this.props.promise.result || []}
-                width={this.props.width}
-                height={this.props.height}
                 columns={this._columns}
                 selectedGenes={this.props.selectedGenes}
                 selectedRows={_.map(_.union(this.selectedRows, this.preSelectedRows), row => row.rowIndex)}
