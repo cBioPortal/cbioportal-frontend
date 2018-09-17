@@ -918,3 +918,11 @@ export function getTableWidthByDimension(chartDimension: ChartDimension) {
 export function getTableHeightByDimension(chartDimension: ChartDimension) {
     return DEFAULT_LAYOUT_PROPS.grid.h * chartDimension.h - 50;
 }
+
+export function getQValue(qvalue: number):string {
+    if (qvalue === 0) {
+        return '0';
+    } else {
+        return qvalue.toExponential(EXPONENTIAL_FRACTION_DIGITS)
+    }
+}
