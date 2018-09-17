@@ -926,3 +926,7 @@ export function getQValue(qvalue: number):string {
         return qvalue.toExponential(EXPONENTIAL_FRACTION_DIGITS)
     }
 }
+
+export function isNAClinicalValue(value:string) {
+    return value.toLowerCase().trim() === 'na';
+}
