@@ -6,13 +6,15 @@ import {
     intervalFiltersDisplayValue, isEveryBinDistinct, toFixedDigit, getExponent,
     getCNAByAlteration,
     getDefaultChartTypeByClinicalAttribute,
-    getVirtualStudyDescription, calculateLayout, getLayoutMatrix, LayoutMatrixItem, getQValue, pickClinicalDataColors
+    getVirtualStudyDescription, calculateLayout, getLayoutMatrix, LayoutMatrixItem, getQValue, pickClinicalDataColors, getSamplesByExcludingFiltersOnChart, getFilteredSampleIdentifiers
 } from 'pages/studyView/StudyViewUtils';
-import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue} from 'shared/api/generated/CBioPortalAPIInternal';
+import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue, Sample} from 'shared/api/generated/CBioPortalAPIInternal';
 import {ClinicalAttribute, Gene} from 'shared/api/generated/CBioPortalAPI';
 import {ChartDimension, ChartMeta, ChartTypeEnum} from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
 import {observable} from "mobx";
+import sinon from 'sinon';
+import internalClient from 'shared/api/cbioportalInternalClientInstance';
 
 describe('StudyViewUtils', () => {
 
@@ -1302,5 +1304,92 @@ describe('StudyViewUtils', () => {
             assert.equal(getQValue(0.00001), '1.000e-5');
             assert.equal(getQValue(-0.01), '-1.000e-2');
         })
+    });
+
+    describe('getSamplesByExcludingFiltersOnChart', () => {
+        let fetchStub: sinon.SinonStub;
+        const emptyStudyViewFilter: StudyViewFilter = {
+            clinicalDataEqualityFilters: [],
+            clinicalDataIntervalFilters: [],
+            cnaGenes: [],
+            mutatedGenes: []
+        } as any
+        beforeEach(() => {
+            fetchStub = sinon.stub(internalClient, 'fetchFilteredSamplesUsingPOST');
+            fetchStub
+                .returns(Promise.resolve([]));
+        });
+        afterEach(() => {
+            fetchStub.restore();
+        });
+
+        it('no filters selected', (done) => {
+            getSamplesByExcludingFiltersOnChart(
+                'WITH_MUTATION_DATA',
+                emptyStudyViewFilter,
+                {},
+                [{ sampleId: 'sample1', studyId: 'study1' }],
+                ['study1']
+            ).then(() => {
+                assert.isTrue(fetchStub.calledWith({ studyViewFilter: { ...emptyStudyViewFilter, sampleIdentifiers: [{ sampleId: 'sample1', studyId: 'study1' }] } }));
+                done();
+            }).catch(done);
+        });
+
+
+        it('has filter for one chart', (done) => {
+            getSamplesByExcludingFiltersOnChart(
+                'WITH_MUTATION_DATA',
+                emptyStudyViewFilter,
+                { 'WITH_MUTATION_DATA': [{ sampleId: 'sample1', studyId: 'study1' }], 'WITH_CNA_DATA': [{ sampleId: 'sample1', studyId: 'study1' }] },
+                [{ sampleId: 'sample1', studyId: 'study1' }, { sampleId: 'sample2', studyId: 'study1' }],
+                ['study1']
+            ).then(() => {
+                assert.isTrue(fetchStub.calledWith({ studyViewFilter: { ...emptyStudyViewFilter, sampleIdentifiers: [{ sampleId: 'sample1', studyId: 'study1' }] } }));
+                done();
+            }).catch(done);
+        });
+
+        it('no filters selected and queriedSampleIdentifiers is empty', (done) => {
+            getSamplesByExcludingFiltersOnChart(
+                'WITH_MUTATION_DATA',
+                emptyStudyViewFilter,
+                {},
+                [],
+                ['study1']
+            ).then(() => {
+                assert.isTrue(fetchStub.calledWith({ studyViewFilter: { ...emptyStudyViewFilter, studyIds: ['study1'] } }));
+                done();
+            }).catch(done);
+        });
+
+        it('has filter for one chart and queriedSampleIdentifiers is empty', (done) => {
+            getSamplesByExcludingFiltersOnChart(
+                'WITH_MUTATION_DATA',
+                emptyStudyViewFilter,
+                { 'WITH_MUTATION_DATA': [{ sampleId: 'sample1', studyId: 'study1' }], 'WITH_CNA_DATA': [{ sampleId: 'sample1', studyId: 'study1' }] },
+                [],
+                ['study1']
+            ).then(() => {
+                assert.isTrue(fetchStub.calledWith({ studyViewFilter: { ...emptyStudyViewFilter, sampleIdentifiers: [{ sampleId: 'sample1', studyId: 'study1' }] } }));
+                done();
+            }).catch(done);
+        });
+    });
+
+    describe('getFilteredSampleIdentifiers', ()=>{
+        let samples:Sample[] = [
+            { sampleId: 'sample1', studyId: 'study1' , sequenced: true , copyNumberSegmentPresent:false},
+            { sampleId: 'sample2', studyId: 'study1' , sequenced: false , copyNumberSegmentPresent: true}
+        ] as any
+        it('when filter function is not present', ()=>{
+            assert.deepEqual(getFilteredSampleIdentifiers([]),[]);
+            assert.deepEqual(getFilteredSampleIdentifiers(samples),[{ sampleId: 'sample1', studyId: 'study1' }, { sampleId: 'sample2', studyId: 'study1' }]);
+        });
+
+        it('when filter function is present', ()=>{
+            assert.deepEqual(getFilteredSampleIdentifiers(samples,  (sample) => sample.sequenced),[{ sampleId: 'sample1', studyId: 'study1' }]);
+            assert.deepEqual(getFilteredSampleIdentifiers(samples,  (sample) => sample.copyNumberSegmentPresent),[{ sampleId: 'sample2', studyId: 'study1' }]);
+        });
     });
 });
