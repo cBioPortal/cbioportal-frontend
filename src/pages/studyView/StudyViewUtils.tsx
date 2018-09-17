@@ -2,7 +2,7 @@ import _ from "lodash";
 import { SingleGeneQuery } from "shared/lib/oql/oql-parser";
 import { unparseOQLQueryLine } from "shared/lib/oql/oqlfilter";
 import {
-    StudyViewFilter, DataBin, ClinicalDataIntervalFilterValue, ClinicalDataCount
+    StudyViewFilter, DataBin, ClinicalDataIntervalFilterValue, ClinicalDataCount, SampleIdentifier
 } from "shared/api/generated/CBioPortalAPIInternal";
 import { Sample, Gene, ClinicalAttribute } from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
@@ -18,6 +18,7 @@ import {
 } from "pages/studyView/StudyViewPageStore";
 import {ChartDimension, ChartMeta, ChartType, ChartTypeEnum, ClinicalDataType} from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
+import internalClient from "shared/api/cbioportalInternalClientInstance";
 
 //TODO:cleanup
 export const COLORS = [
@@ -993,4 +994,60 @@ export function pickClinicalDataColors(data: ClinicalDataCount[],
 
 export function isNAClinicalValue(value:string) {
     return value.toLowerCase().trim() === 'na';
+}
+
+export function getFilteredSampleIdentifiers(samples:Sample[], isFiltered?:(sample:Sample)=>boolean){
+    return _.reduce(samples, (acc, sample) => {
+        if (isFiltered === undefined || isFiltered(sample)) {
+            acc.push({
+                sampleId: sample.sampleId,
+                studyId: sample.studyId
+            });
+        }
+        return acc;
+    }, [] as SampleIdentifier[])
+}
+
+/**
+ * Get filtered samples by excluding filters for the selected chart
+ */
+export function getSamplesByExcludingFiltersOnChart(
+    chartKey: string,
+    filter: StudyViewFilter,
+    sampleIdentiferFilterSet: { [id: string]: SampleIdentifier[] },
+    queriedSampleIdentifiers: SampleIdentifier[],
+    queriedStudyIds: string[]): Promise<Sample[]> {
+
+    //create filter without study/sample identifiers
+    let updatedFilter: StudyViewFilter = {
+        clinicalDataEqualityFilters: filter.clinicalDataEqualityFilters,
+        clinicalDataIntervalFilters: filter.clinicalDataIntervalFilters,
+        cnaGenes: filter.cnaGenes,
+        mutatedGenes: filter.mutatedGenes
+    } as any;
+
+    let _sampleIdentifiers = _.reduce(sampleIdentiferFilterSet, (acc, sampleIdentifiers, key) => {
+        //exclude chart filters
+        if (chartKey !== key) {
+            if (acc.length === 0) {
+                acc = sampleIdentifiers;
+            } else {
+                acc = _.intersectionWith(acc, sampleIdentifiers, _.isEqual) as SampleIdentifier[];
+            }
+        }
+        return acc
+    }, [] as SampleIdentifier[]);
+
+    if (_sampleIdentifiers && _sampleIdentifiers.length > 0) {
+        updatedFilter.sampleIdentifiers = _sampleIdentifiers;
+    } else {
+        if (_.isEmpty(queriedSampleIdentifiers)) {
+            updatedFilter.studyIds = queriedStudyIds;
+        } else {
+            updatedFilter.sampleIdentifiers = queriedSampleIdentifiers;
+        }
+    }
+    return internalClient.fetchFilteredSamplesUsingPOST({
+        studyViewFilter: updatedFilter
+    });
 }
