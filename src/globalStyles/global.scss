@@ -550,3 +550,21 @@ h3.hr {
 .whiteBackground {
   background:#fff;
 }
+
+.form-group.form-group-custom {
+  margin-right:15px;
+  padding-right:15px;
+  border-right:1px dashed $borderColor;
+  display:flex !important;
+  align-items: center;
+
+  h5 {
+    font-weight:bold !important;
+    margin-right:5px;
+  }
+
+  &:last-child {
+    border-right:none;
+  }
+
+}
