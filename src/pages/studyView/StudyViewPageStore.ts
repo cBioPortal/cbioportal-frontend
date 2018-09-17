@@ -42,7 +42,7 @@ import {
     getClinicalDataIntervalFilterValues,
     getClinicalDataType,
     getCNAByAlteration,
-    getDefaultChartTypeByClinicalAttribute, getDefaultPriorityByUniqueKey,
+    getDefaultChartTypeByClinicalAttribute, getDefaultPriorityByUniqueKey, getQValue,
     isFiltered,
     isLogScaleByDataBins,
     isPreSelectedClinicalAttr,
@@ -1555,7 +1555,7 @@ export class StudyViewPageStore {
             _.each(this.mutatedGeneData.result, function (record: MutationCountByGene) {
                 data.push([
                     record.hugoGeneSymbol,
-                    record.qValue === undefined ? '' : record.qValue.toExponential(EXPONENTIAL_FRACTION_DIGITS),
+                    record.qValue === undefined ? '' : getQValue(record.qValue),
                     record.totalCount, record.countByEntity, record.frequency + '%'].join("\t"));
             });
             return data.join("\n");
@@ -1569,7 +1569,7 @@ export class StudyViewPageStore {
             _.each(this.cnaGeneData.result, function (record: CopyNumberCountByGene) {
                 data.push([
                     record.hugoGeneSymbol,
-                    record.qValue === undefined ? '' : record.qValue.toExponential(EXPONENTIAL_FRACTION_DIGITS),
+                    record.qValue === undefined ? '' : getQValue(record.qValue),
                     record.cytoband, getCNAByAlteration(record.alteration),
                     record.countByEntity, record.frequency + '%'].join("\t"));
             });
