@@ -377,6 +377,62 @@ describe('StudyViewUtils', () => {
             }
         ] as any;
 
+        const logScaleDataBinsStartingWithZeroAndContainsNa = [
+            {
+                "attributeId": "DAYS_TO_COLLECTION",
+                "start": 0,
+                "end": 3,
+                "count": 1
+            },
+            {
+                "attributeId": "DAYS_TO_COLLECTION",
+                "start": 3,
+                "end": 10,
+                "count": 1
+            },
+            {
+                "attributeId": "DAYS_TO_COLLECTION",
+                "start": 10,
+                "end": 31,
+                "count": 13
+            },
+            {
+                "attributeId": "DAYS_TO_COLLECTION",
+                "start": 31,
+                "end": 100,
+                "count": 47
+            },
+            {
+                "attributeId": "DAYS_TO_COLLECTION",
+                "start": 100,
+                "end": 316,
+                "count": 78
+            },
+            {
+                "attributeId": "DAYS_TO_COLLECTION",
+                "start": 316,
+                "end": 1000,
+                "count": 82
+            },
+            {
+                "attributeId": "DAYS_TO_COLLECTION",
+                "start": 1000,
+                "end": 3162,
+                "count": 63
+            },
+            {
+                "attributeId": "DAYS_TO_COLLECTION",
+                "start": 3162,
+                "end": 10000,
+                "count": 22
+            },
+            {
+                "attributeId": "DAYS_TO_COLLECTION",
+                "specialValue": "NA",
+                "count": 225
+            }
+        ] as any;
+
         const noGroupingDataBinsWithNa = [
             {
                 "attributeId": "ACTIONABLE_ALTERATIONS",
@@ -508,6 +564,35 @@ describe('StudyViewUtils', () => {
 
             const normalizedCategoryData = generateCategoricalData(categoryBins, 13);
             assert.deepEqual(normalizedCategoryData.map(data => data.x), [14, 15]);
+        });
+
+        it('processes log scaled data bins starting with zero and including NA counts', () => {
+            const numericalBins = filterNumericalBins(logScaleDataBinsStartingWithZeroAndContainsNa);
+            assert.equal(numericalBins.length, 8, "NA should be filtered out");
+
+            const formattedTickValues = formatNumericalTickValues(numericalBins);
+            assert.deepEqual(formattedTickValues, ["0", "", "10", "", "10^2", "", "10^3", "", "10^4"]);
+
+            const intervalBins = filterIntervalBins(numericalBins);
+            assert.equal(intervalBins.length, 8,
+                "Should be same as the number of mumerical bins");
+
+            const intervalBinValues = calcIntervalBinValues(intervalBins);
+            assert.deepEqual(intervalBinValues, [0, 3, 10, 31, 100, 316, 1000, 3162, 10000]);
+
+            const isLogScale = isLogScaleByValues(intervalBinValues);
+            assert.isTrue(isLogScale);
+
+            const categoryBins = filterCategoryBins(logScaleDataBinsStartingWithZeroAndContainsNa);
+            assert.equal(categoryBins.length, 1,
+                "Only NA bin should be included");
+
+            const normalizedNumericalData = generateNumericalData(numericalBins);
+            assert.deepEqual(normalizedNumericalData.map(data => data.x),
+                [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5]);
+
+            const normalizedCategoryData = generateCategoricalData(categoryBins, 9);
+            assert.deepEqual(normalizedCategoryData.map(data => data.x), [10]);
         });
 
         it('processes scientific small numbers data bins', () => {
