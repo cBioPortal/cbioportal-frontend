@@ -12,7 +12,7 @@ import {IBaseScatterPlotData} from "./ScatterPlot";
 import {getDeterministicRandomNumber, separateScatterDataByAppearance} from "./PlotUtils";
 import {logicalAnd} from "../../lib/LogicUtils";
 import {tickFormatNumeral, wrapTick} from "./TickUtils";
-import {scatterPlotSize} from "./PlotUtils";
+import {makeScatterPlotSizeFunction} from "./PlotUtils";
 import {getTextWidth} from "../../lib/wrapText";
 import autobind from "autobind-decorator";
 
@@ -31,9 +31,10 @@ export interface IBoxScatterPlotProps<D extends IBaseBoxScatterPlotPoint> {
     title?:string;
     data: IBoxScatterPlotData<D>[];
     chartBase:number;
+    startDataAxisAtZero?:boolean;
     domainPadding?:number; // see https://formidable.com/open-source/victory/docs/victory-chart/#domainpadding
     highlight?:(d:D)=>boolean;
-    size?:(d:D, active:boolean, isHighlighted?:boolean)=>number;
+    size?:number | ((d:D, active:boolean, isHighlighted?:boolean)=>number);
     fill?:string | ((d:D)=>string);
     stroke?:string | ((d:D)=>string);
     fillOpacity?:number | ((d:D)=>number);
@@ -235,6 +236,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         // data extremes
         let max = Number.NEGATIVE_INFINITY;
         let min = Number.POSITIVE_INFINITY;
+
         for (const d of this.props.data) {
             for (const d2 of d.data) {
                 max = Math.max(d2.value, max);
@@ -244,6 +246,9 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         if (this.props.logScale) {
             min = this.logScale(min);
             max = this.logScale(max);
+        }
+        if (this.props.startDataAxisAtZero) {
+            min = Math.min(0, min);
         }
         let x:number[], y:number[];
         const dataDomain = [min, max];
@@ -275,18 +280,26 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         }
     }
 
-    @computed get chartDomainPadding() {
-        let dataDomain, categoryDomain;
+    @computed get dataAxis():"x"|"y" {
         if (this.props.horizontal) {
-            dataDomain = "x";
-            categoryDomain = "y";
+            return "x";
         } else {
-            dataDomain = "y";
-            categoryDomain = "x";
+            return "y";
         }
+    }
+
+    @computed get categoryAxis():"x"|"y" {
+        if (this.props.horizontal) {
+            return "y";
+        } else {
+            return "x";
+        }
+    }
+
+    @computed get chartDomainPadding() {
         return {
-            [dataDomain]:this.dataAxisDomainPadding,
-            [categoryDomain]:this.categoryAxisDomainPadding
+            [this.dataAxis]:this.dataAxisDomainPadding,
+            [this.categoryAxis]:this.categoryAxisDomainPadding
         };
     }
 
@@ -362,7 +375,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         const highlight = this.props.highlight;
         const size = this.props.size;
         // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
-        return scatterPlotSize(highlight, size);
+        return makeScatterPlotSizeFunction(highlight, size);
     }
 
     @computed get labels() {
@@ -577,7 +590,10 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                             standalone={false}
                             domainPadding={this.chartDomainPadding}
                             domain={this.plotDomain}
-                            singleQuadrantDomainPadding={false}
+                            singleQuadrantDomainPadding={{
+                                [this.dataAxis]:!!this.props.startDataAxisAtZero,
+                                [this.categoryAxis]:false
+                            }}
                         >
                             {this.title}
                             {this.legend}
@@ -616,6 +632,23 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
         );
     }
 
+    @autobind
+    private getTooltip() {
+        if (this.container && this.tooltipModel && this.props.tooltip) {
+            return (
+                <ScatterPlotTooltip
+                    placement={this.props.horizontal ? "bottom" : "right"}
+                    container={this.container}
+                    targetHovered={this.pointHovered}
+                    targetCoords={{x: this.tooltipModel.x + this.leftPadding, y: this.tooltipModel.y + this.topPadding}}
+                    overlay={this.props.tooltip(this.tooltipModel.datum)}
+                />
+            );
+        } else {
+            return <span></span>;
+        }
+    }
+
 
     render() {
         if (!this.props.data.length) {
@@ -626,15 +659,9 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
                 <Observer>
                     {this.getChart}
                 </Observer>
-                {this.container && this.tooltipModel && this.props.tooltip && (
-                    <ScatterPlotTooltip
-                        placement={this.props.horizontal ? "bottom" : "right"}
-                        container={this.container}
-                        targetHovered={this.pointHovered}
-                        targetCoords={{x: this.tooltipModel.x + this.leftPadding, y: this.tooltipModel.y + this.topPadding}}
-                        overlay={this.props.tooltip(this.tooltipModel.datum)}
-                    />
-                )}
+                <Observer>
+                    {this.getTooltip}
+                </Observer>
             </div>
         );
     }

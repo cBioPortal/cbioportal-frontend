@@ -32,7 +32,7 @@ import {
     CNA_STROKE_WIDTH,
     getCnaQueries, IBoxScatterPlotPoint, INumberAxisData, IScatterPlotData, IScatterPlotSampleData, IStringAxisData,
     makeBoxScatterPlotData, makeScatterPlotPointAppearance,
-    mutationRenderPriority, MutationSummary, mutationSummaryToAppearance, scatterPlotLegendData, scatterPlotSize,
+    mutationRenderPriority, MutationSummary, mutationSummaryToAppearance, scatterPlotLegendData,
     scatterPlotTooltip, boxPlotTooltip, scatterPlotZIndexSortBy
 } from "../plots/PlotsTabUtils";
 import {getOncoprintMutationType} from "../../../shared/components/oncoprint/DataUtils";
@@ -48,6 +48,7 @@ import BoxScatterPlot from "../../../shared/components/plots/BoxScatterPlot";
 import {ViewType} from "../plots/PlotsTab";
 import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 import {maxPage} from "../../../shared/components/lazyMobXTable/utils";
+import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
 
 export interface ExpressionWrapperProps {
     store:ResultsViewPageStore;
@@ -109,7 +110,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @observable showMutations: boolean = true;
 
-    @observable showCna: boolean = true;
+    @observable showCna: boolean = false;
 
     @observable selectedStudyIds: { [studyId: string]: boolean } = {};
 
@@ -276,7 +277,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
             } else {
                 return Promise.resolve(_.sortBy<any>(sortedData, d=>{
                     //Note: we have to use slice to convert Seamless immutable array to real array, otherwise jStat chokes
-                    return jStat.median(Array.prototype.slice((d.data.map((v:any)=>(v.value as number)))));
+                    return jStat.median(Array.prototype.slice.apply((d.data.map((v:any)=>(v.value as number)))));
                 }));
             }
         }
@@ -409,9 +410,10 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     @computed get fillOpacity() {
         if (!this.showMutations && this.showCna) {
+            // no fill for CNA mode
             return 0;
         } else {
-            return 1;
+            return 0.7;
         }
     }
 
@@ -482,6 +484,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                     <ExpressionTabBoxPlot
                         svgId={SVG_ID}
                         domainPadding={50}
+                        startDataAxisAtZero={true}
                         boxWidth={this.boxWidth}
                         axisLabelY={this.yAxisLabel}
                         data={this.boxPlotData.result}
@@ -489,7 +492,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         tooltip={this.tooltip}
                         horizontal={false}
                         logScale={this.logScale}
-                        size={scatterPlotSize}
+                        size={4}
                         fill={this.fill}
                         stroke={this.stroke}
                         strokeOpacity={this.strokeOpacity}
