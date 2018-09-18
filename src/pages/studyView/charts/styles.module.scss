@@ -5,6 +5,10 @@
     position: relative;
     flex-direction: column;
     display: flex;
+
+    &.analysisTarget {
+        border: 2px solid #e5e076;
+    }
 }
 
 .chartHeightOne {

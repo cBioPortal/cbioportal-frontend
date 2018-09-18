@@ -236,6 +236,7 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
                     genes={this.genes}
                     updateGeneQuery={this.updateGeneQuery}
                     hideSuccessMessage={this.props.location === GeneBoxType.STUDY_VIEW_PAGE}
+                    hideValidatingMessage={this.props.location === GeneBoxType.STUDY_VIEW_PAGE}
                 />
 
             </div>

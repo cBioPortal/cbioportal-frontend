@@ -5,7 +5,7 @@ import _ from "lodash";
 import client from "../api/cbioportalClientInstance";
 import internalClient from "../api/cbioportalInternalClientInstance";
 import { ClinicalDataCount, StudyViewFilter } from "shared/api/generated/CBioPortalAPIInternal";
-import { NA_COLOR, COLORS } from "pages/studyView/StudyViewUtils";
+import { NA_COLOR, COLORS, isFiltered } from "pages/studyView/StudyViewUtils";
 import { ClinicalDataCountWithColor } from "pages/studyView/StudyViewPageStore";
 
 type StudyViewClinicalDataCountsQuery = {
@@ -24,10 +24,17 @@ export default class StudyViewClinicalDataCountsCache extends MobxPromiseCache<S
                     let result: ClinicalDataCount[] = [];
                     if (_.isUndefined(colors)) {
                         let count = 0;
+                        let studyIds = q.filters.studyIds || [];
+                        if(_.isEmpty(studyIds)){
+                            studyIds = _.keys(_.reduce(q.filters.sampleIdentifiers,(acc, next)=>{
+                                acc[next.studyId] = true;
+                                return acc;
+                            },{} as {[id:string]:boolean}))
+                        }
                         result = await internalClient.fetchClinicalDataCountsUsingPOST({
                             attributeId: q.attribute.clinicalAttributeId,
                             clinicalDataType: q.attribute.patientAttribute ? 'PATIENT' : 'SAMPLE',
-                            studyViewFilter: { studyIds: q.filters.studyIds } as any
+                            studyViewFilter: { studyIds: studyIds } as any
                         });
                         colors = _.reduce(result, (acc: { [id: string]: string }, slice) => {
                             if (slice.value.toLowerCase().includes('na')) {
@@ -41,10 +48,8 @@ export default class StudyViewClinicalDataCountsCache extends MobxPromiseCache<S
                         this.colorCache[q.attribute.clinicalAttributeId + q.attribute.patientAttribute] = colors;
                     }
 
-                    if (_.isEmpty(result) ||
-                        !(_.isEmpty(q.filters.clinicalDataEqualityFilters) ||
-                            _.isEmpty(q.filters.cnaGenes) ||
-                            _.isEmpty(q.filters.mutatedGenes))) {
+                    //fetch data if its not already fetched
+                    if (_.isEmpty(result) || isFiltered(q.filters as any) || !_.isUndefined(q.filters.sampleIdentifiers)) {
                         result = await internalClient.fetchClinicalDataCountsUsingPOST({
                             attributeId: q.attribute.clinicalAttributeId,
                             clinicalDataType: q.attribute.patientAttribute ? 'PATIENT' : 'SAMPLE',

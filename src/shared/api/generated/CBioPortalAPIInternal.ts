@@ -238,6 +238,26 @@ export type GisticToGene = {
 export type Info = {
     'dbVersion': string
 
+        'gitBranch': string
+
+        'gitCommitId': string
+
+        'gitCommitIdAbbrev': string
+
+        'gitCommitIdDescribe': string
+
+        'gitCommitIdDescribeShort': string
+
+        'gitCommitMessageFull': string
+
+        'gitCommitMessageShort': string
+
+        'gitCommitMessageUserEmail': string
+
+        'gitCommitMessageUserName': string
+
+        'gitDirty': boolean
+
         'portalVersion': string
 
 };
@@ -338,9 +358,7 @@ export type MutationSpectrumFilter = {
 
 };
 export type Sample = {
-    'cancerTypeId': string
-
-        'copyNumberSegmentPresent': boolean
+    'copyNumberSegmentPresent': boolean
 
         'patientId': string
 
@@ -839,11 +857,15 @@ export default class CBioPortalAPIInternal {
             });
         };
     fetchFilteredSamplesUsingPOSTURL(parameters: {
+        'negateFilters' ? : boolean,
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/filtered-samples/fetch';
+        if (parameters['negateFilters'] !== undefined) {
+            queryParameters['negateFilters'] = parameters['negateFilters'];
+        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -859,12 +881,14 @@ export default class CBioPortalAPIInternal {
      * Fetch sample IDs by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchFilteredSamplesUsingPOST
+     * @param {boolean} negateFilters - Whether to negate the study view filters
      * @param {} studyViewFilter - Study view filter
      */
     fetchFilteredSamplesUsingPOSTWithHttpInfo(parameters: {
+        'negateFilters' ? : boolean,
         'studyViewFilter': StudyViewFilter,
         $queryParameters ? : any,
-        $domain ? : string
+            $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
@@ -877,6 +901,10 @@ export default class CBioPortalAPIInternal {
         return new Promise(function(resolve, reject) {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
+
+            if (parameters['negateFilters'] !== undefined) {
+                queryParameters['negateFilters'] = parameters['negateFilters'];
+            }
 
             if (parameters['studyViewFilter'] !== undefined) {
                 body = parameters['studyViewFilter'];
@@ -903,12 +931,14 @@ export default class CBioPortalAPIInternal {
      * Fetch sample IDs by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchFilteredSamplesUsingPOST
+     * @param {boolean} negateFilters - Whether to negate the study view filters
      * @param {} studyViewFilter - Study view filter
      */
     fetchFilteredSamplesUsingPOST(parameters: {
+            'negateFilters' ? : boolean,
             'studyViewFilter': StudyViewFilter,
             $queryParameters ? : any,
-            $domain ? : string
+                $domain ? : string
         }): Promise < Array < Sample >
         > {
             return this.fetchFilteredSamplesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
@@ -2418,7 +2448,7 @@ export default class CBioPortalAPIInternal {
     };
 
     /**
-     * Fetch sample IDs by study view filter
+     * Fetch sample counts by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchMolecularProfileSampleCountsUsingPOST
      * @param {} studyViewFilter - Study view filter
@@ -2462,7 +2492,7 @@ export default class CBioPortalAPIInternal {
     };
 
     /**
-     * Fetch sample IDs by study view filter
+     * Fetch sample counts by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchMolecularProfileSampleCountsUsingPOST
      * @param {} studyViewFilter - Study view filter

@@ -83,13 +83,6 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
         return (event: React.MouseEvent<T>) => this.store.selectCancerType(node as CancerType, event.ctrlKey);
     }
 
-    handleStudiesCheckbox<T>(event: React.FormEvent<T>, clickedStudyIds: string[]) {
-        if ((event.target as HTMLInputElement).checked)
-            this.store.selectableSelectedStudyIds = _.union(this.store.selectableSelectedStudyIds, clickedStudyIds);
-        else
-            this.store.selectableSelectedStudyIds = _.difference(this.store.selectableSelectedStudyIds, clickedStudyIds);
-    }
-
     CancerTypeList = observer(() => {
         let cancerTypes = this.logic.cancerTypeListView.getChildCancerTypes(this.store.treeData.rootCancerType);
         return (

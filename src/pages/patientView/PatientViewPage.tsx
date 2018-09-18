@@ -395,7 +395,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         uniqueSampleKeyToTumorType={patientViewPageStore.uniqueSampleKeyToTumorType}
                                         molecularProfileIdToMolecularProfile={patientViewPageStore.molecularProfileIdToMolecularProfile.result}
                                         variantCountCache={patientViewPageStore.variantCountCache}
-                                        genomeNexusEnrichmentCache={patientViewPageStore.genomeNexusEnrichmentCache}
+                                        indexedVariantAnnotations={patientViewPageStore.indexedVariantAnnotations}
                                         discreteCNACache={patientViewPageStore.discreteCNACache}
                                         mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
                                         oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}

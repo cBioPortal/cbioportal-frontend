@@ -1574,6 +1574,14 @@
             "type": "string"
           },
           {
+            "name": "entrezGeneId",
+            "in": "query",
+            "description": "Entrez Gene ID",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
             "name": "projection",
             "in": "query",
             "description": "Level of detail of the response",
@@ -3253,8 +3261,7 @@
             "type": "string",
             "enum": [
               "sampleId",
-              "sampleType",
-              "cancerTypeId"
+              "sampleType"
             ]
           },
           {
@@ -3443,8 +3450,7 @@
             "type": "string",
             "enum": [
               "sampleId",
-              "sampleType",
-              "cancerTypeId"
+              "sampleType"
             ]
           },
           {
@@ -4748,9 +4754,6 @@
         "studyId"
       ],
       "properties": {
-        "cancerTypeId": {
-          "type": "string"
-        },
         "copyNumberSegmentPresent": {
           "type": "boolean"
         },
