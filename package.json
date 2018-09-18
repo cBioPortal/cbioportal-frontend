@@ -99,6 +99,7 @@
     "chart.js": "^2.6.0",
     "classnames": "^2.2.5",
     "clinical-timeline": "0.0.18",
+    "contrast": "^1.0.1",
     "convert-css-color-name-to-hex": "^0.1.1",
     "copy-webpack-plugin": "^4.0.1",
     "cross-env": "^3.1.4",
