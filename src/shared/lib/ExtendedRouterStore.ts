@@ -14,6 +14,7 @@ export interface PortalSession {
     id:string;
     query:{ [key:string] : any };
     path:string;
+    version:number;
 }
 
 function saveRemoteSession(data:any){
@@ -46,6 +47,19 @@ function normalizeLegacySession(sessionData:any){
 
 export default class ExtendedRouterStore extends RouterStore {
 
+    public urlLengthThresholdForSession: number;
+
+    public saveRemoteSession = saveRemoteSession;
+
+    public getRemoteSession = getRemoteSession;
+
+    public sessionVersion = 2;
+
+    constructor(urlLengthThresholdForSession:number){
+        super();
+        this.urlLengthThresholdForSession = urlLengthThresholdForSession || AppConfig.urlLengthThresholdForSession || 10;
+    }
+
     // this has to be computed to avoid annoying problem where
     // remoteSessionData fires every time new route is pushed, even
     // if sessionId has stayed the same
@@ -56,7 +70,7 @@ export default class ExtendedRouterStore extends RouterStore {
     remoteSessionData = remoteData({
         invoke: async () => {
             if (this.sessionId && this.sessionId !== "pending") {
-                let sessionData = await getRemoteSession(this.sessionId);
+                let sessionData = await this.getRemoteSession(this.sessionId);
 
                 // if it has no version, it's a legacy session and needs to be normalized
                 if (sessionData.version === undefined) {
@@ -71,10 +85,13 @@ export default class ExtendedRouterStore extends RouterStore {
         },
         onResult:()=> {
             if (this.remoteSessionData.result) {
+                // we have to do this because session service attaches
+                // other data to response
                 this._session = {
                     id: this.remoteSessionData.result!.id,
                     query: this.remoteSessionData.result!.data,
-                    path: this.location.pathname
+                    path: this.location.pathname,
+                    version:this.remoteSessionData.result!.version
                 };
             } else {
                 if (this._session && this._session.id !== "pending") delete this._session;
@@ -105,7 +122,7 @@ export default class ExtendedRouterStore extends RouterStore {
         path = URL.resolve('/', path);
 
         // we don't use session
-        if (!this.sessionEnabledForPath(path) || JSON.stringify(newQuery).length < (AppConfig.urlLengthThresholdForSession || 10)){
+        if (!this.sessionEnabledForPath(path) || JSON.stringify(newQuery).length < this.urlLengthThresholdForSession){
             // if there happens to be session, kill it because we're going URL, baby
             delete this._session;
             this.push( URL.format({pathname: path, query: newQuery, hash:this.location.hash}) );
@@ -115,16 +132,16 @@ export default class ExtendedRouterStore extends RouterStore {
                 const pendingSession = {
                     id:'pending',
                     query:newQuery,
-                    path:path
+                    path:path,
+                    version:this.sessionVersion
                 };
                 // add session version
-                pendingSession.query.version = 2;
                 this._session = pendingSession;
                 this.push( URL.format({pathname: path, query: { session_id:'pending'}, hash:this.location.hash}) );
-                saveRemoteSession(pendingSession.query).then((key)=>{
-                    this._session!.id = key.id;
+                this.saveRemoteSession(pendingSession.query).then((sessionResponse)=>{
+                    this._session!.id = sessionResponse.id;
                     // we use replace because we don't want the pending state in the history
-                    this.replace( URL.format({pathname: path, query: {session_id:key.id}, hash:this.location.hash}) );
+                    this.replace( URL.format({pathname: path, query: {session_id:sessionResponse.id}, hash:this.location.hash}) );
                 });
             } else { // we already have a session but we only need to update path or hash
                 this.push( URL.format({pathname: path, query: {session_id:this._session.id}, hash:this.location.hash}) );
@@ -133,7 +150,7 @@ export default class ExtendedRouterStore extends RouterStore {
 
     }
 
-    @observable public _session:PortalSession | null = null;
+    @observable public _session:PortalSession | undefined;
 
     @computed
     public get query(){
