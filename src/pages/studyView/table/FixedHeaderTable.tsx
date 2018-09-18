@@ -154,7 +154,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                     <input placeholder={"Search..."} type="text" onInput={this.onFilterTextChange()}
                            className={classnames('form-control', styles.tableSearchInput)}/>
                     <If condition={this.props.showSelectSamples}>
-                        <button className="btn btn-primary btn-sm" onClick={this.afterSelectingRows}>Select Samples</button>
+                        <button className={classnames("btn btn-primary btn-sm", styles.selectSamplesBtn)} onClick={this.afterSelectingRows}>Select Samples</button>
                     </If>
                 </div>
             </div>
