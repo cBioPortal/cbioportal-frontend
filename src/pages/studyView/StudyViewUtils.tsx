@@ -445,6 +445,7 @@ export function generateNumericalData(numericalBins: DataBin[]): BarDatum[] {
     const xShift = (
         isLogScaleByDataBins(numericalBins) &&
         numericalBins[0].start !== undefined &&
+        numericalBins[0].start !== 0 &&
         !isIntegerPowerOfTen(numericalBins[0].start)
     ) ? 2 : 1;
 
