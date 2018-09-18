@@ -41,8 +41,7 @@ export function createQueryStore() {
 
         // need to come up with better place to put app globals (things used by different routes)
         win.currentQueryStore = queryStore;
-
-        win.routingStore.updateRoute(query, "results");
+        win.routingStore.updateRoute(query, "results", true);
 
     };
 
