@@ -198,7 +198,7 @@ export type Evidence = {
 
         'lastEdit': string
 
-        'levelOfEvidence': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_P1" | "LEVEL_P2" | "LEVEL_P3" | "LEVEL_P4" | "LEVEL_D1" | "LEVEL_D2" | "LEVEL_D3"
+        'levelOfEvidence': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Px4" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
 
         'oncoTreeType': TumorType
 
@@ -218,9 +218,9 @@ export type IndicatorQueryResp = {
 
         'geneSummary': string
 
-        'highestResistanceLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_P1" | "LEVEL_P2" | "LEVEL_P3" | "LEVEL_P4" | "LEVEL_D1" | "LEVEL_D2" | "LEVEL_D3"
+        'highestResistanceLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Px4" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
 
-        'highestSensitiveLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_P1" | "LEVEL_P2" | "LEVEL_P3" | "LEVEL_P4" | "LEVEL_D1" | "LEVEL_D2" | "LEVEL_D3"
+        'highestSensitiveLevel': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Px4" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
 
         'hotspot': boolean
 
@@ -230,9 +230,9 @@ export type IndicatorQueryResp = {
 
         'oncogenic': string
 
-        'otherSignificantResistanceLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_P1" | "LEVEL_P2" | "LEVEL_P3" | "LEVEL_P4" | "LEVEL_D1" | "LEVEL_D2" | "LEVEL_D3" >
+        'otherSignificantResistanceLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Px4" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" >
 
-        'otherSignificantSensitiveLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_P1" | "LEVEL_P2" | "LEVEL_P3" | "LEVEL_P4" | "LEVEL_D1" | "LEVEL_D2" | "LEVEL_D3" >
+        'otherSignificantSensitiveLevels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Px4" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" >
 
         'query': Query
 
@@ -296,7 +296,7 @@ export type EvidenceQueryRes = {
 
         'id': string
 
-        'levelOfEvidences': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_P1" | "LEVEL_P2" | "LEVEL_P3" | "LEVEL_P4" | "LEVEL_D1" | "LEVEL_D2" | "LEVEL_D3" >
+        'levelOfEvidences': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Px4" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" >
 
         'oncoTreeTypes': Array < TumorType >
 
@@ -354,7 +354,7 @@ export type IndicatorQueryTreatment = {
 
         'fdaApproved': boolean
 
-        'level': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_P1" | "LEVEL_P2" | "LEVEL_P3" | "LEVEL_P4" | "LEVEL_D1" | "LEVEL_D2" | "LEVEL_D3"
+        'level': "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Px4" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3"
 
         'pmids': Array < string >
 
@@ -378,7 +378,7 @@ export type EvidenceQueries = {
 
         'highestLevelOnly': boolean
 
-        'levels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_P1" | "LEVEL_P2" | "LEVEL_P3" | "LEVEL_P4" | "LEVEL_D1" | "LEVEL_D2" | "LEVEL_D3" >
+        'levels': Array < "LEVEL_0" | "LEVEL_1" | "LEVEL_2A" | "LEVEL_2B" | "LEVEL_3" | "LEVEL_3A" | "LEVEL_3B" | "LEVEL_4" | "LEVEL_R1" | "LEVEL_R2" | "LEVEL_R3" | "LEVEL_Px1" | "LEVEL_Px2" | "LEVEL_Px3" | "LEVEL_Px4" | "LEVEL_Dx1" | "LEVEL_Dx2" | "LEVEL_Dx3" >
 
         'queries': Array < Query >
 

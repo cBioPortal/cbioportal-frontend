@@ -10,10 +10,10 @@ import {
     fetchCosmicData, fetchCivicGenes, fetchCivicVariants
 } from "shared/lib/StoreUtils";
 import {IMutationMapperConfig} from "shared/components/mutationMapper/MutationMapper";
-import GenomeNexusEnrichmentCache from "shared/cache/GenomeNexusEnrichment";
 import MutationCountCache from "shared/cache/MutationCountCache";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 import MutationMapperStore from "shared/components/mutationMapper/MutationMapperStore";
+import { VariantAnnotation } from "shared/api/generated/GenomeNexusAPI";
 
 export default class ResultsViewMutationMapperStore extends MutationMapperStore
 {
@@ -29,7 +29,6 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
                 // (which will be done in the getter thats passed in here) so that the cache itself is observable
                 // and we will react when it changes to a new object.
                 getMutations:()=>Mutation[],
-                protected genomeNexusEnrichmentCache: ()=>GenomeNexusEnrichmentCache,
                 private getMutationCountCache: ()=>MutationCountCache,
                 public studyIdToStudy:MobxPromise<{[studyId:string]:CancerStudy}>,
                 public molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>,
@@ -37,6 +36,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
                 public studiesForSamplesWithoutCancerTypeClinicalData: MobxPromise<CancerStudy[]>,
                 public germlineConsentedSamples:MobxPromise<SampleIdentifier[]>,
                 public indexedHotspotData:MobxPromise<IHotspotIndex|undefined>,
+                public indexedVariantAnnotations:MobxPromise<{[genomicLocation: string]: VariantAnnotation}|undefined>,
                 public uniqueSampleKeyToTumorType:{[uniqueSampleKey:string]:string},
                 public oncoKbData:IOncoKbDataWrapper)
     {
@@ -45,10 +45,10 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
             gene,
             getMutations,
             indexedHotspotData,
+            indexedVariantAnnotations,
             oncoKbAnnotatedGenes,
             oncoKbData,
-            uniqueSampleKeyToTumorType,
-            genomeNexusEnrichmentCache,
+            uniqueSampleKeyToTumorType
         );
 
         labelMobxPromises(this);
@@ -91,6 +91,6 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
     }, undefined);
 
     @cached get downloadDataFetcher(): MutationTableDownloadDataFetcher {
-        return new MutationTableDownloadDataFetcher(this.mutationData, this.genomeNexusEnrichmentCache, this.getMutationCountCache);
+        return new MutationTableDownloadDataFetcher(this.mutationData, this.getMutationCountCache);
     }
 }
