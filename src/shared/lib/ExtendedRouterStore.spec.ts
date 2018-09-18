@@ -42,11 +42,24 @@ describe('ExtendedRoutingStore', () => {
             param2: 'altered',
             param3: 'new'
         });
-
+//
         assert.equal(routingStore.location.pathname, '/results', 'sets path appropriately');
         assert.deepEqual(routingStore.location.query, {param2: 'altered', param3: 'new'},'removes param1');
 
     });
+
+    it('Updating route with clear=true will clear all params and except new ones', () => {
+
+        routingStore.updateRoute({
+            param3: 'cleared'
+        }, undefined, true);
+
+
+        assert.deepEqual(routingStore.query, {param3: 'cleared'},'removes param1');
+        assert.deepEqual(routingStore.location.pathname,'/results');
+
+    });
+
 
     it('Updating route results in new session with id in url and data in _session when session is enabled', (done) => {
 

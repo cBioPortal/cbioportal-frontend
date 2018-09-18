@@ -106,17 +106,25 @@ export default class ExtendedRouterStore extends RouterStore {
         return _.some(tests,(test)=>test.test(path));
     }
 
-    @action updateRoute(newParams: QueryParams, path = this.location.pathname) {
+    @action updateRoute(newParams: QueryParams, path:string | undefined = undefined, clear = false) {
+        // default to current path
+        path = (path !== undefined) ? path : this.location.pathname;
 
-        let newQuery = _.clone(this.query);
-
-        _.each(newParams, (v, k: string)=>{
-            if (v === undefined) {
-                delete newQuery[k];
-            } else {
-                newQuery[k] = v;
-            }
-        });
+        // if we're not clearing, we want to merge newParams onto existing query
+        // but if we're clearing, we want to use newParams ONLY and wipe out existing query;
+        let newQuery:any;
+        if (!clear) {
+            newQuery = _.clone(this.query);
+            _.each(newParams, (v, k: string) => {
+                if (v === undefined) {
+                    delete newQuery[k];
+                } else {
+                    newQuery[k] = v;
+                }
+            });
+        } else {
+            newQuery = newParams;
+        }
 
         // put a leading slash if there isn't one
         path = URL.resolve('/', path);
@@ -128,6 +136,7 @@ export default class ExtendedRouterStore extends RouterStore {
             this.push( URL.format({pathname: path, query: newQuery, hash:this.location.hash}) );
         } else {
             // we are using session: do we need to make a new session?
+
             if (!this._session || !_.isEqual(this._session.query,newQuery) || _.size(newParams) > 0) {
                 const pendingSession = {
                     id:'pending',
