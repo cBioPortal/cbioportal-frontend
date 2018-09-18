@@ -5,7 +5,16 @@ import {ChartContainer, IChartContainerProps} from 'pages/studyView/charts/Chart
 import { MSKTab, MSKTabs } from "../../shared/components/MSKTabs/MSKTabs";
 import { reaction, observable } from 'mobx';
 import { If } from 'react-if';
-import {ChartMeta, ChartType, ChartTypeEnum, DataBinMethodConstants, StudyViewPageStore, AnalysisGroup, UniqueKey, CUSTOM_CHART_KEYS} from 'pages/studyView/StudyViewPageStore';
+import {
+    ChartMeta,
+    ChartType,
+    ChartTypeEnum,
+    DataBinMethodConstants,
+    StudyViewPageStore,
+    AnalysisGroup,
+    CUSTOM_CHART_KEYS,
+    UniqueKey
+} from 'pages/studyView/StudyViewPageStore';
 import SummaryHeader from 'pages/studyView/SummaryHeader';
 import {Gene, SampleIdentifier, ClinicalAttribute} from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -21,6 +30,7 @@ import ReactGridLayout from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import {stringListToSet} from "../../shared/lib/StringUtils";
+import {StudyViewComponentLoader} from "./charts/StudyViewComponentLoader";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -60,11 +70,17 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             addGeneFilters: (entrezGeneIds: number[]) => {
                 this.store.addGeneFilters(entrezGeneIds);
             },
+            removeGeneFilter: (entrezGeneId:number) => {
+                this.store.removeGeneFilter(entrezGeneId);
+            },
             resetGeneFilter: (chartMeta: ChartMeta) => {
                 this.store.resetGeneFilter();
             },
             resetCNAGeneFilter: (chartMeta: ChartMeta) => {
                 this.store.resetCNAGeneFilter();
+            },
+            removeCNAGeneFilter: (filter:CopyNumberGeneFilterElement) => {
+                this.store.removeCNAGeneFilters(filter);
             },
             addCNAGeneFilters: (filters:CopyNumberGeneFilterElement[]) => {
                 this.store.addCNAGeneFilters(filters);
@@ -376,17 +392,20 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                 geneQuery={this.store.geneQueryStr}
                                 selectedSamples={this.store.selectedSamples.result!}
                                 updateCustomCasesFilter={(cases: SampleIdentifier[], keepCurrent?:boolean)=>{
-                                    this.handlers.updateChartSampleIdentifierFilter('customFilters',cases,keepCurrent);
+                                    this.handlers.updateChartSampleIdentifierFilter(UniqueKey.SELECT_CASES_BY_IDS,cases,keepCurrent);
                                 }}
                                 updateSelectedGenes={this.handlers.updateSelectedGenes}
                                 studyWithSamples={this.store.studyWithSamples.result}
                                 filter={this.store.userSelections}
+                                allGenes={this.store.allGenes.result}
                                 attributesMetaSet={this.store.chartMetaSet}
                                 user={AppConfig.userEmailAddress}
                                 getClinicalData={this.store.getDownloadDataPromise}
                                 onSubmitQuery={()=> this.store.onSubmitQuery()}
                                 updateClinicalDataEqualityFilter={this.handlers.onValueSelection}
                                 updateClinicalDataIntervalFilter={this.handlers.onUpdateIntervalFilters}
+                                removeGeneFilter={this.handlers.removeGeneFilter}
+                                removeCNAGeneFilter={this.handlers.removeCNAGeneFilter}
                                 clearCNAGeneFilter={this.handlers.clearCNAGeneFilter}
                                 clearGeneFilter={this.handlers.clearGeneFilter}
                                 clearChartSampleIdentifierFilter={this.handlers.clearChartSampleIdentifierFilter}

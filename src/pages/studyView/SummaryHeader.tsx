@@ -1,6 +1,11 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { Sample, ClinicalDataIntervalFilterValue, SampleIdentifier } from 'shared/api/generated/CBioPortalAPIInternal';
+import {
+    Sample,
+    ClinicalDataIntervalFilterValue,
+    SampleIdentifier,
+    CopyNumberGeneFilterElement
+} from 'shared/api/generated/CBioPortalAPIInternal';
 import { observer } from "mobx-react";
 import { computed, observable, action } from 'mobx';
 import styles from "./styles.module.scss";
@@ -21,6 +26,8 @@ import SelectedInfo from "./SelectedInfo/SelectedInfo";
 import classnames from "classnames";
 import { getPercentage } from 'shared/lib/FormatUtils';
 import MobxPromise from 'mobxpromise';
+import {GroupLogic} from "./filters/groupLogic/GroupLogic";
+import {isFiltered} from "./StudyViewUtils";
 const CheckedSelect = require("react-select-checked").CheckedSelect;
 
 export interface ISummaryHeaderProps {
@@ -32,10 +39,13 @@ export interface ISummaryHeaderProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
     attributesMetaSet: {[id:string]:ChartMeta};
     user?: string;
+    allGenes: Gene[];
     getClinicalData: () => Promise<string>;
     onSubmitQuery:() => void
     updateClinicalDataEqualityFilter: (chartMeta: ChartMeta, value: string[]) => void;
     updateClinicalDataIntervalFilter: (chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) => void;
+    removeGeneFilter: (entrezGeneId: number) => void;
+    removeCNAGeneFilter: (filter: CopyNumberGeneFilterElement) => void;
     clearGeneFilter: () => void;
     clearCNAGeneFilter: () => void;
     clearChartSampleIdentifierFilter: (chartMeta: ChartMeta) => void;
@@ -270,8 +280,11 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                 <UserSelections
                     filter={this.props.filter}
                     attributesMetaSet={this.props.attributesMetaSet}
+                    allGenes={this.props.allGenes}
                     updateClinicalDataEqualityFilter={this.props.updateClinicalDataEqualityFilter}
                     updateClinicalDataIntervalFilter={this.props.updateClinicalDataIntervalFilter}
+                    removeGeneFilter={this.props.removeGeneFilter}
+                    removeCNAGeneFilter={this.props.removeCNAGeneFilter}
                     clearCNAGeneFilter={this.props.clearCNAGeneFilter}
                     clearGeneFilter={this.props.clearGeneFilter}
                     clearChartSampleIdentifierFilter={this.props.clearChartSampleIdentifierFilter}

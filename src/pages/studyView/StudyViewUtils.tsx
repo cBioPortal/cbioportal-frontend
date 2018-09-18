@@ -88,11 +88,19 @@ export const FIXED_COLORS: {[clinicalAttribute: string]: string} = {
     M: "#316395"
 };
 
+export const PRIMARY_COLOR = '#2986E2'; // Study View Blue
+
 export const NA_COLOR = '#CCCCCC';
 export const UNSELECTED_COLOR = '#808080';
 export const NA_DATA = "NA";
 export const EXPONENTIAL_FRACTION_DIGITS = 3;
 export const ONE_GRID_TABLE_ROWS = 8;
+export const MUTATED_GENE_COLOR='#008000'; // green
+export const DEL_COLOR = '#0000FF'; // blue
+export const AMP_COLOR = '#FF0000'; // red
+export const FILTER_TITLE_COLOR = '#A9A9A9'; // darkgray
+export const FILTER_CONTENT_COLOR = PRIMARY_COLOR;
+
 
 // ---- These are the settings from configs.json in the previous study view ----
 // TODO: figure out a way to custom the following settings
@@ -303,7 +311,7 @@ export function getVirtualStudyDescription(
 
                 return cnaGene.alterations.map(alteration => {
                     let geneSymbol = entrezIdSet[alteration.entrezGeneId] || alteration.entrezGeneId
-                    return geneSymbol + "-" + (alteration.alteration === -2 ? 'DEL' : 'AMP')
+                    return geneSymbol + "-" + getCNAByAlteration(alteration.alteration)
                 }).join(', ').trim();
             }).map(line => '  - ' + line));
         }
@@ -774,6 +782,12 @@ export function getCNAByAlteration(alteration: number) {
     return '';
 }
 
+export function getCNAColorByAlteration(alteration: number):string|undefined {
+    if ([-2, 2].includes(alteration))
+        return alteration === -2 ? DEL_COLOR : AMP_COLOR;
+    return undefined;
+}
+
 export function getDefaultChartTypeByClinicalAttribute(clinicalAttribute: ClinicalAttribute): ChartType | undefined {
     if (DEFAULT_ATTRS_SHOW_AS_TABLE.includes(getClinicalAttributeUniqueKey(clinicalAttribute))) {
         return ChartTypeEnum.TABLE;
@@ -1050,4 +1064,9 @@ export function getSamplesByExcludingFiltersOnChart(
     return internalClient.fetchFilteredSamplesUsingPOST({
         studyViewFilter: updatedFilter
     });
+}
+
+export function getHugoSymbolByEntrezGeneId(allGenes:Gene[], entrezGeneId: number) {
+    let result = _.find(allGenes, gene => gene.entrezGeneId === entrezGeneId);
+    return result === undefined ? undefined : result.hugoGeneSymbol;
 }

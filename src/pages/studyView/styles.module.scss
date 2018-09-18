@@ -33,6 +33,7 @@
 }
 .userSelections {
     font-size: 12px;
+    margin: 5px;
 
     .filter {
         padding-right: 10px;
@@ -71,3 +72,8 @@
 .summaryHeaderItem {
     margin: 0 2px !important;
 }
+
+.summaryClearAllBtn {
+  margin: 2px 0 !important;
+}
+

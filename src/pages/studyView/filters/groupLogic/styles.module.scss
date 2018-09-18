@@ -1,0 +1,19 @@
+.main {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 2px 0;
+}
+
+.text {
+    font-weight: bold;
+    margin: 0 5px;
+}
+
+.mostLeft {
+    margin-left: 0;
+}
+
+.mostRight {
+    margin-right: 0;
+}
