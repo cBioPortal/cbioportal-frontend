@@ -5,7 +5,7 @@ import {ChartContainer, IChartContainerProps} from 'pages/studyView/charts/Chart
 import { MSKTab, MSKTabs } from "../../shared/components/MSKTabs/MSKTabs";
 import { reaction, observable } from 'mobx';
 import { If } from 'react-if';
-import {ChartMeta, ChartType, DataBinMethodConstants, StudyViewPageStore, AnalysisGroup} from 'pages/studyView/StudyViewPageStore';
+import {ChartMeta, ChartType, ChartTypeEnum, DataBinMethodConstants, StudyViewPageStore, AnalysisGroup, UniqueKey, CUSTOM_CHART_KEYS} from 'pages/studyView/StudyViewPageStore';
 import SummaryHeader from 'pages/studyView/SummaryHeader';
 import {Gene, SampleIdentifier, ClinicalAttribute} from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
@@ -17,6 +17,9 @@ import {ClinicalDataTab} from "./tabs/ClinicalDataTab";
 import setWindowVariable from "../../shared/lib/setWindowVariable";
 import * as _ from 'lodash';
 import ErrorBox from 'shared/components/errorBox/ErrorBox';
+import ReactGridLayout from 'react-grid-layout';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -30,7 +33,6 @@ export interface IStudyViewPageProps {
 export default class StudyViewPage extends React.Component<IStudyViewPageProps, {}> {
 
     private store: StudyViewPageStore;
-    private queryInput: HTMLInputElement;
     private handlers: any;
 
     @observable showErrorMessage = true;
@@ -76,6 +78,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
                 this.store.resetFilterAndChangeChartVisibility(chartMeta, false);
             },
+            onChangeChartType: (chartMeta: ChartMeta, newChartType: ChartType) => {
+                this.store.changeChartType(chartMeta, newChartType);
+            },
             updateChartSampleIdentifierFilter: (uniqueKey:string, cases: SampleIdentifier[], keepCurrent?:boolean) => {
                 this.store.updateChartSampleIdentifierFilter(uniqueKey, cases, keepCurrent);
             },
@@ -96,7 +101,10 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             },
             updateChartsVisibility: (visibleChartIds: string[]) => {
                 this.store.updateChartsVisibility(visibleChartIds);
-            }
+            },
+            setCustomChartFilters: (chartMeta: ChartMeta, values: string[]) => {
+                this.store.setCustomChartFilters(chartMeta, values);
+            },
 
         }
 
@@ -133,14 +141,31 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         };
 
         switch (chartMeta.chartType) {
-            case ChartType.PIE_CHART: {
-                props.promise = this.store.studyViewClinicalDataCountsCache.get({
-                    attribute: chartMeta.clinicalAttribute!,
-                    filters: this.store.filters
-                });
-                props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey);
-                props.onValueSelection = this.handlers.onValueSelection;
-                props.onResetSelection = this.handlers.onValueSelection;
+            case ChartTypeEnum.PIE_CHART: {
+
+                //if the chart is one of the custom charts then get the appropriate promise
+                if (_.includes(CUSTOM_CHART_KEYS, chartMeta.uniqueKey)) {
+                    props.filters = this.store.getCustomChartFilters(props.chartMeta ? props.chartMeta.uniqueKey : '');
+                    props.onValueSelection = this.handlers.setCustomChartFilters;
+                    props.onResetSelection = this.handlers.setCustomChartFilters;
+
+                    if (chartMeta.uniqueKey === UniqueKey.SAMPLES_PER_PATIENT) {
+                        props.promise = this.store.samplesPerPatientData;
+                    } else if (chartMeta.uniqueKey === UniqueKey.WITH_MUTATION_DATA) {
+                        props.promise = this.store.withMutationData;
+                    } else if (chartMeta.uniqueKey === UniqueKey.WITH_CNA_DATA) {
+                        props.promise = this.store.withCnaData;
+                    }
+                } else {
+                    props.promise = this.store.studyViewClinicalDataCountsCache.get({
+                        attribute: chartMeta.clinicalAttribute!,
+                        filters: this.store.filters
+                    });
+                    props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey);
+                    props.onValueSelection = this.handlers.onValueSelection;
+                    props.onResetSelection = this.handlers.onValueSelection;
+                }
+                props.onChangeChartType = this.handlers.onChangeChartType;
                 props.download = [
                     {
                         initDownload: () => this.store.getClinicalData(chartMeta),
@@ -153,7 +178,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 ];
                 break;
             }
-            case ChartType.BAR_CHART: {
+            case ChartTypeEnum.BAR_CHART: {
                 props.promise = this.store.studyViewClinicalDataBinCountsCache.get({
                     attribute: chartMeta.clinicalAttribute!,
                     filters: this.store.filters,
@@ -179,7 +204,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 ];
                 break;
             }
-            case ChartType.TABLE: {
+            case ChartTypeEnum.TABLE: {
                 props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey);
                 props.promise = this.store.studyViewClinicalDataCountsCache.get({
                     attribute: chartMeta.clinicalAttribute!,
@@ -187,6 +212,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 });
                 props.onValueSelection = this.handlers.onValueSelection;
                 props.onResetSelection = this.handlers.onValueSelection;
+                props.onChangeChartType = this.handlers.onChangeChartType;
                 props.download = [
                     {
                         // TODO implement a proper data download function
@@ -196,7 +222,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 ];
                 break;
             }
-            case ChartType.MUTATED_GENES_TABLE: {
+            case ChartTypeEnum.MUTATED_GENES_TABLE: {
                 props.filters = this.store.getMutatedGenesTableFilters();
                 props.promise = this.store.mutatedGeneData;
                 props.onValueSelection = this.handlers.addGeneFilters;
@@ -213,7 +239,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 ];
                 break;
             }
-            case ChartType.CNA_GENES_TABLE: {
+            case ChartTypeEnum.CNA_GENES_TABLE: {
                 props.filters = this.store.getCNAGenesTableFilters();
                 props.promise = this.store.cnaGeneData;
                 props.onValueSelection = this.handlers.addCNAGeneFilters;
@@ -230,12 +256,16 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 ];
                 break;
             }
-            case ChartType.SURVIVAL: {
+            case ChartTypeEnum.SURVIVAL: {
                 props.promise = this.store.getSurvivalData(chartMeta);
                 props.download = [
                     {
                         initDownload: () => this.store.getSurvivalDownloadData(chartMeta),
                         type: 'TSV'
+                    }, {
+                        type: 'SVG'
+                    }, {
+                        type: 'PDF'
                     }
                 ];
                 // only want to pass these in when necessary, otherwise charts will unnecessarily update when they change
@@ -243,7 +273,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 props.patientToAnalysisGroup = this.store.patientToAnalysisGroup;
                 break;
             }
-            case ChartType.SCATTER: {
+            case ChartTypeEnum.SCATTER: {
                 props.filters = this.store.getChartSampleIdentifiersFilter(props.chartMeta?props.chartMeta.uniqueKey:'');
                 props.promise = this.store.mutationCountVsFractionGenomeAlteredData;
                 props.selectedSamplesMap = this.store.selectedSamplesMap;
@@ -255,12 +285,38 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     this.handlers.updateChartSampleIdentifierFilter(props.chartMeta?props.chartMeta.uniqueKey:'',[]);
                 }
                 props.sampleToAnalysisGroup = this.store.sampleToAnalysisGroup;
+                props.download = [
+                    {
+                        initDownload: () => this.store.getScatterDownloadData(chartMeta),
+                        type: 'TSV'
+                    }, {
+                        type: 'SVG'
+                    }, {
+                        type: 'PDF'
+                    }
+                ];
+
                 break;
             }
             default:
                 break;
         }
-        return <ChartContainer key={chartMeta.uniqueKey} {...(props as any)}/>;
+
+        // Using custom component inside of the GridLayout creates too many chaos as mentioned here
+        // https://github.com/STRML/react-grid-layout/issues/299
+        // Option 1:    Always create div wrapper out of your custom component, but this solves all the issues.
+        // Option 2:    Expose style, className in your component and apply all the properties in your component
+        //              first division tag. And remember, you component has to use div as first child.
+        //              This solution only works with grid layout, not resizing.
+        // Decided to go with option 1 due to following reasons:
+        // 1.   The ChartContainer will be used to include all charts in the study view.
+        //      Then across the study page, there should be only one place to include ChartContainer component.
+        // 2.   The maintainer of RGL repo currently not actively accepts pull requests. So we don't know when the
+        //      issue will be solved.
+        return (
+        <div key={chartMeta.uniqueKey}>
+            <ChartContainer key={chartMeta.uniqueKey} {...(props as any)}/>
+        </div>);
     };
 
     private handleTabChange(id: string) {
@@ -335,8 +391,18 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                             />
                             <div className={styles.studyViewFlexContainer}>
                                 {this.store.initialClinicalDataCounts.isComplete &&
-                                this.store.initialClinicalDataBins.isComplete &&
-                                this.store.visibleAttributes.map(this.renderAttributeChart)}
+                                this.store.initialClinicalDataBins.isComplete && (
+                                    <ReactGridLayout className="layout"
+                                                     style={{width: this.store.containerWidth}}
+                                                     width={this.store.containerWidth}
+                                                     cols={this.store.studyViewPageLayoutProps.cols}
+                                                     rowHeight={this.store.studyViewPageLayoutProps.rowHeight}
+                                                     layout={this.store.studyViewPageLayoutProps.layout}
+                                                     margin={[5, 5]}
+                                                     draggableHandle={'.fa-arrows'}>
+                                        {this.store.visibleAttributes.map(this.renderAttributeChart)}
+                                    </ReactGridLayout>
+                                )}
 
                             </div>
                         </MSKTab>
