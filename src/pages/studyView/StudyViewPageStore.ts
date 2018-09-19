@@ -72,6 +72,7 @@ import sessionServiceClient from "shared/api//sessionServiceInstance";
 import {VirtualStudy} from 'shared/model/VirtualStudy';
 import windowStore from 'shared/components/window/WindowStore';
 import {Layout} from 'react-grid-layout';
+import {getHeatmapMeta} from "../../shared/lib/MDACCUtils";
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
 
@@ -1125,6 +1126,17 @@ export class StudyViewPageStore {
             }
         }
     });
+
+    readonly MDACCHeatmapStudyMeta = remoteData({
+        await: () => [this.queriedPhysicalStudyIds],
+        invoke: async () => {
+            let isSinglePhysicalStudy = this.queriedPhysicalStudyIds.result.length === 1;
+            if (isSinglePhysicalStudy) {
+                return await getHeatmapMeta(`//bioinformatics.mdanderson.org/study2url?studyid=${this.queriedPhysicalStudyIds.result[0]}`);
+            }
+            return [];
+        }
+    }, []);
 
     @computed get analysisGroupsPossible() {
         // analysis groups possible iff there are visible analysis groups-capable charts

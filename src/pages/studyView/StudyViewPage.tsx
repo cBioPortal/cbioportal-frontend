@@ -37,6 +37,7 @@ import MobxPromise from 'mobxpromise';
 import { StudySummaryRecord } from 'pages/studyView/virtualStudy/VirtualStudy';
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 
+import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -458,6 +459,11 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     selectedSamples={this.store.selectedSamples.result!}
                                 />
                             </If>
+                        </MSKTab>
+                        <MSKTab key={2} id={"mdaccHeatmap"} linkText={"Heatmaps"}
+                                hide={this.store.MDACCHeatmapStudyMeta.result.length === 0}>
+                            <IFrameLoader height={700}
+                                          url={`//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this.store.MDACCHeatmapStudyMeta.result[0]}`}/>
                         </MSKTab>
                     </MSKTabs>
                 </div>
