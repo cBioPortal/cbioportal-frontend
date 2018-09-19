@@ -95,7 +95,7 @@ export function getMutationAlignerUrl() {
     return buildCBioPortalAPIUrl(`getMutationAligner.json`);
 }
 export function getOncoQueryDocUrl() {
-    return buildCBioPortalPageUrl("oql");
+    return buildCBioPortalPageUrl("s/oql");
 }
 export function getOncoKbApiUrl() {
     let url = AppConfig.oncoKBApiUrl;
