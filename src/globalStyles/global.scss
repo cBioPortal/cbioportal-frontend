@@ -26,10 +26,6 @@ button:active, button:focus, div:focus, div:active {
   color:$text-color !important;
 }
 
-div {
-  text-align:left;
-}
-
 a {
   cursor:pointer;
   text-decoration:none !important;
@@ -38,6 +34,11 @@ a {
 a:hover {
   text-decoration:underline !important;
 }
+
+.pipeSeperator {
+  margin:0 8px;
+}
+
 
 /* Buttons */
 
