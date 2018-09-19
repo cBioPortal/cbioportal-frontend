@@ -242,6 +242,9 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     return <MSKTab key={5} id="mutualExclusivityTab" loading={!store.isSampleAlteredMap.isComplete} linkText="Mutual Exclusivity">
                         <MutualExclusivityTab store={store}/>
                     </MSKTab>
+                },
+                hide:()=>{
+                    return this.resultsViewPageStore.hugoGeneSymbols.length < 2;
                 }
             },
 
@@ -293,7 +296,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     </MSKTab>
                 }
             },
-
 
             {
                 id:"enrichments",
