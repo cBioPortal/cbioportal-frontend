@@ -204,7 +204,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"oncoprint",
                 getTab: () => {
-                    return <MSKTab key={0} id="oncoprintTab" linkText="Oncoprint">
+                    return <MSKTab key={0} id="oncoprintTab" linkText="OncoPrint">
                         <ResultsViewOncoprint
                             divId={'oncoprintContainer'}
                             store={store}
@@ -278,7 +278,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     store.studyToDataQueryFilter.isPending ||
                     store.geneMolecularDataCache.isPending;
 
-                    return <MSKTab key={7} id="coexpression" loading={isLoading} linkText={'Coexpression'}>
+                    return <MSKTab key={7} id="coexpression" loading={isLoading} linkText={'Co-expression'}>
                         <CoExpressionTab
                             store={store}
                             molecularProfiles={store.molecularProfilesInStudies.result}
@@ -309,8 +309,20 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                         store.mRNAEnrichmentProfiles.isPending ||
                         store.proteinEnrichmentProfiles.isPending
 
-                    return <MSKTab key={10} id="enrichment" loading={isLoading} linkText={'Enrichment'}>
+                    return <MSKTab key={10} id="enrichment" loading={isLoading} linkText={'Enrichments'}>
                         <EnrichmentsTab store={store}/>
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:"survival",
+                hide:()=>{
+                    return this.resultsViewPageStore.studies.result!.length > 1;
+                },
+                getTab: () => {
+                    return <MSKTab key={4} id="survivalTab" linkText="Survival">
+                        <SurvivalTab store={store}/>
                     </MSKTab>
                 }
             },
@@ -324,18 +336,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     return <MSKTab key={6} id="copyNumberSegmentsTab"
                                    linkText="CN Segments">
                         <CNSegments store={store}/>
-                    </MSKTab>
-                }
-            },
-
-            {
-                id:"survival",
-                hide:()=>{
-                    return this.resultsViewPageStore.studies.result!.length > 1;
-                },
-                getTab: () => {
-                    return <MSKTab key={4} id="survivalTab" linkText="Survival">
-                        <SurvivalTab store={store}/>
                     </MSKTab>
                 }
             },
