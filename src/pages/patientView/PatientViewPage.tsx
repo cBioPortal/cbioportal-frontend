@@ -474,7 +474,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     </MSKTab>
 
 
-                    <MSKTab key={4} id="heatMapReportTab" linkText="Heatmap"
+                    <MSKTab key={4} id="heatMapReportTab" linkText="Heatmaps"
                              hide={(!patientViewPageStore.MDAndersonHeatMapAvailable.isComplete || !patientViewPageStore.MDAndersonHeatMapAvailable.result)}
                     >
                             <IFrameLoader height={700} url={ `//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?participant=${patientViewPageStore.patientId}` } />
