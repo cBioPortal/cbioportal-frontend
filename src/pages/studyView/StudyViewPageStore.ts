@@ -261,9 +261,9 @@ export class StudyViewPageStore {
 
     @observable studyIds: string[] = [];
 
-    @observable sampleAttrIds: string[] = [];
-
-    @observable patientAttrIds: string[] = [];
+    @computed get studyIdsSet() {
+        return stringListToSet(this.studyIds);
+    }
 
     private _clinicalDataEqualityFilterSet = observable.map<ClinicalDataEqualityFilter>();
     private _clinicalDataIntervalFilterSet = observable.map<ClinicalDataIntervalFilter>();
@@ -1163,7 +1163,6 @@ export class StudyViewPageStore {
     readonly defaultVisibleAttributes = remoteData({
         await: () => [this.clinicalAttributes],
         invoke: async () => {
-            let selectedAttrIds = [...this.sampleAttrIds, ...this.patientAttrIds];
             let queriedAttributes = this.clinicalAttributes.result.map(attr => {
                 attr.priority = _.isNumber(attr.priority) ? attr.priority : "1";
                 if(attr.priority === '1') {
@@ -1171,11 +1170,6 @@ export class StudyViewPageStore {
                 }
                 return attr;
             });
-            if (!_.isEmpty(selectedAttrIds)) {
-                queriedAttributes = this.clinicalAttributes.result.filter(attribute => {
-                    return _.includes(selectedAttrIds, attribute.clinicalAttributeId);
-                });
-            }
 
             let sampleAttributeCount = 0;
             let patientAttributeCount = 0;

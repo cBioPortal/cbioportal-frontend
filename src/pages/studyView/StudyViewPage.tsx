@@ -20,6 +20,7 @@ import ErrorBox from 'shared/components/errorBox/ErrorBox';
 import ReactGridLayout from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+import {stringListToSet} from "../../shared/lib/StringUtils";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -112,15 +113,20 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         reaction(
             () => props.routing.location.query,
             query => {
+                let newStudyIdsString;
                 if ('studyId' in query) {
-                    this.store.studyIds = (query.studyId as string).split(",");
+                    newStudyIdsString = (query.studyId as string);
                 }
                 if ('id' in query) {
-                    this.store.studyIds = (query.id as string).split(",");
+                    newStudyIdsString = (query.id as string);
                 }
-                if (this.store.studyIds) {
-                    this.store.sampleAttrIds = ('sampleAttrIds' in query ? (query.sampleAttrIds as string).split(",") : []);
-                    this.store.patientAttrIds = ('patientAttrIds' in query ? (query.patientAttrIds as string).split(",") : []);
+                if (newStudyIdsString) {
+                    const newStudyIds = newStudyIdsString.trim().split(",");
+                    const newStudyIdsSet = stringListToSet(newStudyIds);
+                    if (!_.isEqual(newStudyIdsSet, this.store.studyIdsSet)) {
+                        // update if different
+                        this.store.studyIds = newStudyIds;
+                    }
                 }
             },
             {fireImmediately: true}
