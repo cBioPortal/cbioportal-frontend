@@ -4,9 +4,9 @@ import {
     generateCategoricalData, generateNumericalData, isLogScaleByDataBins, isLogScaleByValues,
     getClinicalDataIntervalFilterValues, makePatientToClinicalAnalysisGroup, updateGeneQuery, formatNumericalTickValues,
     intervalFiltersDisplayValue, isEveryBinDistinct, toFixedDigit, getExponent,
-    getCNAByAlteration,
-    getDefaultChartTypeByClinicalAttribute,
-    getVirtualStudyDescription, calculateLayout, getLayoutMatrix, LayoutMatrixItem, getQValue, pickClinicalDataColors, getSamplesByExcludingFiltersOnChart, getFilteredSampleIdentifiers
+    getCNAByAlteration, getDefaultChartTypeByClinicalAttribute,
+    getVirtualStudyDescription, calculateLayout, getLayoutMatrix, LayoutMatrixItem, getQValue, pickClinicalDataColors,
+    getSamplesByExcludingFiltersOnChart, getFilteredSampleIdentifiers, clinicalDataCountComparator
 } from 'pages/studyView/StudyViewUtils';
 import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue, Sample} from 'shared/api/generated/CBioPortalAPIInternal';
 import {ClinicalAttribute, Gene} from 'shared/api/generated/CBioPortalAPI';
@@ -1390,6 +1390,26 @@ describe('StudyViewUtils', () => {
         it('when filter function is present', ()=>{
             assert.deepEqual(getFilteredSampleIdentifiers(samples,  (sample) => sample.sequenced),[{ sampleId: 'sample1', studyId: 'study1' }]);
             assert.deepEqual(getFilteredSampleIdentifiers(samples,  (sample) => sample.copyNumberSegmentPresent),[{ sampleId: 'sample2', studyId: 'study1' }]);
+        });
+    });
+
+    describe('clinicalDataCountComparator', () => {
+        it('returns zero if both NA', () => {
+            assert.equal(clinicalDataCountComparator({value: "NA", count: 1}, {value: "na", count: 666}), 0);
+        });
+
+        it('returns 1 if a is NA, but not b', () => {
+            assert.equal(clinicalDataCountComparator({value: "NA", count: 666}, {value: "HIGH", count: 66}), 1);
+        });
+
+        it('returns -1 if b is NA, but not a', () => {
+            assert.equal(clinicalDataCountComparator({value: "FEMALE", count: 6}, {value: "NA", count: 666}), -1);
+        });
+
+        it('returns count difference if none NA', () => {
+            assert.equal(clinicalDataCountComparator({value: "FEMALE", count: 6}, {value: "MALE", count: 16}), 10);
+            assert.equal(clinicalDataCountComparator({value: "FEMALE", count: 16}, {value: "MALE", count: 6}), -10);
+            assert.equal(clinicalDataCountComparator({value: "FEMALE", count: 666}, {value: "MALE", count: 666}), 0);
         });
     });
 });

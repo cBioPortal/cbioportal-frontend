@@ -1051,3 +1051,16 @@ export function getSamplesByExcludingFiltersOnChart(
         studyViewFilter: updatedFilter
     });
 }
+
+export function clinicalDataCountComparator(a: ClinicalDataCount, b: ClinicalDataCount): number
+{
+    if (isNAClinicalValue(a.value)) {
+        return isNAClinicalValue(b.value) ? 0 : 1;
+    }
+    else if (isNAClinicalValue(b.value)) {
+        return -1;
+    }
+    else {
+        return b.count - a.count;
+    }
+}
