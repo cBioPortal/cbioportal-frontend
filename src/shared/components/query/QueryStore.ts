@@ -18,7 +18,7 @@ import AppConfig from 'appConfig';
 import {gsUploadByGet} from "../../api/gsuploadwindow";
 import {ComponentGetsStoreContext} from "../../lib/ContextUtils";
 import URL from 'url';
-import { openStudySummaryFormSubmit} from "../../api/urls";
+import {buildCBioPortalPageUrl, openStudySummaryFormSubmit} from "../../api/urls";
 import StudyListLogic from "./StudyListLogic";
 import {QuerySession} from "../../lib/QuerySession";
 import {stringListToIndexSet, stringListToSet} from "../../lib/StringUtils";
@@ -36,6 +36,7 @@ import sessionServiceClient from "shared/api//sessionServiceInstance";
 import {VirtualStudy} from "shared/model/VirtualStudy";
 import { getGenesetsFromHierarchy, getVolcanoPlotMinYValue, getVolcanoPlotData } from "shared/components/query/GenesetsSelectorStore";
 import SampleListsInStudyCache from 'shared/cache/SampleListsInStudyCache';
+import formSubmit from "../../lib/formSubmit";
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -1839,7 +1840,13 @@ export class QueryStore
 
 		let urlParams = this.asyncUrlParams.result;
 
-		this.singlePageAppSubmitRoutine(urlParams.pathname, urlParams.query);
+		if (this.forDownloadTab) {
+            formSubmit(buildCBioPortalPageUrl("data_download"), urlParams.query, undefined, "smart");
+		} else {
+            this.singlePageAppSubmitRoutine(urlParams.pathname, urlParams.query);
+		}
+
+
 
 	}
 
