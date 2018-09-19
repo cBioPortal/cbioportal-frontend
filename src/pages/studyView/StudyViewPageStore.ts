@@ -52,7 +52,11 @@ import {
     makePatientToClinicalAnalysisGroup,
     EXPONENTIAL_FRACTION_DIGITS,
     generateScatterPlotDownloadData,
-    NA_DATA, ONE_GRID_TABLE_ROWS, PIE_TO_TABLE_LIMIT, COLORS, NA_COLOR, getSamplesByExcludingFiltersOnChart, getFilteredSampleIdentifiers
+    NA_DATA, ONE_GRID_TABLE_ROWS, PIE_TO_TABLE_LIMIT,
+    COLORS, NA_COLOR,
+    getSamplesByExcludingFiltersOnChart,
+    getFilteredSampleIdentifiers,
+    UNSELECTED_GROUP_COLOR, SELECTED_GROUP_COLOR
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -378,11 +382,11 @@ export class StudyViewPageStore {
             return {
                 groups: [{
                     value: UNSELECTED_ANALYSIS_GROUP_VALUE,
-                    color: "blue",
+                    color: UNSELECTED_GROUP_COLOR,
                     legendText: "Unselected patients"
                 },{
                     value: SELECTED_ANALYSIS_GROUP_VALUE,
-                    color: "red",
+                    color: SELECTED_GROUP_COLOR,
                     legendText: "Selected patients"
                 }] as AnalysisGroup[]
             }

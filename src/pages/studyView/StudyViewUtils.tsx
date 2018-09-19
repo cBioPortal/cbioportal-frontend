@@ -20,9 +20,16 @@ import {ChartDimension, ChartMeta, ChartType, ChartTypeEnum, ClinicalDataType} f
 import {Layout} from 'react-grid-layout';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 
+
+// Study View Default colors: tetradic color scheme
+export const PRIMARY_COLOR = '#2986E2';
+export const SECONDARY_COLOR = '#dc3912';
+export const TERTIARY_COLOR = '#f88508';
+export const QUATERNARY_COLOR = '#109618';
+
 //TODO:cleanup
 export const COLORS = [
-    '#2986e2', '#dc3912', '#f88508', '#109618',
+    PRIMARY_COLOR, SECONDARY_COLOR, TERTIARY_COLOR, QUATERNARY_COLOR,
     '#990099', '#0099c6', '#dd4477', '#66aa00',
     '#b82e2e', '#316395', '#994499', '#22aa99',
     '#aaaa11', '#6633cc', '#e67300', '#8b0707',
@@ -88,7 +95,8 @@ export const FIXED_COLORS: {[clinicalAttribute: string]: string} = {
     M: "#316395"
 };
 
-export const PRIMARY_COLOR = '#2986E2'; // Study View Blue
+export const SELECTED_GROUP_COLOR = SECONDARY_COLOR;
+export const UNSELECTED_GROUP_COLOR = PRIMARY_COLOR;
 
 export const NA_COLOR = '#CCCCCC';
 export const UNSELECTED_COLOR = '#808080';
