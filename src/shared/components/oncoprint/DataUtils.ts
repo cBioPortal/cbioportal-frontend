@@ -56,7 +56,7 @@ const protRenderPriority = {
 
 export type OncoprintMutationType = "missense" | "inframe" | "fusion" | "promoter" | "trunc";
 
-export function getOncoprintMutationType(d:Mutation):OncoprintMutationType {
+export function getOncoprintMutationType(d:Pick<Mutation, "proteinChange"|"mutationType">):OncoprintMutationType {
     if ((d.proteinChange || "").toLowerCase() === "promoter") {
         // promoter mutations aren't labeled as such in mutationType, but in proteinChange, so we must detect it there
         return "promoter";
