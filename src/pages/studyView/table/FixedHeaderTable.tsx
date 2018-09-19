@@ -143,7 +143,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
 
                     {
                         this.props.columns.map(column => {
-                            return <RVColumn label={column.name} dataKey={column.name} width={Number(column.width)}
+                            return <RVColumn key={column.name} label={column.name} dataKey={column.name} width={Number(column.width)}
                                              cellRenderer={(props: TableCellProps) => {
                                                  return column.render(props.rowData);
                                              }}/>;
