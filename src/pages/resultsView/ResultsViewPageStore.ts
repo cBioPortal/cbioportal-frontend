@@ -483,7 +483,7 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly nonMutationMolecularProfilesWithData = remoteData<MolecularProfile[]>({
+    readonly molecularProfilesWithData = remoteData<MolecularProfile[]>({
         await:()=>[
             this.molecularProfilesInStudies,
             this.studyToDataQueryFilter,
@@ -494,26 +494,40 @@ export class ResultsViewPageStore {
             const promises = [];
             const studyToDataQueryFilter = this.studyToDataQueryFilter.result!;
             for (const profile of this.molecularProfilesInStudies.result!) {
-                if (profile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED) {
-                    continue;
-                }
-                const molecularDataFilter = {
-                    entrezGeneIds: this.genes.result!.map(g=>g.entrezGeneId),
-                    ...studyToDataQueryFilter[profile.studyId]
-                } as MolecularDataFilter;
                 const molecularProfileId = profile.molecularProfileId;
                 const projection = "META";
-                promises.push(client.fetchAllMolecularDataInMolecularProfileUsingPOSTWithHttpInfo({
-                    molecularProfileId,
-                    molecularDataFilter,
-                    projection
-                }).then(function(response: request.Response) {
-                    const count = parseInt(response.header["total-count"], 10);
-                    if (count > 0) {
-                        // theres data for at least one of the query genes
-                        ret.push(profile);
-                    }
-                }));
+                const dataFilter = {
+                    entrezGeneIds: this.genes.result!.map(g=>g.entrezGeneId),
+                    ...studyToDataQueryFilter[profile.studyId]
+                } as MolecularDataFilter & MutationFilter;
+
+                if (profile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED) {
+                    // handle mutation profile
+                    promises.push(client.fetchMutationsInMolecularProfileUsingPOSTWithHttpInfo({
+                        molecularProfileId,
+                        mutationFilter: dataFilter,
+                        projection
+                    }).then(function(response: request.Response) {
+                        const count = parseInt(response.header["sample-count"], 10);
+                        if (count > 0) {
+                            // theres data for at least one of the query genes
+                            ret.push(profile);
+                        }
+                    }));
+                } else {
+                    // handle non-mutation profile
+                    promises.push(client.fetchAllMolecularDataInMolecularProfileUsingPOSTWithHttpInfo({
+                        molecularProfileId,
+                        molecularDataFilter: dataFilter,
+                        projection
+                    }).then(function(response: request.Response) {
+                        const count = parseInt(response.header["total-count"], 10);
+                        if (count > 0) {
+                            // theres data for at least one of the query genes
+                            ret.push(profile);
+                        }
+                    }));
+                }
             }
             await Promise.all(promises);
             return ret;
