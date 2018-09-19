@@ -13,10 +13,10 @@ import {
     makeAxisDataPromise, makeScatterPlotData, makeScatterPlotPointAppearance, dataTypeDisplayOrder,
     dataTypeToDisplayType, scatterPlotTooltip, scatterPlotLegendData, IStringAxisData, INumberAxisData,
     makeBoxScatterPlotData, IScatterPlotSampleData, noMutationAppearance, IBoxScatterPlotPoint, boxPlotTooltip,
-    getCnaQueries, getMutationQueries, getScatterPlotDownloadData, getBoxPlotDownloadData, getTablePlotDownloadData,
+    getCnaQueries, getMutationQueries, getScatterPlotDownloadData, getBoxPlotDownloadData,
     mutationRenderPriority, mutationSummaryRenderPriority, MutationSummary, mutationSummaryToAppearance,
     CNA_STROKE_WIDTH, PLOT_SIDELENGTH, CLIN_ATTR_DATA_TYPE,
-    sortMolecularProfilesForDisplay, scatterPlotZIndexSortBy
+    sortMolecularProfilesForDisplay, scatterPlotZIndexSortBy, getMutationProfileDuplicateSamplesReport
 } from "./PlotsTabUtils";
 import {
     ClinicalAttribute, MolecularProfile, Mutation,
@@ -41,6 +41,7 @@ import {SpecialAttribute} from "../../../shared/cache/OncoprintClinicalDataCache
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import ScrollBar from "../../../shared/components/Scrollbar/ScrollBar";
 import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
+import {getTablePlotDownloadData} from "../../../shared/components/plots/TablePlotUtils";
 
 enum EventKey {
     horz_logScale,
@@ -71,11 +72,17 @@ export enum PlotType {
     Table
 }
 
+export enum MutationCountBy {
+    MutationType = "MutationType",
+    MutatedVsWildType = "MutatedVsWildType"
+}
+
 export type AxisMenuSelection = {
     entrezGeneId?:number;
     selectedGeneOption?:{value:number, label:string}; // value is entrez id, label is hugo symbol
     dataType?:string;
     dataSourceId?:string;
+    mutationCountBy:MutationCountBy;
     logScale: boolean;
 };
 
@@ -91,6 +98,11 @@ class PlotsTabBoxPlot extends BoxScatterPlot<IBoxScatterPlotPoint> {}
 const SVG_ID = "plots-tab-plot-svg";
 
 export const SAME_GENE_OPTION_VALUE = "same";
+
+const mutationCountByOptions = [
+    { value: MutationCountBy.MutationType, label: "Mutation Type" },
+    { value: MutationCountBy.MutatedVsWildType, label: "Mutated vs Wild-type" }
+];
 
 @observer
 export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
@@ -306,6 +318,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             set dataSourceId(id:string|undefined) {
                 this._dataSourceId = id;
             },
+            get mutationCountBy() {
+                if (this._mutationCountBy === undefined) {
+                    // default
+                    return MutationCountBy.MutationType;
+                } else {
+                    return this._mutationCountBy;
+                }
+            },
+            set mutationCountBy(m:MutationCountBy) {
+                this._mutationCountBy = m;
+            },
             get logScale() {
                 return this._logScale && logScalePossible(this);
             },
@@ -315,6 +338,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             _selectedGeneOption: undefined,
             _dataType: undefined,
             _dataSourceId: undefined,
+            _mutationCountBy: undefined,
             _logScale: true
         });
     }
@@ -546,11 +570,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     readonly dataTypeOptions = remoteData<{value:string, label:string}[]>({
         await:()=>[
-            this.props.store.nonMutationMolecularProfilesWithData,
+            this.props.store.molecularProfilesWithData,
             this.clinicalAttributeOptions
         ],
         invoke:()=>{
-            const profiles = this.props.store.nonMutationMolecularProfilesWithData.result!;
+            const profiles = this.props.store.molecularProfilesWithData.result!;
 
             // show only data types we have profiles for
             const dataTypeIds:string[] = _.uniq(
@@ -575,11 +599,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     readonly dataTypeToDataSourceOptions = remoteData<{[dataType:string]:{value:string, label:string}[]}>({
         await:()=>[
-            this.props.store.nonMutationMolecularProfilesWithData,
+            this.props.store.molecularProfilesWithData,
             this.clinicalAttributeOptions
         ],
         invoke:()=>{
-            const profiles = this.props.store.nonMutationMolecularProfilesWithData.result!;
+            const profiles = this.props.store.molecularProfilesWithData.result!;
             const map = _.mapValues(
                 _.groupBy(profiles, profile=>profile.molecularAlterationType), // create a map from profile type to list of profiles of that type
                 profilesOfType=>(
@@ -620,8 +644,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @autobind
     @action
+    public onVerticalAxisMutationCountBySelect(option:any) {
+        this.vertSelection.mutationCountBy = option.value;
+    }
+
+    @autobind
+    @action
+    public onHorizontalAxisMutationCountBySelect(option:any) {
+        this.horzSelection.mutationCountBy = option.value;
+    }
+
+    @autobind
+    @action
     private swapHorzVertSelections() {
-        const keys:(keyof AxisMenuSelection)[] = ["dataType", "dataSourceId", "logScale"];
+        const keys:(keyof AxisMenuSelection)[] = ["dataType", "dataSourceId", "logScale", "mutationCountBy"];
         // have to store all values for swap because values depend on each other in derived data way so the copy can mess up if you do it one by one
         const horz = keys.map(k=>this.horzSelection[k]);
         const vert = keys.map(k=>this.vertSelection[k]);
@@ -705,8 +741,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             this.props.store.patientKeyToSamples,
             this.props.store.entrezGeneIdToGene,
             this.props.store.clinicalDataCache,
+            this.props.store.mutationCache,
             this.props.store.numericGeneMolecularDataCache,
-            this.props.store.studyToMutationMolecularProfile
+            this.props.store.studyToMutationMolecularProfile,
+            this.props.store.coverageInformation,
+            this.props.store.samples
         );
     }
 
@@ -718,8 +757,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             this.props.store.patientKeyToSamples,
             this.props.store.entrezGeneIdToGene,
             this.props.store.clinicalDataCache,
+            this.props.store.mutationCache,
             this.props.store.numericGeneMolecularDataCache,
-            this.props.store.studyToMutationMolecularProfile
+            this.props.store.studyToMutationMolecularProfile,
+            this.props.store.coverageInformation,
+            this.props.store.samples
         );
     }
 
@@ -877,6 +919,29 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     ) {
         const axisSelection = vertical ? this.vertSelection : this.horzSelection;
         const dataTestWhichAxis = vertical ? "Vertical" : "Horizontal";
+
+        let dataSourceLabel = "Profile";
+        let dataSourceValue = axisSelection.dataSourceId;
+        let dataSourceOptions = (axisSelection.dataType ? dataSourceOptionsByType[axisSelection.dataType] : []) || [];
+        let onDataSourceChange = vertical ? this.onVerticalAxisDataSourceSelect : this.onHorizontalAxisDataSourceSelect;
+
+        switch (axisSelection.dataType) {
+            case CLIN_ATTR_DATA_TYPE:
+                dataSourceLabel = "Clinical Attribute";
+                break;
+            case AlterationTypeConstants.MUTATION_EXTENDED:
+                dataSourceLabel = "Mutation Count by";
+                dataSourceValue = axisSelection.mutationCountBy;
+                dataSourceOptions = mutationCountByOptions;
+                onDataSourceChange = vertical ? this.onVerticalAxisMutationCountBySelect : this.onHorizontalAxisMutationCountBySelect;
+                break;
+            case undefined:
+                break;
+            default:
+                dataSourceLabel = `${dataTypeToDisplayType[axisSelection.dataType!]} Profile`;
+                break;
+        }
+
         return (
             <form>
                 <h4>{vertical ? "Vertical" : "Horizontal"} Axis</h4>
@@ -893,14 +958,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         />
                     </div>
                     <div className="form-group">
-                        <label>{axisSelection.dataType === CLIN_ATTR_DATA_TYPE ? "Clinical Attribute" : `${axisSelection.dataType ? dataTypeToDisplayType[axisSelection.dataType] : ""} Profile`}</label>
+                        <label>{dataSourceLabel}</label>
                         <div style={{display:"flex", flexDirection:"row"}}>
                             <ReactSelect
                                 className="data-source-id"
                                 name={`${vertical ? "v" : "h"}-profile-name-selector`}
-                                value={axisSelection.dataSourceId}
-                                onChange={vertical ? this.onVerticalAxisDataSourceSelect : this.onHorizontalAxisDataSourceSelect}
-                                options={dataSourceOptionsByType[axisSelection.dataType+""] || []}
+                                value={dataSourceValue}
+                                onChange={onDataSourceChange}
+                                options={dataSourceOptions}
                                 clearable={false}
                                 searchable={true}
                             />
@@ -1058,6 +1123,21 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     return Promise.resolve(PlotType.BoxPlot);
                 }
             }
+        }
+    });
+
+    readonly mutationProfileDuplicateSamplesReport = remoteData({
+        await:()=>[
+            this.horzAxisDataPromise,
+            this.vertAxisDataPromise
+        ],
+        invoke:()=>{
+            return Promise.resolve(getMutationProfileDuplicateSamplesReport(
+                this.horzAxisDataPromise.result!,
+                this.vertAxisDataPromise.result!,
+                this.horzSelection,
+                this.vertSelection
+            ));
         }
     });
 
@@ -1260,7 +1340,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 legendData={scatterPlotLegendData(
                                     _.flatten(this.boxPlotData.result.data.map(d=>d.data)), this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated
                                 )}
-                                legendLocationWidthThreshold={550}
+                                 legendLocationWidthThreshold={550}
                             />
                         );
                         break;
@@ -1297,6 +1377,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     </div>
                     {this.mutationDataCanBeShown && (
                         <div style={{marginTop:5}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
+                    )}
+                    {this.mutationProfileDuplicateSamplesReport.isComplete && this.mutationProfileDuplicateSamplesReport.result.showMessage && (
+                        <div className="alert alert-info" style={{marginTop:5, padding: 7}}>
+                            Notice: With Mutation profiles, there is one data point per mutation type, per sample. In
+                            this plot, there are {this.mutationProfileDuplicateSamplesReport.result.numSamples} samples with more than
+                            one type of mutation, leading to {this.mutationProfileDuplicateSamplesReport.result.numSurplusPoints} extra
+                            data points.
+                        </div>
                     )}
                 </div>
             );

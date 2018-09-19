@@ -375,7 +375,21 @@ describe("plots tab screenshot tests", function() {
         browser.click('[data-test="swapHorzVertButton"]');
         waitForAndCheckPlotsTab();
     });
+    it("plots tab mutations vs clinical boxplot", function() {
+        browser.click('[data-test="swapHorzVertButton"]');
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "AGE" }); });
+        browser.click('[data-test="swapHorzVertButton"]');
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "MUTATION_EXTENDED" }); });
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab mutations wild type mode vs clinical boxplot", function() {
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisMutationCountBySelect({ value: "MutatedVsWildType" }); });
+        waitForAndCheckPlotsTab();
+    });
     it("plots tab clinical vs clinical boxplot", function() {
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "clinical_attribute" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "AJCC_PATHOLOGIC_TUMOR_STAGE" }); });
+        browser.click('[data-test="swapHorzVertButton"]');
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "clinical_attribute" }); });
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "AGE" }); });
         waitForAndCheckPlotsTab();
@@ -392,13 +406,28 @@ describe("plots tab screenshot tests", function() {
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "COPY_NUMBER_ALTERATION" }); });
         waitForAndCheckPlotsTab();
     });
-
+    it("plots tab mutations wildtype mode vs clinical table plot", function() {
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisMutationCountBySelect({ value: "MutatedVsWildType" }); });
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "MUTATION_EXTENDED" }); });
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab mutations vs clinical table plot", function() {
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisMutationCountBySelect({ value: "MutationType" }); });
+        waitForAndCheckPlotsTab();
+    });
 
     it("plots tab one box clinical vs clinical boxplot", function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=lgg_ucsf_2014&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=lgg_ucsf_2014_sequenced&gene_list=SMARCA4%2520CIC&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=lgg_ucsf_2014_mutations&show_samples=true&clinicallist=MUTATION_COUNT#plots`);
         browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 20000);
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "clinical_attribute" }); });
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "CANCER_TYPE" }); });
+        waitForAndCheckPlotsTab();
+    });
+
+    it("plots tab mutations profile with duplicates", function() {
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_Non-Small_Cell_Lung_Cancer&gene_list=TP53&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna#plots`);
+        browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 20000);
+        browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "MUTATION_EXTENDED" }); });
         waitForAndCheckPlotsTab();
     });
 });
