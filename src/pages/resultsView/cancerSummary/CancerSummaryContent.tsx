@@ -110,7 +110,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     @observable private tempTotalCasesInputValue = 0;
     @observable private pngAnchor = '';
     @observable private pdf: { anchor: string; width: number; height: number } = {anchor: '', width: 0, height: 0};
-    @observable private showControls = false;
+    @observable private showControls = true; // 9/2018 we will always show controls
     @observable private hideGenomicAlterations = false;
     @observable public yAxis: 'alt-freq' | 'abs-count' = 'alt-freq';
     @observable private xAxis: 'y-axis' | 'x-axis' = 'y-axis';
@@ -134,7 +134,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         this.handleAltInputKeyPress = this.handleAltInputKeyPress.bind(this);
         this.handleTotalInputChange = this.handleTotalInputChange.bind(this);
         this.handleTotalInputKeyPress = this.handleTotalInputKeyPress.bind(this);
-        this.toggleShowControls = this.toggleShowControls.bind(this);
+        //this.toggleShowControls = this.toggleShowControls.bind(this);
         this.setPngAnchor = this.setPngAnchor.bind(this);
     }
 
@@ -344,9 +344,9 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         this.totalCasesValue = this.tempTotalCasesValue;
     }
 
-    private toggleShowControls() {
-        this.showControls = !this.showControls;
-    }
+    // private toggleShowControls() {
+    //     this.showControls = !this.showControls;
+    // }
 
     public setPngAnchor(href: string) {
         this.pngAnchor = href;
@@ -459,13 +459,13 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                             </ButtonGroup>
                         </div>
 
-                        <div role="group" className="btn-group cancer-summary--chart-buttons">
-                            <button onClick={this.toggleShowControls} className="btn btn-default btn-xs">Customize <i
-                                className="fa fa-cog" aria-hidden="true"></i></button>
-                        </div>
+                        {/*<div role="group" className="hidden btn-group cancer-summary--chart-buttons">*/}
+                            {/*<button onClick={this.toggleShowControls} className="btn btn-default btn-xs">Customize <i*/}
+                                {/*className="fa fa-cog" aria-hidden="true"></i></button>*/}
+                        {/*</div>*/}
 
-                        <Panel className={classnames({hidden: !this.showControls}, 'cancer-summary-secondary-options')}>
-                            <button type="button" onClick={this.toggleShowControls} className="close">×</button>
+                        <Panel className={classnames("inlineBlock",{hidden: !this.showControls}, 'cancer-summary-secondary-options')}>
+                            {/*<button type="button" onClick={this.toggleShowControls} className="close">×</button>*/}
                             {this.controls}
                         </Panel>
 
