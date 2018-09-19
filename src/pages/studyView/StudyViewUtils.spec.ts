@@ -6,11 +6,15 @@ import {
     intervalFiltersDisplayValue, isEveryBinDistinct, toFixedDigit, getExponent,
     getCNAByAlteration,
     getDefaultChartTypeByClinicalAttribute,
-    getVirtualStudyDescription
+    getVirtualStudyDescription, calculateLayout, getLayoutMatrix, LayoutMatrixItem, getQValue, pickClinicalDataColors, getSamplesByExcludingFiltersOnChart, getFilteredSampleIdentifiers
 } from 'pages/studyView/StudyViewUtils';
-import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue} from 'shared/api/generated/CBioPortalAPIInternal';
+import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue, Sample} from 'shared/api/generated/CBioPortalAPIInternal';
 import {ClinicalAttribute, Gene} from 'shared/api/generated/CBioPortalAPI';
-import {ChartType} from "./StudyViewPageStore";
+import {ChartDimension, ChartMeta, ChartTypeEnum} from "./StudyViewPageStore";
+import {Layout} from 'react-grid-layout';
+import {observable} from "mobx";
+import sinon from 'sinon';
+import internalClient from 'shared/api/cbioportalInternalClientInstance';
 
 describe('StudyViewUtils', () => {
 
@@ -375,6 +379,62 @@ describe('StudyViewUtils', () => {
             }
         ] as any;
 
+        const logScaleDataBinsStartingWithZeroAndContainsNa = [
+            {
+                "attributeId": "DAYS_TO_COLLECTION",
+                "start": 0,
+                "end": 3,
+                "count": 1
+            },
+            {
+                "attributeId": "DAYS_TO_COLLECTION",
+                "start": 3,
+                "end": 10,
+                "count": 1
+            },
+            {
+                "attributeId": "DAYS_TO_COLLECTION",
+                "start": 10,
+                "end": 31,
+                "count": 13
+            },
+            {
+                "attributeId": "DAYS_TO_COLLECTION",
+                "start": 31,
+                "end": 100,
+                "count": 47
+            },
+            {
+                "attributeId": "DAYS_TO_COLLECTION",
+                "start": 100,
+                "end": 316,
+                "count": 78
+            },
+            {
+                "attributeId": "DAYS_TO_COLLECTION",
+                "start": 316,
+                "end": 1000,
+                "count": 82
+            },
+            {
+                "attributeId": "DAYS_TO_COLLECTION",
+                "start": 1000,
+                "end": 3162,
+                "count": 63
+            },
+            {
+                "attributeId": "DAYS_TO_COLLECTION",
+                "start": 3162,
+                "end": 10000,
+                "count": 22
+            },
+            {
+                "attributeId": "DAYS_TO_COLLECTION",
+                "specialValue": "NA",
+                "count": 225
+            }
+        ] as any;
+
         const noGroupingDataBinsWithNa = [
             {
                 "attributeId": "ACTIONABLE_ALTERATIONS",
@@ -506,6 +566,35 @@ describe('StudyViewUtils', () => {
 
             const normalizedCategoryData = generateCategoricalData(categoryBins, 13);
             assert.deepEqual(normalizedCategoryData.map(data => data.x), [14, 15]);
+        });
+
+        it('processes log scaled data bins starting with zero and including NA counts', () => {
+            const numericalBins = filterNumericalBins(logScaleDataBinsStartingWithZeroAndContainsNa);
+            assert.equal(numericalBins.length, 8, "NA should be filtered out");
+
+            const formattedTickValues = formatNumericalTickValues(numericalBins);
+            assert.deepEqual(formattedTickValues, ["0", "", "10", "", "10^2", "", "10^3", "", "10^4"]);
+
+            const intervalBins = filterIntervalBins(numericalBins);
+            assert.equal(intervalBins.length, 8,
+                "Should be same as the number of mumerical bins");
+
+            const intervalBinValues = calcIntervalBinValues(intervalBins);
+            assert.deepEqual(intervalBinValues, [0, 3, 10, 31, 100, 316, 1000, 3162, 10000]);
+
+            const isLogScale = isLogScaleByValues(intervalBinValues);
+            assert.isTrue(isLogScale);
+
+            const categoryBins = filterCategoryBins(logScaleDataBinsStartingWithZeroAndContainsNa);
+            assert.equal(categoryBins.length, 1,
+                "Only NA bin should be included");
+
+            const normalizedNumericalData = generateNumericalData(numericalBins);
+            assert.deepEqual(normalizedNumericalData.map(data => data.x),
+                [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5]);
+
+            const normalizedCategoryData = generateCategoricalData(categoryBins, 9);
+            assert.deepEqual(normalizedCategoryData.map(data => data.x), [10]);
         });
 
         it('processes scientific small numbers data bins', () => {
@@ -837,6 +926,99 @@ describe('StudyViewUtils', () => {
         });
     });
 
+    describe('pickClinicalDataColors', () => {
+        const clinicalDataCountWithFixedValues = [
+            {
+                "value": "FALSE",
+                "count": 26
+            },
+            {
+                "value": "TRUE",
+                "count": 66
+            },
+            {
+                "value": "NA",
+                "count": 16
+            }
+        ];
+
+        const clinicalDataCountWithFixedMixedCaseValues = [
+            {
+                "value": "Yes",
+                "count": 26
+            },
+            {
+                "value": "No",
+                "count": 66
+            },
+            {
+                "value": "Male",
+                "count": 36
+            },
+            {
+                "value": "F",
+                "count": 26
+            },
+            {
+                "value": "Na",
+                "count": 16
+            }
+        ];
+
+        const clinicalDataCountWithBothFixedAndOtherValues = [
+            {
+                "value": "Yes",
+                "count": 26
+            },
+            {
+                "value": "NO",
+                "count": 66
+            },
+            {
+                "value": "na",
+                "count": 16
+            },
+            {
+                "value": "maybe",
+                "count": 46
+            },
+            {
+                "value": "WHY",
+                "count": 36
+            }
+        ];
+
+        it ('picks predefined colors for known clinical attribute values', () => {
+            const colors = pickClinicalDataColors(clinicalDataCountWithFixedValues);
+
+            assert.equal(colors["TRUE"], "#66aa00");
+            assert.equal(colors["FALSE"], "#666666");
+            assert.equal(colors["NA"], "#CCCCCC");
+        });
+
+        it ('picks predefined colors for known clinical attribute values in mixed letter case', () => {
+            const colors = pickClinicalDataColors(clinicalDataCountWithFixedMixedCaseValues);
+
+            assert.equal(colors["Yes"], "#66aa00");
+            assert.equal(colors["No"], "#666666");
+            assert.equal(colors["Na"], "#CCCCCC");
+            assert.equal(colors["Male"], "#316395");
+            assert.equal(colors["F"], "#b82e2e");
+        });
+
+        it ('does not pick already picked colors again for non-fixed values', () => {
+            const availableColors = ["#66aa00", "#666666", "#2986e2", "#CCCCCC", "#dc3912", "#f88508", "#109618"]
+
+            const colors = pickClinicalDataColors(clinicalDataCountWithBothFixedAndOtherValues, availableColors);
+
+            assert.equal(colors["Yes"], "#66aa00");
+            assert.equal(colors["NO"], "#666666");
+            assert.equal(colors["na"], "#CCCCCC");
+            assert.equal(colors["maybe"], "#2986e2");
+            assert.equal(colors["WHY"], "#dc3912");
+        });
+    });
+
     describe('getExponent', () => {
         it ('handles negative values properly', () => {
             assert.equal(getExponent(-1), 0);
@@ -882,24 +1064,332 @@ describe('StudyViewUtils', () => {
             let attr: ClinicalAttribute = {
                 clinicalAttributeId: 'CANCER_TYPE'
             } as ClinicalAttribute;
-            assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartType.TABLE);
+            assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartTypeEnum.TABLE);
 
             attr.clinicalAttributeId = 'CANCER_TYPE_DETAILED';
-            assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartType.TABLE);
+            assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartTypeEnum.TABLE);
         });
 
         it('return PIE_CHART when clinical attribute has data type as STRING', () => {
             const attr:ClinicalAttribute = {
                 datatype: 'STRING'
             } as ClinicalAttribute;
-            assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartType.PIE_CHART);
+            assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartTypeEnum.PIE_CHART);
         });
 
         it('return BAR_CHART when clinical attribute has data type as STRING', () => {
             const attr:ClinicalAttribute = {
                 datatype: 'NUMBER'
             } as ClinicalAttribute;
-            assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartType.BAR_CHART);
+            assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartTypeEnum.BAR_CHART);
+        });
+    });
+
+    describe("getLayoutMatrix", () => {
+        it("The result is not expected, the chart should only occupy the first element of the matrix", () => {
+            let result: LayoutMatrixItem[] = getLayoutMatrix([], 'test', {w: 1, h: 1});
+            assert.equal(result.length, 1);
+            assert.isTrue(result[0].notFull);
+            assert.equal(result[0].matrix[0], 'test');
+            assert.equal(result[0].matrix[1], '');
+        });
+
+        it("The result is not expected, the chart should occupy the first and second elements of the matrix", () => {
+            let result: LayoutMatrixItem[] = getLayoutMatrix([], 'test', {w: 2, h: 1});
+            assert.equal(result.length, 1);
+            assert.isTrue(result[0].notFull);
+            assert.equal(result[0].matrix[0], 'test');
+            assert.equal(result[0].matrix[1], 'test');
+            assert.equal(result[0].matrix[2], '');
+        });
+
+        it("The result is not expected, the chart should only occupy the first and third element of the matrix", () => {
+            let result: LayoutMatrixItem[] = getLayoutMatrix([], 'test', {w: 1, h: 2});
+            assert.equal(result.length, 1);
+            assert.isTrue(result[0].notFull);
+            assert.equal(result[0].matrix[0], 'test');
+            assert.equal(result[0].matrix[1], '');
+            assert.equal(result[0].matrix[2], 'test');
+        });
+
+        it("The result is not expected, the chart should only occupy the third and forth element of the matrix", () => {
+            let result: LayoutMatrixItem[] = getLayoutMatrix([{
+                notFull: true,
+                matrix: ['key', 'key', '', '']
+            }], 'test', {w: 2, h: 1});
+            assert.equal(result.length, 1);
+            assert.isFalse(result[0].notFull);
+            assert.equal(result[0].matrix[0], 'key');
+            assert.equal(result[0].matrix[1], 'key');
+            assert.equal(result[0].matrix[2], 'test');
+            assert.equal(result[0].matrix[3], 'test');
+        });
+
+        it("The result is not expected, the additional matrix should be added when the new chart cannot fit in the original matrix", () => {
+            let result: LayoutMatrixItem[] = getLayoutMatrix([{
+                notFull: true,
+                matrix: ['key', 'key', 'key', '']
+            }], 'test', {w: 2, h: 1});
+            assert.equal(result.length, 2);
+            assert.isTrue(result[0].notFull);
+            assert.equal(result[0].matrix[3], '');
+            assert.equal(result[1].matrix[0], 'test');
+            assert.equal(result[1].matrix[1], 'test');
+            assert.equal(result[1].matrix[2], '');
+        });
+    });
+
+    describe("calculateLayout", () => {
+        let visibleAttrs: ChartMeta[] = [];
+        const clinicalAttr: ClinicalAttribute = {
+            'clinicalAttributeId': 'test',
+            'count': 0,
+            'datatype': 'STRING',
+            'description': '',
+            'displayName': '',
+            'patientAttribute': true,
+            'priority': '1',
+            'studyId': ''
+        };
+        for (let i = 0; i < 8; i++) {
+            visibleAttrs.push({
+                clinicalAttribute: clinicalAttr,
+                displayName: clinicalAttr.displayName,
+                description: clinicalAttr.description,
+                uniqueKey: 'test' + i,
+                chartType: ChartTypeEnum.PIE_CHART,
+                dimension: {w: 1, h: 1},
+                priority: 1,
+            });
+        }
+
+        it("Empty array should be returned when no attributes given", () => {
+            let layout: Layout[] = calculateLayout([], 6);
+            assert.isArray(layout);
+            assert.equal(layout.length, 0);
+        });
+
+        it("The layout is not expected", () => {
+            let layout: Layout[] = calculateLayout(visibleAttrs, 6);
+            assert.equal(layout.length, 8);
+            assert.equal(layout[0].i, 'test0');
+            assert.equal(layout[0].x, 0);
+            assert.equal(layout[0].y, 0);
+            assert.equal(layout[1].i, 'test1');
+            assert.equal(layout[1].x, 1);
+            assert.equal(layout[1].y, 0);
+            assert.equal(layout[2].i, 'test2');
+            assert.equal(layout[2].x, 0);
+            assert.equal(layout[2].y, 1);
+            assert.equal(layout[3].i, 'test3');
+            assert.equal(layout[3].x, 1);
+            assert.equal(layout[3].y, 1);
+            assert.equal(layout[4].i, 'test4');
+            assert.equal(layout[4].x, 2);
+            assert.equal(layout[4].y, 0);
+            assert.equal(layout[5].i, 'test5');
+            assert.equal(layout[5].x, 3);
+            assert.equal(layout[5].y, 0);
+            assert.equal(layout[6].i, 'test6');
+            assert.equal(layout[6].x, 2);
+            assert.equal(layout[6].y, 1);
+            assert.equal(layout[7].i, 'test7');
+            assert.equal(layout[7].x, 3);
+            assert.equal(layout[7].y, 1);
+        });
+
+        it("The layout is not expected", () => {
+            let layout: Layout[] = calculateLayout(visibleAttrs, 2);
+            assert.equal(layout.length, 8);
+            assert.equal(layout[0].i, 'test0');
+            assert.equal(layout[0].x, 0);
+            assert.equal(layout[0].y, 0);
+            assert.equal(layout[1].i, 'test1');
+            assert.equal(layout[1].x, 1);
+            assert.equal(layout[1].y, 0);
+            assert.equal(layout[2].i, 'test2');
+            assert.equal(layout[2].x, 0);
+            assert.equal(layout[2].y, 1);
+            assert.equal(layout[3].i, 'test3');
+            assert.equal(layout[3].x, 1);
+            assert.equal(layout[3].y, 1);
+            assert.equal(layout[4].i, 'test4');
+            assert.equal(layout[4].x, 0);
+            assert.equal(layout[4].y, 2);
+            assert.equal(layout[5].i, 'test5');
+            assert.equal(layout[5].x, 1);
+            assert.equal(layout[5].y, 2);
+            assert.equal(layout[6].i, 'test6');
+            assert.equal(layout[6].x, 0);
+            assert.equal(layout[6].y, 3);
+            assert.equal(layout[7].i, 'test7');
+            assert.equal(layout[7].x, 1);
+            assert.equal(layout[7].y, 3);
+        });
+
+        it("Higher priority chart should be displayed first", () => {
+            visibleAttrs = [{
+                clinicalAttribute: clinicalAttr,
+                displayName: clinicalAttr.displayName,
+                description: clinicalAttr.description,
+                uniqueKey: 'test0',
+                chartType: ChartTypeEnum.TABLE,
+                dimension: {w: 2, h: 2},
+                priority: 10,
+            }, {
+                clinicalAttribute: clinicalAttr,
+                displayName: clinicalAttr.displayName,
+                description: clinicalAttr.description,
+                uniqueKey: 'test1',
+                chartType: ChartTypeEnum.PIE_CHART,
+                dimension: {w: 1, h: 1},
+                priority: 20,
+            }];
+
+            let layout: Layout[] = calculateLayout(visibleAttrs, 4);
+            assert.equal(layout.length, 2);
+            assert.equal(layout[0].i, 'test1');
+            assert.equal(layout[0].x, 0);
+            assert.equal(layout[0].y, 0);
+
+            assert.equal(layout[1].i, 'test0');
+            assert.equal(layout[1].x, 2);
+            assert.equal(layout[1].y, 0);
+        });
+
+        it("The lower priority chart should occupy the empty space first", () => {
+            visibleAttrs = [{
+                clinicalAttribute: clinicalAttr,
+                displayName: clinicalAttr.displayName,
+                description: clinicalAttr.description,
+                uniqueKey: 'test0',
+                chartType: ChartTypeEnum.BAR_CHART,
+                dimension: {w: 2, h: 1},
+                priority: 10,
+            }, {
+                clinicalAttribute: clinicalAttr,
+                displayName: clinicalAttr.displayName,
+                description: clinicalAttr.description,
+                uniqueKey: 'test1',
+                chartType: ChartTypeEnum.TABLE,
+                dimension: {w: 2, h: 2},
+                priority: 5,
+            }, {
+                clinicalAttribute: clinicalAttr,
+                displayName: clinicalAttr.displayName,
+                description: clinicalAttr.description,
+                uniqueKey: 'test2',
+                chartType: ChartTypeEnum.PIE_CHART,
+                dimension: {w: 1, h: 1},
+                priority: 2,
+            }];
+
+            let layout: Layout[] = calculateLayout(visibleAttrs, 4);
+            assert.equal(layout.length, 3);
+            assert.equal(layout[0].i, 'test0');
+            assert.equal(layout[0].x, 0);
+            assert.equal(layout[0].y, 0);
+
+            assert.equal(layout[1].i, 'test2');
+            assert.equal(layout[1].x, 0);
+            assert.equal(layout[1].y, 1);
+
+            assert.equal(layout[2].i, 'test1');
+            assert.equal(layout[2].x, 2);
+            assert.equal(layout[2].y, 0);
+        });
+
+        it("Test getQValue", () => {
+            assert.equal(getQValue(0), '0');
+            assert.equal(getQValue(0.00001), '1.000e-5');
+            assert.equal(getQValue(-0.01), '-1.000e-2');
+        })
+    });
+
+    describe('getSamplesByExcludingFiltersOnChart', () => {
+        let fetchStub: sinon.SinonStub;
+        const emptyStudyViewFilter: StudyViewFilter = {
+            clinicalDataEqualityFilters: [],
+            clinicalDataIntervalFilters: [],
+            cnaGenes: [],
+            mutatedGenes: []
+        } as any
+        beforeEach(() => {
+            fetchStub = sinon.stub(internalClient, 'fetchFilteredSamplesUsingPOST');
+            fetchStub
+                .returns(Promise.resolve([]));
+        });
+        afterEach(() => {
+            fetchStub.restore();
+        });
+
+        it('no filters selected', (done) => {
+            getSamplesByExcludingFiltersOnChart(
+                'WITH_MUTATION_DATA',
+                emptyStudyViewFilter,
+                {},
+                [{ sampleId: 'sample1', studyId: 'study1' }],
+                ['study1']
+            ).then(() => {
+                assert.isTrue(fetchStub.calledWith({ studyViewFilter: { ...emptyStudyViewFilter, sampleIdentifiers: [{ sampleId: 'sample1', studyId: 'study1' }] } }));
+                done();
+            }).catch(done);
+        });
+
+
+        it('has filter for one chart', (done) => {
+            getSamplesByExcludingFiltersOnChart(
+                'WITH_MUTATION_DATA',
+                emptyStudyViewFilter,
+                { 'WITH_MUTATION_DATA': [{ sampleId: 'sample1', studyId: 'study1' }], 'WITH_CNA_DATA': [{ sampleId: 'sample1', studyId: 'study1' }] },
+                [{ sampleId: 'sample1', studyId: 'study1' }, { sampleId: 'sample2', studyId: 'study1' }],
+                ['study1']
+            ).then(() => {
+                assert.isTrue(fetchStub.calledWith({ studyViewFilter: { ...emptyStudyViewFilter, sampleIdentifiers: [{ sampleId: 'sample1', studyId: 'study1' }] } }));
+                done();
+            }).catch(done);
+        });
+
+        it('no filters selected and queriedSampleIdentifiers is empty', (done) => {
+            getSamplesByExcludingFiltersOnChart(
+                'WITH_MUTATION_DATA',
+                emptyStudyViewFilter,
+                {},
+                [],
+                ['study1']
+            ).then(() => {
+                assert.isTrue(fetchStub.calledWith({ studyViewFilter: { ...emptyStudyViewFilter, studyIds: ['study1'] } }));
+                done();
+            }).catch(done);
+        });
+
+        it('has filter for one chart and queriedSampleIdentifiers is empty', (done) => {
+            getSamplesByExcludingFiltersOnChart(
+                'WITH_MUTATION_DATA',
+                emptyStudyViewFilter,
+                { 'WITH_MUTATION_DATA': [{ sampleId: 'sample1', studyId: 'study1' }], 'WITH_CNA_DATA': [{ sampleId: 'sample1', studyId: 'study1' }] },
+                [],
+                ['study1']
+            ).then(() => {
+                assert.isTrue(fetchStub.calledWith({ studyViewFilter: { ...emptyStudyViewFilter, sampleIdentifiers: [{ sampleId: 'sample1', studyId: 'study1' }] } }));
+                done();
+            }).catch(done);
+        });
+    });
+
+    describe('getFilteredSampleIdentifiers', ()=>{
+        let samples:Sample[] = [
+            { sampleId: 'sample1', studyId: 'study1' , sequenced: true , copyNumberSegmentPresent:false},
+            { sampleId: 'sample2', studyId: 'study1' , sequenced: false , copyNumberSegmentPresent: true}
+        ] as any
+        it('when filter function is not present', ()=>{
+            assert.deepEqual(getFilteredSampleIdentifiers([]),[]);
+            assert.deepEqual(getFilteredSampleIdentifiers(samples),[{ sampleId: 'sample1', studyId: 'study1' }, { sampleId: 'sample2', studyId: 'study1' }]);
+        });
+
+        it('when filter function is present', ()=>{
+            assert.deepEqual(getFilteredSampleIdentifiers(samples,  (sample) => sample.sequenced),[{ sampleId: 'sample1', studyId: 'study1' }]);
+            assert.deepEqual(getFilteredSampleIdentifiers(samples,  (sample) => sample.copyNumberSegmentPresent),[{ sampleId: 'sample2', studyId: 'study1' }]);
         });
     });
 });

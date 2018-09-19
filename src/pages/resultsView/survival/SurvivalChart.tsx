@@ -21,6 +21,8 @@ import {getPatientViewUrl} from "../../../shared/api/urls";
 import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
 import autobind from "autobind-decorator";
 import {AnalysisGroup} from "../../studyView/StudyViewPageStore";
+import {AbstractChart} from "../../studyView/charts/ChartContainer";
+import {toSvgDomNodeWithLegend} from "../../studyView/StudyViewUtils";
 import classnames from "classnames";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
@@ -59,7 +61,7 @@ export interface ISurvivalChartProps {
 const SURVIVAL_DOWN_SAMPLING_THRESHOLD = 1000;
 
 @observer
-export default class SurvivalChart extends React.Component<ISurvivalChartProps, {}> {
+export default class SurvivalChart extends React.Component<ISurvivalChartProps, {}> implements AbstractChart {
 
     @observable.ref tooltipModel: any;
     @observable scatterFilter: SurvivalPlotFilters;
@@ -125,6 +127,10 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
             }
         }
     }];
+
+    public toSVGDOMNode(): Element {
+        return toSvgDomNodeWithLegend(this.svgContainer.firstChild, ".survivalChartDownloadLegend");
+    }
 
     @computed
     get styleOpts() {
@@ -234,6 +240,23 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         return data;
     }
 
+    @computed get legendDataForDownload() {
+        const data: any = this.analysisGroupsWithData.map(grp => ({
+            name: !!grp.legendText ? grp.legendText : grp.value,
+            symbol: { fill: grp.color, type: "square" }
+        }));
+
+        // add an indicator in case NA is excluded
+        if (this.props.naPatientsHiddenInSurvival) {
+            data.push({
+                name: "* Patients with NA for any of the selected attributes are excluded",
+                symbol: { opacity: 0 }
+            });
+        }
+
+        return data;
+    }
+
     private tooltipMouseEnter(): void {
         this.isTooltipHovered = true;
     }
@@ -307,6 +330,32 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         return lineElements.concat(scatterWithOpacityElements).concat(scatterElements);
     }
 
+    @computed get legendForDownload() {
+        // override the legend style without mutating the actual theme object
+        const theme = _.cloneDeep(CBIOPORTAL_VICTORY_THEME);
+        theme.legend.style.data = {
+            type: "square",
+            size: 5,
+            strokeWidth: 0,
+            stroke: "black"
+        };
+
+        return (
+            <VictoryLegend
+                x={0}
+                y={this.styleOpts.height + 1}
+                style={{
+                    ...theme.legend.style,
+                    title: { fontWeight: "bold" }
+                }}
+                title={this.props.title}
+                rowGutter={-10}
+                data={this.legendDataForDownload}
+                groupComponent={<g className="survivalChartDownloadLegend" />}
+            />
+        );
+    }
+
     @computed
     get chart() {
         return (
@@ -343,6 +392,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     <VictoryLegend x={this.styleOpts.legend.x} y={this.styleOpts.legend.y}
                                    data={this.victoryLegendData} />
                     }
+                    {this.legendForDownload}
                 </VictoryChart>
             </div>
         );
