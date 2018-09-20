@@ -56,22 +56,20 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
             const chartMeta = this.props.attributesMetaSet[clinicalDataEqualityFilter.clinicalDataType + '_' + clinicalDataEqualityFilter.attributeId];
             if (chartMeta) {
                 acc.push(
-                    <GroupLogic
-                        components={[
-                            <PillTag
-                                content={chartMeta.displayName}
-                                backgroundColor={FILTER_TITLE_COLOR}
-                            />,
-                            <GroupLogic components={clinicalDataEqualityFilter.values.map(label => {
-                                return <PillTag
-                                    content={label}
-                                    backgroundColor={FILTER_CONTENT_COLOR}
-                                    onDelete={() => this.props.updateClinicalDataEqualityFilter(chartMeta, _.remove(clinicalDataEqualityFilter.values, value => value !== label))}
-                                />
-                            })} operation={'OR'} group={clinicalDataEqualityFilter.values.length > 1 ? true : false}/>
-                        ]}
-                        operation={clinicalDataEqualityFilter.values.length > 1 ? 'IN' : 'IS'}
-                        group={true}/>
+                    <div className={styles.parentGroupLogic}>
+                        <GroupLogic
+                            components={[
+                                <span className={styles.filterClinicalAttrName}>{chartMeta.displayName}</span>,
+                                <GroupLogic components={clinicalDataEqualityFilter.values.map(label => {
+                                    return <PillTag
+                                        content={label}
+                                        backgroundColor={FILTER_CONTENT_COLOR}
+                                        onDelete={() => this.props.updateClinicalDataEqualityFilter(chartMeta, _.remove(clinicalDataEqualityFilter.values, value => value !== label))}
+                                    />
+                                })} operation={'or'} group={false}/>
+                            ]}
+                            operation={':'}
+                            group={false}/></div>
                 );
             }
             return acc;
@@ -82,20 +80,17 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
             const chartMeta = this.props.attributesMetaSet[clinicalDataIntervalFilter.clinicalDataType + '_' + clinicalDataIntervalFilter.attributeId];
             if (chartMeta) {
                 acc.push(
-                    <GroupLogic
+                    <div className={styles.parentGroupLogic}><GroupLogic
                         components={[
-                            <PillTag
-                                content={chartMeta.displayName}
-                                backgroundColor={FILTER_TITLE_COLOR}
-                            />,
+                            <span className={styles.filterClinicalAttrName}>{chartMeta.displayName}</span>,
                             <PillTag
                                 content={intervalFiltersDisplayValue(clinicalDataIntervalFilter.values)}
                                 backgroundColor={FILTER_CONTENT_COLOR}
                                 onDelete={() => this.props.updateClinicalDataEqualityFilter(chartMeta, [])}
                             />
                         ]}
-                        operation={'IS'}
-                        group={true}/>
+                        operation={':'}
+                        group={false}/></div>
                 );
             }
             return acc;
@@ -104,41 +99,43 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
         // Mutated Genes table
         let chartMeta = this.props.attributesMetaSet[UniqueKey.MUTATED_GENES_TABLE];
         if (chartMeta && !_.isEmpty(this.props.filter.mutatedGenes)) {
-            components.push(<GroupLogic components={this.props.filter.mutatedGenes.map(filter => {
-                return <GroupLogic
-                    components={filter.entrezGeneIds.map((entrezGene, index) => {
-                        const hugoSymbol = getHugoSymbolByEntrezGeneId(this.props.allGenes, entrezGene);
-                        return <PillTag
-                            content={hugoSymbol === undefined ? `Entrez Gene ID: ${entrezGene}` : hugoSymbol}
-                            backgroundColor={MUTATED_GENE_COLOR}
-                            onDelete={() => this.props.removeGeneFilter(entrezGene)}
-                        />
-                    })}
-                    operation="OR"
-                    group={filter.entrezGeneIds.length > 1}
-                />
-            })} operation={"AND"} group={false}/>);
+            components.push(<div className={styles.parentGroupLogic}><GroupLogic
+                components={this.props.filter.mutatedGenes.map(filter => {
+                    return <GroupLogic
+                        components={filter.entrezGeneIds.map((entrezGene, index) => {
+                            const hugoSymbol = getHugoSymbolByEntrezGeneId(this.props.allGenes, entrezGene);
+                            return <PillTag
+                                content={hugoSymbol === undefined ? `Entrez Gene ID: ${entrezGene}` : hugoSymbol}
+                                backgroundColor={MUTATED_GENE_COLOR}
+                                onDelete={() => this.props.removeGeneFilter(entrezGene)}
+                            />
+                        })}
+                        operation="or"
+                        group={filter.entrezGeneIds.length > 1}
+                    />
+                })} operation={"and"} group={false}/></div>);
         }
 
         // CNA table files
         chartMeta = this.props.attributesMetaSet[UniqueKey.CNA_GENES_TABLE];
         if (chartMeta && !_.isEmpty(this.props.filter.cnaGenes)) {
-            components.push(<GroupLogic components={this.props.filter.cnaGenes.map(filter => {
-                return <GroupLogic
-                    components={filter.alterations.map((filter, index) => {
-                        const hugoSymbol = getHugoSymbolByEntrezGeneId(this.props.allGenes, filter.entrezGeneId);
-                        let tagColor = getCNAColorByAlteration(filter.alteration);
-                        tagColor = tagColor === undefined ? NA_COLOR : tagColor;
-                        return <PillTag
-                            content={hugoSymbol === undefined ? `Entrez Gene ID: ${filter.entrezGeneId}` : hugoSymbol}
-                            backgroundColor={tagColor}
-                            onDelete={() => this.props.removeCNAGeneFilter(filter)}
-                        />
-                    })}
-                    operation="OR"
-                    group={filter.alterations.length > 1}
-                />
-            })} operation={"AND"} group={false}/>);
+            components.push(<div className={styles.parentGroupLogic}><GroupLogic
+                components={this.props.filter.cnaGenes.map(filter => {
+                    return <GroupLogic
+                        components={filter.alterations.map((filter, index) => {
+                            const hugoSymbol = getHugoSymbolByEntrezGeneId(this.props.allGenes, filter.entrezGeneId);
+                            let tagColor = getCNAColorByAlteration(filter.alteration);
+                            tagColor = tagColor === undefined ? NA_COLOR : tagColor;
+                            return <PillTag
+                                content={hugoSymbol === undefined ? `Entrez Gene ID: ${filter.entrezGeneId}` : hugoSymbol}
+                                backgroundColor={tagColor}
+                                onDelete={() => this.props.removeCNAGeneFilter(filter)}
+                            />
+                        })}
+                        operation="or"
+                        group={filter.alterations.length > 1}
+                    />
+                })} operation={"and"} group={false}/></div>);
         }
 
         // Select IDs by Case Selector, Scatter Plot
@@ -146,11 +143,11 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
             const chartMeta = this.props.attributesMetaSet[chartUniqKey];
             if (chartMeta) {
                 let customChartName = chartMeta.uniqueKey === UniqueKey.SELECT_CASES_BY_IDS ? 'IDs' : chartMeta.displayName;
-                acc.push(<PillTag
+                acc.push(<div className={styles.parentGroupLogic}><PillTag
                     content={`Selected ${sampleIdentifiers.length} samples by ${customChartName}`}
                     backgroundColor={FILTER_TITLE_COLOR}
                     onDelete={() => this.props.clearChartSampleIdentifierFilter(chartMeta)}
-                />);
+                /></div>);
             }
             return acc;
         }, components);
@@ -161,16 +158,11 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
         if (this.showFilters) {
             return (
                 <div className={styles.userSelections}>
-                    <div style={{display: 'flex', flexWrap: 'wrap'}}>
-                        <GroupLogic
-                            components={this.allComponents}
-                            operation="AND"
-                            group={false}
-                        />
-                        <button className={classnames('btn btn-default btn-sm', styles.summaryHeaderBtn, styles.summaryClearAllBtn)}
-                                onClick={this.props.clearAllFilters}>Clear All Filters
-                        </button>
-                    </div>
+                    {this.allComponents}
+                    <button
+                        className={classnames('btn btn-default btn-sm', styles.summaryHeaderBtn, styles.summaryClearAllBtn)}
+                        onClick={this.props.clearAllFilters}>Clear All Filters
+                    </button>
                 </div>
             );
         } else {
