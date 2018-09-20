@@ -30,10 +30,14 @@ export class StudyViewComponentLoader extends React.Component<StudyViewComponent
         }
     }
 
+    @computed get noChildren() {
+        return !this.props.children || (React.Children.count(this.props.children) === 0);
+    }
+
     public render() {
         return (
             <div className={classNames(this.status === "pending" ? styles.studyViewAutoMargin : null, styles.studyViewLoadingIndicator)}>
-                <If condition={this.status === "pending"}>
+                <If condition={(this.status === "pending") || this.noChildren}>
                     <LoadingIndicator
                         isLoading={true}
                     />

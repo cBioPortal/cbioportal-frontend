@@ -8,11 +8,11 @@ export function makeSurvivalChartData(
     analysisGroups: ReadonlyArray<AnalysisGroup>,
     patientToAnalysisGroup: {[uniquePatientKey:string]:string},
     naPatientsHiddenInSurvival: boolean,
-    patientKeysWithNAInSelectedClinicalData?:IChartContainerProps["patientKeysWithNAInSelectedClinicalData"]
+    patientKeysWithNAInSelectedClinicalData?:string[]
 ) {
-    if (naPatientsHiddenInSurvival && patientKeysWithNAInSelectedClinicalData && patientKeysWithNAInSelectedClinicalData.isComplete) {
+    if (naPatientsHiddenInSurvival && patientKeysWithNAInSelectedClinicalData) {
         // filter out NA
-        const clinicalNAPatientKeysMap = _.keyBy(patientKeysWithNAInSelectedClinicalData.result);
+        const clinicalNAPatientKeysMap = _.keyBy(patientKeysWithNAInSelectedClinicalData);
         patientSurvivals = patientSurvivals.filter(s=>{
             return (patientToAnalysisGroup[s.uniquePatientKey] !== "NA") && !(s.uniquePatientKey in clinicalNAPatientKeysMap);
         });
