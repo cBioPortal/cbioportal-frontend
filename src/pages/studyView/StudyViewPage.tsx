@@ -402,6 +402,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                      rowHeight={this.store.studyViewPageLayoutProps.rowHeight}
                                                      layout={this.store.studyViewPageLayoutProps.layout}
                                                      margin={[5, 5]}
+                                                     useCSSTransforms={false}
                                                      draggableHandle={'.fa-arrows'}>
                                         {this.store.visibleAttributes.map(this.renderAttributeChart)}
                                     </ReactGridLayout>
