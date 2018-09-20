@@ -23,6 +23,7 @@ export class BarChartAxisLabel extends VictoryLabel {
             dx,
             textAnchor: style[0].textAnchor || textAnchor,
             style: style[0],
+            key: style[0].textAnchor || textAnchor
         };
 
         let tspan;

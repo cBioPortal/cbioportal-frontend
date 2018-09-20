@@ -1,10 +1,10 @@
 .chart {
     border: 1px solid #d3d3d3;
-    margin: 5px;
     flex-direction: column;
     position: relative;
     flex-direction: column;
     display: flex;
+    height: 100%;
 
     &.analysisTarget {
         border: 2px solid #e5e076;

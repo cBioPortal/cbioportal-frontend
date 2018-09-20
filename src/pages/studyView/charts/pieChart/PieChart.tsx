@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 import { VictoryPie, VictoryContainer, VictoryLabel, VictoryLegend, Slice } from 'victory';
 import { observable, computed, action, toJS } from "mobx";
 import _ from "lodash";
-import { UNSELECTED_COLOR } from "pages/studyView/StudyViewUtils";
+import {toSvgDomNodeWithLegend, UNSELECTED_COLOR} from "pages/studyView/StudyViewUtils";
 import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 import { AbstractChart } from "pages/studyView/charts/ChartContainer";
 import ifndef from "shared/lib/ifndef";
@@ -78,34 +78,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     }
 
     public toSVGDOMNode(): Element {
-        const svg = this.svg.cloneNode(true) as Element;
-        const legend = $(this.svg).find(".studyViewPieChartLegend").get(0);
-        const legendBBox = legend.getBoundingClientRect();
-
-        const height = + $(this.svg).height() + legendBBox.height;
-        const width = Math.max($(this.svg).width(), legendBBox.width);
-
-        // adjust width and height to make sure that the legend is fully visible
-        $(svg).attr("height", height + 5);
-        $(svg).attr("width", width);
-
-
-        // center elements
-
-        const widthDiff = Math.abs($(this.svg).width() - legendBBox.width);
-        const shift = widthDiff / 2;
-        const transform = `translate(${shift}, 0)`;
-
-        if ($(this.svg).width() > legendBBox.width) {
-            // legend needs to be centered wrt the pie chart
-            $(svg).find(".studyViewPieChartLegend").attr("transform", transform);
-        }
-        else {
-            // pie chart needs to be centered wrt the legend
-            $(svg).find(".studyViewPieChartGroup").attr("transform", transform);
-        }
-
-        return svg;
+        return toSvgDomNodeWithLegend(this.svg, ".studyViewPieChartLegend", ".studyViewPieChartGroup", true);
     }
 
     @computed get totalCount() {
@@ -173,7 +146,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         return ((d.count * 360) / this.totalCount) < 20 ? '' : d.count;
     }
 
-    private victoryPie() {
+    @computed get victoryPie() {
         return (
             <VictoryPie
                 standalone={false}
@@ -206,7 +179,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         );
     }
 
-    private victoryLegend() {
+    @computed get victoryLegend() {
         const legendData = this.props.data.map(data =>
             ({name: `${data.value}: ${data.count} (${(100 * data.count / this.totalCount).toFixed(2)}%)`}));
         const colorScale = this.props.data.map(data => data.color);
@@ -228,7 +201,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                 x={0} y={181}
                 rowGutter={-10}
                 title={this.props.label || "Legend"}
-                centerTitle
+                centerTitle={true}
                 style={{ title: { fontWeight: "bold" } }}
                 data={legendData}
                 groupComponent={<g className="studyViewPieChartLegend" />}
@@ -268,8 +241,8 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                     height={180}
                     ref={(ref: any) => this.svg = ref}
                 >
-                    {this.victoryPie()}
-                    {this.victoryLegend()}
+                    {this.victoryPie}
+                    {this.victoryLegend}
                 </svg>
             </div>
         );
