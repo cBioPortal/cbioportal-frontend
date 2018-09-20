@@ -1274,7 +1274,11 @@ export class StudyViewPageStore {
         default: {},
         onResult: (result) => {
             _.forEach(result, (obj, uniqueKey) => {
-                this.changeChartVisibility(uniqueKey, true);
+                if (obj.length < 2) {
+                    this.changeChartVisibility(uniqueKey, false);
+                } else {
+                    this.changeChartVisibility(uniqueKey, true);
+                }
             });
         }
     });
