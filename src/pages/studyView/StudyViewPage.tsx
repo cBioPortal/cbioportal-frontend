@@ -221,8 +221,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 props.onChangeChartType = this.handlers.onChangeChartType;
                 props.download = [
                     {
-                        // TODO implement a proper data download function
-                        initDownload: () => Promise.resolve("NA"),
+                        initDownload: () => this.store.getClinicalData(chartMeta),
                         type: 'TSV'
                     }
                 ];
@@ -238,7 +237,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 props.title = props.title + ( !this.store.molecularProfileSampleCounts.isComplete || this.store.molecularProfileSampleCounts.result === undefined ? '' : ` (${this.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples} profiled samples)`),
                 props.download = [
                     {
-                        // TODO implement a proper data download function
                         initDownload: () => this.store.getMutatedGenesDownloadData(),
                         type: 'TSV'
                     }
@@ -255,7 +253,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 props.title = props.title + ( !this.store.molecularProfileSampleCounts.isComplete || this.store.molecularProfileSampleCounts.result === undefined ? '' : ` (${this.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples} profiled samples)`),
                 props.download = [
                     {
-                        // TODO implement a proper data download function
                         initDownload: () => this.store.getGenesCNADownloadData(),
                         type: 'TSV'
                     }
