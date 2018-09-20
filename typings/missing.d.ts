@@ -32,3 +32,4 @@ declare module 'victory';
 declare module 'universal-ga';
 declare module 'mixpanel-browser';
 declare module 'measure-text';
+declare module 'contrast';

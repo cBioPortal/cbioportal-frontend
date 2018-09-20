@@ -6,7 +6,8 @@ import {
     intervalFiltersDisplayValue, isEveryBinDistinct, toFixedDigit, getExponent,
     getCNAByAlteration,
     getDefaultChartTypeByClinicalAttribute,
-    getVirtualStudyDescription, calculateLayout, getLayoutMatrix, LayoutMatrixItem, getQValue, pickClinicalDataColors, getSamplesByExcludingFiltersOnChart, getFilteredSampleIdentifiers
+    getVirtualStudyDescription, calculateLayout, getLayoutMatrix, LayoutMatrixItem, getQValue, pickClinicalDataColors, getSamplesByExcludingFiltersOnChart, getFilteredSampleIdentifiers,
+    getHugoSymbolByEntrezGeneId
 } from 'pages/studyView/StudyViewUtils';
 import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue, Sample} from 'shared/api/generated/CBioPortalAPIInternal';
 import {ClinicalAttribute, Gene} from 'shared/api/generated/CBioPortalAPI';
@@ -1392,4 +1393,27 @@ describe('StudyViewUtils', () => {
             assert.deepEqual(getFilteredSampleIdentifiers(samples,  (sample) => sample.copyNumberSegmentPresent),[{ sampleId: 'sample2', studyId: 'study1' }]);
         });
     });
+
+    describe('getHugoSymbolByEntrezGeneId', () => {
+        const braf = {
+            "entrezGeneId": 673,
+            "hugoGeneSymbol": "BRAF",
+            "type": "protein-coding",
+            "cytoband": "7q34",
+            "length": 205602,
+            "chromosome": "7"
+        };
+
+        it('Return undefined for gene not exist', () => {
+            assert.isTrue(getHugoSymbolByEntrezGeneId([], 1) === undefined);
+        });
+
+        it('Return undefined for gene not exist', () => {
+            assert.isTrue(getHugoSymbolByEntrezGeneId([braf], 1) === undefined);
+        });
+
+        it('Return appropriate entrez gene', () => {
+            assert.isTrue(getHugoSymbolByEntrezGeneId([braf], 673) === 'BRAF');
+        });
+    })
 });

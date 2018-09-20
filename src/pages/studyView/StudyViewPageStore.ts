@@ -52,7 +52,11 @@ import {
     makePatientToClinicalAnalysisGroup,
     EXPONENTIAL_FRACTION_DIGITS,
     generateScatterPlotDownloadData,
-    NA_DATA, ONE_GRID_TABLE_ROWS, PIE_TO_TABLE_LIMIT, COLORS, NA_COLOR, getSamplesByExcludingFiltersOnChart, getFilteredSampleIdentifiers
+    NA_DATA, ONE_GRID_TABLE_ROWS, PIE_TO_TABLE_LIMIT,
+    COLORS, NA_COLOR,
+    getSamplesByExcludingFiltersOnChart,
+    getFilteredSampleIdentifiers,
+    UNSELECTED_GROUP_COLOR, SELECTED_GROUP_COLOR
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -83,6 +87,7 @@ export enum ChartTypeEnum {
 export type ChartType = 'PIE_CHART' | 'BAR_CHART' | 'SURVIVAL' | 'TABLE' | 'SCATTER' | 'MUTATED_GENES_TABLE' | 'CNA_GENES_TABLE' | 'NONE';
 
 export enum UniqueKey {
+    SELECT_CASES_BY_IDS = 'CUSTOM_FILTERS',
     MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
     CNA_GENES_TABLE = 'CNA_GENES_TABLE',
     MUTATION_COUNT_CNA_FRACTION = 'MUTATION_COUNT_CNA_FRACTION',
@@ -129,7 +134,7 @@ export type ChartMeta = {
 export const CUSTOM_CHART_KEYS = [UniqueKey.SAMPLES_PER_PATIENT, UniqueKey.WITH_CNA_DATA, UniqueKey.WITH_MUTATION_DATA];
 
 export const SpecialCharts: ChartMeta[] = [{
-    uniqueKey: 'customFilters',
+    uniqueKey: UniqueKey.SELECT_CASES_BY_IDS,
     displayName: 'Select by IDs',
     description: 'Select by IDs',
     dimension: {
@@ -377,11 +382,11 @@ export class StudyViewPageStore {
             return {
                 groups: [{
                     value: UNSELECTED_ANALYSIS_GROUP_VALUE,
-                    color: "blue",
+                    color: UNSELECTED_GROUP_COLOR,
                     legendText: "Unselected patients"
                 },{
                     value: SELECTED_ANALYSIS_GROUP_VALUE,
-                    color: "red",
+                    color: SELECTED_GROUP_COLOR,
                     legendText: "Selected patients"
                 }] as AnalysisGroup[]
             }
@@ -560,6 +565,24 @@ export class StudyViewPageStore {
         this._mutatedGeneFilter = [...this._mutatedGeneFilter, {entrezGeneIds: entrezGeneIds}];
     }
 
+    @action
+    removeGeneFilter(toBeRemoved: number) {
+        this._mutatedGeneFilter = _.reduce(this._mutatedGeneFilter, (acc, next) => {
+            const newGroup = _.reduce(next.entrezGeneIds, (list, entrezGeneId) => {
+                if (entrezGeneId !== toBeRemoved) {
+                    list.push(entrezGeneId);
+                }
+                return list;
+            }, [] as number[]);
+            if (newGroup.length > 0) {
+                acc.push({
+                    entrezGeneIds: newGroup
+                });
+            }
+            return acc;
+        }, [] as MutationGeneFilter[]);
+    }
+
     @action resetGeneFilter() {
         this._mutatedGeneFilter = [];
     }
@@ -597,7 +620,25 @@ export class StudyViewPageStore {
 
     @action
     addCNAGeneFilters(filters: CopyNumberGeneFilterElement[]) {
-        this._cnaGeneFilter = [...this._cnaGeneFilter , {alterations: filters}];
+        this._cnaGeneFilter = [...this._cnaGeneFilter, {alterations: filters}];
+    }
+
+    @action
+    removeCNAGeneFilters(toBeRemoved: CopyNumberGeneFilterElement) {
+        this._cnaGeneFilter = _.reduce(this._cnaGeneFilter, (acc, next) => {
+            const newGroup = _.reduce(next.alterations, (list, filter) => {
+                if (filter.entrezGeneId !== toBeRemoved.entrezGeneId && filter.alteration !== toBeRemoved.alteration) {
+                    list.push(filter);
+                }
+                return list;
+            }, [] as CopyNumberGeneFilterElement[]);
+            if (newGroup.length > 0) {
+                acc.push({
+                    alterations: newGroup
+                });
+            }
+            return acc;
+        }, [] as CopyNumberGeneFilter[]);
     }
 
     @action
@@ -1451,6 +1492,14 @@ export class StudyViewPageStore {
             } else {
                 return [];
             }
+        },
+        default: []
+    });
+
+    readonly allGenes = remoteData<Gene[]>({
+        await:()=>[],
+        invoke: async () => {
+            return defaultClient.getAllGenesUsingGET({});
         },
         default: []
     });
