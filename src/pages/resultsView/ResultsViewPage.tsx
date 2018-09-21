@@ -18,7 +18,6 @@ import ResultsViewOncoprint from "shared/components/oncoprint/ResultsViewOncopri
 import QuerySummary from "./querySummary/QuerySummary";
 import ExpressionWrapper from "./expression/ExpressionWrapper";
 import EnrichmentsTab from 'pages/resultsView/enrichments/EnrichmentsTab';
-import {Bookmark} from "./bookmark/Bookmark";
 import PlotsTab from "./plots/PlotsTab";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
@@ -443,7 +442,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     (this.currentQuery) && (<div>
 
                         <div style={{margin:"0 20px 10px 20px"}}>
-                            <QuerySummary queryStore={getBrowserWindow().currentQueryStore} store={this.resultsViewPageStore}/>
+                            <QuerySummary queryStore={getBrowserWindow().currentQueryStore} routingStore={this.props.routing} store={this.resultsViewPageStore}/>
                         </div>
                         {
                             (this.resultsViewPageStore.studies.isComplete) && (
