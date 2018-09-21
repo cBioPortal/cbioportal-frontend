@@ -18,7 +18,6 @@ export interface IMSKTabProps {
     className?:string;
     hide?:boolean;
     datum?:any;
-    loading?:boolean;
     anchorStyle?:{[k:string]:string|number|boolean};
     unmountOnHide?:boolean;
     onTabDidMount?:(tab:HTMLDivElement)=>void;
@@ -31,7 +30,7 @@ export class MSKTab extends React.Component<IMSKTabProps,{}> {
     }
 
     public static defaultProps: Partial<IMSKTabProps> = {
-        unmountOnHide: false
+        unmountOnHide: false,
     };
 
     public div:HTMLDivElement;
@@ -198,12 +197,12 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                     if (!child.props.hide) {
                         if (child.props.id === this.state.deferedActiveTabId) {
                             this.shownTabs.push(child.props.id);
-                            memo.push(this.cloneTab(child, false, !!child.props.loading));
+                            memo.push(this.cloneTab(child, false));
                         } else if (
                             (child.props.unmountOnHide === false || (this.props.unmountOnHide === false))
-                            && _.includes(this.shownTabs, child.props.id) && !child.props.loading) {
+                            && _.includes(this.shownTabs, child.props.id)) {
                             // if we're NOT unmounting it and the tab has been shown and it's not loading, include it
-                            memo.push(this.cloneTab(child, true, !!child.props.loading));
+                            memo.push(this.cloneTab(child, true));
                         }
                     }
                     return memo;
@@ -218,8 +217,11 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                     className={ classnames('msk-tabs', this.props.className) }
                 >
                     {this.navTabs(children, targetTabId)}
-                    <LoadingIndicator isLoading={switchingTab} isGlobal={true}/>
-                    <div hidden={switchingTab} className="tab-content">{tabContent}</div>
+
+                    <div className="tab-content">
+                        <LoadingIndicator isLoading={switchingTab} isGlobal={true}/>
+                        {tabContent}
+                    </div>
                 </div>
             );
         } else {

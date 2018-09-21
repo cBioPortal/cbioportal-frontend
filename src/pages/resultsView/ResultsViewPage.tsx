@@ -223,7 +223,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
                     const isComplete = store.samplesExtendedWithClinicalData.isComplete && store.alterationsByGeneBySampleKey.isComplete && store.studies.isComplete;
 
-                    return (<MSKTab key={1} id="cancerTypesSummaryTab" loading={!isComplete} linkText="Cancer Types Summary">
+                    return (<MSKTab key={1} id="cancerTypesSummaryTab" linkText="Cancer Types Summary">
                         <CancerSummaryContainer
                             genes={store.genes.result!}
                             samplesExtendedWithClinicalData={store.samplesExtendedWithClinicalData.result!}
@@ -239,7 +239,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"mutual_exclusivity",
                 getTab: () => {
-                    return <MSKTab key={5} id="mutualExclusivityTab" loading={!store.isSampleAlteredMap.isComplete} linkText="Mutual Exclusivity">
+                    return <MSKTab key={5} id="mutualExclusivityTab" linkText="Mutual Exclusivity">
                         <MutualExclusivityTab store={store}/>
                     </MSKTab>
                 },
@@ -263,7 +263,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"mutations",
                 getTab: () => {
-                    return <MSKTab key={3} id="mutationsTab" loading={store.mutationMapperStores.isPending} linkText="Mutations">
+                    return <MSKTab key={3} id="mutationsTab" linkText="Mutations">
                         <Mutations store={store}/>
                     </MSKTab>
                 }
@@ -275,13 +275,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     return this.resultsViewPageStore.studies.result!.length > 1;
                 },
                 getTab: () => {
-
-                    const isLoading = store.molecularProfilesInStudies.isPending ||
-                    store.genes.isPending ||
-                    store.studyToDataQueryFilter.isPending ||
-                    store.geneMolecularDataCache.isPending;
-
-                    return <MSKTab key={7} id="coexpression" loading={isLoading} linkText={'Co-expression'}>
+                    return <MSKTab key={7} id="coexpression" linkText={'Co-expression'}>
                         <CoExpressionTab
                             store={store}
                             molecularProfiles={store.molecularProfilesInStudies.result}
@@ -303,15 +297,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     return this.resultsViewPageStore.studies.result!.length > 1;
                 },
                 getTab: () => {
-
-                    const isLoading = store.mutationEnrichmentProfiles.isPending ||
-                        store.unalteredSampleKeys.isPending ||
-                        store.mutationEnrichmentProfiles.isPending ||
-                        store.copyNumberEnrichmentProfiles.isPending ||
-                        store.mRNAEnrichmentProfiles.isPending ||
-                        store.proteinEnrichmentProfiles.isPending
-
-                    return <MSKTab key={10} id="enrichment" loading={isLoading} linkText={'Enrichments'}>
+                    return <MSKTab key={10} id="enrichment" linkText={'Enrichments'}>
                         <EnrichmentsTab store={store}/>
                     </MSKTab>
                 }
@@ -348,10 +334,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     return this.resultsViewPageStore.studies.result!.length > 1;
                 },
                 getTab: () => {
-                    return <MSKTab key={9} id="network"
-                                   loading={store.studies.isPending || store.sampleLists.isPending}
-                                   linkText={'Network'}
-                    >
+                    return <MSKTab key={9} id="network" linkText={'Network'}>
                         {
                             (store.studies.isComplete && store.sampleLists.isComplete && store.samples.isComplete) &&
                             (<Network genes={store.genes.result!}
@@ -375,7 +358,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                 getTab: () => {
 
                     return <MSKTab key={8} id="expression"
-                                   loading={(store.rnaSeqMolecularData.isPending || store.studyIdToStudy.isPending || store.mutations.isPending || store.genes.isPending || store.coverageInformation.isPending)}
+
                                    linkText={'Expression'}
                     >
                         {
