@@ -98,20 +98,23 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
             content.push(
                 <div>
                     <h4 className='forceHeaderStyle h4'>{ this.diseaseFreeSurvivalTitleText }</h4>
-                    <SurvivalChart
-                    patientSurvivals = {this.diseaseFreePatientSurvivalData.result.patientSurvivals}
-                    analysisGroups={analysisGroups}
-                    patientToAnalysisGroup={this.diseaseFreePatientSurvivalData.result.patientToAnalysisGroup}
-                    title={this.diseaseFreeSurvivalTitleText}
-                    xAxisLabel="Months Disease/Progression-free"
-                    yAxisLabel="Disease/Progression-free Survival"
-                    totalCasesHeader="Number of Cases, Total"
-                    statusCasesHeader="Number of Cases, Relapsed/Progressed"
-                    medianMonthsHeader="Median Months Disease-free"
-                    yLabelTooltip="Disease-free Estimate"
-                    xLabelWithEventTooltip="Time of Relapse"
-                    xLabelWithoutEventTooltip="Time of Last Observation"
-                    fileName="Disease_Free_Survival" />
+                    <div style={{width: '920px'}}>
+                        <SurvivalChart
+                            className='borderedChart'
+                            patientSurvivals = {this.diseaseFreePatientSurvivalData.result.patientSurvivals}
+                            analysisGroups={analysisGroups}
+                            patientToAnalysisGroup={this.diseaseFreePatientSurvivalData.result.patientToAnalysisGroup}
+                            title={this.diseaseFreeSurvivalTitleText}
+                            xAxisLabel="Months Disease/Progression-free"
+                            yAxisLabel="Disease/Progression-free Survival"
+                            totalCasesHeader="Number of Cases, Total"
+                            statusCasesHeader="Number of Cases, Relapsed/Progressed"
+                            medianMonthsHeader="Median Months Disease-free"
+                            yLabelTooltip="Disease-free Estimate"
+                            xLabelWithEventTooltip="Time of Relapse"
+                            xLabelWithoutEventTooltip="Time of Last Observation"
+                            fileName="Disease_Free_Survival" />
+                    </div>
                 </div>
             );
         } else {
