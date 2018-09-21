@@ -250,8 +250,6 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             case ChartTypeEnum.SCATTER: {
                 props.filters = this.store.getChartSampleIdentifiersFilter(props.chartMeta?props.chartMeta.uniqueKey:'');
                 props.promise = this.store.mutationCountVsFractionGenomeAlteredData;
-                props.selectedSamplesMap = this.store.selectedSamplesMap;
-                props.selectedSamples = this.store.selectedSamples;
                 props.onValueSelection = (cases: SampleIdentifier[], keepCurrent?:boolean)=>{
                     this.handlers.updateChartSampleIdentifierFilter(props.chartMeta?props.chartMeta.uniqueKey:'',cases,keepCurrent);
                 }
