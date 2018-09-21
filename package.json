@@ -142,7 +142,7 @@
     "mobx-react-devtools": "^4.2.11",
     "mobx-react-router": "^3.1.2",
     "mobx-utils": "^2.0.1",
-    "mobxpromise": "github:cbioportal/mobxpromise#master",
+    "mobxpromise": "github:cbioportal/mobxpromise#v1.0.0",
     "node-sass": "^4.3.0",
     "numeral": "^2.0.6",
     "oncoprintjs": "^1.1.6",
