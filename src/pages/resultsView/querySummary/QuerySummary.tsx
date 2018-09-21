@@ -8,11 +8,14 @@ import {CancerStudy} from "../../../shared/api/generated/CBioPortalAPI";
 import classNames from 'classnames';
 import './styles.scss';
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
-import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
+import Loader, {default as LoadingIndicator} from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import {action, observable} from "mobx";
 import {QueryStore} from "../../../shared/components/query/QueryStore";
 import QueryAndDownloadTabs from "../../../shared/components/query/QueryAndDownloadTabs";
 import autobind from "autobind-decorator";
+import {BookmarkModal} from "../bookmark/BookmarkModal";
+import ExtendedRouterStore from "../../../shared/lib/ExtendedRouterStore";
+
 
 class StudyLink extends React.Component<{ study: CancerStudy, onClick?: () => void, href?:string }, {}> {
     render() {
@@ -21,10 +24,11 @@ class StudyLink extends React.Component<{ study: CancerStudy, onClick?: () => vo
 }
 
 @observer
-export default class QuerySummary extends React.Component<{ queryStore:QueryStore, store: ResultsViewPageStore }, {}> {
+export default class QuerySummary extends React.Component<{ queryStore:QueryStore, routingStore:ExtendedRouterStore, store: ResultsViewPageStore }, {}> {
 
     @observable private queryFormVisible = false;
     @observable private queryStoreInitialized = false;
+    @observable private showBookmarkDialog = false;
 
     constructor() {
         super();
@@ -71,6 +75,12 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
         $(document).scrollTop(0);
     }
 
+    @autobind
+    @action
+    toggleBookmarkDialog(){
+        this.showBookmarkDialog = !this.showBookmarkDialog;
+    }
+
     private get multipleStudyUI() {
         return <div>
             <span>
@@ -110,15 +120,27 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
             return (
                 <div>
+
+                    {
+                        (this.showBookmarkDialog) && (
+                            <BookmarkModal routingStore={this.props.routingStore} onHide={this.toggleBookmarkDialog}  />
+                        )
+                    }
+
                     <div className="query-summary">
                         <div className="query-summary__leftItems">
                             <div>
                                 <button id="modifyQueryBtn" onClick={this.handleModifyQueryClick} className={classNames('btn btn-primary' , { disabled:!loadingComplete  })}>
                                     {(this.queryFormVisible) ? 'Cancel Modify Query' : 'Modify Query'}
                                 </button>
+
+                                <DefaultTooltip overlay={<div>Bookmark query</div>}>
+                                    <button className="btn btn-default" onClick={this.toggleBookmarkDialog} style={{marginLeft:10}}><i className="fa fa-bookmark fa-lg text-primary"></i></button>
+                                </DefaultTooltip>
+
                             </div>
 
-                            <Loader isLoading={loadingComplete === false}/>
+                            <LoadingIndicator isLoading={!loadingComplete} small={true}/>
 
 
                             {
