@@ -390,33 +390,34 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     </div>
                                 </div>
                             }
-                            (this.store.initialClinicalDataBins.isComplete) && (
-                                <SummaryHeader
-                                    geneQuery={this.store.geneQueryStr}
-                                    selectedSamples={this.store.selectedSamples.result!}
-                                    updateCustomCasesFilter={(cases: SampleIdentifier[], keepCurrent?:boolean)=>{
-                                        this.handlers.updateChartSampleIdentifierFilter(UniqueKey.SELECT_CASES_BY_IDS,cases,keepCurrent);
-                                    }}
-                                    updateSelectedGenes={this.handlers.updateSelectedGenes}
-                                    studyWithSamples={this.store.studyWithSamples.result}
-                                    filter={this.store.userSelections}
-                                    allGenes={this.store.allGenes.result}
-                                    attributesMetaSet={this.store.chartMetaSet}
-                                    user={AppConfig.userEmailAddress}
-                                    getClinicalData={this.store.getDownloadDataPromise}
-                                    onSubmitQuery={()=> this.store.onSubmitQuery()}
-                                    updateClinicalDataEqualityFilter={this.handlers.onValueSelection}
-                                    updateClinicalDataIntervalFilter={this.handlers.onUpdateIntervalFilters}
-                                    removeGeneFilter={this.handlers.removeGeneFilter}
-                                    removeCNAGeneFilter={this.handlers.removeCNAGeneFilter}
-                                    clearCNAGeneFilter={this.handlers.clearCNAGeneFilter}
-                                    clearGeneFilter={this.handlers.clearGeneFilter}
-                                    clearChartSampleIdentifierFilter={this.handlers.clearChartSampleIdentifierFilter}
-                                    clearAllFilters={this.handlers.clearAllFilters}
-                                    clinicalAttributesWithCountPromise={this.store.clinicalAttributesWithCount}
-                                    visibleAttributeIds={this.store.visibleAttributes}
-                                    onChangeChartsVisibility={this.handlers.updateChartsVisibility}
-                                />
+                            {
+                                (this.store.initialClinicalDataBins.isComplete) && (
+                                    <SummaryHeader
+                                        geneQuery={this.store.geneQueryStr}
+                                        selectedSamples={this.store.selectedSamples.result!}
+                                        updateCustomCasesFilter={(cases: SampleIdentifier[], keepCurrent?:boolean)=>{
+                                            this.handlers.updateChartSampleIdentifierFilter(UniqueKey.SELECT_CASES_BY_IDS,cases,keepCurrent);
+                                        }}
+                                        updateSelectedGenes={this.handlers.updateSelectedGenes}
+                                        studyWithSamples={this.store.studyWithSamples.result}
+                                        filter={this.store.userSelections}
+                                        allGenes={this.store.allGenes.result}
+                                        attributesMetaSet={this.store.chartMetaSet}
+                                        user={AppConfig.userEmailAddress}
+                                        getClinicalData={this.store.getDownloadDataPromise}
+                                        onSubmitQuery={()=> this.store.onSubmitQuery()}
+                                        updateClinicalDataEqualityFilter={this.handlers.onValueSelection}
+                                        updateClinicalDataIntervalFilter={this.handlers.onUpdateIntervalFilters}
+                                        removeGeneFilter={this.handlers.removeGeneFilter}
+                                        removeCNAGeneFilter={this.handlers.removeCNAGeneFilter}
+                                        clearCNAGeneFilter={this.handlers.clearCNAGeneFilter}
+                                        clearGeneFilter={this.handlers.clearGeneFilter}
+                                        clearChartSampleIdentifierFilter={this.handlers.clearChartSampleIdentifierFilter}
+                                        clearAllFilters={this.handlers.clearAllFilters}
+                                        clinicalAttributesWithCountPromise={this.store.clinicalAttributesWithCount}
+                                        visibleAttributeIds={this.store.visibleAttributes}
+                                        onChangeChartsVisibility={this.handlers.updateChartsVisibility}
+                                    />
                                 )
                             }
                             <div className={styles.studyViewFlexContainer}>
