@@ -1365,8 +1365,8 @@ describe('case set selection in modify query form', function(){
         browser.pause(5000); // give time for text change to propagate through to the view
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "All (12997)",
-            "All (12997)",
+            "All (12880)",
+            "All (12880)",
         );
 
         // Deselect all tcga -provisional studies
