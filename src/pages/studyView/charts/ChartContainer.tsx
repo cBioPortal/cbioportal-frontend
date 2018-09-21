@@ -30,6 +30,7 @@ import {getTableHeightByDimension, getTableWidthByDimension, makeMutationCountVs
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import {remoteData} from "../../../shared/api/remoteData";
 import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
+import StudyViewDensityScatterPlot from "./scatterPlot/StudyViewDensityScatterPlot";
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -58,8 +59,6 @@ export interface IChartContainerProps {
     showLogScaleToggle?:boolean;
     selectedGenes?:any;
     onGeneSelect?:any;
-    selectedSamplesMap?: any;
-    selectedSamples?: any;
 
     setAnalysisGroupsSettings: (attribute:ClinicalAttribute, grp:ReadonlyArray<AnalysisGroup>)=>void;
     analysisGroupsSettings:StudyViewPageStore["analysisGroupsSettings"];
@@ -353,19 +352,14 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 }
             }
             case ChartTypeEnum.SCATTER: {
-                // sampleToAnalysisGroup is complete because of loadingPromises and StudyViewComponentLoader
                 return (
-                    <StudyViewScatterPlot
+                    <StudyViewDensityScatterPlot
                         ref={this.handlers.ref}
                         width={400}
                         height={380}
                         onSelection={this.props.onValueSelection}
                         data={this.props.promise.result}
-                        isLoading={this.props.selectedSamples.isPending}
-
-                        sampleToAnalysisGroup={this.props.sampleToAnalysisGroup!.result!}
-                        analysisGroups={this.props.analysisGroupsSettings.groups}
-                        analysisClinicalAttribute={this.props.analysisGroupsSettings.clinicalAttribute}
+                        isLoading={this.props.promise.isPending}
 
                         axisLabelX="Fraction of copy number altered genome"
                         axisLabelY="# of mutations"
@@ -379,16 +373,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     @computed get mutationCountVsCnaTooltip() {
-        return makeMutationCountVsCnaTooltip(this.props.sampleToAnalysisGroup!.result, this.props.analysisGroupsSettings.clinicalAttribute);
+        return makeMutationCountVsCnaTooltip();
     }
 
     @computed get loadingPromises() {
         const ret = [this.props.promise];
-        switch (this.chartType) {
-            case ChartTypeEnum.SCATTER:
-                ret.push(this.props.sampleToAnalysisGroup!);
-                break;
-        }
         return ret;
     }
 
