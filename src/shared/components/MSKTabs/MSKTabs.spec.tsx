@@ -125,7 +125,7 @@ describe('MSKTabs', () => {
         assert.equal(span.text(), "One");
 
         let tabs2 = mount(<MSKTabs activeTabId="one">
-            <MSKTab id="one" linkText="One" loading={true}><span className="content">One</span></MSKTab>
+            <MSKTab id="one" linkText="One"><span className="content">One</span></MSKTab>
             <MSKTab linkText="Two" id="two"><span className="content">Two</span></MSKTab>
         </MSKTabs>);
 

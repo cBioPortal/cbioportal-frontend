@@ -171,6 +171,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         return patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length > 0;
     }
 
+    hideTissueImageTab(){
+        // can't show this iframe if we're on https:
+        return patientViewPageStore.hasTissueImageIFrameUrl.isPending || patientViewPageStore.hasTissueImageIFrameUrl.isError
+            || /https/.test(window.location.protocol)
+            || (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && !patientViewPageStore.hasTissueImageIFrameUrl.result);
+    }
+
     public render() {
 
         let sampleManager: SampleManager | null = null;
@@ -459,7 +466,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                     <MSKTab key={3} id="pathologyReportTab" linkText="Pathology Report"
                             hide={!this.shouldShowPathologyReport(patientViewPageStore)}
-                            loading={patientViewPageStore.pathologyReport.isPending}
                     >
                         <div>
                             <PathologyReport iframeStyle={{position:"absolute", top:0}} pdfs={patientViewPageStore.pathologyReport.result} />
@@ -469,15 +475,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                     <MSKTab key={4} id="heatMapReportTab" linkText="Heatmap"
                              hide={(!patientViewPageStore.MDAndersonHeatMapAvailable.isComplete || !patientViewPageStore.MDAndersonHeatMapAvailable.result)}
-                            loading={patientViewPageStore.MDAndersonHeatMapAvailable.isPending}
                     >
                             <IFrameLoader height={700} url={ `//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?participant=${patientViewPageStore.patientId}` } />
                     </MSKTab>
 
                     <MSKTab key={5} id="tissueImageTab" linkText="Tissue Image"
-                            hide={/https/.test(window.location.protocol) // can't show this iframe if we're on https:
-                                    || (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && !patientViewPageStore.hasTissueImageIFrameUrl.result)}
-                            loading={patientViewPageStore.hasTissueImageIFrameUrl.isPending}
+                            hide={this.hideTissueImageTab()}
                     >
                         <div style={{position: "relative"}}>
                             <IFrameLoader height={700} url={  `http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=${patientViewPageStore.patientId}` } />
