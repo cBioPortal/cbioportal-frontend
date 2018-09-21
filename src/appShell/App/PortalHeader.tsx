@@ -116,7 +116,7 @@ export default class PortalHeader extends React.Component<{}, {}> {
                 <If condition={!_.isEmpty(AppConfig.authUserName)}>
                     <Then>
                         <div className="identity">Logged in as <span dangerouslySetInnerHTML={{__html:AppConfig.authUserName!}}></span>
-                            &nbsp;|&nbsp;
+                            <span className="pipeSeperator">|</span>
                             {
                                 (!_.isEmpty(AppConfig.authLogoutUrl)) && (
                                     <a href={getLogoutURL()}>Sign out</a>
