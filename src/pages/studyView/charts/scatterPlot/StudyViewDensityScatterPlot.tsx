@@ -15,8 +15,9 @@ import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicato
 import $ from "jquery";
 import {AnalysisGroup} from "../../StudyViewPageStore";
 import {AbstractChart} from "../ChartContainer";
+import {interpolatePlasma} from "d3-scale-chromatic";
 
-export interface IStudyViewScatterPlotData {
+export interface IStudyViewDensityScatterPlotData {
     x:number;
     y:number;
     uniqueSampleKey:string;
@@ -25,29 +26,26 @@ export interface IStudyViewScatterPlotData {
     patientId:string;
 }
 
-export interface IStudyViewScatterPlotProps {
+export interface IStudyViewDensityScatterPlotProps {
     width:number;
     height:number;
-    data:IStudyViewScatterPlotData[]
+    data:IStudyViewDensityScatterPlotData[]
     onSelection:(sampleIdentifiers:SampleIdentifier[], keepCurrent:boolean)=>void;
 
     isLoading?:boolean;
     svgRef?:(svg:SVGElement|null)=>void;
-    tooltip?:(d:DSData<IStudyViewScatterPlotData>)=>JSX.Element;
+    tooltip?:(d:DSData<IStudyViewDensityScatterPlotData>)=>JSX.Element;
     axisLabelX?: string;
     axisLabelY?: string;
     title?:string;
-
-    sampleToAnalysisGroup:{[uniqueSampleKey:string]:string};
-    analysisGroups:ReadonlyArray<AnalysisGroup>; // identified by `value`
-    analysisClinicalAttribute?:ClinicalAttribute;
 }
 
 const NUM_AXIS_TICKS = 8;
-const DOMAIN_PADDING = 50;
+const DOMAIN_PADDING = 15;
+const BIN_THRESHOLD = 0; // set to 0 means always bin
 
 @observer
-export default class StudyViewScatterPlot extends React.Component<IStudyViewScatterPlotProps, {}> implements AbstractChart {
+export default class StudyViewDensityScatterPlot extends React.Component<IStudyViewDensityScatterPlotProps, {}> implements AbstractChart {
     @observable tooltipModel:any|null = null;
     @observable pointHovered:boolean = false;
     @observable mouseIsDown:boolean = false;
@@ -118,7 +116,7 @@ export default class StudyViewScatterPlot extends React.Component<IStudyViewScat
     }
 
     @computed get dataDomain() {
-        // data extremes
+        // get data extremes
         const max = {x:Number.NEGATIVE_INFINITY, y:Number.NEGATIVE_INFINITY};
         const min = {x:Number.POSITIVE_INFINITY, y:Number.POSITIVE_INFINITY};
         for (const d of this.props.data) {
@@ -128,43 +126,10 @@ export default class StudyViewScatterPlot extends React.Component<IStudyViewScat
             min.y = Math.min(d.y, min.y);
         }
         return {
-            x: [min.x, max.x],
-            y: [min.y, max.y]
-        };
-    }
-
-    @computed get plotDomain() {
-        const dataDomain = this.dataDomain;
-        const pixelSpaceToDataSpace = this.pixelSpaceToDataSpace;
-        const paddingX = pixelSpaceToDataSpace.x(DOMAIN_PADDING);
-        const paddingY = pixelSpaceToDataSpace.y(DOMAIN_PADDING);
-        return {
-            x:[dataDomain.x[0]-paddingX, dataDomain.x[1]+paddingX],
-            y:[dataDomain.y[0]-paddingY, dataDomain.y[1]+paddingY]
-        };
-    }
-
-    @computed get pixelSpaceToDataSpace() {
-        const dataDomain = this.dataDomain;
-        const xRange = dataDomain.x[1] - dataDomain.x[0];
-        const minX = dataDomain.x[0];
-        const yRange = dataDomain.y[1] - dataDomain.y[0];
-        const minY = dataDomain.y[0];
-        return {
-            x: (val:number)=>(val/this.props.width)*xRange + minX,
-            y: (val:number)=>(val/this.props.height)*yRange + minY
-        };
-    }
-
-    @computed get dataSpaceToPixelSpace() {
-        const dataDomain = this.dataDomain;
-        const xRange = dataDomain.x[1] - dataDomain.x[0];
-        const minX = dataDomain.x[0];
-        const yRange = dataDomain.y[1] - dataDomain.y[0];
-        const minY = dataDomain.y[0];
-        return {
-            x: (val:number)=>((val-minX)/xRange)*this.props.width,
-            y: (val:number)=>((val-minY)/yRange)*this.props.height
+            //x: [min.x, max.x],
+            //y: [min.y, max.y]
+            x: [0, 1],
+            y:[0, max.y]
         };
     }
 
@@ -186,7 +151,7 @@ export default class StudyViewScatterPlot extends React.Component<IStudyViewScat
     @autobind
     private onSelection(points:any) {
         const selectedSamples = _.reduce(points, function (acc, point) {
-            _.each(point.data, datum => _.each(datum.data, (d: IStudyViewScatterPlotData) => acc.push({
+            _.each(point.data, datum => _.each(datum.data, (d: IStudyViewDensityScatterPlotData) => acc.push({
                 sampleId: d.sampleId,
                 studyId: d.studyId
             })));
@@ -196,64 +161,97 @@ export default class StudyViewScatterPlot extends React.Component<IStudyViewScat
         this.props.onSelection(selectedSamples, this.shiftPressed); // keep other selection if shift pressed
     }
 
-    @computed get data() {
-        return getDownsampledData(this.props.data, this.dataSpaceToPixelSpace, this.props.sampleToAnalysisGroup);
+    @computed get binningData() {
+        return this.props.data.length > BIN_THRESHOLD;
+    }
+
+    @computed get data():DSData<IStudyViewDensityScatterPlotData>[] {
+        if (this.binningData) {
+            const MESH = 50;
+            const X_STEP = (this.dataDomain.x[1] - this.dataDomain.x[0])/MESH;
+            const Y_STEP = (this.dataDomain.y[1] - this.dataDomain.y[0])/MESH;
+            const getGridCoords = (d:{x:number, y:number})=>{
+                const x = Math.floor((d.x - this.dataDomain.x[0])/X_STEP);
+                const y = Math.floor((d.y - this.dataDomain.y[0])/Y_STEP);
+                return { x, y };
+            };
+
+            const getAreaHash = (gridCoords:{x:number, y:number})=>`${gridCoords.x},${gridCoords.y}`;
+
+            const bins = _.groupBy(this.props.data, d=>getAreaHash(getGridCoords(d)));
+            return _.values(bins).map(data=>{
+                const gridCoords = getGridCoords(data[0]);
+                return {
+                    x: gridCoords.x*X_STEP,
+                    y: gridCoords.y*Y_STEP,
+                    data
+                };
+            });
+        } else {
+            return this.props.data.map(d=>({
+                x: d.x,
+                y:d.y,
+                data: [d]
+            }));
+        }
     }
 
     @computed get scatters() {
-        // sort NA to the beginning - it should be rendered at the bottom
-        // otherwise, order doesnt matter. here we'll just use the same order as given in the prop, bc _.sortBy is stable sort
-        const sortedAnalysisGroups = _.sortBy(this.props.analysisGroups, g=>(g.value === "NA" ? 0 : 1));
-        return _.reduce(sortedAnalysisGroups, (scatters, group)=>{
-            const groupData = this.data[group.value];
-            if (groupData && groupData.length > 0) {
-                // add scatters if theres data for this group
+        // make different scatter for each color of data aka group size,
+        //  this gives significant speed up over passing in a fill function
+        // use log size to determine range
+        if (this.data.length === 0) {
+            return [];
+        }
 
-                // make different scatter for each downsample group size
-                const bySize = _.groupBy(groupData, d=>d.data.length);
-                _.forEach(bySize, (data, numSamplesInDot)=>{
-                    const fillOpacity = this.fillOpacityByNumSamplesInDot(parseInt(numSamplesInDot, 10));
-                    scatters.push(
-                        <VictoryScatter
-                            key={`${group.value}+${numSamplesInDot}`}
-                            style={{
-                                data: {
-                                    fill: group.color,
-                                    fillOpacity: fillOpacity,
-                                    stroke: "black",
-                                    strokeWidth: 1,
-                                    strokeOpacity: 0
-                                }
-                            }}
-                            size={3/*this.size*/}
-                            symbol="circle"
-                            data={data}
-                            events={this.mouseEvents}
-                        />
-                    );
-                });
-            }
-            return scatters;
-        }, [] as JSX.Element[]);
-    }
+        let max = Number.NEGATIVE_INFINITY;
+        let min = Number.POSITIVE_INFINITY;
+        // group data, and collect max and min at same time
+        const byAreaCount = _.groupBy(this.data, d=>{
+            const areaCount = d.data.length;
+            max = Math.max(areaCount, max);
+            min = Math.min(areaCount, min);
+            return areaCount;
+        });
 
-    @computed get opacityPerSample() {
-        const valueAt10000 = 0.1;
-        const exponent = -1*Math.log(valueAt10000)/Math.log(10000);
-        const numDataPoints = _.reduce(this.data, (acc, data)=>acc+data.length, 0);
-        const ret = 1/Math.pow(numDataPoints, exponent);
-        return ret;
-    }
+        // use log scale because its usually a very long tail distribution
+        max = Math.log(max);
+        min = Math.log(min);
 
-    @computed get fillOpacityByNumSamplesInDot() {
-        const opacityPerSample = this.opacityPerSample;
-        return (numSamplesInDot:number)=>{
-            return Math.min(1, opacityPerSample*numSamplesInDot);
-        };
+        let countToT:(count:number)=>number;
+        if (min === max) {
+            countToT = ()=>0.2;
+        } else {
+            countToT = count=>((Math.log(count) - min) / (max - min));
+        }
+
+
+        const scatters:JSX.Element[] = [];
+        _.forEach(byAreaCount, (data, areaCount)=>{
+            const color = this.binningData ? interpolatePlasma(countToT(parseInt(areaCount, 10))) : "red";
+            scatters.push(
+                <VictoryScatter
+                    key={`${areaCount}`}
+                    style={{
+                        data: {
+                            fill: color,
+                            stroke: "black",
+                            strokeWidth: 1,
+                            strokeOpacity: 0
+                        }
+                    }}
+                    size={3}
+                    symbol="circle"
+                    data={data}
+                    events={this.mouseEvents}
+                />
+            );
+        });
+        return scatters;
     }
 
     @autobind
-    private size(d:DSData<IStudyViewScatterPlotData>) {
+    private size(d:DSData<IStudyViewDensityScatterPlotData>) {
         const baseSize = 3;
         const increment = 0.5;
         return Math.min(MAX_DOT_SIZE, (baseSize - increment) + increment*d.data.length);
@@ -270,6 +268,11 @@ export default class StudyViewScatterPlot extends React.Component<IStudyViewScat
                 >
                     <VictoryChart
                         theme={CBIOPORTAL_VICTORY_THEME}
+                        style={{
+                            parent: {
+                                backgroundColor: "#dddddd"
+                            }
+                        }}
                         containerComponent={
                             <VictorySelectionContainer
                                 activateSelectedData={false}
@@ -284,10 +287,12 @@ export default class StudyViewScatterPlot extends React.Component<IStudyViewScat
                         width={this.props.width}
                         height={this.props.height}
                         standalone={true}
+                        domainPadding={DOMAIN_PADDING}
+                        singleQuadrantDomainPadding={false}
                     >
                         {this.title}
                         <VictoryAxis
-                            domain={this.plotDomain.x}
+                            domain={this.dataDomain.x}
                             orientation="bottom"
                             offsetY={50}
                             crossAxis={false}
@@ -297,7 +302,7 @@ export default class StudyViewScatterPlot extends React.Component<IStudyViewScat
                             label={this.props.axisLabelX}
                         />
                         <VictoryAxis
-                            domain={this.plotDomain.y}
+                            domain={this.dataDomain.y}
                             orientation="left"
                             offsetX={50}
                             crossAxis={false}

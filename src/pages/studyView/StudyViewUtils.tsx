@@ -137,7 +137,7 @@ export function makeMutationCountVsCnaTooltip(sampleToAnalysisGroup?:{[sampleKey
                 <tr key="see all" style={borderStyle}>
                     <td style={{padding: 5}}>
                         <a target="_blank" href={getSampleViewUrl(d.data[0].studyId, d.data[0].sampleId, d.data)}>View
-                            all {d.data.length} patients included in this dot.</a>
+                            all {d.data.length} patients in this region.</a>
                     </td>
                 </tr>
             );

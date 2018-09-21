@@ -2079,11 +2079,11 @@ export class StudyViewPageStore {
     });
 
     readonly sampleMutationCountAndFractionGenomeAlteredData = remoteData({
-        await:()=>[this.clinicalAttributes, this.samples],
+        await:()=>[this.clinicalAttributes, this.selectedSamples],
         invoke:()=>{
             const filter: ClinicalDataMultiStudyFilter = {
                 attributeIds: [MUTATION_COUNT, FRACTION_GENOME_ALTERED],
-                identifiers: _.map(this.samples.result!, obj => {
+                identifiers: _.map(this.selectedSamples.result!, obj => {
                     return {
                         "entityId": obj.sampleId,
                         "studyId": obj.studyId
