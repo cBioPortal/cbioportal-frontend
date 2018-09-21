@@ -380,15 +380,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                         <DownloadTab store={store}/>
                     </MSKTab>
                 }
-            },
-
-           {
-                id:"bookmark",
-                getTab: () => {
-                    return <MSKTab key={12} id="bookmark" linkText={'Bookmark'}>
-                        <Bookmark urlPromise={store.bookmarkLinks}/>
-                    </MSKTab>
-                }
             }
 
         ];
