@@ -181,7 +181,6 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                     height={180}
                     labelRadius={30}
                     padding={30}
-                    //to hide label if the angle is too small(currently set to 20 degrees)
                     labels={this.label}
                     data={this.props.data}
                     dataComponent={<CustomSlice />}

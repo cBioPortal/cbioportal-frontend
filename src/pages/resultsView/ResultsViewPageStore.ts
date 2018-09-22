@@ -440,9 +440,6 @@ export class ResultsViewPageStore {
                 samplesWithCNAData += +!!sample.copyNumberSegmentPresent;
             }
             ret[SpecialAttribute.MutationSpectrum] = samplesWithMutationData;
-            ret[SpecialAttribute.MutationCount] = samplesWithMutationData;
-            ret[SpecialAttribute.FractionGenomeAltered] = samplesWithCNAData;
-
             return ret;
         }
     });
