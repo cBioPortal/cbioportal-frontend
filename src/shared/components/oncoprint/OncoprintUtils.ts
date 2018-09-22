@@ -430,9 +430,9 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
                 };
                 if (attribute.datatype === "NUMBER") {
                     ret.datatype = "number";
-                    if (attribute.clinicalAttributeId === SpecialAttribute.FractionGenomeAltered) {
+                    if (attribute.clinicalAttributeId === "FRACTION_GENOME_ALTERED") {
                         (ret as any).numberRange = [0,1];
-                    } else if (attribute.clinicalAttributeId === SpecialAttribute.MutationCount) {
+                    } else if (attribute.clinicalAttributeId === "MUTATION_COUNT") {
                         (ret as any).numberLogScale = true;
                     }
                 } else if (attribute.datatype === "STRING") {
