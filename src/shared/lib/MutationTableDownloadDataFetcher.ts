@@ -54,7 +54,7 @@ export class MutationTableDownloadDataFetcher implements ILazyMobXTableApplicati
         if (this.mutationData.result)
         {
             const queries = this.mutationData.result.map(
-                mutation => ({sampleId: mutation.sampleId, molecularProfileId: mutation.molecularProfileId}));
+                mutation => ({sampleId: mutation.sampleId, studyId: mutation.studyId}));
 
             return await fetchMutationCountData(queries);
         }
