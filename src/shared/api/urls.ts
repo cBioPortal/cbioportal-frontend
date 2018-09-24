@@ -47,11 +47,19 @@ export function openStudySummaryFormSubmit(studyIds: string | ReadonlyArray<stri
     const method:"get"|"post" = params.query.id.length > 1800 ? "post" : "get";
     formSubmit(params.pathname, params.query, "_blank", method);
 }
-export function getSampleViewUrl(studyId:string, sampleId:string) {
-    return cbioUrl('patient', { sampleId, studyId });
+export function getSampleViewUrl(studyId:string, sampleId:string, navIds?:{patientId:string, studyId:string}[]) {
+    let hash:any = undefined;
+    if (navIds) {
+        hash = `navCaseIds=${navIds.map(id=>`${id.studyId}:${id.patientId}`).join(",")}`;
+    }
+    return cbioUrl('patient', { sampleId, studyId }, hash);
 }
-export function getPatientViewUrl(studyId:string, caseId:string) {
-    return cbioUrl('patient', { studyId, caseId });
+export function getPatientViewUrl(studyId:string, caseId:string, navIds?:{patientId:string, studyId:string}[]) {
+    let hash:any = undefined;
+    if (navIds) {
+        hash = `navCaseIds=${navIds.map(id=>`${id.studyId}:${id.patientId}`).join(",")}`;
+    }
+    return cbioUrl('patient', { studyId, caseId }, hash);
 }
 export function getPubMedUrl(pmid:string) {
     return `https://www.ncbi.nlm.nih.gov/pubmed/${pmid}`;

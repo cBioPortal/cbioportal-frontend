@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { inject, observer } from "mobx-react";
+import {inject, observer} from "mobx-react";
 import styles from "./styles.module.scss";
 import { MutatedGenesTable } from "./table/MutatedGenesTable";
 import { CNAGenesTable } from "./table/CNAGenesTable";
@@ -7,12 +7,16 @@ import { ChartContainer } from 'pages/studyView/charts/ChartContainer';
 import SurvivalChart from "../resultsView/survival/SurvivalChart";
 import { MSKTab, MSKTabs } from "../../shared/components/MSKTabs/MSKTabs";
 import { StudyViewComponentLoader } from "./charts/StudyViewComponentLoader";
-import { StudyViewPageStore, SurvivalType, ChartMeta } from 'pages/studyView/StudyViewPageStore';
 import { reaction } from 'mobx';
 import { If } from 'react-if';
+import {ChartMeta, ChartType, StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
 import SummaryHeader from 'pages/studyView/SummaryHeader';
-import { Sample, Gene } from 'shared/api/generated/CBioPortalAPI';
+import { Sample, Gene , SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
+import StudyViewScatterPlot from "./charts/scatterPlot/StudyViewScatterPlot";
+import {isSelected, mutationCountVsCnaTooltip} from "./StudyViewUtils";
+import AppConfig from 'appConfig';
+import MobxPromise from "mobxpromise";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -40,17 +44,26 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             updateGeneFilter: (entrezGeneId: number) => {
                 this.store.updateGeneFilter(entrezGeneId);
             },
+            resetGeneFilter: (chartMeta: ChartMeta) => {
+                this.store.resetGeneFilter();
+            },
+            resetCNAGeneFilter: (chartMeta: ChartMeta) => {
+                this.store.resetCNAGeneFilter();
+            },
             updateCNAGeneFilter: (entrezGeneId: number, alteration: number) => {
                 this.store.updateCNAGeneFilter(entrezGeneId, alteration);
             },
-            onDeleteChart: (uniqueKey: string) => {
-                this.store.changeChartVisibility(uniqueKey, false);
+            onDeleteChart: (chartMeta: ChartMeta) => {
+                this.store.resetFilterAndChangeChartVisibility(chartMeta, false);
             },
-            updateCustomCasesFilter: (cases: Sample[]) => {
+            updateCustomCasesFilter: (cases: SampleIdentifier[]) => {
                 this.store.updateCustomCasesFilter(cases);
             },
             updateSelectedGenes:(query: SingleGeneQuery[], genesInQuery: Gene[])=>{
                 this.store.updateSelectedGenes(query, genesInQuery);
+            },
+            resetCustomCasesFilter: () => {
+                this.store.resetCustomCasesFilter();
             }
         }
 
@@ -69,49 +82,73 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     this.store.patientAttrIds = ('patientAttrIds' in query ? (query.patientAttrIds as string).split(",") : []);
                 }
             },
-            { fireImmediately: true }
+            {fireImmediately: true}
         );
     }
 
     renderAttributeChart = (chartMeta: ChartMeta) => {
-        return (<ChartContainer
-            chartMeta={chartMeta}
-            onUserSelection={this.handlers.onUserSelection}
-            key={chartMeta.uniqueKey}
-            filter={this.store.filters}
-            dataCache={this.store.studyViewClinicalDataCountsCache}
-            onDeleteChart={this.handlers.onDeleteChart}
-        />)
+        let props:any = {
+            chartMeta: chartMeta,
+            filters: [],
+            onDeleteChart: this.handlers.onDeleteChart
+        };
+        switch (chartMeta.chartType) {
+            case ChartType.PIE_CHART: {
+                props.promise = this.store.studyViewClinicalDataCountsCache.get({
+                    attribute: chartMeta.clinicalAttribute!,
+                    filters: this.store.filters
+                });
+                props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey);
+                props.onUserSelection = this.handlers.onUserSelection;
+                props.onResetSelection = this.handlers.onUserSelection;
+                break;
+            }
+            case ChartType.TABLE: {
+                props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey);
+                props.promise = this.store.studyViewClinicalDataCountsCache.get({
+                    attribute: chartMeta.clinicalAttribute!,
+                    filters: this.store.filters
+                });
+                props.onUserSelection = this.handlers.onUserSelection;
+                props.onResetSelection = this.handlers.onUserSelection;
+                break;
+            }
+            case ChartType.MUTATED_GENES_TABLE: {
+                props.filters = this.store.getMutatedGenesTableFilters();
+                props.promise = this.store.mutatedGeneData;
+                props.onUserSelection = this.handlers.updateGeneFilter;
+                props.onResetSelection = this.handlers.resetGeneFilter;
+                props.selectedGenes=this.store.selectedGenes;
+                props.onGeneSelect=this.store.onCheckGene;
+                break;
+            }
+            case ChartType.CNA_GENES_TABLE: {
+                props.filters = this.store.getCNAGenesTableFilters();
+                props.promise = this.store.cnaGeneData;
+                props.onUserSelection = this.handlers.updateCNAGeneFilter;
+                props.onResetSelection = this.handlers.resetCNAGeneFilter;
+                props.selectedGenes=this.store.selectedGenes;
+                props.onGeneSelect=this.store.onCheckGene;
+                break;
+            }
+            case ChartType.SURVIVAL: {
+                props.promise = this.store.getSurvivalData(chartMeta);
+                break;
+            }
+            case ChartType.SCATTER: {
+                props.filters = this.store.getCustomCasesFilter();
+                props.promise = this.store.mutationCountVsFractionGenomeAlteredData;
+                props.selectedSamplesMap = this.store.selectedSamplesMap;
+                props.selectedSamples = this.store.selectedSamples;
+                props.onUserSelection = this.handlers.updateCustomCasesFilter;
+                props.onResetSelection = this.handlers.resetCustomCasesFilter;
+                break;
+            }
+            default:
+                break;
+        }
+        return <ChartContainer key={chartMeta.uniqueKey} {...props}/>;
     };
-
-    renderSurvivalPlot = (data: SurvivalType) => {
-        return <div className={styles.studyViewSurvivalPlot}>
-            <div className={styles.studyViewSurvivalPlotTitle}>{data.title}</div>
-            <div className={styles.studyViewSurvivalPlotBody}>
-                <StudyViewComponentLoader promise={this.store.survivalPlotData}>
-                    <SurvivalChart alteredPatientSurvivals={data.alteredGroup}
-                        unalteredPatientSurvivals={data.unalteredGroup}
-                        title={'test'}
-                        xAxisLabel="Months Survival"
-                        yAxisLabel="Surviving"
-                        totalCasesHeader="Number of Cases, Total"
-                        statusCasesHeader="Number of Cases, Deceased"
-                        medianMonthsHeader="Median Months Survival"
-                        yLabelTooltip="Survival estimate"
-                        xLabelWithEventTooltip="Time of death"
-                        xLabelWithoutEventTooltip="Time of last observation"
-                        showDownloadButtons={false}
-                        showTable={false}
-                        showLegend={false}
-                        styleOpts={{
-                            width: 450,
-                            height: 300
-                        }}
-                        fileName="Overall_Survival" />
-                </StudyViewComponentLoader>
-            </div>
-        </div>
-    }
 
     render() {
         if (this.store.studies.isComplete) {
@@ -122,7 +159,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                             <If condition={this.store.studies.result.length === 1}>
                                 <div>
                                     <h3>{this.store.studies.result![0].name}</h3>
-                                    <p dangerouslySetInnerHTML={{ __html: this.store.studies.result![0].description }}></p>
+                                    <p dangerouslySetInnerHTML={{__html: this.store.studies.result![0].description}}></p>
                                 </div>
                             </If>
                             {/*TDOD: currently show as Multiple Studies but should be shandles properly, i.e as in production*/}
@@ -132,7 +169,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                         </div>
                     </div>
                     <MSKTabs id="studyViewTabs" activeTabId={this.props.routing.location.query.tab}
-                        className="mainTabs">
+                             className="mainTabs">
 
                         <MSKTab key={0} id="summaryTab" linkText="Summary">
                             <SummaryHeader
@@ -140,31 +177,14 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                 selectedSamples={this.store.selectedSamples.result!}
                                 updateCustomCasesFilter={this.handlers.updateCustomCasesFilter}
                                 updateSelectedGenes={this.handlers.updateSelectedGenes}
+                                studyWithSamples={this.store.studyWithSamples.result}
+                                filter={this.store.filters}
+                                attributeNamesSet={this.store.attributeNamesSet}
+                                user={AppConfig.userEmailAddress}
                             />
                             <div className={styles.studyViewFlexContainer}>
-                                {this.store.initialClinicalDataCounts.isComplete && 
-                                    this.store.visibleAttributes.map(this.renderAttributeChart)}
-                            </div>
-                            <div className={styles.studyViewFlexContainer}>
-                                {this.store.survivalPlotData.result.map(this.renderSurvivalPlot)}
-                            </div>
-                            <div className={styles.studyViewFlexContainer}>
-                                <MutatedGenesTable
-                                    promise={this.store.mutatedGeneData}
-                                    numOfSelectedSamples={100}
-                                    filters={this.store.getMutatedGenesTableFilters()}
-                                    toggleSelection={this.handlers.updateGeneFilter}
-                                    selectedGenes={this.store.selectedGenes}
-                                    onGeneSelect={this.store.onCheckGene}
-                                />
-                                <CNAGenesTable
-                                    promise={this.store.cnaGeneData}
-                                    numOfSelectedSamples={100}
-                                    filters={this.store.getCNAGenesTableFilters()}
-                                    toggleSelection={this.handlers.updateCNAGeneFilter}
-                                    selectedGenes={this.store.selectedGenes}
-                                    onGeneSelect={this.store.onCheckGene}
-                                />
+                                {this.store.initialClinicalDataCounts.isComplete &&
+                                this.store.visibleAttributes.map(this.renderAttributeChart)}
                             </div>
                         </MSKTab>
                     </MSKTabs>
@@ -174,6 +194,5 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             //TODO: update with loading
             return null;
         }
-
     }
 }

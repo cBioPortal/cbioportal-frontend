@@ -440,9 +440,6 @@ export class ResultsViewPageStore {
                 samplesWithCNAData += +!!sample.copyNumberSegmentPresent;
             }
             ret[SpecialAttribute.MutationSpectrum] = samplesWithMutationData;
-            ret[SpecialAttribute.MutationCount] = samplesWithMutationData;
-            ret[SpecialAttribute.FractionGenomeAltered] = samplesWithCNAData;
-
             return ret;
         }
     });
@@ -1208,7 +1205,7 @@ export class ResultsViewPageStore {
                         gene,
                         this.samples,
                         this.oncoKbAnnotatedGenes.result || {},
-                        () => this.mutationsByGene[gene.hugoGeneSymbol],
+                        () => (this.mutationsByGene[gene.hugoGeneSymbol] || []),
                         () => (this.mutationCountCache),
                         this.studyIdToStudy,
                         this.molecularProfileIdToMolecularProfile,
