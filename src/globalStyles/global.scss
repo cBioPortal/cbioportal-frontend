@@ -120,28 +120,30 @@ th.reactable-header-sort-asc:after {
 
   .nav-tabs {
     border-bottom:none !important;
+    box-shadow:0px 1px 2px 0px rgba(0,0,0,0.08);
+    margin-top:-19px;
+    padding-left:20px;
+    margin-right:-20px;
+    margin-left:-20px;
   }
 
   li {
     a {
-
-      font-size: 12px;
-      padding: 4px 6px !important;
-      margin-right: 8px !important;
+      font-size:$font-size-small;
+      padding: 8px 0px !important;
+      margin-right: 25px !important;
       background:none !important;
+      border:none !important;
 
       &:hover {
         text-decoration: underline;
-        border-color:transparent;
       }
 
     }
 
     &.active a {
-      background:#eee !important;
-      border-bottom-color:$borderColor !important; // undoes bootstrap
-      border-radius:4px !important;
-      text-decoration:none !important;
+      border-bottom:2px solid $brand-primary !important;
+      padding-bottom: 6px !important;
     }
 
   }
