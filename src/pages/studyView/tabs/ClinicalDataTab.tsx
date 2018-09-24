@@ -8,9 +8,11 @@ import {computed} from 'mobx';
 import {getPatientViewUrl, getSampleViewUrl} from "shared/api/urls";
 import SelectedInfo from "../SelectedInfo/SelectedInfo";
 import {getClinicalAttributeUniqueKey} from "../StudyViewUtils";
+import MobxPromise from "mobxpromise";
+import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 
 export interface IClinicalDataTabTable {
-    data: { [id: string]: string }[];
+    dataPromise: MobxPromise<{ [id: string]: string }[]>;
     clinicalAttributes: ClinicalAttribute[];
     selectedSamples: Sample[];
 }
@@ -71,14 +73,20 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
     public render() {
         return (
             <div>
-                <SelectedInfo selectedSamples={this.props.selectedSamples}/>
-                <ClinicalDataTabTableComponent
-                    initialItemsPerPage={10}
-                    showCopyDownload={true}
-                    showColumnVisibility={true}
-                    data={this.props.data}
-                    columns={this.columns}
+                <SelectedInfo selectedSamples={this.props.selectedSamples} />
+                <LoadingIndicator
+                    isLoading={this.props.dataPromise.isPending}
                 />
+                {this.props.dataPromise.isComplete &&
+                    <ClinicalDataTabTableComponent
+                        initialItemsPerPage={10}
+                        showCopyDownload={true}
+                        showColumnVisibility={true}
+                        data={this.props.dataPromise.result || []}
+                        columns={this.columns}
+                    />
+                }
+
             </div>
         );
     }

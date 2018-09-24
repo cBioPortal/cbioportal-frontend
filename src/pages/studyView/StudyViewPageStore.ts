@@ -1465,9 +1465,13 @@ export class StudyViewPageStore {
     readonly selectedSamples = remoteData<Sample[]>({
         await: () => [this.samples],
         invoke: () => {
-            return internalClient.fetchFilteredSamplesUsingPOST({
-                studyViewFilter: this.filters
-            })
+            //fetch samples when there are only filters applied
+            if (isFiltered(this.userSelections)) {
+                return internalClient.fetchFilteredSamplesUsingPOST({
+                    studyViewFilter: this.filters
+                })
+            }
+            return Promise.resolve(this.samples.result)
         },
         default: []
     });
