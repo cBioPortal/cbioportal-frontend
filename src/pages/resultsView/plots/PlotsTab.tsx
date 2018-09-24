@@ -508,26 +508,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         ],
         invoke:()=>{
             let _map: {[clinicalAttributeId: string]: ClinicalAttribute} = _.keyBy(this.props.store.clinicalAttributes.result, c=>c.clinicalAttributeId);
-            _map[SpecialAttribute.MutationCount] = {
-                clinicalAttributeId: SpecialAttribute.MutationCount,
-                datatype: "NUMBER",
-                description: "Total mutations",
-                displayName: "Total mutations",
-                patientAttribute: false,
-                priority: "1",
-                studyId: this.props.store.studyIds.result![0],
-                count: 0
-            };
-            _map[SpecialAttribute.FractionGenomeAltered] = {
-                clinicalAttributeId: SpecialAttribute.FractionGenomeAltered,
-                datatype: "NUMBER",
-                description: "Fraction Genome Altered",
-                displayName: "Fraction Genome Altered",
-                patientAttribute: false,
-                priority: "1",
-                studyId: this.props.store.studyIds.result![0],
-                count: 0
-            };
             return Promise.resolve(_map);
         }
     });
@@ -535,21 +515,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     readonly clinicalAttributeOptions = remoteData({
         await:()=>[this.props.store.clinicalAttributes],
         invoke:()=>{
-            let _clinicalAttributes: {value: string, label: string}[] = [];
-            _clinicalAttributes.push({
-                value: SpecialAttribute.MutationCount,
-                label: "Total mutations"
-            });
-            _clinicalAttributes.push({
-                value: SpecialAttribute.FractionGenomeAltered,
-                label: "Fraction Genome Altered"
-            });
-            _clinicalAttributes = _clinicalAttributes.concat(_.sortBy(this.props.store.clinicalAttributes.result!.map(attribute=>(
+            
+            let _clinicalAttributes = _.sortBy<ClinicalAttribute>(this.props.store.clinicalAttributes.result!, 
+                [(o: any)=>-o.priority, (o: any)=>o.label]).map(attribute=>(
                 {
                     value: attribute.clinicalAttributeId,
-                    label: attribute.displayName
+                    label: attribute.displayName,
+                    priority: attribute.priority
                 }
-            )), o=>o.label));
+            ));
 
             // to load more quickly, only filter and annotate with data availability once its ready
             // TODO: temporarily disabled because cant figure out a way right now to make this work nicely

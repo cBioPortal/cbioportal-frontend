@@ -1548,92 +1548,6 @@
         }
       }
     },
-    "/molecular-profiles/{molecularProfileId}/mutation-counts": {
-      "get": {
-        "tags": [
-          "Mutations"
-        ],
-        "summary": "Get mutation counts in a molecular profile by Sample List ID",
-        "operationId": "getMutationCountsInMolecularProfileBySampleListIdUsingGET",
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "molecularProfileId",
-            "in": "path",
-            "description": "Molecular Profile ID e.g. acc_tcga_mutations",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "sampleListId",
-            "in": "query",
-            "description": "Sample List ID e.g. acc_tcga_all",
-            "required": true,
-            "type": "string"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/MutationCount"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/molecular-profiles/{molecularProfileId}/mutation-counts/fetch": {
-      "post": {
-        "tags": [
-          "Mutations"
-        ],
-        "summary": "Fetch mutation counts in a molecular profile by sample IDs",
-        "operationId": "fetchMutationCountsInMolecularProfileUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "name": "molecularProfileId",
-            "in": "path",
-            "description": "Molecular Profile ID e.g. acc_tcga_mutations",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "in": "body",
-            "name": "sampleIds",
-            "description": "List of Sample IDs",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/MutationCount"
-              }
-            }
-          }
-        }
-      }
-    },
     "/molecular-profiles/{molecularProfileId}/mutations": {
       "get": {
         "tags": [
@@ -1911,46 +1825,6 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/MutationCountByPosition"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mutation-counts/fetch": {
-      "post": {
-        "tags": [
-          "Mutations"
-        ],
-        "summary": "Fetch mutation counts in multiple studies by sample IDs",
-        "operationId": "fetchMutationCountsInStudiesUsingPOST",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "body",
-            "name": "sampleIdentifiers",
-            "description": "List of Sample Identifiers",
-            "required": true,
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/SampleIdentifier"
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/MutationCount"
               }
             }
           }
@@ -4490,6 +4364,7 @@
           "type": "string",
           "enum": [
             "MUTATION_EXTENDED",
+            "MUTATION_UNCALLED",
             "FUSION",
             "STRUCTURAL_VARIANT",
             "COPY_NUMBER_ALTERATION",
@@ -4674,41 +4549,6 @@
         }
       },
       "title": "Mutation"
-    },
-    "MutationCount": {
-      "type": "object",
-      "required": [
-        "molecularProfileId",
-        "mutationCount",
-        "patientId",
-        "sampleId",
-        "studyId"
-      ],
-      "properties": {
-        "molecularProfileId": {
-          "type": "string"
-        },
-        "mutationCount": {
-          "type": "integer",
-          "format": "int32"
-        },
-        "patientId": {
-          "type": "string"
-        },
-        "sampleId": {
-          "type": "string"
-        },
-        "studyId": {
-          "type": "string"
-        },
-        "uniquePatientKey": {
-          "type": "string"
-        },
-        "uniqueSampleKey": {
-          "type": "string"
-        }
-      },
-      "title": "MutationCount"
     },
     "MutationCountByPosition": {
       "type": "object",

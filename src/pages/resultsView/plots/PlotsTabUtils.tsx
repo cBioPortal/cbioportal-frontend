@@ -1,7 +1,6 @@
 import {AxisMenuSelection, ViewType} from "./PlotsTab";
 import {MobxPromise} from "mobxpromise";
 import {
-    CancerStudy,
     ClinicalAttribute, ClinicalData, Gene, MolecularProfile, Mutation, NumericGeneMolecularData,
     Sample
 } from "../../../shared/api/generated/CBioPortalAPI";
@@ -18,8 +17,6 @@ import {
 import {stringListToIndexSet} from "../../../shared/lib/StringUtils";
 import {
     CNA_COLOR_AMP,
-    CNA_COLOR_GAIN,
-    CNA_COLOR_HETLOSS,
     CNA_COLOR_HOMDEL,
     DEFAULT_GREY,
     MUT_COLOR_FUSION, MUT_COLOR_INFRAME, MUT_COLOR_INFRAME_PASSENGER,
@@ -30,11 +27,7 @@ import {IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPl
 import {AlterationTypeConstants, AnnotatedMutation, AnnotatedNumericGeneMolecularData} from "../ResultsViewPageStore";
 import numeral from "numeral";
 import {getUniqueSampleKeyToCategories} from "../../../shared/components/plots/TablePlotUtils";
-import client from "../../../shared/api/cbioportalClientInstance";
-import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
-import { FractionGenomeAlteredFilter } from "shared/api/generated/CBioPortalAPIInternal";
-import {SpecialAttribute} from "../../../shared/cache/OncoprintClinicalDataCache";
-import {getDeterministicRandomNumber, getJitterForCase} from "../../../shared/components/plots/PlotUtils";
+import {getJitterForCase} from "../../../shared/components/plots/PlotUtils";
 
 export const CLIN_ATTR_DATA_TYPE = "clinical_attribute";
 export const dataTypeToDisplayType:{[s:string]:string} = {
@@ -378,115 +371,43 @@ function makeAxisDataPromise_Clinical(
     studyToMutationMolecularProfile: MobxPromise<{[studyId: string]: MolecularProfile}>
 ):MobxPromise<IAxisData> {
     const promise = clinicalDataCache.get(attribute);
-    let ret:MobxPromise<IAxisData>;
-    switch(attribute.clinicalAttributeId) {
-        case SpecialAttribute.MutationCount:
-            let mutationCounts = remoteData({
-                await:()=>[patientKeyToSamples, studyToMutationMolecularProfile],
-                invoke:()=>{
-                    const _patientKeyToSamples = patientKeyToSamples.result!;
-                    const _studyToMutationMolecularProfile = studyToMutationMolecularProfile.result!;
-                    // get all samples
-                    let samples = _.flatten(_.values(_patientKeyToSamples));
-                    // produce sample data from patient clinical data
-                    let mutationCounts = client.fetchMutationCountsInMolecularProfileUsingPOST({
-                        molecularProfileId: _studyToMutationMolecularProfile[attribute.studyId].molecularProfileId,
-                        sampleIds: samples.map(s=>s.sampleId)
-                        });
-                    return Promise.resolve(mutationCounts);
-                }
-            });
-            ret = remoteData({
-                await:()=>[mutationCounts],
-                invoke:()=>{
-                    const _mutationCounts = mutationCounts.result!;
-                    const axisData:IAxisData = { data:[], datatype:attribute.datatype.toLowerCase() };
-                    const axisData_Data = axisData.data;
-                    for (const mutationCount of _mutationCounts) {
+    let ret:MobxPromise<IAxisData> = remoteData({
+        await:()=>[promise, patientKeyToSamples],
+        invoke:()=>{
+            const _patientKeyToSamples = patientKeyToSamples.result!;
+            const data:ClinicalData[] = promise.result!;
+            const axisData:IAxisData = { data:[], datatype:attribute.datatype.toLowerCase() };
+            const shouldParseFloat = attribute.datatype.toLowerCase() === "number";
+            const axisData_Data = axisData.data;
+            if (attribute.patientAttribute) {
+                // produce sample data from patient clinical data
+                for (const d of data) {
+                    const samples = _patientKeyToSamples[d.uniquePatientKey];
+                    for (const sample of samples) {
                         axisData_Data.push({
-                            uniqueSampleKey: mutationCount.uniqueSampleKey,
-                            value: mutationCount.mutationCount,
+                            uniqueSampleKey: sample.uniqueSampleKey,
+                            value: d.value,
                         });
                     }
-                    return Promise.resolve(axisData);
                 }
-            });
-            break;
-        case SpecialAttribute.FractionGenomeAltered:
-            let fractionGenomeAltered = remoteData({
-                await:()=>[patientKeyToSamples, studyToMutationMolecularProfile],
-                invoke:()=>{
-                    const _patientKeyToSamples = patientKeyToSamples.result!;
-                    const _studyToMutationMolecularProfile = studyToMutationMolecularProfile.result!;
-                    const _studyId = attribute.studyId;
-                    // get all samples
-                    let samples = _.flatten(_.values(_patientKeyToSamples));
-                    let sampleIds = samples.map(s=>s.sampleId);
-                    // produce sample data from patient clinical data
-                    let fractionGenomeAltered = internalClient.fetchFractionGenomeAlteredUsingPOST({
-                        studyId: _studyId,
-                        fractionGenomeAlteredFilter: {
-                            sampleIds: sampleIds
-                        } as FractionGenomeAlteredFilter
+            } else {
+                // produce sample data from sample clinical data
+                for (const d of data) {
+                    axisData_Data.push({
+                        uniqueSampleKey: d.uniqueSampleKey,
+                        value: d.value
                     });
-                    return Promise.resolve(fractionGenomeAltered);
                 }
-            });
-            ret = remoteData({
-                await:()=>[fractionGenomeAltered],
-                invoke:()=>{
-                    const _fractionGenomeAltered = fractionGenomeAltered.result!;
-                    const axisData:IAxisData = { data:[], datatype:attribute.datatype.toLowerCase() };
-                    const axisData_Data = axisData.data;
-                    for (const fractionGenomeAlteredItems of _fractionGenomeAltered) {
-                        axisData_Data.push({
-                            uniqueSampleKey: fractionGenomeAlteredItems.uniqueSampleKey,
-                            value: fractionGenomeAlteredItems.value,
-                        });
-                    }
-                    return Promise.resolve(axisData);
+            }
+            if (shouldParseFloat) {
+                for (const d of axisData_Data) {
+                    d.value = parseFloat(d.value as string); // we know its a string bc all clinical data comes back as string
                 }
-            });
-            break;
-        default:
-            ret = remoteData({
-                await:()=>[promise, patientKeyToSamples],
-                invoke:()=>{
-                    const _patientKeyToSamples = patientKeyToSamples.result!;
-                    const data:ClinicalData[] = promise.result!;
-                    const axisData:IAxisData = { data:[], datatype:attribute.datatype.toLowerCase() };
-                    const shouldParseFloat = attribute.datatype.toLowerCase() === "number";
-                    const axisData_Data = axisData.data;
-                    if (attribute.patientAttribute) {
-                        // produce sample data from patient clinical data
-                        for (const d of data) {
-                            const samples = _patientKeyToSamples[d.uniquePatientKey];
-                            for (const sample of samples) {
-                                axisData_Data.push({
-                                    uniqueSampleKey: sample.uniqueSampleKey,
-                                    value: d.value,
-                                });
-                            }
-                        }
-                    } else {
-                        // produce sample data from sample clinical data
-                        for (const d of data) {
-                            axisData_Data.push({
-                                uniqueSampleKey: d.uniqueSampleKey,
-                                value: d.value
-                            });
-                        }
-                    }
-                    if (shouldParseFloat) {
-                        for (const d of axisData_Data) {
-                            d.value = parseFloat(d.value as string); // we know its a string bc all clinical data comes back as string
-                        }
-                    }
-                    return Promise.resolve(axisData);
-                }
-            });
-        break;
-    }
+            }
+            return Promise.resolve(axisData);
+        }
+    });
+
     return ret;
 }
 
