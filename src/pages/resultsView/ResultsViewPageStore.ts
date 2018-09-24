@@ -948,7 +948,7 @@ export class ResultsViewPageStore {
     readonly defaultOQLQuery = remoteData({
         await: () => [this.selectedMolecularProfiles],
         invoke: () => {
-            const profileTypes = _.map(this.selectedMolecularProfiles.result, (profile) => profile.molecularAlterationType);
+            const profileTypes = _.uniq(_.map(this.selectedMolecularProfiles.result, (profile) => profile.molecularAlterationType));
             return Promise.resolve(buildDefaultOQLProfile(profileTypes, this.zScoreThreshold, this.rppaScoreThreshold));
         }
 
