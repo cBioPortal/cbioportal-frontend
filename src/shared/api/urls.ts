@@ -60,7 +60,7 @@ function getStudySummaryUrlParams(studyIds:string | ReadonlyArray<string>) {
 
 export function getStudySummaryUrl(studyIds:string | ReadonlyArray<string>) {
     const params = getStudySummaryUrlParams(studyIds);
-    return buildCBioPortalAPIUrl(params.pathname, params.query);
+    return buildCBioPortalPageUrl(params.pathname, params.query);
 }
 export function openStudySummaryFormSubmit(studyIds: string | ReadonlyArray<string>) {
     const params = getStudySummaryUrlParams(studyIds);
@@ -73,14 +73,14 @@ export function getSampleViewUrl(studyId:string, sampleId:string, navIds?:{patie
     if (navIds) {
         hash = `navCaseIds=${navIds.map(id=>`${id.studyId}:${id.patientId}`).join(",")}`;
     }
-    return buildCBioPortalAPIUrl('patient', { sampleId, studyId }, hash);
+    return buildCBioPortalPageUrl('patient', { sampleId, studyId }, hash);
 }
 export function getPatientViewUrl(studyId:string, caseId:string, navIds?:{patientId:string, studyId:string}[]) {
     let hash:any = undefined;
     if (navIds) {
         hash = `navCaseIds=${navIds.map(id=>`${id.studyId}:${id.patientId}`).join(",")}`;
     }
-    return buildCBioPortalAPIUrl('patient', { studyId, caseId }, hash);
+    return buildCBioPortalPageUrl('patient', { studyId, caseId }, hash);
 }
 export function getPubMedUrl(pmid:string) {
     return `https://www.ncbi.nlm.nih.gov/pubmed/${pmid}`;
