@@ -4,7 +4,7 @@ import {CancerStudy} from 'shared/api/generated/CBioPortalAPI';
 import {ThreeBounce} from 'better-react-spinkit';
 import request from 'superagent';
 import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
-import {getStudyDownloadListUrl} from "../../../shared/api/urls";
+import {getStudyDownloadListUrl, getStudySummaryUrl} from "../../../shared/api/urls";
 
 
 interface IDataTableRow {
@@ -53,7 +53,7 @@ class CancerStudyCell extends React.Component<ICancerStudyCellProps,{}> {
         return (
             <span>
                 <a
-                    href={`./study?id=${this.props.studyId}#summary`}
+                    href={getStudySummaryUrl(this.props.studyId)}
                     target='_blank'
                 >
                     {this.props.name}
