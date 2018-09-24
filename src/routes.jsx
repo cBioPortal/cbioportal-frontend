@@ -77,7 +77,7 @@ export const makeRoutes = (routing) => {
                 <Route path="/results/legacy_submission" onEnter={handleLegacySubmission} component={getBlankPage()} />
 
                 <Route path="/results(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(ResultsViewPage)} />
-                <Route path="/patient" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(PatientViewPage)}/>
+                <Route path="/patient(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(PatientViewPage)}/>
                 <Route path="/newstudy" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(StudyViewPage)} />
                 <Route path="/study" component={getBlankPage()} />
 
