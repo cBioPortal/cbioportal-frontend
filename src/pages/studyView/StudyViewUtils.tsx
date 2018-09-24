@@ -4,7 +4,7 @@ import { unparseOQLQueryLine } from "shared/lib/oql/oqlfilter";
 import {
     StudyViewFilter, DataBin, ClinicalDataIntervalFilterValue, ClinicalDataCount, SampleIdentifier
 } from "shared/api/generated/CBioPortalAPIInternal";
-import { Sample, Gene, ClinicalAttribute } from "shared/api/generated/CBioPortalAPI";
+import { Sample, Gene, ClinicalAttribute, CancerStudy } from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
 import {getSampleViewUrl, getStudySummaryUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
@@ -19,6 +19,7 @@ import {
 import {ChartDimension, ChartMeta, ChartType, ChartTypeEnum, ClinicalDataType} from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
+import { VirtualStudy } from "shared/model/VirtualStudy";
 
 
 // Study View Default colors: tetradic color scheme
@@ -282,12 +283,10 @@ export function getCurrentDate() {
 
 export function getVirtualStudyDescription(
                                             studyWithSamples: StudyWithSamples[],
-                                            selectedSamples: Sample[],
                                             filter: StudyViewFilter,
                                             attributeNamesSet: { [id: string]: string },
                                             genes: Gene[],
                                             user?: string) {
-    let selectedSampleSet = _.groupBy(selectedSamples, (sample: Sample) => sample.studyId);
     let descriptionLines: string[] = [];
 
     let entrezIdSet: { [id: string]: string } = _.reduce(genes, (acc: { [id: string]: string }, next) => {
@@ -295,20 +294,18 @@ export function getVirtualStudyDescription(
         return acc
     }, {})
     //add to samples and studies count
+
+    let uniqueSampleKeys = _.uniq(_.flatMap(studyWithSamples,study=>study.uniqueSampleKeys))
     descriptionLines.push(
-        selectedSamples.length +
-        " sample" + (selectedSamples.length > 1 ? 's' : '') +
+        uniqueSampleKeys.length +
+        " sample" + (uniqueSampleKeys.length > 1 ? 's' : '') +
         " from " +
-        Object.keys(selectedSampleSet).length +
+        studyWithSamples.length +
         " " +
-        (Object.keys(selectedSampleSet).length > 1 ? 'studies:' : 'study:'));
+        (studyWithSamples.length > 1 ? 'studies:' : 'study:'));
     //add individual studies sample count
     studyWithSamples.forEach(studyObj => {
-        let selectedUniqueSampleKeys = _.map(selectedSampleSet[studyObj.studyId] || [], sample => sample.uniqueSampleKey);
-        let studySelectedSamples = _.intersection(studyObj.uniqueSampleKeys, selectedUniqueSampleKeys);
-        if (studySelectedSamples.length > 0) {
-            descriptionLines.push("- " + studyObj.name + " (" + studySelectedSamples.length + " samples)")
-        }
+        descriptionLines.push("- " + studyObj.name + " (" + studyObj.uniqueSampleKeys.length + " samples)")
     })
     //add filters
     let filterLines: string[] = [];
@@ -813,7 +810,6 @@ export function getDefaultChartTypeByClinicalAttribute(clinicalAttribute: Clinic
     return undefined;
 }
 
-
 /**
  * Calculate the layout used by react-grid-layout
  *
@@ -1077,6 +1073,47 @@ export function getSamplesByExcludingFiltersOnChart(
 export function getHugoSymbolByEntrezGeneId(allGenes:Gene[], entrezGeneId: number) {
     let result = _.find(allGenes, gene => gene.entrezGeneId === entrezGeneId);
     return result === undefined ? undefined : result.hugoGeneSymbol;
+}
+
+// returns true when there is only one virtual study and no physical studies
+export function showOriginStudiesInSummaryDescription(physicalStudies: CancerStudy[], virtualStudies: VirtualStudy[]) {
+    return physicalStudies.length === 0 && virtualStudies.length === 1;
+}
+
+export function getFilteredStudiesWithSamples(
+    samples: Sample[],
+    physicalStudies: CancerStudy[],
+    virtualStudies: VirtualStudy[]) {
+        
+    let queriedStudiesWithSamples: StudyWithSamples[] = [];
+    const selectedStudySampleSet = _.groupBy(samples, sample => sample.studyId);
+
+    _.each(physicalStudies, study => {
+        const samples = selectedStudySampleSet[study.studyId];
+        if (samples && samples.length > 0) {
+            queriedStudiesWithSamples.push({ ...study, uniqueSampleKeys: _.map(samples, sample => sample.uniqueSampleKey) });
+        }
+    })
+
+    _.each(virtualStudies, virtualStudy => {
+        let selectedSamples: Sample[] = []
+        virtualStudy.data.studies.forEach(study => {
+            let samples = selectedStudySampleSet[study.id];
+            if (samples && samples.length > 0) {
+                selectedSamples = selectedSamples.concat(samples);
+            }
+        })
+
+        if (selectedSamples.length > 0) {
+            let study = {
+                name: virtualStudy.data.name,
+                description: virtualStudy.data.description,
+                studyId: virtualStudy.id,
+            } as CancerStudy
+            queriedStudiesWithSamples.push({ ...study, uniqueSampleKeys: _.map(selectedSamples, sample => sample.uniqueSampleKey) });
+        }
+    });
+    return queriedStudiesWithSamples;
 }
 
 export function clinicalDataCountComparator(a: ClinicalDataCount, b: ClinicalDataCount): number
