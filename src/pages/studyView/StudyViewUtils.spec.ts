@@ -11,7 +11,7 @@ import {
 } from 'pages/studyView/StudyViewUtils';
 import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue, Sample} from 'shared/api/generated/CBioPortalAPIInternal';
 import {ClinicalAttribute, Gene, CancerStudy} from 'shared/api/generated/CBioPortalAPI';
-import {ChartMeta, ChartTypeEnum} from "./StudyViewPageStore";
+import {ChartMeta, ChartTypeEnum, StudyViewFilterWithSampleIdentifierFilters} from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
 import sinon from 'sinon';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
@@ -54,15 +54,34 @@ describe('StudyViewUtils', () => {
         });
         it('when filters are applied', () => {
             let filter = {
-                'clinicalDataEqualityFilters': [{
+                clinicalDataEqualityFilters: [{
                     'attributeId': 'attribute1',
                     'clinicalDataType': "SAMPLE",
                     'values': ['value1']
                 }],
-                "mutatedGenes": [{ "entrezGeneIds": [1] }],
-                "cnaGenes": [{ "alterations": [{ "entrezGeneId": 2, "alteration": -2 }] }],
-                'studyIds': ['study1', 'study2']
-            } as StudyViewFilter
+                clinicalDataIntervalFilters: [{
+                    'attributeId': 'attribute2',
+                    'clinicalDataType': "PATIENT",
+                    'values': [{
+                        'end': 0,
+                        'start': 10,
+                        'value': `10`
+                    }]
+                }],
+                mutatedGenes: [{ "entrezGeneIds": [1] }],
+                cnaGenes: [{ "alterations": [{ "entrezGeneId": 2, "alteration": -2 }] }],
+                studyIds: ['study1', 'study2'],
+                sampleIdentifiers: [],
+                sampleIdentifiersSet: {
+                    'SAMPLE_attribute3': [{
+                        'sampleId': 'sample 1',
+                        'studyId': 'study1'
+                    }, {
+                        'sampleId': 'sample 1',
+                        'studyId': 'study2'
+                    }]
+                }
+            } as StudyViewFilterWithSampleIdentifierFilters;
 
             let genes = [{ entrezGeneId: 1, hugoGeneSymbol: "GENE1" }, { entrezGeneId: 2, hugoGeneSymbol: "GENE2" }] as Gene[];
 
@@ -70,10 +89,15 @@ describe('StudyViewUtils', () => {
                 getVirtualStudyDescription(
                     studies as any,
                     filter,
-                    { 'SAMPLE_attribute1': 'attribute1 name' },
+                    {
+                        'SAMPLE_attribute1': 'attribute1 name',
+                        'PATIENT_attribute2': 'attribute2 name',
+                        'SAMPLE_attribute3': 'attribute3 name'
+                    },
                     genes
-                ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)\n\nFilters:\n- CNA Genes:\n  ' +
-                    '- GENE2-DEL\n- Mutated Genes:\n  - GENE1\n  - attribute1 name: value1'));
+                ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)\n\nFilters:\n- CNA Genes:\n' +
+                    '  - GENE2-DEL\n- Mutated Genes:\n  - GENE1\n- attribute1 name: value1\n- attribute2 name: 10 < ~ ≤ 0\n' +
+                    '- attribute3 name: 2 samples'));
         });
         it('when username is not null', () => {
             assert.isTrue(
