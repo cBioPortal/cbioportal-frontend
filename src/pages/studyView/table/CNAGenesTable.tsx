@@ -217,8 +217,6 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             <CNAGenesTableComponent
                 data={this.props.promise.result || []}
                 columns={this._columns}
-                selectedGenes={this.props.selectedGenes}
-                selectedRows={_.map(_.union(this.selectedRows, this.preSelectedRows), row => row.rowIndex)}
                 showSelectSamples={true && this.preSelectedRows.length > 0}
                 afterSelectingRows={this.afterSelectingRows}
                 isSelectedRow={this.isSelectedRow}
