@@ -35,7 +35,7 @@ import { getMouseIcon } from './SVGIcons';
 
 import './patient.scss';
 import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
-import {getSampleViewUrl} from "../../shared/api/urls";
+import {buildCBioPortalPageUrl, getSampleViewUrl} from "../../shared/api/urls";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 import Helmet from "react-helmet";
@@ -47,6 +47,7 @@ const win:any = (window as any);
 win.patientViewPageStore = patientViewPageStore;
 
 export interface IPatientViewPageProps {
+    params: any; // react route
     routing: any;
     samples?: ClinicalDataBySampleId[];
     loadClinicalInformationTableData?: () => Promise<any>;
@@ -126,7 +127,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     private handleTabChange(id: string) {
 
-        this.props.routing.updateRoute({ tab: id });
+        this.props.routing.updateRoute({}, `patient/${id}`);
 
     }
 
@@ -321,7 +322,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 </div>
                 <If condition={patientViewPageStore.patientViewData.isComplete}>
                 <Then>
-                <MSKTabs id="patientViewPageTabs" activeTabId={this.props.routing.location.query.tab}  onTabClick={(id:string)=>this.handleTabChange(id)} className="mainTabs">
+                <MSKTabs id="patientViewPageTabs" activeTabId={this.props.params.tab || "summaryTab"}  onTabClick={(id:string)=>this.handleTabChange(id)} className="mainTabs">
 
                         <MSKTab key={0} id="summaryTab" linkText="Summary">
 
