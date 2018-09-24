@@ -88,13 +88,19 @@ function initStore() {
 
 
             function getMolecularProfiles(query:any){
-                //if there's only one study, we read profiles from query params and filter out udfine
-                const molecularProfiles = [
+                //if there's only one study, we read profiles from query params and filter out undefined
+                let molecularProfiles = [
                     query.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
                     query.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
                     query.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
                     query.genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION,
                 ].filter((profile:string|undefined)=>!!profile);
+
+                // append 'genetic_profile_ids' which is sometimes in use
+                molecularProfiles = molecularProfiles.concat(query.genetic_profile_ids || []);
+
+                // filter out duplicates
+                molecularProfiles = _.uniq(molecularProfiles);
 
                 return molecularProfiles;
             }
