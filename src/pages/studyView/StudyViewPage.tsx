@@ -3,7 +3,7 @@ import {inject, observer} from "mobx-react";
 import styles from "./styles.module.scss";
 import {ChartContainer, IChartContainerProps} from 'pages/studyView/charts/ChartContainer';
 import { MSKTab, MSKTabs } from "../../shared/components/MSKTabs/MSKTabs";
-import { reaction, observable } from 'mobx';
+import { reaction, observable, computed } from 'mobx';
 import { If } from 'react-if';
 import {
     ChartMeta,
@@ -16,7 +16,7 @@ import {
     UniqueKey
 } from 'pages/studyView/StudyViewPageStore';
 import SummaryHeader from 'pages/studyView/SummaryHeader';
-import {Gene, SampleIdentifier, ClinicalAttribute} from 'shared/api/generated/CBioPortalAPI';
+import {Gene, SampleIdentifier, ClinicalAttribute, CancerStudy} from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import AppConfig from 'appConfig';
 import {ClinicalDataIntervalFilterValue, DataBin} from "shared/api/generated/CBioPortalAPIInternal";
@@ -30,7 +30,11 @@ import ReactGridLayout from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import {stringListToSet} from "../../shared/lib/StringUtils";
-import {StudyViewComponentLoader} from "./charts/StudyViewComponentLoader";
+import classnames from 'classnames';
+import { buildCBioPortalUrl } from 'shared/api/urls';
+import MobxPromise from 'mobxpromise';
+import { StudySummaryRecord } from 'pages/studyView/virtualStudy/VirtualStudy';
+
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -346,25 +350,18 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         if (
             this.store.queriedSampleIdentifiers.isComplete &&
             this.store.invalidSampleIds.isComplete &&
-            _.isEmpty(this.store.unknownQueriedIds) &&
-            !_.isEmpty(this.store.queriedStudies)
+            this.store.unknownQueriedIds.isComplete &&
+            this.store.displayedStudies.isComplete &&
+            _.isEmpty(this.store.unknownQueriedIds.result)
             ) {
             return (
                 <div className="studyView">
-                    <div className="topBanner">
-                        <div className="studyViewHeader">
-                            <If condition={this.store.queriedStudies.length === 1}>
-                                <div>
-                                    <h3>{this.store.queriedStudies![0].name}</h3>
-                                    <p dangerouslySetInnerHTML={{ __html: this.store.queriedStudies![0].description }}></p>
-                                </div>
-                            </If>
-                            {/*TDOD: currently show as Multiple Studies but should be shandles properly, i.e as in production*/}
-                            <If condition={this.store.queriedStudies!.length > 1}>
-                                <h3>Multiple Studies</h3>
-                            </If>
-                        </div>
-                    </div>
+                    <StudySummary
+                        studies={this.store.displayedStudies.result}
+                        originStudies={this.store.originStudies}
+                        showOriginStudiesInSummaryDescription={this.store.showOriginStudiesInSummaryDescription}
+                    />
+                    
                     <MSKTabs id="studyViewTabs" activeTabId={this.props.routing.location.query.tab}
                              onTabClick={(id:string)=>this.handleTabChange(id)}
                              className="mainTabs">
@@ -451,14 +448,111 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             )
         } else {
             //TODO: update with loading
-            if(this.store.filteredVirtualStudies.isComplete && !_.isEmpty(this.store.unknownQueriedIds)) {
+            if (this.store.filteredVirtualStudies.isComplete &&
+                this.store.unknownQueriedIds.isComplete &&
+                !_.isEmpty(this.store.unknownQueriedIds.result)) {
                 return (
                     <div style={{ margin: "0px auto", maxWidth: "50%", fontSize: "16px" }}>
-                        <ErrorBox error={Error(`Unknown/Unauthorized studies ${this.store.unknownQueriedIds.join(', ')}`)} />
+                        <ErrorBox error={Error(`Unknown/Unauthorized studies ${this.store.unknownQueriedIds.result.join(', ')}`)} />
                     </div>
                 )
             }
             return null;
         }
+    }
+}
+
+interface IStudySummaryProps {
+    studies: CancerStudy[],
+    originStudies: MobxPromise<CancerStudy[]>,
+    showOriginStudiesInSummaryDescription: boolean
+}
+
+@observer
+class StudySummary extends React.Component<IStudySummaryProps, {}> {
+
+    @observable private showMoreDescription = false;
+
+    @computed get name() {
+        return this.props.studies.length === 1 ? this.props.studies[0].name : 'Combined Study';
+    }
+
+    @computed get descriptionFirstLine() {
+        let line: string = `This combined study contains samples from ${this.props.studies.length} ${this.props.studies.length>1?'studies':'study'}`;
+        if (this.props.studies.length === 1) {
+            line = this.props.studies[0].description.split(/\n+/g)[0];
+        }
+        return <span dangerouslySetInnerHTML={{ __html: line }} />;
+    }
+
+    @computed get hasMoreDescription() {
+        return this.props.showOriginStudiesInSummaryDescription ||
+            this.props.studies.length > 1 ||
+            this.props.studies[0].description.split(/\n/g).length > 1;
+    }
+
+    @computed get descriptionRemainingLines() {
+        if (this.props.studies.length === 1) {
+            const lines = this.props.studies[0].description.split(/\n/g);
+            if (lines.length > 1) {
+                //slice fist line as its already shown
+                return [<span style={{ whiteSpace: 'pre' }} dangerouslySetInnerHTML={{ __html: lines.slice(1).join('\n') }} />]
+            }
+        } else {
+            return _.map(this.props.studies, study => {
+                return (
+                    <span>
+                        <a
+                            href={buildCBioPortalUrl({ pathname: 'newstudy', query: { id: study.studyId } })}
+                            target="_blank">
+                            {study.name}
+                        </a>
+                    </span>
+                )
+            })
+        }
+        return [];
+    }
+
+    render() {
+        return (
+            <div className={classnames("topBanner", styles.summary)}>
+                <h3>{this.name}</h3>
+                <div className={styles.description}>
+                    <div>
+                        {this.descriptionFirstLine}
+                        {this.hasMoreDescription && <i
+                            className={`fa fa-${this.showMoreDescription ? 'minus' : 'plus'}-circle`}
+                            onClick={() => this.showMoreDescription = !this.showMoreDescription}
+                            style={{ marginLeft: '5px', cursor: 'pointer' }}
+                        />}
+                    </div>
+
+                    {this.showMoreDescription &&
+                        <div>
+                            <p style={{ display: 'inline-grid', width: '100%' }}>{this.descriptionRemainingLines}</p>
+                            {
+                                this.props.showOriginStudiesInSummaryDescription &&
+                                (<div>
+                                    {
+                                        this.props.originStudies.isComplete &&
+                                        this.props.originStudies.result!.length > 0 &&
+                                        (<div>
+                                            <span style={{ fontWeight: 'bold', marginBottom: '5px', display: 'block' }}>
+                                                This virtual study was derived from:
+                                            </span>
+                                            {this.props.originStudies.result!.map(study => <StudySummaryRecord {...study} />)}
+                                        </div>)
+                                    }
+                                    <LoadingIndicator
+                                        isLoading={this.props.originStudies.isPending}
+                                    />
+                                </div>)
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        )
     }
 }

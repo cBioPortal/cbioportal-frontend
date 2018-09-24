@@ -7,15 +7,15 @@ import {
     getCNAByAlteration,
     getDefaultChartTypeByClinicalAttribute,
     getVirtualStudyDescription, calculateLayout, getLayoutMatrix, LayoutMatrixItem, getQValue, pickClinicalDataColors, getSamplesByExcludingFiltersOnChart, getFilteredSampleIdentifiers,
-    getHugoSymbolByEntrezGeneId
+    getHugoSymbolByEntrezGeneId, getFilteredStudiesWithSamples, showOriginStudiesInSummaryDescription
 } from 'pages/studyView/StudyViewUtils';
 import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue, Sample} from 'shared/api/generated/CBioPortalAPIInternal';
-import {ClinicalAttribute, Gene} from 'shared/api/generated/CBioPortalAPI';
-import {ChartDimension, ChartMeta, ChartTypeEnum} from "./StudyViewPageStore";
+import {ClinicalAttribute, Gene, CancerStudy} from 'shared/api/generated/CBioPortalAPI';
+import {ChartMeta, ChartTypeEnum} from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
-import {observable} from "mobx";
 import sinon from 'sinon';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
+import { VirtualStudy } from 'shared/model/VirtualStudy';
 
 describe('StudyViewUtils', () => {
 
@@ -42,25 +42,11 @@ describe('StudyViewUtils', () => {
             studyId: 'study2',
             uniqueSampleKeys: ['3', '4']
         }];
-        let selectedSamples = [{
-            studyId: 'study1',
-            uniqueSampleKey: '1'
-        }, {
-            studyId: 'study1',
-            uniqueSampleKey: '2'
-        }, {
-            studyId: 'study2',
-            uniqueSampleKey: '3'
-        }, {
-            studyId: 'study2',
-            uniqueSampleKey: '4'
-        }];
 
         it('when all samples are selected', () => {
             assert.isTrue(
                 getVirtualStudyDescription(
                     studies as any,
-                    selectedSamples as any,
                     {} as any,
                     {} as any,
                     []
@@ -83,18 +69,16 @@ describe('StudyViewUtils', () => {
             assert.isTrue(
                 getVirtualStudyDescription(
                     studies as any,
-                    [{ studyId: 'study1', uniqueSampleKey: '1' }] as any,
                     filter,
                     { 'SAMPLE_attribute1': 'attribute1 name' },
                     genes
-                ).startsWith('1 sample from 1 study:\n- Study 1 (1 samples)\n\nFilters:\n- CNA Genes:\n  ' +
+                ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)\n\nFilters:\n- CNA Genes:\n  ' +
                     '- GENE2-DEL\n- Mutated Genes:\n  - GENE1\n  - attribute1 name: value1'));
         });
         it('when username is not null', () => {
             assert.isTrue(
                 getVirtualStudyDescription(
                     studies as any,
-                    selectedSamples as any,
                     {} as any,
                     {} as any,
                     [],
@@ -103,7 +87,6 @@ describe('StudyViewUtils', () => {
             assert.isTrue(
                 getVirtualStudyDescription(
                     studies as any,
-                    selectedSamples as any,
                     {} as any,
                     {} as any,
                     [],
@@ -1391,6 +1374,49 @@ describe('StudyViewUtils', () => {
         it('when filter function is present', ()=>{
             assert.deepEqual(getFilteredSampleIdentifiers(samples,  (sample) => sample.sequenced),[{ sampleId: 'sample1', studyId: 'study1' }]);
             assert.deepEqual(getFilteredSampleIdentifiers(samples,  (sample) => sample.copyNumberSegmentPresent),[{ sampleId: 'sample2', studyId: 'study1' }]);
+        });
+    });
+
+    describe('showOriginStudiesInSummaryDescription', () => {
+        it('hide origin studies in summary description', () => {
+            assert.equal(showOriginStudiesInSummaryDescription([], []), false);
+            assert.equal(showOriginStudiesInSummaryDescription([{ studyId: 'CancerStudy1' }] as CancerStudy[], [] as VirtualStudy[]), false);
+            assert.equal(showOriginStudiesInSummaryDescription([{ studyId: 'CancerStudy1' }] as CancerStudy[], [{ id: 'VirtualStudy1' }] as VirtualStudy[]), false);
+        });
+        it('show origin studies in summary description', () => {
+            assert.equal(showOriginStudiesInSummaryDescription([], [{ id: 'VirtualStudy1' }] as VirtualStudy[]), true);
+        });
+    });
+
+    describe('getFilteredStudiesWithSamples', () => {
+
+        const samples: Sample[] = [{ sampleId: 'sample1', studyId: 'study1', uniqueSampleKey: 'sample1' }] as any;
+        const physicalStudies: CancerStudy[] = [{ studyId: 'study1' }] as any;
+        const virtualStudies: VirtualStudy[] = [{
+            id: 'virtualStudy1', data: {
+                name: 'virtual study 1',
+                description: 'virtual study 1',
+                studies: [{ id: 'study1', samples: ['sample1'] }, { id: 'study2', samples: ['sample1'] }]
+            }
+        }] as any;
+        it('returns expected results', () => {
+            assert.deepEqual(getFilteredStudiesWithSamples([], [], []), []);
+            assert.deepEqual(getFilteredStudiesWithSamples(samples, physicalStudies, []), [{ studyId: 'study1', uniqueSampleKeys: ['sample1'] }] as any);
+            assert.deepEqual(
+                getFilteredStudiesWithSamples(samples, physicalStudies, virtualStudies),
+                [
+                    {
+                        studyId: 'study1',
+                        uniqueSampleKeys: ['sample1']
+                    },
+                    {
+                        studyId: "virtualStudy1",
+                        name: "virtual study 1",
+                        description: "virtual study 1",
+                        uniqueSampleKeys: [
+                            "sample1"
+                        ]
+                    }] as any);
         });
     });
 
