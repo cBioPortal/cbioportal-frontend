@@ -28,6 +28,7 @@ import AppConfig from "appConfig";
 import Helmet from "react-helmet";
 import {updateConfig} from "../../config/config";
 import {embedGoogleAnalytics} from "../../shared/lib/tracking";
+import {computed} from "mobx";
 
 interface IContainerProps {
     location: Location;
@@ -83,22 +84,12 @@ export default class Container extends React.Component<IContainerProps, {}> {
             c => React.cloneElement(c as React.ReactElement<any>, childProps));
     }
 
-    isConfigComplete(){
-        // if we have session_id, we need to wait for session info to be fetched from session service
-        if (this.routingStore.location.query.session_id && !this.routingStore._session) {
-            return configPromise.isComplete && this.routingStore.remoteSessionData.isComplete;
-        } else {
-            return configPromise.isComplete;
-        }
+    @computed get isConfigComplete(){
+        // remote session will return undefined if there is no session id, so just check it
+        return configPromise.isComplete && this.routingStore.remoteSessionData.isComplete;
     }
 
     render() {
-
-        // if we have session_id, we need to wait for session info to be fetched from session service
-        let configComplete = configPromise.isComplete;
-        if (this.routingStore.location.query.session_id && !this.routingStore._session) {
-            configComplete = configComplete && this.routingStore.remoteSessionData.isComplete;
-        }
 
         return (
             <div>
@@ -116,8 +107,8 @@ export default class Container extends React.Component<IContainerProps, {}> {
 
                 <div className="contentWrapper">
                     <UnsupportedBrowserModal/>
-                    {(configComplete) && this.renderChildren()}
-                    <LoadingIndicator isLoading={!configComplete} isGlobal={true}/>
+                    {(this.isConfigComplete) && this.renderChildren()}
+                    <LoadingIndicator isLoading={!this.isConfigComplete} isGlobal={true}/>
                 </div>
 
                 <PortalFooter/>
