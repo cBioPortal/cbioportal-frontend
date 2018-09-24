@@ -35,6 +35,19 @@
         pointer-events: none;
         opacity: 0.5;
     }
+}
+
+.studySummary {
+    .studyName {
+        cursor: pointer;
+        padding-right: 5px;
+        i {
+            padding-right: 3px;
+        }
+    }
+    .studyDescription {
+        padding: 7px;
+    }
 
     :global {
         .input-group {
@@ -49,18 +62,5 @@
         .panel-heading, .panel-body {
             padding: 7px;
         }
-    }
-}
-
-.studySummary {
-    .studyName {
-        cursor: pointer;
-        padding-right: 5px;
-        i {
-            padding-right: 3px;
-        }
-    }
-    .studyDescription {
-        padding: 7px;
     }
 }
