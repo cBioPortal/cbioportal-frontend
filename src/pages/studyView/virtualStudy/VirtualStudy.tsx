@@ -8,9 +8,8 @@ import classnames from 'classnames';
 import { remoteData } from 'shared/api/remoteData';
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { If, Then, Else } from 'react-if';
-import {getStudySummaryUrl, buildCBioPortalPageUrl} from 'shared/api/urls';
-import { StudyViewFilter } from 'shared/api/generated/CBioPortalAPIInternal';
-import { StudyWithSamples, ChartMeta } from 'pages/studyView/StudyViewPageStore';
+import { buildCBioPortalPageUrl } from 'shared/api/urls';
+import { StudyWithSamples, ChartMeta, StudyViewFilterWithSampleIdentifierFilters } from 'pages/studyView/StudyViewPageStore';
 import { getVirtualStudyDescription, getCurrentDate } from 'pages/studyView/StudyViewUtils';
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import autobind from 'autobind-decorator';
@@ -22,7 +21,7 @@ const Clipboard = require('clipboard');
 export interface IVirtualStudyProps {
     studyWithSamples: StudyWithSamples[];
     selectedSamples: Sample[];
-    filter: StudyViewFilter;
+    filter: StudyViewFilterWithSampleIdentifierFilters;
     attributesMetaSet: { [id: string]: ChartMeta };
     user?: string;
 }
