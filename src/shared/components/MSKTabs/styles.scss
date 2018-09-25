@@ -7,7 +7,13 @@
   .tabs-left {
     border-right: 1px solid #ddd;
     margin-top: -1px;
+    margin-right: -1px;
   }
+
+  .tabs-left-content {
+    border: 1px solid lightgrey;
+  }
+
   .tabs-left > .nav-tabs {
     border-bottom: 0;
   }
