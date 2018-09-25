@@ -126,6 +126,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 this.store.updateChartsVisibility(visibleChartIds);
             },
             onCompareCohorts: (chartMeta:ChartMeta, selectedValues: string[]) => {
+                this.handleTabChange('groupComparison');
                 this.store.onCompareCohort(chartMeta, selectedValues);
             },
             setCustomChartFilters: (chartMeta: ChartMeta, values: string[]) => {

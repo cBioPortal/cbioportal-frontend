@@ -51,6 +51,7 @@ interface IMSKTabsProps {
     arrowStyle?:{[k:string]:string|number|boolean};
     tabButtonStyle?:string;
     unmountOnHide?:boolean;
+    vertical?:boolean;
 }
 
 export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
@@ -164,7 +165,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
             return (
                 <div
                     id={(this.props.id) ? this.props.id : ''}
-                    className={ classnames('msk-tabs', this.props.className) }
+                    className={ classnames('msk-tabs', this.props.className, !!this.props.vertical ? 'msk-tabs-left': '')}
                 >
                     {this.navTabs(children, effectiveActiveTab)}
                     <div className="tab-content">{arr}</div>
@@ -211,6 +212,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
         const navButtonStyle : string = this.props.tabButtonStyle || 'tabs';
 
         return (
+            <div className={classnames(!!this.props.vertical ? 'tabs-left': '')}>
             <ul
                 ref={this.navTabsRefHandler.bind(this)}
                 className={classnames('nav',`nav-${navButtonStyle}`)}
@@ -223,6 +225,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                     <ReactResizeDetector handleWidth={true} onResize={this.initOnResize.bind(this)()} />
                 )}
             </ul>
+            </div>
         );
     }
 
