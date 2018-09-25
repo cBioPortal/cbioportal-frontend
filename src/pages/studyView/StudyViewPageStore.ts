@@ -39,26 +39,29 @@ import StudyViewClinicalDataBinCountsCache from "shared/cache/StudyViewClinicalD
 import {
     ALWAYS_SHOWN_ATTRS,
     calculateLayout,
+    COLORS,
+    generateScatterPlotDownloadData,
     getClinicalAttributeUniqueKey,
     getClinicalDataIntervalFilterValues,
     getClinicalDataType,
     getCNAByAlteration,
     getDefaultChartTypeByClinicalAttribute,
     getDefaultPriorityByUniqueKey,
+    getFilteredSampleIdentifiers,
+    getFilteredStudiesWithSamples,
     getQValue,
+    getSamplesByExcludingFiltersOnChart,
     isFiltered,
     isLogScaleByDataBins,
     isPreSelectedClinicalAttr,
     makePatientToClinicalAnalysisGroup,
-    EXPONENTIAL_FRACTION_DIGITS,
-    generateScatterPlotDownloadData,
-    NA_DATA, ONE_GRID_TABLE_ROWS, PIE_TO_TABLE_LIMIT,
-    COLORS, NA_COLOR,
-    getSamplesByExcludingFiltersOnChart,
-    getFilteredSampleIdentifiers,
-    UNSELECTED_GROUP_COLOR, SELECTED_GROUP_COLOR,
+    NA_COLOR,
+    NA_DATA,
+    ONE_GRID_TABLE_ROWS,
+    PIE_TO_TABLE_LIMIT,
+    SELECTED_GROUP_COLOR,
     showOriginStudiesInSummaryDescription,
-    getFilteredStudiesWithSamples
+    UNSELECTED_GROUP_COLOR
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -281,6 +284,8 @@ export class StudyViewPageStore {
     private _clinicalDataIntervalFilterSet = observable.map<ClinicalDataIntervalFilter>();
 
     @observable private logScaleState = observable.map<boolean>();
+
+    @observable private groups:Group[] = [];
 
     @observable.ref private _mutatedGeneFilter: MutationGeneFilter[] = [];
 
@@ -1247,6 +1252,56 @@ export class StudyViewPageStore {
             w: 2,
             h: 1
         } : (this.studyViewPageLayoutProps.dimensions[ChartTypeEnum.TABLE] || {w: 1, h: 1});
+    }
+
+    @action
+    async onCompareCohort(chartMeta: ChartMeta, selectedRows: string[]) {
+        const clinicalDataList = await defaultClient.fetchClinicalDataUsingPOST({
+            clinicalDataType: chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE',
+            clinicalDataMultiStudyFilter: {
+                attributeIds: [chartMeta.clinicalAttribute!.clinicalAttributeId],
+                identifiers: this.samples.result.map(sample => ({
+                    entityId: chartMeta.clinicalAttribute!.patientAttribute ? sample.patientId : sample.sampleId,
+                    studyId: sample.studyId
+                }))
+            }
+        });
+        let groups = {} as any;
+
+        _.reduce(clinicalDataList, (acc, next: ClinicalData, index) => {
+            if (!_.has(acc, next.value)) {
+                groups[next.value] = [];
+            }
+            if (chartMeta.clinicalAttribute!.patientAttribute) {
+                acc[next.value] = _.concat(acc[next.value], this.getSelectedSampleIdsByPatientId(next.patientId));
+            } else {
+                acc[next.value].push({
+                    'sampleId': next.sampleId,
+                    'studyId': next.studyId
+                });
+            }
+            return acc;
+        }, groups as any);
+
+        this.groups = _.reduce(groups, (acc, next, key) => {
+            if(_.includes(selectedRows, key)) {
+                acc.push({
+                    name: key,
+                    sampleIds: next
+                });
+            }
+            return acc;
+        }, [] as Group[]);
+    }
+
+    @bind
+    private getSelectedSampleIdsByPatientId(patientId:string) {
+        return _.reduce(this.selectedSamples.result, (acc, next:Sample) => {
+            if(next.patientId === patientId) {
+                acc.push(next.sampleId);
+            }
+            return acc;
+        },[] as string[]);
     }
 
     @action
