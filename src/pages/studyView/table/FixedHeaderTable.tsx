@@ -27,6 +27,7 @@ export type IFixedHeaderTableProps<T> = {
     selectedGenes?: string[];
     selectedRows?: number[];
     showSelectSamples?: boolean;
+    showCohortComparison?: boolean;
     afterSelectingRows?: () => void;
     isSelectedRow?: (data:T) => boolean;
 };
@@ -155,6 +156,9 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                            className={classnames('form-control', styles.tableSearchInput)}/>
                     <If condition={this.props.showSelectSamples}>
                         <button className={classnames("btn btn-primary btn-sm", styles.selectSamplesBtn)} onClick={this.afterSelectingRows}>Select Samples</button>
+                    </If>
+                    <If condition={this.props.showCohortComparison}>
+                        <button className={classnames("btn btn-primary btn-sm", styles.selectSamplesBtn)} onClick={this.afterSelectingRows}>Compare Groups</button>
                     </If>
                 </div>
             </div>
