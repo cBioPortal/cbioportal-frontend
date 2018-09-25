@@ -4,7 +4,7 @@ import {action, computed, toJS} from "mobx";
 import {bind} from "bind-decorator";
 import _ from "lodash";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
-import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
+import {ChartMeta, ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
 import FixedHeaderTable from "./FixedHeaderTable";
 import styles from "./tables.module.scss";
 
@@ -13,6 +13,7 @@ export interface IClinicalTableProps {
     filters: string[];
     highlightedRow?: (value: string | undefined) => void;
     onUserSelection: (values: string[]) => void;
+    compareCohorts: (selectedValues: string[]) => void;
     label?: string,
     width?: number,
     height?: number
@@ -107,6 +108,11 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
         return _.sumBy(this.props.data, obj => obj.count);
     }
 
+    @bind
+    private compareCohorts() {
+        this.props.compareCohorts(this.props.filters);
+    }
+
     render() {
         return (
             <ClinicalTableComponent
@@ -115,6 +121,8 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
                 data={this.props.data || []}
                 columns={this._columns}
                 sortBy='#'
+                showCohortComparison={this.props.filters.length > 0}
+                afterSelectingRows={this.compareCohorts}
             />
         )
     }
