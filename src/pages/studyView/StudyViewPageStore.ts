@@ -133,6 +133,11 @@ export type ChartMeta = {
     chartType: ChartType
 }
 
+export type Group = {
+    name: string,
+    sampleIds: SampleIdentifier[]
+}
+
 export const CUSTOM_CHART_KEYS = [UniqueKey.SAMPLES_PER_PATIENT, UniqueKey.WITH_CNA_DATA, UniqueKey.WITH_MUTATION_DATA];
 
 export const SpecialCharts: ChartMeta[] = [{
