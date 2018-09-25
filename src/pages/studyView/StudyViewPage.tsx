@@ -371,6 +371,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     
                     <MSKTabs id="studyViewTabs" activeTabId={this.props.routing.location.query.tab}
                              onTabClick={(id:string)=>this.handleTabChange(id)}
+                             vertical={true}
                              className="mainTabs">
 
                         <MSKTab key={0} id="summary" linkText="Summary">
