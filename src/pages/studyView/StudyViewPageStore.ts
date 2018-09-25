@@ -285,7 +285,7 @@ export class StudyViewPageStore {
 
     @observable private logScaleState = observable.map<boolean>();
 
-    @observable private groups:Group[] = [];
+    @observable groups:Group[] = [];
 
     @observable.ref private _mutatedGeneFilter: MutationGeneFilter[] = [];
 

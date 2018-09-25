@@ -13,7 +13,8 @@ import {
     StudyViewPageStore,
     AnalysisGroup,
     CUSTOM_CHART_KEYS,
-    UniqueKey
+    UniqueKey,
+    Group
 } from 'pages/studyView/StudyViewPageStore';
 import SummaryHeader from 'pages/studyView/SummaryHeader';
 import {Gene, SampleIdentifier, ClinicalAttribute, CancerStudy} from 'shared/api/generated/CBioPortalAPI';
@@ -451,7 +452,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                         </MSKTab>
                         <MSKTab key={1} id={"groupComparison"} linkText={"Group Comparison"}>
                             <GroupComparison
-                                groups={[]}
+                                groups={this.store.groups}
                             />
                         </MSKTab>
                     </MSKTabs>
