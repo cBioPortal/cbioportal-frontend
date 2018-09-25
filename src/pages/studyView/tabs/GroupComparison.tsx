@@ -20,7 +20,7 @@ export interface IGroupComparisonProps {
 
 @observer
 export class GroupComparison extends React.Component<IGroupComparisonProps, {}> {
-    @observable activeTabId = '';
+    @observable activeTabId = 'survival';
 
     @observable private activeTabs = observable.map<boolean>();
 
