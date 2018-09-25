@@ -152,7 +152,7 @@ export class GroupComparison extends React.Component<IGroupComparisonProps, {}> 
 
                     <MSKTab key={1} id="survival" linkText="Survival">
 
-                    <div style={{ display: 'flex'}}>
+                    <div style={{ display: 'flex', padding: '0 10px'}}>
                         {this.survivalCharts}
                     </div>
 
