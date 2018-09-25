@@ -57,7 +57,7 @@ export interface ISummaryHeaderProps {
     clinicalAttributesWithCountPromise: MobxPromise<{ [clinicalAttributeId: string]: number }>;
     visibleAttributeIds: ChartMeta[];
     onChangeChartsVisibility: (visibleChartIds: string[]) => void;
-    // groups: Group[];
+    groups: Group[];
 }
 
 export type GeneReplacement = {alias: string, genes: Gene[]};
@@ -214,6 +214,7 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                         overlay={
                             <CohortGroup
                                 selectedSamples={this.props.selectedSamples}
+                                groups={this.props.groups}
                                 user={this.props.user}
                             />
                         }
