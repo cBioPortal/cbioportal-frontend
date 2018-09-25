@@ -23,12 +23,11 @@ import SurvivalChart, {LegendLocation} from "../../resultsView/survival/Survival
 import {MutatedGenesTable} from "../table/MutatedGenesTable";
 import {CNAGenesTable} from "../table/CNAGenesTable";
 import StudyViewScatterPlot from "./scatterPlot/StudyViewScatterPlot";
-import { bind } from "bind-decorator";
+import {bind} from "bind-decorator";
 import BarChart from "./barChart/BarChart";
 import {CopyNumberGeneFilterElement} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import {getTableHeightByDimension, getTableWidthByDimension, makeMutationCountVsCnaTooltip} from "../StudyViewUtils";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
-import {remoteData} from "../../../shared/api/remoteData";
 import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
 
 export interface AbstractChart {
@@ -52,6 +51,7 @@ export interface IChartContainerProps {
     download?: IChartContainerDownloadProps[];
     onResetSelection?: any;
     onDeleteChart: (chartMeta: ChartMeta) => void;
+    onCompareCohorts: (chartMeta: ChartMeta, selectedRows: string[]) => void;
     onChangeChartType: (chartMeta: ChartMeta, newChartType: ChartType) => void;
     onToggleLogScale?:any;
     logScaleChecked?:boolean;
@@ -125,6 +125,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             onChangeChartType: (newChartType: ChartType) => {
                 this.mouseInChart = false;
                 this.props.onChangeChartType(this.props.chartMeta, newChartType)
+            },
+            compareCohorts: (selectedValues: string[]) => {
+                this.props.onCompareCohorts(this.props.chartMeta, selectedValues);
             },
             onDeleteChart: () => {
                 this.props.onDeleteChart(this.props.chartMeta);
@@ -257,6 +260,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     data={this.props.promise.result}
                     active={this.mouseInChart}
                     placement={this.placement}
+                    compareCohorts={this.handlers.compareCohorts}
                     label={this.props.title}
                 />);
             }
@@ -276,6 +280,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     width={getTableWidthByDimension(this.props.chartMeta.dimension)}
                     height={getTableHeightByDimension(this.props.chartMeta.dimension)}
                     filters={this.props.filters}
+                    compareCohorts={this.handlers.compareCohorts}
                     onUserSelection={this.handlers.onValueSelection}
                     label={this.props.title}
                 />);

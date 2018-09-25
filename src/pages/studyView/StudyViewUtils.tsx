@@ -800,7 +800,7 @@ export function getDefaultChartTypeByClinicalAttribute(clinicalAttribute: Clinic
 
     // TODO: update logic when number of categories above PIE_TO_TABLE_LIMIT
     if (clinicalAttribute.datatype === 'STRING') {
-        return ChartTypeEnum.PIE_CHART;
+        return ChartTypeEnum.TABLE;
     }
 
     if (clinicalAttribute.datatype === 'NUMBER') {

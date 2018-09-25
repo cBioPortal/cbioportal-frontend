@@ -124,6 +124,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             updateChartsVisibility: (visibleChartIds: string[]) => {
                 this.store.updateChartsVisibility(visibleChartIds);
             },
+            onCompareCohorts: (chartMeta:ChartMeta, selectedValues: string[]) => {
+                this.store.onCompareCohort(chartMeta, selectedValues);
+            },
             setCustomChartFilters: (chartMeta: ChartMeta, values: string[]) => {
                 this.store.setCustomChartFilters(chartMeta, values);
             },
@@ -175,6 +178,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     props.filters = this.store.getCustomChartFilters(props.chartMeta ? props.chartMeta.uniqueKey : '');
                     props.onValueSelection = this.handlers.setCustomChartFilters;
                     props.onResetSelection = this.handlers.setCustomChartFilters;
+                    props.onCompareCohorts = this.handlers.onCompareCohorts;
 
                     if (chartMeta.uniqueKey === UniqueKey.SAMPLES_PER_PATIENT) {
                         props.promise = this.store.samplesPerPatientData;
@@ -239,6 +243,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 });
                 props.onValueSelection = this.handlers.onValueSelection;
                 props.onResetSelection = this.handlers.onValueSelection;
+                props.onCompareCohorts = this.handlers.onCompareCohorts;
                 props.onChangeChartType = this.handlers.onChangeChartType;
                 props.download = [
                     {
