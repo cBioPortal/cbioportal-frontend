@@ -168,7 +168,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                     className={ classnames('msk-tabs', this.props.className, !!this.props.vertical ? 'msk-tabs-left': '')}
                 >
                     {this.navTabs(children, effectiveActiveTab)}
-                    <div className="tab-content">{arr}</div>
+                    <div className={classnames('tab-content', this.props.className, !!this.props.vertical ? 'tabs-left-content': '')}>{arr}</div>
                 </div>
             );
         } else {
