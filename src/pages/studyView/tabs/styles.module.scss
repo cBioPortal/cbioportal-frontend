@@ -1,13 +1,14 @@
 .groupPill {
-    margin: 0px 5px;
-    a {
-        background: rgb(238, 238, 238);
-        border-radius: 4px;
-        padding: 3px;
-    }
-    .active {
-        background: #3786C2;
-        color: #fff;
-    }
-   
+    padding: 5px;
+    border-radius: 5px;
+    color: $study-view-primary-color;
+    background-color: white;
+    border: 1px solid $study-view-primary-color;
+    cursor: pointer;
+    margin: 0 5px;
+}
+
+.groupPill.active {
+    background-color: $study-view-primary-color;
+    color: #fff;
 }
