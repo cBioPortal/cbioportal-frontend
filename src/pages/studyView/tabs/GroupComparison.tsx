@@ -39,7 +39,7 @@ export class GroupComparison extends React.Component<IGroupComparisonProps, {}> 
     }
     public render() {
         return (
-            <div style={{marginTop: '10px'}} >
+            <div style={{margin: '10px'}} >
                 <div style={{ display: 'flex', marginBottom: '10px' }}>
                     <span style={{ fontSize: '14px' }}>Groups <sub style={{ fontStyle: 'italic' }}>(click to toggle, drag to re-order)</sub></span>
                     <div style={{ display: 'flex' }}>{this.groups}</div>
