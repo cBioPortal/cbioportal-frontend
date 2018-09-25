@@ -29,7 +29,7 @@ import {
     MolecularProfile,
     MolecularProfileFilter,
     Patient,
-    PatientFilter,
+    PatientFilter, PatientIdentifier,
     SampleFilter
 } from 'shared/api/generated/CBioPortalAPI';
 import {PatientSurvival} from 'shared/model/PatientSurvival';
@@ -138,7 +138,7 @@ export type ChartMeta = {
 
 export type Group = {
     name: string,
-    sampleIds: SampleIdentifier[]
+    samples: Sample[]
 }
 
 export const CUSTOM_CHART_KEYS = [UniqueKey.SAMPLES_PER_PATIENT, UniqueKey.WITH_CNA_DATA, UniqueKey.WITH_MUTATION_DATA];
@@ -1273,12 +1273,9 @@ export class StudyViewPageStore {
                 groups[next.value] = [];
             }
             if (chartMeta.clinicalAttribute!.patientAttribute) {
-                acc[next.value] = _.concat(acc[next.value], this.getSelectedSampleIdsByPatientId(next.patientId));
+                acc[next.value] = _.concat(acc[next.value], this.getSelectedSamplesByUniquePatientKey(next.uniquePatientKey));
             } else {
-                acc[next.value].push({
-                    'sampleId': next.sampleId,
-                    'studyId': next.studyId
-                });
+                acc[next.value].push(this.getSelectedSamplesByUniquePatientKey(next.uniqueSampleKey));
             }
             return acc;
         }, groups as any);
@@ -1287,7 +1284,7 @@ export class StudyViewPageStore {
             if(_.includes(selectedRows, key)) {
                 acc.push({
                     name: key,
-                    sampleIds: next
+                    samples: next
                 });
             }
             return acc;
@@ -1295,13 +1292,23 @@ export class StudyViewPageStore {
     }
 
     @bind
-    private getSelectedSampleIdsByPatientId(patientId:string) {
+    private getSelectedSamplesByUniquePatientKey(uniquePatientKey:string):Sample[] {
         return _.reduce(this.selectedSamples.result, (acc, next:Sample) => {
-            if(next.patientId === patientId) {
-                acc.push(next.sampleId);
+            if(next.uniquePatientKey === uniquePatientKey) {
+                acc.push(next);
             }
             return acc;
-        },[] as string[]);
+        }, [] as Sample[]);
+    }
+
+    @bind
+    private getSelectedSamplesByUniqueSampleKey(uniqueSampleKey:string):Sample[] {
+        return _.reduce(this.selectedSamples.result, (acc, next:Sample) => {
+            if(next.uniqueSampleKey === uniqueSampleKey) {
+                acc.push(next);
+            }
+            return acc;
+        }, [] as Sample[]);
     }
 
     @action

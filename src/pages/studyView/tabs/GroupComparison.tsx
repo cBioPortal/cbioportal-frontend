@@ -32,15 +32,17 @@ export class GroupComparison extends React.Component<IGroupComparisonProps, {}> 
     @computed get groups() {
         return this.props.groups.map(group => {
             let active = this.activeTabs.get(group.name) === undefined ? true : !!this.activeTabs.get(group.name);
+            let numOfSamples = group.samples.length;
+            let numOfPatients = _.uniq(group.samples.map(sample => sample.uniquePatientKey)).length;
             return (
-                <GroupPill active={active} name={group.name} color='' toggleActive={this.toggleActive} />
+                <GroupPill active={active} name={group.name} label={`${group.name} (${numOfSamples}/${numOfPatients})`} color='' toggleActive={this.toggleActive} />
             )
         });
     }
     public render() {
         return (
             <div style={{margin: '10px'}} >
-                <div style={{ display: 'flex', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', margin: '10px' }}>
                     <span style={{ fontSize: '14px' }}>Groups <sub style={{ fontStyle: 'italic' }}>(click to toggle, drag to re-order)</sub></span>
                     <div style={{ display: 'flex' }}>{this.groups}</div>
                 </div>
@@ -53,18 +55,20 @@ export class GroupComparison extends React.Component<IGroupComparisonProps, {}> 
 
                     </MSKTab>
 
-                    <MSKTab key={1} id="survival" linkText="Survival Analysis">
+                    <MSKTab key={1} id="survival" linkText="Survival">
 
                     </MSKTab>
 
-                    <MSKTab key={2} id="differentialExpression" linkText="Differential Expression">
+                    <MSKTab key={2} id="differentialExpression" linkText="Mutations">
 
                     </MSKTab>
-                    <MSKTab key={3} id="alterationFrequencies" linkText="Alteration Frequencies">
+                    <MSKTab key={3} id="alterationFrequencies" linkText="Copy-Number">
 
                     </MSKTab>
+                    <MSKTab key={4} id="alterationFrequencies" linkText="Expression">
 
-                    <MSKTab key={4} id="clinicalAttributes" linkText="Clinical Attributes">
+                    </MSKTab>
+                    <MSKTab key={5} id="clinicalAttributes" linkText="Clinical">
 
                     </MSKTab>
 
@@ -79,6 +83,7 @@ export interface IGroupPillProps {
     active: boolean;
     name: string;
     color: string;
+    label: string;
     toggleActive: (name: string) => void;
 
 }
@@ -90,11 +95,12 @@ class GroupPill extends React.Component<IGroupPillProps, {}> {
     @action private toggleActive() {
         this.props.toggleActive(this.props.name);
     }
+
     public render() {
-        return (<div className={styles.groupPill}>
-            <a className={classNames({
-                [styles.active]: this.props.active
-            })} onClick={this.toggleActive}>{this.props.name}</a>
+        return (<div className={classNames(styles.groupPill, {
+            [styles.active]: this.props.active
+        })} onClick={this.toggleActive}>
+            <span>{this.props.label}</span>
         </div>)
     }
 }
