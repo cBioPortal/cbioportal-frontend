@@ -454,6 +454,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                         <MSKTab key={1} id={"groupComparison"} linkText={"Group Comparison"}>
                             <GroupComparison
                                 groups={this.store.groups}
+                                survivalPlotData={this.store.survivalPlotData}
                             />
                         </MSKTab>
                     </MSKTabs>
