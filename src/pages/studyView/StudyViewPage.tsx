@@ -34,6 +34,7 @@ import classnames from 'classnames';
 import { buildCBioPortalUrl } from 'shared/api/urls';
 import MobxPromise from 'mobxpromise';
 import { StudySummaryRecord } from 'pages/studyView/virtualStudy/VirtualStudy';
+import { GroupComparison } from 'pages/studyView/tabs/GroupComparison';
 
 
 export interface IStudyViewPageProps {
@@ -442,6 +443,11 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     selectedSamples={this.store.selectedSamples.result!}
                                 />
                             </If>
+                        </MSKTab>
+                        <MSKTab key={1} id={"groupComparison"} linkText={"Group Comparison"}>
+                            <GroupComparison
+                                groups={[]}
+                            />
                         </MSKTab>
                     </MSKTabs>
                 </div>
