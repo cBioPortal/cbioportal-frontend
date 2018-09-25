@@ -1,5 +1,5 @@
 .groupPill {
-    padding: 5px;
+    padding: 2px 5px;
     border-radius: 5px;
     color: $study-view-primary-color;
     background-color: white;
@@ -11,4 +11,24 @@
 .groupPill.active {
     background-color: $study-view-primary-color;
     color: #fff;
+}
+
+.main {
+    margin: 10px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    margin: 10px;
+    font-size: 14px;
+}
+
+.sub {
+    font-style: italic;
+    font-size: 10px;
+}
+
+.groups {
+    display: flex;
 }

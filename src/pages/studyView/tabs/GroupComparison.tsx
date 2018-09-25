@@ -41,10 +41,10 @@ export class GroupComparison extends React.Component<IGroupComparisonProps, {}> 
     }
     public render() {
         return (
-            <div style={{margin: '10px'}} >
-                <div style={{ display: 'flex', margin: '10px' }}>
-                    <span style={{ fontSize: '14px' }}>Groups <sub style={{ fontStyle: 'italic' }}>(click to toggle, drag to re-order)</sub></span>
-                    <div style={{ display: 'flex' }}>{this.groups}</div>
+            <div className={styles.main} style={{margin: '10px'}} >
+                <div className={styles.header}>
+                    <span>Groups <span className={styles.sub}>(click to toggle, drag to re-order)</span></span>
+                    <div className={styles.groups}>{this.groups}</div>
                 </div>
                 <MSKTabs id="groupComparisonTabs" activeTabId={this.activeTabId}
                     onTabClick={(id: string) => this.handleTabChange(id)}
