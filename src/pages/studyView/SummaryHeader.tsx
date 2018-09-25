@@ -18,9 +18,13 @@ import { Gene } from 'shared/api/generated/CBioPortalAPI';
 import GeneSelectionBox, { GeneBoxType } from 'shared/components/GeneSelectionBox/GeneSelectionBox';
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import VirtualStudy from 'pages/studyView/virtualStudy/VirtualStudy';
+import CohortGroup from 'pages/studyView/CohortGroup';
 import fileDownload from 'react-file-download';
 import { If, Then, Else } from 'react-if';
-import { StudyWithSamples, ChartMeta, StudyViewFilterWithSampleIdentifierFilters } from 'pages/studyView/StudyViewPageStore';
+import {
+    StudyWithSamples, ChartMeta, StudyViewFilterWithSampleIdentifierFilters,
+    Group
+} from 'pages/studyView/StudyViewPageStore';
 import UserSelections from 'pages/studyView/UserSelections';
 import SelectedInfo from "./SelectedInfo/SelectedInfo";
 import classnames from "classnames";
@@ -53,6 +57,7 @@ export interface ISummaryHeaderProps {
     clinicalAttributesWithCountPromise: MobxPromise<{ [clinicalAttributeId: string]: number }>;
     visibleAttributeIds: ChartMeta[];
     onChangeChartsVisibility: (visibleChartIds: string[]) => void;
+    // groups: Group[];
 }
 
 export type GeneReplacement = {alias: string, genes: Gene[]};
@@ -130,6 +135,16 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
         }
     }
 
+    @computed get groupsButtonTooltip() {
+        //default value of userEmailAddress is anonymousUser. see my-index.ejs
+        // return (
+        //         (_.isUndefined(this.props.user) ||
+        //             _.isEmpty(this.props.user) ||
+        //             _.isEqual(this.props.user.toLowerCase(), 'anonymoususer')
+        //         ) ? '' : 'Save/') + 'Share Virtual Study';
+        return 'Create Groups';
+    }
+
     @computed get virtualStudyButtonTooltip() {
         //default value of userEmailAddress is anonymousUser. see my-index.ejs
         return (
@@ -191,6 +206,33 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
 
                 <div className={styles.summaryHeader}>
                     <SelectedInfo selectedSamples={this.props.selectedSamples}/>
+
+                    {/*Create group name button*/}
+                    <DefaultTooltip
+                        trigger={['click']}
+                        destroyTooltipOnHide={true}
+                        overlay={
+                            <CohortGroup
+                                selectedSamples={this.props.selectedSamples}
+                                user={this.props.user}
+                            />
+                        }
+                        placement="bottom"
+                    >
+                        <DefaultTooltip
+                            placement={"top"}
+                            trigger={['hover']}
+                            overlay={<span>{this.groupsButtonTooltip}</span>}
+                        >
+                            <button
+                                className={classnames('btn btn-default btn-sm', styles.summaryHeaderBtn, styles.summaryHeaderItem)}
+                                title={this.groupsButtonTooltip}>
+                                <i className="fa fa-plus-square" aria-hidden="true" title="Create Groups"/>
+                            </button>
+                        </DefaultTooltip>
+                    </DefaultTooltip>
+
+
                     <DefaultTooltip
                         trigger={['click']}
                         destroyTooltipOnHide={true}
