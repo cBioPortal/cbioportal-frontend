@@ -1,71 +1,32 @@
 import * as React from "react";
 import { observer } from "mobx-react";
-import { VictoryChart, VictoryGroup, VictoryBar, VictoryLegend, Slice, VictoryAxis, VictoryLabel } from 'victory';
+import { VictoryChart, VictoryGroup, VictoryBar, VictoryContainer, VictoryAxis, VictoryLabel } from 'victory';
 import { observable, computed, action, toJS } from "mobx";
 import _ from "lodash";
-import {toSvgDomNodeWithLegend, UNSELECTED_COLOR} from "pages/studyView/StudyViewUtils";
-import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
+import { toSvgDomNodeWithLegend, UNSELECTED_COLOR } from "pages/studyView/StudyViewUtils";
 import { AbstractChart } from "pages/studyView/charts/ChartContainer";
-import ifndef from "shared/lib/ifndef";
 import { bind } from "bind-decorator";
 import { ClinicalDataCountWithColor } from "pages/studyView/StudyViewPageStore";
-import classnames from 'classnames';
-import ClinicalTable from "pages/studyView/table/ClinicalTable";
-import { If } from 'react-if';
+import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 
 export type GroupChartData = {
-    name:string,
-    color:string,
-    categories:{
-        name:string,
-        count:number
+    name: string,
+    color: string,
+    categories: {
+        name: string,
+        count: number
     }[]
 }
 
 export interface IGroupChartProps {
     data: GroupChartData[];
-    filters: string[];
 }
 
 @observer
 export default class GroupChart extends React.Component<IGroupChartProps, {}> implements AbstractChart {
 
     private svg: SVGElement;
-    @computed get fill() {
-        return (d: ClinicalDataCountWithColor) => {
-            if (!_.isEmpty(this.props.filters) && !_.includes(this.props.filters, d.value)) {
-                return UNSELECTED_COLOR;
-            }
-            return d.color;
-        };
-    }
 
-    @computed get stroke() {
-        return (d: ClinicalDataCountWithColor) => {
-            if (!_.isEmpty(this.props.filters) && _.includes(this.props.filters, d.value)) {
-                return "#cccccc";
-            }
-            return null;
-        };
-    }
-
-    @computed get strokeWidth() {
-        return (d: ClinicalDataCountWithColor) => {
-            if (!_.isEmpty(this.props.filters) && _.includes(this.props.filters, d.value)) {
-                return 3;
-            }
-            return 0;
-        };
-    }
-
-    @computed get fillOpacity() {
-        return (d: ClinicalDataCountWithColor) => {
-            if (!_.isEmpty(this.props.filters) && !_.includes(this.props.filters, d.value)) {
-                return '0.5';
-            }
-            return 1;
-        };
-    }
 
     public toSVGDOMNode(): Element {
         return this.svg.cloneNode(true) as Element;;
@@ -87,44 +48,95 @@ export default class GroupChart extends React.Component<IGroupChartProps, {}> im
     }
 
     @computed get colorScale() {
-        return this.props.data.map(dataObj=> dataObj.color)
+        return this.props.data.map(dataObj => dataObj.color)
     }
     @computed get victoryBars() {
-        return this.props.data.map(group=>{
-            let data = group.categories.map(category=>{
+        return this.props.data.map((group, i) => {
+            let data = group.categories.map(category => {
                 return {
-                    x:category.name,
-                    y:category.count
+                    x: category.name,
+                    y: category.count
                 }
             })
-            return( <VictoryBar style={{data:{ width:20 }}} data={data} /> )
+            return (<VictoryBar style={{ data: { width: 20 } }} data={data} key={i} />)
         })
     }
 
-    private get bodyWidth(){
-        let temp = _.flatMap(this.props.data, group=>group.categories.length)
-        return (temp.length * (28));
+    @computed get bodyWidth() {
+        return (_.sum(_.flatMap(this.props.data, group => group.categories.length)) * (28));
     }
 
-    private get width(){
-        return this.bodyWidth + 20 + 20;
+    @computed get width() {
+        return this.bodyWidth + 100;
     }
 
+    @computed get height(){
+        return 300 + this.bottomPadding;
+    }
+
+    @computed get bottomPadding(){
+
+        let names = _.flatMap(this.props.data,(group, i) => {
+            return _.map(group.categories, category => category.name)
+
+        })
+
+        const adjustedForCaps = names.map((label)=>{
+           const capitalizedLetters = label.match(/[A-Z]/g) || [];
+           const undercaseLetters = label.match(/[a-z]/g) || [];
+           const spaces = label.match(/\s/g) || [];
+           return (capitalizedLetters.length * 2) + (undercaseLetters.length * 1) + (spaces.length * 2);
+        });
+
+        return _.max(adjustedForCaps)! * 7 + 40 ;
+
+    }
+
+    private get leftPadding(){
+        return 80;
+    }
+
+    private get topPadding(){
+        return 20;
+    }
+
+    private get rightPadding(){
+        return 20;
+    }
 
 
     public render() {
         return (
             <div>
-                <VictoryChart >
-                <VictoryGroup
-                    offset={20}
-                    colorScale={this.colorScale}
-                >
-                {
-                    this.victoryBars
-                }
-                </VictoryGroup>
-            </VictoryChart>
+                <VictoryChart
+                    theme={CBIOPORTAL_VICTORY_THEME}
+                    width={this.width}
+                    height={this.height}
+                    padding={{bottom:this.bottomPadding, top:this.topPadding, left:this.leftPadding, right:this.rightPadding }}
+                    containerComponent={<VictoryContainer responsive={false}/>}>
+                    <VictoryAxis dependentAxis
+                        axisLabelComponent={<VictoryLabel dy={-20} />}
+                        label={'Counts'}
+                    />
+                    <VictoryAxis
+                        tickLabelComponent={
+                            <VictoryLabel
+                                angle={-85}
+                                verticalAnchor="middle"
+                                textAnchor="end"
+                            />
+                        }
+
+                    />
+                    <VictoryGroup
+                        offset={20}
+                        colorScale={this.colorScale}
+                    >
+                        {
+                            this.victoryBars
+                        }
+                    </VictoryGroup>
+                </VictoryChart>
             </div>
         );
     }
