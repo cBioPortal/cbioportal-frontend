@@ -402,6 +402,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                 allGenes={this.store.allGenes.result}
                                 attributesMetaSet={this.store.chartMetaSet}
                                 user={AppConfig.userEmailAddress}
+                                groups={this.store.groups}
                                 getClinicalData={this.store.getDownloadDataPromise}
                                 onSubmitQuery={()=> this.store.onSubmitQuery()}
                                 updateClinicalDataEqualityFilter={this.handlers.onValueSelection}
