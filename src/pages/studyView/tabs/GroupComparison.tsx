@@ -16,6 +16,7 @@ import GroupChart, { GroupChartData } from "pages/studyView/charts/groupChart/Gr
 import ReactSelect from 'react-select';
 import { ClinicalAttribute, ClinicalDataMultiStudyFilter, ClinicalData } from "shared/api/generated/CBioPortalAPI";
 import defaultClient from "shared/api/cbioportalClientInstance";
+import VennDiagram from "../charts/vennDiagram/VennDiagram";
 
 export interface IGroupComparisonProps {
     groups: Group[];
@@ -25,7 +26,7 @@ export interface IGroupComparisonProps {
 
 @observer
 export class GroupComparison extends React.Component<IGroupComparisonProps, {}> {
-    @observable activeTabId = 'survival';
+    @observable activeTabId = '';
 
     @observable private activeGroups = observable.map<boolean>();
 
@@ -267,7 +268,7 @@ export class GroupComparison extends React.Component<IGroupComparisonProps, {}> 
                     className="pillTabs">
 
                     <MSKTab key={0} id="overlap" linkText="Overlap">
-
+                        <VennDiagram></VennDiagram>
                     </MSKTab>
 
                     {
