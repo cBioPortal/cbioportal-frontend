@@ -164,6 +164,8 @@ export class GroupComparison extends React.Component<IGroupComparisonProps, {}> 
             }
         } else {
             return [];
+        }
+    }
 
     @computed get clinicalAttributeSet() {
         return _.reduce(this.props.clinicalAttributes,(acc, clinicalAttribute)=>{
