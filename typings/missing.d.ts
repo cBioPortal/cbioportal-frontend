@@ -33,3 +33,4 @@ declare module 'universal-ga';
 declare module 'mixpanel-browser';
 declare module 'measure-text';
 declare module 'contrast';
+declare module 'venn.js';
