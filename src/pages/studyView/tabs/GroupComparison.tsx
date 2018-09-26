@@ -142,28 +142,28 @@ export class GroupComparison extends React.Component<IGroupComparisonProps, {}> 
 
 
     @computed get clinicalAttributeSet() {
-        return _.reduce(this.props.clinicalAttributes,(acc, clinicalAttribute)=>{
+        return _.reduce(this.props.clinicalAttributes, (acc, clinicalAttribute) => {
             if (clinicalAttribute.datatype === 'STRING') {
-                let attributrType = clinicalAttribute.patientAttribute?'PATIENT':'SAMPLE'
+                let attributrType = clinicalAttribute.patientAttribute ? 'PATIENT' : 'SAMPLE'
                 acc[`${attributrType}_${clinicalAttribute.clinicalAttributeId}`] = clinicalAttribute
             }
             return acc
-        },{} as {[id:string]:ClinicalAttribute})
+        }, {} as { [id: string]: ClinicalAttribute })
     }
 
     @computed get clinicalAttributeOptions() {
-        return _.map(this.clinicalAttributeSet,(clinicalAttribute, key)=>{
+        return _.map(this.clinicalAttributeSet, (clinicalAttribute, key) => {
             return {
                 label: clinicalAttribute.displayName,
                 value: key
             }
         })
-        
+
     }
 
-    @computed get sampleIdentifiers(){
-        return _.flatMap(this.props.groups,group=>{
-            return group.samples.map(sample=>{
+    @computed get sampleIdentifiers() {
+        return _.flatMap(this.props.groups, group => {
+            return group.samples.map(sample => {
                 return {
                     entityId: sample.sampleId,
                     studyId: sample.studyId
@@ -172,9 +172,9 @@ export class GroupComparison extends React.Component<IGroupComparisonProps, {}> 
         })
     }
 
-    @computed get patientIdentifiers(){
-        return _.flatMap(this.props.groups,group=>{
-            return group.samples.map(sample=>{
+    @computed get patientIdentifiers() {
+        return _.flatMap(this.props.groups, group => {
+            return group.samples.map(sample => {
                 return {
                     entityId: sample.patientId,
                     studyId: sample.studyId
@@ -183,9 +183,9 @@ export class GroupComparison extends React.Component<IGroupComparisonProps, {}> 
         })
     }
 
-    readonly clinicalDataSet = remoteData<{[id:string]:ClinicalData}>({
+    readonly clinicalDataSet = remoteData<{ [id: string]: ClinicalData }>({
         invoke: async () => {
-            if(this.activeClinicalAttrribute){
+            if (this.activeClinicalAttrribute) {
                 let clinicalAttribute = this.clinicalAttributeSet[this.activeClinicalAttrribute]
                 let data = await defaultClient.fetchClinicalDataUsingPOST({
                     'clinicalDataType': clinicalAttribute.patientAttribute ? 'PATIENT' : 'SAMPLE',
@@ -195,33 +195,33 @@ export class GroupComparison extends React.Component<IGroupComparisonProps, {}> 
                     } as ClinicalDataMultiStudyFilter
                 });
                 const key = clinicalAttribute.patientAttribute ? 'uniquePatientKey' : 'uniqueSampleKey'
-                return _.keyBy(data,obj=>obj[key])
+                return _.keyBy(data, obj => obj[key])
             }
             return {};
         },
         default: {},
     });
 
-    @computed get groupedClinicalData(){
-        if(this.activeClinicalAttrribute && this.clinicalDataSet.isComplete && !_.isEmpty(this.clinicalDataSet.result)){
+    @computed get groupedClinicalData() {
+        if (this.activeClinicalAttrribute && this.clinicalDataSet.isComplete && !_.isEmpty(this.clinicalDataSet.result)) {
             let clinicalDataSet = this.clinicalDataSet.result
             let clinicalAttribute = this.clinicalAttributeSet[this.activeClinicalAttrribute]
             const uniqKey = clinicalAttribute.patientAttribute ? 'uniquePatientKey' : 'uniqueSampleKey'
             return _.reduce(this.groupWithColors, (acc, group) => {
                 let isActive = this.activeGroups.get(group.name) === undefined ? true : !!this.activeGroups.get(group.name);
                 if (isActive) {
-    
-                    
-                    let groupClinicalData = _.reduce(group.samples,(acc, sample)=>{
-                        if(clinicalDataSet[sample[uniqKey]]){
+
+
+                    let groupClinicalData = _.reduce(group.samples, (acc, sample) => {
+                        if (clinicalDataSet[sample[uniqKey]]) {
                             acc.push(clinicalDataSet[sample[uniqKey]])
                         }
                         return acc
-                    },[] as ClinicalData[])
+                    }, [] as ClinicalData[])
 
-                    let groupClinicalDataSet = _.groupBy(groupClinicalData,clinicalData=> clinicalData.value)
+                    let groupClinicalDataSet = _.groupBy(groupClinicalData, clinicalData => clinicalData.value)
 
-                    let categories = _.map(groupClinicalDataSet,(group, key)=>{
+                    let categories = _.map(groupClinicalDataSet, (group, key) => {
                         return {
                             name: key,
                             count: group.length
@@ -246,8 +246,8 @@ export class GroupComparison extends React.Component<IGroupComparisonProps, {}> 
 
     @bind
     @action
-    private changeOption(option:any){
-        if(option){
+    private changeOption(option: any) {
+        if (option) {
             this.activeClinicalAttrribute = option.value
         } else {
             this.activeClinicalAttrribute = undefined
@@ -290,19 +290,23 @@ export class GroupComparison extends React.Component<IGroupComparisonProps, {}> 
                     </MSKTab>
                     <MSKTab key={5} id="clinicalAttributes" linkText="Clinical">
 
-                        <div>
-
-                            <ReactSelect
-                                placeholder='select a symbol'
-                                options={this.clinicalAttributeOptions}
-                                onChange={this.changeOption}
-                                value={this.activeClinicalAttrribute}
-                                autosize
-                            />
-
-                            <GroupChart data={this.groupedClinicalData}
-                                filters={[]} />
-
+                        <div className={styles.clinicalAttributeTab}>
+                            <div style={{ display: 'flex' }}>
+                                <span style={{ marginRight: '10px' }}>Clinical Attribute</span>
+                                <ReactSelect
+                                    placeholder='select a symbol'
+                                    options={this.clinicalAttributeOptions}
+                                    onChange={this.changeOption}
+                                    value={this.activeClinicalAttrribute}
+                                    autosize
+                                />
+                            </div>
+                            <div>
+                                {
+                                    this.groupedClinicalData.length > 0 &&
+                                    <GroupChart data={this.groupedClinicalData} />
+                                }
+                            </div>
                         </div>
 
 
