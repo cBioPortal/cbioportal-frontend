@@ -456,6 +456,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                             <GroupComparison
                                 groups={this.store.groups}
                                 survivalPlotData={this.store.survivalPlotData}
+                                clinicalAttributes={this.store.clinicalAttributes.result}
                             />
                         </MSKTab>
                     </MSKTabs>
