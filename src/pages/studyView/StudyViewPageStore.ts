@@ -17,7 +17,8 @@ import {
     MutationGeneFilter,
     Sample,
     SampleIdentifier,
-    StudyViewFilter
+    StudyViewFilter,
+    ExpressionEnrichment
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {
     CancerStudy,
@@ -1152,7 +1153,7 @@ export class StudyViewPageStore {
 
     @computed
     get chartMetaSet(): { [id: string]: ChartMeta } {
-        
+
         let _chartMetaSet: { [id: string]: ChartMeta } = _.keyBy(SpecialCharts,(specialChart)=>specialChart.uniqueKey);
         // Add meta information for each of the clinical attribute
         // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
@@ -2013,6 +2014,21 @@ export class StudyViewPageStore {
             return {}
         },
         default: {}
+    });
+
+    readonly mRNAEnrichmentData = remoteData<ExpressionEnrichment[]>({
+        await: () => [this.molecularProfiles],
+        invoke: async () => {
+            if (this.groups.length === 2) {
+                return internalClient.fetchExpressionEnrichmentsUsingPOST({
+                    molecularProfileId: this.molecularProfiles.result[0].molecularProfileId,
+                    enrichmentType: "SAMPLE",
+                    enrichmentFilter: {alteredIds: this.groups[0].samples.map(s => s.sampleId),
+                        unalteredIds: this.groups[1].samples.map(s => s.sampleId),
+                        queryGenes: []}});
+            }
+            return Promise.resolve([]);
+        }
     });
 
     @bind

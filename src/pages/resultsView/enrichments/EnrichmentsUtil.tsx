@@ -61,7 +61,7 @@ export function getExpressionScatterData(expressionEnrichments: ExpressionEnrich
     return expressionEnrichments.filter(a => !queryGenes.includes(a.hugoGeneSymbol)).map((expressionEnrichment) => {
         return {
             x: expressionEnrichment.logRatio,
-            y: -Math.log10(expressionEnrichment.pValue), 
+            y: -Math.log10(expressionEnrichment.pValue),
             hugoGeneSymbol: expressionEnrichment.hugoGeneSymbol,
             entrezGeneId: expressionEnrichment.entrezGeneId,
             qValue: expressionEnrichment.qValue,
@@ -91,12 +91,12 @@ export function getAlterationRowData(alterationEnrichments: AlterationEnrichment
             disabled: queryGenes.includes(alterationEnrichment.hugoGeneSymbol),
             hugoGeneSymbol: alterationEnrichment.hugoGeneSymbol,
             entrezGeneId: alterationEnrichment.entrezGeneId,
-            cytoband: alterationEnrichment.cytoband, 
+            cytoband: alterationEnrichment.cytoband,
             alteredCount: alterationEnrichment.alteredCount,
             alteredPercentage: alterationEnrichment.alteredCount / totalAltered * 100,
             unalteredCount: alterationEnrichment.unalteredCount,
             unalteredPercentage: alterationEnrichment.unalteredCount / totalUnaltered * 100,
-            logRatio: Number(alterationEnrichment.logRatio), 
+            logRatio: Number(alterationEnrichment.logRatio),
             pValue: alterationEnrichment.pValue,
             qValue: alterationEnrichment.qValue
         };
@@ -124,7 +124,7 @@ export function getExpressionRowData(expressionEnrichments: ExpressionEnrichment
     });
 }
 
-export function getFilteredData(data: any[], negativeLogFilter: boolean, positiveLogFilter: boolean, qValueFilter: boolean, 
+export function getFilteredData(data: any[], negativeLogFilter: boolean, positiveLogFilter: boolean, qValueFilter: boolean,
     selectedGenes: string[]|null): any[] {
 
     return data.filter(alterationEnrichment => {
@@ -181,7 +181,7 @@ export function getDownloadContent(scatterData: any[], hugoGeneSymbol: string, p
     scatterData.map((datum, index) => {
         const profileTitle = hugoGeneSymbol + ", " + profileName;
         downloadData.push({
-            "Sample ID": datum.sampleId, 
+            "Sample ID": datum.sampleId,
             [profileTitle]: datum.y,
             "Alteration": datum.alterations
         });
@@ -190,7 +190,7 @@ export function getDownloadContent(scatterData: any[], hugoGeneSymbol: string, p
 }
 
 export function getAlterationsTooltipContent(alterations: any[]): string {
-        
+
     let result: string = "";
     let currentGene: string;
     alterations.forEach(a => {
@@ -234,7 +234,7 @@ export function getBoxPlotModels(scatterData: any[]): BoxPlotModel[] {
     return [alteredBoxPlotData, unalteredBoxPlotData];
 }
 
-export function getBoxPlotScatterData(molecularData: NumericGeneMolecularData[], molecularProfileId: string, 
+export function getBoxPlotScatterData(molecularData: NumericGeneMolecularData[], molecularProfileId: string,
     sampleAlterations: any, alteredSampleKeys: string[]): any[] {
 
     const scatterData: any[] = [];

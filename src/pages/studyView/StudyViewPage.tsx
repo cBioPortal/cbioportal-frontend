@@ -354,6 +354,13 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         this.props.routing.updateRoute({ tab: id });
     }
 
+    // @computed get mRNAEnrichmentData() {
+    //     //if (this.store.groups.length === 2 && this.store.mRNAEnrichmentData.isComplete) {
+    //         return this.store.mRNAEnrichmentData;
+    //     //}
+    //     //return [];
+    // }
+
     render() {
         if (
             this.store.queriedSampleIdentifiers.isComplete &&
@@ -369,7 +376,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                         originStudies={this.store.originStudies}
                         showOriginStudiesInSummaryDescription={this.store.showOriginStudiesInSummaryDescription}
                     />
-                    
+
                     <MSKTabs id="studyViewTabs" activeTabId={this.props.routing.location.query.tab}
                              onTabClick={(id:string)=>this.handleTabChange(id)}
                              className="mainTabs">
@@ -455,6 +462,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                             <GroupComparison
                                 groups={this.store.groups}
                                 survivalPlotData={this.store.survivalPlotData}
+                                mRNAEnrichmentData={this.store.mRNAEnrichmentData}
                             />
                         </MSKTab>
                     </MSKTabs>

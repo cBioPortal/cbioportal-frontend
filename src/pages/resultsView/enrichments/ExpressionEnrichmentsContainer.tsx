@@ -39,7 +39,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
     }
 
     @computed get filteredData(): ExpressionEnrichmentRow[] {
-        return getFilteredData(this.data, this.underExpressedFilter, this.overExpressedFilter, this.significanceFilter, 
+        return getFilteredData(this.data, this.underExpressedFilter, this.overExpressedFilter, this.significanceFilter,
             this.selectedGenes);
     }
 
@@ -116,12 +116,12 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
         return (
             <div className={styles.Container}>
                 <div className={styles.LeftColumn}>
-                    <MiniScatterChart data={data} 
-                        xAxisLeftLabel="Under-expressed" xAxisRightLabel="Over-expressed" xAxisDomain={Math.ceil(Math.abs(maxData.x))} 
-                        xAxisTickValues={null} onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection} 
+                    <MiniScatterChart data={data}
+                        xAxisLeftLabel="Under-expressed" xAxisRightLabel="Over-expressed" xAxisDomain={Math.ceil(Math.abs(maxData.x))}
+                        xAxisTickValues={null} onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection}
                         onSelectionCleared={this.onSelectionCleared}/>
-                    <MiniBoxPlot selectedGeneHugo={this.clickedGeneHugo} selectedGeneEntrez={this.clickedGeneEntrez} 
-                        selectedProfile={this.props.selectedProfile} queryGenes={this.props.store.hugoGeneSymbols} 
+                    <MiniBoxPlot selectedGeneHugo={this.clickedGeneHugo} selectedGeneEntrez={this.clickedGeneEntrez}
+                        selectedProfile={this.props.selectedProfile} queryGenes={this.props.store.hugoGeneSymbols}
                         selectedGeneQValue={selectedGeneQValue} store={this.props.store}/>
                 </div>
                 <div className={styles.TableContainer}>
