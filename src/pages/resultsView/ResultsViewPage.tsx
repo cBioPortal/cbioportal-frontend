@@ -211,7 +211,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                 getTab: () => {
                     return <MSKTab key={0} id="oncoprintTab" linkText="OncoPrint">
                         <ResultsViewOncoprint
-                            divId={'oncoprintContainer'}
+                            divId={'oncoprintDiv'}
                             store={store}
                             key={store.hugoGeneSymbols.join(",")}
                             routing={this.props.routing}
