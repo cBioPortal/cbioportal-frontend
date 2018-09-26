@@ -1219,7 +1219,7 @@ export class ResultsViewPageStore {
                         gene,
                         this.samples,
                         this.oncoKbAnnotatedGenes.result || {},
-                        () => this.mutationsByGene[gene.hugoGeneSymbol],
+                        () => (this.mutationsByGene[gene.hugoGeneSymbol] || []),
                         () => (this.mutationCountCache),
                         this.studyIdToStudy,
                         this.molecularProfileIdToMolecularProfile,

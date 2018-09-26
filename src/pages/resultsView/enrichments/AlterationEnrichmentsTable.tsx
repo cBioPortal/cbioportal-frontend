@@ -5,8 +5,9 @@ import { observer } from "mobx-react";
 import { observable } from "mobx";
 import { Badge, Checkbox } from 'react-bootstrap';
 import {
-    calculateAlterationTendency, formatLogOddsRatio, formatPercentage, formatValueWithStyle
+    calculateAlterationTendency, formatPercentage
 } from "./EnrichmentsUtil";
+import { formatLogOddsRatio, formatSignificanceValueWithStyle } from "shared/lib/FormatUtils";
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import styles from "./styles.module.scss";
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
@@ -140,7 +141,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
 
         columns[AlterationEnrichmentTableColumnType.Q_VALUE] = {
             name: "q-Value",
-            render: (d: AlterationEnrichmentRow) => <span style={{whiteSpace: 'nowrap'}}>{formatValueWithStyle(d.qValue)}</span>,
+            render: (d: AlterationEnrichmentRow) => <span style={{whiteSpace: 'nowrap'}}>{formatSignificanceValueWithStyle(d.qValue)}</span>,
             tooltip: <span>Derived from Benjamini-Hochberg procedure</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.qValue,
             download: (d: AlterationEnrichmentRow) => toConditionalPrecision(d.qValue, 3, 0.01)
