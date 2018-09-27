@@ -170,14 +170,21 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                 <VictoryLabel  x={x + approxTextWidth}
                                y={CORRELATION_INFO_Y}
                                textAnchor="end"
-                               text={`Pearson: ${(this.props.correlation ? this.props.correlation.pearson : this.pearsonCorr).toFixed(2)}`}
+                               text={`Pearson: ${this.pearsonCorr.toFixed(2)}`}
                                style={style}
                 ></VictoryLabel>
                 <VictoryLabel  x={x + approxTextWidth}
                                y={CORRELATION_INFO_Y}
                                textAnchor="end"
                                dy="2"
-                               text={`Spearman: ${(this.props.correlation ? this.props.correlation.spearman : this.spearmanCorr).toFixed(2)}`}
+                               text={`Spearman: ${this.spearmanCorr.toFixed(2)}`}
+                               style={style}
+                ></VictoryLabel>
+                <VictoryLabel  x={x + approxTextWidth}
+                               y={CORRELATION_INFO_Y}
+                               textAnchor="end"
+                               dy="4"
+                               text={`P-Value: ${this.spearmanPval.toFixed(2)}`}
                                style={style}
                 ></VictoryLabel>
             </g>
@@ -219,19 +226,34 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
     }
 
     @computed get pearsonCorr() {
-        let x = this.splitData.x;
-        let y = this.splitData.y;
-        if (this.props.logX) {
-            x = x.map(d=>this.logScale(d));
+        if (this.props.correlation) {
+            return this.props.correlation.pearson;
+        } else {
+            let x = this.splitData.x;
+            let y = this.splitData.y;
+            if (this.props.logX) {
+                x = x.map(d=>this.logScale(d));
+            }
+            if (this.props.logY) {
+                y = y.map(d=>this.logScale(d));
+            }
+            return jStat.corrcoeff(x, y);
         }
-        if (this.props.logY) {
-            y = y.map(d=>this.logScale(d));
-        }
-        return jStat.corrcoeff(x, y);
     }
 
     @computed get spearmanCorr() {
-        return jStat.spearmancoeff(this.splitData.x, this.splitData.y);
+        if (this.props.correlation) {
+            return this.props.correlation.spearman;
+        } else {
+            return jStat.spearmancoeff(this.splitData.x, this.splitData.y);
+        }
+    }
+
+    @computed get spearmanPval() {
+        const R = this.spearmanCorr;
+        const n = this.splitData.x.length;
+        const tStatistic = R*Math.sqrt((n - 2) / Math.max(0.00001, (1 - R*R)));
+        return jStat.ttest(tStatistic, 2);
     }
 
     @computed get rightPadding() {
