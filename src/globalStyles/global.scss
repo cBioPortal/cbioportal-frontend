@@ -115,7 +115,6 @@ th.reactable-header-sort-asc:after {
 
 }
 
-
 .secondaryTabs {
 
   .nav-tabs {
@@ -193,6 +192,8 @@ th.reactable-header-sort-asc:after {
   > .nav {
     @extend .portalWidth;
     margin:0 auto;
+    position:relative;
+    z-index:1;
 
     display:flex;
 
@@ -225,6 +226,7 @@ th.reactable-header-sort-asc:after {
     border-bottom:1px solid #ddd;
     margin-top:-1px;
     min-height:500px;
+    position:relative;
 
     .tabLoader {
       position:relative;
@@ -521,34 +523,6 @@ h3.hr {
   padding:5px 10px !important;
 }
 
-.globalSpinner {
-
-  position: fixed;
-  top: 350px;
-  left: 50%;
-  transform: translate(-50%, -50%);
-
-  > div {
-    height:100px;
-    width:8px;
-    margin:4px;
-  }
-}
-
-.spinnerColor {
-  > div {
-    color:$brand-primary !important;
-  }
-}
-
-.spinnerSmall {
-  > div {
-    width:3px;
-    margin:0 2px;
-    height:12px;
-    width:3px;
-  }
-}
 
 .whiteBackground {
   background:#fff;

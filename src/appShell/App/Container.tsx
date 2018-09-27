@@ -108,7 +108,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
                 <div className="contentWrapper">
                     <UnsupportedBrowserModal/>
                     {(this.isConfigComplete) && this.renderChildren()}
-                    <LoadingIndicator isLoading={!this.isConfigComplete} isGlobal={true}/>
+                    <LoadingIndicator isLoading={!this.isConfigComplete} center={true} size={"big"}/>
                 </div>
 
                 <PortalFooter/>

@@ -89,7 +89,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
 
     public static defaultProps: Partial<IMSKTabsProps> = {
         unmountOnHide: true,
-        loadingComponent:<LoadingIndicator isLoading={true} isGlobal={true}/>
+        loadingComponent:<LoadingIndicator isLoading={true} center={true}/>
     };
 
     constructor(){
@@ -214,12 +214,13 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
             return (
                 <div
                     id={(this.props.id) ? this.props.id : ''}
-                    className={ classnames('msk-tabs', this.props.className) }
+                    className={ classnames('msk-tabs', 'posRelative', this.props.className) }
                 >
                     {this.navTabs(children, targetTabId)}
-
-                    <div className="tab-content">
-                        <LoadingIndicator isLoading={switchingTab} isGlobal={true}/>
+                    <div className={classnames("tab-content", { hidden:!switchingTab })}>
+                        <LoadingIndicator isLoading={switchingTab} center={true} size={"big"}/>
+                    </div>
+                    <div className={classnames("tab-content", { hidden:switchingTab })}>
                         {tabContent}
                     </div>
                 </div>
