@@ -38,8 +38,8 @@ export default class EnrichmentsDataSetDropdown extends React.Component<IEnrichm
             <div className={styles.DataSet}>
                 <Form inline>
                     <FormGroup controlId="formControlsSelect" bsSize="small">
-                        <ControlLabel>Data Set:&nbsp;</ControlLabel>
-                        <FormControl componentClass="select" onChange={this.change} value={this.props.selectedValue}>
+                        <ControlLabel>Data Set:</ControlLabel>
+                        <FormControl componentClass="select" style={{marginLeft:5}} onChange={this.change} value={this.props.selectedValue}>
                             {options}
                         </FormControl>
                     </FormGroup>
