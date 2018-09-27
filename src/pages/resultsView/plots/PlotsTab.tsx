@@ -1400,7 +1400,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 <div className={'tabMessageContainer'}>
                     <OqlStatusBanner className="plots-oql-status-banner" store={this.props.store} tabReflectsOql={false} />
                 </div>
-                <div className={"plotsTab"} style={{display:"flex", flexDirection:"row", maxWidth:"inherit"}}>
+                <div className={"plotsTab"} style={{display:"flex", flexDirection:"row"}}>
                     <div className="leftColumn">
                         { (this.dataTypeOptions.isComplete &&
                         this.dataTypeToDataSourceOptions.isComplete) ? (
@@ -1409,7 +1409,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             </Observer>
                         ) : <LoadingIndicator isLoading={true}/> }
                     </div>
-                    <div style={{overflow:"hidden"}}>
+                    <div className="inlineBlock">
                         {this.plot}
                     </div>
                 </div>
