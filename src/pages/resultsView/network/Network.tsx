@@ -7,6 +7,7 @@ import {observer } from "mobx-react";
 import {observable, computed} from "mobx";
 import AppConfig from "appConfig";
 import {Gene, MolecularProfile} from "../../../shared/api/generated/CBioPortalAPI";
+import App from "../../../appShell/App/App";
 
 interface NetworkParams {
     genes:Gene
@@ -41,9 +42,14 @@ export default class Network extends React.Component<INetworkTabParams, {}> {
             "netsize": "large",
             "diffusion": "0"
         };
-        const path = (/\/\/localhost|127\.0\.0\.1/.test(AppConfig.frontendUrl!)) ?
+        let path = (/\/\/localhost|127\.0\.0\.1/.test(AppConfig.frontendUrl!)) ?
             AppConfig.frontendUrl! :
             `//${AppConfig.baseUrl!}`;
+
+        // cloodge to get around broken network tab on public portal due to strange MSK IT filtering
+        if (AppConfig.apiRoot === "www.cbioportal.org" && (window as any).location.hostname === "www.cbioportal.org") {
+            path = "//cbioportal-network-tab.herokuapp.com";
+        }
 
         return path + "/reactapp/network/network.htm?apiHost="+ AppConfig.baseUrl +"&networkParams=" + JSON.stringify(networkParams)
             + `&${AppConfig.appVersion}`;
