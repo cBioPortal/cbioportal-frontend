@@ -161,6 +161,7 @@ function addOnBecomeVisibleListener(callback:()=>void) {
 
 export interface IResultsViewPageProps {
     routing: any;
+    params: any; // from react router
 }
 
 @inject('routing')
@@ -416,23 +417,18 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         return !isExcludedInList && !isExcluded;
     }
 
-    public pathToTab(pathname: string): string | undefined {
-        return pathname.split('/')[2];
-    }
-
     // if it's undefined, MSKTabs will default to first
-    public currentTab(pathname:string):string | undefined {
-        const pathToTab = this.pathToTab(pathname);
+    public currentTab(tabId:string|undefined):string | undefined {
         // if we have no tab defined (query submission, no tab click)
         // we need to evaluate which should be the default tab
-        if (pathToTab === undefined) {
+        if (tabId === undefined) {
             if (this.resultsViewPageStore.studies.result!.length > 1 && this.resultsViewPageStore.hugoGeneSymbols.length === 1) {
                 return "cancerTypesSummaryTab"; // cancer type study
             } else {
-                return pathToTab
+                return undefined; // this will resolve to first tab
             }
         } else {
-            return pathToTab;
+            return tabId;
         }
     }
 
@@ -452,7 +448,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                         </div>
                         {
                             (this.resultsViewPageStore.studies.isComplete) && (
-                                <MSKTabs activeTabId={this.currentTab(this.props.routing.location.pathname)} unmountOnHide={true}
+                                <MSKTabs activeTabId={this.currentTab(this.props.params.tab)} unmountOnHide={true}
                                          onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
                                     {
                                         this.tabs
