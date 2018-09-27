@@ -87,7 +87,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
         return (
             <span>
                 <LoadingIndicator
-                    isGlobal={true}
+                    center={true}
                     isLoading={
                         (this.props.store.clinicalDataForSamples &&
                             this.props.store.clinicalDataForSamples.isPending) ||

@@ -1043,22 +1043,11 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     public render() {
         return (
-            <div style={{position:'relative', minHeight:this.isHidden ? this.loadingIndicatorHeight : "auto"}} className="cbioportal-frontend">
-                <LoadingIndicator isGlobal={true} isLoading={this.isHidden} />
+            <div>
+                <LoadingIndicator isLoading={this.isHidden} center={true} size={"big"} />
                 <div className={"tabMessageContainer"}>
                     <OqlStatusBanner className="oncoprint-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
                 </div>
-                {
-                    <div
-                        className={ classNames('oncoprintLoadingIndicator', { 'hidden': !this.isHidden }) }
-                        style={{
-                            display:'none', position: "absolute", top: 0, left: 0, width: "100%", height: "100%", minHeight:this.loadingIndicatorHeight
-                        }}
-                    >
-                        <div>{this.loadingIndicatorMessage}</div>
-                        <LoadingIndicator style={{display: 'block'}} isLoading={true}/>
-                    </div>
-                }
 
                 <div className={classNames('oncoprintContainer', { fadeIn: !this.isHidden })}
                      onMouseEnter={this.onMouseEnter}

@@ -12,11 +12,8 @@ export default class IFrameLoader extends React.Component<{ url:string; iframeId
     render(){
         return (
             <div style={{position:'relative'}}>
-                {
-                    (this.props.showLoader!==false) && (
-                        <LoadingIndicator isLoading={true} isGlobal={true}/>
-                    )
-                }
+
+                <LoadingIndicator center={true} size={"big"} isLoading={this.props.showLoader!==false}  />
                 <iframe id={this.props.iframeId||""}
                         style={{ width:'100%', position:'relative', zIndex:100, height:this.props.height, border:'none'}}
                         src={this.props.url}>
