@@ -60,8 +60,12 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
             if (_.size(this.props.store.isSampleAlteredMap.result) > 1) {
                 return (
                     <div>
-                        <OqlStatusBanner className="mutex-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
+                        <div className={"tabMessageContainer"}>
+                            <OqlStatusBanner className="mutex-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
+                        </div>
+
                         {getCountsText(this.data)}
+
                         <div className={styles.Checkboxes}>
                             <Checkbox checked={this.mutualExclusivityFilter}
                                       onChange={this.mutualExclusivityFilterChange}>
