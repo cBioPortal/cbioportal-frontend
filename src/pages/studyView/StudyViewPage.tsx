@@ -374,7 +374,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                              className="mainTabs">
 
                         <MSKTab key={0} id="summary" linkText="Summary">
-                            <LoadingIndicator isLoading={this.store.initialClinicalDataBins.isPending} isGlobal={true}/>
+                            <LoadingIndicator isLoading={this.store.initialClinicalDataBins.isPending} center={true}/>
                             {
                                 this.store.invalidSampleIds.result.length > 0 &&
                                 this.showErrorMessage &&
@@ -459,7 +459,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 </div>
             )
         } else {
-            <LoadingIndicator isLoading={this.store.filteredVirtualStudies.isPending} isGlobal={true}/>
+            <LoadingIndicator isLoading={this.store.filteredVirtualStudies.isPending} center={true}/>
             if (this.store.filteredVirtualStudies.isComplete &&
                 this.store.unknownQueriedIds.isComplete &&
                 !_.isEmpty(this.store.unknownQueriedIds.result)) {

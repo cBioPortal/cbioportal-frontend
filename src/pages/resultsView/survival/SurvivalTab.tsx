@@ -58,7 +58,7 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
 
         if (this.overallPatientSurvivalData.isPending ||
             this.diseaseFreePatientSurvivalData.isPending) {
-            return <LoadingIndicator isLoading={true} isGlobal={true} />;
+            return <LoadingIndicator isLoading={true} center={true} />;
         }
 
         let content: any = [];

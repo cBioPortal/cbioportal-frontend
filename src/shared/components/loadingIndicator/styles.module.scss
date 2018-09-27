@@ -1,0 +1,30 @@
+.centered {
+  position:absolute;
+  top: 200px;
+  left:50%;
+  z-index:10000;
+  transform: perspective(1px) translateY(-50%) translateX(-50%);
+}
+
+.color {
+  > div {
+    color:$brand-primary !important;
+  }
+}
+
+.small {
+  > div {
+    width:3px;
+    margin:0 2px;
+    height:12px;
+    width:3px;
+  }
+}
+
+.big {
+  > div {
+    height:100px;
+    width:8px;
+    margin:4px;
+  }
+}
