@@ -42,7 +42,7 @@ export default class StaticContent extends React.Component<{ sourceUrl:string, t
     public render() {
 
         return <div>
-            <LoadingIndicator isLoading={this.source.isPending} isGlobal={true} />
+            <LoadingIndicator isLoading={this.source.isPending} center={true} />
             {
                 (this.props.title) && (<h1>{this.props.title}</h1>)
             }
