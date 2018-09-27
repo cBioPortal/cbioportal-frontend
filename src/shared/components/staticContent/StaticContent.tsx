@@ -12,6 +12,10 @@ function isMarkDown(url:string){
     return (!AppConfig.skinIsMarkdownDocumentation === false) && /\.md$/.test(url);
 }
 
+function setImageRoot(path:string){
+    return `${AppConfig.skinDocumentationBaseUrl}/${path}`
+}
+
 @observer
 export default class StaticContent extends React.Component<{ sourceUrl:string, title?:string }, {}> {
 
@@ -25,7 +29,7 @@ export default class StaticContent extends React.Component<{ sourceUrl:string, t
 
     private content(content:string, url:string){
         if (isMarkDown(url)) {
-            return <ReactMarkdown className={'markdown-body'} skipHtml={true} source={this.source.result!} />;
+            return <ReactMarkdown className={'markdown-body'} transformImageUri={setImageRoot} skipHtml={true} source={this.source.result!} />;
         } else {
             return <div dangerouslySetInnerHTML={{__html: content}} />
         }
