@@ -19,6 +19,7 @@ import {
 } from "../../../shared/lib/alterationCountHelpers";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import MobxPromise from "mobxpromise/dist/src/MobxPromise";
+import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 
 interface ICancerSummaryContainerProps {
     store:ResultsViewPageStore;
@@ -163,13 +164,3 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
     }
 };
 
-function getMobxPromiseGroupStatus(...promises:MobxPromise<any>[]): "complete" | "error" | "pending" {
-    if (_.some(promises,(p)=>p.isError)){
-        return "error";
-    }
-    else if (_.some(promises,(p)=>p.isPending)){
-        return "pending";
-    } else {
-        return "complete";
-    }
-}
