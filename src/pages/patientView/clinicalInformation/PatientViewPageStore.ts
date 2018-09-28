@@ -146,6 +146,12 @@ export class PatientViewPageStore {
             }
     }
 
+    @computed get metaDescription(): string {
+        const id = ((this.pageMode === "patient") ?
+            this.patientId : this.sampleId);
+        return `${id} from ${this.studyMetaData.result!.name}`;
+    }
+
     @computed get pageMode(): PageMode {
         return this._sampleId ? 'sample' : 'patient';
     }

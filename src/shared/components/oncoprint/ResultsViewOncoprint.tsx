@@ -22,7 +22,7 @@ import {
 import _ from "lodash";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import AppConfig from "appConfig";
-import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
+import LoadingIndicator, {GlobalLoader} from "shared/components/loadingIndicator/LoadingIndicator";
 import OncoprintJS, {TrackId} from "oncoprintjs";
 import fileDownload from 'react-file-download';
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
@@ -42,6 +42,7 @@ interface IResultsViewOncoprintProps {
     divId: string;
     store:ResultsViewPageStore;
     routing:any;
+    isVirtualStudy:boolean;
     addOnBecomeVisibleListener?:(callback:()=>void)=>void;
 }
 
@@ -180,6 +181,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         this.onMouseEnter = this.onMouseEnter.bind(this);
         this.onMouseLeave = this.onMouseLeave.bind(this);
 
+        console.log("THIS SHOULD USE NEW ROUTER")
         this.urlParamsReaction = reaction(
             ()=>[
                 this.columnMode,
@@ -232,7 +234,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.showMinimap;
             },
             get hideHeatmapMenu() {
-                return self.props.store.queryStore.isVirtualStudyQuery;
+                return self.props.isVirtualStudy;
             },
             get sortByMutationType() {
                 return self.sortByMutationType;
@@ -376,7 +378,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     componentWillUnmount() {
-        this.putativeDriverSettingsReaction();
+        if (this.putativeDriverSettingsReaction) this.putativeDriverSettingsReaction();
         this.urlParamsReaction();
     }
 
@@ -1041,19 +1043,11 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     public render() {
         return (
-            <div style={{position:'relative', minHeight:this.isHidden ? this.loadingIndicatorHeight : "auto"}} className="cbioportal-frontend">
-                <OqlStatusBanner className="oncoprint-oql-status-banner" store={this.props.store} tabReflectsOql={true} style={{marginBottom:12}}/>
-            {
-                    <div
-                        className={ classNames('oncoprintLoadingIndicator', { 'hidden': !this.isHidden }) }
-                        style={{
-                            position: "absolute", top: 0, left: 0, width: "100%", height: "100%", minHeight:this.loadingIndicatorHeight
-                        }}
-                    >
-                        <div>{this.loadingIndicatorMessage}</div>
-                        <LoadingIndicator style={{display: 'block'}} isLoading={true}/>
-                    </div>
-                }
+            <div>
+                <LoadingIndicator isLoading={this.isHidden} center={true} size={"big"} />
+                <div className={"tabMessageContainer"}>
+                    <OqlStatusBanner className="oncoprint-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
+                </div>
 
                 <div className={classNames('oncoprintContainer', { fadeIn: !this.isHidden })}
                      onMouseEnter={this.onMouseEnter}

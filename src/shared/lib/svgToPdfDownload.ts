@@ -1,5 +1,6 @@
 import fileDownload from 'react-file-download';
 import {default as request, Request} from "superagent";
+import {buildCBioPortalPageUrl} from "../api/urls";
 
 function base64ToArrayBuffer(base64:string) {
     const binaryString = window.atob(base64);
@@ -36,7 +37,7 @@ export function svgToPdfRequest(svg:Element, servletUrl?: string): Request|undef
         return undefined;
     }
 
-    const servletURL = servletUrl || "svgtopdf.do";
+    const servletURL = servletUrl || buildCBioPortalPageUrl("svgtopdf.do");
     const filetype = "pdf_data";
 
     return request.post(servletURL)
