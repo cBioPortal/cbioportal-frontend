@@ -29,6 +29,7 @@ export default class CoexpressionTabContainer extends React.Component<{ store:Re
             return (
                 <LoadingIndicator
                     isLoading={true}
+                    center={true}
                 />
             );
         }
