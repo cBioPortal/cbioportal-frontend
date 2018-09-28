@@ -68,7 +68,10 @@ a:hover {
 
 .topBanner {
   @extend .portalWidth;
-  margin:0 auto;
+  margin:0 auto 10px auto;
+  h3 {
+    margin-bottom:2px;
+  }
 }
 
 /* Tables */
