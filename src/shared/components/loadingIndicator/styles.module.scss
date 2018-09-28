@@ -14,17 +14,17 @@
 
 .small {
   > div {
-    width:3px;
-    margin:0 2px;
-    height:12px;
-    width:3px;
+    width:3px !important;
+    margin:0 2px !important;
+    height:12px !important;
+    width:3px !important;
   }
 }
 
 .big {
   > div {
-    height:100px;
-    width:8px;
-    margin:4px;
+    height:100px !important;
+    width:8px !important;
+    margin:4px !important;
   }
 }
