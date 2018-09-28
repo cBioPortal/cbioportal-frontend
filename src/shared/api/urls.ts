@@ -18,7 +18,7 @@ export function buildCBioPortalAPIUrl(pathnameOrParams:string | BuildUrlParams, 
     const apiRootUrl = URL.parse(trimTrailingSlash(AppConfig.apiRoot!));
 
     // prepend the root path (e.g. "beta"
-    params.pathname = apiRootUrl.pathname + "/" + (params.pathname || "");
+    params.pathname = trimTrailingSlash(apiRootUrl.pathname || "") + "/" + (params.pathname || "");
 
     return URL.format({
         protocol: apiRootUrl.protocol || getBrowserWindow().location.protocol,
