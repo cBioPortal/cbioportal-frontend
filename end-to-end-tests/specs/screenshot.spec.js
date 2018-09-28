@@ -308,6 +308,7 @@ describe("enrichments tab screenshot tests", function() {
         browser.click('a=mRNA');
         browser.waitForVisible('div[data-test="MRNAEnrichmentsTab"]',20000);
         browser.click('b=MERTK');
+        browser.waitForVisible('div[data-test="MiniBoxPlot"]', 20000);
         var res = browser.checkElement('[data-test="enrichmentsTabDiv"]', { hide:['.qtip'] } );
         assertScreenShotMatch(res);
     });
