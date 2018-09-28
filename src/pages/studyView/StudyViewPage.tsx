@@ -35,6 +35,7 @@ import classnames from 'classnames';
 import {buildCBioPortalPageUrl} from 'shared/api/urls';
 import MobxPromise from 'mobxpromise';
 import { StudySummaryRecord } from 'pages/studyView/virtualStudy/VirtualStudy';
+import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 
 
 export interface IStudyViewPageProps {
@@ -352,17 +353,20 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         this.props.routing.updateRoute({ tab: id });
     }
 
-    render() {
+    content(){
+
         if (
             this.store.queriedSampleIdentifiers.isComplete &&
             this.store.invalidSampleIds.isComplete &&
             this.store.unknownQueriedIds.isComplete &&
             this.store.displayedStudies.isComplete &&
             _.isEmpty(this.store.unknownQueriedIds.result)
-            ) {
+        ) {
             return (
                 <div className="studyView">
-                    <LoadingIndicator isLoading={(this.store.queriedSampleIdentifiers.isPending ||this.store.invalidSampleIds.isPending)} center={true}/>
+                    <LoadingIndicator size={"big"}
+                                      isLoading={(this.store.queriedSampleIdentifiers.isPending ||this.store.invalidSampleIds.isPending)}
+                                      center={true}/>
                     <StudySummary
                         studies={this.store.displayedStudies.result}
                         originStudies={this.store.originStudies}
@@ -374,7 +378,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                              className="mainTabs">
 
                         <MSKTab key={0} id="summary" linkText="Summary">
-                            <LoadingIndicator isLoading={this.store.initialClinicalDataBins.isPending} center={true}/>
+                            <LoadingIndicator isLoading={this.store.initialClinicalDataBins.isPending} size={"big"} center={true}/>
                             {
                                 this.store.invalidSampleIds.result.length > 0 &&
                                 this.showErrorMessage &&
@@ -459,7 +463,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 </div>
             )
         } else {
-            <LoadingIndicator isLoading={this.store.filteredVirtualStudies.isPending} center={true}/>
+            <LoadingIndicator isLoading={this.store.filteredVirtualStudies.isPending} size={"big"} center={true}/>
             if (this.store.filteredVirtualStudies.isComplete &&
                 this.store.unknownQueriedIds.isComplete &&
                 !_.isEmpty(this.store.unknownQueriedIds.result)) {
@@ -468,9 +472,19 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                         <ErrorBox error={Error(`Unknown/Unauthorized studies ${this.store.unknownQueriedIds.result.join(', ')}`)} />
                     </div>
                 )
+            } else {
+                return <LoadingIndicator isLoading={true} size={"big"} center={true}/>
             }
-            return null;
         }
+
+    }
+
+    render() {
+        return <PageLayout noMargin={true}>
+            {
+                this.content()
+            }
+        </PageLayout>
     }
 }
 
@@ -558,6 +572,8 @@ class StudySummary extends React.Component<IStudySummaryProps, {}> {
                                     }
                                     <LoadingIndicator
                                         isLoading={this.props.originStudies.isPending}
+                                        center={true}
+                                        size={"big"}
                                     />
                                 </div>)
                             }
