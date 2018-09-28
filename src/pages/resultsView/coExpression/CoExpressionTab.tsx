@@ -60,7 +60,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
     constructor(props:ICoExpressionTabProps) {
         super(props);
 
-        setWindowVariable("resultsViewCoExpressionTab", this); // for testing
+        //setWindowVariable("resultsViewCoExpressionTab", this); // for testing
 
         this.plotHandlers = {
             onClickLogScale: action(()=>{
@@ -151,14 +151,14 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                 </div>
             );
         } else {
-            return <LoadingIndicator isLoading={true}/>;
+            return <LoadingIndicator isLoading={true} center={true}/>;
         }
     }
 
     @bind
     private header() {
         return (
-            <div>
+            <div style={{marginBottom:20}}>
                 {this.dataSetSelector}
             </div>
         );
@@ -219,9 +219,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
             );
         } else {
             return (
-                <div style={{position:"relative"}}>
-                    <LoadingIndicator isLoading={true} style={{position:"absolute", left:"50%", top:100, transform:"translate(-50%,0)"}}/>
-                </div>
+                <LoadingIndicator isLoading={true} center={true}/>
             );
         }
     }
@@ -264,14 +262,16 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
             );
         } else {
             divContents = (
-                <div>
-                    <span>There are no available profiles in the queried studies.</span>
+                <div className={'alert alert-info'}>
+                    There are no available profiles in the queried studies.
                 </div>
             );
         }
         return (
             <div>
-                <OqlStatusBanner className="coexp-oql-status-banner" store={this.props.store} tabReflectsOql={false} style={{marginBottom:15}}/>
+                <div className={"tabMessageContainer"}>
+                    <OqlStatusBanner className="coexp-oql-status-banner" store={this.props.store} tabReflectsOql={false}/>
+                </div>
                 {divContents}
             </div>
         );

@@ -26,12 +26,13 @@ import {ClinicalDataTab} from "./tabs/ClinicalDataTab";
 import setWindowVariable from "../../shared/lib/setWindowVariable";
 import * as _ from 'lodash';
 import ErrorBox from 'shared/components/errorBox/ErrorBox';
+import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 import ReactGridLayout from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import {stringListToSet} from "../../shared/lib/StringUtils";
 import classnames from 'classnames';
-import { buildCBioPortalUrl } from 'shared/api/urls';
+import {buildCBioPortalPageUrl} from 'shared/api/urls';
 import MobxPromise from 'mobxpromise';
 import { StudySummaryRecord } from 'pages/studyView/virtualStudy/VirtualStudy';
 
@@ -56,7 +57,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         super();
         this.store = new StudyViewPageStore();
 
-        setWindowVariable("studyViewPageStore", this.store);
+        //setWindowVariable("studyViewPageStore", this.store);
 
         this.handlers = {
             onValueSelection: (chartMeta: ChartMeta, values: string[]) => {
@@ -133,6 +134,11 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         reaction(
             () => props.routing.location.query,
             query => {
+
+                if (!getBrowserWindow().globalStores.routing.location.pathname.includes("/newstudy")) {
+                    return;
+                }
+
                 let newStudyIdsString;
                 if ('studyId' in query) {
                     newStudyIdsString = (query.studyId as string);
@@ -356,17 +362,19 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             ) {
             return (
                 <div className="studyView">
+                    <LoadingIndicator isLoading={(this.store.queriedSampleIdentifiers.isPending ||this.store.invalidSampleIds.isPending)} center={true}/>
                     <StudySummary
                         studies={this.store.displayedStudies.result}
                         originStudies={this.store.originStudies}
                         showOriginStudiesInSummaryDescription={this.store.showOriginStudiesInSummaryDescription}
                     />
-                    
+
                     <MSKTabs id="studyViewTabs" activeTabId={this.props.routing.location.query.tab}
                              onTabClick={(id:string)=>this.handleTabChange(id)}
                              className="mainTabs">
 
                         <MSKTab key={0} id="summary" linkText="Summary">
+                            <LoadingIndicator isLoading={this.store.initialClinicalDataBins.isPending} center={true}/>
                             {
                                 this.store.invalidSampleIds.result.length > 0 &&
                                 this.showErrorMessage &&
@@ -382,32 +390,36 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     </div>
                                 </div>
                             }
-                            <SummaryHeader
-                                geneQuery={this.store.geneQueryStr}
-                                selectedSamples={this.store.selectedSamples.result!}
-                                updateCustomCasesFilter={(cases: SampleIdentifier[], keepCurrent?:boolean)=>{
-                                    this.handlers.updateChartSampleIdentifierFilter(UniqueKey.SELECT_CASES_BY_IDS,cases,keepCurrent);
-                                }}
-                                updateSelectedGenes={this.handlers.updateSelectedGenes}
-                                studyWithSamples={this.store.studyWithSamples.result}
-                                filter={this.store.userSelections}
-                                allGenes={this.store.allGenes.result}
-                                attributesMetaSet={this.store.chartMetaSet}
-                                user={AppConfig.userEmailAddress}
-                                getClinicalData={this.store.getDownloadDataPromise}
-                                onSubmitQuery={()=> this.store.onSubmitQuery()}
-                                updateClinicalDataEqualityFilter={this.handlers.onValueSelection}
-                                updateClinicalDataIntervalFilter={this.handlers.onUpdateIntervalFilters}
-                                removeGeneFilter={this.handlers.removeGeneFilter}
-                                removeCNAGeneFilter={this.handlers.removeCNAGeneFilter}
-                                clearCNAGeneFilter={this.handlers.clearCNAGeneFilter}
-                                clearGeneFilter={this.handlers.clearGeneFilter}
-                                clearChartSampleIdentifierFilter={this.handlers.clearChartSampleIdentifierFilter}
-                                clearAllFilters={this.handlers.clearAllFilters}
-                                clinicalAttributesWithCountPromise={this.store.clinicalAttributesWithCount}
-                                visibleAttributeIds={this.store.visibleAttributes}
-                                onChangeChartsVisibility={this.handlers.updateChartsVisibility}
-                            />
+                            {
+                                (this.store.initialClinicalDataBins.isComplete) && (
+                                    <SummaryHeader
+                                        geneQuery={this.store.geneQueryStr}
+                                        selectedSamples={this.store.selectedSamples.result!}
+                                        updateCustomCasesFilter={(cases: SampleIdentifier[], keepCurrent?:boolean)=>{
+                                            this.handlers.updateChartSampleIdentifierFilter(UniqueKey.SELECT_CASES_BY_IDS,cases,keepCurrent);
+                                        }}
+                                        updateSelectedGenes={this.handlers.updateSelectedGenes}
+                                        studyWithSamples={this.store.studyWithSamples.result}
+                                        filter={this.store.userSelections}
+                                        allGenes={this.store.allGenes.result}
+                                        attributesMetaSet={this.store.chartMetaSet}
+                                        user={AppConfig.userEmailAddress}
+                                        getClinicalData={this.store.getDownloadDataPromise}
+                                        onSubmitQuery={()=> this.store.onSubmitQuery()}
+                                        updateClinicalDataEqualityFilter={this.handlers.onValueSelection}
+                                        updateClinicalDataIntervalFilter={this.handlers.onUpdateIntervalFilters}
+                                        removeGeneFilter={this.handlers.removeGeneFilter}
+                                        removeCNAGeneFilter={this.handlers.removeCNAGeneFilter}
+                                        clearCNAGeneFilter={this.handlers.clearCNAGeneFilter}
+                                        clearGeneFilter={this.handlers.clearGeneFilter}
+                                        clearChartSampleIdentifierFilter={this.handlers.clearChartSampleIdentifierFilter}
+                                        clearAllFilters={this.handlers.clearAllFilters}
+                                        clinicalAttributesWithCountPromise={this.store.clinicalAttributesWithCount}
+                                        visibleAttributeIds={this.store.visibleAttributes}
+                                        onChangeChartsVisibility={this.handlers.updateChartsVisibility}
+                                    />
+                                )
+                            }
                             <div className={styles.studyViewFlexContainer}>
                                 {this.store.initialClinicalDataCounts.isComplete &&
                                 this.store.initialClinicalDataBins.isComplete && (
@@ -447,7 +459,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 </div>
             )
         } else {
-            //TODO: update with loading
+            <LoadingIndicator isLoading={this.store.filteredVirtualStudies.isPending} center={true}/>
             if (this.store.filteredVirtualStudies.isComplete &&
                 this.store.unknownQueriedIds.isComplete &&
                 !_.isEmpty(this.store.unknownQueriedIds.result)) {
@@ -503,7 +515,7 @@ class StudySummary extends React.Component<IStudySummaryProps, {}> {
                 return (
                     <span>
                         <a
-                            href={buildCBioPortalUrl({ pathname: 'newstudy', query: { id: study.studyId } })}
+                            href={buildCBioPortalPageUrl({ pathname: 'newstudy', query: { id: study.studyId } })}
                             target="_blank">
                             {study.name}
                         </a>

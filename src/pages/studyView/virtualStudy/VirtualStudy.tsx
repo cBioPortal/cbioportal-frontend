@@ -8,7 +8,7 @@ import classnames from 'classnames';
 import { remoteData } from 'shared/api/remoteData';
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { If, Then, Else } from 'react-if';
-import { getStudySummaryUrl, buildCBioPortalUrl } from 'shared/api/urls';
+import {getStudySummaryUrl, buildCBioPortalPageUrl} from 'shared/api/urls';
 import { StudyViewFilter } from 'shared/api/generated/CBioPortalAPIInternal';
 import { StudyWithSamples, ChartMeta } from 'pages/studyView/StudyViewPageStore';
 import { getVirtualStudyDescription, getCurrentDate } from 'pages/studyView/StudyViewUtils';
@@ -111,7 +111,7 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
 
     @computed get virtualStudyUrl() {
         // TODO: update path name once fully refactored
-        return buildCBioPortalUrl({pathname:'newstudy', query: {id: this.virtualStudy.result ? this.virtualStudy.result.id : ''}});
+        return buildCBioPortalPageUrl({pathname:'newstudy', query: {id: this.virtualStudy.result ? this.virtualStudy.result.id : ''}});
     }
 
     @autobind
@@ -286,7 +286,7 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
                                                 className="btn btn-default"
                                                 onClick={(event) => {
                                                     if (this.virtualStudy.result) {
-                                                        window.open(buildCBioPortalUrl('index.do', { cancer_study_id: this.virtualStudy.result.id }), "_blank")
+                                                        window.open(buildCBioPortalPageUrl('index.do', { cancer_study_id: this.virtualStudy.result.id }), "_blank")
                                                     }
                                                 }}>
                                                 Query

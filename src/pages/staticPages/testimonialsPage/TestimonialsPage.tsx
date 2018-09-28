@@ -6,6 +6,7 @@ import { ITestimonial } from 'shared/components/testimonials/Testimonials';
 import { TestimonialStore } from 'shared/components/testimonials/Testimonials';
 
 import styles from './testimonialsPage.module.scss';
+import {PageLayout} from "../../../shared/components/PageLayout/PageLayout";
 
 @observer
 export default class TestimonialsPage extends React.Component<{},{}> {
@@ -30,14 +31,14 @@ export default class TestimonialsPage extends React.Component<{},{}> {
 
     public render() {
 
-        return (
-            <div className="markdown">
-                <div id="testimonialsPage" className={styles.testimonialsPage}>
-                    <h1>What People Are Saying</h1>
-                    {this.renderTestimonials()}
-                </div>
+        return (<PageLayout className={"whiteBackground"}>
+
+            <div id="testimonialsPage" className={styles.testimonialsPage}>
+                <h1>What People Are Saying</h1>
+                {this.renderTestimonials()}
             </div>
-        );
+
+        </PageLayout>)
 
     }
 

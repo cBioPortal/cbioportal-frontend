@@ -35,7 +35,10 @@ import { getMouseIcon } from './SVGIcons';
 
 import './patient.scss';
 import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
-import {getSampleViewUrl} from "../../shared/api/urls";
+import {buildCBioPortalPageUrl, getSampleViewUrl} from "../../shared/api/urls";
+import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
+import getBrowserWindow from "../../shared/lib/getBrowserWindow";
+import Helmet from "react-helmet";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -44,6 +47,7 @@ const win:any = (window as any);
 win.patientViewPageStore = patientViewPageStore;
 
 export interface IPatientViewPageProps {
+    params: any; // react route
     routing: any;
     samples?: ClinicalDataBySampleId[];
     loadClinicalInformationTableData?: () => Promise<any>;
@@ -61,17 +65,19 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     @observable private mutationTableColumnVisibility: {[columnId: string]: boolean}|undefined;
     @observable private cnaTableColumnVisibility: {[columnId: string]: boolean}|undefined;
 
-    private updatePageTitleReaction: IReactionDisposer;
-    private updateMetaReaction: IReactionDisposer;
-
     constructor(props: IPatientViewPageProps) {
 
         super();
 
         //TODO: this should be done by a module so that it can be reused on other pages
         const reaction1 = reaction(
-            () => [props.routing.location.query, props.routing.location.hash],
-            ([query,hash]) => {
+            () => [props.routing.location.query, props.routing.location.hash, props.routing.location.pathname],
+            ([query,hash,pathname]) => {
+
+                // we don't want to update patient if we aren't on a patient page route
+                if (!pathname.includes("/patient")) {
+                    return;
+                }
 
                 const validationResult = validateParametersPatientView(query);
 
@@ -106,38 +112,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
             { fireImmediately:true }
         );
 
-        this.updatePageTitleReaction = reaction(
-            () => patientViewPageStore.pageTitle,
-            (title:string) => {
-                win.document.title = title;
-            },
-            { fireImmediately:true }
-        );
-
-        this.updateMetaReaction = autorun(
-            () => {
-                const study = patientViewPageStore.studyMetaData.result;
-                if (study) {
-                    // first kill any existing meta tag
-                    $("meta[name=description]").remove();
-                    const id = ((patientViewPageStore.pageMode === "patient") ?
-                        patientViewPageStore.patientId : patientViewPageStore.sampleId);
-                    const content =
-                        `${id} from ${study.name}`;
-                    const meta = $(`<meta name="description" content="${content}">`).prependTo("head");
-                }
-            }
-        );
-
-
         this.onMutationTableColumnVisibilityToggled = this.onMutationTableColumnVisibilityToggled.bind(this);
         this.onCnaTableColumnVisibilityToggled = this.onCnaTableColumnVisibilityToggled.bind(this);
-    }
-
-    public componentWillUnmount(){
-        //dispose reaction
-        this.updatePageTitleReaction();
-        this.updateMetaReaction();
     }
 
     public handleSampleClick(id: string, e: React.MouseEvent<HTMLAnchorElement>) {
@@ -151,7 +127,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     private handleTabChange(id: string) {
 
-        this.props.routing.updateRoute({ tab: id });
+        this.props.routing.updateRoute({}, `patient/${id}`);
 
     }
 
@@ -194,6 +170,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     private shouldShowPathologyReport(patientViewPageStore: PatientViewPageStore): boolean {
         return patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length > 0;
+    }
+
+    hideTissueImageTab(){
+        // can't show this iframe if we're on https:
+        return patientViewPageStore.hasTissueImageIFrameUrl.isPending || patientViewPageStore.hasTissueImageIFrameUrl.isError
+            || /https/.test(window.location.protocol)
+            || (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && !patientViewPageStore.hasTissueImageIFrameUrl.result);
     }
 
     public render() {
@@ -290,7 +273,16 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         }
 
         return (
-            <div className="patientViewPage">
+            <PageLayout noMargin={true}>
+                {
+                    (patientViewPageStore.patientViewData.isComplete) && (
+                        <Helmet>
+                            <title>{patientViewPageStore.pageTitle}</title>
+                            <meta name="description" content={patientViewPageStore.metaDescription} />
+                        </Helmet>
+                    )
+                }
+                <div className="patientViewPage">
 
                 {/*<AjaxErrorModal*/}
                     {/*show={(patientViewPageStore.ajaxErrors.length > 0)}*/}
@@ -330,7 +322,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 </div>
                 <If condition={patientViewPageStore.patientViewData.isComplete}>
                 <Then>
-                <MSKTabs id="patientViewPageTabs" activeTabId={this.props.routing.location.query.tab}  onTabClick={(id:string)=>this.handleTabChange(id)} className="mainTabs">
+                <MSKTabs id="patientViewPageTabs" activeTabId={this.props.params.tab || "summaryTab"}  onTabClick={(id:string)=>this.handleTabChange(id)} className="mainTabs">
 
                         <MSKTab key={0} id="summaryTab" linkText="Summary">
 
@@ -475,7 +467,6 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                     <MSKTab key={3} id="pathologyReportTab" linkText="Pathology Report"
                             hide={!this.shouldShowPathologyReport(patientViewPageStore)}
-                            loading={patientViewPageStore.pathologyReport.isPending}
                     >
                         <div>
                             <PathologyReport iframeStyle={{position:"absolute", top:0}} pdfs={patientViewPageStore.pathologyReport.result} />
@@ -484,16 +475,13 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
 
                     <MSKTab key={4} id="heatMapReportTab" linkText="Heatmap"
-                             hide={(patientViewPageStore.MDAndersonHeatMapAvailable.isComplete && !patientViewPageStore.MDAndersonHeatMapAvailable.result)}
-                            loading={patientViewPageStore.MDAndersonHeatMapAvailable.isPending}
+                             hide={(!patientViewPageStore.MDAndersonHeatMapAvailable.isComplete || !patientViewPageStore.MDAndersonHeatMapAvailable.result)}
                     >
                             <IFrameLoader height={700} url={ `//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?participant=${patientViewPageStore.patientId}` } />
                     </MSKTab>
 
                     <MSKTab key={5} id="tissueImageTab" linkText="Tissue Image"
-                            hide={/https/.test(window.location.protocol) // can't show this iframe if we're on https:
-                                    || (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && !patientViewPageStore.hasTissueImageIFrameUrl.result)}
-                            loading={patientViewPageStore.hasTissueImageIFrameUrl.isPending}
+                            hide={this.hideTissueImageTab()}
                     >
                         <div style={{position: "relative"}}>
                             <IFrameLoader height={700} url={  `http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=${patientViewPageStore.patientId}` } />
@@ -510,6 +498,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 </If>
 
             </div>
+            </PageLayout>
         );
     }
 }

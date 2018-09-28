@@ -775,7 +775,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                         onClick={this.onInputClick}
                     /> Show legends for clinical tracks
                 </label></div>
-                <div className="checkbox" style={{marginLeft:20}}><label>
+                <div className="checkbox" style={{marginLeft:20, maxWidth: 220}}><label>
                     <input
                         data-test="onlyShowClinicalLegendsForAltered"
                         type="checkbox"
