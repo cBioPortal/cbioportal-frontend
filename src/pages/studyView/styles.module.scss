@@ -50,11 +50,14 @@
 }
 
 .summaryHeader{
-    margin: 5px 5px 20px 5px;
+    margin: 5px 5px 10px 5px;
     font-size: 16px;
     display: flex;
     align-items: center;
     line-height: 12px !important;
+    :global(.form-group) {
+        margin-bottom:0px;
+    }
 }
 
 .summaryHeaderBtn {
