@@ -32,7 +32,7 @@ import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import {stringListToSet} from "../../shared/lib/StringUtils";
 import classnames from 'classnames';
-import { buildCBioPortalUrl } from 'shared/api/urls';
+import {buildCBioPortalPageUrl} from 'shared/api/urls';
 import MobxPromise from 'mobxpromise';
 import { StudySummaryRecord } from 'pages/studyView/virtualStudy/VirtualStudy';
 
@@ -362,7 +362,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             ) {
             return (
                 <div className="studyView">
-                    <LoadingIndicator isLoading={(this.store.queriedSampleIdentifiers.isPending ||this.store.invalidSampleIds.isPending)} isGlobal={true}/>
+                    <LoadingIndicator isLoading={(this.store.queriedSampleIdentifiers.isPending ||this.store.invalidSampleIds.isPending)} center={true}/>
                     <StudySummary
                         studies={this.store.displayedStudies.result}
                         originStudies={this.store.originStudies}
@@ -515,7 +515,7 @@ class StudySummary extends React.Component<IStudySummaryProps, {}> {
                 return (
                     <span>
                         <a
-                            href={buildCBioPortalUrl({ pathname: 'newstudy', query: { id: study.studyId } })}
+                            href={buildCBioPortalPageUrl({ pathname: 'newstudy', query: { id: study.studyId } })}
                             target="_blank">
                             {study.name}
                         </a>
