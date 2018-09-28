@@ -1,32 +1,21 @@
 import * as React from "react";
-import {
-    Gene, MolecularProfile, Mutation, NumericGeneMolecularData,
-    Sample
-} from "../../../shared/api/generated/CBioPortalAPI";
-import {action, autorun, computed, IReactionDisposer, observable, ObservableMap} from "mobx";
+import {Gene, MolecularProfile} from "../../../shared/api/generated/CBioPortalAPI";
+import {action, computed, observable} from "mobx";
 import {observer, Observer} from "mobx-react";
 import {AlterationTypeConstants, ResultsViewPageStore} from "../ResultsViewPageStore";
-import Select from "react-select";
-import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
-import {remoteData} from "../../../shared/api/remoteData";
 import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
-import {MobxPromise} from "mobxpromise";
 import {CoExpression, CoExpressionFilter} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import _ from "lodash";
-import {IDataQueryFilter} from "../../../shared/lib/StoreUtils";
 import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
 import CoExpressionViz from "./CoExpressionViz";
-import GeneMolecularDataCache from "../../../shared/cache/GeneMolecularDataCache";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import MutationDataCache from "../../../shared/cache/MutationDataCache";
-import InfoIcon from "../../../shared/components/InfoIcon";
 import {filterAndSortProfiles} from "./CoExpressionTabUtils";
 import MobxPromiseCache from "../../../shared/lib/MobxPromiseCache";
-import setWindowVariable from "../../../shared/lib/setWindowVariable";
 import {ICoExpressionPlotProps} from "./CoExpressionPlot";
 import {bind} from "bind-decorator";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
+import MolecularProfileSelector from "../../../shared/components/MolecularProfileSelector";
 
 export interface ICoExpressionTabProps {
     store:ResultsViewPageStore;
@@ -131,13 +120,6 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
         if (this.selectedMolecularProfile &&
             this.props.store.molecularProfileIdToProfiledSampleCount.isComplete &&
             this.props.store.coexpressionTabMolecularProfiles.isComplete) {
-            let options = this.props.store.coexpressionTabMolecularProfiles.result.map(profile=>{
-                const profiledSampleCount = this.props.store.molecularProfileIdToProfiledSampleCount.result![profile.molecularProfileId];
-                return {
-                    label: `${profile.name} (${profiledSampleCount} sample${profiledSampleCount !== 1 ? "s" : ""})`,
-                    value: profile.molecularProfileId
-                };
-            });
             return (
                 <div
                     style = {{
@@ -147,13 +129,12 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                 >
                     <span>Data Set:</span>
                     <div style={{display:"inline-block", width:376, marginLeft:4, marginRight:4, zIndex:10 /* so that on top when opened*/}}>
-                        <Select
+                        <MolecularProfileSelector
                             name="data-set-select"
                             value={this.selectedMolecularProfile.molecularProfileId}
                             onChange={this.onSelectDataSet}
-                            options={options}
-                            searchable={false}
-                            clearable={false}
+                            molecularProfiles={this.props.store.coexpressionTabMolecularProfiles.result}
+                            molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount.result}
                             className="coexpression-select-profile"
                         />
                     </div>
@@ -232,6 +213,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
             );
         }
     }
+
 
     render() {
         let divContents = null;
