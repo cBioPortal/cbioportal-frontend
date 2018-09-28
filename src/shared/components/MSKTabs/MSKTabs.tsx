@@ -4,6 +4,11 @@ import classnames from 'classnames';
 import {ThreeBounce} from 'better-react-spinkit';
 import ReactResizeDetector from 'react-resize-detector';
 import './styles.scss';
+import autobind from "autobind-decorator";
+import Spinner from "react-spinkit";
+import LoadingIndicator from "../loadingIndicator/LoadingIndicator";
+import {observable} from "mobx";
+import {ReactChild} from "react";
 
 export interface IMSKTabProps {
     inactive?:boolean;
@@ -13,8 +18,9 @@ export interface IMSKTabProps {
     className?:string;
     hide?:boolean;
     datum?:any;
-    loading?:boolean;
     anchorStyle?:{[k:string]:string|number|boolean};
+    unmountOnHide?:boolean;
+    onTabDidMount?:(tab:HTMLDivElement)=>void;
 }
 
 export class MSKTab extends React.Component<IMSKTabProps,{}> {
@@ -23,9 +29,27 @@ export class MSKTab extends React.Component<IMSKTabProps,{}> {
         super(props);
     }
 
+    public static defaultProps: Partial<IMSKTabProps> = {
+        unmountOnHide: false,
+    };
+
+    public div:HTMLDivElement;
+
+    componentDidMount(){
+        if (this.props.onTabDidMount) {
+            this.props.onTabDidMount(this.div);
+        }
+    }
+
+    @autobind
+    assignRef(div:HTMLDivElement){
+        this.div = div;
+    }
+
     render(){
         return (
             <div
+                ref={(div:HTMLDivElement)=>this.div=div}
                 className={classnames({ 'msk-tab':true, 'hiddenByPosition':!!this.props.inactive  }, this.props.className )}
             >
                 {this.props.children}
@@ -36,9 +60,11 @@ export class MSKTab extends React.Component<IMSKTabProps,{}> {
 }
 
 interface IMSKTabsState {
+    isSwitchingTab:boolean;
     activeTabId:string;
     currentPage:number;
     pageBreaks:string[];
+    deferedActiveTabId:string;
 }
 
 interface IMSKTabsProps {
@@ -51,6 +77,7 @@ interface IMSKTabsProps {
     arrowStyle?:{[k:string]:string|number|boolean};
     tabButtonStyle?:string;
     unmountOnHide?:boolean;
+    loadingComponent?:JSX.Element;
 }
 
 export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
@@ -58,11 +85,18 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
     private shownTabs:string[] = [];
     private navTabsRef: HTMLUListElement;
     private tabRefs: {id:string, element:HTMLLIElement}[] = [];
+    private isSwitchingTab = false;
+
+    public static defaultProps: Partial<IMSKTabsProps> = {
+        unmountOnHide: true,
+        loadingComponent:<LoadingIndicator isLoading={true} center={true}/>
+    };
 
     constructor(){
         super();
 
         this.state = {
+            isSwitchingTab:false,
             currentPage: 1,
             pageBreaks: [] as string[]
         } as IMSKTabsState;
@@ -73,7 +107,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
             return React.cloneElement(
                 tab,
                 { inactive } as Partial<IMSKTabProps>,
-                (<ThreeBounce className="default-spinner center-block text-center" />)
+                (this.props.loadingComponent!)
             );
         } else {
             return React.cloneElement(
@@ -86,6 +120,9 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
 
     setActiveTab(id: string, datum?:any){
         this.props.onTabClick && this.props.onTabClick(id, datum);
+        this.setState({
+            isSwitchingTab: true
+        } as IMSKTabsState);
     }
 
     navTabsRefHandler(ul: HTMLUListElement) {
@@ -129,45 +166,63 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
     }
 
     render(){
+
+
         if (this.props.children && React.Children.count(this.props.children)) {
 
             let children = (this.props.children as React.ReactElement<IMSKTabProps>[]);
 
-            let hasActive: boolean = false;
-            let effectiveActiveTab: string = "";
+            const toArrayedChildren:ReactChild[] = React.Children.toArray(children);
 
-            const toArrayedChildren = React.Children.toArray(children);
+            let switchingTab = false;
 
-            const arr = _.reduce(toArrayedChildren, (memo: React.ReactElement<IMSKTabProps>[], child:React.ReactElement<IMSKTabProps>) => {
-                if (!child.props.hide) {
-                    if (child.props.id === this.props.activeTabId) {
-                        hasActive = true;
-                        effectiveActiveTab = this.props.activeTabId;
-                        this.shownTabs.push(child.props.id);
-                        memo.push(this.cloneTab(child, false, !!child.props.loading));
-                    } else if (!this.props.unmountOnHide && _.includes(this.shownTabs, child.props.id) && !child.props.loading) {
-                        memo.push(this.cloneTab(child, true, !!child.props.loading));
-                    }
+            const targetTabId = (()=>{
+                if (this.props.activeTabId && _.some(toArrayedChildren,(child:React.ReactElement<IMSKTabProps>)=>child.props.id===this.props.activeTabId)) {
+                    return this.props.activeTabId;
+                } else {
+                    return (toArrayedChildren[0] as React.ReactElement<IMSKTabProps>).props.id;
                 }
-                return memo;
-            }, []);
+            })();
 
-            // if we don't have an active child, then default to first
-            if (hasActive === false) {
-                const tabElement = toArrayedChildren[0] as React.ReactElement<IMSKTabProps>
-                this.shownTabs.push(tabElement.props.id);
-                arr[0] = this.cloneTab(tabElement, false, !!tabElement.props.loading);
-                effectiveActiveTab = tabElement.props.id;
+            if (this.state.deferedActiveTabId !== targetTabId) {
+                switchingTab = true;
+                setTimeout(()=>{
+                   this.setState({ deferedActiveTabId:targetTabId } as IMSKTabsState);
+                },0);
             }
 
+            let arr:React.ReactElement<IMSKTabProps>[] = [];
+            if (this.state.deferedActiveTabId) {
+                arr = _.reduce(toArrayedChildren, (memo: React.ReactElement<IMSKTabProps>[], child: React.ReactElement<IMSKTabProps>) => {
+                    if (!child.props.hide) {
+                        if (child.props.id === this.state.deferedActiveTabId) {
+                            this.shownTabs.push(child.props.id);
+                            memo.push(this.cloneTab(child, false));
+                        } else if (
+                            (child.props.unmountOnHide === false || (this.props.unmountOnHide === false))
+                            && _.includes(this.shownTabs, child.props.id)) {
+                            // if we're NOT unmounting it and the tab has been shown and it's not loading, include it
+                            memo.push(this.cloneTab(child, true));
+                        }
+                    }
+                    return memo;
+                }, []);
+            }
+
+            let tabContent = arr;
 
             return (
                 <div
                     id={(this.props.id) ? this.props.id : ''}
-                    className={ classnames('msk-tabs', this.props.className) }
+                    className={ classnames('msk-tabs', 'posRelative', this.props.className) }
                 >
-                    {this.navTabs(children, effectiveActiveTab)}
-                    <div className="tab-content">{arr}</div>
+                    {this.navTabs(children, targetTabId)}
+                    <div className={classnames("tab-content", { hidden:!switchingTab })}>
+                        <LoadingIndicator isLoading={switchingTab} center={true} size={"big"}/>
+                    </div>
+                    <div className={classnames("tab-content", { hidden:switchingTab })}>
+                        {tabContent}
+                    </div>
                 </div>
             );
         } else {
@@ -232,7 +287,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
         let currentPage = 1;
 
         React.Children.forEach(children, (tab: React.ReactElement<IMSKTabProps>) => {
-            if (!tab || tab.props.hide || (tab.props.loading && (effectiveActiveTab !== tab.props.id))) {
+            if (!tab || tab.props.hide) {
                 return;
             }
 

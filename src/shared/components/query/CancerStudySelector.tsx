@@ -11,13 +11,14 @@ import {observer, Observer} from "mobx-react";
 import {action, expr} from 'mobx';
 import memoize from "memoize-weak-decorator";
 import {If, Then, Else} from 'react-if';
-import {QueryStoreComponent} from "./QueryStore";
+import {QueryStore, QueryStoreComponent} from "./QueryStore";
 import SectionHeader from "../sectionHeader/SectionHeader";
 import {Modal, Button} from 'react-bootstrap';
 import Autosuggest from 'react-bootstrap-autosuggest'
 import ReactElement = React.ReactElement;
 import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import FontAwesome from "react-fontawesome";
+import AppConfig from "appConfig";
 
 const styles = styles_any as {
     SelectedStudiesWindow: string,
@@ -54,10 +55,11 @@ const styles = styles_any as {
 
 export interface ICancerStudySelectorProps {
     style?: React.CSSProperties;
+    queryStore:QueryStore;
 }
 
 @observer
-export default class CancerStudySelector extends QueryStoreComponent<ICancerStudySelectorProps, {}> {
+export default class CancerStudySelector extends React.Component<ICancerStudySelectorProps, {}> {
     private handlers = {
         onSummaryClick: () => {
             this.store.openSummary();
@@ -70,8 +72,11 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
         }
     };
 
+    public store:QueryStore;
+
     constructor(props: ICancerStudySelectorProps) {
         super(props);
+        this.store = this.props.queryStore;
     }
 
     get logic() {
@@ -224,7 +229,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 
                     <Observer>
                         {() => {
-                            let searchTextOptions = this.store.searchTextPresets;
+                            let searchTextOptions = AppConfig.skinExampleStudyQueries;
                             if (this.store.searchText && searchTextOptions.indexOf(this.store.searchText) < 0)
                                 searchTextOptions = [this.store.searchText].concat(searchTextOptions as string[]);
                             let searchTimeout: number | null = null;
