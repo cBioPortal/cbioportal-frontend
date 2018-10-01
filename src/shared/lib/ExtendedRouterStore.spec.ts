@@ -10,6 +10,7 @@ import createMemoryHistory from "react-router/lib/createMemoryHistory";
 import {MemoryHistory} from "history";
 import {SinonStub} from "sinon";
 import {sleep} from "./TimeUtils";
+import {computed} from "mobx";
 
 
 
@@ -174,7 +175,7 @@ describe('ExtendedRoutingStore', () => {
 
         await sleep(0);
 
-        assert.equal(routingStore.location.query.session_id, 'somekey','we have non-pending sessionid');
+        assert.equal(routingStore.location.query.session_id, 'somekey','we have non-pending session_id');
 
         saveRemoteSessionStub.returns(Promise.resolve({id:'monkeys'}));
 
@@ -220,6 +221,37 @@ describe('ExtendedRoutingStore', () => {
         assert.deepEqual(mobx.toJS(routingStore.query),{ param2: 'altered', param3: 'new'}, 'can still get it even though not in location anymore');
 
     });
+
+    it('#query getter gets query from _session or url depending on session status', ()=>{
+
+        assert.isFalse(routingStore.needsRemoteSessionLookup, 'false by default');
+
+        routingStore.location.query.session_id = undefined;
+        assert.isFalse(routingStore.needsRemoteSessionLookup, 'undefined session_id');
+
+        routingStore.location.query.session_id = "pending";
+        assert.isFalse(routingStore.needsRemoteSessionLookup, 'session_id = pending');
+
+        routingStore.location.query.session_id = "12345";
+        assert.isTrue(routingStore.needsRemoteSessionLookup, '_session is undefined');
+
+        routingStore.location.query.session_id = "12345";
+        routingStore._session = {
+            id:"12345"
+        } as PortalSession;
+        assert.isFalse(routingStore.needsRemoteSessionLookup, 'session DOES match existing session_id');
+
+        routingStore.location.query.session_id = "12345";
+        routingStore._session = {
+            id:"54321"
+        } as PortalSession;
+        assert.isTrue(routingStore.needsRemoteSessionLookup, 'session DOES NOT match existing session_id');
+
+
+    });
+
+
+
 
 
 });
