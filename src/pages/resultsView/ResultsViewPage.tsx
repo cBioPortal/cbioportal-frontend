@@ -440,7 +440,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                         </div>
                         {
                             (this.resultsViewPageStore.studies.isComplete) && (
-                                <MSKTabs activeTabId={this.currentTab(this.props.params.tab)} unmountOnHide={true}
+                                <MSKTabs activeTabId={this.currentTab(this.props.params.tab)} unmountOnHide={false}
                                          onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
                                     {
                                         this.tabs

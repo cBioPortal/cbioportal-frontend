@@ -85,12 +85,16 @@ export default class Container extends React.Component<IContainerProps, {}> {
     }
 
     @computed get isConfigComplete(){
-        // remote session will return undefined if there is no session id, so just check it
-        return configPromise.isComplete && this.routingStore.remoteSessionData.isComplete;
+
+        if (this.routingStore.needsRemoteSessionLookup) {
+            return configPromise.isComplete && this.routingStore.remoteSessionData.isComplete;
+        } else {
+            return configPromise.isComplete;
+        }
+
     }
 
     render() {
-
         return (
             <div>
                 <Helmet>
@@ -107,7 +111,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
 
                 <div className="contentWrapper">
                     <UnsupportedBrowserModal/>
-                    {(this.isConfigComplete) && this.renderChildren()}
+                    {(this.isConfigComplete) && this.props.children}
                     <LoadingIndicator isLoading={!this.isConfigComplete} center={true} size={"big"}/>
                 </div>
 
