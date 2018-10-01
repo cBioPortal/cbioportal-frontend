@@ -276,14 +276,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     return <MSKTab key={7} id="coexpression" linkText={'Co-expression'}>
                         <CoExpressionTab
                             store={store}
-                            molecularProfiles={store.molecularProfilesInStudies.result}
-                            genes={store.genes.result!}
-                            studyToDataQueryFilter={store.studyToDataQueryFilter.result}
-                            numericGeneMolecularDataCache={store.numericGeneMolecularDataCache}
-                            mutationCache={store.mutationCache}
-                            molecularProfileIdToProfiledSampleCount={store.molecularProfileIdToProfiledSampleCount}
-                            coverageInformation={store.coverageInformation}
-                            studyToMutationMolecularProfile={store.studyToMutationMolecularProfile}
                         />
                     </MSKTab>
                 }
