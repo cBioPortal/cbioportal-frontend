@@ -1232,6 +1232,10 @@
             "type": "string"
           }
         },
+        "refseqMrnaId": {
+          "type": "string",
+          "description": "RefSeq mRNA ID"
+        },
         "exons": {
           "type": "array",
           "description": "Exon information",
