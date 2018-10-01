@@ -3,6 +3,7 @@ $selectHeightInner: $selectHeight - 2px;
 
 .studyViewSummaryHeader{
     .Select {
+        font-size: 14px;
         width: 220px;
         height: $selectHeight;
 
@@ -45,6 +46,10 @@ $selectHeightInner: $selectHeight - 2px;
                 overflow-x:hidden !important;
                 overflow-y:scroll !important;
             }
+        }
+
+        .Select-option {
+            line-height: 1.25;
         }
     }
 }
