@@ -97,11 +97,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                             <StudySummaryTab store={this.store} ></StudySummaryTab>
                         </MSKTab>
                         <MSKTab key={1} id={"clinicalData"} linkText={"Clinical Data"}>
-                            <ClinicalDataTab
-                                dataPromise={this.store.getDataForClinicalDataTab}
-                                clinicalAttributes={this.store.clinicalAttributes.result}
-                                selectedSamples={this.store.selectedSamples.result!}
-                            />
+                            <ClinicalDataTab store={this.store} />
                         </MSKTab>
                         <MSKTab key={2} id={"mdaccHeatmap"} linkText={"Heatmaps"}
                                 hide={this.store.MDACCHeatmapStudyMeta.result.length === 0}>
