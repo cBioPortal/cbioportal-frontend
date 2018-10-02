@@ -465,9 +465,7 @@ export class PatientViewPageStore {
             this.derivedPatientId
         ],
         invoke: async() => {
-            let enableDarwin: boolean | null | undefined = AppConfig.enableDarwin;
-
-            if (enableDarwin === true) {
+            if (AppConfig.serverConfig.enable_darwin === true) {
                 let resp = await request.get(getDarwinUrl(this.sampleIds, this.patientId));
                 return resp.text;
             } else {
@@ -549,7 +547,7 @@ export class PatientViewPageStore {
             this.uncalledMutationData,
             this.clinicalDataForSamples
         ],
-        invoke: async() => AppConfig.showCivic ? fetchCivicGenes(this.mutationData, this.uncalledMutationData) : {},
+        invoke: async() => AppConfig.serverConfig.show_civic ? fetchCivicGenes(this.mutationData, this.uncalledMutationData) : {},
         onError: (err: Error) => {
             // fail silently
         }
@@ -562,7 +560,7 @@ export class PatientViewPageStore {
             this.uncalledMutationData
         ],
         invoke: async() => {
-            if (AppConfig.showCivic && this.civicGenes.result) {
+            if (AppConfig.serverConfig.show_civic && this.civicGenes.result) {
                 return fetchCivicVariants(this.civicGenes.result as ICivicGene,
                     this.mutationData,
                     this.uncalledMutationData);
@@ -594,7 +592,7 @@ export class PatientViewPageStore {
             this.discreteCNAData,
             this.clinicalDataForSamples
         ],
-        invoke: async() => AppConfig.showCivic ? fetchCnaCivicGenes(this.discreteCNAData) : {},
+        invoke: async() => AppConfig.serverConfig.show_civic ? fetchCnaCivicGenes(this.discreteCNAData) : {},
         onError: (err: Error) => {
             // fail silently
         }

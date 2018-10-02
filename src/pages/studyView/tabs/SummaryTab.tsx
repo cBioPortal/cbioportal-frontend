@@ -23,6 +23,7 @@ import ReactGridLayout from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { observer } from 'mobx-react';
+import {ServerConfigHelpers} from "../../../config/config";
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore
@@ -334,7 +335,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                             studyWithSamples={this.store.studyWithSamples.result}
                             filter={this.store.userSelections}
                             attributesMetaSet={this.store.chartMetaSet}
-                            user={AppConfig.userEmailAddress}
+                            user={ServerConfigHelpers.getUserEmailAddress()}
                             getClinicalData={this.store.getDownloadDataPromise}
                             onSubmitQuery={() => this.store.onSubmitQuery()}
                             updateClinicalDataEqualityFilter={this.handlers.onValueSelection}

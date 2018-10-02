@@ -53,8 +53,6 @@ export function createQueryStore() {
 @observer
 export default class HomePage extends React.Component<IResultsViewPageProps, {}> {
 
-    private showTwitter = AppConfig.showTwitter === true;
-
     @observable showQuerySelector = true;
 
     @observable currentQuery:boolean;

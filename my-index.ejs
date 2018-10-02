@@ -12,7 +12,7 @@
         window.defaultRoute = "/spa";
 
         window.frontendConfig = {
-            configurationServiceUrl:"http://www.cbioportal.org/beta/config_service.jsp",
+            configurationServiceUrl:"http://localhost:8080/config_service.jsp",
             frontendUrl:'//'+window.location.host + '/',
             apiRoot: 'http://www.cbioportal.org/rc',
             sessionServiceUrl:'http://www.cbioportal.org/rc/api-legacy/proxy/session/',
@@ -37,6 +37,10 @@
             //         "unmountOnHide":false
             //     }
             // ]
+            serverConfig:{
+                session_url_length_threshold:10,
+                session_service_url:"http://www.cbioportal.org/rc/api-legacy/proxy/session/",
+            }
 
         };
 

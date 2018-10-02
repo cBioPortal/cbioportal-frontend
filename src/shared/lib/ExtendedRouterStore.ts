@@ -5,6 +5,7 @@ import URL, {QueryParams} from 'url';
 import {remoteData} from "../api/remoteData";
 import sessionClient from "../api/sessionServiceInstance";
 import AppConfig from "appConfig";
+import {ServerConfigHelpers} from "../../config/config";
 import hashString from "./hashString";
 
 export function getSessionKey(hash:string){
@@ -64,18 +65,14 @@ export enum QueryParameter {
 
 export default class ExtendedRouterStore extends RouterStore {
 
-    public urlLengthThresholdForSession: number;
+
+    _urlLengthThresholdForSession:number;
 
     public saveRemoteSession = saveRemoteSession;
 
     public getRemoteSession = getRemoteSession;
 
     public sessionVersion = 2;
-
-    constructor(urlLengthThresholdForSession:number){
-        super();
-        this.urlLengthThresholdForSession = urlLengthThresholdForSession || AppConfig.urlLengthThresholdForSession || 10;
-    }
 
     // this has to be computed to avoid annoying problem where
     // remoteSessionData fires every time new route is pushed, even
@@ -84,7 +81,18 @@ export default class ExtendedRouterStore extends RouterStore {
         return this.location.query.session_id;
     }
 
+    public get urlLengthThresholdForSession():number {
+        return this._urlLengthThresholdForSession || parseInt(AppConfig.serverConfig.session_url_length_threshold,10);
+    }
+
+    public set urlLengthThresholdForSession(val:number) {
+        this._urlLengthThresholdForSession = val;
+    }
+
     @computed get needsRemoteSessionLookup(){
+        if (!ServerConfigHelpers.sessionServiceIsEnabled()) {
+            return false;
+        }
         const needsRemoteSessionLookup = this.session_id !== undefined && this.session_id !== "pending"
             && (this._session === undefined || (this._session.id !== this.session_id));
         return needsRemoteSessionLookup;
@@ -153,7 +161,7 @@ export default class ExtendedRouterStore extends RouterStore {
         path = URL.resolve('/', path);
 
         // we don't use session
-        if (!this.sessionEnabledForPath(path) || JSON.stringify(newQuery).length < this.urlLengthThresholdForSession){
+        if (!ServerConfigHelpers.sessionServiceIsEnabled() || !this.sessionEnabledForPath(path) || JSON.stringify(newQuery).length < this.urlLengthThresholdForSession){
             // if there happens to be session, kill it because we're going URL, baby
             delete this._session;
             this.push( URL.format({pathname: path, query: newQuery, hash:this.location.hash}) );

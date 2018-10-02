@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as _ from 'lodash';
 import DatasetList from './DatasetList';
 import {observer} from 'mobx-react';
 import client from "shared/api/cbioportalClientInstance";
@@ -31,8 +32,8 @@ export default class DatasetPage extends React.Component<{}, {}> {
 
     public render() {
 
-        const header:JSX.Element|null = AppConfig.skinDatasetHeader? <p style={{marginBottom:"20px"}} dangerouslySetInnerHTML={{__html: AppConfig.skinDatasetHeader}}></p> : null;
-        const footer:JSX.Element|null = AppConfig.skinDatasetFooter? <p style={{marginTop:"20px"}} dangerouslySetInnerHTML={{__html: AppConfig.skinDatasetFooter}}></p> : null;
+        const header:JSX.Element|null = !_.isEmpty(AppConfig.serverConfig.skin_data_sets_header) ? <p style={{marginBottom:"20px"}} dangerouslySetInnerHTML={{__html: AppConfig.serverConfig.skin_data_sets_header!}}></p> : null;
+        const footer:JSX.Element|null = !_.isEmpty(AppConfig.serverConfig.skin_data_sets_footer) ? <p style={{marginTop:"20px"}} dangerouslySetInnerHTML={{__html: AppConfig.serverConfig.skin_data_sets_footer!}}></p> : null;
 
         return <PageLayout className={"whiteBackground"}>
             <div className={styles.dataSets}>

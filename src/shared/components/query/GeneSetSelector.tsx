@@ -14,6 +14,7 @@ import MutSigGeneSelector from "./MutSigGeneSelector";
 import GisticGeneSelector from "./GisticGeneSelector";
 import SectionHeader from "../sectionHeader/SectionHeader";
 import AppConfig from "appConfig";
+import {ServerConfigHelpers} from "../../../config/config";
 
 const styles = styles_any as {
 	GeneSetSelector: string,
@@ -26,12 +27,8 @@ const styles = styles_any as {
 	sectionSpinner: string,
 };
 
-export interface GeneSetSelectorProps
-{
-}
-
 @observer
-export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelectorProps, {}>
+export default class GeneSetSelector extends QueryStoreComponent<{}, {}>
 {
 	@computed get selectedGeneListOption()
 	{
@@ -42,8 +39,12 @@ export default class GeneSetSelector extends QueryStoreComponent<GeneSetSelector
 	@computed get geneListOptions()
 	{
 	    let geneList: {"id": string, "genes": string[]}[] = gene_lists;
-	    if (AppConfig.querySetsOfGenes) {
-	        geneList = AppConfig.querySetsOfGenes;
+
+	    if (AppConfig.serverConfig.query_sets_of_genes) {
+	    	const parsed = ServerConfigHelpers.parseQuerySetsOfGenes(AppConfig.serverConfig.query_sets_of_genes);
+	    	if (parsed) {
+	    		geneList = parsed;
+			}
 	    }
 
 	    return [
