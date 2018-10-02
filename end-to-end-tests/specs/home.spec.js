@@ -72,19 +72,20 @@ describe('homepage', function() {
         var input = $(".autosuggest input[type=text]");
         input.setValue('breast');
         browser.pause(500);
-        var checkBox = $('[data-test="StudySelect"]');
-        checkBox.waitForExist(10000);
-        browser.click('[data-test="StudySelect"]');
+
+        browser.element('[data-test=selectAllStudies]').click();
 
         var oqlEntrySel = 'textarea[data-test="geneSet"]';
         browser.setValue(oqlEntrySel, 'PTEN: EXP>1');
 
         var errorMessageSel = 'span[data-test="oqlErrorMessage"]';
         browser.waitForExist(errorMessageSel);
+
         assert.equal(
             browser.getText(errorMessageSel),
             "Expression filtering in the gene list (the EXP command) is not supported when doing cross cancer queries."
         );
+
 
         var submitButtonSel = 'button[data-test="queryButton"]';
         assert.equal(
@@ -315,7 +316,7 @@ describe('single study query', function() {
         });
 
         it('should show lollipop for MUC2', function() {
-            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=cellline_nci60&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=cellline_nci60_cnaseq&gene_list=MUC2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=cellline_nci60_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=cellline_nci60_CNA`);
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=cellline_nci60&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=cellline_nci60_cnaseq&gene_list=MUC2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=cellline_nci60_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=cellline_nci60_cna`);
             browser.setViewportSize({ height:1400, width:1000 });
 
             //  wait for mutations tab
@@ -1162,7 +1163,7 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist(selectedCaseSet_sel);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "Sequenced Tumors (160)",
+            "All Sequenced Tumors (160)",
             "Default selected case set"
         );
 
@@ -1219,7 +1220,7 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist(selectedCaseSet_sel);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "Sequenced Tumors (160)",
+            "All Sequenced Tumors (160)",
             "Default selected case set"
         );
 
@@ -1361,11 +1362,11 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
-        browser.pause(1000); // give time for text change to propagate through to the view
+        browser.pause(5000); // give time for text change to propagate through to the view
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "All (12997)",
-            "Expect: All (12997), but got '" + browser.getText(selectedCaseSet_sel) + "'",
+            "All (12880)",
+            "Expect: All (12880), but got '" + browser.getText(selectedCaseSet_sel) + "'",
         );
 
         // Deselect all tcga -provisional studies
