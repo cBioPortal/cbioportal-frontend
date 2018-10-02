@@ -11,7 +11,7 @@ import { computed, observable, action } from 'mobx';
 import styles from "./styles.module.scss";
 import "./styles.scss";
 import { bind } from 'bind-decorator';
-import {buildCBioPortalPageUrl} from 'shared/api/urls';
+import {getSampleViewUrl} from 'shared/api/urls';
 import CustomCaseSelection from 'pages/studyView/customCaseSelection/CustomCaseSelection';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
@@ -26,8 +26,6 @@ import SelectedInfo from "./SelectedInfo/SelectedInfo";
 import classnames from "classnames";
 import { getPercentage } from 'shared/lib/FormatUtils';
 import MobxPromise from 'mobxpromise';
-import {GroupLogic} from "./filters/groupLogic/GroupLogic";
-import {isFiltered} from "./StudyViewUtils";
 const CheckedSelect = require("react-select-checked").CheckedSelect;
 
 export interface ISummaryHeaderProps {
@@ -82,19 +80,12 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
     private openCases() {
         if (!_.isEmpty(this.props.selectedSamples)) {
             const firstSample = this.props.selectedSamples[0];
-            const groupedSamples = _.groupBy(this.props.selectedSamples, sample => sample.studyId);
-            const includeStudyId: boolean = Object.keys(groupedSamples).length > 1;
 
-            let navCaseIds = _.map(this.props.selectedSamples, sample => (includeStudyId ? sample.studyId : '') + sample.sampleId).join(',')
+            let navCaseIds = _.map(this.props.selectedSamples, sample => {
+                return {patientId:sample.patientId, studyId:sample.studyId}
+            })
 
-            window.open(buildCBioPortalPageUrl(
-                'patient',
-                {
-                    sampleId: firstSample.sampleId,
-                    studyId: firstSample.studyId
-                },
-                '&navCaseIds=' + navCaseIds)
-            );
+            window.open(getSampleViewUrl(firstSample.studyId, firstSample.sampleId, navCaseIds));
         }
     }
 
