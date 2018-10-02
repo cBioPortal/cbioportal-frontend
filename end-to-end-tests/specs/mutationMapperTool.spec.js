@@ -14,7 +14,7 @@ describe('Mutation Mapper Tool', function() {
 
     describe('example genomic changes input', ()=>{
         beforeEach(()=>{
-            var url = `${CBIOPORTAL_URL}/mutation_mapper.jsp`;
+            var url = `${CBIOPORTAL_URL}/s/mutation_mapper`;
             goToUrlAndSetLocalStorage(url);
             browser.waitForVisible('[data-test=GenomicChangesExampleButton]',10000)
         });
