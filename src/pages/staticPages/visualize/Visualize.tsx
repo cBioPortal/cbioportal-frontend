@@ -1,48 +1,84 @@
 import * as React from 'react';
 import {observer} from 'mobx-react';
-import {PageLayout} from "../../../shared/components/PageLayout/PageLayout";
-import './styles.scss';
 import Helmet from "react-helmet";
+import {PageLayout} from "shared/components/PageLayout/PageLayout";
+
+import './styles.scss';
+import styles from './visualize.module.scss';
 
 @observer
 export default class Visualize extends React.Component<{}, {}> {
 
     public render() {
 
-        return <PageLayout className={'whiteBackground'}>
-            <Helmet>
-                <title>{'cBioPortal for Cancer Genomics::Visualize Your Data'}</title>
-            </Helmet>
+        return (
+            <PageLayout className={'whiteBackground'}>
+                <Helmet>
+                    <title>{'cBioPortal for Cancer Genomics::Visualize Your Data'}</title>
+                </Helmet>
 
-            <h1>Visualise Your Data</h1>
-            <p>If you want to visualize your own data in cBioPortal, you have the following options:</p>
-            <h3 id="we-host-data-for-you-academic-use">We host data for you (academic use)</h3>
-            <ul>
-                <li><b>MSKCC users can send us their data by filling out this <a href="https://docs.google.com/forms/d/1UPQF-T9HQStHK87UEYzgf-hTiKT-ok6fZDxxw_lANr8/viewform">form</a>.</b></li>
-                <li>Public data will be available to everyone. Suggestions on data sets are welcome. Please <a href="mailto:cbioportal@cbio.mskcc.org?subject=Uploading public data">contact us</a> for details.</li>
-                <li>Private data will be accessible by you and your collaborators. Please <a href="mailto:cbioportal@cbio.mskcc.org?subject=Uploading private data">contact us</a> for details.</li>
-            </ul>
-            <h3 id="use-our-tools-to-visualize-your-data">Use our tools to visualize your data</h3>
-            <ul>
-                <li><a href="oncoprinter.jsp">Oncoprinter</a> lets you create Oncoprints from your own, custom data.</li>
-                <li><a href="mutation_mapper.jsp">MutationMapper</a> draws mutation diagrams (lollipop plots) from your custom data.</li>
-            </ul>
-            <h3 id="download-and-install-a-local-version-of-cbioportal">Download and install a local version of cBioPortal</h3>
-            <ul>
-                <li>The source code of cBioPortal is available on <a href="https://github.com/cBioPortal/cbioportal">GitHub</a> under the terms of Affero GPL V3. </li>
-                <li>Please note that, installing a local version requires system administration skills, for example, installing and configuring Tomcat and MySQL. With limit resources, we cannot provide technical support on system administration.</li>
-            </ul>
+                <h1>Visualize Your Data</h1>
 
-            <hr/>
+                <h2 id="download-and-install-a-local-version-of-cbioportal">1. Download and install a local version of cBioPortal</h2>
+                <ul>
+                    <li>
+                        The source code of cBioPortal is available
+                        on <a href="https://github.com/cBioPortal/cbioportal">GitHub</a> under the terms of Affero GPL V3.
+                    </li>
+                    <li>
+                        Please note that, installing a local version requires system administration skills, for example,
+                        installing and configuring Tomcat and MySQL. With limited resources,
+                        we cannot provide technical support on system administration.
+                    </li>
+                </ul>
 
-            <p>For any questions, please contact us at <a href="mailto:cbioportal@cbio.mskcc.org?subject=Questions about downloading software or hosting data">cbioportal@cbio.mskcc.org</a>.</p>
+                <h2>2. We host data for you (academic use)</h2>
+                <ul>
+                    <li>Public data will be available to everyone. Suggestions on data sets are welcome.</li>
+                    <li>Private data will be accessible by you and your collaborators.</li>
+                    <li>Please <a href="mailto:cbioportal@cbio.mskcc.org?subject=Uploading public data">contact us</a> for details.</li>
+                </ul>
 
+                <h2>3. Commercial support</h2>
+                <ul>
+                    <li>
+                        <a href="http://thehyve.nl" target="_blank">The Hyve</a> is an open source software company
+                        that provides commercial support for cBioPortal.
+                        They can help with deployment, data loading, development, consulting and training.
+                        Please <a href="http://thehyve.nl/contact/" target="_blank">contact The Hyve</a> for details.
+                    </li>
+                </ul>
 
+                <hr />
 
-        </PageLayout>
+                <h2>The following tools are for visualization and analysis of custom datasets</h2>
 
+                <div className="alert alert-info" role="alert">
+                    When using these tools in your publication,
+                    <b>please cite</b> <a href="http://www.ncbi.nlm.nih.gov/pubmed/23550210">Gao et al. <i>Sci. Signal.</i> 2013</a>
+                    &amp;  <a href="http://cancerdiscovery.aacrjournals.org/content/2/5/401.abstract">Cerami et al. <i>Cancer Discov.</i> 2012</a>.
+                </div>
+
+                <div style={{display: "flex"}} className={styles.toolArray}>
+                    <div style={{marginRight: 60}}>
+                        <h2><a href="/oncoprinter.jsp">OncoPrinter</a></h2>
+                        <p>Generates oncoprints from your own data. <a href="/oncoprinter.jsp">Try it!</a></p>
+                        <a href="/oncoprinter.jsp">
+                            <img className="tile-image top-image" alt="Oncoprint" src={require("./images/oncoprint_example_small.png")} />
+                        </a>
+                    </div>
+
+                    <div>
+                        <h2><a href="mutation_mapper">MutationMapper</a></h2>
+                        <p>Maps mutations on a linear protein and its domains (lollipop plots). <a href="mutation_mapper">Try it!</a></p>
+                        <a href="mutation_mapper">
+                            <img alt="MutationMapper" style={{height: 147}} src={require("./images/lollipop_example.png")} />
+                        </a>
+                    </div>
+                </div>
+            </PageLayout>
+        );
     }
-
 }
 
 
