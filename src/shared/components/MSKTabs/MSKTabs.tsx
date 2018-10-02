@@ -170,10 +170,8 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
             }
 
             timeout = window.setTimeout(() => {
-                this.setState({
-                    currentPage: 1,
-                    pageBreaks: [] as string[]
-                } as IMSKTabsState);
+                // re-init paging for the resized container size
+                this.initPaging();
             }, 600);
         };
     }
@@ -275,9 +273,11 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                 {prev}
                 {pages[this.state.currentPage - 1]}
                 {next}
-                {this.props.enablePagination && (
-                    <ReactResizeDetector handleWidth={true} onResize={this.initOnResize.bind(this)()} />
-                )}
+                {// TODO this doesn't always calculate the page size properly after resize, disabling for now
+                // this.props.enablePagination && (
+                //     <ReactResizeDetector handleWidth={true} onResize={this.initOnResize.bind(this)()} />
+                // )
+                }
             </ul>
         );
     }
@@ -320,24 +320,29 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
 
     componentDidMount() {
 
-        setTimeout(()=>{
+        setTimeout(() => {
             // if there are page breaks, it means that page calculations already performed
-            if (this.props.enablePagination &&
-                this.state.pageBreaks.length  === 0)
-            {
-                // find page breaks: depends on width of the container
-                const pageBreaks: string[] = this.findPageBreaks();
-
-                // find current page: depends on active tab id
-                const currentPage: number = this.findCurrentPage(pageBreaks);
-
-                this.setState({
-                    currentPage,
-                    pageBreaks
-                } as IMSKTabsState);
+            if (this.state.pageBreaks.length  === 0) {
+                this.initPaging();
             }
         },1);
 
+    }
+
+    initPaging() {
+        if (this.props.enablePagination)
+        {
+            // find page breaks: depends on width of the container
+            const pageBreaks: string[] = this.findPageBreaks();
+
+            // find current page: depends on active tab id
+            const currentPage: number = this.findCurrentPage(pageBreaks);
+
+            this.setState({
+                currentPage,
+                pageBreaks
+            } as IMSKTabsState);
+        }
     }
 
     findCurrentPage(pageBreaks: string[]) {
