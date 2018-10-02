@@ -128,6 +128,8 @@ export type EnsemblTranscript = {
 
         'hugoSymbols': Array < string >
 
+        'refseqMrnaId': string
+
         'exons': Array < Exon >
 
         'utrs': Array < UntranslatedRegion >
