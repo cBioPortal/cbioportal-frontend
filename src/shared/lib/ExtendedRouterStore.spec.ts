@@ -11,6 +11,8 @@ import {MemoryHistory} from "history";
 import {SinonStub} from "sinon";
 import {sleep} from "./TimeUtils";
 import {computed} from "mobx";
+import AppConfig from "appConfig";
+import {setServerConfig} from "../../config/config";
 
 
 
@@ -22,14 +24,18 @@ describe('ExtendedRoutingStore', () => {
     let saveRemoteSessionStub: SinonStub;
     let getRemoteSessionStub: SinonStub;
 
+
     beforeEach(()=>{
-        routingStore = new ExtendedRouterStore(1000);
+        routingStore = new ExtendedRouterStore();
+        routingStore.urlLengthThresholdForSession = 1000;
         history = syncHistoryWithStore(createMemoryHistory(), routingStore);
         saveRemoteSessionStub = sinon.stub(routingStore,'saveRemoteSession').callsFake(function(){
             return Promise.resolve({ id:'somekey'});
         });
+        setServerConfig({ session_service_url: "notNothing" });
         routingStore.location.pathname = '/results';
         routingStore.location.query = {param1: 1, param2: 2, param3: 3};
+
     });
 
     afterEach(()=>{
@@ -204,7 +210,6 @@ describe('ExtendedRoutingStore', () => {
     });
 
     it('#query getter gets query from _session or url depending on session status', ()=>{
-
 
         routingStore.urlLengthThresholdForSession = 4;
 

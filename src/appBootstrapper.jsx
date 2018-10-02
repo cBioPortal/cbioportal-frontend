@@ -5,6 +5,9 @@ import { hashHistory, browserHistory, createMemoryHistory, Router, useRouterHist
 import { createHistory } from 'history'
 import { RouterStore, syncHistoryWithStore  } from 'mobx-react-router';
 import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
+import {initializeAPIClients, setServerConfig} from './config/config';
+
+
 //import {QueryStore} from "./shared/components/query/QueryStore";
 import {computed, extendObservable} from 'mobx';
 import makeRoutes from './routes';
@@ -212,4 +215,19 @@ if (__DEBUG__ && module.hot) {
     module.hot.accept('./routes', () => render());
 }
 
-$(document).ready(() => render());
+$(document).ready(async () => {
+
+    // need to use jsonp, so use jquery
+    let config = await $.ajax({
+        url: window.frontendConfig.configurationServiceUrl,
+        dataType: "jsonp",
+        jsonpCallback: "callback"
+    });
+
+    setServerConfig(config);
+    initializeAPIClients();
+
+    render();
+
+
+});
