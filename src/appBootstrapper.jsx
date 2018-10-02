@@ -16,9 +16,10 @@ import { getHost } from './shared/api/urls';
 import { validateParametersPatientView } from './shared/lib/validateParameters';
 import AppConfig from "appConfig";
 import browser from 'bowser';
-import './shared/lib/tracking';
+
 import 'script-loader!raven-js/dist/raven.js';
 import {correctPatientUrl} from "shared/lib/urlCorrection";
+import {activateAnalytics} from "shared/lib/tracking";
 import {CancerStudyQueryUrlParams} from "shared/components/query/QueryStore";
 import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 import {molecularProfileParams} from "shared/components/query/QueryStoreUtils";
@@ -188,6 +189,8 @@ window.routingStore = routingStore;
 
 
 let render = () => {
+
+    activateAnalytics();
 
     const rootNode = document.getElementById("reactRoot");
 
