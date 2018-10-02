@@ -19,6 +19,7 @@ import ReactElement = React.ReactElement;
 import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import FontAwesome from "react-fontawesome";
 import AppConfig from "appConfig";
+import {ServerConfigHelpers} from "../../../config/config";
 
 const styles = styles_any as {
     SelectedStudiesWindow: string,
@@ -229,7 +230,7 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
                     <Observer>
                         {() => {
-                            let searchTextOptions = AppConfig.skinExampleStudyQueries;
+                            let searchTextOptions =  ServerConfigHelpers.skin_example_study_queries(AppConfig.serverConfig!.skin_example_study_queries || "");
                             if (this.store.searchText && searchTextOptions.indexOf(this.store.searchText) < 0)
                                 searchTextOptions = [this.store.searchText].concat(searchTextOptions as string[]);
                             let searchTimeout: number | null = null;

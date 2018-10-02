@@ -9,18 +9,18 @@ import {getDocsUrl} from "../../api/urls";
 import './gfm.css';
 
 function isMarkDown(url:string){
-    return (!AppConfig.skinIsMarkdownDocumentation === false) && /\.md$/.test(url);
+    return (!AppConfig.serverConfig.skin_documentation_markdown === false) && /\.md$/.test(url);
 }
 
 function setImageRoot(path:string){
-    return `${AppConfig.skinDocumentationBaseUrl}/${path}`
+    return `${AppConfig.serverConfig.skin_documentation_baseurl}/${path}`
 }
 
 @observer
 export default class StaticContent extends React.Component<{ sourceUrl:string, title?:string }, {}> {
 
     private get url(){
-        return getDocsUrl(this.props.sourceUrl!,AppConfig.skinDocumentationBaseUrl);
+        return getDocsUrl(this.props.sourceUrl!,AppConfig.serverConfig.skin_documentation_baseurl!);
     }
 
     readonly source = remoteData<string>(async ()=>{

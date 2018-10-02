@@ -6,15 +6,6 @@ import Helmet from "react-helmet";
 
 export default class FAQ extends React.Component<{}, {}> {
 
-    get content(){
-        if (/^https:\/\/docs.google.com/.test(AppConfig.skinFaqSourceURL!)) {
-            return <iframe id="faqIframe" style={{width:"100%", height:11000, border:"1px solid #ddd"}}
-                           src={AppConfig.skinFaqSourceURL}>
-            </iframe>
-        } else {
-            return <StaticContent sourceUrl={AppConfig.skinFaqSourceURL!} title={"FAQs"} />
-        }
-    }
 
     public render() {
 
@@ -26,7 +17,7 @@ export default class FAQ extends React.Component<{}, {}> {
                 <title>{'cBioPortal for Cancer Genomics::FAQ'}</title>
             </Helmet>
 
-            {this.content}
+            <StaticContent sourceUrl={AppConfig.serverConfig.skin_documentation_faq!} title={"FAQs"} />
 
         </PageLayout>
     }

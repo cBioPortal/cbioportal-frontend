@@ -38,14 +38,14 @@ interface IContainerProps {
 const configPromise = remoteData(async ()=>{
 
     // need to use jsonp, so use jquery
-    const config = await $.ajax({
+    let config = await $.ajax({
         url: getConfigurationServiceApiUrl(),
         dataType: "jsonp",
         jsonpCallback: "callback"
     });
 
     // overwrite properties of frontend config
-    updateConfig(config);
+    updateConfig({ serverConfig:config });//
 
     // we need to set the domain of our api clients
     (client as any).domain = getCbioPortalApiUrl();
@@ -59,7 +59,7 @@ const configPromise = remoteData(async ()=>{
         embedGoogleAnalytics();
     }
 
-    return config;
+    return config;//
 
 });
 
