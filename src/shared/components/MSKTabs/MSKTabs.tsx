@@ -9,6 +9,7 @@ import Spinner from "react-spinkit";
 import LoadingIndicator from "../loadingIndicator/LoadingIndicator";
 import {observable} from "mobx";
 import {ReactChild} from "react";
+import {observer} from "mobx-react";
 
 export interface IMSKTabProps {
     inactive?:boolean;
@@ -23,15 +24,34 @@ export interface IMSKTabProps {
     onTabDidMount?:(tab:HTMLDivElement)=>void;
 }
 
+@observer
+export class DeferredRender extends React.Component<{ className:string, loadingState?:JSX.Element },{}> {
+
+    @observable renderedOnce = false;
+
+    render(){
+
+        if (!this.renderedOnce) {
+            setTimeout(()=>this.renderedOnce = true)
+        }
+
+        return (<div className={this.props.className}>
+            {
+                this.renderedOnce && this.props.children
+            }
+            {
+                !this.renderedOnce && (this.props.loadingState || null)
+            }
+        </div>)
+    }
+}
+
+
 export class MSKTab extends React.Component<IMSKTabProps,{}> {
 
     constructor(props: IMSKTabProps){
         super(props);
     }
-
-    public static defaultProps: Partial<IMSKTabProps> = {
-        unmountOnHide: false,
-    };
 
     public div:HTMLDivElement;
 
@@ -60,7 +80,6 @@ export class MSKTab extends React.Component<IMSKTabProps,{}> {
 }
 
 interface IMSKTabsState {
-    isSwitchingTab:boolean;
     activeTabId:string;
     currentPage:number;
     pageBreaks:string[];
@@ -85,7 +104,6 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
     private shownTabs:string[] = [];
     private navTabsRef: HTMLUListElement;
     private tabRefs: {id:string, element:HTMLLIElement}[] = [];
-    private isSwitchingTab = false;
 
     public static defaultProps: Partial<IMSKTabsProps> = {
         unmountOnHide: true,
@@ -96,7 +114,6 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
         super();
 
         this.state = {
-            isSwitchingTab:false,
             currentPage: 1,
             pageBreaks: [] as string[]
         } as IMSKTabsState;
@@ -115,14 +132,10 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                 { inactive } as Partial<IMSKTabProps>
             );
         }
-
     }
 
     setActiveTab(id: string, datum?:any){
         this.props.onTabClick && this.props.onTabClick(id, datum);
-        this.setState({
-            isSwitchingTab: true
-        } as IMSKTabsState);
     }
 
     navTabsRefHandler(ul: HTMLUListElement) {
@@ -174,8 +187,6 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
 
             const toArrayedChildren:ReactChild[] = React.Children.toArray(children);
 
-            let switchingTab = false;
-
             const targetTabId = (()=>{
                 if (this.props.activeTabId && _.some(toArrayedChildren,(child:React.ReactElement<IMSKTabProps>)=>child.props.id===this.props.activeTabId)) {
                     return this.props.activeTabId;
@@ -184,32 +195,23 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                 }
             })();
 
-            if (this.state.deferedActiveTabId !== targetTabId) {
-                switchingTab = true;
-                setTimeout(()=>{
-                   this.setState({ deferedActiveTabId:targetTabId } as IMSKTabsState);
-                },0);
-            }
-
             let arr:React.ReactElement<IMSKTabProps>[] = [];
-            if (this.state.deferedActiveTabId) {
-                arr = _.reduce(toArrayedChildren, (memo: React.ReactElement<IMSKTabProps>[], child: React.ReactElement<IMSKTabProps>) => {
-                    if (!child.props.hide) {
-                        if (child.props.id === this.state.deferedActiveTabId) {
-                            this.shownTabs.push(child.props.id);
-                            memo.push(this.cloneTab(child, false));
-                        } else if (
-                            (child.props.unmountOnHide === false || (this.props.unmountOnHide === false))
-                            && _.includes(this.shownTabs, child.props.id)) {
-                            // if we're NOT unmounting it and the tab has been shown and it's not loading, include it
-                            memo.push(this.cloneTab(child, true));
-                        }
-                    }
-                    return memo;
-                }, []);
-            }
 
-            let tabContent = arr;
+            arr = _.reduce(toArrayedChildren, (memo: React.ReactElement<IMSKTabProps>[], child: React.ReactElement<IMSKTabProps>) => {
+                if (!child.props.hide) {
+                    if (child.props.id === targetTabId) {
+                        this.shownTabs.push(child.props.id);
+                        memo.push(this.cloneTab(child, false));
+                    } else if (
+                        (child.props.unmountOnHide === false || (this.props.unmountOnHide === false))
+                        && _.includes(this.shownTabs, child.props.id)) {
+                        // if we're NOT unmounting it and the tab has been shown and it's not loading, include it
+                        memo.push(this.cloneTab(child, true));
+                    }
+                }
+                return memo;
+            }, []);
+
 
             return (
                 <div
@@ -217,12 +219,11 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                     className={ classnames('msk-tabs', 'posRelative', this.props.className) }
                 >
                     {this.navTabs(children, targetTabId)}
-                    <div className={classnames("tab-content", { hidden:!switchingTab })}>
-                        <LoadingIndicator isLoading={switchingTab} center={true} size={"big"}/>
-                    </div>
-                    <div className={classnames("tab-content", { hidden:switchingTab })}>
-                        {tabContent}
-                    </div>
+
+                    <DeferredRender className="tab-content" loadingState={<LoadingIndicator isLoading={true} center={true} size={"big"}/>}>
+                        {arr}
+                    </DeferredRender>
+
                 </div>
             );
         } else {
