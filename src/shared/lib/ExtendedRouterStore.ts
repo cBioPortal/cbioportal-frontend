@@ -63,14 +63,20 @@ export default class ExtendedRouterStore extends RouterStore {
     // this has to be computed to avoid annoying problem where
     // remoteSessionData fires every time new route is pushed, even
     // if sessionId has stayed the same
-    @computed get sessionId(){
+    @computed get session_id(){
         return this.location.query.session_id;
+    }
+
+    @computed get needsRemoteSessionLookup(){
+        const needsRemoteSessionLookup = this.session_id !== undefined && this.session_id !== "pending"
+            && (this._session === undefined || (this._session.id !== this.session_id));
+        return needsRemoteSessionLookup;
     }
 
     remoteSessionData = remoteData({
         invoke: async () => {
-            if (this.sessionId && this.sessionId !== "pending") {
-                let sessionData = await this.getRemoteSession(this.sessionId);
+            if (this.session_id && this.session_id !== "pending") {
+                let sessionData = await this.getRemoteSession(this.session_id);
 
                 // if it has no version, it's a legacy session and needs to be normalized
                 if (sessionData.version === undefined) {
@@ -146,6 +152,7 @@ export default class ExtendedRouterStore extends RouterStore {
                 };
                 // add session version
                 this._session = pendingSession;
+
                 this.push( URL.format({pathname: path, query: { session_id:'pending'}, hash:this.location.hash}) );
                 this.saveRemoteSession(pendingSession.query).then((sessionResponse)=>{
                     this._session!.id = sessionResponse.id;
@@ -163,7 +170,7 @@ export default class ExtendedRouterStore extends RouterStore {
 
     @computed
     public get query(){
-        if (this.location.query.session_id && this._session) {
+        if (this._session) {
             return this._session.query;
         } else {
             return this.location.query;
