@@ -96,7 +96,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
     @computed get molecularProfileIdToMolecularProfile() {
         return _.keyBy(this.profiles, profile=>profile.molecularProfileId);
     }
-
+    
     private coExpressionCache:CoExpressionCache = new CoExpressionCache(
         q=>({
             invoke: ()=>{
@@ -105,13 +105,16 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                     threshold = 0;
                 }
                 const dataQueryFilter = this.props.studyToDataQueryFilter[q.molecularProfile.studyId];
-                if (dataQueryFilter) {
+                if (dataQueryFilter) {                    
+                    // TODO: this sorts by p value asc first, so we can fake
+                    // multi column sort when sorting by q value afterwards. We
+                    // can remove this after implementing multi-sort
                     return internalClient.fetchCoExpressionsUsingPOST({
                         molecularProfileId: q.molecularProfile.molecularProfileId,
                         coExpressionFilter: dataQueryFilter as CoExpressionFilter,
                         entrezGeneId: q.entrezGeneId,
                         threshold
-                    });
+                    })
                 } else {
                     return Promise.resolve([]);
                 }

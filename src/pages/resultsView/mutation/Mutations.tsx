@@ -77,8 +77,12 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
 
             if (mutationMapperStore)
             {
+                const tabHasMutations = mutationMapperStore.mutations.length > 0;
+                // gray out tab if no mutations
+                const anchorStyle = tabHasMutations ? undefined : { color:'#bbb' };
+
                 tabs.push(
-                    <MSKTab key={gene} id={gene} linkText={gene}>
+                    <MSKTab key={gene} id={gene} linkText={gene} anchorStyle={anchorStyle}>
                         <ResultsViewMutationMapper
                             store={mutationMapperStore}
                             discreteCNACache={this.props.store.discreteCNACache}
