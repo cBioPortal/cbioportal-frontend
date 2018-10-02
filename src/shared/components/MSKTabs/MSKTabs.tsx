@@ -310,7 +310,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                     ref={this.tabRefHandler.bind(this, tab.props.id)}
                     className={activeClass}
                 >
-                    <a onClick={this.setActiveTab.bind(this,tab.props.id, tab.props.datum)} style={tab.props.anchorStyle}>{tab.props.linkText}</a>
+                    <a className={classnames(`tabAnchor-${tab.props.id}`)} onClick={this.setActiveTab.bind(this,tab.props.id, tab.props.datum)} style={tab.props.anchorStyle}>{tab.props.linkText}</a>
                 </li>
             );
         });
