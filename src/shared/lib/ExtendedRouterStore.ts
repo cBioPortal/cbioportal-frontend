@@ -181,8 +181,14 @@ export default class ExtendedRouterStore extends RouterStore {
                 this.push( URL.format({pathname: path, query: { session_id:'pending'}, hash:this.location.hash}) );
                 this.saveRemoteSession(pendingSession.query).then((sessionResponse)=>{
                     this._session!.id = sessionResponse.id;
-                    // we use replace because we don't want the pending state in the history
-                    this.replace( URL.format({pathname: path, query: {session_id:sessionResponse.id}, hash:this.location.hash}) );
+                    // we use replace because we don't want the pending state ("?session_id=pending") in the history
+                    // we need to use `this.location.pathname` instead of `path` as the "pathname" parameter because
+                    //  in the meantime the user (more likely, the E2E test runner) could have navigated to a different
+                    //  tab and thus changed the path. If we used `path`, we'd be bringing them back to the
+                    //  tab they were at when the session saving was initiated. We don't care about the
+                    //  fact that this overwrites their history of that original tab, because this would likely go
+                    //  so quickly that they wouldn't miss that in their history anyway.
+                    this.replace( URL.format({pathname: this.location.pathname, query: {session_id:sessionResponse.id}, hash:this.location.hash}) );
                 });
             } else { // we already have a session but we only need to update path or hash
                 this.push( URL.format({pathname: path, query: {session_id:this._session.id}, hash:this.location.hash}) );

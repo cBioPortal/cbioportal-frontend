@@ -39,7 +39,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
             this.props.routing.location.query.mutationsGeneTab : this.mutationsGeneTab;
 
         return (
-            <div>
+            <div data-test="mutationsTabDiv">
                 <div className={"tabMessageContainer"}>
                     <OqlStatusBanner
                         className="mutations-oql-status-banner"

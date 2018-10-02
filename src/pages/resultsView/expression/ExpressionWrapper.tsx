@@ -526,7 +526,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     render() {
         return (
-            <div>
+            <div data-test="expressionTabDiv">
                 <div className={"tabMessageContainer"}>
                     <OqlStatusBanner className="expression-oql-status-banner" store={this.props.store} tabReflectsOql={false} style={{marginTop:-1, marginBottom:12}}/>
                 </div>

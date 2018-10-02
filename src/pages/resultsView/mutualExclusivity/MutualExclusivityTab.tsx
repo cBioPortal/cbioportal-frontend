@@ -59,7 +59,7 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
         } else if (this.props.store.isSampleAlteredMap.isComplete) {
             if (_.size(this.props.store.isSampleAlteredMap.result) > 1) {
                 return (
-                    <div>
+                    <div data-test="mutualExclusivityTabDiv">
                         <div className={"tabMessageContainer"}>
                             <OqlStatusBanner className="mutex-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
                         </div>
