@@ -16,6 +16,8 @@ import {genes, parseOQLQuery} from "shared/lib/oql/oqlfilter.js";
 import Network from "./network/Network";
 import ResultsViewOncoprint from "shared/components/oncoprint/ResultsViewOncoprint";
 import QuerySummary from "./querySummary/QuerySummary";
+import {QueryStore} from "../../shared/components/query/QueryStore";
+import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ExpressionWrapper from "./expression/ExpressionWrapper";
 import EnrichmentsTab from 'pages/resultsView/enrichments/EnrichmentsTab';
 import PlotsTab from "./plots/PlotsTab";

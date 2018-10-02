@@ -2552,7 +2552,7 @@ export default class OncoKbAPI {
     };
 
     /**
-     * Get cancer gene list in text file.
+     * Get cancer gene list
      * @method
      * @name OncoKbAPI#utilsCancerGeneListGetUsingGET
      */
@@ -2585,7 +2585,7 @@ export default class OncoKbAPI {
     };
 
     /**
-     * Get cancer gene list in text file.
+     * Get cancer gene list
      * @method
      * @name OncoKbAPI#utilsCancerGeneListGetUsingGET
      */
@@ -2598,6 +2598,68 @@ export default class OncoKbAPI {
                 return response.body;
             });
         };
+    utilsCancerGeneListTxtGetUsingGETURL(parameters: {
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/utils/cancerGeneList.txt';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get cancer gene list in text file.
+     * @method
+     * @name OncoKbAPI#utilsCancerGeneListTxtGetUsingGET
+     */
+    utilsCancerGeneListTxtGetUsingGETWithHttpInfo(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/utils/cancerGeneList.txt';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get cancer gene list in text file.
+     * @method
+     * @name OncoKbAPI#utilsCancerGeneListTxtGetUsingGET
+     */
+    utilsCancerGeneListTxtGetUsingGET(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < string > {
+        return this.utilsCancerGeneListTxtGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     variantsGetUsingGETURL(parameters: {
         'fields' ? : string,
         $queryParameters ? : any
