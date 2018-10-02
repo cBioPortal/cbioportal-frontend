@@ -17,7 +17,7 @@ export default class PortalHeader extends React.Component<{}, {}> {
                 text:"Data Sets",
                 address:"/s/datasets",
                 internal:true,
-                hide:()=>AppConfig.skinShowDataSetsTab === false
+                hide:()=>AppConfig.serverConfig.skin_show_data_tab === false
             },
 
             {
@@ -25,7 +25,7 @@ export default class PortalHeader extends React.Component<{}, {}> {
                 text:"Web API",
                 address:"/s/webAPI",
                 internal:true,
-                hide:()=>AppConfig.skinShowWebAPITab === false
+                hide:()=>AppConfig.serverConfig.skin_show_web_api_tab === false
             },
 
             {
@@ -33,7 +33,7 @@ export default class PortalHeader extends React.Component<{}, {}> {
                 text:"R/MATLAB",
                 address:"/s/rmatlab",
                 internal:true,
-                hide:()=>AppConfig.skinShowRmatLABTab === false
+                hide:()=>AppConfig.serverConfig.skin_show_r_matlab_tab === false
             },
 
             {
@@ -41,7 +41,7 @@ export default class PortalHeader extends React.Component<{}, {}> {
                 text:"Tutorials",
                 address:"/s/tutorials",
                 internal:true,
-                hide:()=>AppConfig.skinShowTutorialsTab === false
+                hide:()=>AppConfig.serverConfig.skin_show_tutorials_tab === false
             },
 
             {
@@ -49,7 +49,7 @@ export default class PortalHeader extends React.Component<{}, {}> {
                 text:"FAQ",
                 address:"/s/faq",
                 internal:true,
-                hide:()=>AppConfig.skinShowFAQSTab === false
+                hide:()=>AppConfig.serverConfig.skin_show_faqs_tab === false
             },
 
             {
@@ -57,7 +57,7 @@ export default class PortalHeader extends React.Component<{}, {}> {
                 text:"News",
                 address:"/s/news",
                 internal:true,
-                hide:()=>AppConfig.skinShowNewsTab === false
+                hide:()=>AppConfig.serverConfig.skin_show_news_tab === false
             },
 
             {
@@ -65,7 +65,7 @@ export default class PortalHeader extends React.Component<{}, {}> {
                 text:"Visualize Your Data",
                 address:"/s/visualize",
                 internal:true,
-                hide:()=>AppConfig.skinShowToolsTab === false
+                hide:()=>AppConfig.serverConfig.skin_show_tools_tab === false
             },
 
             {
@@ -73,7 +73,7 @@ export default class PortalHeader extends React.Component<{}, {}> {
                 text:"About",
                 address:"/s/about",
                 internal:true,
-                hide:()=>AppConfig.skinShowAboutTab === false
+                hide:()=>AppConfig.serverConfig.skin_show_about_tab === false
             },
 
         ];
@@ -131,13 +131,11 @@ export default class PortalHeader extends React.Component<{}, {}> {
                     </Else>
                 </If>
 
-                <If condition={!_.isEmpty(AppConfig.skinRightLogo)}>
-                    <img id="institute-logo" src={AppConfig.skinRightLogo} alt="Institute Logo" />
+                <If condition={!_.isEmpty(AppConfig.serverConfig.skin_right_logo)}>
+                    <img id="institute-logo" src={AppConfig.serverConfig.skin_right_logo!} alt="Institute Logo" />
                 </If>
 
             </div>
         </header>
     }
-
 }
-

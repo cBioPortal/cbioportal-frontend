@@ -40,6 +40,7 @@ import {buildCBioPortalPageUrl, getSampleViewUrl} from "../../shared/api/urls";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 import Helmet from "react-helmet";
+import {ServerConfigHelpers} from "../../config/config";
 import ClinicalInformationMutationalSignatureTable
     from "./clinicalInformation/ClinicalInformationMutationalSignatureTable";
 
@@ -404,12 +405,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
                                         civicGenes={patientViewPageStore.civicGenes}
                                         civicVariants={patientViewPageStore.civicVariants}
-                                        userEmailAddress={AppConfig.userEmailAddress}
-                                        enableOncoKb={AppConfig.showOncoKB}
-                                        enableFunctionalImpact={AppConfig.showGenomeNexus}
-                                        enableHotspot={AppConfig.showHotspot}
-                                        enableMyCancerGenome={AppConfig.showMyCancerGenome}
-                                        enableCivic={AppConfig.showCivic}
+                                        userEmailAddress={ServerConfigHelpers.getUserEmailAddress()}
+                                        enableOncoKb={AppConfig.serverConfig.show_oncokb}
+                                        enableFunctionalImpact={AppConfig.serverConfig.show_genomenexus}
+                                        enableHotspot={AppConfig.serverConfig.show_hotspot}
+                                        enableMyCancerGenome={AppConfig.serverConfig.mycancergenome_show}
+                                        enableCivic={AppConfig.serverConfig.show_civic}
                                         columnVisibility={this.mutationTableColumnVisibility}
                                         columnVisibilityProps={{
                                             onColumnToggled: this.onMutationTableColumnVisibilityToggled
@@ -430,9 +431,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 cnaCivicVariants={patientViewPageStore.cnaCivicVariants}
                                 oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
                                 oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
-                                enableOncoKb={AppConfig.showOncoKB}
-                                enableCivic={AppConfig.showCivic}
-                                userEmailAddress={AppConfig.userEmailAddress}
+                                enableOncoKb={AppConfig.serverConfig.show_oncokb}
+                                enableCivic={AppConfig.serverConfig.show_civic}
+                                userEmailAddress={AppConfig.serverConfig.user_email_address}
                                 pubMedCache={patientViewPageStore.pubMedCache}
                                 data={patientViewPageStore.mergedDiscreteCNAData}
                                 copyNumberCountCache={patientViewPageStore.copyNumberCountCache}

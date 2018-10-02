@@ -314,7 +314,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.heatmapGeneInputValue;
             },
             get customDriverAnnotationBinaryMenuLabel() {
-                const label = AppConfig.oncoprintCustomDriverAnnotationBinaryMenuLabel;
+                const label = AppConfig.serverConfig.binary_custom_driver_annotation_menu_label;
                 const customDriverReport = self.props.store.customDriverAnnotationReport.result;
                 if (label && customDriverReport && customDriverReport.hasBinary) {
                     return label;
@@ -323,7 +323,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 }
             },
             get customDriverAnnotationTiersMenuLabel() {
-                const label = AppConfig.oncoprintCustomDriverAnnotationTiersMenuLabel;
+                const label = AppConfig.serverConfig.oncoprint_custom_driver_annotation_tiers_menu_label;
                 const customDriverReport = self.props.store.customDriverAnnotationReport.result;
                 if (label && customDriverReport && customDriverReport.tiers.length) {
                     return label;
