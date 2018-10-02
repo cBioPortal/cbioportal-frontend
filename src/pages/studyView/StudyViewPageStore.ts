@@ -50,7 +50,6 @@ import {
     isLogScaleByDataBins,
     isPreSelectedClinicalAttr,
     makePatientToClinicalAnalysisGroup,
-    EXPONENTIAL_FRACTION_DIGITS,
     generateScatterPlotDownloadData,
     NA_DATA, ONE_GRID_TABLE_ROWS, PIE_TO_TABLE_LIMIT,
     COLORS, NA_COLOR,
@@ -58,7 +57,8 @@ import {
     getFilteredSampleIdentifiers,
     UNSELECTED_GROUP_COLOR, SELECTED_GROUP_COLOR,
     showOriginStudiesInSummaryDescription,
-    getFilteredStudiesWithSamples
+    getFilteredStudiesWithSamples,
+    submitToPage
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -66,7 +66,6 @@ import {bind} from '../../../node_modules/bind-decorator';
 import {updateGeneQuery} from 'pages/studyView/StudyViewUtils';
 import {stringListToSet} from 'shared/lib/StringUtils';
 import {unparseOQLQueryLine} from 'shared/lib/oql/oqlfilter';
-import formSubmit from 'shared/lib/formSubmit';
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import {VirtualStudy} from 'shared/model/VirtualStudy';
@@ -2033,12 +2032,13 @@ export class StudyViewPageStore {
             }
         }
 
+        let url = '/';
         if (!_.isEmpty(this.geneQueries)) {
             formOps.Action = 'Submit';
             formOps.gene_list = this.geneQueries.map(query => unparseOQLQueryLine(query)).join('\n');
+            url = '/results/legacy_submission';
         }
-
-        formSubmit('index.do', formOps, "_blank", 'post');
+        submitToPage(url, formOps, '_blank');
     }
 
     @action
