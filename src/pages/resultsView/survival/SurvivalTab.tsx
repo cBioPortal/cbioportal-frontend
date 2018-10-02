@@ -127,7 +127,7 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
         }
 
         return (
-            <div>
+            <div data-test="survivalTabDiv">
                 <div className={"tabMessageContainer"}>
                     <OqlStatusBanner className="survival-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
                 </div>

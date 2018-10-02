@@ -52,7 +52,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
     constructor(props:ICoExpressionTabProps) {
         super(props);
 
-        //setWindowVariable("resultsViewCoExpressionTab", this); // for testing
+        (window as any).resultsViewCoExpressionTab = this; // for testing
 
         this.plotHandlers = {
             onClickLogScale: action(()=>{
@@ -187,7 +187,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
             }
 
             return (
-                <div>
+                <div data-test="coExpressionTabDiv">
                     <MSKTabs
                         id="coexpressionTabGeneTabs"
                         activeTabId={this.selectedEntrezGeneId + ""}
