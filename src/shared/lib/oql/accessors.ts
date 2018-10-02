@@ -63,7 +63,6 @@ export function getSimplifiedMutationType(type: string):SimplifiedMutationType {
         case "nonframeshift":
         case "nonframeshift insertion":
         case "nonframeshift_insertion":
-        case "targeted_region":
             ret = "inframe";
             break;
         default:
