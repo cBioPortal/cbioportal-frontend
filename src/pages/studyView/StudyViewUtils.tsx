@@ -6,7 +6,7 @@ import {
 } from "shared/api/generated/CBioPortalAPIInternal";
 import { Sample, Gene, ClinicalAttribute, CancerStudy } from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
-import {getSampleViewUrl, getStudySummaryUrl} from "../../shared/api/urls";
+import {getSampleViewUrl, getStudySummaryUrl, buildCBioPortalPageUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
 import { BarDatum} from "./charts/barChart/BarChart";
 import {
@@ -1123,5 +1123,22 @@ export function clinicalDataCountComparator(a: ClinicalDataCount, b: ClinicalDat
     }
     else {
         return b.count - a.count;
+    }
+}
+
+export function submitToPage(url:string, params: { [id: string]: string }, target?: string) {
+    try {
+        window.localStorage.setItem("legacyStudySubmission", JSON.stringify(params))
+        window.open(buildCBioPortalPageUrl(url), target);
+    } catch (e) {
+        // try clearing localStorage
+        window.localStorage.clear();
+        try {
+            window.localStorage.setItem("legacyStudySubmission", JSON.stringify(params));
+            window.open(buildCBioPortalPageUrl(url), target);
+        } catch (e) {
+            // TODO - currenlty alerting user with message until we have a proper solution
+            alert('Sorry, the query is too large to submit');
+        }
     }
 }
