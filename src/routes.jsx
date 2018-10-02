@@ -81,7 +81,7 @@ export const makeRoutes = (routing) => {
                 <Route path="/newstudy" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(StudyViewPage)} />
                 <Route path="/study" component={getBlankPage()} />
 
-                <Route path="/mutation_mapper" getComponent={lazyLoadComponent(MutationMapperTool)} />
+                <Route path="/s/mutation_mapper" getComponent={lazyLoadComponent(MutationMapperTool)} />
 
                 <Route path="/s/webAPI" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(WebAPIPage)} />
                 <Route path="/s/rmatlab" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(RMATLAB)} />
