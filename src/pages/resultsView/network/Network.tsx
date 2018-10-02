@@ -7,6 +7,7 @@ import {observer } from "mobx-react";
 import {observable, computed} from "mobx";
 import AppConfig from "appConfig";
 import {Gene, MolecularProfile} from "../../../shared/api/generated/CBioPortalAPI";
+import App from "../../../appShell/App/App";
 
 interface NetworkParams {
     genes:Gene
@@ -42,7 +43,7 @@ export default class Network extends React.Component<INetworkTabParams, {}> {
             "case_ids": this.props.sampleIds.join(" ")
 
         };
-        const path = (/\/\/localhost|127\.0\.0\.1/.test(AppConfig.frontendUrl!)) ?
+        let path = (/\/\/localhost|127\.0\.0\.1/.test(AppConfig.frontendUrl!)) ?
             AppConfig.frontendUrl! :
             `//${AppConfig.baseUrl!}`;
 
