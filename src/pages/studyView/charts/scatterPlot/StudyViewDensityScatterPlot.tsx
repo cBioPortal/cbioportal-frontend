@@ -215,20 +215,23 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         });
 
         // use log scale because its usually a very long tail distribution
+        // we dont need to worry about log(0) because areas wont have data points to them if theres 0 data there,
+        //  so these arguments to log will never be 0.
         max = Math.log(max);
         min = Math.log(min);
 
-        let countToT:(count:number)=>number;
+        let countToColorScaleCoord:(count:number)=>number;
         if (min === max) {
-            countToT = ()=>0.2;
+            countToColorScaleCoord = ()=>0.2;
         } else {
-            countToT = count=>((Math.log(count) - min) / (max - min));
+            // scale between 0 and 0.75 to avoid lighter colors on top which are not visible against white bg
+            countToColorScaleCoord = count=>0.75*((Math.log(count) - min) / (max - min));
         }
 
 
         const scatters:JSX.Element[] = [];
         _.forEach(byAreaCount, (data, areaCount)=>{
-            const color = this.binningData ? interpolatePlasma(countToT(parseInt(areaCount, 10))) : "red";
+            const color = this.binningData ? interpolatePlasma(countToColorScaleCoord(parseInt(areaCount, 10))) : "red";
             scatters.push(
                 <VictoryScatter
                     key={`${areaCount}`}
@@ -268,11 +271,6 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
                 >
                     <VictoryChart
                         theme={CBIOPORTAL_VICTORY_THEME}
-                        style={{
-                            parent: {
-                                backgroundColor: "#dddddd"
-                            }
-                        }}
                         containerComponent={
                             <VictorySelectionContainer
                                 activateSelectedData={false}
