@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 import { VictoryPie, VictoryContainer, VictoryLabel, VictoryLegend, Slice } from 'victory';
 import { observable, computed, action, toJS } from "mobx";
 import _ from "lodash";
-import {toSvgDomNodeWithLegend, UNSELECTED_COLOR} from "pages/studyView/StudyViewUtils";
+import {toFixedDigit, toSvgDomNodeWithLegend, UNSELECTED_COLOR} from "pages/studyView/StudyViewUtils";
 import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 import { AbstractChart } from "pages/studyView/charts/ChartContainer";
 import ifndef from "shared/lib/ifndef";
@@ -181,7 +181,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
 
     @computed get victoryLegend() {
         const legendData = this.props.data.map(data =>
-            ({name: `${data.value}: ${data.count} (${(100 * data.count / this.totalCount).toFixed(2)}%)`}));
+            ({name: `${data.value}: ${data.count} (${toFixedDigit(100 * data.count / this.totalCount)}%)`}));
         const colorScale = this.props.data.map(data => data.color);
 
         // override the legend style without mutating the actual theme object
