@@ -1,6 +1,6 @@
 import {observer} from "mobx-react";
 import * as React from "react";
-import {VictoryChart, VictorySelectionContainer, VictoryAxis, VictoryLabel, VictoryScatter} from "victory";
+import {VictoryChart, VictorySelectionContainer, VictoryAxis, VictoryLabel, VictoryScatter, VictoryLegend} from "victory";
 import CBIOPORTAL_VICTORY_THEME from "../../../../shared/theme/cBioPoralTheme";
 import {computed, observable} from "mobx";
 import autobind from "autobind-decorator";
@@ -196,18 +196,13 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         }
     }
 
-    @computed get scatters() {
-        // make different scatter for each color of data aka group size,
-        //  this gives significant speed up over passing in a fill function
-        // use log size to determine range
-        if (this.data.length === 0) {
-            return [];
-        }
-
+    @computed get plotComputations() {
         let max = Number.NEGATIVE_INFINITY;
         let min = Number.POSITIVE_INFINITY;
         // group data, and collect max and min at same time
-        const byAreaCount = _.groupBy(this.data, d=>{
+        // grouping data by count (aka by color) to make different scatter for each color,
+        //  this gives significant speed up over passing in a fill function
+        const dataByAreaCount = _.groupBy(this.data, d=>{
             const areaCount = d.data.length;
             max = Math.max(areaCount, max);
             min = Math.min(areaCount, min);
@@ -217,21 +212,39 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         // use log scale because its usually a very long tail distribution
         // we dont need to worry about log(0) because areas wont have data points to them if theres 0 data there,
         //  so these arguments to log will never be 0.
-        max = Math.log(max);
-        min = Math.log(min);
+        const logMax = Math.log(max);
+        const logMin = Math.log(min);
 
-        let countToColorScaleCoord:(count:number)=>number;
+        let countToColorCoord:(count:number)=>number;
+        let colorCoordToCount:((colorCoord:number)=>number) | null;
+        const colorCoordMax = 0.75;
         if (min === max) {
-            countToColorScaleCoord = ()=>0.2;
+            countToColorCoord = ()=>0.2;
+            colorCoordToCount = null;
         } else {
-            // scale between 0 and 0.75 to avoid lighter colors on top which are not visible against white bg
-            countToColorScaleCoord = count=>0.75*((Math.log(count) - min) / (max - min));
+            // scale between 0 and some limit, to avoid lighter colors on top which are not visible against white bg
+            countToColorCoord = count=>colorCoordMax*((Math.log(count) - logMin) / (logMax - logMin));
+            colorCoordToCount = coord=>Math.exp((coord*(logMax-logMin)/colorCoordMax) + logMin);
         }
 
+        return {
+            dataByAreaCount,
+            colorCoordToCount,
+            colorCoordMax,
+            countToColor:(count:number)=>interpolatePlasma(countToColorCoord(count)),
+            countMax:max,
+            countMin:min
+        };
+    }
+
+    @computed get scatters() {
+        if (this.data.length === 0) {
+            return [];
+        }
 
         const scatters:JSX.Element[] = [];
-        _.forEach(byAreaCount, (data, areaCount)=>{
-            const color = this.binningData ? interpolatePlasma(countToColorScaleCoord(parseInt(areaCount, 10))) : "red";
+        _.forEach(this.plotComputations.dataByAreaCount, (data, areaCount)=>{
+            const color = this.binningData ? this.plotComputations.countToColor(parseInt(areaCount, 10)) : "red";
             scatters.push(
                 <VictoryScatter
                     key={`${areaCount}`}
@@ -258,6 +271,40 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         const baseSize = 3;
         const increment = 0.5;
         return Math.min(MAX_DOT_SIZE, (baseSize - increment) + increment*d.data.length);
+    }
+
+    @computed get legendData() {
+        const colorCoordToCount = this.plotComputations.colorCoordToCount;
+        if (!colorCoordToCount) {
+            return [];
+        } else {
+            // one circle at uniform spaced intervals in color space
+
+            // first generate count values uniformly spaced in color space
+            const NUM_ELTS = 5;// hard coded based on how many will fit
+            const increment = this.plotComputations.colorCoordMax / (NUM_ELTS-1);
+            let countValues = [];
+            for (let i=0; i<NUM_ELTS-1; i++) {
+                countValues.push(Math.round(colorCoordToCount(i*increment)));
+            }
+            countValues.push(this.plotComputations.countMax);
+            // first is set to the countMin (it would be in theory, but this fixes any rounding errors)
+            countValues[0] = this.plotComputations.countMin;
+            // remove duplicates (would happen in case of small range, NUM_ELTS greater than number of area counts)
+            countValues = _.uniq(countValues);
+            // reverse so top value is on top
+            countValues.reverse();
+
+            // generate circles for it
+            return countValues.map(count=>({
+                name: count,
+                symbol: {
+                    fill: this.plotComputations.countToColor(count),
+                    strokeOpacity: 0,
+                    type: "circles"
+                }
+            }));
+        }
     }
 
     render() {
@@ -311,6 +358,19 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
                             label={this.props.axisLabelY}
                         />
                         {this.scatters}
+                        {(this.legendData.length > 0) && (
+                            <VictoryLegend
+                                title="# Samples"
+                                titleComponent={<VictoryLabel style={{fontSize:11}} dx={-4} dy={5}/>}
+                                orientation="vertical"
+                                symbolSpacer={6}
+                                style={{ data: { size:5 }}}
+                                data={this.legendData}
+                                rowGutter={-3}
+                                x={this.props.width - 57}
+                                y={50}
+                            />
+                        )}
                     </VictoryChart>
                     <span
                         style={{
