@@ -1463,27 +1463,4 @@ describe('StudyViewUtils', () => {
             assert.equal(clinicalDataCountComparator({value: "FEMALE", count: 666}, {value: "MALE", count: 666}), 0);
         });
     });
-
-    describe('getHugoSymbolByEntrezGeneId', () => {
-        const braf = {
-            "entrezGeneId": 673,
-            "hugoGeneSymbol": "BRAF",
-            "type": "protein-coding",
-            "cytoband": "7q34",
-            "length": 205602,
-            "chromosome": "7"
-        };
-
-        it('Return undefined for gene not exist', () => {
-            assert.isTrue(getHugoSymbolByEntrezGeneId([], 1) === undefined);
-        });
-
-        it('Return undefined for gene not exist', () => {
-            assert.isTrue(getHugoSymbolByEntrezGeneId([braf], 1) === undefined);
-        });
-
-        it('Return appropriate entrez gene', () => {
-            assert.isTrue(getHugoSymbolByEntrezGeneId([braf], 673) === 'BRAF');
-        });
-    })
 });
