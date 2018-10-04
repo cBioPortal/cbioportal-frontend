@@ -260,15 +260,15 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                             location={GeneBoxType.STUDY_VIEW_PAGE}
                         />
 
+                        <button disabled={this._isQueryButtonDisabled} className={classnames(styles.summaryHeaderBtn, 'btn btn-primary btn-sm', styles.summaryHeaderItem)} onClick={() => this.props.onSubmitQuery()}>
+                            Submit Query
+                        </button>
+
                         <button
                             className={classnames('btn btn-default btn-sm', styles.summaryHeaderBtn, styles.summaryHeaderItem)}
                             onClick={() => this.isCustomCaseBoxOpen = true}
                         >
                             Select cases
-                        </button>
-
-                        <button disabled={this._isQueryButtonDisabled} className={classnames(styles.summaryHeaderBtn, 'btn btn-primary btn-sm', styles.summaryHeaderItem)} onClick={() => this.props.onSubmitQuery()}>
-                            Submit Query
                         </button>
 
 
