@@ -90,10 +90,10 @@ export const FIXED_COLORS: {[clinicalAttribute: string]: string} = {
     FALSE: "#666666",
     YES: "#66aa00",
     NO: "#666666",
-    FEMALE: "#b82e2e",
-    MALE: "#316395",
-    F: "#b82e2e",
-    M: "#316395"
+    FEMALE: SECONDARY_COLOR,
+    MALE: PRIMARY_COLOR,
+    F: SECONDARY_COLOR,
+    M: PRIMARY_COLOR
 };
 
 export const SELECTED_GROUP_COLOR = SECONDARY_COLOR;
