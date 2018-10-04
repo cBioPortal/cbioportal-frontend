@@ -20,6 +20,7 @@ import {ChartDimension, ChartMeta, ChartType, ChartTypeEnum, ClinicalDataType} f
 import {Layout} from 'react-grid-layout';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import { VirtualStudy } from "shared/model/VirtualStudy";
+import defaultClient from "shared/api/cbioportalClientInstance";
 
 
 // Study View Default colors: tetradic color scheme
@@ -1064,9 +1065,11 @@ export function getSamplesByExcludingFiltersOnChart(
     });
 }
 
-export function getHugoSymbolByEntrezGeneId(allGenes:Gene[], entrezGeneId: number) {
-    let result = _.find(allGenes, gene => gene.entrezGeneId === entrezGeneId);
-    return result === undefined ? undefined : result.hugoGeneSymbol;
+export async function getHugoSymbolByEntrezGeneId(entrezGeneId: number): Promise<string> {
+    const gene: Gene = await defaultClient.getGeneUsingGET({
+        geneId: entrezGeneId.toString()
+    });
+    return gene.hugoGeneSymbol;
 }
 
 // returns true when there is only one virtual study and no physical studies
