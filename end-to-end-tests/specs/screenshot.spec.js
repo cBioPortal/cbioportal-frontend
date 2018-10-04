@@ -12,52 +12,53 @@ function runResultsTestSuite(prefix){
 
     it(`${prefix} render the oncoprint`, function(){
         waitForOncoprint(10000);
-        var res = browser.checkElement('#oncoprintDiv', { hide:['.oncoprint__controls']}); // just hide the controls bc for some reason they keep showing up transparent in this test only
+        var res = browser.checkElement('.oncoprintContainer', { hide:['.oncoprint__controls']}); // just hide the controls bc for some reason they keep showing up transparent in this test only
         assertScreenShotMatch(res);
     });
 
     // can't get it to pass reliably
     it.skip(`${prefix} igv_tab tab`, function(){
-        browser.click("a.tabAnchor-copyNumberSegmentsTab");
+        browser.click("a.tabAnchor_copyNumberSegmentsTab");
         browser.waitForExist('#cnSegmentsFrame', 20000);
         var res = browser.checkElement('.cnSegmentsMSKTabs',{hide:['.qtip'] });
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} cancer type summary`, function(){
-        browser.click("a.tabAnchor-cancerTypesSummaryTab");
-        browser.waitForVisible('[data-test="cancerTypesSummaryDiv"]',10000);
-        var res = browser.checkElement('[data-test="cancerTypesSummaryDiv"]', { hide:['.qtip'] });
+        browser.click("a.tabAnchor_cancerTypesSummaryTab");
+        browser.waitForVisible('[data-test="cancerTypeSummaryChart"]',10000);
+        browser.waitForExist('[data-test="cancerTypeSummaryWrapper"]', 5000);
+        var res = browser.checkElement('[data-test="cancerTypeSummaryWrapper"]', { hide:['.qtip'] });
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} mutex tab`, function(){
-        browser.click("a.tabAnchor-mutualExclusivityTab");
+        browser.click("a.tabAnchor_mutualExclusivityTab");
         var res = browser.checkElement('[data-test="mutualExclusivityTabDiv"]',{ hide:['.qtip'] });
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} plots tab`, function(){
-        browser.click("a.tabAnchor-plots");
+        browser.click("a.tabAnchor_plots");
         waitForAndCheckPlotsTab();
     });
 
     it(`${prefix} mutation tab`, function(){
-        browser.click("a.tabAnchor-mutationsTab");
+        browser.click("a.tabAnchor_mutationsTab");
         browser.waitForVisible('.borderedChart svg',20000);
         var res = browser.checkElement('[data-test="mutationsTabDiv"]',{hide:['.qtip', '[data-test=view3DStructure]', '[data-test=GeneSummaryUniProt]'], viewportChangePause:4000}); // hide these things because the timing of data loading makes this test so flaky
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} coexpression tab`, function(){
-        browser.click("a.tabAnchor-coexpression");
+        browser.click("a.tabAnchor_coexpression");
         browser.waitForVisible('div[data-test="CoExpressionPlot"]',10000);
         var res = browser.checkElement('[data-test="coExpressionTabDiv"]', { hide:['.qtip'] } );
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} enrichments tab`, function(){
-        browser.click("a.tabAnchor-enrichment");
+        browser.click("a.tabAnchor_enrichment");
         browser.waitForVisible('div[data-test="MutationEnrichmentsTab"]',10000);
         browser.click('b=CDK14');
         var res = browser.checkElement('[data-test="enrichmentsTabDiv"]', { hide:['.qtip'] } );
@@ -65,7 +66,7 @@ function runResultsTestSuite(prefix){
     });
 
     it(`${prefix} survival tab`, function(){
-        browser.click("a.tabAnchor-survivalTab");
+        browser.click("a.tabAnchor_survivalTab");
         browser.waitForVisible('[data-test=SurvivalChart] svg',10000);
         var res = browser.checkElement('[data-test="survivalTabDiv"]', { hide:['.qtip'] } );
         assertScreenShotMatch(res);
@@ -73,7 +74,7 @@ function runResultsTestSuite(prefix){
 
     it(`${prefix} network tab`, function(){
 
-        browser.click("a.tabAnchor-network");
+        browser.click("a.tabAnchor_network");
 
         browser.waitForExist('iframe#networkFrame', 10000);
 
@@ -91,7 +92,7 @@ function runResultsTestSuite(prefix){
     });
 
     it.skip(`${prefix} data_download tab`, function(){
-        browser.click("a.tabAnchor-download");
+        browser.click("a.tabAnchor_download");
         //  browser.pause(1000);
         browser.waitForExist("#text_area_gene_alteration_freq",20000);
         browser.waitUntil(function(){ return browser.getValue("#text_area_gene_alteration_freq").length > 0 },20000);
@@ -112,7 +113,7 @@ describe('result page screenshot tests', function(){
 
 describe('expression tab', function() {
     it("expression tab with complex oql", ()=>{
-        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/results/expression?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=TP53%253AMUT%253B&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=acc_tcga%2Cchol_tcga%2Cesca_tcga`);
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/results/expression?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=TP53%3AMUT%3B&geneset_list=%20&tab_index=tab_visualize&Action=Submit&cancer_study_list=acc_tcga%2Cchol_tcga%2Cesca_tcga&show_samples=false`);
         browser.waitForExist(".borderedChart svg", 10000);
         var res = browser.checkElement('[data-test="expressionTabDiv"]');
         assertScreenShotMatch(res);
@@ -124,75 +125,75 @@ describe("oncoprint screenshot tests", function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=1&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%20NRAS%20BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=coadread_tcga_pub_rna_seq_mrna_median_Zscores&show_samples=false&clinicallist=0%2C2%2CMETHYLATION_SUBTYPE&heatmap_track_groups=coadread_tcga_pub_rna_seq_mrna_median_Zscores%2CKRAS%2CNRAS%2CBRAF&`;
         goToUrlAndSetLocalStorage(url);
         waitForOncoprint(10000);
-        var res = browser.checkElement('#oncoprintDiv');
+        var res = browser.checkElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
     it("acc_tcga with clinical and heatmap tracks", ()=>{
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=acc_tcga&Z_SCORE_THRESHOLD=1&RPPA_SCORE_THRESHOLD=1&data_priority=0&case_set_id=acc_tcga_all&gene_list=SOX9%20RAN%20TNK2%20EP300%20PXN%20NCOA2%20AR%20NRIP1%20NCOR1%20NCOR2&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=acc_tcga_rna_seq_v2_mrna_median_Zscores&genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION=acc_tcga_rppa_Zscores&show_samples=false&clinicallist=0%2C1%2CMETASTATIC_DX_CONFIRMED_BY&heatmap_track_groups=acc_tcga_rna_seq_v2_mrna_median_Zscores%2CSOX9%2CRAN%2CTNK2%2CEP300%2CPXN%2CNCOA2%2CAR%2CNRIP1%2CNCOR1%2CNCOR2`;
         goToUrlAndSetLocalStorage(url);
         waitForOncoprint(10000);
-        var res = browser.checkElement('#oncoprintDiv');
+        var res = browser.checkElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
     it("blca_tcga with clinical and heatmap tracks", ()=>{
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=blca_tcga_pub&Z_SCORE_THRESHOLD=1&RPPA_SCORE_THRESHOLD=1&data_priority=0&case_set_id=blca_tcga_pub_all&gene_list=SOX9%20RAN%20TNK2%20EP300%20PXN%20NCOA2%20AR%20NRIP1%20NCOR1%20NCOR2&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=blca_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=blca_tcga_pub_gistic&genetic_profile_ids_PROFILE_MRNA_EXPRESSION=blca_tcga_pub_rna_seq_mrna_median_Zscores&genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION=blca_tcga_pub_rppa_Zscores&show_samples=false&heatmap_track_groups=blca_tcga_pub_rna_seq_mrna_median_Zscores%2CSOX9%2CRAN%2CTNK2%2CEP300%2CPXN%2CNCOA2%2CAR%2CNRIP1%2CNCOR1%2CNCOR2&clinicallist=CANCER_TYPE_DETAILED%2CMETASTATIC_SITE_OTHER%2CNEW_TUMOR_EVENT_AFTER_INITIAL_TREATMENT`;
         goToUrlAndSetLocalStorage(url);
         waitForOncoprint(10000);
-        var res = browser.checkElement('#oncoprintDiv');
+        var res = browser.checkElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
     it("msk_impact_2017 query STK11:HOMDEL MUT", ()=>{
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_Non-Small_Cell_Lung_Cancer&gene_list=STK11%253A%2520HOMDEL%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`);
         waitForOncoprint(20000);
-        var res = browser.checkElement('#oncoprintDiv');
+        var res = browser.checkElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
     it("hcc_inserm_fr_2015 with genes including TERT - it should show orange promoter mutations in TERT", function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=hcc_inserm_fr_2015&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=hcc_inserm_fr_2015_sequenced&gene_list=SOX9%2520RAN%2520TNK2%2520EP300%2520PXN%2520NCOA2%2520AR%2520NRIP1%2520NCOR1%2520NCOR2%2520TERT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=hcc_inserm_fr_2015_mutations`);
         waitForOncoprint(20000);
-        var res = browser.checkElement('#oncoprintDiv');
+        var res = browser.checkElement('.oncoprintContainer');
         assertScreenShotMatch(res);
     });
     it("msk_impact_2017 with SOS1 - SOS1 should be not sequenced", function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations`;
         goToUrlAndSetLocalStorage(url);
         waitForOncoprint(20000);
-        var res = browser.checkElement("#oncoprintDiv");
+        var res = browser.checkElement(".oncoprintContainer");
         assertScreenShotMatch(res);
     });
     it("msk_impact_2017 with ALK and SOS1 - SOS1 should be not sequenced", function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=ALK%2520SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations`;
         goToUrlAndSetLocalStorage(url);
         waitForOncoprint(20000);
-        var res = browser.checkElement("#oncoprintDiv");
+        var res = browser.checkElement(".oncoprintContainer");
         assertScreenShotMatch(res);
     });
     it("msk_impact_2017 with SOS1 with CNA profile - SOS1 should not be sequenced", function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
         goToUrlAndSetLocalStorage(url);
         waitForOncoprint(20000);
-        var res = browser.checkElement("#oncoprintDiv");
+        var res = browser.checkElement(".oncoprintContainer");
         assertScreenShotMatch(res);
     });
     it("brca_tcga_pub with KRAS NRAS BRAF and methylation heatmap tracks", function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=brca_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=brca_tcga_pub_cnaseq&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_tcga_pub_gistic&show_samples=false&heatmap_track_groups=brca_tcga_pub_methylation_hm27%2CKRAS%2CNRAS%2CBRAF%2CTP53%2CBRCA1%2CBRCA2`;
         goToUrlAndSetLocalStorage(url);
         waitForOncoprint(10000);
-        var res = browser.checkElement("#oncoprintDiv");
+        var res = browser.checkElement(".oncoprintContainer");
         assertScreenShotMatch(res);
     });
     it("profiled in tracks in msk impact with 3 not profiled genes", function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=msk_impact_2017_cnaseq&gene_list=AKR1C1%2520AKR1C2%2520AKR1C4&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
         goToUrlAndSetLocalStorage(url);
         waitForOncoprint(20000);
-        var res = browser.checkElement("#oncoprintDiv");
+        var res = browser.checkElement(".oncoprintContainer");
         assertScreenShotMatch(res);
     });
     it("profiled in tracks in multiple study with SOS1", function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=SOS1&geneset_list=%20&tab_index=tab_visualize&Action=Submit&cancer_study_list=msk_impact_2017%2Cbrca_bccrc&show_samples=false&clinicallist=CANCER_STUDY%2CPROFILED_IN_MUTATION_EXTENDED%2CPROFILED_IN_msk_impact_2017_cna#summary`;
         goToUrlAndSetLocalStorage(url);
         waitForOncoprint(20000);
-        var res = browser.checkElement("#oncoprintDiv");
+        var res = browser.checkElement(".oncoprintContainer");
         assertScreenShotMatch(res);
     });
 });
@@ -201,8 +202,9 @@ describe("download tab screenshot tests", function() {
     it("download tab - msk_impact_2017 with ALK and SOS1 - SOS1 should be not sequenced", function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=ALK%2520SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
         goToUrlAndSetLocalStorage(url);
-        browser.click("a.tabAnchor-download");
+        browser.click("a.tabAnchor_download");
         browser.waitForExist('[data-test="dataDownloadGeneAlterationTable"] tr > td > svg', 20000);
+        browser.waitForExist('[data-test="downloadTabDiv"]', 5000);
         var res = browser.checkElement('[data-test="downloadTabDiv"]',{hide:['.qtip'] });
         assertScreenShotMatch(res);
     });
@@ -222,6 +224,8 @@ describe('patient view page screenshot test', function(){
         var vafPlot = $('.vafPlot');
         vafPlot.waitForExist(30000);
 
+        // give time for element widths to stabilize
+        browser.pause(3000);
         var res = browser.checkElement('#mainColumn', {hide:['.qtip'] });
         assertScreenShotMatch(res);
     });
@@ -260,16 +264,19 @@ describe("coexpression tab screenshot tests", function() {
     });
     it('coexpression tab coadread_tcga_pub log scale x and y mutations on', function() {
         browser.click('div[data-test="CoExpressionGeneTabContent"] input[data-test="logScale"]');
+        browser.moveToObject("body",0,0);
         var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
         assertScreenShotMatch(res);
     });
     it('coexpression tab coadread_tcga_pub loc scale x and y mutations off', function() {
         browser.click('div[data-test="CoExpressionGeneTabContent"] input[data-test="ShowMutations"]');
+        browser.moveToObject("body",0,0);
         var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
         assertScreenShotMatch(res);
     });
     it('coexpression tab coadread_tcga_pub switch tabs', function() {
         browser.click('#coexpressionTabGeneTabs>ul>li:nth-child(2)>a');// click on NRAS
+        browser.moveToObject("body",0,0);
         browser.pause(100); // give time to start loading
         browser.waitForExist('div[data-test="CoExpressionPlot"]', 20000); // wait for plot to show up
         var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
@@ -292,7 +299,7 @@ describe("coexpression tab screenshot tests", function() {
 
 describe("enrichments tab screenshot tests", function() {
     before(function() {
-        var url = `${CBIOPORTAL_URL}/results/enrichment?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&case_ids=&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit`;
+        var url = `${CBIOPORTAL_URL}/results/enrichments?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&case_ids=&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit`;
         goToUrlAndSetLocalStorage(url);
     });
     it('enrichments tab coadread_tcga_pub mRNA profile', function(){

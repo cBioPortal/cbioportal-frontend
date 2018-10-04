@@ -4,12 +4,17 @@ function waitForOncoprint(timeout) {
 }
 
 function goToUrlAndSetLocalStorage(url) {
-    browser.url(url);
-    browser.localStorage("DELETE");
-    if (useExternalFrontend) {
-        browser.localStorage("POST", {key: "localdev", value: "true"});
+    if (!useExternalFrontend) {
+        browser.url(url);
+    } else {
+        var urlparam = useLocalDist? 'localdist' : 'localdev';
+        var prefix = (url.indexOf("?") > 0)? '&' : '?';
+        browser.url(`${url}${prefix}${urlparam}=true`);
     }
-    browser.refresh();
+    browser.setViewportSize({ height: 1600, width: 1000 });
+
+    // move mouse out of the way
+    browser.moveToObject("body", 0, 0);
 }
 
 function sessionServiceIsEnabled() {
