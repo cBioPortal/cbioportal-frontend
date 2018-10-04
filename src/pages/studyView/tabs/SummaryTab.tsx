@@ -333,7 +333,6 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                             updateSelectedGenes={this.handlers.updateSelectedGenes}
                             studyWithSamples={this.store.studyWithSamples.result}
                             filter={this.store.userSelections}
-                            allGenes={this.store.allGenes.result}
                             attributesMetaSet={this.store.chartMetaSet}
                             user={AppConfig.userEmailAddress}
                             getClinicalData={this.store.getDownloadDataPromise}
