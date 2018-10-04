@@ -5,6 +5,7 @@ import URL, {QueryParams} from 'url';
 import {remoteData} from "../api/remoteData";
 import sessionClient from "../api/sessionServiceInstance";
 import AppConfig from "appConfig";
+import hashString from "./hashString";
 
 export function getSessionKey(hash:string){
     return `session_${hash}`
@@ -44,6 +45,22 @@ function normalizeLegacySession(sessionData:any){
     return sessionData;
 }
 
+export enum QueryParameter {
+    GENE_LIST="gene_list",
+    Z_SCORE_THRESHOLD="Z_SCORE_THRESHOLD",
+    RPPA_SCORE_THRESHOLD="RPPA_SCORE_THRESHOLD",
+    CANCER_STUDY_LIST="cancer_study_list",
+    CASE_IDS="case_ids",
+    CASE_SET_ID="case_set_id",
+    GENE_SET_CHOICE="gene_set_choice",
+    GENETIC_PROFILE_IDS="genetic_profile_ids",
+    CANCER_STUDY_ID="cancer_study_id",
+    DATA_PRIORITY="data_priority",
+    GENESET_LIST="geneset_list",
+    TAB_INDEX="tab_index",
+    TRANSPOSE_MATRIX="transpose_matrix",
+    ACTION="Action"
+}
 
 export default class ExtendedRouterStore extends RouterStore {
 
@@ -175,6 +192,12 @@ export default class ExtendedRouterStore extends RouterStore {
         } else {
             return this.location.query;
         }
+    }
+
+    @computed
+    public get queryHash():string {
+        // hash representation of current query
+        return hashString(JSON.stringify(this.query)).toString();
     }
 
 }
