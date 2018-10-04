@@ -20,7 +20,7 @@ describe('Results Page', function() {
 
         describe('single study query with four genes', ()=>{
             before(()=>{
-                var url = `${CBIOPORTAL_URL}/results/cancerTypesSummaryTab?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&case_ids=&gene_list=BRAF+KRAS+NRAS&gene_set_choice=user-defined-list&Action=Submit`;
+                var url = `${CBIOPORTAL_URL}/results/cancerTypesSummary?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&case_ids=&gene_list=BRAF+KRAS+NRAS&gene_set_choice=user-defined-list&Action=Submit`;
                 goToUrlAndSetLocalStorage(url);
                 browser.waitForVisible('[data-test="cancerTypeSummaryChart"]',10000)
             });
@@ -41,7 +41,7 @@ describe('Results Page', function() {
 
         describe('cross study query', ()=>{
             before(()=>{
-                var url = `${CBIOPORTAL_URL}/results/cancerTypesSummaryTab?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60&show_samples=false&clinicallist=CANCER_STUDY`;
+                var url = `${CBIOPORTAL_URL}/results/cancerTypesSummary?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60&show_samples=false&clinicallist=CANCER_STUDY`;
                 goToUrlAndSetLocalStorage(url);
                 browser.waitForVisible('[data-test=cancerTypeSummaryChart]',10000)
             });
@@ -55,7 +55,7 @@ describe('Results Page', function() {
 
         describe('single study with multiple cancer types', ()=>{
             before(()=>{
-                var url = `${CBIOPORTAL_URL}/results/cancerTypesSummaryTab?cancer_study_id=brca_metabric&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=brca_metabric_cnaseq&gene_list=CDKN2A%2520MDM2%2520MDM4%2520TP53&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_metabric_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_metabric_cna`;
+                var url = `${CBIOPORTAL_URL}/results/cancerTypesSummary?cancer_study_id=brca_metabric&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=brca_metabric_cnaseq&gene_list=CDKN2A%2520MDM2%2520MDM4%2520TP53&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_metabric_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_metabric_cna`;
                 goToUrlAndSetLocalStorage(url);
                 browser.waitForVisible('[data-test=cancerTypeSummaryChart]',10000)
             });
@@ -69,14 +69,14 @@ describe('Results Page', function() {
 
         describe('query with genes that have no alterations', ()=>{
             before(()=>{
-                var url = `${CBIOPORTAL_URL}/results/cancerTypesSummaryTab?cancer_study_id=chol_nccs_2013&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=chol_nccs_2013_sequenced&gene_list=CDKN2A%2520CDKN2B%2520CDKN2C%2520CDK4%2520CDK6%2520CCND2%2520RB1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=chol_nccs_2013_mutations`;
+                var url = `${CBIOPORTAL_URL}/results/cancerTypesSummary?cancer_study_id=chol_nccs_2013&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=chol_nccs_2013_sequenced&gene_list=CDKN2A%2520CDKN2B%2520CDKN2C%2520CDK4%2520CDK6%2520CCND2%2520RB1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=chol_nccs_2013_mutations`;
                 goToUrlAndSetLocalStorage(url);
                 browser.waitForVisible('[data-test=cancerTypeSummaryChart]',10000)
             });
 
             it("shows an alert message on tabs for missing genes",function(){
                 browser.click('=CDKN2A');
-                var res = browser.checkElement('[data-test="cancerTypesSummaryDiv"]', { hide:['.qtip'] });
+                var res = browser.checkElement('[data-test="cancerTypeSummaryWrapper"]', { hide:['.qtip'] });
                 assertScreenShotMatch(res);
             });
         });
@@ -84,7 +84,7 @@ describe('Results Page', function() {
 
         describe('customization functionality', ()=>{
             before(()=>{
-                var url = `${CBIOPORTAL_URL}/results/cancerTypesSummaryTab?cancer_study_id=brca_metabric&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=brca_metabric_cnaseq&gene_list=CDKN2A%2520MDM2%2520MDM4%2520TP53&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_metabric_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_metabric_cna`;
+                var url = `${CBIOPORTAL_URL}/results/cancerTypesSummary?cancer_study_id=brca_metabric&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=brca_metabric_cnaseq&gene_list=CDKN2A%2520MDM2%2520MDM4%2520TP53&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_metabric_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_metabric_cna`;
                 goToUrlAndSetLocalStorage(url);
                 browser.waitForVisible('[data-test=cancerTypeSummaryChart]',10000)
             });
@@ -92,27 +92,27 @@ describe('Results Page', function() {
             it("group by detailed type",function(){
                 var el = browser.element('[data-value="cancerTypeDetailed"]');
                 el.click();
-                var res = browser.checkElement('[data-test="cancerTypesSummaryDiv"]', { hide:['.qtip'] });
+                var res = browser.checkElement('[data-test="cancerTypeSummaryWrapper"]', { hide:['.qtip'] });
                 assertScreenShotMatch(res);
             });
 
             it('handles change to absolute value yaxis',function(){
                 browser.selectByIndex('[data-test="cancerSummaryYAxisSelect"]',1);
-                var res = browser.checkElement('[data-test="cancerTypesSummaryDiv"]', { hide:['.qtip'] });
+                var res = browser.checkElement('[data-test="cancerTypeSummaryWrapper"]', { hide:['.qtip'] });
                 console.log(res);
                 assertScreenShotMatch(res);
             });
 
             it('handles change to sort of xaxis',function(){
                 browser.selectByIndex('[data-test="cancerSummaryXAxisSelect"]',1);
-                var res = browser.checkElement('[data-test="cancerTypesSummaryDiv"]', { hide:['.qtip'] });
+                var res = browser.checkElement('[data-test="cancerTypeSummaryWrapper"]', { hide:['.qtip'] });
                 assertScreenShotMatch(res);
             });
 
             it('handles change to alteration threshold',function(){
                 browser.setValue("[data-test='alterationThresholdInput']",300)
                 browser.keys("Enter");
-                var res = browser.checkElement('[data-test="cancerTypesSummaryDiv"]', { hide:['.qtip'] });
+                var res = browser.checkElement('[data-test="cancerTypeSummaryWrapper"]', { hide:['.qtip'] });
                 // now cleanup
                 browser.setValue("[data-test='alterationThresholdInput']",0)
                 browser.keys("Enter");
@@ -121,7 +121,7 @@ describe('Results Page', function() {
             it('handles change to sample total threshold',function(){
                 browser.setValue("[data-test='sampleTotalThresholdInput']",312)
                 browser.keys("Enter");
-                var res = browser.checkElement('[data-test="cancerTypesSummaryDiv"]', { hide:['.qtip'] });
+                var res = browser.checkElement('[data-test="cancerTypeSummaryWrapper"]', { hide:['.qtip'] });
                 assertScreenShotMatch(res);
             });
 
@@ -134,8 +134,9 @@ describe('Results Page', function() {
 
         describe('3D structure visualizer', () => {
             before(() => {
-                var url = `${CBIOPORTAL_URL}/results/mutationsTab?tab_index=tab_visualize&cancer_study_list=ov_tcga_pub&cancer_study_id=ov_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&Z_SCORE_THRESHOLD=2.0&case_set_id=ov_tcga_pub_3way_complete&case_ids=&gene_list=BRCA1+BRCA2&gene_set_choice=user-defined-list&Action=Submit`;
+                var url = `${CBIOPORTAL_URL}/results/mutations?tab_index=tab_visualize&cancer_study_list=ov_tcga_pub&cancer_study_id=ov_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&Z_SCORE_THRESHOLD=2.0&case_set_id=ov_tcga_pub_3way_complete&case_ids=&gene_list=BRCA1+BRCA2&gene_set_choice=user-defined-list&Action=Submit`;
                 browser.url(url);
+                browser.waitForExist('[data-test=view3DStructure]', 10000);
                 browser.waitForEnabled('[data-test=view3DStructure]', 10000);
             });
 
@@ -160,57 +161,60 @@ describe('Results Page', function() {
         const simpleQueryUrl = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%2520NRAS%2520BRAF&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`;
         const explicitOqlQueryUrl = `${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%2520NRAS%2520%250ABRAF%253AMUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`;
 
-        it("should not be present in oncoprint tab with simple query", function() {
+        before(()=>{
             goToUrlAndSetLocalStorage(simpleQueryUrl);
             waitForOncoprint(10000);
+        });
+
+        it("should not be present in oncoprint tab with simple query", function() {
             assert(!browser.isVisible(`${yesBannerSelector}.oncoprint-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.oncoprint-oql-status-banner`));
         });
         it("should not be present in cancer types summary with simple query", function() {
-            browser.click("a.tabAnchor-cancerTypesSummaryTab");
+            browser.click("a.tabAnchor_cancerTypesSummaryTab");
             browser.pause(500);
             assert(!browser.isVisible(`${yesBannerSelector}.cancer-types-summary-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.cancer-types-summary-oql-status-banner`));
         });
         it("should not be present in mutual exclusivity tab with simple query", function() {
-            browser.click("a.tabAnchor-mutualExclusivityTab");
+            browser.click("a.tabAnchor_mutualExclusivityTab");
             browser.pause(500);
             assert(!browser.isVisible(`${yesBannerSelector}.mutex-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.mutex-oql-status-banner`));
         });
         it("should not be present in plots tab with simple query", function(){
-            browser.click("a.tabAnchor-plots");
+            browser.click("a.tabAnchor_plots");
             browser.pause(500);
             assert(!browser.isVisible(`${yesBannerSelector}.plots-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.plots-oql-status-banner`));
         });
         it("should not be present in mutations tab with simple query", function(){
-            browser.click("a.tabAnchor-mutationsTab");
+            browser.click("a.tabAnchor_mutationsTab");
             browser.pause(500);
             assert(!browser.isVisible(`${yesBannerSelector}.mutations-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.mutations-oql-status-banner`));
             assert(!browser.isVisible(`${unaffectedBannerSelector}.mutations-oql-status-banner`));
         });
         it("should not be present in coexpression tab with simple query", function(){
-            browser.click("a.tabAnchor-coexpression");
+            browser.click("a.tabAnchor_coexpression");
             browser.pause(500);
             assert(!browser.isVisible(`${yesBannerSelector}.coexp-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.coexp-oql-status-banner`));
         });
         it("should not be present in enrichments tab with simple query", function(){
-            browser.click("a.tabAnchor-enrichment");
+            browser.click("a.tabAnchor_enrichment");
             browser.pause(500);
             assert(!browser.isVisible(`${yesBannerSelector}.enrichments-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.enrichments-oql-status-banner`));
         });
         it("should not be present in survival tab with simple query", function(){
-            browser.click("a.tabAnchor-survivalTab");
+            browser.click("a.tabAnchor_survivalTab");
             browser.pause(500);
             assert(!browser.isVisible(`${yesBannerSelector}.survival-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.survival-oql-status-banner`));
         });
         it("should not be present in download tab with simple query", function(){
-            browser.click("a.tabAnchor-download");
+            browser.click("a.tabAnchor_download");
             browser.pause(500);
             assert(!browser.isVisible(`${yesBannerSelector}.download-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.download-oql-status-banner`));
@@ -230,50 +234,50 @@ describe('Results Page', function() {
             assert(!browser.isVisible(`${noBannerSelector}.oncoprint-oql-status-banner`));
         });
         it("should be present in cancer types summary with explicit query", function() {
-            browser.click("a.tabAnchor-cancerTypesSummaryTab");
+            browser.click("a.tabAnchor_cancerTypesSummaryTab");
             browser.waitForVisible(`${yesBannerSelector}.cancer-types-summary-oql-status-banner`, 10000);
             assert(browser.isVisible(`${yesBannerSelector}.cancer-types-summary-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.cancer-types-summary-oql-status-banner`));
         });
         it("should be present in mutual exclusivity tab with explicit query", function() {
-            browser.click("a.tabAnchor-mutualExclusivityTab");
+            browser.click("a.tabAnchor_mutualExclusivityTab");
             browser.waitForVisible(`${yesBannerSelector}.mutex-oql-status-banner`, 10000);
             assert(browser.isVisible(`${yesBannerSelector}.mutex-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.mutex-oql-status-banner`));
         });
         it("should be present in plots tab with explicit query", function(){
-            browser.click("a.tabAnchor-plots");
+            browser.click("a.tabAnchor_plots");
             browser.waitForVisible(`${noBannerSelector}.plots-oql-status-banner`, 10000);
             assert(!browser.isVisible(`${yesBannerSelector}.plots-oql-status-banner`));
             assert(browser.isVisible(`${noBannerSelector}.plots-oql-status-banner`));
         });
         it("should be present in mutations tab with explicit query", function(){
-            browser.click("a.tabAnchor-mutationsTab");
+            browser.click("a.tabAnchor_mutationsTab");
             browser.waitForVisible(`${unaffectedBannerSelector}.mutations-oql-status-banner`, 10000);
             assert(!browser.isVisible(`${yesBannerSelector}.mutations-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.mutations-oql-status-banner`));
             assert(browser.isVisible(`${unaffectedBannerSelector}.mutations-oql-status-banner`));
         });
         it("should be present in coexpression tab with explicit query", function(){
-            browser.click("a.tabAnchor-coexpression");
+            browser.click("a.tabAnchor_coexpression");
             browser.waitForVisible(`${noBannerSelector}.coexp-oql-status-banner`, 10000);
             assert(!browser.isVisible(`${yesBannerSelector}.coexp-oql-status-banner`));
             assert(browser.isVisible(`${noBannerSelector}.coexp-oql-status-banner`));
         });
         it("should be present in enrichments tab with explicit query", function(){
-            browser.click("a.tabAnchor-enrichment");
+            browser.click("a.tabAnchor_enrichment");
             browser.waitForVisible(`${yesBannerSelector}.enrichments-oql-status-banner`, 10000);
             assert(browser.isVisible(`${yesBannerSelector}.enrichments-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.enrichments-oql-status-banner`));
         });
         it("should be present in survival tab with explicit query", function(){
-            browser.click("a.tabAnchor-survivalTab");
+            browser.click("a.tabAnchor_survivalTab");
             browser.waitForVisible(`${yesBannerSelector}.survival-oql-status-banner`, 10000);
             assert(browser.isVisible(`${yesBannerSelector}.survival-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.survival-oql-status-banner`));
         });
         it("should be present in download tab with explicit query", function(){
-            browser.click("a.tabAnchor-download");
+            browser.click("a.tabAnchor_download");
             browser.waitForVisible(`${yesBannerSelector}.download-oql-status-banner`, 10000);
             assert(browser.isVisible(`${yesBannerSelector}.download-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.download-oql-status-banner`));
