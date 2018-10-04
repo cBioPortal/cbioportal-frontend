@@ -7,6 +7,7 @@ import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
 import FixedHeaderTable from "./FixedHeaderTable";
 import styles from "./tables.module.scss";
+import {toFixedDigit} from "../StudyViewUtils";
 
 export interface IClinicalTableProps {
     data: ClinicalDataCountWithColor[];
@@ -67,9 +68,9 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
     }, {
         name: 'Freq',
         render: (data: ClinicalDataCountWithColor) =>
-            <span>{((data.count / this.totalCount) * 100).toFixed(2) + '%'}</span>,
+            <span>{toFixedDigit((data.count / this.totalCount) * 100) + '%'}</span>,
         filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => {
-            let freq = ((d.count / this.totalCount) * 100).toFixed(2) + '%'
+            let freq = toFixedDigit((d.count / this.totalCount) * 100) + '%'
             return (freq.indexOf(filterStringUpper) > -1)
         },
         sortBy: (d: ClinicalDataCountWithColor) => d.count,//sort freq column using count
