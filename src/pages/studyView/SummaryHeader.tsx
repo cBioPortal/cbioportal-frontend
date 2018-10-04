@@ -39,7 +39,6 @@ export interface ISummaryHeaderProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
     attributesMetaSet: {[id:string]:ChartMeta};
     user?: string;
-    allGenes: Gene[];
     getClinicalData: () => Promise<string>;
     onSubmitQuery:() => void
     updateClinicalDataEqualityFilter: (chartMeta: ChartMeta, value: string[]) => void;
@@ -294,7 +293,6 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                 <UserSelections
                     filter={this.props.filter}
                     attributesMetaSet={this.props.attributesMetaSet}
-                    allGenes={this.props.allGenes}
                     updateClinicalDataEqualityFilter={this.props.updateClinicalDataEqualityFilter}
                     updateClinicalDataIntervalFilter={this.props.updateClinicalDataIntervalFilter}
                     removeGeneFilter={this.props.removeGeneFilter}

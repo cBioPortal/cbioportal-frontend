@@ -1581,14 +1581,6 @@ export class StudyViewPageStore {
         default: []
     });
 
-    readonly allGenes = remoteData<Gene[]>({
-        await:()=>[],
-        invoke: async () => {
-            return defaultClient.getAllGenesUsingGET({});
-        },
-        default: []
-    });
-
     @computed private get survivalPlots() {
         let osStatusFlag = false;
         let osMonthsFlag = false;
