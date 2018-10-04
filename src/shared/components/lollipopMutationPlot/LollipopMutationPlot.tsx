@@ -11,13 +11,10 @@ import Response = request.Response;
 import {observer, Observer} from "mobx-react";
 import {computed, observable, action} from "mobx";
 import _ from "lodash";
-import svgToPdfDownload from "shared/lib/svgToPdfDownload";
-import {longestCommonStartingSubstring} from "shared/lib/StringUtils";
+import {lollipopLabelText, lollipopLabelTextAnchor} from "shared/lib/LollipopPlotUtils";
 import {countUniqueMutations, getColorForProteinImpactType, IProteinImpactTypeColors} from "shared/lib/MutationUtils";
 import {generatePfamDomainColorMap} from "shared/lib/PfamUtils";
 import {getMutationAlignerUrl} from "shared/api/urls";
-import ReactDOM from "react-dom";
-import fileDownload from "react-file-download";
 import styles from "./lollipopMutationPlot.module.scss";
 import Collapse from "react-collapse";
 import MutationMapperStore from "shared/components/mutationMapper/MutationMapperStore";
@@ -86,27 +83,11 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         }))
     }, {});
 
-    private lollipopLabel(mutationsAtPosition:Mutation[]):string {
-        let proteinChanges = _.uniq(mutationsAtPosition.map(m=>m.proteinChange));
-        proteinChanges.sort();
-
-        let startStr = "";
-        if (proteinChanges.length > 1) {
-            // only need to compare first and last element of sorted string list to find longest common starting substring of all of them
-            startStr = longestCommonStartingSubstring(
-                proteinChanges[0], proteinChanges[proteinChanges.length - 1]
-            );
-        }
-        proteinChanges = proteinChanges.map((s:string)=>s.substring(startStr.length));
-
-        return startStr + proteinChanges.join("/");
-    }
-
     private lollipopTooltip(mutationsAtPosition:Mutation[], countsByPosition:{[pos: number]: number}):JSX.Element {
         const codon = mutationsAtPosition[0].proteinPosStart;
         const count = countsByPosition[codon];
         const mutationStr = "mutation" + (count > 1 ? "s" : "");
-        const label = this.lollipopLabel(mutationsAtPosition);
+        const label = lollipopLabelText(mutationsAtPosition);
         return (
             <div>
                 <b>{count} {mutationStr}</b><br/>
@@ -201,9 +182,15 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                 // invalid position
                 continue;
             }
-            let label:string|undefined;
+            let label: {text: string, textAnchor?: string, fontSize?: number, fontFamily?: string} | undefined;
             if (i < numLabelsToShow && mutationCount >= minMutationsToShowLabel) {
-                label = this.lollipopLabel(mutations);
+                const fontSize = 10;
+                const fontFamily = "arial";
+                // limit number of protein changes to 3
+                const text = lollipopLabelText(mutations, 3);
+                const textAnchor = lollipopLabelTextAnchor(
+                    text, codon, fontFamily, fontSize, this.props.geneWidth, this.proteinLength);
+                label = {text, textAnchor, fontSize, fontFamily};
             } else {
                 label = undefined;
             }
@@ -278,7 +265,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
             this.props.store.allTranscripts.result &&
             this.props.store.activeTranscript &&
             this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript] &&
-            this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript].pfamDomains && 
+            this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript].pfamDomains &&
             this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript].pfamDomains.length > 0) {
             return generatePfamDomainColorMap(this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript].pfamDomains);
         }
@@ -297,6 +284,14 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
         else {
             return {};
         }
+    }
+
+    private get proteinLength(): number {
+        return (this.props.store.allTranscripts.result &&
+            this.props.store.activeTranscript &&
+            this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript] &&
+            this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript].proteinLength) ||
+            Math.round(this.props.store.gene.length / 3);
     }
 
     private sequenceTooltip(): JSX.Element
@@ -488,13 +483,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
                         vizWidth={this.props.geneWidth}
                         vizHeight={130}
                         hugoGeneSymbol={this.hugoGeneSymbol}
-                        xMax={
-                            (this.props.store.allTranscripts.result &&
-                             this.props.store.activeTranscript &&
-                             this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript] &&
-                             this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript].proteinLength) ||
-                            Math.round(this.props.store.gene.length / 3)
-                        }
+                        xMax={this.proteinLength}
                         yMax={this.yMaxInput}
                         onXAxisOffset={this.props.onXAxisOffset}
                     />

@@ -1,6 +1,6 @@
 import {
     somaticMutationRate, germlineMutationRate, countUniqueMutations, groupMutationsByGeneAndPatientAndProteinChange,
-    countDuplicateMutations, uniqueGenomicLocations, updateMissingGeneInfo
+    countDuplicateMutations, uniqueGenomicLocations, updateMissingGeneInfo, countMutationsByProteinChange
 } from "./MutationUtils";
 import * as _ from 'lodash';
 import { assert, expect } from 'chai';
@@ -152,6 +152,29 @@ describe('MutationUtils', () => {
                 "There should be 1 mutation for TP53_P4_D666C");
             assert.equal(grouped["TP53_P4_D666F"].length, 1,
                 "There should be 1 mutation for TP53_P4_D666F");
+        });
+    });
+
+    describe('countMutationsByProteinChange', () => {
+        it("returns an empty array when there are no mutations", () => {
+            assert.equal(countMutationsByProteinChange([]).length, 0,
+                "no mutation count for an empty input");
+        });
+
+        it("counts and sorts mutations by protein change values", () => {
+            const mutationCountByProteinChange = countMutationsByProteinChange(mutationsToCount);
+
+            assert.equal(mutationCountByProteinChange.length, 3,
+                "there should be 3 unique protein change values");
+
+            assert.deepEqual(mutationCountByProteinChange[0], {proteinChange: "D66B", count: 5},
+                "first protein change should be D66B with 5 count");
+
+            assert.deepEqual(mutationCountByProteinChange[1], {proteinChange: "D666C", count: 1},
+                "second protein change should be D666C with 1 count");
+
+            assert.deepEqual(mutationCountByProteinChange[2], {proteinChange: "D666F", count: 1},
+                "third protein change should be D666F with 1 count");
         });
     });
 
