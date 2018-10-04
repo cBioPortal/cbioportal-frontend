@@ -26,9 +26,10 @@ import {getSessionKey} from "../../shared/lib/ExtendedRouterStore";
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 import AppConfig from "appConfig";
 import Helmet from "react-helmet";
-import {updateConfig} from "../../config/config";
+import {setServerConfig, updateConfig} from "../../config/config";
 import {embedGoogleAnalytics} from "../../shared/lib/tracking";
 import {computed} from "mobx";
+import { If, Else } from 'react-if';
 
 interface IContainerProps {
     location: Location;
@@ -44,22 +45,13 @@ const configPromise = remoteData(async ()=>{
         jsonpCallback: "callback"
     });
 
-    // overwrite properties of frontend config
-    updateConfig({ serverConfig:config });//
+    //setServerConfig(config);
 
-    // we need to set the domain of our api clients
-    (client as any).domain = getCbioPortalApiUrl();
-    (internalClient as any).domain = getCbioPortalApiUrl();
-    (genomeNexusClient as any).domain = getGenomeNexusApiUrl();
-    (internalGenomeNexusClient as any).domain = getGenomeNexusApiUrl();
-    (oncoKBClient as any).domain = getOncoKbApiUrl();
-    (genome2StructureClient as any).domain = getG2SApiUrl();
-
-    if (AppConfig.googleAnalyticsProfile && AppConfig.googleAnalyticsProfile.length > 0) {
+    if (!_.isEmpty(AppConfig.serverConfig.google_analytics_profile_id)) {
         embedGoogleAnalytics();
     }
 
-    return config;//
+    return config;
 
 });
 
@@ -84,40 +76,40 @@ export default class Container extends React.Component<IContainerProps, {}> {
             c => React.cloneElement(c as React.ReactElement<any>, childProps));
     }
 
-    @computed get isConfigComplete(){
+    @computed get isSessionLoaded(){
 
-        if (this.routingStore.needsRemoteSessionLookup) {
-            return configPromise.isComplete && this.routingStore.remoteSessionData.isComplete;
-        } else {
-            return configPromise.isComplete;
-        }
+        return !this.routingStore.needsRemoteSessionLookup || this.routingStore.remoteSessionData.isComplete;
 
     }
 
     render() {
         return (
-            <div>
-                <Helmet>
-                    <meta charSet="utf-8" />
-                    <title>cBioPortal for Cancer Genomics</title>
-                    <meta name="description" content="The cBioPortal for Cancer Genomics provides visualization, analysis and download of large-scale cancer genomics data sets" />
-                </Helmet>
+            <If condition={this.isSessionLoaded}>
+                <div>
+                    <Helmet>
+                        <meta charSet="utf-8" />
+                        <title>cBioPortal for Cancer Genomics</title>
+                        <meta name="description" content="The cBioPortal for Cancer Genomics provides visualization, analysis and download of large-scale cancer genomics data sets" />
+                    </Helmet>
 
-                <div className="pageTopContainer">
-                    <div className="contentWidth">
-                        <PortalHeader/>
+                    <div className="pageTopContainer">
+                        <div className="contentWidth">
+                            <PortalHeader/>
+                        </div>
                     </div>
+
+                    <div className="contentWrapper">
+                        <UnsupportedBrowserModal/>
+                        {(this.isSessionLoaded) && this.props.children}
+                    </div>
+
+                    <PortalFooter/>
                 </div>
-
-                <div className="contentWrapper">
-                    <UnsupportedBrowserModal/>
-                    {(this.isConfigComplete) && this.props.children}
-                    <LoadingIndicator isLoading={!this.isConfigComplete} center={true} size={"big"}/>
-                </div>
-
-                <PortalFooter/>
-
-            </div>
+                <Else>
+                    <LoadingIndicator isLoading={!this.isSessionLoaded} center={true} size={"big"}/>
+                </Else>
+            </If>
         );
     }
 }
+//
