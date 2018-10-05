@@ -2,11 +2,9 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import { Sample } from 'shared/api/generated/CBioPortalAPIInternal';
 import { observer } from "mobx-react";
-import { bind } from 'bind-decorator';
 import Draggable from 'react-draggable';
-import classnames from 'classnames';
 import styles from "./styles.module.scss";
-import { observable, computed, action } from 'mobx';
+import { observable, computed } from 'mobx';
 import { ButtonGroup, Radio } from 'react-bootstrap';
 import { debounceAsync } from 'mobxpromise';
 import { stringListToSet } from 'shared/lib/StringUtils';
@@ -199,15 +197,13 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                 <SectionHeader promises={[this.asyncCustomCaseSet]} />
                 <div style={{ float: "right", height: "40px" }}>
                     <button
-                        disabled={!_.isUndefined(this.asyncCustomCaseSet.error) || this.validCases.length === 0}
-                        className="btn btn-sm"
+                        disabled={this.asyncCustomCaseSet.isPending || !_.isUndefined(this.asyncCustomCaseSet.error) || this.validCases.length === 0}
+                        className="btn btn-default btn-sm"
                         style={{ float: "right" }}
                         onClick={event => this.props.onSubmit(this.validCases)} >
                         Submit
                     </button>
-
                 </div>
-
             </div>
         );
     }

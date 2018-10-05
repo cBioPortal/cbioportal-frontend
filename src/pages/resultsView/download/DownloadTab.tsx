@@ -73,7 +73,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
     }
 
     @computed get caseAlterationData(): ICaseAlteration[] {
-        if (this.props.store.selectedMolecularProfiles.isComplete) {
+        if (this.props.store.selectedMolecularProfiles.isComplete && this.props.store.coverageInformation.isComplete) {
             return generateCaseAlterationData(
                 this.props.store.selectedMolecularProfiles.result,
                 this.caseAggregatedDataByOQLLine,
@@ -217,7 +217,9 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
 
         return (
             <div className="cbioportal-frontend">
-                <OqlStatusBanner className="download-oql-status-banner" store={this.props.store} tabReflectsOql={true} style={{marginBottom:13}}/>
+                <div className={"tabMessageContainer"}>
+                    <OqlStatusBanner className="download-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
+                </div>
                 <div>
                     <FeatureTitle
                         title="Downloadable Data Files"

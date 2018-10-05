@@ -1,7 +1,7 @@
 import * as React from 'react';
 import SurvivalChart from "./SurvivalChart";
 import { ResultsViewPageStore } from "../ResultsViewPageStore";
-import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
+import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import { observer } from "mobx-react";
 import styles from "./styles.module.scss";
 import {remoteData} from "../../../shared/api/remoteData";
@@ -58,7 +58,7 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
 
         if (this.overallPatientSurvivalData.isPending ||
             this.diseaseFreePatientSurvivalData.isPending) {
-            return <Loader isLoading={true} />;
+            return <LoadingIndicator isLoading={true} center={true} />;
         }
 
         let content: any = [];
@@ -98,20 +98,23 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
             content.push(
                 <div>
                     <h4 className='forceHeaderStyle h4'>{ this.diseaseFreeSurvivalTitleText }</h4>
-                    <SurvivalChart
-                    patientSurvivals = {this.diseaseFreePatientSurvivalData.result.patientSurvivals}
-                    analysisGroups={analysisGroups}
-                    patientToAnalysisGroup={this.diseaseFreePatientSurvivalData.result.patientToAnalysisGroup}
-                    title={this.diseaseFreeSurvivalTitleText}
-                    xAxisLabel="Months Disease/Progression-free"
-                    yAxisLabel="Disease/Progression-free Survival"
-                    totalCasesHeader="Number of Cases, Total"
-                    statusCasesHeader="Number of Cases, Relapsed/Progressed"
-                    medianMonthsHeader="Median Months Disease-free"
-                    yLabelTooltip="Disease-free Estimate"
-                    xLabelWithEventTooltip="Time of Relapse"
-                    xLabelWithoutEventTooltip="Time of Last Observation"
-                    fileName="Disease_Free_Survival" />
+                    <div style={{width: '920px'}}>
+                        <SurvivalChart
+                            className='borderedChart'
+                            patientSurvivals = {this.diseaseFreePatientSurvivalData.result.patientSurvivals}
+                            analysisGroups={analysisGroups}
+                            patientToAnalysisGroup={this.diseaseFreePatientSurvivalData.result.patientToAnalysisGroup}
+                            title={this.diseaseFreeSurvivalTitleText}
+                            xAxisLabel="Months Disease/Progression-free"
+                            yAxisLabel="Disease/Progression-free Survival"
+                            totalCasesHeader="Number of Cases, Total"
+                            statusCasesHeader="Number of Cases, Relapsed/Progressed"
+                            medianMonthsHeader="Median Months Disease-free"
+                            yLabelTooltip="Disease-free Estimate"
+                            xLabelWithEventTooltip="Time of Relapse"
+                            xLabelWithoutEventTooltip="Time of Last Observation"
+                            fileName="Disease_Free_Survival" />
+                    </div>
                 </div>
             );
         } else {
@@ -119,13 +122,15 @@ export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> 
         }
 
         if (overallNotAvailable && diseaseFreeNotAvailable) {
-            content.push(<div className={styles.NotAvailable}>{this.overallSurvivalTitleText} not available</div>);
-            content.push(<div className={styles.NotAvailable}>{this.diseaseFreeSurvivalTitleText} not available</div>);
+            content.push(<div className={'alert alert-info'}>{this.overallSurvivalTitleText} not available</div>);
+            content.push(<div className={'alert alert-info'}>{this.diseaseFreeSurvivalTitleText} not available</div>);
         }
 
         return (
             <div>
-                <OqlStatusBanner className="survival-oql-status-banner" store={this.props.store} tabReflectsOql={true} style={{marginBottom:15}}/>
+                <div className={"tabMessageContainer"}>
+                    <OqlStatusBanner className="survival-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
+                </div>
                 {content}
             </div>
         );

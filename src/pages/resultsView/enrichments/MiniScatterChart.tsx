@@ -4,7 +4,7 @@ import { VictoryChart, VictorySelectionContainer, VictoryAxis, VictoryLabel, Vic
 import { observable, action } from 'mobx';
 import { Popover } from 'react-bootstrap';
 import CBIOPORTAL_VICTORY_THEME, {axisLabelStyles} from "../../../shared/theme/cBioPoralTheme";
-import { formatLogOddsRatio } from "./EnrichmentsUtil";
+import { formatLogOddsRatio } from "shared/lib/FormatUtils";
 import { toConditionalPrecision, } from 'shared/lib/NumberUtils';
 import DownloadControls from 'shared/components/downloadControls/DownloadControls';
 import autobind from 'autobind-decorator';
