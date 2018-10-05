@@ -12,6 +12,7 @@ import SampleManager from './sampleManager';
 import SelectCallback = ReactBootstrap.SelectCallback;
 import {ThreeBounce} from 'better-react-spinkit';
 import PatientHeader from './patientHeader/PatientHeader';
+import SignificantMutationalSignatures from './patientHeader/SignificantMutationalSignatures';
 import {PaginationControls} from "../../shared/components/paginationControls/PaginationControls";
 import {IColumnVisibilityDef} from "shared/components/columnVisibilityControls/ColumnVisibilityControls";
 import {toggleColumnVisibility} from "shared/components/lazyMobXTable/ColumnVisibilityResolver";
@@ -39,6 +40,8 @@ import {buildCBioPortalPageUrl, getSampleViewUrl} from "../../shared/api/urls";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 import Helmet from "react-helmet";
+import ClinicalInformationMutationalSignatureTable
+    from "./clinicalInformation/ClinicalInformationMutationalSignatureTable";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -209,6 +212,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     sampleManager.clinicalDataLegacyCleanAndDerived[sample.id] &&
                     sampleManager.clinicalDataLegacyCleanAndDerived[sample.id].DERIVED_NORMALIZED_CASE_TYPE === 'Xenograft'
                 );
+
                 return (
                     <div className="patientSample">
                         <span className='clinical-spans'>
@@ -232,6 +236,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 )
                             }
                         </span>
+                        {patientViewPageStore.hasMutationalSignatureData.isComplete &&
+                        <LoadingIndicator isLoading={patientViewPageStore.mutationalSignatureData.isPending && patientViewPageStore.mutationalSignatureMetaData.isPending}/>}
+
+                        {patientViewPageStore.hasMutationalSignatureData.isComplete &&
+                        patientViewPageStore.clinicalDataGroupedBySample.isComplete && patientViewPageStore.mutationalSignatureData.isComplete &&
+                        patientViewPageStore.mutationalSignatureMetaData.isComplete &&
+                        (<SignificantMutationalSignatures data={patientViewPageStore.mutationalSignatureData.result}
+                        metadata={patientViewPageStore.mutationalSignatureMetaData.result} uniqueSampleKey={sample.id}/>)}
+
                     </div>
                 );
             });
@@ -439,12 +452,11 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                                     <div className="clearfix">
                                         <FeatureTitle title="Patient"
-                                                      isLoading={ patientViewPageStore.clinicalDataPatient.isPending }
+                                                      isLoading={patientViewPageStore.clinicalDataPatient.isPending}
                                                       className="pull-left"/>
-                                        { (patientViewPageStore.clinicalDataPatient.isComplete) && (
+                                        {(patientViewPageStore.clinicalDataPatient.isComplete) && (
                                             <ClinicalInformationPatientTable showTitleBar={true}
                                                                              data={patientViewPageStore.clinicalDataPatient.result}/>
-
                                         )
                                         }
                                     </div>
@@ -486,6 +498,18 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         <div style={{position: "relative"}}>
                             <IFrameLoader height={700} url={  `http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=${patientViewPageStore.patientId}` } />
                         </div>
+                    </MSKTab>
+
+                    <MSKTab key={6} id="mutationalSignatureTab" linkText="Mutational Signature Data" hide={!patientViewPageStore.hasMutationalSignatureData.isComplete}>
+                        <div className="clearfix">
+                            <FeatureTitle title="Mutational Signatures" isLoading={ patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />
+                            <LoadingIndicator isLoading={patientViewPageStore.mutationalSignatureData.isPending}/>
+                            {  (patientViewPageStore.clinicalDataGroupedBySample.isComplete && patientViewPageStore.mutationalSignatureData.isComplete) && (
+                                <ClinicalInformationMutationalSignatureTable data={patientViewPageStore.mutationalSignatureData.result} showTitleBar={true}/>
+                            )
+                            }
+                        </div>
+
                     </MSKTab>
 
                     </MSKTabs>
