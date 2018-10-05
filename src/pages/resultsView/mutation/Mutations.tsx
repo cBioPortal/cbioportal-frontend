@@ -40,15 +40,16 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
 
         return (
             <div>
-                <OqlStatusBanner
-                    className="mutations-oql-status-banner"
-                    store={this.props.store}
-                    tabReflectsOql={this.props.store.mutationsTabShouldUseOql}
-                    isUnaffected={!this.props.store.queryContainsMutationOql}
-                    style={{marginTop:-2}}
-                    onToggle={this.onToggleOql}
-                />
-                <Loader isLoading={this.props.store.mutationMapperStores.isPending} />
+                <div className={"tabMessageContainer"}>
+                    <OqlStatusBanner
+                        className="mutations-oql-status-banner"
+                        store={this.props.store}
+                        tabReflectsOql={this.props.store.mutationsTabShouldUseOql}
+                        isUnaffected={!this.props.store.queryContainsMutationOql}
+                        onToggle={this.onToggleOql}
+                    />
+                </div>
+
                 {(this.props.store.mutationMapperStores.isComplete) && (
                     <MSKTabs
                         id="mutationsPageTabs"
@@ -76,8 +77,12 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
 
             if (mutationMapperStore)
             {
+                const tabHasMutations = mutationMapperStore.mutations.length > 0;
+                // gray out tab if no mutations
+                const anchorStyle = tabHasMutations ? undefined : { color:'#bbb' };
+
                 tabs.push(
-                    <MSKTab key={gene} id={gene} linkText={gene}>
+                    <MSKTab key={gene} id={gene} linkText={gene} anchorStyle={anchorStyle}>
                         <ResultsViewMutationMapper
                             store={mutationMapperStore}
                             discreteCNACache={this.props.store.discreteCNACache}

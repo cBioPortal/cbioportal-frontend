@@ -1,4 +1,7 @@
+import * as React from 'react';
 import * as _ from 'lodash';
+
+import { toConditionalPrecision } from "shared/lib/NumberUtils";
 
 export function toPrecision(value:number, precision:number, threshold:number)
 {
@@ -46,6 +49,35 @@ export function getPercentage(proportion: number, digits: number = 1) {
     return `${toFixedWithThreshold(100 * proportion, digits)}%`;
 }
 
+export function formatSignificanceValueWithStyle(value: number): JSX.Element {
+
+    let formattedValue = <span>{toConditionalPrecision(value, 3, 0.01)}</span>;
+    if (value < 0.05) {
+        formattedValue = <b>{formattedValue}</b>;
+    }
+    return formattedValue;
+}
+
+export function formatLogOddsRatio(logOddsRatio: number): string {
+
+    if (logOddsRatio < -10) {
+        return "<-10";
+    } else if (logOddsRatio > 10) {
+        return ">10";
+    }
+    return logOddsRatio.toFixed(2);
+}
+
+export function roundLogRatio(logRatio: number, threshold: number): number {
+
+    if (logRatio > threshold) {
+        return threshold;
+    } else if (logRatio < -threshold) {
+        return -threshold;
+    } else {
+        return Number(logRatio.toFixed(2));
+    }
+}
 /* difference between this function and the previous one is it will display
 percentages less than 1% as <1%
 */

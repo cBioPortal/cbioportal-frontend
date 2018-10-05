@@ -22,10 +22,6 @@ export type IFixedHeaderTableProps<T> = {
     sortBy?: string;
     width?: number;
     height?: number;
-    // TODO: These properties are just used to force to rerender the table when selectedGenes is modified.
-    // We don't actually use the property anywhere in the table.
-    selectedGenes?: string[];
-    selectedRows?: number[];
     showSelectSamples?: boolean;
     afterSelectingRows?: () => void;
     isSelectedRow?: (data:T) => boolean;
@@ -44,8 +40,6 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
 
     public static defaultProps = {
         showSelectSamples: false,
-        selectedRows: [],
-        selectedGenes: [],
         width : 398,
         height: 350,
         sortBy: ''
@@ -60,14 +54,25 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
         this.initDataStore();
     }
 
-    @action
-    initDataStore() {
-        this._store = new LazyMobXTableStore<T>({
+    componentWillReceiveProps() {
+        this.updateDataStore();
+    }
+
+    get storeProps() {
+        return {
             columns: this.props.columns,
             data: this.props.data,
             initialSortColumn: this._sortBy,
             initialSortDirection: this._sortDirection
-        });
+        };
+    }
+
+    updateDataStore() {
+        this._store.setProps(this.storeProps);
+    }
+
+    initDataStore() {
+        this._store = new LazyMobXTableStore<T>(this.storeProps);
     }
 
     @bind
@@ -154,7 +159,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                     <input placeholder={"Search..."} type="text" onInput={this.onFilterTextChange()}
                            className={classnames('form-control', styles.tableSearchInput)}/>
                     <If condition={this.props.showSelectSamples}>
-                        <button className="btn btn-primary btn-sm" onClick={this.afterSelectingRows}>Select Samples</button>
+                        <button className={classnames("btn btn-primary btn-sm", styles.selectSamplesBtn)} onClick={this.afterSelectingRows}>Select Samples</button>
                     </If>
                 </div>
             </div>
