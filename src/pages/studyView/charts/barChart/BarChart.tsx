@@ -1,7 +1,7 @@
 import * as React from "react";
 import { observer } from "mobx-react";
-import { VictoryChart, VictoryBar, VictoryAxis, VictorySelectionContainer } from 'victory';
-import { computed } from "mobx";
+import { VictoryChart, VictoryBar, VictoryAxis, createContainer } from 'victory';
+import {action, computed, observable} from "mobx";
 import _ from "lodash";
 import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 import {ClinicalDataIntervalFilterValue, DataBin} from "shared/api/generated/CBioPortalAPIInternal";
@@ -42,6 +42,7 @@ const VICTORY_THEME = generateTheme();
 export default class BarChart extends React.Component<IBarChartProps, {}> implements AbstractChart {
 
     private svgContainer: any;
+    @observable private zoomDomain: {y: number[]} | undefined;
 
     constructor(props: IBarChartProps) {
         super(props);
@@ -53,6 +54,17 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
         this.props.onUserSelection(dataBins);
     }
 
+    @bind
+    @action
+    private onZoomDomainChange(domain: {x: number[], y: number[]})
+    {
+        const start = 0; // always zoom to the domain starting with 0
+        const absDiff = Math.abs(domain.y[1] - domain.y[0]);
+        const end = Math.max(absDiff, this.minZoomDomainEnd);
+
+        this.zoomDomain = {y: [start, end]};
+    }
+
     private isDataBinSelected(dataBin: DataBin, filters: ClinicalDataIntervalFilterValue[]) {
         return filters.find(filter =>
             (filter.start === dataBin.start && filter.end === dataBin.end) ||
@@ -62,6 +74,11 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
 
     public toSVGDOMNode(): Element {
         return this.svgContainer.firstChild;
+    }
+
+    @computed get minZoomDomainEnd() {
+        const values: number[] = this.props.data.map(dataBin => dataBin.count);
+        return Math.min(...values);
     }
 
     @computed get numericalBins() {
@@ -119,14 +136,20 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
     }
 
     public render() {
+        const VictoryZoomSelectionContainer = createContainer("zoom", "selection");
 
         return (
             <div>
                 <VictoryChart
                     containerComponent={
-                        <VictorySelectionContainer
+                        <VictoryZoomSelectionContainer
                             containerRef={(ref: any) => this.svgContainer = ref}
                             selectionDimension="x"
+                            zoomDimension="y"
+                            onZoomDomainChange={this.onZoomDomainChange}
+                            allowPan={false}
+                            zoomDomain={this.zoomDomain}
+                            minimumZoom={{y: this.minZoomDomainEnd}}
                             onSelection={this.onSelection}
                         />
                     }
