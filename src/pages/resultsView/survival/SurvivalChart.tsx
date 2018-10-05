@@ -224,7 +224,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     @computed get victoryLegendData() {
         const data:any = [];
         if (this.props.legendLocation === LegendLocation.CHART) {
-            for (const grp of this.props.analysisGroups) {
+            for (const grp of this.analysisGroupsWithData) {
                 data.push({
                     name: !!grp.legendText ? grp.legendText : grp.value,
                     symbol: { fill: grp.color, type: "square" }
