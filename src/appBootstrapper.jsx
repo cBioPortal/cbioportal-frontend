@@ -5,7 +5,7 @@ import { hashHistory, browserHistory, createMemoryHistory, Router, useRouterHist
 import { createHistory } from 'history'
 import { RouterStore, syncHistoryWithStore  } from 'mobx-react-router';
 import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
-import {initializeAPIClients, setServerConfig} from './config/config';
+import {initializeAPIClients, initializeConfiguration, setServerConfig} from './config/config';
 
 import {computed, extendObservable} from 'mobx';
 import makeRoutes from './routes';
@@ -31,8 +31,9 @@ import {getConfigurationServiceApiUrl} from "shared/api/urls";
 
 superagentCache(superagent);
 
-// this is a strange thing that apparently needs to happen for webpack to load bundles
-// from appropriate place
+// YOU MUST RUN THESE initialize and then set the public path after
+initializeConfiguration();
+// THIS TELLS WEBPACK BUNDLE LOADER WHERE TO LOAD SPLIT BUNDLES
 __webpack_public_path__ = AppConfig.frontendUrl;
 
 if (!window.hasOwnProperty("$")) {
