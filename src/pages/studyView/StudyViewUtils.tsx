@@ -4,7 +4,7 @@ import { unparseOQLQueryLine } from "shared/lib/oql/oqlfilter";
 import {
     StudyViewFilter, DataBin, ClinicalDataIntervalFilterValue, ClinicalDataCount, SampleIdentifier
 } from "shared/api/generated/CBioPortalAPIInternal";
-import { Sample, Gene, ClinicalAttribute } from "shared/api/generated/CBioPortalAPI";
+import { Sample, Gene, ClinicalAttribute, CancerStudy } from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
 import {getSampleViewUrl, getStudySummaryUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
@@ -19,10 +19,18 @@ import {
 import {ChartDimension, ChartMeta, ChartType, ChartTypeEnum, ClinicalDataType} from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
+import { VirtualStudy } from "shared/model/VirtualStudy";
+
+
+// Study View Default colors: tetradic color scheme
+export const PRIMARY_COLOR = '#2986E2';
+export const SECONDARY_COLOR = '#dc3912';
+export const TERTIARY_COLOR = '#f88508';
+export const QUATERNARY_COLOR = '#109618';
 
 //TODO:cleanup
 export const COLORS = [
-    '#2986e2', '#dc3912', '#f88508', '#109618',
+    PRIMARY_COLOR, SECONDARY_COLOR, TERTIARY_COLOR, QUATERNARY_COLOR,
     '#990099', '#0099c6', '#dd4477', '#66aa00',
     '#b82e2e', '#316395', '#994499', '#22aa99',
     '#aaaa11', '#6633cc', '#e67300', '#8b0707',
@@ -88,11 +96,20 @@ export const FIXED_COLORS: {[clinicalAttribute: string]: string} = {
     M: "#316395"
 };
 
+export const SELECTED_GROUP_COLOR = SECONDARY_COLOR;
+export const UNSELECTED_GROUP_COLOR = PRIMARY_COLOR;
+
 export const NA_COLOR = '#CCCCCC';
 export const UNSELECTED_COLOR = '#808080';
 export const NA_DATA = "NA";
 export const EXPONENTIAL_FRACTION_DIGITS = 3;
 export const ONE_GRID_TABLE_ROWS = 8;
+export const MUTATED_GENE_COLOR='#008000'; // green
+export const DEL_COLOR = '#0000FF'; // blue
+export const AMP_COLOR = '#FF0000'; // red
+export const FILTER_TITLE_COLOR = '#A9A9A9'; // darkgray
+export const FILTER_CONTENT_COLOR = PRIMARY_COLOR;
+
 
 // ---- These are the settings from configs.json in the previous study view ----
 // TODO: figure out a way to custom the following settings
@@ -266,12 +283,10 @@ export function getCurrentDate() {
 
 export function getVirtualStudyDescription(
                                             studyWithSamples: StudyWithSamples[],
-                                            selectedSamples: Sample[],
-                                            filter: StudyViewFilter,
+                                            filter: StudyViewFilterWithSampleIdentifierFilters,
                                             attributeNamesSet: { [id: string]: string },
                                             genes: Gene[],
                                             user?: string) {
-    let selectedSampleSet = _.groupBy(selectedSamples, (sample: Sample) => sample.studyId);
     let descriptionLines: string[] = [];
 
     let entrezIdSet: { [id: string]: string } = _.reduce(genes, (acc: { [id: string]: string }, next) => {
@@ -279,20 +294,12 @@ export function getVirtualStudyDescription(
         return acc
     }, {})
     //add to samples and studies count
-    descriptionLines.push(
-        selectedSamples.length +
-        " sample" + (selectedSamples.length > 1 ? 's' : '') +
-        " from " +
-        Object.keys(selectedSampleSet).length +
-        " " +
-        (Object.keys(selectedSampleSet).length > 1 ? 'studies:' : 'study:'));
+
+    let uniqueSampleKeys = _.uniq(_.flatMap(studyWithSamples, study => study.uniqueSampleKeys))
+    descriptionLines.push(`${uniqueSampleKeys.length} sample${uniqueSampleKeys.length > 1 ? 's' : ''} from ${studyWithSamples.length} ${studyWithSamples.length > 1 ? 'studies:' : 'study:'}`);
     //add individual studies sample count
     studyWithSamples.forEach(studyObj => {
-        let selectedUniqueSampleKeys = _.map(selectedSampleSet[studyObj.studyId] || [], sample => sample.uniqueSampleKey);
-        let studySelectedSamples = _.intersection(studyObj.uniqueSampleKeys, selectedUniqueSampleKeys);
-        if (studySelectedSamples.length > 0) {
-            descriptionLines.push("- " + studyObj.name + " (" + studySelectedSamples.length + " samples)")
-        }
+        descriptionLines.push(`- ${studyObj.name} (${studyObj.uniqueSampleKeys.length} sample${uniqueSampleKeys.length > 1 ? 's' : ''})`);
     })
     //add filters
     let filterLines: string[] = [];
@@ -300,10 +307,9 @@ export function getVirtualStudyDescription(
         if (filter.cnaGenes && filter.cnaGenes.length > 0) {
             filterLines.push('- CNA Genes:')
             filterLines = filterLines.concat(filter.cnaGenes.map(cnaGene => {
-
                 return cnaGene.alterations.map(alteration => {
                     let geneSymbol = entrezIdSet[alteration.entrezGeneId] || alteration.entrezGeneId
-                    return geneSymbol + "-" + (alteration.alteration === -2 ? 'DEL' : 'AMP')
+                    return geneSymbol + "-" + getCNAByAlteration(alteration.alteration)
                 }).join(', ').trim();
             }).map(line => '  - ' + line));
         }
@@ -315,20 +321,21 @@ export function getVirtualStudyDescription(
                 }).join(', ').trim();
             }).map(line => '  - ' + line));
         }
-        if (filter.clinicalDataEqualityFilters && filter.clinicalDataEqualityFilters.length > 0) {
-            filterLines = filterLines.concat(
-                filter.clinicalDataEqualityFilters.map(clinicalDataEqualityFilter => {
-                    let name = attributeNamesSet[clinicalDataEqualityFilter.clinicalDataType + '_' + clinicalDataEqualityFilter.attributeId] || clinicalDataEqualityFilter.attributeId;
-                    return `  - ${name}: ${clinicalDataEqualityFilter.values.join(', ')}`;
-                }));
-        }
-        /*
-           TODO: currently sampleIdentifiers includes both custom cases and scatter
-           need to update this once the filter handled properly
-        */
-        if (filter.sampleIdentifiers && filter.sampleIdentifiers.length > 0) {
-            filterLines.push('- Select by IDs: ' + filter.sampleIdentifiers.length + ' samples');
-        }
+
+        _.each(filter.clinicalDataEqualityFilters || [], (clinicalDataEqualityFilter) => {
+            let name = attributeNamesSet[clinicalDataEqualityFilter.clinicalDataType + '_' + clinicalDataEqualityFilter.attributeId];
+            filterLines.push(`- ${name}: ${clinicalDataEqualityFilter.values.join(', ')}`);
+        });
+
+        _.each(filter.clinicalDataIntervalFilters || [], (clinicalDataIntervalFilter) => {
+            let name = attributeNamesSet[clinicalDataIntervalFilter.clinicalDataType + '_' + clinicalDataIntervalFilter.attributeId];
+            filterLines.push(`- ${name}: ${intervalFiltersDisplayValue(clinicalDataIntervalFilter.values)}`);
+        });
+
+        _.each(filter.sampleIdentifiersSet || {}, (sampleIdentifiers, id) => {
+            let name = attributeNamesSet[id] || id;
+            filterLines.push(`- ${name}: ${sampleIdentifiers.length} samples`);
+        })
     }
     if (filterLines.length > 0) {
         descriptionLines.push('');
@@ -774,6 +781,12 @@ export function getCNAByAlteration(alteration: number) {
     return '';
 }
 
+export function getCNAColorByAlteration(alteration: number):string|undefined {
+    if ([-2, 2].includes(alteration))
+        return alteration === -2 ? DEL_COLOR : AMP_COLOR;
+    return undefined;
+}
+
 export function getDefaultChartTypeByClinicalAttribute(clinicalAttribute: ClinicalAttribute): ChartType | undefined {
     if (DEFAULT_ATTRS_SHOW_AS_TABLE.includes(getClinicalAttributeUniqueKey(clinicalAttribute))) {
         return ChartTypeEnum.TABLE;
@@ -790,7 +803,6 @@ export function getDefaultChartTypeByClinicalAttribute(clinicalAttribute: Clinic
 
     return undefined;
 }
-
 
 /**
  * Calculate the layout used by react-grid-layout
@@ -1050,4 +1062,63 @@ export function getSamplesByExcludingFiltersOnChart(
     return internalClient.fetchFilteredSamplesUsingPOST({
         studyViewFilter: updatedFilter
     });
+}
+
+export function getHugoSymbolByEntrezGeneId(allGenes:Gene[], entrezGeneId: number) {
+    let result = _.find(allGenes, gene => gene.entrezGeneId === entrezGeneId);
+    return result === undefined ? undefined : result.hugoGeneSymbol;
+}
+
+// returns true when there is only one virtual study and no physical studies
+export function showOriginStudiesInSummaryDescription(physicalStudies: CancerStudy[], virtualStudies: VirtualStudy[]) {
+    return physicalStudies.length === 0 && virtualStudies.length === 1;
+}
+
+export function getFilteredStudiesWithSamples(
+    samples: Sample[],
+    physicalStudies: CancerStudy[],
+    virtualStudies: VirtualStudy[]) {
+        
+    let queriedStudiesWithSamples: StudyWithSamples[] = [];
+    const selectedStudySampleSet = _.groupBy(samples, sample => sample.studyId);
+
+    _.each(physicalStudies, study => {
+        const samples = selectedStudySampleSet[study.studyId];
+        if (samples && samples.length > 0) {
+            queriedStudiesWithSamples.push({ ...study, uniqueSampleKeys: _.map(samples, sample => sample.uniqueSampleKey) });
+        }
+    })
+
+    _.each(virtualStudies, virtualStudy => {
+        let selectedSamples: Sample[] = []
+        virtualStudy.data.studies.forEach(study => {
+            let samples = selectedStudySampleSet[study.id];
+            if (samples && samples.length > 0) {
+                selectedSamples = selectedSamples.concat(samples);
+            }
+        })
+
+        if (selectedSamples.length > 0) {
+            let study = {
+                name: virtualStudy.data.name,
+                description: virtualStudy.data.description,
+                studyId: virtualStudy.id,
+            } as CancerStudy
+            queriedStudiesWithSamples.push({ ...study, uniqueSampleKeys: _.map(selectedSamples, sample => sample.uniqueSampleKey) });
+        }
+    });
+    return queriedStudiesWithSamples;
+}
+
+export function clinicalDataCountComparator(a: ClinicalDataCount, b: ClinicalDataCount): number
+{
+    if (isNAClinicalValue(a.value)) {
+        return isNAClinicalValue(b.value) ? 0 : 1;
+    }
+    else if (isNAClinicalValue(b.value)) {
+        return -1;
+    }
+    else {
+        return b.count - a.count;
+    }
 }
