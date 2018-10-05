@@ -7,6 +7,7 @@ import {observer } from "mobx-react";
 import {observable, computed} from "mobx";
 import AppConfig from "appConfig";
 import {Gene, MolecularProfile} from "../../../shared/api/generated/CBioPortalAPI";
+import App from "../../../appShell/App/App";
 
 interface NetworkParams {
     genes:Gene
@@ -19,6 +20,7 @@ interface INetworkTabParams {
     zScoreThreshold:number;
     caseIdsKey:string;
     caseSetId:string;
+    sampleIds:string[];
 }
 
 @observer
@@ -32,21 +34,21 @@ export default class Network extends React.Component<INetworkTabParams, {}> {
             "gene_list": this.props.genes.map((gene)=>gene.hugoGeneSymbol).join(" "),
             "genetic_profile_ids": this.props.profileIds.join(" "),
             "cancer_study_id": this.props.cancerStudyId,
-            "case_ids_key": this.props.caseIdsKey,
-            "case_set_id": this.props.caseSetId,
             "Z_SCORE_THRESHOLD": this.props.zScoreThreshold,
             "xdebug": "0",
             "netsrc": "cgds",
             "linkers": "50",
             "netsize": "large",
-            "diffusion": "0"
+            "diffusion": "0",
+            "case_ids": this.props.sampleIds.join(" ")
+
         };
-        const path = (/\/\/localhost|127\.0\.0\.1/.test(AppConfig.frontendUrl!)) ?
+        let path = (/\/\/localhost|127\.0\.0\.1/.test(AppConfig.frontendUrl!)) ?
             AppConfig.frontendUrl! :
             `//${AppConfig.baseUrl!}`;
 
-        return path + "/reactapp/network/network.htm?apiHost="+ AppConfig.baseUrl +"&networkParams=" + JSON.stringify(networkParams)
-            + `&${AppConfig.appVersion}`;
+        const strParams = encodeURIComponent(JSON.stringify(networkParams));
+        return `${path}/reactapp/network/network.htm?${AppConfig.appVersion}&apiHost=${AppConfig.baseUrl}#${strParams}`;
     }
 
     render(){

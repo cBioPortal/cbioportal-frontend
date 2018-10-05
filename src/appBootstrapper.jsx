@@ -1,10 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'mobx-react';
-import { hashHistory, browserHistory, createMemoryHistory, Router } from 'react-router';
+import { hashHistory, browserHistory, createMemoryHistory, Router, useRouterHistory } from 'react-router';
+import { createHistory } from 'history'
 import { RouterStore, syncHistoryWithStore  } from 'mobx-react-router';
 import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
-import {QueryStore} from "./shared/components/query/QueryStore";
+//import {QueryStore} from "./shared/components/query/QueryStore";
 import {computed, extendObservable} from 'mobx';
 import makeRoutes from './routes';
 import * as _ from 'lodash';
@@ -15,22 +16,22 @@ import { getHost } from './shared/api/urls';
 import { validateParametersPatientView } from './shared/lib/validateParameters';
 import AppConfig from "appConfig";
 import browser from 'bowser';
-import './shared/lib/tracking';
+
 import 'script-loader!raven-js/dist/raven.js';
 import {correctPatientUrl} from "shared/lib/urlCorrection";
+import {activateAnalytics} from "shared/lib/tracking";
+import {CancerStudyQueryUrlParams} from "shared/components/query/QueryStore";
+import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
+import {molecularProfileParams} from "shared/components/query/QueryStoreUtils";
+import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
+import superagentCache from 'superagent-cache';
+import getBrowserWindow from "shared/lib/getBrowserWindow";
 
+superagentCache(superagent);
 
-if (localStorage.localdev === 'true' || localStorage.localdist === 'true') {
-    __webpack_public_path__ = "//localhost:3000/"
-    localStorage.setItem("e2etest", "true");
-} else if (localStorage.heroku) {
-    __webpack_public_path__ = ['//',localStorage.heroku,'.herokuapp.com','/'].join('');
-    localStorage.setItem("e2etest", "true");
-} else if (AppConfig.frontendUrl) {
-    // use given frontendUrl as base (use when deploying frontend on external
-    // CDN instead of cbioportal backend)
-    __webpack_public_path__ = AppConfig.frontendUrl;
-}
+// this is a strange thing that apparently needs to happen for webpack to load bundles
+// from appropriate place
+__webpack_public_path__ = AppConfig.frontendUrl;
 
 if (!window.hasOwnProperty("$")) {
     window.$ = $;
@@ -81,34 +82,47 @@ _.noConflict();
 const routingStore = new ExtendedRoutingStore();
 
 //determine history type
-let history;
-switch (window.defaultRoute) {
-    case "/patient":
-        // these pages are going to use state of-the-art browser history
-        // when refactoring is done, all pages will use this
-        history = browserHistory;
-        break;
-    case "/study":
-        // these pages are going to use state of-the-art browser history
-        // when refactoring is done, all pages will use this
-        history = browserHistory;
-        break;
-    default:
-        // legacy pages will use memory history so as not to interfere
-        // with old url params
-        history = createMemoryHistory();
-        break;
+// let history;
+// switch (window.defaultRoute) {
+//     case "/patient":
+//     case "/spa":
+//         // these pages are going to use state of-the-art browser history
+//         // when refactoring is done, all pages will use this
+//         history = browserHistory;
+//         break;
+//     case "/study":
+//         // these pages are going to use state of-the-art browser history
+//         // when refactoring is done, all pages will use this
+//         history = browserHistory;
+//         break;
+//     default:
+//         // legacy pages will use memory history so as not to interfere
+//         // with old url params
+//         history = createMemoryHistory();
+//         break;
+// }
+
+if (/index\.do/.test(window.location.pathname)){
+    if (/Action=Submit/i.test(window.location.search)) {
+        window.history.replaceState(null, "", window.location.href.replace(/index.do/i,'results'));
+    } else if (/session_id/i.test(window.location.search)) {
+        window.history.replaceState(null, "", window.location.href.replace(/index.do/i,'results'));
+    } else {
+        window.history.replaceState(null, "", window.location.href.replace(/index.do/i,''));
+    }
 }
 
-const syncedHistory = syncHistoryWithStore(history, routingStore);
 
-// lets make query Store since it's used in a lot of places
-const queryStore = (/\/patient$/.test(window.location.pathname)) ? {} : new QueryStore(window, window.location.href);
+const history = useRouterHistory(createHistory)({
+    basename: AppConfig.basePath || ""
+});
+
+const syncedHistory = syncHistoryWithStore(history, routingStore);
 
 const stores = {
     // Key can be whatever you want
     routing: routingStore,
-    queryStore
+//    queryStore
     // ...other stores
 };
 
@@ -120,28 +134,30 @@ let redirecting = false;
 
 // check if valid hash parameters for patient view, otherwise convert old style
 // querystring for backwards compatibility
-const validationResult = validateParametersPatientView(routingStore.location.query);
-if (!validationResult.isValid) {
-    const newParams = {};
-    const qs = URL.parse(window.location.href, true).query;
+if (/\/patient$/.test(window.location.pathname)) {
+    const validationResult = validateParametersPatientView(routingStore.location.query);
+    if (!validationResult.isValid) {
+        const newParams = {};
+        const qs = URL.parse(window.location.href, true).query;
 
-    if ('cancer_study_id' in qs && _.isUndefined(routingStore.location.query.studyId)) {
-        newParams['studyId'] = qs.cancer_study_id;
-    }
-    if ('case_id' in qs && _.isUndefined(routingStore.location.query.caseId)) {
-        newParams['caseId'] = qs.case_id;
-    }
+        if ('cancer_study_id' in qs && _.isUndefined(routingStore.location.query.studyId)) {
+            newParams['studyId'] = qs.cancer_study_id;
+        }
+        if ('case_id' in qs && _.isUndefined(routingStore.location.query.caseId)) {
+            newParams['caseId'] = qs.case_id;
+        }
 
-    if ('sample_id' in qs && _.isUndefined(routingStore.location.query.sampleId)) {
-        newParams['sampleId'] = qs.sample_id;
-    }
+        if ('sample_id' in qs && _.isUndefined(routingStore.location.query.sampleId)) {
+            newParams['sampleId'] = qs.sample_id;
+        }
 
-    const navCaseIdsMatch = routingStore.location.pathname.match(/(nav_case_ids)=(.*)$/);
-    if (navCaseIdsMatch && navCaseIdsMatch.length > 2) {
-        newParams['navCaseIds'] = navCaseIdsMatch[2];
-    }
+        const navCaseIdsMatch = routingStore.location.pathname.match(/(nav_case_ids)=(.*)$/);
+        if (navCaseIdsMatch && navCaseIdsMatch.length > 2) {
+            newParams['navCaseIds'] = navCaseIdsMatch[2];
+        }
 
-    routingStore.updateRoute(newParams);
+        routingStore.updateRoute(newParams);
+    }
 }
 
 superagent.Request.prototype.end = function (callback) {
@@ -173,6 +189,8 @@ window.routingStore = routingStore;
 
 
 let render = () => {
+
+    activateAnalytics();
 
     const rootNode = document.getElementById("reactRoot");
 

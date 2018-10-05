@@ -224,7 +224,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         this.searchCaseInput = "";
         this.searchMutationInput = "";
 
-        setWindowVariable("resultsViewPlotsTab", this); // for e2e testing
     }
 
     @autobind
@@ -1398,8 +1397,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     public render() {
         return (
             <div data-test="PlotsTabEntireDiv">
-                <OqlStatusBanner className="plots-oql-status-banner" store={this.props.store} tabReflectsOql={false} style={{marginTop:7}}/>
-                <div className={"plotsTab"} style={{display:"flex", flexDirection:"row", maxWidth:"inherit"}}>
+                <div className={'tabMessageContainer'}>
+                    <OqlStatusBanner className="plots-oql-status-banner" store={this.props.store} tabReflectsOql={false} />
+                </div>
+                <div className={"plotsTab"} style={{display:"flex", flexDirection:"row"}}>
                     <div className="leftColumn">
                         { (this.dataTypeOptions.isComplete &&
                         this.dataTypeToDataSourceOptions.isComplete) ? (
@@ -1408,7 +1409,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             </Observer>
                         ) : <LoadingIndicator isLoading={true}/> }
                     </div>
-                    <div style={{overflow:"hidden"}}>
+                    <div className="inlineBlock">
                         {this.plot}
                     </div>
                 </div>

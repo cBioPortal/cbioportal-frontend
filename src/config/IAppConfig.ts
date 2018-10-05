@@ -1,15 +1,26 @@
 export interface IAppConfig {
     apiRoot?: string;
     baseUrl?:string;
+    basePath?:string;
+    disabledTabs?:string[],
     frontendUrl?: string;
     genomespaceEnabled: boolean;
     skinExampleStudyQueries: string[]; // in query the example searches
     priorityStudies: PriorityStudies;
+
+    googleAnalyticsProfile?: string;
+
+    authLogoutUrl?: string;
+    authUserName?: string;
+    authGoogleLogin?: string;
+
+
     maxTreeDepth: number;
     //priorityStudies: {
     //    'Shared institutional Data Sets': ['mskimpact', 'cellline_mskcc'],
     //    'Priority Studies': ['blca_tcga_pub', 'coadread_tcga_pub', 'brca_tcga_pub2015'], // for demo
     //},
+    configurationServiceUrl?: string;
     showCivic?: boolean;
     showHotspot?: boolean;
     showMyCancerGenome?: boolean;
@@ -23,6 +34,7 @@ export interface IAppConfig {
     enableDarwin?: boolean;
     appVersion?: string;
     historyType?: string;
+    customTabs?:any;
     skinBlurb?: string; // text on main page
     skinDatasetHeader?: string; // header on dataset page
     skinDatasetFooter?: string;
@@ -31,6 +43,16 @@ export interface IAppConfig {
     skinRightNavShowTestimonials?: boolean;
     skinRightNavExamplesHTML?: string;
     skinRightNavWhatsNewBlurb?: string;
+    skinRightLogo?: string;
+    skinShowDataSetsTab?: boolean;
+    skinShowWebAPITab?: boolean;
+    skinShowRmatLABTab?: boolean;
+    skinShowTutorialsTab?: boolean;
+    skinShowNewsTab?: boolean;
+    skinShowToolsTab?: boolean;
+    skinShowAboutTab?: boolean;
+    skinShowFAQSTab?: boolean;
+
     userEmailAddress?: string;
     querySetsOfGenes?: {"id": string, "genes":string[]}[];
     // labels to be displayed in oncoprint "Mutation color" menu for custom annotation of driver and passenger mutations in the oncoprint.
@@ -49,6 +71,17 @@ export interface IAppConfig {
     // Select hide VUS by default
     oncoprintHideVUSDefault?:boolean;
     sessionServiceIsEnabled?:boolean;
+    sessionServiceUrl?:string;
+
+    skinIsMarkdownDocumentation?:boolean;
+    skinDocumentationBaseUrl?: string;
+    skinFaqSourceURL?: string;
+    skinAboutSourceURL?: string;
+    skinNewsSourceURL?: string;
+    skinOQLSourceURL?: string;
+
+    urlLengthThresholdForSession?:number;
+
 }
 
 export type PriorityStudies = {
