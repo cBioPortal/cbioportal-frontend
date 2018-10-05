@@ -1,6 +1,6 @@
 import {observer} from "mobx-react";
 import * as React from "react";
-import {VictoryChart, VictorySelectionContainer, VictoryAxis, VictoryLabel, VictoryScatter, VictoryLegend} from "victory";
+import {VictoryChart, VictorySelectionContainer, VictoryAxis, VictoryLabel, VictoryScatter, VictoryLegend, Rect} from "victory";
 import CBIOPORTAL_VICTORY_THEME from "../../../../shared/theme/cBioPoralTheme";
 import {computed, observable} from "mobx";
 import autobind from "autobind-decorator";
@@ -43,6 +43,27 @@ export interface IStudyViewDensityScatterPlotProps {
 const NUM_AXIS_TICKS = 8;
 const DOMAIN_PADDING = 15;
 const BIN_THRESHOLD = 0; // set to 0 means always bin
+
+class _VictorySelectionContainerWithLegend extends VictorySelectionContainer {
+    // we have to do this because otherwise adding the legend element messes up the
+    //  VictoryChart layout system
+
+    render() {
+        const {activateSelectedData, onSelection, containerRef, legend, children, ...rest} = this.props as any;
+        return (
+            <VictorySelectionContainer
+                activateSelectedData={false}
+                onSelection={onSelection}
+                containerRef={containerRef}
+                children={children.concat(legend)}
+                {...rest}
+            />
+        )
+    }
+}
+
+// need to do this for typescript reasons, because Victory isn't well typed
+const VictorySelectionContainerWithLegend = _VictorySelectionContainerWithLegend as any;
 
 @observer
 export default class StudyViewDensityScatterPlot extends React.Component<IStudyViewDensityScatterPlotProps, {}> implements AbstractChart {
@@ -212,26 +233,36 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         // use log scale because its usually a very long tail distribution
         // we dont need to worry about log(0) because areas wont have data points to them if theres 0 data there,
         //  so these arguments to log will never be 0.
+
+        // if min == max, then set min = 1
+        if (min === max) {
+            min = 1;
+        }
         const logMax = Math.log(max);
         const logMin = Math.log(min);
 
         let countToColorCoord:(count:number)=>number;
         let colorCoordToCount:((colorCoord:number)=>number) | null;
+        let colorCoordToColor:((colorCoord:number)=>string);
         const colorCoordMax = 0.75;
         if (min === max) {
-            countToColorCoord = ()=>0.2;
+            // this means min = max = 1;
+            countToColorCoord = ()=>0;
+            colorCoordToColor = ()=>interpolatePlasma(0);
             colorCoordToCount = null;
         } else {
             // scale between 0 and some limit, to avoid lighter colors on top which are not visible against white bg
-            countToColorCoord = count=>colorCoordMax*((Math.log(count) - logMin) / (logMax - logMin));
+            countToColorCoord = count=>((Math.log(count) - logMin) / (logMax - logMin));
             colorCoordToCount = coord=>Math.exp((coord*(logMax-logMin)/colorCoordMax) + logMin);
+            colorCoordToColor = coord=>interpolatePlasma(colorCoordMax*coord);
         }
 
         return {
             dataByAreaCount,
             colorCoordToCount,
             colorCoordMax,
-            countToColor:(count:number)=>interpolatePlasma(countToColorCoord(count)),
+            countToColor:(count:number)=>colorCoordToColor(countToColorCoord(count)),
+            colorCoordToColor,
             countMax:max,
             countMin:min
         };
@@ -273,37 +304,57 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         return Math.min(MAX_DOT_SIZE, (baseSize - increment) + increment*d.data.length);
     }
 
-    @computed get legendData() {
+    @computed get legend() {
         const colorCoordToCount = this.plotComputations.colorCoordToCount;
         if (!colorCoordToCount) {
-            return [];
+            return null;
         } else {
-            // one circle at uniform spaced intervals in color space
-
-            // first generate count values uniformly spaced in color space
-            const NUM_ELTS = 5;// hard coded based on how many will fit
-            const increment = this.plotComputations.colorCoordMax / (NUM_ELTS-1);
-            let countValues = [];
-            for (let i=0; i<NUM_ELTS-1; i++) {
-                countValues.push(Math.round(colorCoordToCount(i*increment)));
+            const gradientId = "legendGradient";
+            const GRADIENTMESH = 30;
+            const gradientStopPoints = [];
+            for (let i=0; i<GRADIENTMESH; i++) {
+                gradientStopPoints.push(
+                    <stop
+                        offset={`${((i/GRADIENTMESH)*100).toFixed(0)}%`}
+                        style={{stopColor:this.plotComputations.colorCoordToColor(i/GRADIENTMESH)}}
+                    />
+                );
             }
-            countValues.push(this.plotComputations.countMax);
-            // first is set to the countMin (it would be in theory, but this fixes any rounding errors)
-            countValues[0] = this.plotComputations.countMin;
-            // remove duplicates (would happen in case of small range, NUM_ELTS greater than number of area counts)
-            countValues = _.uniq(countValues);
-            // reverse so top value is on top
-            countValues.reverse();
+            const gradientElt = (
+                <linearGradient id={gradientId} x1="0%" y1="100%" x2="0%" y2="0%">
+                    {gradientStopPoints}
+                </linearGradient>
+            );
 
-            // generate circles for it
-            return countValues.map(count=>({
-                name: count,
-                symbol: {
-                    fill: this.plotComputations.countToColor(count),
-                    strokeOpacity: 0,
-                    type: "circles"
-                }
-            }));
+            const rectX = this.props.width - 45;
+            const rectY = 70;
+            const rectWidth = 10;
+            const largeRange = (this.plotComputations.countMax - this.plotComputations.countMin) >= 2;
+            const rectHeight = largeRange ? 68 : 38;
+
+            const rect = (
+                <rect fill={`url(#${gradientId})`} x={rectX} y={rectY} width={rectWidth} height={rectHeight}/>
+            );
+
+            const labels = [
+                <text fontSize={11} x={rectX+rectWidth+4} y={rectY} dy="1em">{this.plotComputations.countMax}</text>,
+                <text fontSize={11} x={rectX+rectWidth+4} y={rectY+rectHeight} dy="-0.3em">{this.plotComputations.countMin}</text>
+            ];
+            if (largeRange) {
+                // only add a middle label if theres room for another whole number in between
+                labels.push(<text fontSize={11} x={rectX+rectWidth+4} y={rectY+(rectHeight/2)} dy="0.3em">{Math.round(colorCoordToCount(0.5))}</text>);
+            }
+
+            const title = <text fontSize={11} x={rectX} y={rectY} dy="-0.5em" dx="-12px"># samples</text>;
+
+            return (
+                <g>
+                    {title}
+                    {gradientElt}
+                    {rect}
+                    {labels}
+                </g>
+            );
         }
     }
 
@@ -319,14 +370,14 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
                     <VictoryChart
                         theme={CBIOPORTAL_VICTORY_THEME}
                         containerComponent={
-                            <VictorySelectionContainer
-                                activateSelectedData={false}
+                            <VictorySelectionContainerWithLegend
                                 onSelection={this.onSelection}
                                 containerRef={(ref: any) => {
                                     if (ref) {
                                         this.svgRef(ref.firstChild);
                                     }
                                 }}
+                                legend={this.legend}
                             />
                         }
                         width={this.props.width}
@@ -354,23 +405,10 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
                             tickCount={NUM_AXIS_TICKS}
                             tickFormat={this.tickFormat}
                             dependentAxis={true}
-                            axisLabelComponent={<VictoryLabel dy={-30}/>}
+                            axisLabelComponent={<VictoryLabel dy={-27}/>}
                             label={this.props.axisLabelY}
                         />
                         {this.scatters}
-                        {(this.legendData.length > 0) && (
-                            <VictoryLegend
-                                title="# Samples"
-                                titleComponent={<VictoryLabel style={{fontSize:11}} dx={-4} dy={5}/>}
-                                orientation="vertical"
-                                symbolSpacer={6}
-                                style={{ data: { size:5 }}}
-                                data={this.legendData}
-                                rowGutter={-3}
-                                x={this.props.width - 57}
-                                y={50}
-                            />
-                        )}
                     </VictoryChart>
                     <span
                         style={{
