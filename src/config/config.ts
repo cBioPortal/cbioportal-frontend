@@ -8,7 +8,7 @@ import {
     getCbioPortalApiUrl,
     getConfigurationServiceApiUrl, getG2SApiUrl,
     getGenomeNexusApiUrl,
-    getOncoKbApiUrl
+    getOncoKbApiUrl, trimTrailingSlash
 } from "../shared/api/urls";
 
 import civicClient from "../shared/api/civicClientInstance";
@@ -22,11 +22,19 @@ import internalClient from "../shared/api/cbioportalInternalClientInstance";
 
 const config:any = (window as any).frontendConfig || { serverConfig:{} };
 
+const win = (window as any);
+
 export default config;
 
 export function updateConfig(obj:Partial<IAppConfig>){
 
-    // app config wins
+    // handle serverConfig
+    if (obj.serverConfig) {
+        setServerConfig(obj.serverConfig);
+        delete obj.serverConfig;
+    }
+
+    // first construct the new object, but DEFERRING TO THE OLD PROPERTIES
     const nextConfig = Object.assign({}, obj, config);
 
     // now we have to overwrite AppConfig props
@@ -34,6 +42,7 @@ export function updateConfig(obj:Partial<IAppConfig>){
     // assignment proceeds left to right and the original AppConfig that's the last param will be overwritten
     // so we have to copy
 
+    // WE CANNOT REPLACE REFERENCE
     // we have to use assign here (as opposed to replacing the reference because importers
     // already have reference and those will become detached from this
     Object.assign(config, nextConfig);
@@ -135,4 +144,44 @@ export function initializeAPIClients(){
 
 }
 
+export function initializeConfiguration(){
+    // @ts-ignore: ENV_* are defined in webpack.config.js
 
+    // handle localStorage
+    // LOCAL STORAGE TRUMPS EVERYTHING EXCEPT WHAT'S ORIGINALLY SET IN JSP
+    if (localStorage.frontendConfig) {
+        try {
+            updateConfig(JSON.parse(localStorage.frontendConfig));
+            console.log("Using localStorage.frontendConfig (overriding window.frontendConfig): " + localStorage.frontendConfig);
+        } catch (err) {
+            // ignore
+            console.log("Error parsing localStorage.frontendConfig")
+        }
+    }
+
+    // @ts-ignore: ENV_* are defined in webpack.config.js
+    const APIROOT = `//${trimTrailingSlash(ENV_CBIOPORTAL_URL)}/`;
+
+    // we want to respect frontUrl if it is already set (case where localdist is true)
+    // @ts-ignore: ENV_* are defined in webpack.config.js
+    const frontendUrl = config.frontendUrl || (/\/\/localhost:3000/.test(win.location.href)) ? "//localhost:3000/" : `//${ENV_CBIOPORTAL_URL}/`;
+
+    const configServiceUrl = config.configurationServiceUrl || APIROOT;
+
+    const envConfig: Partial<IAppConfig> = {
+        apiRoot:APIROOT,
+        frontendUrl:frontendUrl,
+        configurationServiceUrl:configServiceUrl,
+    };
+
+    updateConfig(envConfig);
+
+    // @ts-ignore: ENV_* are defined in webpack.config.js
+    if (ENV_GENOME_NEXUS_URL) {
+        setServerConfig({
+            // @ts-ignore: ENV_* are defined in webpack.config.js
+            genomenexus_url: `//${trimTrailingSlash(ENV_GENOME_NEXUS_URL)}/`
+        });
+    }
+
+}
