@@ -196,8 +196,10 @@ if (__DEBUG__ && module.hot) {
 
 $(document).ready(async () => {
 
+    // we use rawServerConfig (written by JSP) if it is present
+    // or fetch from config service if not
     // need to use jsonp, so use jquery
-    let config = await $.ajax({
+    let config = window.rawServerConfig || await $.ajax({
         url: window.frontendConfig.configurationServiceUrl,
         dataType: "jsonp",
         jsonpCallback: "callback"
