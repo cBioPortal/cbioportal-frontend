@@ -36,26 +36,6 @@ interface IContainerProps {
     children: React.ReactNode;
 }
 
-const configPromise = remoteData(async ()=>{
-
-    // need to use jsonp, so use jquery
-    let config = await $.ajax({
-        url: getConfigurationServiceApiUrl(),
-        dataType: "jsonp",
-        jsonpCallback: "callback"
-    });
-
-    //setServerConfig(config);
-
-    if (!_.isEmpty(AppConfig.serverConfig.google_analytics_profile_id)) {
-        embedGoogleAnalytics();
-    }
-
-    return config;
-
-});
-
-
 @observer
 export default class Container extends React.Component<IContainerProps, {}> {
 
