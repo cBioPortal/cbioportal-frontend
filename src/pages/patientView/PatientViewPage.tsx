@@ -40,7 +40,6 @@ import {buildCBioPortalPageUrl, getSampleViewUrl} from "../../shared/api/urls";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 import Helmet from "react-helmet";
-import {getSampleViewUrl} from "../../shared/api/urls";
 import ClinicalInformationMutationalSignatureTable
     from "./clinicalInformation/ClinicalInformationMutationalSignatureTable";
 
