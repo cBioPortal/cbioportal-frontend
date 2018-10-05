@@ -34,6 +34,27 @@ describe("ResultsViewOncoprintUtils",()=>{
                 "multiple study"
             );
         });
+        it("does not create any if all samples profiled in every selected alteration type, special case sample is not profiled for one gene but profiled for another", ()=>{
+            const coverageInformation = {
+                "sample1":{
+                    byGene:{"BRCA1":[{ molecularProfileId: "mutations" } as GenePanelData]},
+                    allGenes: [],
+                    notProfiledByGene: {"KRAS":[{ molecularProfileId: "mutations" } as GenePanelData]},
+                    notProfiledAllGenes:[]
+                }
+            };
+            const selectedMolecularProfiles = [molecularProfileIdToMolecularProfile.mutations];
+            assert.deepEqual(
+                makeProfiledInClinicalAttributes(coverageInformation, molecularProfileIdToMolecularProfile, selectedMolecularProfiles, 1, true),
+                [],
+                "single study"
+            );
+            assert.deepEqual(
+                makeProfiledInClinicalAttributes(coverageInformation, molecularProfileIdToMolecularProfile, selectedMolecularProfiles, 1, false),
+                [],
+                "multiple study"
+            );
+        });
         it("creates an attribute for one selected alteration type in which not all samples profiled", ()=>{
             const coverageInformation = {
                 "sample1":{

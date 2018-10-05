@@ -1,138 +1,172 @@
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
 import $ from 'jquery';
 import {observer, inject, Observer} from "mobx-react";
-import {reaction, computed, observable} from "mobx";
-import validateParameters from 'shared/lib/validateParameters';
-import ValidationAlert from "shared/components/ValidationAlert";
-import AjaxErrorModal from "shared/components/AjaxErrorModal";
-import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
+import {reaction, computed, observable, runInAction} from "mobx";
 import {ResultsViewPageStore, SamplesSpecificationElement} from "./ResultsViewPageStore";
 import CancerSummaryContainer from "pages/resultsView/cancerSummary/CancerSummaryContainer";
 import Mutations from "./mutation/Mutations";
-import {stringListToSet} from "../../shared/lib/StringUtils";
 import MutualExclusivityTab from "./mutualExclusivity/MutualExclusivityTab";
 import SurvivalTab from "./survival/SurvivalTab";
 import DownloadTab from "./download/DownloadTab";
-import Chart from 'chart.js';
-import {CancerStudy, Gene, MolecularProfile, Sample} from "../../shared/api/generated/CBioPortalAPI";
 import AppConfig from 'appConfig';
-import getOverlappingStudies from "../../shared/lib/getOverlappingStudies";
-import OverlappingStudiesWarning from "../../shared/components/overlappingStudiesWarning/OverlappingStudiesWarning";
 import CNSegments from "./cnSegments/CNSegments";
 import './styles.scss';
 import {genes, parseOQLQuery} from "shared/lib/oql/oqlfilter.js";
 import Network from "./network/Network";
-
-(Chart as any).plugins.register({
-    beforeDraw: function(chartInstance:any) {
-        const ctx = chartInstance.chart.ctx;
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, chartInstance.chart.width, chartInstance.chart.height);
-    }
-});
-import Oncoprint from "shared/components/oncoprint/Oncoprint";
-import {QuerySession} from "../../shared/lib/QuerySession";
 import ResultsViewOncoprint from "shared/components/oncoprint/ResultsViewOncoprint";
 import QuerySummary from "./querySummary/QuerySummary";
 import {QueryStore} from "../../shared/components/query/QueryStore";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
-import {getGAInstance} from "../../shared/lib/tracking";
 import ExpressionWrapper from "./expression/ExpressionWrapper";
-import CoExpressionTabContainer from "./coExpression/CoExpressionTabContainer";
 import EnrichmentsTab from 'pages/resultsView/enrichments/EnrichmentsTab';
-import {Bookmark} from "./bookmark/Bookmark";
 import PlotsTab from "./plots/PlotsTab";
+import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
+import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
+import autobind from "autobind-decorator";
+import {ITabConfiguration} from "../../shared/model/ITabConfiguration";
+import getBrowserWindow from "../../shared/lib/getBrowserWindow";
+import CoExpressionTab from "./coExpression/CoExpressionTab";
+import Helmet from "react-helmet";
+import {createQueryStore} from "../home/HomePage";
 
 
-const win = (window as any);
-
-function initStore(queryStore: QueryStore) {
-
-    const serverVars: any = (window as any).serverVars;
-
-    const oqlQuery = serverVars.theQuery;
-
-    const parsedOQL = parseOQLQuery(oqlQuery);
-
-    const genesetIds = (serverVars.genesetIds.length
-        ? serverVars.genesetIds.split(/\s+/)
-        : []
-    );
+function initStore() {
 
     const resultsViewPageStore = new ResultsViewPageStore();
 
-    // following is a bunch of dirty stuff necessary to read state from jsp page
-    // ultimate we will phase this out and this information will be stored in router etc.
-    //const qSession:any = (window as any).QuerySession;
-    var samplesSpecification:any = [];
-    if(_.includes(['all', 'w_mut_cna', 'w_mut', 'w_cna'],serverVars.caseSetProperties.case_set_id)){
-        var studyToSampleMap = serverVars.studySampleObj;
-        var studies = Object.keys(studyToSampleMap);
-        for (var i=0; i<studies.length; i++) {
-            var study = studies[i];
-            samplesSpecification = samplesSpecification.concat(studyToSampleMap[study].map(function(sampleId:string) {
-                return {
-                    sampleId: sampleId,
-                    studyId: study
-                };
-            }));
-        }
-    } else if (serverVars.caseIds) {
-        // populated if custom case list
-        samplesSpecification = samplesSpecification.concat(serverVars.caseIds.trim().split(/\+/).map((c:string)=>{
-            const elts = c.split(":");
-            return {
-                studyId: elts[0],
-                sampleId: elts[1]
-            };
-        }));
-    } else {
-        // case set
-        var studies = Object.keys(serverVars.studySampleListMap);
-        for (var i=0; i<studies.length; i++) {
-            samplesSpecification.push({
-                sampleListId: serverVars.studySampleListMap[studies[i]],
-                studyId: studies[i]
-            });
-        }
+    if (!getBrowserWindow().currentQueryStore) {
+        getBrowserWindow().currentQueryStore = createQueryStore();
     }
 
-    resultsViewPageStore.samplesSpecification = samplesSpecification;
-    resultsViewPageStore.hugoGeneSymbols = _.map(parsedOQL, (o: any) => o.gene); //qSession.getQueryGenes();
-    resultsViewPageStore.genesetIds = genesetIds;
-    resultsViewPageStore.selectedMolecularProfileIds = serverVars.molecularProfiles; // qSession.getGeneticProfileIds();
-    resultsViewPageStore.rppaScoreThreshold = serverVars.rppaScoreThreshold; // FIX!
-    resultsViewPageStore.zScoreThreshold = serverVars.zScoreThreshold;
-    resultsViewPageStore.oqlQuery = oqlQuery;
-    resultsViewPageStore.queryStore = queryStore;
-    resultsViewPageStore.cohortIdsList = serverVars.cohortIdsList;
+    const reaction1 = reaction(
+        () => {
+            return getBrowserWindow().globalStores.routing.query
+        },
+        (query) => {
+
+
+            if (!getBrowserWindow().globalStores.routing.location.pathname.includes("/results")) {
+               return;
+            }
+
+            // normalize cancer_study_list this handles legacy sessions/urls where queries with single study had different param name
+            const cancer_study_list = query.cancer_study_list || query.cancer_study_id;
+
+            const oql = decodeURIComponent(query.gene_list);
+
+
+            let samplesSpecification: SamplesSpecificationElement[];
+
+            if (query.case_ids && query.case_ids.length > 0) {
+                const case_ids = query.case_ids.split("+");
+                samplesSpecification = case_ids.map((item:string)=>{
+                    const split = item.split(":");
+                    return {
+                       studyId:split[0],
+                       sampleId:split[1]
+                    }
+                });
+            } else if (query.case_set_id !== "all") {
+                // by definition if there is a case_set_id, there is only one study
+                samplesSpecification = [
+                    {
+                        studyId:cancer_study_list,
+                        sampleListId:query.case_set_id,
+                        sampleId:undefined
+                    }
+                ]
+            } else {
+                samplesSpecification = cancer_study_list.split(",").map((studyId:string)=>{
+                    return {
+                        studyId,
+                        sampleListId:`${studyId}_all`,
+                        sampleId:undefined
+                    }
+                });
+            }
+
+
+
+
+            function getMolecularProfiles(query:any){
+                //if there's only one study, we read profiles from query params and filter out undefined
+                let molecularProfiles = [
+                    query.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
+                    query.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
+                    query.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
+                    query.genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION,
+                ].filter((profile:string|undefined)=>!!profile);
+
+                // append 'genetic_profile_ids' which is sometimes in use
+                molecularProfiles = molecularProfiles.concat(query.genetic_profile_ids || []);
+
+                // filter out duplicates
+                molecularProfiles = _.uniq(molecularProfiles);
+
+                return molecularProfiles;
+            }
+
+            runInAction(() => {
+
+                if (!resultsViewPageStore.samplesSpecification || !_.isEqual(resultsViewPageStore.samplesSpecification.slice(), samplesSpecification)) {
+                    resultsViewPageStore.samplesSpecification = samplesSpecification;
+                }
+
+                if (query.data_priority !== undefined && parseInt(query.data_priority,10) !== resultsViewPageStore.profileFilter) {
+                    resultsViewPageStore.profileFilter = parseInt(query.data_priority,10);
+                }
+
+                // note that this could be zero length if we have multiple studies
+                // in that case we derive default selected profiles
+                const profiles = getMolecularProfiles(query);
+                if (!resultsViewPageStore.selectedMolecularProfileIds || !_.isEqual(resultsViewPageStore.selectedMolecularProfileIds.slice(), profiles)) {
+                    resultsViewPageStore.selectedMolecularProfileIds = profiles;
+                }
+
+                if (!_.isEqual(query.RPPA_SCORE_THRESHOLD, resultsViewPageStore.rppaScoreThreshold)) {
+                    resultsViewPageStore.rppaScoreThreshold = parseFloat(query.RPPA_SCORE_THRESHOLD);
+                }
+
+                if (!_.isEqual(query.Z_SCORE_THRESHOLD, resultsViewPageStore.zScoreThreshold)) {
+                    resultsViewPageStore.zScoreThreshold = parseFloat(query.Z_SCORE_THRESHOLD);
+                }
+
+                if (query.geneset_list) {
+                    // we have to trim because for some reason we get a single space from submission
+                    const parsedGeneSetList = query.geneset_list.trim().length ? (query.geneset_list.trim().split(/\s+/)) : [];
+                    if (!_.isEqual(parsedGeneSetList, resultsViewPageStore.genesetIds)) {
+                        resultsViewPageStore.genesetIds = parsedGeneSetList;
+                    }
+                }
+
+                if (!resultsViewPageStore.cohortIdsList || !_.isEqual(resultsViewPageStore.cohortIdsList.slice(), cancer_study_list.split(","))) {
+                    resultsViewPageStore.cohortIdsList = cancer_study_list.split(",");
+                }
+
+                if (resultsViewPageStore.oqlQuery !== oql) {
+                    resultsViewPageStore.oqlQuery = oql;
+                }
+
+            });
+        },
+        {fireImmediately: true}
+    );
 
     return resultsViewPageStore;
+}
 
+
+function addOnBecomeVisibleListener(callback:()=>void) {
+    $('#oncoprint-result-tab').click(callback);
 }
 
 export interface IResultsViewPageProps {
     routing: any;
-    queryStore: QueryStore
-}
-
-type MutationsTabInitProps = {
-    genes: string[];
-    samplesSpecification:SamplesSpecificationElement[]
-};
-
-type OncoprintTabInitProps = {
-    divId: string;
-};
-
-function getDirtyServerVar(varName:string){
-    return (window as any).serverVars[varName]
+    params: any; // from react router
 }
 
 @inject('routing')
-@inject('queryStore')
 @observer
 export default class ResultsViewPage extends React.Component<IResultsViewPageProps, {}> {
 
@@ -142,298 +176,287 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     constructor(props: IResultsViewPageProps) {
         super(props);
 
-        const resultsViewPageStore = initStore(props.queryStore);
-        this.resultsViewPageStore = resultsViewPageStore;
-        (window as any).resultsViewPageStore = resultsViewPageStore;
+        this.resultsViewPageStore = initStore();
 
-        this.exposeComponentRenderersToParentScript(props);
-
-        win.renderQuerySummary(document.getElementById('main_smry_info_div'));
-
-        // hide mutex tab
-        $(document).ready(()=>{
-            if (!(window as any).serverVars.theQuery.trim().length || genes((window as any).serverVars.theQuery).length <= 1) {
-                $('a#mutex-result-tab').parent().hide();
-            }
-            //hide gene-specific tabs when we only query gene sets (and no genes are queried)
-            // TODO: this should probably be changed once we have single page
-            // app
-            if (!(window as any).serverVars.theQuery.trim().length || genes((window as any).serverVars.theQuery).length == 0) {
-                $('a#cancer-types-result-tab').parent().hide();
-                $('a#plots-result-tab').parent().hide();
-                $('a#mutation-result-tab').parent().hide();
-                $('a#coexp-result-tab').parent().hide();
-                $('a#enrichments-result-tab').parent().hide();
-                $('a#survival-result-tab').parent().hide();
-                $('a#network-result-tab').parent().hide();
-                $('a#igv-result-tab').parent().hide();
-                $('a#data-download-result-tab').parent().hide();
-            }
-
-            if (win.cancerStudyIdList !== 'null') {
-                getGAInstance().event('results view', 'show', { eventLabel: win.cancerStudyIdList  });
-            } else if (_.includes(['all','null'],win.cancerStudyId) === false) {
-                getGAInstance().event('results view', 'show', { eventLabel: win.cancerStudyId  });
-            }
-        });
+        getBrowserWindow().resultsViewPageStore = this.resultsViewPageStore;
     }
 
-    private mountOverlappingStudiesWarning(){
+    // this needs to be replaced.  we shouldn't need queryStore reference
+    // because queryStore and results store should only interact via url
+    get queryStore(){
+        return getBrowserWindow().currentQueryStore;
+    }
 
-        const target = $('<div class="cbioportal-frontend"></div>').insertBefore("#tabs");
+    @observable currentQuery = true;
 
-        ReactDOM.render(
-            <Observer>
-                {
-                    ()=> {
-                        if (this.resultsViewPageStore.studies.isComplete) {
-                            //return <OverlappingStudiesWarning studies={resultsViewPageStore.studies.result!}/>
-                            // disable overlapping studies warning until #3395
-                            // is implemented
-                            return <span></span>;
-                        } else {
-                            return <span></span>;
-                        }
-                    }
+    private handleTabChange(id: string) {
+        this.props.routing.updateRoute({},`results/${id}`);
+    }
+
+    @autobind
+    private customTabMountCallback(div:HTMLDivElement,tab:any){
+        if (typeof getBrowserWindow()[tab.mountCallbackName] === 'function'){
+            getBrowserWindow()[tab.mountCallbackName](div, this.props.routing.location, this.resultsViewPageStore, tab.customParameters || {});
+        } else {
+            alert(`Tab mount callback not implemented for ${tab.title}`)
+        }
+    }
+
+    @computed
+    private get tabs() {
+
+        const store = this.resultsViewPageStore;
+
+        const tabMap:ITabConfiguration[] = [
+
+            {
+                id:"oncoprint",
+                getTab: () => {
+                    return <MSKTab key={0} id="oncoprintTab" linkText="OncoPrint">
+                        <ResultsViewOncoprint
+                            divId={'oncoprintDiv'}
+                            store={store}
+                            key={store.hugoGeneSymbols.join(",")}
+                            routing={this.props.routing}
+                            isVirtualStudy={getBrowserWindow().currentQueryStore.isVirtualStudyQuery}
+                            addOnBecomeVisibleListener={addOnBecomeVisibleListener}
+                        />
+                    </MSKTab>
                 }
-            </Observer>
-            ,
-            target[0]
-        );
-
-    }
-
-    private mountNetworkTab(){
-
-        const target = $('<div class="cbioportal-frontend"></div>').appendTo("#network");
-
-        ReactDOM.render(
-            <Observer>
-                {
-                    ()=> {
-                        if (this.resultsViewPageStore.studies.isComplete && this.resultsViewPageStore.sampleLists.isComplete) {
-                            return <Network genes={this.resultsViewPageStore.genes.result!}
-                                                   profileIds={this.resultsViewPageStore.selectedMolecularProfileIds}
-                                                   cancerStudyId={this.resultsViewPageStore.studies.result[0].studyId}
-                                                   zScoreThreshold={this.resultsViewPageStore.zScoreThreshold}
-                                                   caseSetId={(this.resultsViewPageStore.sampleLists.result!.length > 0) ? this.resultsViewPageStore.sampleLists.result![0].sampleListId : "-1"}
-                                                   caseIdsKey={getDirtyServerVar("caseSetProperties").case_ids_key}
-                            />
-                        } else {
-                            return <div />;
-                        }
-                    }
-                }
-            </Observer>
-            ,
-            target[0]
-        );
-
-    }
-
-    get addThisParameters() {
-        const passthrough = this.showTwitter ? {
-            twitter: {
-                hashtags: "cbioportal"
-            }
-        } : {};
-        return {
-            setup: function(url:string){
-                return {
-                    url,
-                    passthrough
-                };
             },
-            className:"addthis_inline_share_toolbox" + (!this.showTwitter ? '_ubww' : '')
-        };
+
+            {
+                id:"cancer_types_summary",
+                getTab: () => {
+                    return (<MSKTab key={1} id="cancerTypesSummaryTab" linkText="Cancer Types Summary">
+                        <CancerSummaryContainer
+                            store={store}
+                        />
+                    </MSKTab>)
+                }
+            },
+
+            {
+                id:"mutual_exclusivity",
+                getTab: () => {
+                    return <MSKTab key={5} id="mutualExclusivityTab" linkText="Mutual Exclusivity">
+                        <MutualExclusivityTab store={store}/>
+                    </MSKTab>
+                },
+                hide:()=>{
+                    return this.resultsViewPageStore.hugoGeneSymbols.length < 2;
+                }
+            },
+
+            {
+                id:"plots",
+                hide:()=>{
+                    return this.resultsViewPageStore.studies.result!.length > 1;
+                },
+                getTab: () => {
+                    return <MSKTab key={12} id="plots" linkText={'Plots'}>
+                        <PlotsTab store={store}/>
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:"mutations",
+                getTab: () => {
+                    return <MSKTab key={3} id="mutationsTab" linkText="Mutations">
+                        <Mutations store={store}/>
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:"co_expression",
+                hide:()=>{
+                    return this.resultsViewPageStore.studies.result!.length > 1;
+                },
+                getTab: () => {
+                    return <MSKTab key={7} id="coexpression" linkText={'Co-expression'}>
+                        <CoExpressionTab
+                            store={store}
+                        />
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:"enrichments",
+                hide:()=>{
+                    return this.resultsViewPageStore.studies.result!.length > 1;
+                },
+                getTab: () => {
+                    return <MSKTab key={10} id="enrichment" linkText={'Enrichments'}>
+                        <EnrichmentsTab store={store}/>
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:"survival",
+                hide:()=>{
+                    return this.resultsViewPageStore.studies.result!.length > 1;
+                },
+                getTab: () => {
+                    return <MSKTab key={4} id="survivalTab" linkText="Survival">
+                        <SurvivalTab store={store}/>
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:"IGV",
+                hide:()=>{
+                    return this.resultsViewPageStore.studies.result!.length > 1;
+                },
+                getTab: () => {
+                    return <MSKTab key={6} id="copyNumberSegmentsTab"
+                                   linkText="CN Segments">
+                        <CNSegments store={store}/>
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:"network",
+                hide:()=>{
+                    return this.resultsViewPageStore.studies.result!.length > 1;
+                },
+                getTab: () => {
+                    return <MSKTab key={9} id="network" linkText={'Network'}>
+                        {
+                            (store.studies.isComplete && store.sampleLists.isComplete && store.samples.isComplete) &&
+                            (<Network genes={store.genes.result!}
+                                      profileIds={store.selectedMolecularProfileIds}
+                                      cancerStudyId={store.studies.result[0].studyId}
+                                      zScoreThreshold={store.zScoreThreshold}
+                                      caseSetId={(store.sampleLists.result!.length > 0) ? store.sampleLists.result![0].sampleListId : "-1"}
+                                      sampleIds={store.samples.result.map((sample)=>sample.sampleId)}
+                                      caseIdsKey={""}
+                            />)
+                        }
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:"expression",
+                hide:()=> {
+                    return this.resultsViewPageStore.studies.result!.length === 1;
+                },
+                getTab: () => {
+
+                    return <MSKTab key={8} id="expression"
+
+                                   linkText={'Expression'}
+                    >
+                        {
+                            (store.studyIdToStudy.isComplete
+                                && store.putativeDriverAnnotatedMutations.isComplete
+                                && store.genes.isComplete
+                                && store.coverageInformation.isComplete) &&
+                            (<ExpressionWrapper store={store}
+                                studyMap={store.studyIdToStudy.result}
+                                genes={store.genes.result}
+                                expressionProfiles={store.expressionProfiles}
+                                numericGeneMolecularDataCache={store.numericGeneMolecularDataCache}
+                                mutations={store.putativeDriverAnnotatedMutations.result!}
+                                RNASeqVersion={store.expressionTabSeqVersion}
+                                coverageInformation={store.coverageInformation.result}
+                                onRNASeqVersionChange={(version:number)=>store.expressionTabSeqVersion=version}
+                            />)
+                        }
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:"download",
+                getTab: () => {
+                    return <MSKTab key={11} id="download" linkText={'Download'}>
+                        <DownloadTab store={store}/>
+                    </MSKTab>
+                }
+            }
+
+        ];
+
+        let filteredTabs = tabMap.filter(this.evaluateTabInclusion).map((tab)=>tab.getTab());
+
+        // now add custom tabs
+        if (AppConfig.customTabs) {
+            const customResultsTabs = AppConfig.customTabs.filter((tab: any) => tab.location === "RESULTS_PAGE").map((tab: any, i: number) => {
+                return (<MSKTab key={100 + i} id={'customTab' + 1} unmountOnHide={(tab.unmountOnHide === true)}
+                                onTabDidMount={(div) => {
+                                    this.customTabMountCallback(div, tab)
+                                }}
+                                linkText={tab.title}
+                    />
+                )
+            });
+            filteredTabs = filteredTabs.concat(customResultsTabs);
+        }
+
+        return filteredTabs;
 
     }
 
-    public exposeComponentRenderersToParentScript(props: IResultsViewPageProps){
+    public evaluateTabInclusion(tab:ITabConfiguration){
+        const excludedTabs = AppConfig.disabledTabs || [];
+        const isExcludedInList = excludedTabs.includes(tab.id);
+        const isExcluded = (tab.hide) ? tab.hide() : false;
+        return !isExcludedInList && !isExcluded;
+    }
 
-
-        exposeComponentRenderer('renderExpression',()=>{
-
-                return <Observer>
-                    {
-                        ()=> {
-
-                            const store = this.resultsViewPageStore;
-
-                            if (store.studyIdToStudy.isComplete
-                                && store.putativeDriverAnnotatedMutations.isComplete && store.genes.isComplete && store.coverageInformation.isComplete) {
-                                return <ExpressionWrapper store={store}
-                                                        studyMap={store.studyIdToStudy.result}
-                                                          genes={store.genes.result}
-                                                          expressionProfiles={store.expressionProfiles}
-                                                          numericGeneMolecularDataCache={store.numericGeneMolecularDataCache}
-                                                          mutations={store.putativeDriverAnnotatedMutations.result}
-                                                          RNASeqVersion={store.expressionTabSeqVersion}
-                                                          coverageInformation={store.coverageInformation.result}
-                                                          onRNASeqVersionChange={(version:number)=>store.expressionTabSeqVersion=version}
-                                />
-                            } else {
-                                return <div><Loader isLoading={true}/></div>
-                            }
-
-
-                        }
-                    }
-                </Observer>
-
-        });
-
-
-        exposeComponentRenderer('renderOncoprint',
-            (props:OncoprintTabInitProps)=>{
-                function addOnBecomeVisibleListener(callback:()=>void) {
-                    $('#oncoprint-result-tab').click(callback);
-                }
-
-                return (
-                    <ResultsViewOncoprint
-                        divId={props.divId}
-                        store={this.resultsViewPageStore}
-                        routing={this.props.routing}
-                        addOnBecomeVisibleListener={addOnBecomeVisibleListener}
-                    />
-                );
-            });
-
-        exposeComponentRenderer('renderCNSegments',
-            ()=>{
-                return <CNSegments store={this.resultsViewPageStore}/>
+    // if it's undefined, MSKTabs will default to first
+    public currentTab(tabId:string|undefined):string | undefined {
+        // if we have no tab defined (query submission, no tab click)
+        // we need to evaluate which should be the default tab
+        if (tabId === undefined) {
+            if (this.resultsViewPageStore.studies.result!.length > 1 && this.resultsViewPageStore.hugoGeneSymbols.length === 1) {
+                return "cancerTypesSummaryTab"; // cancer type study
+            } else {
+                return undefined; // this will resolve to first tab
             }
-        );
-
-        exposeComponentRenderer('renderQuerySummary',
-            ()=>{
-                return <QuerySummary queryStore={props.queryStore} store={this.resultsViewPageStore}/>
-            }
-        );
-
-        exposeComponentRenderer('renderMutationsTab',
-             ()=>{
-                return <div>
-                    <AjaxErrorModal
-                        show={(this.resultsViewPageStore.ajaxErrors.length > 0)}
-                        onHide={() => {
-                            this.resultsViewPageStore.clearErrors();
-                        }}
-                    />
-                    <Mutations store={this.resultsViewPageStore}/>
-                </div>
-            });
-
-
-        exposeComponentRenderer('renderNetworkTab',
-            ()=>{
-                return <Observer>
-                    {
-                        ()=> {
-                            if (this.resultsViewPageStore.studies.isComplete && this.resultsViewPageStore.sampleLists.isComplete) {
-                                return <Network genes={this.resultsViewPageStore.genes.result!}
-                                                profileIds={this.resultsViewPageStore.selectedMolecularProfileIds}
-                                                cancerStudyId={this.resultsViewPageStore.studies.result[0].studyId}
-                                                zScoreThreshold={this.resultsViewPageStore.zScoreThreshold}
-                                                caseSetId={(this.resultsViewPageStore.sampleLists.result!.length > 0) ? this.resultsViewPageStore.sampleLists.result![0].sampleListId : "-1"}
-                                                caseIdsKey={getDirtyServerVar("caseSetProperties").case_ids_key}
-                                />
-                            } else {
-                                return <div></div>;
-                            }
-                        }
-                    }
-                </Observer>
-            });
-
-
-        exposeComponentRenderer('renderCancerTypeSummary',
-            () => {
-
-                return <Observer>
-                    {() => {
-
-                        const isComplete = this.resultsViewPageStore.samplesExtendedWithClinicalData.isComplete && this.resultsViewPageStore.alterationsByGeneBySampleKey.isComplete;
-                        const isPending = this.resultsViewPageStore.samplesExtendedWithClinicalData.isPending && this.resultsViewPageStore.alterationsByGeneBySampleKey.isPending;
-
-                        if (isComplete) {
-                            return (<div>
-                                <AjaxErrorModal
-                                    show={(this.resultsViewPageStore.ajaxErrors.length > 0)}
-                                    onHide={() => {
-                                        this.resultsViewPageStore.clearErrors();
-                                    }}
-                                />
-                                <CancerSummaryContainer
-                                    store={this.resultsViewPageStore}
-                                    genes={this.resultsViewPageStore.genes.result!}
-                                    samplesExtendedWithClinicalData={this.resultsViewPageStore.samplesExtendedWithClinicalData.result!}
-                                    alterationsByGeneBySampleKey={this.resultsViewPageStore.alterationsByGeneBySampleKey.result!}
-                                    studies={this.resultsViewPageStore.studies.result!}
-                                    studyMap={this.resultsViewPageStore.physicalStudySet}
-                                  />
-                            </div>)
-                        } else if (isPending) {
-                            return <Loader isLoading={true}/>
-                        } else {
-                            return <div></div>;
-                        }
-
-                    }}
-                </Observer>
-
-            });
-
-
-        exposeComponentRenderer('renderMutExTab', () => {
-            return (<div>
-                <MutualExclusivityTab store={this.resultsViewPageStore}/>
-            </div>)
-        });
-
-        exposeComponentRenderer('renderBookmarkTab', () => {
-            return <Bookmark urlPromise={ this.resultsViewPageStore.bookmarkLinks } />
-        });
-
-        exposeComponentRenderer('renderSurvivalTab', () => {
-            return (<div className="cbioportal-frontend">
-                <SurvivalTab store={this.resultsViewPageStore}/>
-            </div>)
-        });
-
-        exposeComponentRenderer('renderDownloadTab', () => {
-            return (
-                <div>
-                    <DownloadTab store={this.resultsViewPageStore} />
-                </div>
-            );
-        });
-        exposeComponentRenderer('renderCoExpressionTab', ()=>{
-            return (
-                <div className="cbioportal-frontend">
-                    <CoExpressionTabContainer store={this.resultsViewPageStore}/>
-                </div>
-            );
-        });
-
-        exposeComponentRenderer('renderEnrichmentsTab', () => {
-
-            return (
-                <div className="cbioportal-frontend">
-                    <EnrichmentsTab store={this.resultsViewPageStore}/>
-                </div>);
-        });
-
-        exposeComponentRenderer('renderPlotsTab', ()=>{
-            return (<div className="cbioportal-frontend">
-                <PlotsTab store={this.resultsViewPageStore}/>
-            </div>);
-        });
+        } else {
+            return tabId;
+        }
     }
 
     public render() {
+        return (
+            <PageLayout noMargin={true}>
 
-        return null;
+                <Helmet>
+                    <title>{'cBioPortal for Cancer Genomics::Results'}</title>
+                </Helmet>
+
+                {
+                    (this.currentQuery) && (<div>
+
+                        <div style={{margin:"0 20px 10px 20px"}}>
+                            <QuerySummary queryStore={getBrowserWindow().currentQueryStore} routingStore={this.props.routing} store={this.resultsViewPageStore}/>
+                        </div>
+                        {
+                            (this.resultsViewPageStore.studies.isComplete) && (
+                                <MSKTabs activeTabId={this.currentTab(this.props.params.tab)} unmountOnHide={false}
+                                         onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
+                                    {
+                                        this.tabs
+                                    }
+                                </MSKTabs>
+                            )
+                        }
+
+                    </div>)
+                }
+            </PageLayout>
+        )
+
     }
+
+
 }

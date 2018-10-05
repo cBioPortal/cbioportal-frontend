@@ -67,6 +67,11 @@ const gene_lists = [{
 }, {
 	"id": "General: Invasion and metastasis",
 	"genes": ["MMP1", "MMP2", "MMP3", "MMP7", "MMP9", "MMP10", "MMP11", "MMP12", "MMP13", "MMP14", "MMP15", "MMP16", "MMP17", "MMP19", "MMP21", "MMP23B", "MMP24", "MMP25", "MMP26", "MMP27", "MMP28", "ITGB3", "ITGAV", "PTK2", "CDH1", "SPARC", "WFDC2"]
-}];
+}, {
+	"id":"General: TGF-β Pathway",
+    "genes":["TGFB1","TGFB2","TGFB3","TGFBR1","TGFBR2","TGFBR3","BMP2","BMP3","BMP4","BMP5","BMP6","BMP7","GDF2","BMP10","BMP15","BMPR1A","BMPR1B","BMPR2","ACVR1","ACVR1B","ACVR1C","ACVR2A","ACVR2B","ACVRL1","Nodal","GDF1","GDF11","INHA","INHBA","INHBB","INHBC","INHBE","SMAD2","SMAD3","SMAD1","SMAD5","SMAD4","SMAD9","SMAD6","SMAD7","SPTBN1","TGFBRAP1","ZFYVE9"]
+}
+
+];
 
 export default gene_lists;

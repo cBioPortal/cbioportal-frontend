@@ -9,7 +9,12 @@ import { AbstractChart } from "pages/studyView/charts/ChartContainer";
 import { bind } from "bind-decorator";
 import BarChartAxisLabel from "./BarChartAxisLabel";
 import {
-    filterCategoryBins, filterNumericalBins, formatNumericalTickValues, generateCategoricalData, generateNumericalData
+    filterCategoryBins,
+    filterNumericalBins,
+    formatNumericalTickValues,
+    generateCategoricalData,
+    generateNumericalData,
+    SELECTED_GROUP_COLOR, UNSELECTED_GROUP_COLOR
 } from "../../StudyViewUtils";
 
 export interface IBarChartProps {
@@ -148,7 +153,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                         style={{
                             data: {
                                 fill: (d: BarDatum) =>
-                                    this.isDataBinSelected(d.dataBin, this.props.filters) ? "#dc3912" : "#2986e2"
+                                    this.isDataBinSelected(d.dataBin, this.props.filters) ? SELECTED_GROUP_COLOR : UNSELECTED_GROUP_COLOR
                             }
                         }}
                         data={this.barData}
