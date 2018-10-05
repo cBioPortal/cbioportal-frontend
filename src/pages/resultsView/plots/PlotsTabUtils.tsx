@@ -528,7 +528,12 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
             // we have mutations
             switch (mutationCountBy) {
                 case MutationCountBy.MutationType:
-                    value = sampleMutTypes;
+                    // if more than one type, its "Multiple"
+                    if (sampleMutTypes.length > 1) {
+                        value = MUT_PROFILE_COUNT_MULTIPLE;
+                    } else {
+                        value = sampleMutTypes;
+                    }
                     break;
                 case MutationCountBy.MutatedVsWildType:
                 default:
@@ -833,6 +838,7 @@ const cnaToAppearance = {
 
 const cnaCategoryOrder = ["-2", "-1", "0", "1", "2"].map(x=>(cnaToAppearance as any)[x].legendLabel);
 export const MUT_PROFILE_COUNT_MUTATED = "Mutated";
+export const MUT_PROFILE_COUNT_MULTIPLE = "Multiple";
 export const MUT_PROFILE_COUNT_NOT_MUTATED = "Wild type";
 export const MUT_PROFILE_COUNT_NOT_PROFILED = "Not profiled";
 export const mutTypeCategoryOrder = [
@@ -841,6 +847,7 @@ export const mutTypeCategoryOrder = [
     mutationTypeToDisplayName.trunc,
     mutationTypeToDisplayName.fusion,
     mutationTypeToDisplayName.promoter,
+    MUT_PROFILE_COUNT_MULTIPLE,
     MUT_PROFILE_COUNT_NOT_MUTATED, MUT_PROFILE_COUNT_NOT_PROFILED
 ];
 export const mutVsWildCategoryOrder = [MUT_PROFILE_COUNT_MUTATED, MUT_PROFILE_COUNT_NOT_MUTATED, MUT_PROFILE_COUNT_NOT_PROFILED];
