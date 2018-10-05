@@ -166,6 +166,21 @@ export interface IResultsViewPageProps {
     params: any; // from react router
 }
 
+export enum ResultsViewTab {
+    ONCOPRINT="oncoprintTab",
+    CANCER_TYPES_SUMMARY="cancerTypesSummaryTab",
+    MUTUAL_EXCLUSIVITY="mutualExclusivityTab",
+    PLOTS="plots",
+    MUTATIONS="mutationsTab",
+    COEXPRESSION="coexpression",
+    ENRICHMENT="enrichment",
+    SURVIVAL="survivalTab",
+    CN_SEGMENTS="copyNumberSegmentsTab",
+    NETWORK="network",
+    EXPRESSION="expression",
+    DOWNLOAD="download"
+}
+
 @inject('routing')
 @observer
 export default class ResultsViewPage extends React.Component<IResultsViewPageProps, {}> {
@@ -212,7 +227,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"oncoprint",
                 getTab: () => {
-                    return <MSKTab key={0} id="oncoprintTab" linkText="OncoPrint">
+                    return <MSKTab key={0} id={ResultsViewTab.ONCOPRINT} linkText="OncoPrint">
                         <ResultsViewOncoprint
                             divId={'oncoprintDiv'}
                             store={store}
@@ -228,7 +243,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"cancer_types_summary",
                 getTab: () => {
-                    return (<MSKTab key={1} id="cancerTypesSummaryTab" linkText="Cancer Types Summary">
+                    return (<MSKTab key={1} id={ResultsViewTab.CANCER_TYPES_SUMMARY} linkText="Cancer Types Summary">
                         <CancerSummaryContainer
                             store={store}
                         />
@@ -239,7 +254,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"mutual_exclusivity",
                 getTab: () => {
-                    return <MSKTab key={5} id="mutualExclusivityTab" linkText="Mutual Exclusivity">
+                    return <MSKTab key={5} id={ResultsViewTab.MUTUAL_EXCLUSIVITY} linkText="Mutual Exclusivity">
                         <MutualExclusivityTab store={store}/>
                     </MSKTab>
                 },
@@ -254,7 +269,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     return this.resultsViewPageStore.studies.result!.length > 1;
                 },
                 getTab: () => {
-                    return <MSKTab key={12} id="plots" linkText={'Plots'}>
+                    return <MSKTab key={12} id={ResultsViewTab.PLOTS} linkText={'Plots'}>
                         <PlotsTab store={store}/>
                     </MSKTab>
                 }
@@ -263,7 +278,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"mutations",
                 getTab: () => {
-                    return <MSKTab key={3} id="mutationsTab" linkText="Mutations">
+                    return <MSKTab key={3} id={ResultsViewTab.MUTATIONS} linkText="Mutations">
                         <Mutations store={store}/>
                     </MSKTab>
                 }
@@ -275,7 +290,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     return this.resultsViewPageStore.studies.result!.length > 1;
                 },
                 getTab: () => {
-                    return <MSKTab key={7} id="coexpression" linkText={'Co-expression'}>
+                    return <MSKTab key={7} id={ResultsViewTab.COEXPRESSION} linkText={'Co-expression'}>
                         <CoExpressionTab
                             store={store}
                         />
@@ -289,7 +304,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     return this.resultsViewPageStore.studies.result!.length > 1;
                 },
                 getTab: () => {
-                    return <MSKTab key={10} id="enrichment" linkText={'Enrichments'}>
+                    return <MSKTab key={10} id={ResultsViewTab.ENRICHMENT} linkText={'Enrichments'}>
                         <EnrichmentsTab store={store}/>
                     </MSKTab>
                 }
@@ -301,7 +316,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     return this.resultsViewPageStore.studies.result!.length > 1;
                 },
                 getTab: () => {
-                    return <MSKTab key={4} id="survivalTab" linkText="Survival">
+                    return <MSKTab key={4} id={ResultsViewTab.SURVIVAL} linkText="Survival">
                         <SurvivalTab store={store}/>
                     </MSKTab>
                 }
@@ -313,7 +328,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     return this.resultsViewPageStore.studies.result!.length > 1;
                 },
                 getTab: () => {
-                    return <MSKTab key={6} id="copyNumberSegmentsTab"
+                    return <MSKTab key={6} id={ResultsViewTab.CN_SEGMENTS}
                                    linkText="CN Segments">
                         <CNSegments store={store}/>
                     </MSKTab>
@@ -326,7 +341,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     return this.resultsViewPageStore.studies.result!.length > 1;
                 },
                 getTab: () => {
-                    return <MSKTab key={9} id="network" linkText={'Network'}>
+                    return <MSKTab key={9} id={ResultsViewTab.NETWORK} linkText={'Network'}>
                         {
                             (store.studies.isComplete && store.sampleLists.isComplete && store.samples.isComplete) &&
                             (<Network genes={store.genes.result!}
@@ -349,7 +364,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                 },
                 getTab: () => {
 
-                    return <MSKTab key={8} id="expression"
+                    return <MSKTab key={8} id={ResultsViewTab.EXPRESSION}
 
                                    linkText={'Expression'}
                     >
@@ -376,7 +391,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"download",
                 getTab: () => {
-                    return <MSKTab key={11} id="download" linkText={'Download'}>
+                    return <MSKTab key={11} id={ResultsViewTab.DOWNLOAD} linkText={'Download'}>
                         <DownloadTab store={store}/>
                     </MSKTab>
                 }
@@ -442,7 +457,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                         </div>
                         {
                             (this.resultsViewPageStore.studies.isComplete) && (
-                                <MSKTabs activeTabId={this.currentTab(this.props.params.tab)} unmountOnHide={false}
+                                <MSKTabs key={(window as any).routingStore.queryHash} activeTabId={this.currentTab(this.props.params.tab)} unmountOnHide={false}
                                          onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
                                     {
                                         this.tabs
