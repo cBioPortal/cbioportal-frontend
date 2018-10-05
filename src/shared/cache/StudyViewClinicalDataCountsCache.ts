@@ -3,12 +3,25 @@ import { ClinicalAttribute } from "../api/generated/CBioPortalAPI";
 import _ from "lodash";
 import internalClient from "../api/cbioportalInternalClientInstance";
 import { ClinicalDataCount, StudyViewFilter } from "shared/api/generated/CBioPortalAPIInternal";
-import { isFiltered , isNAClinicalValue, pickClinicalDataColors} from "pages/studyView/StudyViewUtils";
+import { clinicalDataCountComparator, isFiltered , pickClinicalDataColors} from "pages/studyView/StudyViewUtils";
 import { ClinicalDataCountWithColor } from "pages/studyView/StudyViewPageStore";
 
 type StudyViewClinicalDataCountsQuery = {
     attribute: ClinicalAttribute
     filters: StudyViewFilter
+};
+
+async function fetchAndSortClinicalDataCounts(q: StudyViewClinicalDataCountsQuery,
+                                              studyViewFilter?: StudyViewFilter): Promise<ClinicalDataCount[]>
+{
+    const result: ClinicalDataCount[] = await internalClient.fetchClinicalDataCountsUsingPOST({
+        attributeId: q.attribute.clinicalAttributeId,
+        clinicalDataType: q.attribute.patientAttribute ? 'PATIENT' : 'SAMPLE',
+        studyViewFilter: studyViewFilter || q.filters
+    });
+
+    result.sort(clinicalDataCountComparator);
+    return result;
 }
 
 export default class StudyViewClinicalDataCountsCache extends MobxPromiseCache<StudyViewClinicalDataCountsQuery, ClinicalDataCountWithColor[]> {
@@ -23,25 +36,13 @@ export default class StudyViewClinicalDataCountsCache extends MobxPromiseCache<S
                     if (_.isUndefined(colors)) {
                         let studyIds = q.filters.studyIds || [];
                         if(_.isEmpty(studyIds)){
-                            studyIds = _.keys(_.reduce(q.filters.sampleIdentifiers,(acc, next)=>{
+                            studyIds = _.keys(_.reduce(q.filters.sampleIdentifiers,(acc: {[id:string]:boolean}, next)=>{
                                 acc[next.studyId] = true;
                                 return acc;
-                            },{} as {[id:string]:boolean}))
+                            }, {}));
                         }
-                        result = await internalClient.fetchClinicalDataCountsUsingPOST({
-                            attributeId: q.attribute.clinicalAttributeId,
-                            clinicalDataType: q.attribute.patientAttribute ? 'PATIENT' : 'SAMPLE',
-                            studyViewFilter: { studyIds: studyIds } as any
-                        });
 
-                        result.sort((a, b) => {
-                            if (isNAClinicalValue(a.value))
-                                return isNAClinicalValue(b.value) ? 0 : 1;
-                            if (isNAClinicalValue(b.value))
-                                return -1;
-                            return b.count - a.count;
-                        });
-
+                        result = await fetchAndSortClinicalDataCounts(q, { studyIds: studyIds } as any);
                         colors = pickClinicalDataColors(result);
 
                         this.colorCache[q.attribute.clinicalAttributeId + q.attribute.patientAttribute] = colors;
@@ -49,11 +50,7 @@ export default class StudyViewClinicalDataCountsCache extends MobxPromiseCache<S
 
                     //fetch data if its not already fetched
                     if (_.isEmpty(result) || isFiltered(q.filters as any) || !_.isUndefined(q.filters.sampleIdentifiers)) {
-                        result = await internalClient.fetchClinicalDataCountsUsingPOST({
-                            attributeId: q.attribute.clinicalAttributeId,
-                            clinicalDataType: q.attribute.patientAttribute ? 'PATIENT' : 'SAMPLE',
-                            studyViewFilter: q.filters
-                        });
+                        result = await fetchAndSortClinicalDataCounts(q);
                     }
 
                     return new Promise<ClinicalDataCountWithColor[]>((resolve, reject) => {
@@ -66,6 +63,6 @@ export default class StudyViewClinicalDataCountsCache extends MobxPromiseCache<S
             }),
             q => JSON.stringify(q)
         );
-        this.colorCache = {}
+        this.colorCache = {};
     }
 }

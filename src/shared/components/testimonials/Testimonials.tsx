@@ -2,6 +2,7 @@ import * as React from 'react';
 import CSSTransitionGroup from 'react-transition-group/CSSTransitionGroup';
 import {observable, action} from "mobx";
 import {observer} from "mobx-react";
+import { Link } from 'react-router';
 
 import styles from './testimonials.module.scss';
 
@@ -106,7 +107,7 @@ export default class Testimonials extends React.Component <{}, {}> {
                         <p>"{activeTestimonial.quote}"</p>
                         <cite>--{activeTestimonial.cite}</cite>
                         <div className="testimonial-links">
-                            <a href="what_people_are_saying.jsp" >View All</a>
+                            <Link to={'/s/testimonials'}>View All</Link>
                             <a href="mailto:cbioportal@cbio.mskcc.org?subject=cBioPortal Testimonial&body=Job Title:%0D%0APlace of Employment:%0D%0ATestimonial:%0D%0A%0D%0AThank you for taking the time to submit your opinion.">
                                 Tell Us What You Think
                             </a>

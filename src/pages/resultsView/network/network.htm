@@ -22,17 +22,19 @@
     // if this fails, we are NOT in production, so allow anything
     // as a rule, we always load network.htm from WAR file (main page host)
     // so it should always be same domain as regular page
-    try {
-        // if the passed host matches, then we're safe
-        if (validateHost(queryParams.apiHost, window.parent.location.href)) {
-            apiHost = "//" + queryParams.apiHost
-        } else {
-            alert("invalid apihost for network tab");
-        }
+    // try {
+    //     // if the passed host matches, then we're safe
+    //     if (validateHost(queryParams.apiHost, window.parent.location.href)) {
+    //         apiHost = "//" + queryParams.apiHost
+    //     } else {
+    //         alert("invalid apihost for network tab");
+    //     }
+    //
+    // } catch (exc){
+    //     apiHost = "//" + queryParams.apiHost;
+    // }
 
-    } catch (exc){
-        apiHost = "//" + queryParams.apiHost;
-    }
+    apiHost = "//" + queryParams.apiHost;
 
     function writeScriptTag(path) {
         document.write('<script src="' + host + "/" + path + '"></' + 'script>');
@@ -148,7 +150,7 @@
 
                 <script type="text/javascript">
 
-                    var networkParams = JSON.parse(queryParams.networkParams);
+                    var networkParams = JSON.parse(decodeURIComponent(window.location.hash).replace(/^#/,""));
 
                     $(document).ready(function () {
                         showNetwork(networkParams);
@@ -184,35 +186,67 @@
 
                     var showNetwork = function (networkParams) {
 
-                        // get the graphml data from the server
-                        $.post(window.apiHost + "/network.do",
-                            networkParams,
-                            function (graphml) {
-                                var gml2jsonConverter = new GraphMLToJSon(graphml);
-                                var json = gml2jsonConverter.toJSON();
-                                window.networkGraphJSON = json;
+                        $.ajax({
+                            type:"POST",
+                            url:window.apiHost + "/network.do",
+                            data:networkParams
+                        }).then(function(graphml){
 
-                                $("#networkLoading").hide();
-                                $("#network").css({ background:"#ffffff" });
-                                $("#network_wrapper").show();
+                            var gml2jsonConverter = new GraphMLToJSon(graphml);
+                            var json = gml2jsonConverter.toJSON();
+                            window.networkGraphJSON = json;
 
-                                if (typeof graphml !== "string") {
-                                    if (window.ActiveXObject) { // IE
-                                        graphml = (new XMLSerializer()).serializeToString(graphml);
-                                    } else { // Other browsers
-                                        graphml = (new XMLSerializer()).serializeToString(graphml);
-                                    }
+                            $("#networkLoading").hide();
+                            $("#network").css({ background:"#ffffff" });
+                            $("#network_wrapper").show();
+
+                            if (typeof graphml !== "string") {
+                                if (window.ActiveXObject) { // IE
+                                    graphml = (new XMLSerializer()).serializeToString(graphml);
+                                } else { // Other browsers
+                                    graphml = (new XMLSerializer()).serializeToString(graphml);
                                 }
+                            }
 
-                                //show debug message !
-                                showXDebug(graphml);
-                                showNetworkMessage(graphml, "#network #netmsg");
+                            //show debug message !
+                            showXDebug(graphml);
+                            showNetworkMessage(graphml, "#network #netmsg");
 
-                                $("#network").show();
+                            $("#network").show();
 
-                                // when the data is available call send2cytoscapeweb
-                                send2cytoscapeweb(window.networkGraphJSON, "cytoscapeweb", "network");
-                            });
+                            // when the data is available call send2cytoscapeweb
+                            send2cytoscapeweb(window.networkGraphJSON, "cytoscapeweb", "network");
+                        });
+
+                        // get the graphml data from the server
+                        // $.post(window.apiHost + "/network.do",
+                        //     networkParams,
+                        //     function (graphml) {
+                        //         var gml2jsonConverter = new GraphMLToJSon(graphml);
+                        //         var json = gml2jsonConverter.toJSON();
+                        //         window.networkGraphJSON = json;
+                        //
+                        //         $("#networkLoading").hide();
+                        //         $("#network").css({ background:"#ffffff" });
+                        //         $("#network_wrapper").show();
+                        //
+                        //         if (typeof graphml !== "string") {
+                        //             if (window.ActiveXObject) { // IE
+                        //                 graphml = (new XMLSerializer()).serializeToString(graphml);
+                        //             } else { // Other browsers
+                        //                 graphml = (new XMLSerializer()).serializeToString(graphml);
+                        //             }
+                        //         }
+                        //
+                        //         //show debug message !
+                        //         showXDebug(graphml);
+                        //         showNetworkMessage(graphml, "#network #netmsg");
+                        //
+                        //         $("#network").show();
+                        //
+                        //         // when the data is available call send2cytoscapeweb
+                        //         send2cytoscapeweb(window.networkGraphJSON, "cytoscapeweb", "network");
+                        //     });
                     }
 
 

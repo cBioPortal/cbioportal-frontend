@@ -1,12 +1,17 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import { Sample, ClinicalDataIntervalFilterValue, SampleIdentifier } from 'shared/api/generated/CBioPortalAPIInternal';
+import {
+    Sample,
+    ClinicalDataIntervalFilterValue,
+    SampleIdentifier,
+    CopyNumberGeneFilterElement
+} from 'shared/api/generated/CBioPortalAPIInternal';
 import { observer } from "mobx-react";
 import { computed, observable, action } from 'mobx';
 import styles from "./styles.module.scss";
 import "./styles.scss";
 import { bind } from 'bind-decorator';
-import { buildCBioPortalUrl } from 'shared/api/urls';
+import {buildCBioPortalPageUrl} from 'shared/api/urls';
 import CustomCaseSelection from 'pages/studyView/customCaseSelection/CustomCaseSelection';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
@@ -21,6 +26,8 @@ import SelectedInfo from "./SelectedInfo/SelectedInfo";
 import classnames from "classnames";
 import { getPercentage } from 'shared/lib/FormatUtils';
 import MobxPromise from 'mobxpromise';
+import {GroupLogic} from "./filters/groupLogic/GroupLogic";
+import {isFiltered} from "./StudyViewUtils";
 const CheckedSelect = require("react-select-checked").CheckedSelect;
 
 export interface ISummaryHeaderProps {
@@ -32,10 +39,13 @@ export interface ISummaryHeaderProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
     attributesMetaSet: {[id:string]:ChartMeta};
     user?: string;
+    allGenes: Gene[];
     getClinicalData: () => Promise<string>;
     onSubmitQuery:() => void
     updateClinicalDataEqualityFilter: (chartMeta: ChartMeta, value: string[]) => void;
     updateClinicalDataIntervalFilter: (chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) => void;
+    removeGeneFilter: (entrezGeneId: number) => void;
+    removeCNAGeneFilter: (filter: CopyNumberGeneFilterElement) => void;
     clearGeneFilter: () => void;
     clearCNAGeneFilter: () => void;
     clearChartSampleIdentifierFilter: (chartMeta: ChartMeta) => void;
@@ -78,7 +88,7 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
 
             let navCaseIds = _.map(this.props.selectedSamples, sample => (includeStudyId ? sample.studyId : '') + sample.sampleId).join(',')
 
-            window.open(buildCBioPortalUrl(
+            window.open(buildCBioPortalPageUrl(
                 'patient',
                 {
                     sampleId: firstSample.sampleId,
@@ -180,88 +190,102 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                 }
 
                 <div className={styles.summaryHeader}>
-                    <SelectedInfo selectedSamples={this.props.selectedSamples}/>
-                    <DefaultTooltip
-                        trigger={['click']}
-                        destroyTooltipOnHide={true}
-                        overlay={
-                            <VirtualStudy
-                                user={this.props.user}
-                                studyWithSamples={this.props.studyWithSamples}
-                                selectedSamples={this.props.selectedSamples}
-                                filter={this.props.filter}
-                                attributesMetaSet={this.props.attributesMetaSet}
-                            />
-                        }
-                        placement="bottom"
-                    >
+
+                    <div className="form-group form-group-custom">
+                        <SelectedInfo selectedSamples={this.props.selectedSamples}/>
+
+
+                        <div className="btn-group" role="group">
                         <DefaultTooltip
+                            trigger={['click']}
+                            destroyTooltipOnHide={true}
+                            overlay={
+                                <VirtualStudy
+                                    user={this.props.user}
+                                    studyWithSamples={this.props.studyWithSamples}
+                                    selectedSamples={this.props.selectedSamples}
+                                    filter={this.props.filter}
+                                    attributesMetaSet={this.props.attributesMetaSet}
+                                />
+                            }
+                            placement="bottom"
+                        >
+                            <DefaultTooltip
+                                placement={"top"}
+                                trigger={['hover']}
+                                overlay={<span>{this.virtualStudyButtonTooltip}</span>}
+                            >
+                                <button
+                                    className={classnames('btn btn-default btn-sm')}
+                                    title={this.virtualStudyButtonTooltip}>
+                                    <i className="fa fa-bookmark fa-lg" aria-hidden="true" title="Virtual Study"/>
+                                </button>
+                            </DefaultTooltip>
+                        </DefaultTooltip>
+
+                        <DefaultTooltip
+                            trigger={["hover"]}
                             placement={"top"}
-                            trigger={['hover']}
-                            overlay={<span>{this.virtualStudyButtonTooltip}</span>}
+                            overlay={<span>View selected cases</span>}
                         >
                             <button
-                                className={classnames('btn btn-default btn-sm', styles.summaryHeaderBtn, styles.summaryHeaderItem)}
-                                title={this.virtualStudyButtonTooltip}>
-                                <i className="fa fa-bookmark fa-lg" aria-hidden="true" title="Virtual Study"/>
+                                className={classnames('btn btn-default btn-sm')}
+                                onClick={() => this.openCases()}>
+                                <i className="fa fa-user-circle-o fa-lg" aria-hidden="true" title="View selected cases"></i>
                             </button>
                         </DefaultTooltip>
-                    </DefaultTooltip>
 
-                    <DefaultTooltip
-                        trigger={["hover"]}
-                        placement={"top"}
-                        overlay={<span>View selected cases</span>}
-                    >
+                        <DefaultTooltip
+                            trigger={["hover"]}
+                            placement={"top"}
+                            overlay={<span>{this.downloadButtonTooltip}</span>}
+                        >
+                            <button className={classnames('btn btn-default btn-sm')} onClick={() => this.handleDownload()}>
+                                <If condition={this.downloadingData}>
+                                    <Then>
+                                        <i className="fa fa-spinner fa-spin fa-lg" aria-hidden="true"></i>
+                                    </Then>
+                                    <Else>
+                                        <i className="fa fa-download fa-lg" aria-hidden="true"></i>
+                                    </Else>
+                                </If>
+                            </button>
+                        </DefaultTooltip>
+                        </div>
+                    </div>
+                    <div className="form-group form-group-custom">
+                        <GeneSelectionBox
+                            inputGeneQuery={this.props.geneQuery}
+                            callback={this.updateSelectedGenes}
+                            location={GeneBoxType.STUDY_VIEW_PAGE}
+                        />
+
                         <button
                             className={classnames('btn btn-default btn-sm', styles.summaryHeaderBtn, styles.summaryHeaderItem)}
-                            onClick={() => this.openCases()}>
-                            <i className="fa fa-user-circle-o fa-lg" aria-hidden="true" title="View selected cases"></i>
+                            onClick={() => this.isCustomCaseBoxOpen = true}
+                        >
+                            Select cases
                         </button>
-                    </DefaultTooltip>
 
-                    <DefaultTooltip
-                        trigger={["hover"]}
-                        placement={"top"}
-                        overlay={<span>{this.downloadButtonTooltip}</span>}
-                    >
-                        <button className={classnames('btn btn-default btn-sm', styles.summaryHeaderBtn, styles.summaryHeaderItem)} onClick={() => this.handleDownload()}>
-                            <If condition={this.downloadingData}>
-                                <Then>
-                                    <i className="fa fa-spinner fa-spin fa-lg" aria-hidden="true"></i>
-                                </Then>
-                                <Else>
-                                    <i className="fa fa-download fa-lg" aria-hidden="true"></i>
-                                </Else>
-                            </If>
+                        <button disabled={this._isQueryButtonDisabled} className={classnames(styles.summaryHeaderBtn, 'btn btn-primary btn-sm', styles.summaryHeaderItem)} onClick={() => this.props.onSubmitQuery()}>
+                            Submit Query
                         </button>
-                    </DefaultTooltip>
 
-                    <GeneSelectionBox
-                        inputGeneQuery={this.props.geneQuery}
-                        callback={this.updateSelectedGenes}
-                        location={GeneBoxType.STUDY_VIEW_PAGE}
-                    />
-                    <span className={classnames(styles.summaryHeaderItem)}><i className="fa fa-arrow-right fa-lg" aria-hidden="true"></i></span>
-                    <button disabled={this._isQueryButtonDisabled} className={classnames(styles.summaryHeaderBtn, 'btn btn-default btn-sm', styles.summaryHeaderItem)} onClick={() => this.props.onSubmitQuery()}>
-                        Query
-                    </button>
-                    <button
-                        className={classnames('btn btn-default btn-sm', styles.summaryHeaderBtn, styles.summaryHeaderItem)}
-                        onClick={() => this.isCustomCaseBoxOpen = true}
-                    >
-                        Select cases
-                    </button>
 
-                    <div className={classnames(styles.summaryHeaderItem)}>
-                        <CheckedSelect
-                            disabled={this.props.clinicalAttributesWithCountPromise.isPending}
-                            placeholder={"Add Chart"}
-                            onChange={this.onChangeSelectedCharts}
-                            options={this.chartOptions}
-                            value={(this.props.visibleAttributeIds || []).map(chartMeta => ({value: chartMeta.uniqueKey}))}
-                            labelKey="label"
-                        />
+
+                    </div>
+
+                    <div className="form-group form-group-custom">
+                        <div className={classnames(styles.summaryHeaderItem)}>
+                            <CheckedSelect
+                                disabled={this.props.clinicalAttributesWithCountPromise.isPending}
+                                placeholder={"Add Chart"}
+                                onChange={this.onChangeSelectedCharts}
+                                options={this.chartOptions}
+                                value={(this.props.visibleAttributeIds || []).map(chartMeta => ({value: chartMeta.uniqueKey}))}
+                                labelKey="label"
+                            />
+                        </div>
                     </div>
 
 
@@ -270,8 +294,11 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                 <UserSelections
                     filter={this.props.filter}
                     attributesMetaSet={this.props.attributesMetaSet}
+                    allGenes={this.props.allGenes}
                     updateClinicalDataEqualityFilter={this.props.updateClinicalDataEqualityFilter}
                     updateClinicalDataIntervalFilter={this.props.updateClinicalDataIntervalFilter}
+                    removeGeneFilter={this.props.removeGeneFilter}
+                    removeCNAGeneFilter={this.props.removeCNAGeneFilter}
                     clearCNAGeneFilter={this.props.clearCNAGeneFilter}
                     clearGeneFilter={this.props.clearGeneFilter}
                     clearChartSampleIdentifierFilter={this.props.clearChartSampleIdentifierFilter}

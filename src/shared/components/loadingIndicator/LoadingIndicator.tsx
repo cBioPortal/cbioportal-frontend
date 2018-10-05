@@ -1,28 +1,68 @@
 import * as React from 'react';
 import {ThreeBounce} from 'better-react-spinkit';
-import { If, Else, Then } from 'react-if';
+import {If, Else, Then} from 'react-if';
+import Spinner from "react-spinkit";
+import Portal from 'react-portal';
+import classNames from 'classnames';
+import styles from './styles.module.scss';
 
 export interface ILoader {
-    isLoading:Boolean;
-    style?:any;
+    isLoading: boolean;
+    style?: any;
+    small?: boolean;
+    big?: boolean;
+    inline?: boolean;
+    center?: boolean;
+    size?: "big" | "small"
 }
 
-export default class Loader extends React.Component<ILoader, {}> {
+export default class LoadingIndicator extends React.Component<ILoader, {}> {
+
+    public static defaultProps = {
+        inline: true,
+        center: false,
+        size: "small"
+    };
 
     public render() {
-       return (
 
+        const spinnerStyles = {
+            [styles.small]: this.props.size === "small",
+            [styles.big]: this.props.size === "big",
+            inlineBlock: this.props.inline
+        }
+
+        const parentStyles = {
+            [styles.centered]:this.props.center,
+            inlineBlock: this.props.inline
+        };
+
+        return (
             <If condition={this.props.isLoading}>
                 <Then>
-                    <div>
-                        <ThreeBounce style={this.props.style || { display:'inline-block', marginLeft:10 }} />
+                    <div className={classNames(parentStyles)}>
+                        <Spinner fadeIn="none"
+                                 className={classNames(styles.color, spinnerStyles)}
+                                 style={this.props.style || {display: 'inline-block', marginLeft: 10}}
+                                 name="line-scale-pulse-out"/>
                         {
                             this.props.children
                         }
                     </div>
                 </Then>
             </If>
-
         );
+
     }
+}
+
+
+export class GlobalLoader extends React.Component<ILoader, {}> {
+
+    public render() {
+        return <Portal isOpened={this.props.isLoading}>
+            <Spinner className={classNames(styles.color, styles.centered, styles.big)} fadeIn="none" name="line-scale-pulse-out" />
+        </Portal>
+    }
+
 }

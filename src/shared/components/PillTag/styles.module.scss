@@ -1,0 +1,22 @@
+$wide: 10px;
+$regular: 5px;
+
+.main {
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  font-size: 13px;
+  display: flex;
+  align-content: center;
+}
+
+.content {
+  margin: $regular $wide $regular $wide;
+}
+
+.delete {
+  padding-left: $regular;
+  margin: $regular $regular $regular 0;
+  border-left: 1px dashed white;
+  cursor: pointer;
+}

@@ -1,3 +1,4 @@
+
 .studyViewTablesTable {
   padding: 0 1px;
   display: flex;
@@ -35,7 +36,7 @@
 }
 
 .geneSymbol:hover {
-  border: 2px solid #1974b8;
+  border: 2px solid $study-view-primary-color;
   cursor: pointer;
 }
 
@@ -98,4 +99,9 @@
 
 .noFlexShrink {
   flex-shrink: 0;
+}
+
+.selectSamplesBtn {
+  background-color: $study-view-primary-color !important;
+  border-color: $study-view-primary-color !important;
 }

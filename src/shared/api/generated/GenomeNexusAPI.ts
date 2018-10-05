@@ -1,8 +1,34 @@
 import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
+export type Alleles = {
+    'allele': string
+
+};
+export type ClinVar = {
+    '_license': string
+
+        'alleleId': number
+
+        'alt': string
+
+        'chrom': string
+
+        'cytogenic': string
+
+        'gene': Gene
+
+        'hg19': Hg19
+
+        'hg38': Hg38
+
+        'hgvs': Hgvs
+
+};
 export type ColocatedVariant = {
-    'gnomad_nfe_allele': string
+    'dbSnpId': string
+
+        'gnomad_nfe_allele': string
 
         'gnomad_nfe_maf': string
 
@@ -13,6 +39,58 @@ export type ColocatedVariant = {
         'gnomad_eas_allele': string
 
         'gnomad_eas_maf': string
+
+};
+export type Cosmic = {
+    '_license': string
+
+        'alt': string
+
+        'chrom': string
+
+        'cosmicId': string
+
+        'hg19': Hg19
+
+        'mutFreq': number
+
+        'mutNt': string
+
+        'ref': string
+
+        'tumorSite': string
+
+};
+export type Dbsnp = {
+    '_class': string
+
+        'alleleOrigin': string
+
+        'alleles': Array < Alleles >
+
+        'alt': string
+
+        'chrom': string
+
+        'dbsnpBuild': number
+
+        'flags': Array < string >
+
+        'gene': Gene
+
+        'hg19': Hg19
+
+        'license': string
+
+        'ref': string
+
+        'rsid': string
+
+        'validated': boolean
+
+        'varSubtype': string
+
+        'vartype': string
 
 };
 export type EnsemblFilter = {
@@ -50,6 +128,8 @@ export type EnsemblTranscript = {
 
         'hugoSymbols': Array < string >
 
+        'refseqMrnaId': string
+
         'exons': Array < Exon >
 
         'utrs': Array < UntranslatedRegion >
@@ -67,6 +147,12 @@ export type Exon = {
         'strand': number
 
         'version': number
+
+};
+export type Gene = {
+    'geneId': string
+
+        'symbol': string
 
 };
 export type GeneXref = {
@@ -101,6 +187,24 @@ export type GenomicLocation = {
         'referenceAllele': string
 
         'variantAllele': string
+
+};
+export type Hg19 = {
+    'end': number
+
+        'start': number
+
+};
+export type Hg38 = {
+    'end': string
+
+        'start': string
+
+};
+export type Hgvs = {
+    'coding': Array < string >
+
+        'genomic': Array < string >
 
 };
 export type Hotspot = {
@@ -192,6 +296,48 @@ export type MutationAssessorAnnotation = {
         'license': string
 
 };
+export type Mutdb = {
+    'alt': string
+
+        'chrom': string
+
+        'cosmicId': string
+
+        'hg19': Hg19
+
+        'mutpredScore': number
+
+        'ref': string
+
+        'rsid': string
+
+        'uniprotId': string
+
+};
+export type MyVariantInfo = {
+    'clinVar': ClinVar
+
+        'cosmic': Cosmic
+
+        'dbsnp': Dbsnp
+
+        'hgvs': string
+
+        'mutdb': Mutdb
+
+        'snpeff': Snpeff
+
+        'vcf': Vcf
+
+        'version': number
+
+};
+export type MyVariantInfoAnnotation = {
+    'annotation': MyVariantInfo
+
+        'license': string
+
+};
 export type PdbHeader = {
     'compound': {}
 
@@ -216,6 +362,10 @@ export type PfamDomainRange = {
         'pfamDomainStart': number
 
         'pfamDomainEnd': number
+
+};
+export type Snpeff = {
+    'license': string
 
 };
 export type TranscriptConsequence = {
@@ -313,6 +463,8 @@ export type VariantAnnotation = {
 
         'mutation_assessor': MutationAssessorAnnotation
 
+        'my_variant_info': MyVariantInfoAnnotation
+
         'seq_region_name': string
 
         'start': number
@@ -333,11 +485,23 @@ export type VariantAnnotationSummary = {
 
         'strandSign': string
 
+        'transcriptConsequenceSummaries': Array < TranscriptConsequenceSummary >
+
+        'transcriptConsequenceSummary': TranscriptConsequenceSummary
+
         'transcriptConsequences': Array < TranscriptConsequenceSummary >
 
         'variant': string
 
         'variantType': string
+
+};
+export type Vcf = {
+    'alt': string
+
+        'position': string
+
+        'ref': string
 
 };
 export type Version = {
@@ -502,6 +666,210 @@ export default class GenomeNexusAPI {
                 return response.body;
             });
         };
+    fetchVariantAnnotationByIdPOSTURL(parameters: {
+        'variantIds': Array < string > ,
+        'isoformOverrideSource' ? : string,
+        'fields' ? : Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/annotation/dbsnp/';
+
+        if (parameters['isoformOverrideSource'] !== undefined) {
+            queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+        }
+
+        if (parameters['fields'] !== undefined) {
+            queryParameters['fields'] = parameters['fields'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves VEP annotation for the provided list of dbSNP ids
+     * @method
+     * @name GenomeNexusAPI#fetchVariantAnnotationByIdPOST
+     * @param {} variantIds - List of variant IDs. For example ["rs116035550"]
+     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: annotation_summary
+     */
+    fetchVariantAnnotationByIdPOSTWithHttpInfo(parameters: {
+        'variantIds': Array < string > ,
+        'isoformOverrideSource' ? : string,
+        'fields' ? : Array < string > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/annotation/dbsnp/';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['variantIds'] !== undefined) {
+                body = parameters['variantIds'];
+            }
+
+            if (parameters['variantIds'] === undefined) {
+                reject(new Error('Missing required  parameter: variantIds'));
+                return;
+            }
+
+            if (parameters['isoformOverrideSource'] !== undefined) {
+                queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+            }
+
+            if (parameters['fields'] !== undefined) {
+                queryParameters['fields'] = parameters['fields'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Retrieves VEP annotation for the provided list of dbSNP ids
+     * @method
+     * @name GenomeNexusAPI#fetchVariantAnnotationByIdPOST
+     * @param {} variantIds - List of variant IDs. For example ["rs116035550"]
+     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: annotation_summary
+     */
+    fetchVariantAnnotationByIdPOST(parameters: {
+            'variantIds': Array < string > ,
+            'isoformOverrideSource' ? : string,
+            'fields' ? : Array < string > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < VariantAnnotation >
+        > {
+            return this.fetchVariantAnnotationByIdPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchVariantAnnotationByIdGETURL(parameters: {
+        'variantId': string,
+        'isoformOverrideSource' ? : string,
+        'fields' ? : Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/annotation/dbsnp/{variantId}';
+
+        path = path.replace('{variantId}', parameters['variantId'] + '');
+        if (parameters['isoformOverrideSource'] !== undefined) {
+            queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+        }
+
+        if (parameters['fields'] !== undefined) {
+            queryParameters['fields'] = parameters['fields'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves VEP annotation for the give dbSNP id
+     * @method
+     * @name GenomeNexusAPI#fetchVariantAnnotationByIdGET
+     * @param {string} variantId - dbSNP id. For example rs116035550.
+     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: annotation_summary
+     */
+    fetchVariantAnnotationByIdGETWithHttpInfo(parameters: {
+        'variantId': string,
+        'isoformOverrideSource' ? : string,
+        'fields' ? : Array < string > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/annotation/dbsnp/{variantId}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{variantId}', parameters['variantId'] + '');
+
+            if (parameters['variantId'] === undefined) {
+                reject(new Error('Missing required  parameter: variantId'));
+                return;
+            }
+
+            if (parameters['isoformOverrideSource'] !== undefined) {
+                queryParameters['isoformOverrideSource'] = parameters['isoformOverrideSource'];
+            }
+
+            if (parameters['fields'] !== undefined) {
+                queryParameters['fields'] = parameters['fields'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Retrieves VEP annotation for the give dbSNP id
+     * @method
+     * @name GenomeNexusAPI#fetchVariantAnnotationByIdGET
+     * @param {string} variantId - dbSNP id. For example rs116035550.
+     * @param {string} isoformOverrideSource - Isoform override source. For example uniprot
+     * @param {array} fields - Comma separated list of fields to include (case-sensitive!). For example: annotation_summary
+     */
+    fetchVariantAnnotationByIdGET(parameters: {
+        'variantId': string,
+        'isoformOverrideSource' ? : string,
+        'fields' ? : Array < string > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < VariantAnnotation > {
+        return this.fetchVariantAnnotationByIdGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     fetchVariantAnnotationByGenomicLocationPOSTURL(parameters: {
         'genomicLocations': Array < GenomicLocation > ,
         'isoformOverrideSource' ? : string,
