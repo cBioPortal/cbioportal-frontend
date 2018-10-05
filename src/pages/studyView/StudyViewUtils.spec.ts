@@ -1010,8 +1010,8 @@ describe('StudyViewUtils', () => {
             assert.equal(colors["Yes"], "#66aa00");
             assert.equal(colors["No"], "#666666");
             assert.equal(colors["Na"], "#CCCCCC");
-            assert.equal(colors["Male"], "#316395");
-            assert.equal(colors["F"], "#b82e2e");
+            assert.equal(colors["Male"], "#2986E2");
+            assert.equal(colors["F"], "#dc3912");
         });
 
         it ('does not pick already picked colors again for non-fixed values', () => {
