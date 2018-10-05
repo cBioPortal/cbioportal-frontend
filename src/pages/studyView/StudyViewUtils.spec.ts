@@ -3,18 +3,19 @@ import {
     calcIntervalBinValues, filterCategoryBins, filterIntervalBins, filterNumericalBins,
     generateCategoricalData, generateNumericalData, isLogScaleByDataBins, isLogScaleByValues,
     getClinicalDataIntervalFilterValues, makePatientToClinicalAnalysisGroup, updateGeneQuery, formatNumericalTickValues,
-    intervalFiltersDisplayValue, isEveryBinDistinct, toFixedDigit, getExponent,
+    intervalFiltersDisplayValue, isEveryBinDistinct, toFixedDigit, getExponent, clinicalDataCountComparator,
     getCNAByAlteration,
     getDefaultChartTypeByClinicalAttribute,
-    getVirtualStudyDescription, calculateLayout, getLayoutMatrix, LayoutMatrixItem, getQValue, pickClinicalDataColors, getSamplesByExcludingFiltersOnChart, getFilteredSampleIdentifiers
+    getVirtualStudyDescription, calculateLayout, getLayoutMatrix, LayoutMatrixItem, getQValue, pickClinicalDataColors, getSamplesByExcludingFiltersOnChart, getFilteredSampleIdentifiers,
+    getHugoSymbolByEntrezGeneId, getFilteredStudiesWithSamples, showOriginStudiesInSummaryDescription
 } from 'pages/studyView/StudyViewUtils';
 import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue, Sample} from 'shared/api/generated/CBioPortalAPIInternal';
-import {ClinicalAttribute, Gene} from 'shared/api/generated/CBioPortalAPI';
-import {ChartDimension, ChartMeta, ChartTypeEnum} from "./StudyViewPageStore";
+import {ClinicalAttribute, Gene, CancerStudy} from 'shared/api/generated/CBioPortalAPI';
+import {ChartMeta, ChartTypeEnum, StudyViewFilterWithSampleIdentifierFilters} from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
-import {observable} from "mobx";
 import sinon from 'sinon';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
+import { VirtualStudy } from 'shared/model/VirtualStudy';
 
 describe('StudyViewUtils', () => {
 
@@ -41,25 +42,11 @@ describe('StudyViewUtils', () => {
             studyId: 'study2',
             uniqueSampleKeys: ['3', '4']
         }];
-        let selectedSamples = [{
-            studyId: 'study1',
-            uniqueSampleKey: '1'
-        }, {
-            studyId: 'study1',
-            uniqueSampleKey: '2'
-        }, {
-            studyId: 'study2',
-            uniqueSampleKey: '3'
-        }, {
-            studyId: 'study2',
-            uniqueSampleKey: '4'
-        }];
 
         it('when all samples are selected', () => {
             assert.isTrue(
                 getVirtualStudyDescription(
                     studies as any,
-                    selectedSamples as any,
                     {} as any,
                     {} as any,
                     []
@@ -67,33 +54,55 @@ describe('StudyViewUtils', () => {
         });
         it('when filters are applied', () => {
             let filter = {
-                'clinicalDataEqualityFilters': [{
+                clinicalDataEqualityFilters: [{
                     'attributeId': 'attribute1',
                     'clinicalDataType': "SAMPLE",
                     'values': ['value1']
                 }],
-                "mutatedGenes": [{ "entrezGeneIds": [1] }],
-                "cnaGenes": [{ "alterations": [{ "entrezGeneId": 2, "alteration": -2 }] }],
-                'studyIds': ['study1', 'study2']
-            } as StudyViewFilter
+                clinicalDataIntervalFilters: [{
+                    'attributeId': 'attribute2',
+                    'clinicalDataType': "PATIENT",
+                    'values': [{
+                        'end': 0,
+                        'start': 10,
+                        'value': `10`
+                    }]
+                }],
+                mutatedGenes: [{ "entrezGeneIds": [1] }],
+                cnaGenes: [{ "alterations": [{ "entrezGeneId": 2, "alteration": -2 }] }],
+                studyIds: ['study1', 'study2'],
+                sampleIdentifiers: [],
+                sampleIdentifiersSet: {
+                    'SAMPLE_attribute3': [{
+                        'sampleId': 'sample 1',
+                        'studyId': 'study1'
+                    }, {
+                        'sampleId': 'sample 1',
+                        'studyId': 'study2'
+                    }]
+                }
+            } as StudyViewFilterWithSampleIdentifierFilters;
 
             let genes = [{ entrezGeneId: 1, hugoGeneSymbol: "GENE1" }, { entrezGeneId: 2, hugoGeneSymbol: "GENE2" }] as Gene[];
 
             assert.isTrue(
                 getVirtualStudyDescription(
                     studies as any,
-                    [{ studyId: 'study1', uniqueSampleKey: '1' }] as any,
                     filter,
-                    { 'SAMPLE_attribute1': 'attribute1 name' },
+                    {
+                        'SAMPLE_attribute1': 'attribute1 name',
+                        'PATIENT_attribute2': 'attribute2 name',
+                        'SAMPLE_attribute3': 'attribute3 name'
+                    },
                     genes
-                ).startsWith('1 sample from 1 study:\n- Study 1 (1 samples)\n\nFilters:\n- CNA Genes:\n  ' +
-                    '- GENE2-DEL\n- Mutated Genes:\n  - GENE1\n  - attribute1 name: value1'));
+                ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)\n\nFilters:\n- CNA Genes:\n' +
+                    '  - GENE2-DEL\n- Mutated Genes:\n  - GENE1\n- attribute1 name: value1\n- attribute2 name: 10 < ~ ≤ 0\n' +
+                    '- attribute3 name: 2 samples'));
         });
         it('when username is not null', () => {
             assert.isTrue(
                 getVirtualStudyDescription(
                     studies as any,
-                    selectedSamples as any,
                     {} as any,
                     {} as any,
                     [],
@@ -102,7 +111,6 @@ describe('StudyViewUtils', () => {
             assert.isTrue(
                 getVirtualStudyDescription(
                     studies as any,
-                    selectedSamples as any,
                     {} as any,
                     {} as any,
                     [],
@@ -1392,4 +1400,90 @@ describe('StudyViewUtils', () => {
             assert.deepEqual(getFilteredSampleIdentifiers(samples,  (sample) => sample.copyNumberSegmentPresent),[{ sampleId: 'sample2', studyId: 'study1' }]);
         });
     });
+
+    describe('showOriginStudiesInSummaryDescription', () => {
+        it('hide origin studies in summary description', () => {
+            assert.equal(showOriginStudiesInSummaryDescription([], []), false);
+            assert.equal(showOriginStudiesInSummaryDescription([{ studyId: 'CancerStudy1' }] as CancerStudy[], [] as VirtualStudy[]), false);
+            assert.equal(showOriginStudiesInSummaryDescription([{ studyId: 'CancerStudy1' }] as CancerStudy[], [{ id: 'VirtualStudy1' }] as VirtualStudy[]), false);
+        });
+        it('show origin studies in summary description', () => {
+            assert.equal(showOriginStudiesInSummaryDescription([], [{ id: 'VirtualStudy1' }] as VirtualStudy[]), true);
+        });
+    });
+
+    describe('getFilteredStudiesWithSamples', () => {
+
+        const samples: Sample[] = [{ sampleId: 'sample1', studyId: 'study1', uniqueSampleKey: 'sample1' }] as any;
+        const physicalStudies: CancerStudy[] = [{ studyId: 'study1' }] as any;
+        const virtualStudies: VirtualStudy[] = [{
+            id: 'virtualStudy1', data: {
+                name: 'virtual study 1',
+                description: 'virtual study 1',
+                studies: [{ id: 'study1', samples: ['sample1'] }, { id: 'study2', samples: ['sample1'] }]
+            }
+        }] as any;
+        it('returns expected results', () => {
+            assert.deepEqual(getFilteredStudiesWithSamples([], [], []), []);
+            assert.deepEqual(getFilteredStudiesWithSamples(samples, physicalStudies, []), [{ studyId: 'study1', uniqueSampleKeys: ['sample1'] }] as any);
+            assert.deepEqual(
+                getFilteredStudiesWithSamples(samples, physicalStudies, virtualStudies),
+                [
+                    {
+                        studyId: 'study1',
+                        uniqueSampleKeys: ['sample1']
+                    },
+                    {
+                        studyId: "virtualStudy1",
+                        name: "virtual study 1",
+                        description: "virtual study 1",
+                        uniqueSampleKeys: [
+                            "sample1"
+                        ]
+                    }] as any);
+        });
+    });
+
+    describe('clinicalDataCountComparator', () => {
+        it('returns zero if both NA', () => {
+            assert.equal(clinicalDataCountComparator({value: "NA", count: 1}, {value: "na", count: 666}), 0);
+        });
+
+        it('returns 1 if a is NA, but not b', () => {
+            assert.equal(clinicalDataCountComparator({value: "NA", count: 666}, {value: "HIGH", count: 66}), 1);
+        });
+
+        it('returns -1 if b is NA, but not a', () => {
+            assert.equal(clinicalDataCountComparator({value: "FEMALE", count: 6}, {value: "NA", count: 666}), -1);
+        });
+
+        it('returns count difference if none NA', () => {
+            assert.equal(clinicalDataCountComparator({value: "FEMALE", count: 6}, {value: "MALE", count: 16}), 10);
+            assert.equal(clinicalDataCountComparator({value: "FEMALE", count: 16}, {value: "MALE", count: 6}), -10);
+            assert.equal(clinicalDataCountComparator({value: "FEMALE", count: 666}, {value: "MALE", count: 666}), 0);
+        });
+    });
+
+    describe('getHugoSymbolByEntrezGeneId', () => {
+        const braf = {
+            "entrezGeneId": 673,
+            "hugoGeneSymbol": "BRAF",
+            "type": "protein-coding",
+            "cytoband": "7q34",
+            "length": 205602,
+            "chromosome": "7"
+        };
+
+        it('Return undefined for gene not exist', () => {
+            assert.isTrue(getHugoSymbolByEntrezGeneId([], 1) === undefined);
+        });
+
+        it('Return undefined for gene not exist', () => {
+            assert.isTrue(getHugoSymbolByEntrezGeneId([braf], 1) === undefined);
+        });
+
+        it('Return appropriate entrez gene', () => {
+            assert.isTrue(getHugoSymbolByEntrezGeneId([braf], 673) === 'BRAF');
+        });
+    })
 });
