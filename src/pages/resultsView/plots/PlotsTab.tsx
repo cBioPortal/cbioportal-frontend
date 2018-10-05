@@ -171,9 +171,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             } else {
                 const horzProfile = profileIdToProfile.result[this.horzSelection.dataSourceId!];
                 const vertProfile = profileIdToProfile.result[this.vertSelection.dataSourceId!];
-                if ((horzProfile && horzProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && horzProfile.datatype === DataTypeConstants.DISCRETE) ||
-                    (vertProfile && vertProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && vertProfile.datatype === DataTypeConstants.DISCRETE)) {
-                    // if theres a discrete cna profile, redundant to allow showing cna
+                if (// if theres a discrete cna profile, redundant to allow showing cna
+                    (horzProfile && horzProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && horzProfile.datatype === DataTypeConstants.DISCRETE) ||
+                    (vertProfile && vertProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && vertProfile.datatype === DataTypeConstants.DISCRETE) ||
+                    // if theres a mutation profile, we have decided not to allow showing cna
+                    (this.horzSelection.dataType === AlterationTypeConstants.MUTATION_EXTENDED) ||
+                    (this.vertSelection.dataType === AlterationTypeConstants.MUTATION_EXTENDED)) {
                     return PotentialViewType.MutationType;
                 } else {
                     // otherwise, show either one
@@ -192,14 +195,21 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 return PotentialViewType.None;
             } else {
                 let molecularProfileId;
+                let dataType;
                 if (this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
                     molecularProfileId = this.horzSelection.dataSourceId!;
+                    dataType = this.horzSelection.dataType;
                 } else {
                     molecularProfileId = this.vertSelection.dataSourceId!;
+                    dataType = this.vertSelection.dataType;
                 }
                 const profile = profileIdToProfile.result[molecularProfileId];
-                if (profile && profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && profile.datatype === DataTypeConstants.DISCRETE) {
-                    // if theres a discrete cna profile, redundant to allow showing cna
+                if (// if theres a discrete cna profile, redundant to allow showing cna
+                    (profile && profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && profile.datatype === DataTypeConstants.DISCRETE) ||
+                    // if theres a mutation profile, we have decided not to allow showing cna
+                    (dataType === AlterationTypeConstants.MUTATION_EXTENDED)
+                ) {
+
                     return PotentialViewType.MutationType;
                 } else {
                     // otherwise, show either one
@@ -1125,7 +1135,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     });
 
-    readonly mutationProfileDuplicateSamplesReport = remoteData({
+    /*readonly mutationProfileDuplicateSamplesReport = remoteData({
         await:()=>[
             this.horzAxisDataPromise,
             this.vertAxisDataPromise
@@ -1138,7 +1148,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 this.vertSelection
             ));
         }
-    });
+    });*/
 
     readonly scatterPlotData = remoteData<IScatterPlotData[]>({
         await: ()=>[
@@ -1377,14 +1387,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     {this.mutationDataCanBeShown && (
                         <div style={{marginTop:5}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
                     )}
-                    {this.mutationProfileDuplicateSamplesReport.isComplete && this.mutationProfileDuplicateSamplesReport.result.showMessage && (
+                    {/*this.mutationProfileDuplicateSamplesReport.isComplete && this.mutationProfileDuplicateSamplesReport.result.showMessage && (
                         <div className="alert alert-info" style={{marginTop:5, padding: 7}}>
                             Notice: With Mutation profiles, there is one data point per mutation type, per sample. In
                             this plot, there are {this.mutationProfileDuplicateSamplesReport.result.numSamples} samples with more than
                             one type of mutation, leading to {this.mutationProfileDuplicateSamplesReport.result.numSurplusPoints} extra
                             data points.
                         </div>
-                    )}
+                    )*/}
                 </div>
             );
         }
