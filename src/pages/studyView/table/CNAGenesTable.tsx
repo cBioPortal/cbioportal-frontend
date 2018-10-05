@@ -12,7 +12,7 @@ import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import FixedHeaderTable from "./FixedHeaderTable";
 import {bind} from "bind-decorator";
-import {getCNAByAlteration, getQValue} from "../StudyViewUtils";
+import {getCNAByAlteration, getCNAColorByAlteration, getQValue} from "../StudyViewUtils";
 
 
 export type  CNAGenesTableUserSelectionWithIndex = CopyNumberGeneFilterElement & {
@@ -94,7 +94,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         {
             name: 'CNA',
             render: (data: CopyNumberCountByGene) =>
-                <span className={classnames(data.alteration === -2 ? styles.del : styles.amp)}>
+                <span style={{color: getCNAColorByAlteration(data.alteration)}}>
                     {getCNAByAlteration(data.alteration)}
                 </span>,
             sortBy: (data: CopyNumberCountByGene) => data.alteration,
@@ -217,8 +217,6 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             <CNAGenesTableComponent
                 data={this.props.promise.result || []}
                 columns={this._columns}
-                selectedGenes={this.props.selectedGenes}
-                selectedRows={_.map(_.union(this.selectedRows, this.preSelectedRows), row => row.rowIndex)}
                 showSelectSamples={true && this.preSelectedRows.length > 0}
                 afterSelectingRows={this.afterSelectingRows}
                 isSelectedRow={this.isSelectedRow}

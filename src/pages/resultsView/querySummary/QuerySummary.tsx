@@ -8,11 +8,14 @@ import {CancerStudy} from "../../../shared/api/generated/CBioPortalAPI";
 import classNames from 'classnames';
 import './styles.scss';
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
-import formSubmit from '../../../shared/lib/formSubmit';
-import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
-import {observable} from "mobx";
+import Loader, {default as LoadingIndicator} from "../../../shared/components/loadingIndicator/LoadingIndicator";
+import {action, observable} from "mobx";
 import {QueryStore} from "../../../shared/components/query/QueryStore";
 import QueryAndDownloadTabs from "../../../shared/components/query/QueryAndDownloadTabs";
+import autobind from "autobind-decorator";
+import {BookmarkModal} from "../bookmark/BookmarkModal";
+import ExtendedRouterStore from "../../../shared/lib/ExtendedRouterStore";
+
 
 class StudyLink extends React.Component<{ study: CancerStudy, onClick?: () => void, href?:string }, {}> {
     render() {
@@ -21,10 +24,11 @@ class StudyLink extends React.Component<{ study: CancerStudy, onClick?: () => vo
 }
 
 @observer
-export default class QuerySummary extends React.Component<{ queryStore:QueryStore, store: ResultsViewPageStore }, {}> {
+export default class QuerySummary extends React.Component<{ queryStore:QueryStore, routingStore:ExtendedRouterStore, store: ResultsViewPageStore }, {}> {
 
     @observable private queryFormVisible = false;
     @observable private queryStoreInitialized = false;
+    @observable private showBookmarkDialog = false;
 
     constructor() {
         super();
@@ -43,13 +47,38 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
     private get singleStudyUI() {
         return <div>
-            <h4><StudyLink study={this.props.store.queriedStudies.result[0]}/></h4>
-            <span>
-                {(window as any).serverVars.caseSetProperties.case_set_name}&nbsp;
-                (<strong>{this.props.store.samples.result.length}</strong> samples)
-                 / <strong data-test='QuerySummaryGeneCount'>{this.props.store.hugoGeneSymbols.length}</strong> Genes
-            </span>
+            <h4 style={{fontSize:14}}><StudyLink study={this.props.store.queriedStudies.result[0]}/></h4>
+            {(this.props.store.sampleLists.result!.length > 0) && (<span>
+                        {this.props.store.sampleLists.result![0].name}&nbsp;
+                (<strong>{this.props.store.sampleLists.result![0].sampleCount}</strong> samples)
+                        / <strong data-test='QuerySummaryGeneCount'>{this.props.store.hugoGeneSymbols.length}</strong> { (this.props.store.hugoGeneSymbols.length === 1) ? "Gene" : "Genes"  }
+                    </span>)
+            }
+            {
+                (this.props.store.sampleLists.result!.length === 0) && (
+                    <span>User-defined Patient List&nbsp;
+                        ({this.props.store.samples.result!.length} samples)&nbsp;/&nbsp;
+                        {this.props.store.genes.result!.length} { (this.props.store.hugoGeneSymbols.length === 1) ? "Gene" : "Genes"  }
+                    </span>)
+            }
         </div>
+
+
+
+
+    }
+
+    @autobind
+    @action
+    closeQueryForm(){
+        this.queryFormVisible=false;
+        $(document).scrollTop(0);
+    }
+
+    @autobind
+    @action
+    toggleBookmarkDialog(){
+        this.showBookmarkDialog = !this.showBookmarkDialog;
     }
 
     private get multipleStudyUI() {
@@ -84,24 +113,34 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
         if (!this.props.store.totalAlterationStats.isError && !this.props.store.queriedStudies.isError) {
 
-
-            const loadingComplete = this.props.store.totalAlterationStats.isComplete && this.props.store.queriedStudies.isComplete;
+            const loadingComplete = this.props.store.totalAlterationStats.isComplete && this.props.store.queriedStudies.isComplete && this.props.store.samples.isComplete;
 
             let alterationPercentage = (loadingComplete) ?
                 (this.props.store.totalAlterationStats.result!.alteredSampleCount / this.props.store.totalAlterationStats.result!.sampleCount * 100) : 0;
 
             return (
                 <div>
+
+                    {
+                        (this.showBookmarkDialog) && (
+                            <BookmarkModal routingStore={this.props.routingStore} onHide={this.toggleBookmarkDialog}  />
+                        )
+                    }
+
                     <div className="query-summary">
                         <div className="query-summary__leftItems">
                             <div>
                                 <button id="modifyQueryBtn" onClick={this.handleModifyQueryClick} className={classNames('btn btn-primary' , { disabled:!loadingComplete  })}>
                                     {(this.queryFormVisible) ? 'Cancel Modify Query' : 'Modify Query'}
                                 </button>
+
+                                <DefaultTooltip overlay={<div>Bookmark query</div>}>
+                                    <button className="btn btn-default" onClick={this.toggleBookmarkDialog} style={{marginLeft:10}}><i className="fa fa-bookmark fa-lg text-primary"></i></button>
+                                </DefaultTooltip>
+
                             </div>
 
-
-                            <Loader isLoading={loadingComplete === false}/>
+                            <LoadingIndicator isLoading={!loadingComplete} small={true}/>
 
 
                             {
@@ -110,7 +149,7 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
                         </div>
                         {
                             (loadingComplete) && (<div className="query-summary__alterationData">
-                                <h4>Gene Set / Pathway is altered
+                                <h4 style={{fontSize:14}}>Gene Set / Pathway is altered
                                 in {this.props.store.totalAlterationStats.result!.alteredSampleCount} ({_.round(alterationPercentage, 1)}%) of queried samples</h4>
                             </div>)
                         }
@@ -119,7 +158,7 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
                     {
                         (this.queryStoreInitialized) && (
                             <div style={{marginTop:10}} className={classNames({ hidden:!this.queryFormVisible })}>
-                                <QueryAndDownloadTabs showDownloadTab={false} store={this.props.queryStore} />
+                                <QueryAndDownloadTabs onSubmit={this.closeQueryForm} showDownloadTab={false} store={this.props.queryStore} />
                             </div>
                         )
                     }

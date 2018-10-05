@@ -197,8 +197,6 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             <MutatedGenesTableComponent
                 data={this.props.promise.result || []}
                 columns={this._tableColumns}
-                selectedGenes={this.props.selectedGenes}
-                selectedRows={_.map(_.union(this.selectedRows, this.preSelectedRows), row => row.rowIndex)}
                 showSelectSamples={true && this.preSelectedRows.length > 0}
                 isSelectedRow={this.isSelectedRow}
                 afterSelectingRows={this.afterSelectingRows}

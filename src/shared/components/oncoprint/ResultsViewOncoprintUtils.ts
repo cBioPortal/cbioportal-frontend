@@ -34,6 +34,8 @@ export function makeProfiledInClinicalAttributes(
 
     const existsUnprofiledCount:{[alterationType:string]:number} = _.reduce(coverageInformation, (map, sampleCoverage)=>{
         const isUnprofiled:{[alterationType:string]:boolean} = {};
+
+        // if a sample is not profiled in all genes, its certainly unprofiled for this profile
         for (const gpData of sampleCoverage.notProfiledAllGenes) {
             if (gpData.molecularProfileId in selectedMolecularProfilesMap) {
                 // mark isUnprofiled for this type because this is a selected profile
@@ -42,6 +44,8 @@ export function makeProfiledInClinicalAttributes(
                 ] = true;
             }
         }
+
+        // if a sample is not profiled in some gene, then it is maybe unprofiled
         _.forEach(sampleCoverage.notProfiledByGene, (geneInfo)=>{
             for (const gpData of geneInfo) {
                 if (gpData.molecularProfileId in selectedMolecularProfilesMap) {
@@ -52,11 +56,26 @@ export function makeProfiledInClinicalAttributes(
                 }
             }
         });
+
+        // if a sample is profiled in some gene, then it is not unprofiled
+        _.forEach(sampleCoverage.byGene, geneInfo=>{
+            for (const gpData of geneInfo) {
+                if (gpData.molecularProfileId in selectedMolecularProfilesMap) {
+                    // unmark isUnprofiled
+                    isUnprofiled[
+                        molecularProfileIdToMolecularProfile[gpData.molecularProfileId].molecularAlterationType
+                    ] = false;
+                }
+            }
+        });
+
         // increment counts
-        for (const alterationType of Object.keys(isUnprofiled)) {
-            map[alterationType] = map[alterationType] || 0;
-            map[alterationType] += 1;
-        }
+        _.forEach(isUnprofiled, (_isUnprofiled, alterationType)=>{
+            if (_isUnprofiled) {
+                map[alterationType] = map[alterationType] || 0;
+                map[alterationType] += 1;
+            }
+        });
         return map;
     }, {} as {[alterationType:string]:number});
 

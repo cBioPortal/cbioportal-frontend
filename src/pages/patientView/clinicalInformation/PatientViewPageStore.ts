@@ -46,6 +46,7 @@ import {Gene as OncoKbGene} from "../../../shared/api/generated/OncoKbAPI";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 import { VariantAnnotation } from 'shared/api/generated/GenomeNexusAPI';
 import { fetchVariantAnnotationsIndexedByGenomicLocation } from 'shared/lib/MutationAnnotator';
+import {getHeatmapMeta} from "../../../shared/lib/MDACCUtils";
 
 type PageMode = 'patient' | 'sample';
 
@@ -145,6 +146,12 @@ export class PatientViewPageStore {
             } else {
                 return `Sample: ${this.sampleId}`
             }
+    }
+
+    @computed get metaDescription(): string {
+        const id = ((this.pageMode === "patient") ?
+            this.patientId : this.sampleId);
+        return `${id} from ${this.studyMetaData.result!.name}`;
     }
 
     @computed get pageMode(): PageMode {
@@ -311,16 +318,8 @@ export class PatientViewPageStore {
     readonly MDAndersonHeatMapAvailable = remoteData({
         await: () => [this.derivedPatientId],
         invoke: async() => {
-
-            let resp: any = await request.get(`//bioinformatics.mdanderson.org/dyce?app=chmdb&command=participant2maps&participant=${this.patientId}`);
-
-            const parsedResp: any = JSON.parse(resp.text);
-
-            // filecontent array is serialized :(
-            const fileContent: string[] = JSON.parse(parsedResp.fileContent);
-
+            const fileContent: string[] = await getHeatmapMeta(`//bioinformatics.mdanderson.org/participant2maps?participant=${this.patientId}`);
             return fileContent.length > 0;
-
         },
         onError: () => {
             // fail silently

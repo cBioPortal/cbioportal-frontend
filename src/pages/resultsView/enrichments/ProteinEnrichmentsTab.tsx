@@ -23,7 +23,7 @@ export default class ProteinEnrichmentsTab extends React.Component<IProteinEnric
     public render() {
 
         if (this.props.store.proteinEnrichmentData.isPending) {
-            return <Loader isLoading={true} style={{ display:'inline-block', marginLeft:10, marginTop: 20 }} />;
+            return <Loader isLoading={true} center={true} />;
         }
 
         return (
