@@ -4,7 +4,6 @@ import formSubmit from "shared/lib/formSubmit";
 import getBrowserWindow from "../lib/getBrowserWindow";
 
 export function trimTrailingSlash(str:string){
-    if (!str) debugger;
    return str.replace(/\/$/g,"");
 }
 
@@ -130,13 +129,11 @@ export function getGenomeNexusApiUrl() {
 }
 
 export function getVirtualStudyServiceUrl() {
-    const base = trimTrailingSlash(AppConfig.serverConfig.session_service_url);
-    return `${base}/virtual_study`;
+    return buildCBioPortalAPIUrl("api-legacy/proxy/session/virtual_study");
 }
 
 export function getSessionServiceUrl() {
-    const base = trimTrailingSlash(AppConfig.serverConfig.session_service_url);
-    return `${base}/main_session`;
+    return buildCBioPortalAPIUrl("api-legacy/proxy/session/session");
 }
 
 export function getConfigurationServiceApiUrl() {
