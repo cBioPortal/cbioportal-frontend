@@ -121,6 +121,7 @@ export function getGenomeNexusApiUrl() {
             // we need to support legacy configuration values
             url = url.replace(/^http[s]?:\/\//,''); // get rid of protocol
             url = url.replace(/\/$/,""); // get rid of trailing slashes
+            url = url.replace(/^\/+/,""); // get rid of leading slashes
             return buildCBioPortalAPIUrl(`proxy/${url}`)
         }
     } else {
@@ -133,7 +134,7 @@ export function getVirtualStudyServiceUrl() {
 }
 
 export function getSessionServiceUrl() {
-    return buildCBioPortalAPIUrl("api-legacy/proxy/session/session");
+    return buildCBioPortalAPIUrl("api-legacy/proxy/session/");
 }
 
 export function getConfigurationServiceApiUrl() {
