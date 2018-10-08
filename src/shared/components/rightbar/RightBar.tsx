@@ -59,7 +59,7 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
     }
 
     private getWhatsNew() {
-        if (_.isEmpty(AppConfig.serverConfig.skin_right_nav_whats_new_blurb)) {
+        if (!_.isEmpty(AppConfig.serverConfig.skin_right_nav_whats_new_blurb)) {
             return (
                 <div className="rightBarSection">
                     <h3>What's New</h3>
