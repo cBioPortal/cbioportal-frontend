@@ -1112,6 +1112,7 @@ export class StudyViewPageStore {
             if (osStatusFlag && osMonthsFlag) {
                 this.chartsType.set(UniqueKey.OVERALL_SURVIVAL, ChartTypeEnum.SURVIVAL);
                 this.chartsDimension.set(UniqueKey.OVERALL_SURVIVAL, DEFAULT_LAYOUT_PROPS.dimensions[ChartTypeEnum.SURVIVAL]);
+                // hide OVERALL_SURVIVAL chart if cacner type is mixed or have moer than one cancer type
                 if(cancerTypeIds.length === 1 && cancerTypeIds[0] !== 'mixed') {
                     this._chartVisibility.set(UniqueKey.OVERALL_SURVIVAL, true);
                 }
@@ -1119,6 +1120,7 @@ export class StudyViewPageStore {
             if (dfsStatusFlag && dfsMonthsFlag) {
                 this.chartsType.set(UniqueKey.DISEASE_FREE_SURVIVAL, ChartTypeEnum.SURVIVAL);
                 this.chartsDimension.set(UniqueKey.DISEASE_FREE_SURVIVAL, DEFAULT_LAYOUT_PROPS.dimensions[ChartTypeEnum.SURVIVAL]);
+                // hide DISEASE_FREE_SURVIVAL chart if cacner type is mixed or have moer than one cancer type
                 if(cancerTypeIds.length === 1 && cancerTypeIds[0] !== 'mixed') {
                     this._chartVisibility.set(UniqueKey.DISEASE_FREE_SURVIVAL, true);
                 }
@@ -1852,6 +1854,13 @@ export class StudyViewPageStore {
     });
 
 
+    readonly mutationCountVsFractionGenomeAlteredDataSet = remoteData<{ [id: string]: IStudyViewScatterPlotData }>({
+        await: () => [this.mutationCountVsFractionGenomeAlteredData],
+        invoke: () => {
+            return Promise.resolve(_.keyBy(this.mutationCountVsFractionGenomeAlteredData.result, datum => datum.uniqueSampleKey));
+        },
+        default: {}
+    });
 
     readonly getDataForClinicalDataTab = remoteData({
         await: () => [this.clinicalAttributes, this.selectedSamples],
@@ -1905,7 +1914,7 @@ export class StudyViewPageStore {
     readonly clinicalAttributesWithCount = remoteData<{ [clinicalAttributeId: string]: number }>({
         await: () => [
             this.molecularProfileSampleCounts,
-            this.mutationCountVsFractionGenomeAlteredData,
+            this.mutationCountVsFractionGenomeAlteredDataSet,
             this.survivalPlotData,
             this.clinicalAttributesCounts,
             this.samplesPerPatientData,
@@ -1939,7 +1948,15 @@ export class StudyViewPageStore {
                 }
 
                 if (UniqueKey.MUTATION_COUNT_CNA_FRACTION in this.chartMetaSet) {
-                    ret[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = (this.mutationCountVsFractionGenomeAlteredData.result || []).length;
+                    const mutationCountVsFractionGenomeAlteredDataSet = this.mutationCountVsFractionGenomeAlteredDataSet.result;
+                    const selectedSamplesMap = _.keyBy(this.selectedSamples.result!, s => s.uniqueSampleKey);
+                    const filteredData = _.reduce(selectedSamplesMap, (acc, next) => {
+                        if (mutationCountVsFractionGenomeAlteredDataSet[next.uniqueSampleKey]) {
+                            acc.push(mutationCountVsFractionGenomeAlteredDataSet[next.uniqueSampleKey]);
+                        }
+                        return acc;
+                    }, [] as IStudyViewScatterPlotData[]);
+                    ret[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = filteredData.length;
                 }
 
                 if (UniqueKey.SAMPLES_PER_PATIENT in this.chartMetaSet) {
