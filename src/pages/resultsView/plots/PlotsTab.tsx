@@ -1365,7 +1365,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @computed get plot() {
         const promises = [this.plotType, this.horzAxisDataPromise, this.vertAxisDataPromise, this.horzLabel, this.vertLabel];
         if (logicalOr(promises.map(p=>p.isPending))) {
-            return <LoadingIndicator isLoading={true}/>;
+            return <LoadingIndicator isLoading={true} center={true} size={"big"}/>;
         } else if (logicalOr(promises.map(p=>p.isError))) {
             return <span>Error loading plot data.</span>;
         } else {
@@ -1422,7 +1422,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     } else if (this.scatterPlotData.isError) {
                         return <span>Error loading plot data.</span>;
                     } else {
-                        return <LoadingIndicator isLoading={true}/>;
+                        return <LoadingIndicator isLoading={true} center={true} size={"big"}/>;
                     }
                 case PlotType.BoxPlot:
                     if (this.boxPlotData.isComplete) {
@@ -1459,7 +1459,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     } else if (this.boxPlotData.isError) {
                         return <span>Error loading plot data.</span>;
                     } else {
-                        return <LoadingIndicator isLoading={true}/>;
+                        return <LoadingIndicator isLoading={true} center={true} size={"big"}/>;
                     }
                 default:
                     return <span>Not implemented yet</span>
@@ -1520,7 +1520,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             <Observer>
                                 {this.controls}
                             </Observer>
-                        ) : <LoadingIndicator isLoading={true}/> }
+                        ) : <LoadingIndicator isLoading={true} center={true} size={"big"}/> }
                     </div>
                     <div className="inlineBlock">
                         {this.plot}
