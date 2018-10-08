@@ -5,7 +5,8 @@ import { hashHistory, browserHistory, createMemoryHistory, Router, useRouterHist
 import { createHistory } from 'history'
 import { RouterStore, syncHistoryWithStore  } from 'mobx-react-router';
 import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
-//import {QueryStore} from "./shared/components/query/QueryStore";
+import {initializeAPIClients, initializeConfiguration, setServerConfig} from './config/config';
+
 import {computed, extendObservable} from 'mobx';
 import makeRoutes from './routes';
 import * as _ from 'lodash';
@@ -26,11 +27,13 @@ import {molecularProfileParams} from "shared/components/query/QueryStoreUtils";
 import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
 import superagentCache from 'superagent-cache';
 import getBrowserWindow from "shared/lib/getBrowserWindow";
+import {getConfigurationServiceApiUrl} from "shared/api/urls";
 
 superagentCache(superagent);
 
-// this is a strange thing that apparently needs to happen for webpack to load bundles
-// from appropriate place
+// YOU MUST RUN THESE initialize and then set the public path after
+initializeConfiguration();
+// THIS TELLS WEBPACK BUNDLE LOADER WHERE TO LOAD SPLIT BUNDLES
 __webpack_public_path__ = AppConfig.frontendUrl;
 
 if (!window.hasOwnProperty("$")) {
@@ -55,15 +58,16 @@ if (localStorage.e2etest) {
     });
 }
 
+// expose version on window
+window.FRONTEND_VERSION = VERSION;
+window.FRONTEND_COMMIT = COMMIT;
+
+
 // this is to support old hash fragment style urls (from first round of 2017 refactoring)
 // we want to convert hash fragment route to HTML5 style route
 if (/#[^\?]*\?/.test(window.location.hash)) {
     window.history.replaceState(null,null,correctPatientUrl(window.location.href));
 }
-
-// expose version on window
-window.FRONTEND_VERSION = VERSION;
-window.FRONTEND_COMMIT = COMMIT;
 
 if (/cbioportal\.mskcc\.org|www.cbioportal\.org/.test(window.location.hostname) || window.localStorage.getItem('sentry') === 'true') {
     Raven.config('https://c93645c81c964dd284436dffd1c89551@sentry.io/164574', {
@@ -80,27 +84,6 @@ if (/cbioportal\.mskcc\.org|www.cbioportal\.org/.test(window.location.hostname) 
 _.noConflict();
 
 const routingStore = new ExtendedRoutingStore();
-
-//determine history type
-// let history;
-// switch (window.defaultRoute) {
-//     case "/patient":
-//     case "/spa":
-//         // these pages are going to use state of-the-art browser history
-//         // when refactoring is done, all pages will use this
-//         history = browserHistory;
-//         break;
-//     case "/study":
-//         // these pages are going to use state of-the-art browser history
-//         // when refactoring is done, all pages will use this
-//         history = browserHistory;
-//         break;
-//     default:
-//         // legacy pages will use memory history so as not to interfere
-//         // with old url params
-//         history = createMemoryHistory();
-//         break;
-// }
 
 if (/index\.do/.test(window.location.pathname)){
     if (/Action=Submit/i.test(window.location.search)) {
@@ -212,4 +195,21 @@ if (__DEBUG__ && module.hot) {
     module.hot.accept('./routes', () => render());
 }
 
-$(document).ready(() => render());
+$(document).ready(async () => {
+
+    // we use rawServerConfig (written by JSP) if it is present
+    // or fetch from config service if not
+    // need to use jsonp, so use jquery
+    let config = window.rawServerConfig || await $.ajax({
+        url: window.frontendConfig.configurationServiceUrl,
+        dataType: "jsonp",
+        jsonpCallback: "callback"
+    });
+
+    setServerConfig(config);
+    initializeAPIClients();
+
+    render();
+
+
+});
