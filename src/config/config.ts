@@ -82,7 +82,7 @@ export function setServerConfig(serverConfig:{[key:string]:any }){
     });
 
     // allow any hardcoded serverConfig props to override those from service
-    const mergedConfig = Object.assign({}, serverConfig, config.serverConfig || {})
+    const mergedConfig = Object.assign({}, serverConfig, serverConfig.frontendConfigOverride, config.serverConfig || {})
 
     config.serverConfig = mergedConfig;
 
@@ -141,6 +141,9 @@ export function initializeAPIClients(){
     (internalGenomeNexusClient as any).domain = getGenomeNexusApiUrl();
     (oncoKBClient as any).domain = getOncoKbApiUrl();
     (genome2StructureClient as any).domain = getG2SApiUrl();
+
+
+
 
 }
 
