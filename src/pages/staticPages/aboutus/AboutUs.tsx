@@ -12,7 +12,7 @@ export default class AboutUs extends React.Component<{}, {}> {
             <Helmet>
                 <title>{'cBioPortal for Cancer Genomics::About Us'}</title>
             </Helmet>
-            <StaticContent sourceUrl={AppConfig.skinAboutSourceURL!} title={"About Us"}/>
+            <StaticContent sourceUrl={AppConfig.serverConfig.skin_documentation_about!} title={"About Us"}/>
         </PageLayout>
     }
 
