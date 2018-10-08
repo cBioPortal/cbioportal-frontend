@@ -22,7 +22,7 @@ export default class MutationEnrichmentsTab extends React.Component<IMutationEnr
 
     public render() {
         if (this.props.store.mutationEnrichmentData.isPending) {
-            return <Loader isLoading={true} center={true} />;
+            return <Loader isLoading={true} center={true} size={"big"}/>;
         }
 
         return (

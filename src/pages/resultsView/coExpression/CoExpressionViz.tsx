@@ -290,6 +290,7 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
                             (this.dataStore.allData.length > 0) // dont show indicator if theres no data
                             && (this.plotData.isPending || !this.highlightedCoExpression)}
                         center={true}
+                        size={"big"}
                     />
                     { (this.plotData.isComplete && this.highlightedCoExpression) && (
                         <div style={{marginLeft:10}}>
@@ -340,7 +341,7 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
         return (
             <div style={{display:this.props.hidden ? "none" : "inherit", minHeight:826, position:"relative"}}>
                 {innerElt}
-                <LoadingIndicator isLoading={this.coExpressionDataPromise.isPending} center={true} />
+                <LoadingIndicator isLoading={this.coExpressionDataPromise.isPending} center={true} size={"big"} />
             </div>
         );
     }
