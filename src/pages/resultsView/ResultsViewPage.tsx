@@ -30,7 +30,7 @@ import CoExpressionTab from "./coExpression/CoExpressionTab";
 import Helmet from "react-helmet";
 import {createQueryStore} from "../home/HomePage";
 import {ServerConfigHelpers} from "../../config/config";
-
+import {loadCustomTabDeps, showCustomTab} from "../../shared/lib/customTabs";
 
 function initStore() {
 
@@ -210,11 +210,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
     @autobind
     private customTabMountCallback(div:HTMLDivElement,tab:any){
-        if (typeof getBrowserWindow()[tab.mountCallbackName] === 'function'){
-            getBrowserWindow()[tab.mountCallbackName](div, this.props.routing.location, this.resultsViewPageStore, tab.customParameters || {});
-        } else {
-            alert(`Tab mount callback not implemented for ${tab.title}`)
-        }
+        showCustomTab(div, tab, this.props.routing.location, this.resultsViewPageStore);
     }
 
     @computed
@@ -402,8 +398,8 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         let filteredTabs = tabMap.filter(this.evaluateTabInclusion).map((tab)=>tab.getTab());
 
         // now add custom tabs
-        if (AppConfig.customTabs) {
-            const customResultsTabs = AppConfig.customTabs.filter((tab: any) => tab.location === "RESULTS_PAGE").map((tab: any, i: number) => {
+        if (AppConfig.serverConfig.custom_tabs) {
+            const customResultsTabs = AppConfig.serverConfig.custom_tabs.filter((tab: any) => tab.location === "RESULTS_PAGE").map((tab: any, i: number) => {
                 return (<MSKTab key={100 + i} id={'customTab' + 1} unmountOnHide={(tab.unmountOnHide === true)}
                                 onTabDidMount={(div) => {
                                     this.customTabMountCallback(div, tab)
