@@ -29,6 +29,7 @@ import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 import CoExpressionTab from "./coExpression/CoExpressionTab";
 import Helmet from "react-helmet";
 import {createQueryStore} from "../home/HomePage";
+import {ServerConfigHelpers} from "../../config/config";
 
 
 function initStore() {
@@ -185,7 +186,6 @@ export enum ResultsViewTab {
 @observer
 export default class ResultsViewPage extends React.Component<IResultsViewPageProps, {}> {
 
-    private showTwitter = AppConfig.showTwitter === true;
     private resultsViewPageStore: ResultsViewPageStore;
 
     constructor(props: IResultsViewPageProps) {
@@ -420,8 +420,8 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     }
 
     public evaluateTabInclusion(tab:ITabConfiguration){
-        const excludedTabs = AppConfig.disabledTabs || [];
-        const isExcludedInList = excludedTabs.includes(tab.id);
+        const excludedTabs = AppConfig.serverConfig.disabled_tabs || "";
+        const isExcludedInList = ServerConfigHelpers.parseDisabledTabs(excludedTabs).includes(tab.id);
         const isExcluded = (tab.hide) ? tab.hide() : false;
         return !isExcludedInList && !isExcluded;
     }

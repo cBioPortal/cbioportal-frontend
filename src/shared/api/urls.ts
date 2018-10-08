@@ -98,7 +98,7 @@ export function getOncoQueryDocUrl() {
     return buildCBioPortalPageUrl("s/oql");
 }
 export function getOncoKbApiUrl() {
-    let url = AppConfig.oncoKBApiUrl;
+    let url = AppConfig.serverConfig.oncokb_public_api_url;
 
     if (typeof url === 'string') {
         // we need to support legacy configuration values
@@ -112,7 +112,7 @@ export function getOncoKbApiUrl() {
 
 }
 export function getGenomeNexusApiUrl() {
-    let url = AppConfig.genomeNexusApiUrl;
+    let url = AppConfig.serverConfig.genomenexus_url;
     if (typeof url === 'string') {
         // use url if https, otherwise use proxy
         if (url.startsWith('https://')) {
@@ -129,13 +129,11 @@ export function getGenomeNexusApiUrl() {
 }
 
 export function getVirtualStudyServiceUrl() {
-    const base = trimTrailingSlash(AppConfig.sessionServiceUrl!);
-    return `${base}/virtual_study`;
+    return buildCBioPortalAPIUrl("api-legacy/proxy/session/virtual_study");
 }
 
 export function getSessionServiceUrl() {
-    const base = trimTrailingSlash(AppConfig.sessionServiceUrl!);
-    return `${base}/main_session`;
+    return buildCBioPortalAPIUrl("api-legacy/proxy/session/session");
 }
 
 export function getConfigurationServiceApiUrl() {
