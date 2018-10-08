@@ -1,86 +1,16 @@
 export interface IAppConfig {
     apiRoot?: string;
     baseUrl?:string;
-    basePath?:string;
-    disabledTabs?:string[],
-    frontendUrl?: string;
-    genomespaceEnabled: boolean;
-    skinExampleStudyQueries: string[]; // in query the example searches
-    priorityStudies: PriorityStudies;
-
-    googleAnalyticsProfile?: string;
-
     authLogoutUrl?: string;
     authUserName?: string;
     authGoogleLogin?: string;
-
-
-    maxTreeDepth: number;
-    //priorityStudies: {
-    //    'Shared institutional Data Sets': ['mskimpact', 'cellline_mskcc'],
-    //    'Priority Studies': ['blca_tcga_pub', 'coadread_tcga_pub', 'brca_tcga_pub2015'], // for demo
-    //},
     configurationServiceUrl?: string;
-    showCivic?: boolean;
-    showHotspot?: boolean;
-    showMyCancerGenome?: boolean;
-    showOncoKB?: boolean;
-    showTwitter?: boolean;
-    oncoKBApiUrl?: string;
-    showGenomeNexus?: boolean;
-    genomeNexusApiUrl?: string;
+    frontendUrl?: string;
+    customTabs?:any;
+    serverConfig:IServerConfig;
+
     studiesWithGermlineConsentedSamples?:string[];
     isoformOverrideSource?: string;
-    enableDarwin?: boolean;
-    appVersion?: string;
-    historyType?: string;
-    customTabs?:any;
-    skinBlurb?: string; // text on main page
-    skinDatasetHeader?: string; // header on dataset page
-    skinDatasetFooter?: string;
-    skinRightNavShowDatasets?: boolean;
-    skinRightNavShowExamples?: boolean;
-    skinRightNavShowTestimonials?: boolean;
-    skinRightNavExamplesHTML?: string;
-    skinRightNavWhatsNewBlurb?: string;
-    skinRightLogo?: string;
-    skinShowDataSetsTab?: boolean;
-    skinShowWebAPITab?: boolean;
-    skinShowRmatLABTab?: boolean;
-    skinShowTutorialsTab?: boolean;
-    skinShowNewsTab?: boolean;
-    skinShowToolsTab?: boolean;
-    skinShowAboutTab?: boolean;
-    skinShowFAQSTab?: boolean;
-
-    userEmailAddress?: string;
-    querySetsOfGenes?: {"id": string, "genes":string[]}[];
-    // labels to be displayed in oncoprint "Mutation color" menu for custom annotation of driver and passenger mutations in the oncoprint.
-    // Set any of these properties to enable the respective menu options in oncoprint:
-    oncoprintCustomDriverAnnotationBinaryMenuLabel?:string;
-    oncoprintCustomDriverAnnotationTiersMenuLabel?:string;
-    // set this to false to disable the automatic selection of the custom driver/passenger mutations annotation (binary) in the oncoprint
-    // when custom annotation data is present.
-    oncoprintCustomDriverAnnotationDefault?:boolean;
-    // set this to false to disable the automatic selection of the custom tiers in the oncoprint when custom annotation data is present. By default
-    // this property is true.
-    oncoprintCustomDriverTiersAnnotationDefault?:boolean;
-    // OncoKB and Hotspots are automatically selected as annotation source. If you want to disable them, set the following property to "disable". If you
-    // want them to be selected only if there are no custom annotation driver and passenger mutations, type "custom".
-    oncoprintOncoKbHotspotsDefault?:"disable"|"custom";
-    // Select hide VUS by default
-    oncoprintHideVUSDefault?:boolean;
-    sessionServiceIsEnabled?:boolean;
-    sessionServiceUrl?:string;
-
-    skinIsMarkdownDocumentation?:boolean;
-    skinDocumentationBaseUrl?: string;
-    skinFaqSourceURL?: string;
-    skinAboutSourceURL?: string;
-    skinNewsSourceURL?: string;
-    skinOQLSourceURL?: string;
-
-    urlLengthThresholdForSession?:number;
 
 }
 
@@ -95,3 +25,69 @@ export type VirtualCohort = {
     samples:{sampleId:string, studyId:string}[],
     constituentStudyIds:string[]
 };
+
+export interface IServerConfig {
+
+    "app_version": string|null;   // default: "1.0"
+    "binary_custom_driver_annotation_menu_label": string|null; // default:
+    "disabled_tabs": string|null;
+    "civic_url": string|null;
+    "oncoprint_custom_driver_annotation_default": boolean;
+    "oncoprint_oncokb_hotspots_default": string | undefined;
+    "genomenexus_url": string|null;
+    "google_analytics_profile_id": string|null;
+    "oncoprint_hide_vus_default": boolean;
+    "mycancergenome_show": boolean | undefined;
+    "oncokb_public_api_url": string|null;
+    "digitalslidearchive_iframe_url": string|null;
+    "digitalslidearchive_meta_url": string|null;
+    "mdacc_heatmap_meta_url": string|null;
+    "mdacc_heatmap_patient_url": string|null;
+    "priority_studies": string|null;
+    "show_hotspot": boolean | undefined;
+    "show_oncokb": boolean;
+    "show_civic": boolean;
+    "show_genomenexus": boolean;
+    "skin_documentation_about": string|null;
+    "skin_documentation_baseurl": string|null;
+    "skin_blurb": string|null;
+    "skin_custom_header_tabs": string|null;
+    "skin_data_sets_footer": string|null;
+    "skin_data_sets_header": string|null;
+    "skin_documentation_markdown": boolean;
+    "skin_email_contact": string|null;
+    "skin_example_study_queries": string|null;
+    "skin_examples_right_column_html": string|null;
+    "skin_documentation_faq": string|null;
+    "skin_footer": string|null;
+    "skin_login_contact_html": string|null;
+    "skin_login_saml_registration_html": string|null;
+    "skin_documentation_news": string|null;
+    "skin_documentation_oql": string|null;
+    "skin_query_max_tree_depth": string;
+    "skin_right_logo": string|null;
+    "skin_right_nav_show_data_sets": boolean;
+    "skin_right_nav_show_examples": boolean;
+    "skin_right_nav_show_testimonials": boolean;
+    "skin_right_nav_whats_new_blurb": string|null;
+    "skin_show_about_tab": boolean;
+    "skin_show_data_tab": boolean;
+    "skin_show_faqs_tab": boolean;
+    "skin_show_news_tab":boolean;
+    "skin_show_r_matlab_tab": boolean;
+    "skin_show_tools_tab": boolean;
+    "skin_show_tutorials_tab": boolean;
+    "skin_show_web_api_tab": boolean;
+    "skin_title": string|null;
+    "skin_authorization_message": string|null;
+    "mdacc_heatmap_study_meta_url": string|null;
+    "mdacc_heatmap_study_url": string|null;
+    "oncoprint_custom_driver_annotation_tiers_menu_label": string|null;
+    "enable_darwin": boolean;
+    "query_sets_of_genes": string|null;
+    "base_url": string|null;
+    "user_email_address": string;
+    "session_service_url": string;
+    "session_url_length_threshold":string;
+
+}

@@ -37,6 +37,7 @@ import {VirtualStudy} from "shared/model/VirtualStudy";
 import { getGenesetsFromHierarchy, getVolcanoPlotMinYValue, getVolcanoPlotData } from "shared/components/query/GenesetsSelectorStore";
 import SampleListsInStudyCache from 'shared/cache/SampleListsInStudyCache';
 import formSubmit from "../../lib/formSubmit";
+import {ServerConfigHelpers} from "../../../config/config";
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -424,7 +425,7 @@ export class QueryStore
 	@observable showGisticPopup = false;
 	@observable showGenesetsHierarchyPopup = false;
 	@observable showGenesetsVolcanoPopup = false;
-	@observable priorityStudies = AppConfig.priorityStudies;
+	@observable priorityStudies = ServerConfigHelpers.priority_studies(AppConfig.serverConfig.priority_studies);
 	@observable showSelectedStudiesOnly:boolean = false;
 	@observable.shallow selectedCancerTypeIds:string[] = [];
 	@observable clickAgainToDeselectSingle:boolean = true;
@@ -432,7 +433,7 @@ export class QueryStore
 	@observable volcanoPlotSelectedPercentile: {label: string, value: string} = {label: '75%', value: '75'};
 	
 
-	@observable private _maxTreeDepth:number = AppConfig.maxTreeDepth;
+	@observable private _maxTreeDepth:number = parseInt(AppConfig.serverConfig.skin_query_max_tree_depth!,10);
 	@computed get maxTreeDepth()
 	{
 		return (this.forDownloadTab && this._maxTreeDepth > 0) ? 1 : this._maxTreeDepth;
@@ -469,7 +470,7 @@ export class QueryStore
 	});
 
 	readonly virtualStudies = remoteData(async ()=>{
-		if (AppConfig.sessionServiceIsEnabled) {
+		if (ServerConfigHelpers.sessionServiceIsEnabled()) {
 			return sessionServiceClient.getUserVirtualStudies();
 		} else {
 			return [];
@@ -548,7 +549,7 @@ export class QueryStore
 	})
 
 	readonly userVirtualStudies = remoteData(async ()=>{
-		if (AppConfig.sessionServiceIsEnabled) {
+		if (ServerConfigHelpers.sessionServiceIsEnabled()) {
 			return sessionServiceClient.getUserVirtualStudies();
 		} else {
 			return [];

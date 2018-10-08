@@ -85,6 +85,7 @@ import {getProteinPositionFromProteinChange} from "../../shared/lib/ProteinChang
 import {isMutation} from "../../shared/lib/CBioPortalAPIUtils";
 import { fetchVariantAnnotationsIndexedByGenomicLocation } from "shared/lib/MutationAnnotator";
 import { VariantAnnotation } from "shared/api/generated/GenomeNexusAPI";
+import {ServerConfigHelpers} from "../../config/config";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -277,12 +278,12 @@ export class ResultsViewPageStore {
             cbioportalCountThreshold: 10,
             cosmicCount: false,
             cosmicCountThreshold: 10,
-            driverFilter: !!AppConfig.oncoprintCustomDriverAnnotationDefault,
+            driverFilter: !!AppConfig.serverConfig.oncoprint_custom_driver_annotation_default,
             driverTiers: observable.map<boolean>(),
 
-            hotspots:!AppConfig.oncoprintOncoKbHotspotsDefault,
-            _oncoKb:!AppConfig.oncoprintOncoKbHotspotsDefault,
-            _ignoreUnknown: !!AppConfig.oncoprintHideVUSDefault,
+            hotspots:!AppConfig.serverConfig.oncoprint_oncokb_hotspots_default,
+            _oncoKb:!AppConfig.serverConfig.oncoprint_oncokb_hotspots_default,
+            _ignoreUnknown: !!AppConfig.serverConfig.oncoprint_hide_vus_default,
 
             set oncoKb(val:boolean) {
                 this._oncoKb = val;
@@ -1673,7 +1674,7 @@ export class ResultsViewPageStore {
             let sessionResp;
 
             // if we have a session service, lets get the url for the session
-            if (AppConfig.sessionServiceIsEnabled) {
+            if (ServerConfigHelpers.sessionServiceIsEnabled()) {
                 longUrl = await new Promise((resolve, reject)=>{
                     win.getSessionServiceBookmark(window.location.href, $("#bookmark-result-tab").data('session'), function(url:string){
 ;                        resolve(url);
@@ -1753,8 +1754,8 @@ export class ResultsViewPageStore {
             initializeCustomDriverAnnotationSettings(
                 result!,
                 this.mutationAnnotationSettings,
-                !!AppConfig.oncoprintCustomDriverTiersAnnotationDefault,
-                AppConfig.oncoprintOncoKbHotspotsDefault === "custom"
+                !(_.isEmpty(AppConfig.serverConfig.oncoprint_custom_driver_annotation_tiers_menu_label)),
+                AppConfig.serverConfig.oncoprint_oncokb_hotspots_default === "custom"
             );
         }
     });
