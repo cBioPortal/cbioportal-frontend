@@ -33,6 +33,7 @@ import ValidationAlert from "shared/components/ValidationAlert";
 import AjaxErrorModal from "shared/components/AjaxErrorModal";
 import AppConfig from 'appConfig';
 import { getMouseIcon } from './SVGIcons';
+import client from "../../shared/api/cbioportalClientInstance";
 
 import './patient.scss';
 import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
@@ -43,6 +44,8 @@ import Helmet from "react-helmet";
 import {ServerConfigHelpers} from "../../config/config";
 import ClinicalInformationMutationalSignatureTable
     from "./clinicalInformation/ClinicalInformationMutationalSignatureTable";
+import autobind from "autobind-decorator";
+import {showCustomTab} from "../../shared/lib/customTabs";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -181,6 +184,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         return patientViewPageStore.hasTissueImageIFrameUrl.isPending || patientViewPageStore.hasTissueImageIFrameUrl.isError
             || /https/.test(window.location.protocol)
             || (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && !patientViewPageStore.hasTissueImageIFrameUrl.result);
+    }
+
+
+    @autobind
+    private customTabMountCallback(div:HTMLDivElement,tab:any){
+        showCustomTab(div, tab, this.props.routing.location, patientViewPageStore);
     }
 
     public render() {
@@ -505,13 +514,22 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         <div className="clearfix">
                             <FeatureTitle title="Mutational Signatures" isLoading={ patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />
                             <LoadingIndicator isLoading={patientViewPageStore.mutationalSignatureData.isPending}/>
-                            {  (patientViewPageStore.clinicalDataGroupedBySample.isComplete && patientViewPageStore.mutationalSignatureData.isComplete) && (
-                                <ClinicalInformationMutationalSignatureTable data={patientViewPageStore.mutationalSignatureData.result} showTitleBar={true}/>
-                            )
+                            {
+                                (patientViewPageStore.clinicalDataGroupedBySample.isComplete && patientViewPageStore.mutationalSignatureData.isComplete) && (
+                                    <ClinicalInformationMutationalSignatureTable data={patientViewPageStore.mutationalSignatureData.result} showTitleBar={true}/>
+                                )
                             }
                         </div>
 
                     </MSKTab>
+
+                    {
+                        (AppConfig.serverConfig.custom_tabs) && AppConfig.serverConfig.custom_tabs.filter((tab:any)=>tab.location==="PATIENT_PAGE").map((tab:any, i:number)=>{
+                            return (<MSKTab key={100+i} id={'customTab'+1} unmountOnHide={(tab.unmountOnHide===true)}
+                                            onTabDidMount={(div)=>{ this.customTabMountCallback(div, tab) }} linkText={tab.title}>
+                            </MSKTab>)
+                        })
+                    }
 
                     </MSKTabs>
 
