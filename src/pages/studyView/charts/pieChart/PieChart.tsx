@@ -155,7 +155,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                 groupComponent={<g className="studyViewPieChartGroup" />}
                 width={190}
                 height={180}
-                labelRadius={30}
+                labelRadius={20}
                 padding={30}
                 labels={this.label}
                 data={this.props.data}
