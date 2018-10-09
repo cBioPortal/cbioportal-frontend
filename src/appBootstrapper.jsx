@@ -201,7 +201,7 @@ $(document).ready(async () => {
     // or fetch from config service if not
     // need to use jsonp, so use jquery
     let config = window.rawServerConfig || await $.ajax({
-        url: window.frontendConfig.configurationServiceUrl,
+        url: getConfigurationServiceApiUrl(),
         dataType: "jsonp",
         jsonpCallback: "callback"
     });
