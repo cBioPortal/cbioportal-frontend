@@ -12,7 +12,7 @@ import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import FixedHeaderTable from "./FixedHeaderTable";
 import {bind} from "bind-decorator";
-import {getCNAByAlteration, getCNAColorByAlteration, getQValue} from "../StudyViewUtils";
+import {getCNAByAlteration, getCNAColorByAlteration, getFrequencyStr, getQValue} from "../StudyViewUtils";
 
 
 export type  CNAGenesTableUserSelectionWithIndex = CopyNumberGeneFilterElement & {
@@ -79,7 +79,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             filter: (data: CopyNumberCountByGene, filterString: string, filterStringUpper: string) => {
                 return data.hugoGeneSymbol.indexOf(filterStringUpper) > -1;
             },
-            width: 85
+            width: 90
         },
         {
             name: 'Cytoband',
@@ -89,7 +89,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             filter: (data: CopyNumberCountByGene, filterString: string, filterStringUpper: string) => {
                 return _.isUndefined(data.cytoband) ? false : data.cytoband.indexOf(filterStringUpper) > -1;
             },
-            width: 100
+            width: 105
         },
         {
             name: 'CNA',
@@ -102,7 +102,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             filter: (data: CopyNumberCountByGene, filterString: string, filterStringUpper: string) => {
                 return getCNAByAlteration(data.alteration).indexOf(filterStringUpper) > -1;
             },
-            width: 65
+            width: 50
         },
         {
             name: '#',
@@ -119,17 +119,17 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             filter: (data: CopyNumberCountByGene, filterString: string, filterStringUpper: string) => {
                 return _.toString(data.countByEntity).indexOf(filterStringUpper) > -1;
             },
-            width: 75
+            width: 85
         },
         {
             name: 'Freq',
-            render: (data: CopyNumberCountByGene) => <span>{data.frequency + '%'}</span>,
+            render: (data: CopyNumberCountByGene) => <span>{getFrequencyStr(data.frequency)}</span>,
             sortBy: (data: CopyNumberCountByGene) => data.frequency,
             defaultSortDirection: 'desc' as 'desc',
             filter: (data: CopyNumberCountByGene, filterString: string, filterStringUpper: string) => {
                 return _.toString(data.frequency).indexOf(filterStringUpper) > -1;
             },
-            width: 75
+            width: 70
         }
     ];
 
