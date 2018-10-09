@@ -168,15 +168,15 @@ export interface IResultsViewPageProps {
 }
 
 export enum ResultsViewTab {
-    ONCOPRINT="oncoprintTab",
-    CANCER_TYPES_SUMMARY="cancerTypesSummaryTab",
-    MUTUAL_EXCLUSIVITY="mutualExclusivityTab",
+    ONCOPRINT="oncoprint",
+    CANCER_TYPES_SUMMARY="cancerTypesSummary",
+    MUTUAL_EXCLUSIVITY="mutualExclusivity",
     PLOTS="plots",
-    MUTATIONS="mutationsTab",
+    MUTATIONS="mutations",
     COEXPRESSION="coexpression",
-    ENRICHMENT="enrichment",
-    SURVIVAL="survivalTab",
-    CN_SEGMENTS="copyNumberSegmentsTab",
+    ENRICHMENT="enrichments",
+    SURVIVAL="survival",
+    CN_SEGMENTS="cnSegments",
     NETWORK="network",
     EXPRESSION="expression",
     DOWNLOAD="download"
@@ -428,7 +428,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         // we need to evaluate which should be the default tab
         if (tabId === undefined) {
             if (this.resultsViewPageStore.studies.result!.length > 1 && this.resultsViewPageStore.hugoGeneSymbols.length === 1) {
-                return "cancerTypesSummaryTab"; // cancer type study
+                return ResultsViewTab.CANCER_TYPES_SUMMARY; // cancer type study
             } else {
                 return undefined; // this will resolve to first tab
             }
