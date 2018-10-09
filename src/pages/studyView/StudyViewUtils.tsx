@@ -770,6 +770,20 @@ export function toFixedDigit(value: number, fractionDigits: number = 2)
     return `${Number(value.toFixed(numberOfLeadingDecimalZeroes + fractionDigits))}`;
 }
 
+export function getFrequencyStr(value: number) {
+    let str = '';
+    if (value < 0) {
+        return 'NA';
+    } else if (value >= 10) {
+        str = Math.floor(value).toString();
+    } else if (value >= 0.1) {
+        str = Number(value.toFixed(1)).toString();
+    } else {
+        str = '<0.1';
+    }
+    return `${str}%`;
+}
+
 export function getExponent(value: number): number
 {
     // less precision for values like 3 and 31
@@ -1084,7 +1098,7 @@ export function getFilteredStudiesWithSamples(
     samples: Sample[],
     physicalStudies: CancerStudy[],
     virtualStudies: VirtualStudy[]) {
-        
+
     let queriedStudiesWithSamples: StudyWithSamples[] = [];
     const selectedStudySampleSet = _.groupBy(samples, sample => sample.studyId);
 
