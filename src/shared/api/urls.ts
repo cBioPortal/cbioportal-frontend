@@ -138,7 +138,7 @@ export function getSessionServiceUrl() {
 }
 
 export function getConfigurationServiceApiUrl() {
-    return AppConfig.configurationServiceUrl;
+    return AppConfig.configurationServiceUrl || buildCBioPortalAPIUrl("config_service.jsp");
 }
 
 export function getG2SApiUrl() {
