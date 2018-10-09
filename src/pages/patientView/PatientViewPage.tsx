@@ -34,6 +34,7 @@ import AjaxErrorModal from "shared/components/AjaxErrorModal";
 import AppConfig from 'appConfig';
 import { getMouseIcon } from './SVGIcons';
 import client from "../../shared/api/cbioportalClientInstance";
+import { Link } from 'react-router';
 
 import './patient.scss';
 import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
@@ -205,7 +206,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         if (patientViewPageStore.studyMetaData.isComplete) {
             let study = patientViewPageStore.studyMetaData.result;
-            studyName = <a href={`study?id=${study.studyId}`} className="studyMetaBar_studyName">{study.name}</a>;
+            studyName = <Link to={`/newstudy?id=${study.studyId}`} className="studyMetaBar_studyName">{study.name}</Link>;
         }
 
         if (patientViewPageStore.patientViewData.isComplete && patientViewPageStore.studyMetaData.isComplete) {
