@@ -12,6 +12,7 @@ import { Link } from 'react-router';
 import getBrowserWindow from "../../lib/getBrowserWindow";
 import ExtendedRouterStore from "../../lib/ExtendedRouterStore";
 import LoadingIndicator from "../loadingIndicator/LoadingIndicator";
+import {ResultsViewTab} from "../../../pages/resultsView/ResultsViewPage";
 
 
 interface IRightBarProps
@@ -115,22 +116,22 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
         } else {
              return (
                 <div className="rightBarSection exampleQueries">
-                    <h3>"Example Queries</h3>
+                    <h3>Example Queries</h3>
                     <ul>
                         <li>
                             <Link to="/results?cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&case_ids=&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list">RAS/RAF alterations in colorectal cancer</Link>
                         </li>
                         <li>
-                            <Link to="/results?cancer_study_list=ov_tcga_pub&cancer_study_id=ov_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&Z_SCORE_THRESHOLD=2.0&case_set_id=ov_tcga_pub_3way_complete&case_ids=&gene_list=BRCA1+BRCA2&gene_set_choice=user-defined-list&tab=mutationsTab">BRCA1 and BRCA2 mutations in ovarian cancer</Link>
+                            <Link to={`/results/${ResultsViewTab.MUTATIONS}?cancer_study_list=ov_tcga_pub&cancer_study_id=ov_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&Z_SCORE_THRESHOLD=2.0&case_set_id=ov_tcga_pub_3way_complete&case_ids=&gene_list=BRCA1+BRCA2&gene_set_choice=user-defined-list`}>BRCA1 and BRCA2 mutations in ovarian cancer</Link>
                         </li>
                         <li>
                             <Link to="/results?cancer_study_list=ucec_tcga_pub&cancer_study_id=ucec_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ucec_tcga_pub_mutations&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=ucec_tcga_pub_sequenced&case_ids=&gene_set_choice=user-defined-list&gene_list=POLE%3A+MUT+%3D+P286+MUT+%3D+V411+MUT+%3D+L424+MUT+%3D+S297F&clinical_param_selection=null">POLE hotspot mutations in endometrial cancer</Link>
                         </li>
                         <li>
-                            <Link to="/results?case_set_id=gbm_tcga_pub_sequenced&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&case_ids=&Z_SCORE_THRESHOLD=1.0&cancer_study_list=gbm_tcga_pub&cancer_study_id=gbm_tcga_pub&gene_list=TP53+MDM2+MDM4&gene_set_choice=user-defined_list">TP53 and MDM2/4 alterations in GBM</Link>
+                            <Link to="/results?case_set_id=gbm_tcga_pub_sequenced&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=gbm_tcga_pub_cna_rae&case_ids=&Z_SCORE_THRESHOLD=1.0&cancer_study_list=gbm_tcga_pub&cancer_study_id=gbm_tcga_pub&gene_list=TP53+MDM2+MDM4&gene_set_choice=user-defined_list">TP53 and MDM2/4 alterations in GBM</Link>
                         </li>
                         <li>
-                            <Link to="/results?case_set_id=gbm_tcga_pub_sequenced&tab_index=tab_download&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&cancer_study_list=gbm_tcga_pub&cancer_study_id=gbm_tcga_pub&gene_list=PTEN&gene_set_choice=user-defined_list&transpose_matrix=on">PTEN mutations in GBM in text format</Link>
+                            <Link to={`/results/${ResultsViewTab.DOWNLOAD}?case_set_id=gbm_tcga_pub_sequenced&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=gbm_tcga_pub_mutations&cancer_study_list=gbm_tcga_pub&cancer_study_id=gbm_tcga_pub&gene_list=PTEN&gene_set_choice=user-defined_list&transpose_matrix=on`}>PTEN mutations in GBM in text format</Link>
                         </li>
                         <li>
                             <Link to="/patient?studyId=ucec_tcga_pub&caseId=TCGA-BK-A0CC">Patient view of an endometrial cancer case</Link>
