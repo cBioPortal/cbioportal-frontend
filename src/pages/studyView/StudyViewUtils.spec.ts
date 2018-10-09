@@ -6,8 +6,9 @@ import {
     intervalFiltersDisplayValue, isEveryBinDistinct, toFixedDigit, getExponent, clinicalDataCountComparator,
     getCNAByAlteration,
     getDefaultChartTypeByClinicalAttribute,
-    getVirtualStudyDescription, calculateLayout, getLayoutMatrix, LayoutMatrixItem, getQValue, pickClinicalDataColors, getSamplesByExcludingFiltersOnChart, getFilteredSampleIdentifiers,
-    getHugoSymbolByEntrezGeneId, getFilteredStudiesWithSamples, showOriginStudiesInSummaryDescription
+    getVirtualStudyDescription, calculateLayout, getLayoutMatrix, LayoutMatrixItem, getQValue, pickClinicalDataColors,
+    getSamplesByExcludingFiltersOnChart, getFilteredSampleIdentifiers,
+    getHugoSymbolByEntrezGeneId, getFilteredStudiesWithSamples, showOriginStudiesInSummaryDescription, getFrequencyStr
 } from 'pages/studyView/StudyViewUtils';
 import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue, Sample} from 'shared/api/generated/CBioPortalAPIInternal';
 import {ClinicalAttribute, Gene, CancerStudy} from 'shared/api/generated/CBioPortalAPI';
@@ -1441,6 +1442,53 @@ describe('StudyViewUtils', () => {
                             "sample1"
                         ]
                     }] as any);
+        });
+    });
+
+    describe('getFrequencyStr', () => {
+        const negativeValues = [
+            -666.666,
+            -3,
+            -2.2499999999999,
+            -1,
+            -0.6000000000000001,
+            -0.002499999998
+        ];
+
+        const positiveValues = [
+            0.002499999998,
+            0.6000000000000001,
+            1,
+            1.00001,
+            1.5999999999999999,
+            1.7999999999999998,
+            16.99999999999998,
+            666.666
+        ];
+
+        it ('handles negative values properly', () => {
+            assert.equal(getFrequencyStr(negativeValues[0]), "NA");
+            assert.equal(getFrequencyStr(negativeValues[1]), "NA");
+            assert.equal(getFrequencyStr(negativeValues[2]), "NA");
+            assert.equal(getFrequencyStr(negativeValues[3]), "NA");
+            assert.equal(getFrequencyStr(negativeValues[4]), "NA");
+            assert.equal(getFrequencyStr(negativeValues[5]), "NA");
+        });
+
+        it ('handles zero properly', () => {
+            assert.equal(getFrequencyStr(0), "<0.1%");
+        });
+
+        it ('handles positive values properly', () => {
+            //assert.equal(getFrequencyStr(positiveValues[0]), "0.0025");
+            assert.equal(getFrequencyStr(positiveValues[0]), "<0.1%");
+            assert.equal(getFrequencyStr(positiveValues[1]), "0.6%");
+            assert.equal(getFrequencyStr(positiveValues[2]), "1%");
+            assert.equal(getFrequencyStr(positiveValues[3]), "1%");
+            assert.equal(getFrequencyStr(positiveValues[4]), "1.6%");
+            assert.equal(getFrequencyStr(positiveValues[5]), "1.8%");
+            assert.equal(getFrequencyStr(positiveValues[6]), "16%");
+            assert.equal(getFrequencyStr(positiveValues[7]), "666%");
         });
     });
 
