@@ -993,12 +993,15 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         const alteredIdsPromise = (this.columnMode === "sample" ? this.props.store.alteredSampleKeys : this.props.store.alteredPatientKeys);
         const sequencedIdsPromise = (this.columnMode === "sample" ? this.props.store.sequencedSampleKeys: this.props.store.sequencedPatientKeys);
         const allIdsPromise = (this.columnMode === "sample" ? this.props.store.samples : this.props.store.patients);
+
         if (allIdsPromise.isComplete && alteredIdsPromise.isComplete && sequencedIdsPromise.isComplete) {
+            const allIdsSequenced = (sequencedIdsPromise.result.length === allIdsPromise.result.length);
+
             return (
                 <span style={{marginTop:"15px", marginBottom:"15px", display: "block"}}>
                     {`Altered in ${alteredIdsPromise.result.length} `+
                     `(${percentAltered(alteredIdsPromise.result.length, sequencedIdsPromise.result.length)}) `+
-                    `of ${sequencedIdsPromise.result.length} sequenced `+
+                    `of ${sequencedIdsPromise.result.length} ${allIdsSequenced ? "queried" : "sequenced"} `+
                     `${this.columnMode === "sample" ? "samples" : "cases/patients"} `+
                     `(${allIdsPromise.result.length} total)`}
                 </span>
