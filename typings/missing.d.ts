@@ -35,3 +35,4 @@ declare module 'measure-text';
 declare module 'contrast';
 declare module 'react-spinkit';
 declare module 'react-portal';
+declare module 'little-loader';
