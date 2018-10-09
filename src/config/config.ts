@@ -173,8 +173,7 @@ export function initializeConfiguration(){
 
     const envConfig: Partial<IAppConfig> = {
         apiRoot:APIROOT,
-        frontendUrl:frontendUrl,
-        configurationServiceUrl:configServiceUrl,
+        frontendUrl:frontendUrl
     };
 
     updateConfig(envConfig);
