@@ -6,7 +6,6 @@ export interface IAppConfig {
     authGoogleLogin?: string;
     configurationServiceUrl?: string;
     frontendUrl?: string;
-    customTabs?:any;
     serverConfig:IServerConfig;
 
     studiesWithGermlineConsentedSamples?:string[];
@@ -32,6 +31,7 @@ export interface IServerConfig {
     "binary_custom_driver_annotation_menu_label": string|null; // default:
     "disabled_tabs": string|null;
     "civic_url": string|null;
+    "custom_tabs": any[];
     "oncoprint_custom_driver_annotation_default": boolean;
     "oncoprint_oncokb_hotspots_default": string | undefined;
     "genomenexus_url": string|null;
