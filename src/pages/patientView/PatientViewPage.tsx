@@ -243,10 +243,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 )
                             }
                         </span>
-                        {patientViewPageStore.hasMutationalSignatureData.isComplete &&
+                        {patientViewPageStore.hasMutationalSignatureData.result &&
                         <LoadingIndicator isLoading={patientViewPageStore.mutationalSignatureData.isPending && patientViewPageStore.mutationalSignatureMetaData.isPending}/>}
 
-                        {patientViewPageStore.hasMutationalSignatureData.isComplete &&
+                        {patientViewPageStore.hasMutationalSignatureData.result &&
                         patientViewPageStore.clinicalDataGroupedBySample.isComplete && patientViewPageStore.mutationalSignatureData.isComplete &&
                         patientViewPageStore.mutationalSignatureMetaData.isComplete &&
                         (<SignificantMutationalSignatures data={patientViewPageStore.mutationalSignatureData.result}
