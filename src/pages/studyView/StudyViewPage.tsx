@@ -99,7 +99,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                         <MSKTab key={1} id={"clinicalData"} linkText={"Clinical Data"}>
                             <ClinicalDataTab store={this.store} />
                         </MSKTab>
-                        <MSKTab key={2} id={"mdaccHeatmap"} linkText={"Heatmaps"}
+                        <MSKTab key={2} id={"heatmaps"} linkText={"Heatmaps"}
                                 hide={this.store.MDACCHeatmapStudyMeta.result.length === 0}>
                             <IFrameLoader height={700}
                                           url={`//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this.store.MDACCHeatmapStudyMeta.result[0]}`}/>
