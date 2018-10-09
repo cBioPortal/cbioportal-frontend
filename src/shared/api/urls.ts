@@ -134,7 +134,7 @@ export function getVirtualStudyServiceUrl() {
 }
 
 export function getSessionServiceUrl() {
-    return buildCBioPortalAPIUrl("api-legacy/proxy/session/");
+    return buildCBioPortalAPIUrl("api-legacy/proxy/session/main_session");
 }
 
 export function getConfigurationServiceApiUrl() {
