@@ -1,6 +1,8 @@
 import * as React from 'react';
 import {observer} from "mobx-react";
 import {computed, action, observable} from "mobx";
+import 'react-select/dist/react-select.css';
+import './styles.scss';
 
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import StructureViewerPanel from "shared/components/structureViewer/StructureViewerPanel";
@@ -17,6 +19,8 @@ import MutationMapperStore from "./MutationMapperStore";
 import { DropdownButton, MenuItem } from 'react-bootstrap';
 import { EnsemblTranscript } from 'shared/api/generated/GenomeNexusAPI';
 import Mutations from 'pages/resultsView/mutation/Mutations';
+import Select from 'react-select';
+// tslint:disable-next-line:no-import-side-effect
 
 // Anything from App config will be included in mutation mapper config
 export interface IMutationMapperConfig {
@@ -138,37 +142,43 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                               canonicalTranscript:string,
                               transcriptsByTranscriptId:{[transcriptId:string]: EnsemblTranscript},
                               mutationsByTranscriptId?: {[transcriptId:string]: Mutations[]}) {
-        const activeIndex = allTranscripts.indexOf(activeTranscript);
-
         return (
-          <div>
-            <DropdownButton
-                bsStyle="default"
-                title={activeTranscript}
-                key={activeTranscript}
-                id={`dropdown-basic-${activeIndex}`}
-            >
-                <h6 className="dropdown-header" style={{padding:5,margin:0}}>Select transcript ({this.props.store.numberOfMutationsTotal} mutations total)</h6>
-                {allTranscripts.map((t, i) => {
-                        const length = transcriptsByTranscriptId[t].proteinLength;
-                        const refseqMrnaId = transcriptsByTranscriptId[t].refseqMrnaId;
-                        const nrOfMutations = mutationsByTranscriptId && mutationsByTranscriptId[t] && mutationsByTranscriptId[t].length;
-                        return (<MenuItem onSelect={(e:any) => {this.props.store.activeTranscript = e; this.close3dPanel(); }} eventKey={t} active={i === activeIndex}>
-                            {t} {refseqMrnaId? `(${refseqMrnaId})` : ""} {length? `(${length} amino acids)` : ""} {nrOfMutations? `(${nrOfMutations} mutations)` : ""} {t === canonicalTranscript? " (default)" : ""}
-                        </MenuItem>);
+            <div>
+                <Select
+                    className="transcripts-dropdown-select"
+                    value={{ label:activeTranscript, value:activeTranscript }}
+                    clearable={false}
+                    // need to explicitly set delteRemoves for cleable
+                    // https://github.com/JedWatson/react-select/issues/1560
+                    deleteRemoves={false}
+                    style={{width:160}}
+                    options={allTranscripts.map(
+                                (t:string) => {
+                                    const length = transcriptsByTranscriptId[t].proteinLength;
+                                    const refseqMrnaId = transcriptsByTranscriptId[t].refseqMrnaId;
+                                    const nrOfMutations = mutationsByTranscriptId && mutationsByTranscriptId[t] && mutationsByTranscriptId[t].length;
+                                    const label = `${t} ${refseqMrnaId? `(${refseqMrnaId})` : ""} ${length? `(${length} amino acids)` : ""} ${nrOfMutations? `(${nrOfMutations} mutations)` : ""} ${t === canonicalTranscript? " (default)" : ""}`;
+                                    return {label:label,value:t};
+                                }
+                            )
                     }
-                )}
-            </DropdownButton>
-            <a
-                href={`http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=${activeTranscript}`}
-                target="_blank"
-            >
-                <img
-                    src={require("./ensembl_icon.png")}
-                    style={{paddingLeft: 8, cursor:"pointer"}}
+                    onChange={(option:any) => {
+                        if (option.value) {
+                            this.props.store.activeTranscript = option.value;
+                            this.close3dPanel();
+                        }
+                    }}
                 />
-            </a>
-        </div>
+                <a
+                    href={`http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=${activeTranscript}`}
+                    target="_blank"
+                >
+                    <img
+                        src={require("./ensembl_icon.png")}
+                        style={{paddingLeft: 8, cursor:"pointer",top:-15,position:"relative"}}
+                    />
+                </a>
+            </div>
         );
     }
 

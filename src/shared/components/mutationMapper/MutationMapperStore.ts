@@ -192,7 +192,16 @@ export default class MutationMapperStore
                                            t,
                                            this.indexedVariantAnnotations.result!!).length > 0
             ));
-            transcripts.sort();
+            transcripts = _.orderBy(
+                transcripts,
+                [
+                    (t) => t === this.canonicalTranscript.result!!.transcriptId,
+                    (t) => this.transcriptsByTranscriptId[t].hasOwnProperty("refseqMrnaId"),
+                    (t) => this.transcriptsByTranscriptId[t].proteinLength,
+                    (t) => t
+                ],
+                ['desc','desc','desc','asc']
+            );
             return transcripts;
         } else {
             return [];
@@ -200,11 +209,22 @@ export default class MutationMapperStore
     }
 
     @computed get transcriptsWithProteinLength(): string[] {
-        if (this.indexedVariantAnnotations.result && this.allTranscripts.result) {
+        if (this.indexedVariantAnnotations.result && this.allTranscripts.result && this.canonicalTranscript.result) {
             // ignore transcripts without protein length
             // TODO: better solution is to show only mutations table, not
             // lollipop plot for those transcripts
-            return _.compact(this.allTranscripts.result.map((et: EnsemblTranscript) => et.proteinLength && et.transcriptId)).sort();
+            let transcripts:string[] = _.compact(this.allTranscripts.result.map((et: EnsemblTranscript) => et.proteinLength && et.transcriptId));
+            transcripts = _.orderBy(
+                transcripts,
+                [
+                    (t) => t === this.canonicalTranscript.result!!.transcriptId,
+                    (t) => this.transcriptsByTranscriptId[t].hasOwnProperty("refseqMrnaId"),
+                    (t) => this.transcriptsByTranscriptId[t].proteinLength,
+                    (t) => t
+                ],
+                ['desc','desc','desc','asc']
+            );
+            return transcripts;
         } else {
             return [];
         }
