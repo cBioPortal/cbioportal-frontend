@@ -145,10 +145,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                         props.promise = this.store.withCnaData;
                     }
                 } else {
-                    props.promise = this.store.studyViewClinicalDataCountsCache.get({
-                        attribute: chartMeta.clinicalAttribute!,
-                        filters: this.store.filters
-                    });
+                    props.promise = this.store.getClinicalDataCount(chartMeta);
                     props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey);
                     props.onValueSelection = this.handlers.onValueSelection;
                     props.onResetSelection = this.handlers.onValueSelection;
@@ -167,18 +164,13 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 break;
             }
             case ChartTypeEnum.BAR_CHART: {
-                props.promise = this.store.studyViewClinicalDataBinCountsCache.get({
-                    attribute: chartMeta.clinicalAttribute!,
-                    filters: this.store.filters,
-                    disableLogScale: this.store.isLogScaleDisabled(chartMeta.uniqueKey),
-                    method: DataBinMethodConstants.STATIC // TODO this.barChartFilters.length > 0 ? 'STATIC' : 'DYNAMIC' (not trivial when multiple filters involved)
-                });
+                props.promise = this.store.getClinicalDataBin(chartMeta);
                 props.filters = this.store.getClinicalDataIntervalFiltersByUniqueKey(chartMeta.uniqueKey);
                 props.onDataBinSelection = this.handlers.onDataBinSelection;
                 props.onResetSelection = this.handlers.onDataBinSelection;
                 props.onToggleLogScale = this.handlers.onToggleLogScale;
                 props.showLogScaleToggle = this.store.isLogScaleToggleVisible(
-                    chartMeta.uniqueKey, props.promise.result);
+                    chartMeta.uniqueKey, props.promise!.result);
                 props.logScaleChecked = this.store.isLogScaleChecked(chartMeta.uniqueKey);
                 props.download = [
                     {
@@ -194,10 +186,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             }
             case ChartTypeEnum.TABLE: {
                 props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey);
-                props.promise = this.store.studyViewClinicalDataCountsCache.get({
-                    attribute: chartMeta.clinicalAttribute!,
-                    filters: this.store.filters
-                });
+                props.promise = this.store.getClinicalDataCount(chartMeta);
                 props.onValueSelection = this.handlers.onValueSelection;
                 props.onResetSelection = this.handlers.onValueSelection;
                 props.onChangeChartType = this.handlers.onChangeChartType;
@@ -307,7 +296,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
     render() {
         return (
             <div>
-                <LoadingIndicator isLoading={this.store.initialClinicalDataBins.isPending} size={"big"} center={true}/>
+                <LoadingIndicator isLoading={this.store.defaultVisibleAttributes.isPending} size={"big"} center={true}/>
                 {
                     this.store.invalidSampleIds.result.length > 0 &&
                     this.showErrorMessage &&
@@ -324,7 +313,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                     </div>
                 }
                 {
-                    (this.store.initialClinicalDataBins.isComplete) && (
+                    (this.store.selectedSamples.isComplete) && (
                         <SummaryHeader
                             geneQuery={this.store.geneQueryStr}
                             selectedSamples={this.store.selectedSamples.result!}
@@ -353,8 +342,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                     )
                 }
                 <div className={styles.studyViewFlexContainer}>
-                    {this.store.initialClinicalDataCounts.isComplete &&
-                    this.store.initialClinicalDataBins.isComplete && (
+                    {this.store.defaultVisibleAttributes.isComplete && (
                         <ReactGridLayout className="layout"
                                             style={{ width: this.store.containerWidth }}
                                             width={this.store.containerWidth}
