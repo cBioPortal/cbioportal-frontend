@@ -348,7 +348,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                 <Then>
                 <MSKTabs id="patientViewPageTabs" activeTabId={this.props.params.tab || "summaryTab"}  onTabClick={(id:string)=>this.handleTabChange(id)} className="mainTabs">
 
-                        <MSKTab key={0} id="summaryTab" linkText="Summary">
+                        <MSKTab key={0} id="summary" linkText="Summary">
 
                             <LoadingIndicator isLoading={patientViewPageStore.clinicalEvents.isPending} />
 
@@ -459,7 +459,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         </MSKTab>
 
                         {(patientViewPageStore.pageMode === 'patient') && (
-                        <MSKTab key={2} id="clinicalDataTab" linkText="Clinical Data">
+                        <MSKTab key={2} id="clinicalData" linkText="Clinical Data">
 
                                     <div className="clearfix">
                                         <FeatureTitle title="Patient"
@@ -488,7 +488,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     )}
 
 
-                    <MSKTab key={3} id="pathologyReportTab" linkText="Pathology Report"
+                    <MSKTab key={3} id="pathologyReport" linkText="Pathology Report"
                             hide={!this.shouldShowPathologyReport(patientViewPageStore)}
                     >
                         <div>
@@ -496,14 +496,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         </div>
                     </MSKTab>
 
-
-                    <MSKTab key={4} id="heatMapReportTab" linkText="Heatmaps"
-                             hide={(!patientViewPageStore.MDAndersonHeatMapAvailable.isComplete || !patientViewPageStore.MDAndersonHeatMapAvailable.result)}
-                    >
-                            <IFrameLoader height={700} url={ `//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?participant=${patientViewPageStore.patientId}` } />
-                    </MSKTab>
-
-                    <MSKTab key={5} id="tissueImageTab" linkText="Tissue Image"
+                    <MSKTab key={5} id="tissueImage" linkText="Tissue Image"
                             hide={this.hideTissueImageTab()}
                     >
                         <div style={{position: "relative"}}>
@@ -511,18 +504,18 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         </div>
                     </MSKTab>
 
-                    <MSKTab key={6} id="mutationalSignatureTab" linkText="Mutational Signature Data" hide={!patientViewPageStore.hasMutationalSignatureData.isComplete}>
-                        <div className="clearfix">
-                            <FeatureTitle title="Mutational Signatures" isLoading={ patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />
-                            <LoadingIndicator isLoading={patientViewPageStore.mutationalSignatureData.isPending}/>
-                            {
-                                (patientViewPageStore.clinicalDataGroupedBySample.isComplete && patientViewPageStore.mutationalSignatureData.isComplete) && (
-                                    <ClinicalInformationMutationalSignatureTable data={patientViewPageStore.mutationalSignatureData.result} showTitleBar={true}/>
-                                )
-                            }
-                        </div>
+                    {/*<MSKTab key={6} id="mutationalSignatureTab" linkText="Mutational Signature Data" hide={true}>*/}
+                        {/*<div className="clearfix">*/}
+                            {/*<FeatureTitle title="Mutational Signatures" isLoading={ patientViewPageStore.clinicalDataGroupedBySample.isPending } className="pull-left" />*/}
+                            {/*<LoadingIndicator isLoading={patientViewPageStore.mutationalSignatureData.isPending}/>*/}
+                            {/*{*/}
+                                {/*(patientViewPageStore.clinicalDataGroupedBySample.isComplete && patientViewPageStore.mutationalSignatureData.isComplete) && (*/}
+                                    {/*<ClinicalInformationMutationalSignatureTable data={patientViewPageStore.mutationalSignatureData.result} showTitleBar={true}/>*/}
+                                {/*)*/}
+                            {/*}*/}
+                        {/*</div>*/}
 
-                    </MSKTab>
+                    {/*</MSKTab>*/}
 
                     {
                         (AppConfig.serverConfig.custom_tabs) && AppConfig.serverConfig.custom_tabs.filter((tab:any)=>tab.location==="PATIENT_PAGE").map((tab:any, i:number)=>{
