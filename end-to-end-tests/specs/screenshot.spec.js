@@ -18,14 +18,14 @@ function runResultsTestSuite(prefix){
 
     // can't get it to pass reliably
     it.skip(`${prefix} igv_tab tab`, function(){
-        browser.click("a.tabAnchor_copyNumberSegmentsTab");
+        browser.click("a.tabAnchor_cnSegments");
         browser.waitForExist('#cnSegmentsFrame', 20000);
         var res = browser.checkElement('.cnSegmentsMSKTabs',{hide:['.qtip'] });
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} cancer type summary`, function(){
-        browser.click("a.tabAnchor_cancerTypesSummaryTab");
+        browser.click("a.tabAnchor_cancerTypesSummary");
         browser.waitForVisible('[data-test="cancerTypeSummaryChart"]',10000);
         browser.waitForExist('[data-test="cancerTypeSummaryWrapper"]', 5000);
         var res = browser.checkElement('[data-test="cancerTypeSummaryWrapper"]', { hide:['.qtip'] });
@@ -33,7 +33,7 @@ function runResultsTestSuite(prefix){
     });
 
     it(`${prefix} mutex tab`, function(){
-        browser.click("a.tabAnchor_mutualExclusivityTab");
+        browser.click("a.tabAnchor_mutualExclusivity");
         var res = browser.checkElement('[data-test="mutualExclusivityTabDiv"]',{ hide:['.qtip'] });
         assertScreenShotMatch(res);
     });
@@ -44,7 +44,7 @@ function runResultsTestSuite(prefix){
     });
 
     it(`${prefix} mutation tab`, function(){
-        browser.click("a.tabAnchor_mutationsTab");
+        browser.click("a.tabAnchor_mutations");
         browser.waitForVisible('.borderedChart svg',20000);
         var res = browser.checkElement('[data-test="mutationsTabDiv"]',{hide:['.qtip', '[data-test=view3DStructure]', '[data-test=GeneSummaryUniProt]'], viewportChangePause:4000}); // hide these things because the timing of data loading makes this test so flaky
         assertScreenShotMatch(res);
@@ -61,12 +61,13 @@ function runResultsTestSuite(prefix){
         browser.click("a.tabAnchor_enrichment");
         browser.waitForVisible('div[data-test="MutationEnrichmentsTab"]',10000);
         browser.click('b=CDK14');
+        browser.waitForExist('[data-test="enrichmentsTabDiv"]', 10000);
         var res = browser.checkElement('[data-test="enrichmentsTabDiv"]', { hide:['.qtip'] } );
         assertScreenShotMatch(res);
     });
 
     it(`${prefix} survival tab`, function(){
-        browser.click("a.tabAnchor_survivalTab");
+        browser.click("a.tabAnchor_survival");
         browser.waitForVisible('[data-test=SurvivalChart] svg',10000);
         var res = browser.checkElement('[data-test="survivalTabDiv"]', { hide:['.qtip'] } );
         assertScreenShotMatch(res);
@@ -259,19 +260,19 @@ describe("coexpression tab screenshot tests", function() {
     });
     it('coexpression tab coadread_tcga_pub initial load', function() {
         browser.waitForExist('div[data-test="CoExpressionPlot"]', 20000); // wait for plot to show up
-        var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
+        var res = browser.checkElement('div[data-test="coExpressionTabDiv"]');
         assertScreenShotMatch(res);
     });
     it('coexpression tab coadread_tcga_pub log scale x and y mutations on', function() {
-        browser.click('div[data-test="CoExpressionGeneTabContent"] input[data-test="logScale"]');
+        browser.click('div[data-test="coExpressionTabDiv"] input[data-test="logScale"]');
         browser.moveToObject("body",0,0);
-        var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
+        var res = browser.checkElement('div[data-test="coExpressionTabDiv"]');
         assertScreenShotMatch(res);
     });
     it('coexpression tab coadread_tcga_pub loc scale x and y mutations off', function() {
-        browser.click('div[data-test="CoExpressionGeneTabContent"] input[data-test="ShowMutations"]');
+        browser.click('div[data-test="coExpressionTabDiv"] input[data-test="ShowMutations"]');
         browser.moveToObject("body",0,0);
-        var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
+        var res = browser.checkElement('div[data-test="coExpressionTabDiv"]');
         assertScreenShotMatch(res);
     });
     it('coexpression tab coadread_tcga_pub switch tabs', function() {
@@ -279,20 +280,20 @@ describe("coexpression tab screenshot tests", function() {
         browser.moveToObject("body",0,0);
         browser.pause(100); // give time to start loading
         browser.waitForExist('div[data-test="CoExpressionPlot"]', 20000); // wait for plot to show up
-        var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
+        var res = browser.checkElement('div[data-test="coExpressionTabDiv"]');
         assertScreenShotMatch(res);
     });
     it('coexpression tab coadread_tcga_pub switch profiles', function() {
         browser.execute(function() { resultsViewCoExpressionTab.onSelectDataSet({ value: "coadread_tcga_pub_mrna"}); });
         browser.pause(100); // give time to start loading
         browser.waitForExist('div[data-test="CoExpressionPlot"]', 20000); // wait for plot to show up
-        var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
+        var res = browser.checkElement('div[data-test="coExpressionTabDiv"]');
         assertScreenShotMatch(res);
     });
     it('coexpression tab coadread_tcga_pub with a lot of genes', function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/results/coexpression?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=AKR1C3%2520AR%2520CYB5A%2520CYP11A1%2520CYP11B1%2520CYP11B2%2520CYP17A1%2520CYP19A1%2520CYP21A2%2520HSD17B1%2520HSD17B10%2520HSD17B11%2520HSD17B12%2520HSD17B13%2520HSD17B14%2520HSD17B2%2520HSD17B3%2520HSD17B4%2520HSD17B6%2520HSD17B7%2520HSD17B8%2520HSD3B1%2520HSD3B2%2520HSD3B7%2520RDH5%2520SHBG%2520SRD5A1%2520SRD5A2%2520SRD5A3%2520STAR&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
         browser.waitForExist('div[data-test="CoExpressionPlot"]', 20000); // wait for plot to show up
-        var res = browser.checkElement('div[data-test="CoExpressionGeneTabContent"]');
+        var res = browser.checkElement('div[data-test="coExpressionTabDiv"]');
         assertScreenShotMatch(res);
     });
 });
@@ -320,7 +321,7 @@ function waitForAndCheckPlotsTab() {
 
 describe("plots tab screenshot tests", function() {
     before(function() {
-        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/results/plots?cancer_study_id=brca_tcga&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=brca_tcga_cnaseq&gene_list=TP53%2520MDM2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_tcga_gistic`);
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/results/plots?cancer_study_id=brca_tcga&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=brca_tcga_cnaseq&gene_list=TP53%20MDM2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=brca_tcga_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=brca_tcga_gistic`);
         browser.waitForVisible('div[data-test="PlotsTabPlotDiv"]', 20000);
     });
     it("plots tab mutation type view", function() {
@@ -441,7 +442,7 @@ describe("plots tab screenshot tests", function() {
 
 describe('result page tabs, loading from session id', function(){
     before(function(){
-        var url = `${CBIOPORTAL_URL}/index.do?session_id=596f9fa3498e5df2e292bdfd`;
+        var url = `${CBIOPORTAL_URL}/results?session_id=5bbe8197498eb8b3d5684271`;
         goToUrlAndSetLocalStorage(url);
 
         // only run these tests if session service is enabled
