@@ -78,11 +78,11 @@ export default class MutationMapperStore
 
     readonly alignmentData = remoteData({
         await: () => [
-            this.uniprotId
+            this.mutationData
         ],
         invoke: async () => {
-            if (this.uniprotId.result) {
-                return fetchPdbAlignmentData(this.uniprotId.result);
+            if (this.activeTranscript) {
+                return fetchPdbAlignmentData(this.activeTranscript);
             }
             else {
                 return [];

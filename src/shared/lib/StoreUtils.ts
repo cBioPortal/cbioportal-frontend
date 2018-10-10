@@ -83,13 +83,13 @@ export async function fetchGenes(hugoGeneSymbols?: string[],
     }
 }
 
-export async function fetchPdbAlignmentData(uniprotId: string,
+export async function fetchPdbAlignmentData(ensemblId: string,
                                             client:Genome2StructureAPI = g2sClient)
 {
-    if (uniprotId) {
+    if (ensemblId) {
         return await client.getAlignmentUsingGET({
-            idType: "uniprot",
-            id: uniprotId
+            idType: "ensembl",
+            id: ensemblId
         });
     } else {
         return [];

@@ -273,9 +273,7 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
         return (
             <button
                 className="btn btn-default btn-sm"
-                // 3D only works for canonical uniprot transcript. G2S needs to
-                // be updated to support alignments for other transcripts
-                disabled={this.props.store.pdbChainDataStore.allData.length === 0 || (this.props.store.activeTranscript !== canonicalTranscriptId)}
+                disabled={this.props.store.pdbChainDataStore.allData.length === 0}
                 onClick={this.toggle3dPanel}
                 data-test="view3DStructure"
             >
