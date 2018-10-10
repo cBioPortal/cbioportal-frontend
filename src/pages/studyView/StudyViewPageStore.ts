@@ -316,7 +316,7 @@ export class StudyViewPageStore {
             filters = JSON.parse(decodeURIComponent(query.filters)) as Partial<StudyViewFilter>;
         }
 
-        if (filters.hasOwnProperty('clinicalDataEqualityFilters') && filters.clinicalDataEqualityFilters!.length > 0) {
+        if (_.isArray(filters.clinicalDataEqualityFilters) && filters.clinicalDataEqualityFilters.length > 0) {
             _.each(filters.clinicalDataEqualityFilters, (filter: ClinicalDataEqualityFilter) => {
                 this._clinicalDataEqualityFilterSet.set(getClinicalAttributeUniqueKeyByDataTypeAttrId(filter.clinicalDataType, filter.attributeId), {
                     attributeId: filter.attributeId,
@@ -329,7 +329,7 @@ export class StudyViewPageStore {
             });
         }
 
-        if (filters.hasOwnProperty('clinicalDataIntervalFilters') && filters.clinicalDataIntervalFilters!.length > 0) {
+        if (_.isArray(filters.clinicalDataIntervalFilters) && filters.clinicalDataIntervalFilters.length > 0) {
             _.each(filters.clinicalDataIntervalFilters, (filter: ClinicalDataIntervalFilter) => {
                 this._clinicalDataIntervalFilterSet.set(getClinicalAttributeUniqueKeyByDataTypeAttrId(filter.clinicalDataType, filter.attributeId), {
                     attributeId: filter.attributeId,
@@ -346,7 +346,7 @@ export class StudyViewPageStore {
             });
         }
 
-        if (filters.hasOwnProperty('mutatedGenes') && filters.mutatedGenes!.length > 0) {
+        if (_.isArray(filters.mutatedGenes) && filters.mutatedGenes.length > 0) {
             this._mutatedGeneFilter = _.reduce(filters.mutatedGenes, (acc, next) => {
                 acc.push({
                     entrezGeneIds: _.reduce(next.entrezGeneIds, (geneAcc, entrezGeneId) => {
@@ -358,7 +358,7 @@ export class StudyViewPageStore {
             }, [] as MutationGeneFilter[]);
         }
 
-        if (filters.hasOwnProperty('cnaGenes') && filters.cnaGenes!.length > 0) {
+        if (_.isArray(filters.cnaGenes) && filters.cnaGenes.length > 0) {
             this._cnaGeneFilter = _.reduce(filters.cnaGenes, (acc, next) => {
                 acc.push({
                     alterations: _.reduce(next.alterations, (altAcc, alt) => {

@@ -126,7 +126,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                             <PillTag
                                 content={intervalFiltersDisplayValue(clinicalDataIntervalFilter.values)}
                                 backgroundColor={FILTER_CONTENT_COLOR}
-                                onDelete={() => this.props.updateClinicalDataEqualityFilter(chartMeta, [])}
+                                onDelete={() => this.props.updateClinicalDataIntervalFilter(chartMeta, [])}
                             />
                         ]}
                         operation={':'}
