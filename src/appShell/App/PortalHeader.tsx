@@ -2,11 +2,14 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import { Link } from 'react-router';
 import AppConfig from "appConfig";
-import {getLogoutURL} from "../../shared/api/urls";
 import {If, Then, Else} from 'react-if';
 import {openSocialAuthWindow} from "../../shared/lib/openSocialAuthWindow";
+import {AppStore} from "../../AppStore";
+import {observer} from "mobx-react";
+import {buildCBioPortalPageUrl} from "../../shared/api/urls";
 
-export default class PortalHeader extends React.Component<{}, {}> {
+@observer
+export default class PortalHeader extends React.Component<{ appStore:AppStore }, {}> {
 
     private tabs(){
 
@@ -102,31 +105,25 @@ export default class PortalHeader extends React.Component<{}, {}> {
                 <Link to="/" id="cbioportal-logo"><img src={require("./cbioportal_logo.png")} alt="cBioPortal Logo"/></Link>
                 <nav id="main-nav">
                     <ul>
-
                         {
                            this.getTabs()
                         }
-
-
                     </ul>
                 </nav>
             </div>
 
             <div id="rightHeaderContent">
-                <If condition={!_.isEmpty(AppConfig.authUserName)}>
+                <If condition={this.props.appStore.isLoggedIn}>
                     <Then>
-                        <div className="identity">Logged in as <span dangerouslySetInnerHTML={{__html:AppConfig.authUserName!}}></span>
+                        <div className="identity">Logged in as {this.props.appStore.userName}
                             <span className="pipeSeperator">|</span>
-                            {
-                                (!_.isEmpty(AppConfig.authLogoutUrl)) && (
-                                    <a href={getLogoutURL()}>Sign out</a>
-                                )
-                            }
+                             <a href={buildCBioPortalPageUrl(this.props.appStore.logoutUrl)}>Sign out</a>
+
                         </div>
                     </Then>
                     <Else>
                         <If condition={AppConfig.authGoogleLogin}>
-                            <div className="identity"><button className="btn btn-default" onClick={openSocialAuthWindow}>Login</button></div>
+                            <div className="identity"><button className="btn btn-default" onClick={()=>openSocialAuthWindow(this.props.appStore)}>Login</button></div>
                         </If>
                     </Else>
                 </If>
