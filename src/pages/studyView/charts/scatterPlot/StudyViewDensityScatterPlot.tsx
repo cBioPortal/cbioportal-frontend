@@ -9,7 +9,10 @@ import {makeMouseEvents} from "../../../../shared/components/plots/PlotUtils";
 import _ from "lodash";
 import {downsampleByGrouping, DSData} from "../../../../shared/components/plots/downsampleByGrouping";
 import ScatterPlotTooltip from "../../../../shared/components/plots/ScatterPlotTooltip";
-import {DOWNSAMPLE_PIXEL_DISTANCE_THRESHOLD, getDownsampledData, MAX_DOT_SIZE} from "./StudyViewScatterPlotUtils";
+import {
+    DOWNSAMPLE_PIXEL_DISTANCE_THRESHOLD, getBinnedData, getDownsampledData,
+    MAX_DOT_SIZE
+} from "./StudyViewScatterPlotUtils";
 import {ClinicalAttribute, SampleIdentifier} from "../../../../shared/api/generated/CBioPortalAPI";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator"
 import $ from "jquery";
@@ -149,8 +152,8 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         return {
             //x: [min.x, max.x],
             //y: [min.y, max.y]
-            x: [0, 1],
-            y:[0, max.y]
+            x: [0, 1] as [number,number],
+            y:[0, max.y] as [number,number]
         };
     }
 
@@ -188,26 +191,7 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
 
     @computed get data():DSData<IStudyViewDensityScatterPlotData>[] {
         if (this.binningData) {
-            const MESH = 50;
-            const X_STEP = (this.dataDomain.x[1] - this.dataDomain.x[0])/MESH;
-            const Y_STEP = (this.dataDomain.y[1] - this.dataDomain.y[0])/MESH;
-            const getGridCoords = (d:{x:number, y:number})=>{
-                const x = Math.floor((d.x - this.dataDomain.x[0])/X_STEP);
-                const y = Math.floor((d.y - this.dataDomain.y[0])/Y_STEP);
-                return { x, y };
-            };
-
-            const getAreaHash = (gridCoords:{x:number, y:number})=>`${gridCoords.x},${gridCoords.y}`;
-
-            const bins = _.groupBy(this.props.data, d=>getAreaHash(getGridCoords(d)));
-            return _.values(bins).map(data=>{
-                const gridCoords = getGridCoords(data[0]);
-                return {
-                    x: gridCoords.x*X_STEP,
-                    y: gridCoords.y*Y_STEP,
-                    data
-                };
-            });
+            return getBinnedData(this.props.data, this.dataDomain, 50);
         } else {
             return this.props.data.map(d=>({
                 x: d.x,
