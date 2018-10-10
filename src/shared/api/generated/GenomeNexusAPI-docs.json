@@ -1236,6 +1236,10 @@
           "type": "string",
           "description": "RefSeq mRNA ID"
         },
+        "ccdsId": {
+          "type": "string",
+          "description": "Consensus CDS (CCDS) ID"
+        },
         "exons": {
           "type": "array",
           "description": "Exon information",
