@@ -21,6 +21,7 @@ import { StudySummaryRecord } from 'pages/studyView/virtualStudy/VirtualStudy';
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
 import { StudySummaryTab } from 'pages/studyView/tabs/SummaryTab';
+import {StudyViewFilter} from "../../shared/api/generated/CBioPortalAPIInternal";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -44,21 +45,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     return;
                 }
 
-                let newStudyIdsString;
-                if ('studyId' in query) {
-                    newStudyIdsString = (query.studyId as string);
-                }
-                if ('id' in query) {
-                    newStudyIdsString = (query.id as string);
-                }
-                if (newStudyIdsString) {
-                    const newStudyIds = newStudyIdsString.trim().split(",");
-                    const newStudyIdsSet = stringListToSet(newStudyIds);
-                    if (!_.isEqual(newStudyIdsSet, this.store.studyIdsSet)) {
-                        // update if different
-                        this.store.studyIds = newStudyIds;
-                    }
-                }
+                this.store.updateStoreFromURL(query);
             },
             { fireImmediately: true }
         );
