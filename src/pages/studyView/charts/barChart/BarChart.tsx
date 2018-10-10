@@ -14,7 +14,7 @@ import {
     formatNumericalTickValues,
     generateCategoricalData,
     generateNumericalData,
-    SELECTED_GROUP_COLOR, UNSELECTED_GROUP_COLOR
+    SELECTED_GROUP_COLOR, THRESHOLD_ESCAPE_TICK, UNSELECTED_GROUP_COLOR
 } from "../../StudyViewUtils";
 
 export interface IBarChartProps {
@@ -144,6 +144,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                         tickFormat={(t: number) => this.tickFormat[t - 1]}
                         domain={[0, this.tickValues[this.tickValues.length -1] + 1]}
                         tickLabelComponent={<BarChartAxisLabel />}
+                        style={{tickLabels: {angle: this.tickValues.length > THRESHOLD_ESCAPE_TICK ? 315 : 0}}}
                     />
                     <VictoryAxis
                         dependentAxis={true}
