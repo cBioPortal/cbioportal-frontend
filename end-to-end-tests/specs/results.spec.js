@@ -146,7 +146,14 @@ describe('Results Page', function() {
                 const textSelector = 'tr.highlighted div[data-test="pdbChainInfoText"] span';
                 browser.waitForExist(textSelector, 10000);
                 // text might be truncated depending on the actual browser, so using startsWith instead
-                browser.waitUntil(() => (browser.getText(textSelector).trim() !== "LOADING"), 10000);
+                browser.waitUntil(() => {
+                    const text = browser.getText(textSelector);
+                    if (text.trim && text.trim() !== "LOADING") {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }, 10000);
                 assert.ok(browser.getText(textSelector).startsWith("complex structure of brca1 brct with singly"));
             });
 

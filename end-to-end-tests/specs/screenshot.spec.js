@@ -190,7 +190,7 @@ describe("oncoprint screenshot tests", function() {
         assertScreenShotMatch(res);
     });
     it("profiled in tracks in multiple study with SOS1", function() {
-        var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=SOS1&geneset_list=%20&tab_index=tab_visualize&Action=Submit&cancer_study_list=msk_impact_2017%2Cbrca_bccrc&show_samples=false&clinicallist=CANCER_STUDY%2CPROFILED_IN_MUTATION_EXTENDED%2CPROFILED_IN_msk_impact_2017_cna#summary`;
+        var url = `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=msk_impact_2017%2Cbrca_tcga_pub&case_set_id=all&data_priority=0&gene_list=SOS1&geneset_list=%20&tab_index=tab_visualize`;
         goToUrlAndSetLocalStorage(url);
         waitForOncoprint(20000);
         var res = browser.checkElement(".oncoprintContainer");

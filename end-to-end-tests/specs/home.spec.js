@@ -1147,9 +1147,9 @@ describe('case set selection in front page query form', function(){
     });
     it('selects the right default case sets in a single->multiple->single study selection flow', ()=>{
         // Select Ampullary Carcinoma
-        var input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('ampullary baylor');
+        var input = ".autosuggest input[type=text]";
+        browser.waitForExist(input, 10000);
+        browser.setValue(input, 'ampullary baylor');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1165,9 +1165,8 @@ describe('case set selection in front page query form', function(){
         );
 
         // select Adrenocortical Carcinoma
-        input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('adrenocortical carcinoma tcga provisional');
+        browser.waitForExist(input, 10000);
+        browser.setValue(input, 'adrenocortical carcinoma tcga provisional');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1185,9 +1184,8 @@ describe('case set selection in front page query form', function(){
         );
 
         // Deselect Ampullary Carcinoma
-        input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('ampullary baylor');
+        browser.waitForExist(input, 10000);
+        browser.setValue(input, 'ampullary baylor');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1204,9 +1202,9 @@ describe('case set selection in front page query form', function(){
     });
     it('selects the right default case sets in a single->select all filtered->single study selection flow', ()=>{
         // Select Ampullary Carcinoma
-        var input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('ampullary baylor');
+        var input = ".autosuggest input[type=text]";
+        browser.waitForExist(input, 10000);
+        browser.setValue(input, 'ampullary baylor');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1222,9 +1220,8 @@ describe('case set selection in front page query form', function(){
         );
 
         // select all TCGA non-provisional
-        input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('tcga -provisional');
+        browser.waitForExist(input, 10000);
+        browser.setValue(input,'tcga -provisional');
         browser.pause(500);
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
 
@@ -1243,9 +1240,8 @@ describe('case set selection in front page query form', function(){
         browser.pause(100);
 
         // select Adrenocortical Carcinoma
-        input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('adrenocortical carcinoma tcga provisional');
+        browser.waitForExist(input, 10000);
+        browser.setValue(input,'adrenocortical carcinoma tcga provisional');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1263,9 +1259,8 @@ describe('case set selection in front page query form', function(){
         );
 
         // Deselect Ampullary Carcinoma
-        input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('ampullary baylor');
+        browser.waitForExist(input, 10000);
+        browser.setValue(input,'ampullary baylor');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
