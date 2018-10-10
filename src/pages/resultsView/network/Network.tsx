@@ -1,13 +1,12 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import { If, Then, Else } from 'react-if';
-import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import IFrameLoader from "../../../shared/components/iframeLoader/IFrameLoader";
 import {observer } from "mobx-react";
 import {observable, computed} from "mobx";
 import AppConfig from "appConfig";
 import {Gene, MolecularProfile} from "../../../shared/api/generated/CBioPortalAPI";
-import App from "../../../appShell/App/App";
+import {trimTrailingSlash} from "../../../shared/api/urls";
 
 interface NetworkParams {
     genes:Gene
@@ -48,7 +47,7 @@ export default class Network extends React.Component<INetworkTabParams, {}> {
             `//${AppConfig.baseUrl!}`;
 
         const strParams = encodeURIComponent(JSON.stringify(networkParams));
-        return `${path}/reactapp/network/network.htm?${AppConfig.serverConfig.app_version}&apiHost=${AppConfig.baseUrl}#${strParams}`;
+        return `${trimTrailingSlash(path)}/reactapp/network/network.htm?${AppConfig.serverConfig.app_version}&apiHost=${encodeURIComponent(AppConfig.apiRoot!)}#${strParams}`;
     }
 
     render(){
