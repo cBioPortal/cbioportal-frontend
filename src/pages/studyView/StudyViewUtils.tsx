@@ -111,6 +111,7 @@ export const AMP_COLOR = '#FF0000'; // red
 export const FILTER_TITLE_COLOR = '#A9A9A9'; // darkgray
 export const FILTER_CONTENT_COLOR = PRIMARY_COLOR;
 
+export const THRESHOLD_ESCAPE_TICK = 10;
 
 // ---- These are the settings from configs.json in the previous study view ----
 // TODO: figure out a way to custom the following settings
