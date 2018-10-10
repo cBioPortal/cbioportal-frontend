@@ -28,6 +28,8 @@ export type VirtualCohort = {
 export interface IServerConfig {
 
     "app_version": string|null;   // default: "1.0"
+    "authenticationMethod": string | undefined;
+    "bitly_api_key": string|null;
     "binary_custom_driver_annotation_menu_label": string|null; // default:
     "disabled_tabs": string|null;
     "civic_url": string|null;

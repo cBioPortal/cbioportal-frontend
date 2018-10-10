@@ -178,7 +178,3 @@ export function getDocsUrl(sourceUrl:string,docsBaseUrl?:string): string {
         return docsBaseUrl + "/" + sourceUrl;
     }
 }
-
-export function getLogoutURL(){
-    return buildCBioPortalPageUrl(AppConfig.authLogoutUrl!)
-}

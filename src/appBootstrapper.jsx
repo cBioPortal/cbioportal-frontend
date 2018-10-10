@@ -5,7 +5,13 @@ import { hashHistory, browserHistory, createMemoryHistory, Router, useRouterHist
 import { createHistory } from 'history'
 import { RouterStore, syncHistoryWithStore  } from 'mobx-react-router';
 import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
-import {initializeAPIClients, initializeConfiguration, setServerConfig} from './config/config';
+import {
+    fetchServerConfig,
+    initializeAPIClients,
+    initializeAppStore,
+    initializeConfiguration,
+    setServerConfig
+} from './config/config';
 
 import {computed, extendObservable} from 'mobx';
 import makeRoutes from './routes';
@@ -28,6 +34,7 @@ import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
 import superagentCache from 'superagent-cache';
 import getBrowserWindow from "shared/lib/getBrowserWindow";
 import {getConfigurationServiceApiUrl} from "shared/api/urls";
+import {AppStore} from "./AppStore";
 
 superagentCache(superagent);
 
@@ -105,8 +112,7 @@ const syncedHistory = syncHistoryWithStore(history, routingStore);
 const stores = {
     // Key can be whatever you want
     routing: routingStore,
-//    queryStore
-    // ...other stores
+    appStore:new AppStore()
 };
 
 window.globalStores = stores;
@@ -200,14 +206,13 @@ $(document).ready(async () => {
     // we use rawServerConfig (written by JSP) if it is present
     // or fetch from config service if not
     // need to use jsonp, so use jquery
-    let config = window.rawServerConfig || await $.ajax({
-        url: getConfigurationServiceApiUrl(),
-        dataType: "jsonp",
-        jsonpCallback: "callback"
-    });
+    let config = window.rawServerConfig || await fetchServerConfig();
 
     setServerConfig(config);
+
     initializeAPIClients();
+
+    initializeAppStore(stores.appStore,config);
 
     render();
 
