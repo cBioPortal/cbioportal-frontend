@@ -299,8 +299,8 @@ describe('single study query', function() {
             browser.click('[data-test="queryButton"]');
 
             // click mutations tab
-            $('a.tabAnchor_mutationsTab').waitForExist(10000);
-            $('a.tabAnchor_mutationsTab').click();
+            $('a.tabAnchor_mutations').waitForExist(10000);
+            $('a.tabAnchor_mutations').click();
 
             $('[data-test="germlineMutationRate"]').waitForExist(60000);
             var text = browser.getText('[data-test="germlineMutationRate"]')
@@ -317,8 +317,8 @@ describe('single study query', function() {
             browser.setViewportSize({ height:1400, width:1000 });
 
             //  wait for mutations tab
-            $('a.tabAnchor_mutationsTab').waitForExist(10000);
-            $('a.tabAnchor_mutationsTab').click();
+            $('a.tabAnchor_mutations').waitForExist(10000);
+            $('a.tabAnchor_mutations').click();
 
             // check lollipop plot appears
             $('[data-test="LollipopPlot"]').waitForExist(60000);
@@ -349,36 +349,36 @@ describe("results page", function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%2520NRAS%2520BRAF%250APTEN%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
             waitForOncoprint(10000);
 
-            assert(browser.isVisible('a.tabAnchor_mutualExclusivityTab'));
+            assert(browser.isVisible('a.tabAnchor_mutualExclusivity'));
         });
         it("should appear in a multiple study with multiple genes", function(){
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS%2520NRAS%2520BRAF%250APTEN%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`);
-            browser.waitForExist('a.tabAnchor_oncoprintTab', 10000);
+            browser.waitForExist('a.tabAnchor_oncoprint', 10000);
 
-            assert(browser.isVisible('a.tabAnchor_mutualExclusivityTab'));
+            assert(browser.isVisible('a.tabAnchor_mutualExclusivity'));
         });
         it("should not appear in a single study query with one gene", function(){
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
             waitForOncoprint(10000);
-            assert(!browser.isVisible('a.tabAnchor_mutualExclusivityTab'));
+            assert(!browser.isVisible('a.tabAnchor_mutualExclusivity'));
 
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
             waitForOncoprint(10000);
-            assert(!browser.isVisible('a.tabAnchor_mutualExclusivityTab'));
+            assert(!browser.isVisible('a.tabAnchor_mutualExclusivity'));
         });
         it.skip("should not appear in a multiple study query with one gene", function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`);
-            browser.waitForExist('a.tabAnchor_oncoprintTab', 10000);
+            browser.waitForExist('a.tabAnchor_oncoprint', 10000);
             browser.waitUntil(function(){
-                return !browser.isVisible('a.tabAnchor_mutualExclusivityTab');
+                return !browser.isVisible('a.tabAnchor_mutualExclusivity');
             });
-            assert(!browser.isVisible('a.tabAnchor_mutualExclusivityTab'));
+            assert(!browser.isVisible('a.tabAnchor_mutualExclusivity'));
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`);
-            browser.waitForExist('a.tabAnchor_oncoprintTab', 10000);
+            browser.waitForExist('a.tabAnchor_oncoprint', 10000);
             browser.waitUntil(function(){
-                return !browser.isVisible('a.tabAnchor_mutualExclusivityTab');
+                return !browser.isVisible('a.tabAnchor_mutualExclusivity');
             });
-            assert(!browser.isVisible('a.tabAnchor_mutualExclusivityTab'));
+            assert(!browser.isVisible('a.tabAnchor_mutualExclusivity'));
         });
     });
 });
