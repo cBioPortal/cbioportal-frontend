@@ -187,7 +187,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
             }
 
             return (
-                <div data-test="coExpressionTabDiv">
+                <div>
                     <MSKTabs
                         id="coexpressionTabGeneTabs"
                         activeTabId={this.selectedEntrezGeneId + ""}
@@ -270,7 +270,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
         );
 
         return (
-            <div>
+            <div data-test="coExpressionTabDiv">
                 <div className={"tabMessageContainer"}>
                     <OqlStatusBanner className="coexp-oql-status-banner" store={this.props.store} tabReflectsOql={false}/>
                 </div>
