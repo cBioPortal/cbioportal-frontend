@@ -13,8 +13,10 @@ import {action, observable} from "mobx";
 import {QueryStore} from "../../../shared/components/query/QueryStore";
 import QueryAndDownloadTabs from "../../../shared/components/query/QueryAndDownloadTabs";
 import autobind from "autobind-decorator";
-import {BookmarkModal} from "../bookmark/BookmarkModal";
 import ExtendedRouterStore from "../../../shared/lib/ExtendedRouterStore";
+import {ShareUI} from "./ShareUI";
+import {ServerConfigHelpers} from "../../../config/config";
+import AppConfig from "appConfig";
 
 
 class StudyLink extends React.Component<{ study: CancerStudy, onClick?: () => void, href?:string }, {}> {
@@ -28,7 +30,6 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
     @observable private queryFormVisible = false;
     @observable private queryStoreInitialized = false;
-    @observable private showBookmarkDialog = false;
 
     constructor() {
         super();
@@ -63,9 +64,6 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
             }
         </div>
 
-
-
-
     }
 
     @autobind
@@ -73,12 +71,6 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
     closeQueryForm(){
         this.queryFormVisible=false;
         $(document).scrollTop(0);
-    }
-
-    @autobind
-    @action
-    toggleBookmarkDialog(){
-        this.showBookmarkDialog = !this.showBookmarkDialog;
     }
 
     private get multipleStudyUI() {
@@ -120,39 +112,36 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
             return (
                 <div>
-
-                    {
-                        (this.showBookmarkDialog) && (
-                            <BookmarkModal routingStore={this.props.routingStore} onHide={this.toggleBookmarkDialog}  />
-                        )
-                    }
-
                     <div className="query-summary">
                         <div className="query-summary__leftItems">
                             <div>
                                 <button id="modifyQueryBtn" onClick={this.handleModifyQueryClick} className={classNames('btn btn-primary' , { disabled:!loadingComplete  })}>
                                     {(this.queryFormVisible) ? 'Cancel Modify Query' : 'Modify Query'}
                                 </button>
-
-                                <DefaultTooltip overlay={<div>Bookmark query</div>}>
-                                    <button className="btn btn-default" onClick={this.toggleBookmarkDialog} style={{marginLeft:10}}><i className="fa fa-bookmark fa-lg text-primary"></i></button>
-                                </DefaultTooltip>
-
                             </div>
 
                             <LoadingIndicator isLoading={!loadingComplete} small={true}/>
-
-
                             {
                                 (loadingComplete) && ((this.props.store.queriedStudies.result.length === 1) ? this.singleStudyUI : this.multipleStudyUI)
                             }
                         </div>
-                        {
-                            (loadingComplete) && (<div className="query-summary__alterationData">
-                                <h4 style={{fontSize:14}}>Gene Set / Pathway is altered
-                                in {this.props.store.totalAlterationStats.result!.alteredSampleCount} ({_.round(alterationPercentage, 1)}%) of queried samples</h4>
-                            </div>)
-                        }
+
+                        <div className="query-summary__rightItems">
+
+                            {
+                                (loadingComplete) && (
+                                    <div className="query-summary__alterationData">
+                                        <strong>Gene Set / Pathway is altered
+                                            in {this.props.store.totalAlterationStats.result!.alteredSampleCount} ({_.round(alterationPercentage, 1)}%) of queried samples</strong>
+                                    </div>
+                                )
+                            }
+
+                            <ShareUI sessionEnabled={ServerConfigHelpers.sessionServiceIsEnabled()}
+                                     bitlyKey={AppConfig.serverConfig.bitly_api_key}
+                                     routingStore={this.props.routingStore}/>
+                        </div>
+
                     </div>
 
                     {

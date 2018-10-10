@@ -16,8 +16,6 @@ import {genes, parseOQLQuery} from "shared/lib/oql/oqlfilter.js";
 import Network from "./network/Network";
 import ResultsViewOncoprint from "shared/components/oncoprint/ResultsViewOncoprint";
 import QuerySummary from "./querySummary/QuerySummary";
-import {QueryStore} from "../../shared/components/query/QueryStore";
-import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ExpressionWrapper from "./expression/ExpressionWrapper";
 import EnrichmentsTab from 'pages/resultsView/enrichments/EnrichmentsTab';
 import PlotsTab from "./plots/PlotsTab";
@@ -30,7 +28,8 @@ import CoExpressionTab from "./coExpression/CoExpressionTab";
 import Helmet from "react-helmet";
 import {createQueryStore} from "../home/HomePage";
 import {ServerConfigHelpers} from "../../config/config";
-import {loadCustomTabDeps, showCustomTab} from "../../shared/lib/customTabs";
+import {showCustomTab} from "../../shared/lib/customTabs";
+import { buildResultsViewPageTitle} from "./ResultsViewPageStoreUtils";
 
 function initStore() {
 
@@ -201,8 +200,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     get queryStore(){
         return getBrowserWindow().currentQueryStore;
     }
-
-    @observable currentQuery = true;
 
     private handleTabChange(id: string) {
         this.props.routing.updateRoute({},`results/${id}`);
@@ -441,29 +438,33 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         return (
             <PageLayout noMargin={true}>
 
-                <Helmet>
-                    <title>{'cBioPortal for Cancer Genomics::Results'}</title>
-                </Helmet>
+                {
+                    (this.resultsViewPageStore.studies.isComplete) && (
+                        <Helmet>
+                            <title>{buildResultsViewPageTitle(this.resultsViewPageStore.hugoGeneSymbols, this.resultsViewPageStore.studies.result)}</title>
+                        </Helmet>
+                    )
+                }
+
+                <div>
+
+                <div style={{margin:"0 20px 10px 20px"}}>
+                    <QuerySummary queryStore={getBrowserWindow().currentQueryStore} routingStore={this.props.routing} store={this.resultsViewPageStore}/>
+                </div>
 
                 {
-                    (this.currentQuery) && (<div>
-
-                        <div style={{margin:"0 20px 10px 20px"}}>
-                            <QuerySummary queryStore={getBrowserWindow().currentQueryStore} routingStore={this.props.routing} store={this.resultsViewPageStore}/>
-                        </div>
-                        {
-                            (this.resultsViewPageStore.studies.isComplete) && (
-                                <MSKTabs key={(window as any).routingStore.queryHash} activeTabId={this.currentTab(this.props.params.tab)} unmountOnHide={false}
-                                         onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
-                                    {
-                                        this.tabs
-                                    }
-                                </MSKTabs>
-                            )
-                        }
-
-                    </div>)
+                    (this.resultsViewPageStore.studies.isComplete) && (
+                        <MSKTabs key={(window as any).routingStore.queryHash} activeTabId={this.currentTab(this.props.params.tab)} unmountOnHide={false}
+                                 onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
+                            {
+                                this.tabs
+                            }
+                        </MSKTabs>
+                    )
                 }
+
+                </div>
+
             </PageLayout>
         )
 
