@@ -59,17 +59,6 @@ export function updateConfig(obj:Partial<IAppConfig>){
 }
 
 export function setServerConfig(serverConfig:{[key:string]:any }){
-    // fix booleans (temporary until this can be handled on server)
-    serverConfig = _.mapValues(serverConfig,(v:any)=>{
-        switch(v) {
-            case "true":
-                return true;
-            case "false":
-                return false;
-            default:
-                return v;
-        }
-    });
 
     _.each(ServerConfigDefaults,(defaultVal,key)=>{
 
@@ -90,8 +79,10 @@ export function setServerConfig(serverConfig:{[key:string]:any }){
 
     });
 
+    const frontendOverride = (serverConfig.frontendConfigOverride) ? JSON.parse(serverConfig.frontendConfigOverride) : {}
+
     // allow any hardcoded serverConfig props to override those from service
-    const mergedConfig = Object.assign({}, serverConfig, serverConfig.frontendConfigOverride, config.serverConfig || {})
+    const mergedConfig = Object.assign({}, serverConfig, frontendOverride , config.serverConfig || {})
 
     config.serverConfig = mergedConfig;
 
@@ -195,10 +186,9 @@ export function initializeConfiguration(){
 
     // @ts-ignore: ENV_* are defined in webpack.config.js
     if (ENV_GENOME_NEXUS_URL) {
-        setServerConfig({
-            // @ts-ignore: ENV_* are defined in webpack.config.js
-            genomenexus_url: `//${trimTrailingSlash(ENV_GENOME_NEXUS_URL)}/`
-        });
+        if (!config.serverConfig) config.serverConfig = {};
+        // @ts-ignore: ENV_* are defined in webpack.config.js
+        config.serverConfig.genomenexus_url = `//${trimTrailingSlash(ENV_GENOME_NEXUS_URL)}/`;
     }
 
 }
