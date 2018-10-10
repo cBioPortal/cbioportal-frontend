@@ -81,6 +81,7 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
             store.canonicalTranscript.result.transcriptId;
         const transcript = store.activeTranscript && (store.activeTranscript === canonicalTranscriptId)? store.canonicalTranscript.result : store.transcriptsByTranscriptId[store.activeTranscript!!];
         const refseqMrnaId = transcript && transcript.refseqMrnaId;
+        const ccdsId = transcript && transcript.ccdsId;
 
         return (
             <div style={{'paddingBottom':10}}>
@@ -123,6 +124,16 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                         </a>
                     </span>
                 </div>
+                <div className={ccdsId? '' : 'invisible'}>
+                    <span data-test="GeneSummaryCCDS">{'CCDS: '}
+                        <a
+                            href={`http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA=${ccdsId}`}
+                            target="_blank"
+                        >
+                            {ccdsId}
+                        </a>
+                    </span>
+                </div>
                 <div className={this.props.store.uniprotId.result ? '' : 'invisible'}>
                     <span data-test="GeneSummaryUniProt">{'UniProt: '}
                         <a
@@ -156,8 +167,9 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                                 (t:string) => {
                                     const length = transcriptsByTranscriptId[t].proteinLength;
                                     const refseqMrnaId = transcriptsByTranscriptId[t].refseqMrnaId;
+                                    const ccdsId = transcriptsByTranscriptId[t].ccdsId;
                                     const nrOfMutations = mutationsByTranscriptId && mutationsByTranscriptId[t] && mutationsByTranscriptId[t].length;
-                                    const label = `${t} ${refseqMrnaId? `(${refseqMrnaId})` : ""} ${length? `(${length} amino acids)` : ""} ${nrOfMutations? `(${nrOfMutations} mutations)` : ""} ${t === canonicalTranscript? " (default)" : ""}`;
+                                    const label = `${t} ${refseqMrnaId? `(${refseqMrnaId})` : ""} ${ccdsId? `(${ccdsId})` : ""} ${length? `(${length} amino acids)` : ""} ${nrOfMutations? `(${nrOfMutations} mutations)` : ""} ${t === canonicalTranscript? " (default)" : ""}`;
                                     return {label:label,value:t};
                                 }
                             )
