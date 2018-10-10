@@ -55,8 +55,6 @@ export default class HomePage extends React.Component<IResultsViewPageProps, {}>
 
     @observable showQuerySelector = true;
 
-    @observable currentQuery:boolean;
-
     queryStore:QueryStore;
 
     constructor(props: IResultsViewPageProps) {
