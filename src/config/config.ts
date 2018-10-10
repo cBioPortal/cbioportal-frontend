@@ -18,6 +18,8 @@ import oncoKBClient from '../shared/api/oncokbClientInstance';
 import genome2StructureClient from '../shared/api/g2sClientInstance';
 import client from "../shared/api/cbioportalClientInstance";
 import internalClient from "../shared/api/cbioportalInternalClientInstance";
+import $ from "jquery";
+import {AppStore} from "../AppStore";
 import {proxyAllPostMethodsOnClient} from "../shared/lib/proxyPost";
 import CBioPortalAPI from "../shared/api/generated/CBioPortalAPI";
 import CBioPortalAPIInternal from "../shared/api/generated/CBioPortalAPIInternal";
@@ -86,9 +88,7 @@ export function setServerConfig(serverConfig:{[key:string]:any }){
 
     config.serverConfig = mergedConfig;
 
-
 }
-
 
 export class ServerConfigHelpers {
 
@@ -191,4 +191,19 @@ export function initializeConfiguration(){
         config.serverConfig.genomenexus_url = `//${trimTrailingSlash(ENV_GENOME_NEXUS_URL)}/`;
     }
 
+}
+
+export function fetchServerConfig(){
+
+    return $.ajax({
+        url: getConfigurationServiceApiUrl(),
+        dataType: "jsonp",
+        jsonpCallback: "callback"
+    });
+
+}
+
+export function initializeAppStore(appStore:AppStore, config:IServerConfig) {
+    appStore.authMethod = config.authenticationMethod;
+    appStore.userName = config.user_email_address;
 }
