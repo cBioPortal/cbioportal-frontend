@@ -18,6 +18,15 @@ import oncoKBClient from '../shared/api/oncokbClientInstance';
 import genome2StructureClient from '../shared/api/g2sClientInstance';
 import client from "../shared/api/cbioportalClientInstance";
 import internalClient from "../shared/api/cbioportalInternalClientInstance";
+import {proxyAllPostMethodsOnClient} from "../shared/lib/proxyPost";
+import CBioPortalAPI from "../shared/api/generated/CBioPortalAPI";
+import CBioPortalAPIInternal from "../shared/api/generated/CBioPortalAPIInternal";
+import CivicAPI from "../shared/api/CivicAPI";
+import Genome2StructureAPI from "../shared/api/generated/Genome2StructureAPI";
+import GenomeNexusAPI from "../shared/api/generated/GenomeNexusAPI";
+import GenomeNexusAPIInternal from "../shared/api/generated/GenomeNexusAPIInternal";
+import OncoKbAPI from "../shared/api/generated/OncoKbAPI";
+import sessionServiceAPI from "../shared/api/sessionServiceAPI";
 
 
 const config:any = (window as any).frontendConfig || { serverConfig:{} };
@@ -142,9 +151,15 @@ export function initializeAPIClients(){
     (oncoKBClient as any).domain = getOncoKbApiUrl();
     (genome2StructureClient as any).domain = getG2SApiUrl();
 
-
-
-
+    // add POST caching
+    proxyAllPostMethodsOnClient(CBioPortalAPI);
+    proxyAllPostMethodsOnClient(CBioPortalAPIInternal);
+    proxyAllPostMethodsOnClient(CivicAPI);
+    proxyAllPostMethodsOnClient(Genome2StructureAPI);
+    proxyAllPostMethodsOnClient(GenomeNexusAPI);
+    proxyAllPostMethodsOnClient(GenomeNexusAPIInternal);
+    proxyAllPostMethodsOnClient(OncoKbAPI);
+    proxyAllPostMethodsOnClient(sessionServiceAPI);
 }
 
 export function initializeConfiguration(){
