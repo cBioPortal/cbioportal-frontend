@@ -178,13 +178,13 @@ describe('Results Page', function() {
             assert(!browser.isVisible(`${noBannerSelector}.oncoprint-oql-status-banner`));
         });
         it("should not be present in cancer types summary with simple query", function() {
-            browser.click("a.tabAnchor_cancerTypesSummaryTab");
+            browser.click("a.tabAnchor_cancerTypesSummary");
             browser.pause(500);
             assert(!browser.isVisible(`${yesBannerSelector}.cancer-types-summary-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.cancer-types-summary-oql-status-banner`));
         });
         it("should not be present in mutual exclusivity tab with simple query", function() {
-            browser.click("a.tabAnchor_mutualExclusivityTab");
+            browser.click("a.tabAnchor_mutualExclusivity");
             browser.pause(500);
             assert(!browser.isVisible(`${yesBannerSelector}.mutex-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.mutex-oql-status-banner`));
@@ -196,7 +196,7 @@ describe('Results Page', function() {
             assert(!browser.isVisible(`${noBannerSelector}.plots-oql-status-banner`));
         });
         it("should not be present in mutations tab with simple query", function(){
-            browser.click("a.tabAnchor_mutationsTab");
+            browser.click("a.tabAnchor_mutations");
             browser.pause(500);
             assert(!browser.isVisible(`${yesBannerSelector}.mutations-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.mutations-oql-status-banner`));
@@ -209,13 +209,13 @@ describe('Results Page', function() {
             assert(!browser.isVisible(`${noBannerSelector}.coexp-oql-status-banner`));
         });
         it("should not be present in enrichments tab with simple query", function(){
-            browser.click("a.tabAnchor_enrichment");
+            browser.click("a.tabAnchor_enrichments");
             browser.pause(500);
             assert(!browser.isVisible(`${yesBannerSelector}.enrichments-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.enrichments-oql-status-banner`));
         });
         it("should not be present in survival tab with simple query", function(){
-            browser.click("a.tabAnchor_survivalTab");
+            browser.click("a.tabAnchor_survival");
             browser.pause(500);
             assert(!browser.isVisible(`${yesBannerSelector}.survival-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.survival-oql-status-banner`));
@@ -241,13 +241,13 @@ describe('Results Page', function() {
             assert(!browser.isVisible(`${noBannerSelector}.oncoprint-oql-status-banner`));
         });
         it("should be present in cancer types summary with explicit query", function() {
-            browser.click("a.tabAnchor_cancerTypesSummaryTab");
+            browser.click("a.tabAnchor_cancerTypesSummary");
             browser.waitForVisible(`${yesBannerSelector}.cancer-types-summary-oql-status-banner`, 10000);
             assert(browser.isVisible(`${yesBannerSelector}.cancer-types-summary-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.cancer-types-summary-oql-status-banner`));
         });
         it("should be present in mutual exclusivity tab with explicit query", function() {
-            browser.click("a.tabAnchor_mutualExclusivityTab");
+            browser.click("a.tabAnchor_mutualExclusivity");
             browser.waitForVisible(`${yesBannerSelector}.mutex-oql-status-banner`, 10000);
             assert(browser.isVisible(`${yesBannerSelector}.mutex-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.mutex-oql-status-banner`));
@@ -259,7 +259,7 @@ describe('Results Page', function() {
             assert(browser.isVisible(`${noBannerSelector}.plots-oql-status-banner`));
         });
         it("should be present in mutations tab with explicit query", function(){
-            browser.click("a.tabAnchor_mutationsTab");
+            browser.click("a.tabAnchor_mutations");
             browser.waitForVisible(`${unaffectedBannerSelector}.mutations-oql-status-banner`, 10000);
             assert(!browser.isVisible(`${yesBannerSelector}.mutations-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.mutations-oql-status-banner`));
@@ -272,13 +272,13 @@ describe('Results Page', function() {
             assert(browser.isVisible(`${noBannerSelector}.coexp-oql-status-banner`));
         });
         it("should be present in enrichments tab with explicit query", function(){
-            browser.click("a.tabAnchor_enrichment");
+            browser.click("a.tabAnchor_enrichments");
             browser.waitForVisible(`${yesBannerSelector}.enrichments-oql-status-banner`, 10000);
             assert(browser.isVisible(`${yesBannerSelector}.enrichments-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.enrichments-oql-status-banner`));
         });
         it("should be present in survival tab with explicit query", function(){
-            browser.click("a.tabAnchor_survivalTab");
+            browser.click("a.tabAnchor_survival");
             browser.waitForVisible(`${yesBannerSelector}.survival-oql-status-banner`, 10000);
             assert(browser.isVisible(`${yesBannerSelector}.survival-oql-status-banner`));
             assert(!browser.isVisible(`${noBannerSelector}.survival-oql-status-banner`));
