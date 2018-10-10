@@ -1,7 +1,10 @@
 import {buildCBioPortalPageUrl} from "../api/urls";
 import getBrowserWindow from "./getBrowserWindow";
+import {fetchServerConfig} from "../../config/config";
+import {AppStore} from "../../AppStore";
+import {IServerConfig} from "../../config/IAppConfig";
 
-export function openSocialAuthWindow() {
+export function openSocialAuthWindow(appStore:AppStore) {
 
     var _window = getBrowserWindow().open(buildCBioPortalPageUrl('login.jsp'), '', 'width=1000, height=800')!;
     var interval = setInterval(function() {
@@ -13,15 +16,12 @@ export function openSocialAuthWindow() {
                 !_window.document.URL.includes('login.jsp')) {
                 _window.close();
 
-                setTimeout(function() {
-                    clearInterval(interval);
-                    if(getBrowserWindow().location.pathname.includes('/study')) {
-                        $('#rightHeaderContent').load(' #rightHeaderContent');
-                        (getBrowserWindow().iViz as any).vue.manage.getInstance().showSaveButton=true;
-                    } else {
-                        location.reload();
+                fetchServerConfig().then(
+                    (config:IServerConfig)=>{
+                        appStore.userName = config.user_email_address;
+                        appStore.authMethod = config.authenticationMethod;
                     }
-                }, 500);
+                );
             }
         } catch (err) {
             console.log('Error while monitoring the Login window: ', err);

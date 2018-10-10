@@ -30,6 +30,7 @@ import {setServerConfig, updateConfig} from "../../config/config";
 import {embedGoogleAnalytics} from "../../shared/lib/tracking";
 import {computed} from "mobx";
 import { If, Else } from 'react-if';
+import {AppStore} from "../../AppStore";
 
 interface IContainerProps {
     location: Location;
@@ -47,6 +48,10 @@ export default class Container extends React.Component<IContainerProps, {}> {
 
     private get routingStore(){
         return getBrowserWindow().routingStore;
+    }
+
+    private get appStore(){
+        return getBrowserWindow().globalStores.appStore;
     }
 
     renderChildren() {
@@ -74,7 +79,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
 
                     <div className="pageTopContainer">
                         <div className="contentWidth">
-                            <PortalHeader/>
+                            <PortalHeader appStore={this.appStore}/>
                         </div>
                     </div>
 
