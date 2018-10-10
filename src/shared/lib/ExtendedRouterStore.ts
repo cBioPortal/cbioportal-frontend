@@ -20,7 +20,9 @@ export interface PortalSession {
 }
 
 function saveRemoteSession(data:any){
-    return sessionClient.saveSession(data);
+    const dataCopy = Object.assign({}, data);
+    delete dataCopy[""]; // artifact of mobx RouterStore URL serialization, when theres & at end of URL, which breaks session service
+    return sessionClient.saveSession(dataCopy);
 }
 
 function getRemoteSession(sessionId:string){
