@@ -278,7 +278,11 @@ export function getClinicalDataType(patientAttribute: boolean): ClinicalDataType
 
 export function getClinicalAttributeUniqueKey(attribute: ClinicalAttribute): string {
     const clinicalDataType = getClinicalDataType(attribute.patientAttribute);
-    return clinicalDataType + '_' + attribute.clinicalAttributeId;
+    return getClinicalAttributeUniqueKeyByDataTypeAttrId(clinicalDataType, attribute.clinicalAttributeId);
+}
+
+export function getClinicalAttributeUniqueKeyByDataTypeAttrId(dataType: 'SAMPLE'|'PATIENT', attrId: string): string {
+    return dataType + '_' + attrId;
 }
 
 export function getCurrentDate() {
