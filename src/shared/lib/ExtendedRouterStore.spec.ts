@@ -49,7 +49,7 @@ describe('ExtendedRoutingStore', () => {
             param2: 'altered',
             param3: 'new'
         });
-//
+
         assert.equal(routingStore.location.pathname, '/results', 'sets path appropriately');
         assert.deepEqual(routingStore.location.query, {param2: 'altered', param3: 'new'},'removes param1');
 
