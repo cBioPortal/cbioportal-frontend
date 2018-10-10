@@ -1,6 +1,7 @@
 import * as React from 'react';
 import {observer} from "mobx-react";
 import {computed, action, observable} from "mobx";
+// tslint:disable-next-line:no-import-side-effect
 import 'react-select/dist/react-select.css';
 import './styles.scss';
 
@@ -20,7 +21,7 @@ import { DropdownButton, MenuItem } from 'react-bootstrap';
 import { EnsemblTranscript } from 'shared/api/generated/GenomeNexusAPI';
 import Mutations from 'pages/resultsView/mutation/Mutations';
 import Select from 'react-select';
-// tslint:disable-next-line:no-import-side-effect
+import _ from 'lodash';
 
 // Anything from App config will be included in mutation mapper config
 export interface IMutationMapperConfig {
@@ -87,6 +88,7 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
             <div style={{'paddingBottom':10}}>
                 <h4>{hugoGeneSymbol}</h4>
                 {(showDropDown && showOnlyAnnotatedTranscriptsInDropdown && store.indexedVariantAnnotations.result && Object.keys(store.indexedVariantAnnotations.result).length > 0 && store.transcriptsWithAnnotations && canonicalTranscriptId) && (
+                    // annotating on the fly, show only annotated mutations
                     <div style={{paddingBottom:10}}>
                         {this.renderDropdownTranscripts(store.activeTranscript || canonicalTranscriptId,
                                                         store.transcriptsWithAnnotations,
@@ -96,6 +98,8 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                     </div>
                 )}
                 {(showDropDown && !showOnlyAnnotatedTranscriptsInDropdown && store.transcriptsWithProteinLength && store.transcriptsWithProteinLength.length > 0 && canonicalTranscriptId) && (
+                    // using existing annotations, show all transcripts with
+                    // protein length
                     <div style={{paddingBottom:10}}>
                         {this.renderDropdownTranscripts(store.activeTranscript || canonicalTranscriptId,
                                                         store.transcriptsWithProteinLength,
@@ -104,6 +108,7 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                     </div>
                 )}
                 {(!showDropDown && canonicalTranscriptId) && (
+                    // down't show drop down, only the canonical transcript
                     <div>
                     <span>Transcript: </span>
                     <a
@@ -114,34 +119,40 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                     </a>
                 </div>
                 )}
-                <div className={refseqMrnaId? '' : 'invisible'}>
+                <div>
                     <span data-test="GeneSummaryRefSeq">{'RefSeq: '}
-                        <a
-                            href={`https://www.ncbi.nlm.nih.gov/nuccore/${refseqMrnaId}`}
-                            target="_blank"
-                        >
-                            {refseqMrnaId}
-                        </a>
+                        {refseqMrnaId? (
+                            <a
+                                href={`https://www.ncbi.nlm.nih.gov/nuccore/${refseqMrnaId}`}
+                                target="_blank"
+                            >
+                                {refseqMrnaId}
+                            </a>
+                        ) : '-'}
                     </span>
                 </div>
-                <div className={ccdsId? '' : 'invisible'}>
+                <div>
                     <span data-test="GeneSummaryCCDS">{'CCDS: '}
-                        <a
-                            href={`http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA=${ccdsId}`}
-                            target="_blank"
-                        >
-                            {ccdsId}
-                        </a>
+                        {ccdsId? (
+                            <a
+                                href={`http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA=${ccdsId}`}
+                                target="_blank"
+                            >
+                                {ccdsId}
+                            </a>
+                        ) : '-'}
                     </span>
                 </div>
-                <div className={this.props.store.uniprotId.result ? '' : 'invisible'}>
+                <div>
                     <span data-test="GeneSummaryUniProt">{'UniProt: '}
-                        <a
-                            href={`http://www.uniprot.org/uniprot/${uniprotId}`}
-                            target="_blank"
-                        >
-                            {uniprotId}
-                        </a>
+                        {uniprotId? (
+                            <a
+                                href={`http://www.uniprot.org/uniprot/${uniprotId}`}
+                                target="_blank"
+                            >
+                                {uniprotId}
+                            </a>
+                        ) : '-'}
                     </span>
                 </div>
             </div>
@@ -163,7 +174,7 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                     // https://github.com/JedWatson/react-select/issues/1560
                     deleteRemoves={false}
                     style={{width:160}}
-                    options={allTranscripts.map(
+                    options={this.sortTranscripts(allTranscripts).map(
                                 (t:string) => {
                                     const length = transcriptsByTranscriptId[t].proteinLength;
                                     const refseqMrnaId = transcriptsByTranscriptId[t].refseqMrnaId;
@@ -198,6 +209,25 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
     // TODO provide a generic version of this? See ResultsViewMutationMapper.mutationRateSummary
     get mutationRateSummary():JSX.Element|null {
         return null;
+    }
+
+    sortTranscripts(transcripts:string[]) {
+        // sort transcripts for dropdown
+        // canonical id first
+        // then ones with refseq id
+        // then protein length
+        // lastly the ensembl id
+        transcripts = _.orderBy(
+            transcripts,
+            [
+                (t) => this.props.store.canonicalTranscript.result && t === this.props.store.canonicalTranscript.result.transcriptId,
+                (t) => this.props.store.transcriptsByTranscriptId[t].hasOwnProperty("refseqMrnaId"),
+                (t) => this.props.store.transcriptsByTranscriptId[t].proteinLength,
+                (t) => t
+            ],
+            ['desc','desc','desc','asc']
+        );
+        return transcripts;
     }
 
     @computed get multipleMutationInfo(): string {

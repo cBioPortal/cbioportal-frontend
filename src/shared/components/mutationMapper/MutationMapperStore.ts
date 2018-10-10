@@ -182,27 +182,16 @@ export default class MutationMapperStore
             // ignore transcripts without protein length
             // TODO: better solution is to show only mutations table, not
             // lollipop plot for those transcripts
-            let transcripts:string[] = _.uniq([].concat.apply([], (uniqueGenomicLocations(this.getMutations()).map((gl:GenomicLocation) => {
+            const transcripts:string[] = _.uniq([].concat.apply([], (uniqueGenomicLocations(this.getMutations()).map((gl:GenomicLocation) => {
                 return this.indexedVariantAnnotations.result && this.indexedVariantAnnotations.result[genomicLocationString(gl)]? this.indexedVariantAnnotations.result[genomicLocationString(gl)].transcript_consequences.map((tc:TranscriptConsequence) => tc.transcript_id).filter((transcriptId: string) => this.transcriptsWithProteinLength.includes(transcriptId)) : [];
             }))));
             // makes sure the annotations are actually of the form we are
             // displaying (e.g. nonsynonymous)
-            transcripts = transcripts.filter((t:string) => (
+            return transcripts.filter((t:string) => (
                 getMutationsToTranscriptId(this.getMutations(),
                                            t,
                                            this.indexedVariantAnnotations.result!!).length > 0
             ));
-            transcripts = _.orderBy(
-                transcripts,
-                [
-                    (t) => t === this.canonicalTranscript.result!!.transcriptId,
-                    (t) => this.transcriptsByTranscriptId[t].hasOwnProperty("refseqMrnaId"),
-                    (t) => this.transcriptsByTranscriptId[t].proteinLength,
-                    (t) => t
-                ],
-                ['desc','desc','desc','asc']
-            );
-            return transcripts;
         } else {
             return [];
         }
@@ -213,18 +202,7 @@ export default class MutationMapperStore
             // ignore transcripts without protein length
             // TODO: better solution is to show only mutations table, not
             // lollipop plot for those transcripts
-            let transcripts:string[] = _.compact(this.allTranscripts.result.map((et: EnsemblTranscript) => et.proteinLength && et.transcriptId));
-            transcripts = _.orderBy(
-                transcripts,
-                [
-                    (t) => t === this.canonicalTranscript.result!!.transcriptId,
-                    (t) => this.transcriptsByTranscriptId[t].hasOwnProperty("refseqMrnaId"),
-                    (t) => this.transcriptsByTranscriptId[t].proteinLength,
-                    (t) => t
-                ],
-                ['desc','desc','desc','asc']
-            );
-            return transcripts;
+            return _.compact(this.allTranscripts.result.map((et: EnsemblTranscript) => et.proteinLength && et.transcriptId));
         } else {
             return [];
         }
@@ -266,14 +244,15 @@ export default class MutationMapperStore
 
     @computed get mutationsByTranscriptId(): {[transcriptId:string]: Mutations[]} {
         if (this.indexedVariantAnnotations.result) {
-            return _.fromPairs(this.transcriptsWithAnnotations.map((t:string) => (
-                                  [t,
-                                   getMutationsToTranscriptId(this.getMutations(),
-                                                              t,
-                                                              this.indexedVariantAnnotations.result!!)
-                                  ]
-                               ))
-                   );
+            return _.fromPairs(
+                this.transcriptsWithAnnotations.map((t:string) => (
+                    [t,
+                    getMutationsToTranscriptId(this.getMutations(),
+                                               t,
+                                               this.indexedVariantAnnotations.result!!)
+                    ]
+                ))
+            );
         } else {
             return {};
         }
