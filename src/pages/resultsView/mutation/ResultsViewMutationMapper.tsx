@@ -14,6 +14,7 @@ import {
 import MutationRateSummary from "pages/resultsView/mutation/MutationRateSummary";
 import ResultsViewMutationMapperStore from "pages/resultsView/mutation/ResultsViewMutationMapperStore";
 import ResultsViewMutationTable from "pages/resultsView/mutation/ResultsViewMutationTable";
+import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 
 export interface IResultsViewMutationMapperProps extends IMutationMapperProps
 {
@@ -48,6 +49,13 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
         } else {
             return null;
         }
+    }
+
+    protected get isMutationTableDataLoading() {
+        return getMobxPromiseGroupStatus(
+            this.props.store.clinicalDataForSamples,
+            this.props.store.studiesForSamplesWithoutCancerTypeClinicalData
+        ) === "pending";
     }
 
     protected mutationTableComponent(): JSX.Element|null
@@ -86,19 +94,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
     {
         return (
             <span>
-                <LoadingIndicator
-                    center={true}
-                    isLoading={
-                        (this.props.store.clinicalDataForSamples &&
-                            this.props.store.clinicalDataForSamples.isPending) ||
-                        (this.props.store.studiesForSamplesWithoutCancerTypeClinicalData &&
-                            this.props.store.studiesForSamplesWithoutCancerTypeClinicalData.isPending)
-                    }
-                />
-                {(!this.props.store.clinicalDataForSamples ||
-                    !this.props.store.clinicalDataForSamples.isPending) &&
-                (!this.props.store.studiesForSamplesWithoutCancerTypeClinicalData ||
-                    !this.props.store.studiesForSamplesWithoutCancerTypeClinicalData.isPending) && (
+                {!this.isMutationTableDataLoading && (
                     this.mutationTableComponent()
                 )}
             </span>
