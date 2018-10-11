@@ -39,8 +39,8 @@ export const dataTypeToDisplayType:{[s:string]:string} = {
     [AlterationTypeConstants.MRNA_EXPRESSION]: "mRNA",
     [AlterationTypeConstants.PROTEIN_LEVEL]: "Protein Level",
     [AlterationTypeConstants.METHYLATION]: "DNA Methylation",
-    [CLIN_ATTR_DATA_TYPE]:"Clinical Attribute"
-    [GENESET_DATA_TYPE]:"Gene Sets",
+    [CLIN_ATTR_DATA_TYPE]:"Clinical Attribute",
+    [GENESET_DATA_TYPE]:"Gene Sets"
 };
 
 export const mutationTypeToDisplayName:{[oncoprintMutationType:string]:string} = {
@@ -609,7 +609,7 @@ export function makeAxisDataPromise(
     numericGeneMolecularDataCache:MobxPromiseCache<{entrezGeneId:number, molecularProfileId:string}, NumericGeneMolecularData[]>,
     studyToMutationMolecularProfile: MobxPromise<{[studyId: string]: MolecularProfile}>,
     coverageInformation:MobxPromise<CoverageInformation>,
-    samples:MobxPromise<Sample[]>
+    samples:MobxPromise<Sample[]>,
     genesetMolecularDataCachePromise: MobxPromise<GenesetMolecularDataCache>
 ):MobxPromise<IAxisData> {
 
