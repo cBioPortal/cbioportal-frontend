@@ -28,15 +28,19 @@ import {AlterationTypeConstants, AnnotatedMutation, AnnotatedNumericGeneMolecula
 import numeral from "numeral";
 import {getJitterForCase} from "../../../shared/components/plots/PlotUtils";
 import {isSampleProfiled} from "../../../shared/lib/isSampleProfiled";
+import GenesetMolecularDataCache from "../../../shared/cache/GenesetMolecularDataCache";
+import {GenesetMolecularData} from "../../../shared/api/generated/CBioPortalAPIInternal";
 
 export const CLIN_ATTR_DATA_TYPE = "clinical_attribute";
+export const GENESET_DATA_TYPE = "GENESET_SCORE";
 export const dataTypeToDisplayType:{[s:string]:string} = {
     [AlterationTypeConstants.MUTATION_EXTENDED]: "Mutation",
     [AlterationTypeConstants.COPY_NUMBER_ALTERATION]: "Copy Number",
     [AlterationTypeConstants.MRNA_EXPRESSION]: "mRNA",
     [AlterationTypeConstants.PROTEIN_LEVEL]: "Protein Level",
     [AlterationTypeConstants.METHYLATION]: "DNA Methylation",
-    [CLIN_ATTR_DATA_TYPE]:"Clinical Attribute"
+    [CLIN_ATTR_DATA_TYPE]:"Clinical Attribute",
+    [GENESET_DATA_TYPE]:"Gene Sets"
 };
 
 export const mutationTypeToDisplayName:{[oncoprintMutationType:string]:string} = {
@@ -49,9 +53,8 @@ export const mutationTypeToDisplayName:{[oncoprintMutationType:string]:string} =
 
 export const dataTypeDisplayOrder = [
     CLIN_ATTR_DATA_TYPE, AlterationTypeConstants.MUTATION_EXTENDED, AlterationTypeConstants.COPY_NUMBER_ALTERATION,
-    AlterationTypeConstants.MRNA_EXPRESSION, AlterationTypeConstants.PROTEIN_LEVEL, AlterationTypeConstants.METHYLATION
+    AlterationTypeConstants.MRNA_EXPRESSION, GENESET_DATA_TYPE, AlterationTypeConstants.PROTEIN_LEVEL, AlterationTypeConstants.METHYLATION
 ];
-
 export function sortMolecularProfilesForDisplay(profiles:MolecularProfile[]) {
     if (!profiles.length) {
         return [];
@@ -564,6 +567,37 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
     } as IStringAxisData;
 }
 
+function makeAxisDataPromise_Geneset(
+    genesetId:string,
+    molecularProfileId:string,
+    genesetMolecularDataCachePromise:MobxPromise<GenesetMolecularDataCache>,
+    molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>
+):MobxPromise<IAxisData> {
+    return remoteData({
+        await:()=>[genesetMolecularDataCachePromise, molecularProfileIdToMolecularProfile],
+        invoke: async () => {
+            const profile = molecularProfileIdToMolecularProfile.result![molecularProfileId];
+            // const isDiscreteCna = (profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION
+            //                         && profile.datatype === "DISCRETE");
+            const makeRequest = true;
+            await genesetMolecularDataCachePromise.result!.getPromise(
+                 {genesetId, molecularProfileId}, makeRequest);
+            const data:GenesetMolecularData[] = genesetMolecularDataCachePromise.result!.get({molecularProfileId, genesetId})!.data!;
+            return Promise.resolve({
+                data: data.map(d=>{
+                    const value = d.value;
+                    return {
+                        uniqueSampleKey: d.uniqueSampleKey,
+                        value: Number(value)
+                    };
+                }),
+                genesetId: genesetId,
+                datatype: "number"
+            });
+        }
+    });
+}
+
 export function makeAxisDataPromise(
     selection:AxisMenuSelection,
     clinicalAttributeIdToClinicalAttribute:MobxPromise<{[clinicalAttributeId:string]:ClinicalAttribute}>,
@@ -575,7 +609,8 @@ export function makeAxisDataPromise(
     numericGeneMolecularDataCache:MobxPromiseCache<{entrezGeneId:number, molecularProfileId:string}, NumericGeneMolecularData[]>,
     studyToMutationMolecularProfile: MobxPromise<{[studyId: string]: MolecularProfile}>,
     coverageInformation:MobxPromise<CoverageInformation>,
-    samples:MobxPromise<Sample[]>
+    samples:MobxPromise<Sample[]>,
+    genesetMolecularDataCachePromise: MobxPromise<GenesetMolecularDataCache>
 ):MobxPromise<IAxisData> {
 
     let ret:MobxPromise<IAxisData> = remoteData(()=>new Promise<IAxisData>(()=>0)); // always isPending
@@ -584,6 +619,13 @@ export function makeAxisDataPromise(
             if (selection.dataSourceId !== undefined && clinicalAttributeIdToClinicalAttribute.isComplete) {
                 const attribute = clinicalAttributeIdToClinicalAttribute.result![selection.dataSourceId];
                 ret = makeAxisDataPromise_Clinical(attribute, clinicalDataCache, patientKeyToSamples, studyToMutationMolecularProfile);
+            }
+            break;
+        case GENESET_DATA_TYPE:
+            if (selection.genesetId !== undefined && selection.dataSourceId !== undefined) {
+                ret = makeAxisDataPromise_Geneset(
+                    selection.genesetId, selection.dataSourceId, genesetMolecularDataCachePromise,
+                    molecularProfileIdToMolecularProfile);
             }
             break;
         default:
@@ -615,6 +657,7 @@ export function getAxisLabel(
     clinicalAttributeIdToClinicalAttribute:{[clinicalAttributeId:string]:ClinicalAttribute}
 ) {
     let ret = "";
+    const profile = molecularProfileIdToMolecularProfile[selection.dataSourceId!];
     switch (selection.dataType) {
         case CLIN_ATTR_DATA_TYPE:
             const attribute = clinicalAttributeIdToClinicalAttribute[selection.dataSourceId!];
@@ -622,9 +665,13 @@ export function getAxisLabel(
                 ret = attribute.displayName;
             }
             break;
+        case GENESET_DATA_TYPE:
+            if (profile && selection.genesetId !== undefined) {
+                ret = `${selection.genesetId}: ${profile.name}`;
+            }
+            break;
         default:
             // molecular profile
-            const profile = molecularProfileIdToMolecularProfile[selection.dataSourceId!];
             if (profile && selection.entrezGeneId !== undefined) {
                 ret = `${entrezGeneIdToGene[selection.entrezGeneId].hugoGeneSymbol}: ${profile.name}`;
             }
@@ -1091,7 +1138,7 @@ export function makeScatterPlotData(
         molecularProfileIds:string[],
         data:AnnotatedNumericGeneMolecularData[]
     }
-):IScatterPlotData[]
+):IScatterPlotData[];
 
 export function makeScatterPlotData(
     horzData: INumberAxisData|IStringAxisData,
