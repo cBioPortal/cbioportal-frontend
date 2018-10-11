@@ -30,6 +30,7 @@ $selectHeightInner: $selectHeight - 2px;
         .Select-menu-outer {
             width: 300px;
             max-height: 400px;
+            z-index: 100;
         }
 
         .Select-placeholder {
