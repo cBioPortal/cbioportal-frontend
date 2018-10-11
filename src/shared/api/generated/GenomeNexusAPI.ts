@@ -130,6 +130,8 @@ export type EnsemblTranscript = {
 
         'refseqMrnaId': string
 
+        'ccdsId': string
+
         'exons': Array < Exon >
 
         'utrs': Array < UntranslatedRegion >
