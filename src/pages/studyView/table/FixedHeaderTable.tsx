@@ -9,6 +9,7 @@ import {
 import 'react-virtualized/styles.css';
 import {action, observable} from "mobx";
 import styles from "./tables.module.scss";
+import studyViewStyles from "pages/studyView/styles.module.scss";
 import * as _ from 'lodash';
 import {observer} from "mobx-react";
 import classnames from 'classnames';
@@ -159,7 +160,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                     <input placeholder={"Search..."} type="text" onInput={this.onFilterTextChange()}
                            className={classnames('form-control', styles.tableSearchInput)}/>
                     <If condition={this.props.showSelectSamples}>
-                        <button className={classnames("btn btn-primary btn-sm", styles.selectSamplesBtn)} onClick={this.afterSelectingRows}>Select Samples</button>
+                        <button className={classnames("btn btn-primary btn-sm", studyViewStyles.studyViewBtn)} onClick={this.afterSelectingRows}>Select Samples</button>
                     </If>
                 </div>
             </div>
