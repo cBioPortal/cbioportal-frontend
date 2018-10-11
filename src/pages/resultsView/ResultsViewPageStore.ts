@@ -354,7 +354,11 @@ export class ResultsViewPageStore {
     @observable.ref selectedEnrichmentProteinProfile: MolecularProfile;
 
     @computed get hugoGeneSymbols(){
-        return parseOQLQuery(this.oqlQuery).map((o: any) => o.gene);
+        if (this.oqlQuery.length > 0) {
+            return parseOQLQuery(this.oqlQuery).map((o: any) => o.gene);
+        } else {
+            return [];
+        }
     }
 
     @computed get queryContainsOql() {
