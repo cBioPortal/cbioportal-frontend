@@ -6,7 +6,7 @@ defaults: &defaults
   working_directory: ~/repo
   docker:
     # specify the version you desire here
-    - image: circleci/node:8.9.4-browsers
+    - image: circleci/node:8.12.0-browsers
 
 version: 2
 jobs:
@@ -20,11 +20,6 @@ jobs:
             npm --version
       - checkout
       # Download and cache dependencies
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "package-lock.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
       - run: npm ci
       - run:
           name: "Ignore https to http switches on circleci in package lock (not sure why this happens)"
