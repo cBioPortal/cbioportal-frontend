@@ -840,7 +840,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             this.props.store.numericGeneMolecularDataCache,
             this.props.store.studyToMutationMolecularProfile,
             this.props.store.coverageInformation,
-            this.props.store.samples
+            this.props.store.samples,
             this.props.store.genesetMolecularDataCache
         );
     }
@@ -857,7 +857,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             this.props.store.numericGeneMolecularDataCache,
             this.props.store.studyToMutationMolecularProfile,
             this.props.store.coverageInformation,
-            this.props.store.samples
+            this.props.store.samples,
             this.props.store.genesetMolecularDataCache
         );
     }
