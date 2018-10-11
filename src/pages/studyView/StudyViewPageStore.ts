@@ -1948,6 +1948,8 @@ export class StudyViewPageStore {
                 }
 
                 if (UniqueKey.MUTATION_COUNT_CNA_FRACTION in this.chartMetaSet) {
+                    // number of samples containing mutationCountVsFractionGenomeAlteredData should be 
+                    // calculated from the selected samples
                     const mutationCountVsFractionGenomeAlteredDataSet = this.mutationCountVsFractionGenomeAlteredDataSet.result;
                     const selectedSamplesMap = _.keyBy(this.selectedSamples.result!, s => s.uniqueSampleKey);
                     const filteredData = _.reduce(selectedSamplesMap, (acc, next) => {
