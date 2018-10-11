@@ -58,7 +58,7 @@ function runResultsTestSuite(prefix){
     });
 
     it(`${prefix} enrichments tab`, function(){
-        browser.click("a.tabAnchor_enrichment");
+        browser.click("a.tabAnchor_enrichments");
         browser.waitForVisible('div[data-test="MutationEnrichmentsTab"]',10000);
         browser.click('b=CDK14');
         browser.waitForExist('[data-test="enrichmentsTabDiv"]', 10000);
@@ -81,13 +81,13 @@ function runResultsTestSuite(prefix){
 
         browser.frame('networkFrame', function(err, result) {
                 if (err) console.log(err);
-            })
+            });
         browser.waitForVisible('#cytoscapeweb canvas',60000);
         browser.execute(function(){
             $("<style>canvas { visibility: hidden} </style>").appendTo("body");
         });
         browser.frame(null);
-        var res = browser.checkElement("#network",{hide:['.qtip','canvas'] });
+        var res = browser.checkElement("#networkFrame",{hide:['.qtip','canvas'] });
 
         assertScreenShotMatch(res);
     });
@@ -106,6 +106,7 @@ describe('result page screenshot tests', function(){
     before(function(){
         var url = `${CBIOPORTAL_URL}/index.do?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&case_ids=&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit&show_samples=false&`;
         goToUrlAndSetLocalStorage(url);
+        waitForOncoprint(10000);
     });
 
     runResultsTestSuite('no session')
@@ -203,6 +204,7 @@ describe("download tab screenshot tests", function() {
     it("download tab - msk_impact_2017 with ALK and SOS1 - SOS1 should be not sequenced", function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=msk_impact_2017_all&gene_list=ALK%2520SOS1&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
         goToUrlAndSetLocalStorage(url);
+        browser.waitForExist("a.tabAnchor_download", 10000);
         browser.click("a.tabAnchor_download");
         browser.waitForExist('[data-test="dataDownloadGeneAlterationTable"] tr > td > svg', 20000);
         browser.waitForExist('[data-test="downloadTabDiv"]', 5000);
@@ -442,13 +444,14 @@ describe("plots tab screenshot tests", function() {
 
 describe('result page tabs, loading from session id', function(){
     before(function(){
-        var url = `${CBIOPORTAL_URL}/results?session_id=5bbe8197498eb8b3d5684271`;
-        goToUrlAndSetLocalStorage(url);
-
         // only run these tests if session service is enabled
         if (sessionServiceIsEnabled() === false) {
             this.skip();
         }
+
+        var url = `${CBIOPORTAL_URL}/results?session_id=5bbe8197498eb8b3d5684271`;
+        goToUrlAndSetLocalStorage(url);
+        waitForOncoprint(10000);
     });
 
     runResultsTestSuite('session');
