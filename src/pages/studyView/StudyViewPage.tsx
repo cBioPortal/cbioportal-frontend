@@ -135,12 +135,19 @@ class StudySummary extends React.Component<IStudySummaryProps, {}> {
         return this.props.studies.length === 1 ? this.props.studies[0].name : 'Combined Study';
     }
 
-    @computed get descriptionFirstLine() {
-        let line: string = `This combined study contains samples from ${this.props.studies.length} ${this.props.studies.length>1?'studies':'study'}`;
+    @computed
+    get descriptionFirstLine() {
         if (this.props.studies.length === 1) {
-            line = this.props.studies[0].description.split(/\n+/g)[0];
+            let elems = [<span
+                dangerouslySetInnerHTML={{__html: this.props.studies[0].description.split(/\n+/g)[0]}}/>];
+            if (this.props.studies[0].pmid) {
+                elems.push(<a target="_blank" href={`http://www.ncbi.nlm.nih.gov/pubmed/${this.props.studies[0].pmid}`} style={{marginLeft: '5px'}}>PubMed</a>);
+            }
+            return <div>{elems}</div>
+        } else {
+            return <span
+                dangerouslySetInnerHTML={{__html: `This combined study contains samples from ${this.props.studies.length} studies`}}/>;
         }
-        return <span dangerouslySetInnerHTML={{ __html: line }} />;
     }
 
     @computed get hasMoreDescription() {
