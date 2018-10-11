@@ -9,6 +9,7 @@ import {
 import { observer } from "mobx-react";
 import { computed, observable, action } from 'mobx';
 import styles from "./styles.module.scss";
+import studyViewStyles from "pages/studyView/styles.module.scss";
 import "./styles.scss";
 import { bind } from 'bind-decorator';
 import {getSampleViewUrl} from 'shared/api/urls';
@@ -250,7 +251,7 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                             location={GeneBoxType.STUDY_VIEW_PAGE}
                         />
 
-                        <button disabled={this._isQueryButtonDisabled} className={classnames(styles.summaryHeaderBtn, 'btn btn-primary btn-sm', styles.summaryHeaderItem)} onClick={() => this.props.onSubmitQuery()}>
+                        <button disabled={this._isQueryButtonDisabled} className={classnames(styles.summaryHeaderBtn, studyViewStyles.studyViewBtn, 'btn btn-primary btn-sm', styles.summaryHeaderItem)} onClick={() => this.props.onSubmitQuery()}>
                             Submit Query
                         </button>
 
