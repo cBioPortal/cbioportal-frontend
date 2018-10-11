@@ -7,8 +7,9 @@ import {getPatientViewUrl, getSampleViewUrl} from "shared/api/urls";
 import SelectedInfo from "../SelectedInfo/SelectedInfo";
 import {getClinicalAttributeUniqueKey} from "../StudyViewUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import { StudyViewPageStore } from "pages/studyView/StudyViewPageStore";
-import { remoteData } from "shared/api/remoteData";
+import {StudyViewPageStore} from "pages/studyView/StudyViewPageStore";
+import {remoteData} from "shared/api/remoteData";
+import {Else, If, Then} from 'react-if';
 
 export interface IClinicalDataTabTable {
     store: StudyViewPageStore
@@ -33,7 +34,7 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
     readonly columns = remoteData({
         await: () => [this.props.store.clinicalAttributes],
         invoke: async () => {
-            
+
             let defaultColumns: Column<{ [id: string]: string }>[] = [{
                 ...this.getDefaultColumnConfig('patientId'),
                 render: (data: { [id: string]: string }) => {
@@ -74,25 +75,30 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
     public render() {
         return (
             <div>
-                <LoadingIndicator isLoading={this.props.store.selectedSamples.isPending &&
-                    this.columns.isPending &&
-                    this.props.store.getDataForClinicalDataTab.isPending}
-                />
-                {
-                    this.props.store.selectedSamples.isComplete &&
-                    <SelectedInfo selectedSamples={this.props.store.selectedSamples.result} />
-                }
-                {
-                    this.props.store.getDataForClinicalDataTab.isComplete &&
-                    this.columns.isComplete &&
-                    <ClinicalDataTabTableComponent
-                        initialItemsPerPage={10}
-                        showCopyDownload={true}
-                        showColumnVisibility={true}
-                        data={this.props.store.getDataForClinicalDataTab.result || []}
-                        columns={this.columns.result}
-                    />
-                }
+                <If condition={this.props.store.selectedSamples.isPending}>
+                    <Then>
+                        <LoadingIndicator isLoading={this.props.store.selectedSamples.isPending}/>
+                    </Then>
+                    <Else>
+                        <SelectedInfo selectedSamples={this.props.store.selectedSamples.result}/>
+                    </Else>
+                </If>
+                <If condition={this.columns.isPending || this.props.store.getDataForClinicalDataTab.isPending}>
+                    <Then>
+                        <LoadingIndicator
+                            isLoading={this.columns.isPending || this.props.store.getDataForClinicalDataTab.isPending}
+                        />
+                    </Then>
+                    <Else>
+                        <ClinicalDataTabTableComponent
+                            initialItemsPerPage={10}
+                            showCopyDownload={true}
+                            showColumnVisibility={true}
+                            data={this.props.store.getDataForClinicalDataTab.result || []}
+                            columns={this.columns.result}
+                        />
+                    </Else>
+                </If>
             </div>
         );
     }
