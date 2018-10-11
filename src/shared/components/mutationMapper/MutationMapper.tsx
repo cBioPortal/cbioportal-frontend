@@ -107,18 +107,6 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                                                         store.transcriptsByTranscriptId)}
                     </div>
                 )}
-                {(!showDropDown && canonicalTranscriptId) && (
-                    // down't show drop down, only the canonical transcript
-                    <div>
-                    <span>Transcript: </span>
-                    <a
-                        href={`http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=${canonicalTranscriptId}`}
-                        target="_blank"
-                    >
-                        {canonicalTranscriptId}
-                    </a>
-                </div>
-                )}
                 <div>
                     <span data-test="GeneSummaryRefSeq">{'RefSeq: '}
                         {refseqMrnaId? (
@@ -131,6 +119,28 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                         ) : '-'}
                     </span>
                 </div>
+                {showDropDown? ((store.activeTranscript) && (
+                    <div>
+                        <span>Ensembl: </span>
+                        <a
+                            href={`http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=${store.activeTranscript}`}
+                            target="_blank"
+                        >
+                            {store.activeTranscript}
+                        </a>
+                    </div>
+                )) : (canonicalTranscriptId && (
+                    // down't show drop down, only the canonical transcript
+                    <div>
+                        <span>Ensembl: </span>
+                        <a
+                            href={`http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=${canonicalTranscriptId}`}
+                            target="_blank"
+                        >
+                            {canonicalTranscriptId}
+                        </a>
+                    </div>
+                ))}
                 <div>
                     <span data-test="GeneSummaryCCDS">{'CCDS: '}
                         {ccdsId? (
@@ -164,11 +174,15 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                               canonicalTranscript:string,
                               transcriptsByTranscriptId:{[transcriptId:string]: EnsemblTranscript},
                               mutationsByTranscriptId?: {[transcriptId:string]: Mutations[]}) {
+        const activeRefseqMrnaId = transcriptsByTranscriptId[activeTranscript].refseqMrnaId;
         return (
             <div>
                 <Select
                     className="transcripts-dropdown-select"
-                    value={{ label:activeTranscript, value:activeTranscript }}
+                    value={{
+                        label: activeRefseqMrnaId? activeRefseqMrnaId : activeTranscript,
+                        value:activeTranscript
+                    }}
                     clearable={false}
                     // need to explicitly set delteRemoves for cleable
                     // https://github.com/JedWatson/react-select/issues/1560
@@ -180,7 +194,7 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                                     const refseqMrnaId = transcriptsByTranscriptId[t].refseqMrnaId;
                                     const ccdsId = transcriptsByTranscriptId[t].ccdsId;
                                     const nrOfMutations = mutationsByTranscriptId && mutationsByTranscriptId[t] && mutationsByTranscriptId[t].length;
-                                    const label = `${t} ${refseqMrnaId? `(${refseqMrnaId})` : ""} ${ccdsId? `(${ccdsId})` : ""} ${length? `(${length} amino acids)` : ""} ${nrOfMutations? `(${nrOfMutations} mutations)` : ""} ${t === canonicalTranscript? " (default)" : ""}`;
+                                    const label = `${refseqMrnaId? `${refseqMrnaId} / ` : ""}${t} ${ccdsId? `(${ccdsId})` : ""} ${length? `(${length} amino acids)` : ""} ${nrOfMutations? `(${nrOfMutations} mutations)` : ""} ${t === canonicalTranscript? " (default)" : ""}`;
                                     return {label:label,value:t};
                                 }
                             )
@@ -192,15 +206,6 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                         }
                     }}
                 />
-                <a
-                    href={`http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=${activeTranscript}`}
-                    target="_blank"
-                >
-                    <img
-                        src={require("./ensembl_icon.png")}
-                        style={{paddingLeft: 8, cursor:"pointer",top:-15,position:"relative"}}
-                    />
-                </a>
             </div>
         );
     }
