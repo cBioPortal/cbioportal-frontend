@@ -153,7 +153,7 @@ describe('Results Page', function() {
                     } else {
                         return false;
                     }
-                }, 10000);
+                }, 20000);
                 assert.ok(browser.getText(textSelector).startsWith("complex structure of brca1 brct with singly"));
             });
 

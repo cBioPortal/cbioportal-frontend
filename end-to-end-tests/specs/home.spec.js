@@ -215,21 +215,18 @@ describe('patient page', function(){
         browser.waitForExist('span=PPP2R1A');
 
         // find oncokb image
-        var oncokbIndicator = $('[data-test="oncogenic-icon-image"]');
-        oncokbIndicator.waitForExist(30000);
+        const oncokbIcon = '[data-test2="PPP2R1A"][data-test="oncogenic-icon-image"]';
+        browser.waitForExist(oncokbIcon, 30000);
 
         // move over oncokb image (this is deprecated, but there is no new
         // function yet)
 
-        browser.pause(3000);
-        browser.moveToObject('[data-test="oncogenic-icon-image"]',5,5);
+        browser.waitForExist(oncokbIcon, 3000);
+        browser.moveToObject(oncokbIcon,5,5);
 
-        var oncokbCard = $('[data-test="oncokb-card"]');
-
-        oncokbCard.waitForExist(30000);
+        browser.waitForExist('[data-test="oncokb-card"]', 30000);
 
         assert.equal(browser.getText('.tip-header').toLowerCase(), 'ppp2r1a s256f in uterine serous carcinoma/uterine papillary serous carcinoma'.toLowerCase());
-
     });
 
 });
@@ -332,7 +329,7 @@ describe('single study query', function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=ov_tcga_pub_cna_seq&gene_list=BRCA1+BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`);
             waitForOncoprint(10000);
 
-            assert(browser.isVisible('a.tabAnchor_enrichment'));
+            assert(browser.isVisible('a.tabAnchor_enrichments'));
         });
     });
 });
@@ -629,37 +626,17 @@ describe('oncoprint', function() {
     });
 
     describe("sorting", ()=>{
-        function topCmp(eltA, eltB) {
-            return eltA.top - eltB.top;
-        }
         function getNthTrackOptionsElements(n) {
-            // n is one-indexed, to cohere with CSS nth-child
+            // n is one-indexed
 
-            var buttons = $$('#oncoprintDiv .oncoprintjs__track_options__toggle_btn_img');
-            buttons = buttons.map(function(btn, i) {
-                return {
-                    btn: btn,
-                    top: parseFloat(btn.$('..').getCssProperty('top').value),
-                    selector:'#oncoprintDiv .oncoprintjs__track_options__toggle_btn_img:nth-child('+(i+1)+')'
-                };
-            });
-            buttons.sort(topCmp);
-
-            var dropdowns = $$('#oncoprintDiv .oncoprintjs__track_options__dropdown');
-            dropdowns = dropdowns.map(function(dropdown, i) {
-                return {
-                    dropdown: dropdown,
-                    top: parseFloat(dropdown.getCssProperty('top').value),
-                    selector: '#oncoprintDiv .oncoprintjs__track_options__dropdown:nth-child('+(i+1)+')'
-                };
-            });
-            dropdowns.sort(topCmp);
+            const button_selector = "#oncoprintDiv .oncoprintjs__track_options__toggle_btn_img.nth-"+n;
+            const dropdown_selector = "#oncoprintDiv .oncoprintjs__track_options__dropdown.nth-"+n;
 
             return {
-                button: buttons[n-1].btn,
-                button_selector: buttons[n-1].selector,
-                dropdown: dropdowns[n-1].dropdown,
-                dropdown_selector: dropdowns[n-1].selector
+                button: $(button_selector),
+                button_selector,
+                dropdown: $(dropdown_selector),
+                dropdown_selector
             };
         }
 
@@ -691,7 +668,7 @@ describe('oncoprint', function() {
             browser.click('[data-test="StudySelect"] input');
 
             browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
-            browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);    
+            browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
 
             browser.execute(function() { homePageQueryStore.selectedSampleListId = "-1"; }); // select custom case list
 
@@ -837,9 +814,9 @@ describe('oncoprint', function() {
 
             // first get rid of the Profiled track
             var profiledElements = getNthTrackOptionsElements(5);
-            profiledElements.button.click();
+            browser.click(profiledElements.button_selector);
             browser.waitForVisible(profiledElements.dropdown_selector, 1000); // wait for menu to appear
-            profiledElements.dropdown.$('li:nth-child(3)').click(); // Click Remove Track
+            browser.click(profiledElements.dropdown_selector + ' li:nth-child(3)'); // Click Remove Track
             browser.pause(100); // give time to take effect
 
             assert.equal(
@@ -982,16 +959,16 @@ describe('oncoprint', function() {
 
             // first get rid of the Profiled track
             var profiledElements = getNthTrackOptionsElements(5);
-            profiledElements.button.click();
+            browser.click(profiledElements.button_selector);
             browser.waitForVisible(profiledElements.dropdown_selector, 1000); // wait for menu to appear
-            profiledElements.dropdown.$('li:nth-child(3)').click(); // Click Remove Track
+            browser.click(`${profiledElements.dropdown_selector} li:nth-child(3)`); // Click Remove Track
             browser.pause(100); // give time to take effect
 
             browser.scroll(0,1000);//scroll down
 
             // Sort heatmap tracks
             var TP53HeatmapElements = getNthTrackOptionsElements(8);
-            TP53HeatmapElements.button.click(); // open track menu
+            browser.click(TP53HeatmapElements.button_selector); // open track menu
             browser.waitForVisible(TP53HeatmapElements.dropdown_selector, 1000);// wait for menu to appear
             browser.click(TP53HeatmapElements.dropdown_selector + ' li:nth-child(6)'); // Click sort Z-a
             browser.pause(100); // give time to sort
@@ -1160,7 +1137,7 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist(selectedCaseSet_sel);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "All Sequenced Tumors (160)",
+            "Sequenced Tumors (160)",
             "Default selected case set"
         );
 
@@ -1215,7 +1192,7 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist(selectedCaseSet_sel);
         assert.equal(
             browser.getText(selectedCaseSet_sel),
-            "All Sequenced Tumors (160)",
+            "Sequenced Tumors (160)",
             "Default selected case set"
         );
 
@@ -1354,12 +1331,7 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
-        browser.pause(5000); // give time for text change to propagate through to the view
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "All (12880)",
-            "Expect: All (12880), but got '" + browser.getText(selectedCaseSet_sel) + "'",
-        );
+        browser.waitUntil(()=>{ return browser.getText(selectedCaseSet_sel) === "All (12997)"; }, 5000);
 
         // Deselect all tcga -provisional studies
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
