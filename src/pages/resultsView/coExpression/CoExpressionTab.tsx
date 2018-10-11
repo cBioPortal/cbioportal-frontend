@@ -26,6 +26,7 @@ import setWindowVariable from "../../../shared/lib/setWindowVariable";
 import {ICoExpressionPlotProps} from "./CoExpressionPlot";
 import {bind} from "bind-decorator";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
+import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 
 export interface ICoExpressionTabProps {
     store:ResultsViewPageStore;
@@ -261,12 +262,23 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                 </div>
             );
         }
+
+        const status = getMobxPromiseGroupStatus(
+          this.props.store.genes,
+          this.props.store.molecularProfileIdToProfiledSampleCount,
+          this.props.store.molecularProfilesInStudies
+        );
+
         return (
             <div>
                 <div className={"tabMessageContainer"}>
                     <OqlStatusBanner className="coexp-oql-status-banner" store={this.props.store} tabReflectsOql={false}/>
                 </div>
-                {divContents}
+
+                { (status==="complete") && divContents }
+
+                <LoadingIndicator center={true} size={"big"} isLoading={status==="pending"}/>
+
             </div>
         );
     }
