@@ -8,7 +8,7 @@ import Helmet from "react-helmet";
 export default class News extends React.Component<{}, {}> {
 
     public render() {
-        return <PageLayout className={'whiteBackground newsPage'}>
+        return <PageLayout className={'whiteBackground staticPage newsPage'}>
             <Helmet>
                 <title>{'cBioPortal for Cancer Genomics::News'}</title>
             </Helmet>

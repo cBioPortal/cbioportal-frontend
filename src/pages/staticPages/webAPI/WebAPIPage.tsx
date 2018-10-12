@@ -9,7 +9,7 @@ export default class WebAPIPage extends React.Component<{}, {}> {
 
     public render() {
 
-        return <PageLayout className={'whiteBackground'}>
+        return <PageLayout className={'whiteBackground staticPage'}>
             <Helmet>
                 <title>{'cBioPortal for Cancer Genomics::Helmet'}</title>
             </Helmet>
