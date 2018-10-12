@@ -24389,6 +24389,7 @@ var menuDotsIcon = __webpack_require__(32);
 var TOGGLE_BTN_CLASS = "oncoprintjs__track_options__toggle_btn_img";
 var TOGGLE_BTN_OPEN_CLASS = "oncoprintjs__track_options__open";
 var DROPDOWN_CLASS = "oncoprintjs__track_options__dropdown";
+var NTH_CLASS_PREFIX = "nth-";
 
 var OncoprintTrackOptionsView = (function () {
     function OncoprintTrackOptionsView($div, moveUpCallback, moveDownCallback, removeCallback, sortChangeCallback, unexpandCallback) {
@@ -24450,7 +24451,7 @@ var OncoprintTrackOptionsView = (function () {
 	view.img_size = Math.floor(minimum_track_height * 0.75);
 
 	for (var i = 0; i < tracks.length; i++) {
-	    renderTrackOptions(view, model, tracks[i]);
+	    renderTrackOptions(view, model, tracks[i], i);
 	}
     };
 
@@ -24530,7 +24531,7 @@ var OncoprintTrackOptionsView = (function () {
 	$sortarrow.html(sortarrow_char);
     }
 
-    var renderTrackOptions = function (view, model, track_id) {
+    var renderTrackOptions = function (view, model, track_id, index) {
 	var $div, $img, $sortarrow, $dropdown;
 	var top = model.getZoomedTrackTops(track_id);
 	$div = $('<div>').appendTo(view.$buttons_ctr).css({'position': 'absolute', 'left': '0px', 'top': top + 'px', 'white-space': 'nowrap'});
@@ -24544,7 +24545,7 @@ var OncoprintTrackOptionsView = (function () {
 			'float': 'left',
 			'cursor': 'pointer',
 			'border': '1px solid rgba(125,125,125,0)'
-		}).addClass(TOGGLE_BTN_CLASS);
+		}).addClass(TOGGLE_BTN_CLASS).addClass(NTH_CLASS_PREFIX+(index+1));
 	$sortarrow = $('<span>').appendTo($div).css({'position': 'absolute', 'top': Math.floor(view.img_size / 4) + 'px'});
 	$dropdown = $('<ul>').appendTo(view.$dropdown_ctr)
 		.css({
@@ -24557,7 +24558,7 @@ var OncoprintTrackOptionsView = (function () {
 			'float': 'right',
 			'background-color': 'rgb(255,255,255)',
 			'left':'0px', 'top': top + view.img_size + 'px'
-		}).addClass(DROPDOWN_CLASS);
+		}).addClass(DROPDOWN_CLASS).addClass(NTH_CLASS_PREFIX+(index+1));
 	view.track_options_$elts[track_id] = {'$div': $div, '$img': $img, '$dropdown': $dropdown};
 
 	renderSortArrow($sortarrow, model, track_id);
