@@ -145,8 +145,7 @@ class StudySummary extends React.Component<IStudySummaryProps, {}> {
             }
             return <div>{elems}</div>
         } else {
-            return <span
-                dangerouslySetInnerHTML={{__html: `This combined study contains samples from ${this.props.studies.length} studies`}}/>;
+            return <span>{`This combined study contains samples from ${this.props.studies.length} studies`}</span>;
         }
     }
 
