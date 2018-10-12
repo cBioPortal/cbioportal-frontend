@@ -122,7 +122,7 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
                         </div>
                     </Then>
                     <Else>
-                        <If condition={AppConfig.authGoogleLogin}>
+                        <If condition={AppConfig.serverConfig.authenticationMethod === "social_auth"}>
                             <div className="identity"><button className="btn btn-default" onClick={()=>openSocialAuthWindow(this.props.appStore)}>Login</button></div>
                         </If>
                     </Else>
