@@ -107,7 +107,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
 
     public static defaultProps: Partial<IMSKTabsProps> = {
         unmountOnHide: true,
-        loadingComponent:<LoadingIndicator isLoading={true} center={true}/>
+        loadingComponent:<LoadingIndicator isLoading={true} center={true} size={"big"}/>
     };
 
     constructor(){
