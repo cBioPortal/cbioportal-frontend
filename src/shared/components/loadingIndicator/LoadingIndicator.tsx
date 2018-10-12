@@ -40,10 +40,10 @@ export default class LoadingIndicator extends React.Component<ILoader, {}> {
         return (
             <If condition={this.props.isLoading}>
                 <Then>
-                    <div className={classNames(parentStyles)}>
+                    <div className={classNames(parentStyles)} style={this.props.style||{}}>
                         <Spinner fadeIn="none"
                                  className={classNames(styles.color, spinnerStyles)}
-                                 style={this.props.style || {display: 'inline-block', marginLeft: 10}}
+                                 style={{display: 'inline-block', marginLeft: 10}}
                                  name="line-scale-pulse-out"/>
                         {
                             this.props.children
