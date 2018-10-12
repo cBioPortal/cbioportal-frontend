@@ -43,7 +43,7 @@ function runResultsTestSuite(prefix){
         waitForAndCheckPlotsTab();
     });
 
-    it(`${prefix} mutation tab`, function(){
+    it.skip(`${prefix} mutation tab`, function(){
         browser.click("a.tabAnchor_mutations");
         browser.waitForVisible('.borderedChart svg',20000);
         var res = browser.checkElement('[data-test="mutationsTabDiv"]',{hide:['.qtip', '[data-test=view3DStructure]', '[data-test=GeneSummaryUniProt]'], viewportChangePause:4000}); // hide these things because the timing of data loading makes this test so flaky
@@ -73,7 +73,8 @@ function runResultsTestSuite(prefix){
         assertScreenShotMatch(res);
     });
 
-    it(`${prefix} network tab`, function(){
+    it.skip(`${prefix} network tab`, function(){
+        // TODO: unskip this when bug is fixed
 
         browser.click("a.tabAnchor_network");
 
@@ -227,8 +228,6 @@ describe('patient view page screenshot test', function(){
         var vafPlot = $('.vafPlot');
         vafPlot.waitForExist(30000);
 
-        // give time for element widths to stabilize
-        browser.pause(3000);
         var res = browser.checkElement('#mainColumn', {hide:['.qtip'] });
         assertScreenShotMatch(res);
     });
