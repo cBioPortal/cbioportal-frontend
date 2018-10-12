@@ -29,7 +29,7 @@ export default class StaticContent extends React.Component<{ sourceUrl:string, t
 
     private content(content:string, url:string){
         if (isMarkDown(url)) {
-            return <ReactMarkdown className={'markdown-body'} transformImageUri={setImageRoot} skipHtml={true} source={this.source.result!} />;
+            return <ReactMarkdown className={'markdown-body'} skipHtml={true} source={this.source.result!} />;
         } else {
             return <div dangerouslySetInnerHTML={{__html: content}} />
         }
@@ -46,10 +46,12 @@ export default class StaticContent extends React.Component<{ sourceUrl:string, t
     public render() {
 
         return <div>
-            <LoadingIndicator isLoading={this.source.isPending} center={true} />
             {
                 (this.props.title) && (<h1>{this.props.title}</h1>)
             }
+
+            <LoadingIndicator isLoading={this.source.isPending} size={"big"} center={true} />
+
             {
                 (this.source.isComplete) && this.content(this.source.result!,this.url)
             }
