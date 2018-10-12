@@ -19,7 +19,7 @@ function goToUrlAndSetLocalStorage(url) {
 
 function sessionServiceIsEnabled() {
     return browser.execute(function() {
-        return window.frontendConfig.sessionServiceIsEnabled;
+        return window.frontendConfig.serverConfig.sessionServiceEnabled;
     }).value;
 }
 
