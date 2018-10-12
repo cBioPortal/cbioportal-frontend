@@ -57,7 +57,7 @@ export default class DatasetPage extends React.Component<{}, {}> {
 
                 {
                     (this.store.data.isPending) && (
-                        <LoadingIndicator isLoading={true} center={true}></LoadingIndicator>
+                        <LoadingIndicator isLoading={true} size={"big"} center={true}></LoadingIndicator>
                     )
                 }
 
