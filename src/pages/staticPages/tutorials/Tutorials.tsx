@@ -9,7 +9,7 @@ export default class Tutorials extends React.Component<{}, {}> {
 
     public render() {
 
-        return <PageLayout className={'whiteBackground'}>
+        return <PageLayout className={'whiteBackground staticPage'}>
             <Helmet>
                 <title>{'cBioPortal for Cancer Genomics::Tutorials'}</title>
             </Helmet>
