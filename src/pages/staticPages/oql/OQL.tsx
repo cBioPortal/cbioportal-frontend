@@ -8,7 +8,7 @@ import Helmet from "react-helmet";
 export default class OQL extends React.Component<{}, {}> {
 
     public render() {
-        return <PageLayout className={'whiteBackground'}>
+        return <PageLayout className={'whiteBackground staticPage'}>
             <Helmet>
                 <title>{'cBioPortal for Cancer Genomics::OQL Guide'}</title>
             </Helmet>
