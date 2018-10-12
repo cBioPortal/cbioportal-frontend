@@ -778,14 +778,27 @@ export function getFrequencyStr(value: number) {
     let str = '';
     if (value < 0) {
         return 'NA';
-    } else if (value >= 10) {
-        str = Math.floor(value).toString();
+    } else if (value === 0) {
+        str = '0';
     } else if (value >= 0.1) {
-        str = Number(value.toFixed(1)).toString();
+        str = (Math.floor(value * 10) / 10).toString();
     } else {
         str = '<0.1';
     }
     return `${str}%`;
+}
+
+export function formatFrequency(value: number) {
+    if (value < 0) {
+        return -1;
+    } else if (value === 0) {
+        return 0;
+    } else if (value >= 0.1) {
+        value = Math.floor(value * 10) / 10;
+    } else {
+        value = 0.05;
+    }
+    return value;
 }
 
 export function getExponent(value: number): number
