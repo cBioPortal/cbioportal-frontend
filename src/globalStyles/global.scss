@@ -552,3 +552,22 @@ h3.hr {
 .studyViewHeader {
   margin-top:$gutterWidth;
 }
+
+.staticPage {
+
+  .markdown-body {
+    h1 {
+      display:none !important;
+    }
+
+    h2 {
+      font-size:20px;
+    }
+
+    h3 {
+      font-size:18px;
+    }
+
+  }
+
+}
