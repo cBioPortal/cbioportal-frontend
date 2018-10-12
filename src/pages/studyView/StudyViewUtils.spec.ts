@@ -8,7 +8,8 @@ import {
     getDefaultChartTypeByClinicalAttribute,
     getVirtualStudyDescription, calculateLayout, getLayoutMatrix, LayoutMatrixItem, getQValue, pickClinicalDataColors,
     getSamplesByExcludingFiltersOnChart, getFilteredSampleIdentifiers,
-    getHugoSymbolByEntrezGeneId, getFilteredStudiesWithSamples, showOriginStudiesInSummaryDescription, getFrequencyStr
+    getFilteredStudiesWithSamples, showOriginStudiesInSummaryDescription, getFrequencyStr,
+    formatFrequency
 } from 'pages/studyView/StudyViewUtils';
 import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue, Sample} from 'shared/api/generated/CBioPortalAPIInternal';
 import {ClinicalAttribute, Gene, CancerStudy} from 'shared/api/generated/CBioPortalAPI';
@@ -1463,6 +1464,8 @@ describe('StudyViewUtils', () => {
             1.5999999999999999,
             1.7999999999999998,
             16.99999999999998,
+            16.77,
+            16.74,
             666.666
         ];
 
@@ -1476,7 +1479,7 @@ describe('StudyViewUtils', () => {
         });
 
         it ('handles zero properly', () => {
-            assert.equal(getFrequencyStr(0), "<0.1%");
+            assert.equal(getFrequencyStr(0), "0%");
         });
 
         it ('handles positive values properly', () => {
@@ -1485,10 +1488,54 @@ describe('StudyViewUtils', () => {
             assert.equal(getFrequencyStr(positiveValues[1]), "0.6%");
             assert.equal(getFrequencyStr(positiveValues[2]), "1%");
             assert.equal(getFrequencyStr(positiveValues[3]), "1%");
-            assert.equal(getFrequencyStr(positiveValues[4]), "1.6%");
+            assert.equal(getFrequencyStr(positiveValues[4]), "1.5%");
             assert.equal(getFrequencyStr(positiveValues[5]), "1.8%");
-            assert.equal(getFrequencyStr(positiveValues[6]), "16%");
-            assert.equal(getFrequencyStr(positiveValues[7]), "666%");
+            assert.equal(getFrequencyStr(positiveValues[6]), "16.9%");
+            assert.equal(getFrequencyStr(positiveValues[7]), "16.7%");
+            assert.equal(getFrequencyStr(positiveValues[8]), "16.7%");
+            assert.equal(getFrequencyStr(positiveValues[9]), "666.6%");
+        });
+    });
+
+    describe('formatFrequency', () => {
+        const negativeValues = [
+            -666.666,
+            -0.002499999998
+        ];
+
+        const positiveValues = [
+            0.002499999998,
+            0.6000000000000001,
+            1,
+            1.00001,
+            1.5999999999999999,
+            1.7999999999999998,
+            16.99999999999998,
+            16.77,
+            16.74,
+            666.666
+        ];
+
+        it ('handles negative values properly', () => {
+            assert.equal(formatFrequency(negativeValues[0]), -1);
+            assert.equal(formatFrequency(negativeValues[1]), -1);
+        });
+
+        it ('handles zero properly', () => {
+            assert.equal(formatFrequency(0), 0);
+        });
+
+        it ('handles positive values properly', () => {
+            assert.equal(formatFrequency(positiveValues[0]), 0.05);
+            assert.equal(formatFrequency(positiveValues[1]), 0.6);
+            assert.equal(formatFrequency(positiveValues[2]), 1);
+            assert.equal(formatFrequency(positiveValues[3]), 1);
+            assert.equal(formatFrequency(positiveValues[4]), 1.5);
+            assert.equal(formatFrequency(positiveValues[5]), 1.8);
+            assert.equal(formatFrequency(positiveValues[6]), 16.9);
+            assert.equal(formatFrequency(positiveValues[7]), 16.7);
+            assert.equal(formatFrequency(positiveValues[8]), 16.7);
+            assert.equal(formatFrequency(positiveValues[9]), 666.6);
         });
     });
 
