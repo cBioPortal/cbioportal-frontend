@@ -79,3 +79,13 @@
         font-size: 12px;
     }
 }
+
+.studyViewBtn {
+    background-color: $study-view-primary-color !important;
+    border-color: $study-view-primary-color !important;
+}
+
+.studyViewBtn:hover {
+    background-color: #2c6b9a !important;
+    border-color: #24577e !important;
+}

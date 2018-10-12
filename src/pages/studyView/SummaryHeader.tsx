@@ -9,6 +9,7 @@ import {
 import { observer } from "mobx-react";
 import { computed, observable, action } from 'mobx';
 import styles from "./styles.module.scss";
+import studyViewStyles from "pages/studyView/styles.module.scss";
 import "./styles.scss";
 import { bind } from 'bind-decorator';
 import {getSampleViewUrl} from 'shared/api/urls';
@@ -24,8 +25,8 @@ import { StudyWithSamples, ChartMeta, StudyViewFilterWithSampleIdentifierFilters
 import UserSelections from 'pages/studyView/UserSelections';
 import SelectedInfo from "./SelectedInfo/SelectedInfo";
 import classnames from "classnames";
-import { getPercentage } from 'shared/lib/FormatUtils';
 import MobxPromise from 'mobxpromise';
+import {formatFrequency, getFrequencyStr} from "./StudyViewUtils";
 const CheckedSelect = require("react-select-checked").CheckedSelect;
 
 export interface ISummaryHeaderProps {
@@ -138,26 +139,27 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
 
     @computed get chartOptions() {
         let options = _.reduce(this.props.clinicalAttributesWithCountPromise.result || {}, (options, sampleCount: number, key: string) => {
+            let freq = 100* sampleCount / this.props.selectedSamples.length;
             const newOption = {
-                label: `${this.props.attributesMetaSet[key].displayName} (${getPercentage(sampleCount / this.props.selectedSamples.length, 0)})`,
+                label: `${this.props.attributesMetaSet[key].displayName} (${getFrequencyStr(freq)})`,
                 value: key,
                 disabled: false,
-                count: sampleCount
+                freq: formatFrequency(freq)
             };
             if (sampleCount === 0) {
                 newOption.disabled = true;
             }
             options.push(newOption);
             return options;
-        }, [] as { label: string, value: string, count: number, disabled?: boolean }[]);
+        }, [] as { label: string, value: string, freq: number, disabled?: boolean }[]);
         return options.sort((a, b) => {
-            if (a.count === b.count) {
+            if (a.freq === b.freq) {
                 //sort alphabetically
                 if (a.label < b.label) return -1;
                 if (a.label > b.label) return 1;
                 return 0;
             }
-            return b.count - a.count;
+            return b.freq - a.freq;
         });
     }
 
@@ -250,7 +252,7 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                             location={GeneBoxType.STUDY_VIEW_PAGE}
                         />
 
-                        <button disabled={this._isQueryButtonDisabled} className={classnames(styles.summaryHeaderBtn, 'btn btn-primary btn-sm', styles.summaryHeaderItem)} onClick={() => this.props.onSubmitQuery()}>
+                        <button disabled={this._isQueryButtonDisabled} className={classnames(styles.summaryHeaderBtn, studyViewStyles.studyViewBtn, 'btn btn-primary btn-sm', styles.summaryHeaderItem)} onClick={() => this.props.onSubmitQuery()}>
                             Submit Query
                         </button>
 
