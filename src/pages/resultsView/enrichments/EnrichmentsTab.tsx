@@ -7,7 +7,7 @@ import MutationEnrichmentsTab from 'pages/resultsView/enrichments/MutationEnrich
 import CopyNumberEnrichmentsTab from 'pages/resultsView/enrichments/CopyNumberEnrichmentsTab';
 import MRNAEnrichmentsTab from 'pages/resultsView/enrichments/MRNAEnrichmentsTab';
 import ProteinEnrichmentsTab from 'pages/resultsView/enrichments/ProteinEnrichmentsTab';
-import Loader from 'shared/components/loadingIndicator/LoadingIndicator';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import autobind from 'autobind-decorator';
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 
@@ -28,7 +28,7 @@ export default class EnrichmentsTab extends React.Component<IEnrichmentsTabProps
     public render() {
 
         if (this.props.store.alteredSampleKeys.isPending || this.props.store.unalteredSampleKeys.isPending) {
-            return <Loader isLoading={true} center={true} />;
+            return <LoadingIndicator isLoading={true} center={true} size={"big"} />;
         }
 
         if (this.props.store.alteredSampleKeys.result!.length === 0 || this.props.store.unalteredSampleKeys.result!.length === 0) {
@@ -39,7 +39,7 @@ export default class EnrichmentsTab extends React.Component<IEnrichmentsTabProps
             this.props.store.copyNumberEnrichmentProfiles.isPending ||
             this.props.store.mRNAEnrichmentProfiles.isPending ||
             this.props.store.proteinEnrichmentProfiles.isPending) {
-            return <Loader isLoading={true} center={true} />;
+            return <LoadingIndicator isLoading={true} center={true} size={"big"} />;
         }
 
         return (
