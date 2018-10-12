@@ -63,7 +63,8 @@ import {
     SELECTED_GROUP_COLOR,
     showOriginStudiesInSummaryDescription,
     UNSELECTED_GROUP_COLOR,
-    submitToPage, getFrequencyStr
+    submitToPage, getFrequencyStr,
+    getClinicalAttributeUniqueKeyByDataTypeAttrId
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -270,10 +271,6 @@ export class StudyViewPageStore {
 
     @observable studyIds: string[] = [];
 
-    @computed get studyIdsSet() {
-        return stringListToSet(this.studyIds);
-    }
-
     private _clinicalDataEqualityFilterSet = observable.map<ClinicalDataEqualityFilter>();
     private _clinicalDataIntervalFilterSet = observable.map<ClinicalDataIntervalFilter>();
 
@@ -297,6 +294,85 @@ export class StudyViewPageStore {
     @observable private chartsDimension = observable.map<ChartDimension>();
 
     @observable private chartsType = observable.map<ChartType>();
+
+    @action
+    updateStoreFromURL(query: any) {
+        let newStudyIdsString;
+        if ('studyId' in query) {
+            newStudyIdsString = (query.studyId as string);
+        }
+        if ('id' in query) {
+            newStudyIdsString = (query.id as string);
+        }
+        if (newStudyIdsString) {
+            const newStudyIds = newStudyIdsString.trim().split(",");
+            if (!_.isEqual(newStudyIds, this.studyIds)) {
+                // update if different
+                this.studyIds = newStudyIds;
+            }
+        }
+        let filters: Partial<StudyViewFilter> = {};
+        if ('filters' in query) {
+            filters = JSON.parse(decodeURIComponent(query.filters)) as Partial<StudyViewFilter>;
+        }
+
+        if (_.isArray(filters.clinicalDataEqualityFilters) && filters.clinicalDataEqualityFilters.length > 0) {
+            _.each(filters.clinicalDataEqualityFilters, (filter: ClinicalDataEqualityFilter) => {
+                this._clinicalDataEqualityFilterSet.set(getClinicalAttributeUniqueKeyByDataTypeAttrId(filter.clinicalDataType, filter.attributeId), {
+                    attributeId: filter.attributeId,
+                    clinicalDataType: filter.clinicalDataType,
+                    values: _.reduce(filter.values, (acc, next) => {
+                        acc.push(next);
+                        return acc;
+                    }, [] as string[])
+                });
+            });
+        }
+
+        if (_.isArray(filters.clinicalDataIntervalFilters) && filters.clinicalDataIntervalFilters.length > 0) {
+            _.each(filters.clinicalDataIntervalFilters, (filter: ClinicalDataIntervalFilter) => {
+                this._clinicalDataIntervalFilterSet.set(getClinicalAttributeUniqueKeyByDataTypeAttrId(filter.clinicalDataType, filter.attributeId), {
+                    attributeId: filter.attributeId,
+                    clinicalDataType: filter.clinicalDataType,
+                    values: _.reduce(filter.values, (acc, next) => {
+                        acc.push({
+                            end: next.end,
+                            start: next.start,
+                            value: next.value
+                        });
+                        return acc;
+                    }, [] as ClinicalDataIntervalFilterValue[])
+                });
+            });
+        }
+
+        if (_.isArray(filters.mutatedGenes) && filters.mutatedGenes.length > 0) {
+            this._mutatedGeneFilter = _.reduce(filters.mutatedGenes, (acc, next) => {
+                acc.push({
+                    entrezGeneIds: _.reduce(next.entrezGeneIds, (geneAcc, entrezGeneId) => {
+                        geneAcc.push(entrezGeneId);
+                        return geneAcc;
+                    }, [] as number[])
+                });
+                return acc;
+            }, [] as MutationGeneFilter[]);
+        }
+
+        if (_.isArray(filters.cnaGenes) && filters.cnaGenes.length > 0) {
+            this._cnaGeneFilter = _.reduce(filters.cnaGenes, (acc, next) => {
+                acc.push({
+                    alterations: _.reduce(next.alterations, (altAcc, alt) => {
+                        altAcc.push({
+                            alteration: alt.alteration,
+                            entrezGeneId: alt.entrezGeneId
+                        });
+                        return altAcc;
+                    }, [] as CopyNumberGeneFilterElement[])
+                });
+                return acc;
+            }, [] as CopyNumberGeneFilter[]);
+        }
+    }
 
     @computed
     get containerWidth(): number {
