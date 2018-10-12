@@ -12,7 +12,7 @@ export default class Visualize extends React.Component<{}, {}> {
     public render() {
 
         return (
-            <PageLayout className={'whiteBackground'}>
+            <PageLayout className={'whiteBackground staticPage'}>
                 <Helmet>
                     <title>{'cBioPortal for Cancer Genomics::Visualize Your Data'}</title>
                 </Helmet>
