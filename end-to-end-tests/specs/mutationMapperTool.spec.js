@@ -7,7 +7,7 @@ var goToUrlAndSetLocalStorage = require('./specUtils').goToUrlAndSetLocalStorage
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
-describe('Mutation Mapper Tool', function() {
+describe.skip('Mutation Mapper Tool', function() {
     before(function(){
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
     });
@@ -25,7 +25,7 @@ describe('Mutation Mapper Tool', function() {
 
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible("[data-test=oncogenic-icon-image]",20000);
+            browser.waitForVisible("tr:nth-child(1) [data-test=oncogenic-icon-image]",20000);
 
             const mutationsT790M = browser.getText('.//*[text()[contains(.,"T790M")]]')
             assert.equal(mutationsT790M.length, 2, "there should be two samples with a T790M mutation");
@@ -66,7 +66,7 @@ describe('Mutation Mapper Tool', function() {
 
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible("[data-test=oncogenic-icon-image]",20000);
+            browser.waitForVisible("tr:nth-child(1) [data-test=oncogenic-icon-image]",20000);
 
             const mutationsT790M = browser.getText('.//*[text()[contains(.,"T790M")]]')
             assert.equal(mutationsT790M.length, 2, "there should be two samples with a T790M mutation");
