@@ -336,3 +336,33 @@ export function isTCGAProvStudy(studyId:string){
 export function isPanCanStudy(studyId:string){
     return /tcga_pan_can_atlas/.test(studyId);
 }
+
+export function buildResultsViewPageTitle(genes:string[], studies:CancerStudy[]){
+
+    const arr = ["cBioPortal for Cancer Genomics: "];
+
+    if (genes.length) {
+        arr.push(genes[0]);
+        if (genes.length > 1) {
+            arr.push(", ");
+            arr.push(genes[1]);
+        }
+        if (genes.length > 2) {
+            arr.push(" and ");
+            arr.push((genes.length - 2).toString());
+            arr.push(" other ");
+            arr.push(((genes.length - 2) > 1) ? "genes" : "gene");
+        }
+        if (studies.length){
+            arr.push(" in ");
+            arr.push(studies[0].shortName);
+            if (studies.length > 1) {
+                arr.push(" and ");
+                arr.push((studies.length - 1).toString());
+                arr.push (" other ");
+                arr.push(((studies.length - 1) > 1) ? "studies" : "study");
+            }
+        }
+    }
+    return arr.join("");
+}

@@ -17,9 +17,8 @@
 
   }
 
-  .query-summary__alterationData {
-    h4 {
-      color:$text-color !important;
-    }
+  .query-summary__rightItems {
+    display:flex;
+    align-items:center;
   }
 }
