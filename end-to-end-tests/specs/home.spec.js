@@ -267,7 +267,7 @@ describe('cross cancer query', function() {
 describe('single study query', function() {
     this.retries(2);
 
-    describe('mutation mapper ', function() {
+    describe.skip('mutation mapper ', function() {
         it('should show somatic and germline mutation rate', function() {
            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
             browser.setViewportSize({ height:1400, width:1000 });
@@ -1098,16 +1098,14 @@ describe('oncoprint', function() {
 describe('case set selection in front page query form', function(){
     var selectedCaseSet_sel = 'div[data-test="CaseSetSelector"] span.Select-value-label[aria-selected="true"]';
 
-    this.retries(2);
-
     beforeEach(function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
     });
 
     it('selects the default case set for single study selections', ()=>{
-        var input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('ovarian nature 2011');
+        var input = ".autosuggest input[type=text]";
+        browser.waitForExist(input, 10000);
+        browser.setValue(input, 'ovarian nature 2011');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1116,11 +1114,7 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "Tumors with sequencing and CNA data (316)",
-            "Default selected case set"
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Tumors with sequencing and CNA data (316)"), 5000);
     });
     it('selects the right default case sets in a single->multiple->single study selection flow', ()=>{
         // Select Ampullary Carcinoma
@@ -1135,11 +1129,7 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "Sequenced Tumors (160)",
-            "Default selected case set"
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All Sequenced Tumors (160)"), 5000);
 
         // select Adrenocortical Carcinoma
         browser.waitForExist(input, 10000);
@@ -1154,11 +1144,7 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
 
         browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "All (252)",
-            "All (252)",
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All (252)"), 5000);
 
         // Deselect Ampullary Carcinoma
         browser.waitForExist(input, 10000);
@@ -1171,11 +1157,7 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "Tumor Samples with sequencing and CNA data (88)",
-            "Default selected case set for adrenocortical carcinoma"
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Tumor Samples with sequencing and CNA data (88)"), 5000);
     });
     it('selects the right default case sets in a single->select all filtered->single study selection flow', ()=>{
         // Select Ampullary Carcinoma
@@ -1190,11 +1172,7 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "Sequenced Tumors (160)",
-            "Default selected case set"
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All Sequenced Tumors (160)"), 5000);
 
         // select all TCGA non-provisional
         browser.waitForExist(input, 10000);
@@ -1205,12 +1183,7 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
-
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "All (21333)",
-            "All (21333)",
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All (21333)"), 5000);
 
         // Deselect all tcga -provisional studies
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
@@ -1228,12 +1201,8 @@ describe('case set selection in front page query form', function(){
 
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
-        browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "All (252)",
-            "All (252)",
-        );
+        browser.waitForExist(selectedCaseSet_sel, 10000);
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All (252)"), 5000);
 
         // Deselect Ampullary Carcinoma
         browser.waitForExist(input, 10000);
@@ -1246,11 +1215,7 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "Tumor Samples with sequencing and CNA data (88)",
-            "Default selected case set for adrenocortical carcinoma"
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Tumor Samples with sequencing and CNA data (88)"), 5000);
     });
 });
 
@@ -1331,7 +1296,7 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
-        browser.waitUntil(()=>{ return browser.getText(selectedCaseSet_sel) === "All (12997)"; }, 5000);
+        browser.waitUntil(()=>{ return browser.getText(selectedCaseSet_sel) === "All (12880)"; }, 5000);
 
         // Deselect all tcga -provisional studies
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
