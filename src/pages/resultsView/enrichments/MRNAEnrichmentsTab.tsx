@@ -23,7 +23,7 @@ export default class MRNAEnrichmentsTab extends React.Component<IMRNAEnrichments
     public render() {
 
         if (this.props.store.mRNAEnrichmentData.isPending) {
-            return <Loader isLoading={true} center={true} />;
+            return <Loader isLoading={true} center={true} size={"big"} />;
         }
 
         return (
