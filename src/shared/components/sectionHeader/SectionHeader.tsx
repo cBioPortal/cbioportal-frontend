@@ -32,7 +32,7 @@ export default class SectionHeader extends React.Component<ISectionHeaderProps, 
 				<h2>
 					{children}
 					{!!(promises && promises.some(promise => promise.isPending)) && (
-						<LoadingIndicator isLoading={true} small={true} style={{ display:'inline-block', marginLeft:10 }}/>
+						<LoadingIndicator isLoading={true} size={"small"} />
 					)}
 				</h2>
 

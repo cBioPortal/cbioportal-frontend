@@ -122,7 +122,7 @@ export class ServerConfigHelpers {
 
 
     static sessionServiceIsEnabled(){
-        return !_.isEmpty(config.serverConfig.session_service_url);
+        return config.serverConfig.sessionServiceEnabled;
     }
 
     static getUserEmailAddress() : string | undefined {

@@ -2,71 +2,129 @@ import * as React from "react";
 import * as _ from 'lodash';
 import {observer} from "mobx-react";
 import MobxPromise from "mobxpromise";
-import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
+import Loader, {default as LoadingIndicator} from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import {Modal} from 'react-bootstrap';
 import ExtendedRouterStore from "../../../shared/lib/ExtendedRouterStore";
 import {remoteData} from "../../../shared/api/remoteData";
 import getBrowserWindow from "../../../shared/lib/getBrowserWindow";
 import URL, {QueryParams} from 'url';
+import {observable} from "mobx";
+import {ShareUrls} from "../querySummary/ShareUI";
+import classNames from "classnames";
+import autobind from "autobind-decorator";
+var Clipboard = require('clipboard');
+
 
 @observer
-export class BookmarkModal extends React.Component<{ onHide: () => void, routingStore: ExtendedRouterStore }, {}> {
+export class BookmarkModal extends React.Component<{ onHide: () => void, urlPromise:Promise<any> }, {}> {
 
     constructor(){
         super();
     }
 
-    shortenedUrl = remoteData(async () => {
+    @observable
+    urlData:ShareUrls;
 
-        const win = getBrowserWindow();
+    clipboards:any[] = [];
 
-        let sessionUrl;
-        // if we have a session use current url
-        if (this.props.routingStore._session) {
-            sessionUrl = getBrowserWindow().location.href;
-        } else {
-            const resp = await this.props.routingStore.saveRemoteSession(this.props.routingStore.query);
-            sessionUrl = URL.format({
-                hostname: win.location.hostname,
-                pathname: win.location.pathname,
-                protocol: win.location.protocol,
-                query: {
-                    session_id: resp.id
-                }
-            });
-        }
+    private clipboardInitialized = false;
 
-        const BITLY_ACCESS_TOKEN = "7fdf316a43437f8a6291b99963b371d0229d4b2e";
+    componentDidMount(){
+        // this is an $.ajax promise, not a real promise
+        this.props.urlPromise.then(
+            (data)=>{
+                this.urlData = data;
+            },
+            ()=>{
 
-        const bitlyResponse = await $.ajax({
-            url:`https://api-ssl.bitly.com/v3/shorten?access_token=${BITLY_ACCESS_TOKEN}&longUrl=${encodeURIComponent(sessionUrl)}`
-        });
+            }
+        );
 
-        return {sessionUrl, bitlyUrl:bitlyResponse.data.url};
+        // this is so messed up but is necessary because of terrible copy to clipboard library issues when used inside modal
 
-    })
+
+        this.initializeClipboards();
+
+    }
+
+    @autobind
+    showThumb(e:any){
+        e.target.className="fa fa-thumbs-up";
+    }
+
+    initializeClipboards(){
+            this.clipboards.push(new Clipboard(this.sessionButton, {
+                text: function() {
+                    return this.urlData.sessionUrl || this.urlData.fullUrl;
+                }.bind(this),
+                container: this.container
+            }));
+
+            // this.clipboards.push(new Clipboard(this.bitlyButton, {
+            //     text: function() {
+            //         return this.urlData.bitlyUrl;
+            //     }.bind(this),
+            //     container: this.container
+            // }));
+
+    }
+
+    componentDidUpdate(){
+
+
+
+    }
+
+    componentWillUnmount(){
+        // we need to clean up clipboards
+        this.clipboards.forEach((clipboard:any)=>clipboard.destroy());
+    }
+
+    public sessionButton:HTMLAnchorElement;
+
+    public bitlyButton:HTMLAnchorElement;
+
+    public container:HTMLDivElement;
 
     render() {
 
+        //NOTE: internal div id necessary for
         return <Modal show={true} onHide={this.props.onHide}>
             <Modal.Header closeButton>
                 <Modal.Title>Bookmark Query</Modal.Title>
             </Modal.Header>
-            <Modal.Body>
+            <Modal.Body style={{minHeight:70}}>
+                <LoadingIndicator size={"small"} center={true} style={{top:32}} isLoading={!this.urlData}/>
+                    <div className={classNames({hidden:!this.urlData})} ref={(el:HTMLDivElement)=>this.container=el}>
+                        <form>
 
-                {
-                    (this.shortenedUrl.isComplete) && (
-                    <div>
-                        <p>Right click on one of the links below to bookmark your results:</p>
-                        <p><a href={this.shortenedUrl.result.sessionUrl} target="_blank">{this.shortenedUrl.result.sessionUrl}</a></p>
 
-                        <p>If you would like to use a shorter <strong>URL that will not break in email postings</strong>, you can use the
-                        bitly.com url below:</p>
-                        <p><a href={this.shortenedUrl.result.bitlyUrl} target="_blank">{this.shortenedUrl.result.bitlyUrl}</a></p>
+                                    <div className="form-group">
+                                        <label htmlFor="exampleInputAmount">Share link</label>
+                                        <div className="input-group">
+                                            <input type="text" className="form-control" value={(this.urlData ? this.urlData.sessionUrl : "")}/>
+                                            <div className="input-group-addon">
+                                                <a ref={(el:HTMLAnchorElement)=>this.sessionButton=el}
+                                                    onClick={this.showThumb}
+                                                >
+                                                    <i className="fa fa-clipboard"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/*<div className="form-group">*/}
+                                        {/*<label htmlFor="exampleInputAmount">Shortened URL</label>*/}
+                                        {/*<div className="input-group">*/}
+                                            {/*<input type="text" className="form-control" value={(this.urlData ? this.urlData.bitlyUrl : "")}/>*/}
+                                            {/*<div className="input-group-addon"><a*/}
+                                                {/*ref={(el: HTMLAnchorElement) => this.bitlyButton = el}><i*/}
+                                                {/*className="fa fa-clipboard"></i></a></div>*/}
+                                        {/*</div>*/}
+                                    {/*</div>*/}
+
+                        </form>
                     </div>
-                    )
-                }
-
             </Modal.Body>
         </Modal>
 
