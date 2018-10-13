@@ -181,14 +181,14 @@ describe("oncoprint screenshot tests", function() {
         var res = browser.checkElement("#oncoprint");
         assertScreenShotMatch(res);
     });
-    it("'profiled in' tracks in msk impact with 3 n/p genes", function() {
+    it("profiled in tracks in msk impact with 3 not profiled genes", function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=msk_impact_2017&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=msk_impact_2017_cnaseq&gene_list=AKR1C1%2520AKR1C2%2520AKR1C4&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=msk_impact_2017_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=msk_impact_2017_cna`;
         goToUrlAndSetLocalStorage(url);
         waitForOncoprint(20000);
         var res = browser.checkElement("#oncoprint");
         assertScreenShotMatch(res);
     });
-    it("'profiled in' tracks in multiple study with SOS1", function() {
+    it("profiled in tracks in multiple study with SOS1", function() {
         var url = `${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=SOS1&geneset_list=%20&tab_index=tab_visualize&Action=Submit&cancer_study_list=msk_impact_2017%2Cbrca_bccrc&show_samples=false&clinicallist=CANCER_STUDY%2CPROFILED_IN_MUTATION_EXTENDED%2CPROFILED_IN_msk_impact_2017_cna#summary`;
         goToUrlAndSetLocalStorage(url);
         waitForOncoprint(20000);
