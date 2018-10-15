@@ -9,7 +9,7 @@ const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 describe('results page expression tab', ()=>{
 
     before(()=>{
-        goToUrlAndSetLocalStorage(CBIOPORTAL_URL + "/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=EGFR&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=chol_tcga_pan_can_atlas_2018%2Cchol_tcga%2Cblca_dfarber_mskcc_2014#cc-plots");
+        goToUrlAndSetLocalStorage(CBIOPORTAL_URL + "/results/expression?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=EGFR&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=chol_tcga_pan_can_atlas_2018%2Cchol_tcga%2Cblca_dfarber_mskcc_2014");
     });
 
     function getSelectedStudies(studyCheckboxes){
@@ -20,10 +20,8 @@ describe('results page expression tab', ()=>{
     }
 
     it('study selection modal filters work properly', function(){
-
-        var buttonElement = $('[data-test="ExpressionStudyModalButton"]');
-
-        buttonElement.waitForExist(20000);
+        
+        browser.waitForExist('[data-test="ExpressionStudyModalButton"]', 20000);
 
         browser.click('[data-test="ExpressionStudyModalButton"]');
 

@@ -89,7 +89,7 @@ export interface IServerConfig {
     "query_sets_of_genes": string|null;
     "base_url": string|null;
     "user_email_address": string;
-    "sessionServiceEnabled":boolean;
+    "sessionServiceEnabled": boolean;
     "session_url_length_threshold":string;
 
 }

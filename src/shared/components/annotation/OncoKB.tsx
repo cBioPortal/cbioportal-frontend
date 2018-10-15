@@ -109,6 +109,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
                         className={`${oncogenicIconStyles['oncogenic-icon-image']} ${this.oncogenicImageClassNames(this.props.indicator)}`}
                         style={OncoKB.ONCOGENIC_ICON_STYLE}
                         data-test='oncogenic-icon-image'
+                        data-test2={this.props.hugoGeneSymbol}
                     />
                 </span>
             );

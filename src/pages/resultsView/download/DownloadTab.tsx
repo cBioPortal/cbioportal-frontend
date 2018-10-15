@@ -216,7 +216,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
             this.props.store.unfilteredCaseAggregatedData.status === "error";
 
         return (
-            <div className="cbioportal-frontend">
+            <div className="cbioportal-frontend" data-test="downloadTabDiv">
                 <div className={"tabMessageContainer"}>
                     <OqlStatusBanner className="download-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
                 </div>

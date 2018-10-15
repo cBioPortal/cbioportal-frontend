@@ -43,7 +43,7 @@ export default class EnrichmentsTab extends React.Component<IEnrichmentsTabProps
         }
 
         return (
-            <div>
+            <div data-test="enrichmentsTabDiv">
                 <div className={"tabMessageContainer"}>
                     <OqlStatusBanner className="enrichments-oql-status-banner" store={this.props.store} tabReflectsOql={true}/>
                 </div>

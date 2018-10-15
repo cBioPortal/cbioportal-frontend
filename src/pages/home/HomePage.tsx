@@ -11,6 +11,7 @@ import QueryAndDownloadTabs from "../../shared/components/query/QueryAndDownload
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import RightBar from "../../shared/components/rightbar/RightBar";
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
+import setWindowVariable from "../../shared/lib/setWindowVariable";
 
 (Chart as any).plugins.register({
     beforeDraw: function (chartInstance: any) {
@@ -63,6 +64,7 @@ export default class HomePage extends React.Component<IResultsViewPageProps, {}>
 
     componentWillMount(){
         this.queryStore = createQueryStore();
+        setWindowVariable("homePageQueryStore", this.queryStore);
     }
 
     private handleTabChange(id: string) {
