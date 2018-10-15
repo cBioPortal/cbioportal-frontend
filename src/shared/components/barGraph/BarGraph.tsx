@@ -188,20 +188,34 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
                     ticks: {fontSize: 11}
                 }]
             },
-            legend: { display: false }
+            legend: { display: false },
         };
 
         new Chart(this.chartTarget, {
             type: 'horizontalBar',
             data,
-            options
-        });
+            options,
+            plugins: [this.backgroundColorPlugin]
+        } as any);
 
     }
 
+    private backgroundColorPlugin = {
+        beforeDraw: function(chartInstance:any) {
+            var ctx = chartInstance.chart.ctx;
+            ctx.fillStyle = "#F1F6FE";
+            ctx.fillRect(0, 0, chartInstance.chart.width, chartInstance.chart.height);
+        }
+    };
+
     render() {
         const length = this.byPrimarySiteStudies.length;
-        return length ? <canvas ref={(el:HTMLCanvasElement) => this.chartTarget = el} height={70 + 430 * (length > 20 ? 20 : length)/20}/> : null;
+        return length ? (
+            <canvas
+                ref={(el:HTMLCanvasElement) => this.chartTarget = el}
+                height={70 + 430 * (length > 20 ? 20 : length)/20}
+            />
+        ): null;
     }
 
 };
