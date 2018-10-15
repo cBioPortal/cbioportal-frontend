@@ -53,7 +53,11 @@ function initStore() {
             // normalize cancer_study_list this handles legacy sessions/urls where queries with single study had different param name
             const cancer_study_list = query.cancer_study_list || query.cancer_study_id;
 
+            const cancerStudyIds = cancer_study_list.split(",");
+
             const oql = decodeURIComponent(query.gene_list);
+
+
 
 
             let samplesSpecification: SamplesSpecificationElement[];
@@ -67,17 +71,26 @@ function initStore() {
                        sampleId:split[1]
                     }
                 });
-            } else if (query.case_set_id !== "all") {
-                // by definition if there is a case_set_id, there is only one study
-                samplesSpecification = [
-                    {
-                        studyId:cancer_study_list,
-                        sampleListId:query.case_set_id,
-                        sampleId:undefined
+            } else if (query.sample_list_ids) {
+                samplesSpecification = query.sample_list_ids.split(",").map((studyListPair:string)=>{
+                    const pair = studyListPair.split(":");
+                    return {
+                        studyId:pair[0],
+                        sampleListId:pair[1],
+                        sampleId: undefined
                     }
-                ]
+                });
+            } else if (query.case_set_id !== "all") {
+                    // by definition if there is a case_set_id, there is only one study
+                    samplesSpecification = cancerStudyIds.map((studyId:string)=>{
+                        return {
+                            studyId: studyId,
+                            sampleListId: query.case_set_id,
+                            sampleId: undefined
+                        };
+                    });
             } else {
-                samplesSpecification = cancer_study_list.split(",").map((studyId:string)=>{
+                samplesSpecification = cancerStudyIds.map((studyId:string)=>{
                     return {
                         studyId,
                         sampleListId:`${studyId}_all`,
@@ -109,8 +122,19 @@ function initStore() {
 
             runInAction(() => {
 
-                if (!resultsViewPageStore.samplesSpecification || !_.isEqual(resultsViewPageStore.samplesSpecification.slice(), samplesSpecification)) {
-                    resultsViewPageStore.samplesSpecification = samplesSpecification;
+                if (!resultsViewPageStore._samplesSpecification || !_.isEqual(resultsViewPageStore._samplesSpecification.slice(), samplesSpecification)) {
+                    resultsViewPageStore._samplesSpecification = samplesSpecification;
+                }
+
+                // sometimes the submitted case_set_id is not actually a case_set_id but
+                // a category of case set ids (e.g. selected studies > 1 and case category selected)
+                // in that case, note that on the query
+                if (query.case_set_id && ["w_mut","w_cna","w_mut_cna"].includes(query.case_set_id)) {
+                    if (resultsViewPageStore.sampleListCategory !== query.case_set_id) {
+                        resultsViewPageStore.sampleListCategory = query.case_set_id;
+                    }
+                } else {
+                    resultsViewPageStore.sampleListCategory = undefined;
                 }
 
                 if (query.data_priority !== undefined && parseInt(query.data_priority,10) !== resultsViewPageStore.profileFilter) {
@@ -140,8 +164,8 @@ function initStore() {
                     }
                 }
 
-                if (!resultsViewPageStore.cohortIdsList || !_.isEqual(resultsViewPageStore.cohortIdsList.slice(), cancer_study_list.split(","))) {
-                    resultsViewPageStore.cohortIdsList = cancer_study_list.split(",");
+                if (!resultsViewPageStore.cohortIdsList || !_.isEqual(resultsViewPageStore.cohortIdsList.slice(), cancerStudyIds)) {
+                    resultsViewPageStore.cohortIdsList = cancerStudyIds;
                 }
 
                 if (resultsViewPageStore.oqlQuery !== oql) {
