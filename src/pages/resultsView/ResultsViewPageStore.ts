@@ -118,6 +118,18 @@ export const DataTypeConstants = {
     LOG2VALUE:"LOG2-VALUE"
 };
 
+enum SampleListCategoryType {
+    "w_mut"="w_mut",
+    "w_cna"="w_cna",
+    "w_mut_cna"="w_cna_mut"
+}
+
+export const SampleListCategoryTypeToFullId = {
+    [SampleListCategoryType.w_mut]:"all_cases_with_mutation_data",
+    [SampleListCategoryType.w_cna]:"all_cases_with_cna_data",
+    [SampleListCategoryType.w_mut_cna]:"all_cases_with_mutation_and_cna_data"
+};
+
 export type SamplesSpecificationElement = {studyId: string, sampleId: string, sampleListId: undefined} |
     {studyId: string, sampleId: undefined, sampleListId: string};
 
@@ -330,7 +342,9 @@ export class ResultsViewPageStore {
 
 
     @observable genesetIds: string[];
-    @observable samplesSpecification: SamplesSpecificationElement[] = [];
+    @observable _samplesSpecification: SamplesSpecificationElement[] = [];
+
+    @observable sampleListCategory: SampleListCategoryType | undefined;
 
     //queried id(any combination of physical and virtual studies)
     @observable cohortIdsList: string[] = [];
@@ -1090,29 +1104,20 @@ export class ResultsViewPageStore {
         }
     });
 
-    // readonly genes = remoteData(async() => {
-    //     if (this.hugoGeneSymbols) {
-    //         return client.fetchGenesUsingPOST({
-    //             geneIds: this.hugoGeneSymbols.slice(),
-    //             geneIdType: "HUGO_GENE_SYMBOL"
-    //         });
-    //     }
-    //     return undefined;
-    // });
-
     readonly givenSampleOrder = remoteData<Sample[]>({
         await: ()=>[
-            this.samples
+            this.samples,
+            this.samplesSpecification
         ],
         invoke: async()=>{
             // for now, just assume we won't mix sample lists and samples in the specification
-            if (this.samplesSpecification.find(x=>!x.sampleId)) {
+            if (this.samplesSpecification.result!.find(x=>!x.sampleId)) {
                 // for now, if theres any sample list id specification, then there is no given sample order
                 return [];
             }
             // at this point, we know samplesSpecification is a list of samples
             const studyToSampleToIndex:{[studyId:string]:{[sampleId:string]:number}} =
-                _.reduce(this.samplesSpecification,
+                _.reduce(this.samplesSpecification.result,
                     (map:{[studyId:string]:{[sampleId:string]:number}}, next:SamplesSpecificationElement, index:number)=>{
                         map[next.studyId] = map[next.studyId] || {};
                         map[next.studyId][next.sampleId!] = index; // we know sampleId defined otherwise we would have returned from function already
@@ -1123,40 +1128,90 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly studyToSampleIds = remoteData<{ [studyId: string]: { [sampleId: string]: boolean } }>(async () => {
-        const sampleListsToQuery: { studyId: string, sampleListId: string }[] = [];
-        const ret: { [studyId: string]: { [sampleId: string]: boolean } } = {};
-        for (const sampleSpec of this.samplesSpecification) {
-            if (sampleSpec.sampleId) {
-                ret[sampleSpec.studyId] = ret[sampleSpec.studyId] || {};
-                ret[sampleSpec.studyId][sampleSpec.sampleId] = true;
-            } else if (sampleSpec.sampleListId) {
-                sampleListsToQuery.push(sampleSpec as { studyId: string, sampleListId: string });
-            }
+    readonly studyToSampleIds = remoteData<{ [studyId: string]: { [sampleId: string]: boolean } }>({
+        await:()=>[
+            this.samplesSpecification
+        ],
+        invoke: async ()=>{
+                const sampleListsToQuery: { studyId: string, sampleListId: string }[] = [];
+                const ret: { [studyId: string]: { [sampleId: string]: boolean } } = {};
+                for (const sampleSpec of this.samplesSpecification.result!) {
+                    if (sampleSpec.sampleId) {
+                        ret[sampleSpec.studyId] = ret[sampleSpec.studyId] || {};
+                        ret[sampleSpec.studyId][sampleSpec.sampleId] = true;
+                    } else if (sampleSpec.sampleListId) {
+                        sampleListsToQuery.push(sampleSpec as { studyId: string, sampleListId: string });
+                    }
+                }
+                const results: string[][] = await Promise.all(sampleListsToQuery.map(spec => {
+                    return client.getAllSampleIdsInSampleListUsingGET({
+                        sampleListId: spec.sampleListId
+                    });
+                }));
+                for (let i = 0; i < results.length; i++) {
+                    ret[sampleListsToQuery[i].studyId] = ret[sampleListsToQuery[i].studyId] || {};
+                    const sampleMap = ret[sampleListsToQuery[i].studyId];
+                    results[i].map(sampleId => {
+                        sampleMap[sampleId] = true;
+                    });
+                }
+                return ret;
         }
-        const results: string[][] = await Promise.all(sampleListsToQuery.map(spec => {
-            return client.getAllSampleIdsInSampleListUsingGET({
-                sampleListId: spec.sampleListId
-            });
-        }));
-        for (let i = 0; i < results.length; i++) {
-            ret[sampleListsToQuery[i].studyId] = ret[sampleListsToQuery[i].studyId] || {};
-            const sampleMap = ret[sampleListsToQuery[i].studyId];
-            results[i].map(sampleId => {
-                sampleMap[sampleId] = true;
-            });
-        }
-        return ret;
+
     }, {});
 
-    @computed get studyToSampleListId(): { [studyId: string]: string } {
-        return this.samplesSpecification.reduce((map, next) => {
-            if (next.sampleListId) {
-                map[next.studyId] = next.sampleListId;
-            }
-            return map;
-        }, {} as {[studyId: string]: string});
-    }
+    readonly studyToSampleListId = remoteData<{ [studyId: string]: string }>({
+        await:()=>[
+            this.samplesSpecification
+        ],
+        invoke: async ()=>{
+            return this.samplesSpecification.result!.reduce((map, next) => {
+                if (next.sampleListId) {
+                    map[next.studyId] = next.sampleListId;
+                }
+                return map;
+            }, {} as {[studyId: string]: string});
+        }
+    });
+
+
+    readonly samplesSpecification = remoteData({
+       invoke: async ()=>{
+
+           // is this a sample list category query?
+           // if YES, we need to derive the sample lists by:
+           // 1. looking up all sample lists in selected studies
+           // 2. using those with matching category
+           if (!this.sampleListCategory) {
+               return this._samplesSpecification
+           } else {
+               // would be nice to have an endpoint that would return multiple sample lists
+               // but this will only ever happen one for each study selected (and in queries where a sample list is specified)
+               const allSampleLists = await Promise.all(this._samplesSpecification.map((spec)=>{
+                   return client.getAllSampleListsInStudyUsingGET({
+                       studyId: spec.studyId,
+                       projection: 'SUMMARY'
+                   })
+               }));
+
+               const category = SampleListCategoryTypeToFullId[this.sampleListCategory!];
+               const specs = allSampleLists.reduce((aggregator:SamplesSpecificationElement[], sampleLists)=>{
+                   //find the sample list matching the selected category using the map from shortname to full category name :(
+                   const matchingList = _.find(sampleLists,(list)=>list.category===category);
+                   if (matchingList) {
+                       aggregator.push({
+                           studyId:matchingList.studyId,
+                           sampleListId:matchingList.sampleListId,
+                           sampleId:undefined
+                       } as SamplesSpecificationElement);
+                   }
+                   return aggregator;
+               },[]);
+
+               return specs;
+           }
+       }
+    });
 
     readonly studyToMutationMolecularProfile = remoteData<{[studyId: string]: MolecularProfile}>({
         await: () => [
@@ -1175,9 +1230,8 @@ export class ResultsViewPageStore {
     }, {});
 
     readonly studyIds = remoteData({
-        await: ()=>[this.studyToSampleIds],
         invoke: ()=>{
-            return Promise.resolve(Object.keys(this.studyToSampleIds.result));
+            return Promise.resolve(this.cohortIdsList.slice());
         }
     });
 
@@ -1185,10 +1239,14 @@ export class ResultsViewPageStore {
         return fetchMyCancerGenomeData();
     }
 
+    // TODO: refactor b/c we already have sample lists summary so
     readonly sampleLists = remoteData<SampleList[]>({
-        invoke:()=>Promise.all(Object.keys(this.studyToSampleListId).map(studyId=>{
+        await:()=>[
+          this.studyToSampleListId
+        ],
+        invoke:()=>Promise.all(Object.keys(this.studyToSampleListId.result!).map(studyId=>{
             return client.getSampleListUsingGET({
-                sampleListId: this.studyToSampleListId[studyId]
+                sampleListId: this.studyToSampleListId.result![studyId]
             });
         }))
     });
@@ -1652,12 +1710,12 @@ export class ResultsViewPageStore {
     });
 
     readonly studyToDataQueryFilter = remoteData<{ [studyId: string]: IDataQueryFilter }>({
-        await: () => [this.studyToSampleIds, this.studyIds],
+        await: () => [this.studyToSampleIds, this.studyIds, this.studyToSampleListId],
         invoke: () => {
             const studies = this.studyIds.result!;
             const ret: { [studyId: string]: IDataQueryFilter } = {};
             for (const studyId of studies) {
-                ret[studyId] = generateDataQueryFilter(this.studyToSampleListId[studyId] || null, Object.keys(this.studyToSampleIds.result[studyId] || {}))
+                ret[studyId] = generateDataQueryFilter(this.studyToSampleListId.result![studyId] || null, Object.keys(this.studyToSampleIds.result[studyId] || {}))
             }
             return Promise.resolve(ret);
         }
