@@ -443,7 +443,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
         return (
             <If condition={this.hasAlterations}>
                 <Then>
-                    <div>
+                    <div data-test="cancerTypesSummaryDiv">
 
                         <div className={'cancer-summary--main-options'}>
 

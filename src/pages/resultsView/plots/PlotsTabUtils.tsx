@@ -977,8 +977,8 @@ function mutationsProteinChanges(
 export function tooltipMutationsSection(
     mutations:AnnotatedMutation[],
 ) {
-    const oncoKbIcon = (mutation:AnnotatedMutation)=>(<img src="images/oncokb-oncogenic-1.svg" title={mutation.oncoKbOncogenic} style={{height:11, width:11, marginLeft:2, marginBottom: 2}}/>);
-    const hotspotIcon = <img src="images/cancer-hotspots.svg" title="Hotspot" style={{height:11, width:11, marginLeft:2, marginBottom:3}}/>;
+    const oncoKbIcon = (mutation:AnnotatedMutation)=>(<img src={require("../../../rootImages/oncokb-oncogenic-1.svg")} title={mutation.oncoKbOncogenic} style={{height:11, width:11, marginLeft:2, marginBottom: 2}}/>);
+    const hotspotIcon = <img src={require("../../../rootImages/cancer-hotspots.svg")} title="Hotspot" style={{height:11, width:11, marginLeft:2, marginBottom:3}}/>;
     const mutationsByGene = _.groupBy(mutations.filter(m=>!!m.proteinChange), m=>m.hugoGeneSymbol);
     const sorted = _.chain(mutationsByGene).entries().sortBy(x=>x[0]).value();
     return (
@@ -1007,7 +1007,7 @@ export function tooltipMutationsSection(
 export function tooltipCnaSection(
     data:AnnotatedNumericGeneMolecularData[],
 ) {
-    const oncoKbIcon = (alt:AnnotatedNumericGeneMolecularData)=>(<img src="images/oncokb-oncogenic-1.svg" title={alt.oncoKbOncogenic} style={{height:11, width:11, marginLeft:2, marginBottom: 2}}/>);
+    const oncoKbIcon = (alt:AnnotatedNumericGeneMolecularData)=>(<img src={require("../../../rootImages/oncokb-oncogenic-1.svg")} title={alt.oncoKbOncogenic} style={{height:11, width:11, marginLeft:2, marginBottom: 2}}/>);
     const altsByGene = _.groupBy(data, alt=>alt.hugoGeneSymbol);
     const sorted = _.chain(altsByGene).entries().sortBy(x=>x[0]).value();
     return (
