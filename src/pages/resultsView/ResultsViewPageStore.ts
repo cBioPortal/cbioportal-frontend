@@ -1833,7 +1833,13 @@ export class ResultsViewPageStore {
     });
 
     readonly genesets = remoteData<Geneset[]>({
-        invoke: async () => internalClient.fetchGenesetsUsingPOST({genesetIds: this.genesetIds.slice()}),
+        invoke: () => {
+            if (this.genesetIds && this.genesetIds.length > 0) {
+                return internalClient.fetchGenesetsUsingPOST({genesetIds: this.genesetIds});
+            } else {
+                return Promise.resolve([]);
+            }
+        },
         onResult:(genesets:Geneset[])=>{
             this.genesetCache.addData(genesets);
         }
