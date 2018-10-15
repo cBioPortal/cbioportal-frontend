@@ -18,7 +18,7 @@ describe('homepage', function() {
         it('it should show dev mode when testing', function() {
             var devMode = $('.alert-warning');
 
-            devMode.waitForExist(60000);
+            devMode.waitForExist(10000);
             assert(browser.getText('.alert-warning').indexOf('dev mode') > 0);
         });
     }
@@ -70,10 +70,10 @@ describe('homepage', function() {
 
     it('should not allow submission if OQL contains EXP or PROT for multiple studies', ()=>{
         var input = $(".autosuggest input[type=text]");
-        input.setValue('breast');
+        input.setValue('breast -invasive');
         browser.pause(500);
-
-        browser.element('[data-test=selectAllStudies]').click();
+        browser.waitForExist('[data-test="StudySelect"]', 10000);
+        browser.click('[data-test="selectAllStudies"]');
 
         var oqlEntrySel = 'textarea[data-test="geneSet"]';
         browser.setValue(oqlEntrySel, 'PTEN: EXP>1');
@@ -215,21 +215,18 @@ describe('patient page', function(){
         browser.waitForExist('span=PPP2R1A');
 
         // find oncokb image
-        var oncokbIndicator = $('[data-test="oncogenic-icon-image"]');
-        oncokbIndicator.waitForExist(30000);
+        const oncokbIcon = '[data-test2="PPP2R1A"][data-test="oncogenic-icon-image"]';
+        browser.waitForExist(oncokbIcon, 30000);
 
         // move over oncokb image (this is deprecated, but there is no new
         // function yet)
 
-        browser.pause(3000);
-        browser.moveToObject('[data-test="oncogenic-icon-image"]',5,5);
+        browser.waitForExist(oncokbIcon, 3000);
+        browser.moveToObject(oncokbIcon,5,5);
 
-        var oncokbCard = $('[data-test="oncokb-card"]');
-
-        oncokbCard.waitForExist(30000);
+        browser.waitForExist('[data-test="oncokb-card"]', 30000);
 
         assert.equal(browser.getText('.tip-header').toLowerCase(), 'ppp2r1a s256f in uterine serous carcinoma/uterine papillary serous carcinoma'.toLowerCase());
-
     });
 
 });
@@ -270,10 +267,7 @@ describe('cross cancer query', function() {
 describe('single study query', function() {
     this.retries(2);
 
-    before(()=>{
-        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-    });
-    describe('mutation mapper ', function() {
+    describe.skip('mutation mapper ', function() {
         it('should show somatic and germline mutation rate', function() {
            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
             browser.setViewportSize({ height:1400, width:1000 });
@@ -298,12 +292,12 @@ describe('single study query', function() {
             // query BRCA1 and BRCA2
             $('[data-test="geneSet"]').setValue('BRCA1 BRCA2');
 
-            browser.waitForEnabled('[data-test="queryButton"]', 30000);
+            browser.waitForEnabled('[data-test="queryButton"]', 10000);
             browser.click('[data-test="queryButton"]');
 
             // click mutations tab
-            $('#mutation-result-tab').waitForExist(30000);
-            $('#mutation-result-tab').click();
+            $('a.tabAnchor_mutations').waitForExist(10000);
+            $('a.tabAnchor_mutations').click();
 
             $('[data-test="germlineMutationRate"]').waitForExist(60000);
             var text = browser.getText('[data-test="germlineMutationRate"]')
@@ -320,8 +314,8 @@ describe('single study query', function() {
             browser.setViewportSize({ height:1400, width:1000 });
 
             //  wait for mutations tab
-            $('#mutation-result-tab').waitForExist(30000);
-            $('#mutation-result-tab').click();
+            $('a.tabAnchor_mutations').waitForExist(10000);
+            $('a.tabAnchor_mutations').click();
 
             // check lollipop plot appears
             $('[data-test="LollipopPlot"]').waitForExist(60000);
@@ -335,7 +329,7 @@ describe('single study query', function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=ov_tcga_pub_cna_seq&gene_list=BRCA1+BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`);
             waitForOncoprint(10000);
 
-            assert(browser.isVisible('li a#enrichments-result-tab'));
+            assert(browser.isVisible('a.tabAnchor_enrichments'));
         });
     });
 });
@@ -352,36 +346,36 @@ describe("results page", function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%2520NRAS%2520BRAF%250APTEN%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
             waitForOncoprint(10000);
 
-            assert(browser.isVisible('li a#mutex-result-tab'));
+            assert(browser.isVisible('a.tabAnchor_mutualExclusivity'));
         });
         it("should appear in a multiple study with multiple genes", function(){
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS%2520NRAS%2520BRAF%250APTEN%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`);
-            browser.waitForExist('li a#oncoprint-result-tab', 10000);
+            browser.waitForExist('a.tabAnchor_oncoprint', 10000);
 
-            assert(browser.isVisible('li a#mutex-result-tab'));
+            assert(browser.isVisible('a.tabAnchor_mutualExclusivity'));
         });
         it("should not appear in a single study query with one gene", function(){
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
             waitForOncoprint(10000);
-            assert(!browser.isVisible('li a#mutex-result-tab'));
+            assert(!browser.isVisible('a.tabAnchor_mutualExclusivity'));
 
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
             waitForOncoprint(10000);
-            assert(!browser.isVisible('li a#mutex-result-tab'));
+            assert(!browser.isVisible('a.tabAnchor_mutualExclusivity'));
         });
         it.skip("should not appear in a multiple study query with one gene", function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`);
-            browser.waitForExist('li a#oncoprint-result-tab', 10000);
+            browser.waitForExist('a.tabAnchor_oncoprint', 10000);
             browser.waitUntil(function(){
-                return !browser.isVisible('li a#mutex-result-tab');
+                return !browser.isVisible('a.tabAnchor_mutualExclusivity');
             });
-            assert(!browser.isVisible('li a#mutex-result-tab'));
+            assert(!browser.isVisible('a.tabAnchor_mutualExclusivity'));
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`);
-            browser.waitForExist('li a#oncoprint-result-tab', 10000);
+            browser.waitForExist('a.tabAnchor_oncoprint', 10000);
             browser.waitUntil(function(){
-                return !browser.isVisible('li a#mutex-result-tab');
+                return !browser.isVisible('a.tabAnchor_mutualExclusivity');
             });
-            assert(!browser.isVisible('li a#mutex-result-tab'));
+            assert(!browser.isVisible('a.tabAnchor_mutualExclusivity'));
         });
     });
 });
@@ -559,7 +553,7 @@ describe('oncoprint', function() {
             browser.execute(function() { resultsViewOncoprint.setAnnotateCBioPortalInputValue("1"); });
             browser.pause(100); // give time to take effect
             waitForOncoprint(10000);
-            let legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            let legendText = browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
             assert(legendText.indexOf("Inframe Mutation (putative driver)") > -1, "cbio count annotates inframe mutations");
             assert(legendText.indexOf("Missense Mutation (putative driver)") > -1, "cbio count annotates missense mutations");
             assert(legendText.indexOf("Truncating Mutation (putative driver)") > -1, "cbio count annotates truncating mutations");
@@ -571,7 +565,7 @@ describe('oncoprint', function() {
             browser.execute(function() { resultsViewOncoprint.setAnnotateCOSMICInputValue("1"); });
             browser.pause(100); // give time to take effect
             waitForOncoprint(10000);
-            legendText = browser.getText("#oncoprint-inner svg");
+            legendText = browser.getText("#oncoprintDiv svg");
             assert(legendText.indexOf("Inframe Mutation (putative driver)") > -1, "cosmic count annotates inframe mutations");
             assert(legendText.indexOf("Missense Mutation (putative driver)") > -1, "cosmic count annotates missense mutations");
             assert(legendText.indexOf("Truncating Mutation (putative driver)") > -1, "cosmic count annotates truncating mutations");
@@ -584,9 +578,9 @@ describe('oncoprint', function() {
 
             // search for study with germline mutation (ov_tcga_pub)
             browser.url(CBIOPORTAL_URL);
-            var input = $(".autosuggest input[type=text]");
-            input.waitForExist(10000);
-            input.setValue('ovarian serous cystadenocarcinoma tcga nature 2011');
+            var inputSelector = '.autosuggest input[type="text"]';
+            browser.waitForExist(inputSelector, 10000);
+            browser.setValue(inputSelector, 'ovarian serous cystadenocarcinoma tcga nature 2011');
             browser.pause(500);
             // should only be one element
             assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -616,9 +610,9 @@ describe('oncoprint', function() {
             );
 
 
-            $('#oncoprint .oncoprint__controls #viewDropdownButton').click(); // open view menu
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForExist(10000);
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+            $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForExist(10000);
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
 
             waitForOncoprint(10000);
 
@@ -632,37 +626,17 @@ describe('oncoprint', function() {
     });
 
     describe("sorting", ()=>{
-        function topCmp(eltA, eltB) {
-            return eltA.top - eltB.top;
-        }
         function getNthTrackOptionsElements(n) {
-            // n is one-indexed, to cohere with CSS nth-child
+            // n is one-indexed
 
-            var buttons = $$('#oncoprint-inner .oncoprintjs__track_options__toggle_btn_img');
-            buttons = buttons.map(function(btn, i) {
-                return {
-                    btn: btn,
-                    top: parseFloat(btn.$('..').getCssProperty('top').value),
-                    selector:'#oncoprint-inner .oncoprintjs__track_options__toggle_btn_img:nth-child('+(i+1)+')'
-                };
-            });
-            buttons.sort(topCmp);
-
-            var dropdowns = $$('#oncoprint-inner .oncoprintjs__track_options__dropdown');
-            dropdowns = dropdowns.map(function(dropdown, i) {
-                return {
-                    dropdown: dropdown,
-                    top: parseFloat(dropdown.getCssProperty('top').value),
-                    selector: '#oncoprint-inner .oncoprintjs__track_options__dropdown:nth-child('+(i+1)+')'
-                };
-            });
-            dropdowns.sort(topCmp);
+            const button_selector = "#oncoprintDiv .oncoprintjs__track_options__toggle_btn_img.nth-"+n;
+            const dropdown_selector = "#oncoprintDiv .oncoprintjs__track_options__dropdown.nth-"+n;
 
             return {
-                button: buttons[n-1].btn,
-                button_selector: buttons[n-1].selector,
-                dropdown: dropdowns[n-1].dropdown,
-                dropdown_selector: dropdowns[n-1].selector
+                button: $(button_selector),
+                button_selector,
+                dropdown: $(dropdown_selector),
+                dropdown_selector
             };
         }
 
@@ -670,9 +644,9 @@ describe('oncoprint', function() {
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
             // select Colorectal TCGA and Adrenocortical Carcinoma TCGA
-            var input = $(".autosuggest input[type=text]");
-            input.waitForExist(10000);
-            input.setValue('colorectal tcga nature');
+            var inputSelector = '.autosuggest input[type="text"]';
+            browser.waitForExist(inputSelector, 10000);
+            browser.setValue(inputSelector, 'colorectal tcga nature');
             browser.pause(500);
             // should only be one element
             assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -680,8 +654,8 @@ describe('oncoprint', function() {
             checkBox.waitForExist(10000);
             browser.click('[data-test="StudySelect"] input');
 
-            input.setValue('');
-            input.setValue('adrenocortical carcinoma tcga provisional');
+            browser.setValue(inputSelector, '');
+            browser.setValue(inputSelector, 'adrenocortical carcinoma tcga provisional');
             browser.pause(500);
             // should only be one element
 
@@ -694,9 +668,9 @@ describe('oncoprint', function() {
             browser.click('[data-test="StudySelect"] input');
 
             browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
-            browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);    
+            browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
 
-            browser.execute(function() { globalStores.queryStore.selectedSampleListId = "-1"; }); // select custom case list
+            browser.execute(function() { homePageQueryStore.selectedSampleListId = "-1"; }); // select custom case list
 
             var caseInput = $('[data-test="CustomCaseSetInput"]');
             caseInput.waitForExist(10000);
@@ -726,9 +700,9 @@ describe('oncoprint', function() {
                 "sorted patient order correct"
             );
 
-            $('#oncoprint .oncoprint__controls #viewDropdownButton').click(); // open view menu
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForVisible(10000);
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+            $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForVisible(10000);
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
             waitForOncoprint(10000);
 
             assert.equal(
@@ -741,11 +715,11 @@ describe('oncoprint', function() {
         it("should sort patients and samples correctly in coadread_tcga_pub", ()=>{
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-            var input = $(".autosuggest input[type=text]");
+            var inputSelector = '.autosuggest input[type="text"]';
 
-            input.waitForExist(10000);
+            browser.waitForExist(inputSelector, 10000);
 
-            input.setValue('colorectal tcga nature');
+            browser.setValue(inputSelector, 'colorectal tcga nature');
 
             browser.pause(500);
 
@@ -772,9 +746,9 @@ describe('oncoprint', function() {
                 "patient id order correct"
             );
 
-            $('#oncoprint .oncoprint__controls #viewDropdownButton').click(); // open view menu
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForExist(10000);
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+            $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForExist(10000);
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
 
             waitForOncoprint(10000);
 
@@ -788,11 +762,11 @@ describe('oncoprint', function() {
         it("should sort patients and samples correctly in gbm_tcga_pub", ()=>{
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-            var input = $(".autosuggest input[type=text]");
+            var inputSelector = '.autosuggest input[type="text"]';
 
-            input.waitForExist(10000);
+            browser.waitForExist(inputSelector, 10000);
 
-            input.setValue('glio tcga nature 2008');
+            browser.setValue(inputSelector, 'glio tcga nature 2008');
 
             browser.pause(500);
 
@@ -819,9 +793,9 @@ describe('oncoprint', function() {
                 "patient id order correct"
             );
 
-            $('#oncoprint .oncoprint__controls #viewDropdownButton').click(); // open view menu
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForExist(10000);
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+            $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForExist(10000);
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
 
             waitForOncoprint(10000);
 
@@ -840,9 +814,9 @@ describe('oncoprint', function() {
 
             // first get rid of the Profiled track
             var profiledElements = getNthTrackOptionsElements(5);
-            profiledElements.button.click();
+            browser.click(profiledElements.button_selector);
             browser.waitForVisible(profiledElements.dropdown_selector, 1000); // wait for menu to appear
-            profiledElements.dropdown.$('li:nth-child(3)').click(); // Click Remove Track
+            browser.click(profiledElements.dropdown_selector + ' li:nth-child(3)'); // Click Remove Track
             browser.pause(100); // give time to take effect
 
             assert.equal(
@@ -851,9 +825,9 @@ describe('oncoprint', function() {
                 "initial patient id order correct"
             );
 
-            $('#oncoprint .oncoprint__controls #viewDropdownButton').click(); // open view menu
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForVisible(10000);
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+            $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForVisible(10000);
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
 
             waitForOncoprint(10000);
 
@@ -863,8 +837,8 @@ describe('oncoprint', function() {
                 "initial sample id order correct"
             );
 
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').waitForVisible(10000);
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').click(); // go to patient mode
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').waitForVisible(10000);
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').click(); // go to patient mode
 
             waitForOncoprint(10000);
 
@@ -911,7 +885,7 @@ describe('oncoprint', function() {
                 "new sorted patient order correct - 4"
             );
 
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
 
             waitForOncoprint(10000);
 
@@ -985,16 +959,16 @@ describe('oncoprint', function() {
 
             // first get rid of the Profiled track
             var profiledElements = getNthTrackOptionsElements(5);
-            profiledElements.button.click();
+            browser.click(profiledElements.button_selector);
             browser.waitForVisible(profiledElements.dropdown_selector, 1000); // wait for menu to appear
-            profiledElements.dropdown.$('li:nth-child(3)').click(); // Click Remove Track
+            browser.click(`${profiledElements.dropdown_selector} li:nth-child(3)`); // Click Remove Track
             browser.pause(100); // give time to take effect
 
             browser.scroll(0,1000);//scroll down
 
             // Sort heatmap tracks
             var TP53HeatmapElements = getNthTrackOptionsElements(8);
-            TP53HeatmapElements.button.click(); // open track menu
+            browser.click(TP53HeatmapElements.button_selector); // open track menu
             browser.waitForVisible(TP53HeatmapElements.dropdown_selector, 1000);// wait for menu to appear
             browser.click(TP53HeatmapElements.dropdown_selector + ' li:nth-child(6)'); // Click sort Z-a
             browser.pause(100); // give time to sort
@@ -1050,9 +1024,9 @@ describe('oncoprint', function() {
                 "sorted sample order correct - 5"
             );
 
-            $('#oncoprint .oncoprint__controls #viewDropdownButton').click(); // open view menu
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').waitForExist(10000);
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').click(); // go to patient mode
+            $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').waitForExist(10000);
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').click(); // go to patient mode
             waitForOncoprint(10000);
 
             assert.equal(
@@ -1063,58 +1037,58 @@ describe('oncoprint', function() {
         });
     });
     describe("only show clinical legends for altered cases", function(){
-        const checkboxSelector = '#oncoprint .oncoprint__controls input[type="checkbox"][data-test="onlyShowClinicalLegendsForAltered"]';
+        const checkboxSelector = '.oncoprintContainer .oncoprint__controls input[type="checkbox"][data-test="onlyShowClinicalLegendsForAltered"]';
         it("only shows legend items for cases which are altered", function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=-1&case_ids=coadread_tcga_pub%3ATCGA-AA-A00D-01%2Bcoadread_tcga_pub%3ATCGA-A6-2677-01&gene_list=BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&show_samples=false&clinicallist=SEX`);
             waitForOncoprint(10000);
-            let legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            let legendText = browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
             assert(legendText.indexOf("Male") > -1, "a patient is male");
             assert(legendText.indexOf("Female") > -1, "a patient is female");
 
-            $('#oncoprint .oncoprint__controls #viewDropdownButton').click(); // open view menu
+            $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
             $(checkboxSelector).waitForExist(1000);
             $(checkboxSelector).click(); // turn off legend for unaltered cases
             waitForOncoprint(3000); // wait for oncoprint to reset
-            legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            legendText = browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
             assert(legendText.indexOf("Male") > -1, "altered patient is male");
             assert(legendText.indexOf("Female") === -1, "altered patient is not female");
 
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
             waitForOncoprint(3000); // wait for oncoprint to reset
-            legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            legendText = browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
             assert(legendText.indexOf("Male") > -1, "altered sample is male");
             assert(legendText.indexOf("Female") === -1, "altered sample is not female");
 
             $(checkboxSelector).click(); // turn back on legend for unaltered cases
             waitForOncoprint(3000); // wait for oncoprint to reset
-            legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            legendText = browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
             assert(legendText.indexOf("Male") > -1, "a sample is male");
             assert(legendText.indexOf("Female") > -1, "a sample is female");
         });
         it("does not show a legend when no altered cases", function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=-1&case_ids=coadread_tcga_pub%3ATCGA-A6-2677-01&gene_list=BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&show_samples=false&clinicallist=SEX`);
             waitForOncoprint(10000);
-            let legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            let legendText = browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
             assert(legendText.indexOf("Sex") > -1, "Sex legend is shown (in patient mode)");
             assert(legendText.indexOf("Female") > -1, "Female item is shown (in patient mode)");
 
-            $('#oncoprint .oncoprint__controls #viewDropdownButton').click(); // open view menu
+            $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
             $(checkboxSelector).waitForExist(1000);
             $(checkboxSelector).click(); // turn off legend for unaltered cases
             waitForOncoprint(3000); // wait for oncoprint to reset
-            legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            legendText = browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
             assert(legendText.indexOf("Sex") === -1, "Sex legend is not shown (in patient mode)");
             assert(legendText.indexOf("Female") === -1, "Female item is not shown (in patient mode)");
 
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
             waitForOncoprint(3000); // wait for oncoprint to reset
-            legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            legendText = browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
             assert(legendText.indexOf("Sex") === -1, "Sex legend is not shown (in sample mode)");
             assert(legendText.indexOf("Female") === -1, "Female item is not shown (in sample mode)");
 
             $(checkboxSelector).click(); // turn back on legend for unaltered cases
             waitForOncoprint(3000); // wait for oncoprint to reset
-            legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            legendText = browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
             assert(legendText.indexOf("Sex") > -1, "Sex legend is shown (in sample mode)");
             assert(legendText.indexOf("Female") > -1, "Female item is shown (in sample mode)");
         });
@@ -1124,16 +1098,14 @@ describe('oncoprint', function() {
 describe('case set selection in front page query form', function(){
     var selectedCaseSet_sel = 'div[data-test="CaseSetSelector"] span.Select-value-label[aria-selected="true"]';
 
-    this.retries(2);
-
     beforeEach(function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
     });
 
     it('selects the default case set for single study selections', ()=>{
-        var input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('ovarian nature 2011');
+        var input = ".autosuggest input[type=text]";
+        browser.waitForExist(input, 10000);
+        browser.setValue(input, 'ovarian nature 2011');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1142,17 +1114,13 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "Tumors with sequencing and CNA data (316)",
-            "Default selected case set"
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Tumors with sequencing and CNA data (316)"), 5000);
     });
     it('selects the right default case sets in a single->multiple->single study selection flow', ()=>{
         // Select Ampullary Carcinoma
-        var input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('ampullary baylor');
+        var input = ".autosuggest input[type=text]";
+        browser.waitForExist(input, 10000);
+        browser.setValue(input, 'ampullary baylor');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1161,16 +1129,11 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "All Sequenced Tumors (160)",
-            "Default selected case set"
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All Sequenced Tumors (160)"), 5000);
 
         // select Adrenocortical Carcinoma
-        input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('adrenocortical carcinoma tcga provisional');
+        browser.waitForExist(input, 10000);
+        browser.setValue(input, 'adrenocortical carcinoma tcga provisional');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1181,16 +1144,11 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
 
         browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "All (252)",
-            "All (252)",
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All (252)"), 5000);
 
         // Deselect Ampullary Carcinoma
-        input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('ampullary baylor');
+        browser.waitForExist(input, 10000);
+        browser.setValue(input, 'ampullary baylor');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1199,17 +1157,13 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "Tumor Samples with sequencing and CNA data (88)",
-            "Default selected case set for adrenocortical carcinoma"
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Tumor Samples with sequencing and CNA data (88)"), 5000);
     });
     it('selects the right default case sets in a single->select all filtered->single study selection flow', ()=>{
         // Select Ampullary Carcinoma
-        var input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('ampullary baylor');
+        var input = ".autosuggest input[type=text]";
+        browser.waitForExist(input, 10000);
+        browser.setValue(input, 'ampullary baylor');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1218,37 +1172,26 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "All Sequenced Tumors (160)",
-            "Default selected case set"
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All Sequenced Tumors (160)"), 5000);
 
         // select all TCGA non-provisional
-        input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('tcga -provisional');
+        browser.waitForExist(input, 10000);
+        browser.setValue(input,'tcga -provisional');
         browser.pause(500);
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
 
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
-
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "All (21333)",
-            "All (21333)",
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All (21333)"), 5000);
 
         // Deselect all tcga -provisional studies
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
         browser.pause(100);
 
         // select Adrenocortical Carcinoma
-        input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('adrenocortical carcinoma tcga provisional');
+        browser.waitForExist(input, 10000);
+        browser.setValue(input,'adrenocortical carcinoma tcga provisional');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1258,17 +1201,12 @@ describe('case set selection in front page query form', function(){
 
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
-        browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "All (252)",
-            "All (252)",
-        );
+        browser.waitForExist(selectedCaseSet_sel, 10000);
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All (252)"), 5000);
 
         // Deselect Ampullary Carcinoma
-        input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('ampullary baylor');
+        browser.waitForExist(input, 10000);
+        browser.setValue(input,'ampullary baylor');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1277,11 +1215,7 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "Tumor Samples with sequencing and CNA data (88)",
-            "Default selected case set for adrenocortical carcinoma"
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Tumor Samples with sequencing and CNA data (88)"), 5000);
     });
 });
 
@@ -1362,12 +1296,7 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
-        browser.pause(5000); // give time for text change to propagate through to the view
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "All (12880)",
-            "Expect: All (12880), but got '" + browser.getText(selectedCaseSet_sel) + "'",
-        );
+        browser.waitUntil(()=>{ return browser.getText(selectedCaseSet_sel) === "All (12880)"; }, 5000);
 
         // Deselect all tcga -provisional studies
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
