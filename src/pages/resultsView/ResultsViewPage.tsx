@@ -33,6 +33,7 @@ import {buildResultsViewPageTitle} from "./ResultsViewPageStoreUtils";
 import {
     updateStoreFromQuery
 } from "./ResultsViewPageHelpers";
+import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
 
 function initStore() {
 
@@ -252,7 +253,13 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"co_expression",
                 hide:()=>{
-                    return this.resultsViewPageStore.studies.result!.length > 1;
+                    if (!this.resultsViewPageStore.coexpressionTabMolecularProfiles.isComplete) {
+                        return true;
+                    } else {
+                        const tooManyStudies = this.resultsViewPageStore.studies.result!.length > 1;
+                        const noData = this.resultsViewPageStore.coexpressionTabMolecularProfiles.result.length === 0;
+                        return tooManyStudies || noData;
+                    }
                 },
                 getTab: () => {
                     return <MSKTab key={7} id={ResultsViewTab.COEXPRESSION} linkText={'Co-expression'}>
