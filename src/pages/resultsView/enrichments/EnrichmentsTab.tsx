@@ -32,7 +32,7 @@ export default class EnrichmentsTab extends React.Component<IEnrichmentsTabProps
         }
 
         if (this.props.store.alteredSampleKeys.result!.length === 0 || this.props.store.unalteredSampleKeys.result!.length === 0) {
-            return <div>No alteration in selected samples, therefore could not perform this calculation.</div>;
+            return <div className={'alert alert-info'}>No alteration in selected samples, therefore could not perform this calculation.</div>;
         }
 
         if (this.props.store.mutationEnrichmentProfiles.isPending ||
