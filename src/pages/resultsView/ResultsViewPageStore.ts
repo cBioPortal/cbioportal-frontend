@@ -97,6 +97,7 @@ import {
     populateSampleSpecificationsFromVirtualStudies,
     substitutePhysicalStudiesForVirtualStudies
 } from "./ResultsViewPageHelpers";
+import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -554,6 +555,11 @@ export class ResultsViewPageStore {
                 return Promise.resolve([]);
             }
         }
+    });
+
+    readonly coexpressionTabMolecularProfiles = remoteData<MolecularProfile[]>({
+        await:()=>[this.molecularProfilesWithData],
+        invoke:()=>Promise.resolve(filterAndSortProfiles(this.molecularProfilesWithData.result!))
     });
 
     readonly molecularProfilesWithData = remoteData<MolecularProfile[]>({
