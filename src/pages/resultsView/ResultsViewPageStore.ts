@@ -92,6 +92,11 @@ import {isMutation} from "../../shared/lib/CBioPortalAPIUtils";
 import { fetchVariantAnnotationsIndexedByGenomicLocation } from "shared/lib/MutationAnnotator";
 import { VariantAnnotation } from "shared/api/generated/GenomeNexusAPI";
 import {ServerConfigHelpers} from "../../config/config";
+import {
+    getVirtualStudies,
+    populateSampleSpecificationsFromVirtualStudies,
+    substitutePhysicalStudiesForVirtualStudies
+} from "./ResultsViewPageHelpers";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -330,6 +335,10 @@ export class ResultsViewPageStore {
         });
     }
 
+    public queryReactionDisposer:any;
+
+    @observable public checkingVirtualStudies = false;
+
     public queryStore: QueryStore;
 
     @observable public urlValidationError: string | null = null;
@@ -339,7 +348,7 @@ export class ResultsViewPageStore {
 
     @observable ajaxErrors: Error[] = [];
 
-
+    @observable _selectedStudyIds: string[];
 
     @observable genesetIds: string[];
     @observable _samplesSpecification: SamplesSpecificationElement[] = [];
@@ -1176,41 +1185,46 @@ export class ResultsViewPageStore {
 
 
     readonly samplesSpecification = remoteData({
-       invoke: async ()=>{
+        await: () => [this.virtualStudies],
+        invoke: async () => {
 
-           // is this a sample list category query?
-           // if YES, we need to derive the sample lists by:
-           // 1. looking up all sample lists in selected studies
-           // 2. using those with matching category
-           if (!this.sampleListCategory) {
-               return this._samplesSpecification
-           } else {
-               // would be nice to have an endpoint that would return multiple sample lists
-               // but this will only ever happen one for each study selected (and in queries where a sample list is specified)
-               const allSampleLists = await Promise.all(this._samplesSpecification.map((spec)=>{
-                   return client.getAllSampleListsInStudyUsingGET({
-                       studyId: spec.studyId,
-                       projection: 'SUMMARY'
-                   })
-               }));
+            // is this a sample list category query?
+            // if YES, we need to derive the sample lists by:
+            // 1. looking up all sample lists in selected studies
+            // 2. using those with matching category
+            if (!this.sampleListCategory) {
+                if (this.virtualStudies.result!.length > 0){
+                    return populateSampleSpecificationsFromVirtualStudies(this._samplesSpecification, this.virtualStudies.result!);
+                } else {
+                    return this._samplesSpecification;
+                }
+            } else {
+                // would be nice to have an endpoint that would return multiple sample lists
+                // but this will only ever happen one for each study selected (and in queries where a sample list is specified)
+                const allSampleLists = await Promise.all(this._samplesSpecification.map((spec) => {
+                    return client.getAllSampleListsInStudyUsingGET({
+                        studyId: spec.studyId,
+                        projection: 'SUMMARY'
+                    })
+                }));
 
-               const category = SampleListCategoryTypeToFullId[this.sampleListCategory!];
-               const specs = allSampleLists.reduce((aggregator:SamplesSpecificationElement[], sampleLists)=>{
-                   //find the sample list matching the selected category using the map from shortname to full category name :(
-                   const matchingList = _.find(sampleLists,(list)=>list.category===category);
-                   if (matchingList) {
-                       aggregator.push({
-                           studyId:matchingList.studyId,
-                           sampleListId:matchingList.sampleListId,
-                           sampleId:undefined
-                       } as SamplesSpecificationElement);
-                   }
-                   return aggregator;
-               },[]);
+                const category = SampleListCategoryTypeToFullId[this.sampleListCategory!];
+                const specs = allSampleLists.reduce((aggregator: SamplesSpecificationElement[], sampleLists) => {
+                    //find the sample list matching the selected category using the map from shortname to full category name :(
+                    const matchingList = _.find(sampleLists, (list) => list.category === category);
+                    if (matchingList) {
+                        aggregator.push({
+                            studyId: matchingList.studyId,
+                            sampleListId: matchingList.sampleListId,
+                            sampleId: undefined
+                        } as SamplesSpecificationElement);
+                    }
+                    return aggregator;
+                }, []);
 
-               return specs;
-           }
-       }
+                return specs;
+            }
+        }
     });
 
     readonly studyToMutationMolecularProfile = remoteData<{[studyId: string]: MolecularProfile}>({
@@ -1229,9 +1243,23 @@ export class ResultsViewPageStore {
         }
     }, {});
 
+    readonly virtualStudies = remoteData(async ()=>{
+        return ServerConfigHelpers.sessionServiceIsEnabled() ? getVirtualStudies(this.cohortIdsList) : [];
+    });
+
     readonly studyIds = remoteData({
+        await:()=>[
+            this.virtualStudies
+        ],
         invoke: ()=>{
-            return Promise.resolve(this.cohortIdsList.slice());
+            let physicalStudies:string[];
+            if (this.virtualStudies.result!.length > 0) {
+                // we want to replace virtual studies with their underlying physical studies
+                physicalStudies = substitutePhysicalStudiesForVirtualStudies(this.cohortIdsList, this.virtualStudies.result!);
+            } else {
+                physicalStudies = this.cohortIdsList.slice();
+            }
+            return Promise.resolve(physicalStudies);
         }
     });
 
