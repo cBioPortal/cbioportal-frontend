@@ -36,12 +36,12 @@ import setWindowVariable from "../../../shared/lib/setWindowVariable";
 import autobind from "autobind-decorator";
 import fileDownload from 'react-file-download';
 import onMobxPromise from "../../../shared/lib/onMobxPromise";
-import {logicalOr} from "../../../shared/lib/LogicUtils";
 import {SpecialAttribute} from "../../../shared/cache/OncoprintClinicalDataCache";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import ScrollBar from "../../../shared/components/Scrollbar/ScrollBar";
 import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
 import {getTablePlotDownloadData} from "../../../shared/components/plots/TablePlotUtils";
+import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 
 enum EventKey {
     horz_logScale,
@@ -1365,142 +1365,143 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @computed get plot() {
         const promises = [this.plotType, this.horzAxisDataPromise, this.vertAxisDataPromise, this.horzLabel, this.vertLabel];
-        if (logicalOr(promises.map(p=>p.isPending))) {
-            return <LoadingIndicator isLoading={true} center={true} size={"big"}/>;
-        } else if (logicalOr(promises.map(p=>p.isError))) {
-            return <span>Error loading plot data.</span>;
-        } else {
-            // all complete
-            const plotType = this.plotType.result!;
-            let plotElt:any = null;
-            switch (plotType) {
-                case PlotType.Table:
-                    plotElt = (
-                        <TablePlot
-                            svgId={SVG_ID}
-                            horzData={(this.horzAxisDataPromise.result! as IStringAxisData).data}
-                            vertData={(this.vertAxisDataPromise.result! as IStringAxisData).data}
-                            horzCategoryOrder={(this.horzAxisDataPromise.result! as IStringAxisData).categoryOrder}
-                            vertCategoryOrder={(this.vertAxisDataPromise.result! as IStringAxisData).categoryOrder}
-                            minCellWidth={35}
-                            minCellHeight={35}
-                            minChartWidth={PLOT_SIDELENGTH}
-                            minChartHeight={PLOT_SIDELENGTH}
-                            axisLabelX={this.horzLabel.result!}
-                            axisLabelY={this.vertLabel.result!}
-                        />
-                    );
-                    break;
-                case PlotType.ScatterPlot:
-                    if (this.scatterPlotData.isComplete) {
+        const groupStatus = getMobxPromiseGroupStatus(...promises);
+        switch (groupStatus) {
+            case "pending":
+                return <LoadingIndicator isLoading={true} center={true} size={"big"}/>;
+            case "error":
+                return <span>Error loading plot data.</span>;
+            default:
+                const plotType = this.plotType.result!;
+                let plotElt:any = null;
+                switch (plotType) {
+                    case PlotType.Table:
                         plotElt = (
-                            <PlotsTabScatterPlot
+                            <TablePlot
                                 svgId={SVG_ID}
-                                axisLabelX={this.horzLabel.result! + this.horzLabelLogSuffix}
-                                axisLabelY={this.vertLabel.result! + this.vertLabelLogSuffix}
-                                data={this.scatterPlotData.result}
-                                size={scatterPlotSize}
-                                chartWidth={PLOT_SIDELENGTH}
-                                chartHeight={PLOT_SIDELENGTH}
-                                tooltip={this.scatterPlotTooltip}
-                                highlight={this.scatterPlotHighlight}
-                                logX={this.horzSelection.logScale}
-                                logY={this.vertSelection.logScale}
-                                fill={this.scatterPlotFill}
-                                stroke={this.scatterPlotStroke}
-                                strokeOpacity={this.scatterPlotStrokeOpacity}
-                                zIndexSortBy={this.zIndexSortBy}
-                                symbol="circle"
-                                fillOpacity={this.scatterPlotFillOpacity}
-                                strokeWidth={this.scatterPlotStrokeWidth}
-                                useLogSpaceTicks={true}
-                                legendData={scatterPlotLegendData(
-                                    this.scatterPlotData.result, this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated
-                                )}
+                                horzData={(this.horzAxisDataPromise.result! as IStringAxisData).data}
+                                vertData={(this.vertAxisDataPromise.result! as IStringAxisData).data}
+                                horzCategoryOrder={(this.horzAxisDataPromise.result! as IStringAxisData).categoryOrder}
+                                vertCategoryOrder={(this.vertAxisDataPromise.result! as IStringAxisData).categoryOrder}
+                                minCellWidth={35}
+                                minCellHeight={35}
+                                minChartWidth={PLOT_SIDELENGTH}
+                                minChartHeight={PLOT_SIDELENGTH}
+                                axisLabelX={this.horzLabel.result!}
+                                axisLabelY={this.vertLabel.result!}
                             />
                         );
                         break;
-                    } else if (this.scatterPlotData.isError) {
-                        return <span>Error loading plot data.</span>;
-                    } else {
-                        return <LoadingIndicator isLoading={true} center={true} size={"big"}/>;
-                    }
-                case PlotType.BoxPlot:
-                    if (this.boxPlotData.isComplete) {
-                        const horizontal = this.boxPlotData.result.horizontal;
-                        plotElt = (
-                            <PlotsTabBoxPlot
-                                svgId={SVG_ID}
-                                domainPadding={75}
-                                boxWidth={this.boxPlotBoxWidth}
-                                axisLabelX={this.horzLabel.result! + (horizontal ? this.horzLabelLogSuffix : "")}
-                                axisLabelY={this.vertLabel.result! + (!horizontal ? this.vertLabelLogSuffix : "")}
-                                data={this.boxPlotData.result.data}
-                                chartBase={550}
-                                tooltip={this.boxPlotTooltip}
-                                highlight={this.scatterPlotHighlight}
-                                horizontal={horizontal}
-                                logScale={horizontal ? this.horzSelection.logScale : this.vertSelection.logScale}
-                                size={scatterPlotSize}
-                                fill={this.scatterPlotFill}
-                                stroke={this.scatterPlotStroke}
-                                strokeOpacity={this.scatterPlotStrokeOpacity}
-                                zIndexSortBy={this.zIndexSortBy}
-                                symbol="circle"
-                                fillOpacity={this.scatterPlotFillOpacity}
-                                strokeWidth={this.scatterPlotStrokeWidth}
-                                useLogSpaceTicks={true}
-                                legendData={scatterPlotLegendData(
-                                    _.flatten(this.boxPlotData.result.data.map(d=>d.data)), this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated
-                                )}
-                                 legendLocationWidthThreshold={550}
-                            />
-                        );
-                        break;
-                    } else if (this.boxPlotData.isError) {
-                        return <span>Error loading plot data.</span>;
-                    } else {
-                        return <LoadingIndicator isLoading={true} center={true} size={"big"}/>;
-                    }
-                default:
-                    return <span>Not implemented yet</span>
-            }
-            return (
-                <div>
-                    <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative">
-                        <ScrollBar style={{position:'relative', top:-5}} getScrollEl={this.getScrollPane} />
-                        {this.plotExists && (
-                            <DownloadControls
-                                getSvg={this.getSvg}
-                                filename={this.downloadFilename}
-                                additionalRightButtons={[{
-                                    key:"Data",
-                                    content:<span>Data <i className="fa fa-cloud-download" aria-hidden="true"/></span>,
-                                    onClick:this.downloadData,
-                                    disabled: !this.props.store.entrezGeneIdToGene.isComplete
-                                }]}
-                                dontFade={true}
-                                style={{position:'absolute', right:10, top:10 }}
-                                collapse={true}
-                            />
-                        )}
-                            <div ref={this.assignScrollPaneRef} style={{position:"relative", display:"inline-block"}}>
-                            {plotElt}
-                            </div>
-                    </div>
-                    {this.mutationDataCanBeShown && (
-                        <div style={{marginTop:5}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
-                    )}
-                    {/*this.mutationProfileDuplicateSamplesReport.isComplete && this.mutationProfileDuplicateSamplesReport.result.showMessage && (
-                        <div className="alert alert-info" style={{marginTop:5, padding: 7}}>
-                            Notice: With Mutation profiles, there is one data point per mutation type, per sample. In
-                            this plot, there are {this.mutationProfileDuplicateSamplesReport.result.numSamples} samples with more than
-                            one type of mutation, leading to {this.mutationProfileDuplicateSamplesReport.result.numSurplusPoints} extra
-                            data points.
+                    case PlotType.ScatterPlot:
+                        if (this.scatterPlotData.isComplete) {
+                            plotElt = (
+                                <PlotsTabScatterPlot
+                                    svgId={SVG_ID}
+                                    axisLabelX={this.horzLabel.result! + this.horzLabelLogSuffix}
+                                    axisLabelY={this.vertLabel.result! + this.vertLabelLogSuffix}
+                                    data={this.scatterPlotData.result}
+                                    size={scatterPlotSize}
+                                    chartWidth={PLOT_SIDELENGTH}
+                                    chartHeight={PLOT_SIDELENGTH}
+                                    tooltip={this.scatterPlotTooltip}
+                                    highlight={this.scatterPlotHighlight}
+                                    logX={this.horzSelection.logScale}
+                                    logY={this.vertSelection.logScale}
+                                    fill={this.scatterPlotFill}
+                                    stroke={this.scatterPlotStroke}
+                                    strokeOpacity={this.scatterPlotStrokeOpacity}
+                                    zIndexSortBy={this.zIndexSortBy}
+                                    symbol="circle"
+                                    fillOpacity={this.scatterPlotFillOpacity}
+                                    strokeWidth={this.scatterPlotStrokeWidth}
+                                    useLogSpaceTicks={true}
+                                    legendData={scatterPlotLegendData(
+                                        this.scatterPlotData.result, this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated
+                                    )}
+                                />
+                            );
+                            break;
+                        } else if (this.scatterPlotData.isError) {
+                            return <span>Error loading plot data.</span>;
+                        } else {
+                            return <LoadingIndicator isLoading={true} center={true} size={"big"}/>;
+                        }
+                    case PlotType.BoxPlot:
+                        if (this.boxPlotData.isComplete) {
+                            const horizontal = this.boxPlotData.result.horizontal;
+                            plotElt = (
+                                <PlotsTabBoxPlot
+                                    svgId={SVG_ID}
+                                    domainPadding={75}
+                                    boxWidth={this.boxPlotBoxWidth}
+                                    axisLabelX={this.horzLabel.result! + (horizontal ? this.horzLabelLogSuffix : "")}
+                                    axisLabelY={this.vertLabel.result! + (!horizontal ? this.vertLabelLogSuffix : "")}
+                                    data={this.boxPlotData.result.data}
+                                    chartBase={550}
+                                    tooltip={this.boxPlotTooltip}
+                                    highlight={this.scatterPlotHighlight}
+                                    horizontal={horizontal}
+                                    logScale={horizontal ? this.horzSelection.logScale : this.vertSelection.logScale}
+                                    size={scatterPlotSize}
+                                    fill={this.scatterPlotFill}
+                                    stroke={this.scatterPlotStroke}
+                                    strokeOpacity={this.scatterPlotStrokeOpacity}
+                                    zIndexSortBy={this.zIndexSortBy}
+                                    symbol="circle"
+                                    fillOpacity={this.scatterPlotFillOpacity}
+                                    strokeWidth={this.scatterPlotStrokeWidth}
+                                    useLogSpaceTicks={true}
+                                    legendData={scatterPlotLegendData(
+                                        _.flatten(this.boxPlotData.result.data.map(d=>d.data)), this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated
+                                    )}
+                                     legendLocationWidthThreshold={550}
+                                />
+                            );
+                            break;
+                        } else if (this.boxPlotData.isError) {
+                            return <span>Error loading plot data.</span>;
+                        } else {
+                            return <LoadingIndicator isLoading={true} center={true} size={"big"}/>;
+                        }
+                    default:
+                        return <span>Not implemented yet</span>
+                }
+                return (
+                    <div>
+                        <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative">
+                            <ScrollBar style={{position:'relative', top:-5}} getScrollEl={this.getScrollPane} />
+                            {this.plotExists && (
+                                <DownloadControls
+                                    getSvg={this.getSvg}
+                                    filename={this.downloadFilename}
+                                    additionalRightButtons={[{
+                                        key:"Data",
+                                        content:<span>Data <i className="fa fa-cloud-download" aria-hidden="true"/></span>,
+                                        onClick:this.downloadData,
+                                        disabled: !this.props.store.entrezGeneIdToGene.isComplete
+                                    }]}
+                                    dontFade={true}
+                                    style={{position:'absolute', right:10, top:10 }}
+                                    collapse={true}
+                                />
+                            )}
+                                <div ref={this.assignScrollPaneRef} style={{position:"relative", display:"inline-block"}}>
+                                {plotElt}
+                                </div>
                         </div>
-                    )*/}
-                </div>
-            );
+                        {this.mutationDataCanBeShown && (
+                            <div style={{marginTop:5}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
+                        )}
+                        {/*this.mutationProfileDuplicateSamplesReport.isComplete && this.mutationProfileDuplicateSamplesReport.result.showMessage && (
+                            <div className="alert alert-info" style={{marginTop:5, padding: 7}}>
+                                Notice: With Mutation profiles, there is one data point per mutation type, per sample. In
+                                this plot, there are {this.mutationProfileDuplicateSamplesReport.result.numSamples} samples with more than
+                                one type of mutation, leading to {this.mutationProfileDuplicateSamplesReport.result.numSurplusPoints} extra
+                                data points.
+                            </div>
+                        )*/}
+                    </div>
+                );
         }
     }
 
