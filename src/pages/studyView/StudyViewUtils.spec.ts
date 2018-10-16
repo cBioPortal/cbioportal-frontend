@@ -1001,7 +1001,7 @@ describe('StudyViewUtils', () => {
         it ('picks predefined colors for known clinical attribute values', () => {
             const colors = pickClinicalDataColors(clinicalDataCountWithFixedValues);
 
-            assert.equal(colors["TRUE"], "#66aa00");
+            assert.equal(colors["TRUE"], "#66AA00");
             assert.equal(colors["FALSE"], "#666666");
             assert.equal(colors["NA"], "#CCCCCC");
         });
@@ -1009,23 +1009,23 @@ describe('StudyViewUtils', () => {
         it ('picks predefined colors for known clinical attribute values in mixed letter case', () => {
             const colors = pickClinicalDataColors(clinicalDataCountWithFixedMixedCaseValues);
 
-            assert.equal(colors["Yes"], "#66aa00");
+            assert.equal(colors["Yes"], "#66AA00");
             assert.equal(colors["No"], "#666666");
             assert.equal(colors["Na"], "#CCCCCC");
             assert.equal(colors["Male"], "#2986E2");
-            assert.equal(colors["F"], "#dc3912");
+            assert.equal(colors["F"], "#DC3912");
         });
 
         it ('does not pick already picked colors again for non-fixed values', () => {
-            const availableColors = ["#66aa00", "#666666", "#2986e2", "#CCCCCC", "#dc3912", "#f88508", "#109618"]
+            const availableColors = ["#66AA00", "#666666", "#2986E2", "#CCCCCC", "#DC3912", "#f88508", "#109618"]
 
             const colors = pickClinicalDataColors(clinicalDataCountWithBothFixedAndOtherValues, availableColors);
 
-            assert.equal(colors["Yes"], "#66aa00");
+            assert.equal(colors["Yes"], "#66AA00");
             assert.equal(colors["NO"], "#666666");
             assert.equal(colors["na"], "#CCCCCC");
-            assert.equal(colors["maybe"], "#2986e2");
-            assert.equal(colors["WHY"], "#dc3912");
+            assert.equal(colors["maybe"], "#2986E2");
+            assert.equal(colors["WHY"], "#DC3912");
         });
     });
 
