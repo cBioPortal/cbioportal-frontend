@@ -1,5 +1,6 @@
 ---
-engines:
+version: 2
+plugins:
   csslint:
     enabled: true
   duplication:
@@ -12,10 +13,8 @@ engines:
     channel: eslint-2
   fixme:
     enabled: true
-ratings:
-  paths:
-  - "**.css"
-  - "**.js"
-  - "**.jsx"
-exclude_paths:
+  tslint:
+    enabled: true
+exclude_patterns:
 - dist/
+- node_modules/
