@@ -112,7 +112,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     public render() {
 
         if (this.props.data.length === 0) {
-            return <div>No data/result available</div>;
+            return <div className={'alert alert-info'}>No data/result available</div>;
         }
         
         return (
