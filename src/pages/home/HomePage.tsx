@@ -11,6 +11,7 @@ import QueryAndDownloadTabs from "../../shared/components/query/QueryAndDownload
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import RightBar from "../../shared/components/rightbar/RightBar";
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
+import {SampleList} from "../../shared/api/generated/CBioPortalAPI";
 import setWindowVariable from "../../shared/lib/setWindowVariable";
 
 (Chart as any).plugins.register({
@@ -39,6 +40,13 @@ export function createQueryStore() {
         // normalize this
         query.cancer_study_list = query.cancer_study_list || query.cancer_study_id;
         delete query.cancer_study_id;
+
+        // // sometimes the submitted case_set_id is not actually a case_set_id but
+        // // a category of case set ids (e.g. selected studies > 1 and case category selected)
+        // // in that case, note that on the query
+        // if (["w_mut","w_cna","w_mut_cna"].includes(query.case_set_id)) {
+        //     query.sample_list_category = query.case_set_id;
+        // }
 
         // need to come up with better place to put app globals (things used by different routes)
         win.currentQueryStore = queryStore;
