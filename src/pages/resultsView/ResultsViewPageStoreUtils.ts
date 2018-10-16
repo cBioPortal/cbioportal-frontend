@@ -23,6 +23,7 @@ import _ from "lodash";
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { VirtualStudy } from "shared/model/VirtualStudy";
 import client from "shared/api/cbioportalClientInstance";
+import {logicalOr} from "../../shared/lib/LogicUtils";
 
 type CustomDriverAnnotationReport = {
     hasBinary: boolean,
@@ -383,4 +384,16 @@ export function getMolecularProfiles(query:any){
     molecularProfiles = _.uniq(molecularProfiles);
 
     return molecularProfiles;
+}
+
+export function doesQueryHaveCNSegmentData(
+    detailedSamples:Sample[]
+) {
+    if (detailedSamples.length === 0) {
+        return false;
+    } else if (!("copyNumberSegmentPresent" in detailedSamples[0])) {
+        throw "Passed non-detailed sample projection when detailed expected.";
+    } else {
+        return logicalOr(detailedSamples, s=>!!s.copyNumberSegmentPresent);
+    }
 }
