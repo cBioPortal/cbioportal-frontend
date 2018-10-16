@@ -45,6 +45,16 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
                 <div style={{padding:4}}/>
                 {this.input()}
                 <div style={{padding:4}}/>
+                <Loader isLoading={this.store.mutations.isPending} children={
+                    <span style={{paddingLeft:20}}>Annotating mutations with{' '}
+                        <a
+                            href={"https://www.genomenexus.org"}
+                            target="_blank"
+                        >
+                        Genome Nexus
+                        </a>
+                    </span>
+                } />
                 {this.store.mutationsNotAnnotated.length > 0 && this.inputParseWarning()}
                 {this.store.mutationData && this.mainTabs()}
             </div>

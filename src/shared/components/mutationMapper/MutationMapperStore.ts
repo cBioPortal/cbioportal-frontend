@@ -54,10 +54,10 @@ export default class MutationMapperStore
         }
 
         if (this.config.filterMutationsBySelectedTranscript && this.indexedVariantAnnotations.result && !_.isEmpty(this.indexedVariantAnnotations.result) && this.activeTranscript) {
-            if (this.transcriptsWithAnnotations && this.transcriptsWithAnnotations.length > 0 && !this.transcriptsWithAnnotations.includes(this.activeTranscript)) {
+            if (this.transcriptsWithAnnotations.result && this.transcriptsWithAnnotations.result.length > 0 && !this.transcriptsWithAnnotations.result.includes(this.activeTranscript)) {
                 // if there are annotated transcripts and activeTranscipt does
                 // not have any, change the active transcript
-                this.activeTranscript = this.transcriptsWithAnnotations[0];
+                this.activeTranscript = this.transcriptsWithAnnotations.result[0];
             }
             return getMutationsToTranscriptId(this.getMutations(), this.activeTranscript, this.indexedVariantAnnotations.result);
         } else {
@@ -139,8 +139,8 @@ export default class MutationMapperStore
             this.indexedVariantAnnotations,
         ],
         invoke: async()=>{
-            if (this.allTranscripts.result && this.indexedVariantAnnotations.result) {
-                const domainRanges = [].concat.apply([], _.compact(this.transcriptsWithProteinLength.map((transcriptId:string) => this.transcriptsByTranscriptId[transcriptId].pfamDomains)));
+            if (this.allTranscripts.result && this.indexedVariantAnnotations.result && this.transcriptsWithProteinLength.result && this.transcriptsWithProteinLength.result.length ) {
+                const domainRanges = [].concat.apply([], _.compact(this.transcriptsWithProteinLength.result.map((transcriptId:string) => this.transcriptsByTranscriptId[transcriptId].pfamDomains)));
                 return fetchPfamDomainData(domainRanges.map((x: PfamDomainRange) => x.pfamDomainId));
             } else {
                 return undefined;
@@ -177,36 +177,65 @@ export default class MutationMapperStore
         }
     }, undefined);
 
-    @computed get transcriptsWithAnnotations(): string[] {
-        if (this.indexedVariantAnnotations.result && this.allTranscripts.result && this.transcriptsWithProteinLength.length > 0) {
-            // ignore transcripts without protein length
-            // TODO: better solution is to show only mutations table, not
-            // lollipop plot for those transcripts
-            const transcripts:string[] = _.uniq([].concat.apply([], (uniqueGenomicLocations(this.getMutations()).map((gl:GenomicLocation) => {
-                return this.indexedVariantAnnotations.result && this.indexedVariantAnnotations.result[genomicLocationString(gl)]? this.indexedVariantAnnotations.result[genomicLocationString(gl)].transcript_consequences.map((tc:TranscriptConsequence) => tc.transcript_id).filter((transcriptId: string) => this.transcriptsWithProteinLength.includes(transcriptId)) : [];
-            }))));
-            // makes sure the annotations are actually of the form we are
-            // displaying (e.g. nonsynonymous)
-            return transcripts.filter((t:string) => (
-                getMutationsToTranscriptId(this.getMutations(),
-                                           t,
-                                           this.indexedVariantAnnotations.result!!).length > 0
-            ));
-        } else {
-            return [];
+    readonly transcriptsWithAnnotations = remoteData<string[] | undefined>({
+        await: () => [
+            this.indexedVariantAnnotations,
+            this.allTranscripts,
+            this.transcriptsWithProteinLength
+        ],
+        invoke: async()=>{
+            if (this.indexedVariantAnnotations.result && this.allTranscripts.result && this.transcriptsWithProteinLength.result && this.transcriptsWithProteinLength.result.length > 0) {
+                // ignore transcripts without protein length
+                // TODO: better solution is to show only mutations table, not
+                // lollipop plot for those transcripts
+                const transcripts:string[] = _.uniq([].concat.apply([], uniqueGenomicLocations(this.getMutations()).map(
+                    (gl:GenomicLocation) => {
+                        if (this.indexedVariantAnnotations.result && this.indexedVariantAnnotations.result[genomicLocationString(gl)]) {
+                            return this.indexedVariantAnnotations.result[genomicLocationString(gl)].transcript_consequences.map(
+                                (tc:TranscriptConsequence) => tc.transcript_id
+                            ).filter(
+                                (transcriptId: string) => this.transcriptsWithProteinLength.result!!.includes(transcriptId)
+                            );
+                        } else {
+                            return [];
+                        }
+                })));
+                // makes sure the annotations are actually of the form we are
+                // displaying (e.g. nonsynonymous)
+                return transcripts.filter((t:string) => (
+                    getMutationsToTranscriptId(this.getMutations(),
+                                            t,
+                                            this.indexedVariantAnnotations.result!!).length > 0
+                ));
+            } else {
+                return [];
+            }
+        },
+        onError: (err: Error) => {
+            throw new Error("Failed to get transcriptsWithAnnotations");
         }
-    }
+    }, undefined);
 
-    @computed get transcriptsWithProteinLength(): string[] {
-        if (this.indexedVariantAnnotations.result && this.allTranscripts.result && this.canonicalTranscript.result) {
-            // ignore transcripts without protein length
-            // TODO: better solution is to show only mutations table, not
-            // lollipop plot for those transcripts
-            return _.compact(this.allTranscripts.result.map((et: EnsemblTranscript) => et.proteinLength && et.transcriptId));
-        } else {
-            return [];
+    readonly transcriptsWithProteinLength = remoteData<string[] | undefined>({
+        await: () => [
+            this.indexedVariantAnnotations,
+            this.allTranscripts,
+            this.canonicalTranscript
+        ],
+        invoke: async()=>{
+            if (this.indexedVariantAnnotations.result && this.allTranscripts.result && this.canonicalTranscript.result) {
+                // ignore transcripts without protein length
+                // TODO: better solution is to show only mutations table, not
+                // lollipop plot for those transcripts
+                return _.compact(this.allTranscripts.result.map((et: EnsemblTranscript) => et.proteinLength && et.transcriptId));
+            } else {
+                return [];
+            }
+        },
+        onError: (err: Error) => {
+            throw new Error("Failed to get transcriptsWithProteinLength");
         }
-    }
+    }, undefined);
 
     @computed get isoformOverrideSource(): string {
         return this.config.isoformOverrideSource || "uniprot";
@@ -243,9 +272,9 @@ export default class MutationMapperStore
     }
 
     @computed get mutationsByTranscriptId(): {[transcriptId:string]: Mutations[]} {
-        if (this.indexedVariantAnnotations.result) {
+        if (this.indexedVariantAnnotations.result && this.transcriptsWithAnnotations.result) {
             return _.fromPairs(
-                this.transcriptsWithAnnotations.map((t:string) => (
+                this.transcriptsWithAnnotations.result.map((t:string) => (
                     [t,
                     getMutationsToTranscriptId(this.getMutations(),
                                                t,

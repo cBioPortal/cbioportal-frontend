@@ -1,5 +1,8 @@
 import * as React from 'react';
-import {observer} from "mobx-react";
+import Select from 'react-select';
+import _ from 'lodash';
+import autobind from "autobind-decorator";
+import {observer, Observer} from "mobx-react";
 import {computed, action, observable} from "mobx";
 // tslint:disable-next-line:no-import-side-effect
 import 'react-select/dist/react-select.css';
@@ -20,8 +23,6 @@ import MutationMapperStore from "./MutationMapperStore";
 import { DropdownButton, MenuItem } from 'react-bootstrap';
 import { EnsemblTranscript } from 'shared/api/generated/GenomeNexusAPI';
 import Mutations from 'pages/resultsView/mutation/Mutations';
-import Select from 'react-select';
-import _ from 'lodash';
 
 // Anything from App config will be included in mutation mapper config
 export interface IMutationMapperConfig {
@@ -71,7 +72,6 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
         };
     }
 
-    // tslint:disable-next-line:cyclomatic-complexity
     @computed get geneSummary():JSX.Element {
         const hugoGeneSymbol = this.props.store.gene.hugoGeneSymbol;
         const uniprotId = this.props.store.uniprotId.result;
@@ -87,26 +87,9 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
         return (
             <div style={{'paddingBottom':10}}>
                 <h4>{hugoGeneSymbol}</h4>
-                {(showDropDown && showOnlyAnnotatedTranscriptsInDropdown && store.indexedVariantAnnotations.result && Object.keys(store.indexedVariantAnnotations.result).length > 0 && store.transcriptsWithAnnotations && canonicalTranscriptId) && (
-                    // annotating on the fly, show only annotated mutations
-                    <div style={{paddingBottom:10}}>
-                        {this.renderDropdownTranscripts(store.activeTranscript || canonicalTranscriptId,
-                                                        store.transcriptsWithAnnotations,
-                                                        canonicalTranscriptId,
-                                                        store.transcriptsByTranscriptId,
-                                                        store.mutationsByTranscriptId)}
-                    </div>
-                )}
-                {(showDropDown && !showOnlyAnnotatedTranscriptsInDropdown && store.transcriptsWithProteinLength && store.transcriptsWithProteinLength.length > 0 && canonicalTranscriptId) && (
-                    // using existing annotations, show all transcripts with
-                    // protein length
-                    <div style={{paddingBottom:10}}>
-                        {this.renderDropdownTranscripts(store.activeTranscript || canonicalTranscriptId,
-                                                        store.transcriptsWithProteinLength,
-                                                        canonicalTranscriptId,
-                                                        store.transcriptsByTranscriptId)}
-                    </div>
-                )}
+                <Observer>
+                    {this.renderDropdown}
+                </Observer>
                 <div>
                     <span data-test="GeneSummaryRefSeq">{'RefSeq: '}
                         {refseqMrnaId? (
@@ -169,7 +152,62 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
         );
     }
 
-    renderDropdownTranscripts(activeTranscript:string ,
+    @autobind
+    private renderDropdown() {
+        const hugoGeneSymbol = this.props.store.gene.hugoGeneSymbol;
+        const uniprotId = this.props.store.uniprotId.result;
+        const store = this.props.store;
+        const showDropDown = this.props.showDropDown;
+        const showOnlyAnnotatedTranscriptsInDropdown = this.props.showOnlyAnnotatedTranscriptsInDropdown;
+        const canonicalTranscriptId = store.canonicalTranscript.result &&
+            store.canonicalTranscript.result.transcriptId;
+        const transcript = store.activeTranscript && (store.activeTranscript === canonicalTranscriptId)? store.canonicalTranscript.result : store.transcriptsByTranscriptId[store.activeTranscript!!];
+
+        if (!showDropDown) {
+            return <span></span>;
+        } else if (showOnlyAnnotatedTranscriptsInDropdown) {
+            const isLoading = store.transcriptsWithProteinLength.isPending || store.transcriptsWithAnnotations.isPending || store.canonicalTranscript.isPending;
+            const requiredData = store.indexedVariantAnnotations.result &&
+                                 Object.keys(store.indexedVariantAnnotations.result).length > 0 &&
+                                 canonicalTranscriptId &&
+                                 store.transcriptsWithAnnotations.result &&
+                                 store.transcriptsWithAnnotations.result.length > 0;
+
+            return (
+                <div style={{paddingBottom:10}}>
+                    <LoadingIndicator isLoading={isLoading} />
+                    {(!isLoading && requiredData) && (
+                        this.getDropdownTranscripts(store.activeTranscript || canonicalTranscriptId!!,
+                                                    store.transcriptsWithAnnotations.result!!,
+                                                    canonicalTranscriptId!!,
+                                                    store.transcriptsByTranscriptId,
+                                                    store.mutationsByTranscriptId)
+
+                    )}
+                </div>
+            );
+        } else {
+            // using existing annotations, show all transcripts with
+            // protein length
+            const isLoading = store.transcriptsWithProteinLength.isPending || store.canonicalTranscript.isPending;
+            const requiredData = store.transcriptsWithProteinLength.result &&
+                                 store.transcriptsWithProteinLength.result.length > 0 &&
+                                 canonicalTranscriptId;
+            return (
+                <div style={{paddingBottom:10}}>
+                    <LoadingIndicator isLoading={isLoading} />
+                    {(!isLoading && requiredData) && (
+                        this.getDropdownTranscripts(store.activeTranscript || canonicalTranscriptId!!,
+                                                    store.transcriptsWithProteinLength.result!!,
+                                                    canonicalTranscriptId!!,
+                                                    store.transcriptsByTranscriptId)
+                    )}
+                </div>
+            );
+        }
+    }
+
+    private getDropdownTranscripts(activeTranscript:string ,
                               allTranscripts:string[],
                               canonicalTranscript:string,
                               transcriptsByTranscriptId:{[transcriptId:string]: EnsemblTranscript},
