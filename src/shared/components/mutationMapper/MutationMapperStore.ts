@@ -48,23 +48,32 @@ export default class MutationMapperStore
     public get mutations() {
         const canonicalTranscriptId = this.canonicalTranscript.result &&
             this.canonicalTranscript.result.transcriptId;
-        
-        if (canonicalTranscriptId && this.activeTranscript === undefined) {
-            this.activeTranscript = canonicalTranscriptId;
-        }
 
-        if (this.config.filterMutationsBySelectedTranscript && this.indexedVariantAnnotations.result && !_.isEmpty(this.indexedVariantAnnotations.result) && this.activeTranscript) {
-            if (this.transcriptsWithAnnotations.result && this.transcriptsWithAnnotations.result.length > 0 && !this.transcriptsWithAnnotations.result.includes(this.activeTranscript)) {
-                // if there are annotated transcripts and activeTranscipt does
-                // not have any, change the active transcript
-                this.activeTranscript = this.transcriptsWithAnnotations.result[0];
-            }
-            return getMutationsToTranscriptId(this.getMutations(), this.activeTranscript, this.indexedVariantAnnotations.result);
+        if (this.canonicalTranscript.isPending || (this.config.filterMutationsBySelectedTranscript && (this.transcriptsWithAnnotations.isPending || this.indexedVariantAnnotations.isPending))) {
+            return [];
         } else {
-            return this.getMutations();
+            if (this.config.filterMutationsBySelectedTranscript) {
+               if (this.transcriptsWithAnnotations.result && this.transcriptsWithAnnotations.result.length > 0 && canonicalTranscriptId && !this.transcriptsWithAnnotations.result.includes(canonicalTranscriptId)) {
+                    // if there are annotated transcripts and activeTranscipt does
+                    // not have any, change the active transcript
+                    this.activeTranscript = this.transcriptsWithAnnotations.result[0];
+               } else {
+                   this.activeTranscript = canonicalTranscriptId;
+               }
+               if (this.activeTranscript && this.indexedVariantAnnotations.result && !_.isEmpty(this.indexedVariantAnnotations.result)) {
+                   return getMutationsToTranscriptId(this.getMutations(), this.activeTranscript, this.indexedVariantAnnotations.result);
+               } else {
+                   // this shouldn't happen unless error occurs with annotation
+                   // TODO: handle error in annotation more gracefully instead
+                   // of just showing all mutations
+                   return this.getMutations();
+               }
+            } else {
+                this.activeTranscript = canonicalTranscriptId;
+                return this.getMutations();
+            }
         }
     }
-
 
     readonly mutationData = remoteData({
         await: () => [
