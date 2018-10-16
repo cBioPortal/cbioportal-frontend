@@ -1277,19 +1277,21 @@ export class StudyViewPageStore {
             let mutationCountFlag = false;
             let fractionGenomeAlteredFlag = false;
 
-            clinicalAttributes.forEach(obj => {
-                if (obj.clinicalAttributeId === OS_STATUS) {
-                    osStatusFlag = true;
-                } else if (obj.clinicalAttributeId === OS_MONTHS) {
-                    osMonthsFlag = true;
-                } else if (obj.clinicalAttributeId === DFS_STATUS) {
-                    dfsStatusFlag = true;
-                } else if (obj.clinicalAttributeId === DFS_MONTHS) {
-                    dfsMonthsFlag = true;
-                } else  if (MUTATION_COUNT === obj.clinicalAttributeId) {
-                    mutationCountFlag = true;
-                } else  if (FRACTION_GENOME_ALTERED === obj.clinicalAttributeId) {
-                    fractionGenomeAlteredFlag = true;
+            clinicalAttributes.forEach((obj:ClinicalAttribute) => {
+                if (obj.priority !== "0") {
+                    if (obj.clinicalAttributeId === OS_STATUS) {
+                        osStatusFlag = true;
+                    } else if (obj.clinicalAttributeId === OS_MONTHS) {
+                        osMonthsFlag = true;
+                    } else if (obj.clinicalAttributeId === DFS_STATUS) {
+                        dfsStatusFlag = true;
+                    } else if (obj.clinicalAttributeId === DFS_MONTHS) {
+                        dfsMonthsFlag = true;
+                    } else if (MUTATION_COUNT === obj.clinicalAttributeId) {
+                        mutationCountFlag = true;
+                    } else if (FRACTION_GENOME_ALTERED === obj.clinicalAttributeId) {
+                        fractionGenomeAlteredFlag = true;
+                    }
                 }
                 let uniqueKey = getClinicalAttributeUniqueKey(obj);
                 let chartType = getDefaultChartTypeByClinicalAttribute(obj);
@@ -1484,7 +1486,7 @@ export class StudyViewPageStore {
         await: () => [this.clinicalAttributes],
         invoke: async () => {
             let queriedAttributes = this.clinicalAttributes.result.map(attr => {
-                attr.priority = _.isNumber(attr.priority) ? attr.priority : "1";
+                attr.priority = _.isNumber(Number(attr.priority)) ? attr.priority : "1";
                 if(attr.priority === '1') {
                     attr.priority = getDefaultPriorityByUniqueKey(getClinicalAttributeUniqueKey(attr)).toString();
                 }
@@ -1494,7 +1496,7 @@ export class StudyViewPageStore {
             let sampleAttributeCount = 0;
             let patientAttributeCount = 0;
             let filterAttributes: ClinicalAttribute[] = []
-            // Todo: its a temporary logic to show limited charts initially(10 sample and 10 patient attribute charts)
+            // Todo: its a temporary logic to show NUMBER_OF_CHARTS_SHOWING charts initially
             // this logic will be updated later
             queriedAttributes.sort((a, b) => {
                 // Sort by priority first
@@ -1516,6 +1518,9 @@ export class StudyViewPageStore {
                 return 0;
             }).forEach(attribute => {
                 const priority = Number(attribute.priority);
+                if(priority === 0) {
+                    return;
+                }
                 if (attribute.patientAttribute) {
                     if (patientAttributeCount < NUMBER_OF_CHARTS_SHOWING || priority > DEFAULT_PRIORITY) {
                         filterAttributes.push(attribute)
