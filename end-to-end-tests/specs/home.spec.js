@@ -3,6 +3,7 @@ var expect = require('chai').expect;
 var waitForOncoprint = require('./specUtils').waitForOncoprint;
 var goToUrlAndSetLocalStorage = require('./specUtils').goToUrlAndSetLocalStorage;
 var useExternalFrontend = require('./specUtils').useExternalFrontend;
+var waitForNumberOfStudyCheckboxes = require('./specUtils').waitForNumberOfStudyCheckboxes;
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
@@ -43,9 +44,7 @@ describe('homepage', function() {
 
         input.setValue('tract');
 
-        browser.pause(500);
-
-        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 2);
+        waitForNumberOfStudyCheckboxes(2);
 
     });
 
@@ -275,10 +274,7 @@ describe('single study query', function() {
 
             input.setValue('ovarian nature 2011');
 
-            browser.pause(500);
-
-            // should only be one element
-            assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+            waitForNumberOfStudyCheckboxes(1);
 
             var checkBox = $('[data-test="StudySelect"]');
 
@@ -586,9 +582,7 @@ describe('oncoprint', function() {
             var inputSelector = '.autosuggest input[type="text"]';
             browser.waitForExist(inputSelector, 10000);
             browser.setValue(inputSelector, 'ovarian serous cystadenocarcinoma tcga nature 2011');
-            browser.pause(500);
-            // should only be one element
-            assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+            waitForNumberOfStudyCheckboxes(1);
 
             // select it
             var checkBox = $('[data-test="StudySelect"]');
@@ -631,6 +625,7 @@ describe('oncoprint', function() {
     });
 
     describe("sorting", ()=>{
+        this.retries(0);
         function getNthTrackOptionsElements(n) {
             // n is one-indexed
 
@@ -652,9 +647,7 @@ describe('oncoprint', function() {
             var inputSelector = '.autosuggest input[type="text"]';
             browser.waitForExist(inputSelector, 10000);
             browser.setValue(inputSelector, 'colorectal tcga nature');
-            browser.pause(500);
-            // should only be one element
-            assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+            waitForNumberOfStudyCheckboxes(1);
             var checkBox = $('[data-test="StudySelect"]');
             checkBox.waitForExist(10000);
             browser.click('[data-test="StudySelect"] input');
@@ -663,11 +656,7 @@ describe('oncoprint', function() {
             for (let i = 0; i < inputLength; i++) { browser.setValue(inputSelector, "\uE003").pause(10); };
 
             browser.setValue(inputSelector, 'adrenocortical carcinoma tcga provisional');
-            browser.pause(500);
-            // should only be one element
-
-
-            assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+            waitForNumberOfStudyCheckboxes(1, "Adrenocortical Carcinoma (TCGA, Provisional)");
 
             var checkBox = $('[data-test="StudySelect"]');
             checkBox.waitForExist(10000);
@@ -731,10 +720,7 @@ describe('oncoprint', function() {
 
             browser.setValue(inputSelector, 'colorectal tcga nature');
 
-            browser.pause(500);
-
-            // should only be one element
-            assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+            waitForNumberOfStudyCheckboxes(1);
 
             var checkBox = $('[data-test="StudySelect"]');
 
@@ -778,10 +764,7 @@ describe('oncoprint', function() {
 
             browser.setValue(inputSelector, 'glio tcga nature 2008');
 
-            browser.pause(500);
-
-            // should only be one element
-            assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+            waitForNumberOfStudyCheckboxes(1);// should only be one element
 
             var checkBox = $('[data-test="StudySelect"]');
 
@@ -1116,9 +1099,7 @@ describe('case set selection in front page query form', function(){
         var input = ".autosuggest input[type=text]";
         browser.waitForExist(input, 10000);
         browser.setValue(input, 'ovarian nature 2011');
-        browser.pause(500);
-        // should only be one element
-        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        waitForNumberOfStudyCheckboxes(1);
         var checkBox = $('[data-test="StudySelect"]');
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
@@ -1131,9 +1112,7 @@ describe('case set selection in front page query form', function(){
         var input = ".autosuggest input[type=text]";
         browser.waitForExist(input, 10000);
         browser.setValue(input, 'ampullary baylor');
-        browser.pause(500);
-        // should only be one element
-        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        waitForNumberOfStudyCheckboxes(1);
         var checkBox = $('[data-test="StudySelect"]');
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
@@ -1144,9 +1123,7 @@ describe('case set selection in front page query form', function(){
         // select Adrenocortical Carcinoma
         browser.waitForExist(input, 10000);
         browser.setValue(input, 'adrenocortical carcinoma tcga provisional');
-        browser.pause(500);
-        // should only be one element
-        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        waitForNumberOfStudyCheckboxes(1, "Adrenocortical Carcinoma (TCGA, Provisional)");
         checkBox = $('[data-test="StudySelect"]');
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
@@ -1159,9 +1136,7 @@ describe('case set selection in front page query form', function(){
         // Deselect Ampullary Carcinoma
         browser.waitForExist(input, 10000);
         browser.setValue(input, 'ampullary baylor');
-        browser.pause(500);
-        // should only be one element
-        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        waitForNumberOfStudyCheckboxes(1, "Ampullary Carcinoma (Baylor College of Medicine, Cell Reports 2016)");
         var checkBox = $('[data-test="StudySelect"]');
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
@@ -1174,9 +1149,7 @@ describe('case set selection in front page query form', function(){
         var input = ".autosuggest input[type=text]";
         browser.waitForExist(input, 10000);
         browser.setValue(input, 'ampullary baylor');
-        browser.pause(500);
-        // should only be one element
-        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        waitForNumberOfStudyCheckboxes(1);
         var checkBox = $('[data-test="StudySelect"]');
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
@@ -1202,9 +1175,7 @@ describe('case set selection in front page query form', function(){
         // select Adrenocortical Carcinoma
         browser.waitForExist(input, 10000);
         browser.setValue(input,'adrenocortical carcinoma tcga provisional');
-        browser.pause(500);
-        // should only be one element
-        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        waitForNumberOfStudyCheckboxes(1);
         checkBox = $('[data-test="StudySelect"]');
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
@@ -1217,9 +1188,7 @@ describe('case set selection in front page query form', function(){
         // Deselect Ampullary Carcinoma
         browser.waitForExist(input, 10000);
         browser.setValue(input,'ampullary baylor');
-        browser.pause(500);
-        // should only be one element
-        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        waitForNumberOfStudyCheckboxes(1, "Ampullary Carcinoma (Baylor College of Medicine, Cell Reports 2016)");
         var checkBox = $('[data-test="StudySelect"]');
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
@@ -1255,9 +1224,7 @@ describe('case set selection in modify query form', function(){
         var input = $(".autosuggest input[type=text]");
         input.waitForExist(10000);
         input.setValue('adrenocortical carcinoma tcga provisional');
-        browser.pause(500);
-        // should only be one element
-        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        waitForNumberOfStudyCheckboxes(1);
         var checkBox = $('[data-test="StudySelect"]');
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
@@ -1347,9 +1314,7 @@ describe('genetic profile selection in modify query form', function(){
         var input = $(".autosuggest input[type=text]");
         input.waitForExist(10000);
         input.setValue('ampullary baylor');
-        browser.pause(500);
-        // should only be one element
-        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        waitForNumberOfStudyCheckboxes(1);
         var checkBox = $('[data-test="StudySelect"]');
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
@@ -1418,12 +1383,10 @@ describe('genetic profile selection in front page query form', ()=>{
     });
     it('selects the right default genetic profiles in a single->multiple->single study selection flow', ()=>{
         // select a study
-        var input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('ovarian nature 2011');
-        browser.pause(500);
-        // should only be one element
-        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        var input = ".autosuggest input[type=text]";
+        browser.waitForExist(input, 10000);
+        browser.setValue(input, 'ovarian nature 2011');
+        waitForNumberOfStudyCheckboxes(1);
         var checkBox = $('[data-test="StudySelect"]');
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
@@ -1437,12 +1400,9 @@ describe('genetic profile selection in front page query form', ()=>{
         assert(!browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'), "mrna profile not selected");
 
         // select another study
-        var input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('ampullary baylor');
-        browser.pause(500);
-        // should only be one element
-        assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
+        browser.waitForExist(input, 10000);
+        browser.setValue(input, 'ampullary baylor');
+        waitForNumberOfStudyCheckboxes(1, "Ampullary Carcinoma (Baylor College of Medicine, Cell Reports 2016)");
         var checkBox = $('[data-test="StudySelect"]');
         checkBox.waitForExist(10000);
         browser.click('[data-test="StudySelect"] input');
@@ -1464,9 +1424,8 @@ describe('genetic profile selection in front page query form', ()=>{
         assert(!browser.isSelected('div[data-test="molecularProfileSelector"] input[type="checkbox"][data-test="MRNA_EXPRESSION"]'), "mrna profile not selected");
 
         // select all tcga provisional
-        input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('tcga provisional');
+        browser.waitForExist(input, 10000);
+        browser.setValue(input, 'tcga provisional');
         browser.pause(500);
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
 
