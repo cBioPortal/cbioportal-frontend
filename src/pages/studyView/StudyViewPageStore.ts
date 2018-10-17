@@ -35,11 +35,9 @@ import {
 import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import {
-    ALWAYS_SHOWN_ATTRS,
     calculateLayout,
     clinicalDataCountComparator,
     COLORS,
-    DEFAULT_PRIORITY,
     generateScatterPlotDownloadData,
     getClinicalAttributeUniqueKey,
     getClinicalDataIntervalFilterValues,
@@ -55,14 +53,9 @@ import {
     isLogScaleByDataBins,
     isPreSelectedClinicalAttr,
     makePatientToClinicalAnalysisGroup,
-    NA_COLOR,
     NA_DATA,
-    NUMBER_OF_CHARTS_SHOWING,
-    ONE_GRID_TABLE_ROWS,
     pickClinicalDataColors,
-    SELECTED_GROUP_COLOR,
     showOriginStudiesInSummaryDescription,
-    UNSELECTED_GROUP_COLOR,
     submitToPage, getFrequencyStr,
     getClinicalAttributeUniqueKeyByDataTypeAttrId
 } from './StudyViewUtils';
@@ -78,6 +71,7 @@ import {VirtualStudy} from 'shared/model/VirtualStudy';
 import windowStore from 'shared/components/window/WindowStore';
 import {Layout} from 'react-grid-layout';
 import {getHeatmapMeta} from "../../shared/lib/MDACCUtils";
+import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
 
@@ -466,11 +460,12 @@ export class StudyViewPageStore {
             return {
                 groups: [{
                     value: UNSELECTED_ANALYSIS_GROUP_VALUE,
-                    color: UNSELECTED_GROUP_COLOR,
+                    color: STUDY_VIEW_CONFIG.colors.theme.unselectedGroup,
                     legendText: "Unselected patients"
                 },{
                     value: SELECTED_ANALYSIS_GROUP_VALUE,
-                    color: SELECTED_GROUP_COLOR,
+                    // In the initial load when no case selected(the same affect of all cases selected), the curve should be shown as blue instead of red
+                    color: isFiltered(this.userSelections) ? STUDY_VIEW_CONFIG.colors.theme.selectedGroup : STUDY_VIEW_CONFIG.colors.theme.unselectedGroup,
                     legendText: "Selected patients"
                 }] as AnalysisGroup[]
             }
@@ -924,7 +919,7 @@ export class StudyViewPageStore {
                 default: [],
                 onResult: (result) => {
                     if (!isFiltered(this.userSelections)) {
-                        if (result.length < 2 && !_.includes(ALWAYS_SHOWN_ATTRS, uniqueKey)) {
+                        if (result.length < 2 && !_.includes(STUDY_VIEW_CONFIG.tableAttrs, uniqueKey)) {
                             this.changeChartVisibility(uniqueKey, false);
                         }
                         // TODO: enable this feature, currently the pie is not properly converted to a table
@@ -1452,7 +1447,7 @@ export class StudyViewPageStore {
     }
 
     private getTableDimensionByNumberOfRecords(records: number) {
-        return records <= ONE_GRID_TABLE_ROWS ? {
+        return records <= STUDY_VIEW_CONFIG.thresholds.rowsInTableForOneGrid ? {
             w: 2,
             h: 1
         } : (this.studyViewPageLayoutProps.dimensions[ChartTypeEnum.TABLE] || {w: 1, h: 1});
@@ -1486,8 +1481,8 @@ export class StudyViewPageStore {
         await: () => [this.clinicalAttributes],
         invoke: async () => {
             let queriedAttributes = this.clinicalAttributes.result.map(attr => {
-                attr.priority = _.isNumber(Number(attr.priority)) ? attr.priority : "1";
-                if(attr.priority === '1') {
+                attr.priority = _.isNumber(Number(attr.priority)) ? attr.priority : STUDY_VIEW_CONFIG.defaultPriority.toString();
+                if(attr.priority === STUDY_VIEW_CONFIG.defaultPriority.toString()) {
                     attr.priority = getDefaultPriorityByUniqueKey(getClinicalAttributeUniqueKey(attr)).toString();
                 }
                 return attr;
@@ -1522,12 +1517,12 @@ export class StudyViewPageStore {
                     return;
                 }
                 if (attribute.patientAttribute) {
-                    if (patientAttributeCount < NUMBER_OF_CHARTS_SHOWING || priority > DEFAULT_PRIORITY) {
+                    if (patientAttributeCount < STUDY_VIEW_CONFIG.thresholds.clinicalChartsPerGroup || priority > STUDY_VIEW_CONFIG.defaultPriority) {
                         filterAttributes.push(attribute)
                         patientAttributeCount++;
                     }
                 } else {
-                    if (sampleAttributeCount < NUMBER_OF_CHARTS_SHOWING || priority > DEFAULT_PRIORITY) {
+                    if (sampleAttributeCount < STUDY_VIEW_CONFIG.thresholds.clinicalChartsPerGroup || priority > STUDY_VIEW_CONFIG.defaultPriority) {
                         filterAttributes.push(attribute)
                         sampleAttributeCount++;
                     }
@@ -2268,7 +2263,7 @@ export class StudyViewPageStore {
                 if (acc[sampleCount]) {
                     acc[sampleCount].count = acc[sampleCount].count + 1
                 } else {
-                    acc[sampleCount] = { value: `${sampleCount}`, count: 1, color: COLORS[sampleCount - 1] || NA_COLOR }
+                    acc[sampleCount] = { value: `${sampleCount}`, count: 1, color: COLORS[sampleCount - 1] || STUDY_VIEW_CONFIG.colors.na }
                 }
                 return acc
             }, {} as { [id: string]: ClinicalDataCountWithColor }));
@@ -2333,7 +2328,7 @@ export class StudyViewPageStore {
                 if (acc[sequencedStr]) {
                     acc[sequencedStr].count = acc[sequencedStr].count + 1
                 } else {
-                    acc[sequencedStr] = { value: sequencedStr, count: 1, color: COLORS[sequenced ? 0 : 1] || NA_COLOR }
+                    acc[sequencedStr] = { value: sequencedStr, count: 1, color: COLORS[sequenced ? 0 : 1] || STUDY_VIEW_CONFIG.colors.na }
                 }
                 return acc
             }, {} as { [id: string]: ClinicalDataCountWithColor });
@@ -2374,7 +2369,7 @@ export class StudyViewPageStore {
                 if (acc[copyNumberSegmentPresentStr]) {
                     acc[copyNumberSegmentPresentStr].count = acc[copyNumberSegmentPresentStr].count + 1
                 } else {
-                    acc[copyNumberSegmentPresentStr] = { value: copyNumberSegmentPresentStr, count: 1, color: COLORS[copyNumberSegmentPresent ? 0 : 1] || NA_COLOR }
+                    acc[copyNumberSegmentPresentStr] = { value: copyNumberSegmentPresentStr, count: 1, color: COLORS[copyNumberSegmentPresent ? 0 : 1] || STUDY_VIEW_CONFIG.colors.na }
                 }
                 return acc
             }, {} as { [id: string]: ClinicalDataCountWithColor });
