@@ -339,6 +339,8 @@ export class ResultsViewPageStore {
 
     public queryReactionDisposer:any;
 
+    @observable queryHash:string;
+
     @observable public checkingVirtualStudies = false;
 
     public queryStore: QueryStore;
