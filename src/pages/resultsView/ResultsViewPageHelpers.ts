@@ -58,9 +58,10 @@ export function updateStoreFromQuery(resultsViewPageStore:ResultsViewPageStore, 
         }
 
         // cohortIdsList will contain virtual study ids (physicalstudies will contain the phsyical studies which comprise the virtual studies)
-        // although resultsViewStore doesn
-        if (!resultsViewPageStore.cohortIdsList || !_.isEqual(resultsViewPageStore.cohortIdsList.slice(), cohortIdsList)) {
-            resultsViewPageStore.cohortIdsList = cohortIdsList;
+        // although resultsViewStore does
+        if (!resultsViewPageStore.cohortIdsList || !_.isEqual(_.sortBy(resultsViewPageStore.cohortIdsList), _.sortBy(cancerStudyIds))) {
+            resultsViewPageStore.cohortIdsList = cancerStudyIds;
+            resultsViewPageStore.initMutationAnnotationSettings();
         }
 
         if (resultsViewPageStore.oqlQuery !== oql) {
