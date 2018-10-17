@@ -438,7 +438,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
     public render() {
         if (this.props.patientSurvivals.length === 0) {
-            return <div>No data to plot.</div>;
+            return <div className={'alert alert-info'}>No data to plot.</div>;
         } else {
             return (
 
