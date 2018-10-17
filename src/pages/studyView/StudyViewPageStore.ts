@@ -1299,7 +1299,7 @@ export class StudyViewPageStore {
 
             const cancerTypeIds = _.uniq(this.queriedPhysicalStudies.result.map(study=>study.cancerTypeId));
 
-            if (osStatusFlag && osMonthsFlag) {
+            if (osStatusFlag && osMonthsFlag && getDefaultPriorityByUniqueKey(UniqueKey.OVERALL_SURVIVAL) !== 0) {
                 this.chartsType.set(UniqueKey.OVERALL_SURVIVAL, ChartTypeEnum.SURVIVAL);
                 this.chartsDimension.set(UniqueKey.OVERALL_SURVIVAL, DEFAULT_LAYOUT_PROPS.dimensions[ChartTypeEnum.SURVIVAL]);
                 // hide OVERALL_SURVIVAL chart if cacner type is mixed or have moer than one cancer type
@@ -1307,7 +1307,7 @@ export class StudyViewPageStore {
                     this.changeChartVisibility(UniqueKey.OVERALL_SURVIVAL, true);
                 }
             }
-            if (dfsStatusFlag && dfsMonthsFlag) {
+            if (dfsStatusFlag && dfsMonthsFlag && getDefaultPriorityByUniqueKey(UniqueKey.DISEASE_FREE_SURVIVAL) !== 0) {
                 this.chartsType.set(UniqueKey.DISEASE_FREE_SURVIVAL, ChartTypeEnum.SURVIVAL);
                 this.chartsDimension.set(UniqueKey.DISEASE_FREE_SURVIVAL, DEFAULT_LAYOUT_PROPS.dimensions[ChartTypeEnum.SURVIVAL]);
                 // hide DISEASE_FREE_SURVIVAL chart if cacner type is mixed or have moer than one cancer type
@@ -1316,7 +1316,7 @@ export class StudyViewPageStore {
                 }
             }
 
-            if (mutationCountFlag && fractionGenomeAlteredFlag) {
+            if (mutationCountFlag && fractionGenomeAlteredFlag && getDefaultPriorityByUniqueKey(UniqueKey.MUTATION_COUNT_CNA_FRACTION) !== 0) {
                 this.changeChartVisibility(UniqueKey.MUTATION_COUNT_CNA_FRACTION, true);
                 this.chartsType.set(UniqueKey.MUTATION_COUNT_CNA_FRACTION, ChartTypeEnum.SCATTER);
                 this.chartsDimension.set(UniqueKey.MUTATION_COUNT_CNA_FRACTION, DEFAULT_LAYOUT_PROPS.dimensions[ChartTypeEnum.SCATTER])
