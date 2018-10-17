@@ -81,10 +81,13 @@ export default class MutationMapperStore
     }
 
     readonly mutationData = remoteData({
-        await: () => [
-            this.canonicalTranscript,
-            this.indexedVariantAnnotations
-        ],
+        await: () => {
+            if (this.config.filterMutationsBySelectedTranscript) {
+                return [this.canonicalTranscript, this.indexedVariantAnnotations];
+            } else {
+                return [this.canonicalTranscript];
+            }
+        },
         invoke: async () => {
             return this.mutations;
         }
@@ -147,14 +150,17 @@ export default class MutationMapperStore
     }, "");
 
     readonly pfamDomainData = remoteData<PfamDomain[] | undefined>({
-        await: ()=>[
-            this.canonicalTranscript,
-            this.allTranscripts,
-            this.indexedVariantAnnotations,
+        await: ()=> [
+                this.canonicalTranscript,
+                this.transcriptsWithProteinLength
         ],
         invoke: async()=>{
-            if (this.allTranscripts.result && this.indexedVariantAnnotations.result && this.transcriptsWithProteinLength.result && this.transcriptsWithProteinLength.result.length ) {
-                const domainRanges = [].concat.apply([], _.compact(this.transcriptsWithProteinLength.result.map((transcriptId:string) => this.transcriptsByTranscriptId[transcriptId].pfamDomains)));
+            if (this.canonicalTranscript.result && this.canonicalTranscript.result.pfamDomains && this.canonicalTranscript.result.pfamDomains.length > 0) {
+                let domainRanges = this.canonicalTranscript.result.pfamDomains;
+                if (this.config.filterMutationsBySelectedTranscript && this.transcriptsWithProteinLength.result && this.transcriptsWithProteinLength.result.length > 0) {
+                    // add domain ranges for all transcripts to this call
+                    domainRanges = [].concat.apply([domainRanges], _.compact(this.transcriptsWithProteinLength.result.map((transcriptId:string) => this.transcriptsByTranscriptId[transcriptId].pfamDomains)));
+                }
                 return fetchPfamDomainData(domainRanges.map((x: PfamDomainRange) => x.pfamDomainId));
             } else {
                 return undefined;
@@ -232,12 +238,11 @@ export default class MutationMapperStore
 
     readonly transcriptsWithProteinLength = remoteData<string[] | undefined>({
         await: () => [
-            this.indexedVariantAnnotations,
             this.allTranscripts,
             this.canonicalTranscript
         ],
         invoke: async()=>{
-            if (this.indexedVariantAnnotations.result && this.allTranscripts.result && this.canonicalTranscript.result) {
+            if (this.allTranscripts.result && this.canonicalTranscript.result) {
                 // ignore transcripts without protein length
                 // TODO: better solution is to show only mutations table, not
                 // lollipop plot for those transcripts
