@@ -13,6 +13,7 @@ import StandaloneMutationMapper from "./StandaloneMutationMapper";
 import MutationMapperToolStore from "./MutationMapperToolStore";
 
 import AppConfig from "appConfig";
+import autobind from 'autobind-decorator';
 
 interface IMutationMapperToolProps {
     routing: any;
@@ -27,6 +28,8 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
     @observable inputText: string|undefined;
     @observable inputControlsVisible = true;
     @observable inputFileContent: string|undefined;
+    @observable showIncorrectInput = false;
+    @observable lastParsedInputContent: string|undefined;
 
     private store: MutationMapperToolStore = new MutationMapperToolStore();
 
@@ -42,6 +45,17 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
                 <div style={{padding:4}}/>
                 {this.input()}
                 <div style={{padding:4}}/>
+                <Loader isLoading={this.store.mutations.isPending} children={
+                    <span style={{paddingLeft:20}}>Annotating mutations with{' '}
+                        <a
+                            href={"https://www.genomenexus.org"}
+                            target="_blank"
+                        >
+                        Genome Nexus
+                        </a>
+                    </span>
+                } />
+                {this.store.mutationsNotAnnotated.length > 0 && this.inputParseWarning()}
                 {this.store.mutationData && this.mainTabs()}
             </div>
         );
@@ -60,6 +74,35 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
         const content = this.inputText || this.inputFileContent;
 
         return content ? content.trim() : "";
+    }
+
+    @autobind
+    toggleIncorrectInput() {
+        this.showIncorrectInput = !this.showIncorrectInput;
+    }
+
+    protected inputParseWarning()
+    {
+        if (this.store.hugoGeneSymbols.isComplete &&
+            this.store.hugoGeneSymbols.result &&
+            this.store.hugoGeneSymbols.result.length > 0 &&
+            this.lastParsedInputContent &&
+            this.store.mutationsNotAnnotated.length > 0)
+        {
+            return (
+                <div className="alert alert-warning" role="alert">
+                    Failed to annotate {this.store.mutationsNotAnnotated.length} mutation{this.store.mutationsNotAnnotated.length > 1? 's' : ''}&nbsp;
+                    {this.showIncorrectInput && this.lastParsedInputContent && (
+                        this.store.mutationsNotAnnotated.map((failedAnnotation) =>
+                            <div>Line {failedAnnotation.lineNumber}: {this.lastParsedInputContent && this.lastParsedInputContent.split('\n')[failedAnnotation.lineNumber-1]}</div>
+                        )
+                    )}
+                    (<a data-test="ShowWarningsButton" onClick={this.toggleIncorrectInput}>{this.showIncorrectInput? "Hide" : "Show"}</a>)
+                </div>
+            );
+        } else {
+            return null;
+        }
     }
 
     protected mainTabs()
@@ -118,7 +161,7 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
                         Please input <b>tab-delimited</b> or <b>space-delimited</b> mutation data. (Load example data:
                         <span> <a onClick={this.handleLoadExampleGenomicCoordinates} data-test="GenomicChangesExampleButton">Genomic Changes</a></span>,
                         <span> <a onClick={this.handleLoadExampleGeneAndProteinChange} data-test="ProteinChangesExampleButton">Protein Changes</a></span>,
-                        <span> <a onClick={this.handleLoadExamplePartiallyAnnotated}>Genomic and Protein Changes</a></span>)
+                        <span> <a onClick={this.handleLoadExamplePartiallyAnnotated} data-test="GenomicAndProteinChangesExampleButton">Genomic and Protein Changes</a></span>)
                     </p>
 
                     {this.dataFormatToggler()}
@@ -320,6 +363,8 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
                             pdbHeaderCache={this.store.pdbHeaderCache}
                             myCancerGenomeData={this.store.myCancerGenomeData}
                             config={AppConfig}
+                            showDropDown={true}
+                            showOnlyAnnotatedTranscriptsInDropdown={!this.store.hasInputWithProteinChanges}
                         />
                     </MSKTab>
                 );
@@ -398,6 +443,9 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
         this.store.clearCriticalErrors();
 
         this.store.mutationData = parseInput(this.inputContent);
+
+        // save to keep input content after user makes changes
+        this.lastParsedInputContent = this.inputContent;
 
         // hide input controls
         this.inputControlsVisible = false;

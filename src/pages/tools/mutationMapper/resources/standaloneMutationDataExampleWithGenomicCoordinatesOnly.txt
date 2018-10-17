@@ -119,11 +119,8 @@ TCGA-S3-A6ZG-01	Breast Invasive Carcinoma, NOS	7	55266491	55266491	A	T
 TCGA-17-Z026-01	Lung Adenocarcinoma	7	55241714	55241714	G	T
 TCGA-50-5066-01	Lung Adenocarcinoma	7	55220240	55220240	G	T
 TCGA-33-4566-01	Lung Squamous Cell Carcinoma	7	55269425	55269425	C	T
-TCGA-O2-A52N-01	Lung Squamous Cell Carcinoma	7	-1	-1	NA
-TCGA-70-6723-01	Lung Squamous Cell Carcinoma	7	-1	-1	NA
 TCGA-13-0889-01	Serous Ovarian Cancer	7	55270266	55270267	-	A
 TCGA-25-2404-01	Serous Ovarian Cancer	7	55227914	55227914	G	A
-TCGA-13-1489-01	Serous Ovarian Cancer	17	41243753	41243754	NA	TT
 TCGA-04-1357-01	Serous Ovarian Cancer	17	41226411	41226411	G	A
 TCGA-29-2427-01	Serous Ovarian Cancer	17	41246256	41246256	A	C
 TCGA-42-2591-01	Serous Ovarian Cancer	17	41276113	41276113	T	C
@@ -166,7 +163,6 @@ TCGA-S3-AA15-01	Breast Invasive Ductal Carcinoma	17	41243563	41243563	C	A
 TCGA-17-Z042-01	Lung Adenocarcinoma	17	41244214	41244214	C	A
 TCGA-44-4112-01	Lung Adenocarcinoma	17	41244118	41244118	G	A
 TCGA-64-5781-01	Lung Adenocarcinoma	17	41276130	41276130	G	A
-TCGA-69-A59K-01	Lung Adenocarcinoma	17	-1	-1	NA
 TCGA-80-5611-01	Lung Adenocarcinoma	17	41256153	41256153	C	G
 TCGA-22-4613-01	Lung Squamous Cell Carcinoma	17	41219706	41219706	C	A
 TCGA-21-1079-01	Lung Squamous Cell Carcinoma	17	41222979	41222979	G	A
@@ -239,9 +235,6 @@ TCGA-E9-A1R2-01	Breast Invasive Ductal Carcinoma	13	32914938	32914938	T	-
 TCGA-D8-A1XL-01	Breast Invasive Ductal Carcinoma	13	32913428	32913428	G	-
 TCGA-E9-A3HO-01	Breast Invasive Lobular Carcinoma	13	32906916	32906919	AAAG	-
 TCGA-D8-A27V-01	Breast Invasive Lobular Carcinoma	13	32911298	32911298	A	-
-TCGA-A2-A0ET-01	Breast Invasive Ductal Carcinoma	13	-1	-1	NA
-TCGA-A2-A1FW-01	Breast Invasive Ductal Carcinoma	13	-1	-1	NA
-TCGA-AO-A1KQ-01	Breast Invasive Ductal Carcinoma	13	-1	-1	NA
 TCGA-17-Z023-01	Lung Adenocarcinoma	13	32907305	32907314	CCAGCCACCA	-
 TCGA-94-7033-01	Lung Squamous Cell Carcinoma	13	32905062	32905062	A	T
 TCGA-73-4662-01	Lung Adenocarcinoma	13	32907276	32907276	G	T
@@ -445,9 +438,7 @@ TCGA-D8-A1JB-01	Breast Invasive Ductal Carcinoma	10	89692924	89692934	TGCATATTTA
 TCGA-LL-A9Q3-01	Breast Invasive Lobular Carcinoma	10	89720745	89720745	A	-
 TCGA-OL-A66P-01	Breast Invasive Ductal Carcinoma	10	89717625	89717625	T	G
 TCGA-S3-AA11-01	Breast Invasive Ductal Carcinoma	10	89690821	89690821	T	G
-TCGA-A1-A0SP-01	Breast Invasive Ductal Carcinoma	10	-1	-1	NA
 TCGA-66-2788-01	Lung Squamous Cell Carcinoma	10	89711960	89711961	TG	A
-TCGA-34-A5IX-01	Lung Squamous Cell Carcinoma	10	-1	-1	NA
 TCGA-61-1900-01	Serous Ovarian Cancer	10	89711873	89711873	A	C
 TCGA-56-6546-01	Lung Squamous Cell Carcinoma	10	89717718	89717718	C	A
 TCGA-A7-A26G-01	Breast Invasive Carcinoma, NOS	10	89692920	89692920	T	A
