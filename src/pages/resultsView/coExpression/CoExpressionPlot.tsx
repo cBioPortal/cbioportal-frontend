@@ -213,7 +213,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
     @bind
     private plot() {
         if (!this.data.length) {
-            return <span>No data to plot.</span>;
+            return <div className={'alert alert-info'}>No data to plot.</div>;
         }
         return (
             <CoExpressionScatterPlot

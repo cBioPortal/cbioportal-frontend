@@ -326,7 +326,7 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
 
     render() {
         if (!this.tableData.data.length) {
-            return <span>No data to plot.</span>;
+            return <div className={'alert alert-info'}>No data to plot.</div>;
         }
         const cellElements = this.tableData.data.map(d=>{
             const {horzCategory, vertCategory, count} = d;
