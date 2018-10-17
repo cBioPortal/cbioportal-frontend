@@ -25,6 +25,11 @@ export type VirtualCohort = {
     constituentStudyIds:string[]
 };
 
+export type StudyView = {
+    tableAttrs: string[]
+    priority: { [id: string]: number }
+}
+
 export interface IServerConfig {
 
     "app_version": string|null;   // default: "1.0"
@@ -82,6 +87,7 @@ export interface IServerConfig {
     "skin_show_web_api_tab": boolean;
     "skin_title": string|null;
     "skin_authorization_message": string|null;
+    "study_view": StudyView;
     "mdacc_heatmap_study_meta_url": string|null;
     "mdacc_heatmap_study_url": string|null;
     "oncoprint_custom_driver_annotation_tiers_menu_label": string|null;
