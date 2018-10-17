@@ -1,32 +1,37 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import {
-    Sample,
     ClinicalDataIntervalFilterValue,
-    SampleIdentifier,
-    CopyNumberGeneFilterElement
+    CopyNumberGeneFilterElement,
+    Sample,
+    SampleIdentifier
 } from 'shared/api/generated/CBioPortalAPIInternal';
-import { observer } from "mobx-react";
-import { computed, observable, action } from 'mobx';
+import {observer} from "mobx-react";
+import {action, computed, observable, reaction} from 'mobx';
 import styles from "./styles.module.scss";
 import studyViewStyles from "pages/studyView/styles.module.scss";
 import "./styles.scss";
-import { bind } from 'bind-decorator';
+import {bind} from 'bind-decorator';
 import {getSampleViewUrl} from 'shared/api/urls';
 import CustomCaseSelection from 'pages/studyView/customCaseSelection/CustomCaseSelection';
-import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
-import { Gene } from 'shared/api/generated/CBioPortalAPI';
-import GeneSelectionBox, { GeneBoxType } from 'shared/components/GeneSelectionBox/GeneSelectionBox';
+import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
+import {Gene} from 'shared/api/generated/CBioPortalAPI';
+import GeneSelectionBox, {GeneBoxType} from 'shared/components/GeneSelectionBox/GeneSelectionBox';
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import VirtualStudy from 'pages/studyView/virtualStudy/VirtualStudy';
 import fileDownload from 'react-file-download';
-import { If, Then, Else } from 'react-if';
-import { StudyWithSamples, ChartMeta, StudyViewFilterWithSampleIdentifierFilters } from 'pages/studyView/StudyViewPageStore';
+import {Else, If, Then} from 'react-if';
+import {
+    ChartMeta,
+    StudyViewFilterWithSampleIdentifierFilters,
+    StudyWithSamples
+} from 'pages/studyView/StudyViewPageStore';
 import UserSelections from 'pages/studyView/UserSelections';
 import SelectedInfo from "./SelectedInfo/SelectedInfo";
 import classnames from "classnames";
 import MobxPromise from 'mobxpromise';
 import {formatFrequency, getFrequencyStr} from "./StudyViewUtils";
+
 const CheckedSelect = require("react-select-checked").CheckedSelect;
 
 export interface ISummaryHeaderProps {
@@ -63,6 +68,38 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
 
     @observable downloadingData = false;
     @observable showDownloadErrorMessage = false;
+
+    @observable addChartClicked = false;
+
+    // Only fetch the clinical attribute count when filter changes, otherwise use the cached data.
+    @observable filterIsUpdated = false;
+
+    // clinicalAttributesWithCount result
+    // We cannot reference the promise in the compute directly since it will be dereferenced in the reaction.
+    @observable cachedClinicalAttributesWithCount:any;
+
+    private promiseReaction = reaction(() => this.clinicalAttributesWithCountPromise && this.clinicalAttributesWithCountPromise.status, () => {
+        if (this.clinicalAttributesWithCountPromise !== undefined && this.clinicalAttributesWithCountPromise.isComplete) {
+            this.cachedClinicalAttributesWithCount = _.reduce(this.clinicalAttributesWithCountPromise.result, (acc, next, key) => {
+                acc[key] = next;
+                return acc;
+            }, {} as { [attrId: string]: number });
+            this.addChartClicked = false;
+            this.filterIsUpdated = false;
+        }
+    });
+
+    private filterReaction = reaction(()=>this.props.filter, () => {
+        if(this.props.filter !== undefined) {
+            this.filterIsUpdated = true;
+        }
+    }, { fireImmediately: true });
+
+    componentWillUnmount() {
+        // dispose all reactions
+        this.filterReaction();
+        this.promiseReaction();
+    }
 
     @bind
     private handleDownload() {
@@ -121,6 +158,15 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
         }
     }
 
+    @computed
+    get fetchForDataAvailability() {
+        if (this.addChartClicked && this.filterIsUpdated) {
+            return true;
+        }
+        return false;
+    }
+
+
     @computed get virtualStudyButtonTooltip() {
         //default value of userEmailAddress is anonymousUser. see my-index.ejs
         return (
@@ -137,21 +183,48 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
         return 'Download clinical data for the selected cases';
     }
 
-    @computed get chartOptions() {
-        let options = _.reduce(this.props.clinicalAttributesWithCountPromise.result || {}, (options, sampleCount: number, key: string) => {
-            let freq = 100* sampleCount / this.props.selectedSamples.length;
-            const newOption = {
-                label: `${this.props.attributesMetaSet[key].displayName} (${getFrequencyStr(freq)})`,
-                value: key,
-                disabled: false,
-                freq: formatFrequency(freq)
-            };
-            if (sampleCount === 0) {
-                newOption.disabled = true;
-            }
-            options.push(newOption);
-            return options;
-        }, [] as { label: string, value: string, freq: number, disabled?: boolean }[]);
+    @computed get clinicalAttributesWithCountPromise() {
+        return this.fetchForDataAvailability ? this.props.clinicalAttributesWithCountPromise : undefined;
+    }
+
+    @computed get checkedSelectPlaceHolder() {
+        if(this.fetchForDataAvailability) {
+            return 'Calculating data availability...';
+        }else {
+            return 'Add Chart'
+        }
+    }
+
+    @computed
+    get chartOptions() {
+        let options = [];
+        if (this.cachedClinicalAttributesWithCount !== undefined) {
+            options = _.reduce(this.cachedClinicalAttributesWithCount, (options, sampleCount: number, key: string) => {
+                let freq = 100 * sampleCount / this.props.selectedSamples.length;
+                const newOption = {
+                    label: `${this.props.attributesMetaSet[key].displayName} (${getFrequencyStr(freq)})`,
+                    value: key,
+                    disabled: false,
+                    freq: formatFrequency(freq)
+                };
+                if (sampleCount === 0) {
+                    newOption.disabled = true;
+                }
+                options.push(newOption);
+                return options;
+            }, [] as { label: string, value: string, freq: number, disabled?: boolean }[]);
+        } else {
+            options = _.reduce(Object.keys(this.props.attributesMetaSet), (options, key: string) => {
+                const newOption = {
+                    label: this.props.attributesMetaSet[key].displayName,
+                    value: key,
+                    disabled: false,
+                    freq: 1
+                };
+                options.push(newOption);
+                return options;
+            }, [] as { label: string, value: string, freq: number, disabled?: boolean }[]);
+        }
         return options.sort((a, b) => {
             if (a.freq === b.freq) {
                 //sort alphabetically
@@ -167,6 +240,12 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
     @action
     private onChangeSelectedCharts(options: { label: string, value: string }[]) {
         this.props.onChangeChartsVisibility(options.map(option => option.value));
+    }
+
+    @bind
+    @action
+    private addChartIsClicked() {
+        this.addChartClicked = true;
     }
 
     render() {
@@ -268,10 +347,9 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                     </div>
 
                     <div className="form-group form-group-custom">
-                        <div className={classnames(styles.summaryHeaderItem)}>
+                        <div className={classnames(styles.summaryHeaderItem)} onClick={this.addChartIsClicked}>
                             <CheckedSelect
-                                disabled={this.props.clinicalAttributesWithCountPromise.isPending}
-                                placeholder={"Add Chart"}
+                                placeholder={this.checkedSelectPlaceHolder}
                                 onChange={this.onChangeSelectedCharts}
                                 options={this.chartOptions}
                                 value={(this.props.visibleAttributeIds || []).map(chartMeta => ({value: chartMeta.uniqueKey}))}
