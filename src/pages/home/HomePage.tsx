@@ -72,7 +72,6 @@ export default class HomePage extends React.Component<IResultsViewPageProps, {}>
 
     componentWillMount(){
         this.queryStore = createQueryStore();
-        setWindowVariable("homePageQueryStore", this.queryStore);
     }
 
     private handleTabChange(id: string) {
