@@ -1,0 +1,19 @@
+.transcripts-dropdown-select {
+  display: inline-block;
+
+  .Select-control {
+    width: 160px;
+  }
+
+  .Select-menu-outer {
+    font-size: small !important;
+    width: 600px;
+    //line-height: 10px !important;
+
+    .Select-option {
+      // uncomment to make multi line
+      // white-space: pre-wrap;
+      line-height: 5px !important;
+    }
+  }
+}

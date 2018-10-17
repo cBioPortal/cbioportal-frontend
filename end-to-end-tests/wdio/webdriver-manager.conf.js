@@ -1,6 +1,11 @@
 var path = require('path');
 var VisualRegressionCompare = require('wdio-visual-regression-service/compare');
 var getScreenshotName = require('./getScreenshotName');
+// enable require text files for testing
+var fs = require('fs');
+require.extensions['.txt'] = function (module, filename) {
+    module.exports = fs.readFileSync(filename, 'utf8');
+};
 
 exports.config = {
     //
