@@ -7,6 +7,10 @@ var goToUrlAndSetLocalStorage = require('./specUtils').goToUrlAndSetLocalStorage
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 
+function waitForGenomeNexusAnnotation() {
+    browser.pause(5000);// wait for annotation
+}
+
 describe('Mutation Mapper Tool', function() {
     before(function(){
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
@@ -22,6 +26,8 @@ describe('Mutation Mapper Tool', function() {
         it('should correctly annotate the genomic changes example and display the results', ()=>{
             browser.click('[data-test=GenomicChangesExampleButton]');
             browser.click('[data-test=MutationMapperToolVisualizeButton]');
+
+            waitForGenomeNexusAnnotation();
 
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
@@ -63,9 +69,107 @@ describe('Mutation Mapper Tool', function() {
             browser.waitForText('.//*[text()[contains(.,"136 Mutations")]]')
         });
 
+        it('should update the listed number of mutations when selecting a different transcript in the dropdown', ()=>{
+            browser.click('[data-test=GenomicChangesExampleButton]');
+            browser.click('[data-test=MutationMapperToolVisualizeButton]');
+
+            waitForGenomeNexusAnnotation();
+
+            // mutations table should be visiable after oncokb icon shows up,
+            // also need to wait for mutations to be sorted properly
+            browser.waitForVisible("[data-test=oncogenic-icon-image]",20000);
+
+            // wait for transcript to be listed
+            browser.waitForText('.//*[text()[contains(.,"NM_005228")]]');
+            // click on dropbox
+            browser.elements('.//*[text()[contains(.,"NM_005228")]]').value[0].click();
+            // select a different transcript
+            browser.elements('.//*[text()[contains(.,"NM_201283")]]').value[0].click();
+
+            // check number of mutations on this transcript (this gets Showing
+            // 1-23 of 23 Mutations)
+            browser.waitForText('.//*[text()[contains(.,"23 Mutations")]]');
+        });
+
+        it('should show all transcripts when using protein changes', ()=>{
+            browser.click('[data-test=ProteinChangesExampleButton]');
+            browser.click('[data-test=MutationMapperToolVisualizeButton]');
+
+            waitForGenomeNexusAnnotation();
+
+            // mutations table should be visiable after oncokb icon shows up,
+            // also need to wait for mutations to be sorted properly
+            browser.waitForVisible("[data-test=oncogenic-icon-image]",20000);
+            // it should have 124 egfr mutations
+            browser.waitForText('.//*[text()[contains(.,"124 Mutations")]]');
+
+            // wait for transcript to be listed
+            browser.waitForText('.//*[text()[contains(.,"NM_005228")]]');
+            // click on dropbox
+            browser.elements('.//*[text()[contains(.,"NM_005228")]]').value[0].click();
+
+
+            // check if all 8 transcripts are listed (already know the one above
+            // is listed, since we clicked on it)
+            browser.waitForText('.//*[text()[contains(.,"NM_201284")]]');
+            browser.waitForText('.//*[text()[contains(.,"NM_201282")]]');
+            browser.waitForText('.//*[text()[contains(.,"NM_201283")]]');
+            browser.waitForText('.//*[text()[contains(.,"ENST00000454757")]]');
+            browser.waitForText('.//*[text()[contains(.,"ENST00000455089")]]');
+            browser.waitForText('.//*[text()[contains(.,"ENST00000442591")]]');
+            browser.waitForText('.//*[text()[contains(.,"ENST00000450046")]]');
+
+            // select a different transcript
+            browser.elements('.//*[text()[contains(.,"NM_201283")]]').value[0].click();
+
+            // check number of mutations on this transcript (this should keep
+            // showing all mutations (we don't know which transcript was used to
+            // get those annotations the user inputted))
+            browser.waitForText('.//*[text()[contains(.,"124 Mutations")]]');
+        });
+
+        it('should show all transcripts when using combination of genomic and protein changes', ()=>{
+            browser.click('[data-test=GenomicAndProteinChangesExampleButton]');
+            browser.click('[data-test=MutationMapperToolVisualizeButton]');
+
+            waitForGenomeNexusAnnotation();
+
+            // mutations table should be visiable after oncokb icon shows up,
+            // also need to wait for mutations to be sorted properly
+            browser.waitForVisible("[data-test=oncogenic-icon-image]",20000);
+            // it should have 122 egfr mutations
+            browser.waitForText('.//*[text()[contains(.,"122 Mutations")]]');
+
+            // wait for transcript to be listed
+            browser.waitForText('.//*[text()[contains(.,"NM_005228")]]');
+            // click on dropbox
+            browser.elements('.//*[text()[contains(.,"NM_005228")]]').value[0].click();
+
+
+            // check if all 8 transcripts are listed (already know the one above
+            // is listed, since we clicked on it)
+            browser.waitForText('.//*[text()[contains(.,"NM_201284")]]');
+            browser.waitForText('.//*[text()[contains(.,"NM_201282")]]');
+            browser.waitForText('.//*[text()[contains(.,"NM_201283")]]');
+            browser.waitForText('.//*[text()[contains(.,"ENST00000454757")]]');
+            browser.waitForText('.//*[text()[contains(.,"ENST00000455089")]]');
+            browser.waitForText('.//*[text()[contains(.,"ENST00000442591")]]');
+            browser.waitForText('.//*[text()[contains(.,"ENST00000450046")]]');
+
+            // select a different transcript
+            browser.elements('.//*[text()[contains(.,"NM_201283")]]').value[0].click();
+
+            // check number of mutations on this transcript (this should keep
+            // showing all mutations (we don't know which transcript was used to
+            // get those annotations the user inputted))
+            browser.waitForText('.//*[text()[contains(.,"122 Mutations")]]');
+        });
+
         it('should correctly annotate the protein changes example and display the results', ()=>{
             browser.click('[data-test=ProteinChangesExampleButton]');
             browser.click('[data-test=MutationMapperToolVisualizeButton]');
+
+            waitForGenomeNexusAnnotation();
 
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly

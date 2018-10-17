@@ -53,23 +53,28 @@ export default class MutationMapperStore
             return [];
         } else {
             if (this.config.filterMutationsBySelectedTranscript) {
-               if (this.transcriptsWithAnnotations.result && this.transcriptsWithAnnotations.result.length > 0 && canonicalTranscriptId && !this.transcriptsWithAnnotations.result.includes(canonicalTranscriptId)) {
-                    // if there are annotated transcripts and activeTranscipt does
-                    // not have any, change the active transcript
-                    this.activeTranscript = this.transcriptsWithAnnotations.result[0];
-               } else {
-                   this.activeTranscript = canonicalTranscriptId;
-               }
-               if (this.activeTranscript && this.indexedVariantAnnotations.result && !_.isEmpty(this.indexedVariantAnnotations.result)) {
-                   return getMutationsToTranscriptId(this.getMutations(), this.activeTranscript, this.indexedVariantAnnotations.result);
-               } else {
-                   // this shouldn't happen unless error occurs with annotation
-                   // TODO: handle error in annotation more gracefully instead
-                   // of just showing all mutations
-                   return this.getMutations();
-               }
+                // pick default transcript if not activeTranscript
+                if (this.activeTranscript === undefined) {
+                    if (this.transcriptsWithAnnotations.result && this.transcriptsWithAnnotations.result.length > 0 && canonicalTranscriptId && !this.transcriptsWithAnnotations.result.includes(canonicalTranscriptId)) {
+                        // if there are annotated transcripts and activeTranscipt does
+                        // not have any, change the active transcript
+                        this.activeTranscript = this.transcriptsWithAnnotations.result[0];
+                    } else {
+                        this.activeTranscript = canonicalTranscriptId;
+                    }
+                }
+                if (this.activeTranscript && this.indexedVariantAnnotations.result && !_.isEmpty(this.indexedVariantAnnotations.result)) {
+                    return getMutationsToTranscriptId(this.getMutations(), this.activeTranscript, this.indexedVariantAnnotations.result);
+                } else {
+                    // this shouldn't happen unless error occurs with annotation
+                    // TODO: handle error in annotation more gracefully instead
+                    // of just showing all mutations
+                    return this.getMutations();
+                }
             } else {
-                this.activeTranscript = canonicalTranscriptId;
+                if (this.activeTranscript === undefined) {
+                    this.activeTranscript = canonicalTranscriptId;
+                }
                 return this.getMutations();
             }
         }
