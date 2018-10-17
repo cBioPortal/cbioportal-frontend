@@ -3,7 +3,8 @@ import * as _ from "lodash";
 import genomeNexusClient from "shared/api/genomeNexusClientInstance";
 import GenomeNexusAPI, {
     TranscriptConsequenceSummary, VariantAnnotation,
-    VariantAnnotationSummary
+    VariantAnnotationSummary,
+    TranscriptConsequence
 } from "shared/api/generated/GenomeNexusAPI";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {uniqueGenomicLocations, genomicLocationString, extractGenomicLocation} from "./MutationUtils";
@@ -99,6 +100,76 @@ export function filterMutationByTranscriptId(mutation:Mutation,
     }
 }
 
+export function getMutationToTranscriptId(mutation:Mutation,
+                                          ensemblTranscriptId: string,
+                                          indexedVariantAnnotations: {[genomicLocation: string]: VariantAnnotation}): Mutation | undefined
+{
+    const genomicLocation = extractGenomicLocation(mutation);
+    const variantAnnotation = genomicLocation ?
+        indexedVariantAnnotations[genomicLocationString(genomicLocation)] : undefined;
+    
+    const transcriptConsequenceSummaries = variantAnnotation && 
+        variantAnnotation.annotation_summary &&  
+        variantAnnotation.annotation_summary.transcriptConsequenceSummaries &&  
+        variantAnnotation.annotation_summary.transcriptConsequenceSummaries.filter((tc:TranscriptConsequenceSummary) => tc.transcriptId === ensemblTranscriptId);
+
+    if (variantAnnotation && transcriptConsequenceSummaries && transcriptConsequenceSummaries.length > 0) {
+        const transcriptConsequenceSummary = transcriptConsequenceSummaries[0]; // TODO: should pick most impactful one
+        const annotatedMutation =  getMutationFromSummary(mutation, variantAnnotation.annotation_summary, transcriptConsequenceSummary, true);
+        // ignore mutations that don't have a protein change (at some point we
+        // might want to change this to include silent mutations)
+        if (annotatedMutation.proteinChange && annotatedMutation.proteinChange.length > 0 && (new RegExp(/.*[A-Z].*/, "i").test(annotatedMutation.proteinChange.toLowerCase()))) {
+            return annotatedMutation;
+        } else {
+            return undefined;
+        }
+    } else {
+        return undefined;
+    }
+}
+
+export function getMutationFromSummary(mutation:Mutation,
+                                       annotationSummary:VariantAnnotationSummary,
+                                       transcriptConsequenceSummary:TranscriptConsequenceSummary,
+                                       overwrite:boolean)
+{
+    const annotatedMutation: Mutation = initAnnotatedMutation(mutation);
+
+    // Overwrite only missing values: Do not overwrite user provided values!
+    annotatedMutation.variantType = (!overwrite && annotatedMutation.variantType) || annotationSummary.variantType;
+
+    annotatedMutation.proteinChange = (!overwrite && annotatedMutation.proteinChange) || transcriptConsequenceSummary.hgvspShort;
+    // remove p. prefix if exists
+    if (annotatedMutation.proteinChange) {
+        annotatedMutation.proteinChange = annotatedMutation.proteinChange.replace(/^p./,"");
+    }
+    annotatedMutation.mutationType = (!overwrite && annotatedMutation.mutationType) || transcriptConsequenceSummary.variantClassification;
+
+    if (transcriptConsequenceSummary.proteinPosition) {
+        // TODO: make this logic more clear, lollipopplot fills in proteinstart
+        // and end if it's undefined but proteinChange exists
+        annotatedMutation.proteinPosStart = (!overwrite && annotatedMutation.proteinChange)? annotatedMutation.proteinPosStart : transcriptConsequenceSummary.proteinPosition.start;
+        annotatedMutation.proteinPosEnd = (!overwrite && annotatedMutation.proteinChange)? annotatedMutation.proteinPosEnd : transcriptConsequenceSummary.proteinPosition.end;
+    }
+
+    annotatedMutation.gene.hugoGeneSymbol = (!overwrite && annotatedMutation.gene.hugoGeneSymbol) || transcriptConsequenceSummary.hugoGeneSymbol;
+
+    // Entrez Gene id is critical for OncoKB annotation
+    const entrezGeneId = parseInt(transcriptConsequenceSummary.entrezGeneId, 10);
+
+    annotatedMutation.gene.entrezGeneId = annotatedMutation.gene.entrezGeneId || entrezGeneId;
+    annotatedMutation.entrezGeneId = annotatedMutation.entrezGeneId || entrezGeneId;
+        
+    return annotatedMutation;
+}
+
+export function getMutationsToTranscriptId(mutations:Mutation[],
+                                           ensemblTranscriptId: string,
+                                           indexedVariantAnnotations: {[genomicLocation: string]: VariantAnnotation}): Mutation[]
+{
+    return _.compact(mutations.map(mutation => getMutationToTranscriptId(mutation, ensemblTranscriptId, indexedVariantAnnotations)));
+}
+
 export function filterMutationsByTranscriptId(mutations: Mutation[],
                                               ensemblTranscriptId: string,
                                               indexedVariantAnnotations: {[genomicLocation: string]: VariantAnnotation})
@@ -109,49 +180,26 @@ export function filterMutationsByTranscriptId(mutations: Mutation[],
 export function annotateMutation(mutation: Mutation,
                                  indexedVariantAnnotations: {[genomicLocation: string]: VariantAnnotation}): Mutation
 {
-    const annotatedMutation: Mutation = initAnnotatedMutation(mutation);
 
     const genomicLocation = extractGenomicLocation(mutation);
     const variantAnnotation = genomicLocation ?
         indexedVariantAnnotations[genomicLocationString(genomicLocation)] : undefined;
+    let canonicalTranscript:TranscriptConsequenceSummary|undefined;
 
-    // Overwrite only missing values: Do not overwrite user provided values!
     if (variantAnnotation) {
-        const annotationSummary = variantAnnotation.annotation_summary;
-
-        annotatedMutation.variantType = annotatedMutation.variantType || annotationSummary.variantType;
-
-        const canonicalTranscript = findCanonicalTranscript(annotationSummary);
-
-        if (canonicalTranscript) {
-            annotatedMutation.proteinChange = annotatedMutation.proteinChange || canonicalTranscript.hgvspShort;
-            // remove p. prefix if exists
-            if (annotatedMutation.proteinChange) {
-                annotatedMutation.proteinChange = annotatedMutation.proteinChange.replace(/^p./,"");
-            }
-            annotatedMutation.mutationType = annotatedMutation.mutationType || canonicalTranscript.variantClassification;
-
-            if (canonicalTranscript.proteinPosition) {
-                annotatedMutation.proteinPosStart = annotatedMutation.proteinPosStart || canonicalTranscript.proteinPosition.start;
-                annotatedMutation.proteinPosEnd = annotatedMutation.proteinPosEnd || canonicalTranscript.proteinPosition.end;
-            }
-
-            annotatedMutation.gene.hugoGeneSymbol = annotatedMutation.gene.hugoGeneSymbol || canonicalTranscript.hugoGeneSymbol;
-
-            // Entrez Gene id is critical for OncoKB annotation
-            const entrezGeneId = parseInt(canonicalTranscript.entrezGeneId, 10);
-
-            annotatedMutation.gene.entrezGeneId = annotatedMutation.gene.entrezGeneId || entrezGeneId;
-            annotatedMutation.entrezGeneId = annotatedMutation.entrezGeneId || entrezGeneId;
-        }
+        canonicalTranscript = findCanonicalTranscript(variantAnnotation.annotation_summary);
     }
 
-    return annotatedMutation;
+    if (variantAnnotation && canonicalTranscript) {
+        return getMutationFromSummary(mutation, variantAnnotation.annotation_summary, canonicalTranscript, false);
+    } else {
+        return initAnnotatedMutation(mutation);
+    }
 }
 
 export function initAnnotatedMutation(mutation:Mutation): Mutation
 {
-    const annotatedMutation: Mutation = mutation;
+    const annotatedMutation: Mutation = _.cloneDeep(mutation);
 
     // set some default values in case annotation fails
     annotatedMutation.variantType = annotatedMutation.variantType || "";
@@ -163,16 +211,18 @@ export function initAnnotatedMutation(mutation:Mutation): Mutation
     return annotatedMutation;
 }
 
+// TODO: figure out how this is used. We know what the canonical transcript is
+// from ensembl/canonical-transcript endpoint
 export function findCanonicalTranscript(annotationSummary: VariantAnnotationSummary): TranscriptConsequenceSummary|undefined
 {
     let canonical: TranscriptConsequenceSummary|undefined =
-        _.find(annotationSummary.transcriptConsequences, transcriptConsequenceSummary =>
+        _.find(annotationSummary.transcriptConsequenceSummaries, transcriptConsequenceSummary =>
             transcriptConsequenceSummary.transcriptId === annotationSummary.canonicalTranscriptId);
 
     // if no transcript matching the canonical transcript id, then return the first one (if exists)
     if (!canonical) {
-        canonical = annotationSummary.transcriptConsequences.length > 0 ?
-            annotationSummary.transcriptConsequences[0] : undefined;
+        canonical = annotationSummary.transcriptConsequenceSummaries.length > 0 ?
+            annotationSummary.transcriptConsequenceSummaries[0] : undefined;
     }
 
     return canonical;
