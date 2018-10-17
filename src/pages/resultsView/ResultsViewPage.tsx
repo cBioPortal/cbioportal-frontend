@@ -423,7 +423,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
                 {
                     (this.resultsViewPageStore.studies.isComplete) && (
-                        <MSKTabs key={(window as any).routingStore.queryHash} activeTabId={this.currentTab(this.props.params.tab)} unmountOnHide={false}
+                        <MSKTabs key={this.resultsViewPageStore.queryHash} activeTabId={this.currentTab(this.props.params.tab)} unmountOnHide={false}
                                  onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
                             {
                                 this.tabs
