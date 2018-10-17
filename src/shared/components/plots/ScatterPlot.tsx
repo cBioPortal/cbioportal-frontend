@@ -415,7 +415,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
 
     render() {
         if (!this.props.data.length) {
-            return <span>No data to plot.</span>;
+            return <div className={'alert alert-info'}>No data to plot.</div>;
         }
         return (
             <div>
