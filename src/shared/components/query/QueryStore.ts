@@ -148,38 +148,6 @@ export class QueryStore
 			}
 		);
 
-		// reaction(
-		// 	()=>this.selectableStudiesSet,
-		// 	selectableStudiesSet=>{
-		// 		if(this.selectedSampleListId !== CUSTOM_CASE_LIST_ID) {
-		// 			let virtualStudyIdsSet = stringListToSet(this.virtualStudies.result.map(x=>x.id));
-		// 			let physicalStudyIdsSet = stringListToSet(this.cancerStudies.result.map(x=>x.studyId))
-		// 			let userSelectableIds:{[studyId:string]:boolean} = Object.assign({}, physicalStudyIdsSet, virtualStudyIdsSet);
-		// 			let sharedIds:string[] = [];
-		// 			let unknownIds:string[] = [];
-        //
-		// 			this._defaultSelectedIds.keys().forEach(id=>{
-		// 				if(selectableStudiesSet[id]){
-		// 					if(!userSelectableIds[id]){
-		// 						sharedIds.push(id)
-		// 					}
-		// 				}else{
-		// 					unknownIds.push(id);
-		// 				}
-		// 			});
-		// 			//this block is executed when the query is a saved virtual study query is shared to other user
-		// 			//in this scenario we override some parameters to correctly show selected cases to user
-		// 			if(!_.isEmpty(sharedIds) && _.isEmpty(unknownIds)){
-		// 				this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
-		// 				this.caseIdsMode = 'sample';
-		// 				let studySampleMap = this._defaultStudySampleMap
-		// 				this.caseIds = _.flatten<string>(Object.keys(studySampleMap).map(studyId=>{
-		// 					return studySampleMap[studyId].map((sampleId:string)=>`${studyId}:${sampleId}`);
-		// 				})).join("\n");
-		// 			}
-		// 		}
-		// 	}
-		// );
 	}
 
 	public singlePageAppSubmitRoutine: (path:string, query:CancerStudyQueryUrlParams)=>void;
@@ -219,7 +187,7 @@ export class QueryStore
 	};
 
 	@computed get virtualStudiesMap():{[id:string]:VirtualStudy} {
-		return _.keyBy(this.virtualStudies.result, study => study.id);
+		return _.keyBy(this.userVirtualStudies.result, study => study.id);
 	}
 
 	@computed get selectedVirtualStudies():VirtualStudy[] {
@@ -444,6 +412,10 @@ export class QueryStore
 		this._maxTreeDepth = value;
 	}
 
+	@computed get userLoggedIn(){
+		return getBrowserWindow().globalStores.appStore.isLoggedIn;
+	}
+
 
 	////////////////////////////////////////////////////////////////////////////////
 	// REMOTE DATA
@@ -470,14 +442,6 @@ export class QueryStore
 		default: {},
 	});
 
-	readonly virtualStudies = remoteData(async ()=>{
-		if (ServerConfigHelpers.sessionServiceIsEnabled() && getBrowserWindow().globalStores.appStore.isLoggedIn) {
-			return sessionServiceClient.getUserVirtualStudies();
-		} else {
-			return [];
-		}
-	}, []);
-
 	private readonly physicalStudiesIdsSet = remoteData<{[studyId:string]:string[]}>({
 		await: ()=>[this.cancerStudies],
 		invoke: async ()=>{
@@ -491,9 +455,9 @@ export class QueryStore
 	})
 
 	private readonly virtualStudiesIdsSet = remoteData<{[studyId:string]:string[]}>({
-		await: ()=>[this.virtualStudies],
+		await: ()=>[this.userVirtualStudies],
 		invoke: async ()=>{
-			return  this.virtualStudies.result.reduce((obj:{[studyId:string]:string[]}, item) =>{
+			return  this.userVirtualStudies.result.reduce((obj:{[studyId:string]:string[]}, item) =>{
 				obj[item.id] = [item.id]
 				return obj
 			}, {});
@@ -536,7 +500,6 @@ export class QueryStore
 		default: {}
 	});
 
-
 	private readonly physicalStudiesSet = remoteData<{[studyId:string]:CancerStudy}>({
 		await: ()=>[this.cancerStudies],
 		invoke: async ()=>{
@@ -547,10 +510,10 @@ export class QueryStore
 
 		},
 		default: {},
-	})
+	});
 
 	readonly userVirtualStudies = remoteData(async ()=>{
-		if (ServerConfigHelpers.sessionServiceIsEnabled()) {
+		if (ServerConfigHelpers.sessionServiceIsEnabled() && this.userLoggedIn) {
 			return sessionServiceClient.getUserVirtualStudies();
 		} else {
 			return [];
@@ -567,7 +530,7 @@ export class QueryStore
 
 		},
 		default: {},
-	})
+	});
 
 	private readonly sharedVirtualStudiesSet = remoteData<{[studyId:string]:VirtualStudy}>({
 		await: ()=>[this.physicalStudiesSet, this.userVirtualStudiesSet],
@@ -645,6 +608,7 @@ export class QueryStore
 	private readonly selectableStudiesSet = remoteData<{[studyId:string]:string[]}>({
 		await: ()=>[this.physicalStudiesSet, this.selectedStudyToSampleSet],
 		invoke: async () => {
+
 			let result: { [studyId: string]: string[] } = {};
 
 			_.each(this.physicalStudiesSet.result, (study, studyId) => {
@@ -1067,7 +1031,7 @@ export class QueryStore
 			cancerTypes: this.cancerTypes.result,
 			studies: this.cancerStudies.result,
 			priorityStudies: this.priorityStudies,
-			virtualStudies: this.virtualStudies.result
+			virtualStudies: this.userVirtualStudies.result
 		});
 	}
 
