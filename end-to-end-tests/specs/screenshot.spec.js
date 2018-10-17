@@ -218,6 +218,7 @@ describe('patient view page screenshot test', function(){
     before(function(){
         var url = `${CBIOPORTAL_URL}/patient?studyId=lgg_ucsf_2014&caseId=P04`;
         goToUrlAndSetLocalStorage(url);
+        browser.setViewportSize({ height: 1600, width: 1600 });
     });
 
     it('patient view lgg_ucsf_2014 P04', function() {
