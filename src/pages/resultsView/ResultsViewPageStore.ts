@@ -298,15 +298,15 @@ export class ResultsViewPageStore {
 
         this.mutationAnnotationSettings = observable({
             cbioportalCount: false,
-            cbioportalCountThreshold: 10,
+            cbioportalCountThreshold: 0,
             cosmicCount: false,
-            cosmicCountThreshold: 10,
-            driverFilter: !!AppConfig.serverConfig.oncoprint_custom_driver_annotation_default,
+            cosmicCountThreshold: 0,
+            driverFilter: false,
             driverTiers: observable.map<boolean>(),
 
-            hotspots:!AppConfig.serverConfig.oncoprint_oncokb_hotspots_default,
-            _oncoKb:!AppConfig.serverConfig.oncoprint_oncokb_hotspots_default,
-            _ignoreUnknown: !!AppConfig.serverConfig.oncoprint_hide_vus_default,
+            hotspots:false,
+            _oncoKb:false,
+            _ignoreUnknown: false,
 
             set oncoKb(val:boolean) {
                 this._oncoKb = val;
@@ -333,6 +333,8 @@ export class ResultsViewPageStore {
                 return anySelected;
             }
         });
+
+        this.initMutationAnnotationSettings();
     }
 
     public queryReactionDisposer:any;
@@ -390,6 +392,19 @@ export class ResultsViewPageStore {
 
     @computed get queryContainsMutationOql() {
         return doesQueryContainMutationOQL(this.oqlQuery);
+    }
+
+    public initMutationAnnotationSettings() {
+        this.mutationAnnotationSettings.cbioportalCount = false;
+        this.mutationAnnotationSettings.cbioportalCountThreshold = 10;
+        this.mutationAnnotationSettings.cosmicCount = false;
+        this.mutationAnnotationSettings.cosmicCountThreshold = 10;
+        this.mutationAnnotationSettings.driverFilter = !!AppConfig.serverConfig.oncoprint_custom_driver_annotation_default;
+        this.mutationAnnotationSettings.driverTiers = observable.map<boolean>();
+
+        this.mutationAnnotationSettings.hotspots = !AppConfig.serverConfig.oncoprint_oncokb_hotspots_default;
+        (this.mutationAnnotationSettings as any)._oncoKb = !AppConfig.serverConfig.oncoprint_oncokb_hotspots_default;
+        (this.mutationAnnotationSettings as any)._ignoreUnknown = !!AppConfig.serverConfig.oncoprint_hide_vus_default;
     }
 
     private getURL() {
@@ -1818,7 +1833,13 @@ export class ResultsViewPageStore {
     });
 
     readonly genesets = remoteData<Geneset[]>({
-        invoke: async () => internalClient.fetchGenesetsUsingPOST({genesetIds: this.genesetIds.slice()}),
+        invoke: () => {
+            if (this.genesetIds && this.genesetIds.length > 0) {
+                return internalClient.fetchGenesetsUsingPOST({genesetIds: this.genesetIds});
+            } else {
+                return Promise.resolve([]);
+            }
+        },
         onResult:(genesets:Geneset[])=>{
             this.genesetCache.addData(genesets);
         }
