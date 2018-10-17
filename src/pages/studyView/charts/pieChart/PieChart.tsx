@@ -3,7 +3,7 @@ import { observer } from "mobx-react";
 import { VictoryPie, VictoryContainer, VictoryLabel, VictoryLegend, Slice } from 'victory';
 import { observable, computed, action, toJS } from "mobx";
 import _ from "lodash";
-import {getFrequencyStr, toSvgDomNodeWithLegend, UNSELECTED_COLOR} from "pages/studyView/StudyViewUtils";
+import {getFrequencyStr, toSvgDomNodeWithLegend} from "pages/studyView/StudyViewUtils";
 import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 import { AbstractChart } from "pages/studyView/charts/ChartContainer";
 import ifndef from "shared/lib/ifndef";
@@ -12,6 +12,7 @@ import { ClinicalDataCountWithColor } from "pages/studyView/StudyViewPageStore";
 import classnames from 'classnames';
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
 import { If } from 'react-if';
+import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
 
 export interface IPieChartProps {
     data: ClinicalDataCountWithColor[];
@@ -88,7 +89,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     @computed get fill() {
         return (d: ClinicalDataCountWithColor) => {
             if (!_.isEmpty(this.props.filters) && !_.includes(this.props.filters, d.value)) {
-                return UNSELECTED_COLOR;
+                return STUDY_VIEW_CONFIG.colors.theme.unselectedPieSlices;
             }
             return d.color;
         };

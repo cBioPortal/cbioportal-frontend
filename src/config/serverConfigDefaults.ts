@@ -69,8 +69,29 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
 
     enable_darwin:false,
 
-    session_url_length_threshold:"1990"
+    session_url_length_threshold:"1990",
 
+    study_view: {
+        tableAttrs: ['SAMPLE_CANCER_TYPE', 'SAMPLE_CANCER_TYPE_DETAILED'],
+        priority: {
+            "SAMPLE_CANCER_TYPE": 3000,
+            "SAMPLE_CANCER_TYPE_DETAILED": 2000,
+            "OS_SURVIVAL": 400,
+            "DFS_SURVIVAL": 300,
+            "MUTATION_COUNT_CNA_FRACTION": 200,
+            "MUTATED_GENES_TABLE": 90,
+            "CNA_GENES_TABLE": 80,
+            "STUDY_ID": 70,
+            "SEQUENCED": 60,
+            "HAS_CNA_DATA": 50,
+            "SAMPLE_COUNT_PATIENT": 40,
+            "MUTATION_COUNT": 30,
+            "FRACTION_GENOME_ALTERED": 20,
+            "PATIENT_GENDER": 9,
+            "PATIENT_SEX": 9,
+            "PATIENT_AGE": 9
+        }
+    }
 };
 
 export default ServerConfigDefaults;

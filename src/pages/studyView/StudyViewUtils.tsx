@@ -21,17 +21,11 @@ import {Layout} from 'react-grid-layout';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import { VirtualStudy } from "shared/model/VirtualStudy";
 import defaultClient from "shared/api/cbioportalClientInstance";
+import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 
-
-// Study View Default colors: tetradic color scheme
-export const PRIMARY_COLOR = '#2986E2';
-export const SECONDARY_COLOR = '#dc3912';
-export const TERTIARY_COLOR = '#f88508';
-export const QUATERNARY_COLOR = '#109618';
-
-//TODO:cleanup
 export const COLORS = [
-    PRIMARY_COLOR, SECONDARY_COLOR, TERTIARY_COLOR, QUATERNARY_COLOR,
+    STUDY_VIEW_CONFIG.colors.theme.primary, STUDY_VIEW_CONFIG.colors.theme.secondary,
+    STUDY_VIEW_CONFIG.colors.theme.tertiary, STUDY_VIEW_CONFIG.colors.theme.quaternary,
     '#990099', '#0099c6', '#dd4477', '#66aa00',
     '#b82e2e', '#316395', '#994499', '#22aa99',
     '#aaaa11', '#6633cc', '#e67300', '#8b0707',
@@ -86,60 +80,9 @@ export const COLORS = [
     '#651062', '#329267', '#5574a1', '#3b3ea5'
 ];
 
-export const FIXED_COLORS: {[clinicalAttribute: string]: string} = {
-    TRUE: "#66aa00",
-    FALSE: "#666666",
-    YES: "#66aa00",
-    NO: "#666666",
-    FEMALE: SECONDARY_COLOR,
-    MALE: PRIMARY_COLOR,
-    F: SECONDARY_COLOR,
-    M: PRIMARY_COLOR
-};
-
-export const SELECTED_GROUP_COLOR = SECONDARY_COLOR;
-export const UNSELECTED_GROUP_COLOR = PRIMARY_COLOR;
-
-export const NA_COLOR = '#CCCCCC';
-export const UNSELECTED_COLOR = '#808080';
 export const NA_DATA = "NA";
 export const EXPONENTIAL_FRACTION_DIGITS = 3;
-export const ONE_GRID_TABLE_ROWS = 8;
-export const MUTATED_GENE_COLOR='#008000'; // green
-export const DEL_COLOR = '#0000FF'; // blue
-export const AMP_COLOR = '#FF0000'; // red
-export const FILTER_TITLE_COLOR = '#A9A9A9'; // darkgray
-export const FILTER_CONTENT_COLOR = PRIMARY_COLOR;
 
-export const THRESHOLD_ESCAPE_TICK = 10;
-
-// ---- These are the settings from configs.json in the previous study view ----
-// TODO: figure out a way to custom the following settings
-export const PIE_TO_TABLE_LIMIT = 20;
-export const DEFAULT_ATTRS_SHOW_AS_TABLE = ['SAMPLE_CANCER_TYPE', 'SAMPLE_CANCER_TYPE_DETAILED'];
-export const ALWAYS_SHOWN_ATTRS = ['SAMPLE_CANCER_TYPE', 'SAMPLE_CANCER_TYPE_DETAILED'];
-export const NUMBER_OF_CHARTS_SHOWING = 5;
-export const DEFAULT_PRIORITY = 1;
-export const DEFAULT_PRIORITIES:{[id:string]:number} = {
-    "SAMPLE_CANCER_TYPE": 3000,
-    "SAMPLE_CANCER_TYPE_DETAILED": 2000,
-    "OS_SURVIVAL": 400,
-    "DFS_SURVIVAL": 300,
-    "MUTATION_COUNT_CNA_FRACTION": 200,
-    "MUTATED_GENES_TABLE": 90,
-    "CNA_GENES_TABLE": 80,
-    "STUDY_ID": 70,
-    "SEQUENCED": 60,
-    "HAS_CNA_DATA": 50,
-    "SAMPLE_COUNT_PATIENT": 40,
-    "MUTATION_COUNT": 30,
-    "FRACTION_GENOME_ALTERED": 20,
-    "PATIENT_GENDER": 9,
-    "PATIENT_SEX": 9,
-    "PATIENT_AGE": 9
-};
-
-// -----------------------------------------------------------------------------
 
 const OPERATOR_MAP: {[op:string]: string} = {
     "<=": "≤",
@@ -818,12 +761,12 @@ export function getCNAByAlteration(alteration: number) {
 
 export function getCNAColorByAlteration(alteration: number):string|undefined {
     if ([-2, 2].includes(alteration))
-        return alteration === -2 ? DEL_COLOR : AMP_COLOR;
+        return alteration === -2 ? STUDY_VIEW_CONFIG.colors.deletion : STUDY_VIEW_CONFIG.colors.amplification;
     return undefined;
 }
 
 export function getDefaultChartTypeByClinicalAttribute(clinicalAttribute: ClinicalAttribute): ChartType | undefined {
-    if (DEFAULT_ATTRS_SHOW_AS_TABLE.includes(getClinicalAttributeUniqueKey(clinicalAttribute))) {
+    if (STUDY_VIEW_CONFIG.tableAttrs.includes(getClinicalAttributeUniqueKey(clinicalAttribute))) {
         return ChartTypeEnum.TABLE;
     }
 
@@ -968,7 +911,7 @@ export function getLayoutMatrix(layoutMatrix: LayoutMatrixItem[], key: string, c
 }
 
 export function getDefaultPriorityByUniqueKey(uniqueKey: string): number {
-    return DEFAULT_PRIORITIES[uniqueKey] === undefined ? 1 : DEFAULT_PRIORITIES[uniqueKey];
+    return STUDY_VIEW_CONFIG.priority[uniqueKey] === undefined ? 1 : STUDY_VIEW_CONFIG.priority[uniqueKey];
 }
 
 // Grid includes 10px margin
@@ -991,14 +934,14 @@ export function getQValue(qvalue: number):string {
 
 export function getClinicalAttrFixedColor(value: string): string
 {
-    return FIXED_COLORS[value.replace(/\s/g, '').toUpperCase()];
+    return STUDY_VIEW_CONFIG.colors.reservedValue[value.replace(/\s/g, '').toUpperCase()];
 }
 
 export function pickClinicalAttrFixedColors(data: ClinicalDataCount[]): {[attribute: string]: string}
 {
     return _.reduce(data, (acc: { [id: string]: string }, slice) => {
         // pick a fixed color if predefined
-        const fixed = isNAClinicalValue(slice.value) ? NA_COLOR : getClinicalAttrFixedColor(slice.value);
+        const fixed = isNAClinicalValue(slice.value) ? STUDY_VIEW_CONFIG.colors.na : getClinicalAttrFixedColor(slice.value);
 
         if (fixed) {
             // update the map

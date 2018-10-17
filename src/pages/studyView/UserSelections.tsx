@@ -9,11 +9,9 @@ import {
 } from 'shared/api/generated/CBioPortalAPIInternal';
 import {ChartMeta, UniqueKey, StudyViewFilterWithSampleIdentifierFilters} from 'pages/studyView/StudyViewPageStore';
 import {
-    FILTER_CONTENT_COLOR,
-    FILTER_TITLE_COLOR,
     getCNAColorByAlteration, getHugoSymbolByEntrezGeneId,
     intervalFiltersDisplayValue,
-    isFiltered, MUTATED_GENE_COLOR, NA_COLOR
+    isFiltered
 } from 'pages/studyView/StudyViewUtils';
 import {PillTag} from "../../shared/components/PillTag/PillTag";
 import {GroupLogic} from "./filters/groupLogic/GroupLogic";
@@ -22,6 +20,7 @@ import classnames from 'classnames';
 import MobxPromise from 'mobxpromise';
 import {remoteData} from "../../shared/api/remoteData";
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
+import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 
 export interface IUserSelectionsProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
@@ -103,7 +102,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                                 <GroupLogic components={clinicalDataEqualityFilter.values.map(label => {
                                     return <PillTag
                                         content={label}
-                                        backgroundColor={FILTER_CONTENT_COLOR}
+                                        backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
                                         onDelete={() => this.props.updateClinicalDataEqualityFilter(chartMeta, _.remove(clinicalDataEqualityFilter.values, value => value !== label))}
                                     />
                                 })} operation={'or'} group={false}/>
@@ -125,7 +124,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                             <span className={styles.filterClinicalAttrName}>{chartMeta.displayName}</span>,
                             <PillTag
                                 content={intervalFiltersDisplayValue(clinicalDataIntervalFilter.values)}
-                                backgroundColor={FILTER_CONTENT_COLOR}
+                                backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
                                 onDelete={() => this.props.updateClinicalDataIntervalFilter(chartMeta, [])}
                             />
                         ]}
@@ -152,7 +151,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                                 const hugoSymbol = this.hugoSymbolsMap.get(entrezGene.toString());
                                 return <PillTag
                                     content={hugoSymbol === undefined ? `Entrez Gene ID: ${entrezGene}` : hugoSymbol}
-                                    backgroundColor={MUTATED_GENE_COLOR}
+                                    backgroundColor={STUDY_VIEW_CONFIG.colors.mutatedGene}
                                     onDelete={() => this.props.removeGeneFilter(entrezGene)}
                                 />
                             })}
@@ -178,7 +177,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                             components={filter.alterations.map((filter, index) => {
                                 const hugoSymbol = this.hugoSymbolsMap.get(filter.entrezGeneId.toString());
                                 let tagColor = getCNAColorByAlteration(filter.alteration);
-                                tagColor = tagColor === undefined ? NA_COLOR : tagColor;
+                                tagColor = tagColor === undefined ? STUDY_VIEW_CONFIG.colors.na : tagColor;
                                 return <PillTag
                                     content={hugoSymbol === undefined ? `Entrez Gene ID: ${filter.entrezGeneId}` : hugoSymbol}
                                     backgroundColor={tagColor}
@@ -199,7 +198,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                 let customChartName = chartMeta.uniqueKey === UniqueKey.SELECT_CASES_BY_IDS ? 'IDs' : chartMeta.displayName;
                 acc.push(<div className={styles.parentGroupLogic}><PillTag
                     content={`Selected ${sampleIdentifiers.length} samples by ${customChartName}`}
-                    backgroundColor={FILTER_TITLE_COLOR}
+                    backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterTitle}
                     onDelete={() => this.props.clearChartSampleIdentifierFilter(chartMeta)}
                 /></div>);
             }
