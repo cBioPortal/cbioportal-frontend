@@ -150,7 +150,6 @@ export function initializeAPIClients(){
     proxyAllPostMethodsOnClient(GenomeNexusAPI);
     proxyAllPostMethodsOnClient(GenomeNexusAPIInternal);
     proxyAllPostMethodsOnClient(OncoKbAPI);
-    proxyAllPostMethodsOnClient(sessionServiceAPI);
 }
 
 export function initializeConfiguration(){
