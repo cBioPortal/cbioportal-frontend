@@ -12,7 +12,7 @@ import {
     fetchCanonicalEnsemblGeneIds,
     getCanonicalTranscriptsByHugoSymbol
 } from "shared/lib/StoreUtils";
-import {annotateMutations, resolveDefaultsForMissingValues, fetchVariantAnnotationsIndexedByGenomicLocation, filterMutationsByTranscriptId} from "shared/lib/MutationAnnotator";
+import {annotateMutations, resolveDefaultsForMissingValues, fetchVariantAnnotationsIndexedByGenomicLocation} from "shared/lib/MutationAnnotator";
 import {getClinicalData, getGeneList, mutationInputToMutation, MutationInput} from "shared/lib/MutationInputParser";
 import {updateMissingGeneInfo} from "shared/lib/MutationUtils";
 import {IOncoKbData} from "shared/model/OncoKB";
@@ -165,19 +165,10 @@ export default class MutationMapperToolStore
                 //  an Immutable as the result of reduce, and MutationMapperStore when it is made immutable all the
                 //  mobx machinery going on in the readonly remoteDatas and observables somehow gets messed up.
                 return Promise.resolve(_.reduce(this.genes.result, (map: { [hugoGeneSymbol: string]: MutationMapperStore }, gene: Gene) => {
-                    // only pass mutations to the component that apply to the given transcript id
-                    const canonicalTranscriptId = this.canonicalTranscriptsByHugoSymbol.result && this.canonicalTranscriptsByHugoSymbol.result[gene.hugoGeneSymbol]? 
-                        this.canonicalTranscriptsByHugoSymbol.result[gene.hugoGeneSymbol].transcriptId : undefined;
-                    
                     const getMutations = () => {
-                        if (canonicalTranscriptId && this.indexedVariantAnnotations.result && !_.isEmpty(this.indexedVariantAnnotations.result)) {
-                            return filterMutationsByTranscriptId(this.mutations.result, canonicalTranscriptId, this.indexedVariantAnnotations.result);
-                        } else {
-                            return this.mutationsByGene[gene.hugoGeneSymbol];
-                        }
+                        return this.mutationsByGene[gene.hugoGeneSymbol];
                     };
-
-                    map[gene.hugoGeneSymbol] = new MutationMapperStore(AppConfig,
+                    map[gene.hugoGeneSymbol] = new MutationMapperStore(Object.assign({}, AppConfig, {filterMutationsBySelectedTranscript:!this.hasInputWithProteinChanges}),
                         gene,
                         getMutations,
                         this.indexedHotspotData,
@@ -198,6 +189,11 @@ export default class MutationMapperToolStore
         return this.mutationMapperStores.result[hugoGeneSymbol];
     }
 
+    @computed get hasInputWithProteinChanges(): boolean
+    {
+        return _.some(this.mutationData, m => (m.proteinChange && m.proteinChange.length > 0));
+    }
+
     @computed get rawMutations(): Mutation[]
     {
         return mutationInputToMutation(this.mutationData) as Mutation[] || [];
@@ -207,7 +203,16 @@ export default class MutationMapperToolStore
     {
         return this.indexedVariantAnnotations.result? annotateMutations(this.rawMutations, this.indexedVariantAnnotations.result) : [];
     }
-
+    @computed get mutationsNotAnnotated(): {lineNumber:number, mutationInput:Partial<MutationInput>}[]
+    {
+        return _.compact(this.mutations.result.map((mutation: Mutation, index:number) => {
+            if (!mutation || !mutation.gene || !mutation.gene.hugoGeneSymbol) {
+                return this.mutationData && {lineNumber:index+2, mutationInput:this.mutationData[index]};
+            } else {
+                return null;
+            }
+        }));
+    }
     @computed get mutationsByGene(): {[hugoGeneSymbol:string]: Mutation[]} {
         return _.groupBy(this.mutations.result,(mutation: Mutation) => mutation.gene.hugoGeneSymbol);
     }
