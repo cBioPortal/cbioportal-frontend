@@ -6,10 +6,15 @@ export default class sessionServiceAPI {
     /**
      * Retrieve Virtual Studies
      */
+
+
     getUserVirtualStudies(): Promise<Array<VirtualStudy>> {
+
         return request
                 .get(getVirtualStudyServiceUrl())
-                .then((res) => {
+                // @ts-ignore: this method comes from caching plugin and isn't in typing
+                .forceUpdate(true)
+                .then((res:any) => {
                     return res.body;
                 });              
     }
@@ -17,7 +22,9 @@ export default class sessionServiceAPI {
     getVirtualStudy(id:string): Promise<VirtualStudy> {
         return request
                 .get(`${getVirtualStudyServiceUrl()}/${id}`)
-                .then((res) => {
+                // @ts-ignore: this method comes from caching plugin and isn't in typing
+                .forceUpdate(true)
+                .then((res:any) => {
                     return res.body;
                 });              
     }
@@ -25,20 +32,23 @@ export default class sessionServiceAPI {
     deleteVirtualStudy(id:string){
         return request
                 .get(`${getVirtualStudyServiceUrl()}/delete/${id}`)
+                // @ts-ignore: this method comes from caching plugin and isn't in typing
+                .forceUpdate(true)
                              
     }
 
     addVirtualStudy(id:string){
         return request
                 .get(`${getVirtualStudyServiceUrl()}/add/${id}`)
-                             
+                // @ts-ignore: this method comes from caching plugin and isn't in typing
+                .forceUpdate(true)
     }
     
     saveVirtualStudy(object: any, save: boolean) {
         return request
             .post(getVirtualStudyServiceUrl() + (save ? '/save' : ''))
             .send(object)
-            .then((res) => {
+            .then((res:any) => {
                 let result = res.body;
                    return {
                        id:result.id
@@ -50,7 +60,7 @@ export default class sessionServiceAPI {
         return request
             .post(getSessionServiceUrl())
             .send(data)
-            .then((res) => {
+            .then((res:any) => {
                 return res.body
             });
     }
@@ -58,7 +68,9 @@ export default class sessionServiceAPI {
     getSession(sessionId:string) {
         return request
             .get(`${getSessionServiceUrl()}/${sessionId}`)
-            .then((res) => {
+            // @ts-ignore: this method comes from caching plugin and isn't in typing
+            .forceUpdate(true)
+            .then((res:any) => {
                 return res.body
             });
     }

@@ -38,6 +38,7 @@ import { getGenesetsFromHierarchy, getVolcanoPlotMinYValue, getVolcanoPlotData }
 import SampleListsInStudyCache from 'shared/cache/SampleListsInStudyCache';
 import formSubmit from "../../lib/formSubmit";
 import {ServerConfigHelpers} from "../../../config/config";
+import getBrowserWindow from "../../lib/getBrowserWindow";
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -470,7 +471,7 @@ export class QueryStore
 	});
 
 	readonly virtualStudies = remoteData(async ()=>{
-		if (ServerConfigHelpers.sessionServiceIsEnabled()) {
+		if (ServerConfigHelpers.sessionServiceIsEnabled() && getBrowserWindow().globalStores.appStore.isLoggedIn) {
 			return sessionServiceClient.getUserVirtualStudies();
 		} else {
 			return [];
