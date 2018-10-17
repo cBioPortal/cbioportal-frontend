@@ -264,7 +264,7 @@ export default class FunctionalImpactColumnFormatter {
 
     public static getData(genomeNexusData: VariantAnnotation | null): IFunctionalImpactData | null
     {
-        if (genomeNexusData === null)
+        if (!genomeNexusData)
         {
             return null;
         }
