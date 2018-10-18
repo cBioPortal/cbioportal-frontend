@@ -4,6 +4,8 @@ import {action, computed, observable} from "mobx";
 import {bind} from "bind-decorator";
 import Collapse from 'react-collapse';
 import {ControlLabel, FormControl, FormGroup} from "react-bootstrap";
+import {PageLayout} from "shared/components/PageLayout/PageLayout";
+import Helmet from "react-helmet";
 
 import Loader from "shared/components/loadingIndicator/LoadingIndicator";
 import {MSKTab, MSKTabs} from "shared/components/MSKTabs/MSKTabs";
@@ -40,24 +42,29 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
 
     public render() {
         return (
-            <div className="cbioportal-frontend">
-                <h1 style={{display: "inline"}}>MutationMapper</h1> interprets mutations with protein annotations
-                <div style={{padding:4}}/>
-                {this.input()}
-                <div style={{padding:4}}/>
-                <Loader isLoading={this.store.mutations.isPending} children={
-                    <span style={{paddingLeft:20}}>Annotating mutations with{' '}
-                        <a
-                            href={"https://www.genomenexus.org"}
-                            target="_blank"
-                        >
-                        Genome Nexus
-                        </a>
-                    </span>
-                } />
-                {this.store.mutationsNotAnnotated.length > 0 && this.inputParseWarning()}
-                {this.store.mutationData && this.mainTabs()}
-            </div>
+            <PageLayout className={'whiteBackground staticPage'}>
+                <Helmet>
+                    <title>{'cBioPortal for Cancer Genomics::MutationMapper'}</title>
+                </Helmet>
+                <div className="cbioportal-frontend">
+                    <h1 style={{display: "inline"}}>MutationMapper</h1> interprets mutations with protein annotations
+                    <div style={{padding:4}}/>
+                    {this.input()}
+                    <div style={{padding:4}}/>
+                    <Loader isLoading={this.store.mutations.isPending} children={
+                        <span style={{paddingLeft:20}}>Annotating mutations with{' '}
+                            <a
+                                href={"https://www.genomenexus.org"}
+                                target="_blank"
+                            >
+                            Genome Nexus
+                            </a>
+                        </span>
+                    } />
+                    {this.store.mutationsNotAnnotated.length > 0 && this.inputParseWarning()}
+                    {this.store.mutationData && this.mainTabs()}
+                </div>
+            </PageLayout>
         );
     }
 
