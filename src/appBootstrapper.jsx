@@ -10,7 +10,8 @@ import {
     initializeAPIClients,
     initializeAppStore,
     initializeConfiguration,
-    setServerConfig
+    setServerConfig,
+    setConfigDefaults
 } from './config/config';
 
 import {computed, extendObservable} from 'mobx';
@@ -209,6 +210,8 @@ $(document).ready(async () => {
     let config = window.rawServerConfig || await fetchServerConfig();
 
     setServerConfig(config);
+
+    setConfigDefaults();
 
     initializeAPIClients();
 
