@@ -26,7 +26,7 @@ import browser from 'bowser';
 
 import 'script-loader!raven-js/dist/raven.js';
 import {correctPatientUrl} from "shared/lib/urlCorrection";
-import {activateAnalytics} from "shared/lib/tracking";
+import {initializeTracking} from "shared/lib/tracking";
 import {CancerStudyQueryUrlParams} from "shared/components/query/QueryStore";
 import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 import {molecularProfileParams} from "shared/components/query/QueryStoreUtils";
@@ -179,7 +179,7 @@ window.routingStore = routingStore;
 
 let render = () => {
 
-    activateAnalytics();
+    initializeTracking();
 
     const rootNode = document.getElementById("reactRoot");
 
