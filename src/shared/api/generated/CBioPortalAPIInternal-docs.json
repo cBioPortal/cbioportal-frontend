@@ -1414,7 +1414,11 @@
           "type": "string"
         },
         "clinicalDataType": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "SAMPLE",
+            "PATIENT"
+          ]
         },
         "counts": {
           "type": "array",
