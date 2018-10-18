@@ -119,11 +119,8 @@ TCGA-S3-A6ZG-01	Breast Invasive Carcinoma, NOS	E928V	Missense_Mutation	7	5526649
 TCGA-17-Z026-01	Lung Adenocarcinoma	G721V	Missense_Mutation	7	55241714	55241714	G	T	5	21		46
 TCGA-50-5066-01	Lung Adenocarcinoma	L210=	Splice_Region	7	55220240	55220240	G	T	30	279		302
 TCGA-33-4566-01	Lung Squamous Cell Carcinoma	X1039_splice	Splice_Region	7	55269425	55269425	C	T	38	154		180
-TCGA-O2-A52N-01	Lung Squamous Cell Carcinoma	EGFR-CHODL	Fusion	7	-1	-1	NA
-TCGA-70-6723-01	Lung Squamous Cell Carcinoma	TCEA1-EGFR	Fusion	7	-1	-1	NA
 TCGA-13-0889-01	Serous Ovarian Cancer	T1074Nfs*6	Frame_Shift_Ins	7	55270266	55270267	-	A	8	60		240
 TCGA-25-2404-01	Serous Ovarian Cancer	V461M	Missense_Mutation	7	55227914	55227914	G	A	15	57		91
-TCGA-13-1489-01	Serous Ovarian Cancer	N1265Kfs*4	Frame_Shift_Ins	17	41243753	41243754	NA	TT	251	203		604
 TCGA-04-1357-01	Serous Ovarian Cancer	Q1538*	Nonsense_Mutation	17	41226411	41226411	G	A	415	270		598
 TCGA-29-2427-01	Serous Ovarian Cancer	L431*	Nonsense_Mutation	17	41246256	41246256	A	C	63	50		169
 TCGA-42-2591-01	Serous Ovarian Cancer	M1?	Translation_Start_Site	17	41276113	41276113	T	C	148	11		201
@@ -166,7 +163,6 @@ TCGA-S3-AA15-01	Breast Invasive Ductal Carcinoma	E1329*	Nonsense_Mutation	17	412
 TCGA-17-Z042-01	Lung Adenocarcinoma	E1112*	Nonsense_Mutation	17	41244214	41244214	C	A	19	75		61
 TCGA-44-4112-01	Lung Adenocarcinoma	Q1144*	Nonsense_Mutation	17	41244118	41244118	G	A	13	107	1	88
 TCGA-64-5781-01	Lung Adenocarcinoma	X6_splice	Splice_Region	17	41276130	41276130	G	A	7	19		21
-TCGA-69-A59K-01	Lung Adenocarcinoma	ZNF675-BRCA1	Fusion	17	-1	-1	NA
 TCGA-80-5611-01	Lung Adenocarcinoma	E143Q	Missense_Mutation	17	41256153	41256153	C	G	17	183		125
 TCGA-22-4613-01	Lung Squamous Cell Carcinoma	V1665L	Missense_Mutation	17	41219706	41219706	C	A	61	46		99
 TCGA-21-1079-01	Lung Squamous Cell Carcinoma	S1651F	Missense_Mutation	17	41222979	41222979	G	A	62	70		256
@@ -239,9 +235,6 @@ TCGA-E9-A1R2-01	Breast Invasive Ductal Carcinoma	V2151Ffs*17	Frame_Shift_Del	13	
 TCGA-D8-A1XL-01	Breast Invasive Ductal Carcinoma	E1646Kfs*24	Frame_Shift_Del	13	32913428	32913428	G	-	15	9		11
 TCGA-E9-A3HO-01	Breast Invasive Lobular Carcinoma	K437Ifs*22	Frame_Shift_Del	13	32906916	32906919	AAAG	-	14	10		18
 TCGA-D8-A27V-01	Breast Invasive Lobular Carcinoma	K936Nfs*24	Frame_Shift_Del	13	32911298	32911298	A	-	4	31		37
-TCGA-A2-A0ET-01	Breast Invasive Ductal Carcinoma	BRCA2-RXFP2	Fusion	13	-1	-1	NA
-TCGA-A2-A1FW-01	Breast Invasive Ductal Carcinoma	BRCA2-N4BP2L1	Fusion	13	-1	-1	NA
-TCGA-AO-A1KQ-01	Breast Invasive Ductal Carcinoma	BRCA2-ATP8A2	Fusion	13	-1	-1	NA
 TCGA-17-Z023-01	Lung Adenocarcinoma	A565Hfs*5	Frame_Shift_Del	13	32907305	32907314	CCAGCCACCA	-	13	46		47
 TCGA-94-7033-01	Lung Squamous Cell Carcinoma	K230*	Nonsense_Mutation	13	32905062	32905062	A	T	8	11		17
 TCGA-73-4662-01	Lung Adenocarcinoma	C554F	Missense_Mutation	13	32907276	32907276	G	T	40	45		92
@@ -445,9 +438,7 @@ TCGA-D8-A1JB-01	Breast Invasive Ductal Carcinoma	A137Tfs*39	Frame_Shift_Del	10	8
 TCGA-LL-A9Q3-01	Breast Invasive Lobular Carcinoma	I300Sfs*7	Frame_Shift_Del	10	89720745	89720745	A	-	20	38		132
 TCGA-OL-A66P-01	Breast Invasive Ductal Carcinoma	V217G	Missense_Mutation	10	89717625	89717625	T	G	9	30		51
 TCGA-S3-AA11-01	Breast Invasive Ductal Carcinoma	Y76*	Nonsense_Mutation	10	89690821	89690821	T	G	33	27		98
-TCGA-A1-A0SP-01	Breast Invasive Ductal Carcinoma	PTEN-WNK1	Fusion	10	-1	-1	NA
 TCGA-66-2788-01	Lung Squamous Cell Carcinoma	L193Hfs*6	Frame_Shift_Del	10	89711960	89711961	TG	A	44	116		137
-TCGA-34-A5IX-01	Lung Squamous Cell Carcinoma	PTEN-KIF20B	Fusion	10	-1	-1	NA
 TCGA-61-1900-01	Serous Ovarian Cancer	X165_splice	Splice_Site	10	89711873	89711873	A	C	17	131		278
 TCGA-56-6546-01	Lung Squamous Cell Carcinoma	P248H	Missense_Mutation	10	89717718	89717718	C	A	18	57		81
 TCGA-A7-A26G-01	Breast Invasive Carcinoma, NOS	I135K	Missense_Mutation	10	89692920	89692920	T	A	8	50		55
