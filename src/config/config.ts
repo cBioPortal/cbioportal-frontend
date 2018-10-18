@@ -64,27 +64,30 @@ export function setServerConfig(serverConfig:{[key:string]:any }){
 
     _.each(ServerConfigDefaults,(defaultVal,key)=>{
 
-        //if we know the prop default is boolean
-        //set config to default val IF the configuration value is NOT boolean
-        //this handles null or empty string values on boolean props
-        //we do not want to allow this for string values, for which empty string or null is valid value
-        if (_.isBoolean(defaultVal)){
-            if (!_.isBoolean(serverConfig[key])) {
-                serverConfig[key] = defaultVal;
-            }
-        } else {
-            // for non booleans, only resolve to default if prop is missing or null
-            if (!serverConfig.hasOwnProperty(key) || serverConfig[key] === null) {
-                serverConfig[key] = defaultVal;
+        // we only want to work on props which are actually passed to us for setting
+        // WE DO NOT EVER SET DEFAULT VALUES EXCEPT WHEN A PASSED VALUE IS NULL
+        if (serverConfig.hasOwnProperty(key)) {
+            //if we know the prop default is boolean
+            //set config to default val IF the configuration value is NOT boolean
+            //this handles null or empty string values on boolean props
+            //we do not want to allow this for string values, for which empty string or null is valid value
+            if (_.isBoolean(defaultVal)) {
+                if (!_.isBoolean(serverConfig[key])) {
+                    serverConfig[key] = defaultVal;
+                }
+            } else {
+                // for non booleans, only resolve to default if prop is missing or null
+                if (serverConfig.hasOwnProperty(key) && serverConfig[key] === null) {
+                    serverConfig[key] = defaultVal;
+                }
             }
         }
-
     });
 
-    const frontendOverride = (serverConfig.frontendConfigOverride) ? JSON.parse(serverConfig.frontendConfigOverride) : {}
+    const frontendOverride = (serverConfig.frontendConfigOverride) ? JSON.parse(serverConfig.frontendConfigOverride) : {};
 
     // allow any hardcoded serverConfig props to override those from service
-    const mergedConfig = Object.assign({}, serverConfig, frontendOverride , config.serverConfig || {})
+    const mergedConfig = Object.assign({}, serverConfig, frontendOverride , config.serverConfig || {});
 
     config.serverConfig = mergedConfig;
 
@@ -193,14 +196,16 @@ export function initializeConfiguration() {
 
 }
 
-export function fetchServerConfig(){
+export function setConfigDefaults(){
+    setServerConfig(ServerConfigDefaults);
+}
 
+export function fetchServerConfig(){
     return $.ajax({
         url: getConfigurationServiceApiUrl(),
         dataType: "jsonp",
         jsonpCallback: "callback"
     });
-
 }
 
 export function initializeAppStore(appStore:AppStore, config:IServerConfig) {
