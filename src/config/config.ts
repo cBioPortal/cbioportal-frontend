@@ -152,7 +152,7 @@ export function initializeAPIClients(){
     proxyAllPostMethodsOnClient(OncoKbAPI);
 }
 
-export function initializeConfiguration(){
+export function initializeConfiguration() {
     // @ts-ignore: ENV_* are defined in webpack.config.js
 
     // handle localStorage
@@ -169,25 +169,26 @@ export function initializeConfiguration(){
 
     // @ts-ignore: ENV_* are defined in webpack.config.js
     const APIROOT = `//${trimTrailingSlash(ENV_CBIOPORTAL_URL)}/`;
+    // @ts-ignore: ENV_* are defined in webpack.config.js
+    const GENOME_NEXUS_ROOT = `//${trimTrailingSlash(ENV_GENOME_NEXUS_URL)}/`;
 
     // we want to respect frontUrl if it is already set (case where localdist is true)
     // @ts-ignore: ENV_* are defined in webpack.config.js
-    const frontendUrl = config.frontendUrl || (/\/\/localhost:3000/.test(win.location.href)) ? "//localhost:3000/" : `//${ENV_CBIOPORTAL_URL}/`;
+    const frontendUrl = config.frontendUrl || (/\/\/localhost:3000/.test(win.location.href)) ? "//localhost:3000/" : APIROOT;
 
     const configServiceUrl = config.configurationServiceUrl || APIROOT;
 
-    const envConfig: Partial<IAppConfig> = {
-        apiRoot:APIROOT,
-        frontendUrl:frontendUrl
-    };
-
-    updateConfig(envConfig);
-
     // @ts-ignore: ENV_* are defined in webpack.config.js
-    if (ENV_GENOME_NEXUS_URL) {
-        if (!config.serverConfig) config.serverConfig = {};
-        // @ts-ignore: ENV_* are defined in webpack.config.js
-        config.serverConfig.genomenexus_url = `//${trimTrailingSlash(ENV_GENOME_NEXUS_URL)}/`;
+    if (IS_DEV_MODE) {
+    // @ts-ignore: ENV_* are defined in webpack.config.js
+        const envConfig: Partial<IAppConfig> = {
+            apiRoot: APIROOT,
+            frontendUrl: frontendUrl,
+            serverConfig: {
+                genomenexus_url: GENOME_NEXUS_ROOT
+            }
+        };
+        updateConfig(envConfig);
     }
 
 }
