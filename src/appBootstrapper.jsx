@@ -216,5 +216,4 @@ $(document).ready(async () => {
 
     render();
 
-
 });
