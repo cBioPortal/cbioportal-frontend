@@ -18,14 +18,9 @@ describe('homepage', function() {
 
     });
 
-    if (useExternalFrontend) {
-        it('it should show dev mode when testing', function () {
-            var devMode = $('.alert-warning');
-
-            devMode.waitForExist(60000);
-            assert(browser.getText('.alert-warning').indexOf('dev mode') > 0);
-        });
-    }
+    afterEach(()=>{
+        browser.localStorage('POST', {key: 'frontendConfig', value: JSON.stringify({"serverConfig":{}}) });
+    });
 
     it('test login observes authenticationMethod config property', function () {
 
@@ -53,7 +48,7 @@ describe('homepage', function() {
 
         browser.isExisting("a=Data Sets");
 
-        browser.localStorage('POST', {key: 'frontendConfig', value: JSON.stringify({"serverConfig":{"skin_show_data_tab":false}}) });
+        setServerConfiguration({"skin_show_data_tab":false});
 
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
@@ -64,5 +59,48 @@ describe('homepage', function() {
     });
 
 
+    it('shows right logo in header bar depending on skin_right_logo', function () {
+
+        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+
+        browser.waitForExist("#rightHeaderContent");
+
+        var test = browser.execute(function(){
+            return $("img[src='images/msk_logo_transparent_black.png']").length === 0;
+        });
+
+        assert.equal(test.value, true);
+
+        setServerConfiguration({"skin_right_logo":"msk_logo_transparent_black.png"});
+
+        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+
+        browser.waitForExist("#rightHeaderContent");
+
+        assert(testJqueryExpression(()=>{
+            return $("img[src='images/msk_logo_transparent_black.png']").length > 0;
+        }));
+
+    });
+
+    it('shows skin_blurb as configured', function () {
+
+        setServerConfiguration({"skin_blurb":"<div id='blurbDiv'>This is the blurb</div>"});
+
+        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
+
+        browser.waitForExist("#blurbDiv");
+
+    });
+
+
+
 });
 
+function testJqueryExpression(callback){
+    return browser.execute(callback).value;
+}
+
+function setServerConfiguration(serverConfig){
+    browser.localStorage('POST', {key: 'frontendConfig', value: JSON.stringify({"serverConfig":serverConfig}) });
+}
