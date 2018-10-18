@@ -26,8 +26,8 @@ type ProteinChainPanelProps = {
 @observer
 export default class ProteinChainPanel extends React.Component<ProteinChainPanelProps, {}> {
 
-    @observable public isExpanded:boolean = false;
-    @observable public pdbChainTableShown:boolean = false;
+    @observable private isExpanded:boolean = false;
+    @observable private pdbChainTableShown:boolean = false;
     @observable private hoveredChain:IPdbChain|undefined;
     @observable hitZoneConfig:any = {
         x: 0,
@@ -52,8 +52,6 @@ export default class ProteinChainPanel extends React.Component<ProteinChainPanel
 
     constructor(props:ProteinChainPanelProps) {
         super(props);
-
-        setWindowVariable("mutationsTabProteinChainPanel", this);
 
         this.handlers = {
             onMouseEnter:action(()=>{
