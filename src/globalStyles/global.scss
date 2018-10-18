@@ -270,9 +270,10 @@ th.reactable-header-sort-asc:after {
 }
 
 .pageNotFound {
-  width:500px;
-  margin:0 auto;
-  background:#eee;
+  text-align:center;
+  margin:100px auto;
+  font-size:50px;
+  padding:100px;
 }
 
 .table tbody tr td {

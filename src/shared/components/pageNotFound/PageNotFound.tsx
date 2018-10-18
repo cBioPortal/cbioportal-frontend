@@ -1,5 +1,7 @@
+import * as React from 'react';
+
 const PageNotFound = () => (
-    <div className={'pageNotFound'}>Page not found.</div>
+    <h4 className={'pageNotFound'}>Sorry, this page doesn't exist.</h4>
 );
 
 export default PageNotFound;
