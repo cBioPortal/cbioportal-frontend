@@ -909,7 +909,7 @@ export class StudyViewPageStore {
      */
     @computed
     get unfilteredAttrs() {
-        return _.unionBy(_.filter(this.visibleAttributes, (chartMeta:ChartMeta) => {
+        return _.sortBy(_.unionBy(_.filter(this.visibleAttributes, (chartMeta:ChartMeta) => {
             if(chartMeta.clinicalAttribute !== undefined) {
                 let key = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute);
                 return !this._clinicalDataEqualityFilterSet.has(key);
@@ -925,18 +925,18 @@ export class StudyViewPageStore {
                 attributeId: attr.clinicalAttributeId,
                 clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE'
             } as ClinicalDataFilter
-        }), attr => [attr.attributeId, attr.clinicalDataType].join(''));
+        }), attr => [attr.attributeId, attr.clinicalDataType].join('')),
+            attr => [attr.attributeId, attr.clinicalDataType].join(''));
     }
 
-    public unfilteredClinicalDataCount = remoteData<ClinicalDataCountItem[]>({
+    readonly unfilteredClinicalDataCount = remoteData<ClinicalDataCountItem[]>({
         invoke: async () => {
-            let data = await internalClient.fetchClinicalDataCountsUsingPOST({
+            return internalClient.fetchClinicalDataCountsUsingPOST({
                 clinicalDataCountFilter: {
                     attributes: this.unfilteredAttrs,
                     studyViewFilter: this.filters
                 } as ClinicalDataCountFilter
             });
-            return data;
         },
         default: []
     });
