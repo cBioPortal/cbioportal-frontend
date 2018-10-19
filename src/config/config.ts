@@ -64,27 +64,30 @@ export function setServerConfig(serverConfig:{[key:string]:any }){
 
     _.each(ServerConfigDefaults,(defaultVal,key)=>{
 
-        //if we know the prop default is boolean
-        //set config to default val IF the configuration value is NOT boolean
-        //this handles null or empty string values on boolean props
-        //we do not want to allow this for string values, for which empty string or null is valid value
-        if (_.isBoolean(defaultVal)){
-            if (!_.isBoolean(serverConfig[key])) {
-                serverConfig[key] = defaultVal;
-            }
-        } else {
-            // for non booleans, only resolve to default if prop is missing or null
-            if (!serverConfig.hasOwnProperty(key) || serverConfig[key] === null) {
-                serverConfig[key] = defaultVal;
+        // we only want to work on props which are actually passed to us for setting
+        // WE DO NOT EVER SET DEFAULT VALUES EXCEPT WHEN A PASSED VALUE IS NULL
+        if (serverConfig.hasOwnProperty(key)) {
+            //if we know the prop default is boolean
+            //set config to default val IF the configuration value is NOT boolean
+            //this handles null or empty string values on boolean props
+            //we do not want to allow this for string values, for which empty string or null is valid value
+            if (_.isBoolean(defaultVal)) {
+                if (!_.isBoolean(serverConfig[key])) {
+                    serverConfig[key] = defaultVal;
+                }
+            } else {
+                // for non booleans, only resolve to default if prop is missing or null
+                if (serverConfig.hasOwnProperty(key) && serverConfig[key] === null) {
+                    serverConfig[key] = defaultVal;
+                }
             }
         }
-
     });
 
-    const frontendOverride = (serverConfig.frontendConfigOverride) ? JSON.parse(serverConfig.frontendConfigOverride) : {}
+    const frontendOverride = (serverConfig.frontendConfigOverride) ? JSON.parse(serverConfig.frontendConfigOverride) : {};
 
     // allow any hardcoded serverConfig props to override those from service
-    const mergedConfig = Object.assign({}, serverConfig, frontendOverride , config.serverConfig || {})
+    const mergedConfig = Object.assign({}, serverConfig, frontendOverride , config.serverConfig || {});
 
     config.serverConfig = mergedConfig;
 
@@ -152,7 +155,7 @@ export function initializeAPIClients(){
     proxyAllPostMethodsOnClient(OncoKbAPI);
 }
 
-export function initializeConfiguration(){
+export function initializeConfiguration() {
     // @ts-ignore: ENV_* are defined in webpack.config.js
 
     // handle localStorage
@@ -169,37 +172,40 @@ export function initializeConfiguration(){
 
     // @ts-ignore: ENV_* are defined in webpack.config.js
     const APIROOT = `//${trimTrailingSlash(ENV_CBIOPORTAL_URL)}/`;
+    // @ts-ignore: ENV_* are defined in webpack.config.js
+    const GENOME_NEXUS_ROOT = `//${trimTrailingSlash(ENV_GENOME_NEXUS_URL)}/`;
 
     // we want to respect frontUrl if it is already set (case where localdist is true)
     // @ts-ignore: ENV_* are defined in webpack.config.js
-    const frontendUrl = config.frontendUrl || (/\/\/localhost:3000/.test(win.location.href)) ? "//localhost:3000/" : `//${ENV_CBIOPORTAL_URL}/`;
+    const frontendUrl = config.frontendUrl || (/\/\/localhost:3000/.test(win.location.href)) ? "//localhost:3000/" : APIROOT;
 
     const configServiceUrl = config.configurationServiceUrl || APIROOT;
 
-    const envConfig: Partial<IAppConfig> = {
-        apiRoot:APIROOT,
-        frontendUrl:frontendUrl
-    };
-
-    updateConfig(envConfig);
-
     // @ts-ignore: ENV_* are defined in webpack.config.js
-    if (ENV_GENOME_NEXUS_URL) {
-        if (!config.serverConfig) config.serverConfig = {};
-        // @ts-ignore: ENV_* are defined in webpack.config.js
-        config.serverConfig.genomenexus_url = `//${trimTrailingSlash(ENV_GENOME_NEXUS_URL)}/`;
+    if (IS_DEV_MODE) {
+    // @ts-ignore: ENV_* are defined in webpack.config.js
+        const envConfig: Partial<IAppConfig> = {
+            apiRoot: APIROOT,
+            frontendUrl: frontendUrl,
+            serverConfig: {
+                genomenexus_url: GENOME_NEXUS_ROOT
+            }
+        };
+        updateConfig(envConfig);
     }
 
 }
 
-export function fetchServerConfig(){
+export function setConfigDefaults(){
+    setServerConfig(ServerConfigDefaults);
+}
 
+export function fetchServerConfig(){
     return $.ajax({
         url: getConfigurationServiceApiUrl(),
         dataType: "jsonp",
         jsonpCallback: "callback"
     });
-
 }
 
 export function initializeAppStore(appStore:AppStore, config:IServerConfig) {
