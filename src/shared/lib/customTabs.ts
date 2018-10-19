@@ -1,6 +1,7 @@
 import load from 'little-loader';
 import getBrowserWindow from "./getBrowserWindow";
 import {ICustomTabConfiguration} from "../model/ITabConfiguration";
+import {autorun} from "mobx";
 
 export function loadCustomTabDeps(tab:any){
     if (tab.pathsToJs) {
@@ -27,7 +28,7 @@ export function showCustomTab(div:HTMLDivElement, tab:ICustomTabConfiguration, u
 
     const runCallback = (tab:ICustomTabConfiguration)=>{
         if (getBrowserWindow()[tab.mountCallbackName]) {
-            getBrowserWindow()[tab.mountCallbackName](div, tab, url, store);
+            getBrowserWindow()[tab.mountCallbackName](div, tab, url, store, autorun);
         } else {
             alert(`Callback for tab ${tab.title} not found`);
         }
