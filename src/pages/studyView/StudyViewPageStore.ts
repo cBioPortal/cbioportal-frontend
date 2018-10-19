@@ -4,8 +4,9 @@ import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import {action, computed, observable, ObservableMap, reaction} from "mobx";
 import {
-    ClinicalDataCount,
+    ClinicalDataCount, ClinicalDataCountFilter, ClinicalDataCountItem,
     ClinicalDataEqualityFilter,
+    ClinicalDataFilter,
     ClinicalDataIntervalFilter,
     ClinicalDataIntervalFilterValue,
     CopyNumberCountByGene,
@@ -40,6 +41,7 @@ import {
     COLORS,
     generateScatterPlotDownloadData,
     getClinicalAttributeUniqueKey,
+    getClinicalAttributeUniqueKeyByDataTypeAttrId,
     getClinicalDataIntervalFilterValues,
     getClinicalDataType,
     getCNAByAlteration,
@@ -47,6 +49,7 @@ import {
     getDefaultPriorityByUniqueKey,
     getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples,
+    getFrequencyStr,
     getQValue,
     getSamplesByExcludingFiltersOnChart,
     isFiltered,
@@ -56,8 +59,7 @@ import {
     NA_DATA,
     pickClinicalDataColors,
     showOriginStudiesInSummaryDescription,
-    submitToPage, getFrequencyStr,
-    getClinicalAttributeUniqueKeyByDataTypeAttrId
+    submitToPage
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -898,20 +900,80 @@ export class StudyViewPageStore {
         return result ? result.values : [];
     }
 
+    /**
+     * This is really not the best way to generate unfiltered attrs.
+     * But probably the best way to do in the current structure.
+     * We do not send duplicate API call by relying on the API caching.
+     * Maybe the server side should tell the frontend what attribute should be visualized.
+     *
+     */
+    @computed
+    get unfilteredAttrs() {
+        return _.unionBy(_.filter(this.visibleAttributes, (chartMeta:ChartMeta) => {
+            if(chartMeta.clinicalAttribute !== undefined) {
+                let key = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute);
+                return !this._clinicalDataEqualityFilterSet.has(key);
+            }
+            return false;
+        }).map((chartMeta: ChartMeta) => {
+            return {
+                attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
+                clinicalDataType: chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE'
+            } as ClinicalDataFilter
+        }), this.defaultVisibleAttributes.result.map((attr:ClinicalAttribute) => {
+            return {
+                attributeId: attr.clinicalAttributeId,
+                clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE'
+            } as ClinicalDataFilter
+        }), attr => [attr.attributeId, attr.clinicalDataType].join(''));
+    }
+
+    public unfilteredClinicalDataCount = remoteData<ClinicalDataCountItem[]>({
+        invoke: async () => {
+            let data = await internalClient.fetchClinicalDataCountsUsingPOST({
+                clinicalDataCountFilter: {
+                    attributes: this.unfilteredAttrs,
+                    studyViewFilter: this.filters
+                } as ClinicalDataCountFilter
+            });
+            return data;
+        },
+        default: []
+    });
+
     public getClinicalDataCount(chartMeta: ChartMeta) {
         let uniqueKey:string = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!);
         if(!this.clinicalDataCountPromises.hasOwnProperty(uniqueKey)) {
             this.clinicalDataCountPromises[uniqueKey] = remoteData<ClinicalDataCountWithColor[]>({
                 invoke: async () => {
-                    let data = await internalClient.fetchClinicalDataCountsUsingPOST({
-                        attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
-                        clinicalDataType: chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE',
-                        studyViewFilter: this.filters
-                    });
-                    data.sort(clinicalDataCountComparator);
+                    let dataType = chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE';
+                    let result = {};
+                    if(this._clinicalDataEqualityFilterSet.has(uniqueKey)) {
+                        result = await internalClient.fetchClinicalDataCountsUsingPOST({
+                            clinicalDataCountFilter: {
+                                attributes: [{
+                                    attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
+                                    clinicalDataType: dataType
+                                } as ClinicalDataFilter],
+                                studyViewFilter: this.filters
+                            } as ClinicalDataCountFilter
+                        });
+                    }else {
+                        result = await this.unfilteredClinicalDataCount.result;
+                    }
 
-                    let colors = pickClinicalDataColors(data);
-                    return _.reduce(data, (acc: ClinicalDataCountWithColor[], slice) => {
+
+                    let data = _.find(result, {
+                        attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
+                        clinicalDataType: dataType
+                    });
+                    let counts = [];
+                    if (data !== undefined) {
+                        counts = data.counts;
+                    }
+                    counts.sort(clinicalDataCountComparator);
+                    let colors = pickClinicalDataColors(counts);
+                    return _.reduce(counts, (acc: ClinicalDataCountWithColor[], slice) => {
                         acc.push(_.assign({}, slice, {color: colors[slice.value]}));
                         return acc;
                     }, []);
