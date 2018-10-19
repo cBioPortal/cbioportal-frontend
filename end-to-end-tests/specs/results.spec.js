@@ -132,7 +132,7 @@ describe('Results Page', function() {
 
     describe("Mutations Tab", () => {
 
-        describe.skip('3D structure visualizer', () => {
+        describe('3D structure visualizer', () => {
             before(() => {
                 var url = `${CBIOPORTAL_URL}/results/mutations?tab_index=tab_visualize&cancer_study_list=ov_tcga_pub&cancer_study_id=ov_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&Z_SCORE_THRESHOLD=2.0&case_set_id=ov_tcga_pub_3way_complete&case_ids=&gene_list=BRCA1+BRCA2&gene_set_choice=user-defined-list&Action=Submit`;
                 browser.url(url);
@@ -142,19 +142,9 @@ describe('Results Page', function() {
 
             it('populates PDB info properly', () => {
                 browser.click('[data-test=view3DStructure]');
-                browser.execute(()=>{ mutationsTabProteinChainPanel.isExpanded = true; mutationsTabProteinChainPanel.pdbChainTableShown = true; });
-                const textSelector = 'tr.highlighted div[data-test="pdbChainInfoText"] span';
-                browser.waitForExist(textSelector, 10000);
-                // text might be truncated depending on the actual browser, so using startsWith instead
-                browser.waitUntil(() => {
-                    const text = browser.getText(textSelector);
-                    if (text.trim && text.trim() !== "LOADING") {
-                        return true;
-                    } else {
-                        return false;
-                    }
-                }, 20000);
-                assert.ok(browser.getText(textSelector).startsWith("complex structure of brca1 brct with singly"));
+                browser.waitUntil(() => (browser.getText('[data-test=pdbChainInfoText]') !== "LOADING"), 10000);
+                const text = browser.elements('[data-test="pdbChainInfoText"]').value[0].getText().trim();
+                assert.ok(text.startsWith('complex structure of brca1 brct with singly'));
             });
 
         });
