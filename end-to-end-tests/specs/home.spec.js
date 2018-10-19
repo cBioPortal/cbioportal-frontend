@@ -640,7 +640,7 @@ describe('oncoprint', function() {
             };
         }
 
-        it.skip("should sort patients and samples by custom case list order correctly", ()=>{
+        it("should sort patients and samples by custom case list order correctly", ()=>{
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
             // select Colorectal TCGA and Adrenocortical Carcinoma TCGA
@@ -654,11 +654,12 @@ describe('oncoprint', function() {
             checkBox.waitForExist(10000);
             browser.click('[data-test="StudySelect"] input');
 
-            browser.setValue(inputSelector, '');
+            let inputLength = browser.getValue(inputSelector).length
+            for (let i = 0; i < inputLength; i++) { browser.setValue(inputSelector, "\uE003").pause(10); };
+
             browser.setValue(inputSelector, 'adrenocortical carcinoma tcga provisional');
             browser.pause(500);
             // should only be one element
-
 
 
             assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -670,7 +671,11 @@ describe('oncoprint', function() {
             browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
             browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
 
-            browser.execute(function() { homePageQueryStore.selectedSampleListId = "-1"; }); // select custom case list
+            // select custom case list
+            var caseSetSelector = $('[data-test="CaseSetSelector"] .Select-input input');
+            caseSetSelector.waitForExist(10000);
+            caseSetSelector.setValue('User-defined Case List')
+            browser.click('[data-test="CaseSetSelector"] .Select-option')
 
             var caseInput = $('[data-test="CustomCaseSetInput"]');
             caseInput.waitForExist(10000);
