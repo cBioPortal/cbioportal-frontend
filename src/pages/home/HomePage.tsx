@@ -83,9 +83,7 @@ export default class HomePage extends React.Component<IResultsViewPageProps, {}>
         return (
             <PageLayout noMargin={true} rightBar={<RightBar queryStore={this.queryStore} />}>
                 <div style={{padding:"0 15px"}}>
-                    <p style={{marginBottom:15}}>The cBioPortal for Cancer Genomics provides <b>visualization</b>, <b>analysis</b> and <b>download</b> of large-scale <b>cancer genomics</b> data sets.
-                        <br />
-                        <b>Please cite</b> <a href="http://www.ncbi.nlm.nih.gov/pubmed/23550210">Gao et al. <i>Sci. Signal.</i> 2013</a> &amp;  <a href="http://cancerdiscovery.aacrjournals.org/content/2/5/401.abstract"> Cerami et al. <i>Cancer Discov.</i> 2012</a> when publishing results based on cBioPortal.</p>
+                    <div dangerouslySetInnerHTML={{__html:AppConfig.serverConfig.skin_blurb!}}></div>
                     <QueryAndDownloadTabs store={this.queryStore}/>
                 </div>
                 <hr />
