@@ -43,7 +43,7 @@ function runResultsTestSuite(prefix){
         waitForAndCheckPlotsTab();
     });
 
-    it.skip(`${prefix} mutation tab`, function(){
+    it(`${prefix} mutation tab`, function(){
         browser.click("a.tabAnchor_mutations");
         browser.waitForVisible('.borderedChart svg',20000);
         var res = browser.checkElement('[data-test="mutationsTabDiv"]',{hide:['.qtip', '[data-test=view3DStructure]', '[data-test=GeneSummaryUniProt]'], viewportChangePause:4000}); // hide these things because the timing of data loading makes this test so flaky
