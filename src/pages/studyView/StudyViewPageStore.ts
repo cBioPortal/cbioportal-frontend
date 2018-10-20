@@ -4,8 +4,9 @@ import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import {action, computed, observable, ObservableMap, reaction} from "mobx";
 import {
-    ClinicalDataCount,
+    ClinicalDataCount, ClinicalDataCountFilter, ClinicalDataCountItem,
     ClinicalDataEqualityFilter,
+    ClinicalDataFilter,
     ClinicalDataIntervalFilter,
     ClinicalDataIntervalFilterValue,
     CopyNumberCountByGene,
@@ -40,6 +41,7 @@ import {
     COLORS,
     generateScatterPlotDownloadData,
     getClinicalAttributeUniqueKey,
+    getClinicalAttributeUniqueKeyByDataTypeAttrId,
     getClinicalDataIntervalFilterValues,
     getClinicalDataType,
     getCNAByAlteration,
@@ -47,6 +49,7 @@ import {
     getDefaultPriorityByUniqueKey,
     getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples,
+    getFrequencyStr,
     getQValue,
     getSamplesByExcludingFiltersOnChart,
     isFiltered,
@@ -56,8 +59,7 @@ import {
     NA_DATA,
     pickClinicalDataColors,
     showOriginStudiesInSummaryDescription,
-    submitToPage, getFrequencyStr,
-    getClinicalAttributeUniqueKeyByDataTypeAttrId
+    submitToPage
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -898,38 +900,102 @@ export class StudyViewPageStore {
         return result ? result.values : [];
     }
 
+    /**
+     * This is really not the best way to generate unfiltered attrs.
+     * But probably the best way to do in the current structure.
+     * We do not send duplicate API call by relying on the API caching.
+     * Maybe the server side should tell the frontend what attribute should be visualized.
+     *
+     */
+    @computed
+    get unfilteredAttrs() {
+        return _.sortBy(_.unionBy(_.filter(this.visibleAttributes, (chartMeta:ChartMeta) => {
+            if(chartMeta.clinicalAttribute !== undefined) {
+                let key = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute);
+                return !this._clinicalDataEqualityFilterSet.has(key);
+            }
+            return false;
+        }).map((chartMeta: ChartMeta) => {
+            return {
+                attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
+                clinicalDataType: chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE'
+            } as ClinicalDataFilter
+        }), this.defaultVisibleAttributes.result.map((attr:ClinicalAttribute) => {
+            return {
+                attributeId: attr.clinicalAttributeId,
+                clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE'
+            } as ClinicalDataFilter
+        }), attr => [attr.attributeId, attr.clinicalDataType].join('')),
+            attr => [attr.attributeId, attr.clinicalDataType].join(''));
+    }
+
+    readonly unfilteredClinicalDataCount = remoteData<ClinicalDataCountItem[]>({
+        invoke: async () => {
+            return internalClient.fetchClinicalDataCountsUsingPOST({
+                clinicalDataCountFilter: {
+                    attributes: this.unfilteredAttrs,
+                    studyViewFilter: this.filters
+                } as ClinicalDataCountFilter
+            });
+        },
+        default: []
+    });
+
     public getClinicalDataCount(chartMeta: ChartMeta) {
         let uniqueKey:string = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!);
         if(!this.clinicalDataCountPromises.hasOwnProperty(uniqueKey)) {
             this.clinicalDataCountPromises[uniqueKey] = remoteData<ClinicalDataCountWithColor[]>({
+                await: () =>[this.unfilteredClinicalDataCount],
                 invoke: async () => {
-                    let data = await internalClient.fetchClinicalDataCountsUsingPOST({
-                        attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
-                        clinicalDataType: chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE',
-                        studyViewFilter: this.filters
-                    });
-                    data.sort(clinicalDataCountComparator);
+                    let dataType = chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE';
+                    let result = {};
+                    if(this._clinicalDataEqualityFilterSet.has(uniqueKey)) {
+                        result = await internalClient.fetchClinicalDataCountsUsingPOST({
+                            clinicalDataCountFilter: {
+                                attributes: [{
+                                    attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
+                                    clinicalDataType: dataType
+                                } as ClinicalDataFilter],
+                                studyViewFilter: this.filters
+                            } as ClinicalDataCountFilter
+                        });
+                    }else {
+                        result = this.unfilteredClinicalDataCount.result;
+                    }
 
-                    let colors = pickClinicalDataColors(data);
-                    return _.reduce(data, (acc: ClinicalDataCountWithColor[], slice) => {
+                    let data = _.find(result, {
+                        attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
+                        clinicalDataType: dataType
+                    });
+                    let counts = [];
+                    if (data !== undefined) {
+                        counts = data.counts;
+                    }
+                    counts.sort(clinicalDataCountComparator);
+                    let colors = pickClinicalDataColors(counts);
+                    return _.reduce(counts, (acc: ClinicalDataCountWithColor[], slice) => {
                         acc.push(_.assign({}, slice, {color: colors[slice.value]}));
                         return acc;
                     }, []);
                 },
                 default: [],
                 onResult: (result) => {
-                    if (!isFiltered(this.userSelections)) {
-                        if (result.length < 2 && !_.includes(STUDY_VIEW_CONFIG.tableAttrs, uniqueKey)) {
-                            this.changeChartVisibility(uniqueKey, false);
-                        }
-                        // TODO: enable this feature, currently the pie is not properly converted to a table
-                        // if (result.length > PIE_TO_TABLE_LIMIT) {
-                        //     this.chartsType.set(uniqueKey, ChartTypeEnum.TABLE);
-                        // }
-                        if (this.chartsType.get(uniqueKey) === ChartTypeEnum.TABLE) {
-                            this.chartsDimension.set(uniqueKey, this.getTableDimensionByNumberOfRecords(result.length));
-                        }
-                    }
+                    // TODO: Make chart visibility as computed.
+                    // the onResult should not directly modify the chart visibility
+                    // Some of the endpoints relying on the visibleAttrs which may cause recursively calls.
+
+                    // if (!isFiltered(this.userSelections)) {
+                    //     if (result.length < 2 && !_.includes(STUDY_VIEW_CONFIG.tableAttrs, uniqueKey)) {
+                    //         this.changeChartVisibility(uniqueKey, false);
+                    //     }
+                    //     // TODO: enable this feature, currently the pie is not properly converted to a table
+                    //     // if (result.length > PIE_TO_TABLE_LIMIT) {
+                    //     //     this.chartsType.set(uniqueKey, ChartTypeEnum.TABLE);
+                    //     // }
+                    //     if (this.chartsType.get(uniqueKey) === ChartTypeEnum.TABLE) {
+                    //         this.chartsDimension.set(uniqueKey, this.getTableDimensionByNumberOfRecords(result.length));
+                    //     }
+                    // }
                 }
             });
         }
@@ -952,9 +1018,9 @@ export class StudyViewPageStore {
                 },
                 default: [],
                 onResult: (result) => {
-                    if (!isFiltered(this.userSelections) && result.length < 2) {
-                        this.changeChartVisibility(chartMeta.uniqueKey, false);
-                    }
+                    // if (!isFiltered(this.userSelections) && result.length < 2) {
+                    //     this.changeChartVisibility(chartMeta.uniqueKey, false);
+                    // }
                 }
             });
         }
@@ -1230,11 +1296,11 @@ export class StudyViewPageStore {
         },
         default: [],
         onResult:(mutationProfiles)=>{
-            if (!_.isEmpty(mutationProfiles)) {
-                this.changeChartVisibility(UniqueKey.MUTATED_GENES_TABLE, true);
-                this.chartsType.set(UniqueKey.MUTATED_GENES_TABLE, ChartTypeEnum.MUTATED_GENES_TABLE);
-                this.chartsDimension.set(UniqueKey.MUTATED_GENES_TABLE, DEFAULT_LAYOUT_PROPS.dimensions[ChartTypeEnum.MUTATED_GENES_TABLE])
-            }
+            // if (!_.isEmpty(mutationProfiles)) {
+            //     this.changeChartVisibility(UniqueKey.MUTATED_GENES_TABLE, true);
+            //     this.chartsType.set(UniqueKey.MUTATED_GENES_TABLE, ChartTypeEnum.MUTATED_GENES_TABLE);
+            //     this.chartsDimension.set(UniqueKey.MUTATED_GENES_TABLE, DEFAULT_LAYOUT_PROPS.dimensions[ChartTypeEnum.MUTATED_GENES_TABLE])
+            // }
         }
     });
 
@@ -1249,11 +1315,11 @@ export class StudyViewPageStore {
         },
         default: [],
         onResult:(cnaProfiles)=>{
-            if (!_.isEmpty(cnaProfiles)) {
-                this.changeChartVisibility(UniqueKey.CNA_GENES_TABLE, true);
-                this.chartsType.set(UniqueKey.CNA_GENES_TABLE, ChartTypeEnum.CNA_GENES_TABLE);
-                this.chartsDimension.set(UniqueKey.CNA_GENES_TABLE, DEFAULT_LAYOUT_PROPS.dimensions[ChartTypeEnum.CNA_GENES_TABLE])
-            }
+            // if (!_.isEmpty(cnaProfiles)) {
+            //     this.changeChartVisibility(UniqueKey.CNA_GENES_TABLE, true);
+            //     this.chartsType.set(UniqueKey.CNA_GENES_TABLE, ChartTypeEnum.CNA_GENES_TABLE);
+            //     this.chartsDimension.set(UniqueKey.CNA_GENES_TABLE, DEFAULT_LAYOUT_PROPS.dimensions[ChartTypeEnum.CNA_GENES_TABLE])
+            // }
         }
     });
 
