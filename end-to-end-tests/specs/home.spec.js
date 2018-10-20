@@ -267,7 +267,7 @@ describe('cross cancer query', function() {
 describe('single study query', function() {
     this.retries(2);
 
-    describe.skip('mutation mapper ', function() {
+    describe('mutation mapper ', function() {
         it('should show somatic and germline mutation rate', function() {
            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
             browser.setViewportSize({ height:1400, width:1000 });
