@@ -11,11 +11,11 @@
     ],
     "env": {
         "CBIOPORTAL_URL": {
-            "description":"Don't change this on first build. Then use this to set backend url to e.g. http://www.cbioportal.org/beta",
+            "description":"Set backend url to e.g. www.cbioportal.org",
 			"required": false
         },
         "GENOME_NEXUS_URL": {
-            "description":"Don't change on first build. Then use this to change genome nexus url to e.g. https://beta.genomenexus.org",
+            "description":"Set genome nexus url to e.g. www.genomenexus.org",
 			"required": false
         }
     }
