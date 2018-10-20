@@ -177,14 +177,17 @@ export function initializeConfiguration() {
 
     // we want to respect frontUrl if it is already set (case where localdist is true)
     // @ts-ignore: ENV_* are defined in webpack.config.js
-    const frontendUrl = config.frontendUrl || (/\/\/localhost:3000/.test(win.location.href)) ? "//localhost:3000/" : APIROOT;
+    const frontendUrl = config.frontendUrl || `//${win.location.host}/`;
 
-    const configServiceUrl = config.configurationServiceUrl || APIROOT;
+    const configServiceUrl = config.configurationServiceUrl || `${APIROOT}config_service.jsp`;
 
+    // should override both when in dev mode and when serving compiled source
+    // code outside of legacy project
     // @ts-ignore: ENV_* are defined in webpack.config.js
-    if (IS_DEV_MODE) {
+    if (IS_DEV_MODE || !(config.frontendUrl)) {
     // @ts-ignore: ENV_* are defined in webpack.config.js
         const envConfig: Partial<IAppConfig> = {
+            configurationServiceUrl: configServiceUrl,
             apiRoot: APIROOT,
             frontendUrl: frontendUrl,
             serverConfig: {
