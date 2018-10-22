@@ -11,11 +11,14 @@ import {getPercentage} from "../../lib/FormatUtils";
 import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
 import {makeProfiledInClinicalAttributes} from "../oncoprint/ResultsViewOncoprintUtils";
 const CheckedSelect = require("react-select-checked").CheckedSelect;
+import ReactSelect from "react-select";
 
 export interface IClinicalAttributeSelectorProps {
     store:ResultsViewPageStore;
     selectedClinicalAttributeIds:(string|SpecialAttribute)[];
     onChange:(selectedAttributeIds:(string|SpecialAttribute)[])=>void;
+    multiple?:boolean;
+    name?:string;
 }
 
 @observer
@@ -91,9 +94,17 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
         return this.props.selectedClinicalAttributeIds.map(x=>({value:x}));
     }
 
-    @computed get onChange() {
+    @computed get onChangeMultiple() {
         return (values:{value:string|SpecialAttribute}[])=>{
             this.props.onChange(values.map(o=>o.value));
+        };
+    }
+
+    @computed get onChangeSingle() {
+        return (option:any|null)=>{
+            if (option !== null) {
+                this.props.onChange([option.value]);
+            }
         };
     }
 
@@ -116,15 +127,31 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
                 placeholder = "Add clinical tracks..";
                 options = this.options.result!;
         }
-        return (
-            <CheckedSelect
-                disabled={disabled}
-                placeholder={placeholder}
-                onChange={this.onChange}
-                options={options}
-                value={this.value}
-                labelKey="label"
-            />
-        );
+        if (this.props.multiple) {
+            return (
+                <CheckedSelect
+                    name={this.props.name}
+                    disabled={disabled}
+                    placeholder={placeholder}
+                    onChange={this.onChangeMultiple}
+                    options={options}
+                    value={this.value}
+                    labelKey="label"
+                />
+            );
+        } else {
+            return (
+                <ReactSelect
+                    name={this.props.name}
+                    disabled={disabled}
+                    placeholder={placeholder}
+                    onChange={this.onChangeSingle}
+                    options={options}
+                    clearable={false}
+                    searchable={true}
+                    value={this.value}
+                />
+            );
+        }
     }
 }
