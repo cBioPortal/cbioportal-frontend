@@ -1434,7 +1434,7 @@ export class ResultsViewPageStore {
     }
 
     private getClinicalDataCount(clinicalDataType: "SAMPLE" | "PATIENT", studies:any[], entities: any[], attributeIds: string[]):
-    Promise<Array<ClinicalData>> {
+    Promise<number> {
 
         const projection = "META";
         // single study query endpoint is optimal so we should use it
