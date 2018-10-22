@@ -280,8 +280,8 @@ export function uniqueGenomicLocations(mutations: Mutation[]): GenomicLocation[]
 {
     const genomicLocationMap: {[key: string]: GenomicLocation} = {};
 
-    mutations.map((mutaiton: Mutation) => {
-        const genomicLocation: GenomicLocation|undefined = extractGenomicLocation(mutaiton);
+    mutations.map((mutation: Mutation) => {
+        const genomicLocation: GenomicLocation|undefined = extractGenomicLocation(mutation);
 
         if (genomicLocation) {
             genomicLocationMap[genomicLocationString(genomicLocation)] = genomicLocation;
