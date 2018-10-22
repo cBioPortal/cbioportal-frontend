@@ -1,4 +1,5 @@
 import * as React from 'react';
+import AppConfig from "appConfig";
 
 export default class PortalFooter extends React.Component<{}, {}> {
 
@@ -9,7 +10,7 @@ export default class PortalFooter extends React.Component<{}, {}> {
             <span className="pipeSeperator">|</span><a href="http://www.mskcc.org/mskcc/html/44.cfm">MSKCC</a><span className="pipeSeperator">|</span>
             <a href="http://cancergenome.nih.gov/">TCGA</a>
             <br/>
-            Questions and feedback: <span className="mailme" title="Contact us">cbioportal at googlegroups dot com</span>
+            Questions and feedback: <span className="mailme" title="Contact us">{AppConfig.serverConfig.skin_email_contact}</span>
             <span className="pipeSeperator">|</span>
             <a target="_blank" href="http://groups.google.com/group/cbioportal">User discussion group</a>
             <span className="pipeSeperator">|</span>
