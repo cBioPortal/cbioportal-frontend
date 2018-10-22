@@ -1,16 +1,9 @@
 export interface IAppConfig {
     apiRoot?: string;
     baseUrl?:string;
-    authLogoutUrl?: string;
-    authUserName?: string;
-    authGoogleLogin?: string;
     configurationServiceUrl?: string;
     frontendUrl?: string;
     serverConfig:IServerConfig;
-
-    studiesWithGermlineConsentedSamples?:string[];
-    isoformOverrideSource?: string;
-
 }
 
 export type PriorityStudies = {
@@ -43,6 +36,7 @@ export interface IServerConfig {
     "oncoprint_oncokb_hotspots_default": string | undefined;
     "genomenexus_url": string|null;
     "google_analytics_profile_id": string|null;
+    "isoformOverrideSource" : string;
     "oncoprint_hide_vus_default": boolean;
     "mycancergenome_show": boolean | undefined;
     "oncokb_public_api_url": string|null;
@@ -88,6 +82,7 @@ export interface IServerConfig {
     "skin_title": string|null;
     "skin_authorization_message": string|null;
     "study_view": StudyView;
+    "studiesWithGermlineConsentedSamples":string[]|undefined;
     "mdacc_heatmap_study_meta_url": string|null;
     "mdacc_heatmap_study_url": string|null;
     "oncoprint_custom_driver_annotation_tiers_menu_label": string|null;

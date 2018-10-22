@@ -9,6 +9,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     oncoprint_oncokb_hotspots_default:undefined,
     oncoprint_hide_vus_default:false,
     oncokb_public_api_url:"oncokb.org/api/v1",
+    isoformOverrideSource:"uniprot",
     show_hotspot:true,
     show_oncokb:true,
     show_civic:false,

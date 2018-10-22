@@ -23,23 +23,11 @@ import MutationMapperStore from "./MutationMapperStore";
 import { DropdownButton, MenuItem } from 'react-bootstrap';
 import { EnsemblTranscript } from 'shared/api/generated/GenomeNexusAPI';
 import Mutations from 'pages/resultsView/mutation/Mutations';
-
-// Anything from App config will be included in mutation mapper config
-export interface IMutationMapperConfig {
-    userEmailAddress?:string;
-    showCivic?: boolean;
-    showHotspot?: boolean;
-    showMyCancerGenome?: boolean;
-    showOncoKB?: boolean;
-    showGenomeNexus?: boolean;
-    isoformOverrideSource?: string;
-    // non App config (maybe need to split in separate config?)
-    filterMutationsBySelectedTranscript?: boolean;
-}
+import {IServerConfig} from "../../../config/IAppConfig";
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
-    config: IMutationMapperConfig;
+    config: IServerConfig;
     studyId?: string;
     myCancerGenomeData?: IMyCancerGenomeData;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
