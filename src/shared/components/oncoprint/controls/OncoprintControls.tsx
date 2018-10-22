@@ -380,6 +380,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                     store={this.props.store}
                     selectedClinicalAttributeIds={this.props.state.selectedClinicalAttributeIds}
                     onChange={this.props.handlers.onChangeSelectedClinicalTracks}
+                    multiple={true}
                 />
             </div>
         );
