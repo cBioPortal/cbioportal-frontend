@@ -295,7 +295,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                 id:"survival",
                 hide:()=>{
                     return !this.resultsViewPageStore.survivalClinicalDataExists.isComplete ||
-                        this.resultsViewPageStore.survivalClinicalDataExists.result!;
+                        !this.resultsViewPageStore.survivalClinicalDataExists.result!;
                 },
                 getTab: () => {
                     return <MSKTab key={4} id={ResultsViewTab.SURVIVAL} linkText="Survival">
