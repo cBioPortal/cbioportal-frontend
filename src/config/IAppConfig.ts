@@ -56,7 +56,8 @@ export interface IServerConfig {
     "skin_data_sets_footer": string|null;
     "skin_data_sets_header": string|null;
     "skin_documentation_markdown": boolean;
-    "skin_email_contact": string|null;
+    "skin_description": string;
+    "skin_email_contact": string;
     "skin_example_study_queries": string|null;
     "skin_examples_right_column_html": string|null;
     "skin_documentation_faq": string|null;
@@ -79,7 +80,7 @@ export interface IServerConfig {
     "skin_show_tools_tab": boolean;
     "skin_show_tutorials_tab": boolean;
     "skin_show_web_api_tab": boolean;
-    "skin_title": string|null;
+    "skin_title": string;
     "skin_authorization_message": string|null;
     "study_view": StudyView;
     "studiesWithGermlineConsentedSamples":string[]|undefined;
