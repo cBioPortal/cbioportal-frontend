@@ -80,6 +80,7 @@ export interface IServerConfig {
     "skin_show_tools_tab": boolean;
     "skin_show_tutorials_tab": boolean;
     "skin_show_web_api_tab": boolean;
+    "skin_show_tweet_button": boolean;
     "skin_title": string;
     "skin_authorization_message": string|null;
     "study_view": StudyView;
