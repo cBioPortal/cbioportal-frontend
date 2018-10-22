@@ -35,6 +35,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_show_r_matlab_tab:true,
     skin_show_tools_tab:true,
     skin_show_web_api_tab:true,
+    skin_show_tweet_button:false,
     skin_title:"cBioPortal for Cancer Genomics",
 
     skin_blurb:`The cBioPortal for Cancer Genomics provides 
