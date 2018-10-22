@@ -265,7 +265,7 @@ describe('cross cancer query', function() {
 });
 
 describe('single study query', function() {
-    this.retries(2);
+    this.retries(1);
 
     describe('mutation mapper ', function() {
         it('should show somatic and germline mutation rate', function() {
@@ -335,11 +335,20 @@ describe('single study query', function() {
 });
 
 describe("results page", function() {
-    this.retries(2);
+    this.retries(1);
 
-    before(()=>{
-        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-        browser.setViewportSize({ height:1400, width:1000 });
+    describe("tab hiding", function() {
+        it("should hide coexpression and cn segment tabs in a query without any data for those tabs", ()=>{
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?session_id=5bc64b48498eb8b3d5685af7`);
+            waitForOncoprint(10000);
+            assert(!browser.isVisible('a.tabAnchor_coexpression'));
+            assert(!browser.isVisible('a.tabAnchor_cnSegments'));
+        });
+        it("should hide survival tab in a query without any survival data", ()=>{
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?session_id=5bc64bb5498eb8b3d5685afb`);
+            waitForOncoprint(10000);
+            assert(!browser.isVisible('a.tabAnchor_survival'));
+        });
     });
     describe("mutual exclusivity tab", function() {
         it("should appear in a single study query with multiple genes", function(){
@@ -382,14 +391,7 @@ describe("results page", function() {
 
 describe('oncoprint', function() {
 
-    this.retries(2);
-
-    before(()=>{
-        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-
-
-        browser.setViewportSize({ height:1400, width:1000 });
-    });
+    this.retries(1);
 
     describe("initialization from URL parameters", ()=>{
         it("should start in patient mode if URL parameter show_samples=false or not specified", ()=>{
