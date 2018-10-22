@@ -21,7 +21,7 @@ export type VirtualCohort = {
 export type StudyView = {
     tableAttrs: string[]
     priority: { [id: string]: number }
-}
+};
 
 export interface IServerConfig {
     "app_name": string | null;
