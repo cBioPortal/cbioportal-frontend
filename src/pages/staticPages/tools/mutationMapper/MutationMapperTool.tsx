@@ -369,7 +369,7 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
                             pubMedCache={this.store.pubMedCache}
                             pdbHeaderCache={this.store.pdbHeaderCache}
                             myCancerGenomeData={this.store.myCancerGenomeData}
-                            config={AppConfig}
+                            config={AppConfig.serverConfig}
                             showDropDown={true}
                             showOnlyAnnotatedTranscriptsInDropdown={!this.store.hasInputWithProteinChanges}
                         />

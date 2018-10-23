@@ -53,7 +53,7 @@ export default class MutationMapperToolStore
     }, undefined);
 
     @computed get isoformOverrideSource(): string {
-        return AppConfig.isoformOverrideSource || "uniprot";
+        return AppConfig.serverConfig.isoformOverrideSource;
     }
 
     readonly hugoGeneSymbols = remoteData({
@@ -129,7 +129,7 @@ export default class MutationMapperToolStore
     }, []);
 
     readonly indexedVariantAnnotations = remoteData<{[genomicLocation: string]: VariantAnnotation} | undefined>({
-        invoke: async () => await fetchVariantAnnotationsIndexedByGenomicLocation(this.rawMutations, ["annotation_summary","hotspots"], AppConfig.isoformOverrideSource),
+        invoke: async () => await fetchVariantAnnotationsIndexedByGenomicLocation(this.rawMutations, ["annotation_summary","hotspots"], AppConfig.serverConfig.isoformOverrideSource),
         onError: (err: Error) => {
             this.criticalErrors.push(err);
         }
@@ -168,7 +168,7 @@ export default class MutationMapperToolStore
                     const getMutations = () => {
                         return this.mutationsByGene[gene.hugoGeneSymbol];
                     };
-                    map[gene.hugoGeneSymbol] = new MutationMapperStore(Object.assign({}, AppConfig, {filterMutationsBySelectedTranscript:!this.hasInputWithProteinChanges}),
+                    map[gene.hugoGeneSymbol] = new MutationMapperStore(AppConfig.serverConfig, {filterMutationsBySelectedTranscript:!this.hasInputWithProteinChanges},
                         gene,
                         getMutations,
                         this.indexedHotspotData,

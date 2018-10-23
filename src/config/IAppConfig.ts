@@ -1,16 +1,9 @@
 export interface IAppConfig {
     apiRoot?: string;
     baseUrl?:string;
-    authLogoutUrl?: string;
-    authUserName?: string;
-    authGoogleLogin?: string;
     configurationServiceUrl?: string;
     frontendUrl?: string;
     serverConfig:IServerConfig;
-
-    studiesWithGermlineConsentedSamples?:string[];
-    isoformOverrideSource?: string;
-
 }
 
 export type PriorityStudies = {
@@ -31,7 +24,7 @@ export type StudyView = {
 }
 
 export interface IServerConfig {
-
+    "app_name": string | null;
     "app_version": string|null;   // default: "1.0"
     "authenticationMethod": string | undefined;
     "bitly_api_key": string|null;
@@ -43,6 +36,7 @@ export interface IServerConfig {
     "oncoprint_oncokb_hotspots_default": string | undefined;
     "genomenexus_url": string|null;
     "google_analytics_profile_id": string|null;
+    "isoformOverrideSource" : string;
     "oncoprint_hide_vus_default": boolean;
     "mycancergenome_show": boolean | undefined;
     "oncokb_public_api_url": string|null;
@@ -62,7 +56,8 @@ export interface IServerConfig {
     "skin_data_sets_footer": string|null;
     "skin_data_sets_header": string|null;
     "skin_documentation_markdown": boolean;
-    "skin_email_contact": string|null;
+    "skin_description": string;
+    "skin_email_contact": string;
     "skin_example_study_queries": string|null;
     "skin_examples_right_column_html": string|null;
     "skin_documentation_faq": string|null;
@@ -85,9 +80,11 @@ export interface IServerConfig {
     "skin_show_tools_tab": boolean;
     "skin_show_tutorials_tab": boolean;
     "skin_show_web_api_tab": boolean;
-    "skin_title": string|null;
+    "skin_show_tweet_button": boolean;
+    "skin_title": string;
     "skin_authorization_message": string|null;
     "study_view": StudyView;
+    "studiesWithGermlineConsentedSamples":string[]|undefined;
     "mdacc_heatmap_study_meta_url": string|null;
     "mdacc_heatmap_study_url": string|null;
     "oncoprint_custom_driver_annotation_tiers_menu_label": string|null;
