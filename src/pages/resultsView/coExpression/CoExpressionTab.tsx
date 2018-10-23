@@ -36,8 +36,26 @@ export class CoExpressionCache extends MobxPromiseCache<{entrezGeneId:number, mo
 
 @observer
 export default class CoExpressionTab extends React.Component<ICoExpressionTabProps, {}> {
-    @observable selectedMolecularProfile:MolecularProfile|undefined; // only undefined initially, until molecular profiles downloaded, at which point its set automatically (see componentWillMount) and cant be made undefined again
-    @observable selectedEntrezGeneId:number | undefined; // only undefined initially, until genes downloaded, at which point its set automatically (see componentWillMount) and cant be made undefined again
+    @observable _selectedMolecularProfile:MolecularProfile|undefined; // only undefined initially, until molecular profiles downloaded
+    @observable _selectedEntrezGeneId:number | undefined; // only undefined initially, until genes downloaded
+
+    @computed get selectedMolecularProfile():MolecularProfile|undefined {
+        if (!this._selectedMolecularProfile && this.props.store.coexpressionTabMolecularProfiles.isComplete
+            && this.props.store.coexpressionTabMolecularProfiles.result.length > 0) {
+            return this.props.store.coexpressionTabMolecularProfiles.result[0];
+        } else {
+            return this._selectedMolecularProfile;
+        }
+    }
+
+    @computed get selectedEntrezGeneId():number | undefined {
+        if (this._selectedEntrezGeneId === undefined && this.props.store.genes.isComplete &&
+                this.props.store.genes.result.length > 0) {
+            return this.props.store.genes.result[0].entrezGeneId;
+        } else {
+            return this._selectedEntrezGeneId;
+        }
+    }
 
     @observable private plotState = {
         plotLogScale: false,
@@ -45,9 +63,6 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
     };
 
     private plotHandlers: ICoExpressionPlotProps["handlers"];
-
-    private setMolecularProfileReaction:IReactionDisposer;
-    private setGeneReaction:IReactionDisposer;
 
     constructor(props:ICoExpressionTabProps) {
         super(props);
@@ -66,27 +81,21 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
 
     @bind
     public onSelectDataSet(option:any) {
-        this.selectedMolecularProfile = this.molecularProfileIdToMolecularProfile[option.value];
+        if (this.props.store.molecularProfileIdToMolecularProfile.isComplete) {
+            this._selectedMolecularProfile = this.props.store.molecularProfileIdToMolecularProfile.result[option.value];
+        }
     }
 
     @bind
     private onSelectGene(entrezGeneId:string) {
-        this.selectedEntrezGeneId = parseInt(entrezGeneId, 10);
-    }
-
-    @computed get profiles() {
-        return filterAndSortProfiles(this.props.store.molecularProfilesInStudies.result);
+        this._selectedEntrezGeneId = parseInt(entrezGeneId, 10);
     }
 
     @computed get hasMutationData() {
         return !!_.find(
-            this.props.store.molecularProfilesInStudies.result,
+            this.props.store.molecularProfilesWithData.result,
             profile=>profile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED
         );
-    }
-
-    @computed get molecularProfileIdToMolecularProfile() {
-        return _.keyBy(this.profiles, profile=>profile.molecularProfileId);
     }
 
     private coExpressionCache:CoExpressionCache = new CoExpressionCache(
@@ -116,8 +125,10 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
     );
 
     private get dataSetSelector() {
-        if (this.selectedMolecularProfile && this.props.store.molecularProfileIdToProfiledSampleCount.isComplete) {
-            let options = this.profiles.map(profile=>{
+        if (this.selectedMolecularProfile &&
+            this.props.store.molecularProfileIdToProfiledSampleCount.isComplete &&
+            this.props.store.coexpressionTabMolecularProfiles.isComplete) {
+            let options = this.props.store.coexpressionTabMolecularProfiles.result.map(profile=>{
                 const profiledSampleCount = this.props.store.molecularProfileIdToProfiledSampleCount.result![profile.molecularProfileId];
                 return {
                     label: `${profile.name} (${profiledSampleCount} sample${profiledSampleCount !== 1 ? "s" : ""})`,
@@ -161,10 +172,10 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
 
     @bind
     private geneTabs() {
-        if (this.selectedMolecularProfile && this.selectedEntrezGeneId !== undefined) {
+        if (this.selectedMolecularProfile && this.selectedEntrezGeneId !== undefined && this.props.store.coexpressionTabMolecularProfiles.isComplete) {
             const coExpressionVizElements = [];
             for (const gene of this.props.store.genes.result!) {
-                for (const profile of this.profiles) {
+                for (const profile of this.props.store.coexpressionTabMolecularProfiles.result) {
                     coExpressionVizElements.push(
                         <CoExpressionViz
                             key={`${gene.entrezGeneId},${profile.molecularProfileId}`}
@@ -219,32 +230,10 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
         }
     }
 
-    componentWillMount() {
-        this.setMolecularProfileReaction = autorun(()=>{
-            // set sourceMolecularProfile to default if its not already set
-            // will only happen once, the first time profiles is nonempty array. it cant become undefined again
-            if(!this.selectedMolecularProfile && this.profiles.length) {
-                this.selectedMolecularProfile = this.profiles[0];
-            }
-        });
-
-        this.setGeneReaction = autorun(()=>{
-            // set gene to default if its not already set
-            // will only happen once, the first time props.genes is set to nonempty array. it cant become undefined again
-            if (!this.selectedEntrezGeneId && this.props.store.genes.result!.length) {
-                this.selectedEntrezGeneId = this.props.store.genes.result![0].entrezGeneId;
-            }
-        });
-    }
-
-    componentWillUnmount() {
-        this.setMolecularProfileReaction();
-        this.setGeneReaction();
-    }
-
     render() {
         let divContents = null;
-        if (this.profiles.length) {
+        if (this.props.store.coexpressionTabMolecularProfiles.isComplete &&
+            this.props.store.coexpressionTabMolecularProfiles.result.length > 0) {
             divContents = (
                 <div>
                     <Observer>
@@ -266,7 +255,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
         const status = getMobxPromiseGroupStatus(
           this.props.store.genes,
           this.props.store.molecularProfileIdToProfiledSampleCount,
-          this.props.store.molecularProfilesInStudies
+          this.props.store.coexpressionTabMolecularProfiles
         );
 
         return (
