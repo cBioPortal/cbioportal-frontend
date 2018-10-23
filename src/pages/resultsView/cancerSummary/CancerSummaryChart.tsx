@@ -84,11 +84,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
     }
 
     private get rightPadding(){
-        if (this.bodyWidth > this.legendWidth) {
-            return 200;
-        } else {
-            return this.legendWidth - this.bodyWidth + 20;
-        }
+        return Math.max(200, this.legendWidth - this.bodyWidth + 20);
     }
 
     private get height(){
