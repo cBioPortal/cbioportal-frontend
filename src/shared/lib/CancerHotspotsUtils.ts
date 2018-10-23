@@ -46,15 +46,14 @@ export function indexHotspots(hotspots: AggregatedHotspots[]): IHotspotIndex
 
 export function isHotspot(mutation: Mutation, index: IHotspotIndex, filter?: (hotspot: Hotspot) => boolean): boolean
 {
-    let value = false;
-
     const genomicLocation = extractGenomicLocation(mutation);
     const aggregatedHotspots = genomicLocation ? index[genomicLocationString(genomicLocation)] : undefined;
 
-    if (aggregatedHotspots) {
-        value = filter ? aggregatedHotspots.hotspots.filter(filter).length > 0 : true;
+    let hotspots = aggregatedHotspots ? aggregatedHotspots.hotspots : [];
+    if (filter) {
+        hotspots = hotspots.filter(filter);
     }
 
-    return value;
+    return hotspots.length > 0;
 }
 
