@@ -206,7 +206,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                         className="coexpressionTabGeneTabs pillTabs"
                         unmountOnHide={true}
                         tabButtonStyle="pills"
-                        enablePagination={true}
+                        enablePagination={false}
                         arrowStyle={{'line-height':.8}}
                     >
                         {this.props.store.genes.result!.map((gene:Gene, i:number)=>{
