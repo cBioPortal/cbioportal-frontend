@@ -11,10 +11,12 @@ import accessors from '../../../shared/lib/oql/accessors';
 import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import autobind from "autobind-decorator";
+import {AppStore} from "../../../AppStore";
 
 export interface IMutationsPageProps {
     routing?: any;
     store: ResultsViewPageStore;
+    appStore:AppStore;
 }
 
 @observer
@@ -92,7 +94,8 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                             mutationCountCache={this.props.store.mutationCountCache}
                             pdbHeaderCache={this.props.store.pdbHeaderCache}
                             myCancerGenomeData={this.props.store.myCancerGenomeData}
-                            config={AppConfig}
+                            config={AppConfig.serverConfig}
+                            userEmailAddress={this.props.appStore.userName!}
                         />
                     </MSKTab>
                 );
