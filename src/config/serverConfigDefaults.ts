@@ -62,8 +62,6 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
                                      prostate msk\n
                                      serous`,
 
-    skin_footer: ` | <a href=\\"http://www.mskcc.org/mskcc/html/44.cfm\\">MSKCC</a> | <a href=\\"http://cancergenome.nih.gov/\\">TCGA</a>`,
-
     skin_login_contact_html: `If you think you have received this message in
             error, please contact us at <a style="color:#FF0000" href="mailto:cbioportal-access@cbio.mskcc.org">
             cbioportal-access@cbio.mskcc.org</a>`,
