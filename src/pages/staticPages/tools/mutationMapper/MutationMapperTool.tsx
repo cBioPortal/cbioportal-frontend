@@ -129,7 +129,7 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
                             activeTabId={activeTabId}
                             onTabClick={(id:string) => this.handleTabChange(id)}
                             className="pillTabs"
-                            enablePagination={true}
+                            enablePagination={false}
                             arrowStyle={{'line-height': 0.8}}
                             tabButtonStyle="pills"
                             unmountOnHide={true}
