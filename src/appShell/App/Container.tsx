@@ -73,8 +73,8 @@ export default class Container extends React.Component<IContainerProps, {}> {
                 <div>
                     <Helmet>
                         <meta charSet="utf-8" />
-                        <title>cBioPortal for Cancer Genomics</title>
-                        <meta name="description" content="The cBioPortal for Cancer Genomics provides visualization, analysis and download of large-scale cancer genomics data sets" />
+                        <title>{AppConfig.serverConfig.skin_title}</title>
+                        <meta name="description" content={AppConfig.serverConfig.skin_description} />
                     </Helmet>
 
                     <div className="pageTopContainer">
