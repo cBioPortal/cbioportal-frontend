@@ -251,13 +251,19 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.props.store.mutationAnnotationSettings.oncoKb;
             },
             get annotateDriversOncoKbDisabled() {
+                return !AppConfig.serverConfig.show_oncokb;
+            },
+            get annotateDriversOncoKbError() {
                 return self.props.store.didOncoKbFailInOncoprint;
             },
             get annotateDriversHotspots() {
                 return self.props.store.mutationAnnotationSettings.hotspots;
             },
             get annotateDriversHotspotsDisabled() {
-                return false; // maybe we'll use this in future
+                return !AppConfig.serverConfig.show_hotspot;
+            },
+            get annotateDriversHotspotsError() {
+                return self.props.store.indexedHotspotData.peekStatus === "error";
             },
             get annotateDriversCBioPortal() {
                 return self.props.store.mutationAnnotationSettings.cbioportalCount;
@@ -419,10 +425,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     });
                     this.props.store.mutationAnnotationSettings.ignoreUnknown = false;
                 } else {
-                    if (!this.controlsState.annotateDriversOncoKbDisabled)
+                    if (!this.controlsState.annotateDriversOncoKbDisabled && !this.controlsState.annotateDriversOncoKbError)
                         this.props.store.mutationAnnotationSettings.oncoKb = true;
 
-                    if (!this.controlsState.annotateDriversHotspotsDisabled)
+                    if (!this.controlsState.annotateDriversHotspotsDisabled && !this.controlsState.annotateDriversHotspotsError)
                         this.props.store.mutationAnnotationSettings.hotspots = true;
 
                     this.props.store.mutationAnnotationSettings.cbioportalCount = true;
