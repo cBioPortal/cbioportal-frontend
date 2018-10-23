@@ -97,6 +97,7 @@ import {
     populateSampleSpecificationsFromVirtualStudies,
     substitutePhysicalStudiesForVirtualStudies
 } from "./ResultsViewPageHelpers";
+import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -554,6 +555,11 @@ export class ResultsViewPageStore {
                 return Promise.resolve([]);
             }
         }
+    });
+
+    readonly coexpressionTabMolecularProfiles = remoteData<MolecularProfile[]>({
+        await:()=>[this.molecularProfilesWithData],
+        invoke:()=>Promise.resolve(filterAndSortProfiles(this.molecularProfilesWithData.result!))
     });
 
     readonly molecularProfilesWithData = remoteData<MolecularProfile[]>({
@@ -1395,15 +1401,15 @@ export class ResultsViewPageStore {
             this.studies,
             this.samples
         ],
-        invoke: () => this.getClinicalData("SAMPLE", this.samples.result, ["CANCER_TYPE", "CANCER_TYPE_DETAILED"])
+        invoke: () => this.getClinicalData("SAMPLE", this.studies.result!, this.samples.result, ["CANCER_TYPE", "CANCER_TYPE_DETAILED"])
     }, []);
 
-    private getClinicalData(clinicalDataType: "SAMPLE" | "PATIENT", entities: any[], attributeIds: string[]):
+    private getClinicalData(clinicalDataType: "SAMPLE" | "PATIENT", studies:any[], entities: any[], attributeIds: string[]):
     Promise<Array<ClinicalData>> {
 
         // single study query endpoint is optimal so we should use it
         // when there's only one study
-        if (this.studies.result.length === 1) {
+        if (studies.length === 1) {
             const study = this.studies.result[0];
             const filter: ClinicalDataSingleStudyFilter = {
                 attributeIds: attributeIds,
@@ -1427,12 +1433,60 @@ export class ResultsViewPageStore {
         }
     }
 
+    private getClinicalDataCount(clinicalDataType: "SAMPLE" | "PATIENT", studies:any[], entities: any[], attributeIds: string[]):
+    Promise<number> {
+
+        const projection = "META";
+        // single study query endpoint is optimal so we should use it
+        // when there's only one study
+        if (studies.length === 1) {
+            const study = this.studies.result[0];
+            const filter: ClinicalDataSingleStudyFilter = {
+                attributeIds: attributeIds,
+                ids: _.map(entities, clinicalDataType === "SAMPLE" ? 'sampleId' : 'patientId')
+            };
+            return client.fetchAllClinicalDataInStudyUsingPOSTWithHttpInfo({
+                studyId:study.studyId,
+                clinicalDataSingleStudyFilter: filter,
+                clinicalDataType: clinicalDataType,
+                projection
+            }).then(function(response: request.Response) {
+                return parseInt(response.header["total-count"], 10);
+            });
+        } else {
+            const filter: ClinicalDataMultiStudyFilter = {
+                attributeIds: attributeIds,
+                identifiers: entities.map((s: any) => clinicalDataType === "SAMPLE" ?
+                    ({entityId: s.sampleId, studyId: s.studyId}) : ({entityId: s.patientId, studyId: s.studyId}))
+            };
+            return client.fetchClinicalDataUsingPOSTWithHttpInfo({
+                clinicalDataType: clinicalDataType,
+                clinicalDataMultiStudyFilter: filter,
+                projection
+            }).then(function(response: request.Response) {
+                return parseInt(response.header["total-count"], 10);
+            });
+        }
+    }
+
+    readonly survivalClinicalDataExists = remoteData<boolean>({
+        await:()=>[
+            this.studies,
+            this.patients
+        ],
+        invoke:async()=>{
+            const count =
+                await this.getClinicalDataCount("PATIENT", this.studies.result!, this.patients.result, ["OS_STATUS", "OS_MONTHS", "DFS_STATUS", "DFS_MONTHS"]);
+            return count > 0;
+        }
+    });
+
     readonly survivalClinicalData = remoteData<ClinicalData[]>({
         await: () => [
             this.studies,
             this.patients
         ],
-        invoke: () => this.getClinicalData("PATIENT", this.patients.result, ["OS_STATUS", "OS_MONTHS", "DFS_STATUS", "DFS_MONTHS"])
+        invoke: () => this.getClinicalData("PATIENT", this.studies.result!, this.patients.result, ["OS_STATUS", "OS_MONTHS", "DFS_STATUS", "DFS_MONTHS"])
     }, []);
 
     readonly survivalClinicalDataGroupByUniquePatientKey = remoteData<{[key: string]: ClinicalData[]}>({

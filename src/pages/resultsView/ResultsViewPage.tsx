@@ -29,10 +29,11 @@ import Helmet from "react-helmet";
 import {createQueryStore} from "../home/HomePage";
 import {ServerConfigHelpers} from "../../config/config";
 import {showCustomTab} from "../../shared/lib/customTabs";
-import {buildResultsViewPageTitle} from "./ResultsViewPageStoreUtils";
 import {
     updateStoreFromQuery
 } from "./ResultsViewPageHelpers";
+import {buildResultsViewPageTitle, doesQueryHaveCNSegmentData} from "./ResultsViewPageStoreUtils";
+import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
 
 function initStore() {
 
@@ -231,7 +232,11 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"plots",
                 hide:()=>{
-                    return this.resultsViewPageStore.studies.result!.length > 1;
+                    if (!this.resultsViewPageStore.studies.isComplete) {
+                        return true;
+                    } else {
+                        return this.resultsViewPageStore.studies.result!.length > 1;
+                    }
                 },
                 getTab: () => {
                     return <MSKTab key={12} id={ResultsViewTab.PLOTS} linkText={'Plots'}>
@@ -252,7 +257,14 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"co_expression",
                 hide:()=>{
-                    return this.resultsViewPageStore.studies.result!.length > 1;
+                    if (!this.resultsViewPageStore.coexpressionTabMolecularProfiles.isComplete ||
+                        !this.resultsViewPageStore.studies.isComplete) {
+                        return true;
+                    } else {
+                        const tooManyStudies = this.resultsViewPageStore.studies.result!.length > 1;
+                        const noData = this.resultsViewPageStore.coexpressionTabMolecularProfiles.result.length === 0;
+                        return tooManyStudies || noData;
+                    }
                 },
                 getTab: () => {
                     return <MSKTab key={7} id={ResultsViewTab.COEXPRESSION} linkText={'Co-expression'}>
@@ -266,7 +278,11 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"enrichments",
                 hide:()=>{
-                    return this.resultsViewPageStore.studies.result!.length > 1;
+                    if (!this.resultsViewPageStore.studies.isComplete) {
+                        return true;
+                    } else {
+                        return this.resultsViewPageStore.studies.result!.length > 1;
+                    }
                 },
                 getTab: () => {
                     return <MSKTab key={10} id={ResultsViewTab.ENRICHMENT} linkText={'Enrichments'}>
@@ -278,7 +294,8 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"survival",
                 hide:()=>{
-                    return this.resultsViewPageStore.studies.result!.length > 1;
+                    return !this.resultsViewPageStore.survivalClinicalDataExists.isComplete ||
+                        !this.resultsViewPageStore.survivalClinicalDataExists.result!;
                 },
                 getTab: () => {
                     return <MSKTab key={4} id={ResultsViewTab.SURVIVAL} linkText="Survival">
@@ -290,7 +307,14 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"IGV",
                 hide:()=>{
-                    return this.resultsViewPageStore.studies.result!.length > 1;
+                    if (!this.resultsViewPageStore.samples.isComplete ||
+                        !this.resultsViewPageStore.studies.isComplete) {
+                        return true;
+                    } else {
+                        const tooManyStudies = this.resultsViewPageStore.studies.result!.length > 1;
+                        const noData = !doesQueryHaveCNSegmentData(this.resultsViewPageStore.samples.result);
+                        return tooManyStudies || noData;
+                    }
                 },
                 getTab: () => {
                     return <MSKTab key={6} id={ResultsViewTab.CN_SEGMENTS}
@@ -303,7 +327,11 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"network",
                 hide:()=>{
-                    return this.resultsViewPageStore.studies.result!.length > 1;
+                    if (!this.resultsViewPageStore.studies.isComplete) {
+                        return true;
+                    } else {
+                        return this.resultsViewPageStore.studies.result!.length > 1;
+                    }
                 },
                 getTab: () => {
                     return <MSKTab key={9} id={ResultsViewTab.NETWORK} linkText={'Network'}>
@@ -325,7 +353,11 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"expression",
                 hide:()=> {
-                    return this.resultsViewPageStore.studies.result!.length === 1;
+                    if (!this.resultsViewPageStore.studies.isComplete) {
+                        return true;
+                    } else {
+                        return this.resultsViewPageStore.studies.result!.length === 1;
+                    }
                 },
                 getTab: () => {
 

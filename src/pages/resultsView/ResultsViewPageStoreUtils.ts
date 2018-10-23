@@ -384,3 +384,15 @@ export function getMolecularProfiles(query:any){
 
     return molecularProfiles;
 }
+
+export function doesQueryHaveCNSegmentData(
+    detailedSamples:Sample[]
+) {
+    if (detailedSamples.length === 0) {
+        return false;
+    } else if (!("copyNumberSegmentPresent" in detailedSamples[0])) {
+        throw "Passed non-detailed sample projection when detailed expected.";
+    } else {
+        return _.some(detailedSamples, s=>!!s.copyNumberSegmentPresent);
+    }
+}
