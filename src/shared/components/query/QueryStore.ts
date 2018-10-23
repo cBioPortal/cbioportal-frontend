@@ -39,6 +39,7 @@ import SampleListsInStudyCache from 'shared/cache/SampleListsInStudyCache';
 import formSubmit from "../../lib/formSubmit";
 import {ServerConfigHelpers} from "../../../config/config";
 import getBrowserWindow from "../../lib/getBrowserWindow";
+import ExtendedRouterStore from "../../lib/ExtendedRouterStore";
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -110,22 +111,21 @@ type GenesetId = string;
 // mobx observable
 export class QueryStore
 {
-	public initialQueryParams:{
-		pathname:string,
-		nonMolecularProfileParams:NonMolecularProfileQueryParams,
-		molecularProfileIds: ReadonlyArray<string>
-	};
-
-	constructor(_window:Window, urlWithInitialParams?:string)
+	constructor(routingStore:ExtendedRouterStore)
 	{
 
 		labelMobxPromises(this);
-		if (urlWithInitialParams)
-			this.setParamsFromUrl(urlWithInitialParams);
+		reaction(
+			()=>routingStore.query,
+			()=>{
+				if (routingStore.query) {
+					this.setParamsFromUrl(routingStore.query);
+				}
+			},
+			{fireImmediately:true}
+		);
 
         this.setParamsFromLocalStorage();
-
-		this.addParamsFromWindow(_window);
 
 		// need to create initialNonMolecularProfileParams using caseIds obtained from page, because
 		//	at this point asyncCustomCaseSet may not have resolved, and we dont want to wait for it
@@ -134,12 +134,6 @@ export class QueryStore
 		//	making it an imperfect record of the initial query. Using this.caseIds instead of
 		//	asyncCustomCaseSet is the only failsafe way to make a copy of the initial query state
 		let initialNonMolecularProfileParams = nonMolecularProfileParams(this, this.caseIds);
-
-		this.initialQueryParams = {
-			nonMolecularProfileParams: initialNonMolecularProfileParams,
-			pathname: queryUrl(this, initialNonMolecularProfileParams),
-			molecularProfileIds: this._selectedProfileIds || []
-		};
 
 		reaction(
 			()=>this.allSelectedStudyIds,
@@ -1536,69 +1530,6 @@ export class QueryStore
 		sampleListId: false
 	};
 
-	@action addParamsFromWindow(_window:Window)
-	{
-		if ((_window as any).serverVars) {
-			// Populate OQL
-			this.geneQuery = normalizeQuery((_window as any).serverVars.theQuery);
-			this.genesetQuery = normalizeQuery((_window as any).serverVars.genesetIds);
-			const dataPriority = (_window as any).serverVars.dataPriority;
-			if (typeof dataPriority !== "undefined") {
-				this.dataTypePriorityCode = (dataPriority + '') as '0'|'1'|'2';
-			}
-
-            const selectedMolecularProfiles = (_window as any).serverVars.molecularProfiles;
-            if (selectedMolecularProfiles !== undefined) {
-                this.selectedProfileIds = selectedMolecularProfiles;
-            }
-
-            const zScoreThreshold =  (_window as any).serverVars.zScoreThreshold;
-            if (zScoreThreshold !== undefined) {
-                this.zScoreThreshold = zScoreThreshold;
-            }
-
-			const rppaScoreThreshold =  (_window as any).serverVars.rppaScoreThreshold;
-			if (rppaScoreThreshold !== undefined) {
-				this.rppaScoreThreshold = rppaScoreThreshold;
-			}
-
-			const caseSetId =  (_window as any).serverVars.caseSetProperties.case_set_id;
-			if (caseSetId !== undefined) {
-				this.selectedSampleListId = caseSetId;
-				this.initiallySelected.sampleListId = true;
-			}
-
-			// this variable is set custom case ids when it is a shared virtual study query
-			const studySampleMap = (_window as any).serverVars.studySampleObj;
-			if (studySampleMap) {
-				this._defaultStudySampleMap = studySampleMap;
-			}
-
-			const caseIds = (_window as any).serverVars.caseIds;
-			if (caseIds) {
-				if (caseSetId === CUSTOM_CASE_LIST_ID) {
-					this.caseIdsMode = 'sample';
-					this.caseIds = caseIds.replace(/\+/g, "\n");
-				}
-			}
-		}
-
-		// Select studies from _window
-		const windowStudyId = (_window as any).selectedCancerStudyId;
-		if (windowStudyId) {
-			this.setStudyIdSelected(windowStudyId, true);
-			this._defaultSelectedIds.set(windowStudyId, true);
-		}
-
-		const cohortIdsList:string[] = ((_window as any).cohortIdsList as string[]) || [];
-		for (const studyId of cohortIdsList) {
-			if (studyId !== "null") {
-				this.setStudyIdSelected(studyId, true);
-				this._defaultSelectedIds.set(studyId, true);
-			}
-		}
-	}
-
 	@action setParamsFromUrl(url:string|{[k:string]:Partial<CancerStudyQueryUrlParams>})
 	{
 		let params:Partial<CancerStudyQueryUrlParams>;
@@ -1823,20 +1754,6 @@ export class QueryStore
 		}
 
 		openStudySummaryFormSubmit(this.selectableSelectedStudyIds);
-	}
-
-	@action addGenesAndSubmit(genes:string[]) {
-		onMobxPromise(this.molecularProfiles, ()=>{
-			const nonProfileParams = _.cloneDeep(this.initialQueryParams.nonMolecularProfileParams);
-			nonProfileParams.gene_list = normalizeQuery(nonProfileParams.gene_list + "\n" + genes.join(" "));
-			nonProfileParams.geneset_list = normalizeQuery(nonProfileParams.geneset_list ? nonProfileParams.geneset_list : "");
-
-			const profileParams = molecularProfileParams(this, this.initialQueryParams.molecularProfileIds);
-
-			const urlParams = queryParams(nonProfileParams, profileParams, this.initialQueryParams.pathname);
-
-			this.singlePageAppSubmitRoutine(urlParams.pathname, urlParams.query);
-		});
 	}
 
 	@cached get molecularProfilesInStudyCache() {
