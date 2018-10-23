@@ -43,6 +43,7 @@ import ClinicalInformationMutationalSignatureTable
     from "./clinicalInformation/ClinicalInformationMutationalSignatureTable";
 import autobind from "autobind-decorator";
 import {showCustomTab} from "../../shared/lib/customTabs";
+import {StudyLink} from "../../shared/components/StudyLink/StudyLink";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -202,7 +203,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         if (patientViewPageStore.studyMetaData.isComplete) {
             let study = patientViewPageStore.studyMetaData.result;
-            studyName = <Link to={`/newstudy?id=${study.studyId}`} className="studyMetaBar_studyName">{study.name}</Link>;
+            studyName = <StudyLink study={study}/>;
         }
 
         if (patientViewPageStore.patientViewData.isComplete && patientViewPageStore.studyMetaData.isComplete) {
