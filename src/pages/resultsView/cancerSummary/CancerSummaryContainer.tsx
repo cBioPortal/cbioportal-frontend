@@ -151,7 +151,7 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
                         <OqlStatusBanner className="cancer-types-summary-oql-status-banner" store={this.props.store} tabReflectsOql={true}/>
                     </div>
                     <MSKTabs onTabClick={this.handleTabClick}
-                             enablePagination={true}
+                             enablePagination={false}
                              unmountOnHide={true}
                              arrowStyle={{'line-height': .8}}
                              tabButtonStyle="pills"
