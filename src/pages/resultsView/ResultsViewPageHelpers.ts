@@ -17,7 +17,7 @@ export function getTabId(pathname:string) {
     }
 }
 
-export function updateStoreFromQuery(resultsViewPageStore:ResultsViewPageStore, query:any, tabId:string|undefined,
+export function updateStoreFromQuery(resultsViewPageStore:ResultsViewPageStore, query:any,
                                      samplesSpecification:SamplesSpecificationElement[], cancerStudyIds:string[], oql:string, cohortIdsList:string[]){
 
         if (!resultsViewPageStore._samplesSpecification || !_.isEqual(resultsViewPageStore._samplesSpecification.slice(), samplesSpecification)) {
@@ -81,10 +81,6 @@ export function updateStoreFromQuery(resultsViewPageStore:ResultsViewPageStore, 
         const queryHash = hashString(JSON.stringify(query)).toString();
         if (resultsViewPageStore.queryHash !== queryHash ) {
             resultsViewPageStore.queryHash = queryHash;
-        }
-
-        if (resultsViewPageStore.tabId !== tabId) {
-            resultsViewPageStore.tabId = tabId;
         }
 }
 
