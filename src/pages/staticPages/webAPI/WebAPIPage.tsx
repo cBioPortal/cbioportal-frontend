@@ -609,7 +609,7 @@ Error:  No case lists available for cancer_study_id:  gbs.
                 <p>Once you have a cancer_study_id, it is very easy to create stable links from your web site to the
                     cBio Portal. Stable links must point to ln, and can include the following parameters:</p>
                 <ul>
-                    <li><strong>q</strong>=[a query following <a href="onco_query_lang_desc.jsp">Onco Query Language</a>,
+                    <li><strong>q</strong>=[a query following <a href="oql" target="_blank">Onco Query Language</a>,
                         e.g. a space separated list of HUGO gene symbols] (required)
                     </li>
                     <li><strong>cancer_study_id</strong>=[cancer study ID] (if not specified, do a cross cancer query)
