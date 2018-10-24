@@ -1,4 +1,3 @@
-import { ICivicGene, ICivicVariant, ICivicEntry, ICivicVariantData } from "shared/model/Civic";
 import {DiscreteCopyNumberData, Mutation} from "shared/api/generated/CBioPortalAPI";
 import * as _ from 'lodash';
 

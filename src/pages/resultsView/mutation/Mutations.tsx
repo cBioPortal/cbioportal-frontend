@@ -2,6 +2,7 @@ import * as React from 'react';
 import {observer} from "mobx-react";
 import {MSKTabs, MSKTab} from "shared/components/MSKTabs/MSKTabs";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
+import {PatientViewPageStore} from "../../../pages/patientView/clinicalInformation/PatientViewPageStore";
 import ResultsViewMutationMapper from "./ResultsViewMutationMapper";
 import MutationMapperUserSelectionStore from "shared/components/mutationMapper/MutationMapperUserSelectionStore";
 import {observable} from "mobx";
@@ -17,6 +18,7 @@ export interface IMutationsPageProps {
     routing?: any;
     store: ResultsViewPageStore;
     appStore:AppStore;
+    sampleIdToClinicalDataMap:{};
 }
 
 @observer
@@ -121,6 +123,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                             myCancerGenomeData={this.props.store.myCancerGenomeData}
                             config={AppConfig.serverConfig}
                             userEmailAddress={this.props.appStore.userName!}
+                            clinicalDataStore={this.props.store}
                         />
                     </MSKTab>
                 );

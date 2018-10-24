@@ -4,12 +4,22 @@ import {observer} from "mobx-react";
 import {
     IMutationTableProps, MutationTableColumnType, default as MutationTable
 } from "shared/components/mutationTable/MutationTable";
+import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import SampleManager from "../sampleManager";
-import {Mutation} from "shared/api/generated/CBioPortalAPI";
+import {Mutation, ClinicalData, MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 import AlleleCountColumnFormatter from "shared/components/mutationTable/column/AlleleCountColumnFormatter";
+import DiscreteCNAColumnFormatter from "shared/components/mutationTable/column/DiscreteCNAColumnFormatter";
+import ASCNCopyNumberColumnFormatter from "shared/components/mutationTable/column/ASCNCopyNumberColumnFormatter";
+import MutantCopiesColumnFormatter from "shared/components/mutationTable/column/MutantCopiesColumnFormatter";
+import CancerCellFractionColumnFormatter from "shared/components/mutationTable/column/CancerCellFractionColumnFormatter";
+import PatientClonalColumnFormatter from "./column/PatientClonalColumnFormatter";
+import PatientMutantCopiesColumnFormatter from "./column/PatientMutantCopiesColumnFormatter";
+import PatientASCNCopyNumberColumnFormatter from "./column/PatientASCNCopyNumberColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
+import PatientCancerCellFractionColumnFormatter from "./column/PatientCancerCellFractionColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import {isUncalled} from "shared/lib/MutationUtils";
+import {floatValueIsNA} from "shared/lib/NumberUtils";
 import TumorAlleleFreqColumnFormatter from "shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter";
 import ExonColumnFormatter from "shared/components/mutationTable/column/ExonColumnFormatter";
 
@@ -34,6 +44,8 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             MutationTableColumnType.COHORT,
             MutationTableColumnType.MRNA_EXPR,
             MutationTableColumnType.COPY_NUM,
+            MutationTableColumnType.ASCN_METHOD,
+            MutationTableColumnType.FACETS_COPY_NUM,
             MutationTableColumnType.ANNOTATION,
             MutationTableColumnType.REF_READS_N,
             MutationTableColumnType.VAR_READS_N,
@@ -50,6 +62,9 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             MutationTableColumnType.CHROMOSOME,
             MutationTableColumnType.PROTEIN_CHANGE,
             MutationTableColumnType.MUTATION_TYPE,
+            MutationTableColumnType.CLONAL,
+            MutationTableColumnType.CANCER_CELL_FRACTION,
+            MutationTableColumnType.MUTANT_COPIES,
             MutationTableColumnType.FUNCTIONAL_IMPACT,
             MutationTableColumnType.COSMIC,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
@@ -92,6 +107,40 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             resizable: true,
         };
 
+        // customization for ASCN-related columns
+        // Patient view differs from default/results view because multiple samples can appear in a row
+        // due to same variant in multiple samples
+        // This can lead to cases where there are multiple icons/tooltips in a single cell
+        // therefore patient view needs sampleManager to indicate which values match which samples
+        this._columns[MutationTableColumnType.CANCER_CELL_FRACTION] = {
+            name: "CCF",
+            tooltip:(<span>Cancer Cell Fraction</span>),
+            render: (d:Mutation[])=>PatientCancerCellFractionColumnFormatter.renderFunction(d, this.props.sampleManager),
+            sortBy:(d:Mutation[])=>d.map(m=>m.alleleSpecificCopyNumber.ccfMCopies),
+            download:(d:Mutation[])=>CancerCellFractionColumnFormatter.getCancerCellFractionDownload(d)
+        };
+
+        this._columns[MutationTableColumnType.CLONAL] = {
+            name: "Clonal",
+            tooltip: (<span>FACETS Clonal</span>),
+            render:(d:Mutation[])=>PatientClonalColumnFormatter.renderFunction(d, this.getSamples(), this.props.sampleManager),
+            sortBy:(d:Mutation[])=>d.map(m=>m.alleleSpecificCopyNumber.ccfMCopiesUpper),
+            download:(d:Mutation[])=>PatientClonalColumnFormatter.getClonalDownload(d)
+        };
+
+        this._columns[MutationTableColumnType.MUTANT_COPIES] = {
+            name: "Mutant Copies",
+            tooltip: (<span>FACETS Best Guess for Mutant Copies / Total Copies</span>),
+            render:(d:Mutation[])=>PatientMutantCopiesColumnFormatter.renderFunction(d, this.props.sampleIdToClinicalDataMap, this.getSamples(), this.props.sampleManager),
+            download:(d:Mutation[])=>MutantCopiesColumnFormatter.getMutantCopiesDownload(d, this.props.sampleIdToClinicalDataMap),
+            sortBy:(d:Mutation[])=>MutantCopiesColumnFormatter.getDisplayValueAsString(d, this.props.sampleIdToClinicalDataMap, this.getSamples())
+        };
+
+        this._columns[MutationTableColumnType.FACETS_COPY_NUM] = {
+            name: "Integer Copy #",
+            render:(d:Mutation[])=>PatientASCNCopyNumberColumnFormatter.renderFunction(d,this.props.sampleIdToClinicalDataMap, this.getSamples(), this.props.sampleManager),
+            sortBy:(d:Mutation[])=>ASCNCopyNumberColumnFormatter.getSortValue(d, this.props.sampleIdToClinicalDataMap, this.getSamples())
+        };
         // customization for allele count columns
 
         this._columns[MutationTableColumnType.REF_READS_N].render =
@@ -132,14 +181,19 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.VAR_ALLELE].order = 80;
         this._columns[MutationTableColumnType.MUTATION_STATUS].order = 90;
         this._columns[MutationTableColumnType.VALIDATION_STATUS].order = 100;
+        this._columns[MutationTableColumnType.ASCN_METHOD].order = 105;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 110;
+        this._columns[MutationTableColumnType.CLONAL].order = 115;
+        this._columns[MutationTableColumnType.CANCER_CELL_FRACTION].order = 116;
+        this._columns[MutationTableColumnType.MUTANT_COPIES].order = 117;
         this._columns[MutationTableColumnType.CENTER].order = 120;
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ].order = 130;
         this._columns[MutationTableColumnType.VAR_READS].order = 140;
         this._columns[MutationTableColumnType.REF_READS].order = 150;
         this._columns[MutationTableColumnType.VAR_READS_N].order = 170;
-        this._columns[MutationTableColumnType.REF_READS_N].order = 180;
-        this._columns[MutationTableColumnType.COPY_NUM].order = 181;
+        this._columns[MutationTableColumnType.REF_READS_N].order = 175;
+        this._columns[MutationTableColumnType.COPY_NUM].order = 177;
+        this._columns[MutationTableColumnType.FACETS_COPY_NUM].order = 181;
         this._columns[MutationTableColumnType.MRNA_EXPR].order = 182;
         this._columns[MutationTableColumnType.COHORT].order = 183;
         this._columns[MutationTableColumnType.COSMIC].order = 184;
@@ -153,6 +207,19 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.MRNA_EXPR].shouldExclude = ()=>{
             return (!this.props.mrnaExprRankMolecularProfileId) || (this.getSamples().length > 1);
         };
+
+        this._columns[MutationTableColumnType.CLONAL].shouldExclude = ()=>{
+            return !this.hasCcfMCopies;
+        };
+
+        this._columns[MutationTableColumnType.CANCER_CELL_FRACTION].shouldExclude = ()=>{
+            return !this.hasCcfMCopies;
+        };
+
+        this._columns[MutationTableColumnType.MUTANT_COPIES].shouldExclude = ()=>{
+            return (!this.hasMutantCopies || !this.props.discreteCNAMolecularProfileId);
+        };
+
         // only hide tumor column if there is one sample and no uncalled
         // mutations (there is no information added in that case by the sample
         // label)
@@ -162,6 +229,40 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.COPY_NUM].shouldExclude = ()=>{
             return (!this.props.discreteCNAMolecularProfileId) || (this.getSamples().length > 1);
         };
+    }
+
+    @computed private get hasCcfMCopies():boolean {
+        let data:Mutation[][] = [];
+        if (this.props.data) {
+            data = this.props.data;
+        } else if (this.props.dataStore) {
+            data = this.props.dataStore.allData;
+        }
+        return data.some((row:Mutation[]) => {
+            return row.some((m:Mutation) => {
+                return (m.alleleSpecificCopyNumber !== undefined && !floatValueIsNA(m.alleleSpecificCopyNumber.ccfMCopies));
+            });
+        });
+    }
+
+    @computed private get hasMutantCopies():boolean {
+        let data:Mutation[][] = [];
+        let clinicalData:{[sampleId:string]:ClinicalData[]} = {};
+        if (this.props.sampleIdToClinicalDataMap) {
+            clinicalData = this.props.sampleIdToClinicalDataMap;
+        }
+        if (this.props.data) {
+            data = this.props.data;
+        } else if (this.props.dataStore) {
+            data = this.props.dataStore.allData;
+        }
+        return data.some((row:Mutation[]) => {
+            return row.some((m:Mutation) => {
+                return (m.alleleSpecificCopyNumber !== undefined && 
+                       (m.alleleSpecificCopyNumber.totalCopyNumber !== -1 &&
+                        clinicalData[m.sampleId].filter((cd: ClinicalData) => cd.clinicalAttributeId === "FACETS_PURITY").length > 0));
+            });
+        });
     }
 
     @computed private get hasUncalledMutations():boolean {

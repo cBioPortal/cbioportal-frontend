@@ -418,7 +418,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                     <LoadingIndicator isLoading={patientViewPageStore.mutationData.isPending || patientViewPageStore.uncalledMutationData.isPending || patientViewPageStore.oncoKbAnnotatedGenes.isPending || patientViewPageStore.studyIdToStudy.isPending} />
 
                                     {
-                                        (patientViewPageStore.oncoKbAnnotatedGenes.isComplete && patientViewPageStore.mutationData.isComplete && patientViewPageStore.uncalledMutationData.isComplete && !!sampleManager && patientViewPageStore.studyIdToStudy.isComplete) && (
+                                        (patientViewPageStore.oncoKbAnnotatedGenes.isComplete &&
+                                            patientViewPageStore.mutationData.isComplete &&
+                                            patientViewPageStore.uncalledMutationData.isComplete &&
+                                            patientViewPageStore.clinicalDataGroupedBySampleMap.isComplete &&
+                                            !!sampleManager && patientViewPageStore.studyIdToStudy.isComplete &&
+                                            patientViewPageStore.clinicalDataGroupedBySampleMap.isComplete) && (
                                             <PatientViewMutationTable
                                                 studyIdToStudy={patientViewPageStore.studyIdToStudy.result}
                                                 sampleManager={sampleManager}
@@ -455,6 +460,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                                 columnVisibilityProps={{
                                                     onColumnToggled: this.onMutationTableColumnVisibilityToggled
                                                 }}
+                                                sampleIdToClinicalDataMap={patientViewPageStore.clinicalDataGroupedBySampleMap.result}
                                             />
                                         )
                                     }
