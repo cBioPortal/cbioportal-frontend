@@ -1,6 +1,24 @@
 import * as request from "superagent";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
+export type AlleleSpecificCopyNumber = {
+    'ascnIntegerCopyNumber': number
+
+        'ascnMethod': string
+
+        'ccfMCopies': number
+
+        'ccfMCopiesUpper': number
+
+        'clonal': boolean
+
+        'minorCopyNumber': number
+
+        'mutantCopies': number
+
+        'totalCopyNumber': number
+
+};
 export type CancerStudy = {
     'allSampleCount': number
 
@@ -304,7 +322,9 @@ export type MolecularProfileFilter = {
 
 };
 export type Mutation = {
-    'aminoAcidChange': string
+    'alleleSpecificCopyNumber': AlleleSpecificCopyNumber
+
+        'aminoAcidChange': string
 
         'center': string
 

@@ -4129,6 +4129,42 @@
     }
   },
   "definitions": {
+    "AlleleSpecificCopyNumber": {
+      "type": "object",
+      "properties": {
+        "ascnIntegerCopyNumber": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "ascnMethod": {
+          "type": "string"
+        },
+        "ccfMCopies": {
+          "type": "number",
+          "format": "float"
+        },
+        "ccfMCopiesUpper": {
+          "type": "number",
+          "format": "float"
+        },
+        "clonal": {
+          "type": "boolean"
+        },
+        "minorCopyNumber": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "mutantCopies": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "totalCopyNumber": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "AlleleSpecificCopyNumber"
+    },
     "CancerStudy": {
       "type": "object",
       "required": [
@@ -4848,6 +4884,9 @@
         "studyId"
       ],
       "properties": {
+        "alleleSpecificCopyNumber": {
+          "$ref": "#/definitions/AlleleSpecificCopyNumber"
+        },
         "aminoAcidChange": {
           "type": "string"
         },

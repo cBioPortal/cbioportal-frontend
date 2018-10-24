@@ -3,18 +3,22 @@ import {observer} from "mobx-react";
 import {observable, computed} from "mobx";
 import * as _ from "lodash";
 import {default as LazyMobXTable, Column, SortDirection} from "shared/components/lazyMobXTable/LazyMobXTable";
-import {CancerStudy, MolecularProfile, Mutation} from "shared/api/generated/CBioPortalAPI";
+import {CancerStudy, MolecularProfile, Mutation, ClinicalData} from "shared/api/generated/CBioPortalAPI";
 import SampleColumnFormatter from "./column/SampleColumnFormatter";
 import TumorAlleleFreqColumnFormatter from "./column/TumorAlleleFreqColumnFormatter";
 import NormalAlleleFreqColumnFormatter from "./column/NormalAlleleFreqColumnFormatter";
 import MrnaExprColumnFormatter from "./column/MrnaExprColumnFormatter";
 import CohortColumnFormatter from "./column/CohortColumnFormatter";
 import DiscreteCNAColumnFormatter from "./column/DiscreteCNAColumnFormatter";
+import FACETSCNAColumnFormatter from "./column/FACETSCNAColumnFormatter";
 import AlleleCountColumnFormatter from "./column/AlleleCountColumnFormatter";
 import GeneColumnFormatter from "./column/GeneColumnFormatter";
 import ChromosomeColumnFormatter from "./column/ChromosomeColumnFormatter";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
 import MutationTypeColumnFormatter from "./column/MutationTypeColumnFormatter";
+import ClonalColumnFormatter from "./column/ClonalColumnFormatter";
+import CancerCellFractionColumnFormatter from "./column/CancerCellFractionColumnFormatter";
+import MutantCopiesColumnFormatter from "./column/MutantCopiesColumnFormatter";
 import FunctionalImpactColumnFormatter from "./column/FunctionalImpactColumnFormatter";
 import CosmicColumnFormatter from "./column/CosmicColumnFormatter";
 import MutationCountColumnFormatter from "./column/MutationCountColumnFormatter";
@@ -95,6 +99,8 @@ export interface IMutationTableProps {
     showCountHeader?:boolean;
     columnVisibility?: {[columnId: string]: boolean};
     columnVisibilityProps?: IColumnVisibilityControlsProps;
+    sampleIdToClinicalDataMap?: {[key:string]: ClinicalData[]};
+    sampleIdToIconComponentMap?: {[key:string]: JSX.Element | undefined};
 }
 
 export enum MutationTableColumnType {
@@ -111,6 +117,9 @@ export enum MutationTableColumnType {
     MUTATION_STATUS,
     VALIDATION_STATUS,
     MUTATION_TYPE,
+    CLONAL,
+    CANCER_CELL_FRACTION,
+    MUTANT_COPIES,
     CENTER,
     TUMOR_ALLELE_FREQ,
     NORMAL_ALLELE_FREQ,
@@ -118,6 +127,7 @@ export enum MutationTableColumnType {
     ANNOTATION,
     COSMIC,
     COPY_NUM,
+    FACETS_COPY_NUM,
     MRNA_EXPR,
     COHORT,
     REF_READS_N,
@@ -301,6 +311,20 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             visible: DiscreteCNAColumnFormatter.isVisible(this.props.discreteCNACache as DiscreteCNACache)
         };
 
+        this._columns[MutationTableColumnType.FACETS_COPY_NUM] = {
+            name: "Integer Copy #",
+            render:(d:Mutation[])=>{
+                return FACETSCNAColumnFormatter.renderFunction(d, this.props.sampleIdToClinicalDataMap, [d[0].sampleId]);
+            },
+            sortBy: (d:Mutation[]):string|null=>{
+                if (this.props.discreteCNACache && this.props.molecularProfileIdToMolecularProfile) {
+                    return FACETSCNAColumnFormatter.getSortValue(d, this.props.sampleIdToClinicalDataMap, [d[0].sampleId]);
+                } else {
+                    return "";
+                }
+            }
+        };
+
         this._columns[MutationTableColumnType.REF_READS_N] = {
             name: "Ref Reads (Normal)",
             render: (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, [d[0].sampleId], "normalRefCount"),
@@ -438,6 +462,30 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             sortBy:(d:Mutation[])=>MutationTypeColumnFormatter.getDisplayValue(d),
             filter:(d:Mutation[], filterString:string, filterStringUpper:string) =>
                 MutationTypeColumnFormatter.getDisplayValue(d).toUpperCase().indexOf(filterStringUpper) > -1
+        };
+
+        this._columns[MutationTableColumnType.CLONAL] = {
+            name: "Clonal",
+            tooltip: (<span>FACETS Clonal</span>),
+            render:(d:Mutation[])=>ClonalColumnFormatter.renderFunction(d, [d[0].sampleId]),
+            download:ClonalColumnFormatter.getClonalValue,
+            sortBy:(d:Mutation[])=>d.map(m=>m.ccfMCopiesUpper)
+        };
+
+        this._columns[MutationTableColumnType.CANCER_CELL_FRACTION] = {
+            name: "CCF",
+            tooltip: (<span>FACETS Cancer Cell Fraction</span>),
+            render:CancerCellFractionColumnFormatter.renderFunction,
+            download:CancerCellFractionColumnFormatter.getCancerCellFractionValue,
+            sortBy:(d:Mutation[])=>d.map(m=>m.ccfMCopies)
+        };
+
+        this._columns[MutationTableColumnType.MUTANT_COPIES] = {
+            name: "Mutant Copies",
+            tooltip: (<span>FACETS Best Guess for Mutant Copies / Total Copies</span>),
+            render:(d:Mutation[])=>MutantCopiesColumnFormatter.renderFunction(d, this.props.sampleIdToClinicalDataMap, [d[0].sampleId]),
+            download:(d:Mutation[])=>MutantCopiesColumnFormatter.getDisplayValueAsString(d, this.props.sampleIdToClinicalDataMap, [d[0].sampleId]),
+            sortBy:(d:Mutation[])=>MutantCopiesColumnFormatter.getDisplayValueAsString(d, this.props.sampleIdToClinicalDataMap, [d[0].sampleId])
         };
 
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT] = {

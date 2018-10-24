@@ -942,6 +942,16 @@ export function groupBySampleId(sampleIds: Array<string>, clinicalDataArray: Arr
     );
 }
 
+export function mapSampleIdToClinicalData<T>(clinicalDataGroupedBySampleId: Array<T>, indexKey: keyof T, clinicalDataKey: keyof T) {
+    const sampleIdToClinicalDataMap: any = {};
+    for (let i = 0; i < clinicalDataGroupedBySampleId.length; i++) {
+            const sampleIdKey = clinicalDataGroupedBySampleId[i][indexKey];
+            const clinicalAttributeArray = clinicalDataGroupedBySampleId[i][clinicalDataKey];
+            sampleIdToClinicalDataMap[sampleIdKey] = clinicalAttributeArray;;
+    }
+    return sampleIdToClinicalDataMap as { [key: string]: Array<ClinicalData>};
+}
+
 export function groupBy<T>(data:T[], keyFn:(d:T)=>string, defaultKeys:string[]=[]):{[key:string]:T[]} {
     const ret:{[key:string]:T[]} = {};
     for (const key of defaultKeys) {

@@ -187,6 +187,16 @@ class SampleManager {
     getComponentsForSamples() {
         this.samples.map((sample)=>this.getComponentForSample(sample.id));
     }
+
+    mapComponentForSample(sampleId: string, sampleIdToComponentMap: {[s:string]:JSX.Element | undefined}) {
+        sampleIdToComponentMap[sampleId] = this.getComponentForSample(sampleId);
+    }
+
+    getSampleIdToIconComponentMap() {
+        let sampleIdToComponentMap: {[s:string]:JSX.Element | undefined} = {};
+        this.samples.map((sample)=>this.mapComponentForSample(sample.id, sampleIdToComponentMap));
+        return sampleIdToComponentMap;
+    }
 }
 
 export default SampleManager;
