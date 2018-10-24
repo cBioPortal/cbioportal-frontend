@@ -41,6 +41,8 @@ function initStore() {
 
     const resultsViewPageStore = new ResultsViewPageStore();
 
+    resultsViewPageStore.tabId = getTabId(getBrowserWindow().globalStores.routing.location.pathname);
+
     if (!getBrowserWindow().currentQueryStore) {
         getBrowserWindow().currentQueryStore = createQueryStore();
     }
