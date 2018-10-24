@@ -1,0 +1,29 @@
+[[headers]]
+for = "/*.otf"
+	[headers.values]
+	Access-Control-Allow-Origin = "*"
+	Content-Type = "application/font-otf"
+
+[[headers]]
+for = "/*.ttf /*.ttc"
+	[headers.values]
+	Access-Control-Allow-Origin = "*"
+	Content-Type = "application/font-ttf"
+
+[[headers]]
+for = "/*.woff2"
+	[headers.values]
+	Access-Control-Allow-Origin = "*"
+	Content-Type = "application/font-woff2"
+
+[[headers]]
+for = "/*.woff"
+	[headers.values]
+	Access-Control-Allow-Origin = "*"
+	Content-Type = "application/font-woff"
+
+[[headers]]
+for = "/*.eot"
+	[headers.values]
+	Access-Control-Allow-Origin = "*"
+	Content-Type = "application/font-eot"
