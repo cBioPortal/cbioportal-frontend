@@ -34,6 +34,7 @@ import {
 } from "./ResultsViewPageHelpers";
 import {buildResultsViewPageTitle, doesQueryHaveCNSegmentData} from "./ResultsViewPageStoreUtils";
 import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
+import {AppStore} from "../../AppStore";
 
 function initStore() {
 
@@ -132,6 +133,7 @@ function addOnBecomeVisibleListener(callback:()=>void) {
 
 export interface IResultsViewPageProps {
     routing: any;
+    appStore: AppStore;
     params: any; // from react router
 }
 
@@ -151,6 +153,7 @@ export enum ResultsViewTab {
 }
 
 @inject('routing')
+@inject('appStore')
 @observer
 export default class ResultsViewPage extends React.Component<IResultsViewPageProps, {}> {
 
@@ -249,7 +252,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                 id:"mutations",
                 getTab: () => {
                     return <MSKTab key={3} id={ResultsViewTab.MUTATIONS} linkText="Mutations">
-                        <Mutations store={store}/>
+                        <Mutations store={store} appStore={ this.props.appStore } />
                     </MSKTab>
                 }
             },

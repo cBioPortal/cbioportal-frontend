@@ -1364,7 +1364,8 @@ export class ResultsViewPageStore {
                 //  an Immutable as the result of reduce, and MutationMapperStore when it is made immutable all the
                 //  mobx machinery going on in the readonly remoteDatas and observables somehow gets messed up.
                 return Promise.resolve(_.reduce(this.genes.result, (map: { [hugoGeneSymbol: string]: ResultsViewMutationMapperStore }, gene: Gene) => {
-                    map[gene.hugoGeneSymbol] = new ResultsViewMutationMapperStore(AppConfig,
+                    map[gene.hugoGeneSymbol] = new ResultsViewMutationMapperStore(AppConfig.serverConfig,
+                        {},
                         gene,
                         this.samples,
                         this.oncoKbAnnotatedGenes.result || {},
@@ -1548,7 +1549,7 @@ export class ResultsViewPageStore {
 
     readonly germlineConsentedSamples = remoteData<SampleIdentifier[]>({
         await:()=>[this.studyIds],
-        invoke: async() => await fetchGermlineConsentedSamples(this.studyIds, AppConfig.studiesWithGermlineConsentedSamples),
+        invoke: async() => await fetchGermlineConsentedSamples(this.studyIds, AppConfig.serverConfig.studiesWithGermlineConsentedSamples),
         onError: () => {
             // fail silently
         }
@@ -2098,7 +2099,7 @@ export class ResultsViewPageStore {
         await:()=>[
             this.mutations
         ],
-        invoke: async () => this.mutations.result? await fetchVariantAnnotationsIndexedByGenomicLocation(this.mutations.result, ["annotation_summary", "hotspots"], AppConfig.isoformOverrideSource) : undefined,
+        invoke: async () => this.mutations.result? await fetchVariantAnnotationsIndexedByGenomicLocation(this.mutations.result, ["annotation_summary", "hotspots"], AppConfig.serverConfig.isoformOverrideSource) : undefined,
         onError: (err: Error) => {
             // fail silently, leave the error handling responsibility to the data consumer
         }

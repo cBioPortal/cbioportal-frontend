@@ -1,6 +1,6 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import {computed} from "mobx";
+import {computed, observable} from "mobx";
 import {observer} from 'mobx-react';
 import fileDownload from 'react-file-download';
 import {AnnotatedExtendedAlteration, ExtendedAlteration, ResultsViewPageStore} from "../ResultsViewPageStore";
@@ -18,6 +18,8 @@ import {
 import styles from "./styles.module.scss";
 import classNames from 'classnames';
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
+import WindowStore from "../../../shared/components/window/WindowStore";
+import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWidthBox";
 
 export interface IDownloadTabProps {
     store: ResultsViewPageStore;
@@ -216,7 +218,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
             this.props.store.unfilteredCaseAggregatedData.status === "error";
 
         return (
-            <div className="cbioportal-frontend" data-test="downloadTabDiv">
+            <WindowWidthBox data-test="downloadTabDiv" offset={60}>
                 <div className={"tabMessageContainer"}>
                     <OqlStatusBanner className="download-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
                 </div>
@@ -250,13 +252,14 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                         oqls={this.oqls}
                     />
                 </div>
-            </div>
+            </WindowWidthBox>
         );
     }
 
     private downloadableFilesTable(): JSX.Element
     {
         return (
+
             <table className={ classNames("table", "table-striped", styles.downloadCopyTable) }>
                 <tbody>
                     {hasValidData(this.cnaData) && this.cnaDownloadControls()}
@@ -267,6 +270,7 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                     {this.sampleMatrixDownloadControls()}
                 </tbody>
             </table>
+
         );
     }
 

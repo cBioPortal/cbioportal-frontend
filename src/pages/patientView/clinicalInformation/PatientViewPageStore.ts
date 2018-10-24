@@ -296,7 +296,7 @@ export class PatientViewPageStore {
             this.mutationData,
             this.uncalledMutationData,
         ],
-        invoke: async () => await fetchVariantAnnotationsIndexedByGenomicLocation(concatMutationData(this.mutationData, this.uncalledMutationData), ["annotation_summary", "hotspots"], AppConfig.isoformOverrideSource),
+        invoke: async () => await fetchVariantAnnotationsIndexedByGenomicLocation(concatMutationData(this.mutationData, this.uncalledMutationData), ["annotation_summary", "hotspots"], AppConfig.serverConfig.isoformOverrideSource),
         onError: (err: Error) => {
             // fail silently, leave the error handling responsibility to the data consumer
         }

@@ -9,9 +9,11 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     oncoprint_oncokb_hotspots_default:undefined,
     oncoprint_hide_vus_default:false,
     oncokb_public_api_url:"oncokb.org/api/v1",
+    isoformOverrideSource:"uniprot",
     show_hotspot:true,
     show_oncokb:true,
     show_civic:false,
+    skin_description:"The cBioPortal for Cancer Genomics provides visualization, analysis and download of large-scale cancer genomics data sets",
     show_genomenexus:true,
     skin_authorization_message:"Access to this portal is only available to authorized users.",
     skin_documentation_about:"About-Us.md",
@@ -33,6 +35,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_show_r_matlab_tab:true,
     skin_show_tools_tab:true,
     skin_show_web_api_tab:true,
+    skin_show_tweet_button:false,
     skin_title:"cBioPortal for Cancer Genomics",
 
     skin_blurb:`The cBioPortal for Cancer Genomics provides 
@@ -58,8 +61,6 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
                                      esophageal OR stomach\n
                                      prostate msk\n
                                      serous`,
-
-    skin_footer: ` | <a href=\\"http://www.mskcc.org/mskcc/html/44.cfm\\">MSKCC</a> | <a href=\\"http://cancergenome.nih.gov/\\">TCGA</a>`,
 
     skin_login_contact_html: `If you think you have received this message in
             error, please contact us at <a style="color:#FF0000" href="mailto:cbioportal-access@cbio.mskcc.org">
