@@ -348,7 +348,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         (!!sampleManager && patientViewPageStore.clinicalEvents.isComplete && patientViewPageStore.clinicalEvents.result.length > 0) && (
 
                                             <div>
-                                                <Timeline store={patientViewPageStore} getWidth={ ()=>$(window).width()-40 } sampleManager={ sampleManager } />
+                                                <Timeline store={patientViewPageStore} width={WindowStore.size.width-60} sampleManager={ sampleManager } />
                                                 <hr />
                                             </div>
                                         )
