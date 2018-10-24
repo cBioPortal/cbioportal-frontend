@@ -31,8 +31,8 @@ export function updateStoreFromQuery(resultsViewPageStore:ResultsViewPageStore, 
             resultsViewPageStore.sampleListCategory = undefined;
         }
 
-        if (query.data_priority !== undefined && parseInt(query.data_priority,10) !== resultsViewPageStore.profileFilter) {
-            resultsViewPageStore.profileFilter = parseInt(query.data_priority,10);
+        if (query.data_priority !== undefined && parseInt(query.data_priority,10) !== resultsViewPageStore._profileFilter) {
+            resultsViewPageStore._profileFilter = parseInt(query.data_priority,10);
         }
 
         // note that this could be zero length if we have multiple studies
