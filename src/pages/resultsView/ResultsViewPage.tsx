@@ -30,6 +30,7 @@ import {createQueryStore} from "../home/HomePage";
 import {ServerConfigHelpers} from "../../config/config";
 import {showCustomTab} from "../../shared/lib/customTabs";
 import {
+    getTabId,
     updateStoreFromQuery
 } from "./ResultsViewPageHelpers";
 import {buildResultsViewPageTitle, doesQueryHaveCNSegmentData} from "./ResultsViewPageStoreUtils";
@@ -45,20 +46,30 @@ function initStore() {
     }
 
     let lastQuery:any;
+    let lastPathname:string;
 
     const queryReactionDisposer = reaction(
         () => {
-            return getBrowserWindow().globalStores.routing.query
+            return [getBrowserWindow().globalStores.routing.query, getBrowserWindow().globalStores.routing.location.pathname];
         },
-        (query) => {
+        (x:any) => {
+
+            const query = x[0];
+            const pathname = x[1];
 
             // escape from this if queryies are deeply equal
             // TODO: see if we can figure out why query is getting changed and
             // if there's any way to do shallow equality check to avoid this expensive operation
-            if (_.isEqual(lastQuery, query)) {
+            const queryChanged = !_.isEqual(lastQuery, query);
+            if (!queryChanged && pathname === lastPathname) {
                 return;
             } else {
-                lastQuery = query;
+                if (queryChanged) {
+                    lastQuery = query;
+                }
+                if (pathname !== lastPathname) {
+                    lastPathname = pathname;
+                }
             }
 
             if (!getBrowserWindow().globalStores.routing.location.pathname.includes("/results")) {
@@ -113,8 +124,14 @@ function initStore() {
                 throw("INVALID QUERY");
             }
 
+            // need to set tab like this instead of with injected via params.tab because we need to set the tab
+            //  at the same time as we set the query parameters, otherwise we get race conditions where the tab
+            //  we're on at the time we update the query doesnt get unmounted because we change the query, causing
+            //  MSKTabs unmounting, THEN change the tab.
+            const tabId = getTabId(pathname);
+
             runInAction(()=>{
-                updateStoreFromQuery(resultsViewPageStore, query, samplesSpecification, cancerStudyIds, oql, cancerStudyIds);
+                updateStoreFromQuery(resultsViewPageStore, query, tabId, samplesSpecification, cancerStudyIds, oql, cancerStudyIds);
             });
 
         },
@@ -458,7 +475,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
                 {
                     (this.resultsViewPageStore.studies.isComplete) && (
-                        <MSKTabs key={this.resultsViewPageStore.queryHash} activeTabId={this.currentTab(this.props.params.tab)} unmountOnHide={false}
+                        <MSKTabs key={this.resultsViewPageStore.queryHash} activeTabId={this.currentTab(this.resultsViewPageStore.tabId)} unmountOnHide={false}
                                  onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
                             {
                                 this.tabs
