@@ -176,10 +176,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 const vertProfile = profileIdToProfile.result[this.vertSelection.dataSourceId!];
                 if (// if theres a discrete cna profile, redundant to allow showing cna
                     (horzProfile && horzProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && horzProfile.datatype === DataTypeConstants.DISCRETE) ||
-                    (vertProfile && vertProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && vertProfile.datatype === DataTypeConstants.DISCRETE) ||
-                    // if theres a mutation profile, we have decided not to allow showing cna
-                    (this.horzSelection.dataType === AlterationTypeConstants.MUTATION_EXTENDED) ||
-                    (this.vertSelection.dataType === AlterationTypeConstants.MUTATION_EXTENDED)) {
+                    (vertProfile && vertProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && vertProfile.datatype === DataTypeConstants.DISCRETE)
+                ) {
                     return PotentialViewType.MutationType;
                 } else {
                     // otherwise, show either one
@@ -208,9 +206,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 }
                 const profile = profileIdToProfile.result[molecularProfileId];
                 if (// if theres a discrete cna profile, redundant to allow showing cna
-                    (profile && profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && profile.datatype === DataTypeConstants.DISCRETE) ||
-                    // if theres a mutation profile, we have decided not to allow showing cna
-                    (dataType === AlterationTypeConstants.MUTATION_EXTENDED)
+                    (profile && profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && profile.datatype === DataTypeConstants.DISCRETE)
                 ) {
 
                     return PotentialViewType.MutationType;
