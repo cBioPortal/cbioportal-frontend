@@ -24,11 +24,13 @@ import PatientViewUrlWrapper from '../PatientViewUrlWrapper';
 import WindowStore from '../../../shared/components/window/WindowStore';
 import Timeline from '../timeline/Timeline';
 import classnames from 'classnames';
+import { ClinicalDataBySampleId } from '../../../shared/api/api-types-extended';
 
 export interface IPatientViewMutationsTabProps {
     store: PatientViewPageStore;
     urlWrapper: PatientViewUrlWrapper;
     mutationTableColumnVisibility?: { [columnId: string]: boolean };
+    samples?: ClinicalDataBySampleId[];
     onMutationTableColumnVisibilityToggled: (
         columnId: string,
         columnVisibility?: IColumnVisibilityDef[]
@@ -342,6 +344,9 @@ export default class PatientViewMutationsTab extends React.Component<
                     }
                     generateGenomeNexusHgvsgUrl={
                         this.props.store.generateGenomeNexusHgvsgUrl
+                    }
+                    sampleIdToClinicalDataMap={
+                        this.props.store.clinicalDataGroupedBySampleMap.result
                     }
                 />
             </div>

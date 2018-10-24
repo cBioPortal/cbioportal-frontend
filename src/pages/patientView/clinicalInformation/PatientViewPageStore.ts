@@ -78,6 +78,12 @@ import {
     fetchReferenceGenomeGenes,
     fetchSamplesForPatient,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
+<<<<<<< HEAD
+=======
+    concatMutationData,
+    mapSampleIdToClinicalData,
+    fetchOncoKbCancerGenes,
+>>>>>>> Frontend support for ASCN Data
     fetchVariantAnnotationsIndexedByGenomicLocation,
     findMolecularProfileIdDiscrete,
     findMrnaRankMolecularProfileId,
@@ -699,6 +705,20 @@ export class PatientViewPageStore {
                 ),
         },
         []
+    );
+
+    readonly clinicalDataGroupedBySampleMap = remoteData(
+        {
+            await: () => [this.clinicalDataGroupedBySample],
+            invoke: async () => {
+                return mapSampleIdToClinicalData(
+                    this.clinicalDataGroupedBySample.result,
+                    'id',
+                    'clinicalData'
+                );
+            },
+        },
+        {}
     );
 
     readonly getWholeSlideViewerIds = remoteData({

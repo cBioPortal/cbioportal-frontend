@@ -19,6 +19,7 @@ import { MUTATION_STATUS_FILTER_ID } from 'shared/components/mutationMapper/Muta
 
 import MutationRateSummary from 'pages/resultsView/mutation/MutationRateSummary';
 import ResultsViewMutationMapperStore from 'pages/resultsView/mutation/ResultsViewMutationMapperStore';
+import { ResultsViewPageStore } from '../ResultsViewPageStore';
 import ResultsViewMutationTable from 'pages/resultsView/mutation/ResultsViewMutationTable';
 
 export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
@@ -28,6 +29,7 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps {
     mutationCountCache?: MutationCountCache;
     genomeNexusMyVariantInfoCache?: GenomeNexusMyVariantInfoCache;
     userEmailAddress: string;
+    clinicalDataStore: ResultsViewPageStore;
 }
 
 @observer
@@ -139,6 +141,10 @@ export default class ResultsViewMutationMapper extends MutationMapper<
                 totalNumberOfExons={this.totalExonNumber}
                 generateGenomeNexusHgvsgUrl={
                     this.props.store.generateGenomeNexusHgvsgUrl
+                }
+                sampleIdToClinicalDataMap={
+                    this.props.clinicalDataStore.clinicalDataGroupedBySampleMap
+                        .result
                 }
             />
         );

@@ -1000,7 +1000,7 @@ export default class PatientViewPage extends React.Component<
                                             .sampleToMutationGenePanelId
                                             .isComplete &&
                                         this.patientViewPageStore
-                                            .genePanelIdToEntrezGeneIds
+                                            .clinicalDataGroupedBySampleMap
                                             .isComplete &&
                                         !!sampleManager && (
                                             <div data-test="patientview-mutation-table">
@@ -1200,6 +1200,12 @@ export default class PatientViewPage extends React.Component<
                                                         this
                                                             .patientViewPageStore
                                                             .generateGenomeNexusHgvsgUrl
+                                                    }
+                                                    sampleIdToClinicalDataMap={
+                                                        this
+                                                            .patientViewPageStore
+                                                            .clinicalDataGroupedBySampleMap
+                                                            .result
                                                     }
                                                 />
                                             </div>
