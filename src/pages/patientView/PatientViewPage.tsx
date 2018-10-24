@@ -1,49 +1,44 @@
-import * as React from 'react';
-import * as _ from 'lodash';
-import $ from 'jquery';
-import GenomicOverview from './genomicOverview/GenomicOverview';
+import * as React from "react";
+import * as _ from "lodash";
+import $ from "jquery";
+import GenomicOverview from "./genomicOverview/GenomicOverview";
 import {ClinicalData} from "shared/api/generated/CBioPortalAPI";
-import { ClinicalDataBySampleId } from "../../shared/api/api-types-extended";
-import { RequestStatus } from "../../shared/api/api-types-extended";
-import FeatureTitle from '../../shared/components/featureTitle/FeatureTitle';
-import {If, Then, Else} from 'react-if';
-import SampleManager from './sampleManager';
-import PatientHeader from './patientHeader/PatientHeader';
-import SignificantMutationalSignatures from './patientHeader/SignificantMutationalSignatures';
+import {ClinicalDataBySampleId, RequestStatus} from "../../shared/api/api-types-extended";
+import FeatureTitle from "../../shared/components/featureTitle/FeatureTitle";
+import {Else, If, Then} from "react-if";
+import SampleManager from "./sampleManager";
+import PatientHeader from "./patientHeader/PatientHeader";
+import SignificantMutationalSignatures from "./patientHeader/SignificantMutationalSignatures";
 import {PaginationControls} from "../../shared/components/paginationControls/PaginationControls";
 import {IColumnVisibilityDef} from "shared/components/columnVisibilityControls/ColumnVisibilityControls";
 import {toggleColumnVisibility} from "shared/components/lazyMobXTable/ColumnVisibilityResolver";
-import { PatientViewPageStore } from './clinicalInformation/PatientViewPageStore';
+import {PatientViewPageStore} from "./clinicalInformation/PatientViewPageStore";
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
 import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformationSamplesTable";
-import {observer, inject } from "mobx-react";
-import {getSpanElementsFromCleanData} from './clinicalInformation/lib/clinicalAttributesUtil.js';
+import {inject, observer} from "mobx-react";
+import {getSpanElementsFromCleanData} from "./clinicalInformation/lib/clinicalAttributesUtil.js";
 import CopyNumberTableWrapper from "./copyNumberAlterations/CopyNumberTableWrapper";
-import {reaction, computed, autorun, IReactionDisposer, observable, action} from "mobx";
+import {action, computed, observable, reaction} from "mobx";
 import Timeline from "./timeline/Timeline";
 import {default as PatientViewMutationTable} from "./mutation/PatientViewMutationTable";
 import PathologyReport from "./pathologyReport/PathologyReport";
-import { MSKTabs, MSKTab } from "../../shared/components/MSKTabs/MSKTabs";
-import { validateParametersPatientView } from '../../shared/lib/validateParameters';
+import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
+import {validateParametersPatientView} from "../../shared/lib/validateParameters";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import ValidationAlert from "shared/components/ValidationAlert";
-import AppConfig from 'appConfig';
-import { getMouseIcon } from './SVGIcons';
-import client from "../../shared/api/cbioportalClientInstance";
-import { Link } from 'react-router';
+import AppConfig from "appConfig";
+import {getMouseIcon} from "./SVGIcons";
 
-import './patient.scss';
+import "./patient.scss";
 import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
-import {buildCBioPortalPageUrl, getSampleViewUrl} from "../../shared/api/urls";
+import {getSampleViewUrl} from "../../shared/api/urls";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
-import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 import Helmet from "react-helmet";
 import {ServerConfigHelpers} from "../../config/config";
-import ClinicalInformationMutationalSignatureTable
-    from "./clinicalInformation/ClinicalInformationMutationalSignatureTable";
 import autobind from "autobind-decorator";
 import {showCustomTab} from "../../shared/lib/customTabs";
 import {StudyLink} from "../../shared/components/StudyLink/StudyLink";
+import WindowStore from "shared/components/window/WindowStore";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -378,7 +373,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                                     sampleLabels={sampleManager.sampleLabels}
                                                     sampleColors={sampleManager.sampleColors}
                                                     sampleManager={sampleManager}
-                                                    getContainerWidth={()=>$(window).width()}
+                                                    containerWidth={WindowStore.size.width-20}
                                                 />
                                                 <hr />
                                             </div>
