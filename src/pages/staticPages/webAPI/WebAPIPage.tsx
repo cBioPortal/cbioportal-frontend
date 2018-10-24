@@ -56,19 +56,22 @@ export default class WebAPIPage extends React.Component<{}, {}> {
             <h2 id="response-header-and-error-messages">Response Header and Error Messages</h2>
             <p>The first line of each response begins with a hash mark (#), and will contain data regarding the server
                 status. For example:</p>
-            <pre><code> # CGDS Kernel:  Data served up fresh at:  Wed Oct 27 13:02:30 EDT 2010
+            <pre><code>
+# CGDS Kernel:  Data served up fresh at:  Wed Oct 27 13:02:30 EDT 2010
 </code></pre>
             <p>If any errors have occurred in processing your query, this will appear directly after the status message.
                 Error messages begin with the "Error:" tag. Warning messages begin with the "# Warning:" tag.
                 Unrecoverable errors are reported as errors. For example:</p>
-            <pre><code> # CGDS Kernel:  Data served up fresh at:  Wed Oct 27 13:02:30 EDT 2010
- Error:  No case lists available for cancer_study_id:  gbs.
+            <pre><code>
+# CGDS Kernel:  Data served up fresh at:  Wed Oct 27 13:02:30 EDT 2010<br />
+Error:  No case lists available for cancer_study_id:  gbs.
 </code></pre>
             <p>Recoverable errors, such as invalid gene symbols are reported as warnings. Multiple warnings may also be
                 returned. For example:</p>
-            <pre><code> # CGDS Kernel:  Data served up fresh at:  Wed Oct 27 13:06:34 EDT 2010
- # Warning:  Unknown gene:  EGFR11
- # Warning:  Unknown gene:  EGFR12
+            <pre><code>
+# CGDS Kernel:  Data served up fresh at:  Wed Oct 27 13:06:34 EDT 2010<br />
+# Warning:  Unknown gene:  EGFR11<br />
+# Warning:  Unknown gene:  EGFR12<br />
 </code></pre>
             <h2 id="deprecated-api">Deprecated API</h2>
             <p>As of August, 2011:</p>
@@ -618,7 +621,7 @@ export default class WebAPIPage extends React.Component<{}, {}> {
                 </p>
                 <p>And a link to TP53 mutations across all cancer studies:</p>
                 <p><a href="ln?q=TP53:MUT">ln?q=EGFR:MUT</a></p>
-        </PageLayout>
+        </PageLayout>;
 
     }
 
