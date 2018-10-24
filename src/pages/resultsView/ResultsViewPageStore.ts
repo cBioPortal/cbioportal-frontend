@@ -341,6 +341,7 @@ export class ResultsViewPageStore {
     public queryReactionDisposer:any;
 
     @observable queryHash:string;
+    @observable tabId: string|undefined = undefined;
 
     @observable public checkingVirtualStudies = false;
 
