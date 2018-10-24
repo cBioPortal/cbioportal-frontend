@@ -29,7 +29,7 @@ export default class StaticContent extends React.Component<{ sourceUrl:string, t
 
     private content(content:string, url:string){
         if (isMarkDown(url)) {
-            return <ReactMarkdown className={'markdown-body'} skipHtml={true} source={this.source.result!} />;
+            return <ReactMarkdown className={'markdown-body'} escapeHtml={false} source={this.source.result!} />;
         } else {
             return <div dangerouslySetInnerHTML={{__html: content}} />
         }
