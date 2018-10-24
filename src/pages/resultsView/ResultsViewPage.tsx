@@ -63,79 +63,83 @@ function initStore() {
             // TODO: see if we can figure out why query is getting changed and
             // if there's any way to do shallow equality check to avoid this expensive operation
             const queryChanged = !_.isEqual(lastQuery, query);
-            if (!queryChanged && pathname === lastPathname) {
+            const pathnameChanged = (pathname !== lastPathname);
+            if (!queryChanged && !pathnameChanged) {
                 return;
             } else {
-                if (queryChanged) {
-                    lastQuery = query;
+
+                if (!getBrowserWindow().globalStores.routing.location.pathname.includes("/results")) {
+                   return;
                 }
-                if (pathname !== lastPathname) {
-                    lastPathname = pathname;
-                }
-            }
+                runInAction(()=>{
+                    // set query and pathname separately according to which changed, to avoid unnecessary
+                    //  recomputation by updating the query if only the pathname changed
+                    if (queryChanged) {
+                        // update query
+                        // normalize cancer_study_list this handles legacy sessions/urls where queries with single study had different param name
+                        const cancer_study_list = query.cancer_study_list || query.cancer_study_id;
 
-            if (!getBrowserWindow().globalStores.routing.location.pathname.includes("/results")) {
-               return;
-            }
+                        const cancerStudyIds: string[] = cancer_study_list.split(",");
 
-            // normalize cancer_study_list this handles legacy sessions/urls where queries with single study had different param name
-            const cancer_study_list = query.cancer_study_list || query.cancer_study_id;
+                        const oql = decodeURIComponent(query.gene_list);
 
-            const cancerStudyIds: string[] = cancer_study_list.split(",");
+                        let samplesSpecification: SamplesSpecificationElement[];
 
-            const oql = decodeURIComponent(query.gene_list);
+                        if (query.case_ids && query.case_ids.length > 0) {
+                            const case_ids = query.case_ids.split("+");
+                            samplesSpecification = case_ids.map((item:string)=>{
+                                const split = item.split(":");
+                                return {
+                                   studyId:split[0],
+                                   sampleId:split[1]
+                                }
+                            });
+                        } else if (query.sample_list_ids) {
+                            samplesSpecification = query.sample_list_ids.split(",").map((studyListPair:string)=>{
+                                const pair = studyListPair.split(":");
+                                return {
+                                    studyId:pair[0],
+                                    sampleListId:pair[1],
+                                    sampleId: undefined
+                                }
+                            });
+                        } else if (query.case_set_id !== "all") {
+                                // by definition if there is a case_set_id, there is only one study
+                                samplesSpecification = cancerStudyIds.map((studyId:string)=>{
+                                    return {
+                                        studyId: studyId,
+                                        sampleListId: query.case_set_id,
+                                        sampleId: undefined
+                                    };
+                                });
+                        } else if (query.case_set_id === "all") { // case_set_id IS equal to all
+                            samplesSpecification = cancerStudyIds.map((studyId:string)=>{
+                                return {
+                                    studyId,
+                                    sampleListId:`${studyId}_all`,
+                                    sampleId:undefined
+                                }
+                            });
+                        } else {
+                            throw("INVALID QUERY");
+                        }
 
-            let samplesSpecification: SamplesSpecificationElement[];
-
-            if (query.case_ids && query.case_ids.length > 0) {
-                const case_ids = query.case_ids.split("+");
-                samplesSpecification = case_ids.map((item:string)=>{
-                    const split = item.split(":");
-                    return {
-                       studyId:split[0],
-                       sampleId:split[1]
+                        updateStoreFromQuery(resultsViewPageStore, query, samplesSpecification, cancerStudyIds, oql, cancerStudyIds);
+                        lastQuery = query;
+                    }
+                    if (pathnameChanged) {
+                        // need to set tab like this instead of with injected via params.tab because we need to set the tab
+                        //  at the same time as we set the query parameters, otherwise we get race conditions where the tab
+                        //  we're on at the time we update the query doesnt get unmounted because we change the query, causing
+                        //  MSKTabs unmounting, THEN change the tab.
+                        const tabId = getTabId(pathname);
+                        if (resultsViewPageStore.tabId !== tabId) {
+                            resultsViewPageStore.tabId = tabId;
+                        }
+                        lastPathname = pathname;
                     }
                 });
-            } else if (query.sample_list_ids) {
-                samplesSpecification = query.sample_list_ids.split(",").map((studyListPair:string)=>{
-                    const pair = studyListPair.split(":");
-                    return {
-                        studyId:pair[0],
-                        sampleListId:pair[1],
-                        sampleId: undefined
-                    }
-                });
-            } else if (query.case_set_id !== "all") {
-                    // by definition if there is a case_set_id, there is only one study
-                    samplesSpecification = cancerStudyIds.map((studyId:string)=>{
-                        return {
-                            studyId: studyId,
-                            sampleListId: query.case_set_id,
-                            sampleId: undefined
-                        };
-                    });
-            } else if (query.case_set_id === "all") { // case_set_id IS equal to all
-                samplesSpecification = cancerStudyIds.map((studyId:string)=>{
-                    return {
-                        studyId,
-                        sampleListId:`${studyId}_all`,
-                        sampleId:undefined
-                    }
-                });
-            } else {
-                throw("INVALID QUERY");
             }
-
-            // need to set tab like this instead of with injected via params.tab because we need to set the tab
-            //  at the same time as we set the query parameters, otherwise we get race conditions where the tab
-            //  we're on at the time we update the query doesnt get unmounted because we change the query, causing
-            //  MSKTabs unmounting, THEN change the tab.
-            const tabId = getTabId(pathname);
-
-            runInAction(()=>{
-                updateStoreFromQuery(resultsViewPageStore, query, tabId, samplesSpecification, cancerStudyIds, oql, cancerStudyIds);
-            });
-
         },
         {fireImmediately: true}
     );
