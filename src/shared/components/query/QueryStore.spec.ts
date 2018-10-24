@@ -8,7 +8,7 @@ import * as _ from 'lodash';
 
 describe("QueryStore", ()=>{
 
-    describe("initialQueryParams on results page", ()=>{
+    describe.skip("initialQueryParams on results page", ()=>{
         it("should contain the correct case_ids parameter in single study query", ()=>{
             const store = new QueryStore({
                 serverVars: {

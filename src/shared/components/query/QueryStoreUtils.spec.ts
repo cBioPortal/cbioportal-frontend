@@ -9,15 +9,13 @@ import { VirtualStudy } from 'shared/model/VirtualStudy';
 describe('QueryStoreUtils', ()=>{
     describe('nonMolecularProfileParams', ()=>{
 
-        let addParamStub: any;
         let selectableStudiesSetStub:any;
 
         before(()=>{
-            addParamStub = Sinon.stub(QueryStore.prototype, "addParamsFromWindow");
+
         });
 
         after(()=>{
-            addParamStub.restore();
             if (selectableStudiesSetStub) {
                 selectableStudiesSetStub.restore();
             }
