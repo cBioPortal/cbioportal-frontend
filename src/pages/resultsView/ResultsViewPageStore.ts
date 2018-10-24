@@ -93,6 +93,7 @@ import { fetchVariantAnnotationsIndexedByGenomicLocation } from "shared/lib/Muta
 import { VariantAnnotation } from "shared/api/generated/GenomeNexusAPI";
 import {ServerConfigHelpers} from "../../config/config";
 import {
+    getTabId,
     getVirtualStudies,
     populateSampleSpecificationsFromVirtualStudies,
     substitutePhysicalStudiesForVirtualStudies
