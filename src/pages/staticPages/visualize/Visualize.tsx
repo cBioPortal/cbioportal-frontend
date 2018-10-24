@@ -55,8 +55,7 @@ export default class Visualize extends React.Component<{}, {}> {
 
                 <div className="alert alert-info" role="alert">
                     When using these tools in your publication,
-                    <b>please cite</b> <a href="http://www.ncbi.nlm.nih.gov/pubmed/23550210">Gao et al. <i>Sci. Signal.</i> 2013</a>
-                    &amp;  <a href="http://cancerdiscovery.aacrjournals.org/content/2/5/401.abstract">Cerami et al. <i>Cancer Discov.</i> 2012</a>.
+                    <b>please cite</b> <a href="http://www.ncbi.nlm.nih.gov/pubmed/23550210">Gao et al. <i>Sci. Signal.</i> 2013</a> &amp; <a href="http://cancerdiscovery.aacrjournals.org/content/2/5/401.abstract">Cerami et al. <i>Cancer Discov.</i> 2012</a>.
                 </div>
 
                 <div style={{display: "flex"}} className={styles.toolArray}>
