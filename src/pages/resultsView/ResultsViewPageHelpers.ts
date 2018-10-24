@@ -8,7 +8,16 @@ import {CancerStudy} from "../../shared/api/generated/CBioPortalAPI";
 import {VirtualStudy} from "../../shared/model/VirtualStudy";
 import hashString from "../../shared/lib/hashString";
 
-export function updateStoreFromQuery(resultsViewPageStore:ResultsViewPageStore, query:any,
+export function getTabId(pathname:string) {
+    const match = pathname.match(/results\/([^\/]+)/);
+    if (match) {
+        return match[1];
+    } else {
+        return undefined;
+    }
+}
+
+export function updateStoreFromQuery(resultsViewPageStore:ResultsViewPageStore, query:any, tabId:string|undefined,
                                      samplesSpecification:SamplesSpecificationElement[], cancerStudyIds:string[], oql:string, cohortIdsList:string[]){
 
         if (!resultsViewPageStore._samplesSpecification || !_.isEqual(resultsViewPageStore._samplesSpecification.slice(), samplesSpecification)) {
@@ -74,7 +83,9 @@ export function updateStoreFromQuery(resultsViewPageStore:ResultsViewPageStore, 
             resultsViewPageStore.queryHash = queryHash;
         }
 
-
+        if (resultsViewPageStore.tabId !== tabId) {
+            resultsViewPageStore.tabId = tabId;
+        }
 }
 
 export function getVirtualStudies(cancerStudyIds:string[]):Promise<VirtualStudy[]>{
