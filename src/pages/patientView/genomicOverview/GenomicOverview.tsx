@@ -18,13 +18,14 @@ interface IGenomicOverviewProps {
     sampleLabels: {[s:string]:string};
     sampleColors: {[s:string]:string};
     sampleManager: SampleManager;
-    getContainerWidth: ()=>number;
+    containerWidth: number;
 }
 
 export default class GenomicOverview extends React.Component<IGenomicOverviewProps, { frequencies:MutationFrequenciesBySample }> {
 
-    shouldComponentUpdate(){
-        return false;
+    shouldComponentUpdate(nextProps:IGenomicOverviewProps){
+        // only rerender to resize
+        return nextProps.containerWidth !== this.props.containerWidth;
     }
 
     constructor(props:IGenomicOverviewProps) {
@@ -36,13 +37,13 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
 
     }
 
-    componentDidMount(){
+    /*componentDidMount(){
 
         var debouncedResize =  _.debounce(()=>this.forceUpdate(),500);
 
         $(window).resize(debouncedResize);
 
-    }
+    }*/
 
 
     public render() {
@@ -80,7 +81,7 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
     }
 
     private getTracksWidth():number {
-        return this.props.getContainerWidth() - (this.shouldShowVAFPlot() ? 140 : 40);
+        return this.props.containerWidth - (this.shouldShowVAFPlot() ? 140 : 40);
     }
 
     private computeMutationFrequencyBySample(mergedMutations:Mutation[][]):MutationFrequenciesBySample {
