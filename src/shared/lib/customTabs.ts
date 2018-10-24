@@ -34,7 +34,6 @@ export function showCustomTab(div:HTMLDivElement, tab:ICustomTabConfiguration, u
     }
 
     tab.dependencyPromise!.then(()=>{
-        alert("monkeys");
         runCallback(tab);
     });
 }
