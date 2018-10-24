@@ -5,6 +5,7 @@ import URL from 'url';
 import { inject, observer } from 'mobx-react';
 import { action, computed, observable, reaction, runInAction } from 'mobx';
 import { ResultsViewPageStore } from './ResultsViewPageStore';
+import { PatientViewPageStore } from '../../pages/patientView/clinicalInformation/PatientViewPageStore';
 import CancerSummaryContainer from 'pages/resultsView/cancerSummary/CancerSummaryContainer';
 import Mutations from './mutation/Mutations';
 import MutualExclusivityTab from './mutualExclusivity/MutualExclusivityTab';
@@ -261,6 +262,7 @@ export default class ResultsViewPage extends React.Component<
                             <Mutations
                                 store={store}
                                 appStore={this.props.appStore}
+                                sampleIdToClinicalDataMap={store.clinicalDataGroupedBySampleMap.result}
                             />
                         </MSKTab>
                     );

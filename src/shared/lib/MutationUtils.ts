@@ -385,3 +385,8 @@ export function isValidGenomicLocation(mutation: Partial<Mutation>): boolean {
 
     return false;
 }
+
+export function hasASCNProperty(mutation: any, property: string)
+{
+    return mutation.alleleSpecificCopyNumber !== undefined && (mutation.alleleSpecificCopyNumber as any)[property] !== undefined;
+}

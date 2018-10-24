@@ -9,6 +9,7 @@ import {
     isValidGenomicLocation,
     genomicLocationString,
     generateHgvsgByMutation,
+    hasASCNProperty
 } from './MutationUtils';
 import { assert } from 'chai';
 import {
@@ -161,6 +162,7 @@ describe('MutationUtils', () => {
                 proteinChange: 'D666F',
             }),
         ];
+            
     });
 
     describe('groupMutationsByGeneAndPatientAndProteinChange', () => {
@@ -747,6 +749,37 @@ describe('MutationUtils', () => {
                 generateHgvsgByMutation(delinsMutations[1]),
                 'should be delins 17:g.7578205_7578207delinsTTT: (chr):g.(start)_(end)delins(var)'
             );
+        });
+    });
+    
+    describe('hasASCNProperty', () => {
+        const mutationWithASCNProperty =
+            { // mutation
+                sampleId: "P1_sample1",
+                alleleSpecificCopyNumber: {
+                    ascnMethod: "FACETS",
+                }
+            };
+        const mutationWithoutASCNProperty =
+            { // mutation
+                sampleId: "P1_sample1",
+                alleleSpecificCopyNumber: {
+                    totalCopyNumber: 4
+                }
+            };
+        const mutationWithoutASCN =
+            { // mutation
+                sampleId: "P1_sample1",
+            };
+        
+        it('checks if mutation has allele specific copy number and specified sub-property', () => {
+            const hasASCNMethod = hasASCNProperty(mutationWithASCNProperty, "ascnMethod");
+            const missingASCNMethod = hasASCNProperty(mutationWithoutASCNProperty, "ascnMethod");
+            const missingASCN = hasASCNProperty(mutationWithoutASCN, "ascnMethod");
+
+            assert.isTrue(hasASCNMethod, "hasASCNProperty() returned false, should be true.");
+            assert.isFalse(missingASCNMethod, "hasASCNProperty() returned true, should be false.");
+            assert.isFalse(missingASCN, "hasASCNProperty() returned true, should be false.");
         });
     });
 });

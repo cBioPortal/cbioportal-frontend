@@ -6,6 +6,7 @@ import ResultsViewMutationMapper from './ResultsViewMutationMapper';
 import { convertToMutationMapperProps } from 'shared/components/mutationMapper/MutationMapperConfig';
 import MutationMapperUserSelectionStore from 'shared/components/mutationMapper/MutationMapperUserSelectionStore';
 import { observable } from 'mobx';
+import { PatientViewPageStore } from '../../../pages/patientView/clinicalInformation/PatientViewPageStore';
 import AppConfig from 'appConfig';
 import OqlStatusBanner from '../../../shared/components/banners/OqlStatusBanner';
 import autobind from 'autobind-decorator';
@@ -19,6 +20,7 @@ export interface IMutationsPageProps {
     routing?: any;
     store: ResultsViewPageStore;
     appStore: AppStore;
+    sampleIdToClinicalDataMap: {};
 }
 
 @observer
@@ -160,6 +162,7 @@ export default class Mutations extends React.Component<
                                 this.props.store.myCancerGenomeData
                             }
                             userEmailAddress={this.props.appStore.userName!}
+                            clinicalDataStore={this.props.store}
                         />
                     </MSKTab>
                 );

@@ -74,6 +74,7 @@ import {
     findSamplesWithoutCancerTypeClinicalData,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
     concatMutationData,
+    mapSampleIdToClinicalData,
     fetchOncoKbCancerGenes,
     fetchVariantAnnotationsIndexedByGenomicLocation,
     fetchReferenceGenomeGenes,
@@ -555,6 +556,13 @@ export class PatientViewPageStore {
         },
         []
     );
+
+    readonly clinicalDataGroupedBySampleMap = remoteData({
+        await: () => [this.clinicalDataGroupedBySample],
+        invoke: async() => {
+            return mapSampleIdToClinicalData(this.clinicalDataGroupedBySample.result, 'id', 'clinicalData');
+        }
+    }, {});
 
     readonly getWholeSlideViewerIds = remoteData({
         await: () => [this.clinicalDataGroupedBySample],
