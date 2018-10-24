@@ -11,6 +11,7 @@ import {
     CancerStudy,
     MolecularProfile,
     Mutation,
+    ClinicalData
 } from 'cbioportal-ts-api-client';
 import SampleColumnFormatter from './column/SampleColumnFormatter';
 import TumorAlleleFreqColumnFormatter from './column/TumorAlleleFreqColumnFormatter';
@@ -71,6 +72,11 @@ import GnomadColumnFormatter from './column/GnomadColumnFormatter';
 import ClinVarColumnFormatter from './column/ClinVarColumnFormatter';
 import autobind from 'autobind-decorator';
 import DbsnpColumnFormatter from './column/DbsnpColumnFormatter';
+import { getDefaultASCNCopyNumberColumnDefinition } from 'shared/components/mutationTable/column/ascnCopyNumber/ASCNCopyNumberColumnFormatter';
+import { getDefaultASCNMethodColumnDefinition } from 'shared/components/mutationTable/column/ascnMethod/ASCNMethodColumnFormatter';
+import { getDefaultCancerCellFractionColumnDefinition } from 'shared/components/mutationTable/column/cancerCellFraction/CancerCellFractionColumnFormatter';
+import { getDefaultClonalColumnDefinition } from 'shared/components/mutationTable/column/clonal/ClonalColumnFormatter';
+import { getDefaultMutantCopiesColumnDefinition } from 'shared/components/mutationTable/column/mutantCopies/MutantCopiesColumnFormatter';
 
 export interface IMutationTableProps {
     studyIdToStudy?: { [studyId: string]: CancerStudy };
@@ -122,6 +128,7 @@ export interface IMutationTableProps {
     onRowMouseEnter?: (d: Mutation[]) => void;
     onRowMouseLeave?: (d: Mutation[]) => void;
     generateGenomeNexusHgvsgUrl: (hgvsg: string) => string;
+    sampleIdToClinicalDataMap?: { [key: string]: ClinicalData[] };
 }
 
 export enum MutationTableColumnType {
@@ -139,6 +146,9 @@ export enum MutationTableColumnType {
     VALIDATION_STATUS,
     MUTATION_TYPE,
     VARIANT_TYPE,
+    CLONAL,
+    CANCER_CELL_FRACTION,
+    MUTANT_COPIES,
     CENTER,
     TUMOR_ALLELE_FREQ,
     NORMAL_ALLELE_FREQ,
@@ -147,6 +157,8 @@ export enum MutationTableColumnType {
     HGVSG,
     COSMIC,
     COPY_NUM,
+    ASCN_COPY_NUM,
+    ASCN_METHOD,
     MRNA_EXPR,
     COHORT,
     REF_READS_N,
@@ -699,6 +711,29 @@ export default class MutationTable<
             visible: false,
         };
 
+        this._columns[
+            MutationTableColumnType.ASCN_METHOD
+        ] = getDefaultASCNMethodColumnDefinition();
+
+        this._columns[
+            MutationTableColumnType.CANCER_CELL_FRACTION
+        ] = getDefaultCancerCellFractionColumnDefinition();
+
+        this._columns[
+            MutationTableColumnType.CLONAL
+        ] = getDefaultClonalColumnDefinition();
+
+        this._columns[
+            MutationTableColumnType.ASCN_COPY_NUM
+        ] = getDefaultASCNCopyNumberColumnDefinition(
+            undefined,
+            this.props.sampleIdToClinicalDataMap
+        );
+
+        this._columns[
+            MutationTableColumnType.MUTANT_COPIES
+        ] = getDefaultMutantCopiesColumnDefinition();
+
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT] = {
             name: 'Functional Impact',
             render: (d: Mutation[]) => {
@@ -1088,5 +1123,31 @@ export default class MutationTable<
                 onRowMouseLeave={this.props.onRowMouseLeave}
             />
         );
+    }
+
+    protected getMutations() {
+        let data: Mutation[][] | undefined = [];
+        if (this.props.dataStore) {
+            data = this.props.dataStore.allData;
+        } else if (this.props.data) {
+            data = this.props.data;
+        }
+        return data;
+    }
+
+    protected hasRequiredASCNProperty(property: string): boolean {
+        let data = this.getMutations();
+        if (data) {
+            return data.some((row: Mutation[]) => {
+                return row.some((m: Mutation) => {
+                    return (
+                        m.alleleSpecificCopyNumber !== undefined &&
+                        (m.alleleSpecificCopyNumber as any)[property] !==
+                            undefined
+                    );
+                });
+            });
+        }
+        return false;
     }
 }

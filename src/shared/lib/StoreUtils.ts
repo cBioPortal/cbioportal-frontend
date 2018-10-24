@@ -1219,6 +1219,17 @@ export function groupBySampleId(
     }));
 }
 
+export function mapSampleIdToClinicalData(
+    clinicalDataGroupedBySampleId: Array<{ id:string; clinicalData:ClinicalData[] }>
+) {
+    const sampleIdToClinicalDataMap = _
+        .chain(clinicalDataGroupedBySampleId)
+        .keyBy('id')
+        .mapValues('clinicalData')
+        .value();
+    return sampleIdToClinicalDataMap;
+}
+
 export function groupBy<T>(
     data: T[],
     keyFn: (d: T) => string,

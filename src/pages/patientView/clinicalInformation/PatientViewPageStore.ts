@@ -78,6 +78,7 @@ import {
     fetchReferenceGenomeGenes,
     fetchSamplesForPatient,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData,
+    mapSampleIdToClinicalData,
     fetchVariantAnnotationsIndexedByGenomicLocation,
     findMolecularProfileIdDiscrete,
     findMrnaRankMolecularProfileId,
@@ -699,6 +700,18 @@ export class PatientViewPageStore {
                 ),
         },
         []
+    );
+
+    readonly clinicalDataGroupedBySampleMap = remoteData(
+        {
+            await: () => [this.clinicalDataGroupedBySample],
+            invoke: async () => {
+                return mapSampleIdToClinicalData(
+                    this.clinicalDataGroupedBySample.result
+                );
+            },
+        },
+        {}
     );
 
     readonly getWholeSlideViewerIds = remoteData({
