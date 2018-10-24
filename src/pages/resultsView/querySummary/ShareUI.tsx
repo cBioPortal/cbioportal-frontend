@@ -8,6 +8,7 @@ import styles from './shareUI.module.scss';
 import autobind from "autobind-decorator";
 import {BookmarkModal} from "../bookmark/BookmarkModal";
 import {action, observable} from "mobx";
+import AppConfig from "appConfig";
 
 interface IShareUI {
     sessionEnabled: boolean;
@@ -99,12 +100,18 @@ export class ShareUI extends React.Component<IShareUI, {}> {
 
     render() {
         return <div className={styles.shareModule}>
-            <a onClick={this.shareTwitter}>
-                <span className="fa-stack fa-4x">
-                    <i className="fa fa-circle fa-stack-2x"></i>
-                    <i className="fa fa-twitter fa-stack-1x"></i>
-                </span>
-            </a>
+
+            {
+                (AppConfig.serverConfig.skin_show_tweet_button) && (
+                    <a onClick={this.shareTwitter}>
+                        <span className="fa-stack fa-4x">
+                            <i className="fa fa-circle fa-stack-2x"></i>
+                            <i className="fa fa-twitter fa-stack-1x"></i>
+                        </span>
+                    </a>
+                )
+            }
+
             <a onClick={this.openEmail}>
                 <span className="fa-stack fa-4x">
                     <i className="fa fa-circle fa-stack-2x"></i>
