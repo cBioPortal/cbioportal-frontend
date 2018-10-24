@@ -18,7 +18,7 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
             {
                 id:"datasets",
                 text:"Data Sets",
-                address:"/s/datasets",
+                address:"/datasets",
                 internal:true,
                 hide:()=>AppConfig.serverConfig.skin_show_data_tab === false
             },
@@ -26,7 +26,7 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
             {
                 id:"webAPI",
                 text:"Web API",
-                address:"/s/webAPI",
+                address:"/webAPI",
                 internal:true,
                 hide:()=>AppConfig.serverConfig.skin_show_web_api_tab === false
             },
@@ -34,7 +34,7 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
             {
                 id:"rMatlab",
                 text:"R/MATLAB",
-                address:"/s/rmatlab",
+                address:"/rmatlab",
                 internal:true,
                 hide:()=>AppConfig.serverConfig.skin_show_r_matlab_tab === false
             },
@@ -42,7 +42,7 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
             {
                 id:"tutorials",
                 text:"Tutorials",
-                address:"/s/tutorials",
+                address:"/tutorials",
                 internal:true,
                 hide:()=>AppConfig.serverConfig.skin_show_tutorials_tab === false
             },
@@ -50,7 +50,7 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
             {
                 id:"faq",
                 text:"FAQ",
-                address:"/s/faq",
+                address:"/faq",
                 internal:true,
                 hide:()=>AppConfig.serverConfig.skin_show_faqs_tab === false
             },
@@ -58,7 +58,7 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
             {
                 id:"news",
                 text:"News",
-                address:"/s/news",
+                address:"/news",
                 internal:true,
                 hide:()=>AppConfig.serverConfig.skin_show_news_tab === false
             },
@@ -66,7 +66,7 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
             {
                 id:"visualize",
                 text:"Visualize Your Data",
-                address:"/s/visualize",
+                address:"/visualize",
                 internal:true,
                 hide:()=>AppConfig.serverConfig.skin_show_tools_tab === false
             },
@@ -74,7 +74,7 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
             {
                 id:"about",
                 text:"About",
-                address:"/s/about",
+                address:"/about",
                 internal:true,
                 hide:()=>AppConfig.serverConfig.skin_show_about_tab === false
             },
