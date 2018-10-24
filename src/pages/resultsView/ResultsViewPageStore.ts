@@ -49,6 +49,8 @@ import {
     groupBy,
     IDataQueryFilter,
     isMutationProfile,
+    groupBySampleId,
+    mapSampleIdToClinicalData,    
     ONCOKB_DEFAULT
 } from "shared/lib/StoreUtils";
 import {fetchHotspotsData, indexHotspotsData} from "shared/lib/CancerHotspotsUtils";
@@ -1532,6 +1534,36 @@ export class ResultsViewPageStore {
         ],
         invoke: () => this.getClinicalData("SAMPLE", this.studies.result!, this.samples.result, ["CANCER_TYPE", "CANCER_TYPE_DETAILED"])
     }, []);
+
+    readonly facetsClinicalDataForSamples = remoteData({
+        await: () => [
+            this.studies,
+            this.samples
+        ],
+        invoke: () => this.getClinicalData("SAMPLE", this.studies.result!, this.samples.result, ["FACETS_WGD", "FACETS_PURITY"])
+    }, []);
+    
+    @computed get sampleIds(): string[]
+    {
+        if (this.samples.result) {
+            return this.samples.result.map(sample => sample.sampleId);
+        }
+
+        return [];
+    }
+
+    readonly facetsClinicalDataGroupedBySample = remoteData({
+        await: () => [this.facetsClinicalDataForSamples],
+        invoke: async() => groupBySampleId(this.sampleIds, this.facetsClinicalDataForSamples.result)
+    }, []);
+
+    readonly clinicalDataGroupedBySampleMap = remoteData({
+        await: () => [this.facetsClinicalDataGroupedBySample],
+        invoke: async() => {
+            let sampleIdToClinicalDataMap =  mapSampleIdToClinicalData(this.facetsClinicalDataGroupedBySample.result, 'id', 'clinicalData');
+            return sampleIdToClinicalDataMap;
+        }
+    }, {});
 
     private getClinicalData(clinicalDataType: "SAMPLE" | "PATIENT", studies:any[], entities: any[], attributeIds: string[]):
     Promise<Array<ClinicalData>> {

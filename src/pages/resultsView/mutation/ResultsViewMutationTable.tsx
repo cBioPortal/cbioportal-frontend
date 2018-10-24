@@ -1,10 +1,12 @@
 import * as React from "react";
+import {computed} from "mobx";
 import {observer} from "mobx-react";
 import {
     IMutationTableProps, MutationTableColumnType, default as MutationTable
 } from "shared/components/mutationTable/MutationTable";
 import CancerTypeColumnFormatter from "shared/components/mutationTable/column/CancerTypeColumnFormatter";
 import TumorAlleleFreqColumnFormatter from "shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter";
+import {Mutation, ClinicalData} from "shared/api/generated/CBioPortalAPI";
 
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
@@ -40,6 +42,8 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
             MutationTableColumnType.CHROMOSOME,
             MutationTableColumnType.PROTEIN_CHANGE,
             MutationTableColumnType.MUTATION_TYPE,
+            MutationTableColumnType.CLONAL,
+            MutationTableColumnType.MUTANT_COPIES,
             MutationTableColumnType.COSMIC,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
             MutationTableColumnType.NORMAL_ALLELE_FREQ,
@@ -70,6 +74,8 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
         this._columns[MutationTableColumnType.ANNOTATION].order = 30;
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT].order = 38;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 40;
+        this._columns[MutationTableColumnType.CLONAL].order = 45;
+        this._columns[MutationTableColumnType.MUTANT_COPIES].order = 47;
         this._columns[MutationTableColumnType.COPY_NUM].order = 50;
         this._columns[MutationTableColumnType.COSMIC].order = 60;
         this._columns[MutationTableColumnType.MUTATION_STATUS].order = 70;
@@ -92,8 +98,45 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
         this._columns[MutationTableColumnType.CANCER_TYPE].shouldExclude = ()=>{
             return !this.props.uniqueSampleKeyToTumorType;
         };
+
+        this._columns[MutationTableColumnType.CLONAL].shouldExclude = ()=>{
+            return !this.hasCcfMCopies;
+        };
+
+        this._columns[MutationTableColumnType.MUTANT_COPIES].shouldExclude = ()=>{
+            return !this.hasTotalCopyNumber;
+        };
+        
         this._columns[MutationTableColumnType.NUM_MUTATIONS].shouldExclude = ()=>{
             return !this.props.mutationCountCache;
         };
+    }
+    
+    @computed private get hasCcfMCopies():boolean{
+        let data:Mutation[][] = [];
+        if (this.props.dataStore) {
+            data = this.props.dataStore.allData;
+        } else if (this.props.data) {
+            data = this.props.data;
+        }
+        return data.some((row:Mutation[]) => {
+            return row.some((m:Mutation) => {
+                return (m.ccfMCopies !== 1.4e-45);
+            });
+        });
+    }
+
+    @computed private get hasTotalCopyNumber():boolean{
+        let data:Mutation[][] = [];
+        if (this.props.dataStore) {
+            data = this.props.dataStore.allData;
+        } else if (this.props.data) {
+            data = this.props.data;
+        }
+        return data.some((row:Mutation[]) => {
+            return row.some((m:Mutation) => {
+                return (m.totalCopyNumber !== -1);
+            });
+        });
     }
 }

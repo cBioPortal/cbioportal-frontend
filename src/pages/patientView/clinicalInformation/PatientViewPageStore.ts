@@ -37,7 +37,7 @@ import {
     fetchMutSigData, findMrnaRankMolecularProfileId, mergeDiscreteCNAData, fetchSamplesForPatient, fetchClinicalData,
     fetchCopyNumberSegments, fetchClinicalDataForPatient, makeStudyToCancerTypeMap,
     fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, groupBySampleId, findSamplesWithoutCancerTypeClinicalData,
-    fetchStudiesForSamplesWithoutCancerTypeClinicalData, fetchOncoKbAnnotatedGenesSuppressErrors, concatMutationData
+    fetchStudiesForSamplesWithoutCancerTypeClinicalData, fetchOncoKbAnnotatedGenesSuppressErrors, concatMutationData, mapSampleIdToClinicalData
 } from "shared/lib/StoreUtils";
 import {IMutationalSignature} from "../../../shared/model/MutationalSignature";
 import {indexHotspotsData, fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
@@ -345,6 +345,14 @@ export class PatientViewPageStore {
         await: () => [this.clinicalDataForSamples],
         invoke: async() => groupBySampleId(this.sampleIds, this.clinicalDataForSamples.result)
     }, []);
+
+    readonly clinicalDataGroupedBySampleMap = remoteData({
+        await: () => [this.clinicalDataGroupedBySample],
+        invoke: async() => {
+            let sampleIdToClinicalDataMap =  mapSampleIdToClinicalData(this.clinicalDataGroupedBySample.result, 'id', 'clinicalData');
+            return sampleIdToClinicalDataMap;
+        }
+    }, {});
 
     readonly studyMetaData = remoteData({
         invoke: async() => client.getStudyUsingGET({studyId: this.studyId})

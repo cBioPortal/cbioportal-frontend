@@ -14,6 +14,8 @@ import {
 
 import MutationRateSummary from "pages/resultsView/mutation/MutationRateSummary";
 import ResultsViewMutationMapperStore from "pages/resultsView/mutation/ResultsViewMutationMapperStore";
+import {PatientViewPageStore} from "../../../pages/patientView/clinicalInformation/PatientViewPageStore";
+import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import ResultsViewMutationTable from "pages/resultsView/mutation/ResultsViewMutationTable";
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 import {AppStore} from "../../../AppStore";
@@ -25,6 +27,7 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps
     cancerTypeCache?:CancerTypeCache;
     mutationCountCache?:MutationCountCache;
     userEmailAddress:string;
+    clinicalDataStore:ResultsViewPageStore;
 }
 
 @observer
@@ -57,7 +60,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
     protected get isMutationTableDataLoading() {
         return getMobxPromiseGroupStatus(
             this.props.store.clinicalDataForSamples,
-            this.props.store.studiesForSamplesWithoutCancerTypeClinicalData
+            this.props.store.studiesForSamplesWithoutCancerTypeClinicalData,
         ) === "pending";
     }
 
@@ -89,6 +92,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
                 enableHotspot={this.props.config.show_hotspot}
                 enableMyCancerGenome={this.props.config.mycancergenome_show}
                 enableCivic={this.props.config.show_civic}
+                sampleIdToClinicalDataMap={this.props.clinicalDataStore.clinicalDataGroupedBySampleMap.result}
             />
         );
     }

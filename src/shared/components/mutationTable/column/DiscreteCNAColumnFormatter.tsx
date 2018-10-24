@@ -5,7 +5,7 @@ import {
     DiscreteCNACacheDataType,
     default as DiscreteCNACache
 } from "shared/cache/DiscreteCNACache";
-import {MolecularProfile, Mutation} from "shared/api/generated/CBioPortalAPI";
+import {MolecularProfile, Mutation, ClinicalData} from "shared/api/generated/CBioPortalAPI";
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 
 export default class DiscreteCNAColumnFormatter {
@@ -18,15 +18,186 @@ export default class DiscreteCNAColumnFormatter {
         "-2": "deepdel"
     };
 
-    public static renderFunction(data: Mutation[], molecularProfileIdToMolecularProfile: {[molecularProfileId:string]:MolecularProfile}, cache:DiscreteCNACache) {
+    private static getFacetsCNAData(data:Mutation[], sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined) {
+        let sampleId:string = data[0].sampleId;
+        let tcn = data[0].totalCopyNumber;
+        let lcn = data[0].minorCopyNumber;
+        let mcn:number = tcn - lcn;
+        let wgd = null;
+        if (sampleIdToClinicalDataMap) {
+            let wgdData = sampleIdToClinicalDataMap[sampleId].filter((cd: ClinicalData) => cd.clinicalAttributeId === "FACETS_WGD");
+            if (wgdData !== undefined && wgdData.length > 0) {
+                wgd = wgdData[0].value;
+            }
+        }
+        if (tcn === -1 || lcn === -1 || wgd === null) {
+            return "NA";
+        }
+        return DiscreteCNAColumnFormatter.getFacetsCall(mcn, lcn, wgd);
+    }
+
+    private static getFacetsCall(mcn:number, lcn:number, wgd:string) {
+        let facetsCall = null;
+        if (wgd === "no WGD" && mcn === 0 && lcn === 0) {
+            facetsCall = "Homdel";
+        } else if (wgd === "no WGD" && mcn === 1 && lcn === 0) {
+            facetsCall = "Hetloss";
+        } else if (wgd === "no WGD" && mcn === 2 && lcn === 0) {
+            facetsCall = "CNLOH";
+        } else if (wgd === "no WGD" && mcn === 3 && lcn === 0) {
+            facetsCall = "CNLOH & Gain";
+        } else if (wgd === "no WGD" && mcn === 4 && lcn === 0) {
+            facetsCall = "CNLOH & Gain";
+        } else if (wgd === "no WGD" && mcn === 5 && lcn === 0) {
+            facetsCall = "Amp (LOH)";
+        } else if (wgd === "no WGD" && mcn === 6 && lcn === 0) {
+            facetsCall = "Amp (LOH)";
+        } else if (wgd === "no WGD" && mcn === 1 && lcn === 1) {
+            facetsCall = "Diploid";
+        } else if (wgd === "no WGD" && mcn === 2 && lcn === 1) {
+            facetsCall = "Gain";
+        } else if (wgd === "no WGD" && mcn === 3 && lcn === 1) {
+            facetsCall = "Gain";
+        } else if (wgd === "no WGD" && mcn === 4 && lcn === 1) {
+            facetsCall = "Amp";
+        } else if (wgd === "no WGD" && mcn === 5 && lcn === 1) {
+            facetsCall = "Amp";
+        } else if (wgd === "no WGD" && mcn === 6 && lcn === 1) {
+            facetsCall = "Amp";
+        } else if (wgd === "no WGD" && mcn === 2 && lcn === 2) {
+            facetsCall = "Tetraploid";
+        } else if (wgd === "no WGD" && mcn === 3 && lcn === 2) {
+            facetsCall = "Amp";
+        } else if (wgd === "no WGD" && mcn === 4 && lcn === 2) {
+            facetsCall = "Amp";
+        } else if (wgd === "no WGD" && mcn === 5 && lcn === 2) {
+            facetsCall = "Amp";
+        } else if (wgd === "no WGD" && mcn === 6 && lcn === 2) {
+            facetsCall = "Amp";
+        } else if (wgd === "no WGD" && mcn === 3 && lcn === 3) {
+            facetsCall = "Amp (Balanced)";
+        } else if (wgd === "no WGD" && mcn === 4 && lcn === 3) {
+            facetsCall = "Amp";
+        } else if (wgd === "no WGD" && mcn === 5 && lcn === 3) {
+            facetsCall = "Amp";
+        } else if (wgd === "no WGD" && mcn === 6 && lcn === 3) {
+            facetsCall = "Amp";
+        } else if (wgd === "WGD" && mcn === 0 && lcn === 0) {
+            facetsCall = "HOMDEL";
+        } else if (wgd === "WGD" && mcn === 1 && lcn === 0) {
+            facetsCall = "Loss Before & After";
+        } else if (wgd === "WGD" && mcn === 2 && lcn === 0) {
+            facetsCall = "Loss Before";
+        } else if (wgd === "WGD" && mcn === 3 && lcn === 0) {
+            facetsCall = "CNLOH Before & Loss";
+        } else if (wgd === "WGD" && mcn === 4 && lcn === 0) {
+            facetsCall = "CNLOH Before";
+        } else if (wgd === "WGD" && mcn === 5 && lcn === 0) {
+            facetsCall = "CNLOH Before & Gain";
+        } else if (wgd === "WGD" && mcn === 6 && lcn === 0) {
+            facetsCall = "Amp (LOH)";
+        } else if (wgd === "WGD" && mcn === 1 && lcn === 1) {
+            facetsCall = "Double Loss After";
+        } else if (wgd === "WGD" && mcn === 2 && lcn === 1) {
+            facetsCall = "Loss After";
+        } else if (wgd === "WGD" && mcn === 3 && lcn === 1) {
+            facetsCall = "CNLOH After";
+        } else if (wgd === "WGD" && mcn === 4 && lcn === 1) {
+            facetsCall = "Loss & Gain";
+        } else if (wgd === "WGD" && mcn === 5 && lcn === 1) {
+            facetsCall = "Amp";
+        } else if (wgd === "WGD" && mcn === 6 && lcn === 1) {
+            facetsCall = "Amp";
+        } else if (wgd === "WGD" && mcn === 2 && lcn === 2) {
+            facetsCall = "Tetraploid";
+        } else if (wgd === "WGD" && mcn === 3 && lcn === 2) {
+            facetsCall = "Gain";
+        } else if (wgd === "WGD" && mcn === 4 && lcn === 2) {
+            facetsCall = "Amp";
+        } else if (wgd === "WGD" && mcn === 5 && lcn === 2) {
+            facetsCall = "Amp";
+        } else if (wgd === "WGD" && mcn === 6 && lcn === 2) {
+            facetsCall = "Amp";
+        } else if (wgd === "WGD" && mcn === 3 && lcn === 3) {
+            facetsCall = "Amp (Balanced)";
+        } else if (wgd === "WGD" && mcn === 4 && lcn === 3) {
+            facetsCall = "Amp";
+        } else if (wgd === "WGD" && mcn === 5 && lcn === 3) {
+            facetsCall = "Amp";
+        } else if (wgd === "WGD" && mcn === 6 && lcn === 3) {
+            facetsCall = "Amp";
+        } else {
+            facetsCall = "NA";
+        }
+        return facetsCall;
+    }
+   
+    public static formatFacetsCNAData(facetsCNAData:string) {
+        let color = "";
+        let size = "";
+        if (facetsCNAData.includes("Amp")) {
+            color = "red";
+            size = "12px";
+        } else if (facetsCNAData.includes("Gain")) {
+            color = "red";
+            size = "smaller"; 
+        } else if (facetsCNAData.includes("Loss")) {
+            color = "blue";
+            size = "smaller";
+        } else if (facetsCNAData.includes("Homdel")) {
+            color = "blue";
+            size = "12px";
+        } else { 
+            color = "black";
+            size = "xx-small";
+        }
+        if (facetsCNAData === "Diploid") {
+            return (<span style={{color:color, textAlign:"center", fontSize:size}}>
+                {facetsCNAData}
+                </span>);
+        } 
+        return (<span style={{color:color, textAlign:"center", fontSize:size}}>
+                <b>{facetsCNAData}</b>
+                </span>);
+    }
+
+    public static getFacetsCNATooltip(data:Mutation[], sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined) {
+        let sampleId:string = data[0].sampleId;
+        let tcn = data[0].totalCopyNumber;
+        let lcn = data[0].minorCopyNumber;
+        let mcn:number = tcn - lcn;
+        let wgd = null;
+        let facetsTooltip = null;
+        if (sampleIdToClinicalDataMap) {
+            let wgdData = sampleIdToClinicalDataMap[sampleId].filter((cd: ClinicalData) => cd.clinicalAttributeId === "FACETS_WGD");
+            if (wgdData !== undefined && wgdData.length > 0) {
+                wgd = wgdData[0].value;
+            }
+        }
+        if (tcn === -1 || lcn === -1 || wgd === null) {
+            return (<span><b>NA</b></span>);
+        } else {
+            facetsTooltip = DiscreteCNAColumnFormatter.getFacetsCall(mcn, lcn, wgd).toLowerCase() 
+        }
+        return (<span><b>{facetsTooltip}</b> ({wgd} with total copy number of {tcn.toString(10)} and a minor copy number of {lcn.toString(10)})</span>);
+            
+    }
+
+    public static renderFunction(data: Mutation[], molecularProfileIdToMolecularProfile: {[molecularProfileId:string]:MolecularProfile}, cache:DiscreteCNACache, sampleIdToClinicalDataMap: {[key: string]:ClinicalData[]}|undefined) {
         const cnaData = DiscreteCNAColumnFormatter.getData(data, molecularProfileIdToMolecularProfile, cache);
-        return (<DefaultTooltip
-                placement="left"
-                overlay={DiscreteCNAColumnFormatter.getTooltipContents(cnaData)}
-                arrowContent={<div className="rc-tooltip-arrow-inner"/>}
-            >
-                {DiscreteCNAColumnFormatter.getTdContents(cnaData)}
-            </DefaultTooltip>
+        let cnaDataValue = DiscreteCNAColumnFormatter.getTdContents(cnaData);
+        let cnaToolTip = DiscreteCNAColumnFormatter.getTooltipContents(cnaData);
+        let facetsCNAData = DiscreteCNAColumnFormatter.getFacetsCNAData(data, sampleIdToClinicalDataMap);
+        if (facetsCNAData !== "NA") {        
+            cnaDataValue = DiscreteCNAColumnFormatter.formatFacetsCNAData(facetsCNAData);
+            cnaToolTip = DiscreteCNAColumnFormatter.getFacetsCNATooltip(data, sampleIdToClinicalDataMap);
+        }
+        return (<DefaultTooltip placement="left" 
+                    overlay={cnaToolTip} 
+                    arrowContent={<div className="rc-tooltip-arrow-inner"/>}
+                >
+                    {cnaDataValue}
+                </DefaultTooltip>
         );
     }
 
