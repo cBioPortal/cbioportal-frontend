@@ -17,13 +17,7 @@ import ExtendedRouterStore from "../../../shared/lib/ExtendedRouterStore";
 import {ShareUI} from "./ShareUI";
 import {ServerConfigHelpers} from "../../../config/config";
 import AppConfig from "appConfig";
-
-
-class StudyLink extends React.Component<{ study: CancerStudy, onClick?: () => void, href?:string }, {}> {
-    render() {
-        return (<a href={this.props.href || `newstudy?id=${this.props.study.studyId}`} target="_blank" style={{cursor:'pointer'}} onClick={this.props.onClick || (()=>{})}>{this.props.study.name}</a>);
-    }
-}
+import {StudyLink} from "../../../shared/components/StudyLink/StudyLink";
 
 @observer
 export default class QuerySummary extends React.Component<{ queryStore:QueryStore, routingStore:ExtendedRouterStore, store: ResultsViewPageStore }, {}> {

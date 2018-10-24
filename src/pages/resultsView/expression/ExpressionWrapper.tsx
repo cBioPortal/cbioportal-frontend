@@ -535,7 +535,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
                     <MSKTabs onTabClick={this.handleTabClick}
                              arrowStyle={{'line-height': .8}}
-                             enablePagination={true}
+                             enablePagination={false}
                              unmountOnHide={true}
                              tabButtonStyle="pills"
                              activeTabId={"summaryTab" + this.selectedGene.hugoGeneSymbol}
