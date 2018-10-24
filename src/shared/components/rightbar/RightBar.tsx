@@ -13,6 +13,7 @@ import getBrowserWindow from "../../lib/getBrowserWindow";
 import ExtendedRouterStore from "../../lib/ExtendedRouterStore";
 import LoadingIndicator from "../loadingIndicator/LoadingIndicator";
 import {ResultsViewTab} from "../../../pages/resultsView/ResultsViewPage";
+import {openStudySummaryFormSubmit} from "../../api/urls";
 
 
 interface IRightBarProps
@@ -168,7 +169,7 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
 
                                 <BarGraph data={this.CancerTypeDescendantStudies(this.CancerTypeList())}
                                           openStudy={(studyId)=>{
-                                              (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute({ id:studyId },"study");
+                                              openStudySummaryFormSubmit(studyId);
                                           }}
                                 />
 
