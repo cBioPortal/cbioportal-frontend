@@ -189,5 +189,6 @@ declare module "oncoprintjs"
         onClipboardChange:(callback:(array:string[])=>void)=>void;
 
         constructor(ctr_selector:string, width:number);
+        destroy:()=>void;
     }
 }

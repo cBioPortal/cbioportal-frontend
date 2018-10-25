@@ -14915,6 +14915,10 @@ var Oncoprint = (function () {
         }
 	this.clipboard_change_callbacks.push(callback);
     }
+
+    Oncoprint.prototype.destroy = function() {
+    	this.cell_view.destroy();
+	}
     
     return Oncoprint;
 })();
@@ -17072,11 +17076,12 @@ var getNewCanvas = function(view) {
     parent_node.removeChild(old_canvas);
     parent_node.insertBefore(new_canvas, view.$overlay_canvas[0]);
     view.$canvas = $(new_canvas);
+    view.ctx = null;
 };
 var getWebGLCanvasContext = function (view) {
     try {
 	var canvas = view.$canvas[0];
-	var ctx = canvas.getContext("experimental-webgl", {alpha: false, antialias: view.antialias});
+	var ctx = view.ctx || canvas.getContext("experimental-webgl", {alpha: false, antialias: view.antialias});
 	ctx.clearColor(1.0, 1.0, 1.0, 1.0);
 	ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT);
 	ctx.viewportWidth = canvas.width;
@@ -17201,13 +17206,14 @@ var OncoprintWebGLCellView = (function () {
 		var height = self.$overlay_canvas.height();
 		return (mouse_x >= offset.left && mouse_x < width + offset.left && mouse_y >= offset.top && mouse_y < height + offset.top);
 	    };
-	    $(document).on("mousemove", function(evt) {
-		if (!mouseInOverlayCanvas(evt.pageX, evt.pageY)) {
-		    clearOverlay(self);
-		    tooltip.hide();
-		    cell_over_callback(null);
-		}
-	    });
+	    self.mouseMoveHandler = function(evt) {
+            if (!mouseInOverlayCanvas(evt.pageX, evt.pageY)) {
+                clearOverlay(self);
+                tooltip.hide();
+                cell_over_callback(null);
+            }
+        };
+	    $(document).on("mousemove", self.mouseMoveHandler);
 	    self.$overlay_canvas.on("mousemove", function(evt) {
 		if (self.rendering_suppressed) {
 		    return;
@@ -17957,6 +17963,12 @@ var OncoprintWebGLCellView = (function () {
 	}
 	return root;
     }
+
+    OncoprintWebGLCellView.prototype.destroy = function() {
+    	this.$overlay_canvas.off(); // clear all handlers so that it can be garbage collected
+		$(document).off("mousemove", self.mouseMoveHandler);
+	}
+
     return OncoprintWebGLCellView;
 })();
 
@@ -25327,7 +25339,7 @@ var arrayFindIndex = function (arr, callback, start_index) {
 var getWebGLCanvasContext = function (view) {
     try {
 	var canvas = view.$canvas[0];
-	var ctx = canvas.getContext("experimental-webgl", {alpha: false, antialias: true});
+	var ctx = view.ctx || canvas.getContext("experimental-webgl", {alpha: false, antialias: true});
 	ctx.clearColor(1.0, 1.0, 1.0, 1.0);
 	ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT);
 	ctx.viewportWidth = canvas.width;
