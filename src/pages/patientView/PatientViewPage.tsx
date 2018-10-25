@@ -289,7 +289,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         }
 
         return (
-            <PageLayout noMargin={true}>
+            <PageLayout className="patientViewPageLayout" noMargin={true}>
                 {
                     (patientViewPageStore.patientViewData.isComplete) && (
                         <Helmet>
