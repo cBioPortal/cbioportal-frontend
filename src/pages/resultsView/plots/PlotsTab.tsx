@@ -117,7 +117,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @observable searchCaseInput:string;
     @observable searchMutationInput:string;
     @observable viewMutationType:boolean = true;
-    @observable viewCopyNumber:boolean = true;
+    @observable viewCopyNumber:boolean = false;
 
     @observable searchCase:string = "";
     @observable searchMutation:string = "";
