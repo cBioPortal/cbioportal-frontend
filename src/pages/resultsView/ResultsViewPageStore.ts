@@ -93,6 +93,7 @@ import { fetchVariantAnnotationsIndexedByGenomicLocation } from "shared/lib/Muta
 import { VariantAnnotation } from "shared/api/generated/GenomeNexusAPI";
 import {ServerConfigHelpers} from "../../config/config";
 import {
+    getTabId,
     getVirtualStudies,
     populateSampleSpecificationsFromVirtualStudies,
     substitutePhysicalStudiesForVirtualStudies
@@ -341,6 +342,7 @@ export class ResultsViewPageStore {
     public queryReactionDisposer:any;
 
     @observable queryHash:string;
+    @observable tabId: string|undefined = undefined;
 
     @observable public checkingVirtualStudies = false;
 
