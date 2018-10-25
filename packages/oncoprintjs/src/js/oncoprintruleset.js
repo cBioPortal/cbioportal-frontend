@@ -23,6 +23,7 @@ var Shape = require('./oncoprintshape.js');
 var extractRGBA = require('./extractrgba.js');
 var heatmapColors = require('./heatmapcolors.js');
 var binarysearch = require('./binarysearch.js');
+var cloneShallow = require('./utils.js').cloneShallow;
 
 function ifndef(x, val) {
     return (typeof x === "undefined" ? val : x);
@@ -59,19 +60,25 @@ function makeUniqueColorGetter(init_used_colors) {
     for (var i=0; i<init_used_colors.length; i++) {
 	used_colors[init_used_colors[i]] = true;
     }
-    return function() {
-	var next_color = colors[index % colors.length];
-	while (used_colors[next_color]) {
-	    var darker_next_color = darkenHexColor(next_color);
-	    if (darker_next_color === next_color) {
-		break;
-	    }
-	    next_color = darker_next_color;
-	}
-	used_colors[next_color] = true;
-	index += 1;
+    return function(color) {
+    	if (color) {
+    		// calling with an argument adds it to the used colors record
+    		used_colors[color] = true;
+		} else {
+    		// calling without an argument returns a new unused color
+			var next_color = colors[index % colors.length];
+			while (used_colors[next_color]) {
+				var darker_next_color = darkenHexColor(next_color);
+				if (darker_next_color === next_color) {
+				break;
+				}
+				next_color = darker_next_color;
+			}
+			used_colors[next_color] = true;
+			index += 1;
 
-	return next_color;
+			return next_color;
+		}
     };
 };
 
@@ -433,13 +440,13 @@ var CategoricalRuleSet = (function () {
 	});
 
 	this.category_key = params.category_key;
-	this.category_to_color = ifndef(params.category_to_color, {});
+	this.category_to_color = cloneShallow(ifndef(params.category_to_color, {}));
 	this.getUnusedColor = makeUniqueColorGetter(objectValues(this.category_to_color).map(colorToHex));
 	for (var category in this.category_to_color) {
 	    if (this.category_to_color.hasOwnProperty(category)) {
 		var color = this.category_to_color[category];
 		addCategoryRule(this, category, color);
-		this.used_colors[colorToHex(color)] = true;
+		this.getUnusedColor(color);
 	    }
 	}
     }
@@ -468,7 +475,7 @@ var CategoricalRuleSet = (function () {
 	    }
 	    var category = data[i][this.category_key];
 	    if (!this.category_to_color.hasOwnProperty(category)) {
-		var color = this.getUnusedColor(this);
+		var color = this.getUnusedColor();
 
 		this.category_to_color[category] = color;
 		addCategoryRule(this, category, color);
