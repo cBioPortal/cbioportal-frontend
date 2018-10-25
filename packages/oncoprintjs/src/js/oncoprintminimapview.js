@@ -16,7 +16,7 @@ var arrayFindIndex = function (arr, callback, start_index) {
 var getWebGLCanvasContext = function (view) {
     try {
 	var canvas = view.$canvas[0];
-	var ctx = canvas.getContext("experimental-webgl", {alpha: false, antialias: true});
+	var ctx = view.ctx || canvas.getContext("experimental-webgl", {alpha: false, antialias: true});
 	ctx.clearColor(1.0, 1.0, 1.0, 1.0);
 	ctx.clear(ctx.COLOR_BUFFER_BIT | ctx.DEPTH_BUFFER_BIT);
 	ctx.viewportWidth = canvas.width;

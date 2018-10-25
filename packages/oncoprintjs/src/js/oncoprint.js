@@ -1156,6 +1156,10 @@ var Oncoprint = (function () {
         }
 	this.clipboard_change_callbacks.push(callback);
     }
+
+    Oncoprint.prototype.destroy = function() {
+    	this.cell_view.destroy();
+	}
     
     return Oncoprint;
 })();
