@@ -1765,20 +1765,6 @@ export class QueryStore
 		openStudySummaryFormSubmit(this.selectableSelectedStudyIds);
 	}
 
-	@action addGenesAndSubmit(genes:string[]) {
-		onMobxPromise(this.molecularProfiles, ()=>{
-			const nonProfileParams = _.cloneDeep(this.initialQueryParams.nonMolecularProfileParams);
-			nonProfileParams.gene_list = normalizeQuery(nonProfileParams.gene_list + "\n" + genes.join(" "));
-			nonProfileParams.geneset_list = normalizeQuery(nonProfileParams.geneset_list ? nonProfileParams.geneset_list : "");
-
-			const profileParams = molecularProfileParams(this, this.initialQueryParams.molecularProfileIds);
-
-			const urlParams = queryParams(nonProfileParams, profileParams, this.initialQueryParams.pathname);
-
-			this.singlePageAppSubmitRoutine(urlParams.pathname, urlParams.query);
-		});
-	}
-
 	@cached get molecularProfilesInStudyCache() {
 		return new MolecularProfilesInStudyCache();
 		
