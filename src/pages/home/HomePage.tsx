@@ -11,8 +11,8 @@ import QueryAndDownloadTabs from "../../shared/components/query/QueryAndDownload
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import RightBar from "../../shared/components/rightbar/RightBar";
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
-import {SampleList} from "../../shared/api/generated/CBioPortalAPI";
-import setWindowVariable from "../../shared/lib/setWindowVariable";
+// tslint:disable-next-line:no-import-side-effect
+import "./homePage.scss";
 
 (Chart as any).plugins.register({
     beforeDraw: function (chartInstance: any) {
@@ -72,7 +72,7 @@ export default class HomePage extends React.Component<IResultsViewPageProps, {}>
     public render() {
 
         return (
-            <PageLayout noMargin={true} rightBar={<RightBar queryStore={this.queryStore} />}>
+            <PageLayout className="HomePageLayout" noMargin={true} rightBar={<RightBar queryStore={this.queryStore} />}>
                 <div style={{padding:"0 15px"}}>
                     <div dangerouslySetInnerHTML={{__html:AppConfig.serverConfig.skin_blurb!}}></div>
                     <QueryAndDownloadTabs store={this.queryStore}/>
