@@ -623,6 +623,43 @@ export class ResultsViewPageStore {
         invoke:()=>Promise.resolve(filterAndSortProfiles(this.molecularProfilesWithData.result!))
     });
 
+    readonly isThereDataForCoExpressionTab = remoteData<boolean>({
+        await:()=>[this.molecularProfilesInStudies, this.genes, this.samples],
+        invoke:()=>{
+            const coExpressionProfiles = filterAndSortProfiles(this.molecularProfilesInStudies.result!);
+            const studyToProfiles = _.groupBy(coExpressionProfiles, "studyId");
+            // we know these are all mrna and protein profiles
+            const sampleMolecularIdentifiers = _.flatten(
+                this.samples.result!.map(
+                    s=>{
+                        const profiles = studyToProfiles[s.studyId];
+                        if (profiles) {
+                            return profiles.map(p=>({ molecularProfileId: p.molecularProfileId, sampleId: s.sampleId }));
+                        } else {
+                            return [];
+                        }
+                    }
+                )
+            );
+            const entrezGeneIds = this.genes.result!.map(g=>g.entrezGeneId);
+            if (sampleMolecularIdentifiers.length > 0 &&
+                entrezGeneIds.length > 0) {
+                return client.fetchMolecularDataInMultipleMolecularProfilesUsingPOSTWithHttpInfo({
+                    molecularDataMultipleStudyFilter:{
+                        entrezGeneIds,
+                        sampleMolecularIdentifiers
+                    } as MolecularDataMultipleStudyFilter,
+                    projection:"META"
+                }).then(function(response: request.Response) {
+                    const count = parseInt(response.header["total-count"], 10);
+                    return count > 0;
+                });
+            } else {
+                return Promise.resolve(false);
+            }
+        }
+    });
+
     readonly molecularProfilesWithData = remoteData<MolecularProfile[]>({
         await:()=>[
             this.molecularProfilesInStudies,
@@ -1255,23 +1292,24 @@ export class ResultsViewPageStore {
                 const ret: { [studyId: string]: { [sampleId: string]: boolean } } = {};
                 for (const sampleSpec of this.samplesSpecification.result!) {
                     if (sampleSpec.sampleId) {
+                        // add sample id to study
                         ret[sampleSpec.studyId] = ret[sampleSpec.studyId] || {};
                         ret[sampleSpec.studyId][sampleSpec.sampleId] = true;
                     } else if (sampleSpec.sampleListId) {
+                        // mark sample list to query later
                         sampleListsToQuery.push(sampleSpec as { studyId: string, sampleListId: string });
                     }
                 }
-                const results: string[][] = await Promise.all(sampleListsToQuery.map(spec => {
-                    return client.getAllSampleIdsInSampleListUsingGET({
-                        sampleListId: spec.sampleListId
+                // query for sample lists
+                if (sampleListsToQuery.length > 0) {
+                    const sampleLists: SampleList[] = await client.fetchSampleListsUsingPOST({
+                        sampleListIds: sampleListsToQuery.map(spec=>spec.sampleListId),
+                        projection: "DETAILED"
                     });
-                }));
-                for (let i = 0; i < results.length; i++) {
-                    ret[sampleListsToQuery[i].studyId] = ret[sampleListsToQuery[i].studyId] || {};
-                    const sampleMap = ret[sampleListsToQuery[i].studyId];
-                    results[i].map(sampleId => {
-                        sampleMap[sampleId] = true;
-                    });
+                    // add samples from those sample lists to corresponding study
+                    for (const sampleList of sampleLists) {
+                        ret[sampleList.studyId] = stringListToSet(sampleList.sampleIds);
+                    }
                 }
                 return ret;
         }
@@ -1381,11 +1419,14 @@ export class ResultsViewPageStore {
         await:()=>[
           this.studyToSampleListId
         ],
-        invoke:()=>Promise.all(Object.keys(this.studyToSampleListId.result!).map(studyId=>{
-            return client.getSampleListUsingGET({
-                sampleListId: this.studyToSampleListId.result![studyId]
-            });
-        }))
+        invoke:()=>{
+            const sampleListIds = _.values(this.studyToSampleListId.result!);
+            if (sampleListIds.length > 0) {
+                return client.fetchSampleListsUsingPOST({sampleListIds});
+            } else {
+                return Promise.resolve([]);
+            }
+        }
     });
 
     readonly mutations = remoteData<Mutation[]>({
