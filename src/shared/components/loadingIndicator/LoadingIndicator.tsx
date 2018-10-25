@@ -14,6 +14,7 @@ export interface ILoader {
     inline?: boolean;
     center?: boolean;
     size?: "big" | "small"
+    message?: string;
 }
 
 export default class LoadingIndicator extends React.Component<ILoader, {}> {
@@ -41,9 +42,10 @@ export default class LoadingIndicator extends React.Component<ILoader, {}> {
             <If condition={this.props.isLoading}>
                 <Then>
                     <div className={classNames(parentStyles)} style={this.props.style||{}}>
+                        { (this.props.message) && (<div className={styles.message}>{this.props.message}</div>) }
                         <Spinner fadeIn="none"
                                  className={classNames(styles.color, spinnerStyles)}
-                                 style={{display: 'inline-block', marginLeft: 10}}
+                                 style={{display: 'inline-block'}}
                                  name="line-scale-pulse-out"/>
                         {
                             this.props.children

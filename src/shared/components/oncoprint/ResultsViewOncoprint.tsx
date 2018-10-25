@@ -1025,9 +1025,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     @computed get loadingIndicatorMessage() {
         if (this.isLoading)
-            return "Downloading Oncoprint data...";
+            return "Downloading Oncoprint Data";
         else if (!this.renderingComplete)
-            return "Data downloaded. Rendering Oncoprint..";
+            return "Data downloaded! Rendering Oncoprint.";
         // Otherwise, isHidden is false, so no message shown at all..
         // Putting this here just for Typescript
         return "";
@@ -1044,7 +1044,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     public render() {
         return (
             <div>
-                <LoadingIndicator isLoading={this.isHidden} center={true} size={"big"} />
+                <LoadingIndicator isLoading={this.isHidden} message={this.loadingIndicatorMessage} center={true} size={"big"} />
+
                 <div className={"tabMessageContainer"}>
                     <OqlStatusBanner className="oncoprint-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
                 </div>

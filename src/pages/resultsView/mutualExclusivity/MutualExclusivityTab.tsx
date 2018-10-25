@@ -9,7 +9,7 @@ import { MutualExclusivity } from "../../../shared/model/MutualExclusivity";
 import { ResultsViewPageStore } from "../ResultsViewPageStore";
 import DiscreteCNACache from "../../../shared/cache/DiscreteCNACache";
 import { If, Then, Else } from 'react-if';
-import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
+import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import { getCountsText, getData, getFilteredData } from "./MutualExclusivityUtil";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 
@@ -55,7 +55,7 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
     public render() {
 
         if (this.props.store.isSampleAlteredMap.isPending) {
-            return <Loader isLoading={true} />
+            return <LoadingIndicator isLoading={true} center={true} size={"big"} />
         } else if (this.props.store.isSampleAlteredMap.isComplete) {
             if (_.size(this.props.store.isSampleAlteredMap.result) > 1) {
                 return (
