@@ -5,10 +5,16 @@ for = "/*.otf"
 	Content-Type = "application/font-otf"
 
 [[headers]]
-for = "/*.ttf /*.ttc"
+for = "/*.ttf"
 	[headers.values]
 	Access-Control-Allow-Origin = "*"
 	Content-Type = "application/font-ttf"
+
+[[headers]]
+for = "/*.ttc"
+	[headers.values]
+	Access-Control-Allow-Origin = "*"
+	Content-Type = "application/font-ttc"
 
 [[headers]]
 for = "/*.woff2"
