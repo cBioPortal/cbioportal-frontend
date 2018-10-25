@@ -142,7 +142,7 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
         switch(status) {
 
             case "pending":
-                return <LoadingIndicator isLoading={true} center={true} />;
+                return <LoadingIndicator isLoading={true} center={true} size={"big"} />;
             case "error":
                 return null;
             case "complete":
