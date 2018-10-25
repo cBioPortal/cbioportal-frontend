@@ -13763,11 +13763,11 @@ var OncoprintModel = __webpack_require__(13);
 var OncoprintWebGLCellView = __webpack_require__(19);
 var OncoprintLabelView = __webpack_require__(28);
 var OncoprintRuleSet = __webpack_require__(29);
-var OncoprintTrackOptionsView = __webpack_require__(31);
-var OncoprintLegendView = __webpack_require__(33);//TODO: rename
-var OncoprintToolTip = __webpack_require__(34);
-var OncoprintTrackInfoView = __webpack_require__(35);
-var OncoprintMinimapView = __webpack_require__(36);
+var OncoprintTrackOptionsView = __webpack_require__(32);
+var OncoprintLegendView = __webpack_require__(34);//TODO: rename
+var OncoprintToolTip = __webpack_require__(35);
+var OncoprintTrackInfoView = __webpack_require__(36);
+var OncoprintMinimapView = __webpack_require__(37);
 
 var svgfactory = __webpack_require__(2);
 
@@ -22932,6 +22932,7 @@ var Shape = __webpack_require__(10);
 var extractRGBA = __webpack_require__(3);
 var heatmapColors = __webpack_require__(30);
 var binarysearch = __webpack_require__(4);
+var cloneShallow = __webpack_require__(31).cloneShallow;
 
 function ifndef(x, val) {
     return (typeof x === "undefined" ? val : x);
@@ -22968,19 +22969,25 @@ function makeUniqueColorGetter(init_used_colors) {
     for (var i=0; i<init_used_colors.length; i++) {
 	used_colors[init_used_colors[i]] = true;
     }
-    return function() {
-	var next_color = colors[index % colors.length];
-	while (used_colors[next_color]) {
-	    var darker_next_color = darkenHexColor(next_color);
-	    if (darker_next_color === next_color) {
-		break;
-	    }
-	    next_color = darker_next_color;
-	}
-	used_colors[next_color] = true;
-	index += 1;
+    return function(color) {
+    	if (color) {
+    		// calling with an argument adds it to the used colors record
+    		used_colors[color] = true;
+		} else {
+    		// calling without an argument returns a new unused color
+			var next_color = colors[index % colors.length];
+			while (used_colors[next_color]) {
+				var darker_next_color = darkenHexColor(next_color);
+				if (darker_next_color === next_color) {
+				break;
+				}
+				next_color = darker_next_color;
+			}
+			used_colors[next_color] = true;
+			index += 1;
 
-	return next_color;
+			return next_color;
+		}
     };
 };
 
@@ -23342,13 +23349,13 @@ var CategoricalRuleSet = (function () {
 	});
 
 	this.category_key = params.category_key;
-	this.category_to_color = ifndef(params.category_to_color, {});
+	this.category_to_color = cloneShallow(ifndef(params.category_to_color, {}));
 	this.getUnusedColor = makeUniqueColorGetter(objectValues(this.category_to_color).map(colorToHex));
 	for (var category in this.category_to_color) {
 	    if (this.category_to_color.hasOwnProperty(category)) {
 		var color = this.category_to_color[category];
 		addCategoryRule(this, category, color);
-		this.used_colors[colorToHex(color)] = true;
+		this.getUnusedColor(color);
 	    }
 	}
     }
@@ -23377,7 +23384,7 @@ var CategoricalRuleSet = (function () {
 	    }
 	    var category = data[i][this.category_key];
 	    if (!this.category_to_color.hasOwnProperty(category)) {
-		var color = this.getUnusedColor(this);
+		var color = this.getUnusedColor();
 
 		this.category_to_color[category] = color;
 		addCategoryRule(this, category, color);
@@ -24381,10 +24388,29 @@ module.exports = {
 
 /***/ }),
 /* 31 */
+/***/ (function(module, exports) {
+
+function cloneShallow(obj) {
+    var ret = {};
+    for (var key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            ret[key] = obj[key];
+        }
+    }
+    return ret;
+}
+
+module.exports = {
+    cloneShallow: cloneShallow
+};
+
+
+/***/ }),
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var $ = __webpack_require__(0);
-var menuDotsIcon = __webpack_require__(32);
+var menuDotsIcon = __webpack_require__(33);
 
 var TOGGLE_BTN_CLASS = "oncoprintjs__track_options__toggle_btn_img";
 var TOGGLE_BTN_OPEN_CLASS = "oncoprintjs__track_options__open";
@@ -24723,13 +24749,13 @@ module.exports = OncoprintTrackOptionsView;
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ (function(module, exports) {
 
 module.exports = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAxNi4wLjQsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+DQo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4Ig0KCSB3aWR0aD0iNHB4IiBoZWlnaHQ9IjE2cHgiIHZpZXdCb3g9Ii0wLjAzMSAwIDQgMTYiIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgLTAuMDMxIDAgNCAxNiIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+DQo8Y2lyY2xlIGZpbGw9IiNCMkIzQjMiIGN4PSIxLjk2OSIgY3k9IjQiIHI9IjEuNSIvPg0KPGNpcmNsZSBmaWxsPSIjQjJCM0IzIiBjeD0iMS45NjkiIGN5PSI4IiByPSIxLjUiLz4NCjxjaXJjbGUgZmlsbD0iI0IyQjNCMyIgY3g9IjEuOTY5IiBjeT0iMTIiIHI9IjEuNSIvPg0KPC9zdmc+DQo="
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var svgfactory = __webpack_require__(2);
@@ -25024,7 +25050,7 @@ module.exports = OncoprintLegendView;
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var $ = __webpack_require__(0);
@@ -25139,7 +25165,7 @@ module.exports = OncoprintToolTip;
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var svgfactory = __webpack_require__(2);
@@ -25280,13 +25306,13 @@ module.exports = OncoprintTrackInfoView;
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var gl_matrix = __webpack_require__(6);
-var OncoprintZoomSlider = __webpack_require__(37);
+var OncoprintZoomSlider = __webpack_require__(38);
 var $ = __webpack_require__(0);
-var zoomToFitIcon = __webpack_require__(38);
+var zoomToFitIcon = __webpack_require__(39);
 
 var arrayFindIndex = function (arr, callback, start_index) {
     start_index = start_index || 0;
@@ -26206,7 +26232,7 @@ module.exports = OncoprintMinimapView;
 
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var $ = __webpack_require__(0);
@@ -26394,7 +26420,7 @@ module.exports = OncoprintZoomSlider;
 
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(module, exports) {
 
 module.exports = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4NCjwhLS0gR2VuZXJhdG9yOiBBZG9iZSBJbGx1c3RyYXRvciAxNi4wLjQsIFNWRyBFeHBvcnQgUGx1Zy1JbiAuIFNWRyBWZXJzaW9uOiA2LjAwIEJ1aWxkIDApICAtLT4NCjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+DQo8c3ZnIHZlcnNpb249IjEuMSIgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4Ig0KCSB3aWR0aD0iMjBweCIgaGVpZ2h0PSIyMHB4IiB2aWV3Qm94PSIwIDAgMjAgMjAiIGVuYWJsZS1iYWNrZ3JvdW5kPSJuZXcgMCAwIDIwIDIwIiB4bWw6c3BhY2U9InByZXNlcnZlIj4NCjxsaW5lIGZpbGw9Im5vbmUiIHgxPSI2Ljc5MiIgeTE9IjUuNjY3IiB4Mj0iNi43OTIiIHkyPSIxMi4xMjUiLz4NCjxwb2x5Z29uIGZpbGw9IiMwMDAwMDAiIHBvaW50cz0iMCw1IDAsMCA1LDAgIi8+DQo8cG9seWdvbiBmaWxsPSIjMDAwMDAwIiBwb2ludHM9IjE0Ljk5OSwwIDIwLDAgMjAsNSAiLz4NCjxwb2x5Z29uIGZpbGw9IiMwMDAwMDAiIHBvaW50cz0iMjAsMTUgMjAsMjAgMTUsMjAgIi8+DQo8cG9seWdvbiBmaWxsPSIjMDAwMDAwIiBwb2ludHM9IjUsMjAgMCwyMCAwLDE1ICIvPg0KPHJlY3QgeD0iMy43NSIgeT0iNC43MDgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiIHdpZHRoPSIxMi41IiBoZWlnaHQ9IjEwLjU4MyIvPg0KPC9zdmc+DQo="
