@@ -317,8 +317,7 @@ th.reactable-header-sort-asc:after {
 }
 
 #mainColumn {
-  padding: $gutterWidth 0;
-  background-color: white;
+  padding-top: $gutterWidth;
 }
 
 .fixedWidth {
@@ -558,6 +557,7 @@ h3.hr {
 }
 
 .staticPage {
+  padding-bottom: $gutterWidth;
 
   .markdown-body {
     h1 {
