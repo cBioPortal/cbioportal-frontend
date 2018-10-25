@@ -93,6 +93,7 @@ import { fetchVariantAnnotationsIndexedByGenomicLocation } from "shared/lib/Muta
 import { VariantAnnotation } from "shared/api/generated/GenomeNexusAPI";
 import {ServerConfigHelpers} from "../../config/config";
 import {
+    getTabId,
     getVirtualStudies,
     populateSampleSpecificationsFromVirtualStudies,
     substitutePhysicalStudiesForVirtualStudies
@@ -341,6 +342,7 @@ export class ResultsViewPageStore {
     public queryReactionDisposer:any;
 
     @observable queryHash:string;
+    @observable tabId: string|undefined = undefined;
 
     @observable public checkingVirtualStudies = false;
 
@@ -349,7 +351,11 @@ export class ResultsViewPageStore {
     @observable public urlValidationError: string | null = null;
 
     // maps to the old data_priority parameter
-    @observable public profileFilter: number;
+    @observable public _profileFilter: number;
+
+    @computed get profileFilter(){
+        return this._profileFilter || 0;
+    }
 
     @observable ajaxErrors: Error[] = [];
 

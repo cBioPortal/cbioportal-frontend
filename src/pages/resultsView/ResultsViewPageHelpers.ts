@@ -8,6 +8,15 @@ import {CancerStudy} from "../../shared/api/generated/CBioPortalAPI";
 import {VirtualStudy} from "../../shared/model/VirtualStudy";
 import hashString from "../../shared/lib/hashString";
 
+export function getTabId(pathname:string) {
+    const match = pathname.match(/results\/([^\/]+)/);
+    if (match) {
+        return match[1];
+    } else {
+        return undefined;
+    }
+}
+
 export function updateStoreFromQuery(resultsViewPageStore:ResultsViewPageStore, query:any,
                                      samplesSpecification:SamplesSpecificationElement[], cancerStudyIds:string[], oql:string, cohortIdsList:string[]){
 
@@ -31,8 +40,8 @@ export function updateStoreFromQuery(resultsViewPageStore:ResultsViewPageStore, 
             resultsViewPageStore.sampleListCategory = undefined;
         }
 
-        if (query.data_priority !== undefined && parseInt(query.data_priority,10) !== resultsViewPageStore.profileFilter) {
-            resultsViewPageStore.profileFilter = parseInt(query.data_priority,10);
+        if (query.data_priority !== undefined && parseInt(query.data_priority,10) !== resultsViewPageStore._profileFilter) {
+            resultsViewPageStore._profileFilter = parseInt(query.data_priority,10);
         }
 
         // note that this could be zero length if we have multiple studies
@@ -73,8 +82,6 @@ export function updateStoreFromQuery(resultsViewPageStore:ResultsViewPageStore, 
         if (resultsViewPageStore.queryHash !== queryHash ) {
             resultsViewPageStore.queryHash = queryHash;
         }
-
-
 }
 
 export function getVirtualStudies(cancerStudyIds:string[]):Promise<VirtualStudy[]>{

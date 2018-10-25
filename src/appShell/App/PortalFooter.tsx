@@ -4,6 +4,9 @@ import { If } from 'react-if';
 // tslint:disable-next-line:no-import-side-effect
 import './footer.scss';
 import _ from 'lodash';
+import { Link } from 'react-router';
+
+
 
 export default class PortalFooter extends React.Component<{}, {}> {
     render() {
@@ -30,10 +33,10 @@ export default class PortalFooter extends React.Component<{}, {}> {
                                     <h3>HELP</h3>
                                     <ul>
                                         <If condition={AppConfig.serverConfig.skin_show_tutorials_tab !== false}>
-                                            <li><a href="/s/tutorials">Tutorials</a></li>
+                                            <li><Link to="/tutorials">Tutorials</Link></li>
                                         </If>
                                         <If condition={AppConfig.serverConfig.skin_show_faqs_tab}>
-                                            <li><a href="/s/faq/">FAQ</a></li>
+                                            <li><Link to="/faq">FAQ</Link></li>
                                         </If>
                                         <li><a href="https://groups.google.com/forum/#!forum/cbioportal">User Group</a></li>
                                     </ul>
@@ -44,10 +47,10 @@ export default class PortalFooter extends React.Component<{}, {}> {
                                     <h3>INFO</h3>
                                     <ul>
                                         <If condition={AppConfig.serverConfig.skin_show_news_tab}>
-                                            <li><a href="/s/news">News</a></li>
+                                            <li><Link to="/news">News</Link></li>
                                         </If>
                                         <If condition={AppConfig.serverConfig.skin_show_about_tab}>
-                                            <li><a href="/s/about">About</a></li>
+                                            <li><Link to="/about">About</Link></li>
                                         </If>
                                         <li><a href="https://www.twitter.com/cbioportal">Twitter</a></li>
                                     </ul>
@@ -57,12 +60,12 @@ export default class PortalFooter extends React.Component<{}, {}> {
                                 <div className="footer-elem">
                                     <h3>API</h3>
                                     <ul>
-                                        <li><a href="http://www.cbioportal.org/api">Docs</a></li>
-                                        <li><a href="http://www.cbioportal.org/api/info">Version</a></li>
+                                        <li><a href={`${AppConfig.apiRoot}api`}>Docs</a></li>
+                                        <li><a href={`${AppConfig.apiRoot}api/info`}>Version</a></li>
                                     </ul>
                                 </div>
                            </If>
-                           <If condition={AppConfig.serverConfig.app_name === "public_portal"}>
+                           <If condition={AppConfig.serverConfig.app_name === "public-portal"}>
                                <div className="footer-elem">
                                    <h3>DEV</h3>
                                    <ul>

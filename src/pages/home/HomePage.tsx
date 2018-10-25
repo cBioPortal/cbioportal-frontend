@@ -86,7 +86,6 @@ export default class HomePage extends React.Component<IResultsViewPageProps, {}>
                     <div dangerouslySetInnerHTML={{__html:AppConfig.serverConfig.skin_blurb!}}></div>
                     <QueryAndDownloadTabs store={this.queryStore}/>
                 </div>
-                <hr />
             </PageLayout>
         )
 
