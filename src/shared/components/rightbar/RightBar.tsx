@@ -165,7 +165,7 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
 
                             <div>
 
-                                <p>The portal contains {this.studyStore.cancerStudies.result.length} cancer studies <a href="data_sets.jsp">(details)</a></p>
+                                <p>The portal contains {this.studyStore.cancerStudies.result.length} cancer studies <Link to={"/datasets"}>(details)</Link></p>
 
                                 <BarGraph data={this.CancerTypeDescendantStudies(this.CancerTypeList())}
                                           openStudy={(studyId)=>{
