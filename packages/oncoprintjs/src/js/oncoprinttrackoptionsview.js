@@ -34,9 +34,10 @@ var OncoprintTrackOptionsView = (function () {
 	this.menu_shown = {};
 
 	var self = this;
-	$(document).click(function() {
-	    $(self).trigger('oncoprint-track-options-view.click-out');
-	});
+	this.clickHandler = function() {
+        $(self).trigger('oncoprint-track-options-view.click-out');
+    };
+	$(document).on("click", this.clickHandler);
 
 	this.interaction_disabled = false;
     }
@@ -331,6 +332,9 @@ var OncoprintTrackOptionsView = (function () {
 	renderAllOptions(this, model);
 	resize(this, model);
     }
+    OncoprintTrackOptionsView.prototype.destroy = function() {
+    	$(document).off("click", this.clickHandler);
+	};
     return OncoprintTrackOptionsView;
 })();
 
