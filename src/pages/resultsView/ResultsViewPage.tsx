@@ -190,12 +190,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         getBrowserWindow().resultsViewPageStore = this.resultsViewPageStore;
     }
 
-    // this needs to be replaced.  we shouldn't need queryStore reference
-    // because queryStore and results store should only interact via url
-    get queryStore(){
-        return getBrowserWindow().currentQueryStore;
-    }
-
     private handleTabChange(id: string) {
         this.props.routing.updateRoute({},`results/${id}`);
     }
@@ -225,7 +219,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                             store={store}
                             key={store.hugoGeneSymbols.join(",")}
                             routing={this.props.routing}
-                            isVirtualStudy={getBrowserWindow().currentQueryStore.isVirtualStudyQuery}
+                            isVirtualStudy={this.resultsViewPageStore.virtualStudies.result!.length > 0} // will be complete b/c store.studies is dependent on it
                             addOnBecomeVisibleListener={addOnBecomeVisibleListener}
                         />
                     </MSKTab>
@@ -476,7 +470,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
             <div>
                 <div style={{margin:"0 20px 10px 20px"}}>
-                    <QuerySummary queryStore={getBrowserWindow().currentQueryStore} routingStore={this.props.routing} store={this.resultsViewPageStore}/>
+                    <QuerySummary routingStore={this.props.routing} store={this.resultsViewPageStore}/>
                 </div>
 
                 {
