@@ -19,6 +19,20 @@ export type AlterationEnrichment = {
         'unalteredCount': number
 
 };
+export type ClinicalDataBinCountFilter = {
+    'attributes': Array < ClinicalDataBinFilter >
+
+        'studyViewFilter': StudyViewFilter
+
+};
+export type ClinicalDataBinFilter = {
+    'attributeId': string
+
+        'clinicalDataType': "SAMPLE" | "PATIENT"
+
+        'disableLogScale': boolean
+
+};
 export type ClinicalDataCount = {
     'count': number
 
@@ -491,27 +505,14 @@ export default class CBioPortalAPIInternal {
     }
 
     fetchClinicalDataBinCountsUsingPOSTURL(parameters: {
-        'attributeId': string,
-        'clinicalDataType' ? : "SAMPLE" | "PATIENT",
         'dataBinMethod' ? : "STATIC" | "DYNAMIC",
-        'disableLogScale' ? : boolean,
-        'studyViewFilter': StudyViewFilter,
+        'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/attributes/{attributeId}/clinical-data-bin-counts/fetch';
-
-        path = path.replace('{attributeId}', parameters['attributeId'] + '');
-        if (parameters['clinicalDataType'] !== undefined) {
-            queryParameters['clinicalDataType'] = parameters['clinicalDataType'];
-        }
-
+        let path = '/clinical-data-bin-counts/fetch';
         if (parameters['dataBinMethod'] !== undefined) {
             queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
-        }
-
-        if (parameters['disableLogScale'] !== undefined) {
-            queryParameters['disableLogScale'] = parameters['disableLogScale'];
         }
 
         if (parameters.$queryParameters) {
@@ -528,25 +529,19 @@ export default class CBioPortalAPIInternal {
      * Fetch clinical data bin counts by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchClinicalDataBinCountsUsingPOST
-     * @param {string} attributeId - Attribute ID e.g. AGE
-     * @param {string} clinicalDataType - Type of the clinical data
      * @param {string} dataBinMethod - Method for data binning
-     * @param {boolean} disableLogScale - Whether to disable log scaling
-     * @param {} studyViewFilter - Study view filter
+     * @param {} clinicalDataBinCountFilter - Clinical data bin count filter
      */
     fetchClinicalDataBinCountsUsingPOSTWithHttpInfo(parameters: {
-        'attributeId': string,
-        'clinicalDataType' ? : "SAMPLE" | "PATIENT",
         'dataBinMethod' ? : "STATIC" | "DYNAMIC",
-        'disableLogScale' ? : boolean,
-        'studyViewFilter': StudyViewFilter,
+        'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
         $queryParameters ? : any,
-        $domain ? : string
+            $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/attributes/{attributeId}/clinical-data-bin-counts/fetch';
+        let path = '/clinical-data-bin-counts/fetch';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};
@@ -555,31 +550,16 @@ export default class CBioPortalAPIInternal {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            path = path.replace('{attributeId}', parameters['attributeId'] + '');
-
-            if (parameters['attributeId'] === undefined) {
-                reject(new Error('Missing required  parameter: attributeId'));
-                return;
-            }
-
-            if (parameters['clinicalDataType'] !== undefined) {
-                queryParameters['clinicalDataType'] = parameters['clinicalDataType'];
-            }
-
             if (parameters['dataBinMethod'] !== undefined) {
                 queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
             }
 
-            if (parameters['disableLogScale'] !== undefined) {
-                queryParameters['disableLogScale'] = parameters['disableLogScale'];
+            if (parameters['clinicalDataBinCountFilter'] !== undefined) {
+                body = parameters['clinicalDataBinCountFilter'];
             }
 
-            if (parameters['studyViewFilter'] !== undefined) {
-                body = parameters['studyViewFilter'];
-            }
-
-            if (parameters['studyViewFilter'] === undefined) {
-                reject(new Error('Missing required  parameter: studyViewFilter'));
+            if (parameters['clinicalDataBinCountFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: clinicalDataBinCountFilter'));
                 return;
             }
 
@@ -599,20 +579,14 @@ export default class CBioPortalAPIInternal {
      * Fetch clinical data bin counts by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchClinicalDataBinCountsUsingPOST
-     * @param {string} attributeId - Attribute ID e.g. AGE
-     * @param {string} clinicalDataType - Type of the clinical data
      * @param {string} dataBinMethod - Method for data binning
-     * @param {boolean} disableLogScale - Whether to disable log scaling
-     * @param {} studyViewFilter - Study view filter
+     * @param {} clinicalDataBinCountFilter - Clinical data bin count filter
      */
     fetchClinicalDataBinCountsUsingPOST(parameters: {
-            'attributeId': string,
-            'clinicalDataType' ? : "SAMPLE" | "PATIENT",
             'dataBinMethod' ? : "STATIC" | "DYNAMIC",
-            'disableLogScale' ? : boolean,
-            'studyViewFilter': StudyViewFilter,
+            'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
             $queryParameters ? : any,
-            $domain ? : string
+                $domain ? : string
         }): Promise < Array < DataBin >
         > {
             return this.fetchClinicalDataBinCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {

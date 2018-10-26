@@ -85,7 +85,7 @@
     "https"
   ],
   "paths": {
-    "/attributes/{attributeId}/clinical-data-bin-counts/fetch": {
+    "/clinical-data-bin-counts/fetch": {
       "post": {
         "tags": [
           "Study View"
@@ -100,25 +100,6 @@
         ],
         "parameters": [
           {
-            "name": "attributeId",
-            "in": "path",
-            "description": "Attribute ID e.g. AGE",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "clinicalDataType",
-            "in": "query",
-            "description": "Type of the clinical data",
-            "required": false,
-            "type": "string",
-            "default": "SAMPLE",
-            "enum": [
-              "SAMPLE",
-              "PATIENT"
-            ]
-          },
-          {
             "name": "dataBinMethod",
             "in": "query",
             "description": "Method for data binning",
@@ -131,20 +112,12 @@
             ]
           },
           {
-            "name": "disableLogScale",
-            "in": "query",
-            "description": "Whether to disable log scaling",
-            "required": false,
-            "type": "boolean",
-            "default": false
-          },
-          {
             "in": "body",
-            "name": "studyViewFilter",
-            "description": "Study view filter",
+            "name": "clinicalDataBinCountFilter",
+            "description": "Clinical data bin count filter",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/StudyViewFilter"
+              "$ref": "#/definitions/ClinicalDataBinCountFilter"
             }
           }
         ],
@@ -1378,6 +1351,40 @@
         }
       },
       "title": "AlterationEnrichment"
+    },
+    "ClinicalDataBinCountFilter": {
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClinicalDataBinFilter"
+          }
+        },
+        "studyViewFilter": {
+          "$ref": "#/definitions/StudyViewFilter"
+        }
+      },
+      "title": "ClinicalDataBinCountFilter"
+    },
+    "ClinicalDataBinFilter": {
+      "type": "object",
+      "properties": {
+        "attributeId": {
+          "type": "string"
+        },
+        "clinicalDataType": {
+          "type": "string",
+          "enum": [
+            "SAMPLE",
+            "PATIENT"
+          ]
+        },
+        "disableLogScale": {
+          "type": "boolean"
+        }
+      },
+      "title": "ClinicalDataBinFilter"
     },
     "ClinicalDataCount": {
       "type": "object",
