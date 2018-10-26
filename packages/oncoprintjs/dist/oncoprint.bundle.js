@@ -13789,6 +13789,7 @@ var Oncoprint = (function () {
     function Oncoprint(ctr_selector, width) {
 	var self = this;
 
+	this.destroyed = false;
 	this.webgl_unavailable = (document.createElement('canvas').getContext('experimental-webgl') === null);
 	if (this.webgl_unavailable) {
 		$(ctr_selector).append("<p class='oncoprintjs__webgl_unavailable_message'>WebGL context cannot be retrieved, so oncoprint cannot be used. Please visit <a href='http://webglreport.com'>WebGL Report</a> to explore your browsers WebGL capabilities.</p>");
@@ -14055,11 +14056,12 @@ var Oncoprint = (function () {
 	
 	this.horz_zoom_callbacks = [];
 	this.minimap_close_callbacks = [];
+
+	this.onWindowResize = function() {
+        resizeAndOrganize(self);
+    };
 	
-	
-	$(window).resize(function() {
-	    resizeAndOrganize(self);
-	});
+	$(window).on("resize", this.onWindowResize);
 	
 	
 	this.id_clipboard = [];
@@ -14143,7 +14145,7 @@ var Oncoprint = (function () {
     };
     
     Oncoprint.prototype.setMinimapVisible = function (visible) {
-    	if(this.webgl_unavailable) {
+    	if(this.webgl_unavailable || this.destroyed) {
     		return;
 		}
 	if (visible) {
@@ -14156,25 +14158,25 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.scrollTo = function(left) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.$dummy_scroll_div.scrollLeft(left);
     }
     Oncoprint.prototype.onHorzZoom = function(callback) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.horz_zoom_callbacks.push(callback);
     }
     Oncoprint.prototype.onMinimapClose = function(callback) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.minimap_close_callbacks.push(callback);
     }
     Oncoprint.prototype.moveTrack = function(target_track, new_previous_track) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.model.moveTrack(target_track, new_previous_track);
@@ -14191,7 +14193,7 @@ var Oncoprint = (function () {
 	resizeAndOrganizeAfterTimeout(this);
     }
     Oncoprint.prototype.setTrackGroupOrder = function(index, track_order, dont_sort) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.model.setTrackGroupOrder(index, track_order);
@@ -14207,7 +14209,7 @@ var Oncoprint = (function () {
 	resizeAndOrganizeAfterTimeout(this);
     }
 	Oncoprint.prototype.setTrackGroupLegendOrder = function(group_order) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
     	this.model.setTrackGroupLegendOrder(group_order);
@@ -14217,7 +14219,7 @@ var Oncoprint = (function () {
 	}
     
     Oncoprint.prototype.keepSorted = function(keep_sorted) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.keep_sorted = (typeof keep_sorted === 'undefined' ? true : keep_sorted);
@@ -14227,7 +14229,7 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.addTracks = function (params_list) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	// Update model
@@ -14256,7 +14258,7 @@ var Oncoprint = (function () {
     }
 
     Oncoprint.prototype.removeTrack = function (track_id) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	// Update model
@@ -14276,7 +14278,7 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.removeTracks = function(track_ids) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.keepSorted(false);
@@ -14289,14 +14291,14 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.getTracks = function() {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	return this.model.getTracks().slice();
     }
     
     Oncoprint.prototype.removeAllTracks = function() {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	var track_ids = this.model.getTracks();
@@ -14334,7 +14336,7 @@ var Oncoprint = (function () {
     }
 
     Oncoprint.prototype.setHorzZoomToFit = function(ids) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.keep_horz_zoomed_to_fit = true;
@@ -14342,7 +14344,7 @@ var Oncoprint = (function () {
 	updateHorzZoomToFit(this);
     }
     Oncoprint.prototype.updateHorzZoomToFitIds = function(ids) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.keep_horz_zoomed_to_fit_ids = ids.slice();
@@ -14370,7 +14372,7 @@ var Oncoprint = (function () {
     };
     
     Oncoprint.prototype.getHorzZoom = function () {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	return this.model.getHorzZoom();
@@ -14378,7 +14380,7 @@ var Oncoprint = (function () {
     
 
     Oncoprint.prototype.setHorzZoom = function (z, still_keep_horz_zoomed_to_fit) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.keep_horz_zoomed_to_fit = this.keep_horz_zoomed_to_fit && still_keep_horz_zoomed_to_fit
@@ -14393,14 +14395,14 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.getVertZoom = function () {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	return this.model.getVertZoom();
     }
 
     Oncoprint.prototype.setVertZoom = function (z) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	// Update model
@@ -14452,7 +14454,7 @@ var Oncoprint = (function () {
     };
     
     Oncoprint.prototype.setScroll = function(scroll_left, scroll_top) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	doSetScroll(this, scroll_left, scroll_top);
@@ -14460,7 +14462,7 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.setZoom = function(zoom_x, zoom_y) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	// Update model
@@ -14474,7 +14476,7 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.setHorzScroll = function(s) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	// Update model
@@ -14491,7 +14493,7 @@ var Oncoprint = (function () {
 	return this.model.getHorzScroll();
     }
     Oncoprint.prototype.setVertScroll = function(s) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	// Update model
@@ -14508,7 +14510,7 @@ var Oncoprint = (function () {
 	return this.model.getVertScroll();
     }
     Oncoprint.prototype.setViewport = function(col, scroll_y_proportion, num_cols, zoom_y) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	// Zoom
@@ -14523,14 +14525,14 @@ var Oncoprint = (function () {
     }
 
     Oncoprint.prototype.getTrackData = function (track_id) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	return this.model.getTrackData(track_id);
     }
     
     Oncoprint.prototype.getTrackDataIdKey = function(track_id) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	return this.model.getTrackDataIdKey(track_id);
@@ -14545,7 +14547,7 @@ var Oncoprint = (function () {
      * data objects to use as the (column) key
      */
     Oncoprint.prototype.setTrackData = function (track_id, data, data_id_key) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.model.setTrackData(track_id, data, data_id_key);
@@ -14560,7 +14562,7 @@ var Oncoprint = (function () {
     }
 
     Oncoprint.prototype.setTrackImportantIds = function(track_id, ids) {
-    	if(this.webgl_unavailable) {
+    	if(this.webgl_unavailable || this.destroyed) {
     		return;
 		}
 		this.model.setTrackImportantIds(track_id, ids);
@@ -14570,7 +14572,7 @@ var Oncoprint = (function () {
 	}
     
     Oncoprint.prototype.setTrackGroupSortPriority = function(priority) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.model.setTrackGroupSortPriority(priority);
@@ -14583,7 +14585,7 @@ var Oncoprint = (function () {
     }
 
     Oncoprint.prototype.setTrackSortDirection = function(track_id, dir) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	if (this.model.isTrackSortDirectionChangeable(track_id)) {
@@ -14597,7 +14599,7 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.setTrackSortComparator = function(track_id, sortCmpFn) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.model.setTrackSortComparator(track_id, sortCmpFn);
@@ -14607,14 +14609,14 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.getTrackSortDirection = function(track_id) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	return this.model.getTrackSortDirection(track_id);
     }
     
     Oncoprint.prototype.setTrackInfo = function(track_id, msg) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.model.setTrackInfo(track_id, msg);
@@ -14622,14 +14624,14 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.setTrackTooltipFn = function(track_id, tooltipFn) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.model.setTrackTooltipFn(track_id, tooltipFn);
     }
     
     Oncoprint.prototype.sort = function() {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
     	var self = this;
@@ -14648,7 +14650,7 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.shareRuleSet = function(source_track_id, target_track_id) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.model.shareRuleSet(source_track_id, target_track_id);
@@ -14658,7 +14660,7 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.setRuleSet = function(track_id, rule_set_params) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.model.setRuleSet(track_id, OncoprintRuleSet(rule_set_params));
@@ -14669,7 +14671,7 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.setSortConfig = function(params) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.model.setSortConfig(params);
@@ -14681,7 +14683,7 @@ var Oncoprint = (function () {
 	}
     }
     Oncoprint.prototype.setIdOrder = function(ids) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	// Update model
@@ -14696,7 +14698,7 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.disableInteraction = function() {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	//this.label_view.disableInteraction();
@@ -14706,7 +14708,7 @@ var Oncoprint = (function () {
 	//this.legend_view.disableInteraction();
     }
     Oncoprint.prototype.enableInteraction = function() {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	//this.label_view.enableInteraction();
@@ -14716,7 +14718,7 @@ var Oncoprint = (function () {
 	//this.legend_view.enableInteraction();
     }
     Oncoprint.prototype.suppressRendering = function() {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.model.rendering_suppressed_depth += 1;
@@ -14729,7 +14731,7 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.releaseRendering = function(onComplete) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.model.rendering_suppressed_depth -= 1;
@@ -14746,7 +14748,7 @@ var Oncoprint = (function () {
     }
 
     Oncoprint.prototype.triggerPendingResizeAndOrganize = function(onComplete) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
     	if (this.pending_resize_and_organize) {
@@ -14756,7 +14758,7 @@ var Oncoprint = (function () {
 	}
     
     Oncoprint.prototype.hideIds = function(to_hide, show_others) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.model.hideIds(to_hide, show_others);
@@ -14765,7 +14767,7 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.hideTrackLegends = function(track_ids) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	track_ids = [].concat(track_ids);
@@ -14775,7 +14777,7 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.showTrackLegends = function(track_ids) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	track_ids = [].concat(track_ids);
@@ -14785,7 +14787,7 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.setCellPaddingOn = function(cell_padding_on) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.model.setCellPaddingOn(cell_padding_on);
@@ -14793,7 +14795,7 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.toSVG = function(with_background) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	// Returns svg DOM element
@@ -14833,7 +14835,7 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.toCanvas = function(callback, resolution) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	// Returns data url, requires IE >= 11
@@ -14872,7 +14874,7 @@ var Oncoprint = (function () {
     }
 
     Oncoprint.prototype.toDataUrl = function(callback) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
         this.toCanvas(function(canvas) {
@@ -14881,21 +14883,21 @@ var Oncoprint = (function () {
     }
     
     Oncoprint.prototype.highlightTrack = function(track_id) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.label_view.highlightTrack(track_id, this.model);
     }
     
     Oncoprint.prototype.getIdOrder = function(all) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	return this.model.getIdOrder(all);
     }
     
     Oncoprint.prototype.setIdClipboardContents = function(array) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.id_clipboard = array.slice();
@@ -14904,13 +14906,13 @@ var Oncoprint = (function () {
 	}
     }
     Oncoprint.prototype.getIdClipboardContents = function() {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	return this.id_clipboard.slice();
     }
     Oncoprint.prototype.onClipboardChange = function(callback) {
-        if(this.webgl_unavailable) {
+        if(this.webgl_unavailable || this.destroyed) {
             return;
         }
 	this.clipboard_change_callbacks.push(callback);
@@ -14918,6 +14920,9 @@ var Oncoprint = (function () {
 
     Oncoprint.prototype.destroy = function() {
     	this.cell_view.destroy();
+    	this.track_options_view.destroy();
+        $(window).off("resize", this.onWindowResize);
+        this.destroyed = true;
 	}
     
     return Oncoprint;
@@ -24457,9 +24462,10 @@ var OncoprintTrackOptionsView = (function () {
 	this.menu_shown = {};
 
 	var self = this;
-	$(document).click(function() {
-	    $(self).trigger('oncoprint-track-options-view.click-out');
-	});
+	this.clickHandler = function() {
+        $(self).trigger('oncoprint-track-options-view.click-out');
+    };
+	$(document).on("click", this.clickHandler);
 
 	this.interaction_disabled = false;
     }
@@ -24754,6 +24760,9 @@ var OncoprintTrackOptionsView = (function () {
 	renderAllOptions(this, model);
 	resize(this, model);
     }
+    OncoprintTrackOptionsView.prototype.destroy = function() {
+    	$(document).off("click", this.clickHandler);
+	};
     return OncoprintTrackOptionsView;
 })();
 
