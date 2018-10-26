@@ -246,7 +246,6 @@ describe('study view screenshot test', function(){
         mutatedGenesHeader.waitForExist(30000);
 
         // give charts time to render
-        browser.setViewportSize({ height: 1600, width: 1000 })
         browser.pause(5000);
 
         var res = browser.checkElement('#page_wrapper_table', {hide:['.qtip', '#footer-span-version'] });
@@ -331,6 +330,8 @@ describe("plots tab screenshot tests", function() {
     it("plots tab molecular vs molecular same gene", function() {
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "MRNA_EXPRESSION" }); });
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "brca_tcga_mrna" }); });
+        browser.waitForExist('input[data-test="ViewCopyNumber"]');
+        browser.click('input[data-test="ViewCopyNumber"]');
         waitForAndCheckPlotsTab();
     });
     it("plots tab molecular vs molecular same gene changed gene", function() {
