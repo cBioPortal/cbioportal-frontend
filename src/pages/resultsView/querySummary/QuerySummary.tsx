@@ -1,5 +1,4 @@
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
 import {inject, observer} from "mobx-react";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
@@ -9,7 +8,7 @@ import classNames from 'classnames';
 import './styles.scss';
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import Loader, {default as LoadingIndicator} from "../../../shared/components/loadingIndicator/LoadingIndicator";
-import {action, observable} from "mobx";
+import {action, computed, observable} from "mobx";
 import {QueryStore} from "../../../shared/components/query/QueryStore";
 import QueryAndDownloadTabs from "../../../shared/components/query/QueryAndDownloadTabs";
 import autobind from "autobind-decorator";
@@ -18,26 +17,25 @@ import {ShareUI} from "./ShareUI";
 import {ServerConfigHelpers} from "../../../config/config";
 import AppConfig from "appConfig";
 import {StudyLink} from "../../../shared/components/StudyLink/StudyLink";
+import {createQueryStore} from "../../home/HomePage";
 
 @observer
-export default class QuerySummary extends React.Component<{ queryStore:QueryStore, routingStore:ExtendedRouterStore, store: ResultsViewPageStore }, {}> {
+export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore }, {}> {
 
-    @observable private queryFormVisible = false;
-    @observable private queryStoreInitialized = false;
+    @observable.ref queryStore: QueryStore | undefined;
 
     constructor() {
         super();
-        this.handleModifyQueryClick = this.handleModifyQueryClick.bind(this);
     }
 
+    @autobind
     private handleModifyQueryClick() {
-
         // this will have no functional impact after initial invocation of this method
-        this.queryStoreInitialized = true;
+        this.queryStore = (this.queryStore) ? undefined : createQueryStore();
+    }
 
-        // toggle visibility
-        this.queryFormVisible = !this.queryFormVisible;
-
+    @computed get queryFormVisible(){
+        return !!this.queryStore;
     }
 
     private get singleStudyUI() {
@@ -57,13 +55,12 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
                     </span>)
             }
         </div>
-
     }
 
     @autobind
     @action
     closeQueryForm(){
-        this.queryFormVisible=false;
+        this.queryStore = undefined;
         $(document).scrollTop(0);
     }
 
@@ -139,9 +136,9 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
                     </div>
 
                     {
-                        (this.queryStoreInitialized) && (
-                            <div style={{marginTop:10}} className={classNames({ hidden:!this.queryFormVisible })}>
-                                <QueryAndDownloadTabs onSubmit={this.closeQueryForm} showDownloadTab={false} store={this.props.queryStore} />
+                        (this.queryFormVisible) && (
+                            <div style={{marginTop:10}}>
+                                <QueryAndDownloadTabs onSubmit={this.closeQueryForm} showDownloadTab={false} store={this.queryStore!} />
                             </div>
                         )
                     }
