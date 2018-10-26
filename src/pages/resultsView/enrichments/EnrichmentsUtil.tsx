@@ -30,6 +30,7 @@ export function getAlterationScatterData(alterationEnrichments: AlterationEnrich
         return {
             x: roundLogRatio(Number(alterationEnrichment.logRatio), 10), y: -Math.log10(alterationEnrichment.pValue),
             hugoGeneSymbol: alterationEnrichment.hugoGeneSymbol,
+            pValue: alterationEnrichment.pValue,
             qValue: alterationEnrichment.qValue,
             logRatio: alterationEnrichment.logRatio,
             hovered: false
@@ -45,6 +46,7 @@ export function getExpressionScatterData(expressionEnrichments: ExpressionEnrich
             y: -Math.log10(expressionEnrichment.pValue), 
             hugoGeneSymbol: expressionEnrichment.hugoGeneSymbol,
             entrezGeneId: expressionEnrichment.entrezGeneId,
+            pValue: expressionEnrichment.pValue,
             qValue: expressionEnrichment.qValue,
             logRatio: expressionEnrichment.logRatio,
             hovered: false
