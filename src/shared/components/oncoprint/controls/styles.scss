@@ -39,19 +39,20 @@
   }
 
   .oncoprint__controls__heatmap_menu {
-    textarea {
-      width:100%;
-      min-height:50px;
-      border:1px solid $borderColor;
+    span {
+      textarea {
+        width:100%;
+        min-height:50px;
+        border:1px solid $borderColor;
+      }
+      > *, button {
+        margin-bottom:10px !important;
+        width:100%;
+      }
+      > :last-child {
+        margin-bottom:0 !important;
+      }
     }
-    > *, button {
-      margin-bottom:10px !important;
-      width:100%;
-    }
-    > :last-child {
-      margin-bottom:0 !important;
-    }
-
   }
 
   .oncoprint__zoom-controls {
