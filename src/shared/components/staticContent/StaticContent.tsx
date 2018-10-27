@@ -16,6 +16,21 @@ function setImageRoot(path:string){
     return `${AppConfig.serverConfig.skin_documentation_baseurl}/${path}`
 }
 
+class Heading extends React.Component<{ level:number },{}>{
+    render(){
+        const CustomTag = `h${this.props.level}`;
+        const firstChild: string = (this.props.children as any[])[0] as string;
+        const text:string = (firstChild && typeof firstChild === 'string') ? firstChild : "";
+
+        // this transformation is to match headers to internal anchors (#) produced by markdown renderer
+        // unfortunately, we rely on the text of the headers matching the text of urls in the markdown
+        const id = text.toLowerCase().replace(/\s/g,'-').replace(/\?/g,"");
+        const topLink = this.props.level > 1 ? <a href="#pageTop" title={"Return to top"}><i className={"fa fa-arrow-circle-up"}></i></a> : "";
+
+        return <CustomTag id={id}>{text} {topLink}</CustomTag>
+    }
+}
+
 @observer
 export default class StaticContent extends React.Component<{ sourceUrl:string, title?:string }, {}> {
 
@@ -27,20 +42,18 @@ export default class StaticContent extends React.Component<{ sourceUrl:string, t
         return await $.get(this.url);
     });
 
-    private content(content:string, url:string){
-        if (isMarkDown(url)) {
-            return <ReactMarkdown className={'markdown-body'} escapeHtml={false} source={this.source.result!} />;
-        } else {
-            return <div dangerouslySetInnerHTML={{__html: content}} />
+    private get renderers(){
+        return{
+            heading:Heading
         }
     }
 
-    componentDidUpdate(){
-        // yucky hack to add ids to h2 for deeplink purpose
-        $(".markdown-body h2").each((i, h2)=>{
-            console.log(h2);
-            $(h2).attr("id",$(h2).text().toLowerCase().replace(/\s/g,'-').replace(/\?/g,''));
-        })
+    private content(content:string, url:string){
+        if (isMarkDown(url)) {
+            return <ReactMarkdown renderers={this.renderers} className={'markdown-body'} escapeHtml={false} source={this.source.result!} />;
+        } else {
+            return <div dangerouslySetInnerHTML={{__html: content}} />
+        }
     }
 
     public render() {
