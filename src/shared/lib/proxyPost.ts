@@ -32,8 +32,6 @@ export function proxyPost(targetObj:any, methodName:string){
         const hash = getHash(arg);
         if ( !(hash in storeNode) ) {
             storeNode[hash] = oldMethod.apply(this,arguments);
-        } else {
-            console.log(`using POST cache for ${methodName}`);
         }
         return storeNode[hash];
     }
