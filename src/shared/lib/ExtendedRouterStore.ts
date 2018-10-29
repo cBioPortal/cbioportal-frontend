@@ -203,7 +203,8 @@ export default class ExtendedRouterStore extends RouterStore {
 
     @computed
     public get query(){
-        if (this._session) {
+        // this allows url based query to override a session (if sessionId has been cleared in url)
+        if (this._session && this.location.query.session_id) {
             return this._session.query;
         } else {
             return this.location.query;
