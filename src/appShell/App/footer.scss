@@ -5,9 +5,7 @@
     .footer-layout {
         display: flex;
         text-align: left;
-        flex-flow: row wrap;
         justify-content:  space-between;
-        align-items: flex-start;
         max-width: 1024px;
         margin: auto;
 
@@ -18,13 +16,14 @@
 
         h3 {
             color: #666 !important;
+            font-size:15px;
         }
 
         ul {
             line-height: 20px;
             color: #666 !important;
             list-style: none;
-            padding-inline-start: 0;
+            padding-left:0;
         }
     }
 }
