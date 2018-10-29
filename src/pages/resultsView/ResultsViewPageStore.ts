@@ -369,9 +369,30 @@ export class ResultsViewPageStore {
     //queried id(any combination of physical and virtual studies)
     @observable cohortIdsList: string[] = [];
 
-    @observable zScoreThreshold: number;
+    @observable _zScoreThreshold: number;
+    @computed get zScoreThreshold() {
+        if (this._zScoreThreshold === undefined) {
+            return 2;
+        } else {
+            return this._zScoreThreshold;
+        }
+    }
+    set zScoreThreshold(val:number) {
+        if (!Number.isNaN(val)) {
+            this._zScoreThreshold = val;
+        }
+    }
 
-    @observable rppaScoreThreshold: number;
+    @observable _rppaScoreThreshold: number;
+    @computed get rppaScoreThreshold() {
+        return this._rppaScoreThreshold === undefined ? 2 : this._rppaScoreThreshold;
+    }
+    set rppaScoreThreshold(val:number) {
+        if (!Number.isNaN(val)) {
+            this._rppaScoreThreshold = val;
+        }
+    }
+
 
     @observable oqlQuery: string = '';
     @observable public sessionIdURL = '';
