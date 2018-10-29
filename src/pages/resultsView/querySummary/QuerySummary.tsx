@@ -18,6 +18,7 @@ import {ServerConfigHelpers} from "../../../config/config";
 import AppConfig from "appConfig";
 import {StudyLink} from "../../../shared/components/StudyLink/StudyLink";
 import {createQueryStore} from "../../home/HomePage";
+import getBrowserWindow from "../../../shared/lib/getBrowserWindow";
 
 @observer
 export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore }, {}> {
@@ -31,7 +32,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
     @autobind
     private handleModifyQueryClick() {
         // this will have no functional impact after initial invocation of this method
-        this.queryStore = (this.queryStore) ? undefined : createQueryStore();
+        this.queryStore = (this.queryStore) ? undefined : createQueryStore(getBrowserWindow().routingStore.query);
     }
 
     @computed get queryFormVisible(){
