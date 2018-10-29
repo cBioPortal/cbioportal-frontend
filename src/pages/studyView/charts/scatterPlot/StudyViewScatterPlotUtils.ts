@@ -5,32 +5,16 @@ import _ from "lodash";
 export const DOWNSAMPLE_PIXEL_DISTANCE_THRESHOLD = 4;
 export const MAX_DOT_SIZE = 5;
 
-export function getGroupedData(
+export function getDownsampledData(
     data:IStudyViewScatterPlotProps["data"],
-    isSelected:IStudyViewScatterPlotProps["isSelected"],
+    sampleToAnalysisGroup:IStudyViewScatterPlotProps["sampleToAnalysisGroup"],
     dataSpaceToPixelSpace:{x:(val:number)=>number, y:(val:number)=>number}
 ) {
-    // group selected and unselected separately
-    const selectedData = [];
-    const unselectedData = [];
-    for (const datum of data) {
-        if (isSelected(datum)) {
-            selectedData.push(datum);
-        } else {
-            unselectedData.push(datum);
-        }
-    }
-    const unorderedSelectedGroups = downsampleByGrouping(
-        selectedData,
-        DOWNSAMPLE_PIXEL_DISTANCE_THRESHOLD,
-        dataSpaceToPixelSpace
-    );
-    const unorderedUnselectedGroups = downsampleByGrouping(
-        unselectedData,
-        DOWNSAMPLE_PIXEL_DISTANCE_THRESHOLD,
-        dataSpaceToPixelSpace
-    );
-    // display selection above unselection, bigger size above smaller size
-    return _.sortBy(unorderedUnselectedGroups, d=>d.data.length)
-        .concat(_.sortBy(unorderedSelectedGroups, d=>d.data.length));
+    // group data by analysis group
+    const groupedData = _.groupBy(data, d=>sampleToAnalysisGroup[d.uniqueSampleKey]);
+    // downsample, and sort by number of points in the downsample group
+    const downsampledGroups = _.mapValues(groupedData, data=>{
+        return _.sortBy(downsampleByGrouping(data, DOWNSAMPLE_PIXEL_DISTANCE_THRESHOLD, dataSpaceToPixelSpace), d=>d.data.length);
+    });
+    return downsampledGroups;
 }

@@ -7,7 +7,7 @@ import MutationEnrichmentsTab from 'pages/resultsView/enrichments/MutationEnrich
 import CopyNumberEnrichmentsTab from 'pages/resultsView/enrichments/CopyNumberEnrichmentsTab';
 import MRNAEnrichmentsTab from 'pages/resultsView/enrichments/MRNAEnrichmentsTab';
 import ProteinEnrichmentsTab from 'pages/resultsView/enrichments/ProteinEnrichmentsTab';
-import Loader from 'shared/components/loadingIndicator/LoadingIndicator';
+import LoadingIndicator from 'shared/components/loadingIndicator/LoadingIndicator';
 import autobind from 'autobind-decorator';
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 
@@ -28,23 +28,25 @@ export default class EnrichmentsTab extends React.Component<IEnrichmentsTabProps
     public render() {
 
         if (this.props.store.alteredSampleKeys.isPending || this.props.store.unalteredSampleKeys.isPending) {
-            return <Loader isLoading={true} />;
+            return <LoadingIndicator isLoading={true} center={true} size={"big"} />;
         }
 
         if (this.props.store.alteredSampleKeys.result!.length === 0 || this.props.store.unalteredSampleKeys.result!.length === 0) {
-            return <div>No alteration in selected samples, therefore could not perform this calculation.</div>;
+            return <div className={'alert alert-info'}>No alteration in selected samples, therefore could not perform this calculation.</div>;
         }
 
         if (this.props.store.mutationEnrichmentProfiles.isPending ||
             this.props.store.copyNumberEnrichmentProfiles.isPending ||
             this.props.store.mRNAEnrichmentProfiles.isPending ||
             this.props.store.proteinEnrichmentProfiles.isPending) {
-            return <Loader isLoading={true} />;
+            return <LoadingIndicator isLoading={true} center={true} size={"big"} />;
         }
 
         return (
-            <div>
-                <OqlStatusBanner className="enrichments-oql-status-banner" store={this.props.store} tabReflectsOql={true}/>
+            <div data-test="enrichmentsTabDiv">
+                <div className={"tabMessageContainer"}>
+                    <OqlStatusBanner className="enrichments-oql-status-banner" store={this.props.store} tabReflectsOql={true}/>
+                </div>
                 <MSKTabs activeTabId={this.currentTabId} onTabClick={this.handleTabChange} className="secondaryTabs">
                     {(this.props.store.mutationEnrichmentProfiles.result!.length > 0) && <MSKTab id="mutations" linkText="Mutations">
                         <MutationEnrichmentsTab store={this.props.store}/>

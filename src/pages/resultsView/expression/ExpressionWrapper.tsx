@@ -526,13 +526,16 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
 
     render() {
         return (
-            <div>
-                <OqlStatusBanner className="expression-oql-status-banner" store={this.props.store} tabReflectsOql={false} style={{marginTop:-1, marginBottom:12}}/>
+            <div data-test="expressionTabDiv">
+                <div className={"tabMessageContainer"}>
+                    <OqlStatusBanner className="expression-oql-status-banner" store={this.props.store} tabReflectsOql={false} style={{marginTop:-1, marginBottom:12}}/>
+                </div>
                 { (this.studySelectorModalVisible) && this.studySelectionModal }
                 <div style={{marginBottom:15}}>
 
                     <MSKTabs onTabClick={this.handleTabClick}
-                             enablePagination={true}
+                             arrowStyle={{'line-height': .8}}
+                             enablePagination={false}
                              unmountOnHide={true}
                              tabButtonStyle="pills"
                              activeTabId={"summaryTab" + this.selectedGene.hugoGeneSymbol}

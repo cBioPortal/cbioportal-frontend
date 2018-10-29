@@ -652,7 +652,7 @@ export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends 
 
     render() {
         if (!this.props.data.length) {
-            return <span>No data to plot.</span>;
+            return <div className={'alert alert-info'}>No data to plot.</div>;
         }
         return (
             <div>

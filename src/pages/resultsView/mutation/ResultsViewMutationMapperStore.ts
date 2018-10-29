@@ -9,15 +9,17 @@ import {ICivicGene, ICivicVariant} from "shared/model/Civic";
 import {
     fetchCosmicData, fetchCivicGenes, fetchCivicVariants
 } from "shared/lib/StoreUtils";
-import {IMutationMapperConfig} from "shared/components/mutationMapper/MutationMapper";
 import MutationCountCache from "shared/cache/MutationCountCache";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
-import MutationMapperStore from "shared/components/mutationMapper/MutationMapperStore";
+import MutationMapperStore, {IMutationMapperStoreConfig} from "shared/components/mutationMapper/MutationMapperStore";
 import { VariantAnnotation } from "shared/api/generated/GenomeNexusAPI";
+import {IServerConfig} from "../../../config/IAppConfig";
+
 
 export default class ResultsViewMutationMapperStore extends MutationMapperStore
 {
-    constructor(protected config: IMutationMapperConfig,
+    constructor(protected config: IServerConfig,
+                protected mutationMapperStoreConfig: IMutationMapperStoreConfig,
                 public gene:Gene,
                 public samples:MobxPromise<SampleIdentifier[]>,
                 public oncoKbAnnotatedGenes:{[entrezGeneId:number]:boolean},
@@ -42,6 +44,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
     {
         super(
             config,
+            mutationMapperStoreConfig,
             gene,
             getMutations,
             indexedHotspotData,
@@ -66,7 +69,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
             this.mutationData,
             this.clinicalDataForSamples
         ],
-        invoke: async() => this.config.showCivic ? fetchCivicGenes(this.mutationData) : {},
+        invoke: async() => this.config.show_civic ? fetchCivicGenes(this.mutationData) : {},
         onError: (err: Error) => {
             // fail silently
         }
@@ -78,7 +81,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
             this.mutationData
         ],
         invoke: async() => {
-            if (this.config.showCivic && this.civicGenes.result) {
+            if (this.config.show_civic && this.civicGenes.result) {
                 return fetchCivicVariants(this.civicGenes.result as ICivicGene, this.mutationData);
             }
             else {

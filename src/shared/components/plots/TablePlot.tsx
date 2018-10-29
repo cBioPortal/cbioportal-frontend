@@ -12,7 +12,7 @@ import Timer = NodeJS.Timer;
 import measureText from "measure-text";
 import {stringListToIndexSet, stringListToMap} from "../../lib/StringUtils";
 import {wrapTick} from "./TickUtils";
-import {getUniqueSampleKeyToCategories} from "./TablePlotUtils";
+import {iterateOverEntries} from "./TablePlotUtils";
 
 export interface ITablePlotProps {
     svgId?:string;
@@ -126,18 +126,15 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
     private containerRef(container:HTMLDivElement) {
         this.container = container;
     }
-
+    
     @computed get tableData():ITableData {
-        const caseToCategories = getUniqueSampleKeyToCategories(this.props.horzData, this.props.vertData);
-
         // count by categories
         const tableCounts:ListIndexedMap<number> = new ListIndexedMap();
-        for (const caseKey of Object.keys(caseToCategories)) {
-            const caseCategories = caseToCategories[caseKey];
-            if (caseCategories.horz && caseCategories.vert) {
+        for (const entry of iterateOverEntries(this.props.horzData, this.props.vertData)) {
+            if (entry.horz !== undefined && entry.vert !== undefined) {
                 tableCounts.set(
-                    (tableCounts.get(caseCategories.horz, caseCategories.vert) || 0)+1,
-                    caseCategories.horz, caseCategories.vert
+                    (tableCounts.get(entry.horz, entry.vert) || 0)+1,
+                    entry.horz, entry.vert
                 );
             }
         }
@@ -329,7 +326,7 @@ export default class TablePlot extends React.Component<ITablePlotProps, {}> {
 
     render() {
         if (!this.tableData.data.length) {
-            return <span>No data to plot.</span>;
+            return <div className={'alert alert-info'}>No data to plot.</div>;
         }
         const cellElements = this.tableData.data.map(d=>{
             const {horzCategory, vertCategory, count} = d;

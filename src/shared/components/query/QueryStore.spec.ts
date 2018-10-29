@@ -8,42 +8,6 @@ import * as _ from 'lodash';
 
 describe("QueryStore", ()=>{
 
-    describe("initialQueryParams on results page", ()=>{
-        it("should contain the correct case_ids parameter in single study query", ()=>{
-            const store = new QueryStore({
-                serverVars: {
-                    theQuery:"",
-                    genesetIds: "",
-                    caseSetProperties:{
-                        case_set_id: CUSTOM_CASE_LIST_ID
-                    },
-                    caseIds: "study1:sample1+study1:sample2+study1:sample3"
-                }
-            } as any);
-            assert.equal(
-                store.initialQueryParams.nonMolecularProfileParams.case_ids,
-                "study1:sample1+study1:sample2+study1:sample3"
-            );
-        });
-        it("should contain the correct case_ids parameter in multiple study query", ()=>{
-            const store = new QueryStore(
-                {
-                    serverVars: {
-                        theQuery:"",
-                        genesetIds: "",
-                        caseSetProperties:{
-                            case_set_id: CUSTOM_CASE_LIST_ID
-                        },
-                        caseIds:"study1:sample1+study1:sample2+study1:sample3+study2:sample4+study2:sample5+study2:sample6"
-                    }
-                } as any
-            );
-            assert.equal(
-                store.initialQueryParams.nonMolecularProfileParams.case_ids,
-                "study1:sample1+study1:sample2+study1:sample3+study2:sample4+study2:sample5+study2:sample6"
-            );
-        });
-    });
     describe.skip('Virtual Studies section on query page', () => {
         let store_vs:QueryStore;
         const virtualStudies: VirtualStudy[] = [
@@ -121,32 +85,6 @@ describe("QueryStore", ()=>{
             //     assert.equal(JSON.stringify(store_vs.deletedVirtualStudies),'[]')
             //     done()
             // },1000)  
-        });
-    });
-
-    describe("Multiple studies selected", ()=>{
-        let selectableStudiesSetStub:any;
-
-        before(() => {
-            selectableStudiesSetStub = Sinon.stub(QueryStore.prototype,"selectableStudiesSet").get(()=>{
-                return {study1:['study1'],study2:['study2']};
-            });
-        });
-
-        it("should show an error when both mutation and cna datatype checkboxes are unchecked", ()=>{
-            const store = new QueryStore(
-                {
-                    cohortIdsList:["study1","study2"]
-                } as any
-            );
-            store.dataTypePriority = {mutation:false,cna:false};
-            assert.equal(store.submitError,"Please select one or more molecular profiles.");
-            store.dataTypePriority = {mutation:true,cna:false};
-            assert.notEqual(store.submitError,"Please select one or more molecular profiles.");
-        });
-
-        after(()=>{
-            selectableStudiesSetStub.restore();
         });
     });
 });

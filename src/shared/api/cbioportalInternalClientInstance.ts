@@ -1,5 +1,5 @@
 import CBioPortalAPIInternal from "./generated/CBioPortalAPIInternal";
-import {getCbioPortalApiUrl} from "./urls";
 
-const internalClient = new CBioPortalAPIInternal(getCbioPortalApiUrl());
+const internalClient = new CBioPortalAPIInternal();
+
 export default internalClient;
