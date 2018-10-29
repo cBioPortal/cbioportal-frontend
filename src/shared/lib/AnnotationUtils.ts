@@ -54,12 +54,12 @@ export function recurrentHotspotFilter(hotspot:Hotspot) {
         hotspot.type.toLowerCase().includes("indel"));
 }
 
-export function isRecurrentHotspot(mutation:Mutation, index:IHotspotIndex)
+export function isRecurrentHotspot(mutation:Mutation, index:IHotspotIndex): boolean
 {
     return isHotspot(mutation, index, recurrentHotspotFilter);
 }
 
-export function is3dHotspot(mutation:Mutation, index:IHotspotIndex):boolean
+export function is3dHotspot(mutation:Mutation, index:IHotspotIndex): boolean
 {
     return isHotspot(mutation, index, hotspot => hotspot.type.toLowerCase().includes("3d"));
 }
