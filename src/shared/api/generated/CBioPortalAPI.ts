@@ -448,9 +448,7 @@ export type PatientIdentifier = {
 
 };
 export type Sample = {
-    'cancerTypeId': string
-
-        'copyNumberSegmentPresent': boolean
+    'copyNumberSegmentPresent': boolean
 
         'patientId': string
 
@@ -3086,6 +3084,7 @@ export default class CBioPortalAPI {
     getMutationsInMolecularProfileBySampleListIdUsingGETURL(parameters: {
         'molecularProfileId': string,
         'sampleListId': string,
+        'entrezGeneId' ? : number,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
@@ -3099,6 +3098,10 @@ export default class CBioPortalAPI {
         path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
         if (parameters['sampleListId'] !== undefined) {
             queryParameters['sampleListId'] = parameters['sampleListId'];
+        }
+
+        if (parameters['entrezGeneId'] !== undefined) {
+            queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
         }
 
         if (parameters['projection'] !== undefined) {
@@ -3137,6 +3140,7 @@ export default class CBioPortalAPI {
      * @name CBioPortalAPI#getMutationsInMolecularProfileBySampleListIdUsingGET
      * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_mutations
      * @param {string} sampleListId - Sample List ID e.g. acc_tcga_all
+     * @param {integer} entrezGeneId - Entrez Gene ID
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
      * @param {integer} pageNumber - Page number of the result list
@@ -3146,6 +3150,7 @@ export default class CBioPortalAPI {
     getMutationsInMolecularProfileBySampleListIdUsingGETWithHttpInfo(parameters: {
         'molecularProfileId': string,
         'sampleListId': string,
+        'entrezGeneId' ? : number,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
@@ -3179,6 +3184,10 @@ export default class CBioPortalAPI {
             if (parameters['sampleListId'] === undefined) {
                 reject(new Error('Missing required  parameter: sampleListId'));
                 return;
+            }
+
+            if (parameters['entrezGeneId'] !== undefined) {
+                queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
             }
 
             if (parameters['projection'] !== undefined) {
@@ -3219,6 +3228,7 @@ export default class CBioPortalAPI {
      * @name CBioPortalAPI#getMutationsInMolecularProfileBySampleListIdUsingGET
      * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_mutations
      * @param {string} sampleListId - Sample List ID e.g. acc_tcga_all
+     * @param {integer} entrezGeneId - Entrez Gene ID
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
      * @param {integer} pageNumber - Page number of the result list
@@ -3228,6 +3238,7 @@ export default class CBioPortalAPI {
     getMutationsInMolecularProfileBySampleListIdUsingGET(parameters: {
             'molecularProfileId': string,
             'sampleListId': string,
+            'entrezGeneId' ? : number,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
@@ -5654,7 +5665,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "sampleId" | "sampleType" | "cancerTypeId",
+        'sortBy' ? : "sampleId" | "sampleType",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -5712,7 +5723,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "sampleId" | "sampleType" | "cancerTypeId",
+        'sortBy' ? : "sampleId" | "sampleType",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any,
         $domain ? : string
@@ -5792,7 +5803,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "sampleId" | "sampleType" | "cancerTypeId",
+            'sortBy' ? : "sampleId" | "sampleType",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string
@@ -5947,7 +5958,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "sampleId" | "sampleType" | "cancerTypeId",
+        'sortBy' ? : "sampleId" | "sampleType",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -6001,7 +6012,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "sampleId" | "sampleType" | "cancerTypeId",
+        'sortBy' ? : "sampleId" | "sampleType",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any,
         $domain ? : string
@@ -6072,7 +6083,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "sampleId" | "sampleType" | "cancerTypeId",
+            'sortBy' ? : "sampleId" | "sampleType",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string

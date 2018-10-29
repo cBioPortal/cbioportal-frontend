@@ -8,9 +8,8 @@ import classnames from 'classnames';
 import { remoteData } from 'shared/api/remoteData';
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { If, Then, Else } from 'react-if';
-import { getStudySummaryUrl, buildCBioPortalUrl } from 'shared/api/urls';
-import { StudyViewFilter } from 'shared/api/generated/CBioPortalAPIInternal';
-import { StudyWithSamples } from 'pages/studyView/StudyViewPageStore';
+import { buildCBioPortalPageUrl } from 'shared/api/urls';
+import { StudyWithSamples, ChartMeta, StudyViewFilterWithSampleIdentifierFilters } from 'pages/studyView/StudyViewPageStore';
 import { getVirtualStudyDescription, getCurrentDate } from 'pages/studyView/StudyViewUtils';
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import autobind from 'autobind-decorator';
@@ -22,8 +21,8 @@ const Clipboard = require('clipboard');
 export interface IVirtualStudyProps {
     studyWithSamples: StudyWithSamples[];
     selectedSamples: Sample[];
-    filter: StudyViewFilter;
-    attributeNamesSet: { [id: string]: string };
+    filter: StudyViewFilterWithSampleIdentifierFilters;
+    attributesMetaSet: { [id: string]: ChartMeta };
     user?: string;
 }
 
@@ -33,21 +32,23 @@ export class StudySummaryRecord extends React.Component<CancerStudy, {}> {
 
     render() {
         return (
-            <div className={classnames("panel panel-default", styles.studySummary)}>
-                <div className="panel-heading">
-                    <span className={styles.studyName}>
-                        <i
-                            className={`fa fa-${this.showDescription ? 'minus' : 'plus'}-circle`}
-                            onClick={() => this.showDescription = !this.showDescription}
-                        />
-                        {this.props.name}
-                    </span>
-                    <a target="_blank" href={`newstudy?id=${this.props.studyId}`}>
-                        <i className="fa fa-external-link" aria-hidden="true"></i>
-                    </a>
-                </div>
-                <div className={styles.studyDescription} style={{ display: this.showDescription ? 'block' : 'none' }}>
-                    <span dangerouslySetInnerHTML={{ __html: `${this.props.description.replace(/\r?\n/g, '<br/>')}` }} />
+            <div className={styles.studySummary}>
+                <div className="panel panel-default">
+                    <div className="panel-heading">
+                        <span className={styles.studyName}>
+                            <i
+                                className={`fa fa-${this.showDescription ? 'minus' : 'plus'}-circle`}
+                                onClick={() => this.showDescription = !this.showDescription}
+                            />
+                            {this.props.name}
+                        </span>
+                        <a target="_blank" href={`newstudy?id=${this.props.studyId}`}>
+                            <i className="fa fa-external-link" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                    <div className={styles.studyDescription} style={{ display: this.showDescription ? 'block' : 'none' }}>
+                        <span dangerouslySetInnerHTML={{ __html: `${this.props.description.replace(/\r?\n/g, '<br/>')}` }} />
+                    </div>
                 </div>
             </div>
         )
@@ -108,7 +109,8 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
     }, undefined);
 
     @computed get virtualStudyUrl() {
-        return getStudySummaryUrl(this.virtualStudy.result ? this.virtualStudy.result.id : '');
+        // TODO: update path name once fully refactored
+        return buildCBioPortalPageUrl({pathname:'newstudy', query: {id: this.virtualStudy.result ? this.virtualStudy.result.id : ''}});
     }
 
     @autobind
@@ -158,6 +160,13 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
         return entrezIds;
     }
 
+    @computed get attributeNamesSet() {
+        return _.reduce(this.props.attributesMetaSet, (acc: { [id: string]: string }, next, key) => {
+            acc[key] = next.displayName
+            return acc
+        }, {});
+    }
+
     readonly genes = remoteData({
         invoke: async () => {
             if(!_.isEmpty(this.entrezIds)){
@@ -168,9 +177,8 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
         onResult: (genes) => {
             this.description = getVirtualStudyDescription(
                 this.props.studyWithSamples,
-                this.props.selectedSamples,
                 this.props.filter,
-                this.props.attributeNamesSet,
+                this.attributeNamesSet,
                 genes,
                 this.props.user);
         },
@@ -277,7 +285,7 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
                                                 className="btn btn-default"
                                                 onClick={(event) => {
                                                     if (this.virtualStudy.result) {
-                                                        window.open(buildCBioPortalUrl('index.do', { cancer_study_id: this.virtualStudy.result.id }), "_blank")
+                                                        window.open(buildCBioPortalPageUrl('index.do', { cancer_study_id: this.virtualStudy.result.id }), "_blank")
                                                     }
                                                 }}>
                                                 Query

@@ -18,7 +18,7 @@ describe('Mutation Mapper Tool', function() {
 
     describe('example genomic changes input', ()=>{
         beforeEach(()=>{
-            var url = `${CBIOPORTAL_URL}/mutation_mapper.jsp`;
+            var url = `${CBIOPORTAL_URL}/mutation_mapper`;
             goToUrlAndSetLocalStorage(url);
             browser.waitForVisible('[data-test=GenomicChangesExampleButton]',10000)
         });
@@ -31,7 +31,7 @@ describe('Mutation Mapper Tool', function() {
 
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible("[data-test=oncogenic-icon-image]",20000);
+            browser.waitForVisible("tr:nth-child(1) [data-test=oncogenic-icon-image]",20000);
 
             const mutationsT790M = browser.getText('.//*[text()[contains(.,"T790M")]]')
             assert.equal(mutationsT790M.length, 2, "there should be two samples with a T790M mutation");
@@ -173,7 +173,7 @@ describe('Mutation Mapper Tool', function() {
 
             // mutations table should be visiable after oncokb icon shows up,
             // also need to wait for mutations to be sorted properly
-            browser.waitForVisible("[data-test=oncogenic-icon-image]",20000);
+            browser.waitForVisible("tr:nth-child(1) [data-test=oncogenic-icon-image]",20000);
 
             const mutationsT790M = browser.getText('.//*[text()[contains(.,"T790M")]]')
             assert.equal(mutationsT790M.length, 2, "there should be two samples with a T790M mutation");

@@ -31,20 +31,22 @@ import MutationCountCache from "shared/cache/MutationCountCache";
 import AppConfig from "appConfig";
 import {
     findMolecularProfileIdDiscrete, ONCOKB_DEFAULT, fetchOncoKbData,
-    fetchCnaOncoKbData, mergeMutations, fetchMyCancerGenomeData, fetchCosmicData,
-    fetchMutationData, fetchDiscreteCNAData, generateUniqueSampleKeyToTumorTypeMap, findMutationMolecularProfileId,
+    fetchCnaOncoKbData, mergeMutations, fetchMyCancerGenomeData, fetchMutationalSignatureData, fetchMutationalSignatureMetaData,
+    fetchCosmicData, fetchMutationData, fetchDiscreteCNAData, generateUniqueSampleKeyToTumorTypeMap, findMutationMolecularProfileId,
     findUncalledMutationMolecularProfileId, mergeMutationsIncludingUncalled, fetchGisticData, fetchCopyNumberData,
     fetchMutSigData, findMrnaRankMolecularProfileId, mergeDiscreteCNAData, fetchSamplesForPatient, fetchClinicalData,
     fetchCopyNumberSegments, fetchClinicalDataForPatient, makeStudyToCancerTypeMap,
     fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, groupBySampleId, findSamplesWithoutCancerTypeClinicalData,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData, fetchOncoKbAnnotatedGenesSuppressErrors, concatMutationData
 } from "shared/lib/StoreUtils";
+import {IMutationalSignature} from "../../../shared/model/MutationalSignature";
 import {indexHotspotsData, fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
 import {stringListToSet} from "../../../shared/lib/StringUtils";
 import {Gene as OncoKbGene} from "../../../shared/api/generated/OncoKbAPI";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 import { VariantAnnotation } from 'shared/api/generated/GenomeNexusAPI';
 import { fetchVariantAnnotationsIndexedByGenomicLocation } from 'shared/lib/MutationAnnotator';
+import {getHeatmapMeta} from "../../../shared/lib/MDACCUtils";
 
 type PageMode = 'patient' | 'sample';
 
@@ -146,6 +148,12 @@ export class PatientViewPageStore {
             }
     }
 
+    @computed get metaDescription(): string {
+        const id = ((this.pageMode === "patient") ?
+            this.patientId : this.sampleId);
+        return `${id} from ${this.studyMetaData.result!.name}`;
+    }
+
     @computed get pageMode(): PageMode {
         return this._sampleId ? 'sample' : 'patient';
     }
@@ -173,6 +181,19 @@ export class PatientViewPageStore {
     @computed get myCancerGenomeData() {
         return fetchMyCancerGenomeData();
     }
+
+    readonly mutationalSignatureData = remoteData({
+        invoke: async() => fetchMutationalSignatureData()
+    });
+
+    readonly mutationalSignatureMetaData = remoteData({
+        invoke: async() => fetchMutationalSignatureMetaData()
+    });
+
+    readonly hasMutationalSignatureData = remoteData({
+        invoke: async() => false,
+        default: false
+    });
 
     readonly derivedPatientId = remoteData<string>({
         await: () => [this.samples],
@@ -275,7 +296,7 @@ export class PatientViewPageStore {
             this.mutationData,
             this.uncalledMutationData,
         ],
-        invoke: async () => await fetchVariantAnnotationsIndexedByGenomicLocation(concatMutationData(this.mutationData, this.uncalledMutationData), ["annotation_summary", "hotspots"], AppConfig.isoformOverrideSource),
+        invoke: async () => await fetchVariantAnnotationsIndexedByGenomicLocation(concatMutationData(this.mutationData, this.uncalledMutationData), ["annotation_summary", "hotspots"], AppConfig.serverConfig.isoformOverrideSource),
         onError: (err: Error) => {
             // fail silently, leave the error handling responsibility to the data consumer
         }
@@ -298,16 +319,8 @@ export class PatientViewPageStore {
     readonly MDAndersonHeatMapAvailable = remoteData({
         await: () => [this.derivedPatientId],
         invoke: async() => {
-
-            let resp: any = await request.get(`//bioinformatics.mdanderson.org/dyce?app=chmdb&command=participant2maps&participant=${this.patientId}`);
-
-            const parsedResp: any = JSON.parse(resp.text);
-
-            // filecontent array is serialized :(
-            const fileContent: string[] = JSON.parse(parsedResp.fileContent);
-
+            const fileContent: string[] = await getHeatmapMeta(`//bioinformatics.mdanderson.org/participant2maps?participant=${this.patientId}`);
             return fileContent.length > 0;
-
         },
         onError: () => {
             // fail silently
@@ -453,9 +466,7 @@ export class PatientViewPageStore {
             this.derivedPatientId
         ],
         invoke: async() => {
-            let enableDarwin: boolean | null | undefined = AppConfig.enableDarwin;
-
-            if (enableDarwin === true) {
+            if (AppConfig.serverConfig.enable_darwin === true) {
                 let resp = await request.get(getDarwinUrl(this.sampleIds, this.patientId));
                 return resp.text;
             } else {
@@ -537,7 +548,7 @@ export class PatientViewPageStore {
             this.uncalledMutationData,
             this.clinicalDataForSamples
         ],
-        invoke: async() => AppConfig.showCivic ? fetchCivicGenes(this.mutationData, this.uncalledMutationData) : {},
+        invoke: async() => AppConfig.serverConfig.show_civic ? fetchCivicGenes(this.mutationData, this.uncalledMutationData) : {},
         onError: (err: Error) => {
             // fail silently
         }
@@ -550,7 +561,7 @@ export class PatientViewPageStore {
             this.uncalledMutationData
         ],
         invoke: async() => {
-            if (AppConfig.showCivic && this.civicGenes.result) {
+            if (AppConfig.serverConfig.show_civic && this.civicGenes.result) {
                 return fetchCivicVariants(this.civicGenes.result as ICivicGene,
                     this.mutationData,
                     this.uncalledMutationData);
@@ -582,7 +593,7 @@ export class PatientViewPageStore {
             this.discreteCNAData,
             this.clinicalDataForSamples
         ],
-        invoke: async() => AppConfig.showCivic ? fetchCnaCivicGenes(this.discreteCNAData) : {},
+        invoke: async() => AppConfig.serverConfig.show_civic ? fetchCnaCivicGenes(this.discreteCNAData) : {},
         onError: (err: Error) => {
             // fail silently
         }

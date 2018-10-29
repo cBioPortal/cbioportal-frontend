@@ -5,7 +5,6 @@ import {SampleLabelHTML} from "../../../shared/components/sampleLabel/SampleLabe
 import LazyMobXTable, {Column} from "shared/components/lazyMobXTable/LazyMobXTable";
 import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
-
 import styles from './style/sampleTable.module.scss';
 import {SHOW_ALL_PAGE_SIZE} from "../../../shared/components/paginationControls/PaginationControls";
 

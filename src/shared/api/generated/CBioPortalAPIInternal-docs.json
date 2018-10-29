@@ -161,7 +161,7 @@
         }
       }
     },
-    "/attributes/{attributeId}/clinical-data-counts/fetch": {
+    "/clinical-data-counts/fetch": {
       "post": {
         "tags": [
           "Study View"
@@ -176,31 +176,12 @@
         ],
         "parameters": [
           {
-            "name": "attributeId",
-            "in": "path",
-            "description": "Attribute ID e.g. CANCER_TYPE",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "clinicalDataType",
-            "in": "query",
-            "description": "Type of the clinical data",
-            "required": false,
-            "type": "string",
-            "default": "SAMPLE",
-            "enum": [
-              "SAMPLE",
-              "PATIENT"
-            ]
-          },
-          {
             "in": "body",
-            "name": "studyViewFilter",
+            "name": "clinicalDataCountFilter",
             "description": "Clinical data count filter",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/StudyViewFilter"
+              "$ref": "#/definitions/ClinicalDataCountFilter"
             }
           }
         ],
@@ -210,7 +191,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ClinicalDataCount"
+                "$ref": "#/definitions/ClinicalDataCountItem"
               }
             }
           }
@@ -1411,6 +1392,43 @@
       },
       "title": "ClinicalDataCount"
     },
+    "ClinicalDataCountFilter": {
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClinicalDataFilter"
+          }
+        },
+        "studyViewFilter": {
+          "$ref": "#/definitions/StudyViewFilter"
+        }
+      },
+      "title": "ClinicalDataCountFilter"
+    },
+    "ClinicalDataCountItem": {
+      "type": "object",
+      "properties": {
+        "attributeId": {
+          "type": "string"
+        },
+        "clinicalDataType": {
+          "type": "string",
+          "enum": [
+            "SAMPLE",
+            "PATIENT"
+          ]
+        },
+        "counts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClinicalDataCount"
+          }
+        }
+      },
+      "title": "ClinicalDataCountItem"
+    },
     "ClinicalDataEqualityFilter": {
       "type": "object",
       "properties": {
@@ -1432,6 +1450,22 @@
         }
       },
       "title": "ClinicalDataEqualityFilter"
+    },
+    "ClinicalDataFilter": {
+      "type": "object",
+      "properties": {
+        "attributeId": {
+          "type": "string"
+        },
+        "clinicalDataType": {
+          "type": "string",
+          "enum": [
+            "SAMPLE",
+            "PATIENT"
+          ]
+        }
+      },
+      "title": "ClinicalDataFilter"
     },
     "ClinicalDataIntervalFilter": {
       "type": "object",
@@ -2179,9 +2213,6 @@
         "studyId"
       ],
       "properties": {
-        "cancerTypeId": {
-          "type": "string"
-        },
         "copyNumberSegmentPresent": {
           "type": "boolean"
         },
