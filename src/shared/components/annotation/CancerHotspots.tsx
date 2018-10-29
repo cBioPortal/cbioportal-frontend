@@ -35,11 +35,11 @@ export default class CancerHotspots extends React.Component<ICancerHotspotsProps
         return score;
     }
 
-    public static hotspotInfo(isHotspot:boolean, is3dHotspot:boolean)
+    public static hotspotInfo(isHotspot:boolean, is3dHotspot:boolean, count?: number, customInfo?: JSX.Element)
     {
         return (
             <span className={hotspotStyles["hotspot-info"]}>
-                {CancerHotspots.title(isHotspot, is3dHotspot)}
+                {CancerHotspots.title(isHotspot, is3dHotspot, count, customInfo)}
                 <br/>
                 {CancerHotspots.publication(isHotspot, is3dHotspot)}
                 <br/><br/>
@@ -48,15 +48,22 @@ export default class CancerHotspots extends React.Component<ICancerHotspotsProps
         );
     }
 
-    public static title(isHotspot:boolean, is3dHotspot:boolean)
+    public static title(isHotspot:boolean, is3dHotspot:boolean, count?: number, customInfo?: JSX.Element)
     {
-        const recurrentHotspot = isHotspot ? (<b>Recurrent Hotspot</b>) : "";
-        const maybeAnd = isHotspot && is3dHotspot ? "and" : "";
-        const clusteredHotspot = is3dHotspot ? (<b>3D Clustered Hotspot</b>) : "";
+        const recurrentHotspot = isHotspot ? (<b>Recurrent Hotspot</b>) : null;
+        const maybeAnd = isHotspot && is3dHotspot ? <span>and</span> : null;
+        const clusteredHotspot = is3dHotspot ? (<b>3D Clustered Hotspot</b>) : null;
+
+        let countInfo: JSX.Element|null = null;
+
+        if (count) {
+            const sample = count > 1 ? "samples" : "sample";
+            countInfo = <span><b>{count}</b> {sample} with</span>;
+        }
 
         return (
             <span>
-                {recurrentHotspot} {maybeAnd} {clusteredHotspot}
+                {countInfo} {recurrentHotspot} {maybeAnd} {clusteredHotspot} {customInfo}
             </span>
         );
     }

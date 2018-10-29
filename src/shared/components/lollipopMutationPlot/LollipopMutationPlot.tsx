@@ -12,7 +12,12 @@ import {observer, Observer} from "mobx-react";
 import {computed, observable, action} from "mobx";
 import _ from "lodash";
 import {lollipopLabelText, lollipopLabelTextAnchor} from "shared/lib/LollipopPlotUtils";
-import {countUniqueMutations, getColorForProteinImpactType, IProteinImpactTypeColors} from "shared/lib/MutationUtils";
+import {
+    countUniqueMutations,
+    getColorForProteinImpactType,
+    groupMutationsByProteinStartPos,
+    IProteinImpactTypeColors
+} from "shared/lib/MutationUtils";
 import {generatePfamDomainColorMap} from "shared/lib/PfamUtils";
 import {getMutationAlignerUrl} from "shared/api/urls";
 import styles from "./lollipopMutationPlot.module.scss";
@@ -97,19 +102,7 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
     }
 
     @computed private get mutationsByPosition():{[pos:number]:Mutation[]} {
-        const ret:{[pos:number]:Mutation[]} = {};
-        let codon;
-        for (const mutations of this.props.store.dataStore.sortedFilteredData) {
-            for (const mutation of mutations) {
-                codon = mutation.proteinPosStart;
-
-                if (codon !== undefined && codon !== null) {
-                    ret[codon] = ret[codon] || [];
-                    ret[codon].push(mutation);
-                }
-            }
-        }
-        return ret;
+        return groupMutationsByProteinStartPos(this.props.store.dataStore.sortedFilteredData);
     }
 
     @computed private get uniqueMutationCountsByPosition(): {[pos: number]: number} {

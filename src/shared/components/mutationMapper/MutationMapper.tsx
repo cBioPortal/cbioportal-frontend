@@ -26,6 +26,7 @@ import { EnsemblTranscript } from 'shared/api/generated/GenomeNexusAPI';
 import Mutations from 'pages/resultsView/mutation/Mutations';
 import {IServerConfig} from "../../../config/IAppConfig";
 import WindowStore from "../window/WindowStore";
+import TrackPanel from "../tracks/TrackPanel";
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
@@ -323,6 +324,22 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
         );
     }
 
+    protected trackPanel(): JSX.Element|null
+    {
+        const transcript = this.props.store.activeTranscript ?
+            this.props.store.transcriptsByTranscriptId[this.props.store.activeTranscript] :
+            this.props.store.canonicalTranscript.result;
+
+        return (
+            <TrackPanel
+                store={this.props.store}
+                geneWidth={this.geneWidth}
+                proteinLength={transcript && transcript.proteinLength}
+                geneXOffset={this.lollipopPlotGeneX}
+                maxHeight={200}
+            />
+        );
+    }
 
     protected proteinImpactTypePanel(): JSX.Element|null
     {
@@ -418,6 +435,7 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                             <div className="borderedChart" style={{ marginRight:10 }}>
                                 {this.mutationPlot()}
                                 {this.proteinChainPanel()}
+                                {this.trackPanel()}
                             </div>
 
                             <div className="mutationMapperMetaColumn">
