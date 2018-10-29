@@ -3,6 +3,7 @@ import AppConfig from "appConfig";
 import formSubmit from "shared/lib/formSubmit";
 import getBrowserWindow from "../lib/getBrowserWindow";
 import App from "../../appShell/App/App";
+import * as _ from 'lodash';
 
 export function trimTrailingSlash(str:string){
    return str.replace(/\/$/g,"");
@@ -84,20 +85,25 @@ export function getPatientViewUrl(studyId:string, caseId:string, navIds?:{patien
     return buildCBioPortalPageUrl('patient', { studyId, caseId }, hash);
 }
 export function getPubMedUrl(pmid:string) {
-    return `https://www.ncbi.nlm.nih.gov/pubmed/${pmid}`;
+    return _.template(AppConfig.serverConfig.pubmed_url!)({ pmid });
 }
+
 export function getMyGeneUrl(entrezGeneId: number) {
-    return `https://mygene.info/v3/gene/${entrezGeneId}?fields=uniprot`;
+    return _.template(AppConfig.serverConfig.mygene_info_url!)({ entrezGeneId });
 }
+
 export function getUniprotIdUrl(swissProtAccession: string) {
-    return `https://www.uniprot.org/uniprot/?query=accession:${swissProtAccession}&format=tab&columns=entry+name`;
+    return _.template(AppConfig.serverConfig.uniprot_id_url!)({swissProtAccession:swissProtAccession});
 }
+
 export function getMutationAlignerUrl() {
     return buildCBioPortalAPIUrl(`getMutationAligner.json`);
 }
+
 export function getOncoQueryDocUrl() {
     return buildCBioPortalPageUrl("/oql");
 }
+
 export function getOncoKbApiUrl() {
     let url = AppConfig.serverConfig.oncokb_public_api_url;
 
@@ -157,7 +163,7 @@ export function getConfigurationServiceApiUrl() {
 }
 
 export function getG2SApiUrl() {
-    return 'https://g2s.genomenexus.org';
+    return AppConfig.serverConfig.g2s_url;
 }
 
 export function getDigitalSlideArchiveMetaUrl(patientId:string) {
