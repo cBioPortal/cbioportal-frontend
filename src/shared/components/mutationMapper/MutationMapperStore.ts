@@ -12,7 +12,15 @@ import {
     fetchPfamDomainData, fetchCanonicalTranscriptWithFallback,
     fetchEnsemblTranscriptsByEnsemblFilter
 } from "shared/lib/StoreUtils";
-import {EnsemblTranscript, PfamDomain, PfamDomainRange, VariantAnnotation, GenomicLocation, TranscriptConsequence} from "shared/api/generated/GenomeNexusAPI";
+import {
+    EnsemblTranscript,
+    PfamDomain,
+    PfamDomainRange,
+    VariantAnnotation,
+    GenomicLocation,
+    TranscriptConsequence,
+    Hotspot
+} from "shared/api/generated/GenomeNexusAPI";
 import {IPdbChain, PdbAlignmentIndex} from "shared/model/Pdb";
 import {calcPdbIdNumericalValue, mergeIndexedPdbAlignments} from "shared/lib/PdbUtils";
 import {lazyMobXTableSort} from "shared/components/lazyMobXTable/LazyMobXTable";
