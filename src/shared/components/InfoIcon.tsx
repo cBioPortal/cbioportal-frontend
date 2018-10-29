@@ -16,7 +16,7 @@ export default class InfoIcon extends React.Component<IInfoIconProps, {}> {
            >
                <div>
                    <i
-                       className="glyphicon glyphicon-info-sign"
+                       className="fa fa-info-circle"
                        style={Object.assign({}, {
                            color: "#000000",
                            cursor: "pointer",

@@ -20,17 +20,23 @@ import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownload
 
 import PdbChainDataStore from "./PdbChainDataStore";
 import MutationMapperDataStore from "./MutationMapperDataStore";
-import {IMutationMapperConfig} from "./MutationMapper";
 import { uniqueGenomicLocations, genomicLocationString } from "shared/lib/MutationUtils";
 import { getMutationsToTranscriptId } from "shared/lib/MutationAnnotator";
 import Mutations from "pages/resultsView/mutation/Mutations";
+import {IServerConfig} from "../../../config/IAppConfig";
+
+
+export interface IMutationMapperStoreConfig {
+    filterMutationsBySelectedTranscript?:boolean
+}
 
 export default class MutationMapperStore
 {
     @observable public activeTranscript: string | undefined = undefined;
 
     constructor(
-        protected config: IMutationMapperConfig,
+        protected config: IServerConfig,
+        protected mutationMapperStoreConfig:IMutationMapperStoreConfig,
         public gene:Gene,
         private getMutations:()=>Mutation[],
         // TODO: we could merge indexedVariantAnnotations and indexedHotspotData
@@ -49,10 +55,10 @@ export default class MutationMapperStore
         const canonicalTranscriptId = this.canonicalTranscript.result &&
             this.canonicalTranscript.result.transcriptId;
 
-        if (this.canonicalTranscript.isPending || (this.config.filterMutationsBySelectedTranscript && (this.transcriptsWithAnnotations.isPending || this.indexedVariantAnnotations.isPending))) {
+        if (this.canonicalTranscript.isPending || (this.mutationMapperStoreConfig.filterMutationsBySelectedTranscript && (this.transcriptsWithAnnotations.isPending || this.indexedVariantAnnotations.isPending))) {
             return [];
         } else {
-            if (this.config.filterMutationsBySelectedTranscript) {
+            if (this.mutationMapperStoreConfig.filterMutationsBySelectedTranscript) {
                 // pick default transcript if not activeTranscript
                 if (this.activeTranscript === undefined) {
                     if (this.transcriptsWithAnnotations.result && this.transcriptsWithAnnotations.result.length > 0 && canonicalTranscriptId && !this.transcriptsWithAnnotations.result.includes(canonicalTranscriptId)) {
@@ -82,7 +88,7 @@ export default class MutationMapperStore
 
     readonly mutationData = remoteData({
         await: () => {
-            if (this.config.filterMutationsBySelectedTranscript) {
+            if (this.mutationMapperStoreConfig.filterMutationsBySelectedTranscript) {
                 return [this.canonicalTranscript, this.indexedVariantAnnotations];
             } else {
                 return [this.canonicalTranscript];
@@ -157,7 +163,7 @@ export default class MutationMapperStore
         invoke: async()=>{
             if (this.canonicalTranscript.result && this.canonicalTranscript.result.pfamDomains && this.canonicalTranscript.result.pfamDomains.length > 0) {
                 let domainRanges = this.canonicalTranscript.result.pfamDomains;
-                if (this.config.filterMutationsBySelectedTranscript && this.transcriptsWithProteinLength.result && this.transcriptsWithProteinLength.result.length > 0) {
+                if (this.mutationMapperStoreConfig.filterMutationsBySelectedTranscript && this.transcriptsWithProteinLength.result && this.transcriptsWithProteinLength.result.length > 0) {
                     // add domain ranges for all transcripts to this call
                     domainRanges = [].concat.apply([domainRanges], _.compact(this.transcriptsWithProteinLength.result.map((transcriptId:string) => this.transcriptsByTranscriptId[transcriptId].pfamDomains)));
                 }

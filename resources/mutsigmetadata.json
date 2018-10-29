@@ -1,0 +1,152 @@
+[
+  {
+    "mutationalSignatureId": "mutational_signature_1",
+    "description": "Mutational Signature 1",
+    "confidenceStatement": "Signature 1, the aging signature, is detected in this case."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_2",
+    "description": "Mutational Signature 2",
+    "confidenceStatement": "Signature 2, the APOBEC signature, is detected in this case.  This signature often coccurs with signature 13, the other APOBEC signature"
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_3",
+    "description": "Mutational Signature 3",
+    "confidenceStatement": "Signature 3, the signature of Homologous Recombination Repair deficiency is detected in this case.  This signature is most commonly associated with BRCA mutations"
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_4",
+    "description": "Mutational Signature 4",
+    "confidenceStatement":  "Signature 4, the smoking signature is detected in this case"
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_5",
+    "description": "Mutational Signature 5",
+    "confidenceStatement": "Signature 5 is detected in this case.  We are not confident that we are able to detect signature 5 in the IMPACT cohort.  It is a 'flat' signature--when it is detected it is more likely to be an artefact. In the literature it is associated with age"
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_6",
+    "description": "Mutational Signature 6",
+    "confidenceStatement": "Signature 6, a MMR signature, is detected in this case.  It is usually associated with high mutational burden.  This signature often co-occurs with other MMR signatures (14, 15, 20, 21 26)"
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_7",
+    "description": "Mutational Signature 7",
+    "confidenceStatement": "Signature 7, the UV light signature, is detected in this case."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_8",
+    "description": "Mutational Signature 8",
+    "confidenceStatement": "Signature 8 is detected in this case. We are not confident that we are able to detect signature 8 in the IMPACT cohort. It is a 'flat' signature--when it is detected it is more likely to be an artefact. In the literature it is associated with HRD defects"
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_9",
+    "description": "Mutational Signature 9",
+    "confidenceStatement": "Signature 9 is detected in this case.  We are not confident that we are able to detect signature 9 in the IMPACT cohort.  In the literature it is associated with POLH."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_10",
+    "description": "Mutational Signature 10",
+    "confidenceStatement": "Signature 10, the POLE signature, is detected in this case.  It is associated with functions to the exonucleus domain of the POLE gene and enormous mutational burden.  Oftentimes MMR signatures 6, 14,16, 20,21 and 26 co-occur with the POLE signature."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_11",
+    "description": "Mutational Signature 11",
+    "confidenceStatement": "Signature 11, the Temozolomide (TMZ) signature, is detected in this case."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_12",
+    "description": "Mutational Signature 12",
+    "confidenceStatement": "Signature 12 is detected in this case.  We are not confident that we are able to detect signature 9 in the IMPACT cohort.  In the literature it is found in liver cancer."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_13",
+    "description": "Mutational Signature 13",
+    "confidenceStatement": "Signature 13, the APOBEC signature, is detected in this case.  This signature often coccurs with signature 2, the other APOBEC signature."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_14",
+    "description": "Mutational Signature 14",
+    "confidenceStatement": "Signature 14, the signature of simultaneous MMR and POLE dysfunction is detected in this case.  This signature usually occurs in cases with the POLE signature (signature 10) and other MMR signatures (6, 15, 20, 21 26)."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_15",
+    "description": "Mutational Signature 15",
+    "confidenceStatement": "Signature 15, a MMR signature, is detected in this case.  It is usually associated with high mutational burden."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_16",
+    "description": "Mutational Signature 16",
+    "confidenceStatement": "Signature 16 is detected in this case. We are not confident that we are able to detect signature 16 in the IMPACT cohort.  In the literature it is associated with Liver cancer and alcohol consumption."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_17",
+    "description": "Mutational Signature 17",
+    "confidenceStatement": "Signature 17 is detected in this case.  The aetiology of this signature is unknown.  It is predominantly found in gastric cancers."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_18",
+    "description": "Mutational Signature 18",
+    "confidenceStatement": "Signature 18 is detected in this case.  This signature is associated with MUTYH dysfunction and neuroblastoma."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_19",
+    "description": "Mutational Signature 19",
+    "confidenceStatement": "Signature 19 is detected in this case. We are not confident that we are able to detect signature 19 in the IMPACT cohort."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_20",
+    "description": "Mutational Signature 20",
+    "confidenceStatements": "Signature 20 is detected in this case. This signature is associated with MMR and usually occurs in cases with the POLE signature (signature 10) and other MMR signatures (6, 14, 15, 21, 26)."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_21",
+    "description": "Mutational Signature 21",
+    "confidenceStatement": "Signature 21 is detected in this case. This signature is associated with MMR and usually co-occurs with other MMR signatures (6, 14, 15, 21, 26)."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_22",
+    "description": "Mutational Signature 22",
+    "confidenceStatement": "Signature 22 is detected in this case. We are not confident that we are able to detect signature 22 in the IMPACT cohort. In the literature it is associated with exposure to Aristolochic Acid."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_23",
+    "description": "Mutational Signature 23",
+    "confidenceStatement": "Signature 23 is detected in this case. We are not confident that we are able to detect signature 23 in the IMPACT cohort."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_24",
+    "description": "Mutational Signature 24",
+    "confidenceStatement": "Signature 24 is detected in this case. We are not confident that we are able to detect signature 24 in the IMPACT cohort.  In the literature it is associated with aflatoxin exposure.  In our cohort we believe it is detected by accident in cases with the smoking signature (signature 4)."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_25",
+    "description": "Mutational Signature 25",
+    "confidenceStatement": "Signature 25 is detected in this case. We are not confident that we are able to detect signature 25 in the IMPACT cohort."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_26",
+    "description": "Mutational Signature 26",
+    "confidenceStatement": "Signature 26 is detected in this case.  This signature is associated with MMR and usually co-occurs with other MMR signatures (6, 14, 15, 20, 21)."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_27",
+    "description": "Mutational Signature 27",
+    "confidenceStatement": "Signature 27 is detected in this case. We are not confident that we are able to detect signature 27 in the IMPACT cohort."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_28",
+    "description": "Mutational Signature 28",
+    "confidenceStatement": "Signature 28 is detected in this case. We are not confident that we are able to detect signature 28 in the IMPACT cohort.  It often co-occurs with signature 28."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_29",
+    "description": "Mutational Signature 29",
+    "confidenceStatement": "Signature 29, the mutational signature of chewing tobacco is detected in this case."
+  },
+  {
+    "mutationalSignatureId": "mutational_signature_30",
+    "description": "Mutational Signature 30",
+    "confidenceStatement": "Signature 30 is detected in this case. We are not confident that we are able to detect signature 30 in the IMPACT cohort."
+  }
+]

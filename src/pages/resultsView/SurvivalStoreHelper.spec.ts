@@ -91,6 +91,7 @@ describe("SurvivalStoreHelper", () => {
                  "OS_STATUS", "OS_MONTHS", s => s === 'DECEASED'), [
                     {
                         patientId: "patient_1",
+                        uniquePatientKey: "1",
                         studyId: "study_1",
                         months: 0,
                         status: true
