@@ -41,7 +41,7 @@ describe('GenomicOverview', () => {
                 sampleLabels={{}}
                 sampleColors={{}}
                 sampleManager={new SampleManager([])}
-                getContainerWidth={()=>20}
+                containerWidth={20}
             />);
             assert.deepEqual(getVAFFrequencies(genomicOverview), {}, "no frequencies with no mutations");
 
@@ -56,7 +56,7 @@ describe('GenomicOverview', () => {
                 sampleLabels={{}}
                 sampleColors={{}}
                 sampleManager={new SampleManager([])}
-                getContainerWidth={()=>20}
+                containerWidth={20}
             />);
             let frequencies = getVAFFrequencies(genomicOverview);
             assertDeepEqualFrequencies(frequencies, {sample1: [0.25]}, "correctly calculates variant allele frequencies")
@@ -75,7 +75,7 @@ describe('GenomicOverview', () => {
                 sampleLabels={{}}
                 sampleColors={{}}
                 sampleManager={new SampleManager([])}
-                getContainerWidth={()=>20}
+                containerWidth={20}
             />);
             frequencies = getVAFFrequencies(genomicOverview);
             assertDeepEqualFrequencies(frequencies, {sample1: [1/4, 1/6, 1/5, 1/11]}, "correctly calculates, part 2");
@@ -99,7 +99,7 @@ describe('GenomicOverview', () => {
                 sampleLabels={{}}
                 sampleColors={{}}
                 sampleManager={new SampleManager([])}
-                getContainerWidth={()=>20}
+                containerWidth={20}
             />);
             frequencies = getVAFFrequencies(genomicOverview);
             assertDeepEqualFrequencies(frequencies, {sample1:[1/4], sample2:[NaN]}, "case: one mutation for one sample");
@@ -116,7 +116,7 @@ describe('GenomicOverview', () => {
                 sampleLabels={{}}
                 sampleColors={{}}
                 sampleManager={new SampleManager([])}
-                getContainerWidth={()=>20}
+                containerWidth={20}
             />);
             frequencies = getVAFFrequencies(genomicOverview);
             assertDeepEqualFrequencies(frequencies, {sample1:[1/4], sample2:[2/5]}, "case: one mutation for both samples");
@@ -146,7 +146,7 @@ describe('GenomicOverview', () => {
                 sampleLabels={{}}
                 sampleColors={{}}
                 sampleManager={new SampleManager([])}
-                getContainerWidth={()=>20}
+                containerWidth={20}
             />);
             frequencies = getVAFFrequencies(genomicOverview);
             assertDeepEqualFrequencies(frequencies, {sample1:[1/4, 1/4, 1/5, 1/3, NaN], sample2:[2/5, 2/5, 3/11, NaN, NaN]}, "case: a few mutations for both, a few for only one");
@@ -179,7 +179,7 @@ describe('GenomicOverview', () => {
                 sampleLabels={{}}
                 sampleColors={{}}
                 sampleManager={new SampleManager([])}
-                getContainerWidth={()=>20}
+                containerWidth={20}
             />);
             frequencies = getVAFFrequencies(genomicOverview);
             assertDeepEqualFrequencies(frequencies, {sample1:[1/4, 1/4, 3/11, 1/5, 1/3], sample2:[2/5, 2/5, 3/11, 1/5, 1/5]}, "case: all mutations for both");

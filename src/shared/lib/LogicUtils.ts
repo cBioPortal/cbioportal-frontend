@@ -1,12 +1,6 @@
-function logicalReduce(operator:(a:boolean, b:boolean)=>boolean, emptyValue:boolean, firstArg:boolean|boolean[], ...args:boolean[]) {
-    const values = args.concat(firstArg);
-    return values.reduce((acc:boolean, next:boolean)=>operator(acc, next), emptyValue);
-}
+import _ from "lodash";
 
-export function logicalOr(firstArg:boolean|boolean[], ...args:boolean[]) {
-    return logicalReduce((x,y)=>x||y, false, firstArg, ...args);
-}
-
-export function logicalAnd(firstArg:boolean|boolean[], ...args:boolean[]) {
-    return logicalReduce((x,y)=>x&&y, true, firstArg, ...args);
+export function logicalAnd<T>(array:T[], _iterator?:(t:T)=>boolean):boolean {
+    const iterator = _iterator ? _iterator : ((x:T)=>!!x);
+    return _.reduce(array, (acc:boolean, nextElt:T)=>acc&&iterator(nextElt), true);
 }

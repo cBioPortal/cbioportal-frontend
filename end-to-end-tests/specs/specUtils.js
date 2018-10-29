@@ -1,6 +1,6 @@
 function waitForOncoprint(timeout) {
     browser.pause(100); // give oncoprint time to disappear
-    browser.waitForExist('#oncoprint-inner svg rect', timeout); // as a proxy for oncoprint being rendered, wait for an svg rectangle to appear in the legend
+    browser.waitForExist('#oncoprintDiv svg rect', timeout); // as a proxy for oncoprint being rendered, wait for an svg rectangle to appear in the legend
 }
 
 function goToUrlAndSetLocalStorage(url) {
@@ -11,11 +11,15 @@ function goToUrlAndSetLocalStorage(url) {
         var prefix = (url.indexOf("?") > 0)? '&' : '?';
         browser.url(`${url}${prefix}${urlparam}=true`);
     }
+    browser.setViewportSize({ height: 1600, width: 1000 });
+
+    // move mouse out of the way
+    browser.moveToObject("body", 0, 0);
 }
 
 function sessionServiceIsEnabled() {
     return browser.execute(function() {
-        return window.frontendConfig.sessionServiceIsEnabled;
+        return window.frontendConfig.serverConfig.sessionServiceEnabled;
     }).value;
 }
 

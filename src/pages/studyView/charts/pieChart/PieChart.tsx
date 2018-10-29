@@ -1,9 +1,9 @@
 import * as React from "react";
 import { observer } from "mobx-react";
-import { VictoryPie, VictoryContainer, VictoryLabel, Slice } from 'victory';
+import { VictoryPie, VictoryContainer, VictoryLabel, VictoryLegend, Slice } from 'victory';
 import { observable, computed, action, toJS } from "mobx";
 import _ from "lodash";
-import { UNSELECTED_COLOR } from "pages/studyView/StudyViewUtils";
+import {getFrequencyStr, toSvgDomNodeWithLegend} from "pages/studyView/StudyViewUtils";
 import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 import { AbstractChart } from "pages/studyView/charts/ChartContainer";
 import ifndef from "shared/lib/ifndef";
@@ -12,6 +12,7 @@ import { ClinicalDataCountWithColor } from "pages/studyView/StudyViewPageStore";
 import classnames from 'classnames';
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
 import { If } from 'react-if';
+import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
 
 export interface IPieChartProps {
     data: ClinicalDataCountWithColor[];
@@ -19,12 +20,13 @@ export interface IPieChartProps {
     onUserSelection: (values: string[]) => void;
     active: boolean;
     placement: 'left' | 'right';
+    label?: string;
 }
 
 @observer
 export default class PieChart extends React.Component<IPieChartProps, {}> implements AbstractChart {
 
-    private svgContainer: any;
+    private svg: SVGElement;
 
     constructor(props: IPieChartProps) {
         super(props);
@@ -77,7 +79,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     }
 
     public toSVGDOMNode(): Element {
-        return this.svgContainer.firstChild
+        return toSvgDomNodeWithLegend(this.svg, ".studyViewPieChartLegend", ".studyViewPieChartGroup", true);
     }
 
     @computed get totalCount() {
@@ -87,7 +89,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     @computed get fill() {
         return (d: ClinicalDataCountWithColor) => {
             if (!_.isEmpty(this.props.filters) && !_.includes(this.props.filters, d.value)) {
-                return UNSELECTED_COLOR;
+                return STUDY_VIEW_CONFIG.colors.theme.unselectedPieSlices;
             }
             return d.color;
         };
@@ -145,6 +147,69 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         return ((d.count * 360) / this.totalCount) < 20 ? '' : d.count;
     }
 
+    @computed get victoryPie() {
+        return (
+            <VictoryPie
+                standalone={false}
+                theme={CBIOPORTAL_VICTORY_THEME}
+                containerComponent={<VictoryContainer responsive={false} />}
+                groupComponent={<g className="studyViewPieChartGroup" />}
+                width={190}
+                height={180}
+                labelRadius={20}
+                padding={30}
+                labels={this.label}
+                data={this.props.data}
+                dataComponent={<CustomSlice />}
+                labelComponent={<VictoryLabel />}
+                events={this.userEvents}
+                style={{
+                    data: {
+                        fill: ifndef(this.fill, "#cccccc"),
+                        stroke: ifndef(this.stroke, "0x000000"),
+                        strokeWidth: ifndef(this.strokeWidth, 0),
+                        fillOpacity: ifndef(this.fillOpacity, 1)
+                    },
+                    labels: {
+                        fill: "white"
+                    }
+                }}
+                x={this.x}
+                y={this.y}
+            />
+        );
+    }
+
+    @computed get victoryLegend() {
+        const legendData = this.props.data.map(data =>
+            ({name: `${data.value}: ${data.count} (${getFrequencyStr(100 * data.count / this.totalCount)})`}));
+        const colorScale = this.props.data.map(data => data.color);
+
+        // override the legend style without mutating the actual theme object
+        const theme = _.cloneDeep(CBIOPORTAL_VICTORY_THEME);
+        theme.legend.style.data = {
+            type: "square",
+            size: 5,
+            strokeWidth: 0,
+            stroke: "black"
+        };
+
+        return (
+            <VictoryLegend
+                standalone={false}
+                theme={theme}
+                colorScale={colorScale}
+                x={0} y={181}
+                rowGutter={-10}
+                title={this.props.label || "Legend"}
+                centerTitle={true}
+                style={{ title: { fontWeight: "bold" } }}
+                data={legendData}
+                groupComponent={<g className="studyViewPieChartLegend" />}
+            />
+        );
+    }
+
     public render() {
         // 350px => width of tooltip
         // 195px => width of chart
@@ -161,6 +226,8 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                         <div className="arrow" style={{ top: 20 }}></div>
                         <div className="popover-content">
                             <ClinicalTable
+                                width={300}
+                                height={150}
                                 data={this.props.data}
                                 filters={this.props.filters}
                                 highlightedRow={this.highlightedRow}
@@ -170,36 +237,14 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                     </div>
                 </If>
 
-
-                <VictoryPie
-                    theme={CBIOPORTAL_VICTORY_THEME}
-                    containerComponent={<VictoryContainer
-                        responsive={false}
-                        containerRef={(ref: any) => this.svgContainer = ref}
-                    />}
+                <svg
                     width={190}
                     height={180}
-                    labelRadius={30}
-                    padding={30}
-                    labels={this.label}
-                    data={this.props.data}
-                    dataComponent={<CustomSlice />}
-                    labelComponent={<VictoryLabel />}
-                    events={this.userEvents}
-                    style={{
-                        data: {
-                            fill: ifndef(this.fill, "#cccccc"),
-                            stroke: ifndef(this.stroke, "0x000000"),
-                            strokeWidth: ifndef(this.strokeWidth, 0),
-                            fillOpacity: ifndef(this.fillOpacity, 1)
-                        },
-                        labels: {
-                            fill: "white"
-                        }
-                    }}
-                    x={this.x}
-                    y={this.y}
-                />
+                    ref={(ref: any) => this.svg = ref}
+                >
+                    {this.victoryPie}
+                    {this.victoryLegend}
+                </svg>
             </div>
         );
     }

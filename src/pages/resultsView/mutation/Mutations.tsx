@@ -11,10 +11,12 @@ import accessors from '../../../shared/lib/oql/accessors';
 import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import autobind from "autobind-decorator";
+import {AppStore} from "../../../AppStore";
 
 export interface IMutationsPageProps {
     routing?: any;
     store: ResultsViewPageStore;
+    appStore:AppStore;
 }
 
 @observer
@@ -39,23 +41,24 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
             this.props.routing.location.query.mutationsGeneTab : this.mutationsGeneTab;
 
         return (
-            <div>
-                <OqlStatusBanner
-                    className="mutations-oql-status-banner"
-                    store={this.props.store}
-                    tabReflectsOql={this.props.store.mutationsTabShouldUseOql}
-                    isUnaffected={!this.props.store.queryContainsMutationOql}
-                    style={{marginTop:-2}}
-                    onToggle={this.onToggleOql}
-                />
-                <Loader isLoading={this.props.store.mutationMapperStores.isPending} />
+            <div data-test="mutationsTabDiv">
+                <div className={"tabMessageContainer"}>
+                    <OqlStatusBanner
+                        className="mutations-oql-status-banner"
+                        store={this.props.store}
+                        tabReflectsOql={this.props.store.mutationsTabShouldUseOql}
+                        isUnaffected={!this.props.store.queryContainsMutationOql}
+                        onToggle={this.onToggleOql}
+                    />
+                </div>
+
                 {(this.props.store.mutationMapperStores.isComplete) && (
                     <MSKTabs
                         id="mutationsPageTabs"
                         activeTabId={activeTabId}
                         onTabClick={(id:string) => this.handleTabChange(id)}
                         className="pillTabs resultsPageMutationsGeneTabs"
-                        enablePagination={true}
+                        enablePagination={false}
                         arrowStyle={{'line-height': 0.8}}
                         tabButtonStyle="pills"
                         unmountOnHide={true}
@@ -91,7 +94,8 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                             mutationCountCache={this.props.store.mutationCountCache}
                             pdbHeaderCache={this.props.store.pdbHeaderCache}
                             myCancerGenomeData={this.props.store.myCancerGenomeData}
-                            config={AppConfig}
+                            config={AppConfig.serverConfig}
+                            userEmailAddress={this.props.appStore.userName!}
                         />
                     </MSKTab>
                 );

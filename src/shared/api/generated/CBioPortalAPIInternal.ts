@@ -25,12 +25,32 @@ export type ClinicalDataCount = {
         'value': string
 
 };
+export type ClinicalDataCountFilter = {
+    'attributes': Array < ClinicalDataFilter >
+
+        'studyViewFilter': StudyViewFilter
+
+};
+export type ClinicalDataCountItem = {
+    'attributeId': string
+
+        'clinicalDataType': "SAMPLE" | "PATIENT"
+
+        'counts': Array < ClinicalDataCount >
+
+};
 export type ClinicalDataEqualityFilter = {
     'attributeId': string
 
         'clinicalDataType': "SAMPLE" | "PATIENT"
 
         'values': Array < string >
+
+};
+export type ClinicalDataFilter = {
+    'attributeId': string
+
+        'clinicalDataType': "SAMPLE" | "PATIENT"
 
 };
 export type ClinicalDataIntervalFilter = {
@@ -358,9 +378,7 @@ export type MutationSpectrumFilter = {
 
 };
 export type Sample = {
-    'cancerTypeId': string
-
-        'copyNumberSegmentPresent': boolean
+    'copyNumberSegmentPresent': boolean
 
         'patientId': string
 
@@ -602,18 +620,11 @@ export default class CBioPortalAPIInternal {
             });
         };
     fetchClinicalDataCountsUsingPOSTURL(parameters: {
-        'attributeId': string,
-        'clinicalDataType' ? : "SAMPLE" | "PATIENT",
-        'studyViewFilter': StudyViewFilter,
+        'clinicalDataCountFilter': ClinicalDataCountFilter,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/attributes/{attributeId}/clinical-data-counts/fetch';
-
-        path = path.replace('{attributeId}', parameters['attributeId'] + '');
-        if (parameters['clinicalDataType'] !== undefined) {
-            queryParameters['clinicalDataType'] = parameters['clinicalDataType'];
-        }
+        let path = '/clinical-data-counts/fetch';
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -629,21 +640,17 @@ export default class CBioPortalAPIInternal {
      * Fetch clinical data counts by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchClinicalDataCountsUsingPOST
-     * @param {string} attributeId - Attribute ID e.g. CANCER_TYPE
-     * @param {string} clinicalDataType - Type of the clinical data
-     * @param {} studyViewFilter - Clinical data count filter
+     * @param {} clinicalDataCountFilter - Clinical data count filter
      */
     fetchClinicalDataCountsUsingPOSTWithHttpInfo(parameters: {
-        'attributeId': string,
-        'clinicalDataType' ? : "SAMPLE" | "PATIENT",
-        'studyViewFilter': StudyViewFilter,
+        'clinicalDataCountFilter': ClinicalDataCountFilter,
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/attributes/{attributeId}/clinical-data-counts/fetch';
+        let path = '/clinical-data-counts/fetch';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};
@@ -652,23 +659,12 @@ export default class CBioPortalAPIInternal {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            path = path.replace('{attributeId}', parameters['attributeId'] + '');
-
-            if (parameters['attributeId'] === undefined) {
-                reject(new Error('Missing required  parameter: attributeId'));
-                return;
+            if (parameters['clinicalDataCountFilter'] !== undefined) {
+                body = parameters['clinicalDataCountFilter'];
             }
 
-            if (parameters['clinicalDataType'] !== undefined) {
-                queryParameters['clinicalDataType'] = parameters['clinicalDataType'];
-            }
-
-            if (parameters['studyViewFilter'] !== undefined) {
-                body = parameters['studyViewFilter'];
-            }
-
-            if (parameters['studyViewFilter'] === undefined) {
-                reject(new Error('Missing required  parameter: studyViewFilter'));
+            if (parameters['clinicalDataCountFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: clinicalDataCountFilter'));
                 return;
             }
 
@@ -688,17 +684,13 @@ export default class CBioPortalAPIInternal {
      * Fetch clinical data counts by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchClinicalDataCountsUsingPOST
-     * @param {string} attributeId - Attribute ID e.g. CANCER_TYPE
-     * @param {string} clinicalDataType - Type of the clinical data
-     * @param {} studyViewFilter - Clinical data count filter
+     * @param {} clinicalDataCountFilter - Clinical data count filter
      */
     fetchClinicalDataCountsUsingPOST(parameters: {
-            'attributeId': string,
-            'clinicalDataType' ? : "SAMPLE" | "PATIENT",
-            'studyViewFilter': StudyViewFilter,
+            'clinicalDataCountFilter': ClinicalDataCountFilter,
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < ClinicalDataCount >
+        }): Promise < Array < ClinicalDataCountItem >
         > {
             return this.fetchClinicalDataCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;

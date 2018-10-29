@@ -5,7 +5,6 @@ export function getPatientSurvivals(survivalClinicalDataGroupByUniquePatientKey:
     targetUniquePatientKeys: string[], statusAttributeId: string, monthsAttributeId: string,
     statusFilter: (s: string) => boolean): PatientSurvival[] {
 
-    let patientSurvivals: PatientSurvival[] = [];
     if (targetUniquePatientKeys) {
         return targetUniquePatientKeys.reduce((patientSurvivals: PatientSurvival[], uniquePatientKey: string) => {
             const clinicalData: ClinicalData[] = survivalClinicalDataGroupByUniquePatientKey[uniquePatientKey];
@@ -15,6 +14,7 @@ export function getPatientSurvivals(survivalClinicalDataGroupByUniquePatientKey:
                 if (statusClinicalData && monthsClinicalData && statusClinicalData.value != 'NA' &&
                     monthsClinicalData.value != 'NA' && !Number.isNaN(Number(monthsClinicalData.value))) {
                     patientSurvivals.push({
+                        uniquePatientKey,
                         patientId: clinicalData[0].patientId,
                         studyId: clinicalData[0].studyId,
                         status: statusFilter(statusClinicalData.value),

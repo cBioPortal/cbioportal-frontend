@@ -23,23 +23,11 @@ import MutationMapperStore from "./MutationMapperStore";
 import { DropdownButton, MenuItem } from 'react-bootstrap';
 import { EnsemblTranscript } from 'shared/api/generated/GenomeNexusAPI';
 import Mutations from 'pages/resultsView/mutation/Mutations';
-
-// Anything from App config will be included in mutation mapper config
-export interface IMutationMapperConfig {
-    userEmailAddress?:string;
-    showCivic?: boolean;
-    showHotspot?: boolean;
-    showMyCancerGenome?: boolean;
-    showOncoKB?: boolean;
-    showGenomeNexus?: boolean;
-    isoformOverrideSource?: string;
-    // non App config (maybe need to split in separate config?)
-    filterMutationsBySelectedTranscript?: boolean;
-}
+import {IServerConfig} from "../../../config/IAppConfig";
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
-    config: IMutationMapperConfig;
+    config: IServerConfig;
     studyId?: string;
     myCancerGenomeData?: IMyCancerGenomeData;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
@@ -368,6 +356,11 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
         );
     }
 
+    protected get isMutationTableDataLoading() {
+        // Child classes should override this method
+        return false;
+    }
+
     protected mutationTableComponent(): JSX.Element|null
     {
         // Child classes should override this method to return an instance of MutationTable
@@ -383,18 +376,24 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
         );
     }
 
+    protected get isMutationPlotDataLoading() {
+        return this.props.store.pfamDomainData.isPending;
+    }
+
+    protected get isLoading() {
+        return this.props.store.mutationData.isPending || this.isMutationPlotDataLoading || this.isMutationTableDataLoading;
+    }
+
     public render() {
 
         return (
             <div>
                 {this.structureViewerPanel()}
 
-                <LoadingIndicator isLoading={this.props.store.mutationData.isPending} />
+                <LoadingIndicator center={true} size="big" isLoading={this.isLoading} />
                 {
-                    (!this.props.store.mutationData.isPending) && (
+                    (!this.isLoading) && (
                     <div>
-                        <LoadingIndicator isLoading={this.props.store.pfamDomainData.isPending} />
-                        { (!this.props.store.pfamDomainData.isPending) && (
                         <div style={{ display:'flex' }}>
                             <div className="borderedChart" style={{ marginRight:10 }}>
                                 {this.mutationPlot()}
@@ -408,7 +407,6 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                                 {this.view3dButton()}
                             </div>
                         </div>
-                        ) }
                         <hr style={{ marginTop:20 }} />
 
                             {!this.props.store.dataStore.showingAllData &&

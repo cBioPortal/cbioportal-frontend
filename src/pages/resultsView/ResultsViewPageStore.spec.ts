@@ -37,7 +37,6 @@ describe('extendSamplesWithCancerType', () => {
         "rppaSampleCount": 0,
         "completeSampleCount": 0,
         "studyId": "cellline_nci60",
-        "cancerTypeId": "mixed",
         "cancerType": {
             "name": "Mixed Cancer Types",
             "clinicalTrialKeywords": "mixed cancer types",
@@ -56,7 +55,6 @@ describe('extendSamplesWithCancerType', () => {
             "sampleType": "Primary Solid Tumor",
             "sampleId": "BT_549",
             "patientId": "BT_549",
-            "cancerTypeId": "mixed",
             "studyId": "cellline_nci60"
         }] as Sample[];
     });
@@ -91,7 +89,6 @@ describe('extendSamplesWithCancerType', () => {
             "sampleType": "Primary Solid Tumor",
             "sampleId": "BT_549",
             "patientId": "BT_549",
-            "cancerTypeId": "mixed",
             "studyId": "cellline_nci60",
             "cancerType": "Breast Sarcoma",
             "cancerTypeDetailed": "Breast"
@@ -121,7 +118,6 @@ describe('extendSamplesWithCancerType', () => {
             "sampleType": "Primary Solid Tumor",
             "sampleId": "BT_549",
             "patientId": "BT_549",
-            "cancerTypeId": "mixed",
             "studyId": "cellline_nci60",
             "cancerType": "Mixed Cancer Types",
             "cancerTypeDetailed": "Breast"
@@ -151,7 +147,6 @@ describe('extendSamplesWithCancerType', () => {
             "sampleType": "Primary Solid Tumor",
             "sampleId": "BT_549",
             "patientId": "BT_549",
-            "cancerTypeId": "mixed",
             "studyId": "cellline_nci60",
             "cancerType": "Breast",
             "cancerTypeDetailed": "Breast"
