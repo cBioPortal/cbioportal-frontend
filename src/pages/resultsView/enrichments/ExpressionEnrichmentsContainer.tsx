@@ -100,7 +100,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
     public render() {
 
         if (this.props.data.length === 0) {
-            return <div>No data/result available</div>;
+            return <div className={'alert alert-info'}>No data/result available</div>;
         }
 
         const data: any[] = getExpressionScatterData(this.data, this.props.store.hugoGeneSymbols);

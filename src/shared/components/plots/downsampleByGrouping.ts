@@ -33,7 +33,7 @@ function distanceSquared(
     return dx*dx + dy*dy;
 }
 
-export type GroupedData<D> = {
+export type DSData<D> = {
     x: number,
     y: number,
     data: D[]
@@ -46,7 +46,7 @@ export function downsampleByGrouping<D extends {x:number, y:number}>(
         x:(X:number)=>number,
         y:(Y:number)=>number
     }
-):GroupedData<D>[] {
+):DSData<D>[] {
     if (!data.length) {
         return [];
     }

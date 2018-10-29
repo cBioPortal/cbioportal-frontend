@@ -18,6 +18,23 @@ function getRootUrl(href){
 
 var rootUrl = getRootUrl(window.location.href);
 
+var diffSliderMode = true;
+
+function updateComparisonMode() {
+    if (diffSliderMode) {
+        $("#juxta").show();
+        $("#sidebyside").hide();
+    } else {
+        $("#sidebyside").show();
+        $("#juxta").hide();
+    }
+}
+
+$(document).on("click", '#toggleDiffModeBtn', ()=>{
+    diffSliderMode = !diffSliderMode;
+    updateComparisonMode()
+});
+
 $(document).ready(function(){
 
 
@@ -66,8 +83,16 @@ function buildDisplay(ref, rootUrl){
 
     var template = `
      <h3 class="screenshot-name"></h3>
-        <div id="juxta" class="juxtapose">
+        <button id="toggleDiffModeBtn" style="font-size:16px">Toggle Comparison Mode</button>
+        <br/><br/>
+        
+        <div id="juxta" class="juxtapose" style="${diffSliderMode ? '' : 'display:none'}">
             
+        </div>
+        
+        <div id="sidebyside" style="${diffSliderMode ? 'display:none' : ''}">
+            <img style="border:1px solid;" src="${data.refImagePath}" width="48%"/>
+            <img style="border:1px solid;" src="${data.screenImagePath}" width="48%""/>
         </div>
         
         <h2>Screenshot Diff</h2>
@@ -118,7 +143,6 @@ function buildDisplay(ref, rootUrl){
             startingPosition: "50%",
             makeResponsive: true
         });
-
 }
 
 
