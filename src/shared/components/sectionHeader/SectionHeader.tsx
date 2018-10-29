@@ -6,6 +6,7 @@ import classNames from 'classnames';
 import ErrorBox from "../errorBox/ErrorBox";
 import ReactElement = React.ReactElement;
 import {ThreeBounce} from "better-react-spinkit";
+import LoadingIndicator from "../loadingIndicator/LoadingIndicator";
 
 const styles = styles_any as {
 	SectionHeader: string,
@@ -31,7 +32,7 @@ export default class SectionHeader extends React.Component<ISectionHeaderProps, 
 				<h2>
 					{children}
 					{!!(promises && promises.some(promise => promise.isPending)) && (
-						<ThreeBounce style={{ display:'inline-block', marginLeft:10 }}/>
+						<LoadingIndicator isLoading={true} size={"small"} />
 					)}
 				</h2>
 

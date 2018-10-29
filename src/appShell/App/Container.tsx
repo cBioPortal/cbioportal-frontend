@@ -1,33 +1,57 @@
 import * as _ from 'lodash';
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
-import browser from 'detect-browser';
-import PageHeader from '../../pages/pageHeader/PageHeader';
 import UnsupportedBrowserModal from "shared/components/unsupportedBrowserModal/UnsupportedBrowserModal";
 
 import '../../globalStyles/prefixed-global.scss';
+import PortalHeader from "./PortalHeader";
+import PortalFooter from "./PortalFooter";
+import {remoteData} from "../../shared/api/remoteData";
+import request from 'superagent';
+import getBrowserWindow from "../../shared/lib/getBrowserWindow";
+import {observer} from "mobx-react";
+import client from "../../shared/api/cbioportalClientInstance";
+import internalClient from "../../shared/api/cbioportalInternalClientInstance";
+import {
+    getCbioPortalApiUrl,
+    getConfigurationServiceApiUrl, getG2SApiUrl,
+    getGenomeNexusApiUrl,
+    getOncoKbApiUrl
+} from "../../shared/api/urls";
+import civicClient from "../../shared/api/civicClientInstance";
+import genomeNexusClient from '../../shared/api/genomeNexusClientInstance';
+import internalGenomeNexusClient from '../../shared/api/genomeNexusInternalClientInstance';
+import oncoKBClient from '../../shared/api/oncokbClientInstance';
+import genome2StructureClient from '../../shared/api/g2sClientInstance';
+import {getSessionKey} from "../../shared/lib/ExtendedRouterStore";
+import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
+import AppConfig from "appConfig";
+import Helmet from "react-helmet";
+import {setServerConfig, updateConfig} from "../../config/config";
+import {embedGoogleAnalytics} from "../../shared/lib/tracking";
+import {computed} from "mobx";
+import { If, Else } from 'react-if';
+import {AppStore} from "../../AppStore";
 
 interface IContainerProps {
     location: Location;
     children: React.ReactNode;
 }
 
+@observer
 export default class Container extends React.Component<IContainerProps, {}> {
 
     static contextTypes = {
-        router: React.PropTypes.object,
+        router: React.PropTypes.object
     };
 
-    context: {router: any};
+    context: { router: any };
 
-    componentDidMount() {
+    private get routingStore(){
+        return getBrowserWindow().routingStore;
+    }
 
-        const headerNode = document.getElementById("reactHeader");
-        if (headerNode !== null) {
-            ReactDOM.render(<PageHeader router={this.context.router} currentRoutePath={ this.props.location.pathname } />,
-                headerNode);
-        }
-
+    private get appStore(){
+        return getBrowserWindow().globalStores.appStore;
     }
 
     renderChildren() {
@@ -37,14 +61,40 @@ export default class Container extends React.Component<IContainerProps, {}> {
             c => React.cloneElement(c as React.ReactElement<any>, childProps));
     }
 
+    @computed get isSessionLoaded(){
+
+        return !this.routingStore.needsRemoteSessionLookup || this.routingStore.remoteSessionData.isComplete;
+
+    }
+
     render() {
         return (
-            <div>
+            <If condition={this.isSessionLoaded}>
                 <div>
-                    <UnsupportedBrowserModal/>
-                    {this.renderChildren()}
+                    <Helmet>
+                        <meta charSet="utf-8" />
+                        <title>{AppConfig.serverConfig.skin_title}</title>
+                        <meta name="description" content={AppConfig.serverConfig.skin_description} />
+                    </Helmet>
+
+                    <div className="pageTopContainer">
+                        <div className="contentWidth">
+                            <PortalHeader appStore={this.appStore}/>
+                        </div>
+                    </div>
+
+                    <div className="contentWrapper">
+                        <UnsupportedBrowserModal/>
+                        {(this.isSessionLoaded) && this.props.children}
+                    </div>
+
+                    <PortalFooter/>
                 </div>
-            </div>
+                <Else>
+                    <LoadingIndicator isLoading={!this.isSessionLoaded} center={true} size={"big"}/>
+                </Else>
+            </If>
         );
     }
 }
+//

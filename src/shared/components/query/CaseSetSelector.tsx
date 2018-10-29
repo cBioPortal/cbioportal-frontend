@@ -89,6 +89,7 @@ export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 					options={this.caseSetOptions}
 					filterOption={filterCaseSetOptions}
 					onChange={option => this.store.selectedSampleListId = option ? option.value : undefined}
+					data-test='caseSetSelector'
 				/>
 
 				{!!(this.store.selectedSampleListId === CUSTOM_CASE_LIST_ID) && (

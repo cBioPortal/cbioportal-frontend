@@ -610,7 +610,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                     placement="top"
                                 >
                                     <img
-                                        src="images/oncokb.png"
+                                        src={require("../../../../rootImages/oncokb.png")}
                                         style={{maxHeight:"12px", cursor:"pointer", marginRight:"5px"}}
                                     />
                                 </DefaultTooltip>
@@ -633,7 +633,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                     placement="top"
                                 >
                                     <img
-                                        src="images/cancer-hotspots.svg"
+                                        src={require("../../../../rootImages/cancer-hotspots.svg")}
                                         style={{height:"15px", width:"15px", cursor:"pointer", marginLeft:"5px"}}
                                     />
                                 </DefaultTooltip>
@@ -688,14 +688,14 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                         value={EVENT_KEY.customDriverBinaryAnnotation}
                                         onClick={this.onInputClick}
                                     /> {this.props.state.customDriverAnnotationBinaryMenuLabel}
-                                    <img src="images/driver.png" alt="driver filter" style={{height:"15px", width:"15px", cursor:"pointer", marginLeft:"5px"}}/>
+                                    <img src={require("../../../../rootImages/driver.png")} alt="driver filter" style={{height:"15px", width:"15px", cursor:"pointer", marginLeft:"5px"}}/>
                                 </label></div>
                             )}
                             {!!this.props.state.customDriverAnnotationTiersMenuLabel && (
                                 <span>
                                     <span className="caret"/>&nbsp;&nbsp;
                                     <span>{this.props.state.customDriverAnnotationTiersMenuLabel}</span>&nbsp;
-                                    <img src="images/driver_tiers.png" alt="driver tiers filter" style={{height:"15px", width:"15px", cursor:"pointer", marginLeft:"5px"}}/>
+                                    <img src={require("../../../../rootImages/driver_tiers.png")} alt="driver tiers filter" style={{height:"15px", width:"15px", cursor:"pointer", marginLeft:"5px"}}/>
                                     <div style={{marginLeft:"30px"}}>
                                         {(this.props.state.customDriverAnnotationTiers || []).map((tier)=>(
                                             <div className="checkbox"><label>
@@ -775,7 +775,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                         onClick={this.onInputClick}
                     /> Show legends for clinical tracks
                 </label></div>
-                <div className="checkbox" style={{marginLeft:20}}><label>
+                <div className="checkbox" style={{marginLeft:20, maxWidth: 220}}><label>
                     <input
                         data-test="onlyShowClinicalLegendsForAltered"
                         type="checkbox"

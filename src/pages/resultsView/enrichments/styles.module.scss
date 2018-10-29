@@ -1,6 +1,5 @@
 .Container {
     display: flex;
-    justify-content: space-between;
 }
 
 .Checkboxes {
@@ -16,16 +15,16 @@
 }
   
 .TableContainer {
-    width: 800px;
+
 }
 
-.TableContainer th {
-    font-size: 10px;
-}
-
-.TableContainer td {
-    font-size: 11px;
-}
+//.TableContainer th {
+//    font-size: 10px;
+//}
+//
+//.TableContainer td {
+//    font-size: 11px;
+//}
 
 .TableContainer {
     :global(.tableSearchInput) {

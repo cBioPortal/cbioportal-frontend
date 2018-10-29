@@ -18,7 +18,7 @@ describe('homepage', function() {
         it('it should show dev mode when testing', function() {
             var devMode = $('.alert-warning');
 
-            devMode.waitForExist(60000);
+            devMode.waitForExist(10000);
             assert(browser.getText('.alert-warning').indexOf('dev mode') > 0);
         });
     }
@@ -70,10 +70,10 @@ describe('homepage', function() {
 
     it('should not allow submission if OQL contains EXP or PROT for multiple studies', ()=>{
         var input = $(".autosuggest input[type=text]");
-        input.setValue('breast');
+        input.setValue('breast -invasive');
         browser.pause(500);
-
-        browser.element('[data-test=selectAllStudies]').click();
+        browser.waitForExist('[data-test="StudySelect"]', 10000);
+        browser.click('[data-test="selectAllStudies"]');
 
         var oqlEntrySel = 'textarea[data-test="geneSet"]';
         browser.setValue(oqlEntrySel, 'PTEN: EXP>1');
@@ -111,7 +111,6 @@ describe('homepage', function() {
 
         beforeEach(function(){
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-            browser.setViewportSize({ height:1400, width:1000 });
             browser.waitForExist('[data-test="StudySelect"] input[type=checkbox]');
         });
 
@@ -215,21 +214,18 @@ describe('patient page', function(){
         browser.waitForExist('span=PPP2R1A');
 
         // find oncokb image
-        var oncokbIndicator = $('[data-test="oncogenic-icon-image"]');
-        oncokbIndicator.waitForExist(30000);
+        const oncokbIcon = '[data-test2="PPP2R1A"][data-test="oncogenic-icon-image"]';
+        browser.waitForExist(oncokbIcon, 30000);
 
         // move over oncokb image (this is deprecated, but there is no new
         // function yet)
 
-        browser.pause(3000);
-        browser.moveToObject('[data-test="oncogenic-icon-image"]',5,5);
+        browser.waitForExist(oncokbIcon, 3000);
+        browser.moveToObject(oncokbIcon,5,5);
 
-        var oncokbCard = $('[data-test="oncokb-card"]');
-
-        oncokbCard.waitForExist(30000);
+        browser.waitForExist('[data-test="oncokb-card"]', 30000);
 
         assert.equal(browser.getText('.tip-header').toLowerCase(), 'ppp2r1a s256f in uterine serous carcinoma/uterine papillary serous carcinoma'.toLowerCase());
-
     });
 
 });
@@ -240,7 +236,6 @@ describe('cross cancer query', function() {
 
     it('should show cross cancer bar chart with TP53 in title when selecting multiple studies and querying for TP53', function() {
         goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
-        browser.setViewportSize({ height:1400, width:1000 });
 
         $('[data-test="StudySelect"]').waitForExist(20000);
         var checkBoxes = $$('[data-test="StudySelect"]');
@@ -268,15 +263,11 @@ describe('cross cancer query', function() {
 });
 
 describe('single study query', function() {
-    this.retries(2);
+    this.retries(1);
 
-    before(()=>{
-        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-    });
     describe('mutation mapper ', function() {
         it('should show somatic and germline mutation rate', function() {
            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}`);
-            browser.setViewportSize({ height:1400, width:1000 });
 
             var input = $(".autosuggest input[type=text]");
 
@@ -298,12 +289,12 @@ describe('single study query', function() {
             // query BRCA1 and BRCA2
             $('[data-test="geneSet"]').setValue('BRCA1 BRCA2');
 
-            browser.waitForEnabled('[data-test="queryButton"]', 30000);
+            browser.waitForEnabled('[data-test="queryButton"]', 10000);
             browser.click('[data-test="queryButton"]');
 
             // click mutations tab
-            $('#mutation-result-tab').waitForExist(30000);
-            $('#mutation-result-tab').click();
+            $('a.tabAnchor_mutations').waitForExist(10000);
+            $('a.tabAnchor_mutations').click();
 
             $('[data-test="germlineMutationRate"]').waitForExist(60000);
             var text = browser.getText('[data-test="germlineMutationRate"]')
@@ -317,11 +308,10 @@ describe('single study query', function() {
 
         it('should show lollipop for MUC2', function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=cellline_nci60&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=cellline_nci60_cnaseq&gene_list=MUC2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=cellline_nci60_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=cellline_nci60_cna`);
-            browser.setViewportSize({ height:1400, width:1000 });
 
             //  wait for mutations tab
-            $('#mutation-result-tab').waitForExist(30000);
-            $('#mutation-result-tab').click();
+            $('a.tabAnchor_mutations').waitForExist(10000);
+            $('a.tabAnchor_mutations').click();
 
             // check lollipop plot appears
             $('[data-test="LollipopPlot"]').waitForExist(60000);
@@ -335,67 +325,69 @@ describe('single study query', function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=ov_tcga_pub&Z_SCORE_THRESHOLD=2.0&RPPA_SCORE_THRESHOLD=2.0&data_priority=0&case_set_id=ov_tcga_pub_cna_seq&gene_list=BRCA1+BRCA2&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=ov_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=ov_tcga_pub_gistic`);
             waitForOncoprint(10000);
 
-            assert(browser.isVisible('li a#enrichments-result-tab'));
+            assert(browser.isVisible('a.tabAnchor_enrichments'));
         });
     });
 });
 
 describe("results page", function() {
-    this.retries(2);
+    this.retries(1);
 
-    before(()=>{
-        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-        browser.setViewportSize({ height:1400, width:1000 });
+    describe("tab hiding", function() {
+        it("should hide coexpression and cn segment tabs in a query without any data for those tabs", ()=>{
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?session_id=5bc64b48498eb8b3d5685af7`);
+            waitForOncoprint(10000);
+            assert(!browser.isVisible('a.tabAnchor_coexpression'));
+            assert(!browser.isVisible('a.tabAnchor_cnSegments'));
+        });
+        it("should hide survival tab in a query without any survival data", ()=>{
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?session_id=5bc64bb5498eb8b3d5685afb`);
+            waitForOncoprint(10000);
+            assert(!browser.isVisible('a.tabAnchor_survival'));
+        });
     });
     describe("mutual exclusivity tab", function() {
         it("should appear in a single study query with multiple genes", function(){
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%2520NRAS%2520BRAF%250APTEN%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
             waitForOncoprint(10000);
 
-            assert(browser.isVisible('li a#mutex-result-tab'));
+            assert(browser.isVisible('a.tabAnchor_mutualExclusivity'));
         });
         it("should appear in a multiple study with multiple genes", function(){
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS%2520NRAS%2520BRAF%250APTEN%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`);
-            browser.waitForExist('li a#oncoprint-result-tab', 10000);
+            browser.waitForExist('a.tabAnchor_oncoprint', 10000);
 
-            assert(browser.isVisible('li a#mutex-result-tab'));
+            assert(browser.isVisible('a.tabAnchor_mutualExclusivity'));
         });
         it("should not appear in a single study query with one gene", function(){
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
             waitForOncoprint(10000);
-            assert(!browser.isVisible('li a#mutex-result-tab'));
+            assert(!browser.isVisible('a.tabAnchor_mutualExclusivity'));
 
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_nonhypermut&gene_list=KRAS&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic`);
             waitForOncoprint(10000);
-            assert(!browser.isVisible('li a#mutex-result-tab'));
+            assert(!browser.isVisible('a.tabAnchor_mutualExclusivity'));
         });
         it.skip("should not appear in a multiple study query with one gene", function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`);
-            browser.waitForExist('li a#oncoprint-result-tab', 10000);
+            browser.waitForExist('a.tabAnchor_oncoprint', 10000);
             browser.waitUntil(function(){
-                return !browser.isVisible('li a#mutex-result-tab');
+                return !browser.isVisible('a.tabAnchor_mutualExclusivity');
             });
-            assert(!browser.isVisible('li a#mutex-result-tab'));
+            assert(!browser.isVisible('a.tabAnchor_mutualExclusivity'));
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=all&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=all&gene_list=KRAS%253A%2520MUT&geneset_list=+&tab_index=tab_visualize&Action=Submit&cancer_study_list=coadread_tcga_pub%2Ccellline_nci60%2Cacc_tcga`);
-            browser.waitForExist('li a#oncoprint-result-tab', 10000);
+            browser.waitForExist('a.tabAnchor_oncoprint', 10000);
             browser.waitUntil(function(){
-                return !browser.isVisible('li a#mutex-result-tab');
+                return !browser.isVisible('a.tabAnchor_mutualExclusivity');
             });
-            assert(!browser.isVisible('li a#mutex-result-tab'));
+            assert(!browser.isVisible('a.tabAnchor_mutualExclusivity'));
         });
     });
 });
 
 describe('oncoprint', function() {
 
-    this.retries(2);
-
-    before(()=>{
-        goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
-
-
-        browser.setViewportSize({ height:1400, width:1000 });
-    });
+    this.retries(1);
 
     describe("initialization from URL parameters", ()=>{
         it("should start in patient mode if URL parameter show_samples=false or not specified", ()=>{
@@ -559,7 +551,7 @@ describe('oncoprint', function() {
             browser.execute(function() { resultsViewOncoprint.setAnnotateCBioPortalInputValue("1"); });
             browser.pause(100); // give time to take effect
             waitForOncoprint(10000);
-            let legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            let legendText = browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
             assert(legendText.indexOf("Inframe Mutation (putative driver)") > -1, "cbio count annotates inframe mutations");
             assert(legendText.indexOf("Missense Mutation (putative driver)") > -1, "cbio count annotates missense mutations");
             assert(legendText.indexOf("Truncating Mutation (putative driver)") > -1, "cbio count annotates truncating mutations");
@@ -571,7 +563,7 @@ describe('oncoprint', function() {
             browser.execute(function() { resultsViewOncoprint.setAnnotateCOSMICInputValue("1"); });
             browser.pause(100); // give time to take effect
             waitForOncoprint(10000);
-            legendText = browser.getText("#oncoprint-inner svg");
+            legendText = browser.getText("#oncoprintDiv svg");
             assert(legendText.indexOf("Inframe Mutation (putative driver)") > -1, "cosmic count annotates inframe mutations");
             assert(legendText.indexOf("Missense Mutation (putative driver)") > -1, "cosmic count annotates missense mutations");
             assert(legendText.indexOf("Truncating Mutation (putative driver)") > -1, "cosmic count annotates truncating mutations");
@@ -584,9 +576,9 @@ describe('oncoprint', function() {
 
             // search for study with germline mutation (ov_tcga_pub)
             browser.url(CBIOPORTAL_URL);
-            var input = $(".autosuggest input[type=text]");
-            input.waitForExist(10000);
-            input.setValue('ovarian serous cystadenocarcinoma tcga nature 2011');
+            var inputSelector = '.autosuggest input[type="text"]';
+            browser.waitForExist(inputSelector, 10000);
+            browser.setValue(inputSelector, 'ovarian serous cystadenocarcinoma tcga nature 2011');
             browser.pause(500);
             // should only be one element
             assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -616,9 +608,9 @@ describe('oncoprint', function() {
             );
 
 
-            $('#oncoprint .oncoprint__controls #viewDropdownButton').click(); // open view menu
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForExist(10000);
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+            $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForExist(10000);
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
 
             waitForOncoprint(10000);
 
@@ -632,37 +624,17 @@ describe('oncoprint', function() {
     });
 
     describe("sorting", ()=>{
-        function topCmp(eltA, eltB) {
-            return eltA.top - eltB.top;
-        }
         function getNthTrackOptionsElements(n) {
-            // n is one-indexed, to cohere with CSS nth-child
+            // n is one-indexed
 
-            var buttons = $$('#oncoprint-inner .oncoprintjs__track_options__toggle_btn_img');
-            buttons = buttons.map(function(btn, i) {
-                return {
-                    btn: btn,
-                    top: parseFloat(btn.$('..').getCssProperty('top').value),
-                    selector:'#oncoprint-inner .oncoprintjs__track_options__toggle_btn_img:nth-child('+(i+1)+')'
-                };
-            });
-            buttons.sort(topCmp);
-
-            var dropdowns = $$('#oncoprint-inner .oncoprintjs__track_options__dropdown');
-            dropdowns = dropdowns.map(function(dropdown, i) {
-                return {
-                    dropdown: dropdown,
-                    top: parseFloat(dropdown.getCssProperty('top').value),
-                    selector: '#oncoprint-inner .oncoprintjs__track_options__dropdown:nth-child('+(i+1)+')'
-                };
-            });
-            dropdowns.sort(topCmp);
+            const button_selector = "#oncoprintDiv .oncoprintjs__track_options__toggle_btn_img.nth-"+n;
+            const dropdown_selector = "#oncoprintDiv .oncoprintjs__track_options__dropdown.nth-"+n;
 
             return {
-                button: buttons[n-1].btn,
-                button_selector: buttons[n-1].selector,
-                dropdown: dropdowns[n-1].dropdown,
-                dropdown_selector: dropdowns[n-1].selector
+                button: $(button_selector),
+                button_selector,
+                dropdown: $(dropdown_selector),
+                dropdown_selector
             };
         }
 
@@ -670,9 +642,9 @@ describe('oncoprint', function() {
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
             // select Colorectal TCGA and Adrenocortical Carcinoma TCGA
-            var input = $(".autosuggest input[type=text]");
-            input.waitForExist(10000);
-            input.setValue('colorectal tcga nature');
+            var inputSelector = '.autosuggest input[type="text"]';
+            browser.waitForExist(inputSelector, 10000);
+            browser.setValue(inputSelector, 'colorectal tcga nature');
             browser.pause(500);
             // should only be one element
             assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -680,11 +652,12 @@ describe('oncoprint', function() {
             checkBox.waitForExist(10000);
             browser.click('[data-test="StudySelect"] input');
 
-            input.setValue('');
-            input.setValue('adrenocortical carcinoma tcga provisional');
+            let inputLength = browser.getValue(inputSelector).length
+            for (let i = 0; i < inputLength; i++) { browser.setValue(inputSelector, "\uE003").pause(10); };
+
+            browser.setValue(inputSelector, 'adrenocortical carcinoma tcga provisional');
             browser.pause(500);
             // should only be one element
-
 
 
             assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -694,9 +667,13 @@ describe('oncoprint', function() {
             browser.click('[data-test="StudySelect"] input');
 
             browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
-            browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);    
+            browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
 
-            browser.execute(function() { globalStores.queryStore.selectedSampleListId = "-1"; }); // select custom case list
+            // select custom case list
+            var caseSetSelector = $('[data-test="CaseSetSelector"] .Select-input input');
+            caseSetSelector.waitForExist(10000);
+            caseSetSelector.setValue('User-defined Case List')
+            browser.click('[data-test="CaseSetSelector"] .Select-option')
 
             var caseInput = $('[data-test="CustomCaseSetInput"]');
             caseInput.waitForExist(10000);
@@ -726,9 +703,9 @@ describe('oncoprint', function() {
                 "sorted patient order correct"
             );
 
-            $('#oncoprint .oncoprint__controls #viewDropdownButton').click(); // open view menu
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForVisible(10000);
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+            $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForVisible(10000);
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
             waitForOncoprint(10000);
 
             assert.equal(
@@ -741,11 +718,11 @@ describe('oncoprint', function() {
         it("should sort patients and samples correctly in coadread_tcga_pub", ()=>{
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-            var input = $(".autosuggest input[type=text]");
+            var inputSelector = '.autosuggest input[type="text"]';
 
-            input.waitForExist(10000);
+            browser.waitForExist(inputSelector, 10000);
 
-            input.setValue('colorectal tcga nature');
+            browser.setValue(inputSelector, 'colorectal tcga nature');
 
             browser.pause(500);
 
@@ -768,19 +745,19 @@ describe('oncoprint', function() {
 
             assert.equal(
                 browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
-                "VENHQS1BRy0zOTk5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBBOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTU4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRi0yNjkxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBOOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODY0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFaOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNzE1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjgzOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBLOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBROmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFGOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFHOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFJOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFLOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFSOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFYOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJPOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJXOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJZOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDNGOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDNKOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDI5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTIwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTIxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTIyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTMwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTMyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTQ4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTU1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTU2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTYwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTYxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjcyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjczOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjgwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjgxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjk1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjk2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODE0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODE4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODM3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODQyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODQ1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODQ4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODUxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODUyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODU0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODcwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTMwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTM5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTc3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTc5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTg2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTk0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRi0yNjg5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRi0yNjkyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDBDOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDBIOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDFXOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDJOOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDJYOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDA4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDE0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDE1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDIwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDI1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDMyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTc1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTgwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTgxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTgzOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTg2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTk0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTk5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjAyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjA1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjExOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNzI2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNzI3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODc4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODg3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODk2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zOTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zOTAyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zOTA5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy00MDA1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy00MDA4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODkyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTc1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDJHOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFROmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjc4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBGOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFWOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJGOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDI0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTQ5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjY2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODE5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTcyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTczOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTc2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRi0zOTEzOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDFMOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODk0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjcyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjc2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBEOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBKOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFEOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFQOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDIyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTE2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTI1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTQzOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjY0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjg0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODIxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODMzOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODc3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTQ3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTQ5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTY2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTc4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDAyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjcwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjc0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjc3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0zODA3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBFOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBMOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBPOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBSOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBVOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBXOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBaOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFTOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFUOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJIOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJKOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDA0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDEwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDE3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTE0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTE3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTE4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTE5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTI0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTI2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTI3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTI5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTMxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTM0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTM4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTQyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTQ0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTUyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTUzOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTU0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTYyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjY3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjc4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjc5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjg1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjg4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjkyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjkzOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNzEwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODEyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODMxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODQ2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODU1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODU2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODU4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODYwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODY2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODY5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODcyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODc1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTUyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTU1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTU2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTcxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTg0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTg5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRi0zNDAwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDFZOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDExOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDE2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDI2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTc0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTgyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTg0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTg3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTkzOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTk4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjAwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjA4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjA5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjEyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODgxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODgyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODgzOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODkwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODkzOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODk4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy00MDAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy00MDE1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BWS00MDcwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BWS00MDcxOmNvYWRyZWFkX3RjZ2FfcHVi",
+                "VENHQS1BRy0zOTk5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBBOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTU4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRi0yNjkxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBOOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODY0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFaOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNzE1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjgzOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBLOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBROmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFGOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFHOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFJOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFLOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFSOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFYOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJPOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJXOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJZOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDNGOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDNKOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDI5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTIwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTIxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTIyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTMwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTMyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTQ4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTU1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTU2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTYwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTYxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjcyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjczOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjgwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjgxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjk1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjk2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODE0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODE4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODM3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODQyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODQ1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODQ4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODUxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODUyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODU0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODcwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTMwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTM5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTc3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTc5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTg2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTk0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRi0yNjg5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRi0yNjkyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDBDOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDBIOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDFXOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDJOOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDJYOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDA4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDE0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDE1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDIwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDI1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDMyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTc1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTgwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTgxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTgzOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTg2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTk0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTk5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjAyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjA1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjExOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNzI2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNzI3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODc4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODg3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODk2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zOTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zOTAyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zOTA5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy00MDA1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy00MDA4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODkyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTc1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDJHOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFROmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjc4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBGOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFWOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJGOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDI0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTQ5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjY2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODE5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTcyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTczOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTc2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRi0zOTEzOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDFMOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODk0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjcyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjc2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBEOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBKOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFEOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFQOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDIyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTE2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTI1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTQzOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjY0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjg0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODIxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODMzOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODc3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTQ3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTQ5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTY2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDAyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTc4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjcwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjc0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjc3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0zODA3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBFOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBMOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBPOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBSOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBVOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBXOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBaOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFTOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFUOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJIOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJKOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDA0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDEwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDE3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTE0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTE3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTE4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTE5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTI0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTI2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTI3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTI5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTMxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTM0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTM4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTQyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTQ0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTUyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTUzOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTU0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTYyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjY3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjc4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjc5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjg1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjg4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjkyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjkzOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNzEwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODEyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODMxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODQ2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODU1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODU2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODU4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODYwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODY2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODY5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODcyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODc1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTUyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTU1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTU2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTcxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTg0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTg5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRi0zNDAwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDFZOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDExOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDE2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDI2OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTc0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTgyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTg0OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTg3OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTkzOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTk4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjAwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjA4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjA5OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjEyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODgxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODgyOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODgzOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODkwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODkzOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODk4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy00MDAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy00MDE1OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BWS00MDcwOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BWS00MDcxOmNvYWRyZWFkX3RjZ2FfcHVi",
                 "patient id order correct"
             );
 
-            $('#oncoprint .oncoprint__controls #viewDropdownButton').click(); // open view menu
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForExist(10000);
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+            $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForExist(10000);
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
 
             waitForOncoprint(10000);
 
             assert.equal(
                 browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
-                "VENHQS1BRy0zOTk5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBBLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTU4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRi0yNjkxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBOLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODY0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFaLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNzE1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjgzLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBLLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBRLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFGLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFHLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFJLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFLLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFSLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFYLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJPLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJXLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJZLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDNGLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDNKLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDI5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTIwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTIxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTIyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTMwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTMyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTQ4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTU1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTU2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTYwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTYxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjcyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjczLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjgwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjgxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjk1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjk2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODE0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODE4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODM3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODQyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODQ1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODQ4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODUxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODUyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODU0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODcwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTMwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTM5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTc3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTc5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTg2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTk0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRi0yNjg5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRi0yNjkyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDBDLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDBILTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDFXLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDJOLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDJYLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDA4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDE0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDE1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDIwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDI1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDMyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTc1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTgwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTgxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTgzLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTg2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTk0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTk5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjAyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjA1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjExLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNzI2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNzI3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODc4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODg3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODk2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zOTAxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zOTAyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zOTA5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy00MDA1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy00MDA4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODkyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTc1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDJHLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFRLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjc4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBGLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFWLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJGLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDI0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTQ5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjY2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODE5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTcyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTczLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTc2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRi0zOTEzLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDFMLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODk0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjcyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjc2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBELTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBKLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFELTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFQLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDIyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTE2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTI1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTQzLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjY0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjg0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODIxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODMzLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODc3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTQ3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTQ5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTY2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTc4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDAyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjcwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjc0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjc3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0zODA3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBFLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBMLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBPLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBSLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBVLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBXLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBaLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFTLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFULTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJILTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJKLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDA0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDEwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDE3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTE0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTE3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTE4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTE5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTI0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTI2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTI3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTI5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTMxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTM0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTM4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTQyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTQ0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTUyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTUzLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTU0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTYyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjY3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjc4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjc5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjg1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjg4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjkyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjkzLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNzEwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODEyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODMxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODQ2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODU1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODU2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODU4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODYwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODY2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODY5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODcyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODc1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTUyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTU1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTU2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTcxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTg0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTg5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRi0zNDAwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDFZLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDExLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDE2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDI2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTc0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTgyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTg0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTg3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTkzLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTk4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjAwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjAxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjA4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjA5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjEyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODgxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODgyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODgzLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODkwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODkzLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODk4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy00MDAxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy00MDE1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BWS00MDcwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BWS00MDcxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi",
+                "VENHQS1BRy0zOTk5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBBLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTU4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRi0yNjkxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBOLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODY0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFaLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNzE1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjgzLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBLLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBRLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFGLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFHLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFJLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFLLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFSLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFYLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJPLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJXLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJZLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDNGLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDNKLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDI5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTIwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTIxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTIyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTMwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTMyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTQ4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTU1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTU2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTYwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTYxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjcyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjczLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjgwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjgxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjk1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjk2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODE0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODE4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODM3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODQyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODQ1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODQ4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODUxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODUyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODU0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODcwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTMwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTM5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTc3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTc5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTg2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTk0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRi0yNjg5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRi0yNjkyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDBDLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDBILTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDFXLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDJOLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDJYLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDA4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDE0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDE1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDIwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDI1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDMyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTc1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTgwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTgxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTgzLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTg2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTk0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTk5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjAyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjA1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjExLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNzI2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNzI3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODc4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODg3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODk2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zOTAxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zOTAyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zOTA5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy00MDA1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy00MDA4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODkyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTc1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDJHLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFRLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjc4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBGLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFWLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJGLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDI0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTQ5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjY2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODE5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTcyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTczLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTc2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRi0zOTEzLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDFMLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODk0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjcyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjc2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBELTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBKLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFELTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFQLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDIyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTE2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTI1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTQzLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjY0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjg0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODIxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODMzLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODc3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTQ3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTQ5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTY2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDAyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTc4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjcwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjc0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0yNjc3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BNi0zODA3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBFLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBMLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBPLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBSLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBVLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBXLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDBaLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFTLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDFULTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJILTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDJKLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDA0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDEwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS1BMDE3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTE0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTE3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTE4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTE5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTI0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTI2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTI3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTI5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTMxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTM0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTM4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTQyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTQ0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTUyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTUzLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTU0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNTYyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjY3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjc4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjc5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjg1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjg4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjkyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNjkzLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zNzEwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODEyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODMxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODQ2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODU1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODU2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODU4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODYwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODY2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODY5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODcyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zODc1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTUyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTU1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTU2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTcxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTg0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BQS0zOTg5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRi0zNDAwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDFZLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDExLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDE2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy1BMDI2LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTc0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTgyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTg0LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTg3LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTkzLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNTk4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjAwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjAxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjA4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjA5LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zNjEyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODgxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODgyLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODgzLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODkwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODkzLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy0zODk4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy00MDAxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BRy00MDE1LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BWS00MDcwLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1BWS00MDcxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi",
                 "sample id order correct"
             );
         });
@@ -788,11 +765,11 @@ describe('oncoprint', function() {
         it("should sort patients and samples correctly in gbm_tcga_pub", ()=>{
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
-            var input = $(".autosuggest input[type=text]");
+            var inputSelector = '.autosuggest input[type="text"]';
 
-            input.waitForExist(10000);
+            browser.waitForExist(inputSelector, 10000);
 
-            input.setValue('glio tcga nature 2008');
+            browser.setValue(inputSelector, 'glio tcga nature 2008');
 
             browser.pause(500);
 
@@ -819,9 +796,9 @@ describe('oncoprint', function() {
                 "patient id order correct"
             );
 
-            $('#oncoprint .oncoprint__controls #viewDropdownButton').click(); // open view menu
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForExist(10000);
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+            $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForExist(10000);
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
 
             waitForOncoprint(10000);
 
@@ -840,9 +817,9 @@ describe('oncoprint', function() {
 
             // first get rid of the Profiled track
             var profiledElements = getNthTrackOptionsElements(5);
-            profiledElements.button.click();
+            browser.click(profiledElements.button_selector);
             browser.waitForVisible(profiledElements.dropdown_selector, 1000); // wait for menu to appear
-            profiledElements.dropdown.$('li:nth-child(3)').click(); // Click Remove Track
+            browser.click(profiledElements.dropdown_selector + ' li:nth-child(3)'); // Click Remove Track
             browser.pause(100); // give time to take effect
 
             assert.equal(
@@ -851,9 +828,9 @@ describe('oncoprint', function() {
                 "initial patient id order correct"
             );
 
-            $('#oncoprint .oncoprint__controls #viewDropdownButton').click(); // open view menu
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForVisible(10000);
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+            $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForVisible(10000);
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
 
             waitForOncoprint(10000);
 
@@ -863,8 +840,8 @@ describe('oncoprint', function() {
                 "initial sample id order correct"
             );
 
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').waitForVisible(10000);
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').click(); // go to patient mode
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').waitForVisible(10000);
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').click(); // go to patient mode
 
             waitForOncoprint(10000);
 
@@ -911,7 +888,7 @@ describe('oncoprint', function() {
                 "new sorted patient order correct - 4"
             );
 
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
 
             waitForOncoprint(10000);
 
@@ -985,16 +962,16 @@ describe('oncoprint', function() {
 
             // first get rid of the Profiled track
             var profiledElements = getNthTrackOptionsElements(5);
-            profiledElements.button.click();
+            browser.click(profiledElements.button_selector);
             browser.waitForVisible(profiledElements.dropdown_selector, 1000); // wait for menu to appear
-            profiledElements.dropdown.$('li:nth-child(3)').click(); // Click Remove Track
+            browser.click(`${profiledElements.dropdown_selector} li:nth-child(3)`); // Click Remove Track
             browser.pause(100); // give time to take effect
 
             browser.scroll(0,1000);//scroll down
 
             // Sort heatmap tracks
             var TP53HeatmapElements = getNthTrackOptionsElements(8);
-            TP53HeatmapElements.button.click(); // open track menu
+            browser.click(TP53HeatmapElements.button_selector); // open track menu
             browser.waitForVisible(TP53HeatmapElements.dropdown_selector, 1000);// wait for menu to appear
             browser.click(TP53HeatmapElements.dropdown_selector + ' li:nth-child(6)'); // Click sort Z-a
             browser.pause(100); // give time to sort
@@ -1050,9 +1027,9 @@ describe('oncoprint', function() {
                 "sorted sample order correct - 5"
             );
 
-            $('#oncoprint .oncoprint__controls #viewDropdownButton').click(); // open view menu
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').waitForExist(10000);
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').click(); // go to patient mode
+            $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').waitForExist(10000);
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="1"]').click(); // go to patient mode
             waitForOncoprint(10000);
 
             assert.equal(
@@ -1063,58 +1040,58 @@ describe('oncoprint', function() {
         });
     });
     describe("only show clinical legends for altered cases", function(){
-        const checkboxSelector = '#oncoprint .oncoprint__controls input[type="checkbox"][data-test="onlyShowClinicalLegendsForAltered"]';
+        const checkboxSelector = '.oncoprintContainer .oncoprint__controls input[type="checkbox"][data-test="onlyShowClinicalLegendsForAltered"]';
         it("only shows legend items for cases which are altered", function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=-1&case_ids=coadread_tcga_pub%3ATCGA-AA-A00D-01%2Bcoadread_tcga_pub%3ATCGA-A6-2677-01&gene_list=BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&show_samples=false&clinicallist=SEX`);
             waitForOncoprint(10000);
-            let legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            let legendText = browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
             assert(legendText.indexOf("Male") > -1, "a patient is male");
             assert(legendText.indexOf("Female") > -1, "a patient is female");
 
-            $('#oncoprint .oncoprint__controls #viewDropdownButton').click(); // open view menu
+            $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
             $(checkboxSelector).waitForExist(1000);
             $(checkboxSelector).click(); // turn off legend for unaltered cases
             waitForOncoprint(3000); // wait for oncoprint to reset
-            legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            legendText = browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
             assert(legendText.indexOf("Male") > -1, "altered patient is male");
             assert(legendText.indexOf("Female") === -1, "altered patient is not female");
 
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
             waitForOncoprint(3000); // wait for oncoprint to reset
-            legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            legendText = browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
             assert(legendText.indexOf("Male") > -1, "altered sample is male");
             assert(legendText.indexOf("Female") === -1, "altered sample is not female");
 
             $(checkboxSelector).click(); // turn back on legend for unaltered cases
             waitForOncoprint(3000); // wait for oncoprint to reset
-            legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            legendText = browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
             assert(legendText.indexOf("Male") > -1, "a sample is male");
             assert(legendText.indexOf("Female") > -1, "a sample is female");
         });
         it("does not show a legend when no altered cases", function() {
             goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=-1&case_ids=coadread_tcga_pub%3ATCGA-A6-2677-01&gene_list=BRAF&geneset_list=%20&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&show_samples=false&clinicallist=SEX`);
             waitForOncoprint(10000);
-            let legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            let legendText = browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
             assert(legendText.indexOf("Sex") > -1, "Sex legend is shown (in patient mode)");
             assert(legendText.indexOf("Female") > -1, "Female item is shown (in patient mode)");
 
-            $('#oncoprint .oncoprint__controls #viewDropdownButton').click(); // open view menu
+            $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
             $(checkboxSelector).waitForExist(1000);
             $(checkboxSelector).click(); // turn off legend for unaltered cases
             waitForOncoprint(3000); // wait for oncoprint to reset
-            legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            legendText = browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
             assert(legendText.indexOf("Sex") === -1, "Sex legend is not shown (in patient mode)");
             assert(legendText.indexOf("Female") === -1, "Female item is not shown (in patient mode)");
 
-            $('#oncoprint .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
             waitForOncoprint(3000); // wait for oncoprint to reset
-            legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            legendText = browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
             assert(legendText.indexOf("Sex") === -1, "Sex legend is not shown (in sample mode)");
             assert(legendText.indexOf("Female") === -1, "Female item is not shown (in sample mode)");
 
             $(checkboxSelector).click(); // turn back on legend for unaltered cases
             waitForOncoprint(3000); // wait for oncoprint to reset
-            legendText = browser.getText("#oncoprint-inner .oncoprint-legend-div svg");
+            legendText = browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
             assert(legendText.indexOf("Sex") > -1, "Sex legend is shown (in sample mode)");
             assert(legendText.indexOf("Female") > -1, "Female item is shown (in sample mode)");
         });
@@ -1124,16 +1101,14 @@ describe('oncoprint', function() {
 describe('case set selection in front page query form', function(){
     var selectedCaseSet_sel = 'div[data-test="CaseSetSelector"] span.Select-value-label[aria-selected="true"]';
 
-    this.retries(2);
-
     beforeEach(function() {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
     });
 
     it('selects the default case set for single study selections', ()=>{
-        var input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('ovarian nature 2011');
+        var input = ".autosuggest input[type=text]";
+        browser.waitForExist(input, 10000);
+        browser.setValue(input, 'ovarian nature 2011');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1142,17 +1117,13 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "Tumors with sequencing and CNA data (316)",
-            "Default selected case set"
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Tumors with sequencing and CNA data (316)"), 5000);
     });
     it('selects the right default case sets in a single->multiple->single study selection flow', ()=>{
         // Select Ampullary Carcinoma
-        var input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('ampullary baylor');
+        var input = ".autosuggest input[type=text]";
+        browser.waitForExist(input, 10000);
+        browser.setValue(input, 'ampullary baylor');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1161,16 +1132,11 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "All Sequenced Tumors (160)",
-            "Default selected case set"
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All Sequenced Tumors (160)"), 5000);
 
         // select Adrenocortical Carcinoma
-        input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('adrenocortical carcinoma tcga provisional');
+        browser.waitForExist(input, 10000);
+        browser.setValue(input, 'adrenocortical carcinoma tcga provisional');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1181,16 +1147,11 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
 
         browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "All (252)",
-            "All (252)",
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All (252)"), 5000);
 
         // Deselect Ampullary Carcinoma
-        input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('ampullary baylor');
+        browser.waitForExist(input, 10000);
+        browser.setValue(input, 'ampullary baylor');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1199,17 +1160,13 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "Tumor Samples with sequencing and CNA data (88)",
-            "Default selected case set for adrenocortical carcinoma"
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Tumor Samples with sequencing and CNA data (88)"), 5000);
     });
     it('selects the right default case sets in a single->select all filtered->single study selection flow', ()=>{
         // Select Ampullary Carcinoma
-        var input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('ampullary baylor');
+        var input = ".autosuggest input[type=text]";
+        browser.waitForExist(input, 10000);
+        browser.setValue(input, 'ampullary baylor');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1218,37 +1175,26 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "All Sequenced Tumors (160)",
-            "Default selected case set"
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All Sequenced Tumors (160)"), 5000);
 
         // select all TCGA non-provisional
-        input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('tcga -provisional');
+        browser.waitForExist(input, 10000);
+        browser.setValue(input,'tcga -provisional');
         browser.pause(500);
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
 
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
-
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "All (21333)",
-            "All (21333)",
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All (21333)"), 5000);
 
         // Deselect all tcga -provisional studies
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
         browser.pause(100);
 
         // select Adrenocortical Carcinoma
-        input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('adrenocortical carcinoma tcga provisional');
+        browser.waitForExist(input, 10000);
+        browser.setValue(input,'adrenocortical carcinoma tcga provisional');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1258,17 +1204,12 @@ describe('case set selection in front page query form', function(){
 
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
-        browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "All (252)",
-            "All (252)",
-        );
+        browser.waitForExist(selectedCaseSet_sel, 10000);
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All (252)"), 5000);
 
         // Deselect Ampullary Carcinoma
-        input = $(".autosuggest input[type=text]");
-        input.waitForExist(10000);
-        input.setValue('ampullary baylor');
+        browser.waitForExist(input, 10000);
+        browser.setValue(input,'ampullary baylor');
         browser.pause(500);
         // should only be one element
         assert.equal(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length, 1);
@@ -1277,11 +1218,7 @@ describe('case set selection in front page query form', function(){
         browser.click('[data-test="StudySelect"] input');
 
         browser.waitForExist(selectedCaseSet_sel);
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "Tumor Samples with sequencing and CNA data (88)",
-            "Default selected case set for adrenocortical carcinoma"
-        );
+        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "Tumor Samples with sequencing and CNA data (88)"), 5000);
     });
 });
 
@@ -1325,7 +1262,7 @@ describe('case set selection in modify query form', function(){
         assert.equal(
             browser.getText(selectedCaseSet_sel),
             "All (368)",
-            "All (368)",
+            "Expect: All (368), but got " + browser.getText(selectedCaseSet_sel),
         );
 
         // Uncheck study
@@ -1362,12 +1299,7 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
-        browser.pause(5000); // give time for text change to propagate through to the view
-        assert.equal(
-            browser.getText(selectedCaseSet_sel),
-            "All (12880)",
-            "All (12880)",
-        );
+        browser.waitUntil(()=>{ return browser.getText(selectedCaseSet_sel) === "All (12880)"; }, 5000);
 
         // Deselect all tcga -provisional studies
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
