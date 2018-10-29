@@ -37,10 +37,10 @@ export default class PortalFooter extends React.Component<{}, IPortalFooterState
                 return (
                     <div id="footer" dangerouslySetInnerHTML={{__html: 
                         "<a href='http://www.cbioportal.org'>cBioPortal</a> | " +
-                        `<a href='${AppConfig.apiRoot}api/info'>Version Info</a> ` +
+                        `<a href='${AppConfig.apiRoot}api/info'>${this.state.version? this.state.version : "Version Info"}</a> ` +
                         AppConfig.serverConfig.skin_footer +
                         "<br />" +
-                        "Questions and Feedback: " + AppConfig.serverConfig.skin_email_contact
+                        `Questions and Feedback: <a href="mailto:${AppConfig.serverConfig.skin_email_contact}">${AppConfig.serverConfig.skin_email_contact}</a>`
                     }}>
                     </div>
                 );
