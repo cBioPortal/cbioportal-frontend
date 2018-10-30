@@ -535,7 +535,11 @@ export class PatientViewPageStore {
             this.studies
         ],
         invoke: () => {
-            return fetchOncoKbData(this.uniqueSampleKeyToTumorType, this.oncoKbAnnotatedGenes.result || {}, this.mutationData, this.uncalledMutationData);
+            if (AppConfig.serverConfig.show_oncokb) {
+                return fetchOncoKbData(this.uniqueSampleKeyToTumorType, this.oncoKbAnnotatedGenes.result || {}, this.mutationData, this.uncalledMutationData);
+            } else {
+                return Promise.resolve({indicatorMap: null, uniqueSampleKeyToTumorType: null});
+            }
         },
         onError: (err: Error) => {
             // fail silently, leave the error handling responsibility to the data consumer
@@ -582,7 +586,13 @@ export class PatientViewPageStore {
             this.clinicalDataForSamples,
             this.studies
         ],
-        invoke: async() => fetchCnaOncoKbData(this.uniqueSampleKeyToTumorType, this.oncoKbAnnotatedGenes.result || {}, this.discreteCNAData),
+        invoke: async() => {
+            if (AppConfig.serverConfig.show_oncokb) {
+                return fetchCnaOncoKbData(this.uniqueSampleKeyToTumorType, this.oncoKbAnnotatedGenes.result || {}, this.discreteCNAData);
+            } else {
+                return ONCOKB_DEFAULT;
+            }
+        },
         onError: (err: Error) => {
             // fail silently, leave the error handling responsibility to the data consumer
         }
