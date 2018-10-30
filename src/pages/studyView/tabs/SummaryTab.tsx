@@ -16,7 +16,10 @@ import SummaryHeader from 'pages/studyView/SummaryHeader';
 import {Gene, SampleIdentifier, ClinicalAttribute} from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import AppConfig from 'appConfig';
-import {ClinicalDataIntervalFilterValue, DataBin, CopyNumberGeneFilterElement} from "shared/api/generated/CBioPortalAPIInternal";
+import {
+    ClinicalDataIntervalFilterValue, DataBin, CopyNumberGeneFilterElement,
+    RectangleBounds
+} from "shared/api/generated/CBioPortalAPIInternal";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import * as _ from 'lodash';
 import ReactGridLayout from 'react-grid-layout';
@@ -72,6 +75,9 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             removeCNAGeneFilter: (filter:CopyNumberGeneFilterElement) => {
                 this.store.removeCNAGeneFilters(filter);
             },
+            resetMutationCountVsCNAFilter: ()=>{
+                this.store.resetMutationCountVsCNAFilter();
+            },
             addCNAGeneFilters: (filters:CopyNumberGeneFilterElement[]) => {
                 this.store.addCNAGeneFilters(filters);
             },
@@ -93,6 +99,9 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             },
             updateSelectedGenes:(query: SingleGeneQuery[], genesInQuery: Gene[])=>{
                 this.store.updateSelectedGenes(query, genesInQuery);
+            },
+            updateMutationCountVsCNAFilter:(bounds:RectangleBounds)=>{
+                this.store.setMutationCountVsCNAFilter(bounds);
             },
             clearCNAGeneFilter: () => {
                 this.store.clearCNAGeneFilter();
@@ -248,13 +257,15 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 break;
             }
             case ChartTypeEnum.SCATTER: {
-                props.filters = this.store.getChartSampleIdentifiersFilter(props.chartMeta?props.chartMeta.uniqueKey:'');
-                props.promise = this.store.mutationCountVsFractionGenomeAlteredData;
-                props.onValueSelection = (cases: SampleIdentifier[], keepCurrent?:boolean)=>{
-                    this.handlers.updateChartSampleIdentifierFilter(props.chartMeta?props.chartMeta.uniqueKey:'',cases,keepCurrent);
+                if (this.store.getMutationCountVsCNAFilter()) {
+                    props.filters = [this.store.getMutationCountVsCNAFilter()];
+                }
+                props.promise = this.store.mutationCountVsCNADensityData;
+                props.onValueSelection = (bounds:RectangleBounds)=>{
+                    this.handlers.updateMutationCountVsCNAFilter(bounds);
                 }
                 props.onResetSelection = ()=>{
-                    this.handlers.updateChartSampleIdentifierFilter(props.chartMeta?props.chartMeta.uniqueKey:'',[]);
+                    this.handlers.resetMutationCountVsCNAFilter();
                 }
                 props.sampleToAnalysisGroup = this.store.sampleToAnalysisGroup;
                 props.download = [
