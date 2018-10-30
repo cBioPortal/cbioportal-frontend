@@ -16,6 +16,7 @@ describe('GeneSymbolValidator', () => {
             genes: {
                 result: { found: [], suggestions: [] },
                 status: 'complete' as 'complete',
+                peekStatus: 'complete',
                 isPending: false,
                 isError: false,
                 isComplete: true,
@@ -69,6 +70,7 @@ describe('GeneSymbolValidator', () => {
         props.genes = {
             result: { found: [], suggestions: [] },
             status: 'error' as 'error',
+            peekStatus: 'error',
             isPending: false,
             isError: true,
             isComplete: false,
@@ -88,6 +90,7 @@ describe('GeneSymbolValidator', () => {
         props.genes = {
             result: { found: [], suggestions: [] },
             status: 'pending' as 'pending',
+            peekStatus: 'pending',
             isPending: true,
             isError: false,
             isComplete: false,
@@ -106,6 +109,7 @@ describe('GeneSymbolValidator', () => {
         props.genes = {
             result: { found: [], suggestions: [{ alias: 'TP5', genes: [] }] },
             status: 'pending' as 'pending',
+            peekStatus: 'pending',
             isPending: true,
             isError: false,
             isComplete: false,
@@ -142,6 +146,7 @@ describe('GeneSymbolValidator', () => {
                 ]
             },
             status: 'pending' as 'pending',
+            peekStatus: 'pending',
             isPending: true,
             isError: false,
             isComplete: false,
