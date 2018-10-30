@@ -191,6 +191,11 @@ export type ChartDimension = {
     h: number
 }
 
+export type Position = {
+    x: number,
+    y: number
+}
+
 export type StudyViewPageLayoutProps = {
     layout: Layout[],
     cols: number,
