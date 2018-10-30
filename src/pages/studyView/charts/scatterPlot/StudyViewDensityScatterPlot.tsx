@@ -134,6 +134,15 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         }
     }
 
+    @computed get plotDomain() {
+        // enforce plot constraints - because of dot size and wanting them to be
+        //  right up against each other, we cant have less than 50 on the y axis
+        return {
+            x: [0,1] as [number, number],
+            y: [0, Math.max(50, this.dataDomain.y[1])]
+        };
+    }
+
     @computed get dataDomain() {
         // get data extremes
         const max = {x:Number.NEGATIVE_INFINITY, y:Number.NEGATIVE_INFINITY};
@@ -383,7 +392,7 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
                         {this.title}
                         <VictoryAxis
                             ref={this.xAxisRef}
-                            domain={this.dataDomain.x}
+                            domain={this.plotDomain.x}
                             orientation="bottom"
                             offsetY={50}
                             crossAxis={false}
@@ -394,7 +403,7 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
                         />
                         <VictoryAxis
                             ref={this.yAxisRef}
-                            domain={this.dataDomain.y}
+                            domain={this.plotDomain.y}
                             orientation="left"
                             offsetX={50}
                             crossAxis={false}
