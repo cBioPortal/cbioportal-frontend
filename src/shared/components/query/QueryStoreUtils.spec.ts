@@ -24,7 +24,7 @@ describe('QueryStoreUtils', ()=>{
         it.skip("returns url-encoded, normalized query for gene_list parameter", ()=>{
 
 
-            let store = new QueryStore({} as Window);
+            let store = new QueryStore();
 
             let queries = [
                 "TP53:MUT",

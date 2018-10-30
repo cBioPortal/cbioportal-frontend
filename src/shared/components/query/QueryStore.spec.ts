@@ -1,5 +1,5 @@
 import {assert, expect} from "chai";
-import {QueryStore, CUSTOM_CASE_LIST_ID} from "./QueryStore";
+import {QueryStore, CUSTOM_CASE_LIST_ID, CancerStudyQueryUrlParams} from "./QueryStore";
 import { VirtualStudy, VirtualStudyData } from "shared/model/VirtualStudy";
 import Sinon from 'sinon';
 import sessionServiceClient from "shared/api//sessionServiceInstance";
@@ -7,6 +7,31 @@ import client from "../../api/cbioportalClientInstance";
 import * as _ from 'lodash';
 
 describe("QueryStore", ()=>{
+
+    describe('#setParamsFromLocalStorage',()=>{
+        let store:QueryStore;
+        let getUserVirtualStudiesStub: sinon.SinonStub;
+        let deleteVirtualStudyStub: sinon.SinonStub;
+        let addVirtualStudyStub: sinon.SinonStub;
+        let initializeStub: sinon.SinonStub;
+
+        beforeEach(()=>{
+
+            initializeStub = Sinon.stub(QueryStore.prototype,"initialize").callsFake(function(){});
+
+            store = new QueryStore();
+        });
+
+        it("given custom case list, sets store and flags appropriately",()=>{
+            assert.isFalse(store.initiallySelected.profileIds);
+            assert.isFalse(store.initiallySelected.sampleListId);
+            store.setParamsFromLocalStorage({ case_set_id:"-1", case_ids:"sample1:study+sample2:study" } as Partial<CancerStudyQueryUrlParams>);
+            assert.equal(store.caseIds,"sample1:study\nsample2:study");
+            assert.isTrue(store.initiallySelected.sampleListId);
+            assert.equal(store.selectedSampleListId,"-1");
+        });
+    });
+
 
     describe.skip('Virtual Studies section on query page', () => {
         let store_vs:QueryStore;
@@ -57,7 +82,7 @@ describe("QueryStore", ()=>{
                 });
             });
 
-            store_vs = new QueryStore({} as Window);
+            store_vs = new QueryStore();
 
         });
 
@@ -70,21 +95,19 @@ describe("QueryStore", ()=>{
         it('should show all user virtual studies', ()=>{
             assert.isTrue(getUserVirtualStudiesStub.calledOnce)
         });
+
         it('should be able to delete a virtual study', ()=>{
             store_vs.deleteVirtualStudy("study1")
             assert.isTrue(deleteVirtualStudyStub.calledOnce)
-            // setTimeout(()=>{
-            //     assert.equal(JSON.stringify(store_vs.deletedVirtualStudies),'["study1"]')
-            //     done()
-            // },1000)  
         });
+
         it('should be able to restore back deleted virtual study', ()=>{
-            store_vs.restoreVirtualStudy("study1")
+            store_vs.restoreVirtualStudy("study1");
             assert.isTrue(addVirtualStudyStub.calledOnce)
-            // setTimeout(()=>{
-            //     assert.equal(JSON.stringify(store_vs.deletedVirtualStudies),'[]')
-            //     done()
-            // },1000)  
         });
+
+
+
+
     });
 });
