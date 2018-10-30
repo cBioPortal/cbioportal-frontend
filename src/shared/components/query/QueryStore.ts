@@ -117,36 +117,35 @@ export class QueryStore
 		molecularProfileIds: ReadonlyArray<string>
 	};
 
-	constructor(_window:Window, urlWithInitialParams?:string)
+	constructor(urlWithInitialParams?:string)
 	{
-		
+		this.initialize(urlWithInitialParams);
+	}
+
+	initialize(urlWithInitialParams?:string){
+
 		labelMobxPromises(this);
-		if (urlWithInitialParams)
-			this.setParamsFromUrl(urlWithInitialParams);
 
-        this.setParamsFromLocalStorage();
+        if (urlWithInitialParams)
+            this.setParamsFromUrl(urlWithInitialParams);
 
-		// need to create initialNonMolecularProfileParams using caseIds obtained from page, because
-		//	at this point asyncCustomCaseSet may not have resolved, and we dont want to wait for it
-		//	to resolve to create the initial query record, because theres a (remote) chance the user
-		//	could have modified the custom case set before the promise initially resolved, thus
-		//	making it an imperfect record of the initial query. Using this.caseIds instead of
-		//	asyncCustomCaseSet is the only failsafe way to make a copy of the initial query state
-		let initialNonMolecularProfileParams = nonMolecularProfileParams(this, this.caseIds);
+        // handle local storage submission from study page (too long for url)
+        let legacySubmission: any = localStorage.getItem("legacyStudySubmission");
+        localStorage.removeItem("legacyStudySubmission");
+        if (legacySubmission) {
+            try{
+                this.setParamsFromLocalStorage(JSON.parse(legacySubmission));
+            } catch (ex) {
+                throw("error parseing/setting legacyStudySubmission");
+            }
+        }
 
-		this.initialQueryParams = {
-			nonMolecularProfileParams: initialNonMolecularProfileParams,
-			pathname: queryUrl(this, initialNonMolecularProfileParams),
-			molecularProfileIds: this._selectedProfileIds || []
-		};
-
-		reaction(
-			()=>this.allSelectedStudyIds,
-			()=>{
-				this.studiesHaveChangedSinceInitialization = true;
-			}
-		);
-
+        reaction(
+            ()=>this.allSelectedStudyIds,
+            ()=>{
+                this.studiesHaveChangedSinceInitialization = true;
+            }
+        );
 	}
 
 	public singlePageAppSubmitRoutine: (path:string, query:CancerStudyQueryUrlParams)=>void;
@@ -875,7 +874,7 @@ export class QueryStore
 			);
 	}
 
-	readonly asyncCustomCaseSet = remoteData<{sampleId:string, studyId:string}[]>({
+	asyncCustomCaseSet = remoteData<{sampleId:string, studyId:string}[]>({
 		invoke: async () => {
 			if (this.selectedSampleListId !== CUSTOM_CASE_LIST_ID || (this.caseIds.trim().length === 0))
 				return [];
@@ -1530,7 +1529,7 @@ export class QueryStore
 	/**
 	 * This is used to prevent selections from being cleared automatically when new data is downloaded.
 	 */
-	private readonly initiallySelected = {
+	public initiallySelected = {
 		profileIds: false,
 		sampleListId: false
 	};
@@ -1574,54 +1573,27 @@ export class QueryStore
 		this.initiallySelected.sampleListId = true;
 	}
 
-    @action setParamsFromLocalStorage()
+	// TODO: we should be able to merge this with the above since it accepts same interface
+    @action setParamsFromLocalStorage(legacySubmission:Partial<CancerStudyQueryUrlParams>)
     {
 
-        let legacySubmission: any = localStorage.getItem("legacyStudySubmission");
+		const caseIds = legacySubmission.case_ids;
+		if (caseIds) {
+			if (legacySubmission.case_set_id == CUSTOM_CASE_LIST_ID) {
+				this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
+				this.caseIdsMode = 'sample';
+				this.caseIds = caseIds.replace(/\+/g, "\n");
+				this.initiallySelected.sampleListId = true;
+			}
+		}
 
-        localStorage.removeItem("legacyStudySubmission");
-
-        if (legacySubmission) {
-
-            const parsedSubmission:any = JSON.parse(legacySubmission);
-            // Populate OQL
-            const dataPriority = parsedSubmission.dataPriority;
-            if (typeof dataPriority !== "undefined") {
-                this.dataTypePriorityCode = (dataPriority + '') as '0'|'1'|'2';
-            }
-
-            const selectedMolecularProfiles = parsedSubmission.molecularProfiles;
-            if (selectedMolecularProfiles !== undefined) {
-                this.selectedProfileIds = selectedMolecularProfiles;
-            }
-
-            const zScoreThreshold =  parsedSubmission.zScoreThreshold;
-            if (zScoreThreshold !== undefined) {
-                this.zScoreThreshold = zScoreThreshold;
-            }
-
-            const rppaScoreThreshold =  parsedSubmission.rppaScoreThreshold;
-            if (rppaScoreThreshold !== undefined) {
-                this.rppaScoreThreshold = rppaScoreThreshold;
-            }
-
-            const caseIds = parsedSubmission.case_ids;
-            if (caseIds) {
-                if (parsedSubmission.case_set_id == CUSTOM_CASE_LIST_ID) {
-                    this.selectedSampleListId = CUSTOM_CASE_LIST_ID.toString();
-                    this.caseIdsMode = 'sample';
-                    this.caseIds = caseIds.replace(/\+/g, "\n");
-                }
-            }
-
-            if (parsedSubmission.cancer_study_list)
-            for (const studyId of parsedSubmission.cancer_study_list.split(",")) {
+		if (legacySubmission.cancer_study_list) {
+            for (const studyId of legacySubmission.cancer_study_list.split(",")) {
                 if (studyId !== "null") {
                     this.setStudyIdSelected(studyId, true);
                     this._defaultSelectedIds.set(studyId, true);
                 }
             }
-
         }
 
     }
