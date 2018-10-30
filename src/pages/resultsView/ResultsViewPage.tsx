@@ -43,10 +43,6 @@ function initStore() {
 
     resultsViewPageStore.tabId = getTabId(getBrowserWindow().globalStores.routing.location.pathname);
 
-    if (!getBrowserWindow().currentQueryStore) {
-        getBrowserWindow().currentQueryStore = createQueryStore();
-    }
-
     let lastQuery:any;
     let lastPathname:string;
 
