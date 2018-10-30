@@ -2,7 +2,7 @@ import _ from "lodash";
 import { SingleGeneQuery } from "shared/lib/oql/oql-parser";
 import { unparseOQLQueryLine } from "shared/lib/oql/oqlfilter";
 import {
-    StudyViewFilter, DataBin, ClinicalDataIntervalFilterValue, ClinicalDataCount, SampleIdentifier
+    StudyViewFilter, DataBin, ClinicalDataIntervalFilterValue, ClinicalDataCount, SampleIdentifier, DensityPlotBin
 } from "shared/api/generated/CBioPortalAPIInternal";
 import { Sample, Gene, ClinicalAttribute, CancerStudy } from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
@@ -108,7 +108,16 @@ export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: st
     return updatedQueries.map(query=>unparseOQLQueryLine(query)).join('\n');
 
 }
-export function makeMutationCountVsCnaTooltip(sampleToAnalysisGroup?:{[sampleKey:string]:string}, analysisClinicalAttribute?:ClinicalAttribute) {
+export function mutationCountVsCnaTooltip(d:DensityPlotBin) {
+    return (
+        <div>
+            <div>Mutation Count: <b>~{d.y.toFixed()}</b></div>
+            <div>Fraction Genome Altered: <b>~{d.x.toFixed(2)}</b></div>
+            <div>Count: <b>{d.count}</b></div>
+        </div>
+    );
+}
+/*export function makeMutationCountVsCnaTooltip(sampleToAnalysisGroup?:{[sampleKey:string]:string}, analysisClinicalAttribute?:ClinicalAttribute) {
     return (d: { data: Pick<IStudyViewScatterPlotData, "x" | "y" | "studyId" | "sampleId" | "patientId" | "uniqueSampleKey">[] })=>{
         const rows = [];
         const MAX_SAMPLES = 3;
@@ -150,7 +159,7 @@ export function makeMutationCountVsCnaTooltip(sampleToAnalysisGroup?:{[sampleKey
             </div>
         );
     };
-}
+}*/
 
 export function generateScatterPlotDownloadData(data: IStudyViewScatterPlotData[],
                                                 sampleToAnalysisGroup?: {[sampleKey:string]:string},

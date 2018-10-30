@@ -25,8 +25,8 @@ import {CNAGenesTable} from "../table/CNAGenesTable";
 import StudyViewScatterPlot from "./scatterPlot/StudyViewScatterPlot";
 import { bind } from "bind-decorator";
 import BarChart from "./barChart/BarChart";
-import {CopyNumberGeneFilterElement} from "../../../shared/api/generated/CBioPortalAPIInternal";
-import {getTableHeightByDimension, getTableWidthByDimension, makeMutationCountVsCnaTooltip} from "../StudyViewUtils";
+import {CopyNumberGeneFilterElement, DensityPlotBin} from "../../../shared/api/generated/CBioPortalAPIInternal";
+import {getTableHeightByDimension, getTableWidthByDimension, mutationCountVsCnaTooltip} from "../StudyViewUtils";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import {remoteData} from "../../../shared/api/remoteData";
 import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
@@ -363,17 +363,13 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
                         axisLabelX="Fraction of copy number altered genome"
                         axisLabelY="# of mutations"
-                        tooltip={this.mutationCountVsCnaTooltip}
+                        tooltip={mutationCountVsCnaTooltip}
                     />
                 );
             }
             default:
                 return null;
         }
-    }
-
-    @computed get mutationCountVsCnaTooltip() {
-        return makeMutationCountVsCnaTooltip();
     }
 
     @computed get loadingPromises() {

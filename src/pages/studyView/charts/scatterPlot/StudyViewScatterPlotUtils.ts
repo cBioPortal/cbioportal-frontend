@@ -1,7 +1,6 @@
 import {IStudyViewScatterPlotData, IStudyViewScatterPlotProps} from "./StudyViewScatterPlot";
 import {downsampleByGrouping, DSData} from "../../../../shared/components/plots/downsampleByGrouping";
 import _ from "lodash";
-import {IStudyViewDensityScatterPlotData} from "./StudyViewDensityScatterPlot";
 
 export const DOWNSAMPLE_PIXEL_DISTANCE_THRESHOLD = 4;
 export const MAX_DOT_SIZE = 5;
