@@ -330,7 +330,7 @@ describe("plots tab screenshot tests", function() {
     it("plots tab molecular vs molecular same gene", function() {
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "MRNA_EXPRESSION" }); });
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "brca_tcga_mrna" }); });
-        browser.waitForExist('input[data-test="ViewCopyNumber"]');
+        browser.waitForExist('input[data-test="ViewCopyNumber"]', 10000);
         browser.click('input[data-test="ViewCopyNumber"]');
         waitForAndCheckPlotsTab();
     });
