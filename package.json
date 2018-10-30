@@ -3,6 +3,7 @@
   "description": "",
   "scripts": {
     "start": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && cross-env NODE_ENV=development webpack-dev-server",
+    "startSSL": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && cross-env NODE_ENV=development webpack-dev-server --https",
     "clean": "rimraf dist tsDist common-dist",
     "build": "npm run clean && npm run buildDLL:prod && cross-env NODE_ENV=production webpack --progress --colors",
     "buildDLL:prod": "npm run clean && cross-env NODE_ENV=production webpack --config vendor-bundles.webpack.config.js",
@@ -143,7 +144,7 @@
     "mobx-react-devtools": "^4.2.11",
     "mobx-react-router": "^3.1.2",
     "mobx-utils": "^2.0.1",
-    "mobxpromise": "github:cbioportal/mobxpromise#v1.0.1",
+    "mobxpromise": "github:cbioportal/mobxpromise#v1.0.2",
     "node-sass": "^4.9.3",
     "numeral": "^2.0.6",
     "oncoprintjs": "^1.1.9",
