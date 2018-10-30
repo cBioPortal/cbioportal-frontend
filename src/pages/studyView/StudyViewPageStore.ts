@@ -2110,15 +2110,16 @@ export class StudyViewPageStore {
         invoke:async()=>{
             if (!!this.clinicalAttributes.result!.find(a=>a.clinicalAttributeId === MUTATION_COUNT) &&
                 !!this.clinicalAttributes.result!.find(a=>a.clinicalAttributeId === FRACTION_GENOME_ALTERED)) {
-                /*let yAxisBinCount = 50;
+                let yAxisBinCount = 50;
                 // dont have more bins than there are integers in the plot area
                 if (this.getMutationCountVsCNAFilter()) {
                     yAxisBinCount = Math.min(yAxisBinCount, Math.floor(this.getMutationCountVsCNAFilter().yEnd));
-                }*/
+                }
                 return (await internalClient.fetchClinicalDataDensityPlotUsingPOST({
                     xAxisAttributeId: FRACTION_GENOME_ALTERED,
                     yAxisAttributeId: MUTATION_COUNT,
                     xAxisStart:0, xAxisEnd:1, // FGA always goes 0 to 1
+                    yAxisStart:0, // mutation always starts at 0
                     yAxisBinCount,
                     clinicalDataType: "SAMPLE",
                     studyViewFilter: this.filters
