@@ -84,7 +84,7 @@ import {
     AlterationEnrichment,
     CosmicMutation,
     ExpressionEnrichment,
-    Geneset
+    Geneset, GenesetDataFilterCriteria
 } from "../../shared/api/generated/CBioPortalAPIInternal";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
@@ -627,7 +627,8 @@ export class ResultsViewPageStore {
         await:()=>[
             this.molecularProfilesInStudies,
             this.studyToDataQueryFilter,
-            this.genes
+            this.genes,
+            this.genesets
         ],
         invoke:async()=>{
             const ret:MolecularProfile[] = [];
@@ -654,6 +655,23 @@ export class ResultsViewPageStore {
                             ret.push(profile);
                         }
                     }));
+                } else if (profile.molecularAlterationType === AlterationTypeConstants.GENESET_SCORE) {
+                    // geneset profile, we dont have the META projection for geneset data, so just add it
+                    /*promises.push(internalClient.fetchGeneticDataItemsUsingPOST({
+                        geneticProfileId: molecularProfileId,
+                        genesetDataFilterCriteria: {
+                            genesetIds: this.genesets.result!.map(g=>g.genesetId),
+                            ...studyToDataQueryFilter[profile.studyId]
+                        } as GenesetDataFilterCriteria,
+                        projection
+                    }).then(function(response: request.Response) {
+                        const count = parseInt(response.header["total-count"], 10);
+                        if (count > 0) {
+                            // theres data for at least one of the query genes
+                            ret.push(profile);
+                        }
+                    }));*/
+                    ret.push(profile);
                 } else {
                     // handle non-mutation profile
                     promises.push(client.fetchAllMolecularDataInMolecularProfileUsingPOSTWithHttpInfo({
@@ -1953,7 +1971,7 @@ export class ResultsViewPageStore {
     readonly genesets = remoteData<Geneset[]>({
         invoke: () => {
             if (this.genesetIds && this.genesetIds.length > 0) {
-                return internalClient.fetchGenesetsUsingPOST({genesetIds: this.genesetIds});
+                return internalClient.fetchGenesetsUsingPOST({genesetIds: this.genesetIds.slice()});
             } else {
                 return Promise.resolve([]);
             }

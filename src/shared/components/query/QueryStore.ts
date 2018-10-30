@@ -39,6 +39,7 @@ import SampleListsInStudyCache from 'shared/cache/SampleListsInStudyCache';
 import formSubmit from "../../lib/formSubmit";
 import {ServerConfigHelpers} from "../../../config/config";
 import getBrowserWindow from "../../lib/getBrowserWindow";
+import {QueryParameter} from "../../lib/ExtendedRouterStore";
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -1567,6 +1568,7 @@ export class QueryStore
 		this.caseIds = this.sanitizeQueryParams(params.case_ids);
 		this.caseIdsMode = 'sample'; // url always contains sample IDs
         this.geneQuery = normalizeQuery(decodeURIComponent(params.gene_list||''));
+        this.genesetQuery = normalizeQuery(decodeURIComponent(params[QueryParameter.GENESET_LIST]||''));
 		this.forDownloadTab = params.tab_index === 'tab_download';
 		this.initiallySelected.profileIds = true;
 		this.initiallySelected.sampleListId = true;
