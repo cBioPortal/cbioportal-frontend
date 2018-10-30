@@ -3724,6 +3724,35 @@
           }
         }
       }
+    },
+    "/studies/{studyId}/tags": {
+      "get": {
+        "tags": [
+          "Studies"
+        ],
+        "summary": "Get the tags of a study",
+        "operationId": "getTagsUsingGET",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "studyId",
+            "in": "path",
+            "description": "Study ID e.g. acc_tcga",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {

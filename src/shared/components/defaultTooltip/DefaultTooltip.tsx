@@ -4,12 +4,12 @@ import 'rc-tooltip/assets/bootstrap_white.css';
 import $ from "jquery";
 import "./styles.scss";
 
-export type DefaultTooltipProps = Tooltip.Props & { disabled?:boolean};
+export type DefaultTooltipProps = Tooltip.Props & { disabled?:boolean };
 export default class DefaultTooltip extends React.Component<DefaultTooltipProps, {}> {
     static readonly defaultProps = {
         mouseEnterDelay: 0.5,
         mouseLeaveDelay: 0.05,
-        arrowContent: <div className="rc-tooltip-arrow-inner"/>,
+        arrowContent: <div className="rc-tooltip-arrow-outer"/>,
         onPopupAlign:setArrowLeft
     };
 
