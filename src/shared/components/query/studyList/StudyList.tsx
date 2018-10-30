@@ -12,6 +12,7 @@ import {QueryStoreComponent} from "../QueryStore";
 import DefaultTooltip from "../../defaultTooltip/DefaultTooltip";
 import {FilteredCancerTreeView} from "../StudyListLogic";
 import {CancerTreeNode} from "../CancerStudyTreeData";
+import MetadataTooltip from '../../metadataTooltip/MetadataTooltip';
 
 const styles = {
 	...styles_any as {
@@ -175,8 +176,8 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
 			: null;
 
 		return (
-			<li key={arrayIndex} 
-			    className={liClassName} 
+			<li key={arrayIndex}
+			    className={liClassName}
 			    data-test={this.store.isVirtualStudy(study.studyId) ? 'VirtualStudySelect' : 'StudySelect'}>
                 <Observer>
                 {() => {
@@ -238,8 +239,8 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
                         >Restore study</div>
                     }
                     children={
-                        <button 
-                            className={`btn btn-default btn-xs`} 
+                        <button
+                            className={`btn btn-default btn-xs`}
                             onClick={()=>this.store.restoreVirtualStudy(study.studyId)}
                             style={{
                                 lineHeight: '80%',
@@ -255,9 +256,13 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
                 {
                     icon: 'info-circle',
                     tooltip: this.store.isVirtualStudy(study.studyId) ? study.description.replace(/\r?\n/g, '<br />') : study.description,
+                },
+                {
+                    icon: 'tag',
+                    tooltip: ''
                 }
             ];
-    
+
             if (this.store.isVirtualStudy(study.studyId)) {
                 links.push({
                     icon: 'trash',
@@ -270,8 +275,8 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
                     onClick: study.pmid && getPubMedUrl(study.pmid),
                     tooltip: study.pmid && "PubMed",
                 });
-			}
-    
+            }
+
             return (
                 <span className={styles.StudyLinks}>
                     {links.map((link, i) => {
@@ -286,7 +291,7 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
                                 })}
                             />
                         );
-    
+
                         if (link.onClick) {
                             let anchorProps:any = {
                                 key: i
@@ -303,10 +308,10 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
                                 </a>
                             );
                         }
-    
+
                         if (link.tooltip)
                         {
-                            let overlay = (
+                            const overlay = (
                                 <div className={styles.tooltip} dangerouslySetInnerHTML={{__html: link.tooltip}}/>
                             );
                             content = (
@@ -315,11 +320,25 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
                                     mouseEnterDelay={0}
                                     placement="top"
                                     overlay={overlay}
-                                    children={content}
-                                />
+                                   >
+                                {content}
+                                </DefaultTooltip>
                             );
                         }
-    
+
+                        if (link.icon === 'tag') { // Metadata tag
+                            content = (
+                                <MetadataTooltip
+                                     key={i}
+                                     studyId={study.studyId}
+                                     mouseEnterDelay={0}
+                                     placement="top"
+                                    >
+                                {content}
+                                </MetadataTooltip>
+                            );
+                        }
+
                         return content;
                     })}
                     {study.studyId && (

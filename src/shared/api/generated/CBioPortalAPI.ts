@@ -6503,4 +6503,79 @@ export default class CBioPortalAPI {
                 return response.body;
             });
         };
+    getTagsUsingGETURL(parameters: {
+        'studyId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/studies/{studyId}/tags';
+
+        path = path.replace('{studyId}', parameters['studyId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get the tags of a study
+     * @method
+     * @name CBioPortalAPI#getTagsUsingGET
+     * @param {string} studyId - Study ID e.g. acc_tcga
+     */
+    getTagsUsingGETWithHttpInfo(parameters: {
+        'studyId': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/studies/{studyId}/tags';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+
+            path = path.replace('{studyId}', parameters['studyId'] + '');
+
+            if (parameters['studyId'] === undefined) {
+                reject(new Error('Missing required  parameter: studyId'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get the tags of a study
+     * @method
+     * @name CBioPortalAPI#getTagsUsingGET
+     * @param {string} studyId - Study ID e.g. acc_tcga
+     */
+    getTagsUsingGET(parameters: {
+        'studyId': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < {} > {
+        return this.getTagsUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
 }
