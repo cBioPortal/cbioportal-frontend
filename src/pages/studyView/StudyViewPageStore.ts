@@ -16,10 +16,10 @@ import {
     CopyNumberCountByGene,
     CopyNumberGeneFilter,
     CopyNumberGeneFilterElement,
-    DataBin,
+    DataBin, DensityPlotBin,
     MolecularProfileSampleCount,
     MutationCountByGene,
-    MutationGeneFilter,
+    MutationGeneFilter, RectangleBounds,
     Sample,
     SampleIdentifier,
     StudyViewFilter
@@ -279,6 +279,7 @@ export class StudyViewPageStore {
     @observable.ref private _mutatedGeneFilter: MutationGeneFilter[] = [];
 
     @observable.ref private _cnaGeneFilter: CopyNumberGeneFilter[] = [];
+    @observable private _mutationCountVsCNAFilter:RectangleBounds|undefined;
 
     // TODO: make it computed
     // Currently the study view store does not have the full control of the promise.
@@ -437,6 +438,7 @@ export class StudyViewPageStore {
         this._clinicalDataIntervalFilterSet.clear();
         this.clearGeneFilter();
         this.clearCNAGeneFilter();
+        this.resetMutationCountVsCNAFilter();
         this._chartSampleIdentifiersFilterSet.clear();
         this._customChartFilterSet.clear();
     }
@@ -735,6 +737,24 @@ export class StudyViewPageStore {
         }
     }
 
+    public getMutationCountVsCNAFilter() {
+        if (this._mutationCountVsCNAFilter) {
+            return Object.assign({}, this._mutationCountVsCNAFilter);
+        } else {
+            return undefined;
+        }
+    }
+
+    @action
+    setMutationCountVsCNAFilter(bounds:RectangleBounds) {
+        this._mutationCountVsCNAFilter = bounds;
+    }
+
+    @action
+    resetMutationCountVsCNAFilter() {
+        this._mutationCountVsCNAFilter = undefined;
+    }
+
     @action
     changeChartVisibility(uniqueKey:string, visible: boolean) {
         if(visible){
@@ -767,6 +787,9 @@ export class StudyViewPageStore {
                     break;
                 case ChartTypeEnum.SCATTER:
                     this._chartSampleIdentifiersFilterSet.delete(chartMeta.uniqueKey)
+                    if (chartMeta.uniqueKey === UniqueKey.MUTATION_COUNT_CNA_FRACTION) {
+                        this.resetMutationCountVsCNAFilter();
+                    }
                     break;
                 case ChartTypeEnum.SURVIVAL:
                     break;
@@ -851,6 +874,10 @@ export class StudyViewPageStore {
 
         if (this._cnaGeneFilter.length > 0) {
             filters.cnaGenes = this._cnaGeneFilter;
+        }
+
+        if (this._mutationCountVsCNAFilter) {
+            filters.mutationCountVsCNASelection = this._mutationCountVsCNAFilter;
         }
 
         let _sampleIdentifiers =_.reduce(this._chartSampleIdentifiersFilterSet.entries(),(acc, next, key)=>{
@@ -1944,9 +1971,9 @@ export class StudyViewPageStore {
 
     public async getScatterDownloadData(chartMeta: ChartMeta)
     {
-        if (this.mutationCountVsFractionGenomeAlteredData.result) {
+        if (this.mutationCountVsFGAData.result) {
             return generateScatterPlotDownloadData(
-                this.mutationCountVsFractionGenomeAlteredData.result,
+                this.mutationCountVsFGAData.result,
                 this.sampleToAnalysisGroup.result,
                 this.analysisGroupsSettings.clinicalAttribute,
                 this.analysisGroupsSettings.groups as AnalysisGroup[]
@@ -2078,6 +2105,30 @@ export class StudyViewPageStore {
         default: {}
     });
 
+    readonly mutationCountVsCNADensityData = remoteData<DensityPlotBin[]>({
+        await:()=>[this.clinicalAttributes],
+        invoke:async()=>{
+            if (!!this.clinicalAttributes.result!.find(a=>a.clinicalAttributeId === MUTATION_COUNT) &&
+                !!this.clinicalAttributes.result!.find(a=>a.clinicalAttributeId === FRACTION_GENOME_ALTERED)) {
+                /*let yAxisBinCount = 50;
+                // dont have more bins than there are integers in the plot area
+                if (this.getMutationCountVsCNAFilter()) {
+                    yAxisBinCount = Math.min(yAxisBinCount, Math.floor(this.getMutationCountVsCNAFilter().yEnd));
+                }*/
+                return (await internalClient.fetchClinicalDataDensityPlotUsingPOST({
+                    xAxisAttributeId: FRACTION_GENOME_ALTERED,
+                    yAxisAttributeId: MUTATION_COUNT,
+                    xAxisStart:0, xAxisEnd:1, // FGA always goes 0 to 1
+                    yAxisBinCount,
+                    clinicalDataType: "SAMPLE",
+                    studyViewFilter: this.filters
+                })).filter(bin=>(bin.count > 0));// only show points for bins with stuff in them
+            } else {
+                return [];
+            }
+        }
+    });
+
     readonly sampleMutationCountAndFractionGenomeAlteredData = remoteData({
         await:()=>[this.clinicalAttributes, this.selectedSamples],
         invoke:()=>{
@@ -2099,7 +2150,7 @@ export class StudyViewPageStore {
         default: []
     });
 
-    readonly mutationCountVsFractionGenomeAlteredData = remoteData({
+    readonly mutationCountVsFGAData = remoteData({
         await:()=>[this.sampleMutationCountAndFractionGenomeAlteredData],
         invoke: async ()=>{
             return _.reduce(_.groupBy(this.sampleMutationCountAndFractionGenomeAlteredData.result, datum => datum.uniqueSampleKey), (acc, data) => {
@@ -2128,9 +2179,9 @@ export class StudyViewPageStore {
 
 
     readonly mutationCountVsFractionGenomeAlteredDataSet = remoteData<{ [id: string]: IStudyViewScatterPlotData }>({
-        await: () => [this.mutationCountVsFractionGenomeAlteredData],
+        await: () => [this.mutationCountVsFGAData],
         invoke: () => {
-            return Promise.resolve(_.keyBy(this.mutationCountVsFractionGenomeAlteredData.result, datum => datum.uniqueSampleKey));
+            return Promise.resolve(_.keyBy(this.mutationCountVsFGAData.result, datum => datum.uniqueSampleKey));
         },
         default: {}
     });

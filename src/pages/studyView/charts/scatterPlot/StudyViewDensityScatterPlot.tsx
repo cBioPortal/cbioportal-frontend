@@ -19,25 +19,18 @@ import $ from "jquery";
 import {AnalysisGroup} from "../../StudyViewPageStore";
 import {AbstractChart} from "../ChartContainer";
 import {interpolatePlasma} from "d3-scale-chromatic";
-
-export interface IStudyViewDensityScatterPlotData {
-    x:number;
-    y:number;
-    uniqueSampleKey:string;
-    studyId:string;
-    sampleId:string;
-    patientId:string;
-}
+import {DensityPlotBin, RectangleBounds} from "../../../../shared/api/generated/CBioPortalAPIInternal";
+import invertIncreasingFunction from "../../../../shared/lib/invertIncreasingFunction";
 
 export interface IStudyViewDensityScatterPlotProps {
     width:number;
     height:number;
-    data:IStudyViewDensityScatterPlotData[]
-    onSelection:(sampleIdentifiers:SampleIdentifier[], keepCurrent:boolean)=>void;
+    data:DensityPlotBin[]
+    onSelection:(bounds:RectangleBounds)=>void;
 
     isLoading?:boolean;
     svgRef?:(svg:SVGElement|null)=>void;
-    tooltip?:(d:DSData<IStudyViewDensityScatterPlotData>)=>JSX.Element;
+    tooltip?:(d:DensityPlotBin)=>JSX.Element;
     axisLabelX?: string;
     axisLabelY?: string;
     title?:string;
@@ -45,7 +38,6 @@ export interface IStudyViewDensityScatterPlotProps {
 
 const NUM_AXIS_TICKS = 8;
 const DOMAIN_PADDING = 15;
-const BIN_THRESHOLD = 0; // set to 0 means always bin
 
 class _VictorySelectionContainerWithLegend extends VictorySelectionContainer {
     // we have to do this because otherwise adding the legend element messes up the
@@ -75,6 +67,9 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
     @observable mouseIsDown:boolean = false;
     @observable shiftPressed:boolean = false;
     public mouseEvents:any = makeMouseEvents(this);
+
+    private xAxis:VictoryAxis | null = null;
+    private yAxis:VictoryAxis | null = null;
 
     @observable.ref private container:HTMLDivElement;
     private svg:SVGElement|null;
@@ -172,33 +167,42 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         this.mouseIsDown = false;
     }
 
+    private size = 3;
+
     @autobind
-    private onSelection(points:any) {
-        const selectedSamples = _.reduce(points, function (acc, point) {
-            _.each(point.data, datum => _.each(datum.data, (d: IStudyViewDensityScatterPlotData) => acc.push({
-                sampleId: d.sampleId,
-                studyId: d.studyId
-            })));
-            return acc;
-        }, [] as SampleIdentifier[]);
-
-        this.props.onSelection(selectedSamples, this.shiftPressed); // keep other selection if shift pressed
-    }
-
-    @computed get binningData() {
-        return this.props.data.length > BIN_THRESHOLD;
-    }
-
-    @computed get data():DSData<IStudyViewDensityScatterPlotData>[] {
-        if (this.binningData) {
-            return getBinnedData(this.props.data, this.dataDomain, 50);
-        } else {
-            return this.props.data.map(d=>({
-                x: d.x,
-                y:d.y,
-                data: [d]
-            }));
+    private onSelection(scatters:any, bounds:any) {
+        if (this.xAxis && this.yAxis) {
+            let xStart = Number.POSITIVE_INFINITY;
+            let yStart = Number.POSITIVE_INFINITY;
+            let xEnd = Number.NEGATIVE_INFINITY;
+            let yEnd = Number.NEGATIVE_INFINITY;
+            for (const scatter of scatters) {
+                for (const p of scatter.data) {
+                    xStart = Math.min(xStart, p.x);
+                    yStart = Math.min(yStart, p.y);
+                    xEnd = Math.max(xEnd, p.x);
+                    yEnd = Math.max(yEnd, p.y);
+                }
+            }
+            // add width of circle to end to get proper bound
+            const xScale = this.xAxis.props.scale.x;
+            const yScale = this.yAxis.props.scale.y;
+            xEnd += invertIncreasingFunction(
+                inc=>xScale(inc)-xScale(0),
+                6,
+                [0, 1]
+            );
+            yEnd += invertIncreasingFunction(
+                inc=>yScale(0)-yScale(inc),
+                6,
+                [0, this.dataDomain.y[1]]
+            );
+            this.props.onSelection({ xStart, xEnd, yStart, yEnd });
         }
+    }
+
+    @computed get data() {
+        return this.props.data;
     }
 
     @computed get plotComputations() {
@@ -208,7 +212,7 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         // grouping data by count (aka by color) to make different scatter for each color,
         //  this gives significant speed up over passing in a fill function
         const dataByAreaCount = _.groupBy(this.data, d=>{
-            const areaCount = d.data.length;
+            const areaCount = d.count;
             max = Math.max(areaCount, max);
             min = Math.min(areaCount, min);
             return areaCount;
@@ -259,7 +263,7 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
 
         const scatters:JSX.Element[] = [];
         _.forEach(this.plotComputations.dataByAreaCount, (data, areaCount)=>{
-            const color = this.binningData ? this.plotComputations.countToColor(parseInt(areaCount, 10)) : "red";
+            const color = this.plotComputations.countToColor(parseInt(areaCount, 10));
             scatters.push(
                 <VictoryScatter
                     key={`${areaCount}`}
@@ -271,7 +275,7 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
                             strokeOpacity: 0
                         }
                     }}
-                    size={3}
+                    size={this.size}
                     symbol="circle"
                     data={data}
                     events={this.mouseEvents}
@@ -279,13 +283,6 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
             );
         });
         return scatters;
-    }
-
-    @autobind
-    private size(d:DSData<IStudyViewDensityScatterPlotData>) {
-        const baseSize = 3;
-        const increment = 0.5;
-        return Math.min(MAX_DOT_SIZE, (baseSize - increment) + increment*d.data.length);
     }
 
     @computed get legend() {
@@ -342,6 +339,19 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         }
     }
 
+    @autobind
+    private xAxisRef(axis:VictoryAxis|null) {
+        this.xAxis = axis;
+        window.x = axis;
+        window.invertIncreasingFunction = invertIncreasingFunction;
+    }
+
+    @autobind
+    private yAxisRef(axis:VictoryAxis|null) {
+        this.yAxis = axis;
+        window.y = axis;
+    }
+
     render() {
         return (
             <div>
@@ -372,6 +382,7 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
                     >
                         {this.title}
                         <VictoryAxis
+                            ref={this.xAxisRef}
                             domain={this.dataDomain.x}
                             orientation="bottom"
                             offsetY={50}
@@ -382,6 +393,7 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
                             label={this.props.axisLabelX}
                         />
                         <VictoryAxis
+                            ref={this.yAxisRef}
                             domain={this.dataDomain.y}
                             orientation="left"
                             offsetX={50}
