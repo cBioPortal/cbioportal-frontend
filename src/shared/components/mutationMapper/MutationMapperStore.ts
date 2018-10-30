@@ -174,7 +174,7 @@ export default class MutationMapperStore
         }
     }, undefined);
 
-    readonly allTranscripts = remoteData<EnsemblTranscript[] | undefined>({
+    readonly transcriptsByHugoSymbol = remoteData<EnsemblTranscript[] | undefined>({
         invoke: async()=>{
             if (this.gene) {
                 return fetchEnsemblTranscriptsByEnsemblFilter({"hugoSymbols":[this.gene.hugoGeneSymbol]});
@@ -189,17 +189,34 @@ export default class MutationMapperStore
 
     readonly canonicalTranscript = remoteData<EnsemblTranscript | undefined>({
         await: () => [
-            this.allTranscripts
+            this.transcriptsByHugoSymbol
         ],
         invoke: async()=>{
             if (this.gene) {
-                return fetchCanonicalTranscriptWithFallback(this.gene.hugoGeneSymbol, this.isoformOverrideSource, this.allTranscripts.result);
+                return fetchCanonicalTranscriptWithFallback(this.gene.hugoGeneSymbol, this.isoformOverrideSource, this.transcriptsByHugoSymbol.result);
             } else {
                 return undefined;
             }
         },
         onError: (err: Error) => {
             throw new Error("Failed to get canonical transcript");
+        }
+    }, undefined);
+
+    readonly allTranscripts = remoteData<EnsemblTranscript[] | undefined>({
+        await: () => [
+            this.transcriptsByHugoSymbol,
+            this.canonicalTranscript
+        ],
+        invoke: async()=> {
+            return _.compact(_.unionBy(
+                this.transcriptsByHugoSymbol.result,
+                [this.canonicalTranscript.result],
+                (t) => t && t.transcriptId
+            ));
+        },
+        onError: (err: Error) => {
+            throw new Error("Failed to get all transcripts");
         }
     }, undefined);
 
