@@ -1,15 +1,34 @@
 import {
-    DiscreteCopyNumberFilter, DiscreteCopyNumberData, ClinicalData, ClinicalDataMultiStudyFilter, Sample,
-    SampleIdentifier, MolecularProfile, Mutation, NumericGeneMolecularData, MolecularDataFilter, Gene,
-    ClinicalDataSingleStudyFilter, CancerStudy, PatientIdentifier, Patient, GenePanelData, GenePanelDataFilter,
-    SampleList, MutationCountByPosition, MutationMultipleStudyFilter, SampleMolecularIdentifier,
-    MolecularDataMultipleStudyFilter, SampleFilter, MolecularProfileFilter, GenePanelMultipleStudyFilter, PatientFilter, MutationFilter,
-    GenePanel, ClinicalAttributeFilter, ClinicalAttribute
+    CancerStudy,
+    ClinicalAttribute,
+    ClinicalAttributeFilter,
+    ClinicalData,
+    ClinicalDataMultiStudyFilter,
+    ClinicalDataSingleStudyFilter,
+    Gene,
+    GenePanel,
+    GenePanelData,
+    MolecularDataFilter,
+    MolecularDataMultipleStudyFilter,
+    MolecularProfile,
+    MolecularProfileFilter,
+    Mutation,
+    MutationCountByPosition,
+    MutationFilter,
+    MutationMultipleStudyFilter,
+    NumericGeneMolecularData,
+    PatientFilter,
+    PatientIdentifier,
+    Sample,
+    SampleFilter,
+    SampleIdentifier,
+    SampleList,
+    SampleMolecularIdentifier
 } from "shared/api/generated/CBioPortalAPI";
 import client from "shared/api/cbioportalClientInstance";
-import {computed, observable, action, reaction, IObservable, IObservableValue, ObservableMap} from "mobx";
-import {remoteData, addErrorHandler} from "shared/api/remoteData";
-import {labelMobxPromises, cached, MobxPromise} from "mobxpromise";
+import {action, computed, observable, ObservableMap} from "mobx";
+import {remoteData} from "shared/api/remoteData";
+import {cached, labelMobxPromises, MobxPromise} from "mobxpromise";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
@@ -17,29 +36,31 @@ import MutationCountCache from "shared/cache/MutationCountCache";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import {
-    findMolecularProfileIdDiscrete, fetchMyCancerGenomeData,
-    fetchDiscreteCNAData, findMutationMolecularProfileId, mergeDiscreteCNAData,
-    fetchSamples, fetchClinicalDataInStudy, generateDataQueryFilter,
-    fetchSamplesWithoutCancerTypeClinicalData, fetchStudiesForSamplesWithoutCancerTypeClinicalData, IDataQueryFilter,
-    isMutationProfile, fetchOncoKbAnnotatedGenesSuppressErrors, groupBy, fetchOncoKbData,
-    ONCOKB_DEFAULT, generateUniqueSampleKeyToTumorTypeMap, cancerTypeForOncoKb, fetchCnaOncoKbData,
-    fetchCnaOncoKbDataWithNumericGeneMolecularData, fetchGermlineConsentedSamples, fetchGenes
+    cancerTypeForOncoKb,
+    fetchCnaOncoKbDataWithNumericGeneMolecularData,
+    fetchGenes,
+    fetchGermlineConsentedSamples,
+    fetchMyCancerGenomeData,
+    fetchOncoKbAnnotatedGenesSuppressErrors,
+    fetchOncoKbData,
+    fetchStudiesForSamplesWithoutCancerTypeClinicalData,
+    generateDataQueryFilter,
+    generateUniqueSampleKeyToTumorTypeMap,
+    groupBy,
+    IDataQueryFilter,
+    isMutationProfile,
+    ONCOKB_DEFAULT
 } from "shared/lib/StoreUtils";
-import {indexHotspotsData, fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
+import {fetchHotspotsData, indexHotspotsData} from "shared/lib/CancerHotspotsUtils";
 import ResultsViewMutationMapperStore from "./mutation/ResultsViewMutationMapperStore";
 import AppConfig from "appConfig";
-import * as _ from 'lodash';
-import {stringListToIndexSet, stringListToSet} from "../../shared/lib/StringUtils";
+import * as _ from "lodash";
+import {stringListToSet} from "../../shared/lib/StringUtils";
 import {toSampleUuid} from "../../shared/lib/UuidUtils";
 import MutationDataCache from "../../shared/cache/MutationDataCache";
-import accessors, {getSimplifiedMutationType, SimplifiedMutationType} from "../../shared/lib/oql/accessors";
-import {keepAlive} from "mobx-utils";
+import accessors, {SimplifiedMutationType} from "../../shared/lib/oql/accessors";
 import {AugmentedData, CacheData} from "../../shared/lib/LazyMobXCache";
-import {
-    IAlterationCountMap,
-    IAlterationData
-} from "./cancerSummary/CancerSummaryContent";
-import {writeTest} from "../../shared/lib/writeTest";
+import {IAlterationData} from "./cancerSummary/CancerSummaryContent";
 import {PatientSurvival} from "../../shared/model/PatientSurvival";
 import {
     doesQueryContainMutationOQL,
@@ -47,8 +68,9 @@ import {
     filterCBioPortalWebServiceData,
     filterCBioPortalWebServiceDataByOQLLine,
     filterCBioPortalWebServiceDataByUnflattenedOQLLine,
-    OQLLineFilterOutput, parseOQLQuery,
-    UnflattenedOQLLineFilterOutput,
+    OQLLineFilterOutput,
+    parseOQLQuery,
+    UnflattenedOQLLineFilterOutput
 } from "../../shared/lib/oql/oqlfilter";
 import GeneMolecularDataCache from "../../shared/cache/GeneMolecularDataCache";
 import GenesetMolecularDataCache from "../../shared/cache/GenesetMolecularDataCache";
@@ -59,46 +81,52 @@ import {IHotspotIndex} from "../../shared/model/CancerHotspots";
 import {IOncoKbData} from "../../shared/model/OncoKB";
 import {generateQueryVariantId} from "../../shared/lib/OncoKbUtils";
 import {
-    CosmicMutation,
     AlterationEnrichment,
+    CosmicMutation,
     ExpressionEnrichment,
-    Geneset
+    Geneset, GenesetDataFilterCriteria
 } from "../../shared/api/generated/CBioPortalAPIInternal";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import {getAlterationString} from "../../shared/lib/CopyNumberUtils";
 import memoize from "memoize-weak-decorator";
-import request from 'superagent';
+import request from "superagent";
 import {countMutations, mutationCountByPositionKey} from "./mutationCountHelpers";
 import {getPatientSurvivals} from "./SurvivalStoreHelper";
 import {QueryStore} from "shared/components/query/QueryStore";
 import {
-    annotateMolecularDatum, filterSubQueryData,
-    getOncoKbOncogenic, groupDataByCase,
-    computeCustomDriverAnnotationReport, computePutativeDriverAnnotatedMutations,
-    initializeCustomDriverAnnotationSettings, computeGenePanelInformation,
-    fetchQueriedStudies, CoverageInformation, isRNASeqProfile
+    annotateMolecularDatum,
+    computeCustomDriverAnnotationReport,
+    computeGenePanelInformation,
+    computePutativeDriverAnnotatedMutations,
+    CoverageInformation,
+    fetchQueriedStudies,
+    filterSubQueryData,
+    getOncoKbOncogenic,
+    groupDataByCase,
+    initializeCustomDriverAnnotationSettings,
+    isRNASeqProfile
 } from "./ResultsViewPageStoreUtils";
 import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alterationCountHelpers";
 import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
 import {isSampleProfiledInMultiple} from "../../shared/lib/isSampleProfiled";
 import {BookmarkLinks} from "../../shared/model/BookmarkLinks";
 import {getBitlyServiceUrl} from "../../shared/api/urls";
-import url from 'url';
+import url from "url";
 import OncoprintClinicalDataCache, {SpecialAttribute} from "../../shared/cache/OncoprintClinicalDataCache";
 import {getDefaultMolecularProfiles} from "../../shared/lib/getDefaultMolecularProfiles";
 import {getProteinPositionFromProteinChange} from "../../shared/lib/ProteinChangeUtils";
 import {isMutation} from "../../shared/lib/CBioPortalAPIUtils";
-import { fetchVariantAnnotationsIndexedByGenomicLocation } from "shared/lib/MutationAnnotator";
-import { VariantAnnotation } from "shared/api/generated/GenomeNexusAPI";
+import {fetchVariantAnnotationsIndexedByGenomicLocation} from "shared/lib/MutationAnnotator";
+import {VariantAnnotation} from "shared/api/generated/GenomeNexusAPI";
 import {ServerConfigHelpers} from "../../config/config";
 import {
-    getTabId,
     getVirtualStudies,
     populateSampleSpecificationsFromVirtualStudies,
     substitutePhysicalStudiesForVirtualStudies
 } from "./ResultsViewPageHelpers";
 import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
+import {isRecurrentHotspot} from "../../shared/lib/AnnotationUtils";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -306,15 +334,21 @@ export class ResultsViewPageStore {
             driverFilter: false,
             driverTiers: observable.map<boolean>(),
 
-            hotspots:false,
+            _hotspots:false,
             _oncoKb:false,
             _ignoreUnknown: false,
 
+            set hotspots(val:boolean) {
+                this._hotspots = val;
+            },
+            get hotspots() {
+                return !!AppConfig.serverConfig.show_hotspot && this._hotspots && store.indexedHotspotData.peekStatus !== "error";
+            },
             set oncoKb(val:boolean) {
                 this._oncoKb = val;
             },
             get oncoKb() {
-                return this._oncoKb && !store.didOncoKbFailInOncoprint;
+                return AppConfig.serverConfig.show_oncokb && this._oncoKb && !store.didOncoKbFailInOncoprint;
             },
             set ignoreUnknown(val:boolean) {
                 this._ignoreUnknown = val;
@@ -369,9 +403,30 @@ export class ResultsViewPageStore {
     //queried id(any combination of physical and virtual studies)
     @observable cohortIdsList: string[] = [];
 
-    @observable zScoreThreshold: number;
+    @observable _zScoreThreshold: number;
+    @computed get zScoreThreshold() {
+        if (this._zScoreThreshold === undefined) {
+            return 2;
+        } else {
+            return this._zScoreThreshold;
+        }
+    }
+    set zScoreThreshold(val:number) {
+        if (!Number.isNaN(val)) {
+            this._zScoreThreshold = val;
+        }
+    }
 
-    @observable rppaScoreThreshold: number;
+    @observable _rppaScoreThreshold: number;
+    @computed get rppaScoreThreshold() {
+        return this._rppaScoreThreshold === undefined ? 2 : this._rppaScoreThreshold;
+    }
+    set rppaScoreThreshold(val:number) {
+        if (!Number.isNaN(val)) {
+            this._rppaScoreThreshold = val;
+        }
+    }
+
 
     @observable oqlQuery: string = '';
     @observable public sessionIdURL = '';
@@ -572,7 +627,8 @@ export class ResultsViewPageStore {
         await:()=>[
             this.molecularProfilesInStudies,
             this.studyToDataQueryFilter,
-            this.genes
+            this.genes,
+            this.genesets
         ],
         invoke:async()=>{
             const ret:MolecularProfile[] = [];
@@ -599,6 +655,23 @@ export class ResultsViewPageStore {
                             ret.push(profile);
                         }
                     }));
+                } else if (profile.molecularAlterationType === AlterationTypeConstants.GENESET_SCORE) {
+                    // geneset profile, we dont have the META projection for geneset data, so just add it
+                    /*promises.push(internalClient.fetchGeneticDataItemsUsingPOST({
+                        geneticProfileId: molecularProfileId,
+                        genesetDataFilterCriteria: {
+                            genesetIds: this.genesets.result!.map(g=>g.genesetId),
+                            ...studyToDataQueryFilter[profile.studyId]
+                        } as GenesetDataFilterCriteria,
+                        projection
+                    }).then(function(response: request.Response) {
+                        const count = parseInt(response.header["total-count"], 10);
+                        if (count > 0) {
+                            // theres data for at least one of the query genes
+                            ret.push(profile);
+                        }
+                    }));*/
+                    ret.push(profile);
                 } else {
                     // handle non-mutation profile
                     promises.push(client.fetchAllMolecularDataInMolecularProfileUsingPOSTWithHttpInfo({
@@ -1898,7 +1971,7 @@ export class ResultsViewPageStore {
     readonly genesets = remoteData<Geneset[]>({
         invoke: () => {
             if (this.genesetIds && this.genesetIds.length > 0) {
-                return internalClient.fetchGenesetsUsingPOST({genesetIds: this.genesetIds});
+                return internalClient.fetchGenesetsUsingPOST({genesetIds: this.genesetIds.slice()});
             } else {
                 return Promise.resolve([]);
             }
@@ -2128,15 +2201,19 @@ export class ResultsViewPageStore {
         invoke: ()=>Promise.resolve(indexHotspotsData(this.hotspotData))
     });
 
-    public readonly isHotspot = remoteData({
+    public readonly isHotspot = remoteData<(m:Mutation)=>boolean>({
         await:()=>[
-            this.getOncoKbMutationAnnotationForOncoprint
+            this.indexedHotspotData
         ],
         invoke:()=>{
-            return Promise.resolve((mutation:Mutation)=>{
-                const oncokbAnnotation = typeof this.getOncoKbMutationAnnotationForOncoprint.result === "function" && this.getOncoKbMutationAnnotationForOncoprint.result!(mutation);
-                return (oncokbAnnotation ? !!oncokbAnnotation.hotspot : false);
-            });
+            const indexedHotspotData = this.indexedHotspotData.result;
+            if (indexedHotspotData) {
+                return Promise.resolve((mutation:Mutation)=>{
+                    return isRecurrentHotspot(mutation, indexedHotspotData);
+                });
+            } else {
+                return Promise.resolve(((mutation:Mutation)=>false) as (m:Mutation)=>boolean);
+            }
         }
     });
     //OncoKb
@@ -2161,7 +2238,13 @@ export class ResultsViewPageStore {
             this.uniqueSampleKeyToTumorType,
             this.oncoKbAnnotatedGenes
         ],
-        invoke: () => fetchOncoKbData(this.uniqueSampleKeyToTumorType.result!, this.oncoKbAnnotatedGenes.result!, this.mutations),
+        invoke: () => {
+            if (AppConfig.serverConfig.show_oncokb) {
+                return fetchOncoKbData(this.uniqueSampleKeyToTumorType.result!, this.oncoKbAnnotatedGenes.result!, this.mutations);
+            } else {
+                return Promise.resolve(ONCOKB_DEFAULT);
+            }
+        },
         onError: (err: Error) => {
             // fail silently, leave the error handling responsibility to the data consumer
         }
@@ -2176,13 +2259,17 @@ export class ResultsViewPageStore {
             this.oncoKbAnnotatedGenes
         ],
         invoke: async() => {
-            let result;
-            try {
-                result = await fetchOncoKbData({}, this.oncoKbAnnotatedGenes.result!, this.mutations)
-            } catch(e) {
-                result = new Error();
+            if (AppConfig.serverConfig.show_oncokb) {
+                let result;
+                try {
+                    result = await fetchOncoKbData({}, this.oncoKbAnnotatedGenes.result!, this.mutations)
+                } catch(e) {
+                    result = new Error();
+                }
+                return result;
+            } else {
+                return ONCOKB_DEFAULT;
             }
-            return result;
         },
         onError: (err: Error) => {
             // fail silently, leave the error handling responsibility to the data consumer
@@ -2196,12 +2283,18 @@ export class ResultsViewPageStore {
             this.molecularData,
             this.molecularProfileIdToMolecularProfile
         ],
-        invoke: () => fetchCnaOncoKbDataWithNumericGeneMolecularData(
-            this.uniqueSampleKeyToTumorType.result!,
-            this.oncoKbAnnotatedGenes.result!,
-            this.molecularData,
-            this.molecularProfileIdToMolecularProfile.result!
-        )
+        invoke: () => {
+            if (AppConfig.serverConfig.show_oncokb) {
+                return fetchCnaOncoKbDataWithNumericGeneMolecularData(
+                    this.uniqueSampleKeyToTumorType.result!,
+                    this.oncoKbAnnotatedGenes.result!,
+                    this.molecularData,
+                    this.molecularProfileIdToMolecularProfile.result!
+                );
+            } else {
+                return Promise.resolve(ONCOKB_DEFAULT);
+            }
+        }
     }, ONCOKB_DEFAULT);
 
     //we need seperate oncokb data because oncoprint requires onkb queries across cancertype
@@ -2214,23 +2307,29 @@ export class ResultsViewPageStore {
             this.molecularProfileIdToMolecularProfile
         ],
         invoke: async() => {
-            let result;
-            try {
-                result = await fetchCnaOncoKbDataWithNumericGeneMolecularData(
-                    {},
-                    this.oncoKbAnnotatedGenes.result!,
-                    this.molecularData,
-                    this.molecularProfileIdToMolecularProfile.result!
-                );
-            } catch(e) {
-                result = new Error();
+            if (AppConfig.serverConfig.show_oncokb) {
+                let result;
+                try {
+                    result = await fetchCnaOncoKbDataWithNumericGeneMolecularData(
+                        {},
+                        this.oncoKbAnnotatedGenes.result!,
+                        this.molecularData,
+                        this.molecularProfileIdToMolecularProfile.result!
+                    );
+                } catch(e) {
+                    result = new Error();
+                }
+                return result;
+            } else {
+                return ONCOKB_DEFAULT;
             }
-            return result;
         }
     }, ONCOKB_DEFAULT);
 
     @computed get didOncoKbFailInOncoprint() {
-        return this.getOncoKbMutationAnnotationForOncoprint.result instanceof Error;
+        // check in this order so that we don't trigger invoke
+        return this.getOncoKbMutationAnnotationForOncoprint.peekStatus === "complete" &&
+            (this.getOncoKbMutationAnnotationForOncoprint.result instanceof Error);
     }
 
     readonly getOncoKbMutationAnnotationForOncoprint = remoteData<Error|((mutation:Mutation)=>(IndicatorQueryResp|undefined))>({

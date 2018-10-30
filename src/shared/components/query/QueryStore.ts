@@ -39,6 +39,7 @@ import SampleListsInStudyCache from 'shared/cache/SampleListsInStudyCache';
 import formSubmit from "../../lib/formSubmit";
 import {ServerConfigHelpers} from "../../../config/config";
 import getBrowserWindow from "../../lib/getBrowserWindow";
+import {QueryParameter} from "../../lib/ExtendedRouterStore";
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -118,7 +119,7 @@ export class QueryStore
 
 	constructor(_window:Window, urlWithInitialParams?:string)
 	{
-
+		
 		labelMobxPromises(this);
 		if (urlWithInitialParams)
 			this.setParamsFromUrl(urlWithInitialParams);
@@ -1563,10 +1564,11 @@ export class QueryStore
 		this.zScoreThreshold = params.Z_SCORE_THRESHOLD || '2.0';
 		this.rppaScoreThreshold = params.RPPA_SCORE_THRESHOLD || '2.0';
 		this.dataTypePriorityCode = params.data_priority || '0';
-		this.selectedSampleListId = params.case_set_id || "";
+		this.selectedSampleListId = params.case_set_id ? params.case_set_id.toString() : "";  // must be a string even though it's integer
 		this.caseIds = this.sanitizeQueryParams(params.case_ids);
 		this.caseIdsMode = 'sample'; // url always contains sample IDs
         this.geneQuery = normalizeQuery(decodeURIComponent(params.gene_list||''));
+        this.genesetQuery = normalizeQuery(decodeURIComponent(params[QueryParameter.GENESET_LIST]||''));
 		this.forDownloadTab = params.tab_index === 'tab_download';
 		this.initiallySelected.profileIds = true;
 		this.initiallySelected.sampleListId = true;
@@ -1606,7 +1608,7 @@ export class QueryStore
             const caseIds = parsedSubmission.case_ids;
             if (caseIds) {
                 if (parsedSubmission.case_set_id == CUSTOM_CASE_LIST_ID) {
-                    this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
+                    this.selectedSampleListId = CUSTOM_CASE_LIST_ID.toString();
                     this.caseIdsMode = 'sample';
                     this.caseIds = caseIds.replace(/\+/g, "\n");
                 }
