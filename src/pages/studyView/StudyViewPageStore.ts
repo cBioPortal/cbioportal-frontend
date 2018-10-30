@@ -2112,8 +2112,9 @@ export class StudyViewPageStore {
                 !!this.clinicalAttributes.result!.find(a=>a.clinicalAttributeId === FRACTION_GENOME_ALTERED)) {
                 let yAxisBinCount = 50;
                 // dont have more bins than there are integers in the plot area
-                if (this.getMutationCountVsCNAFilter()) {
-                    yAxisBinCount = Math.min(yAxisBinCount, Math.floor(this.getMutationCountVsCNAFilter().yEnd));
+                const filter = this.getMutationCountVsCNAFilter();
+                if (filter) {
+                    yAxisBinCount = Math.min(yAxisBinCount, Math.floor(filter.yEnd));
                 }
                 return (await internalClient.fetchClinicalDataDensityPlotUsingPOST({
                     xAxisAttributeId: FRACTION_GENOME_ALTERED,

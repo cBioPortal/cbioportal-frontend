@@ -65,11 +65,10 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
     @observable tooltipModel:any|null = null;
     @observable pointHovered:boolean = false;
     @observable mouseIsDown:boolean = false;
-    @observable shiftPressed:boolean = false;
     public mouseEvents:any = makeMouseEvents(this);
 
-    private xAxis:VictoryAxis | null = null;
-    private yAxis:VictoryAxis | null = null;
+    private xAxis:any | null = null;
+    private yAxis:any | null = null;
 
     @observable.ref private container:HTMLDivElement;
     private svg:SVGElement|null;
@@ -85,31 +84,6 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         if (this.props.svgRef) {
             this.props.svgRef(this.svg);
         }
-    }
-
-    @autobind
-    private onKeyDown(e: JQueryKeyEventObject) {
-        if (e.which === 16) {
-            this.shiftPressed = true;
-        }
-    }
-
-    @autobind
-    private onKeyUp(e: JQueryKeyEventObject) {
-        if (e.which === 16) {
-            this.shiftPressed = false;
-        }
-    }
-
-    componentDidMount() {
-        // Make it so that if you hold down shift, you can select more than one region at once
-        $(document).on("keydown",this.onKeyDown);
-        $(document).on("keyup", this.onKeyUp);
-    }
-
-    componentWillUnmount() {
-        $(document).off("keydown",this.onKeyDown);
-        $(document).off("keyup", this.onKeyUp);
     }
 
     public toSVGDOMNode(): Element {
@@ -349,16 +323,13 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
     }
 
     @autobind
-    private xAxisRef(axis:VictoryAxis|null) {
+    private xAxisRef(axis:any|null) {
         this.xAxis = axis;
-        window.x = axis;
-        window.invertIncreasingFunction = invertIncreasingFunction;
     }
 
     @autobind
-    private yAxisRef(axis:VictoryAxis|null) {
+    private yAxisRef(axis:any|null) {
         this.yAxis = axis;
-        window.y = axis;
     }
 
     render() {
