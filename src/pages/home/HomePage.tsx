@@ -28,12 +28,12 @@ export interface IResultsViewPageProps {
     routing: any;
 }
 
-export function createQueryStore() {
+export function createQueryStore(currentQuery?:any) {
 
     const win:any = window;
 
     // lets make query Store since it's used in a lot of places
-    const queryStore = new QueryStore(win, getBrowserWindow().routingStore.query);
+    const queryStore = new QueryStore(win, currentQuery);
 
     queryStore.singlePageAppSubmitRoutine = function(path:string, query:CancerStudyQueryUrlParams) {
 
