@@ -22,7 +22,7 @@ import WindowStore from "../../../shared/components/window/WindowStore";
 import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWidthBox";
 import {remoteData} from "../../../shared/api/remoteData";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import {onMobxPromise} from "../../../shared/lib/onMobxPromise";
+import onMobxPromise from "shared/lib/onMobxPromise";
 
 export interface IDownloadTabProps {
     store: ResultsViewPageStore;
