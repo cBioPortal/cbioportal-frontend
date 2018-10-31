@@ -3781,7 +3781,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Fetch patients by ID
+     * fetchPatients
      * @method
      * @name CBioPortalAPI#fetchPatientsUsingPOST
      * @param {} patientFilter - List of patient identifiers
@@ -3831,7 +3831,7 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Fetch patients by ID
+     * fetchPatients
      * @method
      * @name CBioPortalAPI#fetchPatientsUsingPOST
      * @param {} patientFilter - List of patient identifiers
