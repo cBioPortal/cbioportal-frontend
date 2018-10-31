@@ -28,7 +28,12 @@
       box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
       border-radius:$cornerBorderRadius;
       li {
-        border-width: 0 !important;
+        &.oncoprintjs__track_options__separator {
+          border-top: 1px solid #dddddd !important;
+        }
+        &:not(.oncoprintjs__track_options__separator){
+          border-width: 0 !important;
+        }
         padding: 2px 5px;
         &:hover {
           background: #fff !important;

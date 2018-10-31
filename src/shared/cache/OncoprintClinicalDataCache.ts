@@ -16,7 +16,37 @@ import {OncoprintClinicalAttribute} from "../components/oncoprint/ResultsViewOnc
 export enum SpecialAttribute {
     MutationSpectrum = "NO_CONTEXT_MUTATION_SIGNATURE",
     StudyOfOrigin = "CANCER_STUDY",
-    Profiled = "PROFILED_IN"
+    Profiled = "PROFILED_IN",
+    NumSamplesOfPatient = "NUM_SAMPLES_OF_PATIENT"
+}
+
+export const specialClinicalAttributes:OncoprintClinicalAttribute[] = [
+    {
+        clinicalAttributeId: SpecialAttribute.StudyOfOrigin,
+        datatype: "STRING",
+        description: "Study which the sample is a part of.",
+        displayName: "Study of origin",
+        patientAttribute: false,
+    },
+    {
+        clinicalAttributeId: SpecialAttribute.MutationSpectrum,
+        datatype: "COUNTS_MAP",
+        description: "Number of point mutations in the sample counted by different types of nucleotide changes.",
+        displayName: "Mutation spectrum",
+        patientAttribute: false,
+    },
+    {
+        clinicalAttributeId: SpecialAttribute.NumSamplesOfPatient,
+        datatype: "NUMBER",
+        description: "Number of queried samples in each patient.",
+        displayName: "# Samples of Patient",
+        patientAttribute: true
+    }
+];
+
+export function isSpecialAttribute(attr:{ clinicalAttributeId: string | SpecialAttribute }) {
+    return ([SpecialAttribute.MutationSpectrum, SpecialAttribute.StudyOfOrigin, SpecialAttribute.NumSamplesOfPatient].indexOf(attr.clinicalAttributeId as any) > -1) ||
+            attr.clinicalAttributeId.startsWith(SpecialAttribute.Profiled);
 }
 
 type OncoprintClinicalData = ClinicalData[]|MutationSpectrum[];
@@ -90,6 +120,21 @@ async function fetch(
                 uniqueSampleKey: sample.uniqueSampleKey,
                 value: studyIdToStudy[sample.studyId].name
             } as ClinicalData));
+            break;
+        case SpecialAttribute.NumSamplesOfPatient:
+            const patientToSamples = _.groupBy(samples, "uniquePatientKey");
+            const patientKeyToPatient = _.keyBy(patients, "uniquePatientKey");
+            ret = _.map(patientToSamples, (samples, patientKey)=>{
+                const patient = patientKeyToPatient[patientKey];
+                return {
+                    clinicalAttribute: attribute,
+                    clinicalAttributeId: attribute.clinicalAttributeId,
+                    patientId: patient.patientId,
+                    uniquePatientKey: patientKey,
+                    studyId: patient.studyId,
+                    value: samples.length
+                } as any as ClinicalData;
+            });
             break;
         default:
             if (attribute.clinicalAttributeId.indexOf(SpecialAttribute.Profiled) === 0) {
