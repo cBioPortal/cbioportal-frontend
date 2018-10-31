@@ -167,17 +167,17 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
                     yEnd = Math.max(yEnd, p.y);
                 }
             }
-            // add width of circle to end to get proper bound
+            // add radius of circle to end to get proper bound
             const xScale = this.xAxis.props.scale.x;
             const yScale = this.yAxis.props.scale.y;
             xEnd += invertIncreasingFunction(
                 inc=>xScale(inc)-xScale(0),
-                6,
+                3,
                 [0, 1]
             );
             yEnd += invertIncreasingFunction(
                 inc=>yScale(0)-yScale(inc),
-                6,
+                3,
                 [0, this.dataDomain.y[1]]
             );
             this.props.onSelection({ xStart, xEnd, yStart, yEnd });
