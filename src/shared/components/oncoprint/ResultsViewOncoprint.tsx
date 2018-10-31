@@ -1,5 +1,5 @@
 import * as React from "react";
-import {observer} from "mobx-react";
+import {observer, Observer} from "mobx-react";
 import {
     action,
     autorun,
@@ -33,10 +33,11 @@ import * as URL from "url";
 import classNames from 'classnames';
 import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
 import naturalSort from "javascript-natural-sort";
-import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
+import {SpecialAttribute, specialClinicalAttributes} from "../../cache/OncoprintClinicalDataCache";
 import Spec = Mocha.reporters.Spec;
 import OqlStatusBanner from "../oqlStatusBanner/OqlStatusBanner";
 import {makeProfiledInClinicalAttributes} from "./ResultsViewOncoprintUtils";
+import {bind} from "bind-decorator";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -63,23 +64,6 @@ export interface IGenesetExpansionRecord {
     molecularProfileId: string;
     correlationValue: number;
 }
-
-const specialClinicalAttributes:OncoprintClinicalAttribute[] = [
-    {
-        clinicalAttributeId: SpecialAttribute.StudyOfOrigin,
-        datatype: "STRING",
-        description: "Study which the sample is a part of.",
-        displayName: "Study of origin",
-        patientAttribute: false,
-    },
-    {
-        clinicalAttributeId: SpecialAttribute.MutationSpectrum,
-        datatype: "COUNTS_MAP",
-        description: "Number of point mutations in the sample counted by different types of nucleotide changes.",
-        displayName: "Mutation spectrum",
-        patientAttribute: false,
-    }
-];
 
 const SAMPLE_MODE_URL_PARAM = "show_samples";
 const CLINICAL_TRACKS_URL_PARAM = "clinicallist";
@@ -134,10 +118,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     public molecularProfileIdToHeatmapTracks =
         observable.map<HeatmapTrackGroupRecord>();
 
-    private controlsHandlers:IOncoprintControlsHandlers;
+    public controlsHandlers:IOncoprintControlsHandlers;
     private controlsState:IOncoprintControlsState & IObservableObject;
 
-    private oncoprint:OncoprintJS<any>;
+    @observable.ref private oncoprint:OncoprintJS<any>;
 
     private putativeDriverSettingsReaction:IReactionDisposer;
     private urlParamsReaction:IReactionDisposer;
@@ -152,6 +136,11 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         onMobxPromise(props.store.studyIds, (studyIds:string[])=>{
             if (studyIds.length > 1) {
                 this.selectedClinicalAttributeIds.set(SpecialAttribute.StudyOfOrigin, true);
+            }
+        });
+        onMobxPromise([props.store.samples, props.store.patients], (samples:any[], patients:any[])=>{
+            if (samples.length !== patients.length) {
+                this.selectedClinicalAttributeIds.set(SpecialAttribute.NumSamplesOfPatient, true);
             }
         });
         
@@ -802,12 +791,18 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             this.props.store.studies,
             this.props.store.clinicalAttributes,
             this.clinicalAttributes_profiledIn,
+            this.props.store.samples,
+            this.props.store.patients
         ],
         invoke:()=>{
             let special = specialClinicalAttributes.concat(this.clinicalAttributes_profiledIn.result!);
             if (this.props.store.studies.result!.length === 1) {
                 // filter out StudyOfOrigin if only one study
                 special = special.filter(x=>(x.clinicalAttributeId!==SpecialAttribute.StudyOfOrigin));
+            }
+            if (this.props.store.samples.result.length === this.props.store.patients.result.length) {
+                // filter out NumSamples if same number of samples as patients
+                special = special.filter(x=>(x.clinicalAttributeId !== SpecialAttribute.NumSamplesOfPatient));
             }
             let server = this.props.store.clinicalAttributes.result!;
             server = _.uniqBy(server, x=>x.clinicalAttributeId); // remove duplicates in case of multiple studies w same attr
@@ -992,6 +987,20 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
+    @bind
+    private getControls() {
+        if (this.oncoprint && !this.oncoprint.webgl_unavailable)  {
+            return (<FadeInteraction showByDefault={true} show={this.mouseInsideBounds}>
+                <OncoprintControls
+                    handlers={this.controlsHandlers}
+                    state={this.controlsState}
+                />
+            </FadeInteraction>);
+        } else {
+            return <span/>;
+        }
+    }
+
     public render() {
         return (
             <div>
@@ -1004,13 +1013,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                      onMouseEnter={this.onMouseEnter}
                      onMouseLeave={this.onMouseLeave}
                 >
-                    {(this.oncoprint && !this.oncoprint.webgl_unavailable) &&
-                    (<FadeInteraction showByDefault={true} show={this.mouseInsideBounds}>
-                        <OncoprintControls
-                            handlers={this.controlsHandlers}
-                            state={this.controlsState}
-                        />
-                    </FadeInteraction>)}
+                    <Observer>
+                        {this.getControls}
+                    </Observer>
 
                     <div style={{position:"relative", marginTop:15}} >
                         <div>

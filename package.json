@@ -147,7 +147,7 @@
     "mobxpromise": "github:cbioportal/mobxpromise#v1.0.2",
     "node-sass": "^4.9.3",
     "numeral": "^2.0.6",
-    "oncoprintjs": "^1.1.9",
+    "oncoprintjs": "^1.1.11",
     "parameter-validator": "^1.0.2",
     "pdfobject": "^2.0.201604172",
     "plotly.js": "^1.41.3",

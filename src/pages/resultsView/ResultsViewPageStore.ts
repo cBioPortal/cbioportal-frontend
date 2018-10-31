@@ -596,6 +596,7 @@ export class ResultsViewPageStore {
                 }
             }
             // add counts for "special" clinical attributes
+            ret[SpecialAttribute.NumSamplesOfPatient] = this.samples.result!.length;
             ret[SpecialAttribute.StudyOfOrigin] = this.samples.result!.length;
             let samplesWithMutationData = 0, samplesWithCNAData = 0;
             for (const sample of this.samples.result!) {
