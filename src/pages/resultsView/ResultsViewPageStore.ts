@@ -635,11 +635,18 @@ export class ResultsViewPageStore {
             const promises = [];
             const studyToDataQueryFilter = this.studyToDataQueryFilter.result!;
             for (const profile of this.molecularProfilesInStudies.result!) {
+                const dataQueryFilter = studyToDataQueryFilter[profile.studyId];
+
+                // there could be no samples if a study doesn't have a sample list matching a specified category (e.g. cna only)
+                if (!dataQueryFilter || (!dataQueryFilter.sampleIds && !dataQueryFilter.sampleListId)) {
+                    continue;
+                }
+
                 const molecularProfileId = profile.molecularProfileId;
                 const projection = "META";
                 const dataFilter = {
                     entrezGeneIds: this.genes.result!.map(g=>g.entrezGeneId),
-                    ...studyToDataQueryFilter[profile.studyId]
+                    ...dataQueryFilter
                 } as MolecularDataFilter & MutationFilter;
 
                 if (profile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED) {
@@ -661,7 +668,7 @@ export class ResultsViewPageStore {
                         geneticProfileId: molecularProfileId,
                         genesetDataFilterCriteria: {
                             genesetIds: this.genesets.result!.map(g=>g.genesetId),
-                            ...studyToDataQueryFilter[profile.studyId]
+                            ...dataQueryFilter
                         } as GenesetDataFilterCriteria,
                         projection
                     }).then(function(response: request.Response) {
