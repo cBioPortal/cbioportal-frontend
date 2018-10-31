@@ -78,6 +78,7 @@ import windowStore from 'shared/components/window/WindowStore';
 import {Layout} from 'react-grid-layout';
 import {getHeatmapMeta} from "../../shared/lib/MDACCUtils";
 import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
+import onMobxPromise from "../../shared/lib/onMobxPromise";
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
 
@@ -1969,19 +1970,22 @@ export class StudyViewPageStore {
         }
     }
 
-    public async getScatterDownloadData(chartMeta: ChartMeta)
+    public getScatterDownloadData()
     {
-        if (this.mutationCountVsFGAData.result) {
-            return generateScatterPlotDownloadData(
-                this.mutationCountVsFGAData.result,
-                this.sampleToAnalysisGroup.result,
-                this.analysisGroupsSettings.clinicalAttribute,
-                this.analysisGroupsSettings.groups as AnalysisGroup[]
-            );
-        }
-        else {
-            return "";
-        }
+        return new Promise<string>((resolve)=>{
+            onMobxPromise(this.mutationCountVsFGAData, data=>{
+                if (data) {
+                    resolve(generateScatterPlotDownloadData(
+                        data,
+                        this.sampleToAnalysisGroup.result,
+                        this.analysisGroupsSettings.clinicalAttribute,
+                        this.analysisGroupsSettings.groups as AnalysisGroup[]
+                    ));
+                } else {
+                    resolve("");
+                }
+            });
+        });
     }
 
     public async getSurvivalDownloadData(chartMeta: ChartMeta)
