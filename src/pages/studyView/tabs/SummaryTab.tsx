@@ -270,7 +270,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 props.sampleToAnalysisGroup = this.store.sampleToAnalysisGroup;
                 props.download = [
                     {
-                        initDownload: () => this.store.getScatterDownloadData(chartMeta),
+                        initDownload: () => this.store.getScatterDownloadData(),
                         type: 'TSV'
                     }, {
                         type: 'SVG'
