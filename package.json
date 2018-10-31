@@ -3,6 +3,7 @@
   "description": "",
   "scripts": {
     "start": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && cross-env NODE_ENV=development webpack-dev-server",
+    "startSSL": "./scripts/env_vars.sh && eval \"$(./scripts/env_vars.sh)\" && cross-env NODE_ENV=development webpack-dev-server --https",
     "clean": "rimraf dist tsDist common-dist",
     "build": "npm run clean && npm run buildDLL:prod && cross-env NODE_ENV=production webpack --progress --colors",
     "buildDLL:prod": "npm run clean && cross-env NODE_ENV=production webpack --config vendor-bundles.webpack.config.js",
