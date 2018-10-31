@@ -1,16 +1,6 @@
 import {MobxPromise} from "mobxpromise";
 import {autorun, IReactionDisposer} from "mobx";
 
-export function onMobxPromise<T>(promise:MobxPromise<T>,
-                          onComplete:(result:T)=>void,
-                          times?:number,
-                          onDispose?:()=>void):IReactionDisposer;
-
-export function onMobxPromise<T>(promise:Array<MobxPromise<T>>,
-                          onComplete:(...results:T[])=>void,
-                          times?:number,
-                          onDispose?:()=>void):IReactionDisposer;
-
 export default function onMobxPromise<T>(promise:MobxPromise<T>|Array<MobxPromise<T>>,
                                          onComplete:(...results:T[])=>void,
                                          times:number = 1,
