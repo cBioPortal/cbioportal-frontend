@@ -1,5 +1,5 @@
 import * as React from "react";
-import OncoprintJS, {TrackId} from "oncoprintjs";
+import OncoprintJS, {TrackId, CustomTrackOption} from "oncoprintjs";
 import {GenePanelData, MolecularProfile} from "../../api/generated/CBioPortalAPI";
 import {observer} from "mobx-react";
 import {computed} from "mobx";
@@ -29,6 +29,7 @@ export type ClinicalTrackSpec = {
     data: ClinicalTrackDatum[];
     altered_uids?:string[];
     na_legend_label?:string;
+    custom_options?:CustomTrackOption[];
 } & ({
     datatype: "counts";
     countsCategoryLabels:string[];
