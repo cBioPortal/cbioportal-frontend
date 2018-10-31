@@ -29,3 +29,9 @@ export function embedGoogleAnalytics(ga_code:string){
         ga('send', 'pageview');
     });
 }
+
+export function sendSentryMessage(msg:string) {
+    if ((window as any).Sentry) {
+        (window as any).Sentry.captureException(new Error(msg));
+    }
+}
