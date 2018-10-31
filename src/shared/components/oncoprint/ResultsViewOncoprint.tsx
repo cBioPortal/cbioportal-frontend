@@ -923,19 +923,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         };
     }
 
-    readonly caseSetName = remoteData({
-        await:()=>[
-            this.props.store.sampleLists
-        ],
-        invoke:()=>{
-            if (this.props.store.sampleLists.result!.length === 1) {
-                return Promise.resolve(this.props.store.sampleLists.result![0].name);
-            } else {
-                return Promise.resolve(undefined);
-            }
-        }
-    });
-
+    /* commenting this out because I predict it could make a comeback
     @computed get headerColumnModeButton() {
         if (!this.props.store.samples.isComplete ||
             !this.props.store.patients.isComplete ||
@@ -969,48 +957,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 </Button>
             </DefaultTooltip>
         );
-    }
-
-    @computed get caseSetInfo() {
-        let caseSetText = null;
-
-        if (this.props.store.patients.isComplete &&
-            this.props.store.samples.isComplete &&
-            this.caseSetName.isComplete)
-        {
-            const caseSetName = this.caseSetName.result || "User-defined Patient List";
-            const patientCount = this.props.store.patients.result.length;
-            const sampleCount = this.props.store.samples.result.length;
-
-            caseSetText = <span>Case Set: {caseSetName} ({patientCount} patients / {sampleCount} samples)</span>;
-        }
-
-        return (
-            <div>
-                {caseSetText}
-                {this.headerColumnModeButton}
-            </div>
-        );
-    }
-
-    @computed get alterationInfo() {
-        const alteredIdsPromise = (this.columnMode === "sample" ? this.props.store.alteredSampleKeys : this.props.store.alteredPatientKeys);
-        const sequencedIdsPromise = (this.columnMode === "sample" ? this.props.store.sequencedSampleKeys: this.props.store.sequencedPatientKeys);
-        const allIdsPromise = (this.columnMode === "sample" ? this.props.store.samples : this.props.store.patients);
-        if (allIdsPromise.isComplete && alteredIdsPromise.isComplete && sequencedIdsPromise.isComplete) {
-            return (
-                <span style={{marginTop:"15px", marginBottom:"15px", display: "block"}}>
-                    {`Altered in ${alteredIdsPromise.result.length} `+
-                    `(${percentAltered(alteredIdsPromise.result.length, sequencedIdsPromise.result.length)}) `+
-                    `of ${sequencedIdsPromise.result.length} sequenced `+
-                    `${this.columnMode === "sample" ? "samples" : "cases/patients"} `+
-                    `(${allIdsPromise.result.length} total)`}
-                </span>
-            )
-        } else {
-            return null;
-        }
-    }
+    }*/
 
     @computed get isLoading() {
         return this.clinicalTracks.isPending
@@ -1057,9 +1004,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                      onMouseEnter={this.onMouseEnter}
                      onMouseLeave={this.onMouseLeave}
                 >
-
-                    {this.caseSetInfo}
-
                     {(this.oncoprint && !this.oncoprint.webgl_unavailable) &&
                     (<FadeInteraction showByDefault={true} show={this.mouseInsideBounds}>
                         <OncoprintControls
@@ -1068,9 +1012,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                         />
                     </FadeInteraction>)}
 
-                    <div style={{position:"relative"}} >
+                    <div style={{position:"relative", marginTop:15}} >
                         <div>
-                            {this.alterationInfo}
                             <Oncoprint
                                 oncoprintRef={this.oncoprintRef}
                                 clinicalTracks={this.clinicalTracks.result}
