@@ -4,7 +4,11 @@ import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import {action, computed, observable, ObservableMap, reaction} from "mobx";
 import {
-    ClinicalDataCount, ClinicalDataCountFilter, ClinicalDataCountItem,
+    ClinicalDataBinCountFilter,
+    ClinicalDataBinFilter,
+    ClinicalDataCount,
+    ClinicalDataCountFilter,
+    ClinicalDataCountItem,
     ClinicalDataEqualityFilter,
     ClinicalDataFilter,
     ClinicalDataIntervalFilter,
@@ -908,24 +912,58 @@ export class StudyViewPageStore {
      *
      */
     @computed
-    get unfilteredAttrs() {
-        return _.sortBy(_.unionBy(_.filter(this.visibleAttributes, (chartMeta:ChartMeta) => {
-            if(chartMeta.clinicalAttribute !== undefined) {
-                let key = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute);
+    get unfilteredAttrsForNonNumerical() {
+        const visibleNonNumericalAttributes = this.visibleAttributes.filter((chartMeta: ChartMeta) => {
+            if(chartMeta.clinicalAttribute !== undefined && chartMeta.clinicalAttribute.datatype !== "NUMBER") {
+                const key = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute);
                 return !this._clinicalDataEqualityFilterSet.has(key);
             }
             return false;
-        }).map((chartMeta: ChartMeta) => {
+        });
+
+        const defaultVisibleNonNumericalAttributes = this.defaultVisibleAttributes.result.filter(
+            (attr: ClinicalAttribute) => attr.datatype !== "NUMBER");
+
+        return _.sortBy(_.unionBy(visibleNonNumericalAttributes.map((chartMeta: ChartMeta) => {
             return {
                 attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
                 clinicalDataType: chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE'
-            } as ClinicalDataFilter
-        }), this.defaultVisibleAttributes.result.map((attr:ClinicalAttribute) => {
+            } as ClinicalDataFilter;
+        }), defaultVisibleNonNumericalAttributes.map((attr:ClinicalAttribute) => {
             return {
                 attributeId: attr.clinicalAttributeId,
                 clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE'
-            } as ClinicalDataFilter
+            } as ClinicalDataFilter;
         }), attr => [attr.attributeId, attr.clinicalDataType].join('')),
+            attr => [attr.attributeId, attr.clinicalDataType].join(''));
+    }
+
+    @computed
+    get unfilteredAttrsForNumerical() {
+        const visibleNumericalAttributes = this.visibleAttributes.filter((chartMeta: ChartMeta) => {
+            if(chartMeta.clinicalAttribute !== undefined && chartMeta.clinicalAttribute.datatype === "NUMBER") {
+                const key = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute);
+                return !this._clinicalDataIntervalFilterSet.has(key);
+            }
+            return false;
+        });
+
+        const defaultVisibleNumericalAttributes = this.defaultVisibleAttributes.result.filter(
+            (attr: ClinicalAttribute) => attr.datatype === "NUMBER");
+
+        return _.sortBy(_.unionBy(visibleNumericalAttributes.map((chartMeta: ChartMeta) => {
+                return {
+                    attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
+                    clinicalDataType: chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE',
+                    disableLogScale: false
+                } as ClinicalDataBinFilter;
+            }), defaultVisibleNumericalAttributes.map((attr:ClinicalAttribute) => {
+                return {
+                    attributeId: attr.clinicalAttributeId,
+                    clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE',
+                    disableLogScale: false
+                } as ClinicalDataBinFilter;
+            }), attr => [attr.attributeId, attr.clinicalDataType].join('')),
             attr => [attr.attributeId, attr.clinicalDataType].join(''));
     }
 
@@ -933,9 +971,22 @@ export class StudyViewPageStore {
         invoke: async () => {
             return internalClient.fetchClinicalDataCountsUsingPOST({
                 clinicalDataCountFilter: {
-                    attributes: this.unfilteredAttrs,
+                    attributes: this.unfilteredAttrsForNonNumerical,
                     studyViewFilter: this.filters
                 } as ClinicalDataCountFilter
+            });
+        },
+        default: []
+    });
+
+    readonly unfilteredClinicalDataBinCount = remoteData<DataBin[]>({
+        invoke: async () => {
+            return internalClient.fetchClinicalDataBinCountsUsingPOST({
+                dataBinMethod: 'STATIC',
+                clinicalDataBinCountFilter: {
+                    attributes: this.unfilteredAttrsForNumerical,
+                    studyViewFilter: this.filters
+                } as ClinicalDataBinCountFilter
             });
         },
         default: []
@@ -1003,17 +1054,35 @@ export class StudyViewPageStore {
     }
 
     public getClinicalDataBin(chartMeta: ChartMeta) {
-        let uniqueKey: string = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!);
+        const uniqueKey: string = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!);
         if (!this.clinicalDataBinPromises.hasOwnProperty(uniqueKey)) {
             this.clinicalDataBinPromises[uniqueKey] = remoteData<DataBin[]>({
-                invoke: () => {
+                await: () =>[this.unfilteredClinicalDataBinCount],
+                invoke: async () => {
+                    const clinicalDataType = chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE';
                     // TODO this.barChartFilters.length > 0 ? 'STATIC' : 'DYNAMIC' (not trivial when multiple filters involved)
-                    return internalClient.fetchClinicalDataBinCountsUsingPOST({
-                        dataBinMethod: DataBinMethodConstants.STATIC,
-                        disableLogScale: this.isLogScaleDisabled(chartMeta.uniqueKey),
-                        attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
-                        clinicalDataType: chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE',
-                        studyViewFilter: this.filters
+                    const dataBinMethod = DataBinMethodConstants.STATIC;
+                    let result = {};
+
+                    if(this._clinicalDataIntervalFilterSet.has(uniqueKey)) {
+                        result = await internalClient.fetchClinicalDataBinCountsUsingPOST({
+                            dataBinMethod,
+                            clinicalDataBinCountFilter: {
+                                attributes: [{
+                                    attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
+                                    clinicalDataType: clinicalDataType,
+                                    disableLogScale: this.isLogScaleDisabled(chartMeta.uniqueKey),
+                                } as ClinicalDataBinFilter],
+                                studyViewFilter: this.filters
+                            } as ClinicalDataBinCountFilter
+                        });
+                    }
+                    else {
+                        result = this.unfilteredClinicalDataBinCount.result;
+                    }
+
+                    return _.filter(result, {
+                        attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId
                     });
                 },
                 default: [],

@@ -82,7 +82,13 @@ describe('StudyViewUtils', () => {
                         'sampleId': 'sample 1',
                         'studyId': 'study2'
                     }]
-                }
+                },
+                mutationCountVsCNASelection: {
+                    xEnd: 0, xStart: 0, yEnd: 0, yStart: 0
+                },
+                numberOfSamplesPerPatient: [],
+                withCNAData: false,
+                withMutationData: false
             } as StudyViewFilterWithSampleIdentifierFilters;
 
             let genes = [{ entrezGeneId: 1, hugoGeneSymbol: "GENE1" }, { entrezGeneId: 2, hugoGeneSymbol: "GENE2" }] as Gene[];
