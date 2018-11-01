@@ -4,11 +4,11 @@ var menuDotsIcon = require('../img/menudots.svg');
 var TOGGLE_BTN_CLASS = "oncoprintjs__track_options__toggle_btn_img";
 var TOGGLE_BTN_OPEN_CLASS = "oncoprintjs__track_options__open";
 var DROPDOWN_CLASS = "oncoprintjs__track_options__dropdown";
+var SEPARATOR_CLASS = "oncoprintjs__track_options__separator";
 var NTH_CLASS_PREFIX = "nth-";
 
 var OncoprintTrackOptionsView = (function () {
-    function OncoprintTrackOptionsView($div, moveUpCallback, moveDownCallback, removeCallback, sortChangeCallback, unexpandCallback) {
-	// removeCallback: function(track_id)
+    function OncoprintTrackOptionsView($div, moveUpCallback, moveDownCallback, removeCallback, sortChangeCallback, unexpandCallback, custom_options) {
 	var position = $div.css('position');
 	if (position !== 'absolute' && position !== 'relative') {
 	    console.log("WARNING: div passed to OncoprintTrackOptionsView must be absolute or relative positioned - layout problems will occur");
@@ -19,6 +19,7 @@ var OncoprintTrackOptionsView = (function () {
 	this.removeCallback = removeCallback; // function(track_id) { ... }
 	this.sortChangeCallback = sortChangeCallback; // function(track_id, dir) { ... }
 	this.unexpandCallback = unexpandCallback; // function(track_id)
+	this.custom_options = custom_options;
 
 	this.$div = $div;
 	this.$ctr = $('<div></div>').css({'position': 'absolute', 'overflow-y':'hidden', 'overflow-x':'hidden'}).appendTo(this.$div);
@@ -133,7 +134,7 @@ var OncoprintTrackOptionsView = (function () {
 	return li;
     };
     var $makeDropdownSeparator = function () {
-	return $('<li>').css({'border-top': '1px solid black'});
+	return $('<li>').css({'border-top': '1px solid black'}).addClass(SEPARATOR_CLASS);
     };
 
     var renderSortArrow = function($sortarrow, model, track_id) {
@@ -273,6 +274,18 @@ var OncoprintTrackOptionsView = (function () {
 			view.unexpandCallback(track_id);
 		    }));
 	}
+	// Add custom options
+	var custom_options = model.getTrackCustomOptions(track_id);
+	if (custom_options && custom_options.length > 0) {
+		$dropdown.append($makeDropdownSeparator());
+		for (var i=0; i<custom_options.length; i++) {
+			var option = custom_options[i];
+			$dropdown.append($makeDropdownOption(option.label, option.weight || "normal", !!option.disabled, function (evt) {
+				evt.stopPropagation();
+				option.onClick(track_id);
+			}));
+		}
+	}
     };
 
     OncoprintTrackOptionsView.prototype.enableInteraction = function () {
@@ -334,6 +347,9 @@ var OncoprintTrackOptionsView = (function () {
     }
     OncoprintTrackOptionsView.prototype.destroy = function() {
     	$(document).off("click", this.clickHandler);
+	};
+    OncoprintTrackOptionsView.prototype.setTrackCustomOptions = function(model) {
+    	renderAllOptions(this, model);
 	};
     return OncoprintTrackOptionsView;
 })();

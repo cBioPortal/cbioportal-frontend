@@ -14793,6 +14793,11 @@ var Oncoprint = (function () {
 	this.model.setCellPaddingOn(cell_padding_on);
 	this.cell_view.setCellPaddingOn(this.model);
     }
+
+    Oncoprint.prototype.setTrackCustomOptions = function(track_id, options) {
+	this.model.setTrackCustomOptions(track_id, options);
+	this.track_options_view.setTrackCustomOptions(this.model);
+	}
     
     Oncoprint.prototype.toSVG = function(with_background) {
         if(this.webgl_unavailable || this.destroyed) {
@@ -15134,6 +15139,7 @@ var OncoprintModel = (function () {
 	this.track_expand_button_getter = {}; // track id -> function from boolean to string if customized
 	this.track_expansion_tracks = {}; // track id -> array of track ids if applicable
 	this.track_expansion_parent = {}; // track id -> track id if applicable
+	this.track_custom_options = {}; // track id -> { label, onClick, weight, disabled }[] ( see index.d.ts :: CustomTrackOption )
 	
 	// Rule Set Properties
 	this.rule_sets = {}; // map from rule set id to rule set
@@ -15719,7 +15725,8 @@ var OncoprintModel = (function () {
 		    params.removeCallback, params.label, params.description, params.track_info,
 		    params.sortCmpFn, params.sort_direction_changeable, params.init_sort_direction, params.onSortDirectionChange,
 		    params.data, params.rule_set, params.track_label_color, params.html_label,
-		    params.expansion_of, params.expandCallback, params.expandButtonTextGetter, params.important_ids
+		    params.expansion_of, params.expandCallback, params.expandButtonTextGetter, params.important_ids,
+			params.custom_track_options
 	    );
 	}
 	this.track_tops.update();
@@ -15732,8 +15739,9 @@ var OncoprintModel = (function () {
 	    sortCmpFn, sort_direction_changeable, init_sort_direction, onSortDirectionChange,
 	    data, rule_set, track_label_color, html_label,
 	    expansion_of, expandCallback, expandButtonTextGetter,
-		 important_ids
+		 important_ids, custom_track_options
     ) {
+	model.track_custom_options[track_id] = ifndef(custom_track_options, []);
 	model.track_label[track_id] = ifndef(label, "Label");
 	model.track_label_color[track_id] = ifndef(track_label_color, "black");
 	model.track_link_url[track_id] = ifndef(link_url, null);
@@ -16224,6 +16232,14 @@ var OncoprintModel = (function () {
 	}
 	return track_id;
     }
+
+    OncoprintModel.prototype.getTrackCustomOptions = function(track_id) {
+	return this.track_custom_options[track_id];
+	}
+
+	OncoprintModel.prototype.setTrackCustomOptions = function(track_id, options) {
+	this.track_custom_options[track_id] = options;
+	}
     
     OncoprintModel.prototype.getRuleSet = function (track_id) {
 	return this.rule_sets[this.track_rule_set_id[track_id]];
@@ -24432,11 +24448,11 @@ var menuDotsIcon = __webpack_require__(33);
 var TOGGLE_BTN_CLASS = "oncoprintjs__track_options__toggle_btn_img";
 var TOGGLE_BTN_OPEN_CLASS = "oncoprintjs__track_options__open";
 var DROPDOWN_CLASS = "oncoprintjs__track_options__dropdown";
+var SEPARATOR_CLASS = "oncoprintjs__track_options__separator";
 var NTH_CLASS_PREFIX = "nth-";
 
 var OncoprintTrackOptionsView = (function () {
-    function OncoprintTrackOptionsView($div, moveUpCallback, moveDownCallback, removeCallback, sortChangeCallback, unexpandCallback) {
-	// removeCallback: function(track_id)
+    function OncoprintTrackOptionsView($div, moveUpCallback, moveDownCallback, removeCallback, sortChangeCallback, unexpandCallback, custom_options) {
 	var position = $div.css('position');
 	if (position !== 'absolute' && position !== 'relative') {
 	    console.log("WARNING: div passed to OncoprintTrackOptionsView must be absolute or relative positioned - layout problems will occur");
@@ -24447,6 +24463,7 @@ var OncoprintTrackOptionsView = (function () {
 	this.removeCallback = removeCallback; // function(track_id) { ... }
 	this.sortChangeCallback = sortChangeCallback; // function(track_id, dir) { ... }
 	this.unexpandCallback = unexpandCallback; // function(track_id)
+	this.custom_options = custom_options;
 
 	this.$div = $div;
 	this.$ctr = $('<div></div>').css({'position': 'absolute', 'overflow-y':'hidden', 'overflow-x':'hidden'}).appendTo(this.$div);
@@ -24561,7 +24578,7 @@ var OncoprintTrackOptionsView = (function () {
 	return li;
     };
     var $makeDropdownSeparator = function () {
-	return $('<li>').css({'border-top': '1px solid black'});
+	return $('<li>').css({'border-top': '1px solid black'}).addClass(SEPARATOR_CLASS);
     };
 
     var renderSortArrow = function($sortarrow, model, track_id) {
@@ -24701,6 +24718,18 @@ var OncoprintTrackOptionsView = (function () {
 			view.unexpandCallback(track_id);
 		    }));
 	}
+	// Add custom options
+	var custom_options = model.getTrackCustomOptions(track_id);
+	if (custom_options && custom_options.length > 0) {
+		$dropdown.append($makeDropdownSeparator());
+		for (var i=0; i<custom_options.length; i++) {
+			var option = custom_options[i];
+			$dropdown.append($makeDropdownOption(option.label, option.weight || "normal", !!option.disabled, function (evt) {
+				evt.stopPropagation();
+				option.onClick(track_id);
+			}));
+		}
+	}
     };
 
     OncoprintTrackOptionsView.prototype.enableInteraction = function () {
@@ -24762,6 +24791,9 @@ var OncoprintTrackOptionsView = (function () {
     }
     OncoprintTrackOptionsView.prototype.destroy = function() {
     	$(document).off("click", this.clickHandler);
+	};
+    OncoprintTrackOptionsView.prototype.setTrackCustomOptions = function(model) {
+    	renderAllOptions(this, model);
 	};
     return OncoprintTrackOptionsView;
 })();

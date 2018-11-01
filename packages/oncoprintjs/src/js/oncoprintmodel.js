@@ -158,6 +158,7 @@ var OncoprintModel = (function () {
 	this.track_expand_button_getter = {}; // track id -> function from boolean to string if customized
 	this.track_expansion_tracks = {}; // track id -> array of track ids if applicable
 	this.track_expansion_parent = {}; // track id -> track id if applicable
+	this.track_custom_options = {}; // track id -> { label, onClick, weight, disabled }[] ( see index.d.ts :: CustomTrackOption )
 	
 	// Rule Set Properties
 	this.rule_sets = {}; // map from rule set id to rule set
@@ -743,7 +744,8 @@ var OncoprintModel = (function () {
 		    params.removeCallback, params.label, params.description, params.track_info,
 		    params.sortCmpFn, params.sort_direction_changeable, params.init_sort_direction, params.onSortDirectionChange,
 		    params.data, params.rule_set, params.track_label_color, params.html_label,
-		    params.expansion_of, params.expandCallback, params.expandButtonTextGetter, params.important_ids
+		    params.expansion_of, params.expandCallback, params.expandButtonTextGetter, params.important_ids,
+			params.custom_track_options
 	    );
 	}
 	this.track_tops.update();
@@ -756,8 +758,9 @@ var OncoprintModel = (function () {
 	    sortCmpFn, sort_direction_changeable, init_sort_direction, onSortDirectionChange,
 	    data, rule_set, track_label_color, html_label,
 	    expansion_of, expandCallback, expandButtonTextGetter,
-		 important_ids
+		 important_ids, custom_track_options
     ) {
+	model.track_custom_options[track_id] = ifndef(custom_track_options, []);
 	model.track_label[track_id] = ifndef(label, "Label");
 	model.track_label_color[track_id] = ifndef(track_label_color, "black");
 	model.track_link_url[track_id] = ifndef(link_url, null);
@@ -1248,6 +1251,14 @@ var OncoprintModel = (function () {
 	}
 	return track_id;
     }
+
+    OncoprintModel.prototype.getTrackCustomOptions = function(track_id) {
+	return this.track_custom_options[track_id];
+	}
+
+	OncoprintModel.prototype.setTrackCustomOptions = function(track_id, options) {
+	this.track_custom_options[track_id] = options;
+	}
     
     OncoprintModel.prototype.getRuleSet = function (track_id) {
 	return this.rule_sets[this.track_rule_set_id[track_id]];

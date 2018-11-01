@@ -98,6 +98,8 @@ declare module "oncoprintjs"
 
     export type ShapeSpec = any; // TODO
 
+    export type CustomTrackOption = { label:string, onClick:(id:TrackId)=>void, weight?:string, disabled?:boolean};
+
     export type TrackSpec<D> = {
         target_group?:TrackGroupIndex;
         track_group_header?:string;
@@ -124,6 +126,7 @@ declare module "oncoprintjs"
         expandCallback?: (id: TrackId) => void;
         expandButtonTextGetter?: (is_expanded: boolean) => string;
         important_ids?:string[];
+        custom_track_options?:CustomTrackOption[];
     };
 
     export default class OncoprintJS<D> {
@@ -187,6 +190,7 @@ declare module "oncoprintjs"
         setIdClipboardContents:(array:string[])=>void;
         getIdClipboardContents:()=>string[];
         onClipboardChange:(callback:(array:string[])=>void)=>void;
+        setTrackCustomOptions:(track_id:TrackId, custom_options?:CustomTrackOption[]);
 
         constructor(ctr_selector:string, width:number);
         destroy:()=>void;

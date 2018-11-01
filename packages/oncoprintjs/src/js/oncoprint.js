@@ -1034,6 +1034,11 @@ var Oncoprint = (function () {
 	this.model.setCellPaddingOn(cell_padding_on);
 	this.cell_view.setCellPaddingOn(this.model);
     }
+
+    Oncoprint.prototype.setTrackCustomOptions = function(track_id, options) {
+	this.model.setTrackCustomOptions(track_id, options);
+	this.track_options_view.setTrackCustomOptions(this.model);
+	}
     
     Oncoprint.prototype.toSVG = function(with_background) {
         if(this.webgl_unavailable || this.destroyed) {
