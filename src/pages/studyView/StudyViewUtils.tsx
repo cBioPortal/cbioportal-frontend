@@ -83,6 +83,8 @@ export const COLORS = [
 export const NA_DATA = "NA";
 export const EXPONENTIAL_FRACTION_DIGITS = 3;
 
+export const MutationCountVsCnaYBinsMin = 52; // calibrated so that the dots are right up against each other. needs to correspond with the width and height of the chart
+
 
 const OPERATOR_MAP: {[op:string]: string} = {
     "<=": "≤",

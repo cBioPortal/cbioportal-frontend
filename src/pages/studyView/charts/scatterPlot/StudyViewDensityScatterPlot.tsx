@@ -25,6 +25,7 @@ import invertIncreasingFunction from "../../../../shared/lib/invertIncreasingFun
 export interface IStudyViewDensityScatterPlotProps {
     width:number;
     height:number;
+    yBinsMin:number;
     data:DensityPlotBin[]
     onSelection:(bounds:RectangleBounds)=>void;
 
@@ -110,10 +111,10 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
 
     @computed get plotDomain() {
         // enforce plot constraints - because of dot size and wanting them to be
-        //  right up against each other, we cant have less than 50 on the y axis
+        //  right up against each other, we cant have less than yBinsMin on the y axis
         return {
             x: [0,1] as [number, number],
-            y: [0, Math.max(50, this.dataDomain.y[1])]
+            y: [0, Math.max(this.props.yBinsMin, this.dataDomain.y[1])]
         };
     }
 
@@ -369,7 +370,7 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
                             crossAxis={false}
                             tickCount={NUM_AXIS_TICKS}
                             tickFormat={this.tickFormat}
-                            axisLabelComponent={<VictoryLabel dy={25}/>}
+                            axisLabelComponent={<VictoryLabel dy={20}/>}
                             label={this.props.axisLabelX}
                         />
                         <VictoryAxis

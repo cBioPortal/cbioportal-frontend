@@ -59,7 +59,7 @@ import {
     isFiltered,
     isLogScaleByDataBins,
     isPreSelectedClinicalAttr,
-    makePatientToClinicalAnalysisGroup,
+    makePatientToClinicalAnalysisGroup, MutationCountVsCnaYBinsMin,
     NA_DATA,
     pickClinicalDataColors,
     showOriginStudiesInSummaryDescription,
@@ -2114,7 +2114,7 @@ export class StudyViewPageStore {
         invoke:async()=>{
             if (!!this.clinicalAttributes.result!.find(a=>a.clinicalAttributeId === MUTATION_COUNT) &&
                 !!this.clinicalAttributes.result!.find(a=>a.clinicalAttributeId === FRACTION_GENOME_ALTERED)) {
-                let yAxisBinCount = 50;
+                let yAxisBinCount = MutationCountVsCnaYBinsMin;
                 // dont have more bins than there are integers in the plot area
                 const filter = this.getMutationCountVsCNAFilter();
                 if (filter) {
