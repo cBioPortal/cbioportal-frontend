@@ -463,12 +463,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                                 oncoKbCancerGenes={patientViewPageStore.oncoKbCancerGenes}
                                                 civicGenes={patientViewPageStore.civicGenes}
                                                 civicVariants={patientViewPageStore.civicVariants}
+                                                trialMatchGenes={patientViewPageStore.trialMatchGenes}
+                                                trialMatchVariants={patientViewPageStore.trialMatchVariants}
                                                 userEmailAddress={ServerConfigHelpers.getUserEmailAddress()}
                                                 enableOncoKb={AppConfig.serverConfig.show_oncokb}
                                                 enableFunctionalImpact={AppConfig.serverConfig.show_genomenexus}
                                                 enableHotspot={AppConfig.serverConfig.show_hotspot}
                                                 enableMyCancerGenome={AppConfig.serverConfig.mycancergenome_show}
                                                 enableCivic={AppConfig.serverConfig.show_civic}
+                                                enableTrialMatch={AppConfig.serverConfig.show_trial_match}
                                                 columnVisibility={this.mutationTableColumnVisibility}
                                                 columnVisibilityProps={{
                                                     onColumnToggled: this.onMutationTableColumnVisibilityToggled

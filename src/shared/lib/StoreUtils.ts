@@ -43,7 +43,6 @@ import {
 import {
     getCivicVariants, getCivicGenes
 } from "shared/lib/CivicUtils";
-import {Query, default as OncoKbAPI, Gene as OncoKbGene, CancerGene} from "public-lib/api/generated/OncoKbAPI";
 import {
     getTrialMatchVariants, getTrialMatchGenes
 } from "shared/lib/TrialMatchUtils";
@@ -57,7 +56,7 @@ import {IGisticData} from "shared/model/Gistic";
 import {IMutSigData} from "shared/model/MutSig";
 import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
 import {IMutationalSignature, IMutationalSignatureMeta} from "shared/model/MutationalSignature";
-import {ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
+import {ICivicGeneData, ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import {ITrialMatchVariant, ITrialMatchGene} from "shared/model/TrialMatch.ts";
 import {MOLECULAR_PROFILE_MUTATIONS_SUFFIX, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 import GenomeNexusAPI from "public-lib/api/generated/GenomeNexusAPI";

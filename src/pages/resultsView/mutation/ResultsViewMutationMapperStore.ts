@@ -107,7 +107,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
             this.mutationData,
             this.clinicalDataForSamples
         ],
-        invoke: async() => this.config.showCivic? fetchTrialMatchGenes(this.mutationData) : {},
+        invoke: async() => this.config.show_civic? fetchTrialMatchGenes(this.mutationData) : {},
         onError: (err: Error) => {
             // fail silently
         }
@@ -119,7 +119,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
             this.mutationData
         ],
         invoke: async() => {
-            if (this.config.showCivic && this.trialMatchGenes.result) {
+            if (this.config.show_civic && this.trialMatchGenes.result) {
                 return fetchTrialMatchVariants(this.trialMatchGenes.result as ITrialMatchGene, this.mutationData);
             }
             else {
