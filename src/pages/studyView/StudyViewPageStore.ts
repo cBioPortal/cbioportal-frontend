@@ -999,7 +999,7 @@ export class StudyViewPageStore {
                 await: () =>[this.unfilteredClinicalDataCount],
                 invoke: async () => {
                     let dataType = chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE';
-                    let result = {};
+                    let result: ClinicalDataCountItem[] = [];
                     if(this._clinicalDataEqualityFilterSet.has(uniqueKey)) {
                         result = await internalClient.fetchClinicalDataCountsUsingPOST({
                             clinicalDataCountFilter: {
@@ -1018,7 +1018,7 @@ export class StudyViewPageStore {
                         attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
                         clinicalDataType: dataType
                     });
-                    let counts = [];
+                    let counts:ClinicalDataCount[] = [];
                     if (data !== undefined) {
                         counts = data.counts;
                     }
