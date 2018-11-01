@@ -16,41 +16,20 @@ function setImageRoot(path:string){
     return `${AppConfig.serverConfig.skin_documentation_baseurl}/${path}`
 }
 
-class Heading extends React.Component<{ level:number },{}>{
-    render(){
-        const CustomTag = `h${this.props.level}`;
-        const firstChild: string = (this.props.children as any[])[0] as string;
-        const text:string = (firstChild && typeof firstChild === 'string') ? firstChild : "";
-
-        // this transformation is to match headers to internal anchors (#) produced by markdown renderer
-        // unfortunately, we rely on the text of the headers matching the text of urls in the markdown
-        const id = text.toLowerCase().replace(/\s/g,'-').replace(/\?/g,"");
-        const topLink = this.props.level > 1 ? <a href="#pageTop" title={"Return to top"}><i className={"fa fa-arrow-circle-up"}></i></a> : "";
-
-        return <CustomTag id={id}>{text} {topLink}</CustomTag>
-    }
-}
-
 @observer
-export default class StaticContent extends React.Component<{ sourceUrl:string, title?:string }, {}> {
+export default class StaticContent extends React.Component<{ sourceUrl:string, title?:string, renderers?:{ [k:string]:any } }, {}> {
 
     private get url(){
-        return getDocsUrl(this.props.sourceUrl!,AppConfig.serverConfig.skin_documentation_baseurl!);
+        return getDocsUrl(this.props.sourceUrl!, AppConfig.serverConfig.skin_documentation_baseurl!);
     }
 
     readonly source = remoteData<string>(async ()=>{
         return await $.get(this.url);
     });
 
-    private get renderers(){
-        return{
-            heading:Heading
-        }
-    }
-
     private content(content:string, url:string){
         if (isMarkDown(url)) {
-            return <ReactMarkdown renderers={this.renderers} className={'markdown-body'} escapeHtml={false} source={this.source.result!} />;
+            return <ReactMarkdown renderers={this.props.renderers || {}} className={'markdown-body'} escapeHtml={false} source={this.source.result!} />;
         } else {
             return <div dangerouslySetInnerHTML={{__html: content}} />
         }
