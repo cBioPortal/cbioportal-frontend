@@ -2,6 +2,7 @@ import {default as URL, QueryParams} from "url";
 import AppConfig from "appConfig";
 import formSubmit from "shared/lib/formSubmit";
 import getBrowserWindow from "../lib/getBrowserWindow";
+import App from "../../appShell/App/App";
 
 export function trimTrailingSlash(str:string){
    return str.replace(/\/$/g,"");
@@ -144,11 +145,14 @@ export function getConfigurationServiceApiUrl() {
 export function getG2SApiUrl() {
     return 'https://g2s.genomenexus.org';
 }
-export function getTissueImageCheckUrl(filter:string) {
-    return buildCBioPortalAPIUrl('proxy/cancer.digitalslidearchive.net/local_php/get_slide_list_from_db_groupid_not_needed.php', {
-        slide_name_filter: filter
-    });
+
+export function getDigitalSlideArchiveMetaUrl(patientId:string) {
+    return AppConfig.serverConfig.digital_slide_archive_meta_url + patientId;
 }
+export function getDigitalSlideArchiveIFrameUrl(patientId:string){
+    return AppConfig.serverConfig.digital_slide_archive_iframe_url + patientId;
+}
+
 export function getDarwinUrl(sampleIds:string[], caseId:string) {
     return buildCBioPortalAPIUrl('checkDarwinAccess.do', {sample_id: sampleIds.join(','), case_id: caseId});
 }
@@ -165,6 +169,17 @@ export function getLegacyCopyNumberUrl(){
     return buildCBioPortalAPIUrl("api-legacy/copynumbersegments");
 }
 
+export function getMDAndersonHeatmapPatientUrl(patientId:string){
+    return AppConfig.serverConfig.mdacc_heatmap_patient_url + patientId;
+}
+
+export function getMDAndersonHeatMapMetaUrl(patientId:string){
+    return AppConfig.serverConfig.mdacc_heatmap_meta_url + patientId;
+}
+
+export function getMDAndersonHeatmapStudyMetaUrl(studyId:string){
+    return AppConfig.serverConfig.mdacc_heatmap_study_url + studyId;
+}
 
 export function getBasePath(){
     return AppConfig.baseUrl!.replace(/[^\/]*/,"");

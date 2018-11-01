@@ -40,8 +40,8 @@ export interface IServerConfig {
     "oncoprint_hide_vus_default": boolean;
     "mycancergenome_show": boolean | undefined;
     "oncokb_public_api_url": string|null;
-    "digitalslidearchive_iframe_url": string|null;
-    "digitalslidearchive_meta_url": string|null;
+    "digital_slide_archive_iframe_url": string|null;
+    "digital_slide_archive_meta_url": string|null;
     "mdacc_heatmap_meta_url": string|null;
     "mdacc_heatmap_patient_url": string|null;
     "priority_studies": string|null;
@@ -81,6 +81,7 @@ export interface IServerConfig {
     "skin_show_tutorials_tab": boolean;
     "skin_show_web_api_tab": boolean;
     "skin_show_tweet_button": boolean;
+    "skin_show_tissue_image_tab": boolean;
     "skin_title": string;
     "skin_authorization_message": string|null;
     "study_view": StudyView;
