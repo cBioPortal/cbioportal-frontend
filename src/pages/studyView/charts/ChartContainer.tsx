@@ -26,7 +26,10 @@ import StudyViewScatterPlot from "./scatterPlot/StudyViewScatterPlot";
 import { bind } from "bind-decorator";
 import BarChart from "./barChart/BarChart";
 import {CopyNumberGeneFilterElement, DensityPlotBin} from "../../../shared/api/generated/CBioPortalAPIInternal";
-import {getTableHeightByDimension, getTableWidthByDimension, mutationCountVsCnaTooltip} from "../StudyViewUtils";
+import {
+    getTableHeightByDimension, getTableWidthByDimension, mutationCountVsCnaTooltip,
+    MutationCountVsCnaYBinsMin
+} from "../StudyViewUtils";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import {remoteData} from "../../../shared/api/remoteData";
 import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
@@ -353,18 +356,21 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }
             case ChartTypeEnum.SCATTER: {
                 return (
-                    <StudyViewDensityScatterPlot
-                        ref={this.handlers.ref}
-                        width={400}
-                        height={380}
-                        onSelection={this.props.onValueSelection}
-                        data={this.props.promise.result}
-                        isLoading={this.props.promise.isPending}
+                    <div style={{marginTop:-33}}>
+                        <StudyViewDensityScatterPlot
+                            ref={this.handlers.ref}
+                            width={400}
+                            height={420}
+                            yBinsMin={MutationCountVsCnaYBinsMin}
+                            onSelection={this.props.onValueSelection}
+                            data={this.props.promise.result}
+                            isLoading={this.props.promise.isPending}
 
-                        axisLabelX="Fraction of copy number altered genome"
-                        axisLabelY="# of mutations"
-                        tooltip={mutationCountVsCnaTooltip}
-                    />
+                            axisLabelX="Fraction of copy number altered genome"
+                            axisLabelY="# of mutations"
+                            tooltip={mutationCountVsCnaTooltip}
+                        />
+                    </div>
                 );
             }
             default:
@@ -401,22 +407,26 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             <div className={classnames(styles.chart, { [styles.analysisTarget]:this.isAnalysisTarget })}
                  onMouseEnter={this.handlers.onMouseEnterChart}
                  onMouseLeave={this.handlers.onMouseLeaveChart}>
-                <ChartHeader
-                    chartMeta={this.props.chartMeta}
-                    title={this.props.title}
-                    active={this.mouseInChart}
-                    resetChart={this.handlers.resetFilters}
-                    deleteChart={this.handlers.onDeleteChart}
-                    toggleLogScale={this.handlers.onToggleLogScale}
-                    hideLabel={this.hideLabel}
-                    chartControls={this.chartControls}
-                    changeChartType={this.changeChartType}
-                    download={this.downloadTypes}
-                    setAnalysisGroups={this.setAnalysisGroups}
-                />
-                <StudyViewComponentLoader promises={this.loadingPromises}>
-                    {this.chart}
-                </StudyViewComponentLoader>
+                <span style={{position:"relative", zIndex:2}}>
+                    <ChartHeader
+                        chartMeta={this.props.chartMeta}
+                        title={this.props.title}
+                        active={this.mouseInChart}
+                        resetChart={this.handlers.resetFilters}
+                        deleteChart={this.handlers.onDeleteChart}
+                        toggleLogScale={this.handlers.onToggleLogScale}
+                        hideLabel={this.hideLabel}
+                        chartControls={this.chartControls}
+                        changeChartType={this.changeChartType}
+                        download={this.downloadTypes}
+                        setAnalysisGroups={this.setAnalysisGroups}
+                    />
+                </span>
+                <span style={{position:"relative", zIndex:1}}>
+                    <StudyViewComponentLoader promises={this.loadingPromises}>
+                        {this.chart}
+                    </StudyViewComponentLoader>
+                </span>
             </div>
         );
     }
