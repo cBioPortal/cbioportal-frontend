@@ -273,12 +273,12 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"co_expression",
                 hide:()=>{
-                    if (!this.resultsViewPageStore.coexpressionTabMolecularProfiles.isComplete ||
+                    if (!this.resultsViewPageStore.isThereDataForCoExpressionTab.isComplete ||
                         !this.resultsViewPageStore.studies.isComplete) {
                         return true;
                     } else {
                         const tooManyStudies = this.resultsViewPageStore.studies.result!.length > 1;
-                        const noData = this.resultsViewPageStore.coexpressionTabMolecularProfiles.result.length === 0;
+                        const noData = !this.resultsViewPageStore.isThereDataForCoExpressionTab.result;
                         return tooManyStudies || noData;
                     }
                 },
@@ -417,7 +417,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         // now add custom tabs
         if (AppConfig.serverConfig.custom_tabs) {
             const customResultsTabs = AppConfig.serverConfig.custom_tabs.filter((tab: any) => tab.location === "RESULTS_PAGE").map((tab: any, i: number) => {
-                return (<MSKTab key={100 + i} id={'customTab' + 1} unmountOnHide={(tab.unmountOnHide === true)}
+                return (<MSKTab key={100 + i} id={'customTab' + i} unmountOnHide={(tab.unmountOnHide === true)}
                                 onTabDidMount={(div) => {
                                     this.customTabMountCallback(div, tab)
                                 }}
