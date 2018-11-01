@@ -316,7 +316,8 @@ export function isFiltered(filter: StudyViewFilterWithSampleIdentifierFilters) {
         _.isEmpty(filter.clinicalDataIntervalFilters) &&
         _.isEmpty(filter.cnaGenes) &&
         _.isEmpty(filter.mutatedGenes) &&
-        _.isEmpty(filter.sampleIdentifiersSet)
+        _.isEmpty(filter.sampleIdentifiersSet) &&
+        !filter.mutationCountVsCNASelection
     ));
 }
 

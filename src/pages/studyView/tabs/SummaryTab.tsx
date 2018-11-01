@@ -341,6 +341,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                                 updateClinicalDataIntervalFilter={this.handlers.onUpdateIntervalFilters}
                                 removeGeneFilter={this.handlers.removeGeneFilter}
                                 removeCNAGeneFilter={this.handlers.removeCNAGeneFilter}
+                                resetMutationCountVsCNAFilter={this.handlers.resetMutationCountVsCNAFilter}
                                 clearCNAGeneFilter={this.handlers.clearCNAGeneFilter}
                                 clearGeneFilter={this.handlers.clearGeneFilter}
                                 clearChartSampleIdentifierFilter={this.handlers.clearChartSampleIdentifierFilter}
