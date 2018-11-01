@@ -16,7 +16,7 @@ import {labelMobxPromises, cached} from "mobxpromise";
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
 import request from 'superagent';
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
-import {getTissueImageCheckUrl, getDarwinUrl} from "../../../shared/api/urls";
+import { getDarwinUrl, getDigitalSlideArchiveMetaUrl} from "../../../shared/api/urls";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import {IOncoKbData} from "shared/model/OncoKB";
@@ -56,12 +56,10 @@ export async function checkForTissueImage(patientId: string): Promise<boolean> {
         return false;
     } else {
 
-        let resp = await request.get(getTissueImageCheckUrl(patientId));
-
-        let matches = resp.text.match(/<data total_count='([0-9]+)'>/);
+        let resp = await request.get(getDigitalSlideArchiveMetaUrl(patientId));
 
         // if the count is greater than 0, there is a slide for this patient
-        return ( (!!matches && parseInt(matches[1], 10)) > 0 );
+        return resp.body && resp.body.total_count && resp.body.total_count > 0
     }
 
 }
