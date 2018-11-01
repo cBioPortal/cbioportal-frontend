@@ -398,6 +398,19 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             (this.props.analysisGroupsSettings.clinicalAttribute.clinicalAttributeId === this.props.chartMeta.clinicalAttribute.clinicalAttributeId);
     }
 
+    @computed get downloadTypes() {
+        return _.reduce(this.props.download || [], (acc, next) => {
+            //when the chart type is table only show TSV in download buttons
+            if (!(this.chartType === ChartTypeEnum.TABLE && _.includes(['SVG', 'PDF'], next.type))) {
+                acc.push({
+                    type: next.type,
+                    initDownload: next.initDownload ? next.initDownload : this.handlers.defaultDownload[next.type]
+                });
+            }
+            return acc;
+        }, [] as IChartContainerDownloadProps[]);
+    }
+
     public render() {
         return (
             <div className={classnames(styles.chart, { [styles.analysisTarget]:this.isAnalysisTarget })}
@@ -413,7 +426,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     hideLabel={this.hideLabel}
                     chartControls={this.chartControls}
                     changeChartType={this.changeChartType}
-                    download={this.generateHeaderDownloadProps(this.props.download)}
+                    download={this.downloadTypes}
                     setAnalysisGroups={this.setAnalysisGroups}
                 />
                 <StudyViewComponentLoader promises={this.loadingPromises}>
@@ -421,13 +434,5 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 </StudyViewComponentLoader>
             </div>
         );
-    }
-
-    private generateHeaderDownloadProps(download?: IChartContainerDownloadProps[]): IChartContainerDownloadProps[] {
-        return download && download.length > 0 ? download.map(props => ({
-                type: props.type,
-                initDownload: props.initDownload ? props.initDownload : this.handlers.defaultDownload[props.type]
-            })
-        ) : [];
     }
 }
