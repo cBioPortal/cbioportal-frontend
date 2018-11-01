@@ -323,31 +323,33 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 }
                 {
                     (this.store.selectedSamples.isComplete) && (
-                        <SummaryHeader
-                            geneQuery={this.store.geneQueryStr}
-                            selectedSamples={this.store.selectedSamples.result!}
-                            updateCustomCasesFilter={(cases: SampleIdentifier[], keepCurrent?: boolean) => {
-                                this.handlers.updateChartSampleIdentifierFilter(UniqueKey.SELECT_CASES_BY_IDS, cases, keepCurrent);
-                            }}
-                            updateSelectedGenes={this.handlers.updateSelectedGenes}
-                            studyWithSamples={this.store.studyWithSamples.result}
-                            filter={this.store.userSelections}
-                            attributesMetaSet={this.store.chartMetaSet}
-                            user={ServerConfigHelpers.getUserEmailAddress()}
-                            getClinicalData={this.store.getDownloadDataPromise}
-                            onSubmitQuery={() => this.store.onSubmitQuery()}
-                            updateClinicalDataEqualityFilter={this.handlers.onValueSelection}
-                            updateClinicalDataIntervalFilter={this.handlers.onUpdateIntervalFilters}
-                            removeGeneFilter={this.handlers.removeGeneFilter}
-                            removeCNAGeneFilter={this.handlers.removeCNAGeneFilter}
-                            clearCNAGeneFilter={this.handlers.clearCNAGeneFilter}
-                            clearGeneFilter={this.handlers.clearGeneFilter}
-                            clearChartSampleIdentifierFilter={this.handlers.clearChartSampleIdentifierFilter}
-                            clearAllFilters={this.handlers.clearAllFilters}
-                            clinicalAttributesWithCountPromise={this.store.clinicalAttributesWithCount}
-                            visibleAttributeIds={this.store.visibleAttributes}
-                            onChangeChartsVisibility={this.handlers.updateChartsVisibility}
-                        />
+                        <span style={{position:"relative", zIndex:10}}>
+                            <SummaryHeader
+                                geneQuery={this.store.geneQueryStr}
+                                selectedSamples={this.store.selectedSamples.result!}
+                                updateCustomCasesFilter={(cases: SampleIdentifier[], keepCurrent?: boolean) => {
+                                    this.handlers.updateChartSampleIdentifierFilter(UniqueKey.SELECT_CASES_BY_IDS, cases, keepCurrent);
+                                }}
+                                updateSelectedGenes={this.handlers.updateSelectedGenes}
+                                studyWithSamples={this.store.studyWithSamples.result}
+                                filter={this.store.userSelections}
+                                attributesMetaSet={this.store.chartMetaSet}
+                                user={ServerConfigHelpers.getUserEmailAddress()}
+                                getClinicalData={this.store.getDownloadDataPromise}
+                                onSubmitQuery={() => this.store.onSubmitQuery()}
+                                updateClinicalDataEqualityFilter={this.handlers.onValueSelection}
+                                updateClinicalDataIntervalFilter={this.handlers.onUpdateIntervalFilters}
+                                removeGeneFilter={this.handlers.removeGeneFilter}
+                                removeCNAGeneFilter={this.handlers.removeCNAGeneFilter}
+                                clearCNAGeneFilter={this.handlers.clearCNAGeneFilter}
+                                clearGeneFilter={this.handlers.clearGeneFilter}
+                                clearChartSampleIdentifierFilter={this.handlers.clearChartSampleIdentifierFilter}
+                                clearAllFilters={this.handlers.clearAllFilters}
+                                clinicalAttributesWithCountPromise={this.store.clinicalAttributesWithCount}
+                                visibleAttributeIds={this.store.visibleAttributes}
+                                onChangeChartsVisibility={this.handlers.updateChartsVisibility}
+                            />
+                        </span>
                     )
                 }
                 <div className={styles.studyViewFlexContainer}>
