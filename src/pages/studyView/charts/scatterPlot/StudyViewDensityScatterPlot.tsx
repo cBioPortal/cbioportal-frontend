@@ -45,13 +45,13 @@ class _VictorySelectionContainerWithLegend extends VictorySelectionContainer {
     //  VictoryChart layout system
 
     render() {
-        const {activateSelectedData, onSelection, containerRef, legend, children, ...rest} = this.props as any;
+        const {activateSelectedData, onSelection, containerRef, gradient, legend, children, ...rest} = this.props as any;
         return (
             <VictorySelectionContainer
                 activateSelectedData={false}
                 onSelection={onSelection}
                 containerRef={containerRef}
-                children={children.concat(legend)}
+                children={children.concat(legend).concat(<defs>{gradient}</defs>)}
                 {...rest}
             />
         )
@@ -312,14 +312,14 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
 
             const title = <text fontSize={11} x={rectX} y={rectY} dy="-0.5em" dx="-12px"># samples</text>;
 
-            return (
-                <g>
+            return {
+                gradient:gradientElt,
+                legend: (<g>
                     {title}
-                    {gradientElt}
                     {rect}
                     {labels}
-                </g>
-            );
+                </g>)
+            };
         }
     }
 
@@ -352,7 +352,8 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
                                         this.svgRef(ref.firstChild);
                                     }
                                 }}
-                                legend={this.legend}
+                                legend={this.legend && this.legend.legend}
+                                gradient={this.legend && this.legend.gradient}
                             />
                         }
                         width={this.props.width}
