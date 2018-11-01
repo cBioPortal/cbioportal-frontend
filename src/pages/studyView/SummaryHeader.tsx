@@ -49,6 +49,7 @@ export interface ISummaryHeaderProps {
     updateClinicalDataIntervalFilter: (chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) => void;
     removeGeneFilter: (entrezGeneId: number) => void;
     removeCNAGeneFilter: (filter: CopyNumberGeneFilterElement) => void;
+    resetMutationCountVsCNAFilter:()=>void;
     clearGeneFilter: () => void;
     clearCNAGeneFilter: () => void;
     clearChartSampleIdentifierFilter: (chartMeta: ChartMeta) => void;
@@ -368,6 +369,7 @@ export default class SummaryHeader extends React.Component<ISummaryHeaderProps, 
                     updateClinicalDataIntervalFilter={this.props.updateClinicalDataIntervalFilter}
                     removeGeneFilter={this.props.removeGeneFilter}
                     removeCNAGeneFilter={this.props.removeCNAGeneFilter}
+                    resetMutationCountVsCNAFilter={this.props.resetMutationCountVsCNAFilter}
                     clearCNAGeneFilter={this.props.clearCNAGeneFilter}
                     clearGeneFilter={this.props.clearGeneFilter}
                     clearChartSampleIdentifierFilter={this.props.clearChartSampleIdentifierFilter}
