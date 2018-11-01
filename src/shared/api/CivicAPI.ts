@@ -65,7 +65,7 @@ export default class CivicAPI {
      */
     getCivicGenesBatch(ids: string): Promise<Array<ICivicGeneData>> {
     return request.get('https://civicdb.org/api/genes/' + ids)
-           .query({identifier_type: 'entrez_symbol'})
+           .query({identifier_type: 'entrez_id'})
            .then((res) => {
                 let response = res.body;
                 let result: Array<CivicAPIGene>;
