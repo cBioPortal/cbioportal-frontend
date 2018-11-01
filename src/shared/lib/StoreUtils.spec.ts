@@ -467,11 +467,12 @@ describe('StoreUtils', () => {
         });
 
         const fetchSamplesStub = sinon.stub();
-        const getStudyStub = sinon.stub();
+        const fetchStudiesStub = sinon.stub();
+
 
         const client = {
             fetchSamplesUsingPOST: fetchSamplesStub,
-            getStudyUsingGET: getStudyStub
+            fetchStudiesUsingPOST: fetchStudiesStub
         };
 
         it('fetches samples without cancer type clinical data', () => {
@@ -492,8 +493,8 @@ describe('StoreUtils', () => {
             const studies = fetchStudiesForSamplesWithoutCancerTypeClinicalData(
                 samplesWithoutCancerTypeClinicalData, client as any);
 
-            assert.isTrue(getStudyStub.calledOnce, "getStudy should be called only once");
-            assert.isTrue(getStudyStub.calledWith({studyId: "study4"}),
+            assert.isTrue(fetchStudiesStub.calledOnce, "fetchStudies should be called only once");
+            assert.isTrue(fetchStudiesStub.calledWith({studyIds: ["study4"], projection: "DETAILED"}),
                 "fetchStudy should be called with the correct study id (study4)");
         });
     });

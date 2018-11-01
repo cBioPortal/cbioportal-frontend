@@ -409,12 +409,11 @@ export async function fetchStudiesForSamplesWithoutCancerTypeClinicalData(sample
 {
     let studies: CancerStudy[] = [];
 
-    if (samplesWithoutClinicalData.result) {
+    if (samplesWithoutClinicalData.result && samplesWithoutClinicalData.result.length > 0) {
         const studyIdsForSamplesWithoutClinicalData = _.uniq(samplesWithoutClinicalData.result.map(
             (sample: Sample) => sample.studyId));
 
-        const promises = studyIdsForSamplesWithoutClinicalData.map(studyId => client.getStudyUsingGET({studyId}));
-        studies = await Promise.all(promises);
+        studies = await client.fetchStudiesUsingPOST({studyIds:studyIdsForSamplesWithoutClinicalData, projection:"DETAILED"});
     }
 
     return studies;
