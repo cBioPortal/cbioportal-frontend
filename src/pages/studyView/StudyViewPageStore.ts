@@ -1596,7 +1596,7 @@ export class StudyViewPageStore {
             _chartMetaSet[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = {
                 uniqueKey: UniqueKey.MUTATION_COUNT_CNA_FRACTION,
                 chartType: ChartTypeEnum.SCATTER,
-                displayName: 'Mutation count Vs. CNA',
+                displayName: 'Mutation Count vs Fraction of Genome Altered',
                 priority: getDefaultPriorityByUniqueKey(UniqueKey.MUTATION_COUNT_CNA_FRACTION),
                 dimension: DEFAULT_LAYOUT_PROPS.dimensions[ChartTypeEnum.SCATTER],
                 description: ''
