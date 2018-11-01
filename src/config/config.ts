@@ -86,6 +86,15 @@ export function setServerConfig(serverConfig:{[key:string]:any }){
 
     const frontendOverride = (serverConfig.frontendConfigOverride) ? JSON.parse(serverConfig.frontendConfigOverride) : {};
 
+    // TODO: temp WARNING remove after we are done testing with AWS. This allows
+    // one to change the backend api through the frontendConfigOverride file, so
+    // we can point to a different backend then AppConfig.baseUrl
+    // ** Don't try this at home, kids **
+    if (frontendOverride.apiRoot) {
+        console.log(`Overriding apiRoot with: ${frontendOverride.apiRoot}`);
+        config.apiRoot = `//${frontendOverride.apiRoot}/`;
+    }
+
     // allow any hardcoded serverConfig props to override those from service
     const mergedConfig = Object.assign({}, serverConfig, frontendOverride , config.serverConfig || {});
 
