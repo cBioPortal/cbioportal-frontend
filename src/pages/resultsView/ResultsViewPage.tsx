@@ -273,12 +273,12 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             {
                 id:"co_expression",
                 hide:()=>{
-                    if (!this.resultsViewPageStore.coexpressionTabMolecularProfiles.isComplete ||
+                    if (!this.resultsViewPageStore.isThereDataForCoExpressionTab.isComplete ||
                         !this.resultsViewPageStore.studies.isComplete) {
                         return true;
                     } else {
                         const tooManyStudies = this.resultsViewPageStore.studies.result!.length > 1;
-                        const noData = this.resultsViewPageStore.coexpressionTabMolecularProfiles.result.length === 0;
+                        const noData = !this.resultsViewPageStore.isThereDataForCoExpressionTab.result;
                         return tooManyStudies || noData;
                     }
                 },
