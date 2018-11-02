@@ -41,6 +41,19 @@ function patientSampleSummary(
     }
 }
 
+export function geneSummary(hugoSymbols:string[]) {
+    switch (hugoSymbols.length) {
+        case 0:
+            return "";
+        case 1:
+            return hugoSymbols[0];
+        case 2:
+            return hugoSymbols.join(" & ");
+        default:
+            return `${hugoSymbols[0]}, ${hugoSymbols[1]} & ${(hugoSymbols.length === 3) ? hugoSymbols[2] : `${hugoSymbols.length - 2} other genes`}`;
+    }
+}
+
 @observer
 export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore }, {}> {
 
@@ -73,7 +86,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
             {(this.props.store.sampleLists.result!.length > 0) && (<span>
                     {this.props.store.sampleLists.result![0].name}&nbsp;
                 ({patientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)})
-                    / <strong data-test='QuerySummaryGeneCount'>{this.props.store.hugoGeneSymbols.length}</strong> { (this.props.store.hugoGeneSymbols.length === 1) ? "Gene" : "Genes"  }
+                    - {geneSummary(this.props.store.hugoGeneSymbols)}
                 </span>)
             }
             {
