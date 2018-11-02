@@ -275,7 +275,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                     }, {
                         type: 'SVG'
                     }, {
-                        type: 'PDF'
+                        type: 'PNG'
                     }
                 ];
 

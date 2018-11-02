@@ -39,7 +39,7 @@ export interface AbstractChart {
     toSVGDOMNode: () => Element;
 }
 
-export type ChartDownloadType = 'TSV' | 'SVG' | 'PDF';
+export type ChartDownloadType = 'TSV' | 'SVG' | 'PDF' | 'PNG';
 
 export interface IChartContainerDownloadProps {
     type: ChartDownloadType;
@@ -122,6 +122,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }),
             defaultDownload: {
                 SVG: () => Promise.resolve((new XMLSerializer()).serializeToString(this.toSVGDOMNode())),
+                PNG: () => Promise.resolve(this.toSVGDOMNode()),
                 PDF: () => svgToPdfPromise(this.toSVGDOMNode())
             },
             onChangeChartType: (newChartType: ChartType) => {
