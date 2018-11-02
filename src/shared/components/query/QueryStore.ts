@@ -674,11 +674,13 @@ export class QueryStore
 
 	readonly molecularProfiles = remoteData<MolecularProfile[]>({
 		invoke: async () => {
-			if (!this.isSingleNonVirtualStudySelected)
+			if (this.physicalStudyIdsInSelection.length === 1) {
+				return await client.getAllMolecularProfilesInStudyUsingGET({
+                    studyId: this.physicalStudyIdsInSelection[0]
+                });
+			} else {
 				return [];
-			return await client.getAllMolecularProfilesInStudyUsingGET({
-				studyId: this.selectableSelectedStudyIds[0]
-			});
+			}
 		},
 		default: [],
 		onResult: () => {
