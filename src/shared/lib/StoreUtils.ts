@@ -649,15 +649,13 @@ export async function fetchCivicGenes(mutationData?:MobxPromise<Mutation[]>,
         return {};
     }
 
-    let queryHugoSymbols: Set<string> = new Set([]);
+    let entrezGeneSymbols: Set<number> = new Set([]);
 
     mutationDataResult.forEach(function(mutation: Mutation) {
-        queryHugoSymbols.add(mutation.gene.hugoGeneSymbol);
+        entrezGeneSymbols.add(mutation.gene.entrezGeneId);
     });
-    
-    let querySymbols: Array<string> = Array.from(queryHugoSymbols);
 
-    let civicGenes: ICivicGene = await getCivicGenes(querySymbols);
+    let civicGenes: ICivicGene = await getCivicGenes(Array.from(entrezGeneSymbols));
 
     return civicGenes;
 }
@@ -665,13 +663,13 @@ export async function fetchCivicGenes(mutationData?:MobxPromise<Mutation[]>,
 export async function fetchCnaCivicGenes(discreteCNAData:MobxPromise<DiscreteCopyNumberData[]>)
 {
     if (discreteCNAData.result && discreteCNAData.result.length > 0) {
-        let queryHugoSymbols: Set<string> = new Set([]);
+        let entrezGeneSymbols: Set<number> = new Set([]);
         
         discreteCNAData.result.forEach(function(cna: DiscreteCopyNumberData) {
-            queryHugoSymbols.add(cna.gene.hugoGeneSymbol);
+            entrezGeneSymbols.add(cna.gene.entrezGeneId);
         });
         
-        let querySymbols: Array<string> = Array.from(queryHugoSymbols);
+        let querySymbols: Array<number> = Array.from(entrezGeneSymbols);
     
         let civicGenes: ICivicGene = (await getCivicGenes(querySymbols));
     

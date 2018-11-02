@@ -168,10 +168,12 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                         fill: ifndef(this.fill, "#cccccc"),
                         stroke: ifndef(this.stroke, "0x000000"),
                         strokeWidth: ifndef(this.strokeWidth, 0),
-                        fillOpacity: ifndef(this.fillOpacity, 1)
+                        fillOpacity: ifndef(this.fillOpacity, 1),
+                        cursor: 'pointer'
                     },
                     labels: {
-                        fill: "white"
+                        fill: "white",
+                        cursor: 'pointer'
                     }
                 }}
                 x={this.x}

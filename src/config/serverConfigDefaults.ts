@@ -4,8 +4,16 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     app_version:"1.0",
     civic_url:"https://civicdb.org/api/",
     disabled_tabs:"",
+
     genomenexus_url:"v1.genomenexus.org",
     mycancergenome_show:false,
+
+    digital_slide_archive_iframe_url:"https://cancer.digitalslidearchive.org/index.html?patientId=",
+    digital_slide_archive_meta_url:"https://api.digitalslidearchive.org/api/v1/tcga/image?caseName=",
+
+    mdacc_heatmap_patient_url: "https://bioinformatics.mdanderson.org/participant2maps?participant=",
+    mdacc_heatmap_study_url: "https://bioinformatics.mdanderson.org/study2url?studyid=",
+
     oncoprint_oncokb_hotspots_default:undefined,
     oncoprint_hide_vus_default:false,
     oncokb_public_api_url:"oncokb.org/api/v1",
@@ -36,6 +44,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     skin_show_tools_tab:true,
     skin_show_web_api_tab:true,
     skin_show_tweet_button:false,
+    skin_show_tissue_image_tab:true,
     skin_title:"cBioPortal for Cancer Genomics",
 
     skin_blurb:`The cBioPortal for Cancer Genomics provides 
