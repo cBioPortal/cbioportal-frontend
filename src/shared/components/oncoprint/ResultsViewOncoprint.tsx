@@ -42,7 +42,6 @@ interface IResultsViewOncoprintProps {
     divId: string;
     store:ResultsViewPageStore;
     routing:any;
-    isVirtualStudy:boolean;
     addOnBecomeVisibleListener?:(callback:()=>void)=>void;
 }
 
