@@ -195,7 +195,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             overlay={<span>Move chart</span>}
                         >
                             <i className={classnames("fa", "fa-arrows", styles.item, styles.clickable)}
-                               aria-hidden="true"></i>
+                               aria-hidden="true"
+                               style={{cursor: 'move'}}/>
                         </DefaultTooltip>
                         <DefaultTooltip
                             placement="top"
