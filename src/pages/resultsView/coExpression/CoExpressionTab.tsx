@@ -79,10 +79,13 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
         };
     }
 
-    @bind
-    public onSelectDataSet(option:any) {
+    @computed public get onSelectDataSet() {
         if (this.props.store.molecularProfileIdToMolecularProfile.isComplete) {
-            this._selectedMolecularProfile = this.props.store.molecularProfileIdToMolecularProfile.result[option.value];
+            return (option:any)=>{
+                this._selectedMolecularProfile = this.props.store.molecularProfileIdToMolecularProfile.result[option.value];
+            }
+        } else {
+            return (option:any)=>{};
         }
     }
 
