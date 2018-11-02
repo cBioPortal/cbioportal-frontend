@@ -27,7 +27,7 @@ export interface IServerConfig {
     "app_name": string | null;
     "app_version": string|null;   // default: "1.0"
     "authenticationMethod": string | undefined;
-    "bitly_api_key": string|null;
+    "bitly_access_token": string|null;
     "binary_custom_driver_annotation_menu_label": string|null; // default:
     "disabled_tabs": string|null;
     "civic_url": string|null;

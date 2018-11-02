@@ -9,11 +9,12 @@ import autobind from "autobind-decorator";
 import {BookmarkModal} from "../bookmark/BookmarkModal";
 import {action, observable} from "mobx";
 import AppConfig from "appConfig";
+import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 
 interface IShareUI {
     sessionEnabled: boolean;
     routingStore: ExtendedRouterStore;
-    bitlyKey?: string | null;
+    bitlyAccessToken?: string | null;
 }
 
 const win = getBrowserWindow();
@@ -58,19 +59,19 @@ export class ShareUI extends React.Component<IShareUI, {}> {
 
         // now lets shorten with bityly, if we have key
         // WE ARE DISABLING BITLY PENDING DISCUSSION
-        // if (this.props.bitlyKey) {
-        //     try {
-        //         bitlyResponse = await $.ajax({
-        //             url: `https://api-ssl.bitly.com/v3/shorten?access_token=${this.props.bitlyKey}&longUrl=${encodeURIComponent(sessionUrl)}`
-        //         });
-        //     } catch (ex) {
-        //         // fail silently.  we can just reutrn sessionUrl without shortening
-        //     }
-        // }
+        if (this.props.bitlyAccessToken) {
+            try {
+                bitlyResponse = await $.ajax({
+                    url: `https://api-ssl.bitly.com/v3/shorten?access_token=${this.props.bitlyAccessToken}&longUrl=${encodeURIComponent(sessionUrl)}`
+                });
+            } catch (ex) {
+                // fail silently.  we can just reutrn sessionUrl without shortening
+            }
+        }
 
         return {
             sessionUrl,
-            bitlyUrl: undefined, //((bitlyResponse && bitlyResponse.data && bitlyResponse.data.url) ? bitlyResponse.data.url : undefined),
+            bitlyUrl: ((bitlyResponse && bitlyResponse.data && bitlyResponse.data.url) ? bitlyResponse.data.url : undefined),
             fullUrl: win.location.href
         }
 
@@ -79,8 +80,7 @@ export class ShareUI extends React.Component<IShareUI, {}> {
     @autobind
     shareTwitter() {
         this.getUrl().then((urlData:ShareUrls) => {
-            const url = urlData.bitlyUrl || urlData.sessionUrl || urlData.fullUrl;
-            win.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(document.title)}&via=cbioportal`);
+            win.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(this.shortenedUrl(urlData))}&text=${encodeURIComponent(document.title)}&via=cbioportal`);
         });
     }
 
@@ -88,7 +88,7 @@ export class ShareUI extends React.Component<IShareUI, {}> {
     openEmail() {
         this.getUrl().then((urlData)=>{
             window.location.href =
-                `mailto:?subject=${encodeURIComponent(document.title)}&body=${encodeURIComponent(urlData.sessionUrl || urlData.fullUrl)}%20${encodeURIComponent(document.title)}`;
+                `mailto:?subject=${encodeURIComponent(document.title)}&body=${encodeURIComponent(this.shortenedUrl(urlData))}%20${encodeURIComponent(document.title)}`;
         });
     }
 
@@ -98,32 +98,47 @@ export class ShareUI extends React.Component<IShareUI, {}> {
         this.showBookmarkDialog = !this.showBookmarkDialog;
     }
 
+    shortenedUrl(urlData:ShareUrls){
+        const url = urlData.bitlyUrl || urlData.sessionUrl || urlData.fullUrl
+        if (!url) {
+            throw("URL bookmarking error");
+        }
+        return url;
+    }
+
     render() {
         return <div className={styles.shareModule}>
 
             {
                 (AppConfig.serverConfig.skin_show_tweet_button) && (
-                    <a onClick={this.shareTwitter}>
-                        <span className="fa-stack fa-4x">
-                            <i className="fa fa-circle fa-stack-2x"></i>
-                            <i className="fa fa-twitter fa-stack-1x"></i>
-                        </span>
-                    </a>
+                    <DefaultTooltip placement={"top"} overlay={<div>Tweet query results</div>}>
+                        <a onClick={this.shareTwitter}>
+                            <span className="fa-stack fa-4x">
+                                <i className="fa fa-circle fa-stack-2x"></i>
+                                <i className="fa fa-twitter fa-stack-1x"></i>
+                            </span>
+                        </a>
+                    </DefaultTooltip>
                 )
             }
 
-            <a onClick={this.openEmail}>
-                <span className="fa-stack fa-4x">
-                    <i className="fa fa-circle fa-stack-2x"></i>
-                    <i className="fa fa-envelope fa-stack-1x"></i>
-                </span>
-            </a>
-            <a onClick={this.toggleBookmarkDialog}>
-                <span className="fa-stack fa-4x">
-                    <i className="fa fa-circle fa-stack-2x"></i>
-                    <i className="fa fa-external-link-square fa-stack-1x"></i>
-                </span>
-            </a>
+            <DefaultTooltip placement={"top"} overlay={<div>Email query results</div>}>
+                <a onClick={this.openEmail}>
+                    <span className="fa-stack fa-4x">
+                        <i className="fa fa-circle fa-stack-2x"></i>
+                        <i className="fa fa-envelope fa-stack-1x"></i>
+                    </span>
+                </a>
+            </DefaultTooltip>
+
+            <DefaultTooltip placement={"topLeft"} overlay={<div>Get bookmark link</div>}>
+                <a onClick={this.toggleBookmarkDialog}>
+                    <span className="fa-stack fa-4x">
+                        <i className="fa fa-circle fa-stack-2x"></i>
+                        <i className="fa fa-link fa-stack-1x"></i>
+                    </span>
+                </a>
+            </DefaultTooltip>
             {
                 (this.showBookmarkDialog) && (<BookmarkModal onHide={this.toggleBookmarkDialog} urlPromise={this.getUrl()}/>)
             }
