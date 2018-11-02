@@ -1560,7 +1560,10 @@ export class QueryStore
 			params.genetic_profile_ids_PROFILE_GENESET_SCORE,
 		];
 
-		this.selectableSelectedStudyIds = params.cancer_study_list ? params.cancer_study_list.split(",") : (params.cancer_study_id ? [params.cancer_study_id] : []);
+		let queriedStudies = params.cancer_study_list ? params.cancer_study_list.split(",") : (params.cancer_study_id ? [params.cancer_study_id] : []);
+		this.selectableSelectedStudyIds = queriedStudies;
+		this._defaultSelectedIds = observable.map(stringListToSet(queriedStudies));
+
 		this._selectedProfileIds = profileIds.every(id => id === undefined) ? undefined : profileIds.filter(_.identity) as string[];
 		this.zScoreThreshold = params.Z_SCORE_THRESHOLD || '2.0';
 		this.rppaScoreThreshold = params.RPPA_SCORE_THRESHOLD || '2.0';
