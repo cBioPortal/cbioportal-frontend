@@ -417,7 +417,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         // now add custom tabs
         if (AppConfig.serverConfig.custom_tabs) {
             const customResultsTabs = AppConfig.serverConfig.custom_tabs.filter((tab: any) => tab.location === "RESULTS_PAGE").map((tab: any, i: number) => {
-                return (<MSKTab key={100 + i} id={'customTab' + 1} unmountOnHide={(tab.unmountOnHide === true)}
+                return (<MSKTab key={100 + i} id={'customTab' + i} unmountOnHide={(tab.unmountOnHide === true)}
                                 onTabDidMount={(div) => {
                                     this.customTabMountCallback(div, tab)
                                 }}
