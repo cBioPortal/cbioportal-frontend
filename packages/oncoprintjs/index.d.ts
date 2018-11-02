@@ -190,7 +190,7 @@ declare module "oncoprintjs"
         setIdClipboardContents:(array:string[])=>void;
         getIdClipboardContents:()=>string[];
         onClipboardChange:(callback:(array:string[])=>void)=>void;
-        setTrackCustomOptions:(track_id:TrackId, custom_options?:CustomTrackOption[]);
+        setTrackCustomOptions:(track_id:TrackId, custom_options?:CustomTrackOption[])=>void;
 
         constructor(ctr_selector:string, width:number);
         destroy:()=>void;
