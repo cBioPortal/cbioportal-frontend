@@ -58,3 +58,8 @@ $selectHeightInner: $selectHeight - 2px;
 .react-grid-item:hover {
     z-index: 1;
 }
+
+textarea{
+    width: 280px !important;
+    margin: 0 !important;
+}

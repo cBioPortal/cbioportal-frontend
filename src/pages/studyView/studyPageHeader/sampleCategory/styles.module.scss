@@ -1,0 +1,26 @@
+.main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  width: 100%;
+}
+
+.number {
+  font-size: 20px;
+  line-height: 20px;
+  color: $headerColor;
+  font-weight: bold
+}
+
+.subtitle {
+  font-size: 13px;
+  line-height: 13px;
+  white-space: nowrap;
+}
+
+.checkbox {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
