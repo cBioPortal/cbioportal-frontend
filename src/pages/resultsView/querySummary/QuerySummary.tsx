@@ -130,7 +130,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                             }
 
                             <ShareUI sessionEnabled={ServerConfigHelpers.sessionServiceIsEnabled()}
-                                     bitlyKey={AppConfig.serverConfig.bitly_api_key}
+                                     bitlyAccessToken={AppConfig.serverConfig.bitly_access_token}
                                      routingStore={this.props.routingStore}/>
                         </div>
 
