@@ -1,11 +1,16 @@
+.main {
+  line-height: 30px;
+  display: flex;
+  margin: 0 5px;
+}
+
 .title {
   color: #000;
+  margin-right: 5px;
 }
 
 .content {
-  padding: 0 5px;
-  color: $study-view-primary-color;
-  font-weight:bold;
+  white-space: nowrap;
 }
 
 .title, .content {

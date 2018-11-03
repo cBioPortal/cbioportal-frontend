@@ -1,3 +1,20 @@
+.selectedInfo {
+    position: absolute;
+    top: 0;
+    right: 20px;
+    display: flex;
+    z-index: 2;
+    align-items: center;
+}
+
+.selectedInfoCheckbox {
+    margin-top: 2px !important;
+}
+
+.mainTabs{
+    position: relative;
+}
+
 .studyViewSurvivalPlot {
     float: left;
     margin: 5px;
@@ -43,29 +60,9 @@
     padding: 5px;
 }
 
-.summaryHeader{
-    margin: 5px 5px 10px 5px;
-    font-size: 16px;
-    display: flex;
-    align-items: center;
-    line-height: 12px !important;
-    :global(.form-group) {
-        margin-bottom:0px;
-    }
-}
-
-.summaryHeaderBtn {
-    background-image: none !important;
-}
-
-.summaryHeaderItem {
-    margin: 0 2px !important;
-}
-
 .summaryClearAllBtn {
     height: 30px;
     margin-left: 5px !important;
-
 }
 
 .filterClinicalAttrName {
@@ -74,15 +71,15 @@
 }
 
 .summary{
-    margin-bottom: 5px;
+    flex-grow: 1;
     .description{
-        font-size: 12px;
+        font-size: 13px;
     }
 }
 
 .studyViewBtn {
-    background-color: $study-view-primary-color !important;
-    border-color: $study-view-primary-color !important;
+    background-color: $headerColor !important;
+    border-color: $headerColor !important;
 }
 
 .studyViewBtn:hover {
