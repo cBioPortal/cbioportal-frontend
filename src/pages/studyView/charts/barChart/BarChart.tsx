@@ -111,20 +111,27 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
         return values;
     }
 
-    @computed get tickFormat() : string[] {
+    @computed get tickFormat() {
         // copy non-numerical categories as is
         return [
             ...this.numericalTickFormat,
             ...this.categories
-        ] as string[];
+        ];
     }
 
     @computed get tilted() {
         return this.tickValues.length > STUDY_VIEW_CONFIG.thresholds.escapeTick;
     }
 
-    @computed get bottomPadding() :number {
-        return this.tilted ? adjustedLongestLabelLength(this.tickFormat) * 7 : 20;
+    @computed
+    get bottomPadding(): number {
+        return this.tilted ? adjustedLongestLabelLength(this.tickFormat.map((tick: string | string[]) => {
+            if (_.isArray(tick)) {
+                return tick.join();
+            } else {
+                return tick;
+            }
+        })) * 7 : 20;
     }
 
     public render() {
