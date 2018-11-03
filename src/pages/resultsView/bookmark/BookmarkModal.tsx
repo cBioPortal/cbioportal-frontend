@@ -34,17 +34,14 @@ export class BookmarkModal extends React.Component<{ onHide: () => void, urlProm
         this.props.urlPromise.then(
             (data)=>{
                 this.urlData = data;
+                setTimeout(()=>{
+                    this.initializeClipboards();
+                },0);
             },
             ()=>{
 
             }
         );
-
-        // this is so messed up but is necessary because of terrible copy to clipboard library issues when used inside modal
-
-
-        this.initializeClipboards();
-
     }
 
     @autobind
@@ -52,6 +49,7 @@ export class BookmarkModal extends React.Component<{ onHide: () => void, urlProm
         e.target.className="fa fa-thumbs-up";
     }
 
+    @autobind
     initializeClipboards(){
             this.clipboards.push(new Clipboard(this.sessionButton, {
                 text: function() {
@@ -60,18 +58,14 @@ export class BookmarkModal extends React.Component<{ onHide: () => void, urlProm
                 container: this.container
             }));
 
-            // this.clipboards.push(new Clipboard(this.bitlyButton, {
-            //     text: function() {
-            //         return this.urlData.bitlyUrl;
-            //     }.bind(this),
-            //     container: this.container
-            // }));
-
-    }
-
-    componentDidUpdate(){
-
-
+            if (this.urlData && this.urlData.bitlyUrl) {
+                this.clipboards.push(new Clipboard(this.bitlyButton, {
+                    text: function () {
+                        return this.urlData.bitlyUrl;
+                    }.bind(this),
+                    container: this.container
+                }));
+            }
 
     }
 
@@ -97,32 +91,33 @@ export class BookmarkModal extends React.Component<{ onHide: () => void, urlProm
                 <LoadingIndicator size={"small"} center={true} style={{top:32}} isLoading={!this.urlData}/>
                     <div className={classNames({hidden:!this.urlData})} ref={(el:HTMLDivElement)=>this.container=el}>
                         <form>
-
-
+                            <div className="form-group">
+                                <label htmlFor="exampleInputAmount">Share link</label>
+                                <div className="input-group">
+                                    <input type="text" className="form-control" value={(this.urlData ? this.urlData.sessionUrl : "")}/>
+                                    <div className="input-group-addon">
+                                        <a ref={(el:HTMLAnchorElement)=>this.sessionButton=el}
+                                            onClick={this.showThumb}
+                                        >
+                                            <i className="fa fa-clipboard"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {
+                                (this.urlData && this.urlData.bitlyUrl) && (
                                     <div className="form-group">
-                                        <label htmlFor="exampleInputAmount">Share link</label>
+                                        <label htmlFor="exampleInputAmount">Shortened URL</label>
                                         <div className="input-group">
-                                            <input type="text" className="form-control" value={(this.urlData ? this.urlData.sessionUrl : "")}/>
-                                            <div className="input-group-addon">
-                                                <a ref={(el:HTMLAnchorElement)=>this.sessionButton=el}
-                                                    onClick={this.showThumb}
-                                                >
-                                                    <i className="fa fa-clipboard"></i>
-                                                </a>
-                                            </div>
+                                            <input type="text" className="form-control" value={(this.urlData ? this.urlData.bitlyUrl : "")}/>
+                                            <div className="input-group-addon"><a
+                                                onClick={this.showThumb}
+                                                ref={(el: HTMLAnchorElement) => this.bitlyButton = el}><i
+                                                className="fa fa-clipboard"></i></a></div>
                                         </div>
                                     </div>
-
-                                    {/*<div className="form-group">*/}
-                                        {/*<label htmlFor="exampleInputAmount">Shortened URL</label>*/}
-                                        {/*<div className="input-group">*/}
-                                            {/*<input type="text" className="form-control" value={(this.urlData ? this.urlData.bitlyUrl : "")}/>*/}
-                                            {/*<div className="input-group-addon"><a*/}
-                                                {/*ref={(el: HTMLAnchorElement) => this.bitlyButton = el}><i*/}
-                                                {/*className="fa fa-clipboard"></i></a></div>*/}
-                                        {/*</div>*/}
-                                    {/*</div>*/}
-
+                                )
+                            }
                         </form>
                     </div>
             </Modal.Body>
