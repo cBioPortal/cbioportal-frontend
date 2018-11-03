@@ -280,6 +280,9 @@ export class StudyViewPageStore {
 
     @observable.ref private _cnaGeneFilter: CopyNumberGeneFilter[] = [];
 
+    @observable private _withMutationDataFilter:boolean = false;
+    @observable private _withCNADataFilter:boolean = false;
+
     // TODO: make it computed
     // Currently the study view store does not have the full control of the promise.
     // ChartContainer should be modified, instead of accepting a promise, it should accept data and loading state.
@@ -412,25 +415,32 @@ export class StudyViewPageStore {
         return this.queriedGeneSet.keys().filter(gene=>!!this.queriedGeneSet.get(gene));
     }
 
+    @bind
     @action updateSelectedGenes(query: SingleGeneQuery[], genesInQuery: Gene[]) {
         this.geneQueries = query;
         this.queriedGeneSet = new ObservableMap(stringListToSet(genesInQuery.map(gene => gene.hugoGeneSymbol)))
     }
 
+    @bind
     @action
     clearGeneFilter() {
         this._mutatedGeneFilter = [];
     }
+
+    @bind
     @action
     clearCNAGeneFilter() {
         this._cnaGeneFilter = [];
     }
+
+    @bind
     @action
     clearChartSampleIdentifierFilter(chartMeta: ChartMeta) {
         this._chartSampleIdentifiersFilterSet.delete(chartMeta.uniqueKey)
         this._customChartFilterSet.delete(chartMeta.uniqueKey)
     }
 
+    @bind
     @action
     clearAllFilters() {
         this._clinicalDataEqualityFilterSet.clear();
@@ -439,6 +449,8 @@ export class StudyViewPageStore {
         this.clearCNAGeneFilter();
         this._chartSampleIdentifiersFilterSet.clear();
         this._customChartFilterSet.clear();
+        this._withMutationDataFilter = false;
+        this._withCNADataFilter = false;
     }
 
     @action
@@ -451,6 +463,30 @@ export class StudyViewPageStore {
     clearAnalysisGroupsSettings() {
         this._analysisGroupsClinicalAttribute = undefined;
         this._analysisGroups = undefined;
+    }
+
+    @bind
+    @action
+    toggleWithMutationDataFilter() {
+        this._withMutationDataFilter = !this._withMutationDataFilter;
+    }
+
+    @bind
+    @action
+    toggleWithCNADataFilter() {
+        this._withCNADataFilter = !this._withCNADataFilter;
+    }
+
+    @bind
+    @action
+    removeWithMutationDataFilter() {
+        this._withMutationDataFilter = false;
+    }
+
+    @bind
+    @action
+    removeWithCNADataFilter() {
+        this._withCNADataFilter = false;
     }
 
     @computed
@@ -871,6 +907,14 @@ export class StudyViewPageStore {
             } else {
                 filters.sampleIdentifiers = this.queriedSampleIdentifiers.result;
             }
+        }
+
+        if(this._withMutationDataFilter) {
+            filters.withMutationData = true;
+        }
+
+        if(this._withCNADataFilter) {
+            filters.withCNAData = true;
         }
 
         return filters as StudyViewFilter;
