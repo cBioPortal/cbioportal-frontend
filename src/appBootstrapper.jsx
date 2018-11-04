@@ -184,7 +184,7 @@ window.routingStore = routingStore;
 
 let render = () => {
 
-    initializeTracking();
+    if (!getBrowserWindow().navigator.webdriver) initializeTracking();
 
     const rootNode = document.getElementById("reactRoot");
 

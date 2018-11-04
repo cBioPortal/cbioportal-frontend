@@ -23,23 +23,23 @@ function addCivicVariant(variantMap: ICivicVariant, variantId: number, variantNa
 /**
  * Asynchronously return a map with Civic information from the genes given.
  */
-export function getCivicGenes(geneSymbols: Array<string>): Promise<ICivicGene> {
+export function getCivicGenes(entrezGeneIds: Array<number>): Promise<ICivicGene> {
     
     let civicGenes: ICivicGene = {};
 
     // Assemble a list of promises, each of which will retrieve a batch of genes
     let promises: Array<Promise<Array<ICivicGeneData>>> = [];
-    let ids: Array<String> = [];
-    geneSymbols.forEach(function(geneSymbol: string) {
+    let ids: Array<number> = [];
+    entrezGeneIds.forEach(function(entrezGeneId) {
         //Encode "/" characters
-        geneSymbol = geneSymbol.replace(/\//g,'%2F');
+        //geneSymbol = geneSymbol.replace(/\//g,'%2F');
         // Check if we already have it in the cache
-        if (civicGenes.hasOwnProperty(geneSymbol)) {
+        if (civicGenes.hasOwnProperty(entrezGeneId)) {
             return;
         }
 
         // Add the symbol to the list
-        ids.push(geneSymbol);
+        ids.push(entrezGeneId);
 
         // To prevent the request from growing too large, we send it off
         // when it reaches this limit and start a new one
