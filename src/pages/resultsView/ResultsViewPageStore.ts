@@ -498,7 +498,9 @@ export class ResultsViewPageStore {
         ],
         invoke: () => {
 
-            if (this.studies.result.length > 1) {
+            // if there are multiple studies or if there are no selected molecular profiles in query
+            // derive default profiles based on profileFilter (refers to old data priority)
+            if (this.studies.result.length > 1 || this.selectedMolecularProfileIds.length === 0) {
                 return Promise.resolve(getDefaultMolecularProfiles(this.studyToMolecularProfiles.result!, this.profileFilter));
             } else {
                 // if we have only one study, then consult the selectedMolecularProfileIds because
@@ -508,7 +510,6 @@ export class ResultsViewPageStore {
                     (profile:MolecularProfile)=>(profile.molecularProfileId in idLookupMap))
                 );
             }
-
 
         }
     });

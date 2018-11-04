@@ -266,7 +266,7 @@ export class PatientViewPageStore {
                 
                return getPathologyReport(this.patientId, 0);
             } else {
-                return [];
+                return Promise.resolve([]);
             }
         },
         onError: (err: Error) => {
