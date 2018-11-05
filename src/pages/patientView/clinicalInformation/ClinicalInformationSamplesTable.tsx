@@ -1,12 +1,12 @@
 import * as React from "react";
-import { ClinicalDataBySampleId } from "../../../shared/api/api-types-extended";
+import * as _ from "lodash";
+import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import convertSamplesData, {IConvertedSamplesData} from "./lib/convertSamplesData";
-import {SampleLabelHTML} from "../../../shared/components/sampleLabel/SampleLabel";
 import LazyMobXTable, {Column} from "shared/components/lazyMobXTable/LazyMobXTable";
-import TableHeaderControls from "shared/components/tableHeaderControls/TableHeaderControls";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import styles from './style/sampleTable.module.scss';
 import {SHOW_ALL_PAGE_SIZE} from "../../../shared/components/paginationControls/PaginationControls";
+import {sortByClinicalAttributePriorityThenName} from "../../../shared/lib/SortUtils";
 
 interface IClinicalInformationSamplesTableProps {
     samples?: ClinicalDataBySampleId[];
@@ -42,8 +42,6 @@ export default class ClinicalInformationSamplesTable extends React.Component<ICl
                     showPagination={false}
                     initialItemsPerPage={SHOW_ALL_PAGE_SIZE}
                     showColumnVisibility={false}
-                    initialSortColumn="attribute"
-                    initialSortDirection="asc"
                 />;
     }
 
@@ -51,10 +49,10 @@ export default class ClinicalInformationSamplesTable extends React.Component<ICl
 
         const tableData: ISampleRow[] = [];
 
-        for (const key in sampleInvertedData.items) {
-            const rowData = sampleInvertedData.items[key];
-
-            const row: ISampleRow = { attribute: rowData.clinicalAttribute.displayName };
+        _.each(_.values(sampleInvertedData.items).sort((a: any, b: any) => {
+            return sortByClinicalAttributePriorityThenName(a.clinicalAttribute, b.clinicalAttribute);
+        }), rowData => {
+            const row: ISampleRow = {attribute: rowData.clinicalAttribute.displayName};
 
             sampleInvertedData.columns.map((col) => {
                 if (col.id in rowData)
@@ -64,7 +62,7 @@ export default class ClinicalInformationSamplesTable extends React.Component<ICl
             });
 
             tableData.push(row);
-        }
+        });
 
         return tableData;
     }
