@@ -8,6 +8,7 @@ import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import {observable} from "mobx";
 import AppConfig from "appConfig";
 import fileDownload from 'react-file-download';
+import { getLegacyCopyNumberUrl } from '../../../shared/api/urls';
 
 interface CNSegmentsIframeProps {
     sampleIds:string[];
@@ -41,7 +42,7 @@ class CNASegmentIframe extends React.Component<CNSegmentsIframeProps,{}>{
 
 
         var bodyContent1 = '<body style="margin:0"><div id="igvDiv" style="padding-top: 10px;padding-bottom: 10px;"></div><script type="text/javascript">  $(document).ready(function () {    var div = $("#igvDiv"),   options = {'
-            + 'divId: "igvDiv", showNavigation: true, showRuler: true, genome: "hg19", divId: "igvDiv", locus: "' + this.props.gene.hugoGeneSymbol + '", tracks: [  { url: "api-legacy/copynumbersegments", indexed: false, isLog: true, contentType: "application/x-www-form-urlencoded", name: "Alt click to sort", type:"seg", json: true, method: "POST", ';
+            + 'divId: "igvDiv", showNavigation: true, showRuler: true, genome: "hg19", divId: "igvDiv", locus: "' + this.props.gene.hugoGeneSymbol + '", tracks: [  { url:"'+getLegacyCopyNumberUrl()+'" , indexed: false, isLog: true, contentType: "application/x-www-form-urlencoded", name: "Alt click to sort", type:"seg", json: true, method: "POST", ';
 
         var bodyContent2 = 'height: ' + segmentTrackHeight + ', sendData: "cancerStudyId=' + this.props.studyId + '&chromosomes=' + this.props.gene.chromosome +'&sampleIds=' + this.props.sampleIds.join(',') + '"},{name: "Genes", url: "https://s3.amazonaws.com/igv.broadinstitute.org/annotations/hg19/genes/gencode.v18.collapsed.bed", order: Number.MAX_VALUE,  displayMode: "EXPANDED"}]};igv.createBrowser(div, options);});<\/script><\/body>';
 
@@ -85,9 +86,11 @@ class CNASegmentIframe extends React.Component<CNSegmentsIframeProps,{}>{
            height:630,
            border:'none'
         }).appendTo($(this.iframeDiv).empty());
-        iframe.contentWindow.document.open();
-        iframe.contentWindow.document.write(this.getIframeBody());
-        iframe.contentWindow.document.close();
+        if (iframe.contentWindow) {
+            iframe.contentWindow.document.open();
+            iframe.contentWindow.document.write(this.getIframeBody());
+            iframe.contentWindow.document.close();
+        }
     }
     
     render(){
@@ -112,7 +115,7 @@ export default class CNSegments extends React.Component<{ store: ResultsViewPage
     render(){
 
         if (this.props.store.samples.isComplete && this.props.store.genes.isComplete && this.props.store.studyIds.isComplete) {
-            return (<MSKTabs tabButtonStyle="pills" activeTabId={this.activeTabId} className="pillTabs" onTabClick={(id:string)=>{
+            return (<MSKTabs tabButtonStyle="pills" activeTabId={this.activeTabId} className="pillTabs cnSegmentsMSKTabs" onTabClick={(id:string)=>{
                 this.activeTabId = id;
             }}>
                 {

@@ -1,5 +1,4 @@
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
 import {inject, observer} from "mobx-react";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
@@ -8,48 +7,62 @@ import {CancerStudy} from "../../../shared/api/generated/CBioPortalAPI";
 import classNames from 'classnames';
 import './styles.scss';
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
-import formSubmit from '../../../shared/lib/formSubmit';
-import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
-import {observable} from "mobx";
+import Loader, {default as LoadingIndicator} from "../../../shared/components/loadingIndicator/LoadingIndicator";
+import {action, computed, observable} from "mobx";
 import {QueryStore} from "../../../shared/components/query/QueryStore";
 import QueryAndDownloadTabs from "../../../shared/components/query/QueryAndDownloadTabs";
-
-class StudyLink extends React.Component<{ study: CancerStudy, onClick?: () => void, href?:string }, {}> {
-    render() {
-        return (<a href={this.props.href || `study?id=${this.props.study.studyId}`} target="_blank" style={{cursor:'pointer'}} onClick={this.props.onClick || (()=>{})}>{this.props.study.name}</a>);
-    }
-}
+import autobind from "autobind-decorator";
+import ExtendedRouterStore from "../../../shared/lib/ExtendedRouterStore";
+import {ShareUI} from "./ShareUI";
+import {ServerConfigHelpers} from "../../../config/config";
+import AppConfig from "appConfig";
+import {StudyLink} from "../../../shared/components/StudyLink/StudyLink";
+import {createQueryStore} from "../../home/HomePage";
+import getBrowserWindow from "../../../shared/lib/getBrowserWindow";
 
 @observer
-export default class QuerySummary extends React.Component<{ queryStore:QueryStore, store: ResultsViewPageStore }, {}> {
+export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore }, {}> {
 
-    @observable private queryFormVisible = false;
-    @observable private queryStoreInitialized = false;
+    @observable.ref queryStore: QueryStore | undefined;
 
     constructor() {
         super();
-        this.handleModifyQueryClick = this.handleModifyQueryClick.bind(this);
     }
 
+    @autobind
     private handleModifyQueryClick() {
-
         // this will have no functional impact after initial invocation of this method
-        this.queryStoreInitialized = true;
+        this.queryStore = (this.queryStore) ? undefined : createQueryStore(getBrowserWindow().routingStore.query);
+    }
 
-        // toggle visibility
-        this.queryFormVisible = !this.queryFormVisible;
-
+    @computed get queryFormVisible(){
+        return !!this.queryStore;
     }
 
     private get singleStudyUI() {
         return <div>
-            <h4><StudyLink study={this.props.store.queriedStudies.result[0]}/></h4>
-            <span>
-                {(window as any).serverVars.caseSetProperties.case_set_name}&nbsp;
-                (<strong>{this.props.store.samples.result.length}</strong> samples)
-                 / <strong data-test='QuerySummaryGeneCount'>{this.props.store.hugoGeneSymbols.length}</strong> Genes
-            </span>
+            <h4 style={{fontSize:14}}><StudyLink study={this.props.store.queriedStudies.result[0]}/></h4>
+            {(this.props.store.sampleLists.result!.length > 0) && (<span>
+                        {this.props.store.sampleLists.result![0].name}&nbsp;
+                (<strong>{this.props.store.sampleLists.result![0].sampleCount}</strong> samples)
+                        / <strong data-test='QuerySummaryGeneCount'>{this.props.store.hugoGeneSymbols.length}</strong> { (this.props.store.hugoGeneSymbols.length === 1) ? "Gene" : "Genes"  }
+                    </span>)
+            }
+            {
+                (this.props.store.sampleLists.result!.length === 0) && (
+                    <span>User-defined Patient List&nbsp;
+                        ({this.props.store.samples.result!.length} samples)&nbsp;/&nbsp;
+                        {this.props.store.genes.result!.length} { (this.props.store.hugoGeneSymbols.length === 1) ? "Gene" : "Genes"  }
+                    </span>)
+            }
         </div>
+    }
+
+    @autobind
+    @action
+    closeQueryForm(){
+        this.queryStore = undefined;
+        $(document).scrollTop(0);
     }
 
     private get multipleStudyUI() {
@@ -84,8 +97,7 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
 
         if (!this.props.store.totalAlterationStats.isError && !this.props.store.queriedStudies.isError) {
 
-
-            const loadingComplete = this.props.store.totalAlterationStats.isComplete && this.props.store.queriedStudies.isComplete;
+            const loadingComplete = this.props.store.totalAlterationStats.isComplete && this.props.store.queriedStudies.isComplete && this.props.store.samples.isComplete;
 
             let alterationPercentage = (loadingComplete) ?
                 (this.props.store.totalAlterationStats.result!.alteredSampleCount / this.props.store.totalAlterationStats.result!.sampleCount * 100) : 0;
@@ -100,26 +112,34 @@ export default class QuerySummary extends React.Component<{ queryStore:QueryStor
                                 </button>
                             </div>
 
-
-                            <Loader isLoading={loadingComplete === false}/>
-
-
+                            <LoadingIndicator isLoading={!loadingComplete} small={true}/>
                             {
                                 (loadingComplete) && ((this.props.store.queriedStudies.result.length === 1) ? this.singleStudyUI : this.multipleStudyUI)
                             }
                         </div>
-                        {
-                            (loadingComplete) && (<div className="query-summary__alterationData">
-                                <h4>Gene Set / Pathway is altered
-                                in {this.props.store.totalAlterationStats.result!.alteredSampleCount} ({_.round(alterationPercentage, 1)}%) of queried samples</h4>
-                            </div>)
-                        }
+
+                        <div className="query-summary__rightItems">
+
+                            {
+                                (loadingComplete) && (
+                                    <div className="query-summary__alterationData">
+                                        <strong>Gene Set / Pathway is altered
+                                            in {this.props.store.totalAlterationStats.result!.alteredSampleCount} ({_.round(alterationPercentage, 1)}%) of queried samples</strong>
+                                    </div>
+                                )
+                            }
+
+                            <ShareUI sessionEnabled={ServerConfigHelpers.sessionServiceIsEnabled()}
+                                     bitlyAccessToken={AppConfig.serverConfig.bitly_access_token}
+                                     routingStore={this.props.routingStore}/>
+                        </div>
+
                     </div>
 
                     {
-                        (this.queryStoreInitialized) && (
-                            <div style={{marginTop:10}} className={classNames({ hidden:!this.queryFormVisible })}>
-                                <QueryAndDownloadTabs showDownloadTab={false} store={this.props.queryStore} />
+                        (this.queryFormVisible) && (
+                            <div style={{marginTop:10}}>
+                                <QueryAndDownloadTabs onSubmit={this.closeQueryForm} showDownloadTab={false} store={this.queryStore!} />
                             </div>
                         )
                     }

@@ -1,6 +1,12 @@
 import * as React from 'react';
-import {observer} from "mobx-react";
+import Select from 'react-select';
+import _ from 'lodash';
+import autobind from "autobind-decorator";
+import {observer, Observer} from "mobx-react";
 import {computed, action, observable} from "mobx";
+// tslint:disable-next-line:no-import-side-effect
+import 'react-select/dist/react-select.css';
+import './styles.scss';
 
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import StructureViewerPanel from "shared/components/structureViewer/StructureViewerPanel";
@@ -14,26 +20,21 @@ import ProteinImpactTypePanel from "shared/components/mutationTypePanel/ProteinI
 import ProteinChainPanel from "shared/components/proteinChainPanel/ProteinChainPanel";
 
 import MutationMapperStore from "./MutationMapperStore";
-
-// Anything from App config will be included in mutation mapper config
-export interface IMutationMapperConfig {
-    userEmailAddress?:string;
-    showCivic?: boolean;
-    showHotspot?: boolean;
-    showMyCancerGenome?: boolean;
-    showOncoKB?: boolean;
-    showGenomeNexus?: boolean;
-    isoformOverrideSource?: string;
-}
+import { DropdownButton, MenuItem } from 'react-bootstrap';
+import { EnsemblTranscript } from 'shared/api/generated/GenomeNexusAPI';
+import Mutations from 'pages/resultsView/mutation/Mutations';
+import {IServerConfig} from "../../../config/IAppConfig";
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
-    config: IMutationMapperConfig;
+    config: IServerConfig;
     studyId?: string;
     myCancerGenomeData?: IMyCancerGenomeData;
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     pdbHeaderCache?: PdbHeaderCache;
     pubMedCache?:PubMedCache;
+    showDropDown?: boolean;
+    showOnlyAnnotatedTranscriptsInDropdown?: boolean;
 }
 
 @observer
@@ -62,31 +63,175 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
     @computed get geneSummary():JSX.Element {
         const hugoGeneSymbol = this.props.store.gene.hugoGeneSymbol;
         const uniprotId = this.props.store.uniprotId.result;
-        const transcriptId = this.props.store.canonicalTranscript.result &&
-            this.props.store.canonicalTranscript.result.transcriptId;
+        const store = this.props.store;
+        const showDropDown = this.props.showDropDown;
+        const showOnlyAnnotatedTranscriptsInDropdown = this.props.showOnlyAnnotatedTranscriptsInDropdown;
+        const canonicalTranscriptId = store.canonicalTranscript.result &&
+            store.canonicalTranscript.result.transcriptId;
+        const transcript = store.activeTranscript && (store.activeTranscript === canonicalTranscriptId)? store.canonicalTranscript.result : store.transcriptsByTranscriptId[store.activeTranscript!!];
+        const refseqMrnaId = transcript && transcript.refseqMrnaId;
+        const ccdsId = transcript && transcript.ccdsId;
 
         return (
             <div style={{'paddingBottom':10}}>
                 <h4>{hugoGeneSymbol}</h4>
-                <div className={this.props.store.uniprotId.result ? '' : 'invisible'}>
-                    <span data-test="GeneSummaryUniProt">{'UniProt: '}
-                        <a
-                            href={`http://www.uniprot.org/uniprot/${uniprotId}`}
-                            target="_blank"
-                        >
-                            {uniprotId}
-                        </a>
+                <Observer>
+                    {this.renderDropdown}
+                </Observer>
+                <div>
+                    <span data-test="GeneSummaryRefSeq">{'RefSeq: '}
+                        {refseqMrnaId? (
+                            <a
+                                href={`https://www.ncbi.nlm.nih.gov/nuccore/${refseqMrnaId}`}
+                                target="_blank"
+                            >
+                                {refseqMrnaId}
+                            </a>
+                        ) : '-'}
                     </span>
                 </div>
-                <div className={this.props.store.canonicalTranscript.result ? '' : 'invisible'}>
-                    <span>Transcript: </span>
-                    <a
-                        href={`http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=${transcriptId}`}
-                        target="_blank"
-                    >
-                        {transcriptId}
-                    </a>
+                {showDropDown? ((store.activeTranscript) && (
+                    <div>
+                        <span>Ensembl: </span>
+                        <a
+                            href={`http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=${store.activeTranscript}`}
+                            target="_blank"
+                        >
+                            {store.activeTranscript}
+                        </a>
+                    </div>
+                )) : (canonicalTranscriptId && (
+                    // down't show drop down, only the canonical transcript
+                    <div>
+                        <span>Ensembl: </span>
+                        <a
+                            href={`http://grch37.ensembl.org/homo_sapiens/Transcript/Summary?t=${canonicalTranscriptId}`}
+                            target="_blank"
+                        >
+                            {canonicalTranscriptId}
+                        </a>
+                    </div>
+                ))}
+                <div>
+                    <span data-test="GeneSummaryCCDS">{'CCDS: '}
+                        {ccdsId? (
+                            <a
+                                href={`http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA=${ccdsId}`}
+                                target="_blank"
+                            >
+                                {ccdsId}
+                            </a>
+                        ) : '-'}
+                    </span>
                 </div>
+                <div>
+                    <span data-test="GeneSummaryUniProt">{'UniProt: '}
+                        {uniprotId? (
+                            <a
+                                href={`http://www.uniprot.org/uniprot/${uniprotId}`}
+                                target="_blank"
+                            >
+                                {uniprotId}
+                            </a>
+                        ) : '-'}
+                    </span>
+                </div>
+            </div>
+        );
+    }
+
+    @autobind
+    private renderDropdown() {
+        const hugoGeneSymbol = this.props.store.gene.hugoGeneSymbol;
+        const uniprotId = this.props.store.uniprotId.result;
+        const store = this.props.store;
+        const showDropDown = this.props.showDropDown;
+        const showOnlyAnnotatedTranscriptsInDropdown = this.props.showOnlyAnnotatedTranscriptsInDropdown;
+        const canonicalTranscriptId = store.canonicalTranscript.result &&
+            store.canonicalTranscript.result.transcriptId;
+        const transcript = store.activeTranscript && (store.activeTranscript === canonicalTranscriptId)? store.canonicalTranscript.result : store.transcriptsByTranscriptId[store.activeTranscript!!];
+
+        if (!showDropDown) {
+            return <span></span>;
+        } else if (showOnlyAnnotatedTranscriptsInDropdown) {
+            const isLoading = store.transcriptsWithProteinLength.isPending || store.transcriptsWithAnnotations.isPending || store.canonicalTranscript.isPending;
+            const requiredData = store.indexedVariantAnnotations.result &&
+                                 Object.keys(store.indexedVariantAnnotations.result).length > 0 &&
+                                 canonicalTranscriptId &&
+                                 store.transcriptsWithAnnotations.result &&
+                                 store.transcriptsWithAnnotations.result.length > 0;
+
+            return (
+                <div style={{paddingBottom:10}}>
+                    <LoadingIndicator isLoading={isLoading} />
+                    {(!isLoading && requiredData) && (
+                        this.getDropdownTranscripts(store.activeTranscript || canonicalTranscriptId!!,
+                                                    store.transcriptsWithAnnotations.result!!,
+                                                    canonicalTranscriptId!!,
+                                                    store.transcriptsByTranscriptId,
+                                                    store.mutationsByTranscriptId)
+
+                    )}
+                </div>
+            );
+        } else {
+            // using existing annotations, show all transcripts with
+            // protein length
+            const isLoading = store.transcriptsWithProteinLength.isPending || store.canonicalTranscript.isPending;
+            const requiredData = store.transcriptsWithProteinLength.result &&
+                                 store.transcriptsWithProteinLength.result.length > 0 &&
+                                 canonicalTranscriptId;
+            return (
+                <div style={{paddingBottom:10}}>
+                    <LoadingIndicator isLoading={isLoading} />
+                    {(!isLoading && requiredData) && (
+                        this.getDropdownTranscripts(store.activeTranscript || canonicalTranscriptId!!,
+                                                    store.transcriptsWithProteinLength.result!!,
+                                                    canonicalTranscriptId!!,
+                                                    store.transcriptsByTranscriptId)
+                    )}
+                </div>
+            );
+        }
+    }
+
+    private getDropdownTranscripts(activeTranscript:string ,
+                              allTranscripts:string[],
+                              canonicalTranscript:string,
+                              transcriptsByTranscriptId:{[transcriptId:string]: EnsemblTranscript},
+                              mutationsByTranscriptId?: {[transcriptId:string]: Mutations[]}) {
+        const activeRefseqMrnaId = transcriptsByTranscriptId[activeTranscript].refseqMrnaId;
+        return (
+            <div>
+                <Select
+                    className="transcripts-dropdown-select"
+                    value={{
+                        label: activeRefseqMrnaId? activeRefseqMrnaId : activeTranscript,
+                        value:activeTranscript
+                    }}
+                    clearable={false}
+                    // need to explicitly set delteRemoves for cleable
+                    // https://github.com/JedWatson/react-select/issues/1560
+                    deleteRemoves={false}
+                    style={{width:160}}
+                    options={this.sortTranscripts(allTranscripts).map(
+                                (t:string) => {
+                                    const length = transcriptsByTranscriptId[t].proteinLength;
+                                    const refseqMrnaId = transcriptsByTranscriptId[t].refseqMrnaId;
+                                    const ccdsId = transcriptsByTranscriptId[t].ccdsId;
+                                    const nrOfMutations = mutationsByTranscriptId && mutationsByTranscriptId[t] && mutationsByTranscriptId[t].length;
+                                    const label = `${refseqMrnaId? `${refseqMrnaId} / ` : ""}${t} ${ccdsId? `(${ccdsId})` : ""} ${length? `(${length} amino acids)` : ""} ${nrOfMutations? `(${nrOfMutations} mutations)` : ""} ${t === canonicalTranscript? " (default)" : ""}`;
+                                    return {label:label,value:t};
+                                }
+                            )
+                    }
+                    onChange={(option:any) => {
+                        if (option.value) {
+                            this.props.store.activeTranscript = option.value;
+                            this.close3dPanel();
+                        }
+                    }}
+                />
             </div>
         );
     }
@@ -95,6 +240,25 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
     // TODO provide a generic version of this? See ResultsViewMutationMapper.mutationRateSummary
     get mutationRateSummary():JSX.Element|null {
         return null;
+    }
+
+    sortTranscripts(transcripts:string[]) {
+        // sort transcripts for dropdown
+        // canonical id first
+        // then ones with refseq id
+        // then protein length
+        // lastly the ensembl id
+        transcripts = _.orderBy(
+            transcripts,
+            [
+                (t) => this.props.store.canonicalTranscript.result && t === this.props.store.canonicalTranscript.result.transcriptId,
+                (t) => this.props.store.transcriptsByTranscriptId[t].hasOwnProperty("refseqMrnaId"),
+                (t) => this.props.store.transcriptsByTranscriptId[t].proteinLength,
+                (t) => t
+            ],
+            ['desc','desc','desc','asc']
+        );
+        return transcripts;
     }
 
     @computed get multipleMutationInfo(): string {
@@ -164,6 +328,9 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
 
     protected view3dButton(): JSX.Element|null
     {
+        const canonicalTranscriptId = this.props.store.canonicalTranscript.result &&
+            this.props.store.canonicalTranscript.result.transcriptId;
+
         return (
             <button
                 className="btn btn-default btn-sm"
@@ -189,6 +356,11 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
         );
     }
 
+    protected get isMutationTableDataLoading() {
+        // Child classes should override this method
+        return false;
+    }
+
     protected mutationTableComponent(): JSX.Element|null
     {
         // Child classes should override this method to return an instance of MutationTable
@@ -204,18 +376,24 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
         );
     }
 
+    protected get isMutationPlotDataLoading() {
+        return this.props.store.pfamDomainData.isPending;
+    }
+
+    protected get isLoading() {
+        return this.props.store.mutationData.isPending || this.isMutationPlotDataLoading || this.isMutationTableDataLoading;
+    }
+
     public render() {
 
         return (
             <div>
                 {this.structureViewerPanel()}
 
-                <LoadingIndicator isLoading={this.props.store.mutationData.isPending} />
+                <LoadingIndicator center={true} size="big" isLoading={this.isLoading} />
                 {
-                    (!this.props.store.mutationData.isPending) && (
+                    (!this.isLoading) && (
                     <div>
-                        <LoadingIndicator isLoading={this.props.store.pfamDomainData.isPending} />
-                        { (!this.props.store.pfamDomainData.isPending) && (
                         <div style={{ display:'flex' }}>
                             <div className="borderedChart" style={{ marginRight:10 }}>
                                 {this.mutationPlot()}
@@ -229,7 +407,6 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                                 {this.view3dButton()}
                             </div>
                         </div>
-                        ) }
                         <hr style={{ marginTop:20 }} />
 
                             {!this.props.store.dataStore.showingAllData &&

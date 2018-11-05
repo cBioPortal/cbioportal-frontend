@@ -76,8 +76,10 @@ export interface IOncoprintControlsState {
     sortByDrivers?:boolean,
     sortByCaseListDisabled?:boolean,
     annotateDriversOncoKb?:boolean,
+    annotateDriversOncoKbError?:boolean;
     annotateDriversOncoKbDisabled?:boolean;
     annotateDriversHotspots?:boolean,
+    annotateDriversHotspotsError?:boolean;
     annotateDriversHotspotsDisabled?:boolean,
     annotateDriversCBioPortal?:boolean,
     annotateDriversCOSMIC?:boolean,
@@ -595,49 +597,53 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                         </label>
                         </div>
                         <div style={{marginLeft: "20px"}}>
-                            <div className="checkbox"><label>
-                                <input
-                                    type="checkbox"
-                                    value={EVENT_KEY.annotateOncoKb}
-                                    checked={this.props.state.annotateDriversOncoKb}
-                                    onClick={this.onInputClick}
-                                    data-test="annotateOncoKb"
-                                    disabled={this.props.state.annotateDriversOncoKbDisabled}
-                                />
-                                {this.props.state.annotateDriversOncoKbDisabled && <ErrorIcon style={{marginRight:4}} tooltip={<span>Error loading OncoKb data. Please refresh the page or try again later.</span>}/>}
-                                <DefaultTooltip
-                                    overlay={<span>Oncogenicity from OncoKB</span>}
-                                    placement="top"
-                                >
-                                    <img
-                                        src="images/oncokb.png"
-                                        style={{maxHeight:"12px", cursor:"pointer", marginRight:"5px"}}
+                            { !this.props.state.annotateDriversOncoKbDisabled && (
+                                <div className="checkbox"><label>
+                                    <input
+                                        type="checkbox"
+                                        value={EVENT_KEY.annotateOncoKb}
+                                        checked={this.props.state.annotateDriversOncoKb}
+                                        onClick={this.onInputClick}
+                                        data-test="annotateOncoKb"
+                                        disabled={this.props.state.annotateDriversOncoKbError}
                                     />
-                                </DefaultTooltip>
-                                driver annotation
-                            </label></div>
-                            <div className="checkbox"><label>
-                                <input
-                                    type="checkbox"
-                                    value={EVENT_KEY.annotateHotspots}
-                                    checked={this.props.state.annotateDriversHotspots}
-                                    onClick={this.onInputClick}
-                                    data-test="annotateHotspots"
-                                    disabled={this.props.state.annotateDriversHotspotsDisabled}
-                                />
-                                {this.props.state.annotateDriversHotspotsDisabled && <ErrorIcon style={{marginRight:4}} tooltip={<span>Error loading Hotspots data. Please refresh the page or try again later.</span>}/>}
-                                Hotspots
-                                <DefaultTooltip
-                                    overlay={<div style={{maxWidth:"400px"}}>Identified as a recurrent hotspot (statistically significant) in a population-scale cohort of tumor samples of various cancer types using methodology based in part on <a href="http://www.ncbi.nlm.nih.gov/pubmed/26619011" target="_blank">Chang et al., Nat Biotechnol, 2016.</a>
-                                        Explore all mutations at <a href="http://www.cancerhotspots.org" target="_blank">http://cancerhotspots.org</a></div>}
-                                    placement="top"
-                                >
-                                    <img
-                                        src="images/cancer-hotspots.svg"
-                                        style={{height:"15px", width:"15px", cursor:"pointer", marginLeft:"5px"}}
+                                    {this.props.state.annotateDriversOncoKbError && <ErrorIcon style={{marginRight:4}} tooltip={<span>Error loading OncoKb data. Please refresh the page or try again later.</span>}/>}
+                                    <DefaultTooltip
+                                        overlay={<span>Oncogenicity from OncoKB</span>}
+                                        placement="top"
+                                    >
+                                        <img
+                                            src={require("../../../../rootImages/oncokb.png")}
+                                            style={{maxHeight:"12px", cursor:"pointer", marginRight:"5px"}}
+                                        />
+                                    </DefaultTooltip>
+                                    driver annotation
+                                </label></div>
+                            )}
+                            { !this.props.state.annotateDriversHotspotsDisabled && (
+                                <div className="checkbox"><label>
+                                    <input
+                                        type="checkbox"
+                                        value={EVENT_KEY.annotateHotspots}
+                                        checked={this.props.state.annotateDriversHotspots}
+                                        onClick={this.onInputClick}
+                                        data-test="annotateHotspots"
+                                        disabled={this.props.state.annotateDriversHotspotsError}
                                     />
-                                </DefaultTooltip>
-                            </label></div>
+                                    {this.props.state.annotateDriversHotspotsError && <ErrorIcon style={{marginRight:4}} tooltip={<span>Error loading Hotspots data. Please refresh the page or try again later.</span>}/>}
+                                    Hotspots
+                                    <DefaultTooltip
+                                        overlay={<div style={{maxWidth:"400px"}}>Identified as a recurrent hotspot (statistically significant) in a population-scale cohort of tumor samples of various cancer types using methodology based in part on <a href="http://www.ncbi.nlm.nih.gov/pubmed/26619011" target="_blank">Chang et al., Nat Biotechnol, 2016.</a>
+                                            Explore all mutations at <a href="http://www.cancerhotspots.org" target="_blank">http://cancerhotspots.org</a></div>}
+                                        placement="top"
+                                    >
+                                        <img
+                                            src={require("../../../../rootImages/cancer-hotspots.svg")}
+                                            style={{height:"15px", width:"15px", cursor:"pointer", marginLeft:"5px"}}
+                                        />
+                                    </DefaultTooltip>
+                                </label></div>
+                            )}
                             {this.props.handlers.onChangeAnnotateCBioPortalInputValue && (
                             <div className="checkbox">
                                 <label>
@@ -688,14 +694,14 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                         value={EVENT_KEY.customDriverBinaryAnnotation}
                                         onClick={this.onInputClick}
                                     /> {this.props.state.customDriverAnnotationBinaryMenuLabel}
-                                    <img src="images/driver.png" alt="driver filter" style={{height:"15px", width:"15px", cursor:"pointer", marginLeft:"5px"}}/>
+                                    <img src={require("../../../../rootImages/driver.png")} alt="driver filter" style={{height:"15px", width:"15px", cursor:"pointer", marginLeft:"5px"}}/>
                                 </label></div>
                             )}
                             {!!this.props.state.customDriverAnnotationTiersMenuLabel && (
                                 <span>
                                     <span className="caret"/>&nbsp;&nbsp;
                                     <span>{this.props.state.customDriverAnnotationTiersMenuLabel}</span>&nbsp;
-                                    <img src="images/driver_tiers.png" alt="driver tiers filter" style={{height:"15px", width:"15px", cursor:"pointer", marginLeft:"5px"}}/>
+                                    <img src={require("../../../../rootImages/driver_tiers.png")} alt="driver tiers filter" style={{height:"15px", width:"15px", cursor:"pointer", marginLeft:"5px"}}/>
                                     <div style={{marginLeft:"30px"}}>
                                         {(this.props.state.customDriverAnnotationTiers || []).map((tier)=>(
                                             <div className="checkbox"><label>
@@ -775,7 +781,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                         onClick={this.onInputClick}
                     /> Show legends for clinical tracks
                 </label></div>
-                <div className="checkbox" style={{marginLeft:20}}><label>
+                <div className="checkbox" style={{marginLeft:20, maxWidth: 220}}><label>
                     <input
                         data-test="onlyShowClinicalLegendsForAltered"
                         type="checkbox"

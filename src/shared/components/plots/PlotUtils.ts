@@ -1,5 +1,6 @@
 import _ from "lodash";
 
+import Timer = NodeJS.Timer;
 export function getDeterministicRandomNumber(seed:number, range?:[number, number]) {
     // source: https://stackoverflow.com/a/23304189
     seed = Math.sin(seed)*10000;
@@ -26,13 +27,61 @@ export function getJitterForCase(uniqueKey:string) {
     return getDeterministicRandomNumber(seed, [-1,1]);
 }
 
+
+export function makeMouseEvents(self:{ tooltipModel: any, pointHovered: boolean}) {
+    let disappearTimeout:Timer | null = null;
+    const disappearDelayMs = 250;
+
+    return [{
+        target: "data",
+        eventHandlers: {
+            onMouseOver: () => {
+                return [
+                    {
+                        target: "data",
+                        mutation: (props: any) => {
+                            self.tooltipModel = props;
+                            self.pointHovered = true;
+
+                            if (disappearTimeout !== null) {
+                                clearTimeout(disappearTimeout);
+                                disappearTimeout = null;
+                            }
+
+                            return { active: true };
+                        }
+                    }
+                ];
+            },
+            onMouseOut: () => {
+                return [
+                    {
+                        target: "data",
+                        mutation: () => {
+                            if (disappearTimeout !== null) {
+                                clearTimeout(disappearTimeout);
+                            }
+
+                            disappearTimeout = setTimeout(()=>{
+                                self.pointHovered = false;
+                            }, disappearDelayMs);
+
+                            return { active: false };
+                        }
+                    }
+                ];
+            }
+        }
+    }];
+}
+
 export function makeScatterPlotSizeFunction<D>(
     highlight?:(d:D)=>boolean,
-    size?:(d:D, active:Boolean, isHighlighted?:boolean)=>number
+    size?:number | ((d:D, active:Boolean, isHighlighted?:boolean)=>number)
 ) {
     // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
     if (size) {
-        if (highlight) {
+        if (highlight && typeof size === "function") {
             return (d:D, active:boolean)=>size(d, active, highlight(d));
         } else {
             return size;

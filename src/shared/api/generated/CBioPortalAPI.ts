@@ -276,7 +276,7 @@ export type MolecularProfile = {
 
         'description': string
 
-        'molecularAlterationType': "MUTATION_EXTENDED" | "FUSION" | "STRUCTURAL_VARIANT" | "COPY_NUMBER_ALTERATION" | "MICRO_RNA_EXPRESSION" | "MRNA_EXPRESSION" | "MRNA_EXPRESSION_NORMALS" | "RNA_EXPRESSION" | "METHYLATION" | "METHYLATION_BINARY" | "PHOSPHORYLATION" | "PROTEIN_LEVEL" | "PROTEIN_ARRAY_PROTEIN_LEVEL" | "PROTEIN_ARRAY_PHOSPHORYLATION" | "GENESET_SCORE"
+        'molecularAlterationType': "MUTATION_EXTENDED" | "MUTATION_UNCALLED" | "FUSION" | "STRUCTURAL_VARIANT" | "COPY_NUMBER_ALTERATION" | "MICRO_RNA_EXPRESSION" | "MRNA_EXPRESSION" | "MRNA_EXPRESSION_NORMALS" | "RNA_EXPRESSION" | "METHYLATION" | "METHYLATION_BINARY" | "PHOSPHORYLATION" | "PROTEIN_LEVEL" | "PROTEIN_ARRAY_PROTEIN_LEVEL" | "PROTEIN_ARRAY_PHOSPHORYLATION" | "GENESET_SCORE"
 
         'molecularProfileId': string
 
@@ -371,22 +371,6 @@ export type Mutation = {
         'variantType': string
 
 };
-export type MutationCount = {
-    'molecularProfileId': string
-
-        'mutationCount': number
-
-        'patientId': string
-
-        'sampleId': string
-
-        'studyId': string
-
-        'uniquePatientKey': string
-
-        'uniqueSampleKey': string
-
-};
 export type MutationCountByPosition = {
     'count': number
 
@@ -464,9 +448,7 @@ export type PatientIdentifier = {
 
 };
 export type Sample = {
-    'cancerTypeId': string
-
-        'copyNumberSegmentPresent': boolean
+    'copyNumberSegmentPresent': boolean
 
         'patientId': string
 
@@ -3099,193 +3081,10 @@ export default class CBioPortalAPI {
                 return response.body;
             });
         };
-    getMutationCountsInMolecularProfileBySampleListIdUsingGETURL(parameters: {
-        'molecularProfileId': string,
-        'sampleListId': string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/molecular-profiles/{molecularProfileId}/mutation-counts';
-
-        path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
-        if (parameters['sampleListId'] !== undefined) {
-            queryParameters['sampleListId'] = parameters['sampleListId'];
-        }
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Get mutation counts in a molecular profile by Sample List ID
-     * @method
-     * @name CBioPortalAPI#getMutationCountsInMolecularProfileBySampleListIdUsingGET
-     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_mutations
-     * @param {string} sampleListId - Sample List ID e.g. acc_tcga_all
-     */
-    getMutationCountsInMolecularProfileBySampleListIdUsingGETWithHttpInfo(parameters: {
-        'molecularProfileId': string,
-        'sampleListId': string,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/molecular-profiles/{molecularProfileId}/mutation-counts';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-
-            path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
-
-            if (parameters['molecularProfileId'] === undefined) {
-                reject(new Error('Missing required  parameter: molecularProfileId'));
-                return;
-            }
-
-            if (parameters['sampleListId'] !== undefined) {
-                queryParameters['sampleListId'] = parameters['sampleListId'];
-            }
-
-            if (parameters['sampleListId'] === undefined) {
-                reject(new Error('Missing required  parameter: sampleListId'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Get mutation counts in a molecular profile by Sample List ID
-     * @method
-     * @name CBioPortalAPI#getMutationCountsInMolecularProfileBySampleListIdUsingGET
-     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_mutations
-     * @param {string} sampleListId - Sample List ID e.g. acc_tcga_all
-     */
-    getMutationCountsInMolecularProfileBySampleListIdUsingGET(parameters: {
-            'molecularProfileId': string,
-            'sampleListId': string,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < MutationCount >
-        > {
-            return this.getMutationCountsInMolecularProfileBySampleListIdUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    fetchMutationCountsInMolecularProfileUsingPOSTURL(parameters: {
-        'molecularProfileId': string,
-        'sampleIds': Array < string > ,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/molecular-profiles/{molecularProfileId}/mutation-counts/fetch';
-
-        path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Fetch mutation counts in a molecular profile by sample IDs
-     * @method
-     * @name CBioPortalAPI#fetchMutationCountsInMolecularProfileUsingPOST
-     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_mutations
-     * @param {} sampleIds - List of Sample IDs
-     */
-    fetchMutationCountsInMolecularProfileUsingPOSTWithHttpInfo(parameters: {
-        'molecularProfileId': string,
-        'sampleIds': Array < string > ,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/molecular-profiles/{molecularProfileId}/mutation-counts/fetch';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
-
-            if (parameters['molecularProfileId'] === undefined) {
-                reject(new Error('Missing required  parameter: molecularProfileId'));
-                return;
-            }
-
-            if (parameters['sampleIds'] !== undefined) {
-                body = parameters['sampleIds'];
-            }
-
-            if (parameters['sampleIds'] === undefined) {
-                reject(new Error('Missing required  parameter: sampleIds'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Fetch mutation counts in a molecular profile by sample IDs
-     * @method
-     * @name CBioPortalAPI#fetchMutationCountsInMolecularProfileUsingPOST
-     * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_mutations
-     * @param {} sampleIds - List of Sample IDs
-     */
-    fetchMutationCountsInMolecularProfileUsingPOST(parameters: {
-            'molecularProfileId': string,
-            'sampleIds': Array < string > ,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < MutationCount >
-        > {
-            return this.fetchMutationCountsInMolecularProfileUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
     getMutationsInMolecularProfileBySampleListIdUsingGETURL(parameters: {
         'molecularProfileId': string,
         'sampleListId': string,
+        'entrezGeneId' ? : number,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
@@ -3299,6 +3098,10 @@ export default class CBioPortalAPI {
         path = path.replace('{molecularProfileId}', parameters['molecularProfileId'] + '');
         if (parameters['sampleListId'] !== undefined) {
             queryParameters['sampleListId'] = parameters['sampleListId'];
+        }
+
+        if (parameters['entrezGeneId'] !== undefined) {
+            queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
         }
 
         if (parameters['projection'] !== undefined) {
@@ -3337,6 +3140,7 @@ export default class CBioPortalAPI {
      * @name CBioPortalAPI#getMutationsInMolecularProfileBySampleListIdUsingGET
      * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_mutations
      * @param {string} sampleListId - Sample List ID e.g. acc_tcga_all
+     * @param {integer} entrezGeneId - Entrez Gene ID
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
      * @param {integer} pageNumber - Page number of the result list
@@ -3346,6 +3150,7 @@ export default class CBioPortalAPI {
     getMutationsInMolecularProfileBySampleListIdUsingGETWithHttpInfo(parameters: {
         'molecularProfileId': string,
         'sampleListId': string,
+        'entrezGeneId' ? : number,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
@@ -3379,6 +3184,10 @@ export default class CBioPortalAPI {
             if (parameters['sampleListId'] === undefined) {
                 reject(new Error('Missing required  parameter: sampleListId'));
                 return;
+            }
+
+            if (parameters['entrezGeneId'] !== undefined) {
+                queryParameters['entrezGeneId'] = parameters['entrezGeneId'];
             }
 
             if (parameters['projection'] !== undefined) {
@@ -3419,6 +3228,7 @@ export default class CBioPortalAPI {
      * @name CBioPortalAPI#getMutationsInMolecularProfileBySampleListIdUsingGET
      * @param {string} molecularProfileId - Molecular Profile ID e.g. acc_tcga_mutations
      * @param {string} sampleListId - Sample List ID e.g. acc_tcga_all
+     * @param {integer} entrezGeneId - Entrez Gene ID
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
      * @param {integer} pageNumber - Page number of the result list
@@ -3428,6 +3238,7 @@ export default class CBioPortalAPI {
     getMutationsInMolecularProfileBySampleListIdUsingGET(parameters: {
             'molecularProfileId': string,
             'sampleListId': string,
+            'entrezGeneId' ? : number,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
@@ -3671,83 +3482,6 @@ export default class CBioPortalAPI {
         }): Promise < Array < MutationCountByPosition >
         > {
             return this.fetchMutationCountsByPositionUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
-                return response.body;
-            });
-        };
-    fetchMutationCountsInStudiesUsingPOSTURL(parameters: {
-        'sampleIdentifiers': Array < SampleIdentifier > ,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let path = '/mutation-counts/fetch';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * Fetch mutation counts in multiple studies by sample IDs
-     * @method
-     * @name CBioPortalAPI#fetchMutationCountsInStudiesUsingPOST
-     * @param {} sampleIdentifiers - List of Sample Identifiers
-     */
-    fetchMutationCountsInStudiesUsingPOSTWithHttpInfo(parameters: {
-        'sampleIdentifiers': Array < SampleIdentifier > ,
-        $queryParameters ? : any,
-        $domain ? : string
-    }): Promise < request.Response > {
-        const domain = parameters.$domain ? parameters.$domain : this.domain;
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let path = '/mutation-counts/fetch';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
-
-            if (parameters['sampleIdentifiers'] !== undefined) {
-                body = parameters['sampleIdentifiers'];
-            }
-
-            if (parameters['sampleIdentifiers'] === undefined) {
-                reject(new Error('Missing required  parameter: sampleIdentifiers'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        });
-    };
-
-    /**
-     * Fetch mutation counts in multiple studies by sample IDs
-     * @method
-     * @name CBioPortalAPI#fetchMutationCountsInStudiesUsingPOST
-     * @param {} sampleIdentifiers - List of Sample Identifiers
-     */
-    fetchMutationCountsInStudiesUsingPOST(parameters: {
-            'sampleIdentifiers': Array < SampleIdentifier > ,
-            $queryParameters ? : any,
-            $domain ? : string
-        }): Promise < Array < MutationCount >
-        > {
-            return this.fetchMutationCountsInStudiesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
@@ -5931,7 +5665,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "sampleId" | "sampleType" | "cancerTypeId",
+        'sortBy' ? : "sampleId" | "sampleType",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -5989,7 +5723,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "sampleId" | "sampleType" | "cancerTypeId",
+        'sortBy' ? : "sampleId" | "sampleType",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any,
         $domain ? : string
@@ -6069,7 +5803,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "sampleId" | "sampleType" | "cancerTypeId",
+            'sortBy' ? : "sampleId" | "sampleType",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string
@@ -6224,7 +5958,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "sampleId" | "sampleType" | "cancerTypeId",
+        'sortBy' ? : "sampleId" | "sampleType",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -6278,7 +6012,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "sampleId" | "sampleType" | "cancerTypeId",
+        'sortBy' ? : "sampleId" | "sampleType",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any,
         $domain ? : string
@@ -6349,7 +6083,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "sampleId" | "sampleType" | "cancerTypeId",
+            'sortBy' ? : "sampleId" | "sampleType",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string

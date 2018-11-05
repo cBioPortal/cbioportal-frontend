@@ -156,7 +156,7 @@ export interface IOncoprintProps {
 @observer
 export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
     private div:HTMLDivElement;
-    public oncoprint:OncoprintJS<any>;
+    public oncoprint:OncoprintJS<any>|undefined;
     private trackSpecKeyToTrackId:{[key:string]:TrackId};
     private lastTransitionProps:IOncoprintProps;
 
@@ -211,6 +211,13 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
 
     componentDidMount() {
         this.refreshOncoprint(this.props);
+    }
+
+    componentWillUnmount() {
+        if (this.oncoprint) {
+            this.oncoprint.destroy();
+            this.oncoprint = undefined;
+        }
     }
 
     render() {
