@@ -23,6 +23,7 @@ import {OncoprintClinicalAttribute} from "./ResultsViewOncoprint";
 import {CoverageInformation} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
 import { MUTATION_STATUS_GERMLINE } from "shared/constants";
 import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
+import {stringListToIndexSet} from "../../lib/StringUtils";
 
 const cnaDataToString:{[integerCNA:string]:string|undefined} = {
     "-2": "homdel",
@@ -31,14 +32,18 @@ const cnaDataToString:{[integerCNA:string]:string|undefined} = {
     "1": "gain",
     "2": "amp"
 };
-const mutRenderPriority = {
-    'trunc_rec':1,
-    'inframe_rec':2,
-    'missense_rec':3,
-    'trunc': 4,
-    'inframe': 5,
-    'missense': 6
-};
+const mutRenderPriority = stringListToIndexSet([
+    'trunc_rec',
+    'inframe_rec',
+    'promoter_rec',
+    'missense_rec',
+    'other_rec',
+    'trunc',
+    'inframe',
+    'promoter',
+    'missense',
+    'other'
+]);
 const cnaRenderPriority = {
     'amp': 0,
     'homdel': 0,
@@ -54,7 +59,7 @@ const protRenderPriority = {
     'down': 0
 };
 
-export type OncoprintMutationType = "missense" | "inframe" | "fusion" | "promoter" | "trunc";
+export type OncoprintMutationType = "missense" | "inframe" | "fusion" | "promoter" | "trunc" | "other";
 
 export function getOncoprintMutationType(d:Pick<Mutation, "proteinChange"|"mutationType">):OncoprintMutationType {
     if ((d.proteinChange || "").toLowerCase() === "promoter") {
@@ -66,6 +71,7 @@ export function getOncoprintMutationType(d:Pick<Mutation, "proteinChange"|"mutat
             case "missense":
             case "inframe":
             case "fusion":
+            case "other":
                 return simplifiedMutationType;
             default:
                 return "trunc";
