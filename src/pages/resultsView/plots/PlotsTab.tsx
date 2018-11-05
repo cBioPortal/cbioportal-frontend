@@ -13,10 +13,10 @@ import {
     makeAxisDataPromise, makeScatterPlotData, makeScatterPlotPointAppearance, dataTypeDisplayOrder,
     dataTypeToDisplayType, scatterPlotTooltip, scatterPlotLegendData, IStringAxisData, INumberAxisData,
     makeBoxScatterPlotData, IScatterPlotSampleData, noMutationAppearance, IBoxScatterPlotPoint, boxPlotTooltip,
-    getCnaQueries, getMutationQueries, getScatterPlotDownloadData, getBoxPlotDownloadData, getTablePlotDownloadData,
+    getCnaQueries, getMutationQueries, getScatterPlotDownloadData, getBoxPlotDownloadData,
     mutationRenderPriority, mutationSummaryRenderPriority, MutationSummary, mutationSummaryToAppearance,
     CNA_STROKE_WIDTH, PLOT_SIDELENGTH, CLIN_ATTR_DATA_TYPE,
-    sortMolecularProfilesForDisplay, scatterPlotZIndexSortBy
+    sortMolecularProfilesForDisplay, scatterPlotZIndexSortBy, getMutationProfileDuplicateSamplesReport, GENESET_DATA_TYPE
 } from "./PlotsTabUtils";
 import {
     ClinicalAttribute, MolecularProfile, Mutation,
@@ -36,11 +36,12 @@ import setWindowVariable from "../../../shared/lib/setWindowVariable";
 import autobind from "autobind-decorator";
 import fileDownload from 'react-file-download';
 import onMobxPromise from "../../../shared/lib/onMobxPromise";
-import {logicalOr} from "../../../shared/lib/LogicUtils";
 import {SpecialAttribute} from "../../../shared/cache/OncoprintClinicalDataCache";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import ScrollBar from "../../../shared/components/Scrollbar/ScrollBar";
 import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
+import {getTablePlotDownloadData} from "../../../shared/components/plots/TablePlotUtils";
+import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
 
 enum EventKey {
     horz_logScale,
@@ -71,11 +72,19 @@ export enum PlotType {
     Table
 }
 
+export enum MutationCountBy {
+    MutationType = "MutationType",
+    MutatedVsWildType = "MutatedVsWildType"
+}
+
 export type AxisMenuSelection = {
     entrezGeneId?:number;
+    genesetId?:string;
     selectedGeneOption?:{value:number, label:string}; // value is entrez id, label is hugo symbol
+    selectedGenesetOption?:{value:string, label:string};
     dataType?:string;
     dataSourceId?:string;
+    mutationCountBy:MutationCountBy;
     logScale: boolean;
 };
 
@@ -91,6 +100,12 @@ class PlotsTabBoxPlot extends BoxScatterPlot<IBoxScatterPlotPoint> {}
 const SVG_ID = "plots-tab-plot-svg";
 
 export const SAME_GENE_OPTION_VALUE = "same";
+export const SAME_GENESET_OPTION_VALUE = "same";
+
+const mutationCountByOptions = [
+    { value: MutationCountBy.MutationType, label: "Mutation Type" },
+    { value: MutationCountBy.MutatedVsWildType, label: "Mutated vs Wild-type" }
+];
 
 @observer
 export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
@@ -102,7 +117,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @observable searchCaseInput:string;
     @observable searchMutationInput:string;
     @observable viewMutationType:boolean = true;
-    @observable viewCopyNumber:boolean = true;
+    @observable viewCopyNumber:boolean = false;
 
     @observable searchCase:string = "";
     @observable searchMutation:string = "";
@@ -159,9 +174,10 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             } else {
                 const horzProfile = profileIdToProfile.result[this.horzSelection.dataSourceId!];
                 const vertProfile = profileIdToProfile.result[this.vertSelection.dataSourceId!];
-                if ((horzProfile && horzProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && horzProfile.datatype === DataTypeConstants.DISCRETE) ||
-                    (vertProfile && vertProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && vertProfile.datatype === DataTypeConstants.DISCRETE)) {
-                    // if theres a discrete cna profile, redundant to allow showing cna
+                if (// if theres a discrete cna profile, redundant to allow showing cna
+                    (horzProfile && horzProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && horzProfile.datatype === DataTypeConstants.DISCRETE) ||
+                    (vertProfile && vertProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && vertProfile.datatype === DataTypeConstants.DISCRETE)
+                ) {
                     return PotentialViewType.MutationType;
                 } else {
                     // otherwise, show either one
@@ -180,14 +196,19 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 return PotentialViewType.None;
             } else {
                 let molecularProfileId;
+                let dataType;
                 if (this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
                     molecularProfileId = this.horzSelection.dataSourceId!;
+                    dataType = this.horzSelection.dataType;
                 } else {
                     molecularProfileId = this.vertSelection.dataSourceId!;
+                    dataType = this.vertSelection.dataType;
                 }
                 const profile = profileIdToProfile.result[molecularProfileId];
-                if (profile && profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && profile.datatype === DataTypeConstants.DISCRETE) {
-                    // if theres a discrete cna profile, redundant to allow showing cna
+                if (// if theres a discrete cna profile, redundant to allow showing cna
+                    (profile && profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && profile.datatype === DataTypeConstants.DISCRETE)
+                ) {
+
                     return PotentialViewType.MutationType;
                 } else {
                     // otherwise, show either one
@@ -212,7 +233,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         this.searchCaseInput = "";
         this.searchMutationInput = "";
 
-        setWindowVariable("resultsViewPlotsTab", this); // for e2e testing
+        (window as any).resultsViewPlotsTab = this;
     }
 
     @autobind
@@ -306,15 +327,57 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             set dataSourceId(id:string|undefined) {
                 this._dataSourceId = id;
             },
+            get mutationCountBy() {
+                if (this._mutationCountBy === undefined) {
+                    // default
+                    return MutationCountBy.MutationType;
+                } else {
+                    return this._mutationCountBy;
+                }
+            },
+            set mutationCountBy(m:MutationCountBy) {
+                this._mutationCountBy = m;
+            },
             get logScale() {
                 return this._logScale && logScalePossible(this);
             },
             set logScale(v:boolean) {
                 this._logScale = v;
             },
+            get genesetId() {
+                if (this.selectedGenesetOption) {
+                    if (this.selectedGenesetOption.value === SAME_GENESET_OPTION_VALUE) {
+                        return self.horzSelection.genesetId;
+                    } else {
+                        return this.selectedGenesetOption.value;
+                    }
+                } else {
+                    return undefined;
+                }
+            },
+            get selectedGenesetOption() {
+                const genesetOptions = (vertical ? self.vertGenesetOptions : self.horzGenesetOptions.result) || [];
+                if (this._selectedGenesetOption === undefined && genesetOptions.length) {
+                    // select default if _selectedGenesetOption is undefined and theres defaults to choose from
+                    return genesetOptions[0];
+                } else if (vertical && this._selectedGenesetOption && this._selectedGenesetOption.value === SAME_GENESET_OPTION_VALUE &&
+                            self.horzSelection.dataType === CLIN_ATTR_DATA_TYPE) {
+                    // if vertical gene set option is "same as horizontal", and horizontal is clinical, then use the actual
+                    //      gene set option value instead of "Same gene" option value, because that would be slightly weird UX
+                    return self.horzSelection.selectedGenesetOption;
+                } else {
+                    // otherwise, return stored value for this variable
+                    return this._selectedGenesetOption;
+                }
+            },
+            set selectedGenesetOption(o:any) {
+                this._selectedGenesetOption = o;
+            },
             _selectedGeneOption: undefined,
+            _selectedGenesetOption: undefined,
             _dataType: undefined,
             _dataSourceId: undefined,
+            _mutationCountBy: undefined,
             _logScale: true
         });
     }
@@ -459,6 +522,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         this.horzSelection.selectedGeneOption = option;
     }
 
+    @autobind
+    private onVerticalAxisGenesetSelect(option:any) {
+        this.vertSelection.selectedGenesetOption = option;
+    }
+
+    @autobind
+    private onHorizontalAxisGenesetSelect(option:any) {
+        this.horzSelection.selectedGenesetOption = option;
+    }
+
     public test__selectGeneOption(vertical:boolean, optionValue:any) {
         // for end to end testing
         // optionValue is either entrez id or the code for same gene
@@ -493,13 +566,36 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         //  option changes. if its remoteData, theres setTimeout(0)'s in the way and it causes unnecessarily an extra
         //  render which leads to a flash of the loading icon on the screen
         let sameGeneOption = undefined;
-        if (this.horzSelection.selectedGeneOption && this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
-            // show "Same gene" option as long as horzSelection has a selected option, and horz isnt clinical attribute, bc
-            //  in that case theres no selected gene displayed so its confusing UX to have "Same gene" as an option
+        if (this.horzSelection.selectedGeneOption && this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE && this.horzSelection.dataType !== GENESET_DATA_TYPE) {
+            // show "Same gene" option as long as horzSelection has a selected option, and horz isnt clinical attribute or
+            // a gene set, bc in that case theres no selected gene displayed so its confusing UX to have "Same gene" as an option
             sameGeneOption = [{ value: SAME_GENE_OPTION_VALUE, label: `Same gene (${this.horzSelection.selectedGeneOption.label})`}];
         }
         return (sameGeneOption || []).concat((this.horzGeneOptions.result || []) as any[]);
-    };
+    }
+
+    //readonly horzGenesetOptions = this.props.store.genesetIds.map(genesetId=>({ value: genesetId, label: genesetId }));
+    readonly horzGenesetOptions = remoteData({
+        await:()=>[this.props.store.genesets],
+        invoke:()=>{
+            return Promise.resolve(
+                this.props.store.genesets.result!.map(geneset=>({ value: geneset.genesetId, label: geneset.name }))
+            );
+        }
+    });
+
+    @computed get vertGenesetOptions() {
+        // computed instead of remoteData in order to make the rerender synchronous when the 'Same gene set (GENE SET)'
+        //  option changes. if its remoteData, theres setTimeout(0)'s in the way and it causes unnecessarily an extra
+        //  render which leads to a flash of the loading icon on the screen
+        let sameGenesetOption = undefined;
+        if (this.horzSelection.selectedGenesetOption && this.horzSelection.dataType === GENESET_DATA_TYPE) {
+            // show "Same gene set" option as long as horzSelection has a selected option, and horz is gene set attribute, bc
+            //  in that case theres no selected gene displayed so its confusing UX to have "Same gene" as an option
+            sameGenesetOption = [{ value: SAME_GENESET_OPTION_VALUE, label: `Same gene set (${this.horzSelection.selectedGenesetOption.label})`}];
+        }
+        return (sameGenesetOption || []).concat((this.horzGenesetOptions.result || []) as {value:string, label:string}[]);
+    }
 
     readonly clinicalAttributeIdToClinicalAttribute = remoteData<{[clinicalAttributeId:string]:ClinicalAttribute}>({
         await:()=>[
@@ -508,26 +604,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         ],
         invoke:()=>{
             let _map: {[clinicalAttributeId: string]: ClinicalAttribute} = _.keyBy(this.props.store.clinicalAttributes.result, c=>c.clinicalAttributeId);
-            _map[SpecialAttribute.MutationCount] = {
-                clinicalAttributeId: SpecialAttribute.MutationCount,
-                datatype: "NUMBER",
-                description: "Total mutations",
-                displayName: "Total mutations",
-                patientAttribute: false,
-                priority: "1",
-                studyId: this.props.store.studyIds.result![0],
-                count: 0
-            };
-            _map[SpecialAttribute.FractionGenomeAltered] = {
-                clinicalAttributeId: SpecialAttribute.FractionGenomeAltered,
-                datatype: "NUMBER",
-                description: "Fraction Genome Altered",
-                displayName: "Fraction Genome Altered",
-                patientAttribute: false,
-                priority: "1",
-                studyId: this.props.store.studyIds.result![0],
-                count: 0
-            };
             return Promise.resolve(_map);
         }
     });
@@ -535,21 +611,15 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     readonly clinicalAttributeOptions = remoteData({
         await:()=>[this.props.store.clinicalAttributes],
         invoke:()=>{
-            let _clinicalAttributes: {value: string, label: string}[] = [];
-            _clinicalAttributes.push({
-                value: SpecialAttribute.MutationCount,
-                label: "Total mutations"
-            });
-            _clinicalAttributes.push({
-                value: SpecialAttribute.FractionGenomeAltered,
-                label: "Fraction Genome Altered"
-            });
-            _clinicalAttributes = _clinicalAttributes.concat(_.sortBy(this.props.store.clinicalAttributes.result!.map(attribute=>(
+
+            let _clinicalAttributes = _.sortBy<ClinicalAttribute>(this.props.store.clinicalAttributes.result!,
+                [(o: any)=>-o.priority, (o: any)=>o.label]).map(attribute=>(
                 {
                     value: attribute.clinicalAttributeId,
-                    label: attribute.displayName
+                    label: attribute.displayName,
+                    priority: attribute.priority
                 }
-            )), o=>o.label));
+            ));
 
             // to load more quickly, only filter and annotate with data availability once its ready
             // TODO: temporarily disabled because cant figure out a way right now to make this work nicely
@@ -572,11 +642,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     readonly dataTypeOptions = remoteData<{value:string, label:string}[]>({
         await:()=>[
-            this.props.store.nonMutationMolecularProfilesWithData,
-            this.clinicalAttributeOptions
+            this.props.store.molecularProfilesWithData,
+            this.clinicalAttributeOptions,
+            this.props.store.molecularProfilesInStudies
         ],
         invoke:()=>{
-            const profiles = this.props.store.nonMutationMolecularProfilesWithData.result!;
+            const profiles = this.props.store.molecularProfilesWithData.result!;
 
             // show only data types we have profiles for
             const dataTypeIds:string[] = _.uniq(
@@ -586,6 +657,17 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             if (this.clinicalAttributeOptions.result!.length) {
                 // add "clinical attribute" to list if we have any clinical attribute options
                 dataTypeIds.push(CLIN_ATTR_DATA_TYPE);
+            }
+
+            if (this.props.store.molecularProfilesInStudies.result!.length && this.horzGenesetOptions.result && this.horzGenesetOptions.result!.length > 0) {
+              // add geneset profile to list if the study contains it and the query contains gene sets
+              this.props.store.molecularProfilesInStudies.result.filter(p=>{
+                if (p.molecularAlterationType === AlterationTypeConstants[GENESET_DATA_TYPE]) {
+                  if (dataTypeIds.indexOf(GENESET_DATA_TYPE) === -1) {
+                    dataTypeIds.push(GENESET_DATA_TYPE);
+                  }
+                }
+              });
             }
 
             return Promise.resolve(
@@ -601,11 +683,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     readonly dataTypeToDataSourceOptions = remoteData<{[dataType:string]:{value:string, label:string}[]}>({
         await:()=>[
-            this.props.store.nonMutationMolecularProfilesWithData,
+            this.props.store.molecularProfilesWithData,
             this.clinicalAttributeOptions
         ],
         invoke:()=>{
-            const profiles = this.props.store.nonMutationMolecularProfilesWithData.result!;
+            const profiles = this.props.store.molecularProfilesWithData.result!;
             const map = _.mapValues(
                 _.groupBy(profiles, profile=>profile.molecularAlterationType), // create a map from profile type to list of profiles of that type
                 profilesOfType=>(
@@ -646,8 +728,20 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @autobind
     @action
+    public onVerticalAxisMutationCountBySelect(option:any) {
+        this.vertSelection.mutationCountBy = option.value;
+    }
+
+    @autobind
+    @action
+    public onHorizontalAxisMutationCountBySelect(option:any) {
+        this.horzSelection.mutationCountBy = option.value;
+    }
+
+    @autobind
+    @action
     private swapHorzVertSelections() {
-        const keys:(keyof AxisMenuSelection)[] = ["dataType", "dataSourceId", "logScale"];
+        const keys:(keyof AxisMenuSelection)[] = ["dataType", "dataSourceId", "logScale", "mutationCountBy"];
         // have to store all values for swap because values depend on each other in derived data way so the copy can mess up if you do it one by one
         const horz = keys.map(k=>this.horzSelection[k]);
         const vert = keys.map(k=>this.vertSelection[k]);
@@ -662,6 +756,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             const vertOption = this.vertSelection.selectedGeneOption;
             this.horzSelection.selectedGeneOption = vertOption;
             this.vertSelection.selectedGeneOption = horzOption;
+        }
+
+        // only swap gene sets if vertSelection is not set to "Same gene set"
+        if (!this.vertSelection.selectedGenesetOption || (this.vertSelection.selectedGenesetOption.value.toString() !== SAME_GENESET_OPTION_VALUE)) {
+            const horzOption = this.horzSelection.selectedGenesetOption;
+            const vertOption = this.vertSelection.selectedGenesetOption;
+            this.horzSelection.selectedGenesetOption = vertOption;
+            this.vertSelection.selectedGenesetOption = horzOption;
         }
     }
 
@@ -731,8 +833,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             this.props.store.patientKeyToSamples,
             this.props.store.entrezGeneIdToGene,
             this.props.store.clinicalDataCache,
+            this.props.store.mutationCache,
             this.props.store.numericGeneMolecularDataCache,
-            this.props.store.studyToMutationMolecularProfile
+            this.props.store.studyToMutationMolecularProfile,
+            this.props.store.coverageInformation,
+            this.props.store.samples,
+            this.props.store.genesetMolecularDataCache
         );
     }
 
@@ -744,8 +850,12 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             this.props.store.patientKeyToSamples,
             this.props.store.entrezGeneIdToGene,
             this.props.store.clinicalDataCache,
+            this.props.store.mutationCache,
             this.props.store.numericGeneMolecularDataCache,
-            this.props.store.studyToMutationMolecularProfile
+            this.props.store.studyToMutationMolecularProfile,
+            this.props.store.coverageInformation,
+            this.props.store.samples,
+            this.props.store.genesetMolecularDataCache
         );
     }
 
@@ -903,6 +1013,29 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     ) {
         const axisSelection = vertical ? this.vertSelection : this.horzSelection;
         const dataTestWhichAxis = vertical ? "Vertical" : "Horizontal";
+
+        let dataSourceLabel = "Profile";
+        let dataSourceValue = axisSelection.dataSourceId;
+        let dataSourceOptions = (axisSelection.dataType ? dataSourceOptionsByType[axisSelection.dataType] : []) || [];
+        let onDataSourceChange = vertical ? this.onVerticalAxisDataSourceSelect : this.onHorizontalAxisDataSourceSelect;
+
+        switch (axisSelection.dataType) {
+            case CLIN_ATTR_DATA_TYPE:
+                dataSourceLabel = "Clinical Attribute";
+                break;
+            case AlterationTypeConstants.MUTATION_EXTENDED:
+                dataSourceLabel = "Group Mutations by";
+                dataSourceValue = axisSelection.mutationCountBy;
+                dataSourceOptions = mutationCountByOptions;
+                onDataSourceChange = vertical ? this.onVerticalAxisMutationCountBySelect : this.onHorizontalAxisMutationCountBySelect;
+                break;
+            case undefined:
+                break;
+            default:
+                dataSourceLabel = `${dataTypeToDisplayType[axisSelection.dataType!]} Profile`;
+                break;
+        }
+
         return (
             <form>
                 <h4>{vertical ? "Vertical" : "Horizontal"} Axis</h4>
@@ -919,14 +1052,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                         />
                     </div>
                     <div className="form-group">
-                        <label>{axisSelection.dataType === CLIN_ATTR_DATA_TYPE ? "Clinical Attribute" : `${axisSelection.dataType ? dataTypeToDisplayType[axisSelection.dataType] : ""} Profile`}</label>
+                        <label>{dataSourceLabel}</label>
                         <div style={{display:"flex", flexDirection:"row"}}>
                             <ReactSelect
                                 className="data-source-id"
                                 name={`${vertical ? "v" : "h"}-profile-name-selector`}
-                                value={axisSelection.dataSourceId}
-                                onChange={vertical ? this.onVerticalAxisDataSourceSelect : this.onHorizontalAxisDataSourceSelect}
-                                options={dataSourceOptionsByType[axisSelection.dataType+""] || []}
+                                value={dataSourceValue}
+                                onChange={onDataSourceChange}
+                                options={dataSourceOptions}
                                 clearable={false}
                                 searchable={true}
                             />
@@ -944,7 +1077,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             /> Apply Log Scale
                         </label></div>
                     )}
-                    <div className="form-group" style={{opacity:(axisSelection.dataType === CLIN_ATTR_DATA_TYPE ? 0 : 1)}}>
+                    {(axisSelection.dataType !== GENESET_DATA_TYPE) && (<div className="form-group" style={{opacity:(axisSelection.dataType === CLIN_ATTR_DATA_TYPE ? 0 : 1)}}>
                         <label>Gene</label>
                         <div style={{display:"flex", flexDirection:"row"}}>
                             <ReactSelect
@@ -955,10 +1088,25 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                 options={this.horzGeneOptions.isComplete ? (vertical ? this.vertGeneOptions : this.horzGeneOptions.result) : []}
                                 clearable={false}
                                 searchable={false}
-                                disabled={axisSelection.dataType === CLIN_ATTR_DATA_TYPE}
+                                disabled={axisSelection.dataType === CLIN_ATTR_DATA_TYPE || axisSelection.dataType === GENESET_DATA_TYPE}
                             />
                         </div>
-                    </div>
+                    </div>)}
+                    {(axisSelection.dataType === GENESET_DATA_TYPE) && (<div className="form-group" style={{opacity:1}}>
+                        <label>Gene Set</label>
+                        <div style={{display:"flex", flexDirection:"row"}}>
+                            <ReactSelect
+                                name={`${vertical ? "v" : "h"}-geneset-selector`}
+                                value={axisSelection.selectedGenesetOption ? axisSelection.selectedGenesetOption.value : undefined}
+                                onChange={vertical ? this.onVerticalAxisGenesetSelect : this.onHorizontalAxisGenesetSelect}
+                                isLoading={this.horzGenesetOptions.isPending}
+                                options={this.horzGenesetOptions.isComplete ? (vertical ? this.vertGenesetOptions : this.horzGenesetOptions.result) : []}
+                                clearable={false}
+                                searchable={false}
+                                disabled={axisSelection.dataType !== GENESET_DATA_TYPE}
+                            />
+                        </div>
+                    </div>)}
                 </div>
             </form>
         );
@@ -1087,6 +1235,21 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
     });
 
+    /*readonly mutationProfileDuplicateSamplesReport = remoteData({
+        await:()=>[
+            this.horzAxisDataPromise,
+            this.vertAxisDataPromise
+        ],
+        invoke:()=>{
+            return Promise.resolve(getMutationProfileDuplicateSamplesReport(
+                this.horzAxisDataPromise.result!,
+                this.vertAxisDataPromise.result!,
+                this.horzSelection,
+                this.vertSelection
+            ));
+        }
+    });*/
+
     readonly scatterPlotData = remoteData<IScatterPlotData[]>({
         await: ()=>[
             this.horzAxisDataPromise,
@@ -1198,134 +1361,143 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @computed get plot() {
         const promises = [this.plotType, this.horzAxisDataPromise, this.vertAxisDataPromise, this.horzLabel, this.vertLabel];
-        if (logicalOr(promises.map(p=>p.isPending))) {
-            return <LoadingIndicator isLoading={true}/>;
-        } else if (logicalOr(promises.map(p=>p.isError))) {
-            return <span>Error loading plot data.</span>;
-        } else {
-            // all complete
-            const plotType = this.plotType.result!;
-            let plotElt:any = null;
-            switch (plotType) {
-                case PlotType.Table:
-                    plotElt = (
-                        <TablePlot
-                            svgId={SVG_ID}
-                            horzData={(this.horzAxisDataPromise.result! as IStringAxisData).data}
-                            vertData={(this.vertAxisDataPromise.result! as IStringAxisData).data}
-                            horzCategoryOrder={(this.horzAxisDataPromise.result! as IStringAxisData).categoryOrder}
-                            vertCategoryOrder={(this.vertAxisDataPromise.result! as IStringAxisData).categoryOrder}
-                            minCellWidth={35}
-                            minCellHeight={35}
-                            minChartWidth={PLOT_SIDELENGTH}
-                            minChartHeight={PLOT_SIDELENGTH}
-                            axisLabelX={this.horzLabel.result!}
-                            axisLabelY={this.vertLabel.result!}
-                        />
-                    );
-                    break;
-                case PlotType.ScatterPlot:
-                    if (this.scatterPlotData.isComplete) {
+        const groupStatus = getMobxPromiseGroupStatus(...promises);
+        switch (groupStatus) {
+            case "pending":
+                return <LoadingIndicator isLoading={true} center={true} size={"big"}/>;
+            case "error":
+                return <span>Error loading plot data.</span>;
+            default:
+                const plotType = this.plotType.result!;
+                let plotElt:any = null;
+                switch (plotType) {
+                    case PlotType.Table:
                         plotElt = (
-                            <PlotsTabScatterPlot
+                            <TablePlot
                                 svgId={SVG_ID}
-                                axisLabelX={this.horzLabel.result! + this.horzLabelLogSuffix}
-                                axisLabelY={this.vertLabel.result! + this.vertLabelLogSuffix}
-                                data={this.scatterPlotData.result}
-                                size={scatterPlotSize}
-                                chartWidth={PLOT_SIDELENGTH}
-                                chartHeight={PLOT_SIDELENGTH}
-                                tooltip={this.scatterPlotTooltip}
-                                highlight={this.scatterPlotHighlight}
-                                logX={this.horzSelection.logScale}
-                                logY={this.vertSelection.logScale}
-                                fill={this.scatterPlotFill}
-                                stroke={this.scatterPlotStroke}
-                                strokeOpacity={this.scatterPlotStrokeOpacity}
-                                zIndexSortBy={this.zIndexSortBy}
-                                symbol="circle"
-                                fillOpacity={this.scatterPlotFillOpacity}
-                                strokeWidth={this.scatterPlotStrokeWidth}
-                                useLogSpaceTicks={true}
-                                legendData={scatterPlotLegendData(
-                                    this.scatterPlotData.result, this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated
-                                )}
+                                horzData={(this.horzAxisDataPromise.result! as IStringAxisData).data}
+                                vertData={(this.vertAxisDataPromise.result! as IStringAxisData).data}
+                                horzCategoryOrder={(this.horzAxisDataPromise.result! as IStringAxisData).categoryOrder}
+                                vertCategoryOrder={(this.vertAxisDataPromise.result! as IStringAxisData).categoryOrder}
+                                minCellWidth={35}
+                                minCellHeight={35}
+                                minChartWidth={PLOT_SIDELENGTH}
+                                minChartHeight={PLOT_SIDELENGTH}
+                                axisLabelX={this.horzLabel.result!}
+                                axisLabelY={this.vertLabel.result!}
                             />
                         );
                         break;
-                    } else if (this.scatterPlotData.isError) {
-                        return <span>Error loading plot data.</span>;
-                    } else {
-                        return <LoadingIndicator isLoading={true}/>;
-                    }
-                case PlotType.BoxPlot:
-                    if (this.boxPlotData.isComplete) {
-                        const horizontal = this.boxPlotData.result.horizontal;
-                        plotElt = (
-                            <PlotsTabBoxPlot
-                                svgId={SVG_ID}
-                                domainPadding={75}
-                                boxWidth={this.boxPlotBoxWidth}
-                                axisLabelX={this.horzLabel.result! + (horizontal ? this.horzLabelLogSuffix : "")}
-                                axisLabelY={this.vertLabel.result! + (!horizontal ? this.vertLabelLogSuffix : "")}
-                                data={this.boxPlotData.result.data}
-                                chartBase={550}
-                                tooltip={this.boxPlotTooltip}
-                                highlight={this.scatterPlotHighlight}
-                                horizontal={horizontal}
-                                logScale={horizontal ? this.horzSelection.logScale : this.vertSelection.logScale}
-                                size={scatterPlotSize}
-                                fill={this.scatterPlotFill}
-                                stroke={this.scatterPlotStroke}
-                                strokeOpacity={this.scatterPlotStrokeOpacity}
-                                zIndexSortBy={this.zIndexSortBy}
-                                symbol="circle"
-                                fillOpacity={this.scatterPlotFillOpacity}
-                                strokeWidth={this.scatterPlotStrokeWidth}
-                                useLogSpaceTicks={true}
-                                legendData={scatterPlotLegendData(
-                                    _.flatten(this.boxPlotData.result.data.map(d=>d.data)), this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated
-                                )}
-                                legendLocationWidthThreshold={550}
-                            />
-                        );
-                        break;
-                    } else if (this.boxPlotData.isError) {
-                        return <span>Error loading plot data.</span>;
-                    } else {
-                        return <LoadingIndicator isLoading={true}/>;
-                    }
-                default:
-                    return <span>Not implemented yet</span>
-            }
-            return (
-                <div>
-                    <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative">
-                        <ScrollBar style={{position:'relative', top:-5}} getScrollEl={this.getScrollPane} />
-                        {this.plotExists && (
-                            <DownloadControls
-                                getSvg={this.getSvg}
-                                filename={this.downloadFilename}
-                                additionalRightButtons={[{
-                                    key:"Data",
-                                    content:<span>Data <i className="fa fa-cloud-download" aria-hidden="true"/></span>,
-                                    onClick:this.downloadData,
-                                    disabled: !this.props.store.entrezGeneIdToGene.isComplete
-                                }]}
-                                dontFade={true}
-                                style={{position:'absolute', right:10, top:10 }}
-                                collapse={true}
-                            />
+                    case PlotType.ScatterPlot:
+                        if (this.scatterPlotData.isComplete) {
+                            plotElt = (
+                                <PlotsTabScatterPlot
+                                    svgId={SVG_ID}
+                                    axisLabelX={this.horzLabel.result! + this.horzLabelLogSuffix}
+                                    axisLabelY={this.vertLabel.result! + this.vertLabelLogSuffix}
+                                    data={this.scatterPlotData.result}
+                                    size={scatterPlotSize}
+                                    chartWidth={PLOT_SIDELENGTH}
+                                    chartHeight={PLOT_SIDELENGTH}
+                                    tooltip={this.scatterPlotTooltip}
+                                    highlight={this.scatterPlotHighlight}
+                                    logX={this.horzSelection.logScale}
+                                    logY={this.vertSelection.logScale}
+                                    fill={this.scatterPlotFill}
+                                    stroke={this.scatterPlotStroke}
+                                    strokeOpacity={this.scatterPlotStrokeOpacity}
+                                    zIndexSortBy={this.zIndexSortBy}
+                                    symbol="circle"
+                                    fillOpacity={this.scatterPlotFillOpacity}
+                                    strokeWidth={this.scatterPlotStrokeWidth}
+                                    useLogSpaceTicks={true}
+                                    legendData={scatterPlotLegendData(
+                                        this.scatterPlotData.result, this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated
+                                    )}
+                                />
+                            );
+                            break;
+                        } else if (this.scatterPlotData.isError) {
+                            return <span>Error loading plot data.</span>;
+                        } else {
+                            return <LoadingIndicator isLoading={true} center={true} size={"big"}/>;
+                        }
+                    case PlotType.BoxPlot:
+                        if (this.boxPlotData.isComplete) {
+                            const horizontal = this.boxPlotData.result.horizontal;
+                            plotElt = (
+                                <PlotsTabBoxPlot
+                                    svgId={SVG_ID}
+                                    domainPadding={75}
+                                    boxWidth={this.boxPlotBoxWidth}
+                                    axisLabelX={this.horzLabel.result! + (horizontal ? this.horzLabelLogSuffix : "")}
+                                    axisLabelY={this.vertLabel.result! + (!horizontal ? this.vertLabelLogSuffix : "")}
+                                    data={this.boxPlotData.result.data}
+                                    chartBase={550}
+                                    tooltip={this.boxPlotTooltip}
+                                    highlight={this.scatterPlotHighlight}
+                                    horizontal={horizontal}
+                                    logScale={horizontal ? this.horzSelection.logScale : this.vertSelection.logScale}
+                                    size={scatterPlotSize}
+                                    fill={this.scatterPlotFill}
+                                    stroke={this.scatterPlotStroke}
+                                    strokeOpacity={this.scatterPlotStrokeOpacity}
+                                    zIndexSortBy={this.zIndexSortBy}
+                                    symbol="circle"
+                                    fillOpacity={this.scatterPlotFillOpacity}
+                                    strokeWidth={this.scatterPlotStrokeWidth}
+                                    useLogSpaceTicks={true}
+                                    legendData={scatterPlotLegendData(
+                                        _.flatten(this.boxPlotData.result.data.map(d=>d.data)), this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated
+                                    )}
+                                     legendLocationWidthThreshold={550}
+                                />
+                            );
+                            break;
+                        } else if (this.boxPlotData.isError) {
+                            return <span>Error loading plot data.</span>;
+                        } else {
+                            return <LoadingIndicator isLoading={true} center={true} size={"big"}/>;
+                        }
+                    default:
+                        return <span>Not implemented yet</span>
+                }
+                return (
+                    <div>
+                        <div data-test="PlotsTabPlotDiv" className="borderedChart posRelative">
+                            <ScrollBar style={{position:'relative', top:-5}} getScrollEl={this.getScrollPane} />
+                            {this.plotExists && (
+                                <DownloadControls
+                                    getSvg={this.getSvg}
+                                    filename={this.downloadFilename}
+                                    additionalRightButtons={[{
+                                        key:"Data",
+                                        content:<span>Data <i className="fa fa-cloud-download" aria-hidden="true"/></span>,
+                                        onClick:this.downloadData,
+                                        disabled: !this.props.store.entrezGeneIdToGene.isComplete
+                                    }]}
+                                    dontFade={true}
+                                    style={{position:'absolute', right:10, top:10 }}
+                                    collapse={true}
+                                />
+                            )}
+                                <div ref={this.assignScrollPaneRef} style={{position:"relative", display:"inline-block"}}>
+                                {plotElt}
+                                </div>
+                        </div>
+                        {this.mutationDataCanBeShown && (
+                            <div style={{marginTop:5}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
                         )}
-                            <div ref={this.assignScrollPaneRef} style={{position:"relative", display:"inline-block"}}>
-                            {plotElt}
+                        {/*this.mutationProfileDuplicateSamplesReport.isComplete && this.mutationProfileDuplicateSamplesReport.result.showMessage && (
+                            <div className="alert alert-info" style={{marginTop:5, padding: 7}}>
+                                Notice: With Mutation profiles, there is one data point per mutation type, per sample. In
+                                this plot, there are {this.mutationProfileDuplicateSamplesReport.result.numSamples} samples with more than
+                                one type of mutation, leading to {this.mutationProfileDuplicateSamplesReport.result.numSurplusPoints} extra
+                                data points.
                             </div>
+                        )*/}
                     </div>
-                    {this.mutationDataCanBeShown && (
-                        <div style={{marginTop:5}}>* Driver annotation settings are located in the Mutation Color menu of the Oncoprint.</div>
-                    )}
-                </div>
-            );
+                );
         }
     }
 
@@ -1336,17 +1508,19 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     public render() {
         return (
             <div data-test="PlotsTabEntireDiv">
-                <OqlStatusBanner className="plots-oql-status-banner" store={this.props.store} tabReflectsOql={false} style={{marginTop:7}}/>
-                <div className={"plotsTab"} style={{display:"flex", flexDirection:"row", maxWidth:"inherit"}}>
+                <div className={'tabMessageContainer'}>
+                    <OqlStatusBanner className="plots-oql-status-banner" store={this.props.store} tabReflectsOql={false} />
+                </div>
+                <div className={"plotsTab"} style={{display:"flex", flexDirection:"row"}}>
                     <div className="leftColumn">
                         { (this.dataTypeOptions.isComplete &&
                         this.dataTypeToDataSourceOptions.isComplete) ? (
                             <Observer>
                                 {this.controls}
                             </Observer>
-                        ) : <LoadingIndicator isLoading={true}/> }
+                        ) : <LoadingIndicator isLoading={true} center={true} size={"big"}/> }
                     </div>
-                    <div style={{overflow:"hidden"}}>
+                    <div className="inlineBlock">
                         {this.plot}
                     </div>
                 </div>

@@ -213,7 +213,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
     @bind
     private plot() {
         if (!this.data.length) {
-            return <span>No data to plot.</span>;
+            return <div className={'alert alert-info'}>No data to plot.</div>;
         }
         return (
             <CoExpressionScatterPlot
@@ -227,10 +227,6 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
                 fill={this.fill}
                 strokeWidth={1.2}
                 legendData={this.mutationLegendElements}
-                correlation={{
-                    pearson: this.props.coExpression.pearsonsCorrelation,
-                    spearman: this.props.coExpression.spearmansCorrelation
-                }}
                 logX={this.props.logScale}
                 logY={this.props.logScale}
                 useLogSpaceTicks={true}
@@ -327,7 +323,7 @@ export default class CoExpressionPlot extends React.Component<ICoExpressionPlotP
 
     render() {
         return (
-            <div className="borderedChart" data-test="CoExpressionPlot">
+            <div className="borderedChart inlineBlock" data-test="CoExpressionPlot">
                 <Observer>
                     {this.toolbar}
                 </Observer>

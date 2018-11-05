@@ -1304,20 +1304,6 @@ describe("DataUtils", ()=>{
                     na: true
                 }, "NA in general"
             );
-
-            assert.deepEqual(
-                fillClinicalTrackDatum(
-                    {},
-                    {clinicalAttributeId:SpecialAttribute.MutationCount} as any,
-                    {sampleId:"sample", studyId:"study"} as Sample
-                ),
-                {
-                    attr_id: SpecialAttribute.MutationCount,
-                    study_id:"study",
-                    attr_val_counts: {},
-                    attr_val: 0
-                }, "0 for Mutation Count"
-            );
         });
         it("creates data correctly for number data",()=>{
             assert.deepEqual(
@@ -1332,7 +1318,8 @@ describe("DataUtils", ()=>{
                     study_id: "study",
                     attr_val_counts:{3:1},
                     attr_val: 3
-                }
+                },
+                "one input data"
             );
 
             assert.deepEqual(
@@ -1347,7 +1334,8 @@ describe("DataUtils", ()=>{
                     study_id: "study",
                     attr_val_counts:{},
                     na: true
-                }
+                },
+                "doesnt accept string data in number clinical attribute"
             );
 
             assert.deepEqual(
@@ -1362,37 +1350,24 @@ describe("DataUtils", ()=>{
                     study_id: "study",
                     attr_val_counts:{2.5:1},
                     attr_val: 2.5
-                }
+                },
+                "averages multiple values"
             );
 
             assert.deepEqual(
                 fillClinicalTrackDatum(
                     {},
-                    {clinicalAttributeId:"clinicalAttribute", datatype:"number"} as any,
+                    {clinicalAttributeId:"MUTATION_COUNT", datatype:"number"} as any,
                     {sampleId:"sample", studyId:"study"} as Sample,
-                    [{mutationCount:3}] as any[]
+                    [{value:3}, {value:2}] as any[]
                 ),
                 {
-                    attr_id: "clinicalAttribute",
+                    attr_id: "MUTATION_COUNT",
                     study_id: "study",
                     attr_val_counts:{3:1},
                     attr_val: 3
-                }
-            );
-
-            assert.deepEqual(
-                fillClinicalTrackDatum(
-                    {},
-                    {clinicalAttributeId:"clinicalAttribute", datatype:"number"} as any,
-                    {sampleId:"sample", studyId:"study"} as Sample,
-                    [{mutationCount:3}, {mutationCount:2}] as any[]
-                ),
-                {
-                    attr_id: "clinicalAttribute",
-                    study_id: "study",
-                    attr_val_counts:{2.5:1},
-                    attr_val: 2.5
-                }
+                },
+                "takes max of multiple values for MUTATION_COUNT"
             );
         });
         it("creates data correctly for string data",()=>{

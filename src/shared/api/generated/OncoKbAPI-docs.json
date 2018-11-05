@@ -1069,7 +1069,7 @@
           "Utils"
         ],
         "summary": "utilsCancerGeneListGet",
-        "description": "Get cancer gene list in text file.",
+        "description": "Get cancer gene list",
         "operationId": "utilsCancerGeneListGetUsingGET",
         "consumes": [
           "application/json"
@@ -1085,6 +1085,30 @@
               "items": {
                 "$ref": "#/definitions/CancerGene"
               }
+            }
+          }
+        }
+      }
+    },
+    "/utils/cancerGeneList.txt": {
+      "get": {
+        "tags": [
+          "Utils"
+        ],
+        "summary": "utilsCancerGeneListTxtGet",
+        "description": "Get cancer gene list in text file.",
+        "operationId": "utilsCancerGeneListTxtGetUsingGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
             }
           }
         }

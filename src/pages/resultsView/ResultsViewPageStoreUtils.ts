@@ -336,3 +336,64 @@ export function isTCGAProvStudy(studyId:string){
 export function isPanCanStudy(studyId:string){
     return /tcga_pan_can_atlas/.test(studyId);
 }
+
+export function buildResultsViewPageTitle(genes:string[], studies:CancerStudy[]){
+
+    const arr = ["cBioPortal for Cancer Genomics: "];
+
+    if (genes.length) {
+        arr.push(genes[0]);
+        if (genes.length > 1) {
+            arr.push(", ");
+            arr.push(genes[1]);
+        }
+        if (genes.length > 2) {
+            arr.push(" and ");
+            arr.push((genes.length - 2).toString());
+            arr.push(" other ");
+            arr.push(((genes.length - 2) > 1) ? "genes" : "gene");
+        }
+        if (studies.length){
+            arr.push(" in ");
+            arr.push(studies[0].shortName);
+            if (studies.length > 1) {
+                arr.push(" and ");
+                arr.push((studies.length - 1).toString());
+                arr.push (" other ");
+                arr.push(((studies.length - 1) > 1) ? "studies" : "study");
+            }
+        }
+    }
+    return arr.join("");
+}
+
+export function getMolecularProfiles(query:any){
+    //if there's only one study, we read profiles from query params and filter out undefined
+    let molecularProfiles = [
+        query.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
+        query.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
+        query.genetic_profile_ids_PROFILE_MRNA_EXPRESSION,
+        query.genetic_profile_ids_PROFILE_PROTEIN_EXPRESSION,
+        query.genetic_profile_ids_PROFILE_GENESET_SCORE
+    ].filter((profile:string|undefined)=>!!profile);
+
+    // append 'genetic_profile_ids' which is sometimes in use
+    molecularProfiles = molecularProfiles.concat(query.genetic_profile_ids || []);
+
+    // filter out duplicates
+    molecularProfiles = _.uniq(molecularProfiles);
+
+    return molecularProfiles;
+}
+
+export function doesQueryHaveCNSegmentData(
+    detailedSamples:Sample[]
+) {
+    if (detailedSamples.length === 0) {
+        return false;
+    } else if (!("copyNumberSegmentPresent" in detailedSamples[0])) {
+        throw "Passed non-detailed sample projection when detailed expected.";
+    } else {
+        return _.some(detailedSamples, s=>!!s.copyNumberSegmentPresent);
+    }
+}
