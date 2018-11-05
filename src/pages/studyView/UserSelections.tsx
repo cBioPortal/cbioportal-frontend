@@ -31,6 +31,7 @@ export interface IUserSelectionsProps {
     clearCNAGeneFilter: () => void;
     removeGeneFilter: (entrezGeneId: number) => void;
     removeCNAGeneFilter: (filter: CopyNumberGeneFilterElement) => void;
+    resetMutationCountVsCNAFilter: ()=>void;
     clearChartSampleIdentifierFilter: (chartMeta: ChartMeta) => void;
     clearAllFilters: () => void
 }
@@ -83,7 +84,8 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
     }
 
     @computed get showFilters() {
-        return isFiltered(this.props.filter)
+        //return isFiltered(this.props.filter)
+        return this.allComponents.length > 0;
     }
 
     @computed
@@ -191,7 +193,25 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                 })} operation={"and"} group={false}/></div>);
         }
 
-        // Select IDs by Case Selector, Scatter Plot
+        // Mutation count vs FGA
+        if (this.props.filter.mutationCountVsCNASelection) {
+            const region = this.props.filter.mutationCountVsCNASelection;
+            components.push(
+                <div className={styles.parentGroupLogic}><GroupLogic
+                    components={[
+                        <span className={styles.filterClinicalAttrName}>Mutation Count vs FGA</span>,
+                        <PillTag
+                            content={`${Math.floor(region.yStart)} ≤ Mutation Count < ${Math.ceil(region.yEnd)} and ${region.xStart.toFixed(2)} ≤ FGA < ${region.xEnd.toFixed(2)}`}
+                            backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
+                            onDelete={this.props.resetMutationCountVsCNAFilter}
+                        />
+                    ]}
+                    operation={':'}
+                    group={false}/></div>
+            );
+        }
+
+        // Select IDs by Case Selector
         _.reduce((this.props.filter.sampleIdentifiersSet || []), (acc, sampleIdentifiers, chartUniqKey) => {
             const chartMeta = this.props.attributesMetaSet[chartUniqKey];
             if (chartMeta) {

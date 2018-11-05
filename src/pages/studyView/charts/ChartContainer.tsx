@@ -25,17 +25,21 @@ import {CNAGenesTable} from "../table/CNAGenesTable";
 import StudyViewScatterPlot from "./scatterPlot/StudyViewScatterPlot";
 import { bind } from "bind-decorator";
 import BarChart from "./barChart/BarChart";
-import {CopyNumberGeneFilterElement} from "../../../shared/api/generated/CBioPortalAPIInternal";
-import {getTableHeightByDimension, getTableWidthByDimension, makeMutationCountVsCnaTooltip} from "../StudyViewUtils";
+import {CopyNumberGeneFilterElement, DensityPlotBin} from "../../../shared/api/generated/CBioPortalAPIInternal";
+import {
+    getTableHeightByDimension, getTableWidthByDimension, mutationCountVsCnaTooltip,
+    MutationCountVsCnaYBinsMin
+} from "../StudyViewUtils";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import {remoteData} from "../../../shared/api/remoteData";
 import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
+import StudyViewDensityScatterPlot from "./scatterPlot/StudyViewDensityScatterPlot";
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
 }
 
-export type ChartDownloadType = 'TSV' | 'SVG' | 'PDF';
+export type ChartDownloadType = 'TSV' | 'SVG' | 'PDF' | 'PNG';
 
 export interface IChartContainerDownloadProps {
     type: ChartDownloadType;
@@ -58,8 +62,6 @@ export interface IChartContainerProps {
     showLogScaleToggle?:boolean;
     selectedGenes?:any;
     onGeneSelect?:any;
-    selectedSamplesMap?: any;
-    selectedSamples?: any;
 
     setAnalysisGroupsSettings: (attribute:ClinicalAttribute, grp:ReadonlyArray<AnalysisGroup>)=>void;
     analysisGroupsSettings:StudyViewPageStore["analysisGroupsSettings"];
@@ -120,6 +122,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }),
             defaultDownload: {
                 SVG: () => Promise.resolve((new XMLSerializer()).serializeToString(this.toSVGDOMNode())),
+                PNG: () => Promise.resolve(this.toSVGDOMNode()),
                 PDF: () => svgToPdfPromise(this.toSVGDOMNode())
             },
             onChangeChartType: (newChartType: ChartType) => {
@@ -353,24 +356,22 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 }
             }
             case ChartTypeEnum.SCATTER: {
-                // sampleToAnalysisGroup is complete because of loadingPromises and StudyViewComponentLoader
                 return (
-                    <StudyViewScatterPlot
-                        ref={this.handlers.ref}
-                        width={400}
-                        height={380}
-                        onSelection={this.props.onValueSelection}
-                        data={this.props.promise.result}
-                        isLoading={this.props.selectedSamples.isPending}
+                    <div style={{marginTop:-33}}>
+                        <StudyViewDensityScatterPlot
+                            ref={this.handlers.ref}
+                            width={400}
+                            height={420}
+                            yBinsMin={MutationCountVsCnaYBinsMin}
+                            onSelection={this.props.onValueSelection}
+                            data={this.props.promise.result}
+                            isLoading={this.props.promise.isPending}
 
-                        sampleToAnalysisGroup={this.props.sampleToAnalysisGroup!.result!}
-                        analysisGroups={this.props.analysisGroupsSettings.groups}
-                        analysisClinicalAttribute={this.props.analysisGroupsSettings.clinicalAttribute}
-
-                        axisLabelX="Fraction of copy number altered genome"
-                        axisLabelY="# of mutations"
-                        tooltip={this.mutationCountVsCnaTooltip}
-                    />
+                            axisLabelX="Fraction of copy number altered genome"
+                            axisLabelY="# of mutations"
+                            tooltip={mutationCountVsCnaTooltip}
+                        />
+                    </div>
                 );
             }
             default:
@@ -378,17 +379,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         }
     }
 
-    @computed get mutationCountVsCnaTooltip() {
-        return makeMutationCountVsCnaTooltip(this.props.sampleToAnalysisGroup!.result, this.props.analysisGroupsSettings.clinicalAttribute);
-    }
-
     @computed get loadingPromises() {
         const ret = [this.props.promise];
-        switch (this.chartType) {
-            case ChartTypeEnum.SCATTER:
-                ret.push(this.props.sampleToAnalysisGroup!);
-                break;
-        }
         return ret;
     }
 
@@ -416,22 +408,26 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             <div className={classnames(styles.chart, { [styles.analysisTarget]:this.isAnalysisTarget })}
                  onMouseEnter={this.handlers.onMouseEnterChart}
                  onMouseLeave={this.handlers.onMouseLeaveChart}>
-                <ChartHeader
-                    chartMeta={this.props.chartMeta}
-                    title={this.props.title}
-                    active={this.mouseInChart}
-                    resetChart={this.handlers.resetFilters}
-                    deleteChart={this.handlers.onDeleteChart}
-                    toggleLogScale={this.handlers.onToggleLogScale}
-                    hideLabel={this.hideLabel}
-                    chartControls={this.chartControls}
-                    changeChartType={this.changeChartType}
-                    download={this.downloadTypes}
-                    setAnalysisGroups={this.setAnalysisGroups}
-                />
-                <StudyViewComponentLoader promises={this.loadingPromises}>
-                    {this.chart}
-                </StudyViewComponentLoader>
+                <span style={{position:"relative", zIndex:2}}>
+                    <ChartHeader
+                        chartMeta={this.props.chartMeta}
+                        title={this.props.title}
+                        active={this.mouseInChart}
+                        resetChart={this.handlers.resetFilters}
+                        deleteChart={this.handlers.onDeleteChart}
+                        toggleLogScale={this.handlers.onToggleLogScale}
+                        hideLabel={this.hideLabel}
+                        chartControls={this.chartControls}
+                        changeChartType={this.changeChartType}
+                        download={this.downloadTypes}
+                        setAnalysisGroups={this.setAnalysisGroups}
+                    />
+                </span>
+                <span style={{position:"relative", zIndex:1}}>
+                    <StudyViewComponentLoader promises={this.loadingPromises}>
+                        {this.chart}
+                    </StudyViewComponentLoader>
+                </span>
             </div>
         );
     }
