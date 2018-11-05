@@ -6,10 +6,10 @@ import {
     intervalFiltersDisplayValue, isEveryBinDistinct, toFixedDigit, getExponent, clinicalDataCountComparator,
     getCNAByAlteration,
     getDefaultChartTypeByClinicalAttribute,
-    getVirtualStudyDescription, calculateLayout, getLayoutMatrix, LayoutMatrixItem, getQValue, pickClinicalDataColors,
+    getVirtualStudyDescription, calculateLayout, getQValue, pickClinicalDataColors,
     getSamplesByExcludingFiltersOnChart, getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples, showOriginStudiesInSummaryDescription, getFrequencyStr,
-    formatFrequency
+    formatFrequency, isOccupied, findSpot
 } from 'pages/studyView/StudyViewUtils';
 import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue, Sample} from 'shared/api/generated/CBioPortalAPIInternal';
 import {ClinicalAttribute, Gene, CancerStudy} from 'shared/api/generated/CBioPortalAPI';
@@ -1101,57 +1101,46 @@ describe('StudyViewUtils', () => {
         });
     });
 
-    describe("getLayoutMatrix", () => {
-        it("The result is not expected, the chart should only occupy the first element of the matrix", () => {
-            let result: LayoutMatrixItem[] = getLayoutMatrix([], 'test', {w: 1, h: 1});
-            assert.equal(result.length, 1);
-            assert.isTrue(result[0].notFull);
-            assert.equal(result[0].matrix[0], 'test');
-            assert.equal(result[0].matrix[1], '');
+    describe("isOccupied", () => {
+        it("Return false if the matrix is empty", () => {
+            assert.isFalse(isOccupied([], {x: 0, y: 0}, {w: 1, h: 1}));
         });
+        it("Check the bigger chart starts from even index", () => {
+            // x
+            assert.isTrue(isOccupied([['1', '', '', '2', '', '']], {x: 1, y: 0}, {w: 2, h: 1},));
+            assert.isTrue(isOccupied([['1', '', '', '2', '', '']], {x: 2, y: 0}, {w: 2, h: 1}));
+            assert.isFalse(isOccupied([['1', '', '', '2', '', '']], {x: 4, y: 0}, {w: 2, h: 1}));
 
-        it("The result is not expected, the chart should occupy the first and second elements of the matrix", () => {
-            let result: LayoutMatrixItem[] = getLayoutMatrix([], 'test', {w: 2, h: 1});
-            assert.equal(result.length, 1);
-            assert.isTrue(result[0].notFull);
-            assert.equal(result[0].matrix[0], 'test');
-            assert.equal(result[0].matrix[1], 'test');
-            assert.equal(result[0].matrix[2], '');
+            // y
+            assert.isTrue(isOccupied([['1', '1', '', ''], ['2', '2', '', '']], {x: 2, y: 1}, {w: 2, h: 2}));
         });
+        it("Return proper value", () => {
+            assert.isTrue(isOccupied([['1', '2', '']], {x: 0, y: 0}, {w: 1, h: 1}));
+            assert.isTrue(isOccupied([['1', '2', '']], {x: 1, y: 0}, {w: 1, h: 1}));
+            assert.isFalse(isOccupied([['1', '2', '']], {x: 2, y: 0}, {w: 1, h: 1}));
 
-        it("The result is not expected, the chart should only occupy the first and third element of the matrix", () => {
-            let result: LayoutMatrixItem[] = getLayoutMatrix([], 'test', {w: 1, h: 2});
-            assert.equal(result.length, 1);
-            assert.isTrue(result[0].notFull);
-            assert.equal(result[0].matrix[0], 'test');
-            assert.equal(result[0].matrix[1], '');
-            assert.equal(result[0].matrix[2], 'test');
+            assert.isTrue(isOccupied([['1', '2', '']], {x: 2, y: 0}, {w: 2, h: 1}));
+
+            assert.isTrue(isOccupied([['1', '1', ''], ['2', '2', '']], {x: 0, y: 0}, {w: 1, h: 1}));
+            assert.isTrue(isOccupied([['1', '1', ''], ['2', '2', '']], {x: 0, y: 1}, {w: 1, h: 1}));
+
+            assert.isFalse(isOccupied([['1', '1', '', ''], ['2', '2', '', '']], {x: 2, y: 0}, {w: 2, h: 2}));
+            assert.isFalse(isOccupied([['1', '1', '', ''], ['2', '2', '', ''], ['3', '3', '', '']], {x: 2, y: 2}, {w: 2, h: 2}));
         });
+    });
 
-        it("The result is not expected, the chart should only occupy the third and forth element of the matrix", () => {
-            let result: LayoutMatrixItem[] = getLayoutMatrix([{
-                notFull: true,
-                matrix: ['key', 'key', '', '']
-            }], 'test', {w: 2, h: 1});
-            assert.equal(result.length, 1);
-            assert.isFalse(result[0].notFull);
-            assert.equal(result[0].matrix[0], 'key');
-            assert.equal(result[0].matrix[1], 'key');
-            assert.equal(result[0].matrix[2], 'test');
-            assert.equal(result[0].matrix[3], 'test');
+    describe("findSpot", () => {
+        it("0,0 should be returned if the matrix is empty", () => {
+            assert.deepEqual(findSpot([], {w: 1, h: 1}), {x: 0, y: 0});
         });
-
-        it("The result is not expected, the additional matrix should be added when the new chart cannot fit in the original matrix", () => {
-            let result: LayoutMatrixItem[] = getLayoutMatrix([{
-                notFull: true,
-                matrix: ['key', 'key', 'key', '']
-            }], 'test', {w: 2, h: 1});
-            assert.equal(result.length, 2);
-            assert.isTrue(result[0].notFull);
-            assert.equal(result[0].matrix[3], '');
-            assert.equal(result[1].matrix[0], 'test');
-            assert.equal(result[1].matrix[1], 'test');
-            assert.equal(result[1].matrix[2], '');
+        it("The first index in next row should be returned if the matrix is fully occupied", () => {
+            assert.deepEqual(findSpot([['1', '2']], {w: 1, h: 1}), {x: 0, y: 1});
+        });
+        it("Return proper position", () => {
+            assert.deepEqual(findSpot([['1', '2', '']], {w: 1, h: 1}), {x: 2, y: 0});
+            assert.deepEqual(findSpot([['1', '2', '']], {w: 2, h: 1}), {x: 0, y: 1});
+            assert.deepEqual(findSpot([['1', '1', ''], ['2', '2', '']], {w: 1, h: 1}), {x: 2, y: 0});
+            assert.deepEqual(findSpot([['1', '1', ''], ['2', '2', '']], {w: 2, h: 1}), {x: 0, y: 2});
         });
     });
 
@@ -1185,7 +1174,7 @@ describe('StudyViewUtils', () => {
             assert.equal(layout.length, 0);
         });
 
-        it("The layout is not expected", () => {
+        it("The layout is not expected - 1", () => {
             let layout: Layout[] = calculateLayout(visibleAttrs, 6);
             assert.equal(layout.length, 8);
             assert.equal(layout[0].i, 'test0');
@@ -1195,26 +1184,26 @@ describe('StudyViewUtils', () => {
             assert.equal(layout[1].x, 1);
             assert.equal(layout[1].y, 0);
             assert.equal(layout[2].i, 'test2');
-            assert.equal(layout[2].x, 0);
-            assert.equal(layout[2].y, 1);
+            assert.equal(layout[2].x, 2);
+            assert.equal(layout[2].y, 0);
             assert.equal(layout[3].i, 'test3');
-            assert.equal(layout[3].x, 1);
-            assert.equal(layout[3].y, 1);
+            assert.equal(layout[3].x, 3);
+            assert.equal(layout[3].y, 0);
             assert.equal(layout[4].i, 'test4');
-            assert.equal(layout[4].x, 2);
+            assert.equal(layout[4].x, 4);
             assert.equal(layout[4].y, 0);
             assert.equal(layout[5].i, 'test5');
-            assert.equal(layout[5].x, 3);
+            assert.equal(layout[5].x, 5);
             assert.equal(layout[5].y, 0);
             assert.equal(layout[6].i, 'test6');
-            assert.equal(layout[6].x, 2);
+            assert.equal(layout[6].x, 0);
             assert.equal(layout[6].y, 1);
             assert.equal(layout[7].i, 'test7');
-            assert.equal(layout[7].x, 3);
+            assert.equal(layout[7].x, 1);
             assert.equal(layout[7].y, 1);
         });
 
-        it("The layout is not expected", () => {
+        it("The layout is not expected - 2", () => {
             let layout: Layout[] = calculateLayout(visibleAttrs, 2);
             assert.equal(layout.length, 8);
             assert.equal(layout[0].i, 'test0');
@@ -1306,15 +1295,85 @@ describe('StudyViewUtils', () => {
             assert.equal(layout[0].x, 0);
             assert.equal(layout[0].y, 0);
 
-            assert.equal(layout[1].i, 'test2');
-            assert.equal(layout[1].x, 0);
-            assert.equal(layout[1].y, 1);
+            assert.equal(layout[1].i, 'test1');
+            assert.equal(layout[1].x, 2);
+            assert.equal(layout[1].y, 0);
 
-            assert.equal(layout[2].i, 'test1');
-            assert.equal(layout[2].x, 2);
-            assert.equal(layout[2].y, 0);
+
+            assert.equal(layout[2].i, 'test2');
+            assert.equal(layout[2].x, 0);
+            assert.equal(layout[2].y, 1);
         });
 
+        it("The chart should utilize the horizontal space in the last row", () => {
+            visibleAttrs = [{
+                clinicalAttribute: clinicalAttr,
+                displayName: clinicalAttr.displayName,
+                description: clinicalAttr.description,
+                uniqueKey: 'test0',
+                chartType: ChartTypeEnum.BAR_CHART,
+                dimension: {w: 2, h: 2},
+                priority: 1,
+            }, {
+                clinicalAttribute: clinicalAttr,
+                displayName: clinicalAttr.displayName,
+                description: clinicalAttr.description,
+                uniqueKey: 'test1',
+                chartType: ChartTypeEnum.TABLE,
+                dimension: {w: 2, h: 2},
+                priority: 1,
+            }, {
+                clinicalAttribute: clinicalAttr,
+                displayName: clinicalAttr.displayName,
+                description: clinicalAttr.description,
+                uniqueKey: 'test2',
+                chartType: ChartTypeEnum.PIE_CHART,
+                dimension: {w: 2, h: 1},
+                priority: 1,
+            }, {
+                clinicalAttribute: clinicalAttr,
+                displayName: clinicalAttr.displayName,
+                description: clinicalAttr.description,
+                uniqueKey: 'test3',
+                chartType: ChartTypeEnum.PIE_CHART,
+                dimension: {w: 1, h: 1},
+                priority: 1,
+            }, {
+                clinicalAttribute: clinicalAttr,
+                displayName: clinicalAttr.displayName,
+                description: clinicalAttr.description,
+                uniqueKey: 'test4',
+                chartType: ChartTypeEnum.PIE_CHART,
+                dimension: {w: 1, h: 1},
+                priority: 1,
+            }];
+
+            let layout: Layout[] = calculateLayout(visibleAttrs, 4);
+            assert.equal(layout.length, 5);
+            assert.equal(layout[0].i, 'test0');
+            assert.equal(layout[0].x, 0);
+            assert.equal(layout[0].y, 0);
+
+            assert.equal(layout[1].i, 'test1');
+            assert.equal(layout[1].x, 2);
+            assert.equal(layout[1].y, 0);
+
+            assert.equal(layout[2].i, 'test2');
+            assert.equal(layout[2].x, 0);
+            assert.equal(layout[2].y, 2);
+
+            assert.equal(layout[3].i, 'test3');
+            assert.equal(layout[3].x, 2);
+            assert.equal(layout[3].y, 2);
+
+            assert.equal(layout[4].i, 'test4');
+            assert.equal(layout[4].x, 3);
+            assert.equal(layout[4].y, 2);
+        });
+
+    });
+
+    describe('getSamplesByExcludingFiltersOnChart', () => {
         it("Test getQValue", () => {
             assert.equal(getQValue(0), '0');
             assert.equal(getQValue(0.00001), '1.000e-5');

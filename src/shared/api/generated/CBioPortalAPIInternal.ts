@@ -30,7 +30,13 @@ export type ClinicalDataBinFilter = {
 
         'clinicalDataType': "SAMPLE" | "PATIENT"
 
+        'customBins': Array < number >
+
         'disableLogScale': boolean
+
+        'end': number
+
+        'start': number
 
 };
 export type ClinicalDataCount = {
@@ -143,6 +149,8 @@ export type CosmicMutation = {
 };
 export type DataBin = {
     'attributeId': string
+
+        'clinicalDataType': "SAMPLE" | "PATIENT"
 
         'count': number
 
