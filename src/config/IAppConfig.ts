@@ -42,6 +42,7 @@ export interface IServerConfig {
     "oncokb_public_api_url": string|null;
     "digital_slide_archive_iframe_url": string|null;
     "digital_slide_archive_meta_url": string|null;
+    "loggly_api_key": string| null;
     "mdacc_heatmap_meta_url": string|null;
     "mdacc_heatmap_patient_url": string|null;
     "priority_studies": string|null;

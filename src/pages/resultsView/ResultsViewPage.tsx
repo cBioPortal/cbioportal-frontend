@@ -36,6 +36,7 @@ import {
 import {buildResultsViewPageTitle, doesQueryHaveCNSegmentData} from "./ResultsViewPageStoreUtils";
 import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
 import {AppStore} from "../../AppStore";
+import {getGA, trackQuerySubmission} from "../../shared/lib/tracking";
 import {bind} from "bind-decorator";
 
 function initStore() {
@@ -122,6 +123,9 @@ function initStore() {
                         }
 
                         updateStoreFromQuery(resultsViewPageStore, query, samplesSpecification, cancerStudyIds, oql, cancerStudyIds);
+
+                        trackQuerySubmission(resultsViewPageStore);
+
                         lastQuery = query;
                     }
                     if (pathnameChanged) {
