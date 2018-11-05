@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import {remoteData} from "../../shared/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import {action, computed, observable, ObservableMap, reaction} from "mobx";
+import {action, computed, observable, ObservableMap, reaction, toJS} from "mobx";
 import {
     ClinicalDataBinCountFilter,
     ClinicalDataBinFilter,
@@ -1153,7 +1153,18 @@ export class StudyViewPageStore {
 
     readonly allPhysicalStudies = remoteData({
         invoke: async () => {
-            return await defaultClient.getAllStudiesUsingGET({ projection: 'SUMMARY' });
+            if (this.studyIds.length > 0) {
+                return defaultClient
+                    .fetchStudiesUsingPOST({
+                        studyIds: toJS(this.studyIds),
+                        projection: 'SUMMARY'
+                    }).then((studies) => {
+                        return studies
+                    }).catch((error) => {
+                        return defaultClient.getAllStudiesUsingGET({ projection: 'SUMMARY' });
+                    })
+            }
+            return [];
         },
         default: []
     });
