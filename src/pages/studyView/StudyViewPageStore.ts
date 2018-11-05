@@ -1512,7 +1512,7 @@ export class StudyViewPageStore {
     @computed get analysisGroupsPossible() {
         // analysis groups possible iff there are visible analysis groups-capable charts
         const analysisGroupsCharts =
-            [UniqueKey.MUTATION_COUNT_CNA_FRACTION, UniqueKey.DISEASE_FREE_SURVIVAL, UniqueKey.OVERALL_SURVIVAL] as string[];
+            [UniqueKey.DISEASE_FREE_SURVIVAL, UniqueKey.OVERALL_SURVIVAL] as string[];
         let ret = false;
         for (const chartMeta of this.visibleAttributes) {
             if (analysisGroupsCharts.indexOf(chartMeta.uniqueKey) > -1) {
