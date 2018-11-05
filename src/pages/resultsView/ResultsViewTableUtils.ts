@@ -1,4 +1,5 @@
-import {logicalAnd, logicalOr} from "../../shared/lib/LogicUtils";
+import {logicalAnd} from "../../shared/lib/LogicUtils";
+import _ from "lodash";
 
 function cytobandFilterSingle(d: { cytoband: string }, filterString:string) {
     if (!filterString.length) {
@@ -33,7 +34,7 @@ export function cytobandFilter(d: { cytoband: string }, filterString:string) {
                 positiveQueries.push(q);
             }
         }
-        const positiveResult = positiveQueries.length ? logicalOr(positiveQueries.map(q=>cytobandFilterSingle(d, q))) : true;
+        const positiveResult = positiveQueries.length ? _.some(positiveQueries, q=>cytobandFilterSingle(d, q)) : true;
         const negativeResult = negativeQueries.length ? logicalAnd(negativeQueries.map(q=>cytobandFilterSingle(d, q))) : true;
         return positiveResult && negativeResult;
     }

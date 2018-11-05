@@ -9,22 +9,25 @@ describe('url library', () => {
 
     before(()=>{
         //global.window = { location: { protocol: 'https://' } };
+        AppConfig.serverConfig.oncokb_public_api_url = 'http://www.test.com/hello/';
+        AppConfig.apiRoot = 'http://www.cbioportal.org';
     });
 
     after(()=>{
-        delete AppConfig.oncoKBApiUrl;
+        delete AppConfig.serverConfig.oncokb_public_api_url;
+        delete AppConfig.apiRoot;
     });
 
     it('transforms oncokb url configuration url to proxied url: removes protocol and trailing slash', ()=>{
-        AppConfig.oncoKBApiUrl = 'http://www.test.com/hello/';
+
         // note that this is WRONG (http: should be followed by double shlash)
         // but this is due to testing env and url builder library
         // this works correctly in browser env
-        assert.equal(getOncoKbApiUrl(), 'http:proxy/www.test.com/hello');
+        assert.equal(getOncoKbApiUrl(), 'http://www.cbioportal.org/proxy/www.test.com/hello');
     });
 
     it('transforms oncokb url configuration url to proxied url: removes protocol and trailing slash', ()=>{
-        AppConfig.oncoKBApiUrl = undefined;
+        AppConfig.serverConfig.oncokb_public_api_url = null;
         // note that this is WRONG (http: should be followed by double shlash)
         // note that this is WRONG (http: should be followed by double shlash)
         // but this is due to testing env and url builder library

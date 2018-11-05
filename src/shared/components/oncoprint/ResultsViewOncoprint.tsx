@@ -22,7 +22,7 @@ import {
 import _ from "lodash";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import AppConfig from "appConfig";
-import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
+import LoadingIndicator, {GlobalLoader} from "shared/components/loadingIndicator/LoadingIndicator";
 import OncoprintJS, {TrackId} from "oncoprintjs";
 import fileDownload from 'react-file-download';
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
@@ -65,20 +65,6 @@ export interface IGenesetExpansionRecord {
 }
 
 const specialClinicalAttributes:OncoprintClinicalAttribute[] = [
-    {
-        clinicalAttributeId: SpecialAttribute.FractionGenomeAltered,
-        datatype: "NUMBER",
-        description: "Fraction of the genome with copy number alterations.",
-        displayName: "Fraction Genome Altered",
-        patientAttribute: false,
-    },
-    {
-        clinicalAttributeId: SpecialAttribute.MutationCount,
-        datatype: "NUMBER",
-        description: "Number of mutations.",
-        displayName: "Total mutations",
-        patientAttribute: false,
-    },
     {
         clinicalAttributeId: SpecialAttribute.StudyOfOrigin,
         datatype: "STRING",
@@ -246,7 +232,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.showMinimap;
             },
             get hideHeatmapMenu() {
-                return self.props.store.queryStore.isVirtualStudyQuery;
+                return self.props.store.studies.result.length > 1;
             },
             get sortByMutationType() {
                 return self.sortByMutationType;
@@ -264,13 +250,19 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.props.store.mutationAnnotationSettings.oncoKb;
             },
             get annotateDriversOncoKbDisabled() {
+                return !AppConfig.serverConfig.show_oncokb;
+            },
+            get annotateDriversOncoKbError() {
                 return self.props.store.didOncoKbFailInOncoprint;
             },
             get annotateDriversHotspots() {
                 return self.props.store.mutationAnnotationSettings.hotspots;
             },
             get annotateDriversHotspotsDisabled() {
-                return false; // maybe we'll use this in future
+                return !AppConfig.serverConfig.show_hotspot;
+            },
+            get annotateDriversHotspotsError() {
+                return self.props.store.indexedHotspotData.peekStatus === "error";
             },
             get annotateDriversCBioPortal() {
                 return self.props.store.mutationAnnotationSettings.cbioportalCount;
@@ -326,7 +318,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.heatmapGeneInputValue;
             },
             get customDriverAnnotationBinaryMenuLabel() {
-                const label = AppConfig.oncoprintCustomDriverAnnotationBinaryMenuLabel;
+                const label = AppConfig.serverConfig.binary_custom_driver_annotation_menu_label;
                 const customDriverReport = self.props.store.customDriverAnnotationReport.result;
                 if (label && customDriverReport && customDriverReport.hasBinary) {
                     return label;
@@ -335,7 +327,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 }
             },
             get customDriverAnnotationTiersMenuLabel() {
-                const label = AppConfig.oncoprintCustomDriverAnnotationTiersMenuLabel;
+                const label = AppConfig.serverConfig.oncoprint_custom_driver_annotation_tiers_menu_label;
                 const customDriverReport = self.props.store.customDriverAnnotationReport.result;
                 if (label && customDriverReport && customDriverReport.tiers.length) {
                     return label;
@@ -390,7 +382,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     componentWillUnmount() {
-        this.putativeDriverSettingsReaction();
+        if (this.putativeDriverSettingsReaction) this.putativeDriverSettingsReaction();
         this.urlParamsReaction();
     }
 
@@ -432,10 +424,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     });
                     this.props.store.mutationAnnotationSettings.ignoreUnknown = false;
                 } else {
-                    if (!this.controlsState.annotateDriversOncoKbDisabled)
+                    if (!this.controlsState.annotateDriversOncoKbDisabled && !this.controlsState.annotateDriversOncoKbError)
                         this.props.store.mutationAnnotationSettings.oncoKb = true;
 
-                    if (!this.controlsState.annotateDriversHotspotsDisabled)
+                    if (!this.controlsState.annotateDriversHotspotsDisabled && !this.controlsState.annotateDriversHotspotsError)
                         this.props.store.mutationAnnotationSettings.hotspots = true;
 
                     this.props.store.mutationAnnotationSettings.cbioportalCount = true;
@@ -796,6 +788,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                         }
                         return -sampleCount;
                     },
+                    (x:ClinicalAttribute)=>-x.priority
+                    ,
                     (x:ClinicalAttribute)=>x.displayName
                 ]
             ); // sort server clinical attrs by availability and display name
@@ -1053,19 +1047,11 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     public render() {
         return (
-            <div style={{position:'relative', minHeight:this.isHidden ? this.loadingIndicatorHeight : "auto"}} className="cbioportal-frontend">
-                <OqlStatusBanner className="oncoprint-oql-status-banner" store={this.props.store} tabReflectsOql={true} style={{marginBottom:12}}/>
-            {
-                    <div
-                        className={ classNames('oncoprintLoadingIndicator', { 'hidden': !this.isHidden }) }
-                        style={{
-                            position: "absolute", top: 0, left: 0, width: "100%", height: "100%", minHeight:this.loadingIndicatorHeight
-                        }}
-                    >
-                        <div>{this.loadingIndicatorMessage}</div>
-                        <LoadingIndicator style={{display: 'block'}} isLoading={true}/>
-                    </div>
-                }
+            <div>
+                <LoadingIndicator isLoading={this.isHidden} center={true} size={"big"} />
+                <div className={"tabMessageContainer"}>
+                    <OqlStatusBanner className="oncoprint-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
+                </div>
 
                 <div className={classNames('oncoprintContainer', { fadeIn: !this.isHidden })}
                      onMouseEnter={this.onMouseEnter}

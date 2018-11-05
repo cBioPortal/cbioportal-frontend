@@ -1,7 +1,6 @@
-import {AxisMenuSelection, ViewType} from "./PlotsTab";
+import {AxisMenuSelection, MutationCountBy, ViewType} from "./PlotsTab";
 import {MobxPromise} from "mobxpromise";
 import {
-    CancerStudy,
     ClinicalAttribute, ClinicalData, Gene, MolecularProfile, Mutation, NumericGeneMolecularData,
     Sample
 } from "../../../shared/api/generated/CBioPortalAPI";
@@ -18,8 +17,6 @@ import {
 import {stringListToIndexSet} from "../../../shared/lib/StringUtils";
 import {
     CNA_COLOR_AMP,
-    CNA_COLOR_GAIN,
-    CNA_COLOR_HETLOSS,
     CNA_COLOR_HOMDEL,
     DEFAULT_GREY,
     MUT_COLOR_FUSION, MUT_COLOR_INFRAME, MUT_COLOR_INFRAME_PASSENGER,
@@ -29,23 +26,35 @@ import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 import {IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPlot";
 import {AlterationTypeConstants, AnnotatedMutation, AnnotatedNumericGeneMolecularData} from "../ResultsViewPageStore";
 import numeral from "numeral";
-import {getUniqueSampleKeyToCategories} from "../../../shared/components/plots/TablePlotUtils";
-import client from "../../../shared/api/cbioportalClientInstance";
-import internalClient from "../../../shared/api/cbioportalInternalClientInstance";
-import { FractionGenomeAlteredFilter } from "shared/api/generated/CBioPortalAPIInternal";
-import {SpecialAttribute} from "../../../shared/cache/OncoprintClinicalDataCache";
-import {getDeterministicRandomNumber, getJitterForCase} from "../../../shared/components/plots/PlotUtils";
+import {getJitterForCase} from "../../../shared/components/plots/PlotUtils";
+import {isSampleProfiled} from "../../../shared/lib/isSampleProfiled";
+import GenesetMolecularDataCache from "../../../shared/cache/GenesetMolecularDataCache";
+import {GenesetMolecularData} from "../../../shared/api/generated/CBioPortalAPIInternal";
 
 export const CLIN_ATTR_DATA_TYPE = "clinical_attribute";
+export const GENESET_DATA_TYPE = "GENESET_SCORE";
 export const dataTypeToDisplayType:{[s:string]:string} = {
-    "COPY_NUMBER_ALTERATION": "Copy Number",
-    "MRNA_EXPRESSION": "mRNA",
-    "PROTEIN_LEVEL": "Protein Level",
-    "METHYLATION": "DNA Methylation",
-    [CLIN_ATTR_DATA_TYPE]:"Clinical Attribute"
+    [AlterationTypeConstants.MUTATION_EXTENDED]: "Mutation",
+    [AlterationTypeConstants.COPY_NUMBER_ALTERATION]: "Copy Number",
+    [AlterationTypeConstants.MRNA_EXPRESSION]: "mRNA",
+    [AlterationTypeConstants.PROTEIN_LEVEL]: "Protein Level",
+    [AlterationTypeConstants.METHYLATION]: "DNA Methylation",
+    [CLIN_ATTR_DATA_TYPE]:"Clinical Attribute",
+    [GENESET_DATA_TYPE]:"Gene Sets"
 };
 
-export const dataTypeDisplayOrder = [CLIN_ATTR_DATA_TYPE, "MRNA_EXPRESSION", "COPY_NUMBER_ALTERATION", "PROTEIN_LEVEL", "METHYLATION"];
+export const mutationTypeToDisplayName:{[oncoprintMutationType:string]:string} = {
+    "missense":"Missense",
+    "inframe":"Inframe",
+    "fusion":"Fusion",
+    "promoter":"Promoter",
+    "trunc":"Truncating"
+};
+
+export const dataTypeDisplayOrder = [
+    CLIN_ATTR_DATA_TYPE, AlterationTypeConstants.MUTATION_EXTENDED, AlterationTypeConstants.COPY_NUMBER_ALTERATION,
+    AlterationTypeConstants.MRNA_EXPRESSION, GENESET_DATA_TYPE, AlterationTypeConstants.PROTEIN_LEVEL, AlterationTypeConstants.METHYLATION
+];
 export function sortMolecularProfilesForDisplay(profiles:MolecularProfile[]) {
     if (!profiles.length) {
         return [];
@@ -71,7 +80,7 @@ export const PLOT_SIDELENGTH = 650;
 export interface IAxisData {
     data:{
         uniqueSampleKey:string;
-        value:string|number;
+        value:string|number|(string[])|(number[]); // if theres a list, then we'll make one data point per value
     }[];
     hugoGeneSymbol?:string;
     datatype:string;//"string" or "number"
@@ -80,7 +89,7 @@ export interface IAxisData {
 export interface IStringAxisData {
     data:{
         uniqueSampleKey:string;
-        value:string;
+        value:string | (string[]);
     }[];
     categoryOrder?:string[];
     hugoGeneSymbol?:string;
@@ -89,7 +98,7 @@ export interface IStringAxisData {
 export interface INumberAxisData {
     data:{
         uniqueSampleKey:string;
-        value:number;
+        value:number | (number[]);
     }[];
     hugoGeneSymbol?:string;
     datatype:string;
@@ -378,153 +387,212 @@ function makeAxisDataPromise_Clinical(
     studyToMutationMolecularProfile: MobxPromise<{[studyId: string]: MolecularProfile}>
 ):MobxPromise<IAxisData> {
     const promise = clinicalDataCache.get(attribute);
-    let ret:MobxPromise<IAxisData>;
-    switch(attribute.clinicalAttributeId) {
-        case SpecialAttribute.MutationCount:
-            let mutationCounts = remoteData({
-                await:()=>[patientKeyToSamples, studyToMutationMolecularProfile],
-                invoke:()=>{
-                    const _patientKeyToSamples = patientKeyToSamples.result!;
-                    const _studyToMutationMolecularProfile = studyToMutationMolecularProfile.result!;
-                    // get all samples
-                    let samples = _.flatten(_.values(_patientKeyToSamples));
-                    // produce sample data from patient clinical data
-                    let mutationCounts = client.fetchMutationCountsInMolecularProfileUsingPOST({
-                        molecularProfileId: _studyToMutationMolecularProfile[attribute.studyId].molecularProfileId,
-                        sampleIds: samples.map(s=>s.sampleId)
-                        });
-                    return Promise.resolve(mutationCounts);
-                }
-            });
-            ret = remoteData({
-                await:()=>[mutationCounts],
-                invoke:()=>{
-                    const _mutationCounts = mutationCounts.result!;
-                    const axisData:IAxisData = { data:[], datatype:attribute.datatype.toLowerCase() };
-                    const axisData_Data = axisData.data;
-                    for (const mutationCount of _mutationCounts) {
+    let ret:MobxPromise<IAxisData> = remoteData({
+        await:()=>[promise, patientKeyToSamples],
+        invoke:()=>{
+            const _patientKeyToSamples = patientKeyToSamples.result!;
+            const data:ClinicalData[] = promise.result!;
+            const axisData:IAxisData = { data:[], datatype:attribute.datatype.toLowerCase() };
+            const shouldParseFloat = attribute.datatype.toLowerCase() === "number";
+            const axisData_Data = axisData.data;
+            if (attribute.patientAttribute) {
+                // produce sample data from patient clinical data
+                for (const d of data) {
+                    const samples = _patientKeyToSamples[d.uniquePatientKey];
+                    for (const sample of samples) {
                         axisData_Data.push({
-                            uniqueSampleKey: mutationCount.uniqueSampleKey,
-                            value: mutationCount.mutationCount,
+                            uniqueSampleKey: sample.uniqueSampleKey,
+                            value: d.value,
                         });
                     }
-                    return Promise.resolve(axisData);
                 }
-            });
-            break;
-        case SpecialAttribute.FractionGenomeAltered:
-            let fractionGenomeAltered = remoteData({
-                await:()=>[patientKeyToSamples, studyToMutationMolecularProfile],
-                invoke:()=>{
-                    const _patientKeyToSamples = patientKeyToSamples.result!;
-                    const _studyToMutationMolecularProfile = studyToMutationMolecularProfile.result!;
-                    const _studyId = attribute.studyId;
-                    // get all samples
-                    let samples = _.flatten(_.values(_patientKeyToSamples));
-                    let sampleIds = samples.map(s=>s.sampleId);
-                    // produce sample data from patient clinical data
-                    let fractionGenomeAltered = internalClient.fetchFractionGenomeAlteredUsingPOST({
-                        studyId: _studyId,
-                        fractionGenomeAlteredFilter: {
-                            sampleIds: sampleIds
-                        } as FractionGenomeAlteredFilter
+            } else {
+                // produce sample data from sample clinical data
+                for (const d of data) {
+                    axisData_Data.push({
+                        uniqueSampleKey: d.uniqueSampleKey,
+                        value: d.value
                     });
-                    return Promise.resolve(fractionGenomeAltered);
                 }
-            });
-            ret = remoteData({
-                await:()=>[fractionGenomeAltered],
-                invoke:()=>{
-                    const _fractionGenomeAltered = fractionGenomeAltered.result!;
-                    const axisData:IAxisData = { data:[], datatype:attribute.datatype.toLowerCase() };
-                    const axisData_Data = axisData.data;
-                    for (const fractionGenomeAlteredItems of _fractionGenomeAltered) {
-                        axisData_Data.push({
-                            uniqueSampleKey: fractionGenomeAlteredItems.uniqueSampleKey,
-                            value: fractionGenomeAlteredItems.value,
-                        });
-                    }
-                    return Promise.resolve(axisData);
+            }
+            if (shouldParseFloat) {
+                for (const d of axisData_Data) {
+                    d.value = parseFloat(d.value as string); // we know its a string bc all clinical data comes back as string
                 }
-            });
-            break;
-        default:
-            ret = remoteData({
-                await:()=>[promise, patientKeyToSamples],
-                invoke:()=>{
-                    const _patientKeyToSamples = patientKeyToSamples.result!;
-                    const data:ClinicalData[] = promise.result!;
-                    const axisData:IAxisData = { data:[], datatype:attribute.datatype.toLowerCase() };
-                    const shouldParseFloat = attribute.datatype.toLowerCase() === "number";
-                    const axisData_Data = axisData.data;
-                    if (attribute.patientAttribute) {
-                        // produce sample data from patient clinical data
-                        for (const d of data) {
-                            const samples = _patientKeyToSamples[d.uniquePatientKey];
-                            for (const sample of samples) {
-                                axisData_Data.push({
-                                    uniqueSampleKey: sample.uniqueSampleKey,
-                                    value: d.value,
-                                });
-                            }
-                        }
-                    } else {
-                        // produce sample data from sample clinical data
-                        for (const d of data) {
-                            axisData_Data.push({
-                                uniqueSampleKey: d.uniqueSampleKey,
-                                value: d.value
-                            });
-                        }
-                    }
-                    if (shouldParseFloat) {
-                        for (const d of axisData_Data) {
-                            d.value = parseFloat(d.value as string); // we know its a string bc all clinical data comes back as string
-                        }
-                    }
-                    return Promise.resolve(axisData);
-                }
-            });
-        break;
-    }
+            }
+            return Promise.resolve(axisData);
+        }
+    });
+
     return ret;
 }
 
 function makeAxisDataPromise_Molecular(
     entrezGeneId:number,
     molecularProfileId:string,
+    mutationCache:MobxPromiseCache<{entrezGeneId:number}, Mutation[]>,
     numericGeneMolecularDataCache:MobxPromiseCache<{entrezGeneId:number, molecularProfileId:string}, NumericGeneMolecularData[]>,
     entrezGeneIdToGene:MobxPromise<{[entrezGeneId:number]:Gene}>,
-    molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>
+    molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>,
+    mutationCountBy: MutationCountBy,
+    coverageInformation:MobxPromise<CoverageInformation>,
+    samples:MobxPromise<Sample[]>
 ):MobxPromise<IAxisData> {
-    const promise = numericGeneMolecularDataCache.get({
-        entrezGeneId: entrezGeneId,
-        molecularProfileId: molecularProfileId
-    });
+    let promise:MobxPromise<any>;/* = ;*/
     return remoteData({
-        await:()=>[promise, entrezGeneIdToGene, molecularProfileIdToMolecularProfile],
+        await:()=>{
+            const ret:MobxPromise<any>[] = [];
+            if (molecularProfileIdToMolecularProfile.isComplete) {
+                if (molecularProfileIdToMolecularProfile.result![molecularProfileId].molecularAlterationType ===
+                        AlterationTypeConstants.MUTATION_EXTENDED) {
+                    // mutation profile
+                    promise = mutationCache.get({ entrezGeneId });
+                    ret.push(coverageInformation);
+                    ret.push(samples);
+                } else {
+                    // non-mutation profile
+                    promise = numericGeneMolecularDataCache.get({ entrezGeneId, molecularProfileId });
+                }
+                ret.push(promise);
+            } else {
+                ret.push(molecularProfileIdToMolecularProfile);
+            }
+            ret.push(entrezGeneIdToGene);
+            return ret;
+        },
         invoke:()=>{
             const profile = molecularProfileIdToMolecularProfile.result![molecularProfileId];
-            const isDiscreteCna = (profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION
-                                    && profile.datatype === "DISCRETE");
-            const data:NumericGeneMolecularData[] = promise.result!;
+            const hugoGeneSymbol = entrezGeneIdToGene.result![entrezGeneId].hugoGeneSymbol;
+
+            if (profile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED) {
+                // mutation profile
+                const mutations:Mutation[] = promise.result!;
+                return Promise.resolve(
+                    makeAxisDataPromise_Molecular_MakeMutationData(
+                        molecularProfileId, hugoGeneSymbol, mutations, coverageInformation.result!, mutationCountBy, samples.result!
+                    )
+                );
+            } else {
+                // non-mutation profile
+                const isDiscreteCna = (profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION
+                    && profile.datatype === "DISCRETE");
+                const data:NumericGeneMolecularData[] = promise.result!;
+                return Promise.resolve({
+                    data: data.map(d=>{
+                        let value = d.value;
+                        if (isDiscreteCna) {
+                            const appearance = (cnaToAppearance as any)[d.value];
+                            if (appearance) {
+                                value = appearance.legendLabel;
+                            }
+                        }
+                        return {
+                            uniqueSampleKey: d.uniqueSampleKey,
+                            value
+                        }
+                    }),
+                    hugoGeneSymbol,
+                    datatype: isDiscreteCna ? "string" : "number",
+                    categoryOrder: isDiscreteCna ? cnaCategoryOrder : undefined
+                } as IAxisData);
+            }
+        }
+    });
+}
+
+export function makeAxisDataPromise_Molecular_MakeMutationData(
+    molecularProfileId:string,
+    hugoGeneSymbol:string,
+    mutations:Pick<Mutation,"uniqueSampleKey"|"proteinChange"|"mutationType">[],
+    coverageInformation:CoverageInformation,
+    mutationCountBy: MutationCountBy,
+    samples:Pick<Sample, "uniqueSampleKey">[]
+) {
+    // collect mutations by sample by type
+    const sampleToMutationTypes = _.mapValues(
+        _.groupBy(mutations, m=>m.uniqueSampleKey),
+        sampleMuts=>_.uniq(sampleMuts.map(m=>mutationTypeToDisplayName[getOncoprintMutationType(m)]))
+    );
+
+    const data = samples.map(s=>{
+        const sampleMutTypes = sampleToMutationTypes[s.uniqueSampleKey];
+        let value:string|string[];
+        if (!sampleMutTypes) {
+            // sampleMutTypes would never be an empty array because its generated by _.groupBy,
+            //  so we need only check if it exists
+            if (!isSampleProfiled(s.uniqueSampleKey, molecularProfileId, hugoGeneSymbol, coverageInformation)) {
+                // its not profiled
+                value = MUT_PROFILE_COUNT_NOT_PROFILED;
+            } else {
+                // otherwise, its profiled, so not mutated
+                value = MUT_PROFILE_COUNT_NOT_MUTATED;
+            }
+        } else {
+            // we have mutations
+            switch (mutationCountBy) {
+                case MutationCountBy.MutationType:
+                    // if more than one type, its "Multiple"
+                    if (sampleMutTypes.length > 1) {
+                        value = MUT_PROFILE_COUNT_MULTIPLE;
+                    } else {
+                        value = sampleMutTypes;
+                    }
+                    break;
+                case MutationCountBy.MutatedVsWildType:
+                default:
+                    value = MUT_PROFILE_COUNT_MUTATED;
+                    break;
+            }
+        }
+        return {
+            uniqueSampleKey: s.uniqueSampleKey,
+            value
+        };
+    });
+    let categoryOrder:string[] = [];
+    switch (mutationCountBy) {
+        case MutationCountBy.MutationType:
+            categoryOrder = mutTypeCategoryOrder;
+            break;
+        case MutationCountBy.MutatedVsWildType:
+        default:
+            categoryOrder = mutVsWildCategoryOrder;
+            break;
+    }
+    return {
+        data,
+        hugoGeneSymbol,
+        datatype: "string",
+        categoryOrder
+    } as IStringAxisData;
+}
+
+function makeAxisDataPromise_Geneset(
+    genesetId:string,
+    molecularProfileId:string,
+    genesetMolecularDataCachePromise:MobxPromise<GenesetMolecularDataCache>,
+    molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>
+):MobxPromise<IAxisData> {
+    return remoteData({
+        await:()=>[genesetMolecularDataCachePromise, molecularProfileIdToMolecularProfile],
+        invoke: async () => {
+            const profile = molecularProfileIdToMolecularProfile.result![molecularProfileId];
+            // const isDiscreteCna = (profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION
+            //                         && profile.datatype === "DISCRETE");
+            const makeRequest = true;
+            await genesetMolecularDataCachePromise.result!.getPromise(
+                 {genesetId, molecularProfileId}, makeRequest);
+            const data:GenesetMolecularData[] = genesetMolecularDataCachePromise.result!.get({molecularProfileId, genesetId})!.data!;
             return Promise.resolve({
                 data: data.map(d=>{
-                    let value = d.value;
-                    if (isDiscreteCna) {
-                        const appearance = (cnaToAppearance as any)[d.value];
-                        if (appearance) {
-                            value = appearance.legendLabel;
-                        }
-                    }
+                    const value = d.value;
                     return {
                         uniqueSampleKey: d.uniqueSampleKey,
-                        value
-                    }
+                        value: Number(value)
+                    };
                 }),
-                hugoGeneSymbol: entrezGeneIdToGene.result![entrezGeneId].hugoGeneSymbol,
-                datatype: isDiscreteCna ? "string" : "number",
-                categoryOrder: isDiscreteCna ? cnaCategoryOrder : undefined
+                genesetId: genesetId,
+                datatype: "number"
             });
         }
     });
@@ -537,8 +605,12 @@ export function makeAxisDataPromise(
     patientKeyToSamples:MobxPromise<{[uniquePatientKey:string]:Sample[]}>,
     entrezGeneIdToGene:MobxPromise<{[entrezGeneId:number]:Gene}>,
     clinicalDataCache:MobxPromiseCache<ClinicalAttribute, ClinicalData[]>,
+    mutationCache:MobxPromiseCache<{entrezGeneId:number}, Mutation[]>,
     numericGeneMolecularDataCache:MobxPromiseCache<{entrezGeneId:number, molecularProfileId:string}, NumericGeneMolecularData[]>,
-    studyToMutationMolecularProfile: MobxPromise<{[studyId: string]: MolecularProfile}>
+    studyToMutationMolecularProfile: MobxPromise<{[studyId: string]: MolecularProfile}>,
+    coverageInformation:MobxPromise<CoverageInformation>,
+    samples:MobxPromise<Sample[]>,
+    genesetMolecularDataCachePromise: MobxPromise<GenesetMolecularDataCache>
 ):MobxPromise<IAxisData> {
 
     let ret:MobxPromise<IAxisData> = remoteData(()=>new Promise<IAxisData>(()=>0)); // always isPending
@@ -549,12 +621,20 @@ export function makeAxisDataPromise(
                 ret = makeAxisDataPromise_Clinical(attribute, clinicalDataCache, patientKeyToSamples, studyToMutationMolecularProfile);
             }
             break;
+        case GENESET_DATA_TYPE:
+            if (selection.genesetId !== undefined && selection.dataSourceId !== undefined) {
+                ret = makeAxisDataPromise_Geneset(
+                    selection.genesetId, selection.dataSourceId, genesetMolecularDataCachePromise,
+                    molecularProfileIdToMolecularProfile);
+            }
+            break;
         default:
             // molecular profile
             if (selection.entrezGeneId !== undefined && selection.dataSourceId !== undefined) {
                 ret = makeAxisDataPromise_Molecular(
-                    selection.entrezGeneId, selection.dataSourceId, numericGeneMolecularDataCache,
-                    entrezGeneIdToGene, molecularProfileIdToMolecularProfile
+                    selection.entrezGeneId, selection.dataSourceId, mutationCache, numericGeneMolecularDataCache,
+                    entrezGeneIdToGene, molecularProfileIdToMolecularProfile, selection.mutationCountBy,
+                    coverageInformation, samples
                 );
             }
             break;
@@ -577,6 +657,7 @@ export function getAxisLabel(
     clinicalAttributeIdToClinicalAttribute:{[clinicalAttributeId:string]:ClinicalAttribute}
 ) {
     let ret = "";
+    const profile = molecularProfileIdToMolecularProfile[selection.dataSourceId!];
     switch (selection.dataType) {
         case CLIN_ATTR_DATA_TYPE:
             const attribute = clinicalAttributeIdToClinicalAttribute[selection.dataSourceId!];
@@ -584,9 +665,13 @@ export function getAxisLabel(
                 ret = attribute.displayName;
             }
             break;
+        case GENESET_DATA_TYPE:
+            if (profile && selection.genesetId !== undefined) {
+                ret = `${selection.genesetId}: ${profile.name}`;
+            }
+            break;
         default:
             // molecular profile
-            const profile = molecularProfileIdToMolecularProfile[selection.dataSourceId!];
             if (profile && selection.entrezGeneId !== undefined) {
                 ret = `${entrezGeneIdToGene[selection.entrezGeneId].hugoGeneSymbol}: ${profile.name}`;
             }
@@ -799,6 +884,20 @@ const cnaToAppearance = {
 };
 
 const cnaCategoryOrder = ["-2", "-1", "0", "1", "2"].map(x=>(cnaToAppearance as any)[x].legendLabel);
+export const MUT_PROFILE_COUNT_MUTATED = "Mutated";
+export const MUT_PROFILE_COUNT_MULTIPLE = "Multiple";
+export const MUT_PROFILE_COUNT_NOT_MUTATED = "Wild type";
+export const MUT_PROFILE_COUNT_NOT_PROFILED = "Not profiled";
+export const mutTypeCategoryOrder = [
+    mutationTypeToDisplayName.missense,
+    mutationTypeToDisplayName.inframe,
+    mutationTypeToDisplayName.trunc,
+    mutationTypeToDisplayName.fusion,
+    mutationTypeToDisplayName.promoter,
+    MUT_PROFILE_COUNT_MULTIPLE,
+    MUT_PROFILE_COUNT_NOT_MUTATED, MUT_PROFILE_COUNT_NOT_PROFILED
+];
+export const mutVsWildCategoryOrder = [MUT_PROFILE_COUNT_MUTATED, MUT_PROFILE_COUNT_NOT_MUTATED, MUT_PROFILE_COUNT_NOT_PROFILED];
 
 export const cnaRenderPriority = stringListToIndexSet([
     "-2", "2", "-1", "1", "0", CNA_TYPE_NOT_PROFILED
@@ -878,8 +977,8 @@ function mutationsProteinChanges(
 export function tooltipMutationsSection(
     mutations:AnnotatedMutation[],
 ) {
-    const oncoKbIcon = (mutation:AnnotatedMutation)=>(<img src="images/oncokb-oncogenic-1.svg" title={mutation.oncoKbOncogenic} style={{height:11, width:11, marginLeft:2, marginBottom: 2}}/>);
-    const hotspotIcon = <img src="images/cancer-hotspots.svg" title="Hotspot" style={{height:11, width:11, marginLeft:2, marginBottom:3}}/>;
+    const oncoKbIcon = (mutation:AnnotatedMutation)=>(<img src={require("../../../rootImages/oncokb-oncogenic-1.svg")} title={mutation.oncoKbOncogenic} style={{height:11, width:11, marginLeft:2, marginBottom: 2}}/>);
+    const hotspotIcon = <img src={require("../../../rootImages/cancer-hotspots.svg")} title="Hotspot" style={{height:11, width:11, marginLeft:2, marginBottom:3}}/>;
     const mutationsByGene = _.groupBy(mutations.filter(m=>!!m.proteinChange), m=>m.hugoGeneSymbol);
     const sorted = _.chain(mutationsByGene).entries().sortBy(x=>x[0]).value();
     return (
@@ -908,7 +1007,7 @@ export function tooltipMutationsSection(
 export function tooltipCnaSection(
     data:AnnotatedNumericGeneMolecularData[],
 ) {
-    const oncoKbIcon = (alt:AnnotatedNumericGeneMolecularData)=>(<img src="images/oncokb-oncogenic-1.svg" title={alt.oncoKbOncogenic} style={{height:11, width:11, marginLeft:2, marginBottom: 2}}/>);
+    const oncoKbIcon = (alt:AnnotatedNumericGeneMolecularData)=>(<img src={require("../../../rootImages/oncokb-oncogenic-1.svg")} title={alt.oncoKbOncogenic} style={{height:11, width:11, marginLeft:2, marginBottom: 2}}/>);
     const altsByGene = _.groupBy(data, alt=>alt.hugoGeneSymbol);
     const sorted = _.chain(altsByGene).entries().sortBy(x=>x[0]).value();
     return (
@@ -1039,7 +1138,7 @@ export function makeScatterPlotData(
         molecularProfileIds:string[],
         data:AnnotatedNumericGeneMolecularData[]
     }
-):IScatterPlotData[]
+):IScatterPlotData[];
 
 export function makeScatterPlotData(
     horzData: INumberAxisData|IStringAxisData,
@@ -1059,7 +1158,7 @@ export function makeScatterPlotData(
         mutations ? _.groupBy(mutations.data, m=>m.uniqueSampleKey) : {};
     const cnaMap:{[uniqueSampleKey:string]:AnnotatedNumericGeneMolecularData[]} =
         copyNumberAlterations? _.groupBy(copyNumberAlterations.data, d=>d.uniqueSampleKey) : {};
-    const dataMap:{[uniqueSampleKey:string]:Partial<IScatterPlotSampleData & { x:string|number, y:number, category:string, value:number, jitter:number }>} = {};
+    const dataMap:{[uniqueSampleKey:string]:Partial<IScatterPlotSampleData & { horzValues:string[]|number[], vertValues:number[], jitter:number }>} = {};
     for (const d of horzData.data) {
         const sample = uniqueSampleKeyToSample[d.uniqueSampleKey];
         const sampleCopyNumberAlterations:AnnotatedNumericGeneMolecularData[] | undefined = cnaMap[d.uniqueSampleKey];
@@ -1123,8 +1222,7 @@ export function makeScatterPlotData(
             uniqueSampleKey: d.uniqueSampleKey,
             sampleId: sample.sampleId,
             studyId: sample.studyId,
-            x: d.value as string,
-            category: d.value as string,
+            horzValues: ([] as string[]).concat(d.value as string),
             mutations: sampleMutations || [],
             copyNumberAlterations:sampleCopyNumberAlterations || [],
             dispCna,
@@ -1139,17 +1237,31 @@ export function makeScatterPlotData(
         const datum = dataMap[d.uniqueSampleKey];
         if (datum) {
             // we only care about cases with both x and y data
-            datum.y = d.value;
-            datum.value = d.value;
+            datum.vertValues = ([] as number[]).concat(d.value);
             datum.jitter = getJitterForCase(d.uniqueSampleKey);
-
-            // filter out NaN number values
-            if (!Number.isNaN(datum.x as any) && !Number.isNaN(datum.y as any)) {
-                data.push(datum);
+            data.push(datum);
+        }
+    }
+    // expand horz and vert values in case theres multiple
+    const expandedData:any[] = [];
+    for (const d of data) {
+        for (const horzValue of d.horzValues) {
+            for (const vertValue of d.vertValues) {
+                // filter out NaN number values
+                if (!Number.isNaN(horzValue as any) && !Number.isNaN(vertValue as any)) {
+                    expandedData.push(
+                        Object.assign({}, d, {
+                            x: horzValue as string,
+                            category: horzValue as string,
+                            y: vertValue as number,
+                            value: vertValue as number
+                        })
+                    );
+                }
             }
         }
     }
-    return data;
+    return expandedData;
 }
 
 function makeScatterPlotData_profiledReport(
@@ -1274,23 +1386,46 @@ export function getBoxPlotDownloadData(
     return header.join("\t")+"\n"+dataRows.join("\n");
 }
 
-export function getTablePlotDownloadData(
-    horzData:IStringAxisData["data"],
-    vertData:IStringAxisData["data"],
-    uniqueSampleKeyToSample:{[uniqueSampleKey:string]:Sample},
-    horzLabel:string,
-    vertLabel:string
+export function getMutationProfileDuplicateSamplesReport(
+    horzAxisData:Pick<IAxisData,"data">,
+    vertAxisData:Pick<IAxisData,"data">,
+    horzSelection:Pick<AxisMenuSelection,"dataType">,
+    vertSelection:Pick<AxisMenuSelection,"dataType">
 ) {
-    const dataRows:string[] = [];
-    const sampleKeyToCategories = getUniqueSampleKeyToCategories(horzData, vertData);
-    for (const sampleKey of Object.keys(sampleKeyToCategories)) {
-        const row:string[] = [];
-        row.push(uniqueSampleKeyToSample[sampleKey].sampleId);
-        const categories = sampleKeyToCategories[sampleKey];
-        row.push(categories.horz || "n/a");
-        row.push(categories.vert || "n/a");
-        dataRows.push(row.join("\t"));
+    // sampleToNumPoints maps a sample key to the number of points in the plot
+    //  which are due to this sample. only samples with more than one point are
+    //  entered.
+    const sampleToNumPoints:{[uniqueSampleKey:string]:number} = {};
+
+    if (horzSelection.dataType === AlterationTypeConstants.MUTATION_EXTENDED) {
+        for (const d of horzAxisData.data) {
+            if (Array.isArray(d.value) && d.value.length > 1) {
+                // only samples with more than one point are entered
+
+                // for the contribution from horz data, the sample is associated with this many points
+                sampleToNumPoints[d.uniqueSampleKey] = d.value.length;
+            }
+        }
     }
-    const header = ["Sample Id", horzLabel, vertLabel];
-    return header.join("\t")+"\n"+dataRows.join("\n");
+
+    if (vertSelection.dataType === AlterationTypeConstants.MUTATION_EXTENDED) {
+        for (const d of vertAxisData.data) {
+            if (Array.isArray(d.value) && d.value.length > 1) {
+                // only samples with more than one point are entered
+
+                // we combine the contribution from horz and vert data - we multiply them, bc a point is created
+                //  for each horz value for each vert value
+                sampleToNumPoints[d.uniqueSampleKey] = (sampleToNumPoints[d.uniqueSampleKey] || 1)*d.value.length;
+            }
+        }
+    }
+
+    const numSamples = Object.keys(sampleToNumPoints).length;
+    const numPointsForTheseSamples = _.reduce(sampleToNumPoints, (sum, nextNumPoints)=>sum+nextNumPoints, 0);
+    const numSurplusPoints = numPointsForTheseSamples - numSamples;
+
+    return {
+        showMessage: numSamples > 0,
+        numSamples, numSurplusPoints
+    };
 }
