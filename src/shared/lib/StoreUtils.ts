@@ -34,6 +34,7 @@ import {IOncoKbData} from "shared/model/OncoKB";
 import {IGisticData} from "shared/model/Gistic";
 import {IMutSigData} from "shared/model/MutSig";
 import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
+import {IMutationalSignature, IMutationalSignatureMeta} from "shared/model/MutationalSignature";
 import {ICivicGeneData, ICivicVariant, ICivicGene} from "shared/model/Civic.ts";
 import {MOLECULAR_PROFILE_MUTATIONS_SUFFIX, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX} from "shared/constants";
 import GenomeNexusAPI from "shared/api/generated/GenomeNexusAPI";
@@ -83,13 +84,13 @@ export async function fetchGenes(hugoGeneSymbols?: string[],
     }
 }
 
-export async function fetchPdbAlignmentData(uniprotId: string,
+export async function fetchPdbAlignmentData(ensemblId: string,
                                             client:Genome2StructureAPI = g2sClient)
 {
-    if (uniprotId) {
+    if (ensemblId) {
         return await client.getAlignmentUsingGET({
-            idType: "uniprot",
-            id: uniprotId
+            idType: "ensembl",
+            id: ensemblId
         });
     } else {
         return [];
@@ -408,12 +409,11 @@ export async function fetchStudiesForSamplesWithoutCancerTypeClinicalData(sample
 {
     let studies: CancerStudy[] = [];
 
-    if (samplesWithoutClinicalData.result) {
+    if (samplesWithoutClinicalData.result && samplesWithoutClinicalData.result.length > 0) {
         const studyIdsForSamplesWithoutClinicalData = _.uniq(samplesWithoutClinicalData.result.map(
             (sample: Sample) => sample.studyId));
 
-        const promises = studyIdsForSamplesWithoutClinicalData.map(studyId => client.getStudyUsingGET({studyId}));
-        studies = await Promise.all(promises);
+        studies = await client.fetchStudiesUsingPOST({studyIds:studyIdsForSamplesWithoutClinicalData, projection:"DETAILED"});
     }
 
     return studies;
@@ -516,6 +516,15 @@ export function fetchMyCancerGenomeData(): IMyCancerGenomeData
 {
     const data:IMyCancerGenome[] = require('../../../resources/mycancergenome.json');
     return geneToMyCancerGenome(data);
+}
+
+export function fetchMutationalSignatureData(): IMutationalSignature[]
+{
+    return require('../../../resources/samplemutsigdata.json');
+}
+
+export function fetchMutationalSignatureMetaData(): IMutationalSignatureMeta[]{
+    return require('../../../resources/mutsigmetadata.json');
 }
 
 export async function fetchOncoKbAnnotatedGenes(client: OncoKbAPI = oncokbClient): Promise<{[entrezGeneId:number]:boolean}>
@@ -640,15 +649,13 @@ export async function fetchCivicGenes(mutationData?:MobxPromise<Mutation[]>,
         return {};
     }
 
-    let queryHugoSymbols: Set<string> = new Set([]);
+    let entrezGeneSymbols: Set<number> = new Set([]);
 
     mutationDataResult.forEach(function(mutation: Mutation) {
-        queryHugoSymbols.add(mutation.gene.hugoGeneSymbol);
+        entrezGeneSymbols.add(mutation.gene.entrezGeneId);
     });
-    
-    let querySymbols: Array<string> = Array.from(queryHugoSymbols);
 
-    let civicGenes: ICivicGene = await getCivicGenes(querySymbols);
+    let civicGenes: ICivicGene = await getCivicGenes(Array.from(entrezGeneSymbols));
 
     return civicGenes;
 }
@@ -656,13 +663,13 @@ export async function fetchCivicGenes(mutationData?:MobxPromise<Mutation[]>,
 export async function fetchCnaCivicGenes(discreteCNAData:MobxPromise<DiscreteCopyNumberData[]>)
 {
     if (discreteCNAData.result && discreteCNAData.result.length > 0) {
-        let queryHugoSymbols: Set<string> = new Set([]);
+        let entrezGeneSymbols: Set<number> = new Set([]);
         
         discreteCNAData.result.forEach(function(cna: DiscreteCopyNumberData) {
-            queryHugoSymbols.add(cna.gene.hugoGeneSymbol);
+            entrezGeneSymbols.add(cna.gene.entrezGeneId);
         });
         
-        let querySymbols: Array<string> = Array.from(queryHugoSymbols);
+        let querySymbols: Array<number> = Array.from(entrezGeneSymbols);
     
         let civicGenes: ICivicGene = (await getCivicGenes(querySymbols));
     

@@ -9,15 +9,13 @@ import { VirtualStudy } from 'shared/model/VirtualStudy';
 describe('QueryStoreUtils', ()=>{
     describe('nonMolecularProfileParams', ()=>{
 
-        let addParamStub: any;
         let selectableStudiesSetStub:any;
 
         before(()=>{
-            addParamStub = Sinon.stub(QueryStore.prototype, "addParamsFromWindow");
+
         });
 
         after(()=>{
-            addParamStub.restore();
             if (selectableStudiesSetStub) {
                 selectableStudiesSetStub.restore();
             }
@@ -26,7 +24,7 @@ describe('QueryStoreUtils', ()=>{
         it.skip("returns url-encoded, normalized query for gene_list parameter", ()=>{
 
 
-            let store = new QueryStore({} as Window);
+            let store = new QueryStore();
 
             let queries = [
                 "TP53:MUT",
@@ -41,16 +39,6 @@ describe('QueryStoreUtils', ()=>{
                 store.geneQuery = query;
                 assert.equal(nonMolecularProfileParams(store).gene_list, encodeURIComponent(normalizeQuery(query)), `got encoded, normalized query for query ${query}`);
             }
-        });
-
-        it.skip("correctly sets study parameters in case of single study", ()=>{
-            let store = new QueryStore({} as Window);
-            selectableStudiesSetStub = Sinon.stub(store, "selectableStudiesSet").get(() => {
-                return {"a":["a"], "b":["b"]};
-            });
-            store.selectableSelectedStudyIds = ["a"];
-            assert.equal(nonMolecularProfileParams(store).cancer_study_id, "a");
-            assert.equal(nonMolecularProfileParams(store).cancer_study_list, undefined);
         });
     });
     describe("profileAvailability", ()=>{

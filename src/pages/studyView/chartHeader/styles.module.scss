@@ -1,0 +1,54 @@
+$fontSize: 11px;
+
+.header {
+  display: flex;
+  height: 15px;
+  align-items: center;
+  line-height: 15px;
+  padding: 0 2px;
+  font-size: $fontSize;
+}
+
+.name {
+  flex-grow: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: center !important;
+  font-weight: bold;
+}
+
+.controls {
+  flex-shrink: 0;
+  color: grey;
+  display: flex;
+  align-items: baseline;
+  padding: 2px 0 1px 0;
+}
+
+.item {
+  margin: 0 0 0 3px;
+  font-size: $fontSize + 1px;
+}
+
+.survivalIcon {
+  width: $fontSize - 1px;
+  height: $fontSize - 1px;
+}
+
+.clickable {
+  cursor: pointer;
+}
+
+.undo {
+  color: $brand-primary;
+}
+
+.downloadControl {
+  display: flex;
+  flex-direction: column;
+  button {
+    margin-top: 2px;
+    margin-bottom: 2px;
+  }
+}

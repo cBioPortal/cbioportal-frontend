@@ -44,7 +44,6 @@ describe('DownloadUtils', () => {
         sampleType: "Primary Solid Tumor",
         sampleId: "P-0000378-T01-IM3",
         patientId: "P-0000378",
-        cancerTypeId: "mixed",
         studyId: "msk_impact_2017",
     }, {
         uniqueSampleKey: "VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ",
@@ -52,7 +51,6 @@ describe('DownloadUtils', () => {
         sampleType: "Metastatic",
         sampleId: "TCGA-EE-A20C-06",
         patientId: "TCGA-EE-A20C",
-        cancerTypeId: "skcm",
         studyId: "skcm_tcga",
     }] as Sample[];
 

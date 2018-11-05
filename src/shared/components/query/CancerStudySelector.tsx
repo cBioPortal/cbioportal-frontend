@@ -11,13 +11,15 @@ import {observer, Observer} from "mobx-react";
 import {action, expr} from 'mobx';
 import memoize from "memoize-weak-decorator";
 import {If, Then, Else} from 'react-if';
-import {QueryStoreComponent} from "./QueryStore";
+import {QueryStore, QueryStoreComponent} from "./QueryStore";
 import SectionHeader from "../sectionHeader/SectionHeader";
 import {Modal, Button} from 'react-bootstrap';
 import Autosuggest from 'react-bootstrap-autosuggest'
 import ReactElement = React.ReactElement;
 import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import FontAwesome from "react-fontawesome";
+import AppConfig from "appConfig";
+import {ServerConfigHelpers} from "../../../config/config";
 
 const styles = styles_any as {
     SelectedStudiesWindow: string,
@@ -54,10 +56,11 @@ const styles = styles_any as {
 
 export interface ICancerStudySelectorProps {
     style?: React.CSSProperties;
+    queryStore:QueryStore;
 }
 
 @observer
-export default class CancerStudySelector extends QueryStoreComponent<ICancerStudySelectorProps, {}> {
+export default class CancerStudySelector extends React.Component<ICancerStudySelectorProps, {}> {
     private handlers = {
         onSummaryClick: () => {
             this.store.openSummary();
@@ -70,8 +73,11 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
         }
     };
 
+    public store:QueryStore;
+
     constructor(props: ICancerStudySelectorProps) {
         super(props);
+        this.store = this.props.queryStore;
     }
 
     get logic() {
@@ -81,13 +87,6 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
     @memoize
     getCancerTypeListClickHandler<T>(node: CancerType) {
         return (event: React.MouseEvent<T>) => this.store.selectCancerType(node as CancerType, event.ctrlKey);
-    }
-
-    handleStudiesCheckbox<T>(event: React.FormEvent<T>, clickedStudyIds: string[]) {
-        if ((event.target as HTMLInputElement).checked)
-            this.store.selectableSelectedStudyIds = _.union(this.store.selectableSelectedStudyIds, clickedStudyIds);
-        else
-            this.store.selectableSelectedStudyIds = _.difference(this.store.selectableSelectedStudyIds, clickedStudyIds);
     }
 
     CancerTypeList = observer(() => {
@@ -231,7 +230,7 @@ export default class CancerStudySelector extends QueryStoreComponent<ICancerStud
 
                     <Observer>
                         {() => {
-                            let searchTextOptions = this.store.searchTextPresets;
+                            let searchTextOptions =  ServerConfigHelpers.skin_example_study_queries(AppConfig.serverConfig!.skin_example_study_queries || "");
                             if (this.store.searchText && searchTextOptions.indexOf(this.store.searchText) < 0)
                                 searchTextOptions = [this.store.searchText].concat(searchTextOptions as string[]);
                             let searchTimeout: number | null = null;

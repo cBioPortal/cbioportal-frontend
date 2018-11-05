@@ -5,8 +5,9 @@ import { observer } from "mobx-react";
 import { observable } from "mobx";
 import { Badge, Checkbox } from 'react-bootstrap';
 import {
-    calculateAlterationTendency, formatLogOddsRatio, formatPercentage, formatValueWithStyle
+    calculateAlterationTendency, formatPercentage
 } from "./EnrichmentsUtil";
+import { formatLogOddsRatio, formatSignificanceValueWithStyle } from "shared/lib/FormatUtils";
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import styles from "./styles.module.scss";
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
@@ -105,7 +106,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_ALTERED] = {
             name: "Samples with alteration in altered group",
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.alteredCount, d.alteredPercentage)}</span>,
-            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 100 }}>{name}</span>,
+            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 165 }}>{name}</span>,
             tooltip: <span>Number (percentage) of samples that have alterations in the query gene(s) that also 
                 have {this.props.alterationType} in the listed gene.</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.alteredCount,
@@ -115,7 +116,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_UNALTERED] = {
             name: "Samples with alteration in unaltered group",
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.unalteredCount, d.unalteredPercentage)}</span>,
-            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 100 }}>{name}</span>,
+            headerRender: (name: string) => <span style={{ display: 'inline-block', width: 165 }}>{name}</span>,
             tooltip: <span>Number (percentage) of samples that do not have alterations in the query gene(s) that 
                 have {this.props.alterationType} in the listed gene.</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.unalteredCount,
@@ -140,7 +141,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
 
         columns[AlterationEnrichmentTableColumnType.Q_VALUE] = {
             name: "q-Value",
-            render: (d: AlterationEnrichmentRow) => <span style={{whiteSpace: 'nowrap'}}>{formatValueWithStyle(d.qValue)}</span>,
+            render: (d: AlterationEnrichmentRow) => <span style={{whiteSpace: 'nowrap'}}>{formatSignificanceValueWithStyle(d.qValue)}</span>,
             tooltip: <span>Derived from Benjamini-Hochberg procedure</span>,
             sortBy: (d: AlterationEnrichmentRow) => d.qValue,
             download: (d: AlterationEnrichmentRow) => toConditionalPrecision(d.qValue, 3, 0.01)
