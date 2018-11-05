@@ -2,7 +2,7 @@ import _ from "lodash";
 import { SingleGeneQuery } from "shared/lib/oql/oql-parser";
 import { unparseOQLQueryLine } from "shared/lib/oql/oqlfilter";
 import {
-    StudyViewFilter, DataBin, ClinicalDataIntervalFilterValue, ClinicalDataCount, SampleIdentifier
+    StudyViewFilter, DataBin, ClinicalDataIntervalFilterValue, ClinicalDataCount, SampleIdentifier, DensityPlotBin
 } from "shared/api/generated/CBioPortalAPIInternal";
 import { Sample, Gene, ClinicalAttribute, CancerStudy } from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
@@ -83,6 +83,8 @@ export const COLORS = [
 export const NA_DATA = "NA";
 export const EXPONENTIAL_FRACTION_DIGITS = 3;
 
+export const MutationCountVsCnaYBinsMin = 52; // calibrated so that the dots are right up against each other. needs to correspond with the width and height of the chart
+
 
 const OPERATOR_MAP: {[op:string]: string} = {
     "<=": "≤",
@@ -108,7 +110,16 @@ export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: st
     return updatedQueries.map(query=>unparseOQLQueryLine(query)).join('\n');
 
 }
-export function makeMutationCountVsCnaTooltip(sampleToAnalysisGroup?:{[sampleKey:string]:string}, analysisClinicalAttribute?:ClinicalAttribute) {
+export function mutationCountVsCnaTooltip(d:DensityPlotBin) {
+    return (
+        <div>
+            <div>Mutation Count: <b>~{d.y.toFixed()}</b></div>
+            <div>Fraction Genome Altered: <b>~{d.x.toFixed(2)}</b></div>
+            <div>Count: <b>{d.count}</b></div>
+        </div>
+    );
+}
+/*export function makeMutationCountVsCnaTooltip(sampleToAnalysisGroup?:{[sampleKey:string]:string}, analysisClinicalAttribute?:ClinicalAttribute) {
     return (d: { data: Pick<IStudyViewScatterPlotData, "x" | "y" | "studyId" | "sampleId" | "patientId" | "uniqueSampleKey">[] })=>{
         const rows = [];
         const MAX_SAMPLES = 3;
@@ -137,7 +148,7 @@ export function makeMutationCountVsCnaTooltip(sampleToAnalysisGroup?:{[sampleKey
                 <tr key="see all" style={borderStyle}>
                     <td style={{padding: 5}}>
                         <a target="_blank" href={getSampleViewUrl(d.data[0].studyId, d.data[0].sampleId, d.data)}>View
-                            all {d.data.length} patients included in this dot.</a>
+                            all {d.data.length} patients in this region.</a>
                     </td>
                 </tr>
             );
@@ -150,7 +161,7 @@ export function makeMutationCountVsCnaTooltip(sampleToAnalysisGroup?:{[sampleKey
             </div>
         );
     };
-}
+}*/
 
 export function generateScatterPlotDownloadData(data: IStudyViewScatterPlotData[],
                                                 sampleToAnalysisGroup?: {[sampleKey:string]:string},
@@ -305,7 +316,8 @@ export function isFiltered(filter: StudyViewFilterWithSampleIdentifierFilters) {
         _.isEmpty(filter.clinicalDataIntervalFilters) &&
         _.isEmpty(filter.cnaGenes) &&
         _.isEmpty(filter.mutatedGenes) &&
-        _.isEmpty(filter.sampleIdentifiersSet)
+        _.isEmpty(filter.sampleIdentifiersSet) &&
+        !filter.mutationCountVsCNASelection
     ));
 }
 
