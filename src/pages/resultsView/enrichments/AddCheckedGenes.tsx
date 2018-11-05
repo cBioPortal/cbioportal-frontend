@@ -5,7 +5,7 @@ import { Button } from 'react-bootstrap';
 import { ResultsViewPageStore } from 'pages/resultsView/ResultsViewPageStore';
 import autobind from 'autobind-decorator';
 import {QueryParameter} from "../../../shared/lib/ExtendedRouterStore";
-import {ResultsViewTab} from "../ResultsViewPage";
+import {ResultsViewTab} from "../ResultsViewPageHelpers";
 
 export interface IAddCheckedGenesProps {
     checkedGenes:  string[];

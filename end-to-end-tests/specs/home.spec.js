@@ -345,6 +345,11 @@ describe("results page", function() {
             waitForOncoprint(10000);
             assert(!browser.isVisible('a.tabAnchor_survival'));
         });
+        it("should show survival tab if the tab is routed to directly, even if no data", ()=>{
+            goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/results/survival?session_id=5bc64bb5498eb8b3d5685afb`);
+            browser.waitForExist("a.tabAnchor_survival", 10000);
+            assert(browser.isVisible('a.tabAnchor_survival'));
+        });
     });
     describe("mutual exclusivity tab", function() {
         it("should appear in a single study query with multiple genes", function(){
@@ -541,6 +546,8 @@ describe('oncoprint', function() {
             cosmicCheckbox = mutationColorMenuDropdown + ' input[data-test="annotateCOSMICCount"]';
         });
         it("annotates all types of mutations with cbioportal count and cosmic", ()=>{
+            browser.moveToObject("div.oncoprint__controls");
+            browser.waitForVisible(mutationColorMenuButton);
             browser.click(mutationColorMenuButton);
             browser.waitForVisible(mutationColorMenuDropdown, 2000);
             // select only mutation coloring by cbioportal count
