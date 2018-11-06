@@ -7,6 +7,10 @@ import sessionServiceClient from "../../shared/api/sessionServiceInstance";
 import {CancerStudy} from "../../shared/api/generated/CBioPortalAPI";
 import {VirtualStudy} from "../../shared/model/VirtualStudy";
 import hashString from "../../shared/lib/hashString";
+import {
+    CLINICAL_TRACKS_URL_PARAM, HEATMAP_TRACKS_URL_PARAM,
+    SAMPLE_MODE_URL_PARAM
+} from "../../shared/components/oncoprint/ResultsViewOncoprint";
 
 export enum ResultsViewTab {
     ONCOPRINT="oncoprint",
@@ -117,6 +121,12 @@ export function updateStoreFromQuery(resultsViewPageStore:ResultsViewPageStore, 
             resultsViewPageStore.oqlQuery = oql;
         }
 
+        // dont unmount due to changes in certain URL parameters:
+        // oncoprint-specific parameters
+        query = Object.assign({}, query);
+        delete query[SAMPLE_MODE_URL_PARAM];
+        delete query[CLINICAL_TRACKS_URL_PARAM];
+        delete query[HEATMAP_TRACKS_URL_PARAM];
         const queryHash = hashString(JSON.stringify(query)).toString();
         if (resultsViewPageStore.queryHash !== queryHash ) {
             resultsViewPageStore.queryHash = queryHash;
