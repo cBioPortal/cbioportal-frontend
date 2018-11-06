@@ -213,20 +213,6 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
             );
         }
 
-        // Select IDs by Case Selector
-        _.reduce((this.props.filter.sampleIdentifiersSet || []), (acc, sampleIdentifiers, chartUniqKey) => {
-            const chartMeta = this.props.attributesMetaSet[chartUniqKey];
-            if (chartMeta) {
-                let customChartName = chartMeta.uniqueKey === UniqueKey.SELECT_CASES_BY_IDS ? 'IDs' : chartMeta.displayName;
-                acc.push(<div className={styles.parentGroupLogic}><PillTag
-                    content={`Selected ${sampleIdentifiers.length} samples by ${customChartName}`}
-                    backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterTitle}
-                    onDelete={() => this.props.clearChartSampleIdentifierFilter(chartMeta)}
-                /></div>);
-            }
-            return acc;
-        }, components);
-
         if(this.props.filter.withMutationData) {
             components.push(
                 <div className={styles.parentGroupLogic}><PillTag
