@@ -558,7 +558,7 @@ describe("DataUtils", ()=>{
                "inframe non-driver");
 
            data = [{
-               mutationType: "truncating",
+               mutationType: "start_codon_del",
                putativeDriver: false,
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
@@ -765,7 +765,7 @@ describe("DataUtils", ()=>{
                mutationStatus: 'Germline',
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration, {
-               mutationType: "truncating",
+               mutationType: "start_codon_del",
                putativeDriver: true,
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
@@ -865,7 +865,7 @@ describe("DataUtils", ()=>{
                putativeDriver: true,
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration,{
-               mutationType: "truncating",
+               mutationType: "start_codon_del",
                putativeDriver: true,
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
@@ -888,7 +888,7 @@ describe("DataUtils", ()=>{
                putativeDriver: true,
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration,{
-               mutationType: "truncating",
+               mutationType: "start_codon_del",
                putativeDriver: false,
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
@@ -911,7 +911,7 @@ describe("DataUtils", ()=>{
                putativeDriver: false,
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration,{
-               mutationType: "truncating",
+               mutationType: "start_codon_del",
                putativeDriver: false,
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
@@ -1151,7 +1151,7 @@ describe("DataUtils", ()=>{
                putativeDriver: true,
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration,{
-               mutationType: "truncating",
+               mutationType: "start_codon_del",
                putativeDriver: true,
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
