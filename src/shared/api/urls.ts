@@ -131,11 +131,25 @@ export function getGenomeNexusApiUrl() {
 }
 
 export function getVirtualStudyServiceUrl() {
-    return buildCBioPortalAPIUrl("api-legacy/proxy/session/virtual_study");
+    if (AppConfig.serverConfig && AppConfig.serverConfig.hasOwnProperty("apiRoot")) {
+        // TODO: remove this after switch to AWS. This is a hack to use proxy
+        // session-service from non apiRoot. We'll have to come up with a better
+        // solution for auth portals
+        return buildCBioPortalPageUrl("api-legacy/proxy/session/virtual_study");
+    } else {
+        return buildCBioPortalAPIUrl("api-legacy/proxy/session/virtual_study");
+    }
 }
 
 export function getSessionServiceUrl() {
-    return buildCBioPortalAPIUrl("api-legacy/proxy/session/main_session");
+    if (AppConfig.serverConfig && AppConfig.serverConfig.hasOwnProperty("apiRoot")) {
+        // TODO: remove this after switch to AWS. This is a hack to use proxy
+        // session-service from non apiRoot. We'll have to come up with a better
+        // solution for auth portals
+        return buildCBioPortalPageUrl("api-legacy/proxy/session/main_session");
+    } else {
+        return buildCBioPortalAPIUrl("api-legacy/proxy/session/main_session");
+    }
 }
 
 export function getConfigurationServiceApiUrl() {
