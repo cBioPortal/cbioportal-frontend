@@ -129,7 +129,7 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
                                 </Dropdown.Menu>
                             </Dropdown>
                             <span className="pipeSeperator">|</span>
-                            <a href={buildCBioPortalPageUrl(this.props.appStore.logoutUrl)}>Sign out</a>
+                            <a href={buildCBioPortalPageUrl(this.props.appStore.logoutUrl)}>Sign out DAT</a>
                         </div>
                     </Then>
                     <Else>
@@ -138,7 +138,7 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
                         </If>
                     </Else>
                 </If>
-
+                <div id="temporary">temp</div>
                 <If condition={!_.isEmpty(AppConfig.serverConfig.skin_right_logo)}>
                     <img id="institute-logo" src={`images/${AppConfig.serverConfig.skin_right_logo!}`} alt="Institute Logo" />
                 </If>
