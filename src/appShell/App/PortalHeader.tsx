@@ -120,7 +120,7 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
                         <div className="identity">
                             <Dropdown id="mydropdown">
                                 <Dropdown.Toggle {...({rootCloseEvent: "click"} as DropdownToggleProps)} className="btn-sm">
-                                    Logged in as DAT {this.props.appStore.userName}
+                                    Logged in as {this.props.appStore.userName}
                                 </Dropdown.Toggle>
                                 <Dropdown.Menu {...({bsRole: "menu"} as DropdownMenuProps)} style={{ paddingLeft:10, overflow:'auto', maxHeight:300, whiteSpace:'nowrap' }}>
                                     <ul className="list-unstyled">
@@ -129,7 +129,7 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
                                 </Dropdown.Menu>
                             </Dropdown>
                             <span className="pipeSeperator">|</span>
-                            <a href={buildCBioPortalPageUrl(this.props.appStore.logoutUrl)}>Sign out DAT</a>
+                            <a href={buildCBioPortalPageUrl(this.props.appStore.logoutUrl)}>Sign out</a>
                         </div>
                     </Then>
                     <Else>

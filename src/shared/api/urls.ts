@@ -178,3 +178,7 @@ export function getDocsUrl(sourceUrl:string,docsBaseUrl?:string): string {
         return docsBaseUrl + "/" + sourceUrl;
     }
 }
+
+export function getLegacyDataAccessTokenUrl(){
+    return buildCBioPortalAPIUrl("api-legacy/dataAccessToken");
+}

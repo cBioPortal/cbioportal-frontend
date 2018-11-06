@@ -1,4 +1,5 @@
 import * as request from "superagent";
+import { getLegacyDataAccessTokenUrl } from "../urls";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
 export type CancerStudy = {
@@ -6509,4 +6510,38 @@ export default class CBioPortalAPI {
                 return response.body;
             });
         };
+
+    getUserDataAccessTokenResponseUsingPOST(parameters: {
+        'allowRevocationOfOtherTokens' ? : boolean,
+        $queryParameters ? : any
+    }): Promise < request.Response > {
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let url = getLegacyDataAccessTokenUrl();
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function (resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+            queryParameters['allowRevocationOfOtherTokens'] = parameters['allowRevocationOfOtherTokens'];
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function (parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+            request('POST', url, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+        });
+    }
+
+    getUserDataAccessTokenUsingPOSTUrl(parameters: {
+        'allowRevocationOfOtherTokens'? : boolean,
+        $queryParameters ? : any
+    }): Promise < DataAccessToken > {
+        return this.getUserDataAccessTokenResponseUsingPOST(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    }
 }
