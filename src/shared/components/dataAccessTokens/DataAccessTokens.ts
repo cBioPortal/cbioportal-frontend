@@ -6,22 +6,20 @@ import {remoteData} from "shared/api/remoteData";
 
 export interface IDataAccessTokensProps {
     dataAccessToken?: DataAccessToken;
+    userToken ? : string;
 }
 
-const userAccessToken = remoteData<DataAccessToken>({
-    await: () => [
-        this.dataAccessToken
-    ],
-    invoke: async () => {
-        const result = await client.getUserDataAccessTokenUsingPOSTUrl({'allowRevocationOfOtherTokens': true});
-        this.dataAccessToken = Promise.resolve(result);
-        return Promise.resolve(result);
-    }
-});
-
+export function userAccessTokenPromise() : Promise <DataAccessToken> {
+    return Promise.resolve(client.getUserDataAccessTokenUsingPOSTUrl({'allowRevocationOfOtherTokens': true}));
+}
 export function getDataAccessTokens(username: string | undefined): string {
     if (_.isString(username)) {
-        return this.userAccessToken.result.token;
+        const result =  userAccessTokenPromise().then(function(response) {
+            this.dataAccessToken = response;
+            this.userToken = response.token.toString();
+            console.log(response.token);
+        });
+        return this.userToken;
     } else {
         return "undefined username";
     }

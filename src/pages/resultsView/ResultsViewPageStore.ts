@@ -5,6 +5,7 @@ import {
     ClinicalData,
     ClinicalDataMultiStudyFilter,
     ClinicalDataSingleStudyFilter,
+    DataAccessToken,
     Gene,
     GenePanel,
     GenePanelData,
@@ -2460,7 +2461,7 @@ export class ResultsViewPageStore {
             this.molecularProfileIdToProfiledSampleCount
         ],
         invoke: async () => {
-            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) => 
+            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) =>
                 profile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED);
         },
         onResult:(profiles: MolecularProfile[])=>{
@@ -2493,7 +2494,7 @@ export class ResultsViewPageStore {
             this.molecularProfileIdToProfiledSampleCount
         ],
         invoke: async () => {
-            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) => 
+            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) =>
                 profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && profile.datatype === "DISCRETE");
         },
         onResult:(profiles: MolecularProfile[])=>{
@@ -2511,7 +2512,7 @@ export class ResultsViewPageStore {
         ],
         invoke: async () => {
             // returns an empty array if the selected study doesn't have any CNA profiles
-            return this.selectedEnrichmentCopyNumberProfile ? this.getCopyNumberEnrichmentData(this.alteredSamples.result, 
+            return this.selectedEnrichmentCopyNumberProfile ? this.getCopyNumberEnrichmentData(this.alteredSamples.result,
                 this.unalteredSamples.result, "HOMDEL") : [];
         }
     });
@@ -2526,14 +2527,14 @@ export class ResultsViewPageStore {
         ],
         invoke: async () => {
             // returns an empty array if the selected study doesn't have any CNA profiles
-            return this.selectedEnrichmentCopyNumberProfile ? this.getCopyNumberEnrichmentData(this.alteredSamples.result, 
+            return this.selectedEnrichmentCopyNumberProfile ? this.getCopyNumberEnrichmentData(this.alteredSamples.result,
                 this.unalteredSamples.result, "AMP") : [];
         }
     });
 
-    private async getCopyNumberEnrichmentData(alteredSamples: Sample[], unalteredSamples: Sample[], 
+    private async getCopyNumberEnrichmentData(alteredSamples: Sample[], unalteredSamples: Sample[],
         copyNumberEventType: "HOMDEL" | "AMP"): Promise<AlterationEnrichment[]> {
-        
+
         return this.sortEnrichmentData(await internalClient.fetchCopyNumberEnrichmentsUsingPOST({
             molecularProfileId: this.selectedEnrichmentCopyNumberProfile.molecularProfileId,
             copyNumberEventType: copyNumberEventType,
@@ -2590,7 +2591,7 @@ export class ResultsViewPageStore {
             this.molecularProfileIdToProfiledSampleCount
         ],
         invoke: async () => {
-            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) => 
+            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) =>
                 profile.molecularAlterationType === AlterationTypeConstants.PROTEIN_LEVEL && profile.datatype != "Z-SCORE");
         },
         onResult:(profiles: MolecularProfile[])=>{
@@ -2781,6 +2782,12 @@ export class ResultsViewPageStore {
                 this.molecularProfileIdToDataQueryFilter.result!
             )
         )
+    });
+
+    readonly userAccessToken = remoteData<DataAccessToken>({
+        invoke: async () => {
+            return Promise.resolve(client.getUserDataAccessTokenUsingPOSTUrl({'allowRevocationOfOtherTokens': true}));
+        }
     });
 
     @cached get geneCache() {
