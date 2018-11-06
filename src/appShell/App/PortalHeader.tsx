@@ -138,7 +138,6 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
                         </If>
                     </Else>
                 </If>
-                <div id="temporary">temp</div>
                 <If condition={!_.isEmpty(AppConfig.serverConfig.skin_right_logo)}>
                     <img id="institute-logo" src={`images/${AppConfig.serverConfig.skin_right_logo!}`} alt="Institute Logo" />
                 </If>
