@@ -263,7 +263,6 @@ export function fetchCopyNumberSegmentsForSamples(samples: Sample[],
                 sampleId: sample.sampleId,
                 studyId: sample.studyId
             })),
-            chromosome,
             projection: 'DETAILED',
         });
     }

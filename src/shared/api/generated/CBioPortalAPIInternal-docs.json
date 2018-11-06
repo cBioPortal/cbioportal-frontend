@@ -28,6 +28,10 @@
       "description": " "
     },
     {
+      "name": "Data Access Tokens",
+      "description": " "
+    },
+    {
       "name": "Expression Enrichments",
       "description": " "
     },
@@ -352,6 +356,127 @@
                 "$ref": "#/definitions/CosmicMutation"
               }
             }
+          }
+        }
+      }
+    },
+    "/data-access-tokens": {
+      "get": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "getAllDataAccessTokens",
+        "operationId": "getAllDataAccessTokensUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/DataAccessToken"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "createDataAccessToken",
+        "operationId": "createDataAccessTokenUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "allowRevocationOfOtherTokens",
+            "in": "query",
+            "description": "allowRevocationOfOtherTokens",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/DataAccessToken"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "revokeAllDataAccessTokens",
+        "operationId": "revokeAllDataAccessTokensUsingDELETE",
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/data-access-tokens/{token}": {
+      "get": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "getDataAccessToken",
+        "operationId": "getDataAccessTokenUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "description": "token",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/DataAccessToken"
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Data Access Tokens"
+        ],
+        "summary": "revokeDataAccessToken",
+        "operationId": "revokeDataAccessTokenUsingDELETE",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "description": "token",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
           }
         }
       }
@@ -1767,6 +1892,26 @@
         }
       },
       "title": "CosmicMutation"
+    },
+    "DataAccessToken": {
+      "type": "object",
+      "properties": {
+        "creation": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expiration": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "token": {
+          "type": "string"
+        },
+        "username": {
+          "type": "string"
+        }
+      },
+      "title": "DataAccessToken"
     },
     "DataBin": {
       "type": "object",
