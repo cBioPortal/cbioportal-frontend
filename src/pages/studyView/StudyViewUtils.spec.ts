@@ -1,23 +1,56 @@
-import { assert } from 'chai';
+import {assert} from 'chai';
 import {
-    calcIntervalBinValues, filterCategoryBins, filterIntervalBins, filterNumericalBins,
-    generateCategoricalData, generateNumericalData, isLogScaleByDataBins, isLogScaleByValues,
-    getClinicalDataIntervalFilterValues, makePatientToClinicalAnalysisGroup, updateGeneQuery, formatNumericalTickValues,
-    intervalFiltersDisplayValue, isEveryBinDistinct, toFixedDigit, getExponent, clinicalDataCountComparator,
+    calcIntervalBinValues,
+    calculateLayout,
+    clinicalDataCountComparator,
+    filterCategoryBins,
+    filterIntervalBins,
+    filterNumericalBins,
+    findSpot,
+    formatFrequency,
+    formatNumericalTickValues,
+    generateCategoricalData,
+    generateNumericalData,
+    getClinicalDataCountWithColorByClinicalDataCount,
+    getClinicalDataIntervalFilterValues,
     getCNAByAlteration,
     getDefaultChartTypeByClinicalAttribute,
-    getVirtualStudyDescription, calculateLayout, getQValue, pickClinicalDataColors,
-    getSamplesByExcludingFiltersOnChart, getFilteredSampleIdentifiers,
-    getFilteredStudiesWithSamples, showOriginStudiesInSummaryDescription, getFrequencyStr,
-    formatFrequency, isOccupied, findSpot
+    getExponent,
+    getFilteredSampleIdentifiers,
+    getFilteredStudiesWithSamples,
+    getFrequencyStr,
+    getQValue,
+    getSamplesByExcludingFiltersOnChart,
+    getVirtualStudyDescription,
+    intervalFiltersDisplayValue,
+    isEveryBinDistinct,
+    isLogScaleByDataBins,
+    isLogScaleByValues,
+    isOccupied,
+    makePatientToClinicalAnalysisGroup,
+    pickClinicalDataColors,
+    showOriginStudiesInSummaryDescription,
+    toFixedDigit,
+    updateGeneQuery
 } from 'pages/studyView/StudyViewUtils';
-import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue, Sample} from 'shared/api/generated/CBioPortalAPIInternal';
-import {ClinicalAttribute, Gene, CancerStudy} from 'shared/api/generated/CBioPortalAPI';
-import {ChartMeta, ChartTypeEnum, StudyViewFilterWithSampleIdentifierFilters} from "./StudyViewPageStore";
+import {
+    ClinicalDataIntervalFilterValue,
+    DataBin,
+    Sample,
+    StudyViewFilter
+} from 'shared/api/generated/CBioPortalAPIInternal';
+import {CancerStudy, ClinicalAttribute, Gene} from 'shared/api/generated/CBioPortalAPI';
+import {
+    ChartMeta,
+    ChartMetaDataTypeEnum,
+    ChartTypeEnum,
+    StudyViewFilterWithSampleIdentifierFilters
+} from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
 import sinon from 'sinon';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
-import { VirtualStudy } from 'shared/model/VirtualStudy';
+import {VirtualStudy} from 'shared/model/VirtualStudy';
+import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 
 describe('StudyViewUtils', () => {
 
@@ -1162,6 +1195,7 @@ describe('StudyViewUtils', () => {
                 displayName: clinicalAttr.displayName,
                 description: clinicalAttr.description,
                 uniqueKey: 'test' + i,
+                dataType: ChartMetaDataTypeEnum.CLINICAL,
                 chartType: ChartTypeEnum.PIE_CHART,
                 dimension: {w: 1, h: 1},
                 priority: 1,
@@ -1238,6 +1272,7 @@ describe('StudyViewUtils', () => {
                 displayName: clinicalAttr.displayName,
                 description: clinicalAttr.description,
                 uniqueKey: 'test0',
+                dataType: ChartMetaDataTypeEnum.CLINICAL,
                 chartType: ChartTypeEnum.TABLE,
                 dimension: {w: 2, h: 2},
                 priority: 10,
@@ -1247,6 +1282,7 @@ describe('StudyViewUtils', () => {
                 description: clinicalAttr.description,
                 uniqueKey: 'test1',
                 chartType: ChartTypeEnum.PIE_CHART,
+                dataType: ChartMetaDataTypeEnum.CLINICAL,
                 dimension: {w: 1, h: 1},
                 priority: 20,
             }];
@@ -1269,6 +1305,7 @@ describe('StudyViewUtils', () => {
                 description: clinicalAttr.description,
                 uniqueKey: 'test0',
                 chartType: ChartTypeEnum.BAR_CHART,
+                dataType: ChartMetaDataTypeEnum.CLINICAL,
                 dimension: {w: 2, h: 1},
                 priority: 10,
             }, {
@@ -1277,6 +1314,7 @@ describe('StudyViewUtils', () => {
                 description: clinicalAttr.description,
                 uniqueKey: 'test1',
                 chartType: ChartTypeEnum.TABLE,
+                dataType: ChartMetaDataTypeEnum.CLINICAL,
                 dimension: {w: 2, h: 2},
                 priority: 5,
             }, {
@@ -1285,6 +1323,7 @@ describe('StudyViewUtils', () => {
                 description: clinicalAttr.description,
                 uniqueKey: 'test2',
                 chartType: ChartTypeEnum.PIE_CHART,
+                dataType: ChartMetaDataTypeEnum.CLINICAL,
                 dimension: {w: 1, h: 1},
                 priority: 2,
             }];
@@ -1312,6 +1351,7 @@ describe('StudyViewUtils', () => {
                 description: clinicalAttr.description,
                 uniqueKey: 'test0',
                 chartType: ChartTypeEnum.BAR_CHART,
+                dataType: ChartMetaDataTypeEnum.CLINICAL,
                 dimension: {w: 2, h: 2},
                 priority: 1,
             }, {
@@ -1320,6 +1360,7 @@ describe('StudyViewUtils', () => {
                 description: clinicalAttr.description,
                 uniqueKey: 'test1',
                 chartType: ChartTypeEnum.TABLE,
+                dataType: ChartMetaDataTypeEnum.CLINICAL,
                 dimension: {w: 2, h: 2},
                 priority: 1,
             }, {
@@ -1328,6 +1369,7 @@ describe('StudyViewUtils', () => {
                 description: clinicalAttr.description,
                 uniqueKey: 'test2',
                 chartType: ChartTypeEnum.PIE_CHART,
+                dataType: ChartMetaDataTypeEnum.CLINICAL,
                 dimension: {w: 2, h: 1},
                 priority: 1,
             }, {
@@ -1336,6 +1378,7 @@ describe('StudyViewUtils', () => {
                 description: clinicalAttr.description,
                 uniqueKey: 'test3',
                 chartType: ChartTypeEnum.PIE_CHART,
+                dataType: ChartMetaDataTypeEnum.CLINICAL,
                 dimension: {w: 1, h: 1},
                 priority: 1,
             }, {
@@ -1344,6 +1387,7 @@ describe('StudyViewUtils', () => {
                 description: clinicalAttr.description,
                 uniqueKey: 'test4',
                 chartType: ChartTypeEnum.PIE_CHART,
+                dataType: ChartMetaDataTypeEnum.CLINICAL,
                 dimension: {w: 1, h: 1},
                 priority: 1,
             }];
@@ -1581,16 +1625,16 @@ describe('StudyViewUtils', () => {
             666.666
         ];
 
-        it ('handles negative values properly', () => {
+        it('handles negative values properly', () => {
             assert.equal(formatFrequency(negativeValues[0]), -1);
             assert.equal(formatFrequency(negativeValues[1]), -1);
         });
 
-        it ('handles zero properly', () => {
+        it('handles zero properly', () => {
             assert.equal(formatFrequency(0), 0);
         });
 
-        it ('handles positive values properly', () => {
+        it('handles positive values properly', () => {
             assert.equal(formatFrequency(positiveValues[0]), 0.05);
             assert.equal(formatFrequency(positiveValues[1]), 0.6);
             assert.equal(formatFrequency(positiveValues[2]), 1);
@@ -1601,6 +1645,34 @@ describe('StudyViewUtils', () => {
             assert.equal(formatFrequency(positiveValues[7]), 16.7);
             assert.equal(formatFrequency(positiveValues[8]), 16.7);
             assert.equal(formatFrequency(positiveValues[9]), 666.6);
+        });
+    });
+
+    describe('getClinicalDataCountWithColorByClinicalDataCount', () => {
+        it('NA should be placed at the last and also get predefined color for NA', () => {
+            const result = getClinicalDataCountWithColorByClinicalDataCount([{
+                count: 50,
+                value: 'NA'
+            }, {
+                count: 10,
+                value: 'Stage I'
+            }]);
+            assert.equal(result.length, 2);
+            assert.equal(result[0].value, 'Stage I');
+            assert.equal(result[1].color, STUDY_VIEW_CONFIG.colors.na);
+        });
+
+        it('Test the reserved value', () => {
+            const result = getClinicalDataCountWithColorByClinicalDataCount([{
+                count: 50,
+                value: 'Male'
+            }, {
+                count: 10,
+                value: 'F'
+            }]);
+            assert.equal(result.length, 2);
+            assert.equal(result[0].color, STUDY_VIEW_CONFIG.colors.reservedValue.MALE);
+            assert.equal(result[1].color, STUDY_VIEW_CONFIG.colors.reservedValue.F);
         });
     });
 
