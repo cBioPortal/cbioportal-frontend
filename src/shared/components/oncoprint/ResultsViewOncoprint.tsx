@@ -61,9 +61,9 @@ export interface IGenesetExpansionRecord {
     correlationValue: number;
 }
 
-const SAMPLE_MODE_URL_PARAM = "show_samples";
-const CLINICAL_TRACKS_URL_PARAM = "clinicallist";
-const HEATMAP_TRACKS_URL_PARAM = "heatmap_track_groups";
+export const SAMPLE_MODE_URL_PARAM = "show_samples";
+export const CLINICAL_TRACKS_URL_PARAM = "clinicallist";
+export const HEATMAP_TRACKS_URL_PARAM = "heatmap_track_groups";
 
 const CLINICAL_TRACK_KEY_PREFIX = "CLINICALTRACK_";
 
