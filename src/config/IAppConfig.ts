@@ -94,6 +94,7 @@ export interface IServerConfig {
     "base_url": string|null;
     "user_email_address": string;
     "sessionServiceEnabled": boolean;
-    "session_url_length_threshold":string;
-
+    "session_url_length_threshold": string;
+    "dat_revoke_other_tokens": boolean;
+    "dat_method": string;
 }
