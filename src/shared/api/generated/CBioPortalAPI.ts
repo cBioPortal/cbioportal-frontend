@@ -171,6 +171,12 @@ export type CopyNumberSeg = {
         'uniqueSampleKey': string
 
 };
+export type DataAccessToken = {
+    'token': string
+    'username': string
+    'expiration': string
+    'creation': string
+};
 export type DiscreteCopyNumberData = {
     'alteration': number
 
@@ -5164,7 +5170,7 @@ export default class CBioPortalAPI {
          * @param {string} projection - Level of detail of the response
          * @param {integer} pageSize - Page size of the result list
          * @param {integer} pageNumber - Page number of the result list
-        
+
          * @param {string} direction - Direction of the sort
     */
     getAllPatientsInStudyUsingGETWithHttpInfo(parameters: {
@@ -5232,7 +5238,7 @@ export default class CBioPortalAPI {
          * @param {string} projection - Level of detail of the response
          * @param {integer} pageSize - Page size of the result list
          * @param {integer} pageNumber - Page number of the result list
-        
+
          * @param {string} direction - Direction of the sort
     */
     getAllPatientsInStudyUsingGET(parameters: {
