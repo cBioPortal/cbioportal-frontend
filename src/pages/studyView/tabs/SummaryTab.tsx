@@ -27,6 +27,7 @@ import 'react-resizable/css/styles.css';
 import { observer } from 'mobx-react';
 import {ServerConfigHelpers} from "../../../config/config";
 import UserSelections from "../UserSelections";
+import AddChartButton from "../addChartButton/AddChartButton";
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore
@@ -150,6 +151,11 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                     } else if (chartMeta.uniqueKey === UniqueKey.WITH_CNA_DATA) {
                         props.promise = this.store.withCnaData;
                     }
+                } else if(this.store.isCustomChart(chartMeta.uniqueKey)) {
+                    props.filters = this.store.getCustomChartFilters(props.chartMeta!.uniqueKey);
+                    props.onValueSelection = this.handlers.setCustomChartFilters;
+                    props.onResetSelection = this.handlers.setCustomChartFilters;
+                    props.promise = this.store.getCustomChartDataCount(chartMeta);
                 } else {
                     props.promise = this.store.getClinicalDataCount(chartMeta);
                     props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey);
@@ -159,7 +165,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 props.onChangeChartType = this.handlers.onChangeChartType;
                 props.download = [
                     {
-                        initDownload: () => this.store.getClinicalData(chartMeta),
+                        initDownload: () => this.store.isCustomChart(chartMeta.uniqueKey) ? this.store.getCustomChartDownloadData(chartMeta) : this.store.getClinicalData(chartMeta),
                         type: 'TSV'
                     }, {
                         type: 'SVG'
@@ -357,6 +363,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                     } size={"big"} center={false}/>
 
                 </div>
+                <AddChartButton store={this.store}/>
             </div>
         )
     }

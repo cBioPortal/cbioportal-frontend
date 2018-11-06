@@ -24,7 +24,7 @@ export default class ErrorBox extends React.Component<ISectionHeaderProps, {}>
 			<div className={classNames(className, styles.error)} {...divProps}>
 				<span className={styles.message}>
 					<FontAwesome className={styles.icon} name='exclamation-circle'/>
-					{error + ''}
+					{error.message + ''}
 				</span>
 				{children}
 			</div>
