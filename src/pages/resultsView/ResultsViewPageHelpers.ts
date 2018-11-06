@@ -8,13 +8,52 @@ import {CancerStudy} from "../../shared/api/generated/CBioPortalAPI";
 import {VirtualStudy} from "../../shared/model/VirtualStudy";
 import hashString from "../../shared/lib/hashString";
 
+export enum ResultsViewTab {
+    ONCOPRINT="oncoprint",
+    CANCER_TYPES_SUMMARY="cancerTypesSummary",
+    MUTUAL_EXCLUSIVITY="mutualExclusivity",
+    PLOTS="plots",
+    MUTATIONS="mutations",
+    COEXPRESSION="coexpression",
+    ENRICHMENTS="enrichments",
+    SURVIVAL="survival",
+    CN_SEGMENTS="cnSegments",
+    NETWORK="network",
+    EXPRESSION="expression",
+    DOWNLOAD="download"
+}
+
 export function getTabId(pathname:string) {
     const match = pathname.match(/results\/([^\/]+)/);
     if (match) {
-        return match[1];
+        return match[1] as ResultsViewTab;
     } else {
         return undefined;
     }
+}
+
+export function parseConfigDisabledTabs(configDisabledTabsParam:string){
+    const oldTabToNewTabRoute:{[legacyTabId:string]:ResultsViewTab} = {
+        "oncoprint":ResultsViewTab.ONCOPRINT,
+        "cancer_types_summary":ResultsViewTab.CANCER_TYPES_SUMMARY,
+        "mutual_exclusivity":ResultsViewTab.MUTUAL_EXCLUSIVITY,
+        "plots":ResultsViewTab.PLOTS,
+        "mutations":ResultsViewTab.MUTATIONS,
+        "co_expression":ResultsViewTab.COEXPRESSION,
+        "enrichments":ResultsViewTab.ENRICHMENTS,
+        "survival":ResultsViewTab.SURVIVAL,
+        "IGV":ResultsViewTab.CN_SEGMENTS,
+        "network":ResultsViewTab.NETWORK,
+        "expression":ResultsViewTab.EXPRESSION,
+        "download":ResultsViewTab.DOWNLOAD
+    };
+    return configDisabledTabsParam.split(",").map((s)=>s.trim()).map(str=>{
+        if (str in oldTabToNewTabRoute) {
+            return oldTabToNewTabRoute[str];
+        } else {
+            return str;
+        }
+    });
 }
 
 export function updateStoreFromQuery(resultsViewPageStore:ResultsViewPageStore, query:any,
