@@ -8,6 +8,9 @@ import {AppStore} from "../../AppStore";
 import {observer} from "mobx-react";
 import {buildCBioPortalPageUrl} from "../../shared/api/urls";
 import SocialAuthButton from "../../shared/components/SocialAuthButton";
+import {Dropdown} from 'react-bootstrap';
+import {DataAccessTokensDropdown} from "../../shared/components/dataAccessTokens/DataAccessTokensDropdown";
+import {observable} from "mobx";
 
 @observer
 export default class PortalHeader extends React.Component<{ appStore:AppStore }, {}> {
@@ -117,10 +120,15 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
                 <If condition={!AppConfig.hide_login}>
                     <If condition={this.props.appStore.isLoggedIn}>
                         <Then>
-                            <div className="identity">Logged in as {this.props.appStore.userName}
-                                <span className="pipeSeperator">|</span>
-                                 <a href={buildCBioPortalPageUrl(this.props.appStore.logoutUrl)}>Sign out</a>
-
+                            <div className="identity">
+                                <Dropdown id="dat-dropdown">
+                                    <Dropdown.Toggle className="btn-sm">
+                                        Logged in as {this.props.appStore.userName}
+                                    </Dropdown.Toggle>
+                                    <Dropdown.Menu style={{ paddingLeft:10, overflow:'auto', maxHeight:300, whiteSpace:'nowrap' }}>
+                                        <DataAccessTokensDropdown appStore={this.props.appStore}/>
+                                    </Dropdown.Menu>
+                                </Dropdown>
                             </div>
                         </Then>
                         <Else>
@@ -129,8 +137,8 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
                             </If>
                         </Else>
                     </If>
-                </If>
 
+                </If>
                 <If condition={!_.isEmpty(AppConfig.serverConfig.skin_right_logo)}>
                     <img id="institute-logo" src={`images/${AppConfig.serverConfig.skin_right_logo!}`} alt="Institute Logo" />
                 </If>
