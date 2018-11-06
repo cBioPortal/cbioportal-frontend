@@ -183,6 +183,16 @@ export type CountSummary = {
         'profiledCount': number
 
 };
+export type DataAccessToken = {
+    'creation': string
+
+        'expiration': string
+
+        'token': string
+
+        'username': string
+
+};
 export type DataBin = {
     'attributeId': string
 
@@ -1327,6 +1337,353 @@ export default class CBioPortalAPIInternal {
                 return response.body;
             });
         };
+    getAllDataAccessTokensUsingGETURL(parameters: {
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/data-access-tokens';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * getAllDataAccessTokens
+     * @method
+     * @name CBioPortalAPIInternal#getAllDataAccessTokensUsingGET
+     */
+    getAllDataAccessTokensUsingGETWithHttpInfo(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/data-access-tokens';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * getAllDataAccessTokens
+     * @method
+     * @name CBioPortalAPIInternal#getAllDataAccessTokensUsingGET
+     */
+    getAllDataAccessTokensUsingGET(parameters: {
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < DataAccessToken >
+        > {
+            return this.getAllDataAccessTokensUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    createDataAccessTokenUsingPOSTURL(parameters: {
+        'allowRevocationOfOtherTokens' ? : boolean,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/data-access-tokens';
+        if (parameters['allowRevocationOfOtherTokens'] !== undefined) {
+            queryParameters['allowRevocationOfOtherTokens'] = parameters['allowRevocationOfOtherTokens'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * createDataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#createDataAccessTokenUsingPOST
+     * @param {boolean} allowRevocationOfOtherTokens - allowRevocationOfOtherTokens
+     */
+    createDataAccessTokenUsingPOSTWithHttpInfo(parameters: {
+        'allowRevocationOfOtherTokens' ? : boolean,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/data-access-tokens';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['allowRevocationOfOtherTokens'] !== undefined) {
+                queryParameters['allowRevocationOfOtherTokens'] = parameters['allowRevocationOfOtherTokens'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * createDataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#createDataAccessTokenUsingPOST
+     * @param {boolean} allowRevocationOfOtherTokens - allowRevocationOfOtherTokens
+     */
+    createDataAccessTokenUsingPOST(parameters: {
+        'allowRevocationOfOtherTokens' ? : boolean,
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < DataAccessToken > {
+        return this.createDataAccessTokenUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    revokeAllDataAccessTokensUsingDELETEURL(parameters: {
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/data-access-tokens';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * revokeAllDataAccessTokens
+     * @method
+     * @name CBioPortalAPIInternal#revokeAllDataAccessTokensUsingDELETE
+     */
+    revokeAllDataAccessTokensUsingDELETEWithHttpInfo(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/data-access-tokens';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('DELETE', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * revokeAllDataAccessTokens
+     * @method
+     * @name CBioPortalAPIInternal#revokeAllDataAccessTokensUsingDELETE
+     */
+    revokeAllDataAccessTokensUsingDELETE(parameters: {
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < any > {
+        return this.revokeAllDataAccessTokensUsingDELETEWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    getDataAccessTokenUsingGETURL(parameters: {
+        'token': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/data-access-tokens/{token}';
+
+        path = path.replace('{token}', parameters['token'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * getDataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#getDataAccessTokenUsingGET
+     * @param {string} token - token
+     */
+    getDataAccessTokenUsingGETWithHttpInfo(parameters: {
+        'token': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/data-access-tokens/{token}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+
+            path = path.replace('{token}', parameters['token'] + '');
+
+            if (parameters['token'] === undefined) {
+                reject(new Error('Missing required  parameter: token'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * getDataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#getDataAccessTokenUsingGET
+     * @param {string} token - token
+     */
+    getDataAccessTokenUsingGET(parameters: {
+        'token': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < DataAccessToken > {
+        return this.getDataAccessTokenUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    revokeDataAccessTokenUsingDELETEURL(parameters: {
+        'token': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/data-access-tokens/{token}';
+
+        path = path.replace('{token}', parameters['token'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * revokeDataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#revokeDataAccessTokenUsingDELETE
+     * @param {string} token - token
+     */
+    revokeDataAccessTokenUsingDELETEWithHttpInfo(parameters: {
+        'token': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/data-access-tokens/{token}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = '*/*';
+
+            path = path.replace('{token}', parameters['token'] + '');
+
+            if (parameters['token'] === undefined) {
+                reject(new Error('Missing required  parameter: token'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('DELETE', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * revokeDataAccessToken
+     * @method
+     * @name CBioPortalAPIInternal#revokeDataAccessTokenUsingDELETE
+     * @param {string} token - token
+     */
+    revokeDataAccessTokenUsingDELETE(parameters: {
+        'token': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < any > {
+        return this.revokeDataAccessTokenUsingDELETEWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
     fetchFilteredSamplesUsingPOSTURL(parameters: {
         'negateFilters' ? : boolean,
         'studyViewFilter': StudyViewFilter,
