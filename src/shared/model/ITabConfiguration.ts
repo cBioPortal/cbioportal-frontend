@@ -1,5 +1,6 @@
+import {ResultsViewTab} from "../../pages/resultsView/ResultsViewPageHelpers";
 export interface ITabConfiguration {
-    id:string;
+    id:ResultsViewTab;
     getTab:()=>JSX.Element;
     hide?:()=>boolean;
 }
