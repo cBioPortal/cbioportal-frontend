@@ -9,6 +9,6 @@ export function getDataAccessTokens(username: string | undefined): string {
     if (_.isString(this.userName)) {
         return "myDataAccessToken" + username;
     } else {
-        return "undefined username"
+        return "undefined username";
     }
 }
