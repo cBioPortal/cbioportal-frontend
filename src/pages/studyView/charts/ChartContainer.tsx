@@ -357,20 +357,25 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }
             case ChartTypeEnum.SCATTER: {
                 return (
-                    <div style={{marginTop:-33}}>
-                        <StudyViewDensityScatterPlot
-                            ref={this.handlers.ref}
-                            width={400}
-                            height={420}
-                            yBinsMin={MutationCountVsCnaYBinsMin}
-                            onSelection={this.props.onValueSelection}
-                            data={this.props.promise.result}
-                            isLoading={this.props.promise.isPending}
+                    <div style={{overflow:"hidden", height:380}}>
+                        {/* have to do all this weird positioning to decrease gap btwn chart and title, bc I cant do it from within Victory */}
+                        {/* overflow: "hidden" because otherwise the large SVG (I have to make it larger to make the plot large enough to
+                            decrease the gap) will cover the header controls and make them unclickable */}
+                        <div style={{marginTop:-33}}>
+                            <StudyViewDensityScatterPlot
+                                ref={this.handlers.ref}
+                                width={400}
+                                height={420}
+                                yBinsMin={MutationCountVsCnaYBinsMin}
+                                onSelection={this.props.onValueSelection}
+                                data={this.props.promise.result}
+                                isLoading={this.props.promise.isPending}
 
-                            axisLabelX="Fraction of copy number altered genome"
-                            axisLabelY="# of mutations"
-                            tooltip={mutationCountVsCnaTooltip}
-                        />
+                                axisLabelX="Fraction of copy number altered genome"
+                                axisLabelY="# of mutations"
+                                tooltip={mutationCountVsCnaTooltip}
+                            />
+                        </div>
                     </div>
                 );
             }
@@ -408,26 +413,22 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             <div className={classnames(styles.chart, { [styles.analysisTarget]:this.isAnalysisTarget })}
                  onMouseEnter={this.handlers.onMouseEnterChart}
                  onMouseLeave={this.handlers.onMouseLeaveChart}>
-                <span style={{position:"relative", zIndex:2}}>
-                    <ChartHeader
-                        chartMeta={this.props.chartMeta}
-                        title={this.props.title}
-                        active={this.mouseInChart}
-                        resetChart={this.handlers.resetFilters}
-                        deleteChart={this.handlers.onDeleteChart}
-                        toggleLogScale={this.handlers.onToggleLogScale}
-                        hideLabel={this.hideLabel}
-                        chartControls={this.chartControls}
-                        changeChartType={this.changeChartType}
-                        download={this.downloadTypes}
-                        setAnalysisGroups={this.setAnalysisGroups}
-                    />
-                </span>
-                <span style={{position:"relative", zIndex:1}}>
-                    <StudyViewComponentLoader promises={this.loadingPromises}>
-                        {this.chart}
-                    </StudyViewComponentLoader>
-                </span>
+                <ChartHeader
+                    chartMeta={this.props.chartMeta}
+                    title={this.props.title}
+                    active={this.mouseInChart}
+                    resetChart={this.handlers.resetFilters}
+                    deleteChart={this.handlers.onDeleteChart}
+                    toggleLogScale={this.handlers.onToggleLogScale}
+                    hideLabel={this.hideLabel}
+                    chartControls={this.chartControls}
+                    changeChartType={this.changeChartType}
+                    download={this.downloadTypes}
+                    setAnalysisGroups={this.setAnalysisGroups}
+                />
+                <StudyViewComponentLoader promises={this.loadingPromises}>
+                    {this.chart}
+                </StudyViewComponentLoader>
             </div>
         );
     }
