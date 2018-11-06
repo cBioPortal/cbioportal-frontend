@@ -2,7 +2,7 @@ import _ from "lodash";
 import { SingleGeneQuery } from "shared/lib/oql/oql-parser";
 import { unparseOQLQueryLine } from "shared/lib/oql/oqlfilter";
 import {
-    StudyViewFilter, DataBin, ClinicalDataIntervalFilterValue, ClinicalDataCount, SampleIdentifier
+    StudyViewFilter, DataBin, ClinicalDataIntervalFilterValue, ClinicalDataCount, SampleIdentifier, DensityPlotBin
 } from "shared/api/generated/CBioPortalAPIInternal";
 import { Sample, Gene, ClinicalAttribute, CancerStudy } from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
@@ -14,6 +14,7 @@ import {
     StudyWithSamples,
     StudyViewFilterWithSampleIdentifierFilters,
     AnalysisGroup,
+    Position,
     DEFAULT_LAYOUT_PROPS
 } from "pages/studyView/StudyViewPageStore";
 import {ChartDimension, ChartMeta, ChartType, ChartTypeEnum, ClinicalDataType} from "./StudyViewPageStore";
@@ -83,6 +84,8 @@ export const COLORS = [
 export const NA_DATA = "NA";
 export const EXPONENTIAL_FRACTION_DIGITS = 3;
 
+export const MutationCountVsCnaYBinsMin = 52; // calibrated so that the dots are right up against each other. needs to correspond with the width and height of the chart
+
 
 const OPERATOR_MAP: {[op:string]: string} = {
     "<=": "≤",
@@ -90,11 +93,6 @@ const OPERATOR_MAP: {[op:string]: string} = {
     ">=": "≥",
     ">": ">"
 };
-
-export type LayoutMatrixItem = {
-    notFull: boolean,
-    matrix: string[]
-}
 
 export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: string): string {
 
@@ -108,7 +106,16 @@ export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: st
     return updatedQueries.map(query=>unparseOQLQueryLine(query)).join('\n');
 
 }
-export function makeMutationCountVsCnaTooltip(sampleToAnalysisGroup?:{[sampleKey:string]:string}, analysisClinicalAttribute?:ClinicalAttribute) {
+export function mutationCountVsCnaTooltip(d:DensityPlotBin) {
+    return (
+        <div>
+            <div>Mutation Count: <b>~{d.y.toFixed()}</b></div>
+            <div>Fraction Genome Altered: <b>~{d.x.toFixed(2)}</b></div>
+            <div>Count: <b>{d.count}</b></div>
+        </div>
+    );
+}
+/*export function makeMutationCountVsCnaTooltip(sampleToAnalysisGroup?:{[sampleKey:string]:string}, analysisClinicalAttribute?:ClinicalAttribute) {
     return (d: { data: Pick<IStudyViewScatterPlotData, "x" | "y" | "studyId" | "sampleId" | "patientId" | "uniqueSampleKey">[] })=>{
         const rows = [];
         const MAX_SAMPLES = 3;
@@ -137,7 +144,7 @@ export function makeMutationCountVsCnaTooltip(sampleToAnalysisGroup?:{[sampleKey
                 <tr key="see all" style={borderStyle}>
                     <td style={{padding: 5}}>
                         <a target="_blank" href={getSampleViewUrl(d.data[0].studyId, d.data[0].sampleId, d.data)}>View
-                            all {d.data.length} patients included in this dot.</a>
+                            all {d.data.length} patients in this region.</a>
                     </td>
                 </tr>
             );
@@ -150,7 +157,7 @@ export function makeMutationCountVsCnaTooltip(sampleToAnalysisGroup?:{[sampleKey
             </div>
         );
     };
-}
+}*/
 
 export function generateScatterPlotDownloadData(data: IStudyViewScatterPlotData[],
                                                 sampleToAnalysisGroup?: {[sampleKey:string]:string},
@@ -305,7 +312,8 @@ export function isFiltered(filter: StudyViewFilterWithSampleIdentifierFilters) {
         _.isEmpty(filter.clinicalDataIntervalFilters) &&
         _.isEmpty(filter.cnaGenes) &&
         _.isEmpty(filter.mutatedGenes) &&
-        _.isEmpty(filter.sampleIdentifiersSet)
+        _.isEmpty(filter.sampleIdentifiersSet) &&
+        !filter.mutationCountVsCNASelection
     ));
 }
 
@@ -790,124 +798,98 @@ export function getDefaultChartTypeByClinicalAttribute(clinicalAttribute: Clinic
  * @param {[id: string]: ChartDimension} chartsDimension
  * @returns {ReactGridLayout.Layout[]}
  */
-export function calculateLayout(visibleAttributes: ChartMeta[], cols: number): Layout[] {
-    let sizes:{[id:string]:ChartDimension} = {};
-    let matrixGroup = _.reduce(visibleAttributes.sort((a, b) => b.priority - a.priority), function (acc, next) {
-        acc = getLayoutMatrix(acc, next.uniqueKey, next.dimension!);
-        sizes[next.uniqueKey] = next.dimension!;
-        return acc;
-    }, [] as LayoutMatrixItem[]);
-    let layout: Layout[] = [];
-    let x = 0;
-    let y = 0;
-    let plottedCharts: { [id: string]: number } = {};
-    _.forEach(matrixGroup, (group: LayoutMatrixItem, index) => {
-        let _x = x - 1;
-        let _y = y;
-        _.forEach(group.matrix, (uniqueId, _index: number) => {
-            ++_x;
-            if (_index === 2) {
-                _x = x;
-                _y++;
+
+
+export function findSpot(matrix: string[][], chartDimension: ChartDimension): Position {
+    if (matrix.length === 0) {
+        return {
+            x: 0,
+            y: 0
+        };
+    }
+    let found: Position | undefined = undefined;
+    _.each(matrix, (row: string[], rowIndex: number) => {
+        _.each(row, (item: string, columnIndex: number) => {
+            if (!item && !isOccupied(matrix, {x: columnIndex, y: rowIndex}, chartDimension)) {
+                found = {x: columnIndex, y: rowIndex};
+                return false;
             }
-            if (!uniqueId) {
-                return;
-            }
-            if (plottedCharts.hasOwnProperty(uniqueId)) {
-                return;
-            }
-            plottedCharts[uniqueId] = 1;
-            const _size = sizes[uniqueId];
-            layout.push({
-                i: uniqueId,
-                x: _x,
-                y: _y,
-                w: _size!.w,
-                h: _size!.h,
-                isResizable: false
-            });
         });
-        x = x + 2;
-        if (x + 2 > cols) {
-            x = 0;
-            y = y + 2;
+        if (found) {
+            return false;
+        }
+    });
+
+    if (!found) {
+        return {
+            x: 0,
+            y: matrix.length
+        }
+    } else {
+        return found;
+    }
+}
+
+export function isOccupied(matrix: string[][], position: Position, chartDimension: ChartDimension) {
+    let occupied = false;
+    if (matrix.length === 0) {
+        return false;
+    }
+
+    // For chart higher than 1 grid, or wider than 1 grid, we only plot them on the odd index
+    if (chartDimension.w > 1 && position.x % 2 !== 0) {
+        occupied = true;
+    }
+    if (chartDimension.h > 1 && position.y % 2 !== 0) {
+        occupied = true;
+    }
+    if (!occupied) {
+        const xMax = position.x + chartDimension.w;
+        const yMax = position.y + chartDimension.h;
+        for (let i = position.y; i < yMax; i++) {
+            if (i >= matrix.length) {
+                break;
+            }
+            for (let j = position.x; j < xMax; j++) {
+                if (j >= matrix[0].length || matrix[i][j]) {
+                    occupied = true;
+                    break;
+                }
+            }
+            if (occupied) {
+                break;
+            }
+        }
+    }
+    return occupied;
+}
+
+export function calculateLayout(visibleAttributes: ChartMeta[], cols: number): Layout[] {
+    let layout: Layout[] = [];
+    let matrix = [new Array(cols).fill('')] as string[][];
+
+    _.forEach(visibleAttributes.sort((a, b) => b.priority - a.priority), (chart: ChartMeta) => {
+        const position = findSpot(matrix, chart.dimension);
+        while ((position.y + chart.dimension.h) >= matrix.length) {
+            matrix.push(new Array(cols).fill(''));
+        }
+        layout.push({
+            i: chart.uniqueKey,
+            x: position.x,
+            y: position.y,
+            w: chart.dimension.w,
+            h: chart.dimension.h,
+            isResizable: false
+        });
+        const xMax = position.x + chart.dimension.w;
+        const yMax = position.y + chart.dimension.h;
+        for (let i = position.y; i < yMax; i++) {
+            for (let j = position.x; j < xMax; j++) {
+                matrix[i][j] = chart.uniqueKey;
+            }
         }
     });
     return layout;
-}
-/**
- * Group chart into 4*4 matrix based on description from here
- * https://github.com/cBioPortal/cbioportal/blob/master/docs/Study-View.md
- *
- * @param {LayoutMatrixItem[]} layoutMatrix
- * @param {string} key The unique key to identify the chart
- * @param {ChartDimension} chartDimension
- * @returns {LayoutMatrixItem[]}
- */
-export function getLayoutMatrix(layoutMatrix: LayoutMatrixItem[], key: string, chartDimension: ChartDimension): LayoutMatrixItem[] {
-    let neighborIndex: number;
-    let foundSpace = false;
-    const chartSize = chartDimension.w * chartDimension.h;
-    _.some(layoutMatrix, function (layoutItem) {
-        if (foundSpace) {
-            return true;
-        }
-        if (layoutItem.notFull) {
-            let _matrix = layoutItem.matrix;
-            _.some(_matrix, function (item, _matrixIndex) {
-                if (chartSize === 2) {
-                    let _validIndex = false;
-                    if (chartDimension.h === 2) {
-                        neighborIndex = _matrixIndex + 2;
-                        if (_matrixIndex < 2) {
-                            _validIndex = true;
-                        }
-                    } else {
-                        neighborIndex = _matrixIndex + 1;
-                        if (_matrixIndex % 2 === 0) {
-                            _validIndex = true;
-                        }
-                    }
-                    if (neighborIndex < _matrix.length && _validIndex) {
-                        if (item === '' && _matrix[neighborIndex] === '') {
-                            // Found a place for chart
-                            _matrix[_matrixIndex] = _matrix[neighborIndex] = key;
-                            foundSpace = true;
-                            layoutItem.notFull = _.includes(_matrix, '');
-                            return true;
-                        }
-                    }
-                } else if (chartSize === 1) {
-                    if (item === '') {
-                        // Found a place for chart
-                        _matrix[_matrixIndex] = key;
-                        foundSpace = true;
-                        if (_matrixIndex === _matrix.length - 1) {
-                            layoutItem.notFull = false;
-                        }
-                        return true;
-                    }
-                } else if (chartSize === 4) {
-                    if (item === '' && _matrix[0] === '' && _matrix[1] === '' && _matrix[2] === '' && _matrix[3] === '') {
-                        // Found a place for chart
-                        _matrix = _.fill(Array(4), key);
-                        layoutItem.notFull = false;
-                        foundSpace = true;
-                        return true;
-                    }
-                }
-            });
-            layoutItem.matrix = _matrix;
-        }
-    });
-    if (!foundSpace) {
-        layoutMatrix.push({
-            notFull: true,
-            matrix: _.fill(Array(4), '')
-        });
-        layoutMatrix = getLayoutMatrix(layoutMatrix, key, chartDimension);
-    }
-    return layoutMatrix;
 }
 
 export function getDefaultPriorityByUniqueKey(uniqueKey: string): number {
