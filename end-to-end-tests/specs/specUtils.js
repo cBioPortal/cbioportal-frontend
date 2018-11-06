@@ -23,6 +23,19 @@ function sessionServiceIsEnabled() {
     }).value;
 }
 
+function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
+    browser.waitUntil(()=>{
+        var ret = browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length === expectedNumber;
+        if (text && ret) {
+            ret = browser.isExisting('[data-test="cancerTypeListContainer"] > ul > ul > ul > li:nth-child(2) > label > span');
+            if (ret) {
+                ret = (browser.getText('[data-test="cancerTypeListContainer"] > ul > ul > ul > li:nth-child(2) > label > span') === text);
+            }
+        }
+        return ret;
+    }, 2000);
+}
+
 const useExternalFrontend = !process.env.FRONTEND_TEST_DO_NOT_LOAD_EXTERNAL_FRONTEND;
 
 const useLocalDist = process.env.FRONTEND_TEST_USE_LOCAL_DIST;
@@ -31,5 +44,6 @@ module.exports = {
     waitForOncoprint: waitForOncoprint,
     goToUrlAndSetLocalStorage: goToUrlAndSetLocalStorage,
     useExternalFrontend: useExternalFrontend,
-    sessionServiceIsEnabled: sessionServiceIsEnabled
+    sessionServiceIsEnabled: sessionServiceIsEnabled,
+    waitForNumberOfStudyCheckboxes: waitForNumberOfStudyCheckboxes
 };

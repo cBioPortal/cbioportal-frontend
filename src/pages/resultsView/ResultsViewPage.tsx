@@ -30,12 +30,13 @@ import {createQueryStore} from "../home/HomePage";
 import {ServerConfigHelpers} from "../../config/config";
 import {showCustomTab} from "../../shared/lib/customTabs";
 import {
-    getTabId,
+    getTabId, parseConfigDisabledTabs, ResultsViewTab,
     updateStoreFromQuery
 } from "./ResultsViewPageHelpers";
 import {buildResultsViewPageTitle, doesQueryHaveCNSegmentData} from "./ResultsViewPageStoreUtils";
 import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
 import {AppStore} from "../../AppStore";
+import {bind} from "bind-decorator";
 
 function initStore() {
 
@@ -156,21 +157,6 @@ export interface IResultsViewPageProps {
     params: any; // from react router
 }
 
-export enum ResultsViewTab {
-    ONCOPRINT="oncoprint",
-    CANCER_TYPES_SUMMARY="cancerTypesSummary",
-    MUTUAL_EXCLUSIVITY="mutualExclusivity",
-    PLOTS="plots",
-    MUTATIONS="mutations",
-    COEXPRESSION="coexpression",
-    ENRICHMENT="enrichments",
-    SURVIVAL="survival",
-    CN_SEGMENTS="cnSegments",
-    NETWORK="network",
-    EXPRESSION="expression",
-    DOWNLOAD="download"
-}
-
 @inject('routing')
 @inject('appStore')
 @observer
@@ -207,7 +193,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         const tabMap:ITabConfiguration[] = [
 
             {
-                id:"oncoprint",
+                id:ResultsViewTab.ONCOPRINT,
                 getTab: () => {
                     return <MSKTab key={0} id={ResultsViewTab.ONCOPRINT} linkText="OncoPrint">
                         <ResultsViewOncoprint
@@ -215,7 +201,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                             store={store}
                             key={store.hugoGeneSymbols.join(",")}
                             routing={this.props.routing}
-                            isVirtualStudy={this.resultsViewPageStore.virtualStudies.result!.length > 0} // will be complete b/c store.studies is dependent on it
                             addOnBecomeVisibleListener={addOnBecomeVisibleListener}
                         />
                     </MSKTab>
@@ -223,7 +208,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             },
 
             {
-                id:"cancer_types_summary",
+                id:ResultsViewTab.CANCER_TYPES_SUMMARY,
                 getTab: () => {
                     return (<MSKTab key={1} id={ResultsViewTab.CANCER_TYPES_SUMMARY} linkText="Cancer Types Summary">
                         <CancerSummaryContainer
@@ -234,7 +219,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             },
 
             {
-                id:"mutual_exclusivity",
+                id:ResultsViewTab.MUTUAL_EXCLUSIVITY,
                 getTab: () => {
                     return <MSKTab key={5} id={ResultsViewTab.MUTUAL_EXCLUSIVITY} linkText="Mutual Exclusivity">
                         <MutualExclusivityTab store={store}/>
@@ -246,7 +231,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             },
 
             {
-                id:"plots",
+                id:ResultsViewTab.PLOTS,
                 hide:()=>{
                     if (!this.resultsViewPageStore.studies.isComplete) {
                         return true;
@@ -262,7 +247,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             },
 
             {
-                id:"mutations",
+                id:ResultsViewTab.MUTATIONS,
                 getTab: () => {
                     return <MSKTab key={3} id={ResultsViewTab.MUTATIONS} linkText="Mutations">
                         <Mutations store={store} appStore={ this.props.appStore } />
@@ -271,7 +256,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             },
 
             {
-                id:"co_expression",
+                id:ResultsViewTab.COEXPRESSION,
                 hide:()=>{
                     if (!this.resultsViewPageStore.isThereDataForCoExpressionTab.isComplete ||
                         !this.resultsViewPageStore.studies.isComplete) {
@@ -292,7 +277,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             },
 
             {
-                id:"enrichments",
+                id:ResultsViewTab.ENRICHMENTS,
                 hide:()=>{
                     if (!this.resultsViewPageStore.studies.isComplete) {
                         return true;
@@ -301,14 +286,14 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     }
                 },
                 getTab: () => {
-                    return <MSKTab key={10} id={ResultsViewTab.ENRICHMENT} linkText={'Enrichments'}>
+                    return <MSKTab key={10} id={ResultsViewTab.ENRICHMENTS} linkText={'Enrichments'}>
                         <EnrichmentsTab store={store}/>
                     </MSKTab>
                 }
             },
 
             {
-                id:"survival",
+                id:ResultsViewTab.SURVIVAL,
                 hide:()=>{
                     return !this.resultsViewPageStore.survivalClinicalDataExists.isComplete ||
                         !this.resultsViewPageStore.survivalClinicalDataExists.result!;
@@ -321,7 +306,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             },
 
             {
-                id:"IGV",
+                id:ResultsViewTab.CN_SEGMENTS,
                 hide:()=>{
                     if (!this.resultsViewPageStore.samples.isComplete ||
                         !this.resultsViewPageStore.studies.isComplete) {
@@ -341,7 +326,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             },
 
             {
-                id:"network",
+                id:ResultsViewTab.NETWORK,
                 hide:()=>{
                     if (!this.resultsViewPageStore.studies.isComplete) {
                         return true;
@@ -367,7 +352,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             },
 
             {
-                id:"expression",
+                id:ResultsViewTab.EXPRESSION,
                 hide:()=> {
                     if (!this.resultsViewPageStore.studies.isComplete) {
                         return true;
@@ -402,7 +387,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             },
 
             {
-                id:"download",
+                id:ResultsViewTab.DOWNLOAD,
                 getTab: () => {
                     return <MSKTab key={11} id={ResultsViewTab.DOWNLOAD} linkText={'Download'}>
                         <DownloadTab store={store}/>
@@ -432,11 +417,15 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
     }
 
+    @bind
     public evaluateTabInclusion(tab:ITabConfiguration){
         const excludedTabs = AppConfig.serverConfig.disabled_tabs || "";
-        const isExcludedInList = ServerConfigHelpers.parseDisabledTabs(excludedTabs).includes(tab.id);
+        const isExcludedInList = parseConfigDisabledTabs(excludedTabs).includes(tab.id);
+        const isRoutedTo = (this.resultsViewPageStore.tabId === tab.id);
         const isExcluded = (tab.hide) ? tab.hide() : false;
-        return !isExcludedInList && !isExcluded;
+
+        // we show no matter what if its routed to
+        return isRoutedTo || (!isExcludedInList && !isExcluded);
     }
 
     // if it's undefined, MSKTabs will default to first

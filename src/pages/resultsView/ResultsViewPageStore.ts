@@ -122,7 +122,7 @@ import {VariantAnnotation} from "shared/api/generated/GenomeNexusAPI";
 import {ServerConfigHelpers} from "../../config/config";
 import {
     getVirtualStudies,
-    populateSampleSpecificationsFromVirtualStudies,
+    populateSampleSpecificationsFromVirtualStudies, ResultsViewTab,
     substitutePhysicalStudiesForVirtualStudies
 } from "./ResultsViewPageHelpers";
 import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
@@ -376,7 +376,7 @@ export class ResultsViewPageStore {
     public queryReactionDisposer:any;
 
     @observable queryHash:string;
-    @observable tabId: string|undefined = undefined;
+    @observable tabId: ResultsViewTab|undefined = undefined;
 
     @observable public checkingVirtualStudies = false;
 
