@@ -63,18 +63,6 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
 
     @autobind
     @action
-    private onSubmit(cases: Sample[]) {
-        this.props.store.updateChartSampleIdentifierFilter(UniqueKey.SELECT_CASES_BY_IDS, _.map(cases, obj => {
-            return {
-                "sampleId": obj.sampleId,
-                "studyId": obj.studyId
-            }
-        }));
-        this.isCustomCaseBoxOpen = false;
-    }
-
-    @autobind
-    @action
     private updateSelectedGenes(oql: {
                                     query: SingleGeneQuery[],
                                     error?: { start: number, end: number, message: string }
