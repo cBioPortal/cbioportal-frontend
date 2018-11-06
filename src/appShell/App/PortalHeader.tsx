@@ -7,6 +7,8 @@ import {openSocialAuthWindow} from "../../shared/lib/openSocialAuthWindow";
 import {AppStore} from "../../AppStore";
 import {observer} from "mobx-react";
 import {buildCBioPortalPageUrl} from "../../shared/api/urls";
+import {Dropdown, DropdownToggleProps, DropdownMenuProps} from 'react-bootstrap';
+import {getDataAccessTokens} from "../../shared/components/dataAccessTokens/DataAccessTokens";
 
 @observer
 export default class PortalHeader extends React.Component<{ appStore:AppStore }, {}> {
@@ -115,10 +117,19 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
             <div id="rightHeaderContent">
                 <If condition={this.props.appStore.isLoggedIn}>
                     <Then>
-                        <div className="identity">Logged in as {this.props.appStore.userName}
+                        <div className="identity">
+                            <Dropdown id="mydropdown">
+                                <Dropdown.Toggle {...({rootCloseEvent: "click"} as DropdownToggleProps)} className="btn-sm">
+                                    Logged in as {this.props.appStore.userName}
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu {...({bsRole: "menu"} as DropdownMenuProps)} style={{ paddingLeft:10, overflow:'auto', maxHeight:300, whiteSpace:'nowrap' }}>
+                                    <ul className="list-unstyled">
+                                        <li>{getDataAccessTokens(this.props.appStore.userName)}</li>
+                                    </ul>
+                                </Dropdown.Menu>
+                            </Dropdown>
                             <span className="pipeSeperator">|</span>
-                             <a href={buildCBioPortalPageUrl(this.props.appStore.logoutUrl)}>Sign out</a>
-
+                            <a href={buildCBioPortalPageUrl(this.props.appStore.logoutUrl)}>Sign out</a>
                         </div>
                     </Then>
                     <Else>
