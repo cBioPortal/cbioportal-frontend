@@ -6,7 +6,7 @@ export interface IDataAccessTokensProps {
     dataAccessToken?: DataAccessToken;
 }
 export function getDataAccessTokens(username: string | undefined): string {
-    if (_.isString(this.userName)) {
+    if (_.isString(username)) {
         return "myDataAccessToken" + username;
     } else {
         return "undefined username";
