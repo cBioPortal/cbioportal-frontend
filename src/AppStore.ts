@@ -1,6 +1,9 @@
 import {computed, observable} from "mobx";
+import {remoteData} from "shared/api/remoteData";
 import {initializeAPIClients} from "./config/config";
 import * as _ from 'lodash';
+import internalClient from "shared/api/cbioportalInternalClientInstance";
+
 
 export class AppStore {
 
@@ -20,4 +23,13 @@ export class AppStore {
         }
     }
 
+    readonly portalVersion = remoteData<string | undefined>({
+        invoke:async()=>{
+            const portalVersionResult = await internalClient.getInfoUsingGET({});
+            if (portalVersionResult && portalVersionResult.portalVersion) {
+                return Promise.resolve("v" + portalVersionResult.portalVersion.split('-')[0]);
+            }
+            return undefined; 
+        }
+    });
 }
