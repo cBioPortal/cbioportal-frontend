@@ -279,7 +279,7 @@ export class StudyViewPageStore {
         reaction(()=>this.filters, ()=>this.clearAnalysisGroupsSettings()); // whenever any data filters change, reset survival analysis settings
     }
 
-    @observable private defaultFilters: Partial<StudyViewFilter> = {};
+    @observable private initialFilters: Partial<StudyViewFilter> = {};
 
     @observable studyIds: string[] = [];
 
@@ -310,13 +310,13 @@ export class StudyViewPageStore {
 
     @action
     updateStoreFromURL(query: Partial<StudyViewURLQuery>) {
-        let studyIdsString;
+        let studyIdsString:string = '';
         let studyIds: string[] = [];
         if (query.studyId) {
-            studyIdsString = (query.studyId as string);
+            studyIdsString = query.studyId;
         }
         if (query.id) {
-            studyIdsString = (query.id as string);
+            studyIdsString = query.id;
         }
         if (studyIdsString) {
             studyIds = studyIdsString.trim().split(",");
@@ -387,12 +387,12 @@ export class StudyViewPageStore {
                 return acc;
             }, [] as CopyNumberGeneFilter[]);
         }
-        this.defaultFilters = filters;
+        this.initialFilters = filters;
     }
 
     @computed
     get isInitialFilterState(): boolean {
-        return _.isEqual(toJS(this.defaultFilters), toJS(this.filters));
+        return _.isEqual(toJS(this.initialFilters), toJS(this.filters));
     }
 
     @computed
@@ -1043,12 +1043,12 @@ export class StudyViewPageStore {
         let uniqueKey:string = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!);
         if(!this.clinicalDataCountPromises.hasOwnProperty(uniqueKey)) {
             this.clinicalDataCountPromises[uniqueKey] = remoteData<ClinicalDataCountWithColor[]>({
-                await: () => [this.defaultVisibleAttributesClinicalDataCountData],
+                await: () => [this.initialVisibleAttributesClinicalDataCountData],
                 invoke: async () => {
                     let dataType = chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE';
                     let result: ClinicalDataCountItem[] = [];
                     if (this.isInitialFilterState) {
-                        result = this.defaultVisibleAttributesClinicalDataCountData.result;
+                        result = this.initialVisibleAttributesClinicalDataCountData.result;
                     } else {
                         if (this._clinicalDataEqualityFilterSet.has(uniqueKey)) {
                             result = await internalClient.fetchClinicalDataCountsUsingPOST({
@@ -1089,14 +1089,14 @@ export class StudyViewPageStore {
         const uniqueKey: string = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!);
         if (!this.clinicalDataBinPromises.hasOwnProperty(uniqueKey)) {
             this.clinicalDataBinPromises[uniqueKey] = remoteData<DataBin[]>({
-                await: () =>[this.defaultVisibleAttributesClinicalDataBinCountData],
+                await: () =>[this.initialVisibleAttributesClinicalDataBinCountData],
                 invoke: async () => {
                     const clinicalDataType = chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE';
                     // TODO this.barChartFilters.length > 0 ? 'STATIC' : 'DYNAMIC' (not trivial when multiple filters involved)
                     const dataBinMethod = DataBinMethodConstants.STATIC;
                     let result = [];
                     if (this.isInitialFilterState) {
-                        result = this.defaultVisibleAttributesClinicalDataBinCountData.result;
+                        result = this.initialVisibleAttributesClinicalDataBinCountData.result;
                     } else {
                         if (this._clinicalDataIntervalFilterSet.has(uniqueKey)) {
                             result = await internalClient.fetchClinicalDataBinCountsUsingPOST({
@@ -1701,7 +1701,7 @@ export class StudyViewPageStore {
         default: []
     });
 
-    readonly defaultVisibleAttributesClinicalDataCountData = remoteData<ClinicalDataCountItem[]>({
+    readonly initialVisibleAttributesClinicalDataCountData = remoteData<ClinicalDataCountItem[]>({
         await: () => [this.defaultVisibleAttributes],
         invoke: async () => {
             return internalClient.fetchClinicalDataCountsUsingPOST({
@@ -1712,7 +1712,7 @@ export class StudyViewPageStore {
                             clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE'
                         } as ClinicalDataFilter
                     }),
-                    studyViewFilter: this.defaultFilters
+                    studyViewFilter: this.initialFilters
                 } as ClinicalDataCountFilter
             });
         },
@@ -1722,7 +1722,7 @@ export class StudyViewPageStore {
         default: []
     });
 
-    readonly defaultVisibleAttributesClinicalDataBinCountData = remoteData<DataBin[]>({
+    readonly initialVisibleAttributesClinicalDataBinCountData = remoteData<DataBin[]>({
         await: () => [this.defaultVisibleAttributes],
         invoke: async () => {
             return internalClient.fetchClinicalDataBinCountsUsingPOST({
@@ -1735,7 +1735,7 @@ export class StudyViewPageStore {
                             disableLogScale: false
                         } as ClinicalDataBinFilter
                     }),
-                    studyViewFilter: this.defaultFilters
+                    studyViewFilter: this.initialFilters
                 } as ClinicalDataBinCountFilter
             });
         },
@@ -1749,7 +1749,7 @@ export class StudyViewPageStore {
     initializeClinicalDataCountCharts(data: ClinicalDataCountItem[]) {
         _.each(data, item => {
             const uniqueKey = getClinicalAttributeUniqueKeyByDataTypeAttrId(item.clinicalDataType, item.attributeId);
-            if (isFiltered(this.defaultFilters) || item.counts.length >= 2) {
+            if (isFiltered(this.initialFilters) || item.counts.length >= 2) {
                 this._chartVisibility.set(uniqueKey, true);
             }
             let chartType = ChartTypeEnum.PIE_CHART;
@@ -1768,10 +1768,9 @@ export class StudyViewPageStore {
 
     @action
     initializeClinicalDataBinCountCharts(data: DataBin[]) {
-        // TODO: update the data type when the api is updated
         _.each(_.groupBy(data, 'attributeId'), (item:DataBin[], attributeId:string) => {
-            const uniqueKey = getClinicalAttributeUniqueKeyByDataTypeAttrId('SAMPLE', attributeId);
-            if (isFiltered(this.defaultFilters) || item.length >= 2) {
+            const uniqueKey = getClinicalAttributeUniqueKeyByDataTypeAttrId(item[0].clinicalDataType, attributeId);
+            if (isFiltered(this.initialFilters) || item.length >= 2) {
                 this._chartVisibility.set(uniqueKey, true);
             }
             this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
