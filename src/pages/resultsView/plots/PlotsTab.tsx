@@ -61,7 +61,6 @@ export enum ViewType {
 
 export enum PotentialViewType {
     MutationTypeAndCopyNumber,
-    MutationType,
     MutationSummary,
     None
 }
@@ -149,13 +148,6 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                     ret = ViewType.None;
                 }
                 break;
-            case PotentialViewType.MutationType:
-                if (this.viewMutationType) {
-                    ret = ViewType.MutationType;
-                } else {
-                    ret = ViewType.None;
-                }
-                break;
         }
         return ret;
     }
@@ -167,54 +159,14 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
         }
         if (this.sameGeneInBothAxes) {
             // both axes molecular profile, same gene
-            const profileIdToProfile = this.props.store.molecularProfileIdToMolecularProfile;
-            if (!profileIdToProfile.isComplete) {
-                // just show none until profile information is loaded
-                return PotentialViewType.None;
-            } else {
-                const horzProfile = profileIdToProfile.result[this.horzSelection.dataSourceId!];
-                const vertProfile = profileIdToProfile.result[this.vertSelection.dataSourceId!];
-                if (// if theres a discrete cna profile, redundant to allow showing cna
-                    (horzProfile && horzProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && horzProfile.datatype === DataTypeConstants.DISCRETE) ||
-                    (vertProfile && vertProfile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && vertProfile.datatype === DataTypeConstants.DISCRETE)
-                ) {
-                    return PotentialViewType.MutationType;
-                } else {
-                    // otherwise, show either one
-                    return PotentialViewType.MutationTypeAndCopyNumber;
-                }
-            }
+            return PotentialViewType.MutationTypeAndCopyNumber;
         } else if (this.bothAxesMolecularProfile) {
             // both axes molecular profile, different gene
             return PotentialViewType.MutationSummary;
         } else if (this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE ||
             this.vertSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
             // one axis molecular profile
-            const profileIdToProfile = this.props.store.molecularProfileIdToMolecularProfile;
-            if (!profileIdToProfile.isComplete) {
-                // just show none until profile information is loaded
-                return PotentialViewType.None;
-            } else {
-                let molecularProfileId;
-                let dataType;
-                if (this.horzSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
-                    molecularProfileId = this.horzSelection.dataSourceId!;
-                    dataType = this.horzSelection.dataType;
-                } else {
-                    molecularProfileId = this.vertSelection.dataSourceId!;
-                    dataType = this.vertSelection.dataType;
-                }
-                const profile = profileIdToProfile.result[molecularProfileId];
-                if (// if theres a discrete cna profile, redundant to allow showing cna
-                    (profile && profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && profile.datatype === DataTypeConstants.DISCRETE)
-                ) {
-
-                    return PotentialViewType.MutationType;
-                } else {
-                    // otherwise, show either one
-                    return PotentialViewType.MutationTypeAndCopyNumber;
-                }
-            }
+            return PotentialViewType.MutationTypeAndCopyNumber;
         } else {
             // neither axis gene
             return PotentialViewType.None;
