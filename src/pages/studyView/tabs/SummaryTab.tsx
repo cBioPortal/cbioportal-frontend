@@ -368,6 +368,14 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                         </ReactGridLayout>
                     )}
 
+                     {/* Always show a loader when study view loading the initial data */}
+                    <LoadingIndicator isLoading={
+                        this.store.defaultVisibleAttributes.isComplete && (
+                            this.store.initialVisibleAttributesClinicalDataCountData.isPending
+                            || this.store.initialVisibleAttributesClinicalDataBinCountData.isPending
+                        )
+                    } size={"big"} center={false}/>
+
                 </div>
             </div>
         )

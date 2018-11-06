@@ -306,15 +306,20 @@ export function getVirtualStudyDescription(
     return descriptionLines.join('\n');
 }
 
-export function isFiltered(filter: StudyViewFilterWithSampleIdentifierFilters) {
-    return !(_.isEmpty(filter) || (
-        _.isEmpty(filter.clinicalDataEqualityFilters) &&
-        _.isEmpty(filter.clinicalDataIntervalFilters) &&
-        _.isEmpty(filter.cnaGenes) &&
-        _.isEmpty(filter.mutatedGenes) &&
-        _.isEmpty(filter.sampleIdentifiersSet) &&
-        !filter.mutationCountVsCNASelection
-    ));
+export function isFiltered(filter: Partial<StudyViewFilterWithSampleIdentifierFilters>) {
+    const flag = !(_.isEmpty(filter) || (
+            _.isEmpty(filter.clinicalDataEqualityFilters) &&
+            _.isEmpty(filter.clinicalDataIntervalFilters) &&
+            _.isEmpty(filter.cnaGenes) &&
+            _.isEmpty(filter.mutatedGenes) &&
+            !filter.mutationCountVsCNASelection)
+    );
+
+    if (filter.sampleIdentifiersSet) {
+        return flag || !_.isEmpty(filter.sampleIdentifiersSet)
+    } else {
+        return flag;
+    }
 }
 
 export function makePatientToClinicalAnalysisGroup(
