@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import {remoteData} from "../../shared/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import {action, computed, observable, ObservableMap, reaction} from "mobx";
+import {action, computed, observable, ObservableMap, reaction, toJS} from "mobx";
 import {
     ClinicalDataBinCountFilter,
     ClinicalDataBinFilter,
@@ -16,10 +16,10 @@ import {
     CopyNumberCountByGene,
     CopyNumberGeneFilter,
     CopyNumberGeneFilterElement,
-    DataBin,
+    DataBin, DensityPlotBin,
     MolecularProfileSampleCount,
     MutationCountByGene,
-    MutationGeneFilter,
+    MutationGeneFilter, RectangleBounds,
     Sample,
     SampleIdentifier,
     StudyViewFilter
@@ -59,7 +59,7 @@ import {
     isFiltered,
     isLogScaleByDataBins,
     isPreSelectedClinicalAttr,
-    makePatientToClinicalAnalysisGroup,
+    makePatientToClinicalAnalysisGroup, MutationCountVsCnaYBinsMin,
     NA_DATA,
     pickClinicalDataColors,
     showOriginStudiesInSummaryDescription,
@@ -78,6 +78,7 @@ import windowStore from 'shared/components/window/WindowStore';
 import {Layout} from 'react-grid-layout';
 import {getHeatmapMeta} from "../../shared/lib/MDACCUtils";
 import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
+import onMobxPromise from "../../shared/lib/onMobxPromise";
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
 
@@ -190,6 +191,11 @@ export type ChartDimension = {
     h: number
 }
 
+export type Position = {
+    x: number,
+    y: number
+}
+
 export type StudyViewPageLayoutProps = {
     layout: Layout[],
     cols: number,
@@ -279,6 +285,7 @@ export class StudyViewPageStore {
     @observable.ref private _mutatedGeneFilter: MutationGeneFilter[] = [];
 
     @observable.ref private _cnaGeneFilter: CopyNumberGeneFilter[] = [];
+    @observable private _mutationCountVsCNAFilter:RectangleBounds|undefined;
 
     // TODO: make it computed
     // Currently the study view store does not have the full control of the promise.
@@ -437,6 +444,7 @@ export class StudyViewPageStore {
         this._clinicalDataIntervalFilterSet.clear();
         this.clearGeneFilter();
         this.clearCNAGeneFilter();
+        this.resetMutationCountVsCNAFilter();
         this._chartSampleIdentifiersFilterSet.clear();
         this._customChartFilterSet.clear();
     }
@@ -735,6 +743,24 @@ export class StudyViewPageStore {
         }
     }
 
+    public getMutationCountVsCNAFilter() {
+        if (this._mutationCountVsCNAFilter) {
+            return Object.assign({}, this._mutationCountVsCNAFilter);
+        } else {
+            return undefined;
+        }
+    }
+
+    @action
+    setMutationCountVsCNAFilter(bounds:RectangleBounds) {
+        this._mutationCountVsCNAFilter = bounds;
+    }
+
+    @action
+    resetMutationCountVsCNAFilter() {
+        this._mutationCountVsCNAFilter = undefined;
+    }
+
     @action
     changeChartVisibility(uniqueKey:string, visible: boolean) {
         if(visible){
@@ -767,6 +793,9 @@ export class StudyViewPageStore {
                     break;
                 case ChartTypeEnum.SCATTER:
                     this._chartSampleIdentifiersFilterSet.delete(chartMeta.uniqueKey)
+                    if (chartMeta.uniqueKey === UniqueKey.MUTATION_COUNT_CNA_FRACTION) {
+                        this.resetMutationCountVsCNAFilter();
+                    }
                     break;
                 case ChartTypeEnum.SURVIVAL:
                     break;
@@ -851,6 +880,10 @@ export class StudyViewPageStore {
 
         if (this._cnaGeneFilter.length > 0) {
             filters.cnaGenes = this._cnaGeneFilter;
+        }
+
+        if (this._mutationCountVsCNAFilter) {
+            filters.mutationCountVsCNASelection = this._mutationCountVsCNAFilter;
         }
 
         let _sampleIdentifiers =_.reduce(this._chartSampleIdentifiersFilterSet.entries(),(acc, next, key)=>{
@@ -1153,7 +1186,18 @@ export class StudyViewPageStore {
 
     readonly allPhysicalStudies = remoteData({
         invoke: async () => {
-            return await defaultClient.getAllStudiesUsingGET({ projection: 'SUMMARY' });
+            if (this.studyIds.length > 0) {
+                return defaultClient
+                    .fetchStudiesUsingPOST({
+                        studyIds: toJS(this.studyIds),
+                        projection: 'SUMMARY'
+                    }).then((studies) => {
+                        return studies
+                    }).catch((error) => {
+                        return defaultClient.getAllStudiesUsingGET({ projection: 'SUMMARY' });
+                    })
+            }
+            return [];
         },
         default: []
     });
@@ -1473,7 +1517,7 @@ export class StudyViewPageStore {
     @computed get analysisGroupsPossible() {
         // analysis groups possible iff there are visible analysis groups-capable charts
         const analysisGroupsCharts =
-            [UniqueKey.MUTATION_COUNT_CNA_FRACTION, UniqueKey.DISEASE_FREE_SURVIVAL, UniqueKey.OVERALL_SURVIVAL] as string[];
+            [UniqueKey.DISEASE_FREE_SURVIVAL, UniqueKey.OVERALL_SURVIVAL] as string[];
         let ret = false;
         for (const chartMeta of this.visibleAttributes) {
             if (analysisGroupsCharts.indexOf(chartMeta.uniqueKey) > -1) {
@@ -1557,7 +1601,7 @@ export class StudyViewPageStore {
             _chartMetaSet[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = {
                 uniqueKey: UniqueKey.MUTATION_COUNT_CNA_FRACTION,
                 chartType: ChartTypeEnum.SCATTER,
-                displayName: 'Mutation count Vs. CNA',
+                displayName: 'Mutation Count vs Fraction of Genome Altered',
                 priority: getDefaultPriorityByUniqueKey(UniqueKey.MUTATION_COUNT_CNA_FRACTION),
                 dimension: DEFAULT_LAYOUT_PROPS.dimensions[ChartTypeEnum.SCATTER],
                 description: ''
@@ -1931,19 +1975,22 @@ export class StudyViewPageStore {
         }
     }
 
-    public async getScatterDownloadData(chartMeta: ChartMeta)
+    public getScatterDownloadData()
     {
-        if (this.mutationCountVsFractionGenomeAlteredData.result) {
-            return generateScatterPlotDownloadData(
-                this.mutationCountVsFractionGenomeAlteredData.result,
-                this.sampleToAnalysisGroup.result,
-                this.analysisGroupsSettings.clinicalAttribute,
-                this.analysisGroupsSettings.groups as AnalysisGroup[]
-            );
-        }
-        else {
-            return "";
-        }
+        return new Promise<string>((resolve)=>{
+            onMobxPromise(this.mutationCountVsFGAData, data=>{
+                if (data) {
+                    resolve(generateScatterPlotDownloadData(
+                        data,
+                        this.sampleToAnalysisGroup.result,
+                        this.analysisGroupsSettings.clinicalAttribute,
+                        this.analysisGroupsSettings.groups as AnalysisGroup[]
+                    ));
+                } else {
+                    resolve("");
+                }
+            });
+        });
     }
 
     public async getSurvivalDownloadData(chartMeta: ChartMeta)
@@ -2067,12 +2114,38 @@ export class StudyViewPageStore {
         default: {}
     });
 
+    readonly mutationCountVsCNADensityData = remoteData<DensityPlotBin[]>({
+        await:()=>[this.clinicalAttributes],
+        invoke:async()=>{
+            if (!!this.clinicalAttributes.result!.find(a=>a.clinicalAttributeId === MUTATION_COUNT) &&
+                !!this.clinicalAttributes.result!.find(a=>a.clinicalAttributeId === FRACTION_GENOME_ALTERED)) {
+                let yAxisBinCount = MutationCountVsCnaYBinsMin;
+                // dont have more bins than there are integers in the plot area
+                const filter = this.getMutationCountVsCNAFilter();
+                if (filter) {
+                    yAxisBinCount = Math.min(yAxisBinCount, Math.floor(filter.yEnd));
+                }
+                return (await internalClient.fetchClinicalDataDensityPlotUsingPOST({
+                    xAxisAttributeId: FRACTION_GENOME_ALTERED,
+                    yAxisAttributeId: MUTATION_COUNT,
+                    xAxisStart:0, xAxisEnd:1, // FGA always goes 0 to 1
+                    yAxisStart:0, // mutation always starts at 0
+                    yAxisBinCount,
+                    clinicalDataType: "SAMPLE",
+                    studyViewFilter: this.filters
+                })).filter(bin=>(bin.count > 0));// only show points for bins with stuff in them
+            } else {
+                return [];
+            }
+        }
+    });
+
     readonly sampleMutationCountAndFractionGenomeAlteredData = remoteData({
-        await:()=>[this.clinicalAttributes, this.samples],
+        await:()=>[this.clinicalAttributes, this.selectedSamples],
         invoke:()=>{
             const filter: ClinicalDataMultiStudyFilter = {
                 attributeIds: [MUTATION_COUNT, FRACTION_GENOME_ALTERED],
-                identifiers: _.map(this.samples.result!, obj => {
+                identifiers: _.map(this.selectedSamples.result!, obj => {
                     return {
                         "entityId": obj.sampleId,
                         "studyId": obj.studyId
@@ -2088,7 +2161,7 @@ export class StudyViewPageStore {
         default: []
     });
 
-    readonly mutationCountVsFractionGenomeAlteredData = remoteData({
+    readonly mutationCountVsFGAData = remoteData({
         await:()=>[this.sampleMutationCountAndFractionGenomeAlteredData],
         invoke: async ()=>{
             return _.reduce(_.groupBy(this.sampleMutationCountAndFractionGenomeAlteredData.result, datum => datum.uniqueSampleKey), (acc, data) => {
@@ -2117,9 +2190,9 @@ export class StudyViewPageStore {
 
 
     readonly mutationCountVsFractionGenomeAlteredDataSet = remoteData<{ [id: string]: IStudyViewScatterPlotData }>({
-        await: () => [this.mutationCountVsFractionGenomeAlteredData],
+        await: () => [this.mutationCountVsFGAData],
         invoke: () => {
-            return Promise.resolve(_.keyBy(this.mutationCountVsFractionGenomeAlteredData.result, datum => datum.uniqueSampleKey));
+            return Promise.resolve(_.keyBy(this.mutationCountVsFGAData.result, datum => datum.uniqueSampleKey));
         },
         default: {}
     });
