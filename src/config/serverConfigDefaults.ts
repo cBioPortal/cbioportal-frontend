@@ -3,6 +3,8 @@ import {IServerConfig} from "./IAppConfig";
 const ServerConfigDefaults: Partial<IServerConfig> = {
     app_version:"1.0",
     api_cache_limit:450,
+    dat_uuid_revoke_other_tokens:true,
+    dat_method:"none",
     disabled_tabs:"",
     genomenexus_url:"v1.genomenexus.org",
     g2s_url:"https://g2s.genomenexus.org",
