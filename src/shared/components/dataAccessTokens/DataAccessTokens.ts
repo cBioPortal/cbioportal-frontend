@@ -9,12 +9,13 @@ export interface IDataAccessTokensProps {
     dataAccessToken: DataAccessToken;
 }
 async function getUserToken() {
+    // must use await otherwise will return a promise instead of expected object
     let tokens = await Promise.resolve(
         client.createDataAccessTokenUsingPOST(
             {'allowRevocationOfOtherTokens':true}));
     return tokens.token;
 }
-export function getDataAccessTokens(username: string | undefined): string {
+export function getDataAccessTokens(username: string | undefined) {
     if (_.isString(username)) {
         var token : Promise<string>;
         const result = Promise.resolve(
@@ -34,7 +35,7 @@ export function getDataAccessTokens(username: string | undefined): string {
         console.log("-------RESULT AS AWAIT FUNCTION--------");
         console.log(getUserToken());
 
-        return "mytoken-" + username;
+        return getUserToken();
     } else {
         return "undefined username";
     }
