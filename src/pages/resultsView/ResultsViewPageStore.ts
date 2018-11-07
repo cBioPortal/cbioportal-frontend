@@ -2786,7 +2786,7 @@ export class ResultsViewPageStore {
 
     readonly userAccessToken = remoteData<DataAccessToken>({
         invoke: async () => {
-            return Promise.resolve(client.getUserDataAccessTokenUsingPOSTUrl({'allowRevocationOfOtherTokens': true}));
+            return Promise.resolve(client.createDataAccessTokenUsingPOST({'allowRevocationOfOtherTokens': true}));
         }
     });
 
