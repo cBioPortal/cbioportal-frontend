@@ -13,7 +13,14 @@ async function getUserToken() {
     let tokens = await Promise.resolve(
         client.createDataAccessTokenUsingPOST(
             {'allowRevocationOfOtherTokens':true}));
-    return tokens.token;
+    const tokenValue = tokens.token.toString();
+    console.log("-----ASYNC TOKEN VALUE AS .TOSTRING----");
+    console.log(tokenValue);
+    console.log("------ASYNC TOKEN VALUE AS VALUE OF ----");
+    console.log(tokenValue.valueOf());
+    console.log("------ASYNC TOKEN VALUE AS VALUE OF and TOSTRING----");
+    console.log(tokenValue.valueOf().toString());
+    return tokenValue;
 }
 export function getDataAccessTokens(username: string | undefined) {
     if (_.isString(username)) {
@@ -31,11 +38,11 @@ export function getDataAccessTokens(username: string | undefined) {
         console.log("-------TOKEN AS PROMISE--------");
         console.log(token);
 
-
+        var myToken = getUserToken();
         console.log("-------RESULT AS AWAIT FUNCTION--------");
-        console.log(getUserToken());
+        console.log(myToken);
 
-        return getUserToken();
+        return myToken;
     } else {
         return "undefined username";
     }
