@@ -5,9 +5,6 @@ import * as request from "superagent";
 import client from "shared/api/cbioportalClientInstance";
 import {remoteData} from "shared/api/remoteData";
 
-
-let userTokenValue : string;
-
 export interface IDataAccessTokensProps {
     dataAccessToken: DataAccessToken;
 }
@@ -17,38 +14,22 @@ async function getUserToken() {
         client.createDataAccessTokenUsingPOST(
             {'allowRevocationOfOtherTokens':true}));
     const tokenValue = tokens.token.toString();
-    console.log("-----ASYNC TOKEN VALUE AS .TOSTRING----");
-    console.log(tokenValue);
-    console.log("------ASYNC TOKEN VALUE AS VALUE OF ----");
-    console.log(tokenValue.valueOf());
-    console.log("------ASYNC TOKEN VALUE AS VALUE OF and TOSTRING----");
-    console.log(tokenValue.valueOf().toString());
-    userTokenValue = tokenValue;
     return tokenValue;
 }
 export async function getDataAccessTokens(username: string | undefined) {
     if (_.isString(username)) {
-        var token : Promise<string>;
-        const result = Promise.resolve(
+        let result = await Promise.resolve(
             client.createDataAccessTokenUsingPOST(
                 {'allowRevocationOfOtherTokens':true}));
-        console.log("RESULT AS PROMISE");
+        console.log("---------RESULT AS AWAIT CALL--------");
         console.log(result);
 
-
-        token = result.then(function(response) {
-            return response.token as string;
-        });
-        console.log("-------TOKEN AS PROMISE--------");
-        console.log(token);
+        console.log("------- RESULT PARSED AS STRING FROM AWAIT CALL -------");
+        console.log(result.token.toString());
 
         var myToken = await getUserToken();
         console.log("-------RESULT AS AWAIT FUNCTION--------");
         console.log(myToken);
-
-        console.log("-------PARSED USER TOKEN VALUE-----------");
-        console.log(myToken.toString());
-
 
         return myToken.toString();
     } else {
