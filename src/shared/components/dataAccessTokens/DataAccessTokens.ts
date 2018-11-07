@@ -26,7 +26,7 @@ async function getUserToken() {
     userTokenValue = tokenValue;
     return tokenValue;
 }
-export function getDataAccessTokens(username: string | undefined) {
+export async function getDataAccessTokens(username: string | undefined) {
     if (_.isString(username)) {
         var token : Promise<string>;
         const result = Promise.resolve(
@@ -42,12 +42,12 @@ export function getDataAccessTokens(username: string | undefined) {
         console.log("-------TOKEN AS PROMISE--------");
         console.log(token);
 
-        var myToken = getUserToken();
+        var myToken = await getUserToken();
         console.log("-------RESULT AS AWAIT FUNCTION--------");
         console.log(myToken);
 
         console.log("-------PARSED USER TOKEN VALUE-----------");
-        console.log(userTokenValue);
+        console.log(myToken.toString());
 
 
         return myToken;
