@@ -5,6 +5,9 @@ import * as request from "superagent";
 import client from "shared/api/cbioportalClientInstance";
 import {remoteData} from "shared/api/remoteData";
 
+
+let userTokenValue : string;
+
 export interface IDataAccessTokensProps {
     dataAccessToken: DataAccessToken;
 }
@@ -20,6 +23,7 @@ async function getUserToken() {
     console.log(tokenValue.valueOf());
     console.log("------ASYNC TOKEN VALUE AS VALUE OF and TOSTRING----");
     console.log(tokenValue.valueOf().toString());
+    userTokenValue = tokenValue;
     return tokenValue;
 }
 export function getDataAccessTokens(username: string | undefined) {
@@ -41,6 +45,10 @@ export function getDataAccessTokens(username: string | undefined) {
         var myToken = getUserToken();
         console.log("-------RESULT AS AWAIT FUNCTION--------");
         console.log(myToken);
+
+        console.log("-------PARSED USER TOKEN VALUE-----------");
+        console.log(userTokenValue);
+
 
         return myToken;
     } else {
