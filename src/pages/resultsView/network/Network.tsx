@@ -57,7 +57,7 @@ export default class Network extends React.Component<INetworkTabParams, {}> {
         }
 
         const strParams = encodeURIComponent(JSON.stringify(networkParams));
-        return `${trimTrailingSlash(path)}/reactapp/network/network.htm?${AppConfig.serverConfig.app_version}&apiHost=${encodeURIComponent(AppConfig.apiRoot!)}#${strParams}`;
+        return `${trimTrailingSlash(path)}/reactapp/network/network.htm?${AppConfig.serverConfig.app_version}&apiHost=${encodeURIComponent(AppConfig.apiRoot!.replace(/^http[s]?:\/\//,''))}#${strParams}`;
     }
 
     render(){

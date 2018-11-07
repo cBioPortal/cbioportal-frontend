@@ -90,7 +90,7 @@ export function setServerConfig(serverConfig:{[key:string]:any }){
     // ** Don't try this at home, kids **
     if (frontendOverride.apiRoot) {
         console.log(`Overriding apiRoot with: ${frontendOverride.apiRoot}`);
-        config.apiRoot = `//${frontendOverride.apiRoot}/`;
+        config.apiRoot = `${frontendOverride.apiRoot}`;
     }
 
     // allow any hardcoded serverConfig props to override those from service
