@@ -34,7 +34,6 @@ export function getDataAccessTokens(username: string | undefined): string {
             }});
         console.log("-------RESULT AS READONLY--------");
         console.log(dat.result!);
-        console.log(dat.result!.token);
 
         return "mytoken-" + username;
     } else {
