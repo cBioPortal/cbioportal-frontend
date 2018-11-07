@@ -11,8 +11,15 @@ export interface IDataAccessTokensProps {
 
 export function getDataAccessTokens(username: string | undefined): string {
     if (_.isString(username)) {
-        const result = Promise.resolve(client.createDataAccessTokenUsingPOST({'allowRevocationOfOtherTokens':true}));
+        var token : Promise<string>;
+        const result = Promise.resolve(
+            client.createDataAccessTokenUsingPOST(
+                {'allowRevocationOfOtherTokens':true}));
         console.log(result);
+        token = result.then(function(response) {
+            return response.token as string;
+        });
+        console.log(token);
         return "mytoken-" + username;
     } else {
         return "undefined username";
