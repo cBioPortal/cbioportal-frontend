@@ -7,9 +7,13 @@ import {remoteData} from "shared/api/remoteData";
 
 export interface IDataAccessTokensProps {
     dataAccessToken: DataAccessToken;
-    tokenValue: string;
 }
-
+async function getUserToken() {
+    let tokens = await Promise.resolve(
+        client.createDataAccessTokenUsingPOST(
+            {'allowRevocationOfOtherTokens':true}));
+    return tokens.token;
+}
 export function getDataAccessTokens(username: string | undefined): string {
     if (_.isString(username)) {
         var token : Promise<string>;
@@ -26,14 +30,9 @@ export function getDataAccessTokens(username: string | undefined): string {
         console.log("-------TOKEN AS PROMISE--------");
         console.log(token);
 
-        const dat = remoteData<DataAccessToken>({
-            invoke: () => {
-                return Promise.resolve(
-                        client.createDataAccessTokenUsingPOST(
-                            {'allowRevocationOfOtherTokens':true}));
-            }});
-        console.log("-------RESULT AS READONLY--------");
-        console.log(dat.result!);
+
+        console.log("-------RESULT AS AWAIT FUNCTION--------");
+        console.log(getUserToken());
 
         return "mytoken-" + username;
     } else {
