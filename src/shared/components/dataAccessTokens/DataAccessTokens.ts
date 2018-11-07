@@ -50,7 +50,7 @@ export async function getDataAccessTokens(username: string | undefined) {
         console.log(myToken.toString());
 
 
-        return myToken;
+        return myToken.toString();
     } else {
         return "undefined username";
     }
