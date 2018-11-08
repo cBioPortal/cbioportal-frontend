@@ -110,7 +110,9 @@ import {
 } from "./ResultsViewPageStoreUtils";
 import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alterationCountHelpers";
 import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
-import {isSampleProfiledInMultiple} from "../../shared/lib/isSampleProfiled";
+import {
+    isSampleProfiledInMultiple
+} from "../../shared/lib/isSampleProfiled";
 import {BookmarkLinks} from "../../shared/model/BookmarkLinks";
 import {getBitlyServiceUrl} from "../../shared/api/urls";
 import url from "url";
@@ -1090,14 +1092,15 @@ export class ResultsViewPageStore {
         await: ()=>[
             this.samples,
             this.genes,
-            this.coverageInformation
+            this.coverageInformation,
+            this.selectedMolecularProfiles
         ],
         invoke:()=>{
             const genePanelInformation = this.coverageInformation.result!;
+            const profileIds = this.selectedMolecularProfiles.result!.map(p=>p.molecularProfileId);
             return Promise.resolve(this.genes.result!.reduce((map:{[hugoGeneSymbol:string]:string[]}, next:Gene)=>{
                 map[next.hugoGeneSymbol] = this.samples.result!.map(s=>s.uniqueSampleKey).filter(k=>{
-                    const sequencedInfo = genePanelInformation.samples[k];
-                    return (!!sequencedInfo.allGenes.length || sequencedInfo.byGene.hasOwnProperty(next.hugoGeneSymbol));
+                    return _.some(isSampleProfiledInMultiple(k, profileIds, genePanelInformation, next.hugoGeneSymbol));
                 });
                 return map;
             }, {}));
@@ -1106,19 +1109,14 @@ export class ResultsViewPageStore {
 
     readonly sequencedPatientKeysByGene = remoteData<{[hugoGeneSymbol:string]:string[]}>({
         await: ()=>[
-            this.patients,
-            this.genes,
-            this.coverageInformation
+            this.sampleKeyToSample,
+            this.sequencedSampleKeysByGene
         ],
-        invoke:()=>{
-            const genePanelInformation = this.coverageInformation.result!;
-            return Promise.resolve(this.genes.result!.reduce((map:{[hugoGeneSymbol:string]:string[]}, next:Gene)=>{
-                map[next.hugoGeneSymbol] = this.patients.result!.map(p=>p.uniquePatientKey).filter(k=>{
-                    const sequencedInfo = genePanelInformation.patients[k];
-                    return (!!sequencedInfo.allGenes.length || sequencedInfo.byGene.hasOwnProperty(next.hugoGeneSymbol));
-                });
-                return map;
-            }, {}));
+        invoke:async()=>{
+            const sampleKeyToSample = this.sampleKeyToSample.result!;
+            return _.mapValues(this.sequencedSampleKeysByGene.result!, sampleKeys=>{
+                return _.chain(sampleKeys).map(k=>sampleKeyToSample[k].uniquePatientKey).uniq().value();
+            });
         }
     });
 

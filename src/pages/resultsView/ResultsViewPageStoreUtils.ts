@@ -31,21 +31,18 @@ type CustomDriverAnnotationReport = {
     tiers: string[];
 };
 
+export type CoverageInformationForCase = {
+    byGene:{[hugoGeneSymbol:string]:GenePanelData[]},
+    allGenes:GenePanelData[],
+    notProfiledByGene:{[hugoGeneSymbol:string]:GenePanelData[]}
+    notProfiledAllGenes:GenePanelData[];
+};
+
 export type CoverageInformation = {
     samples:
-        {[uniqueSampleKey:string]:{
-            byGene:{[hugoGeneSymbol:string]:GenePanelData[]},
-            allGenes:GenePanelData[],
-            notProfiledByGene:{[hugoGeneSymbol:string]:GenePanelData[]}
-            notProfiledAllGenes:GenePanelData[];
-        }};
+        {[uniqueSampleKey:string]:CoverageInformationForCase};
     patients:
-        {[uniquePatientKey:string]:{
-            byGene:{[hugoGeneSymbol:string]:GenePanelData[]},
-            allGenes:GenePanelData[],
-            notProfiledByGene:{[hugoGeneSymbol:string]:GenePanelData[]}
-            notProfiledAllGenes:GenePanelData[];
-        }};
+        {[uniquePatientKey:string]:CoverageInformationForCase};
 };
 
 export function computeCustomDriverAnnotationReport(mutations:Mutation[]):CustomDriverAnnotationReport {
