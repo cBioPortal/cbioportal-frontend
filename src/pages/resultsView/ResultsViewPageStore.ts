@@ -342,7 +342,7 @@ export class ResultsViewPageStore {
                 this._hotspots = val;
             },
             get hotspots() {
-                return !!AppConfig.serverConfig.show_hotspot && this._hotspots && store.indexedHotspotData.peekStatus !== "error";
+                return !!AppConfig.serverConfig.show_hotspot && this._hotspots && !store.didHotspotFailInOncoprint;
             },
             set oncoKb(val:boolean) {
                 this._oncoKb = val;
@@ -2153,7 +2153,7 @@ export class ResultsViewPageStore {
                 toAwait.push(this.getOncoKbMutationAnnotationForOncoprint);
             }
             if (this.mutationAnnotationSettings.hotspots) {
-                toAwait.push(this.isHotspot);
+                toAwait.push(this.isHotspotForOncoprint);
             }
             if (this.mutationAnnotationSettings.cbioportalCount) {
                 toAwait.push(this.getCBioportalCount);
@@ -2178,8 +2178,8 @@ export class ResultsViewPageStore {
 
                 const hotspots:boolean =
                     (this.mutationAnnotationSettings.hotspots &&
-                    this.isHotspot.isComplete &&
-                    this.isHotspot.result(mutation));
+                    (!(this.isHotspotForOncoprint.result instanceof Error)) &&
+                    this.isHotspotForOncoprint.result!(mutation));
 
                 const cbioportalCount:boolean =
                     (this.mutationAnnotationSettings.cbioportalCount &&
@@ -2241,18 +2241,23 @@ export class ResultsViewPageStore {
         invoke: ()=>Promise.resolve(indexHotspotsData(this.hotspotData))
     });
 
-    public readonly isHotspot = remoteData<(m:Mutation)=>boolean>({
-        await:()=>[
-            this.indexedHotspotData
-        ],
+    public readonly isHotspotForOncoprint = remoteData<((m:Mutation)=>boolean) | Error>({
         invoke:()=>{
-            const indexedHotspotData = this.indexedHotspotData.result;
-            if (indexedHotspotData) {
-                return Promise.resolve((mutation:Mutation)=>{
-                    return isRecurrentHotspot(mutation, indexedHotspotData);
-                });
+            // have to do it like this so that an error doesnt cause chain reaction of errors and app crash
+            if (this.indexedHotspotData.isComplete) {
+                const indexedHotspotData = this.indexedHotspotData.result;
+                if (indexedHotspotData) {
+                    return Promise.resolve((mutation:Mutation)=>{
+                        return isRecurrentHotspot(mutation, indexedHotspotData);
+                    });
+                } else {
+                    return Promise.resolve(((mutation:Mutation)=>false) as (m:Mutation)=>boolean);
+                }
+            } else if (this.indexedHotspotData.isError) {
+                return Promise.resolve(new Error());
             } else {
-                return Promise.resolve(((mutation:Mutation)=>false) as (m:Mutation)=>boolean);
+                // pending: return endless promise to keep isHotspotForOncoprint pending
+                return new Promise(()=>{});
             }
         }
     });
@@ -2370,6 +2375,12 @@ export class ResultsViewPageStore {
         // check in this order so that we don't trigger invoke
         return this.getOncoKbMutationAnnotationForOncoprint.peekStatus === "complete" &&
             (this.getOncoKbMutationAnnotationForOncoprint.result instanceof Error);
+    }
+
+    @computed get didHotspotFailInOncoprint() {
+        // check in this order so that we don't trigger invoke
+        return this.isHotspotForOncoprint.peekStatus === "complete" &&
+            (this.isHotspotForOncoprint.result instanceof Error);
     }
 
     readonly getOncoKbMutationAnnotationForOncoprint = remoteData<Error|((mutation:Mutation)=>(IndicatorQueryResp|undefined))>({
