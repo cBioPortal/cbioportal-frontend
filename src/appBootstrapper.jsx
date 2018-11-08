@@ -25,8 +25,6 @@ import { validateParametersPatientView } from './shared/lib/validateParameters';
 import AppConfig from "appConfig";
 import browser from 'bowser';
 
-import 'script-loader!raven-js/dist/raven.js';
-import {correctPatientUrl} from "shared/lib/urlCorrection";
 import {initializeTracking} from "shared/lib/tracking";
 import {CancerStudyQueryUrlParams} from "shared/components/query/QueryStore";
 import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
@@ -75,38 +73,11 @@ window.FRONTEND_VERSION = VERSION;
 window.FRONTEND_COMMIT = COMMIT;
 
 
-// this is to support old hash fragment style urls (from first round of 2017 refactoring)
-// we want to convert hash fragment route to HTML5 style route
-if (/#[^\?]*\?/.test(window.location.hash)) {
-    window.history.replaceState(null,null,correctPatientUrl(window.location.href));
-}
-
-if (/cbioportal\.mskcc\.org|www.cbioportal\.org/.test(window.location.hostname) || window.localStorage.getItem('sentry') === 'true') {
-    Raven.config('https://c93645c81c964dd284436dffd1c89551@sentry.io/164574', {
-        tags:{
-          fullUrl:window.location.href
-        },
-        release:window.FRONTEND_COMMIT || '',
-        ignoreErrors: ['_germline', 'symlink_by_patient'],
-        serverName: window.location.hostname
-    }).install();
-}
 
 // make sure lodash doesn't overwrite (or set) global underscore
 _.noConflict();
 
 const routingStore = new ExtendedRoutingStore();
-
-if (/index\.do/.test(window.location.pathname)){
-    if (/Action=Submit/i.test(window.location.search)) {
-        window.history.replaceState(null, "", window.location.href.replace(/index.do/i,'results'));
-    } else if (/session_id/i.test(window.location.search)) {
-        window.history.replaceState(null, "", window.location.href.replace(/index.do/i,'results'));
-    } else {
-        window.history.replaceState(null, "", window.location.href.replace(/index.do/i,''));
-    }
-}
-
 
 const history = useRouterHistory(createHistory)({
     basename: AppConfig.basePath || ""
@@ -125,34 +96,6 @@ window.globalStores = stores;
 const end = superagent.Request.prototype.end;
 
 let redirecting = false;
-
-// check if valid hash parameters for patient view, otherwise convert old style
-// querystring for backwards compatibility
-if (/\/patient$/.test(window.location.pathname)) {
-    const validationResult = validateParametersPatientView(routingStore.location.query);
-    if (!validationResult.isValid) {
-        const newParams = {};
-        const qs = URL.parse(window.location.href, true).query;
-
-        if ('cancer_study_id' in qs && _.isUndefined(routingStore.location.query.studyId)) {
-            newParams['studyId'] = qs.cancer_study_id;
-        }
-        if ('case_id' in qs && _.isUndefined(routingStore.location.query.caseId)) {
-            newParams['caseId'] = qs.case_id;
-        }
-
-        if ('sample_id' in qs && _.isUndefined(routingStore.location.query.sampleId)) {
-            newParams['sampleId'] = qs.sample_id;
-        }
-
-        const navCaseIdsMatch = routingStore.location.pathname.match(/(nav_case_ids)=(.*)$/);
-        if (navCaseIdsMatch && navCaseIdsMatch.length > 2) {
-            newParams['navCaseIds'] = navCaseIdsMatch[2];
-        }
-
-        routingStore.updateRoute(newParams);
-    }
-}
 
 superagent.Request.prototype.end = function (callback) {
     return end.call(this, (error, response) => {

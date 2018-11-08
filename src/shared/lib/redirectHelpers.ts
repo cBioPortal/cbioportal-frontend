@@ -1,6 +1,8 @@
 import ExtendedRouterStore from "./ExtendedRouterStore";
 import getBrowserWindow from "./getBrowserWindow";
 import {QueryParams} from "url";
+import {PatientViewUrlParams} from "../../pages/patientView/PatientViewPage";
+import {Patient} from "../api/generated/CBioPortalAPI";
 
 export function restoreRouteAfterRedirect(injected: { routing:ExtendedRouterStore }){
 
@@ -28,6 +30,35 @@ export function handleLegacySubmission(){
         }
     }
 }
+
+export function handleCaseDO(){
+
+    const routingStore:ExtendedRouterStore = getBrowserWindow().routingStore;
+
+    const newParams: Partial<PatientViewUrlParams> = {};
+
+    const currentQuery = routingStore.location.query;
+
+    if (currentQuery.cancer_study_id) {
+        newParams.studyId = currentQuery.cancer_study_id;
+    }
+
+    if (currentQuery.case_id) {
+        newParams.caseId = currentQuery.case_id;
+    }
+
+    if (currentQuery.sample_id) {
+        newParams.sampleId = currentQuery.sample_id;
+    }
+
+    if (routingStore.location.hash && routingStore.location.hash.includes("nav_case_ids")) {
+        routingStore.location.hash = routingStore.location.hash!.replace(/nav_case_ids/,"navCaseIds");
+    }
+
+    (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(newParams, "/patient", true);
+
+}
+
 
 export function handleIndexDO(){
     if (/Action=Submit/i.test(window.location.search)) {

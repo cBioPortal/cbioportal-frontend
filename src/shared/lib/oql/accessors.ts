@@ -43,6 +43,7 @@ export function getSimplifiedMutationType(type: string):SimplifiedMutationType {
         case "splice_site_snp":
         case "splice_site_del":
         case "splice_site_indel":
+        case "splice_region":
             ret = "splice";
             break;
         case "translation_start_site":
@@ -58,12 +59,13 @@ export function getSimplifiedMutationType(type: string):SimplifiedMutationType {
             break;
         case "in_frame_del":
         case "in_frame_ins":
+        case "in_frame_deletion":
+        case "in_frame_insertion":
         case "indel":
         case "nonframeshift_deletion":
         case "nonframeshift":
         case "nonframeshift insertion":
         case "nonframeshift_insertion":
-        case "targeted_region":
             ret = "inframe";
             break;
         default:
