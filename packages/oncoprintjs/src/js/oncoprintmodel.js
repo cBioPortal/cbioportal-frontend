@@ -152,6 +152,7 @@ var OncoprintModel = (function () {
 	this.track_rule_set_id = {}; // track id -> rule set id
 	this.track_active_rules = {}; // from track id to active rule map (map with rule ids as keys)
 	this.track_info = {};
+	this.$track_info_tooltip_elt = {};
 	this.track_has_column_spacing = {}; // track id -> boolean
 	this.track_expansion_enabled = {}; // track id -> boolean or undefined
 	this.track_expand_callback = {}; // track id -> function that adds expansion tracks for its track if set
@@ -745,7 +746,7 @@ var OncoprintModel = (function () {
 		    params.sortCmpFn, params.sort_direction_changeable, params.init_sort_direction, params.onSortDirectionChange,
 		    params.data, params.rule_set, params.track_label_color, params.html_label,
 		    params.expansion_of, params.expandCallback, params.expandButtonTextGetter, params.important_ids,
-			params.custom_track_options
+			params.custom_track_options, params.$track_info_tooltip_elt
 	    );
 	}
 	this.track_tops.update();
@@ -758,8 +759,9 @@ var OncoprintModel = (function () {
 	    sortCmpFn, sort_direction_changeable, init_sort_direction, onSortDirectionChange,
 	    data, rule_set, track_label_color, html_label,
 	    expansion_of, expandCallback, expandButtonTextGetter,
-		 important_ids, custom_track_options
+		 important_ids, custom_track_options, $track_info_tooltip_elt
     ) {
+	model.$track_info_tooltip_elt[track_id] = $track_info_tooltip_elt;
 	model.track_custom_options[track_id] = ifndef(custom_track_options, []);
 	model.track_label[track_id] = ifndef(label, "Label");
 	model.track_label_color[track_id] = ifndef(track_label_color, "black");
@@ -942,7 +944,7 @@ var OncoprintModel = (function () {
 	    removeRuleSet(this, rule_set_id);
 	}
     };
-    
+
     OncoprintModel.prototype.getOverlappingCell = function(x,y) {
 	// First, see if it's in a column
 	var id_order = this.getIdOrder();
@@ -1258,6 +1260,14 @@ var OncoprintModel = (function () {
 
 	OncoprintModel.prototype.setTrackCustomOptions = function(track_id, options) {
 	this.track_custom_options[track_id] = options;
+	}
+
+	OncoprintModel.prototype.setTrackInfoTooltip = function(track_id, $tooltip_elt) {
+        this.$track_info_tooltip_elt[track_id] = $tooltip_elt;
+	}
+
+	OncoprintModel.prototype.$getTrackInfoTooltip = function(track_id) {
+    	return this.$track_info_tooltip_elt[track_id];
 	}
     
     OncoprintModel.prototype.getRuleSet = function (track_id) {

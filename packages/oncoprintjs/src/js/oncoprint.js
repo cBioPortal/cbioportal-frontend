@@ -241,7 +241,7 @@ var Oncoprint = (function () {
 								function (track_id) { self.removeTrack(track_id); },
 								function (track_id, dir) { self.setTrackSortDirection(track_id, dir); },
 								function (track_id) { self.removeExpansionTracksFor(track_id); });
-	this.track_info_view = new OncoprintTrackInfoView($track_info_div);
+	this.track_info_view = new OncoprintTrackInfoView($track_info_div, new OncoprintToolTip($tooltip_ctr));
 								
 	//this.track_info_view = new OncoprintTrackInfoView($track_info_div);
 
@@ -1039,6 +1039,10 @@ var Oncoprint = (function () {
 	this.model.setTrackCustomOptions(track_id, options);
 	this.track_options_view.setTrackCustomOptions(this.model);
 	}
+
+	Oncoprint.prototype.setTrackInfoTooltip = function(track_id, $tooltip_elt) {
+    	this.model.setTrackInfoTooltip(track_id, $tooltip_elt);
+	}
     
     Oncoprint.prototype.toSVG = function(with_background) {
         if(this.webgl_unavailable || this.destroyed) {
@@ -1167,6 +1171,7 @@ var Oncoprint = (function () {
     Oncoprint.prototype.destroy = function() {
     	this.cell_view.destroy();
     	this.track_options_view.destroy();
+    	this.track_info_view.destroy();
         $(window).off("resize", this.onWindowResize);
         this.destroyed = true;
 	}
