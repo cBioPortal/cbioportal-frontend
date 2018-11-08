@@ -2,7 +2,7 @@ import React from 'react';
 import { Route, Redirect, IndexRoute } from 'react-router';
 import { inject } from 'mobx-react';
 import Container from 'appShell/App/Container';
-import {handleIndexDO, handleLegacySubmission, restoreRouteAfterRedirect} from './shared/lib/redirectHelpers';
+import {handleIndexDO, handleCaseDO, handleLegacySubmission, restoreRouteAfterRedirect} from './shared/lib/redirectHelpers';
 import AppConfig from "appConfig";
 import PageNotFound from './shared/components/pageNotFound/PageNotFound';
 
@@ -95,7 +95,10 @@ export const makeRoutes = (routing) => {
                 <Route path="/testimonials" onEnter={()=>{$(document).scrollTop(0)}} component={TestimonialsPage}/>
 
 
-                <Redirect from={"/mutation_mapper.jsp"} to={"/mutation_mapper"}/>
+                <Route path="/case.do" onEnter={handleCaseDO} component={getBlankPage()} />
+                <Route path="/index.do" onEnter={handleIndexDO} component={getBlankPage()} />
+
+                 <Redirect from={"/mutation_mapper.jsp"} to={"/mutation_mapper"}/>
                 <Redirect from={"/data_sets.jsp"} to={"/datasets"}/>
 
                 <Route path="*" onEnter={()=>{$(document).scrollTop(0)}} component={()=><PageNotFound/>}/>

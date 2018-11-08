@@ -42,6 +42,7 @@ import autobind from "autobind-decorator";
 import {showCustomTab} from "../../shared/lib/customTabs";
 import {StudyLink} from "../../shared/components/StudyLink/StudyLink";
 import WindowStore from "shared/components/window/WindowStore";
+import {QueryParams} from "url";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -59,6 +60,12 @@ export interface IPatientViewPageProps {
         clinicalData: ClinicalData[]
     };
     clinicalDataStatus?: RequestStatus;
+}
+
+export interface PatientViewUrlParams extends QueryParams{
+    studyId:string;
+    caseId?:string;
+    sampleId?:string;
 }
 
 @inject('routing')
