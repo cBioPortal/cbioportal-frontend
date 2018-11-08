@@ -2,10 +2,9 @@ import {IServerConfig} from "./IAppConfig";
 
 const ServerConfigDefaults: Partial<IServerConfig> = {
     app_version:"1.0",
-    civic_url:"https://civicdb.org/api/",
     disabled_tabs:"",
-
     genomenexus_url:"v1.genomenexus.org",
+    g2s_url:"https://g2s.genomenexus.org",
     mycancergenome_show:false,
 
     digital_slide_archive_iframe_url:"https://cancer.digitalslidearchive.org/index.html?patientId=",
@@ -14,9 +13,14 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     mdacc_heatmap_patient_url: "https://bioinformatics.mdanderson.org/participant2maps?participant=",
     mdacc_heatmap_study_url: "https://bioinformatics.mdanderson.org/study2url?studyid=",
 
+    mygene_info_url: "https://mygene.info/v3/gene/<%= entrezGeneId %>?fields=uniprot",
+
     oncoprint_oncokb_hotspots_default:undefined,
     oncoprint_hide_vus_default:false,
     oncokb_public_api_url:"oncokb.org/api/v1",
+
+    pubmed_url: "https://www.ncbi.nlm.nih.gov/pubmed/<%=pmid%>",
+
     isoformOverrideSource:"uniprot",
     show_hotspot:true,
     show_oncokb:true,
@@ -99,7 +103,12 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
             "PATIENT_SEX": 9,
             "PATIENT_AGE": 9
         }
-    }
+    },
+
+    uniprot_id_url:"https://www.uniprot.org/uniprot/?query=accession:<%= swissProtAccession %>&format=tab&columns=entry+name"
+
+
+
 };
 
 export default ServerConfigDefaults;
