@@ -1,21 +1,20 @@
 import {IAppConfig, IServerConfig, PriorityStudies} from "./IAppConfig";
-import getBrowserWindow from "../shared/lib/getBrowserWindow";
 import * as _ from "lodash";
 import ServerConfigDefaults from "./serverConfigDefaults";
 import memoize from "memoize-weak-decorator";
 
 import {
     getCbioPortalApiUrl,
-    getConfigurationServiceApiUrl, getG2SApiUrl,
+    getConfigurationServiceApiUrl,
+    getG2SApiUrl,
     getGenomeNexusApiUrl,
-    getOncoKbApiUrl, trimTrailingSlash
+    getOncoKbApiUrl,
+    trimTrailingSlash
 } from "../shared/api/urls";
-
-import civicClient from "../shared/api/civicClientInstance";
-import genomeNexusClient from '../shared/api/genomeNexusClientInstance';
-import internalGenomeNexusClient from '../shared/api/genomeNexusInternalClientInstance';
-import oncoKBClient from '../shared/api/oncokbClientInstance';
-import genome2StructureClient from '../shared/api/g2sClientInstance';
+import genomeNexusClient from "../shared/api/genomeNexusClientInstance";
+import internalGenomeNexusClient from "../shared/api/genomeNexusInternalClientInstance";
+import oncoKBClient from "../shared/api/oncokbClientInstance";
+import genome2StructureClient from "../shared/api/g2sClientInstance";
 import client from "../shared/api/cbioportalClientInstance";
 import internalClient from "../shared/api/cbioportalInternalClientInstance";
 import $ from "jquery";
@@ -28,7 +27,6 @@ import Genome2StructureAPI from "../shared/api/generated/Genome2StructureAPI";
 import GenomeNexusAPI from "../shared/api/generated/GenomeNexusAPI";
 import GenomeNexusAPIInternal from "../shared/api/generated/GenomeNexusAPIInternal";
 import OncoKbAPI from "../shared/api/generated/OncoKbAPI";
-import sessionServiceAPI from "../shared/api/sessionServiceAPI";
 
 
 const config:any = (window as any).frontendConfig || { serverConfig:{} };
@@ -92,7 +90,7 @@ export function setServerConfig(serverConfig:{[key:string]:any }){
     // ** Don't try this at home, kids **
     if (frontendOverride.apiRoot) {
         console.log(`Overriding apiRoot with: ${frontendOverride.apiRoot}`);
-        config.apiRoot = `//${frontendOverride.apiRoot}/`;
+        config.apiRoot = `${frontendOverride.apiRoot}`;
     }
 
     // allow any hardcoded serverConfig props to override those from service
@@ -127,11 +125,6 @@ export class ServerConfigHelpers {
             return null;
         }
     }
-
-    @memoize static parseDisabledTabs(str:string){
-        return str.split(",").map((s)=>s.trim());
-    }
-
 
     static sessionServiceIsEnabled(){
         return config.serverConfig.sessionServiceEnabled;
