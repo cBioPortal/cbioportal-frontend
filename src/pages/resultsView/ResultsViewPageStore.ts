@@ -482,15 +482,6 @@ export class ResultsViewPageStore {
         }
     }
 
-    readonly bitlyShortenedURL = remoteData({
-        invoke: () => {
-            return request.get('http://' + location.host + "/api/url-shortener?url=" + this.sessionIdURL);
-        },
-        onError: () => {
-            //
-        }
-    });
-
     readonly selectedMolecularProfiles = remoteData<MolecularProfile[]>({
         await: ()=>[
             this.studyToMolecularProfiles,

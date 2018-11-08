@@ -74,6 +74,7 @@ import windowStore from 'shared/components/window/WindowStore';
 import {Layout} from 'react-grid-layout';
 import {getHeatmapMeta} from "../../shared/lib/MDACCUtils";
 import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
+import {getMDAndersonHeatmapStudyMetaUrl} from "../../shared/api/urls";
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
 
@@ -1395,7 +1396,7 @@ export class StudyViewPageStore {
         invoke: async () => {
             let isSinglePhysicalStudy = this.queriedPhysicalStudyIds.result.length === 1;
             if (isSinglePhysicalStudy) {
-                return await getHeatmapMeta(`//bioinformatics.mdanderson.org/study2url?studyid=${this.queriedPhysicalStudyIds.result[0]}`);
+                return await getHeatmapMeta(getMDAndersonHeatmapStudyMetaUrl(this.queriedPhysicalStudyIds.result[0]));
             }
             return [];
         }
