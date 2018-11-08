@@ -262,7 +262,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return !AppConfig.serverConfig.show_hotspot;
             },
             get annotateDriversHotspotsError() {
-                return self.props.store.indexedHotspotData.peekStatus === "error";
+                return self.props.store.didHotspotFailInOncoprint;
             },
             get annotateDriversCBioPortal() {
                 return self.props.store.mutationAnnotationSettings.cbioportalCount;
