@@ -570,6 +570,7 @@ function transitionGeneticTrack(
             data: nextSpec.data,
             tooltipFn: makeGeneticTrackTooltip(true, getMolecularProfileMap, nextProps.alterationTypesInQuery),
             track_info: nextSpec.info,
+            $track_info_tooltip_elt: nextSpec.infoTooltip ? $('<div>'+nextSpec.infoTooltip+'</div>') : undefined,
             removeCallback: () => {
                 delete getTrackSpecKeyToTrackId()[nextSpec.key];
                 if (nextSpec.removeCallback) nextSpec.removeCallback();
@@ -609,6 +610,9 @@ function transitionGeneticTrack(
 
         if (nextSpec.info !== prevSpec.info) {
             oncoprint.setTrackInfo(trackId, nextSpec.info);
+        }
+        if (nextSpec.infoTooltip !== prevSpec.infoTooltip) {
+            oncoprint.setTrackInfoTooltip(trackId, nextSpec.infoTooltip ? $('<div>'+nextSpec.infoTooltip+'</div>') : undefined);
         }
 
         // update ruleset if its changed
