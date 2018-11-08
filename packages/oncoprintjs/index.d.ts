@@ -169,6 +169,7 @@ declare module "oncoprintjs"
         setTrackSortComparator:(track_id:TrackId, sortCmpFn:TrackSortSpecification<any>)=>void;
         getTrackSortDirection:(track_id:TrackId)=>TrackSortDirection;
         setTrackInfo:(track_id:TrackId, msg:string)=>void;
+        setTrackInfoTooltip:(track_id:TrackId, $tooltip_elt:any)=>void;//$tooltip_elt is JQuery HTML element
         setTrackTooltipFn:(track_id:TrackId, tooltipFn:TrackTooltipFn<any>)=>void;
         sort:()=>void;
         shareRuleSet:(source_track_id:TrackId, target_track_id:TrackId)=>void;
