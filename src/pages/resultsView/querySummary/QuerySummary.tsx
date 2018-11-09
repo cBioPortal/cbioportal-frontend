@@ -20,39 +20,7 @@ import {StudyLink} from "../../../shared/components/StudyLink/StudyLink";
 import {createQueryStore} from "../../home/HomePage";
 import getBrowserWindow from "../../../shared/lib/getBrowserWindow";
 import {remoteData} from "../../../shared/api/remoteData";
-import {getPercentage} from "../../../shared/lib/FormatUtils";
-
-function patientSampleSummary(
-    samples:any[],
-    patients:any[]
-) {
-    if (samples.length !== patients.length) {
-        return (
-            <span>
-                <strong>{patients.length}</strong> patients / <strong>{samples.length}</strong> samples
-            </span>
-        );
-    } else {
-        return (
-            <span>
-                <strong>{samples.length}</strong> samples
-            </span>
-        );
-    }
-}
-
-export function geneSummary(hugoSymbols:string[]) {
-    switch (hugoSymbols.length) {
-        case 0:
-            return "";
-        case 1:
-            return hugoSymbols[0];
-        case 2:
-            return hugoSymbols.join(" & ");
-        default:
-            return `${hugoSymbols[0]}, ${hugoSymbols[1]} & ${(hugoSymbols.length === 3) ? hugoSymbols[2] : `${hugoSymbols.length - 2} other genes`}`;
-    }
-}
+import {getAlterationSummary, getGeneSummary, getPatientSampleSummary} from "./QuerySummaryUtils";
 
 @observer
 export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore }, {}> {
@@ -85,8 +53,8 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
             <h4 style={{fontSize:14}}><StudyLink study={this.props.store.queriedStudies.result[0]}/></h4>
             {(this.props.store.sampleLists.result!.length > 0) && (<span>
                     {this.props.store.sampleLists.result![0].name}&nbsp;
-                ({patientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)})
-                    - {geneSummary(this.props.store.hugoGeneSymbols)}
+                ({getPatientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)})
+                    - {getGeneSummary(this.props.store.hugoGeneSymbols)}
                 </span>)
             }
             {
@@ -115,7 +83,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                         href={`study?id=${this.props.store.queriedStudies.result.map(study => study.studyId).join(',')}`}
                         target="_blank"
                     >
-                        Combined Study ({patientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)})
+                        Combined Study ({getPatientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)})
                     </a>
                 </h4>
             </div>
@@ -136,19 +104,8 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
     readonly alterationSummary = remoteData({
         await:()=>[this.props.store.samples, this.props.store.patients,
             this.props.store.alteredSampleKeys, this.props.store.alteredPatientKeys],
-        invoke:()=>{
-            const numSamples = this.props.store.samples.result.length;
-            const numPatients = this.props.store.patients.result.length;
-            const numAlteredSamples = this.props.store.alteredSampleKeys.result!.length;
-            const numAlteredPatients = this.props.store.alteredPatientKeys.result!.length;
-            const sampleSummary = `${numSamples} (${getPercentage(numAlteredSamples/numSamples, 0)}) of queried samples`;
-            let patientSummary = "";
-            if (numSamples !== numPatients) {
-                patientSummary = `${numPatients} (${getPercentage(numAlteredPatients/numPatients, 0)}) of queried patients and `;
-            }
-            return Promise.resolve(<strong>Queried gene{this.props.store.hugoGeneSymbols.length !== 1 ? "s are" : " is"}&nbsp;altered
-                in {patientSummary}{sampleSummary}</strong>);
-        }
+        invoke:()=>Promise.resolve(getAlterationSummary(this.props.store.samples.result!.length, this.props.store.patients.result!.length,
+            this.props.store.alteredSampleKeys.result!.length, this.props.store.alteredPatientKeys.result!.length, this.props.store.hugoGeneSymbols.length))
     });
 
     private get studyList(){
@@ -189,7 +146,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                         <div className="query-summary__rightItems">
                             <div className="query-summary__alterationData">
                             {
-                                (loadingComplete) && this.alterationSummary.result
+                                (loadingComplete) && <strong>{this.alterationSummary.result}</strong>
                             }
                             </div>
 
