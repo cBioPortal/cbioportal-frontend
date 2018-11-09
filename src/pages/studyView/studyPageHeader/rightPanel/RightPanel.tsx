@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import {Sample} from 'shared/api/generated/CBioPortalAPIInternal';
 import {observer} from "mobx-react";
-import {action, computed, observable, reaction} from 'mobx';
+import {action, computed, observable} from 'mobx';
 import styles from "../styles.module.scss";
 import {bind} from 'bind-decorator';
 import {getSampleViewUrl} from 'shared/api/urls';
@@ -15,10 +15,7 @@ import fileDownload from 'react-file-download';
 import {Else, If, Then} from 'react-if';
 import {StudyViewPageStore, UniqueKey} from 'pages/studyView/StudyViewPageStore';
 import classnames from "classnames";
-import {formatFrequency, getFrequencyStr} from "../../StudyViewUtils";
 import shareUIstyles from '../../../resultsView/querySummary/shareUI.module.scss';
-
-const CheckedSelect = require("react-select-checked").CheckedSelect;
 
 export interface IRightPanelProps {
     store: StudyViewPageStore,
@@ -36,39 +33,7 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
     @observable downloadingData = false;
     @observable showDownloadErrorMessage = false;
 
-    @observable addChartClicked = false;
-
-    // Only fetch the clinical attribute count when filter changes, otherwise use the cached data.
-    @observable filterIsUpdated = false;
-
-    // clinicalAttributesWithCount result
-    // We cannot reference the promise in the compute directly since it will be dereferenced in the reaction.
-    @observable cachedClinicalAttributesWithCount: any;
-
     @observable private showMoreDescription = false;
-
-    private promiseReaction = reaction(() => this.clinicalAttributesWithCountPromise && this.clinicalAttributesWithCountPromise.status, () => {
-        if (this.clinicalAttributesWithCountPromise !== undefined && this.clinicalAttributesWithCountPromise.isComplete) {
-            this.cachedClinicalAttributesWithCount = _.reduce(this.clinicalAttributesWithCountPromise.result, (acc, next, key) => {
-                acc[key] = next;
-                return acc;
-            }, {} as { [attrId: string]: number });
-            this.addChartClicked = false;
-            this.filterIsUpdated = false;
-        }
-    });
-
-    private filterReaction = reaction(() => this.props.store.userSelections, () => {
-        if (this.props.store.userSelections !== undefined) {
-            this.filterIsUpdated = true;
-        }
-    }, {fireImmediately: true});
-
-    componentWillUnmount() {
-        // dispose all reactions
-        this.filterReaction();
-        this.promiseReaction();
-    }
 
     @bind
     private handleDownload() {
@@ -127,15 +92,6 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
     }
 
     @computed
-    get fetchForDataAvailability() {
-        if (this.addChartClicked && this.filterIsUpdated) {
-            return true;
-        }
-        return false;
-    }
-
-
-    @computed
     get virtualStudyButtonTooltip() {
         //default value of userEmailAddress is anonymousUser. see my-index.ejs
         return (
@@ -153,72 +109,6 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
         return 'Download clinical data for the selected cases';
     }
 
-    @computed
-    get clinicalAttributesWithCountPromise() {
-        return this.fetchForDataAvailability ? this.props.store.clinicalAttributesWithCount : undefined;
-    }
-
-    @computed
-    get checkedSelectPlaceHolder() {
-        if (this.fetchForDataAvailability) {
-            return 'Calculating data availability...';
-        } else {
-            return 'Add Chart'
-        }
-    }
-
-    @computed
-    get chartOptions() {
-        let options = [];
-        if (this.cachedClinicalAttributesWithCount !== undefined) {
-            options = _.reduce(this.cachedClinicalAttributesWithCount, (options, sampleCount: number, key: string) => {
-                let freq = 100 * sampleCount / this.props.store.selectedSamples.result.length;
-                const newOption = {
-                    label: `${this.props.store.chartMetaSet[key].displayName} (${getFrequencyStr(freq)})`,
-                    value: key,
-                    disabled: false,
-                    freq: formatFrequency(freq)
-                };
-                if (sampleCount === 0) {
-                    newOption.disabled = true;
-                }
-                options.push(newOption);
-                return options;
-            }, [] as { label: string, value: string, freq: number, disabled?: boolean }[]);
-        } else {
-            options = _.reduce(Object.keys(this.props.store.chartMetaSet), (options, key: string) => {
-                const newOption = {
-                    label: this.props.store.chartMetaSet[key].displayName,
-                    value: key,
-                    disabled: false,
-                    freq: 1
-                };
-                options.push(newOption);
-                return options;
-            }, [] as { label: string, value: string, freq: number, disabled?: boolean }[]);
-        }
-        return options.sort((a, b) => {
-            if (a.freq === b.freq) {
-                //sort alphabetically
-                if (a.label < b.label) return -1;
-                if (a.label > b.label) return 1;
-                return 0;
-            }
-            return b.freq - a.freq;
-        });
-    }
-
-    @bind
-    @action
-    private onChangeSelectedCharts(options: { label: string, value: string }[]) {
-        this.props.store.updateChartsVisibility(options.map(option => option.value));
-    }
-
-    @bind
-    @action
-    private addChartIsClicked() {
-        this.addChartClicked = true;
-    }
 
     render() {
         return (
@@ -298,10 +188,10 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
 
                         {/* Todo: share button*/}
                         {/*<a onClick={()=>{}}>*/}
-                            {/*<span className="fa-stack fa-4x">*/}
-                                {/*<i className="fa fa-circle fa-stack-2x"></i>*/}
-                                {/*<i className="fa fa-link fa-stack-1x"></i>*/}
-                            {/*</span>*/}
+                        {/*<span className="fa-stack fa-4x">*/}
+                        {/*<i className="fa fa-circle fa-stack-2x"></i>*/}
+                        {/*<i className="fa fa-link fa-stack-1x"></i>*/}
+                        {/*</span>*/}
                         {/*</a>*/}
                     </div>
                 </div>
