@@ -197,7 +197,7 @@ export default class StudyViewScatterPlot extends React.Component<IStudyViewScat
     }
 
     @computed get data() {
-        return getDownsampledData(this.props.data, this.props.sampleToAnalysisGroup, this.dataSpaceToPixelSpace);
+        return getDownsampledData(this.props.data, this.dataSpaceToPixelSpace, this.props.sampleToAnalysisGroup);
     }
 
     @computed get scatters() {
@@ -207,27 +207,49 @@ export default class StudyViewScatterPlot extends React.Component<IStudyViewScat
         return _.reduce(sortedAnalysisGroups, (scatters, group)=>{
             const groupData = this.data[group.value];
             if (groupData && groupData.length > 0) {
-                // add a scatter if theres data for this group
-                scatters.push(
-                    <VictoryScatter
-                        key={group.value}
-                        style={{
-                            data: {
-                                fill: group.color,
-                                stroke: "black",
-                                strokeWidth: 1,
-                                strokeOpacity: 0
-                            }
-                        }}
-                        size={this.size}
-                        symbol="circle"
-                        data={groupData}
-                        events={this.mouseEvents}
-                    />
-                );
+                // add scatters if theres data for this group
+
+                // make different scatter for each downsample group size
+                const bySize = _.groupBy(groupData, d=>d.data.length);
+                _.forEach(bySize, (data, numSamplesInDot)=>{
+                    const fillOpacity = this.fillOpacityByNumSamplesInDot(parseInt(numSamplesInDot, 10));
+                    scatters.push(
+                        <VictoryScatter
+                            key={`${group.value}+${numSamplesInDot}`}
+                            style={{
+                                data: {
+                                    fill: group.color,
+                                    fillOpacity: fillOpacity,
+                                    stroke: "black",
+                                    strokeWidth: 1,
+                                    strokeOpacity: 0
+                                }
+                            }}
+                            size={3/*this.size*/}
+                            symbol="circle"
+                            data={data}
+                            events={this.mouseEvents}
+                        />
+                    );
+                });
             }
             return scatters;
         }, [] as JSX.Element[]);
+    }
+
+    @computed get opacityPerSample() {
+        const valueAt10000 = 0.1;
+        const exponent = -1*Math.log(valueAt10000)/Math.log(10000);
+        const numDataPoints = _.reduce(this.data, (acc, data)=>acc+data.length, 0);
+        const ret = 1/Math.pow(numDataPoints, exponent);
+        return ret;
+    }
+
+    @computed get fillOpacityByNumSamplesInDot() {
+        const opacityPerSample = this.opacityPerSample;
+        return (numSamplesInDot:number)=>{
+            return Math.min(1, opacityPerSample*numSamplesInDot);
+        };
     }
 
     @autobind

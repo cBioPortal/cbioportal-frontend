@@ -16,6 +16,7 @@ import {
     generateNumericalData
 } from "../../StudyViewUtils";
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
+import {adjustedLongestLabelLength} from "../../../../shared/lib/VictoryChartUtils";
 
 export interface IBarChartProps {
     data: DataBin[];
@@ -118,6 +119,21 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
         ];
     }
 
+    @computed get tilted() {
+        return this.tickValues.length > STUDY_VIEW_CONFIG.thresholds.escapeTick;
+    }
+
+    @computed
+    get bottomPadding(): number {
+        return this.tilted ? adjustedLongestLabelLength(this.tickFormat.map((tick: string | string[]) => {
+            if (_.isArray(tick)) {
+                return tick.join();
+            } else {
+                return tick;
+            }
+        })) * 7 : 20;
+    }
+
     public render() {
 
         return (
@@ -136,7 +152,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                         }
                     }}
                     height={150}
-                    padding={{left: 40, right: 20, top: 10, bottom: 20}}
+                    padding={{left: 40, right: 20, top: 10, bottom: this.bottomPadding}}
                     theme={VICTORY_THEME}
                 >
                     <VictoryAxis
@@ -144,7 +160,11 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                         tickFormat={(t: number) => this.tickFormat[t - 1]}
                         domain={[0, this.tickValues[this.tickValues.length -1] + 1]}
                         tickLabelComponent={<BarChartAxisLabel />}
-                        style={{tickLabels: {angle: this.tickValues.length > STUDY_VIEW_CONFIG.thresholds.escapeTick ? 315 : 0}}}
+                        style={{tickLabels: {
+                            angle: this.tilted ? 50 : 0,
+                            verticalAnchor:"start",
+                            textAnchor:"start"
+                        }}}
                     />
                     <VictoryAxis
                         dependentAxis={true}

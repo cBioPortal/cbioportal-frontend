@@ -10,6 +10,7 @@ import fileDownload from 'react-file-download';
 import {action, computed, observable} from "mobx";
 import {observer} from "mobx-react";
 import {IChartContainerDownloadProps} from "../charts/ChartContainer";
+import {saveSvgAsPng} from "save-svg-as-png";
 
 export interface IChartHeaderProps {
     chartMeta: ChartMeta;
@@ -44,7 +45,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
     @observable downloadPending = {
         TSV: false,
         SVG: false,
-        PDF: false
+        PDF: false,
+        PNG: false
     };
 
     @computed
@@ -63,8 +65,13 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             onClick={() => {
                                 this.downloadPending[props.type] = true;
                                 props.initDownload!().then(data => {
-                                    if (data && data.length > 0) {
-                                        fileDownload(data, `${this.fileName}.${props.type.substring(0, 3).toLowerCase()}`);
+                                    if (data) {
+                                        const fileName = `${this.fileName}.${props.type.substring(0, 3).toLowerCase()}`;
+                                        if (props.type === "PNG") {
+                                            saveSvgAsPng(data, fileName, {backgroundColor:"#ffffff"});
+                                        } else if (typeof data === "string" && data.length > 0) {
+                                            fileDownload(data, fileName);
+                                        }
                                     }
                                     this.downloadPending[props.type] = false;
                                 }).catch(() => {
@@ -195,7 +202,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             overlay={<span>Move chart</span>}
                         >
                             <i className={classnames("fa", "fa-arrows", styles.item, styles.clickable)}
-                               aria-hidden="true"></i>
+                               aria-hidden="true"
+                               style={{cursor: 'move'}}/>
                         </DefaultTooltip>
                         <DefaultTooltip
                             placement="top"
