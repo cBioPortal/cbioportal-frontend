@@ -2,14 +2,11 @@
   font-size: 16px;
   display: flex;
   align-items: flex-start;
-  :global(.form-group) {
-    margin-bottom: 0px;
-  }
-}
 
-.filterClinicalAttrName {
-  font-size: 13px;
-  font-weight: bold;
+  textarea{
+    width: 280px !important;
+    margin: 0 !important;
+  }
 }
 
 .summary {
