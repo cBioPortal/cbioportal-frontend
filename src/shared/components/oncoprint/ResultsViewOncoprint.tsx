@@ -37,7 +37,7 @@ import {SpecialAttribute, specialClinicalAttributes} from "../../cache/Oncoprint
 import Spec = Mocha.reporters.Spec;
 import OqlStatusBanner from "../oqlStatusBanner/OqlStatusBanner";
 import {makeProfiledInClinicalAttributes} from "./ResultsViewOncoprintUtils";
-import {bind} from "bind-decorator";
+import autobind from "autobind-decorator";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -987,7 +987,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
-    @bind
+    @autobind
     private getControls() {
         if (this.oncoprint && !this.oncoprint.webgl_unavailable)  {
             return (<FadeInteraction showByDefault={true} show={this.mouseInsideBounds}>
