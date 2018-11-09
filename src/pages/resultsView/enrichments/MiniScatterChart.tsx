@@ -106,7 +106,7 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                         filename="enrichments-volcano"
                         dontFade={true}
                         collapse={true}
-                        style={{position:"absolute", top:10, right:10}}
+                        style={{position:"absolute", top:10, right:10, zIndex:0}}
                     />
                 </div>
                 {this.tooltipModel &&
