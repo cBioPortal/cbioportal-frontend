@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as _ from 'lodash';
 import {Checkbox, ButtonGroup, Panel, Radio} from 'react-bootstrap';
-import {computed, observable} from "mobx";
+import {computed, observable, action} from "mobx";
 import {observer} from "mobx-react";
 import Slider from 'react-rangeslider';
 import {FormGroup, ControlLabel, FormControl} from 'react-bootstrap';
@@ -348,6 +348,16 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
     //     this.showControls = !this.showControls;
     // }
 
+    @action
+    private clearSliderValue() {
+        this.tempAltCasesValue = 0;
+        this.tempAltCasesInputValue = 0;
+        this.altCasesValue = 0;
+        this.tempTotalCasesValue = 0;
+        this.tempTotalCasesInputValue = 0;
+        this.totalCasesValue = 0;
+    }
+
     public setPngAnchor(href: string) {
         this.pngAnchor = href;
     }
@@ -453,7 +463,8 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                                         return <Radio
                                             checked={option.value === this.props.groupAlterationsBy}
                                             onChange={(e) => {
-                                                this.props.handlePivotChange($(e.target).attr("data-value"))
+                                                this.clearSliderValue();
+                                                this.props.handlePivotChange($(e.target).attr("data-value"));
                                             }}
                                             inline
                                             data-value={option.value}
