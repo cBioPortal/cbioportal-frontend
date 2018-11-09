@@ -437,10 +437,46 @@ export class ResultsViewPageStore {
 
     public mutationAnnotationSettings:MutationAnnotationSettings;
 
-    @observable.ref selectedEnrichmentMutationProfile: MolecularProfile;
-    @observable.ref selectedEnrichmentCopyNumberProfile: MolecularProfile;
-    @observable.ref selectedEnrichmentMRNAProfile: MolecularProfile;
-    @observable.ref selectedEnrichmentProteinProfile: MolecularProfile;
+    @observable.ref public _selectedEnrichmentMutationProfile: MolecularProfile;
+    @observable.ref public _selectedEnrichmentCopyNumberProfile: MolecularProfile;
+    @observable.ref public _selectedEnrichmentMRNAProfile: MolecularProfile;
+    @observable.ref public _selectedEnrichmentProteinProfile: MolecularProfile;
+
+    @computed get selectedEnrichmentMutationProfile() {
+        if (!this._selectedEnrichmentMutationProfile && this.mutationEnrichmentProfiles.isComplete &&
+                this.mutationEnrichmentProfiles.result!.length > 0) {
+            return this.mutationEnrichmentProfiles.result![0];
+        } else {
+            return this._selectedEnrichmentMutationProfile;
+        }
+    }
+
+    @computed get selectedEnrichmentCopyNumberProfile() {
+        if (!this._selectedEnrichmentCopyNumberProfile && this.copyNumberEnrichmentProfiles.isComplete &&
+            this.copyNumberEnrichmentProfiles.result!.length > 0) {
+            return this.copyNumberEnrichmentProfiles.result![0];
+        } else {
+            return this._selectedEnrichmentCopyNumberProfile;
+        }
+    }
+
+    @computed get selectedEnrichmentMRNAProfile() {
+        if (!this._selectedEnrichmentMRNAProfile && this.mRNAEnrichmentProfiles.isComplete &&
+            this.mRNAEnrichmentProfiles.result!.length > 0) {
+            return this.mRNAEnrichmentProfiles.result![0];
+        } else {
+            return this._selectedEnrichmentMRNAProfile;
+        }
+    }
+
+    @computed get selectedEnrichmentProteinProfile() {
+        if (!this._selectedEnrichmentProteinProfile && this.proteinEnrichmentProfiles.isComplete &&
+            this.proteinEnrichmentProfiles.result!.length > 0) {
+            return this.proteinEnrichmentProfiles.result![0];
+        } else {
+            return this._selectedEnrichmentProteinProfile;
+        }
+    }
 
     @computed get hugoGeneSymbols(){
         if (this.oqlQuery.length > 0) {
@@ -2508,15 +2544,13 @@ export class ResultsViewPageStore {
 
     readonly mutationEnrichmentProfiles = remoteData<MolecularProfile[]>({
         await: () => [
+            this.molecularProfilesWithData,
             this.molecularProfileIdToProfiledSampleCount
         ],
         invoke: async () => {
-            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) => 
+            return _.filter(this.molecularProfilesWithData.result, (profile: MolecularProfile) =>
                 profile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED);
         },
-        onResult:(profiles: MolecularProfile[])=>{
-            this.selectedEnrichmentMutationProfile = profiles[0];
-        }
     });
 
     readonly mutationEnrichmentData = remoteData<AlterationEnrichment[]>({
@@ -2541,15 +2575,13 @@ export class ResultsViewPageStore {
 
     readonly copyNumberEnrichmentProfiles = remoteData<MolecularProfile[]>({
         await: () => [
+            this.molecularProfilesWithData,
             this.molecularProfileIdToProfiledSampleCount
         ],
         invoke: async () => {
-            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) => 
+            return _.filter(this.molecularProfilesWithData.result, (profile: MolecularProfile) =>
                 profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && profile.datatype === "DISCRETE");
         },
-        onResult:(profiles: MolecularProfile[])=>{
-            this.selectedEnrichmentCopyNumberProfile = profiles[0];
-        }
     });
 
     readonly copyNumberHomdelEnrichmentData = remoteData<AlterationEnrichment[]>({
@@ -2597,23 +2629,13 @@ export class ResultsViewPageStore {
     }
 
     readonly mRNAEnrichmentProfiles = remoteData<MolecularProfile[]>({
-        await: () => [
-            this.molecularProfileIdToProfiledSampleCount
-        ],
-        invoke: async () => {
-            let profiles: MolecularProfile[] = _.filter(this.molecularProfilesInStudies.result,
-                (profile: MolecularProfile) => profile.molecularAlterationType === AlterationTypeConstants.MRNA_EXPRESSION
-                    && profile.datatype != "Z-SCORE");
-            // move rna_seq profiles at the top of the list to prioritize them
-            const rnaSeqProfiles = _.remove(profiles, (p) => {
-                return p.molecularProfileId.includes("rna_seq");
+        await:()=>[this.molecularProfilesWithData],
+        invoke:()=>{
+            const mrnaProfiles = this.molecularProfilesWithData.result!.filter(p=>{
+                return p.molecularAlterationType === AlterationTypeConstants.MRNA_EXPRESSION
             });
-            profiles = rnaSeqProfiles.concat(profiles);
-            return profiles;
+            return Promise.resolve(filterAndSortProfiles(mrnaProfiles));
         },
-        onResult:(profiles: MolecularProfile[])=>{
-            this.selectedEnrichmentMRNAProfile = profiles[0];
-        }
     });
 
     readonly mRNAEnrichmentData = remoteData<ExpressionEnrichment[]>({
@@ -2637,16 +2659,13 @@ export class ResultsViewPageStore {
     });
 
     readonly proteinEnrichmentProfiles = remoteData<MolecularProfile[]>({
-        await: () => [
-            this.molecularProfileIdToProfiledSampleCount
-        ],
-        invoke: async () => {
-            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) => 
-                profile.molecularAlterationType === AlterationTypeConstants.PROTEIN_LEVEL && profile.datatype != "Z-SCORE");
+        await:()=>[this.molecularProfilesWithData],
+        invoke:()=>{
+            const protProfiles = this.molecularProfilesWithData.result!.filter(p=>{
+                return p.molecularAlterationType === AlterationTypeConstants.PROTEIN_LEVEL;
+            });
+            return Promise.resolve(filterAndSortProfiles(protProfiles));
         },
-        onResult:(profiles: MolecularProfile[])=>{
-            this.selectedEnrichmentProteinProfile = profiles[0];
-        }
     });
 
     readonly proteinEnrichmentData = remoteData<ExpressionEnrichment[]>({
