@@ -5,6 +5,7 @@ import {
     ClinicalData,
     ClinicalDataMultiStudyFilter,
     ClinicalDataSingleStudyFilter,
+    CopyNumberSeg,
     Gene,
     GenePanel,
     GenePanelData,
@@ -39,6 +40,7 @@ import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import {
     cancerTypeForOncoKb,
     fetchCnaOncoKbDataWithNumericGeneMolecularData,
+    fetchCopyNumberSegmentsForSamples,
     fetchGenes,
     fetchGermlineConsentedSamples,
     fetchMyCancerGenomeData,
@@ -635,6 +637,34 @@ export class ResultsViewPageStore {
             return ret;
         }
     });
+
+    readonly cnSegments = remoteData<CopyNumberSeg[]>({
+        await: () => [
+            this.samples
+        ],
+        invoke: () => fetchCopyNumberSegmentsForSamples(this.samples.result)
+    }, []);
+
+    readonly cnSegmentsByChromosome = remoteData<{ [chromosome: string]: MobxPromise<CopyNumberSeg[]> }>({
+        await: () => [
+            this.genes,
+            this.samples
+        ],
+        invoke: () => {
+            if (this.genes.result) {
+                return Promise.resolve(_.reduce(_.uniq(this.genes.result.map(g => g.chromosome)), (map: { [chromosome: string]: MobxPromise<CopyNumberSeg[]> }, chromosome: string) => {
+                    map[chromosome] = remoteData<CopyNumberSeg[]> ({
+                        invoke: () => fetchCopyNumberSegmentsForSamples(this.samples.result, chromosome)
+                    });
+
+                    return map;
+                }, {}));
+            } else {
+                return Promise.resolve({});
+            }
+        }
+    }, {});
+
 
     readonly molecularData = remoteData<NumericGeneMolecularData[]>({
         await: () => [

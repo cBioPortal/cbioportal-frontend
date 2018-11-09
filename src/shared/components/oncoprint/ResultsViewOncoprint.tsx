@@ -514,7 +514,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                         onMobxPromise(
                             [this.props.store.sampleKeyToSample,
                                 this.props.store.patientKeyToPatient],
-                            (sampleKeyToSample:{[sampleKey:string]:Sample}, patientKeyToPatient)=>{
+                            (sampleKeyToSample:{[sampleKey:string]:Sample}, patientKeyToPatient: any)=>{
                                 let file = `${capitalizedColumnMode} order in the Oncoprint is:\n`;
                                 const keyToCase = (this.columnMode === "sample" ? sampleKeyToSample : patientKeyToPatient);
                                 const caseIds = this.oncoprint.getIdOrder().map(
@@ -536,7 +536,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                         onMobxPromise(
                             [this.props.store.sampleKeyToSample,
                                 this.props.store.patientKeyToPatient],
-                            (sampleKeyToSample:{[sampleKey:string]:Sample}, patientKeyToPatient)=>{
+                            (sampleKeyToSample:{[sampleKey:string]:Sample}, patientKeyToPatient: any)=>{
                                 tabularDownload(
                                     this.geneticTracks.result,
                                     this.clinicalTracks.result,
