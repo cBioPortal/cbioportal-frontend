@@ -19,7 +19,7 @@ export default class CopyNumberEnrichmentsTab extends React.Component<ICopyNumbe
 
     @autobind
     private onProfileChange(molecularProfile: MolecularProfile) {
-        this.props.store.selectedEnrichmentCopyNumberProfile = molecularProfile;
+        this.props.store._selectedEnrichmentCopyNumberProfile = molecularProfile;
     }
 
     public render() {
@@ -33,7 +33,7 @@ export default class CopyNumberEnrichmentsTab extends React.Component<ICopyNumbe
             default:
                 return (
                     <div>
-                        <EnrichmentsDataSetDropdown dataSets={this.props.store.copyNumberEnrichmentProfiles.result!} onChange={this.onProfileChange}
+                        <EnrichmentsDataSetDropdown dataSets={this.props.store.copyNumberEnrichmentProfiles} onChange={this.onProfileChange}
                                                     selectedValue={this.props.store.selectedEnrichmentCopyNumberProfile.molecularProfileId}
                                                     molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount.result!}/>
                         <AlterationEnrichmentContainer data={this.props.store.copyNumberHomdelEnrichmentData.result!}
