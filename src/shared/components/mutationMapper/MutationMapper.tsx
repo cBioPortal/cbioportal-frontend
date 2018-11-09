@@ -408,12 +408,8 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                             </div>
                         </div>
                         <hr style={{ marginTop:20 }} />
-
-                            {!this.props.store.dataStore.showingAllData &&
-                                this.filterResetPanel()
-                            }
-                            {this.mutationTable()}
-                        </div>
+                        {this.mutationTable()}
+                    </div>
                     )
                 }
             </div>
