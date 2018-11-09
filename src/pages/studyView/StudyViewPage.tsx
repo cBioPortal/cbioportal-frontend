@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {inject, observer} from "mobx-react";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
-import {reaction} from 'mobx';
+import {computed, reaction} from 'mobx';
 import {StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {ClinicalDataTab} from "./tabs/ClinicalDataTab";
@@ -18,8 +18,6 @@ import "./styles.scss";
 import styles from './styles.module.scss';
 import SelectedInfo from "./SelectedInfo/SelectedInfo";
 import LabeledCheckbox from "../../shared/components/labeledCheckbox/LabeledCheckbox";
-import {remoteData} from "../../shared/api/remoteData";
-import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -52,23 +50,24 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         this.props.routing.updateRoute({tab: id});
     }
 
-    readonly withMutation = remoteData({
-        await: () => [this.store.molecularProfileSampleCounts],
-        invoke: async () => {
-            return this.store.molecularProfileSampleCounts.result!.numberOfMutationProfiledSamples ?
-                this.store.molecularProfileSampleCounts.result!.numberOfMutationProfiledSamples : 0;
-        },
-        default: 0
-    });
+    @computed
+    get numberOfSamplesWithMutation() {
+        if (this.store.molecularProfileSampleCounts.isComplete &&
+            this.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples) {
+            return this.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples;
+        } else {
+            return 0;
+        }
+    }
 
-    readonly withCNA = remoteData({
-        await: () => [this.store.molecularProfileSampleCounts],
-        invoke: async () => {
-            return this.store.molecularProfileSampleCounts.result!.numberOfCNAProfiledSamples ?
-                this.store.molecularProfileSampleCounts.result!.numberOfCNAProfiledSamples : 0;
-        },
-        default: 0
-    });
+    @computed
+    get numberOfSamplesWithCNA() {
+        if (this.store.molecularProfileSampleCounts.isComplete && this.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples) {
+            return this.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples;
+        } else {
+            return 0;
+        }
+    }
 
     content() {
         if (
@@ -106,14 +105,14 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                         </MSKTabs>
 
                         <div className={styles.selectedInfo}>
-                            <SelectedInfo promise={this.store.selectedSamples}/>
+                            <SelectedInfo selectedSamples={this.store.selectedSamples.result}/>
                             <div className={"btn-group"} role={"group"}>
                                 <button className="btn btn-default btn-sm">
                                     <LabeledCheckbox
                                         inputProps={{className: styles.selectedInfoCheckbox}}
                                         checked={!!this.store.filters.withMutationData}
                                         onChange={this.store.toggleWithMutationDataFilter}
-                                    >{this.withMutation.result} With Mutations</LabeledCheckbox>
+                                    >{this.numberOfSamplesWithMutation} With Mutations</LabeledCheckbox>
                                 </button>
                                 <button className="btn btn-default btn-sm">
                                     <LabeledCheckbox
@@ -121,7 +120,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                         checked={!!this.store.filters.withCNAData}
                                         onChange={this.store.toggleWithCNADataFilter}
                                     >
-                                        {this.withCNA.result} With CNA</LabeledCheckbox>
+                                        {this.numberOfSamplesWithCNA} With CNA</LabeledCheckbox>
                                 </button>
                             </div>
                         </div>
