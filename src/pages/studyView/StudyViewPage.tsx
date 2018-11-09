@@ -46,7 +46,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             },
             {fireImmediately: true}
         );
-
     }
 
     private handleTabChange(id: string) {

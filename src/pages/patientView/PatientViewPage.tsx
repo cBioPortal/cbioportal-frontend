@@ -31,7 +31,10 @@ import {getMouseIcon} from "./SVGIcons";
 
 import "./patient.scss";
 import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
-import {getSampleViewUrl} from "../../shared/api/urls";
+import {
+    getDigitalSlideArchiveIFrameUrl,
+    getSampleViewUrl
+} from "../../shared/api/urls";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import Helmet from "react-helmet";
 import {ServerConfigHelpers} from "../../config/config";
@@ -39,6 +42,7 @@ import autobind from "autobind-decorator";
 import {showCustomTab} from "../../shared/lib/customTabs";
 import {StudyLink} from "../../shared/components/StudyLink/StudyLink";
 import WindowStore from "shared/components/window/WindowStore";
+import {QueryParams} from "url";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -56,6 +60,12 @@ export interface IPatientViewPageProps {
         clinicalData: ClinicalData[]
     };
     clinicalDataStatus?: RequestStatus;
+}
+
+export interface PatientViewUrlParams extends QueryParams{
+    studyId:string;
+    caseId?:string;
+    sampleId?:string;
 }
 
 @inject('routing')
@@ -173,9 +183,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     }
 
     hideTissueImageTab(){
-        // can't show this iframe if we're on https:
         return patientViewPageStore.hasTissueImageIFrameUrl.isPending || patientViewPageStore.hasTissueImageIFrameUrl.isError
-            || /https/.test(window.location.protocol)
             || (patientViewPageStore.hasTissueImageIFrameUrl.isComplete && !patientViewPageStore.hasTissueImageIFrameUrl.result);
     }
 
@@ -492,7 +500,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             hide={this.hideTissueImageTab()}
                     >
                         <div style={{position: "relative"}}>
-                            <IFrameLoader height={700} url={  `http://cancer.digitalslidearchive.net/index_mskcc.php?slide_name=${patientViewPageStore.patientId}` } />
+                            <IFrameLoader height={700} url={  getDigitalSlideArchiveIFrameUrl(patientViewPageStore.patientId) } />
                         </div>
                     </MSKTab>
 

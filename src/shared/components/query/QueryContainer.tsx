@@ -75,7 +75,7 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 
 				<CancerStudySelector queryStore={this.store}/>
 
-				{this.store.isVirtualStudyQuery ?
+				{this.store.physicalStudyIdsInSelection.length > 1 ?
 					(<DataTypePrioritySelector/>) :
 					(<MolecularProfileSelector/>)
 				}
@@ -89,9 +89,6 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 				{!! (this.store.isGenesetProfileSelected) && (
 				    <GenesetsSelector/>
 				)}
-
-				
-				
 
 				{!!(this.store.forDownloadTab) && (
 					<span className={styles.downloadSubmitExplanation}>
