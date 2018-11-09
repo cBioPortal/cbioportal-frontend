@@ -136,6 +136,16 @@ export function countUniqueMutations(mutations: Mutation[]): number
     return Object.keys(groupMutationsByGeneAndPatientAndProteinChange(mutations)).length;
 }
 
+export function countMutationsByProteinChange(mutations: Mutation[]): {proteinChange: string, count: number}[]
+{
+    const mutationsByProteinChange = _.groupBy(mutations, "proteinChange");
+    const mutationCountsByProteinChange = _.map(mutationsByProteinChange,
+        mutations => ({proteinChange: mutations[0].proteinChange, count: mutations.length}));
+
+    // order by count descending, and then protein change ascending
+    return _.orderBy(mutationCountsByProteinChange, ["count", "proteinChange"], ["desc", "asc"]);
+}
+
 /**
  * Protein start positions for the mutations falling between a specific start and end position range
  */
