@@ -21,6 +21,7 @@ import {createQueryStore} from "../../home/HomePage";
 import getBrowserWindow from "../../../shared/lib/getBrowserWindow";
 import {remoteData} from "../../../shared/api/remoteData";
 import {getAlterationSummary, getGeneSummary, getPatientSampleSummary} from "./QuerySummaryUtils";
+import {MakeMobxView} from "../../../shared/components/MobxView";
 
 @observer
 export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore }, {}> {
@@ -41,7 +42,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
         return !!this.queryStore;
     }
 
-    readonly singleStudyUI = remoteData({
+    readonly singleStudyUI = MakeMobxView({
         await:()=>[
             this.props.store.queriedStudies,
             this.props.store.sampleLists,
@@ -49,7 +50,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
             this.props.store.patients,
             this.props.store.genes
         ],
-        invoke:()=>Promise.resolve(<div>
+        renderComplete:()=>(<div>
             <h4 style={{fontSize:14}}><StudyLink study={this.props.store.queriedStudies.result[0]}/></h4>
             {(this.props.store.sampleLists.result!.length > 0) && (<span>
                     {this.props.store.sampleLists.result![0].name}&nbsp;
@@ -74,7 +75,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
         $(document).scrollTop(0);
     }
 
-    readonly multipleStudyUI = remoteData({
+    readonly multipleStudyUI = MakeMobxView({
         await:()=>[this.props.store.samples, this.props.store.patients, this.props.store.queriedStudies],
         invoke:()=>Promise.resolve(
             <div>
@@ -90,21 +91,21 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
         )
     });
 
-    readonly cohortAndGeneSummary = remoteData({
+    readonly cohortAndGeneSummary = MakeMobxView({
         await:()=>[this.singleStudyUI, this.multipleStudyUI, this.props.store.queriedStudies],
-        invoke:()=>{
+        renderComplete:()=>{
             if (this.props.store.queriedStudies.result.length === 1) {
-                return Promise.resolve(this.singleStudyUI.result!);
+                return this.singleStudyUI.component!;
             } else {
-                return Promise.resolve(this.multipleStudyUI.result!);
+                return this.multipleStudyUI.component!;
             }
         }
     });
 
-    readonly alterationSummary = remoteData({
+    readonly alterationSummary = MakeMobxView({
         await:()=>[this.props.store.samples, this.props.store.patients,
             this.props.store.alteredSampleKeys, this.props.store.alteredPatientKeys],
-        invoke:()=>Promise.resolve(getAlterationSummary(this.props.store.samples.result!.length, this.props.store.patients.result!.length,
+        renderComplete:()=>(getAlterationSummary(this.props.store.samples.result!.length, this.props.store.patients.result!.length,
             this.props.store.alteredSampleKeys.result!.length, this.props.store.alteredPatientKeys.result!.length, this.props.store.hugoGeneSymbols.length))
     });
 
@@ -139,14 +140,14 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
 
                             <LoadingIndicator isLoading={!loadingComplete} small={true}/>
                             {
-                                (loadingComplete) && this.cohortAndGeneSummary.result
+                                (loadingComplete) && this.cohortAndGeneSummary.component!
                             }
                         </div>
 
                         <div className="query-summary__rightItems">
                             <div className="query-summary__alterationData">
                             {
-                                (loadingComplete) && <strong>{this.alterationSummary.result}</strong>
+                                (loadingComplete) && <strong>{this.alterationSummary.component!}</strong>
                             }
                             </div>
 
