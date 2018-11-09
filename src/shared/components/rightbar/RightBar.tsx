@@ -12,8 +12,8 @@ import { Link } from 'react-router';
 import getBrowserWindow from "../../lib/getBrowserWindow";
 import ExtendedRouterStore from "../../lib/ExtendedRouterStore";
 import LoadingIndicator from "../loadingIndicator/LoadingIndicator";
-import {ResultsViewTab} from "../../../pages/resultsView/ResultsViewPage";
 import {openStudySummaryFormSubmit} from "../../api/urls";
+import {ResultsViewTab} from "../../../pages/resultsView/ResultsViewPageHelpers";
 
 
 interface IRightBarProps

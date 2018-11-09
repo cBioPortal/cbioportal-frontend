@@ -8,6 +8,7 @@ import {CSSProperties} from "react";
 import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
 import autobind from "autobind-decorator";
 import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
+import {adjustedLongestLabelLength} from "../../../shared/lib/VictoryChartUtils";
 
 interface CancerSummaryChartProps {
     colors: Record<keyof IAlterationCountMap, string>;
@@ -105,7 +106,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
     }
 
     private get bottomPadding(){
-        return this.longestXLabelLength! * 7 + 40;
+        return adjustedLongestLabelLength(this.props.xLabels) * 7 + 40;
     }
 
     private get topPadding(){
@@ -137,19 +138,6 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
 
     private get yAxisLabel(){
         return (this.props.isPercentage) ? "Alteration Frequency" : "Absolute Counts";
-    }
-
-    private get longestXLabelLength(){
-
-        const adjustedForCaps = this.props.xLabels.map((label)=>{
-           const capitalizedLetters = label.match(/[A-Z]/g) || [];
-           const undercaseLetters = label.match(/[a-z]/g) || [];
-           const spaces = label.match(/\s/g) || [];
-           return (capitalizedLetters.length * 2) + (undercaseLetters.length * 1) + (spaces.length * 2);
-        });
-
-        return _.max(adjustedForCaps);
-
     }
 
     private tickFormat(){
