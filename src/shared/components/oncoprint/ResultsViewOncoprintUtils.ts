@@ -13,6 +13,18 @@ export const alterationTypeToProfiledForText:{[alterationType:string]:string} = 
     "PROTEIN_LEVEL": "protein expression"
 };
 
+export function getAnnotatingProgressMessage(usingOncokb:boolean, usingHotspot:boolean) {
+    if (usingOncokb && usingHotspot) {
+        return "Annotating with OncoKB and Cancer Hotspots";
+    } else if (usingOncokb) {
+        return "Annotating with OncoKB";
+    } else if (usingHotspot) {
+        return "Annotating with Cancer Hotspots";
+    } else {
+        return "Processing data";
+    }
+}
+
 export function makeProfiledInClinicalAttributes(
     coverageInformation: CoverageInformation["samples"],
     molecularProfileIdToMolecularProfile: {[molecularProfileId:string]:MolecularProfile},
