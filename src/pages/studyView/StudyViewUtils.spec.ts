@@ -13,11 +13,12 @@ import {
 } from 'pages/studyView/StudyViewUtils';
 import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue, Sample} from 'shared/api/generated/CBioPortalAPIInternal';
 import {ClinicalAttribute, Gene, CancerStudy} from 'shared/api/generated/CBioPortalAPI';
-import {ChartMeta, ChartTypeEnum, StudyViewFilterWithSampleIdentifierFilters} from "./StudyViewPageStore";
+import {ChartMeta, StudyViewFilterWithSampleIdentifierFilters} from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
 import sinon from 'sinon';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
 import { VirtualStudy } from 'shared/model/VirtualStudy';
+import {ChartTypeEnum} from "./StudyViewConfig";
 
 describe('StudyViewUtils', () => {
 

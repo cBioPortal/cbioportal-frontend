@@ -77,23 +77,12 @@ import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPl
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import {VirtualStudy} from 'shared/model/VirtualStudy';
 import windowStore from 'shared/components/window/WindowStore';
-import {Layout} from 'react-grid-layout';
 import {getHeatmapMeta} from "../../shared/lib/MDACCUtils";
-import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
+import {ChartDimension, ChartTypeEnum, STUDY_VIEW_CONFIG, StudyViewLayout} from "./StudyViewConfig";
 import onMobxPromise from "../../shared/lib/onMobxPromise";
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
 
-export enum ChartTypeEnum {
-    PIE_CHART = 'PIE_CHART',
-    BAR_CHART = 'BAR_CHART',
-    SURVIVAL = 'SURVIVAL',
-    TABLE = 'TABLE',
-    SCATTER = 'SCATTER',
-    MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
-    CNA_GENES_TABLE = 'CNA_GENES_TABLE',
-    NONE = 'NONE'
-}
 
 export type ChartType = 'PIE_CHART' | 'BAR_CHART' | 'SURVIVAL' | 'TABLE' | 'SCATTER' | 'MUTATED_GENES_TABLE' | 'CNA_GENES_TABLE' | 'NONE';
 
@@ -193,67 +182,6 @@ export const SpecialCharts: ChartMeta[] = [{
     priority: 0
 }];
 
-export type ChartDimension = {
-    w: number,
-    h: number
-}
-
-export type Position = {
-    x: number,
-    y: number
-}
-
-export type StudyViewPageLayoutProps = {
-    layout: Layout[],
-    cols: number,
-    rowHeight: number,
-    grid: ChartDimension,
-    dimensions:  {[chartType in ChartType]: ChartDimension}
-}
-
-export const DEFAULT_LAYOUT_PROPS:StudyViewPageLayoutProps ={
-    layout: [],
-    cols: 6,
-    rowHeight: 200,
-    grid: {
-        w: 205,
-        h: 200
-    },
-    dimensions: {
-        [ChartTypeEnum.PIE_CHART]: {
-            w: 1,
-            h: 1
-        },
-        [ChartTypeEnum.BAR_CHART]: {
-            w: 2,
-            h: 1
-        },
-        [ChartTypeEnum.SCATTER]: {
-            w: 2,
-            h: 2
-        },
-        [ChartTypeEnum.TABLE]: {
-            w: 2,
-            h: 2
-        },
-        [ChartTypeEnum.SURVIVAL]: {
-            w: 2,
-            h: 2
-        },
-        [ChartTypeEnum.MUTATED_GENES_TABLE]: {
-            w: 2,
-            h: 2
-        },
-        [ChartTypeEnum.CNA_GENES_TABLE]: {
-            w: 2,
-            h: 2
-        },
-        [ChartTypeEnum.NONE]: {
-            w: 0,
-            h: 0
-        }
-    }
-};
 export type StudyWithSamples = CancerStudy & {
     uniqueSampleKeys : string[]
 }
@@ -400,18 +328,19 @@ export class StudyViewPageStore {
 
     @computed
     get containerWidth(): number {
-        return this.studyViewPageLayoutProps.cols * DEFAULT_LAYOUT_PROPS.grid.w;
+        return this.studyViewPageLayoutProps.cols * STUDY_VIEW_CONFIG.layout.grid.w + (this.studyViewPageLayoutProps.cols + 1) * STUDY_VIEW_CONFIG.layout.gridMargin.x;
     }
 
+    // Minus the margin width
     @computed
-    get studyViewPageLayoutProps(): StudyViewPageLayoutProps {
-        let cols:number = Math.floor(windowStore.size.width / DEFAULT_LAYOUT_PROPS.grid.w);
+    get studyViewPageLayoutProps(): StudyViewLayout {
+        let cols: number = Math.floor((windowStore.size.width - 40) / (STUDY_VIEW_CONFIG.layout.grid.w + STUDY_VIEW_CONFIG.layout.gridMargin.x));
         return {
             cols: cols,
-            rowHeight: DEFAULT_LAYOUT_PROPS.grid.h,
-            grid: DEFAULT_LAYOUT_PROPS.grid,
+            grid: STUDY_VIEW_CONFIG.layout.grid,
+            gridMargin: STUDY_VIEW_CONFIG.layout.gridMargin,
             layout: calculateLayout(this.visibleAttributes, cols),
-            dimensions: DEFAULT_LAYOUT_PROPS.dimensions
+            dimensions: STUDY_VIEW_CONFIG.layout.dimensions
         };
     }
 
@@ -1394,7 +1323,7 @@ export class StudyViewPageStore {
             if (!_.isEmpty(mutationProfiles)) {
                 this.changeChartVisibility(UniqueKey.MUTATED_GENES_TABLE, true);
                 this.chartsType.set(UniqueKey.MUTATED_GENES_TABLE, ChartTypeEnum.MUTATED_GENES_TABLE);
-                this.chartsDimension.set(UniqueKey.MUTATED_GENES_TABLE, DEFAULT_LAYOUT_PROPS.dimensions[ChartTypeEnum.MUTATED_GENES_TABLE])
+                this.chartsDimension.set(UniqueKey.MUTATED_GENES_TABLE, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.MUTATED_GENES_TABLE])
             }
         }
     });
@@ -1413,7 +1342,7 @@ export class StudyViewPageStore {
             if (!_.isEmpty(cnaProfiles)) {
                 this.changeChartVisibility(UniqueKey.CNA_GENES_TABLE, true);
                 this.chartsType.set(UniqueKey.CNA_GENES_TABLE, ChartTypeEnum.CNA_GENES_TABLE);
-                this.chartsDimension.set(UniqueKey.CNA_GENES_TABLE, DEFAULT_LAYOUT_PROPS.dimensions[ChartTypeEnum.CNA_GENES_TABLE])
+                this.chartsDimension.set(UniqueKey.CNA_GENES_TABLE, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.CNA_GENES_TABLE])
             }
         }
     });
@@ -1469,7 +1398,7 @@ export class StudyViewPageStore {
 
             if (osStatusFlag && osMonthsFlag && getDefaultPriorityByUniqueKey(UniqueKey.OVERALL_SURVIVAL) !== 0) {
                 this.chartsType.set(UniqueKey.OVERALL_SURVIVAL, ChartTypeEnum.SURVIVAL);
-                this.chartsDimension.set(UniqueKey.OVERALL_SURVIVAL, DEFAULT_LAYOUT_PROPS.dimensions[ChartTypeEnum.SURVIVAL]);
+                this.chartsDimension.set(UniqueKey.OVERALL_SURVIVAL, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SURVIVAL]);
                 // hide OVERALL_SURVIVAL chart if cacner type is mixed or have moer than one cancer type
                 if(cancerTypeIds.length === 1 && cancerTypeIds[0] !== 'mixed') {
                     this.changeChartVisibility(UniqueKey.OVERALL_SURVIVAL, true);
@@ -1477,7 +1406,7 @@ export class StudyViewPageStore {
             }
             if (dfsStatusFlag && dfsMonthsFlag && getDefaultPriorityByUniqueKey(UniqueKey.DISEASE_FREE_SURVIVAL) !== 0) {
                 this.chartsType.set(UniqueKey.DISEASE_FREE_SURVIVAL, ChartTypeEnum.SURVIVAL);
-                this.chartsDimension.set(UniqueKey.DISEASE_FREE_SURVIVAL, DEFAULT_LAYOUT_PROPS.dimensions[ChartTypeEnum.SURVIVAL]);
+                this.chartsDimension.set(UniqueKey.DISEASE_FREE_SURVIVAL, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SURVIVAL]);
                 // hide DISEASE_FREE_SURVIVAL chart if cacner type is mixed or have moer than one cancer type
                 if(cancerTypeIds.length === 1 && cancerTypeIds[0] !== 'mixed') {
                     this.changeChartVisibility(UniqueKey.DISEASE_FREE_SURVIVAL, true);
@@ -1487,7 +1416,7 @@ export class StudyViewPageStore {
             if (mutationCountFlag && fractionGenomeAlteredFlag && getDefaultPriorityByUniqueKey(UniqueKey.MUTATION_COUNT_CNA_FRACTION) !== 0) {
                 this.changeChartVisibility(UniqueKey.MUTATION_COUNT_CNA_FRACTION, true);
                 this.chartsType.set(UniqueKey.MUTATION_COUNT_CNA_FRACTION, ChartTypeEnum.SCATTER);
-                this.chartsDimension.set(UniqueKey.MUTATION_COUNT_CNA_FRACTION, DEFAULT_LAYOUT_PROPS.dimensions[ChartTypeEnum.SCATTER])
+                this.chartsDimension.set(UniqueKey.MUTATION_COUNT_CNA_FRACTION, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SCATTER])
             }
         }
     });
@@ -1592,7 +1521,7 @@ export class StudyViewPageStore {
                 chartType: ChartTypeEnum.SCATTER,
                 displayName: 'Mutation Count vs Fraction of Genome Altered',
                 priority: getDefaultPriorityByUniqueKey(UniqueKey.MUTATION_COUNT_CNA_FRACTION),
-                dimension: DEFAULT_LAYOUT_PROPS.dimensions[ChartTypeEnum.SCATTER],
+                dimension: STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SCATTER],
                 description: ''
             };
         }
@@ -1640,7 +1569,7 @@ export class StudyViewPageStore {
                     this.chartsDimension.set(attr.uniqueKey, this.getTableDimensionByNumberOfRecords(data.result!.length));
                 }
             }else{
-                this.chartsDimension.set(attr.uniqueKey, DEFAULT_LAYOUT_PROPS.dimensions[newChartType]);
+                this.chartsDimension.set(attr.uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[newChartType]);
             }
     }
 
@@ -1756,7 +1685,7 @@ export class StudyViewPageStore {
             if (chartType === ChartTypeEnum.TABLE) {
                 this.chartsDimension.set(uniqueKey, this.getTableDimensionByNumberOfRecords(item.counts.length));
             } else {
-                this.chartsDimension.set(uniqueKey, DEFAULT_LAYOUT_PROPS.dimensions[chartType]);
+                this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[chartType]);
             }
         });
     }
@@ -1769,7 +1698,7 @@ export class StudyViewPageStore {
                 this._chartVisibility.set(uniqueKey, true);
             }
             this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
-            this.chartsDimension.set(uniqueKey, DEFAULT_LAYOUT_PROPS.dimensions[ChartTypeEnum.BAR_CHART]);
+            this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.BAR_CHART]);
         });
     }
 
