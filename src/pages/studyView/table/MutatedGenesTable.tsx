@@ -16,8 +16,8 @@ import {getFrequencyStr, getQValue} from "../StudyViewUtils";
 
 export interface IMutatedGenesTablePros {
     promise: MobxPromise<MutatedGenesData>;
-    width?: number;
-    height?: number;
+    width: number;
+    height: number;
     filters: number[];
     onUserSelection: (value: number[]) => void;
     numOfSelectedSamples: number;
@@ -195,6 +195,8 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
     public render() {
         return (
             <MutatedGenesTableComponent
+                width={this.props.width}
+                height={this.props.height}
                 data={this.props.promise.result || []}
                 columns={this._tableColumns}
                 showSelectSamples={true && this.preSelectedRows.length > 0}

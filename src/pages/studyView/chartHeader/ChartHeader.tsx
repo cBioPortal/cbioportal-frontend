@@ -1,7 +1,7 @@
 import * as React from "react";
 import styles from "./styles.module.scss";
 import {If} from 'react-if';
-import {ChartMeta, ChartType, ChartTypeEnum} from "pages/studyView/StudyViewPageStore";
+import {ChartMeta, ChartType} from "pages/studyView/StudyViewPageStore";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import {bind} from "bind-decorator";
@@ -11,10 +11,12 @@ import {action, computed, observable} from "mobx";
 import {observer} from "mobx-react";
 import {IChartContainerDownloadProps} from "../charts/ChartContainer";
 import {saveSvgAsPng} from "save-svg-as-png";
+import {ChartTypeEnum} from "../StudyViewConfig";
 
 export interface IChartHeaderProps {
     chartMeta: ChartMeta;
     title: string;
+    height: number;
     active           : boolean;
     resetChart       : () => void;
     deleteChart      : () => void;
@@ -124,7 +126,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
             </div>
         };
         return (
-            <div className={styles.header}>
+            <div className={styles.header}
+                 style={{height: `${this.props.height}px`, lineHeight: `${this.props.height}px`}}>
                 <div className={styles.name}>
                     {!this.props.hideLabel && <span>{this.props.title}</span>}
                 </div>

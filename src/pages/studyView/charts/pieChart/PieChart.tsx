@@ -1,20 +1,22 @@
 import * as React from "react";
-import { observer } from "mobx-react";
-import { VictoryPie, VictoryContainer, VictoryLabel, VictoryLegend, Slice } from 'victory';
-import { observable, computed, action, toJS } from "mobx";
+import {observer} from "mobx-react";
+import {Slice, VictoryContainer, VictoryLabel, VictoryLegend, VictoryPie} from 'victory';
+import {action, computed, observable, toJS} from "mobx";
 import _ from "lodash";
 import {getFrequencyStr, toSvgDomNodeWithLegend} from "pages/studyView/StudyViewUtils";
 import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
-import { AbstractChart } from "pages/studyView/charts/ChartContainer";
+import {AbstractChart} from "pages/studyView/charts/ChartContainer";
 import ifndef from "shared/lib/ifndef";
-import { bind } from "bind-decorator";
-import { ClinicalDataCountWithColor } from "pages/studyView/StudyViewPageStore";
+import {bind} from "bind-decorator";
+import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
 import classnames from 'classnames';
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
-import { If } from 'react-if';
+import {If} from 'react-if';
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
 
 export interface IPieChartProps {
+    width: number;
+    height: number;
     data: ClinicalDataCountWithColor[];
     filters: string[];
     onUserSelection: (values: string[]) => void;
@@ -147,6 +149,12 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         return ((d.count * 360) / this.totalCount) < 20 ? '' : d.count;
     }
 
+    // We do want to show a bigger pie chart when the height is way smaller than width
+    @computed
+    get chartSize() {
+        return (this.props.width + this.props.height ) / 2;
+    }
+
     @computed get victoryPie() {
         return (
             <VictoryPie
@@ -154,8 +162,8 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                 theme={CBIOPORTAL_VICTORY_THEME}
                 containerComponent={<VictoryContainer responsive={false} />}
                 groupComponent={<g className="studyViewPieChartGroup" />}
-                width={190}
-                height={180}
+                width={this.props.width}
+                height={this.chartSize}
                 labelRadius={20}
                 padding={30}
                 labels={this.label}
@@ -240,8 +248,8 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                 </If>
 
                 <svg
-                    width={190}
-                    height={180}
+                    width={this.props.width}
+                    height={this.props.height}
                     ref={(ref: any) => this.svg = ref}
                 >
                     {this.victoryPie}
