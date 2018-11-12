@@ -844,7 +844,7 @@ export class StudyViewPageStore {
     }
 
     public isLogScaleChecked(uniqueKey: string) {
-        return this._clinicalDataBinFilterSet.get(uniqueKey)!== undefined &&
+        return this._clinicalDataBinFilterSet.get(uniqueKey) !== undefined &&
             this._clinicalDataBinFilterSet.get(uniqueKey)!.disableLogScale;
     }
 

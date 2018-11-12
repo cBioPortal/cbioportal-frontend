@@ -174,7 +174,8 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                         style={{
                             data: {
                                 fill: (d: BarDatum) =>
-                                    this.isDataBinSelected(d.dataBin, this.props.filters) ? STUDY_VIEW_CONFIG.colors.theme.selectedGroup : STUDY_VIEW_CONFIG.colors.theme.unselectedGroup
+                                    (this.isDataBinSelected(d.dataBin, this.props.filters) || this.props.filters.length === 0) ?
+                                        STUDY_VIEW_CONFIG.colors.theme.primary : STUDY_VIEW_CONFIG.colors.na
                             }
                         }}
                         data={this.barData}
