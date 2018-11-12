@@ -50,7 +50,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
             this.props.store.patients,
             this.props.store.genes
         ],
-        renderComplete:()=>(<div>
+        render:()=>(<div>
             <h4 style={{fontSize:14}}><StudyLink study={this.props.store.queriedStudies.result[0]}/></h4>
             {(this.props.store.sampleLists.result!.length > 0) && (<span>
                     {this.props.store.sampleLists.result![0].name}&nbsp;
@@ -77,7 +77,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
 
     readonly multipleStudyUI = MakeMobxView({
         await:()=>[this.props.store.samples, this.props.store.patients, this.props.store.queriedStudies],
-        renderComplete:()=>(
+        render:()=>(
             <div>
                 <h4>
                     <a
@@ -103,7 +103,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
 
     readonly cohortAndGeneSummary = MakeMobxView({
         await:()=>[this.singleStudyUI, this.multipleStudyUI, this.props.store.queriedStudies],
-        renderComplete:()=>{
+        render:()=>{
             if (this.props.store.queriedStudies.result.length === 1) {
                 return this.singleStudyUI.component!;
             } else {
@@ -115,7 +115,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
     readonly alterationSummary = MakeMobxView({
         await:()=>[this.props.store.samples, this.props.store.patients,
             this.props.store.alteredSampleKeys, this.props.store.alteredPatientKeys],
-        renderComplete:()=>(getAlterationSummary(this.props.store.samples.result!.length, this.props.store.patients.result!.length,
+        render:()=>(getAlterationSummary(this.props.store.samples.result!.length, this.props.store.patients.result!.length,
             this.props.store.alteredSampleKeys.result!.length, this.props.store.alteredPatientKeys.result!.length, this.props.store.hugoGeneSymbols.length))
     });
 
