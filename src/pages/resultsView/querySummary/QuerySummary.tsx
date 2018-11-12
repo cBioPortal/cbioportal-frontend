@@ -77,16 +77,26 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
 
     readonly multipleStudyUI = MakeMobxView({
         await:()=>[this.props.store.samples, this.props.store.patients, this.props.store.queriedStudies],
-        invoke:()=>Promise.resolve(
+        renderComplete:()=>(
             <div>
                 <h4>
                     <a
                         href={`study?id=${this.props.store.queriedStudies.result.map(study => study.studyId).join(',')}`}
                         target="_blank"
                     >
-                        Combined Study ({getPatientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)})
+                        Combined Study ({this.props.store.samples.result.length} samples)
                     </a>
                 </h4>
+                <span>
+                    Querying {getPatientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)} in {this.props.store.queriedStudies.result.length} studies
+                    &nbsp;
+                    <DefaultTooltip
+                        placement='bottom'
+                        overlay={this.studyList}
+                        destroyTooltipOnHide={true}
+                    ><i className="fa fa-info-circle"/>
+                    </DefaultTooltip>
+                </span>
             </div>
         )
     });
