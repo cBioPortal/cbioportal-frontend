@@ -16,7 +16,7 @@ export type MobxView = {
 
 export function MakeMobxView(params:{
     await: ()=>({status:"complete"|"error"|"pending"}[]),
-    renderComplete: ()=>JSX.Element,
+    render: ()=>JSX.Element,
     renderError?:()=>JSX.Element,
     renderPending?:()=>JSX.Element
 }):MobxView {
@@ -38,7 +38,7 @@ export function MakeMobxView(params:{
             let ret = undefined;
             switch (this.status) {
                 case "complete":
-                    ret = params.renderComplete();
+                    ret = params.render();
                     break;
                 case "pending":
                     if (params.renderPending) {
