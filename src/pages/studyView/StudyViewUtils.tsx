@@ -1,28 +1,31 @@
 import _ from "lodash";
-import { SingleGeneQuery } from "shared/lib/oql/oql-parser";
-import { unparseOQLQueryLine } from "shared/lib/oql/oqlfilter";
+import {SingleGeneQuery} from "shared/lib/oql/oql-parser";
+import {unparseOQLQueryLine} from "shared/lib/oql/oqlfilter";
 import {
-    StudyViewFilter, DataBin, ClinicalDataIntervalFilterValue, ClinicalDataCount, SampleIdentifier, DensityPlotBin
+    ClinicalDataCount,
+    ClinicalDataIntervalFilterValue,
+    DataBin,
+    DensityPlotBin,
+    SampleIdentifier,
+    StudyViewFilter
 } from "shared/api/generated/CBioPortalAPIInternal";
-import { Sample, Gene, ClinicalAttribute, CancerStudy } from "shared/api/generated/CBioPortalAPI";
+import {CancerStudy, ClinicalAttribute, Gene, Sample} from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
-import {getSampleViewUrl, getStudySummaryUrl, buildCBioPortalPageUrl} from "../../shared/api/urls";
+import {buildCBioPortalPageUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
-import { BarDatum} from "./charts/barChart/BarChart";
+import {BarDatum} from "./charts/barChart/BarChart";
 import {
-    ClinicalDataTypeConstants,
-    StudyWithSamples,
-    StudyViewFilterWithSampleIdentifierFilters,
     AnalysisGroup,
-    Position,
-    DEFAULT_LAYOUT_PROPS
+    ClinicalDataTypeConstants,
+    StudyViewFilterWithSampleIdentifierFilters,
+    StudyWithSamples,
 } from "pages/studyView/StudyViewPageStore";
-import {ChartDimension, ChartMeta, ChartType, ChartTypeEnum, ClinicalDataType} from "./StudyViewPageStore";
+import {ChartMeta, ChartType, ClinicalDataType} from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
-import { VirtualStudy } from "shared/model/VirtualStudy";
+import {VirtualStudy} from "shared/model/VirtualStudy";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
+import {ChartDimension, ChartTypeEnum, Position, STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 
 export const COLORS = [
     STUDY_VIEW_CONFIG.colors.theme.primary, STUDY_VIEW_CONFIG.colors.theme.secondary,
@@ -902,13 +905,18 @@ export function getDefaultPriorityByUniqueKey(uniqueKey: string): number {
 }
 
 // Grid includes 10px margin
-export function getTableWidthByDimension(chartDimension: ChartDimension) {
-    return DEFAULT_LAYOUT_PROPS.grid.w * chartDimension.w - 10;
+export function getWidthByDimension(chartDimension: ChartDimension) {
+    return STUDY_VIEW_CONFIG.layout.grid.w * chartDimension.w + (chartDimension.w - 1) * STUDY_VIEW_CONFIG.layout.gridMargin.x - 2;
 }
 
 // Grid includes 15px header and 35px tool section
-export function getTableHeightByDimension(chartDimension: ChartDimension) {
-    return DEFAULT_LAYOUT_PROPS.grid.h * chartDimension.h - 50;
+export function getHeightByDimension(chartDimension: ChartDimension, chartHeight: number) {
+    return STUDY_VIEW_CONFIG.layout.grid.h * chartDimension.h + (chartDimension.h - 1) * STUDY_VIEW_CONFIG.layout.gridMargin.y - chartHeight;
+}
+
+// 35px tool section
+export function getTableHeightByDimension(chartDimension: ChartDimension, chartHeight: number) {
+    return getHeightByDimension(chartDimension, chartHeight) - 35;
 }
 
 export function getQValue(qvalue: number):string {

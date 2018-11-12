@@ -1,6 +1,8 @@
 import AppConfig from "appConfig";
 import {StudyView} from "../../config/IAppConfig";
+import {Layout} from 'react-grid-layout';
 import * as _ from 'lodash';
+import {ChartType} from "./StudyViewPageStore";
 
 export type StudyViewColor = {
     theme: StudyViewColorTheme,
@@ -31,15 +33,45 @@ export type StudyViewThreshold = {
     clinicalChartsPerGroup: number,
 }
 
+export type ChartDimension = {
+    w: number,
+    h: number
+}
+
+export type Position = {
+    x: number,
+    y: number
+}
+
+export type StudyViewLayout = {
+    layout: Layout[],
+    cols: number,
+    grid: ChartDimension,
+    gridMargin: Position,
+    dimensions: {[chartType in ChartType]: ChartDimension}
+}
+
 export type StudyViewFrontEndConfig = {
     thresholds: StudyViewThreshold,
-    initialBins: {[uniqueKey:string]: number[]}
+    initialBins: { [uniqueKey: string]: number[] }
     colors: StudyViewColor,
     alwaysShownClinicalAttributes: string[],
+    layout: StudyViewLayout,
     defaultPriority: number,
 }
 
 export type StudyViewConfig = StudyView & StudyViewFrontEndConfig
+
+export enum ChartTypeEnum {
+    PIE_CHART = 'PIE_CHART',
+    BAR_CHART = 'BAR_CHART',
+    SURVIVAL = 'SURVIVAL',
+    TABLE = 'TABLE',
+    SCATTER = 'SCATTER',
+    MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
+    CNA_GENES_TABLE = 'CNA_GENES_TABLE',
+    NONE = 'NONE'
+}
 
 // TODO: The priority and tableAttrs are duplicated in serverConfigDefaults.
 // We need to update in next visit before the release.
@@ -48,7 +80,7 @@ const studyViewFrontEnd = {
     defaultPriority: 1,
     tableAttrs: ['SAMPLE_CANCER_TYPE', 'SAMPLE_CANCER_TYPE_DETAILED'],
     initialBins: {
-      'SAMPLE_MSI_SCORE': [1, 2, 5, 10, 30]
+        'SAMPLE_MSI_SCORE': [1, 2, 5, 10, 30]
     },
     priority: {
         "SAMPLE_CANCER_TYPE": 3000,
@@ -74,6 +106,53 @@ const studyViewFrontEnd = {
         rowsInTableForOneGrid: 8,
         clinicalChartsPerGroup: 5,
     },
+    layout: {
+        layout: [],
+        cols: 6,
+        grid: {
+            w: 195,
+            h: 170
+        },
+        gridMargin: {
+            x: 5,
+            y: 5
+        },
+        dimensions: {
+            [ChartTypeEnum.PIE_CHART]: {
+                w: 1,
+                h: 1
+            },
+            [ChartTypeEnum.BAR_CHART]: {
+                w: 2,
+                h: 1
+            },
+            [ChartTypeEnum.SCATTER]: {
+                w: 2,
+                h: 2
+            },
+            [ChartTypeEnum.TABLE]: {
+                w: 2,
+                h: 2
+            },
+            [ChartTypeEnum.SURVIVAL]: {
+                w: 2,
+                h: 2
+            },
+            [ChartTypeEnum.MUTATED_GENES_TABLE]: {
+                w: 2,
+                h: 2
+            },
+            [ChartTypeEnum.CNA_GENES_TABLE]: {
+                w: 2,
+                h: 2
+            },
+            [ChartTypeEnum.NONE]: {
+                w: 0,
+                h: 0
+            }
+        }
+    },
+
     colors: {
         theme: {
             primary: '#2986E2',
