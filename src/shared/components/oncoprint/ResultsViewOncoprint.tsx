@@ -36,7 +36,9 @@ import naturalSort from "javascript-natural-sort";
 import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
 import Spec = Mocha.reporters.Spec;
 import OqlStatusBanner from "../oqlStatusBanner/OqlStatusBanner";
-import {makeProfiledInClinicalAttributes} from "./ResultsViewOncoprintUtils";
+import {getAnnotatingProgressMessage, makeProfiledInClinicalAttributes} from "./ResultsViewOncoprintUtils";
+import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
+import {getMobxPromiseGroupStatus} from "../../lib/getMobxPromiseGroupStatus";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -1045,10 +1047,49 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
+    @computed get progressItems():IProgressIndicatorItem[] {
+        const ret = [];
+
+        const loadingDataStatus = getMobxPromiseGroupStatus(this.props.store.molecularData, this.props.store.mutations);
+        ret.push({
+            label: "Loading genomic data",
+            status: loadingDataStatus
+        });
+
+        const usingOncokb = this.props.store.mutationAnnotationSettings.oncoKb;
+        const usingHotspot = this.props.store.mutationAnnotationSettings.hotspots;
+        let annotatingStatus = "complete";
+
+        if (usingOncokb || usingHotspot) {
+            if (loadingDataStatus !== "complete") {
+                annotatingStatus = "notInvoked";
+            } else {
+                annotatingStatus = getMobxPromiseGroupStatus(
+                    this.props.store.annotatedMolecularData, this.props.store.putativeDriverAnnotatedMutations
+                );
+            }
+            ret.push({
+                label: getAnnotatingProgressMessage(usingOncokb, usingHotspot),
+                status: annotatingStatus
+            });
+        }
+
+        ret.push({
+            label: "Rendering",
+            status: (loadingDataStatus === "complete" && annotatingStatus === "complete") ? "pending" : "notInvoked"
+        });
+
+        return ret as IProgressIndicatorItem[];
+    }
+
     public render() {
         return (
-            <div>
-                <LoadingIndicator isLoading={this.isHidden} center={true} size={"big"} />
+            <div className="posRelative">
+
+                <LoadingIndicator isLoading={this.isHidden} size={"big"} center={true}>
+                    <ProgressIndicator items={this.progressItems} show={this.isHidden}/>
+                </LoadingIndicator>
+
                 <div className={"tabMessageContainer"}>
                     <OqlStatusBanner className="oncoprint-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
                 </div>
