@@ -56,7 +56,7 @@ function getStudySummaryUrlParams(studyIds:string | ReadonlyArray<string>) {
     } else {
         cohortsArray = studyIds;
     }
-    return {pathname:'study', query: {id: cohortsArray.join(",")}};
+    return {pathname:'newstudy', query: {id: cohortsArray.join(",")}};
 }
 
 export function getStudySummaryUrl(studyIds:string | ReadonlyArray<string>) {
