@@ -20,7 +20,6 @@ export type StudyViewColorTheme = {
 
     unselectedGroup: string,
     selectedGroup: string,
-    unselectedPieSlices: string,
     clinicalFilterTitle: string,
     clinicalFilterContent: string,
 }
@@ -84,7 +83,6 @@ const studyViewFrontEnd = {
 
             unselectedGroup: '#2986E2',
             selectedGroup: '#DC3912',
-            unselectedPieSlices: '#808080',
             clinicalFilterTitle: '#A9A9A9',
             clinicalFilterContent: '#2986E2',
         },
