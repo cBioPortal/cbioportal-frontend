@@ -16,10 +16,12 @@ import {
     CopyNumberCountByGene,
     CopyNumberGeneFilter,
     CopyNumberGeneFilterElement,
-    DataBin, DensityPlotBin,
+    DataBin,
+    DensityPlotBin,
     MolecularProfileSampleCount,
     MutationCountByGene,
-    MutationGeneFilter, RectangleBounds,
+    MutationGeneFilter,
+    RectangleBounds,
     Sample,
     SampleIdentifier,
     StudyViewFilter
@@ -58,7 +60,8 @@ import {
     isFiltered,
     isLogScaleByDataBins,
     isPreSelectedClinicalAttr,
-    makePatientToClinicalAnalysisGroup, MutationCountVsCnaYBinsMin,
+    makePatientToClinicalAnalysisGroup,
+    MutationCountVsCnaYBinsMin,
     NA_DATA,
     pickClinicalDataColors,
     showOriginStudiesInSummaryDescription,
@@ -286,7 +289,7 @@ export class StudyViewPageStore {
     private _clinicalDataEqualityFilterSet = observable.shallowMap<ClinicalDataEqualityFilter>();
     private _clinicalDataIntervalFilterSet = observable.shallowMap<ClinicalDataIntervalFilter>();
 
-    @observable private logScaleState = observable.map<boolean>();
+    @observable private _clinicalDataBinFilterSet = observable.map<ClinicalDataBinFilter>();
 
     @observable.ref private _mutatedGeneFilter: MutationGeneFilter[] = [];
 
@@ -827,28 +830,22 @@ export class StudyViewPageStore {
         // reset filters before toggling
         this.updateClinicalDataIntervalFilters(chartMeta, []);
 
-        // then toggle
-        if (this.logScaleState.get(chartMeta.uniqueKey) === undefined) {
-            this.logScaleState.set(chartMeta.uniqueKey, false);
-        }
-        else {
-            this.logScaleState.set(chartMeta.uniqueKey, !this.logScaleState.get(chartMeta.uniqueKey));
-        }
+        // the toggle should really only be used by the bar chart.
+        // the clinicalDataBinFilter is guaranteed for bar chart.
+        let ref = this._clinicalDataBinFilterSet.get(chartMeta.uniqueKey);
+        ref!.disableLogScale = !ref!.disableLogScale;
     }
 
     public isLogScaleToggleVisible(uniqueKey: string, dataBins?: DataBin[]) {
         return (
-            this.logScaleState.get(uniqueKey) !== undefined ||
+            (this._clinicalDataBinFilterSet.get(uniqueKey) !== undefined &&  this._clinicalDataBinFilterSet.get(uniqueKey)!.disableLogScale) ||
             isLogScaleByDataBins(dataBins)
         );
     }
 
-    public isLogScaleDisabled(uniqueKey: string) {
-        return this.logScaleState.get(uniqueKey) === false;
-    }
-
     public isLogScaleChecked(uniqueKey: string) {
-        return this.logScaleState.get(uniqueKey) !== false;
+        return this._clinicalDataBinFilterSet.get(uniqueKey)!== undefined &&
+            this._clinicalDataBinFilterSet.get(uniqueKey)!.disableLogScale;
     }
 
     @action updateChartsVisibility(visibleChartIds:string[]){
@@ -999,17 +996,9 @@ export class StudyViewPageStore {
             (attr: ClinicalAttribute) => attr.datatype === "NUMBER");
 
         return _.sortBy(_.unionBy(visibleNumericalAttributes.map((chartMeta: ChartMeta) => {
-                return {
-                    attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
-                    clinicalDataType: chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE',
-                    disableLogScale: false
-                } as ClinicalDataBinFilter;
+                return this._clinicalDataBinFilterSet.get(getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!))!;;
             }), defaultVisibleNumericalAttributes.map((attr:ClinicalAttribute) => {
-                return {
-                    attributeId: attr.clinicalAttributeId,
-                    clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE',
-                    disableLogScale: false
-                } as ClinicalDataBinFilter;
+                return this._clinicalDataBinFilterSet.get(getClinicalAttributeUniqueKey(attr))!;;
             }), attr => [attr.attributeId, attr.clinicalDataType].join('')),
             attr => [attr.attributeId, attr.clinicalDataType].join(''));
     }
@@ -1102,11 +1091,7 @@ export class StudyViewPageStore {
                             result = await internalClient.fetchClinicalDataBinCountsUsingPOST({
                                 dataBinMethod,
                                 clinicalDataBinCountFilter: {
-                                    attributes: [{
-                                        attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
-                                        clinicalDataType: clinicalDataType,
-                                        disableLogScale: this.isLogScaleDisabled(chartMeta.uniqueKey),
-                                    } as ClinicalDataBinFilter],
+                                    attributes: [this._clinicalDataBinFilterSet.get(getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!))!],
                                     studyViewFilter: this.filters
                                 } as ClinicalDataBinCountFilter
                             });
@@ -1464,6 +1449,20 @@ export class StudyViewPageStore {
                         fractionGenomeAlteredFlag = true;
                     }
                 }
+
+                if(obj.datatype === 'NUMBER') {
+                    const uniqueKey = getClinicalAttributeUniqueKey(obj);
+                    let filter = {
+                        attributeId: obj.clinicalAttributeId,
+                        clinicalDataType: obj.patientAttribute ? 'PATIENT' : 'SAMPLE',
+                        disableLogScale: false
+                    } as ClinicalDataBinFilter;
+
+                    if (STUDY_VIEW_CONFIG.initialBins[uniqueKey]) {
+                        filter.customBins = STUDY_VIEW_CONFIG.initialBins[uniqueKey];
+                    }
+                    this._clinicalDataBinFilterSet.set(uniqueKey, filter);
+                }
             });
 
             const cancerTypeIds = _.uniq(this.queriedPhysicalStudies.result.map(study=>study.cancerTypeId));
@@ -1729,11 +1728,7 @@ export class StudyViewPageStore {
                 dataBinMethod: 'STATIC',
                 clinicalDataBinCountFilter: {
                     attributes: _.filter(this.defaultVisibleAttributes.result, attr => attr.datatype === 'NUMBER').map(attr => {
-                        return {
-                            attributeId: attr.clinicalAttributeId,
-                            clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE',
-                            disableLogScale: false
-                        } as ClinicalDataBinFilter
+                        return this._clinicalDataBinFilterSet.get(getClinicalAttributeUniqueKey(attr))!;
                     }),
                     studyViewFilter: this.initialFilters
                 } as ClinicalDataBinCountFilter
