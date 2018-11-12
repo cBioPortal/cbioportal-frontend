@@ -89,7 +89,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     @computed get fill() {
         return (d: ClinicalDataCountWithColor) => {
             if (!_.isEmpty(this.props.filters) && !_.includes(this.props.filters, d.value)) {
-                return STUDY_VIEW_CONFIG.colors.theme.unselectedPieSlices;
+                return STUDY_VIEW_CONFIG.colors.na;
             }
             return d.color;
         };
