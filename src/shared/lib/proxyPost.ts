@@ -1,5 +1,6 @@
 import getBrowserWindow from "./getBrowserWindow";
 import sizeof from "object-sizeof";
+import {sendSentryMessage} from "./tracking";
 
 function hash(str:string) {
     var hash = 0, i, chr;
@@ -34,6 +35,10 @@ function tryFreeCache() {
     // delete data to free up memory, starting from the front of the line (least recently used)
     let elt:any;
     try {
+        if (cacheSize > maxCacheSize) {
+            // log this
+            sendSentryMessage(`Clearing cache after reaching cache limit of ${maxCacheSize} bytes (${(maxCacheSize/Math.pow(10,6)).toFixed(2)} Mb)`);
+        }
         while (cacheSize > maxCacheSize) {
             elt = undefined;
             // remove least recently used element from front, skipping over
