@@ -34,6 +34,7 @@ export type StudyViewThreshold = {
 
 export type StudyViewFrontEndConfig = {
     thresholds: StudyViewThreshold,
+    initialBins: {[uniqueKey:string]: number[]}
     colors: StudyViewColor,
     alwaysShownClinicalAttributes: string[],
     defaultPriority: number,
@@ -47,6 +48,9 @@ const studyViewFrontEnd = {
     alwaysShownClinicalAttributes: ['SAMPLE_CANCER_TYPE', 'SAMPLE_CANCER_TYPE_DETAILED'],
     defaultPriority: 1,
     tableAttrs: ['SAMPLE_CANCER_TYPE', 'SAMPLE_CANCER_TYPE_DETAILED'],
+    initialBins: {
+      'SAMPLE_MSI_SCORE': [1, 2, 5, 10, 30]
+    },
     priority: {
         "SAMPLE_CANCER_TYPE": 3000,
         "SAMPLE_CANCER_TYPE_DETAILED": 2000,
