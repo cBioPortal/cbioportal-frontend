@@ -1,7 +1,7 @@
 import * as React from "react";
 import AppConfig from "appConfig";
 import {If, Then, Else} from 'react-if';
-import client from "shared/api/cbioportalClientInstance";
+import internalClient from "shared/api/cbioportalInternalClientInstance";
 import {AppStore} from "../../../AppStore";
 import LoadingIndicator from "../loadingIndicator/LoadingIndicator";
 import {observer} from "mobx-react";
@@ -87,7 +87,7 @@ export class DataAccessTokens extends React.Component<IDataAccessTokensProps, {}
     async generateNewDataAccessToken() {
         if (this.props.appStore.isLoggedIn) {
             let _token = await Promise.resolve(
-                client.createDataAccessTokenUsingPOST(
+                internalClient.createDataAccessTokenUsingPOST(
                     {'allowRevocationOfOtherTokens':AppConfig.serverConfig.dat_revoke_other_tokens}))
             const dat = new UserDataAccessToken(_token.token, _token.creation, _token.expiration, _token.username);
             this.setState({userDataAccessToken : dat})
