@@ -16,26 +16,32 @@ import {ClinicalEvent, ClinicalEventData} from "../../../shared/api/generated/CB
 interface ITimelineProps {
     sampleManager:SampleManager;
     store:PatientViewPageStore;
-    getWidth:() => number;
+    width:number;
 }
 
 export default class Timeline extends React.Component<ITimelineProps, {}> {
 
-    shouldComponentUpdate() {
+    private currentWidth:number;
+
+    shouldComponentUpdate(nextProps:ITimelineProps){
+        if (nextProps.width !== this.currentWidth) {
+            // only rerender to resize
+            this.drawTimeline(nextProps.width);
+        }
         return false;
     }
 
     componentDidMount() {
 
-        this.drawTimeline();
+        this.drawTimeline(this.props.width);
 
-        var debouncedResize =  _.debounce(()=>this.drawTimeline(),500);
+        /*var debouncedResize =  _.debounce(()=>this.drawTimeline(),500);
 
-        $(window).resize(debouncedResize);
+        $(window).resize(debouncedResize);*/
 
     }
 
-    drawTimeline(){
+    drawTimeline(width:number){
 
         let clinicalDataMap = this.props.store.patientViewData.result.samples!.reduce((memo:any,item)=>{
             memo[item.id] = item.clinicalData.reduce((innerMemo:any,innerItem)=>{
@@ -76,8 +82,8 @@ export default class Timeline extends React.Component<ITimelineProps, {}> {
             }
         });
 
-        buildTimeline(params, caseIds, patientInfo, clinicalDataMap, caseMetaData, timelineData, this.props.getWidth());
-
+        buildTimeline(params, caseIds, patientInfo, clinicalDataMap, caseMetaData, timelineData, width);
+        this.currentWidth = width;
 
     }
 

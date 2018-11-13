@@ -1,12 +1,13 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import {action, computed, toJS} from "mobx";
+import {computed, toJS} from "mobx";
 import {bind} from "bind-decorator";
 import _ from "lodash";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import {ChartMeta, ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
 import FixedHeaderTable from "./FixedHeaderTable";
 import styles from "./tables.module.scss";
+import {getFrequencyStr} from "../StudyViewUtils";
 
 export interface IClinicalTableProps {
     data: ClinicalDataCountWithColor[];
@@ -28,6 +29,16 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
 
     constructor(props: IClinicalTableProps) {
         super(props);
+    }
+
+    static readonly defaultProps = {
+        width: 300
+    };
+
+    @computed
+    get columnWidth() {
+        // last two columns width are 80, 60
+        return [this.props.width! - 140, 80, 60]
     }
 
     private _columns = [{
@@ -52,7 +63,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
         filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => (d.value.toUpperCase().indexOf(filterStringUpper) > -1),
         sortBy: (d: ClinicalDataCountWithColor) => d.value,
         defaultSortDirection: 'asc' as 'asc',
-        width: 180
+        width: this.columnWidth[0]
     }, {
         name: '#',
         render: (data: ClinicalDataCountWithColor) =>
@@ -64,18 +75,18 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
         filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => (d.count.toString().indexOf(f) > -1),
         sortBy: (d: ClinicalDataCountWithColor) => d.count,
         defaultSortDirection: 'desc' as 'desc',
-        width: 60
+        width: this.columnWidth[1]
     }, {
         name: 'Freq',
         render: (data: ClinicalDataCountWithColor) =>
-            <span>{((data.count / this.totalCount) * 100).toFixed(2) + '%'}</span>,
+            <span>{getFrequencyStr((data.count / this.totalCount) * 100)}</span>,
         filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => {
-            let freq = ((d.count / this.totalCount) * 100).toFixed(2) + '%'
+            let freq = getFrequencyStr((d.count / this.totalCount) * 100);
             return (freq.indexOf(filterStringUpper) > -1)
         },
         sortBy: (d: ClinicalDataCountWithColor) => d.count,//sort freq column using count
         defaultSortDirection: 'desc' as 'desc',
-        width: 60
+        width: this.columnWidth[2]
     }];
 
     @bind

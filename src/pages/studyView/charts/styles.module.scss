@@ -5,6 +5,7 @@
     flex-direction: column;
     display: flex;
     height: 100%;
+    border-radius:$border-radius-base;
 
     &.analysisTarget {
         border: 2px solid #e5e076;

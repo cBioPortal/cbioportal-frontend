@@ -46,11 +46,11 @@ export function getGeneticTrackSortComparator(sortByMutationType?: boolean, sort
                 return (({'true': 1, 'false': 2}) as { [bool: string]: number })[(!!m) + ""];
             }
         } else if (!sortByMutationType && sortByDrivers) {
-            _order = makeComparatorMetric([['inframe_rec', 'missense_rec', 'promoter_rec', 'trunc_rec', 'inframe', 'promoter', 'trunc',], 'missense', undefined]);
+            _order = makeComparatorMetric([['inframe_rec', 'missense_rec', 'promoter_rec', 'trunc_rec', 'other_rec', 'inframe', 'promoter', 'trunc','other'], 'missense', undefined]);
         } else if (sortByMutationType && !sortByDrivers) {
-            _order = makeComparatorMetric([['trunc', 'trunc_rec'], ['inframe', 'inframe_rec'], ['promoter', 'promoter_rec'], ['missense', 'missense_rec'], undefined, true, false]);
+            _order = makeComparatorMetric([['trunc', 'trunc_rec'], ['inframe', 'inframe_rec'], ['promoter', 'promoter_rec'], ['missense', 'missense_rec'], ['other', 'other_rec'], undefined, true, false]);
         } else if (sortByMutationType && sortByDrivers) {
-            _order = makeComparatorMetric(['trunc_rec', 'inframe_rec', 'promoter_rec', 'missense_rec', 'trunc', 'inframe', 'promoter', 'missense', undefined, true, false]);
+            _order = makeComparatorMetric(['trunc_rec', 'inframe_rec', 'promoter_rec', 'missense_rec', 'other_rec', 'trunc', 'inframe', 'promoter', 'missense', 'other', undefined, true, false]);
         }
         return function (m: any) {
             return _order[m];

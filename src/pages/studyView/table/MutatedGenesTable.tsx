@@ -12,7 +12,7 @@ import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import FixedHeaderTable from "./FixedHeaderTable";
 import {action, computed, observable} from "mobx";
 import {bind} from "bind-decorator";
-import {getQValue} from "../StudyViewUtils";
+import {getFrequencyStr, getQValue} from "../StudyViewUtils";
 
 export interface IMutatedGenesTablePros {
     promise: MobxPromise<MutatedGenesData>;
@@ -79,7 +79,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             filter: (data: MutationCountByGene, filterString: string, filterStringUpper: string) => {
                 return data.hugoGeneSymbol.indexOf(filterStringUpper) > -1;
             },
-            width: 160
+            width: 150
         },
         {
             name: '# Mut',
@@ -89,7 +89,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             filter: (data: MutationCountByGene, filterString: string, filterStringUpper: string) => {
                 return _.toString(data.totalCount).indexOf(filterStringUpper) > -1;
             },
-            width: 80
+            width: 90
         },
         {
             name: '#',
@@ -106,17 +106,17 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             filter: (data: MutationCountByGene, filterString: string, filterStringUpper: string) => {
                 return _.toString(data.countByEntity).indexOf(filterStringUpper) > -1;
             },
-            width: 80
+            width: 90
         },
         {
             name: 'Freq',
-            render: (data: MutationCountByGene) => <span>{data.frequency + '%'}</span>,
+            render: (data: MutationCountByGene) => <span>{getFrequencyStr(data.frequency)}</span>,
             sortBy: (data: MutationCountByGene) => data.frequency,
             defaultSortDirection: 'desc' as 'desc',
             filter: (data: MutationCountByGene, filterString: string, filterStringUpper: string) => {
                 return _.toString(data.frequency).indexOf(filterStringUpper) > -1;
             },
-            width: 80
+            width: 70
         }
     ];
 
@@ -197,8 +197,6 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             <MutatedGenesTableComponent
                 data={this.props.promise.result || []}
                 columns={this._tableColumns}
-                selectedGenes={this.props.selectedGenes}
-                selectedRows={_.map(_.union(this.selectedRows, this.preSelectedRows), row => row.rowIndex)}
                 showSelectSamples={true && this.preSelectedRows.length > 0}
                 isSelectedRow={this.isSelectedRow}
                 afterSelectingRows={this.afterSelectingRows}

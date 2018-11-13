@@ -1,0 +1,20 @@
+.newsPage {
+  #mainColumn {
+    li {
+      margin-bottom:5px;
+      img {
+        @extend .framedImage;
+      }
+      ul {
+        margin-top:5px;
+      }
+    }
+  }
+
+
+  .markdown-body {
+    img {
+      max-width: 800px;
+    }
+  }
+}

@@ -4370,6 +4370,7 @@
           "type": "string",
           "enum": [
             "MUTATION_EXTENDED",
+            "MUTATION_UNCALLED",
             "FUSION",
             "STRUCTURAL_VARIANT",
             "COPY_NUMBER_ALTERATION",
