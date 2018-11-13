@@ -1,10 +1,15 @@
 .centered {
   position:absolute;
-  top: 200px;
+  top: 100px;
   left:50%;
   z-index:10000;
   text-align:center;
-  transform: perspective(1px) translateY(-50%) translateX(-50%);
+  transform: translateX(-50%);
+}
+
+.centered-with-children {
+  // fixes blurry text bug to have an even # of pixels in width
+  width:600px;
 }
 
 .color {
