@@ -14,6 +14,7 @@ import {
     setConfigDefaults
 } from './config/config';
 
+import './shared/lib/ajaxQuiet';
 import {computed, extendObservable} from 'mobx';
 import makeRoutes from './routes';
 import * as _ from 'lodash';
@@ -24,7 +25,7 @@ import { getHost } from './shared/api/urls';
 import { validateParametersPatientView } from './shared/lib/validateParameters';
 import AppConfig from "appConfig";
 import browser from 'bowser';
-
+import { setNetworkListener } from './shared/lib/ajaxQuiet';
 import {initializeTracking} from "shared/lib/tracking";
 import {CancerStudyQueryUrlParams} from "shared/components/query/QueryStore";
 import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
@@ -62,6 +63,10 @@ if (localStorage.e2etest) {
         $("body").addClass("e2etest");
         window.e2etest = true;
     });
+}
+
+if (getBrowserWindow().navigator.webdriver) {
+    setNetworkListener();
 }
 
 // expose version on window
