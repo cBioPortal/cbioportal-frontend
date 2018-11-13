@@ -44,7 +44,7 @@ function waitForNetworkQuiet(){
     browser.waitUntil(()=>{
         return browser.execute(function(){
             return window.ajaxQuiet === true;
-        })
+        }).value == true
     });
 }
 

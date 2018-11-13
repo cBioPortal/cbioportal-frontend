@@ -1,7 +1,6 @@
 var requests = {};
 var _send = XMLHttpRequest.prototype.send;
 var lastTimeout = null;
-import * as _ from 'lodash';
 
 export function setNetworkListener(){
 
@@ -26,7 +25,7 @@ export function setNetworkListener(){
                 delete requests[id];
             }
             if (callback) callback.apply(this, arguments);
-            if (_.size(requests) === 0) {
+            if (Object.keys(requests).length === 0) {
                 window.ajaxQuiet = true;
             }
         }
