@@ -30,13 +30,7 @@ export type ClinicalDataBinFilter = {
 
         'clinicalDataType': "SAMPLE" | "PATIENT"
 
-        'customBins': Array < number >
-
         'disableLogScale': boolean
-
-        'end': number
-
-        'start': number
 
 };
 export type ClinicalDataCount = {

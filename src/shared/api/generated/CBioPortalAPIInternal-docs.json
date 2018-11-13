@@ -1488,23 +1488,8 @@
             "PATIENT"
           ]
         },
-        "customBins": {
-          "type": "array",
-          "items": {
-            "type": "number",
-            "format": "double"
-          }
-        },
         "disableLogScale": {
           "type": "boolean"
-        },
-        "end": {
-          "type": "number",
-          "format": "double"
-        },
-        "start": {
-          "type": "number",
-          "format": "double"
         }
       },
       "title": "ClinicalDataBinFilter"
