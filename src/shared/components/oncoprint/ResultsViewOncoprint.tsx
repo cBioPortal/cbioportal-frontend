@@ -22,7 +22,7 @@ import {
 import _ from "lodash";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import AppConfig from "appConfig";
-import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
+import LoadingIndicator, {GlobalLoader} from "shared/components/loadingIndicator/LoadingIndicator";
 import OncoprintJS, {TrackId} from "oncoprintjs";
 import fileDownload from 'react-file-download';
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
@@ -36,7 +36,9 @@ import naturalSort from "javascript-natural-sort";
 import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
 import Spec = Mocha.reporters.Spec;
 import OqlStatusBanner from "../oqlStatusBanner/OqlStatusBanner";
-import {makeProfiledInClinicalAttributes} from "./ResultsViewOncoprintUtils";
+import {getAnnotatingProgressMessage, makeProfiledInClinicalAttributes} from "./ResultsViewOncoprintUtils";
+import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
+import {getMobxPromiseGroupStatus} from "../../lib/getMobxPromiseGroupStatus";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -232,7 +234,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.showMinimap;
             },
             get hideHeatmapMenu() {
-                return self.props.store.queryStore.isVirtualStudyQuery;
+                return self.props.store.studies.result.length > 1;
             },
             get sortByMutationType() {
                 return self.sortByMutationType;
@@ -250,13 +252,19 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.props.store.mutationAnnotationSettings.oncoKb;
             },
             get annotateDriversOncoKbDisabled() {
+                return !AppConfig.serverConfig.show_oncokb;
+            },
+            get annotateDriversOncoKbError() {
                 return self.props.store.didOncoKbFailInOncoprint;
             },
             get annotateDriversHotspots() {
                 return self.props.store.mutationAnnotationSettings.hotspots;
             },
             get annotateDriversHotspotsDisabled() {
-                return false; // maybe we'll use this in future
+                return !AppConfig.serverConfig.show_hotspot;
+            },
+            get annotateDriversHotspotsError() {
+                return self.props.store.didHotspotFailInOncoprint;
             },
             get annotateDriversCBioPortal() {
                 return self.props.store.mutationAnnotationSettings.cbioportalCount;
@@ -312,7 +320,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.heatmapGeneInputValue;
             },
             get customDriverAnnotationBinaryMenuLabel() {
-                const label = AppConfig.oncoprintCustomDriverAnnotationBinaryMenuLabel;
+                const label = AppConfig.serverConfig.binary_custom_driver_annotation_menu_label;
                 const customDriverReport = self.props.store.customDriverAnnotationReport.result;
                 if (label && customDriverReport && customDriverReport.hasBinary) {
                     return label;
@@ -321,7 +329,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 }
             },
             get customDriverAnnotationTiersMenuLabel() {
-                const label = AppConfig.oncoprintCustomDriverAnnotationTiersMenuLabel;
+                const label = AppConfig.serverConfig.oncoprint_custom_driver_annotation_tiers_menu_label;
                 const customDriverReport = self.props.store.customDriverAnnotationReport.result;
                 if (label && customDriverReport && customDriverReport.tiers.length) {
                     return label;
@@ -376,7 +384,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     componentWillUnmount() {
-        this.putativeDriverSettingsReaction();
+        if (this.putativeDriverSettingsReaction) this.putativeDriverSettingsReaction();
         this.urlParamsReaction();
     }
 
@@ -418,10 +426,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     });
                     this.props.store.mutationAnnotationSettings.ignoreUnknown = false;
                 } else {
-                    if (!this.controlsState.annotateDriversOncoKbDisabled)
+                    if (!this.controlsState.annotateDriversOncoKbDisabled && !this.controlsState.annotateDriversOncoKbError)
                         this.props.store.mutationAnnotationSettings.oncoKb = true;
 
-                    if (!this.controlsState.annotateDriversHotspotsDisabled)
+                    if (!this.controlsState.annotateDriversHotspotsDisabled && !this.controlsState.annotateDriversHotspotsError)
                         this.props.store.mutationAnnotationSettings.hotspots = true;
 
                     this.props.store.mutationAnnotationSettings.cbioportalCount = true;
@@ -1039,21 +1047,52 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
+    @computed get progressItems():IProgressIndicatorItem[] {
+        const ret = [];
+
+        const loadingDataStatus = getMobxPromiseGroupStatus(this.props.store.molecularData, this.props.store.mutations);
+        ret.push({
+            label: "Loading genomic data",
+            status: loadingDataStatus
+        });
+
+        const usingOncokb = this.props.store.mutationAnnotationSettings.oncoKb;
+        const usingHotspot = this.props.store.mutationAnnotationSettings.hotspots;
+        let annotatingStatus = "complete";
+
+        if (usingOncokb || usingHotspot) {
+            if (loadingDataStatus !== "complete") {
+                annotatingStatus = "notInvoked";
+            } else {
+                annotatingStatus = getMobxPromiseGroupStatus(
+                    this.props.store.annotatedMolecularData, this.props.store.putativeDriverAnnotatedMutations
+                );
+            }
+            ret.push({
+                label: getAnnotatingProgressMessage(usingOncokb, usingHotspot),
+                status: annotatingStatus
+            });
+        }
+
+        ret.push({
+            label: "Rendering",
+            status: (loadingDataStatus === "complete" && annotatingStatus === "complete") ? "pending" : "notInvoked"
+        });
+
+        return ret as IProgressIndicatorItem[];
+    }
+
     public render() {
         return (
-            <div style={{position:'relative', minHeight:this.isHidden ? this.loadingIndicatorHeight : "auto"}} className="cbioportal-frontend">
-                <OqlStatusBanner className="oncoprint-oql-status-banner" store={this.props.store} tabReflectsOql={true} style={{marginBottom:12}}/>
-            {
-                    <div
-                        className={ classNames('oncoprintLoadingIndicator', { 'hidden': !this.isHidden }) }
-                        style={{
-                            position: "absolute", top: 0, left: 0, width: "100%", height: "100%", minHeight:this.loadingIndicatorHeight
-                        }}
-                    >
-                        <div>{this.loadingIndicatorMessage}</div>
-                        <LoadingIndicator style={{display: 'block'}} isLoading={true}/>
-                    </div>
-                }
+            <div className="posRelative">
+
+                <LoadingIndicator isLoading={this.isHidden} size={"big"} center={true}>
+                    <ProgressIndicator items={this.progressItems} show={this.isHidden}/>
+                </LoadingIndicator>
+
+                <div className={"tabMessageContainer"}>
+                    <OqlStatusBanner className="oncoprint-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
+                </div>
 
                 <div className={classNames('oncoprintContainer', { fadeIn: !this.isHidden })}
                      onMouseEnter={this.onMouseEnter}

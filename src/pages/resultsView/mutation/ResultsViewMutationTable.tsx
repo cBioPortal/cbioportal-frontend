@@ -9,7 +9,7 @@ import TumorAlleleFreqColumnFormatter from "shared/components/mutationTable/colu
 export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
 }
-
+//
 @observer
 export default class ResultsViewMutationTable extends MutationTable<IResultsViewMutationTableProps> {
 

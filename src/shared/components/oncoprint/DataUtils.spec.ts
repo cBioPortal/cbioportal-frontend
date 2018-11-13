@@ -558,7 +558,7 @@ describe("DataUtils", ()=>{
                "inframe non-driver");
 
            data = [{
-               mutationType: "truncating",
+               mutationType: "start_codon_del",
                putativeDriver: false,
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
@@ -765,7 +765,7 @@ describe("DataUtils", ()=>{
                mutationStatus: 'Germline',
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration, {
-               mutationType: "truncating",
+               mutationType: "start_codon_del",
                putativeDriver: true,
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
@@ -865,7 +865,7 @@ describe("DataUtils", ()=>{
                putativeDriver: true,
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration,{
-               mutationType: "truncating",
+               mutationType: "start_codon_del",
                putativeDriver: true,
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
@@ -888,7 +888,7 @@ describe("DataUtils", ()=>{
                putativeDriver: true,
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration,{
-               mutationType: "truncating",
+               mutationType: "start_codon_del",
                putativeDriver: false,
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
@@ -911,7 +911,7 @@ describe("DataUtils", ()=>{
                putativeDriver: false,
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration,{
-               mutationType: "truncating",
+               mutationType: "start_codon_del",
                putativeDriver: false,
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
@@ -1151,7 +1151,7 @@ describe("DataUtils", ()=>{
                putativeDriver: true,
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration,{
-               mutationType: "truncating",
+               mutationType: "start_codon_del",
                putativeDriver: true,
                molecularProfileAlterationType: AlterationTypeConstants.MUTATION_EXTENDED
            } as AnnotatedExtendedAlteration];
@@ -1318,7 +1318,8 @@ describe("DataUtils", ()=>{
                     study_id: "study",
                     attr_val_counts:{3:1},
                     attr_val: 3
-                }
+                },
+                "one input data"
             );
 
             assert.deepEqual(
@@ -1333,7 +1334,8 @@ describe("DataUtils", ()=>{
                     study_id: "study",
                     attr_val_counts:{},
                     na: true
-                }
+                },
+                "doesnt accept string data in number clinical attribute"
             );
 
             assert.deepEqual(
@@ -1348,7 +1350,24 @@ describe("DataUtils", ()=>{
                     study_id: "study",
                     attr_val_counts:{2.5:1},
                     attr_val: 2.5
-                }
+                },
+                "averages multiple values"
+            );
+
+            assert.deepEqual(
+                fillClinicalTrackDatum(
+                    {},
+                    {clinicalAttributeId:"MUTATION_COUNT", datatype:"number"} as any,
+                    {sampleId:"sample", studyId:"study"} as Sample,
+                    [{value:3}, {value:2}] as any[]
+                ),
+                {
+                    attr_id: "MUTATION_COUNT",
+                    study_id: "study",
+                    attr_val_counts:{3:1},
+                    attr_val: 3
+                },
+                "takes max of multiple values for MUTATION_COUNT"
             );
         });
         it("creates data correctly for string data",()=>{

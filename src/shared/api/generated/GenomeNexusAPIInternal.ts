@@ -9,6 +9,88 @@ export type AggregatedHotspots = {
         'variant': string
 
 };
+export type Alleles = {
+    'allele': string
+
+};
+export type ClinVar = {
+    '_license': string
+
+        'alleleId': number
+
+        'alt': string
+
+        'chrom': string
+
+        'cytogenic': string
+
+        'gene': Gene
+
+        'hg19': Hg19
+
+        'hg38': Hg38
+
+        'hgvs': Hgvs
+
+};
+export type Cosmic = {
+    '_license': string
+
+        'alt': string
+
+        'chrom': string
+
+        'cosmicId': string
+
+        'hg19': Hg19
+
+        'mutFreq': number
+
+        'mutNt': string
+
+        'ref': string
+
+        'tumorSite': string
+
+};
+export type Dbsnp = {
+    '_class': string
+
+        'alleleOrigin': string
+
+        'alleles': Array < Alleles >
+
+        'alt': string
+
+        'chrom': string
+
+        'dbsnpBuild': number
+
+        'flags': Array < string >
+
+        'gene': Gene
+
+        'hg19': Hg19
+
+        'license': string
+
+        'ref': string
+
+        'rsid': string
+
+        'validated': boolean
+
+        'varSubtype': string
+
+        'vartype': string
+
+};
+export type Gene = {
+    'geneId': string
+
+        'symbol': string
+
+};
 export type GeneXref = {
     'db_display_name': string
 
@@ -41,6 +123,24 @@ export type GenomicLocation = {
         'referenceAllele': string
 
         'variantAllele': string
+
+};
+export type Hg19 = {
+    'end': number
+
+        'start': number
+
+};
+export type Hg38 = {
+    'end': string
+
+        'start': string
+
+};
+export type Hgvs = {
+    'coding': Array < string >
+
+        'genomic': Array < string >
 
 };
 export type Hotspot = {
@@ -129,6 +229,46 @@ export type MutationAssessor = {
         'variantSpecificityScore': number
 
 };
+export type Mutdb = {
+    'alt': string
+
+        'chrom': string
+
+        'cosmicId': string
+
+        'hg19': Hg19
+
+        'mutpredScore': number
+
+        'ref': string
+
+        'rsid': string
+
+        'uniprotId': string
+
+};
+export type MyVariantInfo = {
+    'clinVar': ClinVar
+
+        'cosmic': Cosmic
+
+        'dbsnp': Dbsnp
+
+        'hgvs': string
+
+        'mutdb': Mutdb
+
+        'snpeff': Snpeff
+
+        'vcf': Vcf
+
+        'version': number
+
+};
+export type Snpeff = {
+    'license': string
+
+};
 export type TranscriptConsequenceSummary = {
     'codonChange': string
 
@@ -162,11 +302,23 @@ export type VariantAnnotationSummary = {
 
         'strandSign': string
 
+        'transcriptConsequenceSummaries': Array < TranscriptConsequenceSummary >
+
+        'transcriptConsequenceSummary': TranscriptConsequenceSummary
+
         'transcriptConsequences': Array < TranscriptConsequenceSummary >
 
         'variant': string
 
         'variantType': string
+
+};
+export type Vcf = {
+    'alt': string
+
+        'position': string
+
+        'ref': string
 
 };
 
@@ -1160,7 +1312,7 @@ export default class GenomeNexusAPIInternal {
      * Retrieves mutation assessor information for the provided list of variants
      * @method
      * @name GenomeNexusAPIInternal#fetchMutationAssessorAnnotationGET
-     * @param {string} variant - A variants. For example 7:g.140453136A>T
+     * @param {string} variant - A variant. For example 7:g.140453136A>T
      */
     fetchMutationAssessorAnnotationGETWithHttpInfo(parameters: {
         'variant': string,
@@ -1202,7 +1354,7 @@ export default class GenomeNexusAPIInternal {
      * Retrieves mutation assessor information for the provided list of variants
      * @method
      * @name GenomeNexusAPIInternal#fetchMutationAssessorAnnotationGET
-     * @param {string} variant - A variants. For example 7:g.140453136A>T
+     * @param {string} variant - A variant. For example 7:g.140453136A>T
      */
     fetchMutationAssessorAnnotationGET(parameters: {
         'variant': string,
@@ -1210,6 +1362,159 @@ export default class GenomeNexusAPIInternal {
         $domain ? : string
     }): Promise < MutationAssessor > {
         return this.fetchMutationAssessorAnnotationGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
+    postMyVariantInfoAnnotationURL(parameters: {
+        'variants': Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/my_variant_info/variant';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves myvariant information for the provided list of variants
+     * @method
+     * @name GenomeNexusAPIInternal#postMyVariantInfoAnnotation
+     * @param {} variants - List of variants. For example ["7:g.140453136A>T","12:g.25398285C>A"]
+     */
+    postMyVariantInfoAnnotationWithHttpInfo(parameters: {
+        'variants': Array < string > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/my_variant_info/variant';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['variants'] !== undefined) {
+                body = parameters['variants'];
+            }
+
+            if (parameters['variants'] === undefined) {
+                reject(new Error('Missing required  parameter: variants'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Retrieves myvariant information for the provided list of variants
+     * @method
+     * @name GenomeNexusAPIInternal#postMyVariantInfoAnnotation
+     * @param {} variants - List of variants. For example ["7:g.140453136A>T","12:g.25398285C>A"]
+     */
+    postMyVariantInfoAnnotation(parameters: {
+            'variants': Array < string > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < MyVariantInfo >
+        > {
+            return this.postMyVariantInfoAnnotationWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchMyVariantInfoAnnotationGETURL(parameters: {
+        'variant': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/my_variant_info/variant/{variant}';
+
+        path = path.replace('{variant}', parameters['variant'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Retrieves myvariant information for the provided list of variants
+     * @method
+     * @name GenomeNexusAPIInternal#fetchMyVariantInfoAnnotationGET
+     * @param {string} variant - . For example 7:g.140453136A>T
+     */
+    fetchMyVariantInfoAnnotationGETWithHttpInfo(parameters: {
+        'variant': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/my_variant_info/variant/{variant}';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            path = path.replace('{variant}', parameters['variant'] + '');
+
+            if (parameters['variant'] === undefined) {
+                reject(new Error('Missing required  parameter: variant'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Retrieves myvariant information for the provided list of variants
+     * @method
+     * @name GenomeNexusAPIInternal#fetchMyVariantInfoAnnotationGET
+     * @param {string} variant - . For example 7:g.140453136A>T
+     */
+    fetchMyVariantInfoAnnotationGET(parameters: {
+        'variant': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < MyVariantInfo > {
+        return this.fetchMyVariantInfoAnnotationGETWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };

@@ -9,15 +9,13 @@ import { VirtualStudy } from 'shared/model/VirtualStudy';
 describe('QueryStoreUtils', ()=>{
     describe('nonMolecularProfileParams', ()=>{
 
-        let addParamStub: any;
         let selectableStudiesSetStub:any;
 
         before(()=>{
-            addParamStub = Sinon.stub(QueryStore.prototype, "addParamsFromWindow");
+
         });
 
         after(()=>{
-            addParamStub.restore();
             if (selectableStudiesSetStub) {
                 selectableStudiesSetStub.restore();
             }
@@ -26,7 +24,7 @@ describe('QueryStoreUtils', ()=>{
         it.skip("returns url-encoded, normalized query for gene_list parameter", ()=>{
 
 
-            let store = new QueryStore({} as Window);
+            let store = new QueryStore();
 
             let queries = [
                 "TP53:MUT",

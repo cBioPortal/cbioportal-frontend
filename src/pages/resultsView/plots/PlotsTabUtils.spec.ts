@@ -1,7 +1,8 @@
 import {assert} from "chai";
 import {
     CLIN_ATTR_DATA_TYPE, getMutationProfileDuplicateSamplesReport, makeAxisDataPromise_Molecular_MakeMutationData,
-    makeScatterPlotData, MUT_PROFILE_COUNT_MUTATED, MUT_PROFILE_COUNT_NOT_MUTATED, MUT_PROFILE_COUNT_NOT_PROFILED,
+    makeScatterPlotData, MUT_PROFILE_COUNT_MULTIPLE, MUT_PROFILE_COUNT_MUTATED, MUT_PROFILE_COUNT_NOT_MUTATED,
+    MUT_PROFILE_COUNT_NOT_PROFILED,
     mutationTypeToDisplayName,
     mutTypeCategoryOrder, mutVsWildCategoryOrder
 } from "./PlotsTabUtils";
@@ -222,7 +223,7 @@ describe("PlotsTabUtils", ()=>{
                 {
                     data:[
                         {uniqueSampleKey:"sample1", value:[mutationTypeToDisplayName.missense]},
-                        {uniqueSampleKey:"sample2", value:[mutationTypeToDisplayName.inframe, mutationTypeToDisplayName.trunc]},
+                        {uniqueSampleKey:"sample2", value:MUT_PROFILE_COUNT_MULTIPLE},
                         {uniqueSampleKey:"sample3", value:[mutationTypeToDisplayName.fusion]},
                         {uniqueSampleKey:"sample4", value:MUT_PROFILE_COUNT_NOT_MUTATED},
                         {uniqueSampleKey:"sample5", value:MUT_PROFILE_COUNT_NOT_PROFILED},

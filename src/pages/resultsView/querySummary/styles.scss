@@ -12,14 +12,13 @@
     }
 
     h4 {
-      margin-bottom:3px !important;
+      margin-bottom:0px;
     }
 
   }
 
-  .query-summary__alterationData {
-    h4 {
-      color:$text-color !important;
-    }
+  .query-summary__rightItems {
+    display:flex;
+    align-items:center;
   }
 }

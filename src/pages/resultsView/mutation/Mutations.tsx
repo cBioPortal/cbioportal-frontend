@@ -3,6 +3,8 @@ import {observer} from "mobx-react";
 import {MSKTabs, MSKTab} from "shared/components/MSKTabs/MSKTabs";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import ResultsViewMutationMapper from "./ResultsViewMutationMapper";
+import ResultsViewMutationMapperStore from "./ResultsViewMutationMapperStore";
+import classnames from "classnames";
 import {observable, computed} from "mobx";
 import AppConfig from 'appConfig';
 import "./mutations.scss";
@@ -11,10 +13,12 @@ import accessors from '../../../shared/lib/oql/accessors';
 import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import autobind from "autobind-decorator";
+import {AppStore} from "../../../AppStore";
 
 export interface IMutationsPageProps {
     routing?: any;
     store: ResultsViewPageStore;
+    appStore:AppStore;
 }
 
 @observer
@@ -39,23 +43,29 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
             this.props.routing.location.query.mutationsGeneTab : this.mutationsGeneTab;
 
         return (
-            <div>
-                <OqlStatusBanner
-                    className="mutations-oql-status-banner"
-                    store={this.props.store}
-                    tabReflectsOql={this.props.store.mutationsTabShouldUseOql}
-                    isUnaffected={!this.props.store.queryContainsMutationOql}
-                    style={{marginTop:-2}}
-                    onToggle={this.onToggleOql}
-                />
-                <Loader isLoading={this.props.store.mutationMapperStores.isPending} />
+            <div data-test="mutationsTabDiv">
+                <div className={"tabMessageContainer"}>
+                    <OqlStatusBanner
+                        className="mutations-oql-status-banner"
+                        store={this.props.store}
+                        tabReflectsOql={this.props.store.mutationsTabShouldUseOql}
+                        isUnaffected={!this.props.store.queryContainsMutationOql}
+                        onToggle={this.onToggleOql}
+                    />
+                    {this.props.store.mutationMapperStores.isComplete && ! this.props.store.mutationMapperStores.result[this.mutationsGeneTab].dataStore.showingAllData &&
+                        this.bannerAlert()
+                    }
+                </div>
+                
+
+
                 {(this.props.store.mutationMapperStores.isComplete) && (
                     <MSKTabs
                         id="mutationsPageTabs"
                         activeTabId={activeTabId}
                         onTabClick={(id:string) => this.handleTabChange(id)}
                         className="pillTabs resultsPageMutationsGeneTabs"
-                        enablePagination={true}
+                        enablePagination={false}
                         arrowStyle={{'line-height': 0.8}}
                         tabButtonStyle="pills"
                         unmountOnHide={true}
@@ -76,8 +86,12 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
 
             if (mutationMapperStore)
             {
+                const tabHasMutations = mutationMapperStore.mutations.length > 0;
+                // gray out tab if no mutations
+                const anchorStyle = tabHasMutations ? undefined : { color:'#bbb' };
+
                 tabs.push(
-                    <MSKTab key={gene} id={gene} linkText={gene}>
+                    <MSKTab key={gene} id={gene} linkText={gene} anchorStyle={anchorStyle}>
                         <ResultsViewMutationMapper
                             store={mutationMapperStore}
                             discreteCNACache={this.props.store.discreteCNACache}
@@ -87,7 +101,8 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                             mutationCountCache={this.props.store.mutationCountCache}
                             pdbHeaderCache={this.props.store.pdbHeaderCache}
                             myCancerGenomeData={this.props.store.myCancerGenomeData}
-                            config={AppConfig}
+                            config={AppConfig.serverConfig}
+                            userEmailAddress={this.props.appStore.userName!}
                         />
                     </MSKTab>
                 );
@@ -95,6 +110,26 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
         });
 
         return tabs;
+    }
+
+    protected bannerAlert(): JSX.Element|null
+    {
+        let dataStore = this.props.store.mutationMapperStores.result[this.mutationsGeneTab].dataStore;
+
+        return (
+            <div className={classnames("alert" , "alert-success")}>
+                <span style={{verticalAlign:"middle"}}>
+                    {`${dataStore.sortedFilteredData.length}/${dataStore.allData.length} `}
+                    {"mutations are shown based on your filtering."}
+                    <button className="btn btn-default btn-xs" 
+                            style={{cursor:"pointer", marginLeft:6}} 
+                            onClick={()=>{dataStore.resetFilterAndSelection();}}
+                    >
+                        Show all mutations
+                    </button>
+                </span>
+            </div>
+        );
     }
     
     protected handleTabChange(id: string) {

@@ -22,12 +22,8 @@ export default class OqlStatusBanner extends React.Component<IOqlStatusBannerPro
                 <span>
                     <button
                         onClick={this.props.onToggle}
-                        className="btn btn-secondary"
-                        style={{
-                            fontSize: 13,
-                            lineHeight: 1,
-                            marginLeft: 10
-                        }}
+                        className="btn btn-default btn-xs"
+                        style={{marginLeft:5}}
                     >
                         { this.props.tabReflectsOql ?
                             "Do not filter by OQL" :
@@ -64,9 +60,9 @@ export default class OqlStatusBanner extends React.Component<IOqlStatusBannerPro
                 iconClassName = "fa fa-md fa-exclamation-triangle";
                 dataTest="OqlStatusBannerNo";
             }
-            const style = {fontFamily:"arial", fontSize:"13px", fontWeight:"bold", marginBottom:4, padding:8};
+
             return (
-                <div data-test={dataTest} className={classnames("oql-status-banner", className, this.props.className)} style={Object.assign({}, style, this.props.style || {})}>
+                <div data-test={dataTest} className={classnames("oql-status-banner", className, this.props.className)} style={Object.assign({}, this.props.style || {})}>
                     <span style={{verticalAlign:"middle"}}>
                         <i
                             className={classnames("banner-icon", iconClassName)}

@@ -6,12 +6,14 @@ import {
     intervalFiltersDisplayValue, isEveryBinDistinct, toFixedDigit, getExponent, clinicalDataCountComparator,
     getCNAByAlteration,
     getDefaultChartTypeByClinicalAttribute,
-    getVirtualStudyDescription, calculateLayout, getLayoutMatrix, LayoutMatrixItem, getQValue, pickClinicalDataColors, getSamplesByExcludingFiltersOnChart, getFilteredSampleIdentifiers,
-    getHugoSymbolByEntrezGeneId, getFilteredStudiesWithSamples, showOriginStudiesInSummaryDescription
+    getVirtualStudyDescription, calculateLayout, getLayoutMatrix, LayoutMatrixItem, getQValue, pickClinicalDataColors,
+    getSamplesByExcludingFiltersOnChart, getFilteredSampleIdentifiers,
+    getFilteredStudiesWithSamples, showOriginStudiesInSummaryDescription, getFrequencyStr,
+    formatFrequency
 } from 'pages/studyView/StudyViewUtils';
 import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue, Sample} from 'shared/api/generated/CBioPortalAPIInternal';
 import {ClinicalAttribute, Gene, CancerStudy} from 'shared/api/generated/CBioPortalAPI';
-import {ChartMeta, ChartTypeEnum} from "./StudyViewPageStore";
+import {ChartMeta, ChartTypeEnum, StudyViewFilterWithSampleIdentifierFilters} from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
 import sinon from 'sinon';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
@@ -54,15 +56,34 @@ describe('StudyViewUtils', () => {
         });
         it('when filters are applied', () => {
             let filter = {
-                'clinicalDataEqualityFilters': [{
+                clinicalDataEqualityFilters: [{
                     'attributeId': 'attribute1',
                     'clinicalDataType': "SAMPLE",
                     'values': ['value1']
                 }],
-                "mutatedGenes": [{ "entrezGeneIds": [1] }],
-                "cnaGenes": [{ "alterations": [{ "entrezGeneId": 2, "alteration": -2 }] }],
-                'studyIds': ['study1', 'study2']
-            } as StudyViewFilter
+                clinicalDataIntervalFilters: [{
+                    'attributeId': 'attribute2',
+                    'clinicalDataType': "PATIENT",
+                    'values': [{
+                        'end': 0,
+                        'start': 10,
+                        'value': `10`
+                    }]
+                }],
+                mutatedGenes: [{ "entrezGeneIds": [1] }],
+                cnaGenes: [{ "alterations": [{ "entrezGeneId": 2, "alteration": -2 }] }],
+                studyIds: ['study1', 'study2'],
+                sampleIdentifiers: [],
+                sampleIdentifiersSet: {
+                    'SAMPLE_attribute3': [{
+                        'sampleId': 'sample 1',
+                        'studyId': 'study1'
+                    }, {
+                        'sampleId': 'sample 1',
+                        'studyId': 'study2'
+                    }]
+                }
+            } as StudyViewFilterWithSampleIdentifierFilters;
 
             let genes = [{ entrezGeneId: 1, hugoGeneSymbol: "GENE1" }, { entrezGeneId: 2, hugoGeneSymbol: "GENE2" }] as Gene[];
 
@@ -70,10 +91,15 @@ describe('StudyViewUtils', () => {
                 getVirtualStudyDescription(
                     studies as any,
                     filter,
-                    { 'SAMPLE_attribute1': 'attribute1 name' },
+                    {
+                        'SAMPLE_attribute1': 'attribute1 name',
+                        'PATIENT_attribute2': 'attribute2 name',
+                        'SAMPLE_attribute3': 'attribute3 name'
+                    },
                     genes
-                ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)\n\nFilters:\n- CNA Genes:\n  ' +
-                    '- GENE2-DEL\n- Mutated Genes:\n  - GENE1\n  - attribute1 name: value1'));
+                ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)\n\nFilters:\n- CNA Genes:\n' +
+                    '  - GENE2-DEL\n- Mutated Genes:\n  - GENE1\n- attribute1 name: value1\n- attribute2 name: 10 < ~ ≤ 0\n' +
+                    '- attribute3 name: 2 samples'));
         });
         it('when username is not null', () => {
             assert.isTrue(
@@ -975,7 +1001,7 @@ describe('StudyViewUtils', () => {
         it ('picks predefined colors for known clinical attribute values', () => {
             const colors = pickClinicalDataColors(clinicalDataCountWithFixedValues);
 
-            assert.equal(colors["TRUE"], "#66aa00");
+            assert.equal(colors["TRUE"], "#66AA00");
             assert.equal(colors["FALSE"], "#666666");
             assert.equal(colors["NA"], "#CCCCCC");
         });
@@ -983,23 +1009,23 @@ describe('StudyViewUtils', () => {
         it ('picks predefined colors for known clinical attribute values in mixed letter case', () => {
             const colors = pickClinicalDataColors(clinicalDataCountWithFixedMixedCaseValues);
 
-            assert.equal(colors["Yes"], "#66aa00");
+            assert.equal(colors["Yes"], "#66AA00");
             assert.equal(colors["No"], "#666666");
             assert.equal(colors["Na"], "#CCCCCC");
-            assert.equal(colors["Male"], "#316395");
-            assert.equal(colors["F"], "#b82e2e");
+            assert.equal(colors["Male"], "#2986E2");
+            assert.equal(colors["F"], "#DC3912");
         });
 
         it ('does not pick already picked colors again for non-fixed values', () => {
-            const availableColors = ["#66aa00", "#666666", "#2986e2", "#CCCCCC", "#dc3912", "#f88508", "#109618"]
+            const availableColors = ["#66AA00", "#666666", "#2986E2", "#CCCCCC", "#DC3912", "#f88508", "#109618"]
 
             const colors = pickClinicalDataColors(clinicalDataCountWithBothFixedAndOtherValues, availableColors);
 
-            assert.equal(colors["Yes"], "#66aa00");
+            assert.equal(colors["Yes"], "#66AA00");
             assert.equal(colors["NO"], "#666666");
             assert.equal(colors["na"], "#CCCCCC");
-            assert.equal(colors["maybe"], "#2986e2");
-            assert.equal(colors["WHY"], "#dc3912");
+            assert.equal(colors["maybe"], "#2986E2");
+            assert.equal(colors["WHY"], "#DC3912");
         });
     });
 
@@ -1420,6 +1446,99 @@ describe('StudyViewUtils', () => {
         });
     });
 
+    describe('getFrequencyStr', () => {
+        const negativeValues = [
+            -666.666,
+            -3,
+            -2.2499999999999,
+            -1,
+            -0.6000000000000001,
+            -0.002499999998
+        ];
+
+        const positiveValues = [
+            0.002499999998,
+            0.6000000000000001,
+            1,
+            1.00001,
+            1.5999999999999999,
+            1.7999999999999998,
+            16.99999999999998,
+            16.77,
+            16.74,
+            666.666
+        ];
+
+        it ('handles negative values properly', () => {
+            assert.equal(getFrequencyStr(negativeValues[0]), "NA");
+            assert.equal(getFrequencyStr(negativeValues[1]), "NA");
+            assert.equal(getFrequencyStr(negativeValues[2]), "NA");
+            assert.equal(getFrequencyStr(negativeValues[3]), "NA");
+            assert.equal(getFrequencyStr(negativeValues[4]), "NA");
+            assert.equal(getFrequencyStr(negativeValues[5]), "NA");
+        });
+
+        it ('handles zero properly', () => {
+            assert.equal(getFrequencyStr(0), "0%");
+        });
+
+        it ('handles positive values properly', () => {
+            //assert.equal(getFrequencyStr(positiveValues[0]), "0.0025");
+            assert.equal(getFrequencyStr(positiveValues[0]), "<0.1%");
+            assert.equal(getFrequencyStr(positiveValues[1]), "0.6%");
+            assert.equal(getFrequencyStr(positiveValues[2]), "1%");
+            assert.equal(getFrequencyStr(positiveValues[3]), "1%");
+            assert.equal(getFrequencyStr(positiveValues[4]), "1.5%");
+            assert.equal(getFrequencyStr(positiveValues[5]), "1.8%");
+            assert.equal(getFrequencyStr(positiveValues[6]), "16.9%");
+            assert.equal(getFrequencyStr(positiveValues[7]), "16.7%");
+            assert.equal(getFrequencyStr(positiveValues[8]), "16.7%");
+            assert.equal(getFrequencyStr(positiveValues[9]), "666.6%");
+        });
+    });
+
+    describe('formatFrequency', () => {
+        const negativeValues = [
+            -666.666,
+            -0.002499999998
+        ];
+
+        const positiveValues = [
+            0.002499999998,
+            0.6000000000000001,
+            1,
+            1.00001,
+            1.5999999999999999,
+            1.7999999999999998,
+            16.99999999999998,
+            16.77,
+            16.74,
+            666.666
+        ];
+
+        it ('handles negative values properly', () => {
+            assert.equal(formatFrequency(negativeValues[0]), -1);
+            assert.equal(formatFrequency(negativeValues[1]), -1);
+        });
+
+        it ('handles zero properly', () => {
+            assert.equal(formatFrequency(0), 0);
+        });
+
+        it ('handles positive values properly', () => {
+            assert.equal(formatFrequency(positiveValues[0]), 0.05);
+            assert.equal(formatFrequency(positiveValues[1]), 0.6);
+            assert.equal(formatFrequency(positiveValues[2]), 1);
+            assert.equal(formatFrequency(positiveValues[3]), 1);
+            assert.equal(formatFrequency(positiveValues[4]), 1.5);
+            assert.equal(formatFrequency(positiveValues[5]), 1.8);
+            assert.equal(formatFrequency(positiveValues[6]), 16.9);
+            assert.equal(formatFrequency(positiveValues[7]), 16.7);
+            assert.equal(formatFrequency(positiveValues[8]), 16.7);
+            assert.equal(formatFrequency(positiveValues[9]), 666.6);
+        });
+    });
+
     describe('clinicalDataCountComparator', () => {
         it('returns zero if both NA', () => {
             assert.equal(clinicalDataCountComparator({value: "NA", count: 1}, {value: "na", count: 666}), 0);
@@ -1439,27 +1558,4 @@ describe('StudyViewUtils', () => {
             assert.equal(clinicalDataCountComparator({value: "FEMALE", count: 666}, {value: "MALE", count: 666}), 0);
         });
     });
-
-    describe('getHugoSymbolByEntrezGeneId', () => {
-        const braf = {
-            "entrezGeneId": 673,
-            "hugoGeneSymbol": "BRAF",
-            "type": "protein-coding",
-            "cytoband": "7q34",
-            "length": 205602,
-            "chromosome": "7"
-        };
-
-        it('Return undefined for gene not exist', () => {
-            assert.isTrue(getHugoSymbolByEntrezGeneId([], 1) === undefined);
-        });
-
-        it('Return undefined for gene not exist', () => {
-            assert.isTrue(getHugoSymbolByEntrezGeneId([braf], 1) === undefined);
-        });
-
-        it('Return appropriate entrez gene', () => {
-            assert.isTrue(getHugoSymbolByEntrezGeneId([braf], 673) === 'BRAF');
-        });
-    })
 });

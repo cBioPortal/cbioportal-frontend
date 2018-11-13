@@ -18,13 +18,11 @@ import AppConfig from 'appConfig';
 import {gsUploadByGet} from "../../api/gsuploadwindow";
 import {ComponentGetsStoreContext} from "../../lib/ContextUtils";
 import URL from 'url';
-import {buildCBioPortalUrl, BuildUrlParams, getHost, openStudySummaryFormSubmit} from "../../api/urls";
+import {buildCBioPortalPageUrl, openStudySummaryFormSubmit} from "../../api/urls";
 import StudyListLogic from "./StudyListLogic";
 import {QuerySession} from "../../lib/QuerySession";
 import {stringListToIndexSet, stringListToSet} from "../../lib/StringUtils";
 import chunkMapReduce from "shared/lib/chunkMapReduce";
-import request, {Response} from "superagent";
-import formSubmit from "shared/lib/formSubmit";
 import {
 	MolecularProfileQueryParams, NonMolecularProfileQueryParams, queryUrl,
 	nonMolecularProfileParams, currentQueryParams, molecularProfileParams, queryParams, profileAvailability, categorizedSamplesCount
@@ -38,6 +36,11 @@ import sessionServiceClient from "shared/api//sessionServiceInstance";
 import {VirtualStudy} from "shared/model/VirtualStudy";
 import { getGenesetsFromHierarchy, getVolcanoPlotMinYValue, getVolcanoPlotData } from "shared/components/query/GenesetsSelectorStore";
 import SampleListsInStudyCache from 'shared/cache/SampleListsInStudyCache';
+import formSubmit from "../../lib/formSubmit";
+import {ServerConfigHelpers} from "../../../config/config";
+import getBrowserWindow from "../../lib/getBrowserWindow";
+import {QueryParameter} from "../../lib/ExtendedRouterStore";
+import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -115,36 +118,38 @@ export class QueryStore
 		molecularProfileIds: ReadonlyArray<string>
 	};
 
-	constructor(_window:Window, urlWithInitialParams?:string)
+	constructor(urlWithInitialParams?:string)
 	{
+		this.initialize(urlWithInitialParams);
+	}
+
+	initialize(urlWithInitialParams?:string){
 
 		labelMobxPromises(this);
-		if (urlWithInitialParams)
-			this.setParamsFromUrl(urlWithInitialParams);
 
-		this.addParamsFromWindow(_window);
+        if (urlWithInitialParams)
+            this.setParamsFromUrl(urlWithInitialParams);
 
-		// need to create initialNonMolecularProfileParams using caseIds obtained from page, because
-		//	at this point asyncCustomCaseSet may not have resolved, and we dont want to wait for it
-		//	to resolve to create the initial query record, because theres a (remote) chance the user
-		//	could have modified the custom case set before the promise initially resolved, thus
-		//	making it an imperfect record of the initial query. Using this.caseIds instead of
-		//	asyncCustomCaseSet is the only failsafe way to make a copy of the initial query state
-		let initialNonMolecularProfileParams = nonMolecularProfileParams(this, this.caseIds);
+        // handle local storage submission from study page (too long for url)
+        let legacySubmission: any = localStorage.getItem("legacyStudySubmission");
+        localStorage.removeItem("legacyStudySubmission");
+        if (legacySubmission) {
+            try{
+                this.setParamsFromLocalStorage(JSON.parse(legacySubmission));
+            } catch (ex) {
+                throw("error parseing/setting legacyStudySubmission");
+            }
+        }
 
-		this.initialQueryParams = {
-			nonMolecularProfileParams: initialNonMolecularProfileParams,
-			pathname: queryUrl(this, initialNonMolecularProfileParams),
-			molecularProfileIds: this._selectedProfileIds || []
-		};
-
-		reaction(
-			()=>this.allSelectedStudyIds,
-			()=>{
-				this.studiesHaveChangedSinceInitialization = true;
-			}
-		);
+        reaction(
+            ()=>this.allSelectedStudyIds,
+            ()=>{
+                this.studiesHaveChangedSinceInitialization = true;
+            }
+        );
 	}
+
+	public singlePageAppSubmitRoutine: (path:string, query:CancerStudyQueryUrlParams)=>void;
 
 	@observable studiesHaveChangedSinceInitialization:boolean = false;
 
@@ -181,7 +186,7 @@ export class QueryStore
 	};
 
 	@computed get virtualStudiesMap():{[id:string]:VirtualStudy} {
-		return _.keyBy(this.virtualStudies.result, study => study.id);
+		return _.keyBy(this.userVirtualStudies.result, study => study.id);
 	}
 
 	@computed get selectedVirtualStudies():VirtualStudy[] {
@@ -388,8 +393,7 @@ export class QueryStore
 	@observable showGisticPopup = false;
 	@observable showGenesetsHierarchyPopup = false;
 	@observable showGenesetsVolcanoPopup = false;
-	@observable.ref searchTextPresets:ReadonlyArray<string> = AppConfig.skinExampleStudyQueries;
-	@observable priorityStudies = AppConfig.priorityStudies;
+	@observable priorityStudies = ServerConfigHelpers.priority_studies(AppConfig.serverConfig.priority_studies);
 	@observable showSelectedStudiesOnly:boolean = false;
 	@observable.shallow selectedCancerTypeIds:string[] = [];
 	@observable clickAgainToDeselectSingle:boolean = true;
@@ -397,7 +401,7 @@ export class QueryStore
 	@observable volcanoPlotSelectedPercentile: {label: string, value: string} = {label: '75%', value: '75'};
 	
 
-	@observable private _maxTreeDepth:number = AppConfig.maxTreeDepth;
+	@observable private _maxTreeDepth:number = parseInt(AppConfig.serverConfig.skin_query_max_tree_depth!,10);
 	@computed get maxTreeDepth()
 	{
 		return (this.forDownloadTab && this._maxTreeDepth > 0) ? 1 : this._maxTreeDepth;
@@ -405,6 +409,10 @@ export class QueryStore
 	set maxTreeDepth(value)
 	{
 		this._maxTreeDepth = value;
+	}
+
+	@computed get userLoggedIn(){
+		return getBrowserWindow().globalStores.appStore.isLoggedIn;
 	}
 
 
@@ -424,7 +432,7 @@ export class QueryStore
 		}
 	}, []);
 
-	readonly cancerStudies = remoteData(client.getAllStudiesUsingGET({}), []);
+	readonly cancerStudies = remoteData(client.getAllStudiesUsingGET({ projection: 'SUMMARY' }), []);
 	readonly cancerStudyIdsSet = remoteData<{[studyId:string]:boolean}>({
 		await: ()=>[this.cancerStudies],
 		invoke: async ()=>{
@@ -432,14 +440,6 @@ export class QueryStore
 		},
 		default: {},
 	});
-
-	readonly virtualStudies = remoteData(async ()=>{
-		if (AppConfig.sessionServiceIsEnabled) {
-			return sessionServiceClient.getUserVirtualStudies();
-		} else {
-			return [];
-		}
-	}, []);
 
 	private readonly physicalStudiesIdsSet = remoteData<{[studyId:string]:string[]}>({
 		await: ()=>[this.cancerStudies],
@@ -454,9 +454,9 @@ export class QueryStore
 	})
 
 	private readonly virtualStudiesIdsSet = remoteData<{[studyId:string]:string[]}>({
-		await: ()=>[this.virtualStudies],
+		await: ()=>[this.userVirtualStudies],
 		invoke: async ()=>{
-			return  this.virtualStudies.result.reduce((obj:{[studyId:string]:string[]}, item) =>{
+			return  this.userVirtualStudies.result.reduce((obj:{[studyId:string]:string[]}, item) =>{
 				obj[item.id] = [item.id]
 				return obj
 			}, {});
@@ -499,7 +499,6 @@ export class QueryStore
 		default: {}
 	});
 
-
 	private readonly physicalStudiesSet = remoteData<{[studyId:string]:CancerStudy}>({
 		await: ()=>[this.cancerStudies],
 		invoke: async ()=>{
@@ -510,10 +509,10 @@ export class QueryStore
 
 		},
 		default: {},
-	})
+	});
 
 	readonly userVirtualStudies = remoteData(async ()=>{
-		if (AppConfig.sessionServiceIsEnabled) {
+		if (ServerConfigHelpers.sessionServiceIsEnabled() && this.userLoggedIn) {
 			return sessionServiceClient.getUserVirtualStudies();
 		} else {
 			return [];
@@ -530,7 +529,7 @@ export class QueryStore
 
 		},
 		default: {},
-	})
+	});
 
 	private readonly sharedVirtualStudiesSet = remoteData<{[studyId:string]:VirtualStudy}>({
 		await: ()=>[this.physicalStudiesSet, this.userVirtualStudiesSet],
@@ -544,7 +543,7 @@ export class QueryStore
 			const unknownQueriedIds:string[] = this._defaultSelectedIds.keys().filter(id => !_.includes(knownSelectableIds,id));
 
 			let result:{[studyId:string]:VirtualStudy} = {}
-			
+
 			await Promise.all(unknownQueriedIds.map(id =>{
 				return new Promise((resolve, reject) => {
 					sessionServiceClient.getVirtualStudy(id).then((virtualStudy)=>{
@@ -582,7 +581,7 @@ export class QueryStore
 						studyToSampleSet[studyId] = stringListToSet(samples.map(sample => sample.sampleId));
 					})
 				}));
-	
+
 				const _vs = {...this.userVirtualStudiesSet.result, ...this.sharedVirtualStudiesSet.result};
 
 				this._allSelectedStudyIds.keys().forEach(id=>{
@@ -608,6 +607,7 @@ export class QueryStore
 	private readonly selectableStudiesSet = remoteData<{[studyId:string]:string[]}>({
 		await: ()=>[this.physicalStudiesSet, this.selectedStudyToSampleSet],
 		invoke: async () => {
+
 			let result: { [studyId: string]: string[] } = {};
 
 			_.each(this.physicalStudiesSet.result, (study, studyId) => {
@@ -675,11 +675,13 @@ export class QueryStore
 
 	readonly molecularProfiles = remoteData<MolecularProfile[]>({
 		invoke: async () => {
-			if (!this.isSingleNonVirtualStudySelected)
+			if (this.physicalStudyIdsInSelection.length === 1) {
+				return await client.getAllMolecularProfilesInStudyUsingGET({
+                    studyId: this.physicalStudyIdsInSelection[0]
+                });
+			} else {
 				return [];
-			return await client.getAllMolecularProfilesInStudyUsingGET({
-				studyId: this.selectableSelectedStudyIds[0]
-			});
+			}
 		},
 		default: [],
 		onResult: () => {
@@ -875,7 +877,7 @@ export class QueryStore
 			);
 	}
 
-	readonly asyncCustomCaseSet = remoteData<{sampleId:string, studyId:string}[]>({
+	asyncCustomCaseSet = remoteData<{sampleId:string, studyId:string}[]>({
 		invoke: async () => {
 			if (this.selectedSampleListId !== CUSTOM_CASE_LIST_ID || (this.caseIds.trim().length === 0))
 				return [];
@@ -1030,7 +1032,7 @@ export class QueryStore
 			cancerTypes: this.cancerTypes.result,
 			studies: this.cancerStudies.result,
 			priorityStudies: this.priorityStudies,
-			virtualStudies: this.virtualStudies.result
+			virtualStudies: this.forDownloadTab ? [] : this.userVirtualStudies.result
 		});
 	}
 
@@ -1209,7 +1211,7 @@ export class QueryStore
 		else if (mutSelect && !cnaSelect && !expSelect && !rppaSelect)
 			sampleListId = studyId + "_sequenced";
 		else if (!mutSelect && cnaSelect && !expSelect && !rppaSelect)
-			sampleListId = studyId + "_acgh";
+			sampleListId = studyId + "_cna";
 		else if (!mutSelect && !cnaSelect && expSelect && !rppaSelect)
 		{
 			if (this.isProfileSelected(studyId + '_mrna_median_Zscores'))
@@ -1401,13 +1403,19 @@ export class QueryStore
 
 	@computed get submitError()
 	{
-		let haveExpInQuery = this.oql.query.some(result => {
-			return (result.alterations || []).some(alt => alt.alteration_type === 'exp');
-		});
+		let haveMutInQuery = false;
+		let haveCnaInQuery = false;
+		let haveExpInQuery = false;
+		let haveProtInQuery = false;
 
-		const haveProtInQuery = this.oql.query.some(result => {
-			return (result.alterations || []).some(alt => alt.alteration_type === 'prot');
-		});
+		for (const queryLine of this.oql.query) {
+			for (const alteration of (queryLine.alterations || [])) {
+				haveMutInQuery = haveMutInQuery || (alteration.alteration_type === "mut");
+				haveCnaInQuery = haveCnaInQuery || (alteration.alteration_type === "cna");
+				haveExpInQuery = haveExpInQuery || (alteration.alteration_type === "exp");
+				haveProtInQuery = haveProtInQuery || (alteration.alteration_type === "prot");
+			}
+		}
 
 		if (!this.selectableSelectedStudyIds.length)
 			return "Please select one or more cancer studies.";
@@ -1417,9 +1425,19 @@ export class QueryStore
 			if (!this.selectedProfileIds.length)
 				return "Please select one or more molecular profiles.";
 
-			let expProfileSelected = this.getSelectedProfileIdFromMolecularAlterationType('MRNA_EXPRESSION');
+			let mutProfileSelected = this.getSelectedProfileIdFromMolecularAlterationType(AlterationTypeConstants.MUTATION_EXTENDED as any);
+			let cnaProfileSelected = this.getSelectedProfileIdFromMolecularAlterationType(AlterationTypeConstants.COPY_NUMBER_ALTERATION as any);
+			let expProfileSelected = this.getSelectedProfileIdFromMolecularAlterationType(AlterationTypeConstants.MRNA_EXPRESSION as any);
+			let protProfileSelected = this.getSelectedProfileIdFromMolecularAlterationType(AlterationTypeConstants.PROTEIN_LEVEL as any);
+			if (haveMutInQuery && !mutProfileSelected)
+				return "Mutation data query specified in OQL, but no mutation profile selected in `Select Genomic Profiles`";
+			if (haveCnaInQuery && !cnaProfileSelected)
+				return "CNA data query specified in OQL, but not CNA profile selected in `Select Genomic Profiles`";
 			if (haveExpInQuery && !expProfileSelected)
-				return "Expression specified in the list of genes, but not selected in the Molecular Profile Checkboxes.";
+				return "mRNA expression data query specified in OQL, but no mRNA profile selected in `Select Genomic Profiles`";
+			if (haveProtInQuery && !protProfileSelected)
+				return "Protein level data query specified in OQL, but no protein level profile selected in `Select Genomic Profiles`";
+
 
 		} else if(!(this.dataTypePriority.mutation || this.dataTypePriority.cna)){
 			return "Please select one or more molecular profiles.";
@@ -1530,78 +1548,26 @@ export class QueryStore
 	/**
 	 * This is used to prevent selections from being cleared automatically when new data is downloaded.
 	 */
-	private readonly initiallySelected = {
+	public initiallySelected = {
 		profileIds: false,
 		sampleListId: false
 	};
 
-	@action addParamsFromWindow(_window:Window)
-	{
-		if ((_window as any).serverVars) {
-			// Populate OQL
-			this.geneQuery = normalizeQuery((_window as any).serverVars.theQuery);
-			this.genesetQuery = normalizeQuery((_window as any).serverVars.genesetIds);
-			const dataPriority = (_window as any).serverVars.dataPriority;
-			if (typeof dataPriority !== "undefined") {
-				this.dataTypePriorityCode = (dataPriority + '') as '0'|'1'|'2';
-			}
 
-            const selectedMolecularProfiles = (_window as any).serverVars.molecularProfiles;
-            if (selectedMolecularProfiles !== undefined) {
-                this.selectedProfileIds = selectedMolecularProfiles;
-            }
-
-            const zScoreThreshold =  (_window as any).serverVars.zScoreThreshold;
-            if (zScoreThreshold !== undefined) {
-                this.zScoreThreshold = zScoreThreshold;
-            }
-
-			const rppaScoreThreshold =  (_window as any).serverVars.rppaScoreThreshold;
-			if (rppaScoreThreshold !== undefined) {
-				this.rppaScoreThreshold = rppaScoreThreshold;
-			}
-
-			const caseSetId =  (_window as any).serverVars.caseSetProperties.case_set_id;
-			if (caseSetId !== undefined) {
-				this.selectedSampleListId = caseSetId;
-				this.initiallySelected.sampleListId = true;
-			}
-
-			// this variable is set custom case ids when it is a shared virtual study query
-			const studySampleMap = (_window as any).serverVars.studySampleObj;
-			if (studySampleMap) {
-				this._defaultStudySampleMap = studySampleMap;
-			}
-
-			const caseIds = (_window as any).serverVars.caseIds;
-			if (caseIds) {
-				if (caseSetId === CUSTOM_CASE_LIST_ID) {
-					this.caseIdsMode = 'sample';
-					this.caseIds = caseIds.replace(/\+/g, "\n");
-				}
-			}
-		}
-
-		// Select studies from _window
-		const windowStudyId = (_window as any).selectedCancerStudyId;
-		if (windowStudyId) {
-			this.setStudyIdSelected(windowStudyId, true);
-			this._defaultSelectedIds.set(windowStudyId, true);
-		}
-
-		const cohortIdsList:string[] = ((_window as any).cohortIdsList as string[]) || [];
-		for (const studyId of cohortIdsList) {
-			if (studyId !== "null") {
-				this.setStudyIdSelected(studyId, true);
-				this._defaultSelectedIds.set(studyId, true);
-			}
-		}
+	sanitizeQueryParams(str?:string){
+		return str ? decodeURIComponent(str).replace(/\+/g,"\n") : "";
 	}
 
-	@action setParamsFromUrl(url:string)
+	@action setParamsFromUrl(url:string|{[k:string]:Partial<CancerStudyQueryUrlParams>})
 	{
-		let urlParts = URL.parse(url, true);
-		let params = urlParts.query as Partial<CancerStudyQueryUrlParams>;
+		let params:Partial<CancerStudyQueryUrlParams>;
+		if (typeof url === 'string') {
+            let urlParts = URL.parse(url, true);
+            params = urlParts.query as Partial<CancerStudyQueryUrlParams>;
+		} else {
+			params = url; // already an object
+		}
+
 		let profileIds = [
 			params.genetic_profile_ids_PROFILE_MUTATION_EXTENDED,
 			params.genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION,
@@ -1611,19 +1577,49 @@ export class QueryStore
 			params.genetic_profile_ids_PROFILE_GENESET_SCORE,
 		];
 
-		this.selectableSelectedStudyIds = params.cancer_study_list ? params.cancer_study_list.split(",") : (params.cancer_study_id ? [params.cancer_study_id] : []);
+		let queriedStudies = params.cancer_study_list ? params.cancer_study_list.split(",") : (params.cancer_study_id ? [params.cancer_study_id] : []);
+		this.selectableSelectedStudyIds = queriedStudies;
+		this._defaultSelectedIds = observable.map(stringListToSet(queriedStudies));
+
 		this._selectedProfileIds = profileIds.every(id => id === undefined) ? undefined : profileIds.filter(_.identity) as string[];
 		this.zScoreThreshold = params.Z_SCORE_THRESHOLD || '2.0';
 		this.rppaScoreThreshold = params.RPPA_SCORE_THRESHOLD || '2.0';
 		this.dataTypePriorityCode = params.data_priority || '0';
-		this.selectedSampleListId = params.case_set_id !== "-1" ? params.case_set_id : '';
-		this.caseIds = params.case_ids || '';
+		this.selectedSampleListId = params.case_set_id ? params.case_set_id.toString() : "";  // must be a string even though it's integer
+		this.caseIds = this.sanitizeQueryParams(params.case_ids);
 		this.caseIdsMode = 'sample'; // url always contains sample IDs
-		this.geneQuery = normalizeQuery(params.gene_list || '');
+        this.geneQuery = normalizeQuery(decodeURIComponent(params.gene_list||''));
+        this.genesetQuery = normalizeQuery(decodeURIComponent(params[QueryParameter.GENESET_LIST]||''));
 		this.forDownloadTab = params.tab_index === 'tab_download';
 		this.initiallySelected.profileIds = true;
 		this.initiallySelected.sampleListId = true;
 	}
+
+	// TODO: we should be able to merge this with the above since it accepts same interface
+    @action setParamsFromLocalStorage(legacySubmission:Partial<CancerStudyQueryUrlParams>)
+    {
+
+		const caseIds = legacySubmission.case_ids;
+		if (caseIds) {
+			if (legacySubmission.case_set_id == CUSTOM_CASE_LIST_ID) {
+				this.selectedSampleListId = CUSTOM_CASE_LIST_ID;
+				this.caseIdsMode = 'sample';
+				this.caseIds = caseIds.replace(/\+/g, "\n");
+				this.initiallySelected.sampleListId = true;
+			}
+		}
+
+		if (legacySubmission.cancer_study_list) {
+            for (const studyId of legacySubmission.cancer_study_list.split(",")) {
+                if (studyId !== "null") {
+                    this.setStudyIdSelected(studyId, true);
+                    this._defaultSelectedIds.set(studyId, true);
+                }
+            }
+        }
+
+    }
+
 
 	@action selectCancerType(cancerType:CancerType, multiSelect?:boolean)
 	{
@@ -1746,19 +1742,14 @@ export class QueryStore
 
 		let urlParams = this.asyncUrlParams.result;
 
-		//TODO this is currently broken because of mobx-react-router
-		// this is supposed to allow you to go back in the browser history to
-		// return to the query page and restore the QueryStore state from the URL.
-		/*let historyUrl = URL.format({...urlParams, pathname: window.location.href.split('?')[0]});
+		if (this.forDownloadTab) {
+            formSubmit(buildCBioPortalPageUrl("data_download"), urlParams.query, undefined, "smart");
+		} else {
+            this.singlePageAppSubmitRoutine(urlParams.pathname, urlParams.query);
+		}
 
-		// TODO remove this temporary HACK to make back button work
-		historyUrl = historyUrl.split('#crosscancer').join('#/home#crosscancer');
 
-		let newUrl = buildCBioPortalUrl(urlParams);
-		if (historyUrl != newUrl)
-			window.history.pushState(null, window.document.title, historyUrl);*/
 
-		formSubmit(urlParams.pathname, urlParams.query, undefined, "smart");
 	}
 
 	@action openSummary() {
@@ -1768,33 +1759,6 @@ export class QueryStore
 		}
 
 		openStudySummaryFormSubmit(this.selectableSelectedStudyIds);
-	}
-
-	@action addGenesAndSubmit(genes:string[]) {
-		onMobxPromise(this.molecularProfiles, ()=>{
-			const nonProfileParams = _.cloneDeep(this.initialQueryParams.nonMolecularProfileParams);
-			nonProfileParams.gene_list = normalizeQuery(nonProfileParams.gene_list + "\n" + genes.join(" "));
-			nonProfileParams.geneset_list = normalizeQuery(nonProfileParams.geneset_list ? nonProfileParams.geneset_list : "");
-
-			const profileParams = molecularProfileParams(this, this.initialQueryParams.molecularProfileIds);
-
-			const urlParams = queryParams(nonProfileParams, profileParams, this.initialQueryParams.pathname);
-
-			formSubmit(urlParams.pathname, urlParams.query);
-		});
-	}
-
-	@action sendToGenomeSpace()
-	{
-		if (!this.submitEnabled || !this.asyncUrlParams.isComplete)
-			return;
-
-		gsUploadByGet({
-			url: buildCBioPortalUrl(this.asyncUrlParams.result),
-			filename: this.downloadDataFilename,
-			successCallback: savePath => alert('Saved to GenomeSpace as ' + savePath),
-			errorCallback: savePath => alert('ERROR saving to GenomeSpace as ' + savePath),
-		});
 	}
 
 	@cached get molecularProfilesInStudyCache() {

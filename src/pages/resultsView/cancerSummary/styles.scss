@@ -34,17 +34,36 @@
 
 .cancer-summary--form-controls {
 
-  > div {
-    padding:0 15px;
-    border-left:1px dashed $borderColor;
-    &:first-child {
-      border:none;
+  border: 1px solid $borderColor;
+  margin-bottom:10px;
+
+  > table {
+    > tr {
+      > td {
+        padding-left: 13px;
+        padding-right: 13px;
+        padding-top: 5px;
+        padding-bottom: 5px;
+
+        &.dashed-border-right {
+          border-right: 1px dashed $borderColor;
+        }
+        &.slider-input {
+          width: 110px;
+        }
+      }
+      &:last-child {
+        > td {
+         padding-bottom:10px;
+        }
+      }
     }
   }
 
   .slider-holder {
     display: flex;
     align-items: flex-start;
+    width:235px;
     >div:first-child {
       flex: 1 1 100%;
       margin-bottom: 0px;}
