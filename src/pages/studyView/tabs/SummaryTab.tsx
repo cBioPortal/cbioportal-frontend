@@ -26,7 +26,8 @@ import { observer } from 'mobx-react';
 import {ServerConfigHelpers} from "../../../config/config";
 
 export interface IStudySummaryTabProps {
-    store: StudyViewPageStore
+    store: StudyViewPageStore;
+    handleTabChange:(id:string)=>void
 }
 
 // making this an observer (mobx-react) causes this component to re-render any time
@@ -112,6 +113,10 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             setCustomChartFilters: (chartMeta: ChartMeta, values: string[]) => {
                 this.store.setCustomChartFilters(chartMeta, values);
             },
+            onCompareCohorts: (chartMeta:ChartMeta, selectedValues: string[]) => {
+                this.props.handleTabChange('groupComparison');
+                this.store.onCompareCohort(chartMeta, selectedValues);
+            }
         }
     }
 
@@ -136,6 +141,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                     props.filters = this.store.getCustomChartFilters(props.chartMeta ? props.chartMeta.uniqueKey : '');
                     props.onValueSelection = this.handlers.setCustomChartFilters;
                     props.onResetSelection = this.handlers.setCustomChartFilters;
+                    props.onCompareCohorts = this.handlers.onCompareCohorts;
 
                     if (chartMeta.uniqueKey === UniqueKey.SAMPLES_PER_PATIENT) {
                         props.promise = this.store.samplesPerPatientData;
@@ -190,6 +196,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 props.onValueSelection = this.handlers.onValueSelection;
                 props.onResetSelection = this.handlers.onValueSelection;
                 props.onChangeChartType = this.handlers.onChangeChartType;
+                props.onCompareCohorts = this.handlers.onCompareCohorts;
                 props.download = [
                     {
                         initDownload: () => this.store.getClinicalData(chartMeta),
@@ -338,6 +345,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                             clinicalAttributesWithCountPromise={this.store.clinicalAttributesWithCount}
                             visibleAttributeIds={this.store.visibleAttributes}
                             onChangeChartsVisibility={this.handlers.updateChartsVisibility}
+                            groups={this.store.groups}
                         />
                     )
                 }

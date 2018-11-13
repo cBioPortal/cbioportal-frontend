@@ -1080,12 +1080,13 @@ describe('StudyViewUtils', () => {
             assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartTypeEnum.TABLE);
         });
 
-        it('return PIE_CHART when clinical attribute has data type as STRING', () => {
+        //TODO: uncomment this once release-1.19.0 branch is merged
+        /* it('return PIE_CHART when clinical attribute has data type as STRING', () => {
             const attr:ClinicalAttribute = {
                 datatype: 'STRING'
             } as ClinicalAttribute;
             assert.isTrue(getDefaultChartTypeByClinicalAttribute(attr) === ChartTypeEnum.PIE_CHART);
-        });
+        }); */
 
         it('return BAR_CHART when clinical attribute has data type as STRING', () => {
             const attr:ClinicalAttribute = {
