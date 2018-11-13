@@ -23,6 +23,7 @@ import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
 import { StudySummaryTab } from 'pages/studyView/tabs/SummaryTab';
 import {StudyViewFilter} from "../../shared/api/generated/CBioPortalAPIInternal";
 import { GroupComparison } from 'pages/studyView/tabs/GroupComparison';
+import {bind} from 'bind-decorator';
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -51,6 +52,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
     }
 
+    @bind
     private handleTabChange(id: string) {
         this.props.routing.updateRoute({ tab: id });
     }
@@ -80,7 +82,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                         className="mainTabs">
 
                         <MSKTab key={0} id="summary" linkText="Summary">
-                            <StudySummaryTab store={this.store} ></StudySummaryTab>
+                            <StudySummaryTab store={this.store} handleTabChange={this.handleTabChange}></StudySummaryTab>
                         </MSKTab>
                         <MSKTab key={1} id={"clinicalData"} linkText={"Clinical Data"}>
                             <ClinicalDataTab store={this.store} />
