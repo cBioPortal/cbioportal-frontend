@@ -2,6 +2,7 @@ import {IServerConfig} from "./IAppConfig";
 
 const ServerConfigDefaults: Partial<IServerConfig> = {
     app_version:"1.0",
+    dat_revoke_other_tokens:true,
     civic_url:"https://civicdb.org/api/",
     disabled_tabs:"",
 
