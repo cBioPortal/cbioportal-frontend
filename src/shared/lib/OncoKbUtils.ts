@@ -70,7 +70,7 @@ export function generateIdToIndicatorMap(data:IndicatorQueryResp[]): {[queryId:s
     return map;
 }
 
-export function generateEvidenceQuery(queryVariants:Query[], evidenceTypes:string): EvidenceQueries
+export function generateEvidenceQuery(queryVariants:Query[], evidenceTypes?:string): EvidenceQueries
 {
     return {
         evidenceTypes: evidenceTypes ? evidenceTypes : "GENE_SUMMARY,GENE_BACKGROUND,ONCOGENIC,MUTATION_EFFECT,VUS,MUTATION_SUMMARY,TUMOR_TYPE_SUMMARY,STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY,STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE",
