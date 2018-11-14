@@ -30,11 +30,12 @@ export interface IServerConfig {
     "bitly_access_token": string|null;
     "binary_custom_driver_annotation_menu_label": string|null; // default:
     "disabled_tabs": string|null;
-    "civic_url": string|null;
     "custom_tabs": any[];
     "oncoprint_custom_driver_annotation_default": boolean;
     "oncoprint_oncokb_hotspots_default": string | undefined;
     "genomenexus_url": string|null;
+    "mygene_info_url": string|null;
+    "g2s_url": string|null;
     "google_analytics_profile_id": string|null;
     "isoformOverrideSource" : string;
     "oncoprint_hide_vus_default": boolean;
@@ -44,6 +45,7 @@ export interface IServerConfig {
     "digital_slide_archive_meta_url": string|null;
     "mdacc_heatmap_meta_url": string|null;
     "mdacc_heatmap_patient_url": string|null;
+    "pubmed_url":string | null;
     "priority_studies": string|null;
     "show_hotspot": boolean | undefined;
     "show_oncokb": boolean;
@@ -85,6 +87,7 @@ export interface IServerConfig {
     "skin_title": string;
     "skin_authorization_message": string|null;
     "study_view": StudyView;
+    "uniprot_id_url": string|null,
     "studiesWithGermlineConsentedSamples":string[]|undefined;
     "mdacc_heatmap_study_meta_url": string|null;
     "mdacc_heatmap_study_url": string|null;

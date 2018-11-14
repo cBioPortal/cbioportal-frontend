@@ -1,11 +1,8 @@
-import * as _ from "lodash";
 import * as React from "react";
 import CancerStudySelector from "./CancerStudySelector";
-import {FlexRow, FlexCol} from "../flexbox/FlexBox";
-import * as styles_any from './styles/styles.module.scss';
-import classNames from 'classnames';
+import {FlexCol, FlexRow} from "../flexbox/FlexBox";
+import * as styles_any from "./styles/styles.module.scss";
 import MolecularProfileSelector from "./MolecularProfileSelector";
-import {observable, computed, action} from 'mobx';
 import {observer} from "mobx-react";
 import DataTypePrioritySelector from "./DataTypePrioritySelector";
 import GenesetsSelector from "./GenesetsSelector";
@@ -13,10 +10,8 @@ import GeneSetSelector from "./GeneSetSelector";
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import {QueryStore} from "./QueryStore";
 import {providesStoreContext} from "../../lib/ContextUtils";
-import AppConfig from "appConfig";
 import CaseSetSelector from "./CaseSetSelector";
-import OverlappingStudiesWarning from "../overlappingStudiesWarning/OverlappingStudiesWarning";
-import UnknownStudiesWarning from "../unknownStudies/UnknownStudiesWarning"
+import UnknownStudiesWarning from "../unknownStudies/UnknownStudiesWarning";
 
 const styles = styles_any as {
 	QueryContainer: string,
