@@ -1704,14 +1704,19 @@ export class StudyViewPageStore {
     readonly initialVisibleAttributesClinicalDataCountData = remoteData<ClinicalDataCountItem[]>({
         await: () => [this.defaultVisibleAttributes],
         invoke: async () => {
+            const attributes = _.uniqBy(
+                _.filter(this.defaultVisibleAttributes.result, attr => attr.datatype === 'STRING').map(attr => {
+                    return {
+                        attributeId: attr.clinicalAttributeId,
+                        clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE'
+                    } as ClinicalDataFilter
+                }),
+                attr => `${attr.attributeId}_${attr.clinicalDataType}`
+            );
+
             return internalClient.fetchClinicalDataCountsUsingPOST({
                 clinicalDataCountFilter: {
-                    attributes: _.filter(this.defaultVisibleAttributes.result, attr => attr.datatype === 'STRING').map(attr => {
-                        return {
-                            attributeId: attr.clinicalAttributeId,
-                            clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE'
-                        } as ClinicalDataFilter
-                    }),
+                    attributes,
                     studyViewFilter: this.initialFilters
                 } as ClinicalDataCountFilter
             });
@@ -1725,16 +1730,21 @@ export class StudyViewPageStore {
     readonly initialVisibleAttributesClinicalDataBinCountData = remoteData<DataBin[]>({
         await: () => [this.defaultVisibleAttributes],
         invoke: async () => {
+            const attributes = _.uniqBy(
+                _.filter(this.defaultVisibleAttributes.result, attr => attr.datatype === 'NUMBER').map(attr => {
+                    return {
+                        attributeId: attr.clinicalAttributeId,
+                        clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE',
+                        disableLogScale: false
+                    } as ClinicalDataBinFilter
+                }),
+                attr => `${attr.attributeId}_${attr.clinicalDataType}`
+            );
+
             return internalClient.fetchClinicalDataBinCountsUsingPOST({
                 dataBinMethod: 'STATIC',
                 clinicalDataBinCountFilter: {
-                    attributes: _.filter(this.defaultVisibleAttributes.result, attr => attr.datatype === 'NUMBER').map(attr => {
-                        return {
-                            attributeId: attr.clinicalAttributeId,
-                            clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE',
-                            disableLogScale: false
-                        } as ClinicalDataBinFilter
-                    }),
+                    attributes,
                     studyViewFilter: this.initialFilters
                 } as ClinicalDataBinCountFilter
             });
