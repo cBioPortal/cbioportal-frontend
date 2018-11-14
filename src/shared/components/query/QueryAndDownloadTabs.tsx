@@ -32,6 +32,7 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
 	onSelectTab = (eventKey:string) =>
 	{
 		this.store.forDownloadTab = eventKey === DOWNLOAD;
+		this.store.selectableSelectedStudyIds = [];
 	}
 
 	render()

@@ -117,7 +117,7 @@ export default class MiniBoxPlot extends React.Component<IMiniBoxPlotProps, {}> 
                             Boxplots of {this.props.selectedProfile.name} data for altered and unaltered cases
                         </div>
                         <div className="posRelative">
-                            <div className="borderedChart inlineBlock posRelative">
+                            <div className="borderedChart inlineBlock posRelative" data-test="MiniBoxPlot">
                                 <DownloadControls
                                     buttons={["SVG", "PNG", "Data"]}
                                     getSvg={this.getSvg}

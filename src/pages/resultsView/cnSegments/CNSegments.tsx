@@ -8,7 +8,7 @@ import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import {observable} from "mobx";
 import AppConfig from "appConfig";
 import fileDownload from 'react-file-download';
-import { getLegacyCopyNumberUrl } from '../../../shared/api/urls';
+import {buildCBioPortalPageUrl, getLegacyCopyNumberUrl} from '../../../shared/api/urls';
 
 interface CNSegmentsIframeProps {
     sampleIds:string[];
@@ -72,7 +72,7 @@ class CNASegmentIframe extends React.Component<CNSegmentsIframeProps,{}>{
             };
 
             // Post data to URL which handles post request
-            xhr.open("POST", "api-legacy/segmentfile");
+            xhr.open("POST", buildCBioPortalPageUrl("api-legacy/segmentfile"));
             xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
             xhr.responseType = 'blob';
             xhr.send(sendData);
