@@ -88,7 +88,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
                         {(this.isSessionLoaded) && this.props.children}
                     </div>
 
-                    <PortalFooter/>
+                    <PortalFooter appStore={this.appStore}/>
                 </div>
                 <Else>
                     <LoadingIndicator isLoading={!this.isSessionLoaded} center={true} size={"big"}/>
