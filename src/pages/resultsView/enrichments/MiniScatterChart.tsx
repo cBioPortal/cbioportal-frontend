@@ -106,7 +106,7 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                         filename="enrichments-volcano"
                         dontFade={true}
                         collapse={true}
-                        style={{position:"absolute", top:10, right:10}}
+                        style={{position:"absolute", top:10, right:10, zIndex:0}}
                     />
                 </div>
                 {this.tooltipModel &&
@@ -114,7 +114,7 @@ export default class MiniScatterChart extends React.Component<IMiniScatterChartP
                         positionTop={this.tooltipModel.y - 33}>
                         Gene: {this.tooltipModel.datum.hugoGeneSymbol}<br/>
                         Log Ratio: {formatLogOddsRatio(this.tooltipModel.datum.logRatio)}<br/>
-                        p-Value: {toConditionalPrecision(this.tooltipModel.datum.y, 3, 0.01)}<br/>
+                        p-Value: {toConditionalPrecision(this.tooltipModel.datum.pValue, 3, 0.01)}<br/>
                         q-Value: {toConditionalPrecision(this.tooltipModel.datum.qValue, 3, 0.01)}
                     </Popover>
                 }

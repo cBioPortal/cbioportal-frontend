@@ -9,35 +9,25 @@ import {
     default as CBioPortalAPIInternal
 } from "shared/api/generated/CBioPortalAPIInternal";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
+import {AppStore} from "../../AppStore";
+import getBrowserWindow from "../../shared/lib/getBrowserWindow";
+import {observer} from "mobx-react";
 
-
-interface IPortalFooterState {
-    version?: string;
-}
-
-export default class PortalFooter extends React.Component<{}, IPortalFooterState> {
-    constructor(props:IPortalFooterState) {
-        super(props);
-        this.state = {};
-    }
-
-    componentDidMount() {
-        internalClient.getInfoUsingGET({}).then((res) => {
-            if (res && res.portalVersion) {
-                // only show the closest tagged version in the footer, don't
-                // show full describe output if portalVersion is higher than
-                // commit version, use that instead
-                this.setState({"version":`v${res.portalVersion.split('-')[0]}`,});
-            }
-        });
-    }
+@observer export default class PortalFooter extends React.Component<{appStore:AppStore}, {}> {
 
     render() {
+            var version;
+            if (this.props.appStore.portalVersion.isComplete && !this.props.appStore.portalVersion.isError && this.props.appStore.portalVersion.result){
+                version = this.props.appStore.portalVersion.result;
+            }
+            else{
+                version = "--"
+            }
             if (AppConfig.serverConfig.skin_footer && !_.isEmpty(AppConfig.serverConfig.skin_footer)) {
                 return (
                     <div id="footer" dangerouslySetInnerHTML={{__html: 
                         "<a href='http://www.cbioportal.org'>cBioPortal</a> | " +
-                        `<a href='${AppConfig.apiRoot}api/info'>${this.state.version? this.state.version : "Version Info"}</a> ` +
+                        `<a href='${AppConfig.apiRoot}api/info'>${version}</a> ` +
                         AppConfig.serverConfig.skin_footer +
                         "<br />" +
                         `Questions and Feedback: <a href="mailto:${AppConfig.serverConfig.skin_email_contact}">${AppConfig.serverConfig.skin_email_contact}</a>`
@@ -50,8 +40,8 @@ export default class PortalFooter extends React.Component<{}, IPortalFooterState
                         <div className="footer-layout">
                             <div className="footer-elem">
                                 <img src={require("./cbioportal_logo.png")} style={{width: 142, filter:"grayscale(100%)"}} alt="cBioPortal Logo"/>
-                                {this.state.version && (
-                                    <a href={`${AppConfig.apiRoot}api/info`}><div style={{paddingTop:9,textAlign:"center"}}>{this.state.version}</div></a>
+                                {version && (
+                                    <a href={`${AppConfig.apiRoot}api/info`}><div style={{paddingTop:9,textAlign:"center"}}>{version}</div></a>
                                 )}
                             </div>
                             <If condition={AppConfig.serverConfig.skin_show_tutorials_tab !== false || AppConfig.serverConfig.skin_show_faqs_tab}>
