@@ -3,7 +3,7 @@ import {assert} from 'chai';
 import {GeneticTrackDatum} from "shared/components/oncoprint/Oncoprint";
 import {GenePanelData, MolecularProfile, Sample} from "shared/api/generated/CBioPortalAPI";
 import {
-    generateCaseAlterationData, generateDownloadData, generateGeneAlterationData, generateMutationDownloadData, generateOqlData
+    generateCaseAlterationData, generateDownloadData, generateGeneAlterationData, generateMutationDownloadData, generateOqlData, updateOqlData
 } from "./DownloadUtils";
 import {
     AnnotatedMutation, ExtendedAlteration
@@ -662,6 +662,254 @@ describe('DownloadUtils', () => {
             assert.deepEqual(caseAlterationData[1].oqlData["PTEN: AMP HOMDEL MUT FUSION;"].proteinLevel,
                 [{type: 'UP', value: 2.5406}],
                 "protein data is correct for the sample key VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ");
+        });
+    });
+
+    describe('sampleOqlReport', () => {
+        it('properly updates oql data', () => {
+            const sampleOql = {
+                sequenced: true,
+                geneSymbol: "EGFR",
+                mutation: [],
+                fusion: [],
+                cna: [],
+                mrnaExp: [],
+                proteinLevel: [],
+                isMutationNotProfiled: false,
+                isFusionNotProfiled: false,
+                isCnaNotProfiled: false,
+                isMrnaExpNotProfiled: false,
+                isProteinLevelNotProfiled: false,
+                alterationTypes: []
+            };
+
+            const notProfiledGeneticTrackDatum: GeneticTrackDatum[] = [
+                {
+                    "sample": "TCGA-S9-A7J0-01",
+                    "study_id": "lgg_tcga",
+                    "uid": "VENHQS1TOS1BN0owLTAxOmxnZ190Y2dh",
+                    "profiled_in": [
+                        {
+                            "uniqueSampleKey": "VENHQS1EVS02Mzk1LTAxOmxnZ190Y2dh",
+                            "uniquePatientKey": "VENHQS1EVS02Mzk1OmxnZ190Y2dh",
+                            "molecularProfileId": "lgg_tcga_gistic",
+                            "sampleId": "TCGA-DU-6395-01",
+                            "patientId": "TCGA-DU-6395",
+                            "studyId": "lgg_tcga",
+                            "profiled": true
+                        } as GenePanelData,
+                        {
+                            "uniqueSampleKey": "VENHQS1EVS02Mzk1LTAxOmxnZ190Y2dh",
+                            "uniquePatientKey": "VENHQS1EVS02Mzk1OmxnZ190Y2dh",
+                            "molecularProfileId": "lgg_tcga_mutations",
+                            "sampleId": "TCGA-DU-6395-01",
+                            "patientId": "TCGA-DU-6395",
+                            "studyId": "lgg_tcga",
+                            "profiled": true
+                        } as GenePanelData
+                    ],
+                    "trackLabel": "EGFR",
+                    "data": []
+                },
+                {
+                    "sample": "TCGA-F6-A8O3-01",
+                    "study_id": "lgg_tcga",
+                    "uid": "VENHQS1GNi1BOE8zLTAxOmxnZ190Y2dh",
+                    "profiled_in": [
+                        {
+                            "uniqueSampleKey": "VENHQS1GNi1BOE8zLTAxOmxnZ190Y2dh",
+                            "uniquePatientKey": "VENHQS1GNi1BOE8zOmxnZ190Y2dh",
+                            "molecularProfileId": "lgg_tcga_gistic",
+                            "sampleId": "TCGA-F6-A8O3-01",
+                            "patientId": "TCGA-F6-A8O3",
+                            "studyId": "lgg_tcga",
+                            "profiled": true
+                        } as GenePanelData
+                    ],
+                    "not_profiled_in": [
+                        {
+                            "uniqueSampleKey": "VENHQS1GNi1BOE8zLTAxOmxnZ190Y2dh",
+                            "uniquePatientKey": "VENHQS1GNi1BOE8zOmxnZ190Y2dh",
+                            "molecularProfileId": "lgg_tcga_mutations",
+                            "sampleId": "TCGA-F6-A8O3-01",
+                            "patientId": "TCGA-F6-A8O3",
+                            "studyId": "lgg_tcga",
+                            "profiled": false
+                        } as GenePanelData
+                    ],
+                    "trackLabel": "EGFR",
+                    "data": []                
+                },
+                {
+                    "sample": "TCGA-DU-6396-01",
+                    "study_id": "lgg_tcga",
+                    "uid": "VENHQS1EVS02Mzk2LTAxOmxnZ190Y2dh",
+                    "profiled_in": [],
+                    "not_profiled_in": [
+                        {
+                            "uniqueSampleKey": "VENHQS1EVS02Mzk2LTAxOmxnZ190Y2dh",
+                            "uniquePatientKey": "VENHQS1EVS02Mzk2OmxnZ190Y2dh",
+                            "molecularProfileId": "lgg_tcga_gistic",
+                            "sampleId": "TCGA-DU-6396-01",
+                            "patientId": "TCGA-DU-6396",
+                            "studyId": "lgg_tcga",
+                            "profiled": true
+                        } as GenePanelData,
+                        {
+                            "uniqueSampleKey": "VENHQS1EVS02Mzk2LTAxOmxnZ190Y2dh",
+                            "uniquePatientKey": "VENHQS1EVS02Mzk2OmxnZ190Y2dh",
+                            "molecularProfileId": "lgg_tcga_mutations",
+                            "sampleId": "TCGA-DU-6396-01",
+                            "patientId": "TCGA-DU-6396",
+                            "studyId": "lgg_tcga",
+                            "profiled": true
+                        } as GenePanelData
+                    ],
+                    "trackLabel": "EGFR",
+                    "data": []
+                }
+            ];
+
+            const sampleMolecularProfileIdToMolecularProfile: {[molecularProfileId:string]:MolecularProfile} = {
+                "lgg_tcga_rppa": {
+                    "molecularAlterationType": "PROTEIN_LEVEL",
+                    "datatype": "LOG2-VALUE",
+                    "name": "Protein expression (RPPA)",
+                    "description": "Protein expression measured by reverse-phase protein array",
+                    "showProfileInAnalysisTab": false,
+                    "molecularProfileId": "lgg_tcga_rppa",
+                    "studyId": "lgg_tcga"
+                } as MolecularProfile,
+                "lgg_tcga_rppa_Zscores": {
+                    "molecularAlterationType": "PROTEIN_LEVEL",
+                    "datatype": "Z-SCORE",
+                    "name": "Protein expression Z-scores (RPPA)",
+                    "description": "Protein expression, measured by reverse-phase protein array, Z-scores",
+                    "showProfileInAnalysisTab": true,
+                    "molecularProfileId": "lgg_tcga_rppa_Zscores",
+                    "studyId": "lgg_tcga"
+                } as MolecularProfile,
+                "lgg_tcga_gistic": {
+                    "molecularAlterationType": "COPY_NUMBER_ALTERATION",
+                    "datatype": "DISCRETE",
+                    "name": "Putative copy-number alterations from GISTIC",
+                    "description": "Putative copy-number calls on 513 cases determined using GISTIC 2.0. Values: -2 = homozygous deletion; -1 = hemizygous deletion; 0 = neutral / no change; 1 = gain; 2 = high level amplification.",
+                    "showProfileInAnalysisTab": true,
+                    "molecularProfileId": "lgg_tcga_gistic",
+                    "studyId": "lgg_tcga"
+                } as MolecularProfile,
+                "lgg_tcga_mrna": {
+                    "molecularAlterationType": "MRNA_EXPRESSION",
+                    "datatype": "CONTINUOUS",
+                    "name": "mRNA expression (microarray)",
+                    "description": "Expression levels for 17155 genes in 27 difg cases (Agilent microarray).",
+                    "showProfileInAnalysisTab": false,
+                    "molecularProfileId": "lgg_tcga_mrna",
+                    "studyId": "lgg_tcga"
+                } as MolecularProfile,
+                "lgg_tcga_mrna_median_Zscores": {
+                    "molecularAlterationType": "MRNA_EXPRESSION",
+                    "datatype": "Z-SCORE",
+                    "name": "mRNA Expression z-Scores (microarray)",
+                    "description": "mRNA z-Scores (Agilent microarray) compared to the expression distribution of each gene tumors that are diploid for this gene.",
+                    "showProfileInAnalysisTab": true,
+                    "molecularProfileId": "lgg_tcga_mrna_median_Zscores",
+                    "studyId": "lgg_tcga"
+                } as MolecularProfile,
+                "lgg_tcga_rna_seq_v2_mrna": {
+                    "molecularAlterationType": "MRNA_EXPRESSION",
+                    "datatype": "CONTINUOUS",
+                    "name": "mRNA expression (RNA Seq V2 RSEM)",
+                    "description": "Expression levels for 20532 genes in 530 difg cases (RNA Seq V2 RSEM).",
+                    "showProfileInAnalysisTab": false,
+                    "molecularProfileId": "lgg_tcga_rna_seq_v2_mrna",
+                    "studyId": "lgg_tcga"
+                } as MolecularProfile,
+                "lgg_tcga_rna_seq_v2_mrna_median_Zscores": {
+                    "molecularAlterationType": "MRNA_EXPRESSION",
+                    "datatype": "Z-SCORE",
+                    "name": "mRNA Expression z-Scores (RNA Seq V2 RSEM)",
+                    "description": "mRNA z-Scores (RNA Seq V2 RSEM) compared to the expression distribution of each gene tumors that are diploid for this gene.",
+                    "showProfileInAnalysisTab": true,
+                    "molecularProfileId": "lgg_tcga_rna_seq_v2_mrna_median_Zscores",
+                    "studyId": "lgg_tcga"
+                } as MolecularProfile,
+                "lgg_tcga_linear_CNA": {
+                    "molecularAlterationType": "COPY_NUMBER_ALTERATION",
+                    "datatype": "CONTINUOUS",
+                    "name": "Relative linear copy-number values",
+                    "description": "Relative linear copy-number values for each gene (from Affymetrix SNP6).",
+                    "showProfileInAnalysisTab": false,
+                    "molecularProfileId": "lgg_tcga_linear_CNA",
+                    "studyId": "lgg_tcga"
+                } as MolecularProfile,
+                "lgg_tcga_methylation_hm450": {
+                    "molecularAlterationType": "METHYLATION",
+                    "datatype": "CONTINUOUS",
+                    "name": "Methylation (HM450)",
+                    "description": "Methylation (HM450) beta-values for genes in 530 cases. For genes with multiple methylation probes, the probe most anti-correlated with expression.",
+                    "showProfileInAnalysisTab": false,
+                    "molecularProfileId": "lgg_tcga_methylation_hm450",
+                    "studyId": "lgg_tcga"
+                } as MolecularProfile,
+                "lgg_tcga_mutations": {
+                    "molecularAlterationType": "MUTATION_EXTENDED",
+                    "datatype": "MAF",
+                    "name": "Mutations",
+                    "description": "Mutation data from whole exome sequencing. Mutation packager: LGG/20160128/gdac.broadinstitute.org_LGG.Mutation_Packager_Calls.Level_3.2016012800.0.0.tar.gz.",
+                    "showProfileInAnalysisTab": true,
+                    "molecularProfileId": "lgg_tcga_mutations",
+                    "studyId": "lgg_tcga"
+                } as MolecularProfile
+            };
+
+            const oqlData0 = updateOqlData(
+                notProfiledGeneticTrackDatum[0],
+                sampleOql,
+                sampleMolecularProfileIdToMolecularProfile);
+
+            assert.equal(oqlData0.isCnaNotProfiled, false,
+                "cna is profiled for the zero not profiled GeneticTrackDatum");
+            assert.equal(oqlData0.isFusionNotProfiled, false,
+                "fusion is profiled for the zero not profiled GeneticTrackDatum");
+            assert.equal(oqlData0.isMrnaExpNotProfiled, true,
+                "mrna is profiled for the zero not profiled GeneticTrackDatum");
+            assert.equal(oqlData0.isMutationNotProfiled, false,
+                "mutation is profiled for the zero not profiled GeneticTrackDatum");
+            assert.equal(oqlData0.isProteinLevelNotProfiled, true,
+                "protein level is profiled for the zero not profiled GeneticTrackDatum");
+
+            const oqlData1 = updateOqlData(
+                notProfiledGeneticTrackDatum[1],
+                sampleOql,
+                sampleMolecularProfileIdToMolecularProfile);
+
+            assert.equal(oqlData1.isCnaNotProfiled, false,
+                "cna is profiled for the one not profiled GeneticTrackDatum");
+            assert.equal(oqlData1.isFusionNotProfiled, true,
+                "fusion is not profiled for the one not profiled GeneticTrackDatum");
+            assert.equal(oqlData1.isMrnaExpNotProfiled, true,
+                "mrna is profiled for the one not profiled GeneticTrackDatum");
+            assert.equal(oqlData1.isMutationNotProfiled, true,
+                "mutation is not profiled for the one not profiled GeneticTrackDatum");
+            assert.equal(oqlData1.isProteinLevelNotProfiled, true,
+                "protein level is profiled for the one not profiled GeneticTrackDatum");
+
+            const oqlData2 = updateOqlData(
+                notProfiledGeneticTrackDatum[2],
+                sampleOql,
+                sampleMolecularProfileIdToMolecularProfile);
+
+            assert.equal(oqlData2.isCnaNotProfiled, true,
+                "cna is not profiled for the two not profiled GeneticTrackDatum");
+            assert.equal(oqlData2.isFusionNotProfiled, true,
+                "fusion is not profiled for the two not profiled GeneticTrackDatum");
+            assert.equal(oqlData2.isMrnaExpNotProfiled, true,
+                "mrna is profiled for the two not profiled GeneticTrackDatum");
+            assert.equal(oqlData2.isMutationNotProfiled, true,
+                "mutation is not profiled for the two not profiled GeneticTrackDatum");
+            assert.equal(oqlData2.isProteinLevelNotProfiled, true,
+                "protein level is profiled for the two not profiled GeneticTrackDatum");
         });
     });
 });
