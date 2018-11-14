@@ -41,21 +41,6 @@
   }
 }
 
-.oncoprintLoadingIndicator {
-  height: 200px;
-  border-radius: 4px;
-  background-color: #eee;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-
-  div {
-    margin-bottom: 5px;
-  }
-
-}
-
 .oncoprintContainer {
   opacity: 0;
   max-width: 95vw;
