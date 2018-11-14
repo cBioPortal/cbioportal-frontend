@@ -137,9 +137,8 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
                         iconActive={classnames("fa fa-lg", styles.faCharC)}
                         className={styles.child}
                         label={this.addClinicalDataChartTitle}
-                        onClick={() =>
-                            this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.ADD_CLINICAL)
-                        }
+                        href="javascript:void(0)"
+                        onClick={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.ADD_CLINICAL)}
                     >
                     </MainButton>
                     <ChildButton

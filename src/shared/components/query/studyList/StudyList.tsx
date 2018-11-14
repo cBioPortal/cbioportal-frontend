@@ -7,7 +7,7 @@ import LabeledCheckbox from "../../labeledCheckbox/LabeledCheckbox";
 import {observer, Observer} from "mobx-react";
 import {computed} from "mobx";
 import _ from "lodash";
-import {getPubMedUrl, openStudySummaryFormSubmit} from "../../../api/urls";
+import {getPubMedUrl, getStudySummaryUrl, redirectToStudyView} from "../../../api/urls";
 import {QueryStoreComponent} from "../QueryStore";
 import DefaultTooltip from "../../defaultTooltip/DefaultTooltip";
 import {FilteredCancerTreeView} from "../StudyListLogic";
@@ -331,9 +331,11 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
                                 >View study summary</div>
                             }
                         >
-						    <span onClick={()=>openStudySummaryFormSubmit(study.studyId)}
-						        className={ classNames(styles.summaryIcon, 'ci ci-pie-chart')}>
-					        </span>
+						    <a href={getStudySummaryUrl(study.studyId)} onClick={((event:any) => {
+                                event.preventDefault();
+                                redirectToStudyView(study.studyId)
+                            })} className={ classNames(styles.summaryIcon, 'ci ci-pie-chart')}>
+					        </a>
 						</DefaultTooltip>
                     )}
                 </span>
