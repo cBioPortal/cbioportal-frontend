@@ -36,7 +36,9 @@ import naturalSort from "javascript-natural-sort";
 import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
 import Spec = Mocha.reporters.Spec;
 import OqlStatusBanner from "../oqlStatusBanner/OqlStatusBanner";
-import {makeProfiledInClinicalAttributes} from "./ResultsViewOncoprintUtils";
+import {getAnnotatingProgressMessage, makeProfiledInClinicalAttributes} from "./ResultsViewOncoprintUtils";
+import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
+import {getMobxPromiseGroupStatus} from "../../lib/getMobxPromiseGroupStatus";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -262,7 +264,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return !AppConfig.serverConfig.show_hotspot;
             },
             get annotateDriversHotspotsError() {
-                return self.props.store.indexedHotspotData.peekStatus === "error";
+                return self.props.store.didHotspotFailInOncoprint;
             },
             get annotateDriversCBioPortal() {
                 return self.props.store.mutationAnnotationSettings.cbioportalCount;
@@ -1045,10 +1047,36 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
+    @computed get progressItems():IProgressIndicatorItem[] {
+        const ret = [];
+
+        ret.push({
+            label: "Loading genomic data",
+            promises: [this.props.store.molecularData, this.props.store.mutations]
+        });
+
+        const usingOncokb = this.props.store.mutationAnnotationSettings.oncoKb;
+        const usingHotspot = this.props.store.mutationAnnotationSettings.hotspots;
+        ret.push({
+            label: getAnnotatingProgressMessage(usingOncokb, usingHotspot),
+            promises:[this.props.store.annotatedMolecularData, this.props.store.putativeDriverAnnotatedMutations]
+        });
+
+        ret.push({
+            label: "Rendering"
+        });
+
+        return ret as IProgressIndicatorItem[];
+    }
+
     public render() {
         return (
-            <div>
-                <LoadingIndicator isLoading={this.isHidden} center={true} size={"big"} />
+            <div className="posRelative">
+
+                <LoadingIndicator isLoading={this.isHidden} size={"big"} center={true}>
+                    <ProgressIndicator items={this.progressItems} show={this.isHidden} sequential={true}/>
+                </LoadingIndicator>
+
                 <div className={"tabMessageContainer"}>
                     <OqlStatusBanner className="oncoprint-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
                 </div>

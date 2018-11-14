@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { observer } from "mobx-react";
-import { ResultsViewPageStore } from "../ResultsViewPageStore";
+import {AlterationTypeConstants, ResultsViewPageStore} from "../ResultsViewPageStore";
 import { observable } from 'mobx';
 import ExpressionEnrichmentContainer from 'pages/resultsView/enrichments/ExpressionEnrichmentsContainer';
 import Loader from 'shared/components/loadingIndicator/LoadingIndicator';
@@ -18,7 +18,7 @@ export default class ProteinEnrichmentsTab extends React.Component<IProteinEnric
 
     @autobind
     private onProfileChange(molecularProfile: MolecularProfile) {
-        this.props.store.selectedEnrichmentProteinProfile = molecularProfile;
+        this.props.store._selectedEnrichmentProteinProfile = molecularProfile;
     }
 
     public render() {
@@ -31,7 +31,7 @@ export default class ProteinEnrichmentsTab extends React.Component<IProteinEnric
 
             return (
                 <div>
-                    <EnrichmentsDataSetDropdown dataSets={this.props.store.proteinEnrichmentProfiles.result!} onChange={this.onProfileChange}
+                    <EnrichmentsDataSetDropdown dataSets={this.props.store.proteinEnrichmentProfiles} onChange={this.onProfileChange}
                         selectedValue={this.props.store.selectedEnrichmentProteinProfile.molecularProfileId}
                         molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount.result!}/>
                     <ExpressionEnrichmentContainer data={this.props.store.proteinEnrichmentData.result!}
