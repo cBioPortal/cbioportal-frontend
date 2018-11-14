@@ -774,7 +774,7 @@ export class StudyViewPageStore {
 
     public isLogScaleChecked(uniqueKey: string) {
         return this._clinicalDataBinFilterSet.get(uniqueKey) !== undefined &&
-            this._clinicalDataBinFilterSet.get(uniqueKey)!.disableLogScale;
+            !this._clinicalDataBinFilterSet.get(uniqueKey)!.disableLogScale;
     }
 
     @action updateChartsVisibility(visibleChartIds:string[]){
@@ -965,7 +965,7 @@ export class StudyViewPageStore {
                 invoke: async () => {
                     let dataType = chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE';
                     let result: ClinicalDataCountItem[] = [];
-                    if (this.isInitialFilterState) {
+                    if (this.isInitialFilterState && _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined) {
                         result = this.initialVisibleAttributesClinicalDataCountData.result;
                     } else {
                         if (this._clinicalDataEqualityFilterSet.has(uniqueKey)) {
@@ -1013,7 +1013,7 @@ export class StudyViewPageStore {
                     // TODO this.barChartFilters.length > 0 ? 'STATIC' : 'DYNAMIC' (not trivial when multiple filters involved)
                     const dataBinMethod = DataBinMethodConstants.STATIC;
                     let result = [];
-                    if (this.isInitialFilterState) {
+                    if (this.isInitialFilterState && _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined) {
                         result = this.initialVisibleAttributesClinicalDataBinCountData.result;
                     } else {
                         if (this._clinicalDataIntervalFilterSet.has(uniqueKey)) {
@@ -1363,6 +1363,7 @@ export class StudyViewPageStore {
             let fractionGenomeAlteredFlag = false;
 
             clinicalAttributes.forEach((obj:ClinicalAttribute) => {
+                const uniqueKey = getClinicalAttributeUniqueKey(obj);
                 if (obj.priority !== "0") {
                     if (obj.clinicalAttributeId === OS_STATUS) {
                         osStatusFlag = true;
@@ -1377,6 +1378,14 @@ export class StudyViewPageStore {
                     } else if (FRACTION_GENOME_ALTERED === obj.clinicalAttributeId) {
                         fractionGenomeAlteredFlag = true;
                     }
+                }
+
+                if (obj.datatype === 'NUMBER') {
+                    this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
+                    this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.BAR_CHART]);
+                } else {
+                    this.chartsType.set(uniqueKey, ChartTypeEnum.PIE_CHART);
+                    this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.PIE_CHART]);
                 }
 
                 if(obj.datatype === 'NUMBER') {
