@@ -2,6 +2,7 @@ var assert = require('assert');
 var expect = require('chai').expect;
 var waitForOncoprint = require('./specUtils').waitForOncoprint;
 var goToUrlAndSetLocalStorage = require('./specUtils').goToUrlAndSetLocalStorage;
+var waitForNetworkQuiet = require('./specUtils').waitForNetworkQuiet;
 var sessionServiceIsEnabled = require('./specUtils').sessionServiceIsEnabled;
 var assertScreenShotMatch = require('../lib/testUtils').assertScreenShotMatch;
 
@@ -331,6 +332,9 @@ describe("plots tab screenshot tests", function() {
     it("plots tab molecular vs molecular same gene", function() {
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "MRNA_EXPRESSION" }); });
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "brca_tcga_mrna" }); });
+
+        waitForNetworkQuiet();
+
         browser.waitForExist('input[data-test="ViewCopyNumber"]');
         browser.click('input[data-test="ViewCopyNumber"]');
         waitForAndCheckPlotsTab();
