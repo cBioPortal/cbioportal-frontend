@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {inject, observer} from "mobx-react";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
-import {computed, reaction} from 'mobx';
+import {reaction} from 'mobx';
 import {StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {ClinicalDataTab} from "./tabs/ClinicalDataTab";
@@ -50,25 +50,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         this.props.routing.updateRoute({tab: id});
     }
 
-    @computed
-    get numberOfSamplesWithMutation() {
-        if (this.store.molecularProfileSampleCounts.isComplete &&
-            this.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples) {
-            return this.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples;
-        } else {
-            return 0;
-        }
-    }
-
-    @computed
-    get numberOfSamplesWithCNA() {
-        if (this.store.molecularProfileSampleCounts.isComplete && this.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples) {
-            return this.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples;
-        } else {
-            return 0;
-        }
-    }
-
     content() {
         if (
             this.store.queriedSampleIdentifiers.isComplete &&
@@ -107,21 +88,34 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                         <div className={styles.selectedInfo}>
                             <SelectedInfo selectedSamples={this.store.selectedSamples.result}/>
                             <div className={"btn-group"} role={"group"}>
-                                <button className="btn btn-default btn-sm">
-                                    <LabeledCheckbox
-                                        inputProps={{className: styles.selectedInfoCheckbox}}
-                                        checked={!!this.store.filters.withMutationData}
-                                        onChange={this.store.toggleWithMutationDataFilter}
-                                    >{this.numberOfSamplesWithMutation} With Mutations</LabeledCheckbox>
-                                </button>
-                                <button className="btn btn-default btn-sm">
-                                    <LabeledCheckbox
-                                        inputProps={{className: styles.selectedInfoCheckbox}}
-                                        checked={!!this.store.filters.withCNAData}
-                                        onChange={this.store.toggleWithCNADataFilter}
-                                    >
-                                        {this.numberOfSamplesWithCNA} With CNA</LabeledCheckbox>
-                                </button>
+                                {this.store.mutationProfiles.result.length > 0 && (
+                                    <button className="btn btn-default btn-sm">
+                                        <LabeledCheckbox
+                                            inputProps={{className: styles.selectedInfoCheckbox}}
+                                            checked={!!this.store.filters.withMutationData}
+                                            onChange={this.store.toggleWithMutationDataFilter}
+                                        >
+                                            <LoadingIndicator
+                                                isLoading={this.store.molecularProfileSampleCounts.isPending}/>
+                                            {this.store.molecularProfileSampleCounts.isComplete && (
+                                                `${this.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples} with Mutations`)}
+                                        </LabeledCheckbox>
+                                    </button>
+                                )}
+                                {this.store.cnaProfiles.result.length > 0 && (
+                                    <button className="btn btn-default btn-sm">
+                                        <LabeledCheckbox
+                                            inputProps={{className: styles.selectedInfoCheckbox}}
+                                            checked={!!this.store.filters.withCNAData}
+                                            onChange={this.store.toggleWithCNADataFilter}
+                                        >
+                                            <LoadingIndicator
+                                                isLoading={this.store.molecularProfileSampleCounts.isPending}/>
+                                            {this.store.molecularProfileSampleCounts.isComplete && (
+                                                `${this.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples} with CNA`)}
+                                        </LabeledCheckbox>
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
