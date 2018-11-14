@@ -62,7 +62,7 @@ export default class StudySummary extends React.Component<IStudySummaryProps, {}
                 return (
                     <span>
                         <a
-                            href={buildCBioPortalPageUrl({pathname: 'newstudy', query: {id: study.studyId}})}
+                            href={buildCBioPortalPageUrl({pathname: 'study', query: {id: study.studyId}})}
                             target="_blank">
                             {study.name}
                         </a>

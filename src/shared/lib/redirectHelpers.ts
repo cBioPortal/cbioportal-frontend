@@ -3,6 +3,7 @@ import getBrowserWindow from "./getBrowserWindow";
 import {QueryParams} from "url";
 import {PatientViewUrlParams} from "../../pages/patientView/PatientViewPage";
 import {Patient} from "../api/generated/CBioPortalAPI";
+import {StudyViewURLQuery} from "../../pages/studyView/StudyViewPageStore";
 
 export function restoreRouteAfterRedirect(injected: { routing:ExtendedRouterStore }){
 
@@ -57,6 +58,12 @@ export function handleCaseDO(){
 
     (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(newParams, "/patient", true);
 
+}
+
+export function handleStudyDO(){
+    const routingStore:ExtendedRouterStore = getBrowserWindow().routingStore;
+    const currentQuery = routingStore.location.query;
+    (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(currentQuery, "/study", true);
 }
 
 
