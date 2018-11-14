@@ -66,7 +66,7 @@ import {
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
-import {bind} from '../../../node_modules/bind-decorator';
+import autobind from "autobind-decorator";
 import {updateGeneQuery} from 'pages/studyView/StudyViewUtils';
 import {stringListToSet} from 'shared/lib/StringUtils';
 import {unparseOQLQueryLine} from 'shared/lib/oql/oqlfilter';
@@ -294,6 +294,9 @@ export class StudyViewPageStore {
     @observable.ref private _cnaGeneFilter: CopyNumberGeneFilter[] = [];
     @observable private _mutationCountVsCNAFilter:RectangleBounds|undefined;
 
+    @observable private _withMutationDataFilter:boolean = false;
+    @observable private _withCNADataFilter:boolean = false;
+
     // TODO: make it computed
     // Currently the study view store does not have the full control of the promise.
     // ChartContainer should be modified, instead of accepting a promise, it should accept data and loading state.
@@ -423,7 +426,7 @@ export class StudyViewPageStore {
 
     private _customChartFilterSet =  observable.map<string[]>();
 
-    @bind
+    @autobind
     @action onCheckGene(hugoGeneSymbol: string) {
         //only update geneQueryStr whenever a table gene is clicked.
         this.geneQueryStr = updateGeneQuery(this.geneQueries, hugoGeneSymbol);
@@ -434,25 +437,32 @@ export class StudyViewPageStore {
         return this.queriedGeneSet.keys().filter(gene=>!!this.queriedGeneSet.get(gene));
     }
 
+    @autobind
     @action updateSelectedGenes(query: SingleGeneQuery[], genesInQuery: Gene[]) {
         this.geneQueries = query;
         this.queriedGeneSet = new ObservableMap(stringListToSet(genesInQuery.map(gene => gene.hugoGeneSymbol)))
     }
 
+    @autobind
     @action
     clearGeneFilter() {
         this._mutatedGeneFilter = [];
     }
+
+    @autobind
     @action
     clearCNAGeneFilter() {
         this._cnaGeneFilter = [];
     }
+
+    @autobind
     @action
     clearChartSampleIdentifierFilter(chartMeta: ChartMeta) {
         this._chartSampleIdentifiersFilterSet.delete(chartMeta.uniqueKey)
         this._customChartFilterSet.delete(chartMeta.uniqueKey)
     }
 
+    @autobind
     @action
     clearAllFilters() {
         this._clinicalDataEqualityFilterSet.clear();
@@ -462,6 +472,8 @@ export class StudyViewPageStore {
         this.resetMutationCountVsCNAFilter();
         this._chartSampleIdentifiersFilterSet.clear();
         this._customChartFilterSet.clear();
+        this._withMutationDataFilter = false;
+        this._withCNADataFilter = false;
     }
 
     @action
@@ -474,6 +486,30 @@ export class StudyViewPageStore {
     clearAnalysisGroupsSettings() {
         this._analysisGroupsClinicalAttribute = undefined;
         this._analysisGroups = undefined;
+    }
+
+    @autobind
+    @action
+    toggleWithMutationDataFilter() {
+        this._withMutationDataFilter = !this._withMutationDataFilter;
+    }
+
+    @autobind
+    @action
+    toggleWithCNADataFilter() {
+        this._withCNADataFilter = !this._withCNADataFilter;
+    }
+
+    @autobind
+    @action
+    removeWithMutationDataFilter() {
+        this._withMutationDataFilter = false;
+    }
+
+    @autobind
+    @action
+    removeWithCNADataFilter() {
+        this._withCNADataFilter = false;
     }
 
     @computed
@@ -919,6 +955,14 @@ export class StudyViewPageStore {
             } else {
                 filters.sampleIdentifiers = this.queriedSampleIdentifiers.result;
             }
+        }
+
+        if(this._withMutationDataFilter) {
+            filters.withMutationData = true;
+        }
+
+        if(this._withCNADataFilter) {
+            filters.withCNAData = true;
         }
 
         return filters as StudyViewFilter;
@@ -2387,7 +2431,7 @@ export class StudyViewPageStore {
         default: {}
     });
 
-    @bind
+    @autobind
     public async getDownloadDataPromise() {
 
         let sampleClinicalDataMap = await this.getClinicalDataBySamples(this.selectedSamples.result)
@@ -2422,7 +2466,7 @@ export class StudyViewPageStore {
         return dataRows.map(mutation => mutation.join('\t')).join('\n');
     }
 
-    @bind
+    @autobind
     onSubmitQuery() {
         let formOps: { [id: string]: string } = {
             cancer_study_list: this.studyIds.join(','),

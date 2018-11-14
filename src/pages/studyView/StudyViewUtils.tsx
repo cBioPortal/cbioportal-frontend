@@ -312,6 +312,8 @@ export function isFiltered(filter: Partial<StudyViewFilterWithSampleIdentifierFi
             _.isEmpty(filter.clinicalDataIntervalFilters) &&
             _.isEmpty(filter.cnaGenes) &&
             _.isEmpty(filter.mutatedGenes) &&
+            !filter.withMutationData &&
+            !filter.withCNAData &&
             !filter.mutationCountVsCNASelection)
     );
 

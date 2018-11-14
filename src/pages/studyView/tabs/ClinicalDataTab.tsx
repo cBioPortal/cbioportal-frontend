@@ -4,7 +4,6 @@ import {observer} from "mobx-react";
 import * as _ from 'lodash';
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import {getPatientViewUrl, getSampleViewUrl} from "shared/api/urls";
-import SelectedInfo from "../SelectedInfo/SelectedInfo";
 import {getClinicalAttributeUniqueKey} from "../StudyViewUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {StudyViewPageStore} from "pages/studyView/StudyViewPageStore";
@@ -71,14 +70,6 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
     public render() {
         return (
             <div>
-                <If condition={this.props.store.selectedSamples.isPending}>
-                    <Then>
-                        <LoadingIndicator isLoading={this.props.store.selectedSamples.isPending}/>
-                    </Then>
-                    <Else>
-                        <SelectedInfo selectedSamples={this.props.store.selectedSamples.result}/>
-                    </Else>
-                </If>
                 <If condition={this.columns.isPending || this.props.store.getDataForClinicalDataTab.isPending}>
                     <Then>
                         <LoadingIndicator
