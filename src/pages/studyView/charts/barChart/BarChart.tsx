@@ -6,7 +6,7 @@ import _ from "lodash";
 import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 import {ClinicalDataIntervalFilterValue, DataBin} from "shared/api/generated/CBioPortalAPIInternal";
 import { AbstractChart } from "pages/studyView/charts/ChartContainer";
-import { bind } from "bind-decorator";
+import autobind from 'autobind-decorator';
 import BarChartAxisLabel from "./BarChartAxisLabel";
 import {
     filterCategoryBins,
@@ -48,7 +48,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
         super(props);
     }
 
-    @bind
+    @autobind
     private onSelection(bars: {data: BarDatum[]}[], bounds: {x: number, y: number}[], props: any) {
         const dataBins = _.flatten(bars.map(bar => bar.data.map(barDatum => barDatum.dataBin)));
         this.props.onUserSelection(dataBins);
