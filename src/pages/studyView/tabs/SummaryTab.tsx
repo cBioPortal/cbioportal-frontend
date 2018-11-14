@@ -12,7 +12,6 @@ import {
     CUSTOM_CHART_KEYS,
     UniqueKey
 } from 'pages/studyView/StudyViewPageStore';
-import SummaryHeader from 'pages/studyView/SummaryHeader';
 import {Gene, SampleIdentifier, ClinicalAttribute} from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
 import AppConfig from 'appConfig';
@@ -27,6 +26,7 @@ import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { observer } from 'mobx-react';
 import {ServerConfigHelpers} from "../../../config/config";
+import UserSelections from "../UserSelections";
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore
@@ -114,9 +114,6 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             },
             clearAllFilters: () => {
                 this.store.clearAllFilters();
-            },
-            updateChartsVisibility: (visibleChartIds: string[]) => {
-                this.store.updateChartsVisibility(visibleChartIds);
             },
             setCustomChartFilters: (chartMeta: ChartMeta, values: string[]) => {
                 this.store.setCustomChartFilters(chartMeta, values);
@@ -321,36 +318,21 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                         </div>
                     </div>
                 }
-                {
-                    (this.store.selectedSamples.isComplete) && (
-                        <SummaryHeader
-                            geneQuery={this.store.geneQueryStr}
-                            selectedSamples={this.store.selectedSamples.result!}
-                            updateCustomCasesFilter={(cases: SampleIdentifier[], keepCurrent?: boolean) => {
-                                this.handlers.updateChartSampleIdentifierFilter(UniqueKey.SELECT_CASES_BY_IDS, cases, keepCurrent);
-                            }}
-                            updateSelectedGenes={this.handlers.updateSelectedGenes}
-                            studyWithSamples={this.store.studyWithSamples.result}
-                            filter={this.store.userSelections}
-                            attributesMetaSet={this.store.chartMetaSet}
-                            user={ServerConfigHelpers.getUserEmailAddress()}
-                            getClinicalData={this.store.getDownloadDataPromise}
-                            onSubmitQuery={() => this.store.onSubmitQuery()}
-                            updateClinicalDataEqualityFilter={this.handlers.onValueSelection}
-                            updateClinicalDataIntervalFilter={this.handlers.onUpdateIntervalFilters}
-                            removeGeneFilter={this.handlers.removeGeneFilter}
-                            removeCNAGeneFilter={this.handlers.removeCNAGeneFilter}
-                            resetMutationCountVsCNAFilter={this.handlers.resetMutationCountVsCNAFilter}
-                            clearCNAGeneFilter={this.handlers.clearCNAGeneFilter}
-                            clearGeneFilter={this.handlers.clearGeneFilter}
-                            clearChartSampleIdentifierFilter={this.handlers.clearChartSampleIdentifierFilter}
-                            clearAllFilters={this.handlers.clearAllFilters}
-                            clinicalAttributesWithCountPromise={this.store.clinicalAttributesWithCount}
-                            visibleAttributeIds={this.store.visibleAttributes}
-                            onChangeChartsVisibility={this.handlers.updateChartsVisibility}
-                        />
-                    )
-                }
+
+                    <UserSelections
+                            filter={this.props.store.userSelections}
+                            attributesMetaSet={this.props.store.chartMetaSet}
+                            updateClinicalDataEqualityFilter={this.props.store.updateClinicalDataEqualityFilters}
+                            updateClinicalDataIntervalFilter={ this.props.store.updateClinicalDataIntervalFiltersByValues}
+                            removeGeneFilter={this.props.store.removeGeneFilter}
+                            removeCNAGeneFilter={this.props.store.removeCNAGeneFilters}
+                            resetMutationCountVsCNAFilter={this.handlers.resetMutationCountVsCNAFilter}clearCNAGeneFilter={this.props.store.clearCNAGeneFilter}
+                            clearGeneFilter={this.props.store.clearGeneFilter}
+                            removeWithMutationDataFilter={this.props.store.removeWithMutationDataFilter}
+                            removeWithCNADataFilter={this.props.store.removeWithCNADataFilter}
+                            clearChartSampleIdentifierFilter={this.props.store.clearChartSampleIdentifierFilter}
+                            clearAllFilters={this.props.store.clearAllFilters}
+                />
                 <div className={styles.studyViewFlexContainer}>
                     {this.store.defaultVisibleAttributes.isComplete && (
                         <ReactGridLayout className="layout"

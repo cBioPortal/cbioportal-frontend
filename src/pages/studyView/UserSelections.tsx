@@ -32,6 +32,8 @@ export interface IUserSelectionsProps {
     removeGeneFilter: (entrezGeneId: number) => void;
     removeCNAGeneFilter: (filter: CopyNumberGeneFilterElement) => void;
     resetMutationCountVsCNAFilter: ()=>void;
+    removeWithMutationDataFilter: () => void;
+    removeWithCNADataFilter: () => void;
     clearChartSampleIdentifierFilter: (chartMeta: ChartMeta) => void;
     clearAllFilters: () => void
 }
@@ -224,6 +226,26 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
             }
             return acc;
         }, components);
+
+        if(this.props.filter.withMutationData) {
+            components.push(
+                <div className={styles.parentGroupLogic}><PillTag
+                    content={`Samples with mutation data only`}
+                    backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterTitle}
+                    onDelete={this.props.removeWithMutationDataFilter}
+                /></div>
+            );
+        }
+
+        if(this.props.filter.withCNAData) {
+            components.push(
+                <div className={styles.parentGroupLogic}><PillTag
+                    content={`Samples with CNA data only`}
+                    backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterTitle}
+                    onDelete={this.props.removeWithCNADataFilter}
+                /></div>
+            );
+        }
         return components;
     }
 
