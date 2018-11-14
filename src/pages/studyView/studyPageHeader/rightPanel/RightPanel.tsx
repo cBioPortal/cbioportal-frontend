@@ -4,7 +4,7 @@ import {Sample} from 'shared/api/generated/CBioPortalAPIInternal';
 import {observer} from "mobx-react";
 import {action, computed, observable} from 'mobx';
 import styles from "../styles.module.scss";
-import {bind} from 'bind-decorator';
+import autobind from "autobind-decorator";
 import {getSampleViewUrl} from 'shared/api/urls';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
 import {Gene} from 'shared/api/generated/CBioPortalAPI';
@@ -35,7 +35,7 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
 
     @observable private showMoreDescription = false;
 
-    @bind
+    @autobind
     private handleDownload() {
         this.downloadingData = true;
         this.showDownloadErrorMessage = false;
@@ -48,7 +48,7 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
         });
     }
 
-    @bind
+    @autobind
     private openCases() {
         if (!_.isEmpty(this.props.store.selectedSamples.result)) {
             const firstSample = this.props.store.selectedSamples.result[0];
@@ -61,7 +61,7 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
         }
     }
 
-    @bind
+    @autobind
     @action
     private onSubmit(cases: Sample[]) {
         this.props.store.updateChartSampleIdentifierFilter(UniqueKey.SELECT_CASES_BY_IDS, _.map(cases, obj => {
@@ -73,7 +73,7 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
         this.isCustomCaseBoxOpen = false;
     }
 
-    @bind
+    @autobind
     @action
     private updateSelectedGenes(oql: {
                                     query: SingleGeneQuery[],
