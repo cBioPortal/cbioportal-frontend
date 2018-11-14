@@ -18,6 +18,53 @@ export default class DiscreteCNAColumnFormatter {
         "-2": "deepdel"
     };
 
+    private static facetsCallTable:{[key:string]:string} = {
+        "no WGD,0,0":"Homdel",
+        "no WGD,1,0":"Hetloss",
+        "no WGD,2,0":"CNLOH",
+        "no WGD,3,0":"CNLOH & Gain",
+        "no WGD,4,0":"CNLOH & Gain",
+        "no WGD,5,0":"Amp (LOH)",
+        "no WGD,6,0":"Amp (LOH)",
+        "no WGD,1,1":"Diploid",
+        "no WGD,2,1":"Gain",
+        "no WGD,3,1":"Gain",
+        "no WGD,4,1":"Amp",
+        "no WGD,5,1":"Amp",
+        "no WGD,6,1":"Amp",
+        "no WGD,2,2":"Tetraploid",
+        "no WGD,3,2":"Amp",
+        "no WGD,4,2":"Amp",
+        "no WGD,5,2":"Amp",
+        "no WGD,6,2":"Amp",
+        "no WGD,3,3":"Amp (Balanced)",
+        "no WGD,4,3":"Amp",
+        "no WGD,5,3":"Amp",
+        "no WGD,6,3":"Amp",
+        "WGD,0,0":"Homdel",
+        "WGD,1,0":"Loss Before & After",
+        "WGD,2,0":"Loss Before",
+        "WGD,3,0":"CNLOH Before & Loss",
+        "WGD,4,0":"CNLOH Before",
+        "WGD,5,0":"CNLOH Before & Gain",
+        "WGD,6,0":"Amp (LOH)",
+        "WGD,1,1":"Double Loss After",
+        "WGD,2,1":"Loss After",
+        "WGD,3,1":"CNLOH After",
+        "WGD,4,1":"Loss & Gain",
+        "WGD,5,1":"Amp",
+        "WGD,6,1":"Amp",
+        "WGD,2,2":"Tetraploid",
+        "WGD,3,2":"Gain",
+        "WGD,4,2":"Amp",
+        "WGD,5,2":"Amp",
+        "WGD,6,2":"Amp",
+        "WGD,3,3":"Amp (Balanced)",
+        "WGD,4,3":"Amp",
+        "WGD,5,3":"Amp",
+        "WGD,6,3":"Amp"
+    };
+
     private static getFacetsCNAData(data:Mutation[], sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined) {
         const sampleId:string = data[0].sampleId;
         const tcn = data[0].totalCopyNumber;
@@ -38,96 +85,11 @@ export default class DiscreteCNAColumnFormatter {
 
     private static getFacetsCall(mcn:number, lcn:number, wgd:string) {
         let facetsCall = null;
-        if (wgd === "no WGD" && mcn === 0 && lcn === 0) {
-            facetsCall = "Homdel";
-        } else if (wgd === "no WGD" && mcn === 1 && lcn === 0) {
-            facetsCall = "Hetloss";
-        } else if (wgd === "no WGD" && mcn === 2 && lcn === 0) {
-            facetsCall = "CNLOH";
-        } else if (wgd === "no WGD" && mcn === 3 && lcn === 0) {
-            facetsCall = "CNLOH & Gain";
-        } else if (wgd === "no WGD" && mcn === 4 && lcn === 0) {
-            facetsCall = "CNLOH & Gain";
-        } else if (wgd === "no WGD" && mcn === 5 && lcn === 0) {
-            facetsCall = "Amp (LOH)";
-        } else if (wgd === "no WGD" && mcn === 6 && lcn === 0) {
-            facetsCall = "Amp (LOH)";
-        } else if (wgd === "no WGD" && mcn === 1 && lcn === 1) {
-            facetsCall = "Diploid";
-        } else if (wgd === "no WGD" && mcn === 2 && lcn === 1) {
-            facetsCall = "Gain";
-        } else if (wgd === "no WGD" && mcn === 3 && lcn === 1) {
-            facetsCall = "Gain";
-        } else if (wgd === "no WGD" && mcn === 4 && lcn === 1) {
-            facetsCall = "Amp";
-        } else if (wgd === "no WGD" && mcn === 5 && lcn === 1) {
-            facetsCall = "Amp";
-        } else if (wgd === "no WGD" && mcn === 6 && lcn === 1) {
-            facetsCall = "Amp";
-        } else if (wgd === "no WGD" && mcn === 2 && lcn === 2) {
-            facetsCall = "Tetraploid";
-        } else if (wgd === "no WGD" && mcn === 3 && lcn === 2) {
-            facetsCall = "Amp";
-        } else if (wgd === "no WGD" && mcn === 4 && lcn === 2) {
-            facetsCall = "Amp";
-        } else if (wgd === "no WGD" && mcn === 5 && lcn === 2) {
-            facetsCall = "Amp";
-        } else if (wgd === "no WGD" && mcn === 6 && lcn === 2) {
-            facetsCall = "Amp";
-        } else if (wgd === "no WGD" && mcn === 3 && lcn === 3) {
-            facetsCall = "Amp (Balanced)";
-        } else if (wgd === "no WGD" && mcn === 4 && lcn === 3) {
-            facetsCall = "Amp";
-        } else if (wgd === "no WGD" && mcn === 5 && lcn === 3) {
-            facetsCall = "Amp";
-        } else if (wgd === "no WGD" && mcn === 6 && lcn === 3) {
-            facetsCall = "Amp";
-        } else if (wgd === "WGD" && mcn === 0 && lcn === 0) {
-            facetsCall = "HOMDEL";
-        } else if (wgd === "WGD" && mcn === 1 && lcn === 0) {
-            facetsCall = "Loss Before & After";
-        } else if (wgd === "WGD" && mcn === 2 && lcn === 0) {
-            facetsCall = "Loss Before";
-        } else if (wgd === "WGD" && mcn === 3 && lcn === 0) {
-            facetsCall = "CNLOH Before & Loss";
-        } else if (wgd === "WGD" && mcn === 4 && lcn === 0) {
-            facetsCall = "CNLOH Before";
-        } else if (wgd === "WGD" && mcn === 5 && lcn === 0) {
-            facetsCall = "CNLOH Before & Gain";
-        } else if (wgd === "WGD" && mcn === 6 && lcn === 0) {
-            facetsCall = "Amp (LOH)";
-        } else if (wgd === "WGD" && mcn === 1 && lcn === 1) {
-            facetsCall = "Double Loss After";
-        } else if (wgd === "WGD" && mcn === 2 && lcn === 1) {
-            facetsCall = "Loss After";
-        } else if (wgd === "WGD" && mcn === 3 && lcn === 1) {
-            facetsCall = "CNLOH After";
-        } else if (wgd === "WGD" && mcn === 4 && lcn === 1) {
-            facetsCall = "Loss & Gain";
-        } else if (wgd === "WGD" && mcn === 5 && lcn === 1) {
-            facetsCall = "Amp";
-        } else if (wgd === "WGD" && mcn === 6 && lcn === 1) {
-            facetsCall = "Amp";
-        } else if (wgd === "WGD" && mcn === 2 && lcn === 2) {
-            facetsCall = "Tetraploid";
-        } else if (wgd === "WGD" && mcn === 3 && lcn === 2) {
-            facetsCall = "Gain";
-        } else if (wgd === "WGD" && mcn === 4 && lcn === 2) {
-            facetsCall = "Amp";
-        } else if (wgd === "WGD" && mcn === 5 && lcn === 2) {
-            facetsCall = "Amp";
-        } else if (wgd === "WGD" && mcn === 6 && lcn === 2) {
-            facetsCall = "Amp";
-        } else if (wgd === "WGD" && mcn === 3 && lcn === 3) {
-            facetsCall = "Amp (Balanced)";
-        } else if (wgd === "WGD" && mcn === 4 && lcn === 3) {
-            facetsCall = "Amp";
-        } else if (wgd === "WGD" && mcn === 5 && lcn === 3) {
-            facetsCall = "Amp";
-        } else if (wgd === "WGD" && mcn === 6 && lcn === 3) {
-            facetsCall = "Amp";
-        } else {
+        const key: string = [wgd, mcn.toString(), lcn.toString()].join(",");
+        if (!(key in DiscreteCNAColumnFormatter.facetsCallTable)) {
             facetsCall = "NA";
+        } else {
+            facetsCall = DiscreteCNAColumnFormatter.facetsCallTable[key];
         }
         return facetsCall;
     }

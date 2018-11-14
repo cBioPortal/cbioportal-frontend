@@ -3,6 +3,7 @@ import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import styles from "./mutationType.module.scss";
 import getCanonicalMutationType from "shared/lib/getCanonicalMutationType";
+import {floatValueIsNA} from "shared/lib/NumberUtils";
 
 interface IMutationTypeFormat {
     label?: string;
@@ -27,19 +28,12 @@ export default class ClonalColumnFormatter {
 
     public static getTooltipValue(data:Mutation[]):string {
         const ccfMCopiesValue = ClonalColumnFormatter.getCcfMCopiesValue(data);
-        if (ClonalColumnFormatter.missingFacetsData(ccfMCopiesValue)) {
+        if (floatValueIsNA(ccfMCopiesValue)) {
             return "FACETS data not available";
         } 
-        return ClonalColumnFormatter.getTextValue(ccfMCopiesValue);
+        return "CCF: " + ClonalColumnFormatter.getTextValue(ccfMCopiesValue);
     } 
             
-    public static missingFacetsData(value:number):boolean {
-        if (value === 1.4e-45) {
-            return true;
-        }
-        return false;
-    }
-
     public static getCcfMCopiesUpperValue(data:Mutation[]):number {
         const ccfMCopiesUpperValue = data[0].ccfMCopiesUpper;
         return ccfMCopiesUpperValue;
@@ -53,7 +47,7 @@ export default class ClonalColumnFormatter {
     public static getClonalValue(data:Mutation[]):string {
         let textValue:string = "";
         const ccfMCopiesUpperValue = ClonalColumnFormatter.getCcfMCopiesUpperValue(data);
-        if (ClonalColumnFormatter.missingFacetsData(ccfMCopiesUpperValue)) {
+        if (floatValueIsNA(ccfMCopiesUpperValue)) {
             textValue = "NA";
         } else if (ccfMCopiesUpperValue === 1) {
             textValue = "True";

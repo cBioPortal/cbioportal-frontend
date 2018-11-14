@@ -10,6 +10,7 @@ import AlleleCountColumnFormatter from "shared/components/mutationTable/column/A
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import {isUncalled} from "shared/lib/MutationUtils";
+import {floatValueIsNA} from "shared/lib/NumberUtils";
 import TumorAlleleFreqColumnFormatter from "shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter";
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
@@ -169,7 +170,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         }
         return data.some((row:Mutation[]) => {
             return row.some((m:Mutation) => {
-                return (m.ccfMCopies !== 1.4e-45);
+                return !floatValueIsNA(m.ccfMCopies);
             });
         });
     }

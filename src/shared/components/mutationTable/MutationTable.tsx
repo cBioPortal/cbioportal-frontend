@@ -423,6 +423,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             render:ClonalColumnFormatter.renderFunction,
             download:ClonalColumnFormatter.getClonalValue,
             sortBy:(d:Mutation[])=>ClonalColumnFormatter.getDisplayValue(d),
+            tooltip: (<span>FACETS Clonal</span>),
             filter:(d:Mutation[], filterString:string, filterStringUpper:string) =>
                 ClonalColumnFormatter.getDisplayValue(d).toUpperCase().indexOf(filterStringUpper) > -1
         };
@@ -431,6 +432,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             name: "Mutant Copies",
             render:(d:Mutation[])=>MutantCopiesColumnFormatter.renderFunction(d, this.props.sampleIdToClinicalDataMap),
             download:(d:Mutation[])=>MutantCopiesColumnFormatter.getDisplayValue(d, this.props.sampleIdToClinicalDataMap),
+            tooltip: (<span>FACETS Best Guess for Mutant Copies / Total Copies</span>),
             sortBy:(d:Mutation[])=>MutantCopiesColumnFormatter.getDisplayValue(d, this.props.sampleIdToClinicalDataMap)
         };
 
