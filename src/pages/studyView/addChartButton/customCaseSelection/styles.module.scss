@@ -1,0 +1,23 @@
+
+.body {
+    textarea {
+        resize: none;
+        width: 100%;
+        height: 300px;
+        margin-top: 5px;
+    }
+    textarea.invalid {
+        border-color: red;
+        outline-color: red;
+    }
+
+    textarea.valid {
+        border-color: green;
+        outline-color: green;
+    }
+
+    .fillIds {
+        text-decoration: underline;
+        cursor: pointer;
+    }
+}
