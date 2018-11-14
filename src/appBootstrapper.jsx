@@ -14,6 +14,7 @@ import {
     setConfigDefaults
 } from './config/config';
 
+import './shared/lib/ajaxQuiet';
 import {computed, extendObservable} from 'mobx';
 import makeRoutes from './routes';
 import * as _ from 'lodash';
@@ -24,7 +25,7 @@ import { getHost } from './shared/api/urls';
 import { validateParametersPatientView } from './shared/lib/validateParameters';
 import AppConfig from "appConfig";
 import browser from 'bowser';
-
+import { setNetworkListener } from './shared/lib/ajaxQuiet';
 import {initializeTracking} from "shared/lib/tracking";
 import {CancerStudyQueryUrlParams} from "shared/components/query/QueryStore";
 import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
@@ -68,6 +69,10 @@ if (localStorage.e2etest) {
     });
 }
 
+if (getBrowserWindow().navigator.webdriver) {
+    setNetworkListener();
+}
+
 // expose version on window
 window.FRONTEND_VERSION = VERSION;
 window.FRONTEND_COMMIT = COMMIT;
@@ -99,13 +104,6 @@ let redirecting = false;
 
 superagent.Request.prototype.end = function (callback) {
     return end.call(this, (error, response) => {
-
-        if (error) {
-
-            Raven.captureException(((response && response.error) || error),{
-                tags: { network:true }
-            });
-        }
 
         if (redirecting) {
             return;

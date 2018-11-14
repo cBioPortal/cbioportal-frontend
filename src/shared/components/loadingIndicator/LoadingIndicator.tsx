@@ -34,6 +34,7 @@ export default class LoadingIndicator extends React.Component<ILoader, {}> {
 
         const parentStyles = {
             [styles.centered]:this.props.center,
+            [styles["centered-with-children"]]:this.props.center && (React.Children.count(this.props.children) > 0),
             inlineBlock: this.props.inline
         };
 
