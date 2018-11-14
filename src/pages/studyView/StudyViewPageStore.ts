@@ -66,7 +66,7 @@ import {
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
-import {bind} from '../../../node_modules/bind-decorator';
+import autobind from "autobind-decorator";
 import {updateGeneQuery} from 'pages/studyView/StudyViewUtils';
 import {stringListToSet} from 'shared/lib/StringUtils';
 import {unparseOQLQueryLine} from 'shared/lib/oql/oqlfilter';
@@ -425,7 +425,7 @@ export class StudyViewPageStore {
 
     private _customChartFilterSet =  observable.map<string[]>();
 
-    @bind
+    @autobind
     @action onCheckGene(hugoGeneSymbol: string) {
         //only update geneQueryStr whenever a table gene is clicked.
         this.geneQueryStr = updateGeneQuery(this.geneQueries, hugoGeneSymbol);
@@ -436,32 +436,32 @@ export class StudyViewPageStore {
         return this.queriedGeneSet.keys().filter(gene=>!!this.queriedGeneSet.get(gene));
     }
 
-    @bind
+    @autobind
     @action updateSelectedGenes(query: SingleGeneQuery[], genesInQuery: Gene[]) {
         this.geneQueries = query;
         this.queriedGeneSet = new ObservableMap(stringListToSet(genesInQuery.map(gene => gene.hugoGeneSymbol)))
     }
 
-    @bind
+    @autobind
     @action
     clearGeneFilter() {
         this._mutatedGeneFilter = [];
     }
 
-    @bind
+    @autobind
     @action
     clearCNAGeneFilter() {
         this._cnaGeneFilter = [];
     }
 
-    @bind
+    @autobind
     @action
     clearChartSampleIdentifierFilter(chartMeta: ChartMeta) {
         this._chartSampleIdentifiersFilterSet.delete(chartMeta.uniqueKey)
         this._customChartFilterSet.delete(chartMeta.uniqueKey)
     }
 
-    @bind
+    @autobind
     @action
     clearAllFilters() {
         this._clinicalDataEqualityFilterSet.clear();
@@ -487,25 +487,25 @@ export class StudyViewPageStore {
         this._analysisGroups = undefined;
     }
 
-    @bind
+    @autobind
     @action
     toggleWithMutationDataFilter() {
         this._withMutationDataFilter = !this._withMutationDataFilter;
     }
 
-    @bind
+    @autobind
     @action
     toggleWithCNADataFilter() {
         this._withCNADataFilter = !this._withCNADataFilter;
     }
 
-    @bind
+    @autobind
     @action
     removeWithMutationDataFilter() {
         this._withMutationDataFilter = false;
     }
 
-    @bind
+    @autobind
     @action
     removeWithCNADataFilter() {
         this._withCNADataFilter = false;
@@ -2420,7 +2420,7 @@ export class StudyViewPageStore {
         default: {}
     });
 
-    @bind
+    @autobind
     public async getDownloadDataPromise() {
 
         let sampleClinicalDataMap = await this.getClinicalDataBySamples(this.selectedSamples.result)
@@ -2455,7 +2455,7 @@ export class StudyViewPageStore {
         return dataRows.map(mutation => mutation.join('\t')).join('\n');
     }
 
-    @bind
+    @autobind
     onSubmitQuery() {
         let formOps: { [id: string]: string } = {
             cancer_study_list: this.studyIds.join(','),
