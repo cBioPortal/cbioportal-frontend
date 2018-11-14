@@ -18,7 +18,7 @@ export default class MutationEnrichmentsTab extends React.Component<IMutationEnr
 
     @autobind
     private onProfileChange(molecularProfile: MolecularProfile) {
-        this.props.store.selectedEnrichmentMutationProfile = molecularProfile;
+        this.props.store._selectedEnrichmentMutationProfile = molecularProfile;
     }
 
     public render() {
@@ -30,7 +30,7 @@ export default class MutationEnrichmentsTab extends React.Component<IMutationEnr
 
             return (
                 <div data-test="MutationEnrichmentsTab">
-                    <EnrichmentsDataSetDropdown dataSets={this.props.store.mutationEnrichmentProfiles.result!} onChange={this.onProfileChange}
+                    <EnrichmentsDataSetDropdown dataSets={this.props.store.mutationEnrichmentProfiles} onChange={this.onProfileChange}
                         selectedValue={this.props.store.selectedEnrichmentMutationProfile.molecularProfileId}
                         molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount.result!}/>
                     <AlterationEnrichmentContainer data={this.props.store.mutationEnrichmentData.result!}

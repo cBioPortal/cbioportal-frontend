@@ -77,6 +77,7 @@ import windowStore from 'shared/components/window/WindowStore';
 import {Layout} from 'react-grid-layout';
 import {getHeatmapMeta} from "../../shared/lib/MDACCUtils";
 import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
+import {getMDAndersonHeatmapStudyMetaUrl} from "../../shared/api/urls";
 import onMobxPromise from "../../shared/lib/onMobxPromise";
 
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
@@ -1542,7 +1543,7 @@ export class StudyViewPageStore {
         invoke: async () => {
             let isSinglePhysicalStudy = this.queriedPhysicalStudyIds.result.length === 1;
             if (isSinglePhysicalStudy) {
-                return await getHeatmapMeta(`//bioinformatics.mdanderson.org/study2url?studyid=${this.queriedPhysicalStudyIds.result[0]}`);
+                return await getHeatmapMeta(getMDAndersonHeatmapStudyMetaUrl(this.queriedPhysicalStudyIds.result[0]));
             }
             return [];
         }
@@ -1748,14 +1749,19 @@ export class StudyViewPageStore {
     readonly initialVisibleAttributesClinicalDataCountData = remoteData<ClinicalDataCountItem[]>({
         await: () => [this.defaultVisibleAttributes],
         invoke: async () => {
+            const attributes = _.uniqBy(
+                _.filter(this.defaultVisibleAttributes.result, attr => attr.datatype === 'STRING').map(attr => {
+                    return {
+                        attributeId: attr.clinicalAttributeId,
+                        clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE'
+                    } as ClinicalDataFilter
+                }),
+                attr => `${attr.attributeId}_${attr.clinicalDataType}`
+            );
+
             return internalClient.fetchClinicalDataCountsUsingPOST({
                 clinicalDataCountFilter: {
-                    attributes: _.filter(this.defaultVisibleAttributes.result, attr => attr.datatype === 'STRING').map(attr => {
-                        return {
-                            attributeId: attr.clinicalAttributeId,
-                            clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE'
-                        } as ClinicalDataFilter
-                    }),
+                    attributes,
                     studyViewFilter: this.initialFilters
                 } as ClinicalDataCountFilter
             });
@@ -1769,16 +1775,21 @@ export class StudyViewPageStore {
     readonly initialVisibleAttributesClinicalDataBinCountData = remoteData<DataBin[]>({
         await: () => [this.defaultVisibleAttributes],
         invoke: async () => {
+            const attributes = _.uniqBy(
+                _.filter(this.defaultVisibleAttributes.result, attr => attr.datatype === 'NUMBER').map(attr => {
+                    return {
+                        attributeId: attr.clinicalAttributeId,
+                        clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE',
+                        disableLogScale: false
+                    } as ClinicalDataBinFilter
+                }),
+                attr => `${attr.attributeId}_${attr.clinicalDataType}`
+            );
+
             return internalClient.fetchClinicalDataBinCountsUsingPOST({
                 dataBinMethod: 'STATIC',
                 clinicalDataBinCountFilter: {
-                    attributes: _.filter(this.defaultVisibleAttributes.result, attr => attr.datatype === 'NUMBER').map(attr => {
-                        return {
-                            attributeId: attr.clinicalAttributeId,
-                            clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE',
-                            disableLogScale: false
-                        } as ClinicalDataBinFilter
-                    }),
+                    attributes,
                     studyViewFilter: this.initialFilters
                 } as ClinicalDataBinCountFilter
             });

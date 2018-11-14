@@ -16,7 +16,11 @@ import {labelMobxPromises, cached} from "mobxpromise";
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
 import request from 'superagent';
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
-import { getDarwinUrl, getDigitalSlideArchiveMetaUrl} from "../../../shared/api/urls";
+import {
+    getDarwinUrl,
+    getMDAndersonHeatmapPatientUrl,
+    getMDAndersonHeatMapMetaUrl, getDigitalSlideArchiveMetaUrl
+} from "../../../shared/api/urls";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import {IOncoKbData} from "shared/model/OncoKB";
@@ -39,10 +43,8 @@ import {
     fetchCivicGenes, fetchCnaCivicGenes, fetchCivicVariants, groupBySampleId, findSamplesWithoutCancerTypeClinicalData,
     fetchStudiesForSamplesWithoutCancerTypeClinicalData, fetchOncoKbAnnotatedGenesSuppressErrors, concatMutationData
 } from "shared/lib/StoreUtils";
-import {IMutationalSignature} from "../../../shared/model/MutationalSignature";
 import {indexHotspotsData, fetchHotspotsData} from "shared/lib/CancerHotspotsUtils";
 import {stringListToSet} from "../../../shared/lib/StringUtils";
-import {Gene as OncoKbGene} from "../../../shared/api/generated/OncoKbAPI";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 import { VariantAnnotation } from 'shared/api/generated/GenomeNexusAPI';
 import { fetchVariantAnnotationsIndexedByGenomicLocation } from 'shared/lib/MutationAnnotator';
@@ -313,11 +315,10 @@ export class PatientViewPageStore {
         }
     });
 
-
     readonly MDAndersonHeatMapAvailable = remoteData({
         await: () => [this.derivedPatientId],
         invoke: async() => {
-            const fileContent: string[] = await getHeatmapMeta(`//bioinformatics.mdanderson.org/participant2maps?participant=${this.patientId}`);
+            const fileContent: string[] = await getHeatmapMeta(getMDAndersonHeatMapMetaUrl(this.patientId));
             return fileContent.length > 0;
         },
         onError: () => {
@@ -326,7 +327,6 @@ export class PatientViewPageStore {
     }, false);
 
 
-    //
     readonly clinicalDataForSamples = remoteData({
         await: () => [
             this.samples
