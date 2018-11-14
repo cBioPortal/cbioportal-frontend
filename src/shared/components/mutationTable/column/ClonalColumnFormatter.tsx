@@ -19,7 +19,7 @@ export default class ClonalColumnFormatter {
     /* Determines the display value by using the impact field.
      *
      * @param data  column formatter data
-     * @returns {string}    "ClonaL" text value
+     * @returns {string}    "Clonal" text value
      */
     public static getDisplayValue(data:Mutation[]):string {
         return ClonalColumnFormatter.getClonalValue(data);
@@ -66,7 +66,7 @@ export default class ClonalColumnFormatter {
     public static getTextValue(data:number):string {
         let textValue:string = "";
         if (data) {
-            textValue = data.toString(10);
+            textValue = data.toString();
         }
         return textValue;
     }

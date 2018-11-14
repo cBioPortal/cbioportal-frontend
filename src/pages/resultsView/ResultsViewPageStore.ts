@@ -1543,12 +1543,10 @@ export class ResultsViewPageStore {
         invoke: () => this.getClinicalData("SAMPLE", this.studies.result!, this.samples.result, ["FACETS_WGD", "FACETS_PURITY"])
     }, []);
     
-    @computed get sampleIds(): string[]
-    {
+    @computed get sampleIds(): string[] {
         if (this.samples.result) {
             return this.samples.result.map(sample => sample.sampleId);
         }
-
         return [];
     }
 
@@ -1559,10 +1557,7 @@ export class ResultsViewPageStore {
 
     readonly clinicalDataGroupedBySampleMap = remoteData({
         await: () => [this.facetsClinicalDataGroupedBySample],
-        invoke: async() => {
-            let sampleIdToClinicalDataMap =  mapSampleIdToClinicalData(this.facetsClinicalDataGroupedBySample.result, 'id', 'clinicalData');
-            return sampleIdToClinicalDataMap;
-        }
+        invoke: async() => mapSampleIdToClinicalData(this.facetsClinicalDataGroupedBySample.result, 'id', 'clinicalData')
     }, {});
 
     private getClinicalData(clinicalDataType: "SAMPLE" | "PATIENT", studies:any[], entities: any[], attributeIds: string[]):

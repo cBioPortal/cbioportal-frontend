@@ -14,7 +14,6 @@ import {
 
 import MutationRateSummary from "pages/resultsView/mutation/MutationRateSummary";
 import ResultsViewMutationMapperStore from "pages/resultsView/mutation/ResultsViewMutationMapperStore";
-import {PatientViewPageStore} from "../../../pages/patientView/clinicalInformation/PatientViewPageStore";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import ResultsViewMutationTable from "pages/resultsView/mutation/ResultsViewMutationTable";
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
@@ -60,7 +59,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
     protected get isMutationTableDataLoading() {
         return getMobxPromiseGroupStatus(
             this.props.store.clinicalDataForSamples,
-            this.props.store.studiesForSamplesWithoutCancerTypeClinicalData,
+            this.props.store.studiesForSamplesWithoutCancerTypeClinicalData
         ) === "pending";
     }
 

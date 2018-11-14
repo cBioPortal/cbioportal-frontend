@@ -99,11 +99,11 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
             return !this.props.uniqueSampleKeyToTumorType;
         };
 
-        this._columns[MutationTableColumnType.CLONAL].shouldExclude = ()=>{
+        this._columns[MutationTableColumnType.CLONAL].shouldExclude = () => {
             return !this.hasCcfMCopies;
         };
 
-        this._columns[MutationTableColumnType.MUTANT_COPIES].shouldExclude = ()=>{
+        this._columns[MutationTableColumnType.MUTANT_COPIES].shouldExclude = () => {
             return !this.hasTotalCopyNumber;
         };
         

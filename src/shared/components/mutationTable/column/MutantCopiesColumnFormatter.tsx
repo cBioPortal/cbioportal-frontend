@@ -39,8 +39,8 @@ export default class MutantCopiesColumnFormatter
     {
         let variantAlleleFraction = 0;
         if (data.length > 0) {
-            let refreads:number = data[0].tumorRefCount;
-            let altreads:number = data[0].tumorAltCount;
+            const refreads:number = data[0].tumorRefCount;
+            const altreads:number = data[0].tumorAltCount;
             variantAlleleFraction = altreads/(refreads + altreads);
         }
         return variantAlleleFraction;
@@ -48,12 +48,12 @@ export default class MutantCopiesColumnFormatter
 
     public static getMutantCopies(data:Mutation[], sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined):number
     {
-        let sampleId:string = data[0].sampleId;
-        let variantAlleleFraction:number = MutantCopiesColumnFormatter.getVariantAlleleFraction(data);
-        let totalCopyNumber = data[0].totalCopyNumber;
+        const sampleId:string = data[0].sampleId;
+        const variantAlleleFraction:number = MutantCopiesColumnFormatter.getVariantAlleleFraction(data);
+        const totalCopyNumber = data[0].totalCopyNumber;
         let purity = null;
         if (sampleIdToClinicalDataMap) {
-            let purityData = sampleIdToClinicalDataMap[sampleId].filter((cd: ClinicalData) => cd.clinicalAttributeId === "FACETS_PURITY");
+            const purityData = sampleIdToClinicalDataMap[sampleId].filter((cd: ClinicalData) => cd.clinicalAttributeId === "FACETS_PURITY");
             if (purityData !== undefined && purityData.length > 0) {
                 purity = Number(purityData[0].value);
             }
@@ -61,15 +61,15 @@ export default class MutantCopiesColumnFormatter
         if (purity === null) {
             return -1;
         }
-        let mutantCopies:number = Math.max(1, Math.min(totalCopyNumber, Math.round((variantAlleleFraction/purity)*totalCopyNumber)))
+        const mutantCopies:number = Math.max(1, Math.min(totalCopyNumber, Math.round((variantAlleleFraction/purity)*totalCopyNumber)))
         return mutantCopies;
     }
  
     public static getMutantCopiesOverTotalCopies(data:Mutation[], sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined):string
     {
         let textValue:string = "";
-        let totalCopyNumber:number = data[0].totalCopyNumber;
-        let mutantCopies:number = MutantCopiesColumnFormatter.getMutantCopies(data, sampleIdToClinicalDataMap)
+        const totalCopyNumber:number = data[0].totalCopyNumber;
+        const mutantCopies:number = MutantCopiesColumnFormatter.getMutantCopies(data, sampleIdToClinicalDataMap)
         if (mutantCopies === -1 || MutantCopiesColumnFormatter.invalidTotalCopyNumber(totalCopyNumber)) {
             textValue = "NA";
         } else {
@@ -81,8 +81,8 @@ export default class MutantCopiesColumnFormatter
     public static getMutantCopiesToolTip(data:Mutation[], sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined):string
     {
         let textValue:string = "";
-        let totalCopyNumber:number = data[0].totalCopyNumber;
-        let mutantCopies:number = MutantCopiesColumnFormatter.getMutantCopies(data, sampleIdToClinicalDataMap);
+        const totalCopyNumber:number = data[0].totalCopyNumber;
+        const mutantCopies:number = MutantCopiesColumnFormatter.getMutantCopies(data, sampleIdToClinicalDataMap);
         if (mutantCopies === -1 || MutantCopiesColumnFormatter.invalidTotalCopyNumber(totalCopyNumber)) {
             textValue = "Missing data values, mutant copies can not be computed";
         } else {

@@ -119,7 +119,7 @@ export enum MutationTableColumnType {
     REF_READS,
     VAR_READS,
     CANCER_TYPE,
-    NUM_MUTATIONS,
+    NUM_MUTATIONS
 }
 
 type MutationTableColumn = Column<Mutation[]>&{order?:number, shouldExclude?:()=>boolean};
