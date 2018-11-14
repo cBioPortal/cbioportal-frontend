@@ -88,7 +88,7 @@ export default class SVGAxis extends React.Component<SVGAxisProps, {}> {
             let y:number;
             let transform:string;
             if (this.props.vertical) {
-                x = this.props.x - this.props.tickLength - 20;
+                x = this.props.x - this.props.tickLength - 30;
                 y = this.props.y + (this.props.length / 2);
                 transform = `rotate(270,${x},${y})`;
             } else {
