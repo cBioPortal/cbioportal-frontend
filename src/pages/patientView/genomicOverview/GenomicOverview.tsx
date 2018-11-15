@@ -77,7 +77,18 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
     }
 
     private shouldShowVAFPlot():boolean {
-        return this.props.mergedMutations.length > 0;
+        return this.props.mergedMutations.length > 0 && this.isFrequencyExist();
+    }
+
+    private isFrequencyExist():boolean {
+        for (const frequencyId of Object.keys(this.state.frequencies)){
+            if (this.state.frequencies.hasOwnProperty(frequencyId)){
+                for (const frequency of this.state.frequencies[frequencyId]){
+                    return !isNaN(frequency);
+                }
+            }
+        }
+        return false;
     }
 
     private getTracksWidth():number {

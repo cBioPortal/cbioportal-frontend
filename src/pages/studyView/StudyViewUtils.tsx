@@ -1,26 +1,42 @@
 import _ from "lodash";
-import { SingleGeneQuery } from "shared/lib/oql/oql-parser";
-import { unparseOQLQueryLine } from "shared/lib/oql/oqlfilter";
+import {SingleGeneQuery} from "shared/lib/oql/oql-parser";
+import {unparseOQLQueryLine} from "shared/lib/oql/oqlfilter";
 import {
-    StudyViewFilter, DataBin, ClinicalDataIntervalFilterValue, ClinicalDataCount, SampleIdentifier, DensityPlotBin
+    ClinicalDataCount,
+    ClinicalDataIntervalFilterValue,
+    DataBin,
+    DensityPlotBin,
+    SampleIdentifier,
+    StudyViewFilter
 } from "shared/api/generated/CBioPortalAPIInternal";
-import { Sample, Gene, ClinicalAttribute, CancerStudy } from "shared/api/generated/CBioPortalAPI";
+import {CancerStudy, ClinicalAttribute, Gene, Sample} from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
-import {getSampleViewUrl, getStudySummaryUrl, buildCBioPortalPageUrl} from "../../shared/api/urls";
+import {buildCBioPortalPageUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
-import { BarDatum} from "./charts/barChart/BarChart";
+import {BarDatum} from "./charts/barChart/BarChart";
 import {
-    ClinicalDataTypeConstants,
-    StudyWithSamples,
-    StudyViewFilterWithSampleIdentifierFilters,
     AnalysisGroup,
+    ClinicalDataTypeEnum,
+    DEFAULT_LAYOUT_PROPS,
     Position,
-    DEFAULT_LAYOUT_PROPS
+    StudyViewFilterWithSampleIdentifierFilters,
+    StudyWithSamples
 } from "pages/studyView/StudyViewPageStore";
-import {ChartDimension, ChartMeta, ChartType, ChartTypeEnum, ClinicalDataType} from "./StudyViewPageStore";
+import {
+    ChartDimension,
+    ChartMeta,
+    ChartMetaDataType,
+    ChartMetaDataTypeEnum,
+    ChartType,
+    ChartTypeEnum,
+    ClinicalDataCountSet,
+    ClinicalDataCountWithColor,
+    ClinicalDataType,
+    UniqueKey
+} from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
-import { VirtualStudy } from "shared/model/VirtualStudy";
+import {VirtualStudy} from "shared/model/VirtualStudy";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 
@@ -223,7 +239,7 @@ export function isPreSelectedClinicalAttr(attr: string): boolean {
 }
 
 export function getClinicalDataType(patientAttribute: boolean): ClinicalDataType {
-    return patientAttribute ? ClinicalDataTypeConstants.PATIENT : ClinicalDataTypeConstants.SAMPLE;
+    return patientAttribute ? ClinicalDataTypeEnum.PATIENT : ClinicalDataTypeEnum.SAMPLE;
 }
 
 export function getClinicalAttributeUniqueKey(attribute: ClinicalAttribute): string {
@@ -231,7 +247,7 @@ export function getClinicalAttributeUniqueKey(attribute: ClinicalAttribute): str
     return getClinicalAttributeUniqueKeyByDataTypeAttrId(clinicalDataType, attribute.clinicalAttributeId);
 }
 
-export function getClinicalAttributeUniqueKeyByDataTypeAttrId(dataType: 'SAMPLE'|'PATIENT', attrId: string): string {
+export function getClinicalAttributeUniqueKeyByDataTypeAttrId(dataType: ClinicalDataType , attrId: string): string {
     return dataType + '_' + attrId;
 }
 
@@ -312,6 +328,8 @@ export function isFiltered(filter: Partial<StudyViewFilterWithSampleIdentifierFi
             _.isEmpty(filter.clinicalDataIntervalFilters) &&
             _.isEmpty(filter.cnaGenes) &&
             _.isEmpty(filter.mutatedGenes) &&
+            !filter.withMutationData &&
+            !filter.withCNAData &&
             !filter.mutationCountVsCNASelection)
     );
 
@@ -730,6 +748,14 @@ export function toFixedDigit(value: number, fractionDigits: number = 2)
     return `${Number(value.toFixed(numberOfLeadingDecimalZeroes + fractionDigits))}`;
 }
 
+export function getChartMetaDataType(uniqueKey: string): ChartMetaDataType {
+    const GENOMIC_DATA_TYPES = [
+        UniqueKey.MUTATION_COUNT_CNA_FRACTION, UniqueKey.CNA_GENES_TABLE, UniqueKey.MUTATED_GENES_TABLE,
+        UniqueKey.MUTATION_COUNT, UniqueKey.FRACTION_GENOME_ALTERED
+    ];
+    return _.includes(GENOMIC_DATA_TYPES, uniqueKey) ? ChartMetaDataTypeEnum.GENOMIC : ChartMetaDataTypeEnum.CLINICAL;
+}
+
 export function getFrequencyStr(value: number) {
     let str = '';
     if (value < 0) {
@@ -939,6 +965,17 @@ export function pickClinicalAttrFixedColors(data: ClinicalDataCount[]): {[attrib
     }, {});
 }
 
+export function getClinicalDataCountWithColorByClinicalDataCount(counts:ClinicalDataCount[]):ClinicalDataCountWithColor[] {
+    counts.sort(clinicalDataCountComparator);
+    const colors = pickClinicalDataColors(counts);
+    return counts.map(slice =>{
+        return {
+            ...slice,
+            color: colors[slice.value]
+        };
+    });
+}
+
 export function pickClinicalAttrColorsByIndex(data: ClinicalDataCount[],
                                               availableColors: string[]): {[attribute: string]: string}
 {
@@ -951,6 +988,27 @@ export function pickClinicalAttrColorsByIndex(data: ClinicalDataCount[],
         }
         return acc;
     }, {});
+}
+
+export function calculateClinicalDataCountFrequency(data: ClinicalDataCountSet, numOfSelectedSamples: number): ClinicalDataCountSet {
+    return _.reduce(data, (acc, next, key) => {
+        acc[key] = next * 100 / numOfSelectedSamples;
+        return acc;
+    }, {} as { [attrId: string]: number });
+}
+
+
+export function getOptionsByChartMetaDataType(type: ChartMetaDataType, allCharts: { [id: string]: ChartMeta }, selectedAttrs: string[]) {
+    return _.filter(allCharts, chartMeta => chartMeta.dataType === type)
+        .map(chartMeta => {
+            return {
+                label: chartMeta.displayName,
+                key: chartMeta.uniqueKey,
+                disabled: false,
+                selected: selectedAttrs.includes(chartMeta.uniqueKey),
+                freq: 100
+            }
+        });
 }
 
 export function pickClinicalDataColors(data: ClinicalDataCount[],
