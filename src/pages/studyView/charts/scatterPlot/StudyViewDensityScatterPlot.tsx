@@ -1,26 +1,28 @@
 import {observer} from "mobx-react";
 import * as React from "react";
-import {VictoryChart, VictorySelectionContainer, VictoryAxis, VictoryLabel, VictoryScatter, VictoryLegend, Rect} from "victory";
+import {
+    Rect,
+    VictoryAxis,
+    VictoryChart,
+    VictoryLabel,
+    VictoryLegend,
+    VictoryScatter,
+    VictorySelectionContainer
+} from "victory";
 import CBIOPORTAL_VICTORY_THEME from "../../../../shared/theme/cBioPoralTheme";
 import {computed, observable} from "mobx";
 import autobind from "autobind-decorator";
 import {tickFormatNumeral} from "../../../../shared/components/plots/TickUtils";
 import {makeMouseEvents} from "../../../../shared/components/plots/PlotUtils";
 import _ from "lodash";
-import {downsampleByGrouping, DSData} from "../../../../shared/components/plots/downsampleByGrouping";
 import ScatterPlotTooltip from "../../../../shared/components/plots/ScatterPlotTooltip";
-import {
-    DOWNSAMPLE_PIXEL_DISTANCE_THRESHOLD, getBinnedData, getDownsampledData,
-    MAX_DOT_SIZE
-} from "./StudyViewScatterPlotUtils";
-import {ClinicalAttribute, SampleIdentifier} from "../../../../shared/api/generated/CBioPortalAPI";
-import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator"
-import $ from "jquery";
-import {AnalysisGroup} from "../../StudyViewPageStore";
+import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {AbstractChart} from "../ChartContainer";
 import {interpolatePlasma} from "d3-scale-chromatic";
 import {DensityPlotBin, RectangleBounds} from "../../../../shared/api/generated/CBioPortalAPIInternal";
 import invertIncreasingFunction from "../../../../shared/lib/invertIncreasingFunction";
+
+export type IStudyViewDensityScatterPlotDatum = DensityPlotBin & {x:number, y:number};
 
 export interface IStudyViewDensityScatterPlotProps {
     width:number;
@@ -28,6 +30,7 @@ export interface IStudyViewDensityScatterPlotProps {
     yBinsMin:number;
     data:DensityPlotBin[]
     onSelection:(bounds:RectangleBounds)=>void;
+    selectionBounds?:RectangleBounds;
 
     isLoading?:boolean;
     svgRef?:(svg:SVGElement|null)=>void;
@@ -122,7 +125,7 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         // get data extremes
         const max = {x:Number.NEGATIVE_INFINITY, y:Number.NEGATIVE_INFINITY};
         const min = {x:Number.POSITIVE_INFINITY, y:Number.POSITIVE_INFINITY};
-        for (const d of this.props.data) {
+        for (const d of this.data) {
             max.x = Math.max(d.x, max.x);
             max.y = Math.max(d.y, max.y);
             min.x = Math.min(d.x, min.x);
@@ -185,8 +188,18 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         }
     }
 
-    @computed get data() {
-        return this.props.data;
+    @computed get data():IStudyViewDensityScatterPlotDatum[] {
+        return this.props.data.map(d=>Object.assign({}, d, { x: d.binX, y: d.binY }));
+    }
+
+    private isSelected(d:IStudyViewDensityScatterPlotDatum) {
+        if (!this.props.selectionBounds) {
+            return true;
+        } else {
+            const bounds = this.props.selectionBounds;
+            return d.binX >= bounds.xStart && d.binX < bounds.xEnd &&
+                    d.binY >= bounds.yStart && d.binY < bounds.yEnd;
+        }
     }
 
     @computed get plotComputations() {
@@ -195,7 +208,23 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         // group data, and collect max and min at same time
         // grouping data by count (aka by color) to make different scatter for each color,
         //  this gives significant speed up over passing in a fill function
-        const dataByAreaCount = _.groupBy(this.data, d=>{
+        const selectedData = [];
+        const unselectedData = [];
+        for (const d of this.data) {
+            if (this.isSelected(d)) {
+                selectedData.push(d);
+            } else {
+                unselectedData.push(d);
+            }
+        }
+
+        const selectedDataByAreaCount = _.groupBy(selectedData, d=>{
+            const areaCount = d.count;
+            max = Math.max(areaCount, max);
+            min = Math.min(areaCount, min);
+            return areaCount;
+        });
+        const unselectedDataByAreaCount = _.groupBy(unselectedData, d=>{
             const areaCount = d.count;
             max = Math.max(areaCount, max);
             min = Math.min(areaCount, min);
@@ -230,10 +259,15 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         }
 
         return {
-            dataByAreaCount,
+            selectedDataByAreaCount,
+            unselectedDataByAreaCount,
             colorCoordToCount,
             colorCoordMax,
-            countToColor:(count:number)=>colorCoordToColor(countToColorCoord(count)),
+            countToSelectedColor:(count:number)=>colorCoordToColor(countToColorCoord(count)),
+            countToUnselectedColor:(count:number)=>{
+                const val = Math.round(countToColorCoord(count)*255);
+                return `rgba(${val},${val},${val},0.3)`;
+            },
             colorCoordToColor,
             countMax:max,
             countMin:min
@@ -246,26 +280,40 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         }
 
         const scatters:JSX.Element[] = [];
-        _.forEach(this.plotComputations.dataByAreaCount, (data, areaCount)=>{
-            const color = this.plotComputations.countToColor(parseInt(areaCount, 10));
-            scatters.push(
-                <VictoryScatter
-                    key={`${areaCount}`}
-                    style={{
-                        data: {
-                            fill: color,
-                            stroke: "black",
-                            strokeWidth: 1,
-                            strokeOpacity: 0
-                        }
-                    }}
-                    size={this.size}
-                    symbol="circle"
-                    data={data}
-                    events={this.mouseEvents}
-                />
-            );
-        });
+        const scatterCategories = [
+            {
+                dataByAreaCount: this.plotComputations.selectedDataByAreaCount,
+                countToColor: this.plotComputations.countToSelectedColor,
+                size: 3
+            },
+            {
+                dataByAreaCount: this.plotComputations.unselectedDataByAreaCount,
+                countToColor: this.plotComputations.countToUnselectedColor,
+                size: 2.5
+            }
+        ];
+        for (const scatterCategory of scatterCategories) {
+            _.forEach(scatterCategory.dataByAreaCount, (data, areaCount)=>{
+                const color = scatterCategory.countToColor(parseInt(areaCount, 10));
+                scatters.push(
+                    <VictoryScatter
+                        key={`${areaCount}`}
+                        style={{
+                            data: {
+                                fill: color,
+                                stroke: "black",
+                                strokeWidth: 1,
+                                strokeOpacity: 0
+                            }
+                        }}
+                        size={scatterCategory.size}
+                        symbol="circle"
+                        data={data}
+                        events={this.mouseEvents}
+                    />
+                );
+            });
+        }
         return scatters;
     }
 
