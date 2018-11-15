@@ -365,6 +365,8 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
                     <MSKTab key={gene} id={gene} linkText={gene}>
                         <StandaloneMutationMapper
                             store={mutationMapperStore}
+                            downloadDataFetcher={this.store.downloadDataFetcher}
+                            genomeNexusCache={this.store.genomeNexusCache}
                             oncoKbEvidenceCache={this.store.oncoKbEvidenceCache}
                             pubMedCache={this.store.pubMedCache}
                             pdbHeaderCache={this.store.pdbHeaderCache}

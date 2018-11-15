@@ -2,6 +2,7 @@ import MobxPromise from "mobxpromise";
 import {ILazyMobXTableApplicationLazyDownloadDataFetcher} from "shared/lib/ILazyMobXTableApplicationLazyDownloadDataFetcher";
 import LazyMobXCache from "shared/lib/LazyMobXCache";
 import {default as MutationCountCache, fetch as fetchMutationCountData} from "shared/cache/MutationCountCache";
+import {default as GenomeNexusCache, fetch as fetchGenomeNexusData } from "shared/cache/GenomeNexusCache";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 
 export class MutationTableDownloadDataFetcher implements ILazyMobXTableApplicationLazyDownloadDataFetcher
@@ -9,6 +10,7 @@ export class MutationTableDownloadDataFetcher implements ILazyMobXTableApplicati
     private allData:any[]|undefined = undefined;
 
     constructor(private mutationData: MobxPromise<Mutation[]>,
+                private genomeNexusCache?: () => GenomeNexusCache,
                 private mutationCountCache?: () => MutationCountCache) {
         // TODO labelMobxPromises(this); ?
     }
@@ -40,6 +42,12 @@ export class MutationTableDownloadDataFetcher implements ILazyMobXTableApplicati
         const promises:Promise<any>[] = [];
         const caches:LazyMobXCache<any, any>[] = [];
 
+        if (this.genomeNexusCache)
+        {
+            promises.push(this.fetchAllGenomeNexusData());
+            caches.push(this.genomeNexusCache());
+        }
+
         if (this.mutationCountCache)
         {
             promises.push(this.fetchAllMutationCountData());
@@ -47,6 +55,17 @@ export class MutationTableDownloadDataFetcher implements ILazyMobXTableApplicati
         }
 
         return {promises, caches};
+    }
+
+    private async fetchAllGenomeNexusData()
+    {
+        if (this.mutationData.result)
+        {
+            return await fetchGenomeNexusData(this.mutationData.result);
+        }
+        else {
+            return undefined;
+        }
     }
 
     private async fetchAllMutationCountData()
