@@ -5,7 +5,6 @@ import { observable } from 'mobx';
 import {
     ChartMeta,
     ChartType,
-    ChartTypeEnum,
     DataBinMethodConstants,
     StudyViewPageStore,
     AnalysisGroup,
@@ -28,6 +27,7 @@ import { observer } from 'mobx-react';
 import {ServerConfigHelpers} from "../../../config/config";
 import UserSelections from "../UserSelections";
 import AddChartButton from "../addChartButton/AddChartButton";
+import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore
@@ -345,9 +345,9 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                                             style={{ width: this.store.containerWidth }}
                                             width={this.store.containerWidth}
                                             cols={this.store.studyViewPageLayoutProps.cols}
-                                            rowHeight={this.store.studyViewPageLayoutProps.rowHeight}
+                                            rowHeight={this.store.studyViewPageLayoutProps.grid.h}
                                             layout={this.store.studyViewPageLayoutProps.layout}
-                                            margin={[5, 5]}
+                                            margin={[STUDY_VIEW_CONFIG.layout.gridMargin.x, STUDY_VIEW_CONFIG.layout.gridMargin.y]}
                                             useCSSTransforms={false}
                                             draggableHandle={'.fa-arrows'}>
                             {this.store.visibleAttributes.map(this.renderAttributeChart)}
