@@ -342,7 +342,7 @@ export class ResultsViewPageStore {
                 this._hotspots = val;
             },
             get hotspots() {
-                return !!AppConfig.serverConfig.show_hotspot && this._hotspots && store.indexedHotspotData.peekStatus !== "error";
+                return !!AppConfig.serverConfig.show_hotspot && this._hotspots && !store.didHotspotFailInOncoprint;
             },
             set oncoKb(val:boolean) {
                 this._oncoKb = val;
@@ -437,10 +437,46 @@ export class ResultsViewPageStore {
 
     public mutationAnnotationSettings:MutationAnnotationSettings;
 
-    @observable.ref selectedEnrichmentMutationProfile: MolecularProfile;
-    @observable.ref selectedEnrichmentCopyNumberProfile: MolecularProfile;
-    @observable.ref selectedEnrichmentMRNAProfile: MolecularProfile;
-    @observable.ref selectedEnrichmentProteinProfile: MolecularProfile;
+    @observable.ref public _selectedEnrichmentMutationProfile: MolecularProfile;
+    @observable.ref public _selectedEnrichmentCopyNumberProfile: MolecularProfile;
+    @observable.ref public _selectedEnrichmentMRNAProfile: MolecularProfile;
+    @observable.ref public _selectedEnrichmentProteinProfile: MolecularProfile;
+
+    @computed get selectedEnrichmentMutationProfile() {
+        if (!this._selectedEnrichmentMutationProfile && this.mutationEnrichmentProfiles.isComplete &&
+                this.mutationEnrichmentProfiles.result!.length > 0) {
+            return this.mutationEnrichmentProfiles.result![0];
+        } else {
+            return this._selectedEnrichmentMutationProfile;
+        }
+    }
+
+    @computed get selectedEnrichmentCopyNumberProfile() {
+        if (!this._selectedEnrichmentCopyNumberProfile && this.copyNumberEnrichmentProfiles.isComplete &&
+            this.copyNumberEnrichmentProfiles.result!.length > 0) {
+            return this.copyNumberEnrichmentProfiles.result![0];
+        } else {
+            return this._selectedEnrichmentCopyNumberProfile;
+        }
+    }
+
+    @computed get selectedEnrichmentMRNAProfile() {
+        if (!this._selectedEnrichmentMRNAProfile && this.mRNAEnrichmentProfiles.isComplete &&
+            this.mRNAEnrichmentProfiles.result!.length > 0) {
+            return this.mRNAEnrichmentProfiles.result![0];
+        } else {
+            return this._selectedEnrichmentMRNAProfile;
+        }
+    }
+
+    @computed get selectedEnrichmentProteinProfile() {
+        if (!this._selectedEnrichmentProteinProfile && this.proteinEnrichmentProfiles.isComplete &&
+            this.proteinEnrichmentProfiles.result!.length > 0) {
+            return this.proteinEnrichmentProfiles.result![0];
+        } else {
+            return this._selectedEnrichmentProteinProfile;
+        }
+    }
 
     @computed get hugoGeneSymbols(){
         if (this.oqlQuery.length > 0) {
@@ -481,15 +517,6 @@ export class ResultsViewPageStore {
             this.sessionIdURL = shareURL.slice(0, showSamples);
         }
     }
-
-    readonly bitlyShortenedURL = remoteData({
-        invoke: () => {
-            return request.get('http://' + location.host + "/api/url-shortener?url=" + this.sessionIdURL);
-        },
-        onError: () => {
-            //
-        }
-    });
 
     readonly selectedMolecularProfiles = remoteData<MolecularProfile[]>({
         await: ()=>[
@@ -2162,7 +2189,7 @@ export class ResultsViewPageStore {
                 toAwait.push(this.getOncoKbMutationAnnotationForOncoprint);
             }
             if (this.mutationAnnotationSettings.hotspots) {
-                toAwait.push(this.isHotspot);
+                toAwait.push(this.isHotspotForOncoprint);
             }
             if (this.mutationAnnotationSettings.cbioportalCount) {
                 toAwait.push(this.getCBioportalCount);
@@ -2187,8 +2214,8 @@ export class ResultsViewPageStore {
 
                 const hotspots:boolean =
                     (this.mutationAnnotationSettings.hotspots &&
-                    this.isHotspot.isComplete &&
-                    this.isHotspot.result(mutation));
+                    (!(this.isHotspotForOncoprint.result instanceof Error)) &&
+                    this.isHotspotForOncoprint.result!(mutation));
 
                 const cbioportalCount:boolean =
                     (this.mutationAnnotationSettings.cbioportalCount &&
@@ -2250,18 +2277,23 @@ export class ResultsViewPageStore {
         invoke: ()=>Promise.resolve(indexHotspotsData(this.hotspotData))
     });
 
-    public readonly isHotspot = remoteData<(m:Mutation)=>boolean>({
-        await:()=>[
-            this.indexedHotspotData
-        ],
+    public readonly isHotspotForOncoprint = remoteData<((m:Mutation)=>boolean) | Error>({
         invoke:()=>{
-            const indexedHotspotData = this.indexedHotspotData.result;
-            if (indexedHotspotData) {
-                return Promise.resolve((mutation:Mutation)=>{
-                    return isRecurrentHotspot(mutation, indexedHotspotData);
-                });
+            // have to do it like this so that an error doesnt cause chain reaction of errors and app crash
+            if (this.indexedHotspotData.isComplete) {
+                const indexedHotspotData = this.indexedHotspotData.result;
+                if (indexedHotspotData) {
+                    return Promise.resolve((mutation:Mutation)=>{
+                        return isRecurrentHotspot(mutation, indexedHotspotData);
+                    });
+                } else {
+                    return Promise.resolve(((mutation:Mutation)=>false) as (m:Mutation)=>boolean);
+                }
+            } else if (this.indexedHotspotData.isError) {
+                return Promise.resolve(new Error());
             } else {
-                return Promise.resolve(((mutation:Mutation)=>false) as (m:Mutation)=>boolean);
+                // pending: return endless promise to keep isHotspotForOncoprint pending
+                return new Promise(()=>{});
             }
         }
     });
@@ -2379,6 +2411,12 @@ export class ResultsViewPageStore {
         // check in this order so that we don't trigger invoke
         return this.getOncoKbMutationAnnotationForOncoprint.peekStatus === "complete" &&
             (this.getOncoKbMutationAnnotationForOncoprint.result instanceof Error);
+    }
+
+    @computed get didHotspotFailInOncoprint() {
+        // check in this order so that we don't trigger invoke
+        return this.isHotspotForOncoprint.peekStatus === "complete" &&
+            (this.isHotspotForOncoprint.result instanceof Error);
     }
 
     readonly getOncoKbMutationAnnotationForOncoprint = remoteData<Error|((mutation:Mutation)=>(IndicatorQueryResp|undefined))>({
@@ -2506,15 +2544,13 @@ export class ResultsViewPageStore {
 
     readonly mutationEnrichmentProfiles = remoteData<MolecularProfile[]>({
         await: () => [
+            this.molecularProfilesWithData,
             this.molecularProfileIdToProfiledSampleCount
         ],
         invoke: async () => {
-            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) => 
+            return _.filter(this.molecularProfilesWithData.result, (profile: MolecularProfile) =>
                 profile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED);
         },
-        onResult:(profiles: MolecularProfile[])=>{
-            this.selectedEnrichmentMutationProfile = profiles[0];
-        }
     });
 
     readonly mutationEnrichmentData = remoteData<AlterationEnrichment[]>({
@@ -2539,15 +2575,13 @@ export class ResultsViewPageStore {
 
     readonly copyNumberEnrichmentProfiles = remoteData<MolecularProfile[]>({
         await: () => [
+            this.molecularProfilesWithData,
             this.molecularProfileIdToProfiledSampleCount
         ],
         invoke: async () => {
-            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) => 
+            return _.filter(this.molecularProfilesWithData.result, (profile: MolecularProfile) =>
                 profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && profile.datatype === "DISCRETE");
         },
-        onResult:(profiles: MolecularProfile[])=>{
-            this.selectedEnrichmentCopyNumberProfile = profiles[0];
-        }
     });
 
     readonly copyNumberHomdelEnrichmentData = remoteData<AlterationEnrichment[]>({
@@ -2595,23 +2629,13 @@ export class ResultsViewPageStore {
     }
 
     readonly mRNAEnrichmentProfiles = remoteData<MolecularProfile[]>({
-        await: () => [
-            this.molecularProfileIdToProfiledSampleCount
-        ],
-        invoke: async () => {
-            let profiles: MolecularProfile[] = _.filter(this.molecularProfilesInStudies.result,
-                (profile: MolecularProfile) => profile.molecularAlterationType === AlterationTypeConstants.MRNA_EXPRESSION
-                    && profile.datatype != "Z-SCORE");
-            // move rna_seq profiles at the top of the list to prioritize them
-            const rnaSeqProfiles = _.remove(profiles, (p) => {
-                return p.molecularProfileId.includes("rna_seq");
+        await:()=>[this.molecularProfilesWithData],
+        invoke:()=>{
+            const mrnaProfiles = this.molecularProfilesWithData.result!.filter(p=>{
+                return p.molecularAlterationType === AlterationTypeConstants.MRNA_EXPRESSION
             });
-            profiles = rnaSeqProfiles.concat(profiles);
-            return profiles;
+            return Promise.resolve(filterAndSortProfiles(mrnaProfiles));
         },
-        onResult:(profiles: MolecularProfile[])=>{
-            this.selectedEnrichmentMRNAProfile = profiles[0];
-        }
     });
 
     readonly mRNAEnrichmentData = remoteData<ExpressionEnrichment[]>({
@@ -2635,16 +2659,13 @@ export class ResultsViewPageStore {
     });
 
     readonly proteinEnrichmentProfiles = remoteData<MolecularProfile[]>({
-        await: () => [
-            this.molecularProfileIdToProfiledSampleCount
-        ],
-        invoke: async () => {
-            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) => 
-                profile.molecularAlterationType === AlterationTypeConstants.PROTEIN_LEVEL && profile.datatype != "Z-SCORE");
+        await:()=>[this.molecularProfilesWithData],
+        invoke:()=>{
+            const protProfiles = this.molecularProfilesWithData.result!.filter(p=>{
+                return p.molecularAlterationType === AlterationTypeConstants.PROTEIN_LEVEL;
+            });
+            return Promise.resolve(filterAndSortProfiles(protProfiles));
         },
-        onResult:(profiles: MolecularProfile[])=>{
-            this.selectedEnrichmentProteinProfile = profiles[0];
-        }
     });
 
     readonly proteinEnrichmentData = remoteData<ExpressionEnrichment[]>({

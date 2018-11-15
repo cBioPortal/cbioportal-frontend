@@ -16,11 +16,20 @@ import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPl
 import {BarDatum} from "./charts/barChart/BarChart";
 import {
     AnalysisGroup,
-    ClinicalDataTypeConstants,
+    ClinicalDataTypeEnum,
     StudyViewFilterWithSampleIdentifierFilters,
     StudyWithSamples,
 } from "pages/studyView/StudyViewPageStore";
-import {ChartMeta, ChartType, ClinicalDataType} from "./StudyViewPageStore";
+import {
+    ChartMeta,
+    ChartMetaDataType,
+    ChartMetaDataTypeEnum,
+    ChartType,
+    ClinicalDataCountSet,
+    ClinicalDataCountWithColor,
+    ClinicalDataType,
+    UniqueKey
+} from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import {VirtualStudy} from "shared/model/VirtualStudy";
@@ -226,7 +235,7 @@ export function isPreSelectedClinicalAttr(attr: string): boolean {
 }
 
 export function getClinicalDataType(patientAttribute: boolean): ClinicalDataType {
-    return patientAttribute ? ClinicalDataTypeConstants.PATIENT : ClinicalDataTypeConstants.SAMPLE;
+    return patientAttribute ? ClinicalDataTypeEnum.PATIENT : ClinicalDataTypeEnum.SAMPLE;
 }
 
 export function getClinicalAttributeUniqueKey(attribute: ClinicalAttribute): string {
@@ -234,7 +243,7 @@ export function getClinicalAttributeUniqueKey(attribute: ClinicalAttribute): str
     return getClinicalAttributeUniqueKeyByDataTypeAttrId(clinicalDataType, attribute.clinicalAttributeId);
 }
 
-export function getClinicalAttributeUniqueKeyByDataTypeAttrId(dataType: 'SAMPLE'|'PATIENT', attrId: string): string {
+export function getClinicalAttributeUniqueKeyByDataTypeAttrId(dataType: ClinicalDataType , attrId: string): string {
     return dataType + '_' + attrId;
 }
 
@@ -315,6 +324,8 @@ export function isFiltered(filter: Partial<StudyViewFilterWithSampleIdentifierFi
             _.isEmpty(filter.clinicalDataIntervalFilters) &&
             _.isEmpty(filter.cnaGenes) &&
             _.isEmpty(filter.mutatedGenes) &&
+            !filter.withMutationData &&
+            !filter.withCNAData &&
             !filter.mutationCountVsCNASelection)
     );
 
@@ -733,6 +744,14 @@ export function toFixedDigit(value: number, fractionDigits: number = 2)
     return `${Number(value.toFixed(numberOfLeadingDecimalZeroes + fractionDigits))}`;
 }
 
+export function getChartMetaDataType(uniqueKey: string): ChartMetaDataType {
+    const GENOMIC_DATA_TYPES = [
+        UniqueKey.MUTATION_COUNT_CNA_FRACTION, UniqueKey.CNA_GENES_TABLE, UniqueKey.MUTATED_GENES_TABLE,
+        UniqueKey.MUTATION_COUNT, UniqueKey.FRACTION_GENOME_ALTERED
+    ];
+    return _.includes(GENOMIC_DATA_TYPES, uniqueKey) ? ChartMetaDataTypeEnum.GENOMIC : ChartMetaDataTypeEnum.CLINICAL;
+}
+
 export function getFrequencyStr(value: number) {
     let str = '';
     if (value < 0) {
@@ -947,6 +966,17 @@ export function pickClinicalAttrFixedColors(data: ClinicalDataCount[]): {[attrib
     }, {});
 }
 
+export function getClinicalDataCountWithColorByClinicalDataCount(counts:ClinicalDataCount[]):ClinicalDataCountWithColor[] {
+    counts.sort(clinicalDataCountComparator);
+    const colors = pickClinicalDataColors(counts);
+    return counts.map(slice =>{
+        return {
+            ...slice,
+            color: colors[slice.value]
+        };
+    });
+}
+
 export function pickClinicalAttrColorsByIndex(data: ClinicalDataCount[],
                                               availableColors: string[]): {[attribute: string]: string}
 {
@@ -959,6 +989,27 @@ export function pickClinicalAttrColorsByIndex(data: ClinicalDataCount[],
         }
         return acc;
     }, {});
+}
+
+export function calculateClinicalDataCountFrequency(data: ClinicalDataCountSet, numOfSelectedSamples: number): ClinicalDataCountSet {
+    return _.reduce(data, (acc, next, key) => {
+        acc[key] = next * 100 / numOfSelectedSamples;
+        return acc;
+    }, {} as { [attrId: string]: number });
+}
+
+
+export function getOptionsByChartMetaDataType(type: ChartMetaDataType, allCharts: { [id: string]: ChartMeta }, selectedAttrs: string[]) {
+    return _.filter(allCharts, chartMeta => chartMeta.dataType === type)
+        .map(chartMeta => {
+            return {
+                label: chartMeta.displayName,
+                key: chartMeta.uniqueKey,
+                disabled: false,
+                selected: selectedAttrs.includes(chartMeta.uniqueKey),
+                freq: 100
+            }
+        });
 }
 
 export function pickClinicalDataColors(data: ClinicalDataCount[],
