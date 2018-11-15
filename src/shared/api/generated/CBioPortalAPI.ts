@@ -50,8 +50,6 @@ export type CancerStudy = {
 export type ClinicalAttribute = {
     'clinicalAttributeId': string
 
-        'count': number
-
         'datatype': string
 
         'description': string
@@ -65,7 +63,13 @@ export type ClinicalAttribute = {
         'studyId': string
 
 };
-export type ClinicalAttributeFilter = {
+export type ClinicalAttributeCount = {
+    'clinicalAttributeId': string
+
+        'count': number
+
+};
+export type ClinicalAttributeCountFilter = {
     'sampleIdentifiers': Array < SampleIdentifier >
 
         'sampleListId': string
@@ -775,7 +779,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId" | "count",
+        'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -825,7 +829,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId" | "count",
+        'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any,
             $domain ? : string
@@ -887,7 +891,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId" | "count",
+            'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
                 $domain ? : string
@@ -897,27 +901,12 @@ export default class CBioPortalAPI {
                 return response.body;
             });
         };
-    getAllClinicalAttributesInStudiesUsingPOSTURL(parameters: {
-        'clinicalAttributeFilter': ClinicalAttributeFilter,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId" | "count",
-        'direction' ? : "ASC" | "DESC",
+    getClinicalAttributeCountsUsingPOSTURL(parameters: {
+        'clinicalAttributeCountFilter': ClinicalAttributeCountFilter,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/clinical-attributes/counts/fetch';
-
-        if (parameters['projection'] !== undefined) {
-            queryParameters['projection'] = parameters['projection'];
-        }
-
-        if (parameters['sortBy'] !== undefined) {
-            queryParameters['sortBy'] = parameters['sortBy'];
-        }
-
-        if (parameters['direction'] !== undefined) {
-            queryParameters['direction'] = parameters['direction'];
-        }
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -930,19 +919,13 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get all clinical attributes in specified sampleIdentifiers or sampleListID with clinical attribute count
+     * Get counts for clinical attributes according to their data availability for selected samples/patients
      * @method
-     * @name CBioPortalAPI#getAllClinicalAttributesInStudiesUsingPOST
-     * @param {} clinicalAttributeFilter - List of SampleIdentifiers or Sample List ID
-     * @param {string} projection - projection
-     * @param {string} sortBy - Name of the property that the result list is sorted by
-     * @param {string} direction - Direction of the sort
+     * @name CBioPortalAPI#getClinicalAttributeCountsUsingPOST
+     * @param {} clinicalAttributeCountFilter - List of SampleIdentifiers or Sample List ID
      */
-    getAllClinicalAttributesInStudiesUsingPOSTWithHttpInfo(parameters: {
-        'clinicalAttributeFilter': ClinicalAttributeFilter,
-        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-        'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId" | "count",
-        'direction' ? : "ASC" | "DESC",
+    getClinicalAttributeCountsUsingPOSTWithHttpInfo(parameters: {
+        'clinicalAttributeCountFilter': ClinicalAttributeCountFilter,
         $queryParameters ? : any,
         $domain ? : string
     }): Promise < request.Response > {
@@ -958,25 +941,13 @@ export default class CBioPortalAPI {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            if (parameters['clinicalAttributeFilter'] !== undefined) {
-                body = parameters['clinicalAttributeFilter'];
+            if (parameters['clinicalAttributeCountFilter'] !== undefined) {
+                body = parameters['clinicalAttributeCountFilter'];
             }
 
-            if (parameters['clinicalAttributeFilter'] === undefined) {
-                reject(new Error('Missing required  parameter: clinicalAttributeFilter'));
+            if (parameters['clinicalAttributeCountFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: clinicalAttributeCountFilter'));
                 return;
-            }
-
-            if (parameters['projection'] !== undefined) {
-                queryParameters['projection'] = parameters['projection'];
-            }
-
-            if (parameters['sortBy'] !== undefined) {
-                queryParameters['sortBy'] = parameters['sortBy'];
-            }
-
-            if (parameters['direction'] !== undefined) {
-                queryParameters['direction'] = parameters['direction'];
             }
 
             if (parameters.$queryParameters) {
@@ -992,24 +963,18 @@ export default class CBioPortalAPI {
     };
 
     /**
-     * Get all clinical attributes in specified sampleIdentifiers or sampleListID with clinical attribute count
+     * Get counts for clinical attributes according to their data availability for selected samples/patients
      * @method
-     * @name CBioPortalAPI#getAllClinicalAttributesInStudiesUsingPOST
-     * @param {} clinicalAttributeFilter - List of SampleIdentifiers or Sample List ID
-     * @param {string} projection - projection
-     * @param {string} sortBy - Name of the property that the result list is sorted by
-     * @param {string} direction - Direction of the sort
+     * @name CBioPortalAPI#getClinicalAttributeCountsUsingPOST
+     * @param {} clinicalAttributeCountFilter - List of SampleIdentifiers or Sample List ID
      */
-    getAllClinicalAttributesInStudiesUsingPOST(parameters: {
-            'clinicalAttributeFilter': ClinicalAttributeFilter,
-            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
-            'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId" | "count",
-            'direction' ? : "ASC" | "DESC",
+    getClinicalAttributeCountsUsingPOST(parameters: {
+            'clinicalAttributeCountFilter': ClinicalAttributeCountFilter,
             $queryParameters ? : any,
             $domain ? : string
-        }): Promise < Array < ClinicalAttribute >
+        }): Promise < Array < ClinicalAttributeCount >
         > {
-            return this.getAllClinicalAttributesInStudiesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+            return this.getClinicalAttributeCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
@@ -4470,7 +4435,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId" | "count",
+        'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any
     }): string {
@@ -4524,7 +4489,7 @@ export default class CBioPortalAPI {
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
-        'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId" | "count",
+        'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId",
         'direction' ? : "ASC" | "DESC",
         $queryParameters ? : any,
         $domain ? : string
@@ -4595,7 +4560,7 @@ export default class CBioPortalAPI {
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
-            'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId" | "count",
+            'sortBy' ? : "clinicalAttributeId" | "displayName" | "description" | "datatype" | "patientAttribute" | "priority" | "studyId",
             'direction' ? : "ASC" | "DESC",
             $queryParameters ? : any,
             $domain ? : string

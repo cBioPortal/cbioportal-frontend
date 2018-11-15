@@ -162,11 +162,19 @@ export type DataBin = {
 
 };
 export type DensityPlotBin = {
-    'count': number
+    'binX': number
 
-        'x': number
+        'binY': number
 
-        'y': number
+        'count': number
+
+        'maxX': number
+
+        'maxY': number
+
+        'minX': number
+
+        'minY': number
 
 };
 export type EnrichmentFilter = {
