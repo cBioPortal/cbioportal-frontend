@@ -35,6 +35,7 @@ import internalClient from "shared/api/cbioportalInternalClientInstance";
 import {VirtualStudy} from "shared/model/VirtualStudy";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import {ChartDimension, ChartTypeEnum, Position, STUDY_VIEW_CONFIG} from "./StudyViewConfig";
+import {IStudyViewDensityScatterPlotDatum} from "./charts/scatterPlot/StudyViewDensityScatterPlot";
 
 export const COLORS = [
     STUDY_VIEW_CONFIG.colors.theme.primary, STUDY_VIEW_CONFIG.colors.theme.secondary,
@@ -118,7 +119,7 @@ export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: st
     return updatedQueries.map(query=>unparseOQLQueryLine(query)).join('\n');
 
 }
-export function mutationCountVsCnaTooltip(d:DensityPlotBin) {
+export function mutationCountVsCnaTooltip(d:IStudyViewDensityScatterPlotDatum) {
     return (
         <div>
             <div>Mutation Count: <b>~{d.y.toFixed()}</b></div>
