@@ -43,11 +43,12 @@ import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import {
     calculateLayout,
-    clinicalDataCountComparator,
     COLORS,
     generateScatterPlotDownloadData,
+    getChartMetaDataType,
     getClinicalAttributeUniqueKey,
     getClinicalAttributeUniqueKeyByDataTypeAttrId,
+    getClinicalDataCountWithColorByClinicalDataCount,
     getClinicalDataIntervalFilterValues,
     getClinicalDataType,
     getCNAByAlteration,
@@ -63,13 +64,12 @@ import {
     makePatientToClinicalAnalysisGroup,
     MutationCountVsCnaYBinsMin,
     NA_DATA,
-    pickClinicalDataColors,
     showOriginStudiesInSummaryDescription,
     submitToPage
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
-import {bind} from '../../../node_modules/bind-decorator';
+import autobind from "autobind-decorator";
 import {updateGeneQuery} from 'pages/studyView/StudyViewUtils';
 import {stringListToSet} from 'shared/lib/StringUtils';
 import {unparseOQLQueryLine} from 'shared/lib/oql/oqlfilter';
@@ -79,15 +79,23 @@ import {VirtualStudy} from 'shared/model/VirtualStudy';
 import windowStore from 'shared/components/window/WindowStore';
 import {getHeatmapMeta} from "../../shared/lib/MDACCUtils";
 import {ChartDimension, ChartTypeEnum, STUDY_VIEW_CONFIG, StudyViewLayout} from "./StudyViewConfig";
+import {getMDAndersonHeatmapStudyMetaUrl} from "../../shared/api/urls";
 import onMobxPromise from "../../shared/lib/onMobxPromise";
+import {Layout} from 'react-grid-layout';
 
+
+export enum ClinicalDataTypeEnum {
+    SAMPLE = 'SAMPLE',
+    PATIENT = 'PATIENT',
+}
+
+// Cannot use ClinicalDataTypeEnum here for the strong type. The model in the type is not strongly typed
 export type ClinicalDataType = 'SAMPLE' | 'PATIENT';
 
 
 export type ChartType = 'PIE_CHART' | 'BAR_CHART' | 'SURVIVAL' | 'TABLE' | 'SCATTER' | 'MUTATED_GENES_TABLE' | 'CNA_GENES_TABLE' | 'NONE';
 
 export enum UniqueKey {
-    SELECT_CASES_BY_IDS = 'CUSTOM_FILTERS',
     MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
     CNA_GENES_TABLE = 'CNA_GENES_TABLE',
     MUTATION_COUNT_CNA_FRACTION = 'MUTATION_COUNT_CNA_FRACTION',
@@ -95,7 +103,9 @@ export enum UniqueKey {
     OVERALL_SURVIVAL = 'OS_SURVIVAL',
     SAMPLES_PER_PATIENT = 'SAMPLES_PER_PATIENT',
     WITH_MUTATION_DATA = 'WITH_MUTATION_DATA',
-    WITH_CNA_DATA = 'WITH_CNA_DATA'
+    WITH_CNA_DATA = 'WITH_CNA_DATA',
+    MUTATION_COUNT = "SAMPLE_MUTATION_COUNT",
+    FRACTION_GENOME_ALTERED = "SAMPLE_FRACTION_GENOME_ALTERED",
 }
 
 export const MUTATION_COUNT = 'MUTATION_COUNT';
@@ -121,6 +131,13 @@ export type SurvivalType = {
     unalteredGroup: PatientSurvival[]
 }
 
+export enum ChartMetaDataTypeEnum {
+    CLINICAL = 'CLINICAL',
+    GENOMIC = 'GENOMIC'
+}
+
+export type ChartMetaDataType = ChartMetaDataTypeEnum.CLINICAL | ChartMetaDataTypeEnum.GENOMIC;
+
 export type ChartMeta = {
     clinicalAttribute?: ClinicalAttribute,
     uniqueKey: string,
@@ -128,6 +145,7 @@ export type ChartMeta = {
     description: string,
     dimension: ChartDimension,
     priority: number,
+    dataType: ChartMetaDataType,
     chartType: ChartType
 }
 
@@ -139,19 +157,10 @@ export type StudyViewURLQuery = {
 export const CUSTOM_CHART_KEYS = [UniqueKey.SAMPLES_PER_PATIENT, UniqueKey.WITH_CNA_DATA, UniqueKey.WITH_MUTATION_DATA];
 
 export const SpecialCharts: ChartMeta[] = [{
-    uniqueKey: UniqueKey.SELECT_CASES_BY_IDS,
-    displayName: 'Select by IDs',
-    description: 'Select by IDs',
-    dimension: {
-        w: 0,
-        h: 0
-    },
-    priority: 0,
-    chartType: ChartTypeEnum.NONE
-},{
     uniqueKey: UniqueKey.SAMPLES_PER_PATIENT,
     displayName: '# of Samples Per Patient',
     description: '# of Samples Per Patient',
+    dataType: ChartMetaDataTypeEnum.CLINICAL,
     chartType: ChartTypeEnum.PIE_CHART,
     dimension: {
         w: 1,
@@ -163,6 +172,7 @@ export const SpecialCharts: ChartMeta[] = [{
     uniqueKey: UniqueKey.WITH_MUTATION_DATA,
     displayName: 'With Mutation Data',
     description: 'With Mutation Data',
+    dataType: ChartMetaDataTypeEnum.GENOMIC,
     chartType: ChartTypeEnum.PIE_CHART,
     dimension: {
         w: 1,
@@ -174,6 +184,7 @@ export const SpecialCharts: ChartMeta[] = [{
     uniqueKey: UniqueKey.WITH_CNA_DATA,
     displayName: 'With CNA Data',
     description: 'With CNA Data',
+    dataType: ChartMetaDataTypeEnum.GENOMIC,
     chartType: ChartTypeEnum.PIE_CHART,
     dimension: {
         w: 1,
@@ -182,18 +193,21 @@ export const SpecialCharts: ChartMeta[] = [{
     priority: 0
 }];
 
+export type CustomGroup = {
+    name: string,
+    cases: CustomChartIdentifier[]
+}
+
+export type NewChart = {
+    name: string,
+    groups: CustomGroup[]
+}
+
+export type ClinicalDataCountSet = { [attrId: string]: number };
+
 export type StudyWithSamples = CancerStudy & {
     uniqueSampleKeys : string[]
 }
-export const ClinicalDataTypeConstants: {[key: string]: ClinicalDataType}= {
-    SAMPLE: 'SAMPLE',
-    PATIENT: 'PATIENT'
-};
-
-export const ClinicalAttributeDataTypeConstants = {
-    STRING: 'STRING',
-    NUMBER: 'NUMBER'
-};
 
 export const DataBinMethodConstants: {[key: string]: 'DYNAMIC' | 'STATIC'}= {
     STATIC: 'STATIC',
@@ -202,6 +216,17 @@ export const DataBinMethodConstants: {[key: string]: 'DYNAMIC' | 'STATIC'}= {
 
 export type StudyViewFilterWithSampleIdentifierFilters = StudyViewFilter & {
     sampleIdentifiersSet: { [id: string]: SampleIdentifier[] }
+}
+
+export type CustomChartIdentifier = {
+    studyId: string,
+    patientAttribute: boolean,
+    sampleId: string,
+    patientId: string
+}
+
+export type CustomChartIdentifierWithValue = CustomChartIdentifier & {
+    value: string
 }
 
 export class StudyViewPageStore {
@@ -223,6 +248,9 @@ export class StudyViewPageStore {
 
     @observable.ref private _cnaGeneFilter: CopyNumberGeneFilter[] = [];
     @observable private _mutationCountVsCNAFilter:RectangleBounds|undefined;
+
+    @observable private _withMutationDataFilter:boolean = false;
+    @observable private _withCNADataFilter:boolean = false;
 
     // TODO: make it computed
     // Currently the study view store does not have the full control of the promise.
@@ -346,6 +374,7 @@ export class StudyViewPageStore {
 
     private clinicalDataBinPromises: { [id: string]: MobxPromise<DataBin[]> } = {};
     private clinicalDataCountPromises: { [id: string]: MobxPromise<ClinicalDataCountWithColor[]> } = {};
+    private customChartsPromises: { [id: string]: MobxPromise<ClinicalDataCountWithColor[]> } = {};
 
     @observable.ref private _analysisGroupsClinicalAttribute:ClinicalAttribute|undefined;
     @observable.ref private _analysisGroups:ReadonlyArray<AnalysisGroup>|undefined;
@@ -354,7 +383,10 @@ export class StudyViewPageStore {
 
     private _customChartFilterSet =  observable.map<string[]>();
 
-    @bind
+    @observable private _customCharts = observable.shallowMap<ChartMeta>();
+    @observable private _customChartsSelectedCases = observable.shallowMap<CustomChartIdentifierWithValue[]>();
+
+    @autobind
     @action onCheckGene(hugoGeneSymbol: string) {
         //only update geneQueryStr whenever a table gene is clicked.
         this.geneQueryStr = updateGeneQuery(this.geneQueries, hugoGeneSymbol);
@@ -365,25 +397,32 @@ export class StudyViewPageStore {
         return this.queriedGeneSet.keys().filter(gene=>!!this.queriedGeneSet.get(gene));
     }
 
+    @autobind
     @action updateSelectedGenes(query: SingleGeneQuery[], genesInQuery: Gene[]) {
         this.geneQueries = query;
         this.queriedGeneSet = new ObservableMap(stringListToSet(genesInQuery.map(gene => gene.hugoGeneSymbol)))
     }
 
+    @autobind
     @action
     clearGeneFilter() {
         this._mutatedGeneFilter = [];
     }
+
+    @autobind
     @action
     clearCNAGeneFilter() {
         this._cnaGeneFilter = [];
     }
+
+    @autobind
     @action
     clearChartSampleIdentifierFilter(chartMeta: ChartMeta) {
         this._chartSampleIdentifiersFilterSet.delete(chartMeta.uniqueKey)
         this._customChartFilterSet.delete(chartMeta.uniqueKey)
     }
 
+    @autobind
     @action
     clearAllFilters() {
         this._clinicalDataEqualityFilterSet.clear();
@@ -393,6 +432,8 @@ export class StudyViewPageStore {
         this.resetMutationCountVsCNAFilter();
         this._chartSampleIdentifiersFilterSet.clear();
         this._customChartFilterSet.clear();
+        this._withMutationDataFilter = false;
+        this._withCNADataFilter = false;
     }
 
     @action
@@ -405,6 +446,30 @@ export class StudyViewPageStore {
     clearAnalysisGroupsSettings() {
         this._analysisGroupsClinicalAttribute = undefined;
         this._analysisGroups = undefined;
+    }
+
+    @autobind
+    @action
+    toggleWithMutationDataFilter() {
+        this._withMutationDataFilter = !this._withMutationDataFilter;
+    }
+
+    @autobind
+    @action
+    toggleWithCNADataFilter() {
+        this._withCNADataFilter = !this._withCNADataFilter;
+    }
+
+    @autobind
+    @action
+    removeWithMutationDataFilter() {
+        this._withMutationDataFilter = false;
+    }
+
+    @autobind
+    @action
+    removeWithCNADataFilter() {
+        this._withCNADataFilter = false;
     }
 
     @computed
@@ -659,6 +724,14 @@ export class StudyViewPageStore {
         return this._customChartFilterSet.get(chartKey)|| [];
     }
 
+    public newCustomChartUniqueKey():string {
+        return `CUSTOM_FILTERS_${this._customCharts.keys().length}`;
+    }
+
+    public isCustomChart(uniqueKey:string):boolean {
+        return this._customCharts.has(uniqueKey);
+    }
+
     @action
     addCNAGeneFilters(filters: CopyNumberGeneFilterElement[]) {
         this._cnaGeneFilter = [...this._cnaGeneFilter, {alterations: filters}];
@@ -846,6 +919,14 @@ export class StudyViewPageStore {
             }
         }
 
+        if(this._withMutationDataFilter) {
+            filters.withMutationData = true;
+        }
+
+        if(this._withCNADataFilter) {
+            filters.withCNAData = true;
+        }
+
         return filters as StudyViewFilter;
     }
 
@@ -990,12 +1071,7 @@ export class StudyViewPageStore {
                     if (data !== undefined) {
                         counts = data.counts;
                     }
-                    counts.sort(clinicalDataCountComparator);
-                    let colors = pickClinicalDataColors(counts);
-                    return _.reduce(counts, (acc: ClinicalDataCountWithColor[], slice) => {
-                        acc.push(_.assign({}, slice, {color: colors[slice.value]}));
-                        return acc;
-                    }, []);
+                    return getClinicalDataCountWithColorByClinicalDataCount(counts)
                 },
                 default: []
             });
@@ -1354,7 +1430,6 @@ export class StudyViewPageStore {
         }),
         default: [],
         onResult:(clinicalAttributes)=>{
-            // TODO: this is a temorary solution util we figure out the chartVisibility logic
             let osStatusFlag = false;
             let osMonthsFlag = false;
             let dfsStatusFlag = false;
@@ -1435,7 +1510,7 @@ export class StudyViewPageStore {
         invoke: async () => {
             let isSinglePhysicalStudy = this.queriedPhysicalStudyIds.result.length === 1;
             if (isSinglePhysicalStudy) {
-                return await getHeatmapMeta(`//bioinformatics.mdanderson.org/study2url?studyid=${this.queriedPhysicalStudyIds.result[0]}`);
+                return await getHeatmapMeta(getMDAndersonHeatmapStudyMetaUrl(this.queriedPhysicalStudyIds.result[0]));
             }
             return [];
         }
@@ -1455,21 +1530,60 @@ export class StudyViewPageStore {
         return ret;
     }
 
+    @autobind
+    @action addCustomChart(newChart:NewChart) {
+        const uniqueKey = this.newCustomChartUniqueKey();
+        const chartMeta = {
+            uniqueKey: uniqueKey,
+            displayName: newChart.name,
+            description: newChart.name,
+            chartType: ChartTypeEnum.PIE_CHART,
+            dataType: getChartMetaDataType(uniqueKey),
+            dimension: {
+                w: 1,
+                h: 1
+            },
+            priority: 1
+        };
+        this._customCharts.set(uniqueKey, chartMeta);
+        this._chartVisibility.set(uniqueKey, true);
+        let allCases: CustomChartIdentifierWithValue[] = [];
+        _.each(newChart.groups, (group:CustomGroup) => {
+            _.reduce(group.cases, (acc, next) => {
+                acc.push({
+                    studyId: next.studyId,
+                    sampleId: next.sampleId,
+                    patientId: next.patientId,
+                    patientAttribute: next.patientAttribute,
+                    value: group.name
+                });
+                return acc;
+            }, allCases)
+        })
+        this._customChartsSelectedCases.set(uniqueKey, allCases);
+    }
+
     @computed
     get chartMetaSet(): { [id: string]: ChartMeta } {
         
         let _chartMetaSet: { [id: string]: ChartMeta } = _.keyBy(SpecialCharts,(specialChart)=>specialChart.uniqueKey);
+
+        _.reduce(this._customCharts.values(), (acc: { [id: string]: ChartMeta }, chartMeta:ChartMeta) => {
+            acc[chartMeta.uniqueKey] = toJS(chartMeta);
+            return acc
+        }, _chartMetaSet);
+
         // Add meta information for each of the clinical attribute
         // Convert to a Set for easy access and to update attribute meta information(would be useful while adding new features)
         _.reduce(this.clinicalAttributes.result, (acc: { [id: string]: ChartMeta }, attribute) => {
             const uniqueKey = getClinicalAttributeUniqueKey(attribute);
-            //TODO: currently only piechart is handled
             const chartType = this.chartsType.get(uniqueKey);
             if (chartType !== undefined) {
                 acc[uniqueKey] = {
                     displayName: attribute.displayName,
                     uniqueKey: uniqueKey,
                     chartType: chartType,
+                    dataType: getChartMetaDataType(uniqueKey),
                     description: attribute.description,
                     dimension: this.chartsDimension.get(uniqueKey)!,
                     priority: Number(attribute.priority),
@@ -1484,6 +1598,7 @@ export class StudyViewPageStore {
             acc[survivalPlot.id] = {
                 uniqueKey: survivalPlot.id,
                 chartType: this.chartsType.get(survivalPlot.id)!,
+                dataType: getChartMetaDataType(survivalPlot.id),
                 dimension: this.chartsDimension.get(survivalPlot.id)!,
                 displayName: survivalPlot.title,
                 priority: getDefaultPriorityByUniqueKey(survivalPlot.id),
@@ -1495,6 +1610,7 @@ export class StudyViewPageStore {
         if (!_.isEmpty(this.mutationProfiles.result!)) {
             _chartMetaSet[UniqueKey.MUTATED_GENES_TABLE] = {
                 uniqueKey: UniqueKey.MUTATED_GENES_TABLE,
+                dataType: getChartMetaDataType(UniqueKey.MUTATED_GENES_TABLE),
                 chartType: this.chartsType.get(UniqueKey.MUTATED_GENES_TABLE)!,
                 dimension: this.chartsDimension.get(UniqueKey.MUTATED_GENES_TABLE)!,
                 displayName: 'Mutated Genes',
@@ -1506,6 +1622,7 @@ export class StudyViewPageStore {
         if (!_.isEmpty(this.cnaProfiles.result)) {
             _chartMetaSet[UniqueKey.CNA_GENES_TABLE] = {
                 uniqueKey: UniqueKey.CNA_GENES_TABLE,
+                dataType: getChartMetaDataType(UniqueKey.CNA_GENES_TABLE),
                 chartType: this.chartsType.get(UniqueKey.CNA_GENES_TABLE)!,
                 dimension: this.chartsDimension.get(UniqueKey.CNA_GENES_TABLE)!,
                 displayName: 'CNA Genes',
@@ -1526,6 +1643,7 @@ export class StudyViewPageStore {
 
         if (scatterRequiredParams[MUTATION_COUNT] && scatterRequiredParams[FRACTION_GENOME_ALTERED]) {
             _chartMetaSet[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = {
+                dataType: getChartMetaDataType(UniqueKey.MUTATION_COUNT_CNA_FRACTION),
                 uniqueKey: UniqueKey.MUTATION_COUNT_CNA_FRACTION,
                 chartType: ChartTypeEnum.SCATTER,
                 displayName: 'Mutation Count vs Fraction of Genome Altered',
@@ -1545,6 +1663,8 @@ export class StudyViewPageStore {
                 let dimension = this.chartsDimension.get(chartUniqueKey);
                 if (dimension !== undefined) {
                     chartMeta.dimension = dimension;
+                }else {
+                    chartMeta.dimension = STUDY_VIEW_CONFIG.layout.dimensions[chartMeta.chartType];
                 }
                 acc.push(chartMeta);
             }
@@ -1571,6 +1691,8 @@ export class StudyViewPageStore {
                     } else if (attr.uniqueKey === UniqueKey.WITH_CNA_DATA) {
                         data = this.withCnaData;
                     }
+                } else if (this.isCustomChart(attr.uniqueKey)) {
+                    data = this.getCustomChartDataCount(attr);
                 } else {
                     data = this.getClinicalDataCount(attr);
                 }
@@ -1641,14 +1763,19 @@ export class StudyViewPageStore {
     readonly initialVisibleAttributesClinicalDataCountData = remoteData<ClinicalDataCountItem[]>({
         await: () => [this.defaultVisibleAttributes],
         invoke: async () => {
+            const attributes = _.uniqBy(
+                _.filter(this.defaultVisibleAttributes.result, attr => attr.datatype === 'STRING').map(attr => {
+                    return {
+                        attributeId: attr.clinicalAttributeId,
+                        clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE'
+                    } as ClinicalDataFilter
+                }),
+                attr => `${attr.attributeId}_${attr.clinicalDataType}`
+            );
+
             return internalClient.fetchClinicalDataCountsUsingPOST({
                 clinicalDataCountFilter: {
-                    attributes: _.filter(this.defaultVisibleAttributes.result, attr => attr.datatype === 'STRING').map(attr => {
-                        return {
-                            attributeId: attr.clinicalAttributeId,
-                            clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE'
-                        } as ClinicalDataFilter
-                    }),
+                    attributes,
                     studyViewFilter: this.initialFilters
                 } as ClinicalDataCountFilter
             });
@@ -1662,12 +1789,16 @@ export class StudyViewPageStore {
     readonly initialVisibleAttributesClinicalDataBinCountData = remoteData<DataBin[]>({
         await: () => [this.defaultVisibleAttributes],
         invoke: async () => {
+            const
+                    attributes= _.uniqBy( _.filter(this.defaultVisibleAttributes.result, attr => attr.datatype === 'NUMBER').map(attr => {
+                        return this._clinicalDataBinFilterSet.get(getClinicalAttributeUniqueKey( attr))!;
+                    }),attr => `${attr.attributeId}_${attr.clinicalDataType}`
+            );
+
             return internalClient.fetchClinicalDataBinCountsUsingPOST({
                 dataBinMethod: 'STATIC',
                 clinicalDataBinCountFilter: {
-                    attributes: _.filter(this.defaultVisibleAttributes.result, attr => attr.datatype === 'NUMBER').map(attr => {
-                        return this._clinicalDataBinFilterSet.get(getClinicalAttributeUniqueKey(attr))!;
-                    }),
+                    attributes,
                     studyViewFilter: this.initialFilters
                 } as ClinicalDataBinCountFilter
             });
@@ -1685,16 +1816,9 @@ export class StudyViewPageStore {
             if (isFiltered(this.initialFilters) || item.counts.length >= 2) {
                 this._chartVisibility.set(uniqueKey, true);
             }
-            let chartType = ChartTypeEnum.PIE_CHART;
             if (item.counts.length > STUDY_VIEW_CONFIG.thresholds.pieToTable || _.includes(STUDY_VIEW_CONFIG.tableAttrs, uniqueKey)) {
-                chartType = ChartTypeEnum.TABLE;
-            }
-            this.chartsType.set(uniqueKey, chartType);
-
-            if (chartType === ChartTypeEnum.TABLE) {
+                this.chartsType.set(uniqueKey, ChartTypeEnum.TABLE);
                 this.chartsDimension.set(uniqueKey, this.getTableDimensionByNumberOfRecords(item.counts.length));
-            } else {
-                this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[chartType]);
             }
         });
     }
@@ -1967,6 +2091,40 @@ export class StudyViewPageStore {
         }
     }
 
+    public getCustomChartDownloadData(chartMeta: ChartMeta) {
+        return new Promise<string>((resolve) => {
+            if (chartMeta && chartMeta.uniqueKey && this._customChartsSelectedCases.has(chartMeta.uniqueKey)) {
+                let isPatientChart = false;
+                let header = ["Study ID", "Patient ID",]
+
+                if (this._customChartsSelectedCases.get(chartMeta.uniqueKey)!.length > 0 && this._customChartsSelectedCases.get(chartMeta.uniqueKey)![0].patientAttribute) {
+                    isPatientChart = true;
+                    header.push('Sample ID');
+                }
+                header.push(chartMeta.displayName);
+                let data = [header.join("\t")];
+                if (isPatientChart) {
+                    data = data.concat(this.selectedPatients.result!.map((patient: Patient) => {
+                        let record = _.find(this._customChartsSelectedCases.get(chartMeta.uniqueKey), (caseIdentifier: CustomChartIdentifierWithValue) => {
+                            return caseIdentifier.studyId === patient.studyId && patient.patientId === caseIdentifier.patientId;
+                        });
+                        return [patient.studyId || NA_DATA, patient.patientId || NA_DATA, record === undefined ? 'NA' : record.value].join("\t");
+                    }));
+                } else {
+                    data = data.concat(this.selectedSamples.result!.map((sample: Sample) => {
+                        let record = _.find(this._customChartsSelectedCases.get(chartMeta.uniqueKey), (caseIdentifier: CustomChartIdentifierWithValue) => {
+                            return caseIdentifier.studyId === sample.studyId && sample.sampleId === caseIdentifier.sampleId;
+                        });
+                        return [sample.studyId || NA_DATA, sample.patientId || NA_DATA, sample.sampleId || NA_DATA, record === undefined ? 'NA' : record.value].join("\t");
+                    }));
+                }
+                resolve(data.join("\n"));
+            } else {
+                resolve("");
+            }
+        });
+    }
+
     public getScatterDownloadData()
     {
         return new Promise<string>((resolve)=>{
@@ -2095,7 +2253,7 @@ export class StudyViewPageStore {
                 };
 
                 let data = await defaultClient.fetchClinicalDataUsingPOST({
-                    clinicalDataType: ClinicalDataTypeConstants.PATIENT,
+                    clinicalDataType: ClinicalDataTypeEnum.PATIENT,
                     clinicalDataMultiStudyFilter: filter
                 })
 
@@ -2146,7 +2304,7 @@ export class StudyViewPageStore {
             };
 
             return defaultClient.fetchClinicalDataUsingPOST({
-                clinicalDataType: ClinicalDataTypeConstants.SAMPLE,
+                clinicalDataType: ClinicalDataTypeEnum.SAMPLE,
                 clinicalDataMultiStudyFilter: filter
             });
         },
@@ -2237,10 +2395,9 @@ export class StudyViewPageStore {
         }
     });
 
-    readonly clinicalAttributesWithCount = remoteData<{ [clinicalAttributeId: string]: number }>({
+    readonly clinicalDataWithCount = remoteData<ClinicalDataCountSet>({
         await: () => [
             this.molecularProfileSampleCounts,
-            this.mutationCountVsFractionGenomeAlteredDataSet,
             this.survivalPlotData,
             this.clinicalAttributesCounts,
             this.samplesPerPatientData,
@@ -2250,20 +2407,63 @@ export class StudyViewPageStore {
             if (!_.isEmpty(this.chartMetaSet)) {
                 // build map
                 const ret: { [clinicalAttributeId: string]: number } =
-                    _.reduce(this.clinicalAttributesCounts.result || [], (map: { [clinicalAttributeId: string]: number }, next: ClinicalAttribute) => {
+                    _.reduce(this.clinicalAttributesCounts.result || [], (map: ClinicalDataCountSet, next: ClinicalAttribute) => {
                         let key = getClinicalAttributeUniqueKey(next)
                         map[key] = map[key] || 0;
                         map[key] += next.count;
                         return map;
                     }, {});
 
-                //Add special charts counts
-
                 _.each(this.survivalPlotData.result, (survivalPlot) => {
                     if (survivalPlot.id in this.chartMetaSet) {
                         ret[survivalPlot.id] = survivalPlot.alteredGroup.length;
                     }
                 })
+
+                if (UniqueKey.SAMPLES_PER_PATIENT in this.chartMetaSet) {
+                    ret[UniqueKey.SAMPLES_PER_PATIENT] = _.sumBy(this.samplesPerPatientData.result, data => data.count);
+                }
+
+                if (UniqueKey.WITH_MUTATION_DATA in this.chartMetaSet) {
+                    ret[UniqueKey.WITH_MUTATION_DATA] = _.sumBy(this.withMutationData.result, data => data.count);
+                }
+
+                if (UniqueKey.WITH_CNA_DATA in this.chartMetaSet) {
+                    ret[UniqueKey.WITH_CNA_DATA] = _.sumBy(this.withCnaData.result, data => data.count);
+                }
+
+                // Add all custom chart counts, and they should all get 100%
+                _.reduce(this._customCharts.keys(), (acc, next) => {
+                    acc[next] = this.selectedSamples.result.length;
+                    return acc;
+                }, ret);
+
+                return _.reduce(this.chartMetaSet, (acc, next, key) => {
+                    acc[key] = ret[key] || 0;
+                    return acc;
+                }, {} as ClinicalDataCountSet);
+            }
+            return {}
+        },
+        default: {}
+    });
+
+    readonly genomicDataWithCount = remoteData<ClinicalDataCountSet>({
+        await: () => [
+            this.molecularProfileSampleCounts,
+            this.clinicalAttributesCounts,
+            this.mutationCountVsFractionGenomeAlteredDataSet],
+        invoke: async () => {
+            if (!_.isEmpty(this.chartMetaSet)) {
+                // build map
+                const ret: ClinicalDataCountSet =
+                    _.reduce(this.clinicalAttributesCounts.result || [], (map: ClinicalDataCountSet, next: ClinicalAttribute) => {
+                        let key = getClinicalAttributeUniqueKey(next)
+                        map[key] = map[key] || 0;
+                        map[key] += next.count;
+                        return map;
+                    }, {});
+
 
                 if (UniqueKey.MUTATED_GENES_TABLE in this.chartMetaSet) {
                     ret[UniqueKey.MUTATED_GENES_TABLE] = this.molecularProfileSampleCounts.result ? this.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples : 0;
@@ -2287,29 +2487,17 @@ export class StudyViewPageStore {
                     ret[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = filteredData.length;
                 }
 
-                if (UniqueKey.SAMPLES_PER_PATIENT in this.chartMetaSet) {
-                    ret[UniqueKey.SAMPLES_PER_PATIENT] =  _.sumBy(this.samplesPerPatientData.result, data=>data.count);
-                }
-
-                if (UniqueKey.WITH_MUTATION_DATA in this.chartMetaSet) {
-                    ret[UniqueKey.WITH_MUTATION_DATA] =  _.sumBy(this.withMutationData.result, data=>data.count);
-                }
-
-                if (UniqueKey.WITH_CNA_DATA in this.chartMetaSet) {
-                    ret[UniqueKey.WITH_CNA_DATA] =  _.sumBy(this.withCnaData.result, data=>data.count);
-                }
-
                 return _.reduce(this.chartMetaSet, (acc, next, key) => {
                     acc[key] = ret[key] || 0;
                     return acc;
-                }, {} as { [id: string]: number });
+                }, {} as ClinicalDataCountSet);
             }
             return {}
         },
         default: {}
     });
 
-    @bind
+    @autobind
     public async getDownloadDataPromise() {
 
         let sampleClinicalDataMap = await this.getClinicalDataBySamples(this.selectedSamples.result)
@@ -2344,7 +2532,7 @@ export class StudyViewPageStore {
         return dataRows.map(mutation => mutation.join('\t')).join('\n');
     }
 
-    @bind
+    @autobind
     onSubmitQuery() {
         let formOps: { [id: string]: string } = {
             cancer_study_list: this.studyIds.join(','),
@@ -2424,6 +2612,14 @@ export class StudyViewPageStore {
                     });
                     break;
                 }
+                default:
+                    filteredSampleIdentifiers = _.reduce(this._customChartsSelectedCases.get(chartMeta.uniqueKey), (acc, next) => {
+                        acc.push({
+                            studyId: next.studyId,
+                            sampleId: next.sampleId
+                        });
+                        return acc;
+                    }, [] as SampleIdentifier[]);
             }
             this._customChartFilterSet.set(chartMeta.uniqueKey, values);
             this._chartSampleIdentifiersFilterSet.set(chartMeta.uniqueKey, filteredSampleIdentifiers);
@@ -2469,6 +2665,38 @@ export class StudyViewPageStore {
         },
         default: []
     });
+
+    public getCustomChartDataCount(chartMeta: ChartMeta) {
+        let uniqueKey: string = chartMeta.uniqueKey;
+        if (!this.customChartsPromises.hasOwnProperty(uniqueKey)) {
+            this.customChartsPromises[uniqueKey] = remoteData<ClinicalDataCountWithColor[]>({
+                await: () => [],
+                invoke: async () => {
+                    const result = _.reduce(this.selectedSamples.result, (acc, sample) => {
+                        const findCase = _.find(this._customChartsSelectedCases.get(uniqueKey), (selectedCase:CustomChartIdentifierWithValue) => selectedCase.sampleId === sample.sampleId);
+                        let value =  'NA';
+                        if(findCase !== undefined) {
+                            value =  findCase.value;
+                        }
+
+                        if (acc[value]) {
+                            acc[value].count = acc[value].count + 1
+                        } else {
+                            acc[value] = {
+                                value: value,
+                                count: 1
+                            }
+                        }
+                        return acc;
+                    }, {} as { [id: string]: ClinicalDataCount });
+
+                    return getClinicalDataCountWithColorByClinicalDataCount(_.values(result));
+                },
+                default: []
+            });
+        }
+        return this.customChartsPromises[uniqueKey];
+    }
 
     readonly sampleSetWithMutationData = remoteData<{[id:string]:boolean}>({
         await: () => [this.sampleMutationCountAndFractionGenomeAlteredData],
@@ -2532,7 +2760,7 @@ export class StudyViewPageStore {
                 return acc
             }, {} as { [id: string]: ClinicalDataCountWithColor });
 
-            return _.values(result);
+            return getClinicalDataCountWithColorByClinicalDataCount(_.values(result));
         },
         default: [],
     });
@@ -2573,7 +2801,7 @@ export class StudyViewPageStore {
                 return acc
             }, {} as { [id: string]: ClinicalDataCountWithColor });
 
-            return _.values(result)
+            return getClinicalDataCountWithColorByClinicalDataCount(_.values(result));
         },
         default: [],
     });

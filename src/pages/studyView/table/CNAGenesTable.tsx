@@ -11,7 +11,7 @@ import classnames from 'classnames';
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import FixedHeaderTable from "./FixedHeaderTable";
-import {bind} from "bind-decorator";
+import autobind from 'autobind-decorator';
 import {getCNAByAlteration, getCNAColorByAlteration, getFrequencyStr, getQValue} from "../StudyViewUtils";
 
 
@@ -133,7 +133,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         }
     ];
 
-    @bind
+    @autobind
     isChecked(entrezGeneId: number, alteration: number) {
         let record = _.find(this.preSelectedRows, (row: CNAGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId && row.alteration === alteration);
         if (_.isUndefined(record)) {
@@ -143,12 +143,12 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         }
     }
 
-    @bind
+    @autobind
     isDisabled(entrezGeneId: number, alteration: number) {
         return !_.isUndefined(_.find(this.selectedRows, (row: CNAGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId && row.alteration === alteration));
     }
 
-    @bind
+    @autobind
     @action
     togglePreSelectRow(entrezGeneId: number, alteration: number) {
         let record: CNAGenesTableUserSelectionWithIndex | undefined = _.find(this.preSelectedRows, (row: CNAGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId && row.alteration === alteration);
@@ -175,7 +175,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         }
     }
 
-    @bind
+    @autobind
     @action
     afterSelectingRows() {
         this.props.onUserSelection(this.preSelectedRows.map(row => {
@@ -205,7 +205,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         }
     }
 
-    @bind
+    @autobind
     isSelectedRow(data: CopyNumberCountByGene) {
         return !_.isUndefined(_.find(_.union(this.selectedRows, this.preSelectedRows), function (row) {
             return row.entrezGeneId === data.entrezGeneId && row.alteration === data.alteration;

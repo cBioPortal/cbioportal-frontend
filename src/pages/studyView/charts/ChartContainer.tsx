@@ -21,7 +21,8 @@ import MobxPromise from "mobxpromise";
 import SurvivalChart, {LegendLocation} from "../../resultsView/survival/SurvivalChart";
 import {MutatedGenesTable} from "../table/MutatedGenesTable";
 import {CNAGenesTable} from "../table/CNAGenesTable";
-import {bind} from "bind-decorator";
+
+import autobind from 'autobind-decorator';
 import BarChart from "./barChart/BarChart";
 import {CopyNumberGeneFilterElement} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import {
@@ -180,7 +181,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         } as ChartControls;
     }
 
-    @bind
+    @autobind
     @action
     changeChartType(chartType: ChartType) {
         this.chartType = chartType;
@@ -195,7 +196,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             !!this.props.chartMeta.clinicalAttribute;
     }
 
-    @bind
+    @autobind
     @action
     setAnalysisGroups() {
         if (this.analysisGroupsPossible) {
@@ -203,7 +204,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         }
     }
 
-    @bind
+    @autobind
     @action
     toggleSurvivalHideNAPatients() {
         this.naPatientsHiddenInSurvival = !this.naPatientsHiddenInSurvival;

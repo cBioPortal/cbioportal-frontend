@@ -1,7 +1,7 @@
 import * as React from "react";
 import {observer} from "mobx-react";
 import {computed, toJS} from "mobx";
-import {bind} from "bind-decorator";
+import autobind from 'autobind-decorator';
 import _ from "lodash";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
@@ -88,7 +88,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
         width: this.columnWidth[2]
     }];
 
-    @bind
+    @autobind
     private onUserSelection(filter: string) {
         let filters = toJS(this.props.filters)
         if (_.includes(filters, filter)) {
@@ -99,14 +99,14 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
         this.props.onUserSelection(filters);
     }
 
-    @bind
+    @autobind
     private tooltipLabelMouseEnter(value: string): void {
         if (this.props.highlightedRow) {
             this.props.highlightedRow(value);
         }
     }
 
-    @bind
+    @autobind
     private tooltipLabelMouseLeave(): void {
         if (this.props.highlightedRow) {
             this.props.highlightedRow(undefined);
