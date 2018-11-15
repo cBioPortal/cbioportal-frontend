@@ -2275,6 +2275,10 @@ export class StudyViewPageStore {
                 if (filter) {
                     yAxisBinCount = Math.min(yAxisBinCount, Math.floor(filter.yEnd));
                 }
+                // remove selection area filter because we want to show even unselected dots
+                const studyViewFilter = Object.assign({}, this.filters);
+                delete studyViewFilter.mutationCountVsCNASelection;
+
                 return (await internalClient.fetchClinicalDataDensityPlotUsingPOST({
                     xAxisAttributeId: FRACTION_GENOME_ALTERED,
                     yAxisAttributeId: MUTATION_COUNT,
@@ -2282,7 +2286,7 @@ export class StudyViewPageStore {
                     yAxisStart:0, // mutation always starts at 0
                     yAxisBinCount,
                     clinicalDataType: "SAMPLE",
-                    studyViewFilter: this.filters
+                    studyViewFilter
                 })).filter(bin=>(bin.count > 0));// only show points for bins with stuff in them
             } else {
                 return [];
