@@ -29,7 +29,8 @@ import {
 import {
     CancerStudy,
     ClinicalAttribute,
-    ClinicalAttributeFilter,
+    ClinicalAttributeCount,
+    ClinicalAttributeCountFilter,
     ClinicalData,
     ClinicalDataMultiStudyFilter,
     Gene,
@@ -1514,6 +1515,13 @@ export class StudyViewPageStore {
         }
     });
 
+    readonly clinicalAttributeIdToClinicalAttribute = remoteData({
+        await:()=>[this.clinicalAttributes],
+        invoke:async()=>{
+            return _.keyBy(this.clinicalAttributes.result!, "clinicalAttributeId");
+        }
+    });
+
     readonly MDACCHeatmapStudyMeta = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
         invoke: async () => {
@@ -2284,6 +2292,10 @@ export class StudyViewPageStore {
                 if (filter) {
                     yAxisBinCount = Math.min(yAxisBinCount, Math.floor(filter.yEnd));
                 }
+                // remove selection area filter because we want to show even unselected dots
+                const studyViewFilter = Object.assign({}, this.filters);
+                delete studyViewFilter.mutationCountVsCNASelection;
+
                 return (await internalClient.fetchClinicalDataDensityPlotUsingPOST({
                     xAxisAttributeId: FRACTION_GENOME_ALTERED,
                     yAxisAttributeId: MUTATION_COUNT,
@@ -2291,7 +2303,7 @@ export class StudyViewPageStore {
                     yAxisStart:0, // mutation always starts at 0
                     yAxisBinCount,
                     clinicalDataType: "SAMPLE",
-                    studyViewFilter: this.filters
+                    studyViewFilter
                 })).filter(bin=>(bin.count > 0));// only show points for bins with stuff in them
             } else {
                 return [];
@@ -2394,12 +2406,11 @@ export class StudyViewPageStore {
                 }
             });
 
-            let clinicalAttributeFilter = {
+            let clinicalAttributeCountFilter = {
                 sampleIdentifiers
-            } as ClinicalAttributeFilter;
-            return defaultClient.getAllClinicalAttributesInStudiesUsingPOST({
-                clinicalAttributeFilter,
-                projection: "DETAILED"
+            } as ClinicalAttributeCountFilter;
+            return defaultClient.getClinicalAttributeCountsUsingPOST({
+                clinicalAttributeCountFilter
             });
         }
     });
@@ -2408,18 +2419,23 @@ export class StudyViewPageStore {
         await: () => [
             this.molecularProfileSampleCounts,
             this.survivalPlotData,
+            this.clinicalAttributeIdToClinicalAttribute,
             this.clinicalAttributesCounts,
             this.samplesPerPatientData,
             this.withMutationData,
             this.withCnaData],
         invoke: async () => {
             if (!_.isEmpty(this.chartMetaSet)) {
+                const attributeIdToAttribute = this.clinicalAttributeIdToClinicalAttribute.result!;
                 // build map
                 const ret: { [clinicalAttributeId: string]: number } =
-                    _.reduce(this.clinicalAttributesCounts.result || [], (map: ClinicalDataCountSet, next: ClinicalAttribute) => {
-                        let key = getClinicalAttributeUniqueKey(next)
-                        map[key] = map[key] || 0;
-                        map[key] += next.count;
+                    _.reduce(this.clinicalAttributesCounts.result || [], (map: ClinicalDataCountSet, next: ClinicalAttributeCount) => {
+                        const attribute = attributeIdToAttribute[next.clinicalAttributeId];
+                        if (attribute) {
+                            let key = getClinicalAttributeUniqueKey(attribute);
+                            map[key] = map[key] || 0;
+                            map[key] += next.count;
+                        }
                         return map;
                     }, {});
 
@@ -2460,16 +2476,21 @@ export class StudyViewPageStore {
     readonly genomicDataWithCount = remoteData<ClinicalDataCountSet>({
         await: () => [
             this.molecularProfileSampleCounts,
+            this.clinicalAttributeIdToClinicalAttribute,
             this.clinicalAttributesCounts,
             this.mutationCountVsFractionGenomeAlteredDataSet],
         invoke: async () => {
             if (!_.isEmpty(this.chartMetaSet)) {
+                const attributeIdToAttribute = this.clinicalAttributeIdToClinicalAttribute.result!;
                 // build map
                 const ret: ClinicalDataCountSet =
-                    _.reduce(this.clinicalAttributesCounts.result || [], (map: ClinicalDataCountSet, next: ClinicalAttribute) => {
-                        let key = getClinicalAttributeUniqueKey(next)
-                        map[key] = map[key] || 0;
-                        map[key] += next.count;
+                    _.reduce(this.clinicalAttributesCounts.result || [], (map: ClinicalDataCountSet, next: ClinicalAttributeCount) => {
+                        const attribute = attributeIdToAttribute[next.clinicalAttributeId];
+                        if (attribute) {
+                            let key = getClinicalAttributeUniqueKey(attribute)
+                            map[key] = map[key] || 0;
+                            map[key] += next.count;
+                        }
                         return map;
                     }, {});
 

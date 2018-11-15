@@ -1802,14 +1802,26 @@
     "DensityPlotBin": {
       "type": "object",
       "properties": {
+        "binX": {
+          "type": "number"
+        },
+        "binY": {
+          "type": "number"
+        },
         "count": {
           "type": "integer",
           "format": "int32"
         },
-        "x": {
+        "maxX": {
           "type": "number"
         },
-        "y": {
+        "maxY": {
+          "type": "number"
+        },
+        "minX": {
+          "type": "number"
+        },
+        "minY": {
           "type": "number"
         }
       },
