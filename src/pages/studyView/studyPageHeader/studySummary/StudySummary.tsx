@@ -35,7 +35,7 @@ export default class StudySummary extends React.Component<IStudySummaryProps, {}
                 elems.push(<a target="_blank" href={`http://www.ncbi.nlm.nih.gov/pubmed/${this.props.studies[0].pmid}`}
                               style={{marginLeft: '5px'}}>PubMed</a>);
             }
-            return <div>{elems}</div>
+            return <span>{elems}</span>
         } else {
             return <span>{`This combined study contains samples from ${this.props.studies.length} studies`}</span>;
         }
