@@ -79,7 +79,9 @@ var OncoprintLabelView = (function () {
 			    view.$canvas.css('cursor', 'move');
 			    $tooltip_div.append("<b>hold to drag</b>");
 			}
-			view.tooltip.fadeIn(200, renderedLabelWidth(view, view.labels[hovered_track]) + offset.left, view.cell_tops[hovered_track] + offset.top - view.scroll_y, $tooltip_div);
+			if ($tooltip_div.contents().length > 0) {
+				view.tooltip.fadeIn(200, renderedLabelWidth(view, view.labels[hovered_track]) + offset.left, view.cell_tops[hovered_track] + offset.top - view.scroll_y, $tooltip_div);
+			}
 		    } else {
 			view.$canvas.css('cursor', 'auto');
 			view.tooltip.hide();
