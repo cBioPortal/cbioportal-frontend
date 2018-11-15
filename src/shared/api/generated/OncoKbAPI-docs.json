@@ -698,14 +698,14 @@
         }
       }
     },
-    "/levels/resistence": {
+    "/levels/resistance": {
       "get": {
         "tags": [
           "Levels"
         ],
-        "summary": "levelsResistenceGet",
-        "description": "Get all resistence levels.",
-        "operationId": "levelsResistenceGetUsingGET",
+        "summary": "levelsResistanceGet",
+        "description": "Get all resistance levels.",
+        "operationId": "levelsResistanceGetUsingGET",
         "consumes": [
           "application/json"
         ],
