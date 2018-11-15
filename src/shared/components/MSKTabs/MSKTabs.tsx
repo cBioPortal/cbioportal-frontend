@@ -97,7 +97,6 @@ interface IMSKTabsProps {
     tabButtonStyle?:string;
     unmountOnHide?:boolean;
     loadingComponent?:JSX.Element;
-    vertical?:boolean;
 }
 
 export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
