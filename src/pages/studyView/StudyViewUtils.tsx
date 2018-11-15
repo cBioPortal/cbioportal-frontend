@@ -119,11 +119,22 @@ export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: st
     return updatedQueries.map(query=>unparseOQLQueryLine(query)).join('\n');
 
 }
+
+function getBinStatsForTooltip(d:IStudyViewDensityScatterPlotDatum) {
+    const mutCountExact = (d.maxY === d.minY);
+    const fgaExact = (d.maxX === d.minX);
+    const mutCount = (d.maxY + d.minY) / 2;
+    const fga = (d.maxX + d.minX) / 2;
+    return {
+        mutCount, fga, mutCountExact, fgaExact
+    };
+}
 export function mutationCountVsCnaTooltip(d:IStudyViewDensityScatterPlotDatum) {
+    const binStats = getBinStatsForTooltip(d);
     return (
         <div>
-            <div>Mutation Count: <b>~{d.y.toFixed()}</b></div>
-            <div>Fraction Genome Altered: <b>~{d.x.toFixed(2)}</b></div>
+            <div>Mutation Count: <b>{`${binStats.mutCountExact ? "" : "~"}${binStats.mutCount.toFixed()}`}</b></div>
+            <div>Fraction Genome Altered: <b>{`${binStats.fgaExact ? "" : "~"}${binStats.fga.toFixed(2)}`}</b></div>
             <div>Count: <b>{d.count}</b></div>
         </div>
     );
