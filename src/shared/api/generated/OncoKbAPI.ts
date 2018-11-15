@@ -1789,11 +1789,11 @@ export default class OncoKbAPI {
             return response.body;
         });
     };
-    levelsResistenceGetUsingGETURL(parameters: {
+    levelsResistanceGetUsingGETURL(parameters: {
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/levels/resistence';
+        let path = '/levels/resistance';
 
         if (parameters.$queryParameters) {
             Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
@@ -1806,18 +1806,18 @@ export default class OncoKbAPI {
     };
 
     /**
-     * Get all resistence levels.
+     * Get all resistance levels.
      * @method
-     * @name OncoKbAPI#levelsResistenceGetUsingGET
+     * @name OncoKbAPI#levelsResistanceGetUsingGET
      */
-    levelsResistenceGetUsingGETWithHttpInfo(parameters: {
+    levelsResistanceGetUsingGETWithHttpInfo(parameters: {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/levels/resistence';
+        let path = '/levels/resistance';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};
@@ -1839,15 +1839,15 @@ export default class OncoKbAPI {
     };
 
     /**
-     * Get all resistence levels.
+     * Get all resistance levels.
      * @method
-     * @name OncoKbAPI#levelsResistenceGetUsingGET
+     * @name OncoKbAPI#levelsResistanceGetUsingGET
      */
-    levelsResistenceGetUsingGET(parameters: {
+    levelsResistanceGetUsingGET(parameters: {
         $queryParameters ? : any,
             $domain ? : string
     }): Promise < {} > {
-        return this.levelsResistenceGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+        return this.levelsResistanceGetUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
