@@ -1176,7 +1176,6 @@ describe('StudyViewUtils', () => {
         let visibleAttrs: ChartMeta[] = [];
         const clinicalAttr: ClinicalAttribute = {
             'clinicalAttributeId': 'test',
-            'count': 0,
             'datatype': 'STRING',
             'description': '',
             'displayName': '',
