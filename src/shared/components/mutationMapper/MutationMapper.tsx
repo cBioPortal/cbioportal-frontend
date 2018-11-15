@@ -352,7 +352,7 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
         return (
             <div className={classnames("alert" , "alert-success")}>
                 <span style={{verticalAlign:"middle"}}>
-                    {`${dataStore.sortedFilteredData.length}/${dataStore.allData.length} mutations are shown based on your filtering.`}
+                    {`${dataStore.tableData.length}/${dataStore.allData.length} mutations are shown based on your filtering.`}
                     <button
                         className="btn btn-default btn-xs"
                         style={{cursor:"pointer", marginLeft:6}}
