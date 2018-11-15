@@ -2343,7 +2343,7 @@ export class ResultsViewPageStore {
             if (AppConfig.serverConfig.show_oncokb) {
                 let result;
                 try {
-                    result = await fetchOncoKbData({}, this.oncoKbAnnotatedGenes.result!, this.mutations)
+                    result = await fetchOncoKbData({}, this.oncoKbAnnotatedGenes.result!, this.mutations, 'ONCOGENIC')
                 } catch(e) {
                     result = new Error();
                 }
@@ -2395,7 +2395,8 @@ export class ResultsViewPageStore {
                         {},
                         this.oncoKbAnnotatedGenes.result!,
                         this.molecularData,
-                        this.molecularProfileIdToMolecularProfile.result!
+                        this.molecularProfileIdToMolecularProfile.result!,
+                        'ONCOGENIC'
                     );
                 } catch(e) {
                     result = new Error();
