@@ -353,6 +353,7 @@ describe("plots tab screenshot tests", function() {
     });
     it("plots tab molecular vs molecular different genes different profiles", function() {
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "brca_tcga_rna_seq_v2_mrna" }); });
+        browser.click('input[data-test="HorizontalLogCheckbox"]');
         waitForAndCheckPlotsTab();
     });
     it("plots tab molecular vs molecular swapped axes", function() {
