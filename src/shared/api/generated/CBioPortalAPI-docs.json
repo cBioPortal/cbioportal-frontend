@@ -262,8 +262,7 @@
               "datatype",
               "patientAttribute",
               "priority",
-              "studyId",
-              "count"
+              "studyId"
             ]
           },
           {
@@ -297,8 +296,8 @@
         "tags": [
           "Clinical Attributes"
         ],
-        "summary": "Get all clinical attributes in specified sampleIdentifiers or sampleListID with clinical attribute count",
-        "operationId": "getAllClinicalAttributesInStudiesUsingPOST",
+        "summary": "Get counts for clinical attributes according to their data availability for selected samples/patients",
+        "operationId": "getClinicalAttributeCountsUsingPOST",
         "consumes": [
           "application/json"
         ],
@@ -308,55 +307,12 @@
         "parameters": [
           {
             "in": "body",
-            "name": "clinicalAttributeFilter",
+            "name": "clinicalAttributeCountFilter",
             "description": "List of SampleIdentifiers or Sample List ID",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/ClinicalAttributeFilter"
+              "$ref": "#/definitions/ClinicalAttributeCountFilter"
             }
-          },
-          {
-            "name": "projection",
-            "in": "query",
-            "description": "projection",
-            "required": false,
-            "type": "string",
-            "default": "SUMMARY",
-            "enum": [
-              "ID",
-              "SUMMARY",
-              "DETAILED",
-              "META"
-            ]
-          },
-          {
-            "name": "sortBy",
-            "in": "query",
-            "description": "Name of the property that the result list is sorted by",
-            "required": false,
-            "type": "string",
-            "enum": [
-              "clinicalAttributeId",
-              "displayName",
-              "description",
-              "datatype",
-              "patientAttribute",
-              "priority",
-              "studyId",
-              "count"
-            ]
-          },
-          {
-            "name": "direction",
-            "in": "query",
-            "description": "Direction of the sort",
-            "required": false,
-            "type": "string",
-            "default": "ASC",
-            "enum": [
-              "ASC",
-              "DESC"
-            ]
           }
         ],
         "responses": {
@@ -365,7 +321,7 @@
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/ClinicalAttribute"
+                "$ref": "#/definitions/ClinicalAttributeCount"
               }
             }
           }
@@ -2509,8 +2465,7 @@
               "datatype",
               "patientAttribute",
               "priority",
-              "studyId",
-              "count"
+              "studyId"
             ]
           },
           {
@@ -3826,10 +3781,6 @@
         "clinicalAttributeId": {
           "type": "string"
         },
-        "count": {
-          "type": "integer",
-          "format": "int32"
-        },
         "datatype": {
           "type": "string"
         },
@@ -3851,7 +3802,20 @@
       },
       "title": "ClinicalAttribute"
     },
-    "ClinicalAttributeFilter": {
+    "ClinicalAttributeCount": {
+      "type": "object",
+      "properties": {
+        "clinicalAttributeId": {
+          "type": "string"
+        },
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        }
+      },
+      "title": "ClinicalAttributeCount"
+    },
+    "ClinicalAttributeCountFilter": {
       "type": "object",
       "properties": {
         "sampleIdentifiers": {
@@ -3864,7 +3828,7 @@
           "type": "string"
         }
       },
-      "title": "ClinicalAttributeFilter"
+      "title": "ClinicalAttributeCountFilter"
     },
     "ClinicalData": {
       "type": "object",
