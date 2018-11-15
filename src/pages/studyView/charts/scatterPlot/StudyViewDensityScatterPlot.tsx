@@ -22,6 +22,8 @@ import {interpolatePlasma} from "d3-scale-chromatic";
 import {DensityPlotBin, RectangleBounds} from "../../../../shared/api/generated/CBioPortalAPIInternal";
 import invertIncreasingFunction from "../../../../shared/lib/invertIncreasingFunction";
 
+export type IStudyViewDensityScatterPlotDatum = DensityPlotBin & {x:number, y:number};
+
 export interface IStudyViewDensityScatterPlotProps {
     width:number;
     height:number;
@@ -122,7 +124,7 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         // get data extremes
         const max = {x:Number.NEGATIVE_INFINITY, y:Number.NEGATIVE_INFINITY};
         const min = {x:Number.POSITIVE_INFINITY, y:Number.POSITIVE_INFINITY};
-        for (const d of this.props.data) {
+        for (const d of this.data) {
             max.x = Math.max(d.x, max.x);
             max.y = Math.max(d.y, max.y);
             min.x = Math.min(d.x, min.x);
@@ -186,7 +188,7 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
     }
 
     @computed get data() {
-        return this.props.data;
+        return this.props.data.map(d=>Object.assign({}, d, { x: d.binX, y: d.binY }));
     }
 
     @computed get plotComputations() {
