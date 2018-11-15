@@ -11,7 +11,12 @@ type LollipopProps = {
     hoverHeadRadius:number;
     headColor?:string;
     stickColor?:string;
-    label?:string;
+    label?: {
+        text: string;
+        textAnchor?: string;
+        fontSize?: number;
+        fontFamily?: string;
+    };
     hitzoneClassName?:string;
     spec:LollipopSpec;
 };
@@ -49,14 +54,14 @@ export default class Lollipop extends React.Component<LollipopProps, {}> {
                 <text
                     fill="#2E3436"
                     style={{
-                        fontSize: "10px",
-                        fontFamily: "arial",
+                        fontSize: this.props.label.fontSize || 10,
+                        fontFamily: this.props.label.fontFamily || "arial",
                     }}
-                    textAnchor="middle"
+                    textAnchor={this.props.label.textAnchor || "middle"}
                     x={this.props.x}
                     y={this.props.stickBaseY - this.props.stickHeight - this.props.headRadius - 5}
                 >
-                    {this.props.label}
+                    {this.props.label.text}
                 </text>
             );
         }

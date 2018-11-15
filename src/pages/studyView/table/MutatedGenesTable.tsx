@@ -11,7 +11,7 @@ import classnames from 'classnames';
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import FixedHeaderTable from "./FixedHeaderTable";
 import {action, computed, observable} from "mobx";
-import {bind} from "bind-decorator";
+import autobind from 'autobind-decorator';
 import {getFrequencyStr, getQValue} from "../StudyViewUtils";
 
 export interface IMutatedGenesTablePros {
@@ -120,7 +120,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         }
     ];
 
-    @bind
+    @autobind
     isChecked(entrezGeneId: number) {
         let record = _.find(this.preSelectedRows, (row: MutatedGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId);
         if (_.isUndefined(record)) {
@@ -130,12 +130,12 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         }
     }
 
-    @bind
+    @autobind
     isDisabled(entrezGeneId: number) {
         return !_.isUndefined(_.find(this.selectedRows, (row: MutatedGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId));
     }
 
-    @bind
+    @autobind
     togglePreSelectRow(entrezGeneId: number) {
         let record: MutatedGenesTableUserSelectionWithIndex | undefined = _.find(this.preSelectedRows, (row: MutatedGenesTableUserSelectionWithIndex) => row.entrezGeneId === entrezGeneId);
         if (_.isUndefined(record)) {
@@ -161,7 +161,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
     }
 
 
-    @bind
+    @autobind
     @action
     afterSelectingRows() {
         this.props.onUserSelection(this.preSelectedRows.map(row => row.entrezGeneId));
@@ -185,7 +185,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         }
     }
 
-    @bind
+    @autobind
     isSelectedRow(data:MutationCountByGene) {
         return !_.isUndefined(_.find(_.union(this.selectedRows, this.preSelectedRows), function (row) {
             return row.entrezGeneId === data.entrezGeneId;

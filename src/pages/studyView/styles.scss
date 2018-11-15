@@ -54,3 +54,12 @@ $selectHeightInner: $selectHeight - 2px;
         }
     }
 }
+
+.react-grid-item:hover {
+    z-index: 1;
+}
+
+[data-mfb-label]:after {
+    background: rgba(0, 0, 0, 1) !important;
+    color: white !important;
+}

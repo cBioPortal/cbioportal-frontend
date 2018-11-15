@@ -4,7 +4,7 @@ import {If} from 'react-if';
 import {ChartMeta, ChartType} from "pages/studyView/StudyViewPageStore";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
-import {bind} from "bind-decorator";
+import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import fileDownload from 'react-file-download';
 import {action, computed, observable} from "mobx";
@@ -108,7 +108,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
         );
     }
 
-    @bind
+    @autobind
     @action
     onTooltipVisibleChange(visible: boolean) {
         this.downloadMenuActive = visible;
