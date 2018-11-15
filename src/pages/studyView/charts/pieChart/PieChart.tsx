@@ -7,7 +7,7 @@ import {getFrequencyStr, toSvgDomNodeWithLegend} from "pages/studyView/StudyView
 import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 import { AbstractChart } from "pages/studyView/charts/ChartContainer";
 import ifndef from "shared/lib/ifndef";
-import { bind } from "bind-decorator";
+import autobind from 'autobind-decorator';
 import { ClinicalDataCountWithColor } from "pages/studyView/StudyViewPageStore";
 import classnames from 'classnames';
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
@@ -32,7 +32,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         super(props);
     }
 
-    @bind
+    @autobind
     private onUserSelection(filter: string) {
         let filters = toJS(this.props.filters);
         if (_.includes(filters, filter)) {
@@ -65,7 +65,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     @observable isTooltipHovered: boolean = false;
     @observable tooltipHighlightedRow: string | undefined = undefined;
 
-    @bind
+    @autobind
     @action private highlightedRow(value: string): void {
         this.tooltipHighlightedRow = value;
     }
@@ -122,27 +122,27 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         };
     }
 
-    @bind
+    @autobind
     private tooltipMouseEnter(): void {
         this.isTooltipHovered = true;
     }
 
-    @bind
+    @autobind
     private tooltipMouseLeave(): void {
         this.isTooltipHovered = false;
     }
 
-    @bind
+    @autobind
     private x(d: ClinicalDataCountWithColor) {
         return d.value;
     }
 
-    @bind
+    @autobind
     private y(d: ClinicalDataCountWithColor) {
         return d.count;
     }
 
-    @bind
+    @autobind
     private label(d: ClinicalDataCountWithColor) {
         return ((d.count * 360) / this.totalCount) < 20 ? '' : d.count;
     }

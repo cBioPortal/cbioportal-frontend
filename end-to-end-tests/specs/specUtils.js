@@ -40,10 +40,21 @@ const useExternalFrontend = !process.env.FRONTEND_TEST_DO_NOT_LOAD_EXTERNAL_FRON
 
 const useLocalDist = process.env.FRONTEND_TEST_USE_LOCAL_DIST;
 
+function waitForNetworkQuiet(){
+    browser.waitUntil(()=>{
+        return browser.execute(function(){
+            return window.ajaxQuiet === true;
+        }).value == true
+    });
+}
+
+
+
 module.exports = {
     waitForOncoprint: waitForOncoprint,
     goToUrlAndSetLocalStorage: goToUrlAndSetLocalStorage,
     useExternalFrontend: useExternalFrontend,
     sessionServiceIsEnabled: sessionServiceIsEnabled,
-    waitForNumberOfStudyCheckboxes: waitForNumberOfStudyCheckboxes
+    waitForNumberOfStudyCheckboxes: waitForNumberOfStudyCheckboxes,
+    waitForNetworkQuiet:waitForNetworkQuiet
 };
