@@ -1,6 +1,9 @@
 function waitForOncoprint(timeout) {
     browser.pause(100); // give oncoprint time to disappear
-    browser.waitForExist('#oncoprintDiv svg rect', timeout); // as a proxy for oncoprint being rendered, wait for an svg rectangle to appear in the legend
+    browser.waitUntil(()=>{
+        return !browser.isExisting(".oncoprintLoadingIndicator") // wait for loading indicator to hide, and
+            && browser.isExisting('#oncoprintDiv svg rect');// as a proxy for oncoprint being rendered, wait for an svg rectangle to appear in the legend
+    }, timeout);
 }
 
 function goToUrlAndSetLocalStorage(url) {
