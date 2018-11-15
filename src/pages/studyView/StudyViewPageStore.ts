@@ -1241,8 +1241,17 @@ export class StudyViewPageStore {
         await: () => [this.filteredPhysicalStudies, this.filteredVirtualStudies],
         invoke: async () => {
 
-            const physicalStudiesSet = this.physicalStudiesSet.result;
+            let physicalStudiesSet = this.physicalStudiesSet.result;
 
+            const virtualStudyRelatedPhysicalStudiesIds = _.uniq(_.flatten(this.filteredVirtualStudies.result.map((vs:VirtualStudy)=>vs.data.studies.map(study => study.id))));
+            const unsettledPhysicalStudies = _.without(virtualStudyRelatedPhysicalStudiesIds, ..._.keys(physicalStudiesSet));
+            if(unsettledPhysicalStudies.length > 0) {
+                const virtualStudyRelatedPhysicalStudies = await defaultClient.fetchStudiesUsingPOST({
+                    studyIds:unsettledPhysicalStudies,
+                    projection: 'SUMMARY'
+                });
+                physicalStudiesSet = _.merge(physicalStudiesSet, _.keyBy(virtualStudyRelatedPhysicalStudies, 'studyId'));
+            }
             let studies = _.reduce(this.filteredPhysicalStudies.result, (acc, next) => {
                 acc[next.studyId] = physicalStudiesSet[next.studyId];
                 return acc;

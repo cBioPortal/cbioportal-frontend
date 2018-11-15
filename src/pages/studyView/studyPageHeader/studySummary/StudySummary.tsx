@@ -96,13 +96,13 @@ export default class StudySummary extends React.Component<IStudySummaryProps, {}
                                 {
                                     this.props.originStudies.isComplete &&
                                     this.props.originStudies.result!.length > 0 &&
-                                    (<div>
+                                    (<span>
                                             <span style={{fontWeight: 'bold', marginBottom: '5px', display: 'block'}}>
                                                 This virtual study was derived from:
                                             </span>
                                         {this.props.originStudies.result!.map(study =>
                                             <StudySummaryRecord {...study} />)}
-                                    </div>)
+                                    </span>)
                                 }
                                 <LoadingIndicator
                                     isLoading={this.props.originStudies.isPending}
