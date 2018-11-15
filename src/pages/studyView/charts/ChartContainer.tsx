@@ -358,6 +358,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 height={this.getScatterPlotHeight()}
                                 yBinsMin={MutationCountVsCnaYBinsMin}
                                 onSelection={this.props.onValueSelection}
+                                selectionBounds={(this.props.filters && this.props.filters.length > 0) ? this.props.filters[0] : undefined}
                                 data={this.props.promise.result}
                                 isLoading={this.props.promise.isPending}
 
