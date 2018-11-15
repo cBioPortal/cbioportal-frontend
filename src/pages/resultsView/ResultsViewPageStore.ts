@@ -1,7 +1,7 @@
 import {
     CancerStudy,
-    ClinicalAttribute,
-    ClinicalAttributeFilter,
+    ClinicalAttribute, ClinicalAttributeCount,
+    ClinicalAttributeCountFilter,
     ClinicalData,
     ClinicalDataMultiStudyFilter,
     ClinicalDataSingleStudyFilter,
@@ -558,33 +558,32 @@ export class ResultsViewPageStore {
             this.studyToDataQueryFilter,
         ],
         invoke:async()=>{
-            let clinicalAttributeFilter:ClinicalAttributeFilter;
+            let clinicalAttributeCountFilter:ClinicalAttributeCountFilter;
             if (this.studies.result.length === 1) {
                 // try using sample list id
                 const studyId = this.studies.result[0].studyId;
                 const dqf = this.studyToDataQueryFilter.result[studyId];
                 if (dqf.sampleListId) {
-                    clinicalAttributeFilter = {
+                    clinicalAttributeCountFilter = {
                         sampleListId: dqf.sampleListId
-                    } as ClinicalAttributeFilter;
+                    } as ClinicalAttributeCountFilter;
                 } else {
-                    clinicalAttributeFilter = {
+                    clinicalAttributeCountFilter = {
                         sampleIdentifiers: dqf.sampleIds!.map(sampleId=>({ sampleId, studyId }))
-                    } as ClinicalAttributeFilter;
+                    } as ClinicalAttributeCountFilter;
                 }
             } else {
                 // use sample identifiers
-                clinicalAttributeFilter = {
+                clinicalAttributeCountFilter = {
                     sampleIdentifiers: this.samples.result!.map(sample=>({sampleId:sample.sampleId, studyId:sample.studyId}))
-                } as ClinicalAttributeFilter;
+                } as ClinicalAttributeCountFilter;
             }
 
-            const result = await client.getAllClinicalAttributesInStudiesUsingPOST({
-                clinicalAttributeFilter,
-                projection: "DETAILED"
+            const result = await client.getClinicalAttributeCountsUsingPOST({
+                clinicalAttributeCountFilter
             });
             // build map
-            const ret:{[clinicalAttributeId:string]:number} = _.reduce(result, (map:{[clinicalAttributeId:string]:number}, next:ClinicalAttribute)=>{
+            const ret:{[clinicalAttributeId:string]:number} = _.reduce(result, (map:{[clinicalAttributeId:string]:number}, next:ClinicalAttributeCount)=>{
                 map[next.clinicalAttributeId] = map[next.clinicalAttributeId] || 0;
                 map[next.clinicalAttributeId] += next.count;
                 return map;
