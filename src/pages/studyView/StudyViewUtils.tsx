@@ -17,18 +17,14 @@ import {BarDatum} from "./charts/barChart/BarChart";
 import {
     AnalysisGroup,
     ClinicalDataTypeEnum,
-    DEFAULT_LAYOUT_PROPS,
-    Position,
     StudyViewFilterWithSampleIdentifierFilters,
-    StudyWithSamples
+    StudyWithSamples,
 } from "pages/studyView/StudyViewPageStore";
 import {
-    ChartDimension,
     ChartMeta,
     ChartMetaDataType,
     ChartMetaDataTypeEnum,
     ChartType,
-    ChartTypeEnum,
     ClinicalDataCountSet,
     ClinicalDataCountWithColor,
     ClinicalDataType,
@@ -38,7 +34,7 @@ import {Layout} from 'react-grid-layout';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import {VirtualStudy} from "shared/model/VirtualStudy";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
+import {ChartDimension, ChartTypeEnum, Position, STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 
 export const COLORS = [
     STUDY_VIEW_CONFIG.colors.theme.primary, STUDY_VIEW_CONFIG.colors.theme.secondary,
@@ -928,13 +924,18 @@ export function getDefaultPriorityByUniqueKey(uniqueKey: string): number {
 }
 
 // Grid includes 10px margin
-export function getTableWidthByDimension(chartDimension: ChartDimension) {
-    return DEFAULT_LAYOUT_PROPS.grid.w * chartDimension.w - 10;
+export function getWidthByDimension(chartDimension: ChartDimension) {
+    return STUDY_VIEW_CONFIG.layout.grid.w * chartDimension.w + (chartDimension.w - 1) * STUDY_VIEW_CONFIG.layout.gridMargin.x - 2;
 }
 
 // Grid includes 15px header and 35px tool section
-export function getTableHeightByDimension(chartDimension: ChartDimension) {
-    return DEFAULT_LAYOUT_PROPS.grid.h * chartDimension.h - 50;
+export function getHeightByDimension(chartDimension: ChartDimension, chartHeight: number) {
+    return STUDY_VIEW_CONFIG.layout.grid.h * chartDimension.h + (chartDimension.h - 1) * STUDY_VIEW_CONFIG.layout.gridMargin.y - chartHeight;
+}
+
+// 35px tool section
+export function getTableHeightByDimension(chartDimension: ChartDimension, chartHeight: number) {
+    return getHeightByDimension(chartDimension, chartHeight) - 35;
 }
 
 export function getQValue(qvalue: number):string {
