@@ -31,6 +31,7 @@ import {getJitterForCase} from "../../../shared/components/plots/PlotUtils";
 import {isSampleProfiled} from "../../../shared/lib/isSampleProfiled";
 import GenesetMolecularDataCache from "../../../shared/cache/GenesetMolecularDataCache";
 import {GenesetMolecularData} from "../../../shared/api/generated/CBioPortalAPIInternal";
+import {MUTATION_COUNT} from "../../studyView/StudyViewPageStore";
 
 export const CLIN_ATTR_DATA_TYPE = "clinical_attribute";
 export const GENESET_DATA_TYPE = "GENESET_SCORE";
@@ -1091,10 +1092,18 @@ export function boxPlotTooltip(
 export function logScalePossible(
     axisSelection: AxisMenuSelection
 ) {
-    return !!(axisSelection.dataType !== CLIN_ATTR_DATA_TYPE &&
-         axisSelection.dataSourceId &&
-        !(/zscore/i.test(axisSelection.dataSourceId)) &&
-        /rna_seq/i.test(axisSelection.dataSourceId));
+    if (axisSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
+        // molecular profile
+        return !!(
+            axisSelection.dataSourceId &&
+            !(/zscore/i.test(axisSelection.dataSourceId)) &&
+            /rna_seq/i.test(axisSelection.dataSourceId)
+        );
+    } else {
+        // clinical attribute
+        return axisSelection.dataSourceId === MUTATION_COUNT;
+    }
+
 }
 
 export function makeBoxScatterPlotData(
