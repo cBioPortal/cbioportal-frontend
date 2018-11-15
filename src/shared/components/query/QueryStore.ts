@@ -40,6 +40,7 @@ import formSubmit from "../../lib/formSubmit";
 import {ServerConfigHelpers} from "../../../config/config";
 import getBrowserWindow from "../../lib/getBrowserWindow";
 import {QueryParameter} from "../../lib/ExtendedRouterStore";
+import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
 
 // interface for communicating
 export type CancerStudyQueryUrlParams = {
@@ -1031,7 +1032,7 @@ export class QueryStore
 			cancerTypes: this.cancerTypes.result,
 			studies: this.cancerStudies.result,
 			priorityStudies: this.priorityStudies,
-			virtualStudies: this.userVirtualStudies.result
+			virtualStudies: this.forDownloadTab ? [] : this.userVirtualStudies.result
 		});
 	}
 
@@ -1210,7 +1211,7 @@ export class QueryStore
 		else if (mutSelect && !cnaSelect && !expSelect && !rppaSelect)
 			sampleListId = studyId + "_sequenced";
 		else if (!mutSelect && cnaSelect && !expSelect && !rppaSelect)
-			sampleListId = studyId + "_acgh";
+			sampleListId = studyId + "_cna";
 		else if (!mutSelect && !cnaSelect && expSelect && !rppaSelect)
 		{
 			if (this.isProfileSelected(studyId + '_mrna_median_Zscores'))
@@ -1402,13 +1403,19 @@ export class QueryStore
 
 	@computed get submitError()
 	{
-		let haveExpInQuery = this.oql.query.some(result => {
-			return (result.alterations || []).some(alt => alt.alteration_type === 'exp');
-		});
+		let haveMutInQuery = false;
+		let haveCnaInQuery = false;
+		let haveExpInQuery = false;
+		let haveProtInQuery = false;
 
-		const haveProtInQuery = this.oql.query.some(result => {
-			return (result.alterations || []).some(alt => alt.alteration_type === 'prot');
-		});
+		for (const queryLine of this.oql.query) {
+			for (const alteration of (queryLine.alterations || [])) {
+				haveMutInQuery = haveMutInQuery || (alteration.alteration_type === "mut");
+				haveCnaInQuery = haveCnaInQuery || (alteration.alteration_type === "cna");
+				haveExpInQuery = haveExpInQuery || (alteration.alteration_type === "exp");
+				haveProtInQuery = haveProtInQuery || (alteration.alteration_type === "prot");
+			}
+		}
 
 		if (!this.selectableSelectedStudyIds.length)
 			return "Please select one or more cancer studies.";
@@ -1418,9 +1425,19 @@ export class QueryStore
 			if (!this.selectedProfileIds.length)
 				return "Please select one or more molecular profiles.";
 
-			let expProfileSelected = this.getSelectedProfileIdFromMolecularAlterationType('MRNA_EXPRESSION');
+			let mutProfileSelected = this.getSelectedProfileIdFromMolecularAlterationType(AlterationTypeConstants.MUTATION_EXTENDED as any);
+			let cnaProfileSelected = this.getSelectedProfileIdFromMolecularAlterationType(AlterationTypeConstants.COPY_NUMBER_ALTERATION as any);
+			let expProfileSelected = this.getSelectedProfileIdFromMolecularAlterationType(AlterationTypeConstants.MRNA_EXPRESSION as any);
+			let protProfileSelected = this.getSelectedProfileIdFromMolecularAlterationType(AlterationTypeConstants.PROTEIN_LEVEL as any);
+			if (haveMutInQuery && !mutProfileSelected)
+				return "Mutation data query specified in OQL, but no mutation profile selected in `Select Genomic Profiles`";
+			if (haveCnaInQuery && !cnaProfileSelected)
+				return "CNA data query specified in OQL, but not CNA profile selected in `Select Genomic Profiles`";
 			if (haveExpInQuery && !expProfileSelected)
-				return "Expression specified in the list of genes, but not selected in the Molecular Profile Checkboxes.";
+				return "mRNA expression data query specified in OQL, but no mRNA profile selected in `Select Genomic Profiles`";
+			if (haveProtInQuery && !protProfileSelected)
+				return "Protein level data query specified in OQL, but no protein level profile selected in `Select Genomic Profiles`";
+
 
 		} else if(!(this.dataTypePriority.mutation || this.dataTypePriority.cna)){
 			return "Please select one or more molecular profiles.";

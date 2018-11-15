@@ -32,6 +32,8 @@ export interface IUserSelectionsProps {
     removeGeneFilter: (entrezGeneId: number) => void;
     removeCNAGeneFilter: (filter: CopyNumberGeneFilterElement) => void;
     resetMutationCountVsCNAFilter: ()=>void;
+    removeWithMutationDataFilter: () => void;
+    removeWithCNADataFilter: () => void;
     clearChartSampleIdentifierFilter: (chartMeta: ChartMeta) => void;
     clearAllFilters: () => void
 }
@@ -211,19 +213,25 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
             );
         }
 
-        // Select IDs by Case Selector
-        _.reduce((this.props.filter.sampleIdentifiersSet || []), (acc, sampleIdentifiers, chartUniqKey) => {
-            const chartMeta = this.props.attributesMetaSet[chartUniqKey];
-            if (chartMeta) {
-                let customChartName = chartMeta.uniqueKey === UniqueKey.SELECT_CASES_BY_IDS ? 'IDs' : chartMeta.displayName;
-                acc.push(<div className={styles.parentGroupLogic}><PillTag
-                    content={`Selected ${sampleIdentifiers.length} samples by ${customChartName}`}
+        if(this.props.filter.withMutationData) {
+            components.push(
+                <div className={styles.parentGroupLogic}><PillTag
+                    content={`Samples with mutation data only`}
                     backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterTitle}
-                    onDelete={() => this.props.clearChartSampleIdentifierFilter(chartMeta)}
-                /></div>);
-            }
-            return acc;
-        }, components);
+                    onDelete={this.props.removeWithMutationDataFilter}
+                /></div>
+            );
+        }
+
+        if(this.props.filter.withCNAData) {
+            components.push(
+                <div className={styles.parentGroupLogic}><PillTag
+                    content={`Samples with CNA data only`}
+                    backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterTitle}
+                    onDelete={this.props.removeWithCNADataFilter}
+                /></div>
+            );
+        }
         return components;
     }
 
