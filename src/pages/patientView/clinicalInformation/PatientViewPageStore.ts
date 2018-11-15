@@ -534,7 +534,7 @@ export class PatientViewPageStore {
         ],
         invoke: () => {
             if (AppConfig.serverConfig.show_oncokb) {
-                return fetchOncoKbData(this.uniqueSampleKeyToTumorType, this.oncoKbAnnotatedGenes.result || {}, this.mutationData, this.uncalledMutationData);
+                return fetchOncoKbData(this.uniqueSampleKeyToTumorType, this.oncoKbAnnotatedGenes.result || {}, this.mutationData, undefined, this.uncalledMutationData);
             } else {
                 return Promise.resolve({indicatorMap: null, uniqueSampleKeyToTumorType: null});
             }
