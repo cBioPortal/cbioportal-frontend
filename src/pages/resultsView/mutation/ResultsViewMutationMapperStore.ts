@@ -10,6 +10,7 @@ import {
     fetchCosmicData, fetchCivicGenes, fetchCivicVariants
 } from "shared/lib/StoreUtils";
 import MutationCountCache from "shared/cache/MutationCountCache";
+import GenomeNexusCache from "shared/cache/GenomeNexusCache";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 import MutationMapperStore, {IMutationMapperStoreConfig} from "shared/components/mutationMapper/MutationMapperStore";
 import { VariantAnnotation } from "shared/api/generated/GenomeNexusAPI";
@@ -32,6 +33,7 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
                 // and we will react when it changes to a new object.
                 getMutations:()=>Mutation[],
                 private getMutationCountCache: ()=>MutationCountCache,
+                private getGenomeNexusCache: ()=>GenomeNexusCache,
                 public studyIdToStudy:MobxPromise<{[studyId:string]:CancerStudy}>,
                 public molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>,
                 public clinicalDataForSamples: MobxPromise<ClinicalData[]>,
@@ -94,6 +96,6 @@ export default class ResultsViewMutationMapperStore extends MutationMapperStore
     }, undefined);
 
     @cached get downloadDataFetcher(): MutationTableDownloadDataFetcher {
-        return new MutationTableDownloadDataFetcher(this.mutationData, this.getMutationCountCache);
+        return new MutationTableDownloadDataFetcher(this.mutationData, this.getGenomeNexusCache, this.getMutationCountCache);
     }
 }
