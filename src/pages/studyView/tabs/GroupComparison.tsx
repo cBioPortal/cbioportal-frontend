@@ -259,13 +259,12 @@ export class GroupComparison extends React.Component<IGroupComparisonProps, {}> 
         return (
             <div className={styles.main} style={{ margin: '10px' }} >
                 <div className={styles.header}>
-                    <span>Groups <span className={styles.sub}>(click to toggle, drag to re-order)</span></span>
+                    <span>Groups <sub className={styles.sub}>(click to toggle, drag to re-order)</sub></span>
                     <div className={styles.groups}>{this.groups}</div>
                 </div>
                 <MSKTabs id="groupComparisonTabs" activeTabId={this.activeTabId}
                     onTabClick={(id: string) => this.handleTabChange(id)}
-                    vertical={true}
-                    className="pillTabs">
+                    className="leftTabs">
 
                     <MSKTab key={0} id="overlap" linkText="Overlap">
                         <VennDiagram></VennDiagram>
