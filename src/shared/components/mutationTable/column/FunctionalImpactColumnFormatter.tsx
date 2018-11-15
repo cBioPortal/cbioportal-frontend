@@ -6,7 +6,7 @@ import 'rc-tooltip/assets/bootstrap_white.css';
 import {Mutation, DiscreteCopyNumberData} from "shared/api/generated/CBioPortalAPI";
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 import MutationAssessor from "shared/components/annotation/genomeNexus/MutationAssessor";
-import {MutationAssessor as MutationAssessorData} from 'shared/api/generated/GenomeNexusAPIInternal';
+import {MutationAssessor as MutationAssessorData} from 'shared/api/generated/GenomeNexusAPI';
 import Sift from "shared/components/annotation/genomeNexus/Sift";
 import PolyPhen2 from "shared/components/annotation/genomeNexus/PolyPhen2";
 import siftStyles from "shared/components/annotation/genomeNexus/styles/siftTooltip.module.scss";
@@ -16,6 +16,7 @@ import annotationStyles from "shared/components/annotation/styles/annotation.mod
 import MobxPromise from 'mobxpromise';
 import { VariantAnnotation } from 'shared/api/generated/GenomeNexusAPI';
 import { extractGenomicLocation, genomicLocationString } from 'shared/lib/MutationUtils';
+import GenomeNexusCache, { GenomeNexusCacheDataType } from "shared/cache/GenomeNexusCache";
 
 
 type FunctionalImpactColumnTooltipProps = {
@@ -206,7 +207,7 @@ export default class FunctionalImpactColumnFormatter {
             <div>
                 {name}<br />
                 <div style={{height:14}}>
-                    {/* <DefaultTooltip
+                    <DefaultTooltip
                         overlay={<FunctionalImpactColumnTooltip active='mutationAssessor' />}
                         placement="topLeft"
                         trigger={['hover', 'focus']}
@@ -222,7 +223,7 @@ export default class FunctionalImpactColumnFormatter {
                                 alt='Sift'
                             />
                         </span>
-                    </DefaultTooltip> */}
+                    </DefaultTooltip>
                     <DefaultTooltip
                         overlay={<FunctionalImpactColumnTooltip active='sift' />}
                         placement="topLeft"
@@ -285,19 +286,20 @@ export default class FunctionalImpactColumnFormatter {
         };
     }
 
-    public static renderFunction(data:Mutation[], indexedVariantAnnotations:MobxPromise<{[genomicLocation: string]: VariantAnnotation}|undefined>) {
-        const genomeNexusData = FunctionalImpactColumnFormatter.getGenomeNexusData(data, indexedVariantAnnotations);
+    public static renderFunction(data:Mutation[],
+                                 genomeNexusCache:GenomeNexusCache|undefined) {
+        const genomeNexusCacheData = FunctionalImpactColumnFormatter.getGenomeNexusDataFromCache(data, genomeNexusCache);
         return (
                 <div>
-                    {FunctionalImpactColumnFormatter.makeFunctionalImpactViz(genomeNexusData, indexedVariantAnnotations)}
+                    {FunctionalImpactColumnFormatter.makeFunctionalImpactViz(genomeNexusCacheData)}
                 </div>
         );
     }
 
-    public static download(data:Mutation[], indexedVariantAnnotations:MobxPromise<{[genomicLocation: string]: VariantAnnotation}|undefined>): string
+    public static download(data:Mutation[], genomeNexusCache:GenomeNexusCache): string
     {
-        const genomeNexusData = FunctionalImpactColumnFormatter.getGenomeNexusData(data, indexedVariantAnnotations);
-        const functionalImpactData = FunctionalImpactColumnFormatter.getData(genomeNexusData);
+        const genomeNexusData = FunctionalImpactColumnFormatter.getGenomeNexusDataFromCache(data, genomeNexusCache);
+        const functionalImpactData = genomeNexusData && FunctionalImpactColumnFormatter.getData(genomeNexusData.data);
 
         if (!functionalImpactData) {
             return "";
@@ -310,34 +312,30 @@ export default class FunctionalImpactColumnFormatter {
         ].join(";");
     }
 
-    private static getGenomeNexusData(data:Mutation[], indexedVariantAnnotations:MobxPromise<{[genomicLocation: string]: VariantAnnotation}|undefined>):VariantAnnotation | null {
-        if (data.length === 0 || indexedVariantAnnotations.result === undefined) {
+    private static getGenomeNexusDataFromCache(data:Mutation[], cache:GenomeNexusCache|undefined):GenomeNexusCacheDataType | null {
+        if (data.length === 0 || !cache) {
             return null;
         }
-        const genomicLocation = extractGenomicLocation(data[0]);
-        const variantAnnotation = genomicLocation ?
-            indexedVariantAnnotations.result[genomicLocationString(genomicLocation)] : null;
-        return variantAnnotation;
+        return cache.get(data[0]);
     }
 
-    private static makeFunctionalImpactViz(genomeNexusData:VariantAnnotation | null, indexedVariantAnnotations:MobxPromise<{[genomicLocation: string]: VariantAnnotation}|undefined>) {
+    private static makeFunctionalImpactViz(genomeNexusCacheData:GenomeNexusCacheDataType|null) {
         let status:TableCellStatus | null = null;
 
-        if (indexedVariantAnnotations.status === "pending") {
+        if (genomeNexusCacheData === null) {
             status = TableCellStatus.LOADING;
-        } else if (indexedVariantAnnotations.status === "error") {
+        } else if (genomeNexusCacheData.status === "error") {
             status = TableCellStatus.ERROR;
-        } else if (genomeNexusData === null) {
+        } else if (genomeNexusCacheData.data === null) {
             status = TableCellStatus.NA;
         } else {
-            const functionalImpactData = FunctionalImpactColumnFormatter.getData(genomeNexusData);
+            const functionalImpactData = FunctionalImpactColumnFormatter.getData(genomeNexusCacheData.data);
 
             return functionalImpactData && (
                 <div>
-                    {/* TODO: Enable after Mutation Assessor comes back online
                     <MutationAssessor
                         mutationAssessor={functionalImpactData.mutationAssessor}
-                    /> */}
+                    />
                     <Sift
                         siftScore={functionalImpactData.siftScore}
                         siftPrediction={functionalImpactData.siftPrediction}
