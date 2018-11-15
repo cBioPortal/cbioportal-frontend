@@ -3,6 +3,8 @@ import {observer} from "mobx-react";
 import {MSKTabs, MSKTab} from "shared/components/MSKTabs/MSKTabs";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import ResultsViewMutationMapper from "./ResultsViewMutationMapper";
+import ResultsViewMutationMapperStore from "./ResultsViewMutationMapperStore";
+import classnames from "classnames";
 import {observable, computed} from "mobx";
 import AppConfig from 'appConfig';
 import "./mutations.scss";
@@ -50,7 +52,12 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                         isUnaffected={!this.props.store.queryContainsMutationOql}
                         onToggle={this.onToggleOql}
                     />
+                    {this.props.store.mutationMapperStores.isComplete && ! this.props.store.mutationMapperStores.result[this.mutationsGeneTab].dataStore.showingAllData &&
+                        this.bannerAlert()
+                    }
                 </div>
+                
+
 
                 {(this.props.store.mutationMapperStores.isComplete) && (
                     <MSKTabs
@@ -103,6 +110,26 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
         });
 
         return tabs;
+    }
+
+    protected bannerAlert(): JSX.Element|null
+    {
+        let dataStore = this.props.store.mutationMapperStores.result[this.mutationsGeneTab].dataStore;
+
+        return (
+            <div className={classnames("alert" , "alert-success")}>
+                <span style={{verticalAlign:"middle"}}>
+                    {`${dataStore.sortedFilteredData.length}/${dataStore.allData.length} `}
+                    {"mutations are shown based on your filtering."}
+                    <button className="btn btn-default btn-xs" 
+                            style={{cursor:"pointer", marginLeft:6}} 
+                            onClick={()=>{dataStore.resetFilterAndSelection();}}
+                    >
+                        Show all mutations
+                    </button>
+                </span>
+            </div>
+        );
     }
     
     protected handleTabChange(id: string) {
