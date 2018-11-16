@@ -157,7 +157,7 @@ export const DataTypeConstants = {
 enum SampleListCategoryType {
     "w_mut"="w_mut",
     "w_cna"="w_cna",
-    "w_mut_cna"="w_cna_mut"
+    "w_mut_cna"="w_mut_cna"
 }
 
 export const SampleListCategoryTypeToFullId = {
@@ -1368,6 +1368,7 @@ export class ResultsViewPageStore {
             // if YES, we need to derive the sample lists by:
             // 1. looking up all sample lists in selected studies
             // 2. using those with matching category
+
             if (!this.sampleListCategory) {
                 if (this.virtualStudies.result!.length > 0){
                     return populateSampleSpecificationsFromVirtualStudies(this._samplesSpecification, this.virtualStudies.result!);
