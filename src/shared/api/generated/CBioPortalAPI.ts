@@ -1,5 +1,4 @@
 import * as request from "superagent";
-import { getLegacyDataAccessTokenUrl } from "../urls";
 
 type CallbackHandler = (err: any, res ? : request.Response) => void;
 export type CancerStudy = {
@@ -171,12 +170,6 @@ export type CopyNumberSeg = {
 
         'uniqueSampleKey': string
 
-};
-export type DataAccessToken = {
-    'token': string
-    'username': string
-    'expiration': string
-    'creation': string
 };
 export type DiscreteCopyNumberData = {
     'alteration': number
@@ -5239,7 +5232,7 @@ export default class CBioPortalAPI {
          * @param {string} projection - Level of detail of the response
          * @param {integer} pageSize - Page size of the result list
          * @param {integer} pageNumber - Page number of the result list
-
+        
          * @param {string} direction - Direction of the sort
     */
     getAllPatientsInStudyUsingGET(parameters: {
@@ -6510,91 +6503,51 @@ export default class CBioPortalAPI {
                 return response.body;
             });
         };
+    getTagsUsingGETURL(parameters: {
+        'studyId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/studies/{studyId}/tags';
+
+        path = path.replace('{studyId}', parameters['studyId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
 
     /**
-     * createDataAccessToken
+     * Get the tags of a study
      * @method
-     * @name CBioPortalAPI#createDataAccessTokenUsingPOST
-     * @param {boolean} allowRevocationOfOtherTokens - allowRevocationOfOtherTokens
+     * @name CBioPortalAPI#getTagsUsingGET
+     * @param {string} studyId - Study ID e.g. acc_tcga
      */
-    createDataAccessTokenUsingPOST(parameters: {
-        'allowRevocationOfOtherTokens' ? : boolean,
-        $queryParameters ? : any
-    }): Promise < DataAccessToken > {
+    getTagsUsingGETWithHttpInfo(parameters: {
+        'studyId': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let url = getLegacyDataAccessTokenUrl();
+        let path = '/studies/{studyId}/tags';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};
         let form: any = {};
         return new Promise(function(resolve, reject) {
             headers['Accept'] = 'application/json';
-            headers['Content-Type'] = 'application/json';
 
-            if (parameters['allowRevocationOfOtherTokens'] !== undefined) {
-                queryParameters['allowRevocationOfOtherTokens'] = parameters['allowRevocationOfOtherTokens'];
-            } else {
-                queryParameters['allowRevocationOfOtherTokens'] = false;
-            }
+            path = path.replace('{studyId}', parameters['studyId'] + '');
 
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('POST', url, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        }).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-
-    getDataAccessTokenUsingGETURL(parameters: {
-        'token': string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let url = getLegacyDataAccessTokenUrl() + '/{token}';
-
-        url = url.replace('{token}', parameters['token'] + '');
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return url + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * getDataAccessToken
-     * @method
-     * @name CBioPortalAPI#getDataAccessTokenUsingGET
-     * @param {string} token - token
-     */
-    getDataAccessTokenUsingGET(parameters: {
-        'token': string,
-        $queryParameters ? : any
-    }): Promise < DataAccessToken > {
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let url = getLegacyDataAccessTokenUrl() + '/{token}';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = '*/*';
-
-            url = url.replace('{token}', parameters['token'] + '');
-
-            if (parameters['token'] === undefined) {
-                reject(new Error('Missing required  parameter: token'));
+            if (parameters['studyId'] === undefined) {
+                reject(new Error('Missing required  parameter: studyId'));
                 return;
             }
 
@@ -6605,167 +6558,24 @@ export default class CBioPortalAPI {
                 });
             }
 
-            request('GET', url, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
 
-        }).then(function(response: request.Response) {
-            return response.body;
         });
     };
 
-    revokeDataAccessTokenUsingDELETEURL(parameters: {
-        'token': string,
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let url = getLegacyDataAccessTokenUrl() + '/{token}';
-        url = url.replace('{token}', parameters['token'] + '');
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return url + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
     /**
-     * revokeDataAccessToken
+     * Get the tags of a study
      * @method
-     * @name CBioPortalAPI#revokeDataAccessTokenUsingDELETE
-     * @param {string} token - token
+     * @name CBioPortalAPI#getTagsUsingGET
+     * @param {string} studyId - Study ID e.g. acc_tcga
      */
-    revokeDataAccessTokenUsingDELETE(parameters: {
-        'token': string,
-        $queryParameters ? : any
-    }): Promise < any > {
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let url = getLegacyDataAccessTokenUrl() + '/{token}';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = '*/*';
-
-            url = url.replace('{token}', parameters['token'] + '');
-
-            if (parameters['token'] === undefined) {
-                reject(new Error('Missing required  parameter: token'));
-                return;
-            }
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('DELETE', url, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        }).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-
-    getAllDataAccessTokensUsingGETURL(parameters: {
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let url = getLegacyDataAccessTokenUrl() + '/{token}';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return url + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * getAllDataAccessTokens
-     * @method
-     * @name CBioPortalAPI#getAllDataAccessTokensUsingGET
-     */
-    getAllDataAccessTokensUsingGET(parameters: {
-        $queryParameters ? : any
-    }): Promise < Array < DataAccessToken >
-        > {
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let url = getLegacyDataAccessTokenUrl() + 's';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = '*/*';
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('GET', url, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        }).then(function(response: request.Response) {
-            return response.body;
-        });
-    };
-
-    revokeAllDataAccessTokensUsingDELETEURL(parameters: {
-        $queryParameters ? : any
-    }): string {
-        let queryParameters: any = {};
-        let url = getLegacyDataAccessTokenUrl() + 's';
-
-        if (parameters.$queryParameters) {
-            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                var parameter = parameters.$queryParameters[parameterName];
-                queryParameters[parameterName] = parameter;
-            });
-        }
-        let keys = Object.keys(queryParameters);
-        return url + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
-    };
-
-    /**
-     * revokeAllDataAccessTokens
-     * @method
-     * @name CBioPortalAPI#revokeAllDataAccessTokensUsingDELETE
-     */
-    revokeAllDataAccessTokensUsingDELETE(parameters: {
-        $queryParameters ? : any
-    }): Promise < any > {
-        const errorHandlers = this.errorHandlers;
-        const request = this.request;
-        let url = getLegacyDataAccessTokenUrl() + 's';
-        let body: any;
-        let queryParameters: any = {};
-        let headers: any = {};
-        let form: any = {};
-        return new Promise(function(resolve, reject) {
-            headers['Accept'] = '*/*';
-
-            if (parameters.$queryParameters) {
-                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
-                    var parameter = parameters.$queryParameters[parameterName];
-                    queryParameters[parameterName] = parameter;
-                });
-            }
-
-            request('DELETE', url, body, headers, queryParameters, form, reject, resolve, errorHandlers);
-
-        }).then(function(response: request.Response) {
+    getTagsUsingGET(parameters: {
+        'studyId': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < {} > {
+        return this.getTagsUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
             return response.body;
         });
     };
 }
-
