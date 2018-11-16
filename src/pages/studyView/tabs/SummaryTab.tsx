@@ -1,21 +1,21 @@
 import * as React from 'react';
 import styles from "./studySummaryTabStyles.module.scss";
 import {ChartContainer, IChartContainerProps} from 'pages/studyView/charts/ChartContainer';
-import { observable } from 'mobx';
+import {observable} from 'mobx';
 import {
+    AnalysisGroup,
     ChartMeta,
     ChartType,
-    DataBinMethodConstants,
-    StudyViewPageStore,
-    AnalysisGroup,
     CUSTOM_CHART_KEYS,
+    StudyViewPageStore,
     UniqueKey
 } from 'pages/studyView/StudyViewPageStore';
-import {Gene, SampleIdentifier, ClinicalAttribute} from 'shared/api/generated/CBioPortalAPI';
-import { SingleGeneQuery } from 'shared/lib/oql/oql-parser';
-import AppConfig from 'appConfig';
+import {ClinicalAttribute, Gene, SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
+import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
 import {
-    ClinicalDataIntervalFilterValue, DataBin, CopyNumberGeneFilterElement,
+    ClinicalDataIntervalFilterValue,
+    CopyNumberGeneFilterElement,
+    DataBin,
     RectangleBounds
 } from "shared/api/generated/CBioPortalAPIInternal";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
@@ -23,8 +23,7 @@ import * as _ from 'lodash';
 import ReactGridLayout from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
-import { observer } from 'mobx-react';
-import {ServerConfigHelpers} from "../../../config/config";
+import {observer} from 'mobx-react';
 import UserSelections from "../UserSelections";
 import AddChartButton from "../addChartButton/AddChartButton";
 import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
@@ -146,10 +145,8 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
 
                     if (chartMeta.uniqueKey === UniqueKey.SAMPLES_PER_PATIENT) {
                         props.promise = this.store.samplesPerPatientData;
-                    } else if (chartMeta.uniqueKey === UniqueKey.WITH_MUTATION_DATA) {
-                        props.promise = this.store.withMutationData;
-                    } else if (chartMeta.uniqueKey === UniqueKey.WITH_CNA_DATA) {
-                        props.promise = this.store.withCnaData;
+                    } else if (chartMeta.uniqueKey === UniqueKey.CANCER_STUDIES) {
+                        props.promise = this.store.cancerStudiesData;
                     }
                 } else if(this.store.isCustomChart(chartMeta.uniqueKey)) {
                     props.filters = this.store.getCustomChartFilters(props.chartMeta!.uniqueKey);
@@ -197,10 +194,27 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 break;
             }
             case ChartTypeEnum.TABLE: {
-                props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey);
-                props.promise = this.store.getClinicalDataCount(chartMeta);
-                props.onValueSelection = this.handlers.onValueSelection;
-                props.onResetSelection = this.handlers.onValueSelection;
+                if (_.includes(CUSTOM_CHART_KEYS, chartMeta.uniqueKey)) {
+                    props.filters = this.store.getCustomChartFilters(props.chartMeta ? props.chartMeta.uniqueKey : '');
+                    props.onValueSelection = this.handlers.setCustomChartFilters;
+                    props.onResetSelection = this.handlers.setCustomChartFilters;
+
+                    if (chartMeta.uniqueKey === UniqueKey.SAMPLES_PER_PATIENT) {
+                        props.promise = this.store.samplesPerPatientData;
+                    } else if (chartMeta.uniqueKey === UniqueKey.CANCER_STUDIES) {
+                        props.promise = this.store.cancerStudiesData;
+                    }
+                } else if (this.store.isCustomChart(chartMeta.uniqueKey)) {
+                    props.filters = this.store.getCustomChartFilters(props.chartMeta!.uniqueKey);
+                    props.onValueSelection = this.handlers.setCustomChartFilters;
+                    props.onResetSelection = this.handlers.setCustomChartFilters;
+                    props.promise = this.store.getCustomChartDataCount(chartMeta);
+                } else {
+                    props.filters = this.store.getClinicalDataFiltersByUniqueKey(chartMeta.uniqueKey);
+                    props.promise = this.store.getClinicalDataCount(chartMeta);
+                    props.onValueSelection = this.handlers.onValueSelection;
+                    props.onResetSelection = this.handlers.onValueSelection;
+                }
                 props.onChangeChartType = this.handlers.onChangeChartType;
                 props.download = [
                     {
@@ -359,6 +373,8 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                         this.store.defaultVisibleAttributes.isComplete && (
                             this.store.initialVisibleAttributesClinicalDataCountData.isPending
                             || this.store.initialVisibleAttributesClinicalDataBinCountData.isPending
+                            || this.store.samplesPerPatientData.isPending
+                            || this.store.cancerStudiesData.isPending
                         )
                     } size={"big"} center={false}/>
 
