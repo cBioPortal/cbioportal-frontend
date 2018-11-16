@@ -1454,7 +1454,7 @@ describe('StudyViewUtils', () => {
             getSamplesByExcludingFiltersOnChart(
                 UniqueKey.SAMPLES_PER_PATIENT,
                 emptyStudyViewFilter,
-                { [UniqueKey.SAMPLES_PER_PATIENT]: [{ sampleId: 'sample1', studyId: 'study1' }] },
+                { [UniqueKey.SAMPLES_PER_PATIENT]: [{ sampleId: 'sample1', studyId: 'study1' }], [UniqueKey.CANCER_STUDIES]: [{ sampleId: 'sample1', studyId: 'study1' }] },
                 [{ sampleId: 'sample1', studyId: 'study1' }, { sampleId: 'sample2', studyId: 'study1' }],
                 ['study1']
             ).then(() => {
@@ -1480,7 +1480,7 @@ describe('StudyViewUtils', () => {
             getSamplesByExcludingFiltersOnChart(
                 UniqueKey.SAMPLES_PER_PATIENT,
                 emptyStudyViewFilter,
-                { [UniqueKey.SAMPLES_PER_PATIENT]: [{ sampleId: 'sample1', studyId: 'study1' }] },
+                { [UniqueKey.SAMPLES_PER_PATIENT]: [{ sampleId: 'sample1', studyId: 'study1' }], [UniqueKey.CANCER_STUDIES]: [{ sampleId: 'sample1', studyId: 'study1' }] },
                 [],
                 ['study1']
             ).then(() => {
