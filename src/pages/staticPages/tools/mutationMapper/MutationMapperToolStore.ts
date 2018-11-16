@@ -20,8 +20,10 @@ import {fetchHotspotsData, indexHotspotsData} from "shared/lib/CancerHotspotsUti
 import {IHotspotIndex} from "shared/model/CancerHotspots";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
+import GenomeNexusCache from "shared/cache/GenomeNexusCache";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import MutationMapperStore from "shared/components/mutationMapper/MutationMapperStore";
+import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 import { VariantAnnotation, EnsemblTranscript } from "shared/api/generated/GenomeNexusAPI";
 
 export default class MutationMapperToolStore
@@ -233,12 +235,20 @@ export default class MutationMapperToolStore
         return new PubMedCache();
     }
 
+    @cached get genomeNexusCache() {
+        return new GenomeNexusCache();
+    }
+
     @cached get pdbHeaderCache() {
         return new PdbHeaderCache();
     }
 
     @computed get myCancerGenomeData() {
         return fetchMyCancerGenomeData();
+    }
+
+    @cached get downloadDataFetcher() {
+        return new MutationTableDownloadDataFetcher(this.mutations, () => this.genomeNexusCache);
     }
 
     @action public clearCriticalErrors() {
