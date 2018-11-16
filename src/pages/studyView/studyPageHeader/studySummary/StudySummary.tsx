@@ -35,7 +35,7 @@ export default class StudySummary extends React.Component<IStudySummaryProps, {}
                 elems.push(<a target="_blank" href={`http://www.ncbi.nlm.nih.gov/pubmed/${this.props.studies[0].pmid}`}
                               style={{marginLeft: '5px'}}>PubMed</a>);
             }
-            return <div>{elems}</div>
+            return <span>{elems}</span>
         } else {
             return <span>{`This combined study contains samples from ${this.props.studies.length} studies`}</span>;
         }
@@ -96,13 +96,13 @@ export default class StudySummary extends React.Component<IStudySummaryProps, {}
                                 {
                                     this.props.originStudies.isComplete &&
                                     this.props.originStudies.result!.length > 0 &&
-                                    (<div>
+                                    (<span>
                                             <span style={{fontWeight: 'bold', marginBottom: '5px', display: 'block'}}>
                                                 This virtual study was derived from:
                                             </span>
                                         {this.props.originStudies.result!.map(study =>
                                             <StudySummaryRecord {...study} />)}
-                                    </div>)
+                                    </span>)
                                 }
                                 <LoadingIndicator
                                     isLoading={this.props.originStudies.isPending}
