@@ -1028,7 +1028,15 @@ export class StudyViewPageStore {
         let uniqueKey:string = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!);
         if(!this.clinicalDataCountPromises.hasOwnProperty(uniqueKey)) {
             this.clinicalDataCountPromises[uniqueKey] = remoteData<ClinicalDataCountWithColor[]>({
-                await: () => [this.initialVisibleAttributesClinicalDataCountData],
+                await: () => {
+                    if (this.isInitialFilterState && _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined) {
+                        return [this.initialVisibleAttributesClinicalDataCountData];
+                    } else if (this._clinicalDataEqualityFilterSet.has(uniqueKey)) {
+                        return [];
+                    } else {
+                        return [this.unfilteredClinicalDataCount];
+                    }
+                },
                 invoke: async () => {
                     let dataType = chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE';
                     let result: ClinicalDataCountItem[] = [];
@@ -1069,7 +1077,15 @@ export class StudyViewPageStore {
         const uniqueKey: string = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!);
         if (!this.clinicalDataBinPromises.hasOwnProperty(uniqueKey)) {
             this.clinicalDataBinPromises[uniqueKey] = remoteData<DataBin[]>({
-                await: () =>[this.initialVisibleAttributesClinicalDataBinCountData],
+                await: () => {
+                    if (this.isInitialFilterState && _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined) {
+                        return [this.initialVisibleAttributesClinicalDataBinCountData];
+                    } else if (this._clinicalDataIntervalFilterSet.has(uniqueKey)) {
+                        return [];
+                    } else {
+                        return [this.unfilteredClinicalDataBinCount];
+                    }
+                },
                 invoke: async () => {
                     const clinicalDataType = chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE';
                     // TODO this.barChartFilters.length > 0 ? 'STATIC' : 'DYNAMIC' (not trivial when multiple filters involved)
