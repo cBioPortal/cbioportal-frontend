@@ -221,7 +221,7 @@ export class StudyViewPageStore {
         reaction(()=>this.filters, ()=>this.clearAnalysisGroupsSettings()); // whenever any data filters change, reset survival analysis settings
     }
 
-    @observable private initialFilters: Partial<StudyViewFilter> = {};
+    @observable private initialFiltersQuery: Partial<StudyViewFilter> = {};
 
     @observable studyIds: string[] = [];
 
@@ -270,11 +270,12 @@ export class StudyViewPageStore {
                 this.studyIds = studyIds;
             }
         }
+
+        // We do not support studyIds in the query filters
         let filters: Partial<StudyViewFilter> = {};
         if (query.filters) {
             filters = JSON.parse(decodeURIComponent(query.filters)) as Partial<StudyViewFilter>;
         }
-        filters.studyIds = studyIds;
 
         if (_.isArray(filters.clinicalDataEqualityFilters) && filters.clinicalDataEqualityFilters.length > 0) {
             _.each(filters.clinicalDataEqualityFilters, (filter: ClinicalDataEqualityFilter) => {
@@ -332,7 +333,12 @@ export class StudyViewPageStore {
                 return acc;
             }, [] as CopyNumberGeneFilter[]);
         }
-        this.initialFilters = filters;
+        this.initialFiltersQuery = filters;
+    }
+
+    @computed
+    get initialFilters() {
+        return _.merge(this.initialFiltersQuery, {studyIds: this.queriedPhysicalStudyIds.result});
     }
 
     @computed
@@ -1028,7 +1034,15 @@ export class StudyViewPageStore {
         let uniqueKey:string = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!);
         if(!this.clinicalDataCountPromises.hasOwnProperty(uniqueKey)) {
             this.clinicalDataCountPromises[uniqueKey] = remoteData<ClinicalDataCountWithColor[]>({
-                await: () => [this.initialVisibleAttributesClinicalDataCountData],
+                await: () => {
+                    if (this.isInitialFilterState && _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined) {
+                        return [this.initialVisibleAttributesClinicalDataCountData];
+                    } else if (this._clinicalDataEqualityFilterSet.has(uniqueKey)) {
+                        return [];
+                    } else {
+                        return [this.unfilteredClinicalDataCount];
+                    }
+                },
                 invoke: async () => {
                     let dataType = chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE';
                     let result: ClinicalDataCountItem[] = [];
@@ -1069,7 +1083,15 @@ export class StudyViewPageStore {
         const uniqueKey: string = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!);
         if (!this.clinicalDataBinPromises.hasOwnProperty(uniqueKey)) {
             this.clinicalDataBinPromises[uniqueKey] = remoteData<DataBin[]>({
-                await: () =>[this.initialVisibleAttributesClinicalDataBinCountData],
+                await: () => {
+                    if (this.isInitialFilterState && _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined) {
+                        return [this.initialVisibleAttributesClinicalDataBinCountData];
+                    } else if (this._clinicalDataIntervalFilterSet.has(uniqueKey)) {
+                        return [];
+                    } else {
+                        return [this.unfilteredClinicalDataBinCount];
+                    }
+                },
                 invoke: async () => {
                     const clinicalDataType = chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE';
                     // TODO this.barChartFilters.length > 0 ? 'STATIC' : 'DYNAMIC' (not trivial when multiple filters involved)
@@ -2566,7 +2588,7 @@ export class StudyViewPageStore {
     @autobind
     onSubmitQuery() {
         let formOps: { [id: string]: string } = {
-            cancer_study_list: this.studyIds.join(','),
+            cancer_study_list: this.queriedPhysicalStudyIds.result.join(','),
             tab_index: 'tab_visualize',
         }
 
