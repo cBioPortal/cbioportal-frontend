@@ -1,5 +1,5 @@
 import {CoverageInformation} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
-import {MolecularProfile, Sample} from "../../api/generated/CBioPortalAPI";
+import {ClinicalAttribute, MolecularProfile, Sample} from "../../api/generated/CBioPortalAPI";
 import {OncoprintClinicalAttribute} from "./ResultsViewOncoprint";
 import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
 import _ from "lodash";
@@ -13,13 +13,24 @@ export const alterationTypeToProfiledForText:{[alterationType:string]:string} = 
     "PROTEIN_LEVEL": "protein expression"
 };
 
+export function getAnnotatingProgressMessage(usingOncokb:boolean, usingHotspot:boolean) {
+    if (usingOncokb && usingHotspot) {
+        return "Annotating with OncoKB and Cancer Hotspots";
+    } else if (usingOncokb) {
+        return "Annotating with OncoKB";
+    } else if (usingHotspot) {
+        return "Annotating with Cancer Hotspots";
+    } else {
+        return "Processing data";
+    }
+}
+
 export function makeProfiledInClinicalAttributes(
     coverageInformation: CoverageInformation["samples"],
     molecularProfileIdToMolecularProfile: {[molecularProfileId:string]:MolecularProfile},
     selectedMolecularProfiles: MolecularProfile[],
-    numSamples:number,
     isSingleStudyQuery: boolean
-) {
+):(ClinicalAttribute & {molecularProfileIds:string[]})[] {
     // determine which Profiled In clinical attributes will exist in this query.
     // A Profiled In <alteration type> attribute only exists if theres a sample in the query
     //  which is not profiled in any selected profiles for that type.
@@ -83,7 +94,7 @@ export function makeProfiledInClinicalAttributes(
     const existsUnprofiled = Object.keys(existsUnprofiledCount).filter(alterationType=>{
         return existsUnprofiledCount[alterationType] > 0;
     });
-    const attributes:OncoprintClinicalAttribute[] = (existsUnprofiled.map(alterationType=>{
+    const attributes:(ClinicalAttribute & {molecularProfileIds:string[]})[] = (existsUnprofiled.map(alterationType=>{
         const group = groupedSelectedMolecularProfiles[alterationType];
         if (!group) {
             // No selected profiles of that type, skip it
@@ -92,25 +103,25 @@ export function makeProfiledInClinicalAttributes(
             // If only one profile of type, and its a single study query, then it gets its own attribute
             const profile = group[0];
             return {
-                clinicalAttributeId: `${SpecialAttribute.Profiled}_${profile.molecularProfileId}`,
+                clinicalAttributeId: `${SpecialAttribute.ProfiledInPrefix}_${profile.molecularProfileId}`,
                 datatype: "STRING",
                 description: `Profiled in ${profile.name}: ${profile.description}`,
                 displayName: `Profiled in ${profile.name}`,
                 molecularProfileIds: [profile.molecularProfileId],
                 patientAttribute: false
-            };
+            } as (ClinicalAttribute & {molecularProfileIds:string[]});
         } else {
             // If more than one, or its multiple study query, make one attribute for the entire alteration type
             return {
-                clinicalAttributeId: `${SpecialAttribute.Profiled}_${alterationType}`,
+                clinicalAttributeId: `${SpecialAttribute.ProfiledInPrefix}_${alterationType}`,
                 datatype: "STRING",
                 description: "",
                 displayName: `Profiled for ${alterationTypeToProfiledForText[alterationType]}`,
                 molecularProfileIds: group.map(p=>p.molecularProfileId),
                 patientAttribute: false
-            };
+            } as (ClinicalAttribute & {molecularProfileIds:string[]});
         }
-    }) as (OncoprintClinicalAttribute|null)[]).filter(x=>!!x) as OncoprintClinicalAttribute[];// filter out null
+    })).filter(x=>!!x) as (ClinicalAttribute & {molecularProfileIds:string[]})[];// filter out null
     
     attributes.sort((a,b)=>naturalSort(a.displayName, b.displayName));
     return attributes;

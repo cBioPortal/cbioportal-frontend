@@ -392,13 +392,13 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
             let ret:MobxPromise<any>[] = [
                 oncoprint.props.store.samples,
                 oncoprint.props.store.patients,
-                oncoprint.clinicalAttributesById,
+                oncoprint.props.store.clinicalAttributeIdToClinicalAttribute,
                 oncoprint.props.store.alteredSampleKeys,
                 oncoprint.props.store.alteredPatientKeys
             ];
-            if (oncoprint.clinicalAttributesById.isComplete) {
+            if (oncoprint.props.store.clinicalAttributeIdToClinicalAttribute.isComplete) {
                 const attributes = oncoprint.selectedClinicalAttributeIds.keys().map(attrId=>{
-                    return oncoprint.clinicalAttributesById.result![attrId];
+                    return oncoprint.props.store.clinicalAttributeIdToClinicalAttribute.result![attrId];
                 }).filter(x=>!!x);
                 ret = ret.concat(oncoprint.props.store.oncoprintClinicalDataCache.getAll(attributes));
             }
@@ -408,9 +408,9 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
             if (oncoprint.selectedClinicalAttributeIds.keys().length === 0) {
                 return [];
             }
-            let attributes = oncoprint.selectedClinicalAttributeIds.keys().map(attrId=>{
-                return oncoprint.clinicalAttributesById.result![attrId];
-            }).filter(x=>!!x); // filter out nonexistent attributes
+            const attributes = oncoprint.selectedClinicalAttributeIds.keys().map(attrId=>{
+                return oncoprint.props.store.clinicalAttributeIdToClinicalAttribute.result![attrId];
+            }).filter(x=>!!x);// filter out nonexistent attributes
             return attributes.map((attribute:ClinicalAttribute)=>{
                 const data = oncoprint.props.store.oncoprintClinicalDataCache.get(attribute).result!;
                 let altered_uids = undefined;
@@ -448,7 +448,7 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
                     (ret as any).countsCategoryLabels = ["C>A", "C>G", "C>T", "T>A", "T>C", "T>G"];
                     (ret as any).countsCategoryFills = ['#3D6EB1', '#8EBFDC', '#DFF1F8', '#FCE08E', '#F78F5E', '#D62B23'];
                 }
-                if (attribute.clinicalAttributeId.indexOf(SpecialAttribute.Profiled) === 0) {
+                if (attribute.clinicalAttributeId.indexOf(SpecialAttribute.ProfiledInPrefix) === 0) {
                     ret.na_legend_label = "No";
                 }
                 return ret as ClinicalTrackSpec;
