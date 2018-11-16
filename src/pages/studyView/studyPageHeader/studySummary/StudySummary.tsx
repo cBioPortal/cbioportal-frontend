@@ -9,6 +9,7 @@ import {StudySummaryRecord} from "../../virtualStudy/VirtualStudy";
 import LoadingIndicator from "../../../../shared/components/loadingIndicator/LoadingIndicator";
 import {buildCBioPortalPageUrl} from "../../../../shared/api/urls";
 import MobxPromise from 'mobxpromise';
+import {StudyLink} from "../../../../shared/components/StudyLink/StudyLink";
 
 interface IStudySummaryProps {
     studies: CancerStudy[],
@@ -60,13 +61,7 @@ export default class StudySummary extends React.Component<IStudySummaryProps, {}
         } else {
             return _.map(this.props.studies, study => {
                 return (
-                    <span>
-                        <a
-                            href={buildCBioPortalPageUrl({pathname: 'newstudy', query: {id: study.studyId}})}
-                            target="_blank">
-                            {study.name}
-                        </a>
-                    </span>
+                    <StudyLink studyId={study.studyId}>{study.name}</StudyLink>
                 )
             })
         }
