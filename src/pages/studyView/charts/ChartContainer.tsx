@@ -323,6 +323,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                        xLabelWithEventTooltip="Time of death"
                                        xLabelWithoutEventTooltip="Time of last observation"
                                        showDownloadButtons={false}
+                                       disableZoom={true}
                                        showTable={false}
                                        styleOpts={{
                                            width: getWidthByDimension(this.props.chartMeta.dimension),
