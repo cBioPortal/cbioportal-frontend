@@ -1,9 +1,15 @@
 .centered {
   position:absolute;
-  top: 200px;
+  top: 100px;
   left:50%;
   z-index:10000;
-  transform: perspective(1px) translateY(-50%) translateX(-50%);
+  text-align:center;
+  transform: translateX(-50%);
+}
+
+.centered-with-children {
+  // fixes blurry text bug to have an even # of pixels in width
+  width:600px;
 }
 
 .color {
@@ -23,8 +29,8 @@
 
 .big {
   > div {
-    height:100px !important;
-    width:8px !important;
+    height:75px !important;
+    width:6px !important;
     margin:4px !important;
   }
 }

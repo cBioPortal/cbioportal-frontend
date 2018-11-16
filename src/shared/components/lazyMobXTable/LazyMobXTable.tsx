@@ -557,8 +557,12 @@ export class LazyMobXTableStore<T> {
             this.dataStore.sortMetric = this.sortMetric;
         }
 
-        // we would like to keep the previous filter if exists
-        if (this.filterString) {
+        // we would like to keep the previous filter if it exists
+        // this is only a problem if table is managing its own data store
+        // if not, then the filter state is managed by parent and does not need
+        // to be persisted here
+        // NOTE: this is very confusing and should be remedied by a refactor
+        if (!props.dataStore && this.filterString) {
             this.setFilterString(this.filterString);
         }
     }

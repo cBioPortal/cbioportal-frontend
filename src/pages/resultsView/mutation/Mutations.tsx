@@ -3,6 +3,8 @@ import {observer} from "mobx-react";
 import {MSKTabs, MSKTab} from "shared/components/MSKTabs/MSKTabs";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import ResultsViewMutationMapper from "./ResultsViewMutationMapper";
+import ResultsViewMutationMapperStore from "./ResultsViewMutationMapperStore";
+import classnames from "classnames";
 import {observable, computed} from "mobx";
 import AppConfig from 'appConfig';
 import "./mutations.scss";
@@ -92,6 +94,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                             pubMedCache={this.props.store.pubMedCache}
                             cancerTypeCache={this.props.store.cancerTypeCache}
                             mutationCountCache={this.props.store.mutationCountCache}
+                            genomeNexusCache={this.props.store.genomeNexusCache}
                             pdbHeaderCache={this.props.store.pdbHeaderCache}
                             myCancerGenomeData={this.props.store.myCancerGenomeData}
                             config={AppConfig.serverConfig}
