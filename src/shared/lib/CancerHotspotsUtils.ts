@@ -12,7 +12,7 @@ export async function fetchHotspotsData(mutationData: MobxPromise<Mutation[]>,
                                         uncalledMutationData?: MobxPromise<Mutation[]>,
                                         client: GenomeNexusAPIInternal = genomeNexusInternalClient)
 {
-    const mutationDataResult = concatMutationData(mutationData, uncalledMutationData);
+    const mutationDataResult = filterMutationsOnNonHotspotGenes(concatMutationData(mutationData, uncalledMutationData));
 
     if (mutationDataResult.length === 0) {
         return [];
@@ -21,6 +21,13 @@ export async function fetchHotspotsData(mutationData: MobxPromise<Mutation[]>,
     const genomicLocations: GenomicLocation[] = uniqueGenomicLocations(mutationDataResult);
 
     return await client.fetchHotspotAnnotationByGenomicLocationPOST({genomicLocations: genomicLocations});
+}
+
+export function filterMutationsOnNonHotspotGenes(mutationData: Mutation[]) {
+    const hotspotGenes = require("shared/static-data/hotspotGenes.json");
+    return mutationData.filter(
+        (m:Mutation) => !m.gene.hugoGeneSymbol || hotspotGenes.includes(m.gene.hugoGeneSymbol)
+    );
 }
 
 export function indexHotspotsData(hotspotData: MobxPromise<AggregatedHotspots[]>): IHotspotIndex|undefined

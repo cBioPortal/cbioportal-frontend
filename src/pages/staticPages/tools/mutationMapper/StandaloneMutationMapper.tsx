@@ -4,10 +4,15 @@ import StandaloneMutationTable from "./StandaloneMutationTable";
 import {
     IMutationMapperProps, default as MutationMapper
 } from "shared/components/mutationMapper/MutationMapper";
+import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 
 
+export interface IStandaloneMutationMapperProps extends IMutationMapperProps {
+    // add standalone view specific props here if needed
+    downloadDataFetcher?:MutationTableDownloadDataFetcher;
+}
 @observer
-export default class StandaloneMutationMapper extends MutationMapper<IMutationMapperProps>
+export default class StandaloneMutationMapper extends MutationMapper<IStandaloneMutationMapperProps>
 {
     constructor(props: IMutationMapperProps) {
         super(props);
@@ -20,11 +25,12 @@ export default class StandaloneMutationMapper extends MutationMapper<IMutationMa
                 uniqueSampleKeyToTumorType={this.props.store.uniqueSampleKeyToTumorType}
                 oncoKbAnnotatedGenes={this.props.store.oncoKbAnnotatedGenes}
                 indexedVariantAnnotations={this.props.store.indexedVariantAnnotations}
+                genomeNexusCache={this.props.genomeNexusCache}
                 oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
                 pubMedCache={this.props.pubMedCache}
                 dataStore={this.props.store.dataStore}
                 itemsLabelPlural={this.itemsLabelPlural}
-                downloadDataFetcher={this.props.store.downloadDataFetcher}
+                downloadDataFetcher={this.props.downloadDataFetcher}
                 myCancerGenomeData={this.props.myCancerGenomeData}
                 hotspotData={this.props.store.indexedHotspotData}
                 oncoKbData={this.props.store.oncoKbData}
