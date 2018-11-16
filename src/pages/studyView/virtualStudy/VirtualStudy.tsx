@@ -42,7 +42,7 @@ export class StudySummaryRecord extends React.Component<CancerStudy, {}> {
                             />
                             {this.props.name}
                         </span>
-                        <a target="_blank" href={`newstudy?id=${this.props.studyId}`}>
+                        <a target="_blank" href={`study?id=${this.props.studyId}`}>
                             <i className="fa fa-external-link" aria-hidden="true"></i>
                         </a>
                     </div>
@@ -110,7 +110,7 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
 
     @computed get virtualStudyUrl() {
         // TODO: update path name once fully refactored
-        return buildCBioPortalPageUrl({pathname:'newstudy', query: {id: this.virtualStudy.result ? this.virtualStudy.result.id : ''}});
+        return buildCBioPortalPageUrl({pathname:'study', query: {id: this.virtualStudy.result ? this.virtualStudy.result.id : ''}});
     }
 
     @autobind
