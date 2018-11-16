@@ -825,7 +825,7 @@ describe('oncoprint', function() {
             browser.click(profiledElements.button_selector);
             browser.waitForVisible(profiledElements.dropdown_selector, 1000); // wait for menu to appear
             browser.click(profiledElements.dropdown_selector + ' li:nth-child(3)'); // Click Remove Track
-            browser.pause(100); // give time to take effect
+            waitForOncoprint(2000);
 
             assert.equal(
                 browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
