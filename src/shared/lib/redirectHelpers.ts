@@ -61,9 +61,7 @@ export function handleCaseDO(){
 }
 
 export function handleStudyDO(){
-    const routingStore:ExtendedRouterStore = getBrowserWindow().routingStore;
-    const currentQuery = routingStore.location.query;
-    (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute(currentQuery, "/study", true);
+    (getBrowserWindow().routingStore as ExtendedRouterStore).updateRoute({}, "/study", false);
 }
 
 
