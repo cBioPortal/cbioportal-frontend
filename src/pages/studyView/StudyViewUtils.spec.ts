@@ -38,7 +38,7 @@ import {ClinicalAttribute, Gene, CancerStudy} from 'shared/api/generated/CBioPor
 import {
     ChartMeta,
     ChartMetaDataTypeEnum,
-    StudyViewFilterWithSampleIdentifierFilters
+    StudyViewFilterWithSampleIdentifierFilters, UniqueKey
 } from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
 import sinon from 'sinon';
@@ -1438,7 +1438,7 @@ describe('StudyViewUtils', () => {
 
         it('no filters selected', (done) => {
             getSamplesByExcludingFiltersOnChart(
-                'WITH_MUTATION_DATA',
+                UniqueKey.SAMPLES_PER_PATIENT,
                 emptyStudyViewFilter,
                 {},
                 [{ sampleId: 'sample1', studyId: 'study1' }],
@@ -1452,9 +1452,9 @@ describe('StudyViewUtils', () => {
 
         it('has filter for one chart', (done) => {
             getSamplesByExcludingFiltersOnChart(
-                'WITH_MUTATION_DATA',
+                UniqueKey.SAMPLES_PER_PATIENT,
                 emptyStudyViewFilter,
-                { 'WITH_MUTATION_DATA': [{ sampleId: 'sample1', studyId: 'study1' }], 'WITH_CNA_DATA': [{ sampleId: 'sample1', studyId: 'study1' }] },
+                { [UniqueKey.SAMPLES_PER_PATIENT]: [{ sampleId: 'sample1', studyId: 'study1' }] },
                 [{ sampleId: 'sample1', studyId: 'study1' }, { sampleId: 'sample2', studyId: 'study1' }],
                 ['study1']
             ).then(() => {
@@ -1465,7 +1465,7 @@ describe('StudyViewUtils', () => {
 
         it('no filters selected and queriedSampleIdentifiers is empty', (done) => {
             getSamplesByExcludingFiltersOnChart(
-                'WITH_MUTATION_DATA',
+                UniqueKey.SAMPLES_PER_PATIENT,
                 emptyStudyViewFilter,
                 {},
                 [],
@@ -1478,9 +1478,9 @@ describe('StudyViewUtils', () => {
 
         it('has filter for one chart and queriedSampleIdentifiers is empty', (done) => {
             getSamplesByExcludingFiltersOnChart(
-                'WITH_MUTATION_DATA',
+                UniqueKey.SAMPLES_PER_PATIENT,
                 emptyStudyViewFilter,
-                { 'WITH_MUTATION_DATA': [{ sampleId: 'sample1', studyId: 'study1' }], 'WITH_CNA_DATA': [{ sampleId: 'sample1', studyId: 'study1' }] },
+                { [UniqueKey.SAMPLES_PER_PATIENT]: [{ sampleId: 'sample1', studyId: 'study1' }] },
                 [],
                 ['study1']
             ).then(() => {
