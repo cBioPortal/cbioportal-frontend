@@ -221,7 +221,7 @@ export class StudyViewPageStore {
         reaction(()=>this.filters, ()=>this.clearAnalysisGroupsSettings()); // whenever any data filters change, reset survival analysis settings
     }
 
-    @observable private initialFilters: Partial<StudyViewFilter> = {};
+    @observable private initialFiltersQuery: Partial<StudyViewFilter> = {};
 
     @observable studyIds: string[] = [];
 
@@ -270,11 +270,12 @@ export class StudyViewPageStore {
                 this.studyIds = studyIds;
             }
         }
+
+        // We do not support studyIds in the query filters
         let filters: Partial<StudyViewFilter> = {};
         if (query.filters) {
             filters = JSON.parse(decodeURIComponent(query.filters)) as Partial<StudyViewFilter>;
         }
-        filters.studyIds = studyIds;
 
         if (_.isArray(filters.clinicalDataEqualityFilters) && filters.clinicalDataEqualityFilters.length > 0) {
             _.each(filters.clinicalDataEqualityFilters, (filter: ClinicalDataEqualityFilter) => {
@@ -332,7 +333,12 @@ export class StudyViewPageStore {
                 return acc;
             }, [] as CopyNumberGeneFilter[]);
         }
-        this.initialFilters = filters;
+        this.initialFiltersQuery = filters;
+    }
+
+    @computed
+    get initialFilters() {
+        return _.merge(this.initialFiltersQuery, {studyIds: this.queriedPhysicalStudyIds.result});
     }
 
     @computed
@@ -2582,7 +2588,7 @@ export class StudyViewPageStore {
     @autobind
     onSubmitQuery() {
         let formOps: { [id: string]: string } = {
-            cancer_study_list: this.studyIds.join(','),
+            cancer_study_list: this.queriedPhysicalStudyIds.result.join(','),
             tab_index: 'tab_visualize',
         }
 
