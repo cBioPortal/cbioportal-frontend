@@ -7,6 +7,7 @@ import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicato
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
+import GenomeNexusCache from "shared/cache/GenomeNexusCache";
 
 import {
     IMutationMapperProps, default as MutationMapper
@@ -24,6 +25,7 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps
     discreteCNACache?:DiscreteCNACache;
     cancerTypeCache?:CancerTypeCache;
     mutationCountCache?:MutationCountCache;
+    genomeNexusCache?:GenomeNexusCache;
     userEmailAddress:string;
 }
 
@@ -73,6 +75,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
                 oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
                 pubMedCache={this.props.pubMedCache}
                 mutationCountCache={this.props.mutationCountCache}
+                genomeNexusCache={this.props.genomeNexusCache}
                 dataStore={this.props.store.dataStore}
                 itemsLabelPlural={this.itemsLabelPlural}
                 downloadDataFetcher={this.props.store.downloadDataFetcher}
