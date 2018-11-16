@@ -16,37 +16,8 @@ import {OncoprintClinicalAttribute} from "../components/oncoprint/ResultsViewOnc
 export enum SpecialAttribute {
     MutationSpectrum = "NO_CONTEXT_MUTATION_SIGNATURE",
     StudyOfOrigin = "CANCER_STUDY",
-    Profiled = "PROFILED_IN",
+    ProfiledInPrefix = "PROFILED_IN",
     NumSamplesOfPatient = "NUM_SAMPLES_OF_PATIENT"
-}
-
-export const specialClinicalAttributes:OncoprintClinicalAttribute[] = [
-    {
-        clinicalAttributeId: SpecialAttribute.StudyOfOrigin,
-        datatype: "STRING",
-        description: "Study which the sample is a part of.",
-        displayName: "Study of origin",
-        patientAttribute: false,
-    },
-    {
-        clinicalAttributeId: SpecialAttribute.MutationSpectrum,
-        datatype: "COUNTS_MAP",
-        description: "Number of point mutations in the sample counted by different types of nucleotide changes.",
-        displayName: "Mutation spectrum",
-        patientAttribute: false,
-    },
-    {
-        clinicalAttributeId: SpecialAttribute.NumSamplesOfPatient,
-        datatype: "NUMBER",
-        description: "Number of queried samples in each patient.",
-        displayName: "# Samples of Patient",
-        patientAttribute: true
-    }
-];
-
-export function isSpecialAttribute(attr:{ clinicalAttributeId: string | SpecialAttribute }) {
-    return ([SpecialAttribute.MutationSpectrum, SpecialAttribute.StudyOfOrigin, SpecialAttribute.NumSamplesOfPatient].indexOf(attr.clinicalAttributeId as any) > -1) ||
-            attr.clinicalAttributeId.startsWith(SpecialAttribute.Profiled);
 }
 
 type OncoprintClinicalData = ClinicalData[]|MutationSpectrum[];
@@ -137,7 +108,7 @@ async function fetch(
             });
             break;
         default:
-            if (attribute.clinicalAttributeId.indexOf(SpecialAttribute.Profiled) === 0) {
+            if (attribute.clinicalAttributeId.indexOf(SpecialAttribute.ProfiledInPrefix) === 0) {
                 ret = makeProfiledData(attribute, samples, coverageInformation);
             } else {
                 ret = await client.fetchClinicalDataUsingPOST({

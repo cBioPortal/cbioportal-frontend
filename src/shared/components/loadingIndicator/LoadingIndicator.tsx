@@ -14,6 +14,7 @@ export interface ILoader {
     inline?: boolean;
     center?: boolean;
     size?: "big" | "small"
+    className?:string;
 }
 
 export default class LoadingIndicator extends React.Component<ILoader, {}> {
@@ -34,13 +35,14 @@ export default class LoadingIndicator extends React.Component<ILoader, {}> {
 
         const parentStyles = {
             [styles.centered]:this.props.center,
+            [styles["centered-with-children"]]:this.props.center && (React.Children.count(this.props.children) > 0),
             inlineBlock: this.props.inline
         };
 
         return (
             <If condition={this.props.isLoading}>
                 <Then>
-                    <div className={classNames(parentStyles)} style={this.props.style||{}}>
+                    <div className={classNames(parentStyles, this.props.className)} style={this.props.style||{}}>
                         <Spinner fadeIn="none"
                                  className={classNames(styles.color, spinnerStyles)}
                                  style={{display: 'inline-block', marginLeft: 10}}
