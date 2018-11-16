@@ -63,3 +63,7 @@ $selectHeightInner: $selectHeight - 2px;
     background: rgba(0, 0, 0, 1) !important;
     color: white !important;
 }
+
+.mfb-component__main-icon--active, .mfb-component__main-icon--resting {
+    line-height: 56px !important;
+}
