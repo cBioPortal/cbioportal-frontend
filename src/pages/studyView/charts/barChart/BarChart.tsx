@@ -20,6 +20,8 @@ import {adjustedLongestLabelLength} from "../../../../shared/lib/VictoryChartUti
 
 export interface IBarChartProps {
     data: DataBin[];
+    width: number;
+    height: number;
     filters: ClinicalDataIntervalFilterValue[];
     onUserSelection: (dataBins: DataBin[]) => void;
 }
@@ -131,7 +133,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
             } else {
                 return tick;
             }
-        })) * 7 : 20;
+        })) * 6 : 20;
     }
 
     public render() {
@@ -148,10 +150,10 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                     }
                     style={{
                         parent: {
-                            width: 380, height: 180
+                            width: this.props.width, height: this.props.height
                         }
                     }}
-                    height={150}
+                    height={this.props.height - 10 - this.bottomPadding}
                     padding={{left: 40, right: 20, top: 10, bottom: this.bottomPadding}}
                     theme={VICTORY_THEME}
                 >
@@ -174,7 +176,8 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                         style={{
                             data: {
                                 fill: (d: BarDatum) =>
-                                    this.isDataBinSelected(d.dataBin, this.props.filters) ? STUDY_VIEW_CONFIG.colors.theme.selectedGroup : STUDY_VIEW_CONFIG.colors.theme.unselectedGroup
+                                    (this.isDataBinSelected(d.dataBin, this.props.filters) || this.props.filters.length === 0) ?
+                                        STUDY_VIEW_CONFIG.colors.theme.primary : STUDY_VIEW_CONFIG.colors.na
                             }
                         }}
                         data={this.barData}

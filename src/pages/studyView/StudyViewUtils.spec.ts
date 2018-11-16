@@ -33,23 +33,18 @@ import {
     toFixedDigit,
     updateGeneQuery
 } from 'pages/studyView/StudyViewUtils';
-import {
-    ClinicalDataIntervalFilterValue,
-    DataBin,
-    Sample,
-    StudyViewFilter
-} from 'shared/api/generated/CBioPortalAPIInternal';
-import {CancerStudy, ClinicalAttribute, Gene} from 'shared/api/generated/CBioPortalAPI';
+import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue, Sample} from 'shared/api/generated/CBioPortalAPIInternal';
+import {ClinicalAttribute, Gene, CancerStudy} from 'shared/api/generated/CBioPortalAPI';
 import {
     ChartMeta,
     ChartMetaDataTypeEnum,
-    ChartTypeEnum,
     StudyViewFilterWithSampleIdentifierFilters
 } from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
 import sinon from 'sinon';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
-import {VirtualStudy} from 'shared/model/VirtualStudy';
+import { VirtualStudy } from 'shared/model/VirtualStudy';
+import {ChartTypeEnum} from "./StudyViewConfig";
 import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 
 describe('StudyViewUtils', () => {
@@ -1181,7 +1176,6 @@ describe('StudyViewUtils', () => {
         let visibleAttrs: ChartMeta[] = [];
         const clinicalAttr: ClinicalAttribute = {
             'clinicalAttributeId': 'test',
-            'count': 0,
             'datatype': 'STRING',
             'description': '',
             'displayName': '',

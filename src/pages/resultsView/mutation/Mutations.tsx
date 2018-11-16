@@ -99,6 +99,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                             pubMedCache={this.props.store.pubMedCache}
                             cancerTypeCache={this.props.store.cancerTypeCache}
                             mutationCountCache={this.props.store.mutationCountCache}
+                            genomeNexusCache={this.props.store.genomeNexusCache}
                             pdbHeaderCache={this.props.store.pdbHeaderCache}
                             myCancerGenomeData={this.props.store.myCancerGenomeData}
                             config={AppConfig.serverConfig}
