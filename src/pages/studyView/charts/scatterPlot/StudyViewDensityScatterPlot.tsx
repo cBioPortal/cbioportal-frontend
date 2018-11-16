@@ -29,6 +29,8 @@ export interface IStudyViewDensityScatterPlotProps {
     height:number;
     yBinsMin:number;
     data:DensityPlotBin[]
+    xBinSize:number;
+    yBinSize:number;
     onSelection:(bounds:RectangleBounds)=>void;
     selectionBounds?:RectangleBounds;
 
@@ -171,19 +173,9 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
                     yEnd = Math.max(yEnd, p.y);
                 }
             }
-            // add radius of circle to end to get proper bound
-            const xScale = this.xAxis.props.scale.x;
-            const yScale = this.yAxis.props.scale.y;
-            xEnd += invertIncreasingFunction(
-                inc=>xScale(inc)-xScale(0),
-                3,
-                [0, 1]
-            );
-            yEnd += invertIncreasingFunction(
-                inc=>yScale(0)-yScale(inc),
-                3,
-                [0, this.dataDomain.y[1]]
-            );
+            // add bin size to get proper bound
+            xEnd += this.props.xBinSize;
+            yEnd += this.props.yBinSize;
             this.props.onSelection({ xStart, xEnd, yStart, yEnd });
         }
     }

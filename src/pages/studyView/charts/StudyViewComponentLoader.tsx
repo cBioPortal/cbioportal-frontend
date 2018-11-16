@@ -10,6 +10,7 @@ import _ from "lodash";
 
 export interface StudyViewComponentLoaderProps {
     promises: MobxPromise<any> | (MobxPromise<any>[])
+    render:null|(()=>JSX.Element);
 }
 
 @observer
@@ -30,24 +31,16 @@ export class StudyViewComponentLoader extends React.Component<StudyViewComponent
         }
     }
 
-    @computed get noChildren() {
-        return !this.props.children || (React.Children.count(this.props.children) === 0);
-    }
-
     public render() {
         return (
             <div className={classNames(this.status === "pending" ? styles.studyViewAutoMargin : null, styles.studyViewLoadingIndicator)}>
-                <If condition={(this.status === "pending") || this.noChildren}>
+                {(this.status === "pending" || this.props.render === null) && (
                     <LoadingIndicator
                         isLoading={true}
                     />
-                </If>
-                <If condition={this.status === "error"}>
-                    <div>Error when loading data.</div>
-                </If>
-                <If condition={this.status === "complete"}>
-                    {this.props.children}
-                </If>
+                )}
+                {this.status === "error" && (<div>Error when loading data.</div>)}
+                {this.status === "complete" && this.props.render && this.props.render()}
             </div>
         );
     }
