@@ -12,6 +12,7 @@ import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicato
 import StructureViewerPanel from "shared/components/structureViewer/StructureViewerPanel";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
+import GenomeNexusCache from "shared/cache/GenomeNexusCache";
 import {IMyCancerGenomeData} from "shared/model/MyCancerGenome";
 import PdbHeaderCache from "shared/cache/PdbHeaderCache";
 import {DEFAULT_PROTEIN_IMPACT_TYPE_COLORS} from "shared/lib/MutationUtils";
@@ -33,6 +34,7 @@ export interface IMutationMapperProps {
     oncoKbEvidenceCache?:OncoKbEvidenceCache;
     pdbHeaderCache?: PdbHeaderCache;
     pubMedCache?:PubMedCache;
+    genomeNexusCache?:GenomeNexusCache;
     showDropDown?: boolean;
     showOnlyAnnotatedTranscriptsInDropdown?: boolean;
 }
