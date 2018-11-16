@@ -180,7 +180,7 @@
     "react-helmet": "^5.2.0",
     "react-if": "^2.1.0",
     "react-markdown": "^3.4.1",
-    "react-mfb": "github:zhx828/react-material-floating-button#ignore-href",
+    "react-mfb": "^0.6.0",
     "react-motion": "^0.4.7",
     "react-overlays": "0.7.4",
     "react-portal": "^3.2.0",
