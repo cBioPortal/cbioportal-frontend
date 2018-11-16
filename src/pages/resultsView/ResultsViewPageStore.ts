@@ -128,6 +128,7 @@ import {
 } from "./ResultsViewPageHelpers";
 import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
 import {isRecurrentHotspot} from "../../shared/lib/AnnotationUtils";
+import {makeProfiledInClinicalAttributes} from "../../shared/components/oncoprint/ResultsViewOncoprintUtils";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -542,13 +543,62 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly clinicalAttributes = remoteData({
-        await:()=>[this.studyIds],
+    readonly clinicalAttributes_profiledIn = remoteData<(ClinicalAttribute & {molecularProfileIds:string[]})[]>({
+        await:()=>[
+            this.samples,
+            this.coverageInformation,
+            this.molecularProfileIdToMolecularProfile,
+            this.selectedMolecularProfiles,
+            this.studyIds
+        ],
+        invoke:()=>{
+            return Promise.resolve(
+                makeProfiledInClinicalAttributes(
+                    this.coverageInformation.result!.samples,
+                    this.molecularProfileIdToMolecularProfile.result!,
+                    this.selectedMolecularProfiles.result!,
+                    this.studyIds.result!.length === 1
+                )
+            );
+        },
+    });
+
+    readonly clinicalAttributes = remoteData<(ClinicalAttribute & { molecularProfileIds?: string[] })[]>({
+        await:()=>[this.studyIds, this.clinicalAttributes_profiledIn],
         invoke:async()=>{
-            return client.fetchClinicalAttributesUsingPOST({
+            const serverAttributes = await client.fetchClinicalAttributesUsingPOST({
                 studyIds:this.studyIds.result!
             });
+            const specialAttributes = [
+                {
+                    clinicalAttributeId: SpecialAttribute.MutationSpectrum,
+                    datatype: "COUNTS_MAP",
+                    description: "Number of point mutations in the sample counted by different types of nucleotide changes.",
+                    displayName: "Mutation spectrum",
+                    patientAttribute: false,
+                    studyId: "",
+                    priority:"0" // TODO: change?
+                } as ClinicalAttribute
+            ];
+            if (this.studyIds.result!.length > 1) {
+                // if more than one study, add "Study of Origin" attribute
+                specialAttributes.push({
+                    clinicalAttributeId: SpecialAttribute.StudyOfOrigin,
+                    datatype: "STRING",
+                    description: "Study which the sample is a part of.",
+                    displayName: "Study of origin",
+                    patientAttribute: false,
+                    studyId: "",
+                    priority:"0" // TODO: change?
+                } as ClinicalAttribute);
+            }
+            return serverAttributes.concat(specialAttributes).concat(this.clinicalAttributes_profiledIn.result!);
         }
+    });
+
+    readonly clinicalAttributeIdToClinicalAttribute = remoteData({
+        await:()=>[this.clinicalAttributes],
+        invoke:()=>Promise.resolve(_.keyBy(this.clinicalAttributes.result!, "clinicalAttributeId"))
     });
 
     readonly clinicalAttributeIdToAvailableSampleCount = remoteData({
