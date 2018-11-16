@@ -5,11 +5,12 @@ import {
     IMutationTableProps, MutationTableColumnType, default as MutationTable
 } from "shared/components/mutationTable/MutationTable";
 import SampleManager from "../sampleManager";
-import {Mutation} from "shared/api/generated/CBioPortalAPI";
+import {Mutation, ClinicalData} from "shared/api/generated/CBioPortalAPI";
 import AlleleCountColumnFormatter from "shared/components/mutationTable/column/AlleleCountColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import {isUncalled} from "shared/lib/MutationUtils";
+import {floatValueIsNA} from "shared/lib/NumberUtils";
 import TumorAlleleFreqColumnFormatter from "shared/components/mutationTable/column/TumorAlleleFreqColumnFormatter";
 
 export interface IPatientViewMutationTableProps extends IMutationTableProps {
@@ -49,6 +50,8 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             MutationTableColumnType.CHROMOSOME,
             MutationTableColumnType.PROTEIN_CHANGE,
             MutationTableColumnType.MUTATION_TYPE,
+            MutationTableColumnType.CLONAL,
+            MutationTableColumnType.MUTANT_COPIES,
             MutationTableColumnType.FUNCTIONAL_IMPACT,
             MutationTableColumnType.COSMIC,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
@@ -122,6 +125,8 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.MUTATION_STATUS].order = 90;
         this._columns[MutationTableColumnType.VALIDATION_STATUS].order = 100;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 110;
+        this._columns[MutationTableColumnType.CLONAL].order = 115;
+        this._columns[MutationTableColumnType.MUTANT_COPIES].order = 117;
         this._columns[MutationTableColumnType.CENTER].order = 120;
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ].order = 130;
         this._columns[MutationTableColumnType.VAR_READS].order = 140;
@@ -140,12 +145,48 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         // only hide tumor column if there is one sample and no uncalled
         // mutations (there is no information added in that case by the sample
         // label)
+        this._columns[MutationTableColumnType.CLONAL].shouldExclude = ()=>{
+            return !this.hasCcfMCopies;
+        };
+
+        this._columns[MutationTableColumnType.MUTANT_COPIES].shouldExclude = ()=>{
+            return !this.hasTotalCopyNumber;
+        };
+
         this._columns[MutationTableColumnType.TUMORS].shouldExclude = ()=>{
             return this.getSamples().length < 2 && !this.hasUncalledMutations;
         };
         this._columns[MutationTableColumnType.COPY_NUM].shouldExclude = ()=>{
             return (!this.props.discreteCNAMolecularProfileId) || (this.getSamples().length > 1);
         };
+    }
+
+    @computed private get hasCcfMCopies():boolean {
+        let data:Mutation[][] = [];
+        if (this.props.data) {
+            data = this.props.data;
+        } else if (this.props.dataStore) {
+            data = this.props.dataStore.allData;
+        }
+        return data.some((row:Mutation[]) => {
+            return row.some((m:Mutation) => {
+                return !floatValueIsNA(m.ccfMCopies);
+            });
+        });
+    }
+
+    @computed private get hasTotalCopyNumber():boolean {
+        let data:Mutation[][] = [];
+        if (this.props.data) {
+            data = this.props.data;
+        } else if (this.props.dataStore) {
+            data = this.props.dataStore.allData;
+        }
+        return data.some((row:Mutation[]) => {
+            return row.some((m:Mutation) => {
+                return (m.totalCopyNumber !== -1);
+            });
+        });
     }
 
     @computed private get hasUncalledMutations():boolean {

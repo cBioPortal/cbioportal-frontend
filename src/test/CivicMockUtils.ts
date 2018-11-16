@@ -88,7 +88,9 @@ export function getMutationData(): Mutation
        proteinPosStart: 545, referenceAllele: "G", refseqMrnaId: "NM_006218.2", sampleId: "NCIH508_LARGE_INTESTINE", patientId: "PATIENT1",
        studyId: "STUDY1", uniquePatientKey: "", uniqueSampleKey: "", startPosition: 178936091, tumorAltCount: -1, tumorRefCount: -1,
        validationStatus: "NA", variantAllele: "A", variantType: "SNP", aminoAcidChange: "", driverFilter: "", driverFilterAnnotation: "", driverTiersFilter: "",
-       driverTiersFilterAnnotation: "", /*wildType:false,
+       driverTiersFilterAnnotation: "", ccfMCopies: -1, ccfMCopiesEm: -1, ccfMCopiesLower: -1, ccfMCopiesLowerEm: -1, ccfMCopiesProb90: -1, 
+       ccfMCopiesProb90Em: -1, ccfMCopiesProb95: -1, ccfMCopiesProb95Em: -1, ccfMCopiesUpper: -1, ccfMCopiesUpperEm: -1, cellularFraction: -1, cellularFractionEm: -1, 
+       dipLogR: -1, minorCopyNumber: -1, minorCopyNumberEm: -1, ploidy: -1, purity: -1, totalCopyNumber: -1, totalCopyNumberEm: -1, /*wildType:false, 
         sequenced:true*/
    };
 }

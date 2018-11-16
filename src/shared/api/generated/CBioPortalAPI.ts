@@ -300,6 +300,44 @@ export type Mutation = {
 
         'center': string
 
+        'ccfMCopies': number
+
+        'ccfMCopiesEm': number
+
+        'ccfMCopiesLower': number
+
+        'ccfMCopiesLowerEm': number
+
+        'ccfMCopiesProb90': number
+
+        'ccfMCopiesProb90Em': number
+
+        'ccfMCopiesProb95': number
+
+        'ccfMCopiesProb95Em': number
+
+        'ccfMCopiesUpper': number
+
+        'ccfMCopiesUpperEm': number
+
+        'cellularFraction': number
+
+        'cellularFractionEm': number
+
+        'dipLogR': number
+
+        'minorCopyNumber': number
+
+        'minorCopyNumberEm': number
+
+        'ploidy': number
+
+        'purity': number
+
+        'totalCopyNumber': number
+
+        'totalCopyNumberEm': number
+
         'driverFilter': string
 
         'driverFilterAnnotation': string

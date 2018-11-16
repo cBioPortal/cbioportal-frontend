@@ -4,6 +4,7 @@ import $ from 'jquery';
 import {observer, inject, Observer} from "mobx-react";
 import {reaction, computed, observable, runInAction} from "mobx";
 import {ResultsViewPageStore, SamplesSpecificationElement} from "./ResultsViewPageStore";
+import {PatientViewPageStore} from "../../pages/patientView/clinicalInformation/PatientViewPageStore";
 import CancerSummaryContainer from "pages/resultsView/cancerSummary/CancerSummaryContainer";
 import Mutations from "./mutation/Mutations";
 import MutualExclusivityTab from "./mutualExclusivity/MutualExclusivityTab";
@@ -38,10 +39,13 @@ import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
 import {AppStore} from "../../AppStore";
 import {bind} from "bind-decorator";
 
+const patientViewPageStore = new PatientViewPageStore();
+const win:any = (window as any);
+win.patientViewPageStore = patientViewPageStore;
+
 function initStore() {
 
     const resultsViewPageStore = new ResultsViewPageStore();
-
     resultsViewPageStore.tabId = getTabId(getBrowserWindow().globalStores.routing.location.pathname);
 
     let lastQuery:any;
@@ -250,7 +254,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                 id:ResultsViewTab.MUTATIONS,
                 getTab: () => {
                     return <MSKTab key={3} id={ResultsViewTab.MUTATIONS} linkText="Mutations">
-                        <Mutations store={store} appStore={ this.props.appStore } />
+                        <Mutations store={store} appStore={ this.props.appStore }/>
                     </MSKTab>
                 }
             },
