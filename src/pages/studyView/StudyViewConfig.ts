@@ -90,7 +90,7 @@ const studyViewFrontEnd = {
         "MUTATION_COUNT_CNA_FRACTION": 200,
         "MUTATED_GENES_TABLE": 90,
         "CNA_GENES_TABLE": 80,
-        "STUDY_ID": 70,
+        "CANCER_STUDIES": 70,
         "SEQUENCED": 60,
         "HAS_CNA_DATA": 50,
         "SAMPLE_COUNT_PATIENT": 40,
