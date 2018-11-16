@@ -53,6 +53,7 @@ export interface ISurvivalChartProps {
     legendLocation?:LegendLocation;
     showLogRankPVal?:boolean;
     showDownloadButtons?: boolean;
+    disableZoom?: boolean;
     styleOpts?: any; // see victory styles, and styleOptsDefaultProps for examples
     className?: string;
 }
@@ -197,6 +198,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
     public static defaultProps: Partial<ISurvivalChartProps> = {
         showTable: true,
+        disableZoom: false,
         legendLocation: LegendLocation.CHART,
         showLogRankPVal: true,
         showDownloadButtons: true,
@@ -374,6 +376,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                 }
 
                 <VictoryChart containerComponent={<VictoryZoomContainer responsive={false}
+                                                                        disable={this.props.disableZoom}
                                                                         onZoomDomainChange={_.debounce((domain: any) => {
                                                                             this.scatterFilter = domain as SurvivalPlotFilters;
                                                                         }, 1000)}
