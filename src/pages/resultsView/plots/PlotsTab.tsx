@@ -330,7 +330,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             _dataType: undefined,
             _dataSourceId: undefined,
             _mutationCountBy: undefined,
-            _logScale: true
+            _logScale: false
         });
     }
 

@@ -541,7 +541,7 @@ describe('oncoprint', function() {
             cbioportalCheckbox = mutationColorMenuDropdown + ' input[data-test="annotateCBioPortalCount"]';
             cosmicCheckbox = mutationColorMenuDropdown + ' input[data-test="annotateCOSMICCount"]';
         });
-        it("annotates all types of mutations with cbioportal count and cosmic", ()=>{
+        it.skip("annotates all types of mutations with cbioportal count and cosmic", ()=>{
             browser.moveToObject("div.oncoprint__controls");
             browser.waitForVisible(mutationColorMenuButton);
             browser.click(mutationColorMenuButton);
