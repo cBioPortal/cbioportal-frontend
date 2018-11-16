@@ -156,8 +156,6 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         this.mouseIsDown = false;
     }
 
-    private size = 3;
-
     @autobind
     private onSelection(scatters:any, bounds:any) {
         if (this.xAxis && this.yAxis) {
@@ -257,8 +255,9 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
             colorCoordMax,
             countToSelectedColor:(count:number)=>colorCoordToColor(countToColorCoord(count)),
             countToUnselectedColor:(count:number)=>{
-                const val = Math.round(countToColorCoord(count)*255);
-                return `rgba(${val},${val},${val},0.3)`;
+                return "rgb(200,200,200)";
+                /*const val = Math.round(countToColorCoord(count)*255);
+                return `rgba(${val},${val},${val},0.3)`;&*/
             },
             colorCoordToColor,
             countMax:max,
