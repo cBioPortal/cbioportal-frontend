@@ -18,7 +18,7 @@ import AppConfig from 'appConfig';
 import {gsUploadByGet} from "../../api/gsuploadwindow";
 import {ComponentGetsStoreContext} from "../../lib/ContextUtils";
 import URL from 'url';
-import {buildCBioPortalPageUrl, openStudySummaryFormSubmit} from "../../api/urls";
+import {buildCBioPortalPageUrl, redirectToStudyView} from "../../api/urls";
 import StudyListLogic from "./StudyListLogic";
 import {QuerySession} from "../../lib/QuerySession";
 import {stringListToIndexSet, stringListToSet} from "../../lib/StringUtils";
@@ -1758,7 +1758,7 @@ export class QueryStore
 			return;
 		}
 
-		openStudySummaryFormSubmit(this.selectableSelectedStudyIds);
+		redirectToStudyView(this.selectableSelectedStudyIds);
 	}
 
 	@cached get molecularProfilesInStudyCache() {
