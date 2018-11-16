@@ -1,6 +1,6 @@
 import {IHotspotIndex} from "shared/model/CancerHotspots";
 import { assert } from 'chai';
-import {indexHotspots, isHotspot} from "./CancerHotspotsUtils";
+import {indexHotspots, isHotspot, filterMutationsOnNonHotspotGenes} from "./CancerHotspotsUtils";
 import {Mutation} from "../api/generated/CBioPortalAPI";
 
 describe('CancerHotspotsUtils', () => {
@@ -119,6 +119,11 @@ describe('CancerHotspotsUtils', () => {
 
         assert.equal(hotspotIndex["4,111,111,T,C"].hotspots.length, 1,
             "Only one SMURF1 3d hotspot mutation should be indexed.");
+    });
+
+    it('filters mutations on non hotspot genes', () => {
+        const mutations = [{gene:{hugoGeneSymbol:"TP53"}},{gene:{hugoGeneSymbol:"CLEC9A"}}] as Mutation[];
+        assert.isTrue(filterMutationsOnNonHotspotGenes(mutations).length === 1);
     });
 
     it("isHotspot works correctly", ()=>{
