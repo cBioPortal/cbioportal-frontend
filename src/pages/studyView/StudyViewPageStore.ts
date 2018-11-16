@@ -2275,7 +2275,7 @@ export class StudyViewPageStore {
         default: {}
     });
 
-    readonly mutationCountVsCNADensityData = remoteData<DensityPlotBin[]>({
+    readonly mutationCountVsCNADensityData = remoteData<{bins:DensityPlotBin[], xBinSize:number, yBinSize:number}>({
         await:()=>[this.clinicalAttributes],
         invoke:async()=>{
             if (!!this.clinicalAttributes.result!.find(a=>a.clinicalAttributeId === MUTATION_COUNT) &&
@@ -2290,17 +2290,28 @@ export class StudyViewPageStore {
                 const studyViewFilter = Object.assign({}, this.filters);
                 delete studyViewFilter.mutationCountVsCNASelection;
 
-                return (await internalClient.fetchClinicalDataDensityPlotUsingPOST({
+                const xAxisBinCount = 50;
+                const bins = (await internalClient.fetchClinicalDataDensityPlotUsingPOST({
                     xAxisAttributeId: FRACTION_GENOME_ALTERED,
                     yAxisAttributeId: MUTATION_COUNT,
                     xAxisStart:0, xAxisEnd:1, // FGA always goes 0 to 1
                     yAxisStart:0, // mutation always starts at 0
+                    xAxisBinCount,
                     yAxisBinCount,
                     clinicalDataType: "SAMPLE",
                     studyViewFilter
                 })).filter(bin=>(bin.count > 0));// only show points for bins with stuff in them
+                const xBinSize = 1/xAxisBinCount;
+                const yBinSize = Math.max(...bins.map(bin=>bin.binY)) / (yAxisBinCount - 1);
+                return {
+                    bins, xBinSize, yBinSize
+                };
             } else {
-                return [];
+                return {
+                    bins: [],
+                    xBinSize:-1,
+                    yBinSize:-1
+                };
             }
         }
     });
