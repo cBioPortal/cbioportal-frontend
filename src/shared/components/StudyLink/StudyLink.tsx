@@ -1,10 +1,10 @@
 import * as React from "react";
 import {CancerStudy} from "../../api/generated/CBioPortalAPI";
-import {buildCBioLink} from "../../api/urls";
+import {Link} from "react-router";
 
-export class StudyLink extends React.Component<{ study: CancerStudy, onClick?: () => void, href?:string }, {}> {
+export class StudyLink extends React.Component<{ studyId: string, className?: string }, {}> {
     render() {
-        const url = this.props.href || `study?id=${this.props.study.studyId}`;
-        return (<a href={buildCBioLink(url)} target="_blank" style={{cursor:'pointer'}} onClick={this.props.onClick || (()=>{})}>{this.props.study.name}</a>);
+        return <Link to={`/study?id=${this.props.studyId}`}
+                     className={this.props.className}>{this.props.children}</Link>
     }
 }

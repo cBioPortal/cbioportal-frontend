@@ -2,7 +2,7 @@ import React from 'react';
 import { Route, Redirect, IndexRoute } from 'react-router';
 import { inject } from 'mobx-react';
 import Container from 'appShell/App/Container';
-import {handleIndexDO, handleCaseDO, handleLegacySubmission, restoreRouteAfterRedirect} from './shared/lib/redirectHelpers';
+import {handleIndexDO, handleCaseDO, handleLegacySubmission, restoreRouteAfterRedirect, handleStudyDO} from './shared/lib/redirectHelpers';
 import AppConfig from "appConfig";
 import PageNotFound from './shared/components/pageNotFound/PageNotFound';
 
@@ -76,10 +76,9 @@ export const makeRoutes = (routing) => {
 
                 <Route path="/results/legacy_submission" onEnter={handleLegacySubmission} component={getBlankPage()} />
 
-                <Route path="/results(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(ResultsViewPage)} />
+                <Route path="/results(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(ResultsViewPage)} />
                 <Route path="/patient(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(PatientViewPage)}/>
-                <Route path="/newstudy" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(StudyViewPage)} />
-                <Route path="/study" component={getBlankPage()} />
+                <Route path="/study" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(StudyViewPage)} />
 
                 <Route path="/mutation_mapper" getComponent={lazyLoadComponent(MutationMapperTool)} />
 
@@ -97,6 +96,7 @@ export const makeRoutes = (routing) => {
 
                 <Route path="/case.do" onEnter={handleCaseDO} component={getBlankPage()} />
                 <Route path="/index.do" onEnter={handleIndexDO} component={getBlankPage()} />
+                <Route path="/study.do" onEnter={handleStudyDO} component={getBlankPage()} />
 
                  <Redirect from={"/mutation_mapper.jsp"} to={"/mutation_mapper"}/>
                 <Redirect from={"/data_sets.jsp"} to={"/datasets"}/>
