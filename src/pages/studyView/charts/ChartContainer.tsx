@@ -239,7 +239,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     get chart() {
         switch (this.chartType) {
             case ChartTypeEnum.PIE_CHART: {
-                return (<PieChart
+                return ()=>(<PieChart
                     width={getWidthByDimension(this.props.chartMeta.dimension)}
                     height={getHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
                     ref={this.handlers.ref}
@@ -252,7 +252,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 />);
             }
             case ChartTypeEnum.BAR_CHART: {
-                return (
+                return ()=>(
                     <BarChart
                         width={getWidthByDimension(this.props.chartMeta.dimension)}
                         height={getHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
@@ -264,7 +264,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 );
             }
             case ChartTypeEnum.TABLE: {
-                return (<ClinicalTable
+                return ()=>(<ClinicalTable
                     data={this.props.promise.result}
                     width={getWidthByDimension(this.props.chartMeta.dimension)}
                     height={getTableHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
@@ -274,7 +274,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 />);
             }
             case ChartTypeEnum.MUTATED_GENES_TABLE: {
-                return (
+                return ()=>(
                     <MutatedGenesTable
                         promise={this.props.promise}
                         width={getWidthByDimension(this.props.chartMeta.dimension)}
@@ -288,7 +288,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 );
             }
             case ChartTypeEnum.CNA_GENES_TABLE: {
-                return (
+                return ()=>(
                     <CNAGenesTable
                         promise={this.props.promise}
                         width={getWidthByDimension(this.props.chartMeta.dimension)}
@@ -303,11 +303,12 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }
             case ChartTypeEnum.SURVIVAL: {
                 if (this.survivalChartData) {
-                    return (
+                    const data = this.survivalChartData;
+                    return ()=>(
                         <SurvivalChart ref={this.handlers.ref}
-                                       patientSurvivals={this.survivalChartData.patientSurvivals}
-                                       patientToAnalysisGroup={this.survivalChartData.patientToAnalysisGroup}
-                                       analysisGroups={this.survivalChartData.analysisGroups}
+                                       patientSurvivals={data.patientSurvivals}
+                                       patientToAnalysisGroup={data.patientToAnalysisGroup}
+                                       analysisGroups={data.analysisGroups}
                                        analysisClinicalAttribute={this.props.analysisGroupsSettings.clinicalAttribute}
                                        naPatientsHiddenInSurvival={this.naPatientsHiddenInSurvival}
                                        toggleSurvivalHideNAPatients={this.toggleSurvivalHideNAPatients}
@@ -322,6 +323,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                        xLabelWithEventTooltip="Time of death"
                                        xLabelWithoutEventTooltip="Time of last observation"
                                        showDownloadButtons={false}
+                                       disableZoom={true}
                                        showTable={false}
                                        styleOpts={{
                                            width: getWidthByDimension(this.props.chartMeta.dimension),
@@ -346,7 +348,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 }
             }
             case ChartTypeEnum.SCATTER: {
-                return (
+                return ()=>(
                     <div style={{overflow:"hidden", height:getHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}}>
                         {/* have to do all this weird positioning to decrease gap btwn chart and title, bc I cant do it from within Victory */}
                         {/* overflow: "hidden" because otherwise the large SVG (I have to make it larger to make the plot large enough to
@@ -359,7 +361,9 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                 yBinsMin={MutationCountVsCnaYBinsMin}
                                 onSelection={this.props.onValueSelection}
                                 selectionBounds={(this.props.filters && this.props.filters.length > 0) ? this.props.filters[0] : undefined}
-                                data={this.props.promise.result}
+                                data={this.props.promise.result.bins}
+                                xBinSize={this.props.promise.result.xBinSize}
+                                yBinSize={this.props.promise.result.yBinSize}
                                 isLoading={this.props.promise.isPending}
 
                                 axisLabelX="Fraction of copy number altered genome"
@@ -418,9 +422,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     download={this.downloadTypes}
                     setAnalysisGroups={this.setAnalysisGroups}
                 />
-                <StudyViewComponentLoader promises={this.loadingPromises}>
-                    {this.chart}
-                </StudyViewComponentLoader>
+                <StudyViewComponentLoader promises={this.loadingPromises} render={this.chart}/>
             </div>
         );
     }

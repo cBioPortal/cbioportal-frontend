@@ -41,7 +41,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
 
     private get singleStudyUI() {
         return <div>
-            <h4 style={{fontSize:14}}><StudyLink study={this.props.store.queriedStudies.result[0]}/></h4>
+            <h4 style={{fontSize:14}}><StudyLink studyId={this.props.store.queriedStudies.result[0].studyId}/></h4>
             {(this.props.store.sampleLists.result!.length > 0) && (<span>
                         {this.props.store.sampleLists.result![0].name}&nbsp;
                 (<strong>{this.props.store.sampleLists.result![0].sampleCount}</strong> samples)
@@ -68,12 +68,9 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
     private get multipleStudyUI() {
         return <div>
             <h4>
-                <a
-                    href={`study?id=${this.props.store.queriedStudies.result.map(study => study.studyId).join(',')}`}
-                    target="_blank"
-                >
+                <StudyLink studyId={this.props.store.queriedStudies.result.map(study => study.studyId).join(',')}>
                     {`Combined Study (${this.props.store.samples.result.length} samples)`}
-                </a>
+                </StudyLink>
             </h4>
             <span>
                 Querying {this.props.store.samples.result.length} samples in {this.props.store.queriedStudies.result.length} studies
@@ -94,7 +91,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                 <ul className="list-unstyled" style={{marginBottom:0}}>
                 {
                     this.props.store.queriedStudies.result.map((study:CancerStudy)=>{
-                        return <li><StudyLink href={`study?id=${study.studyId}`} study={study} /></li>
+                        return <li><StudyLink studyId={study.studyId}/></li>
                     })
                 }
                 </ul>

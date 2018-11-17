@@ -18,6 +18,7 @@ import AddChartByType from "./addChartByType/AddChartByType";
 import {remoteData} from "../../../shared/api/remoteData";
 import CustomCaseSelection from "./customCaseSelection/CustomCaseSelection";
 import {calculateClinicalDataCountFrequency, getOptionsByChartMetaDataType} from "../StudyViewUtils";
+import $ from 'jquery';
 
 export interface IAddChartButtonProps {
     store: StudyViewPageStore
@@ -128,6 +129,17 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
         }
     }
 
+
+    componentDidMount() {
+
+        // Register main button onClick event
+        // The implementation of the library forbids the onClick event binding.
+        $('.mfb-component__button--main').click((event:any) => {
+            event.preventDefault();
+            this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.ADD_CLINICAL);
+        })
+    }
+
     render() {
         return (
             <div className={styles.addChart}>
@@ -137,9 +149,6 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
                         iconActive={classnames("fa fa-lg", styles.faCharC)}
                         className={styles.child}
                         label={this.addClinicalDataChartTitle}
-                        onClick={() =>
-                            this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.ADD_CLINICAL)
-                        }
                     >
                     </MainButton>
                     <ChildButton
