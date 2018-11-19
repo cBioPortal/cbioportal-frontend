@@ -112,7 +112,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                     disabled={this.isDisabled(data.entrezGeneId, data.alteration)}
                     onChange={event => this.togglePreSelectRow(data.entrezGeneId, data.alteration)}
                 >
-                    {data.countByEntity}
+                    {data.countByEntity.toLocaleString()}
                 </LabeledCheckbox>,
             sortBy: (data: CopyNumberCountByGene) => data.countByEntity,
             defaultSortDirection: 'desc' as 'desc',
