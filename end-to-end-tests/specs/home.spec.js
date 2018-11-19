@@ -541,15 +541,18 @@ describe('oncoprint', function() {
             cbioportalCheckbox = mutationColorMenuDropdown + ' input[data-test="annotateCBioPortalCount"]';
             cosmicCheckbox = mutationColorMenuDropdown + ' input[data-test="annotateCOSMICCount"]';
         });
-        it.skip("annotates all types of mutations with cbioportal count and cosmic", ()=>{
+        it("annotates all types of mutations with cbioportal count and cosmic", ()=>{
             browser.moveToObject("div.oncoprint__controls");
             browser.waitForVisible(mutationColorMenuButton);
             browser.click(mutationColorMenuButton);
             browser.waitForVisible(mutationColorMenuDropdown, 2000);
             // select only mutation coloring by cbioportal count
             browser.click(cbioportalCheckbox);
+            waitForOncoprint(2000);
             browser.click(oncoKbCheckbox);
+            waitForOncoprint(2000);
             browser.click(hotspotsCheckbox);
+            waitForOncoprint(2000);
             // set threshold 1
             browser.execute(function() { resultsViewOncoprint.setAnnotateCBioPortalInputValue("1"); });
             browser.pause(100); // give time to take effect
@@ -561,7 +564,9 @@ describe('oncoprint', function() {
 
             // select only mutation coloring by cosmic count
             browser.click(cosmicCheckbox);
+            waitForOncoprint(2000);
             browser.click(cbioportalCheckbox);
+            waitForOncoprint(2000);
             // set threshold 1
             browser.execute(function() { resultsViewOncoprint.setAnnotateCOSMICInputValue("1"); });
             browser.pause(100); // give time to take effect
@@ -820,7 +825,7 @@ describe('oncoprint', function() {
             browser.click(profiledElements.button_selector);
             browser.waitForVisible(profiledElements.dropdown_selector, 1000); // wait for menu to appear
             browser.click(profiledElements.dropdown_selector + ' li:nth-child(3)'); // Click Remove Track
-            browser.pause(100); // give time to take effect
+            waitForOncoprint(2000);
 
             assert.equal(
                 browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
