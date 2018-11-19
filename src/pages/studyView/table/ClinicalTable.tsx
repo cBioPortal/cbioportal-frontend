@@ -69,7 +69,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
             <LabeledCheckbox
                 checked={_.includes(this.props.filters, data.value)}
                 onChange={event => this.onUserSelection(data.value)}>
-                {data.count}
+                {data.count.toLocaleString()}
             </LabeledCheckbox>,
         filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => (d.count.toString().indexOf(f) > -1),
         sortBy: (d: ClinicalDataCountWithColor) => d.count,
