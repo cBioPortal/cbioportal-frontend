@@ -81,6 +81,9 @@ export function makeClinicalTrackTooltip(track:ClinicalTrackSpec, link_id?:boole
                 ret += track.label+': <b>' + displayVal + '</b><br>';
             }
         }
+        if (d.na && track.na_tooltip_value) {
+            ret += `${track.label}: <b>${track.na_tooltip_value}</b><br/>`;
+        }
         ret += '<span>'+(d.sample ? "Sample" : "Patient")+": ";
         ret += (link_id ? (d.sample? sampleViewAnchorTag(d.study_id, d.sample) : patientViewAnchorTag(d.study_id, d.patient))
             : (d.sample ? d.sample : d.patient));
