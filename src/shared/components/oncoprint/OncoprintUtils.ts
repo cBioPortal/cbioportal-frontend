@@ -38,7 +38,7 @@ import {
     Patient,
     Sample
 } from "../../api/generated/CBioPortalAPI";
-import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
+import {clinicalAttributeIsPROFILEDIN, SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
 
 interface IGenesetExpansionMap {
         [genesetTrackKey: string]: IGeneHeatmapTrackSpec[];
@@ -428,6 +428,10 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
                     ),
                     altered_uids
                 };
+                if (clinicalAttributeIsPROFILEDIN(attribute)) {
+                    // "Profiled-In" clinical attribute: show "No" on N/A items
+                    ret.na_tooltip_value = "No";
+                }
                 if (attribute.datatype === "NUMBER") {
                     ret.datatype = "number";
                     if (attribute.clinicalAttributeId === "FRACTION_GENOME_ALTERED") {

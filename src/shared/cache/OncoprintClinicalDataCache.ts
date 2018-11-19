@@ -19,6 +19,10 @@ export enum SpecialAttribute {
     ProfiledInPrefix = "PROFILED_IN"
 }
 
+export function clinicalAttributeIsPROFILEDIN(attribute:{clinicalAttributeId:string|SpecialAttribute}) {
+    return attribute.clinicalAttributeId.startsWith(SpecialAttribute.ProfiledInPrefix);
+}
+
 type OncoprintClinicalData = ClinicalData[]|MutationSpectrum[];
 
 function makeProfiledData(
