@@ -9,6 +9,10 @@ import {MUTATION_STATUS_GERMLINE, MOLECULAR_PROFILE_UNCALLED_MUTATIONS_SUFFIX} f
 import {findFirstMostCommonElt} from "./findFirstMostCommonElt";
 import {toSampleUuid} from "./UuidUtils";
 import {stringListToSet} from "./StringUtils";
+import {
+    MUT_COLOR_INFRAME, MUT_COLOR_MISSENSE, MUT_COLOR_OTHER,
+    MUT_COLOR_TRUNC
+} from "../components/oncoprint/geneticrules";
 
 export interface IProteinImpactTypeColors
 {
@@ -19,10 +23,10 @@ export interface IProteinImpactTypeColors
 }
 
 export const DEFAULT_PROTEIN_IMPACT_TYPE_COLORS: IProteinImpactTypeColors = {
-    missenseColor: "#008000",
-    inframeColor: "#8B4513",
-    truncatingColor: "#000000",
-    otherColor: "#8B00C9"
+    missenseColor: MUT_COLOR_MISSENSE,
+    inframeColor: MUT_COLOR_INFRAME,
+    truncatingColor: MUT_COLOR_TRUNC,
+    otherColor: MUT_COLOR_OTHER
 };
 
 export const MUTATION_TYPE_PRIORITY: {[canonicalMutationType: string]: number} = {
@@ -130,6 +134,16 @@ export function countDuplicateMutations(groupedMutations: {[key: string]: Mutati
 export function countUniqueMutations(mutations: Mutation[]): number
 {
     return Object.keys(groupMutationsByGeneAndPatientAndProteinChange(mutations)).length;
+}
+
+export function countMutationsByProteinChange(mutations: Mutation[]): {proteinChange: string, count: number}[]
+{
+    const mutationsByProteinChange = _.groupBy(mutations, "proteinChange");
+    const mutationCountsByProteinChange = _.map(mutationsByProteinChange,
+        mutations => ({proteinChange: mutations[0].proteinChange, count: mutations.length}));
+
+    // order by count descending, and then protein change ascending
+    return _.orderBy(mutationCountsByProteinChange, ["count", "proteinChange"], ["desc", "asc"]);
 }
 
 /**
@@ -280,8 +294,8 @@ export function uniqueGenomicLocations(mutations: Mutation[]): GenomicLocation[]
 {
     const genomicLocationMap: {[key: string]: GenomicLocation} = {};
 
-    mutations.map((mutaiton: Mutation) => {
-        const genomicLocation: GenomicLocation|undefined = extractGenomicLocation(mutaiton);
+    mutations.map((mutation: Mutation) => {
+        const genomicLocation: GenomicLocation|undefined = extractGenomicLocation(mutation);
 
         if (genomicLocation) {
             genomicLocationMap[genomicLocationString(genomicLocation)] = genomicLocation;

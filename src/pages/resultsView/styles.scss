@@ -5,11 +5,11 @@
   }
 }
 
-#oncoprint {
+.oncoprintContainer {
   border: none !important;
   padding: 0 !important;
 
-  #oncoprint-inner {
+  #oncoprintDiv {
 
     .oncoprintjs__track_options__toggle_btn_img {
       border-width:0px !important;
@@ -41,23 +41,9 @@
   }
 }
 
-.oncoprintLoadingIndicator {
-  height: 200px;
-  border-radius: 4px;
-  background-color: #eee;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-
-  div {
-    margin-bottom: 5px;
-  }
-
-}
-
 .oncoprintContainer {
   opacity: 0;
+  max-width: 95vw;
   &.fadeIn {
     transition: opacity .75s ease-in-out;
     opacity:1;

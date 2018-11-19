@@ -3,6 +3,7 @@ declare module '*.scss';
 declare module '*.json';
 
 // these packages are missing typings
+declare module 'object-sizeof';
 declare module 'save-svg-as-png'
 declare module 'react-file-download';
 declare module 'react-select-checked';
@@ -33,4 +34,6 @@ declare module 'universal-ga';
 declare module 'mixpanel-browser';
 declare module 'measure-text';
 declare module 'contrast';
-declare module 'venn.js';
+declare module 'react-spinkit';
+declare module 'react-portal';
+declare module 'little-loader';

@@ -1,0 +1,36 @@
+.centered {
+  position:absolute;
+  top: 100px;
+  left:50%;
+  z-index:10000;
+  text-align:center;
+  transform: translateX(-50%);
+}
+
+.centered-with-children {
+  // fixes blurry text bug to have an even # of pixels in width
+  width:600px;
+}
+
+.color {
+  > div {
+    color:$brand-primary !important;
+  }
+}
+
+.small {
+  > div {
+    width:3px !important;
+    margin:0 2px !important;
+    height:12px !important;
+    width:3px !important;
+  }
+}
+
+.big {
+  > div {
+    height:75px !important;
+    width:6px !important;
+    margin:4px !important;
+  }
+}

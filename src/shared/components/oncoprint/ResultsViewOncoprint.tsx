@@ -22,7 +22,7 @@ import {
 import _ from "lodash";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import AppConfig from "appConfig";
-import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
+import LoadingIndicator, {GlobalLoader} from "shared/components/loadingIndicator/LoadingIndicator";
 import OncoprintJS, {TrackId} from "oncoprintjs";
 import fileDownload from 'react-file-download';
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
@@ -36,7 +36,9 @@ import naturalSort from "javascript-natural-sort";
 import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
 import Spec = Mocha.reporters.Spec;
 import OqlStatusBanner from "../oqlStatusBanner/OqlStatusBanner";
-import {makeProfiledInClinicalAttributes} from "./ResultsViewOncoprintUtils";
+import {getAnnotatingProgressMessage, makeProfiledInClinicalAttributes} from "./ResultsViewOncoprintUtils";
+import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
+import {getMobxPromiseGroupStatus} from "../../lib/getMobxPromiseGroupStatus";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -63,23 +65,6 @@ export interface IGenesetExpansionRecord {
     molecularProfileId: string;
     correlationValue: number;
 }
-
-const specialClinicalAttributes:OncoprintClinicalAttribute[] = [
-    {
-        clinicalAttributeId: SpecialAttribute.StudyOfOrigin,
-        datatype: "STRING",
-        description: "Study which the sample is a part of.",
-        displayName: "Study of origin",
-        patientAttribute: false,
-    },
-    {
-        clinicalAttributeId: SpecialAttribute.MutationSpectrum,
-        datatype: "COUNTS_MAP",
-        description: "Number of point mutations in the sample counted by different types of nucleotide changes.",
-        displayName: "Mutation spectrum",
-        patientAttribute: false,
-    }
-];
 
 const SAMPLE_MODE_URL_PARAM = "show_samples";
 const CLINICAL_TRACKS_URL_PARAM = "clinicallist";
@@ -152,6 +137,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         onMobxPromise(props.store.studyIds, (studyIds:string[])=>{
             if (studyIds.length > 1) {
                 this.selectedClinicalAttributeIds.set(SpecialAttribute.StudyOfOrigin, true);
+            }
+        });
+
+        onMobxPromise(props.store.clinicalAttributes_profiledIn, (result:any[])=>{
+            for (const attr of result) {
+                this.selectedClinicalAttributeIds.set(attr.clinicalAttributeId, true);
             }
         });
         
@@ -232,7 +223,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.showMinimap;
             },
             get hideHeatmapMenu() {
-                return self.props.store.queryStore.isVirtualStudyQuery;
+                return self.props.store.studies.result.length > 1;
             },
             get sortByMutationType() {
                 return self.sortByMutationType;
@@ -250,13 +241,19 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.props.store.mutationAnnotationSettings.oncoKb;
             },
             get annotateDriversOncoKbDisabled() {
+                return !AppConfig.serverConfig.show_oncokb;
+            },
+            get annotateDriversOncoKbError() {
                 return self.props.store.didOncoKbFailInOncoprint;
             },
             get annotateDriversHotspots() {
                 return self.props.store.mutationAnnotationSettings.hotspots;
             },
             get annotateDriversHotspotsDisabled() {
-                return false; // maybe we'll use this in future
+                return !AppConfig.serverConfig.show_hotspot;
+            },
+            get annotateDriversHotspotsError() {
+                return self.props.store.didHotspotFailInOncoprint;
             },
             get annotateDriversCBioPortal() {
                 return self.props.store.mutationAnnotationSettings.cbioportalCount;
@@ -272,12 +269,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             },
             get annotateCOSMICInputValue() {
                 return self.props.store.mutationAnnotationSettings.cosmicCountThreshold + "";
-            },
-            get clinicalAttributesPromise() {
-                return self.sortedClinicalAttributes;
-            },
-            get clinicalAttributeSampleCountPromise() {
-                return self.props.store.clinicalAttributeIdToAvailableSampleCount;
             },
             get sortMode() {
                 return self.sortMode;
@@ -312,7 +303,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.heatmapGeneInputValue;
             },
             get customDriverAnnotationBinaryMenuLabel() {
-                const label = AppConfig.oncoprintCustomDriverAnnotationBinaryMenuLabel;
+                const label = AppConfig.serverConfig.binary_custom_driver_annotation_menu_label;
                 const customDriverReport = self.props.store.customDriverAnnotationReport.result;
                 if (label && customDriverReport && customDriverReport.hasBinary) {
                     return label;
@@ -321,7 +312,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 }
             },
             get customDriverAnnotationTiersMenuLabel() {
-                const label = AppConfig.oncoprintCustomDriverAnnotationTiersMenuLabel;
+                const label = AppConfig.serverConfig.oncoprint_custom_driver_annotation_tiers_menu_label;
                 const customDriverReport = self.props.store.customDriverAnnotationReport.result;
                 if (label && customDriverReport && customDriverReport.tiers.length) {
                     return label;
@@ -376,7 +367,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     componentWillUnmount() {
-        this.putativeDriverSettingsReaction();
+        if (this.putativeDriverSettingsReaction) this.putativeDriverSettingsReaction();
         this.urlParamsReaction();
     }
 
@@ -418,10 +409,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     });
                     this.props.store.mutationAnnotationSettings.ignoreUnknown = false;
                 } else {
-                    if (!this.controlsState.annotateDriversOncoKbDisabled)
+                    if (!this.controlsState.annotateDriversOncoKbDisabled && !this.controlsState.annotateDriversOncoKbError)
                         this.props.store.mutationAnnotationSettings.oncoKb = true;
 
-                    if (!this.controlsState.annotateDriversHotspotsDisabled)
+                    if (!this.controlsState.annotateDriversHotspotsDisabled && !this.controlsState.annotateDriversHotspotsError)
                         this.props.store.mutationAnnotationSettings.hotspots = true;
 
                     this.props.store.mutationAnnotationSettings.cbioportalCount = true;
@@ -737,88 +728,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
-    readonly clinicalAttributes_profiledIn = remoteData<OncoprintClinicalAttribute[]>({
-        await:()=>[
-            this.props.store.samples,
-            this.props.store.coverageInformation,
-            this.props.store.molecularProfileIdToMolecularProfile,
-            this.props.store.selectedMolecularProfiles,
-            this.props.store.studyIds
-        ],
-        invoke:()=>{
-            return Promise.resolve(
-                makeProfiledInClinicalAttributes(
-                    this.props.store.coverageInformation.result!.samples,
-                    this.props.store.molecularProfileIdToMolecularProfile.result!,
-                    this.props.store.selectedMolecularProfiles.result!,
-                    this.props.store.samples.result!.length,
-                    this.props.store.studyIds.result!.length === 1
-                )
-            );
-        },
-        onResult:(result:OncoprintClinicalAttribute[]|undefined)=>{
-            // automatically select these tracks when the page loads
-            // TODO: do this differently for single page application? in general it will be good to look at onResult everywhere
-            for (const attr of (result || [])) {
-                this.selectedClinicalAttributeIds.set(attr.clinicalAttributeId, true);
-            }
-        }
-    });
-
-    readonly sortedClinicalAttributes = remoteData({
-        await: ()=>[
-            this.clinicalAttributes,
-            this.props.store.clinicalAttributeIdToAvailableSampleCount
-        ],
-        invoke:()=>{
-            const availableSampleCount = this.props.store.clinicalAttributeIdToAvailableSampleCount.result!;
-            let server:OncoprintClinicalAttribute[] = _.sortBy<ClinicalAttribute>(
-                this.clinicalAttributes.result!.server,
-                [
-                    (x:ClinicalAttribute)=>{
-                        let sampleCount = availableSampleCount[x.clinicalAttributeId];
-                        if (sampleCount === undefined) {
-                            sampleCount = 0;
-                        }
-                        return -sampleCount;
-                    },
-                    (x:ClinicalAttribute)=>-x.priority
-                    ,
-                    (x:ClinicalAttribute)=>x.displayName
-                ]
-            ); // sort server clinical attrs by availability and display name
-            return Promise.resolve(this.clinicalAttributes.result!.special.concat(server)); // put special clinical attrs at beginning
-        }
-    });
-
-    readonly clinicalAttributes = remoteData({
-        await:()=>[
-            this.props.store.studies,
-            this.props.store.clinicalAttributes,
-            this.clinicalAttributes_profiledIn,
-        ],
-        invoke:()=>{
-            let special = specialClinicalAttributes.concat(this.clinicalAttributes_profiledIn.result!);
-            if (this.props.store.studies.result!.length === 1) {
-                // filter out StudyOfOrigin if only one study
-                special = special.filter(x=>(x.clinicalAttributeId!==SpecialAttribute.StudyOfOrigin));
-            }
-            let server = this.props.store.clinicalAttributes.result!;
-            server = _.uniqBy(server, x=>x.clinicalAttributeId); // remove duplicates in case of multiple studies w same attr
-            return Promise.resolve({ special, server, all:special.concat(server) });
-        }
-    });
-
-    readonly clinicalAttributesById = remoteData({
-        await:()=>[
-            this.clinicalAttributes
-        ],
-        invoke: ()=>{
-            return Promise.resolve(_.keyBy(this.clinicalAttributes.result!.all,
-                (attr:OncoprintClinicalAttribute)=>attr.clinicalAttributeId));
-        }
-    });
-
     @computed get sortOrder() {
         if (this.sortMode.type === "alphabetical") {
             return this.columnMode === "sample" ? this.alphabeticalSampleOrder : this.alphabeticalPatientOrder;
@@ -1039,21 +948,39 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
+    @computed get progressItems():IProgressIndicatorItem[] {
+        const ret = [];
+
+        ret.push({
+            label: "Loading genomic data",
+            promises: [this.props.store.molecularData, this.props.store.mutations]
+        });
+
+        const usingOncokb = this.props.store.mutationAnnotationSettings.oncoKb;
+        const usingHotspot = this.props.store.mutationAnnotationSettings.hotspots;
+        ret.push({
+            label: getAnnotatingProgressMessage(usingOncokb, usingHotspot),
+            promises:[this.props.store.annotatedMolecularData, this.props.store.putativeDriverAnnotatedMutations]
+        });
+
+        ret.push({
+            label: "Rendering"
+        });
+
+        return ret as IProgressIndicatorItem[];
+    }
+
     public render() {
         return (
-            <div style={{position:'relative', minHeight:this.isHidden ? this.loadingIndicatorHeight : "auto"}} className="cbioportal-frontend">
-                <OqlStatusBanner className="oncoprint-oql-status-banner" store={this.props.store} tabReflectsOql={true} style={{marginBottom:12}}/>
-            {
-                    <div
-                        className={ classNames('oncoprintLoadingIndicator', { 'hidden': !this.isHidden }) }
-                        style={{
-                            position: "absolute", top: 0, left: 0, width: "100%", height: "100%", minHeight:this.loadingIndicatorHeight
-                        }}
-                    >
-                        <div>{this.loadingIndicatorMessage}</div>
-                        <LoadingIndicator style={{display: 'block'}} isLoading={true}/>
-                    </div>
-                }
+            <div className="posRelative">
+
+                <LoadingIndicator isLoading={this.isHidden} size={"big"} center={true} className="oncoprintLoadingIndicator">
+                    <ProgressIndicator items={this.progressItems} show={this.isHidden} sequential={true}/>
+                </LoadingIndicator>
+
+                <div className={"tabMessageContainer"}>
+                    <OqlStatusBanner className="oncoprint-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
+                </div>
 
                 <div className={classNames('oncoprintContainer', { fadeIn: !this.isHidden })}
                      onMouseEnter={this.onMouseEnter}
@@ -1065,6 +992,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     {(this.oncoprint && !this.oncoprint.webgl_unavailable) &&
                     (<FadeInteraction showByDefault={true} show={this.mouseInsideBounds}>
                         <OncoprintControls
+                            store={this.props.store}
                             handlers={this.controlsHandlers}
                             state={this.controlsState}
                         />

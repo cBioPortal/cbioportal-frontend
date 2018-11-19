@@ -13,9 +13,9 @@ import {
     filterNumericalBins,
     formatNumericalTickValues,
     generateCategoricalData,
-    generateNumericalData,
-    SELECTED_GROUP_COLOR, UNSELECTED_GROUP_COLOR
+    generateNumericalData
 } from "../../StudyViewUtils";
+import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
 
 export interface IBarChartProps {
     data: DataBin[];
@@ -144,6 +144,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                         tickFormat={(t: number) => this.tickFormat[t - 1]}
                         domain={[0, this.tickValues[this.tickValues.length -1] + 1]}
                         tickLabelComponent={<BarChartAxisLabel />}
+                        style={{tickLabels: {angle: this.tickValues.length > STUDY_VIEW_CONFIG.thresholds.escapeTick ? 315 : 0}}}
                     />
                     <VictoryAxis
                         dependentAxis={true}
@@ -153,7 +154,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                         style={{
                             data: {
                                 fill: (d: BarDatum) =>
-                                    this.isDataBinSelected(d.dataBin, this.props.filters) ? SELECTED_GROUP_COLOR : UNSELECTED_GROUP_COLOR
+                                    this.isDataBinSelected(d.dataBin, this.props.filters) ? STUDY_VIEW_CONFIG.colors.theme.selectedGroup : STUDY_VIEW_CONFIG.colors.theme.unselectedGroup
                             }
                         }}
                         data={this.barData}

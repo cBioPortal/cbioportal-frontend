@@ -1,63 +1,83 @@
 import * as React from 'react';
-import exposeComponentRenderer from 'shared/lib/exposeComponentRenderer';
-import {FlexCol, FlexRow} from "../../shared/components/flexbox/FlexBox";
-import {observer, inject} from "mobx-react";
-import DevTools from "mobx-react-devtools";
-import {toJS, observable, action, computed, whyRun, expr} from "mobx";
-import LabeledCheckbox from "../../shared/components/labeledCheckbox/LabeledCheckbox";
-import ReactSelect from 'react-select';
+import * as _ from 'lodash';
+import {If, Then, Else} from 'react-if';
+import {observer, inject, Observer } from "mobx-react";
+import { observable } from 'mobx';
+import Chart from 'chart.js';
+import AppConfig from 'appConfig';
 import 'react-select/dist/react-select.css';
+import {CancerStudyQueryUrlParams, QueryStore} from "../../shared/components/query/QueryStore";
 import QueryAndDownloadTabs from "../../shared/components/query/QueryAndDownloadTabs";
-import {QueryStore} from "../../shared/components/query/QueryStore";
-import QueryModal from "../../shared/components/query/QueryModal";
-import BarGraph from "shared/components/barGraph/BarGraph";
-import client from '../../shared/api/cbioportalClientInstance';
-import {remoteData} from "../../shared/api/remoteData";
+import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import RightBar from "../../shared/components/rightbar/RightBar";
-import AppConfig from "appConfig";
+import getBrowserWindow from "../../shared/lib/getBrowserWindow";
+// tslint:disable-next-line:no-import-side-effect
+import "./homePage.scss";
 
+(Chart as any).plugins.register({
+    beforeDraw: function (chartInstance: any) {
+        const ctx = chartInstance.chart.ctx;
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, chartInstance.chart.width, chartInstance.chart.height);
+    }
+});
 
-export class HomePageStore {
+const win = (window as any);
 
-    readonly data = remoteData({
-        invoke: () => {
-            return client.getAllStudiesUsingGET({projection: "DETAILED"});
-
-        }
-    });
+export interface IResultsViewPageProps {
+    routing: any;
 }
 
-interface IHomePageProps
-{
-    queryStore:QueryStore
+export function createQueryStore(currentQuery?:any) {
+
+    const win:any = window;
+
+    const queryStore = new QueryStore(currentQuery);
+
+    queryStore.singlePageAppSubmitRoutine = function(path:string, query:CancerStudyQueryUrlParams) {
+
+        // normalize this
+        query.cancer_study_list = query.cancer_study_list || query.cancer_study_id;
+        delete query.cancer_study_id;
+
+        win.routingStore.updateRoute(query, "results", true);
+
+    };
+
+    return queryStore;
+
 }
 
-interface IHomePageState
-{
-}
+@inject('routing')
+@observer
+export default class HomePage extends React.Component<IResultsViewPageProps, {}> {
 
-@inject("queryStore") @observer
-export default class HomePage extends React.Component<IHomePageProps, IHomePageState>
-{
-    constructor(props:IHomePageProps)
-    {
+    @observable showQuerySelector = true;
+
+    queryStore:QueryStore;
+
+    constructor(props: IResultsViewPageProps) {
         super(props);
     }
 
-    getModalWrappedComponent(){
-        return (
-            <QueryModal store={this.props.queryStore} />
-        )
+    componentWillMount(){
+        this.queryStore = createQueryStore();
     }
 
-    public render()
-    {
-        const blurb:JSX.Element|null = AppConfig.skinBlurb? <p style={{marginBottom:"20px"}} dangerouslySetInnerHTML={{__html: AppConfig.skinBlurb}}></p> : null;
-        return (<div>
-                   <div>
-                       {blurb}
-                   </div>
-                   <QueryAndDownloadTabs store={this.props.queryStore} />
-                </div>);
+    private handleTabChange(id: string) {
+        this.props.routing.updateRoute({ tab: id });
+    }
+
+    public render() {
+
+        return (
+            <PageLayout className="HomePageLayout" noMargin={true} rightBar={<RightBar queryStore={this.queryStore} />}>
+                <div style={{padding:"0 15px"}}>
+                    <div dangerouslySetInnerHTML={{__html:AppConfig.serverConfig.skin_blurb!}}></div>
+                    <QueryAndDownloadTabs store={this.queryStore}/>
+                </div>
+            </PageLayout>
+        )
+
     }
 }

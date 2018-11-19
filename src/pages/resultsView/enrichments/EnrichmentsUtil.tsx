@@ -1,12 +1,12 @@
 import * as React from 'react';
 import { AlterationEnrichment, ExpressionEnrichment } from "shared/api/generated/CBioPortalAPIInternal";
-import { toConditionalPrecision } from "shared/lib/NumberUtils";
 import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
 import { tsvFormat } from 'd3-dsv';
 import { BoxPlotModel, calculateBoxPlotModel } from 'shared/lib/boxPlotUtils';
 import { NumericGeneMolecularData } from 'shared/api/generated/CBioPortalAPI';
 import seedrandom from 'seedrandom';
+import { roundLogRatio } from 'shared/lib/FormatUtils';
 
 const LOG_VALUE = "LOG-VALUE";
 const LOG2_VALUE = "LOG2-VALUE";
@@ -17,25 +17,6 @@ export function calculateAlterationTendency(logOddsRatio: number): string {
 
 export function calculateExpressionTendency(logOddsRatio: number): string {
     return logOddsRatio > 0 ? "Over-expressed" : "Under-expressed";
-}
-
-export function formatLogOddsRatio(logOddsRatio: number): string {
-
-    if (logOddsRatio < -10) {
-        return "<-10";
-    } else if (logOddsRatio > 10) {
-        return ">10";
-    }
-    return logOddsRatio.toFixed(2);
-}
-
-export function formatValueWithStyle(value: number): JSX.Element {
-
-    let formattedValue = <span>{toConditionalPrecision(value, 3, 0.01)}</span>;
-    if (value < 0.05) {
-        formattedValue = <b>{formattedValue}</b>;
-    }
-    return formattedValue;
 }
 
 export function formatPercentage(count: number, percentage: number): string {
@@ -49,6 +30,7 @@ export function getAlterationScatterData(alterationEnrichments: AlterationEnrich
         return {
             x: roundLogRatio(Number(alterationEnrichment.logRatio), 10), y: -Math.log10(alterationEnrichment.pValue),
             hugoGeneSymbol: alterationEnrichment.hugoGeneSymbol,
+            pValue: alterationEnrichment.pValue,
             qValue: alterationEnrichment.qValue,
             logRatio: alterationEnrichment.logRatio,
             hovered: false
@@ -64,22 +46,12 @@ export function getExpressionScatterData(expressionEnrichments: ExpressionEnrich
             y: -Math.log10(expressionEnrichment.pValue), 
             hugoGeneSymbol: expressionEnrichment.hugoGeneSymbol,
             entrezGeneId: expressionEnrichment.entrezGeneId,
+            pValue: expressionEnrichment.pValue,
             qValue: expressionEnrichment.qValue,
             logRatio: expressionEnrichment.logRatio,
             hovered: false
         };
     });
-}
-
-export function roundLogRatio(logRatio: number, threshold: number): number {
-
-    if (logRatio > threshold) {
-        return threshold;
-    } else if (logRatio < -threshold) {
-        return -threshold;
-    } else {
-        return Number(logRatio.toFixed(2));
-    }
 }
 
 export function getAlterationRowData(alterationEnrichments: AlterationEnrichment[], totalAltered: number,

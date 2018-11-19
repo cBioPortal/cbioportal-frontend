@@ -20,7 +20,8 @@ import {
     CNA_COLOR_HOMDEL,
     DEFAULT_GREY,
     MUT_COLOR_FUSION, MUT_COLOR_INFRAME, MUT_COLOR_INFRAME_PASSENGER,
-    MUT_COLOR_MISSENSE, MUT_COLOR_MISSENSE_PASSENGER, MUT_COLOR_PROMOTER, MUT_COLOR_TRUNC, MUT_COLOR_TRUNC_PASSENGER
+    MUT_COLOR_MISSENSE, MUT_COLOR_MISSENSE_PASSENGER, MUT_COLOR_OTHER, MUT_COLOR_PROMOTER, MUT_COLOR_TRUNC,
+    MUT_COLOR_TRUNC_PASSENGER
 } from "../../../shared/components/oncoprint/geneticrules";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 import {IBoxScatterPlotData} from "../../../shared/components/plots/BoxScatterPlot";
@@ -28,15 +29,20 @@ import {AlterationTypeConstants, AnnotatedMutation, AnnotatedNumericGeneMolecula
 import numeral from "numeral";
 import {getJitterForCase} from "../../../shared/components/plots/PlotUtils";
 import {isSampleProfiled} from "../../../shared/lib/isSampleProfiled";
+import GenesetMolecularDataCache from "../../../shared/cache/GenesetMolecularDataCache";
+import {GenesetMolecularData} from "../../../shared/api/generated/CBioPortalAPIInternal";
+import {MUTATION_COUNT} from "../../studyView/StudyViewPageStore";
 
 export const CLIN_ATTR_DATA_TYPE = "clinical_attribute";
+export const GENESET_DATA_TYPE = "GENESET_SCORE";
 export const dataTypeToDisplayType:{[s:string]:string} = {
     [AlterationTypeConstants.MUTATION_EXTENDED]: "Mutation",
     [AlterationTypeConstants.COPY_NUMBER_ALTERATION]: "Copy Number",
     [AlterationTypeConstants.MRNA_EXPRESSION]: "mRNA",
     [AlterationTypeConstants.PROTEIN_LEVEL]: "Protein Level",
     [AlterationTypeConstants.METHYLATION]: "DNA Methylation",
-    [CLIN_ATTR_DATA_TYPE]:"Clinical Attribute"
+    [CLIN_ATTR_DATA_TYPE]:"Clinical Attribute",
+    [GENESET_DATA_TYPE]:"Gene Sets"
 };
 
 export const mutationTypeToDisplayName:{[oncoprintMutationType:string]:string} = {
@@ -44,14 +50,14 @@ export const mutationTypeToDisplayName:{[oncoprintMutationType:string]:string} =
     "inframe":"Inframe",
     "fusion":"Fusion",
     "promoter":"Promoter",
-    "trunc":"Truncating"
+    "trunc":"Truncating",
+    "other":"Other"
 };
 
 export const dataTypeDisplayOrder = [
     CLIN_ATTR_DATA_TYPE, AlterationTypeConstants.MUTATION_EXTENDED, AlterationTypeConstants.COPY_NUMBER_ALTERATION,
-    AlterationTypeConstants.MRNA_EXPRESSION, AlterationTypeConstants.PROTEIN_LEVEL, AlterationTypeConstants.METHYLATION
+    AlterationTypeConstants.MRNA_EXPRESSION, GENESET_DATA_TYPE, AlterationTypeConstants.PROTEIN_LEVEL, AlterationTypeConstants.METHYLATION
 ];
-
 export function sortMolecularProfilesForDisplay(profiles:MolecularProfile[]) {
     if (!profiles.length) {
         return [];
@@ -528,7 +534,12 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
             // we have mutations
             switch (mutationCountBy) {
                 case MutationCountBy.MutationType:
-                    value = sampleMutTypes;
+                    // if more than one type, its "Multiple"
+                    if (sampleMutTypes.length > 1) {
+                        value = MUT_PROFILE_COUNT_MULTIPLE;
+                    } else {
+                        value = sampleMutTypes;
+                    }
                     break;
                 case MutationCountBy.MutatedVsWildType:
                 default:
@@ -559,6 +570,37 @@ export function makeAxisDataPromise_Molecular_MakeMutationData(
     } as IStringAxisData;
 }
 
+function makeAxisDataPromise_Geneset(
+    genesetId:string,
+    molecularProfileId:string,
+    genesetMolecularDataCachePromise:MobxPromise<GenesetMolecularDataCache>,
+    molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>
+):MobxPromise<IAxisData> {
+    return remoteData({
+        await:()=>[genesetMolecularDataCachePromise, molecularProfileIdToMolecularProfile],
+        invoke: async () => {
+            const profile = molecularProfileIdToMolecularProfile.result![molecularProfileId];
+            // const isDiscreteCna = (profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION
+            //                         && profile.datatype === "DISCRETE");
+            const makeRequest = true;
+            await genesetMolecularDataCachePromise.result!.getPromise(
+                 {genesetId, molecularProfileId}, makeRequest);
+            const data:GenesetMolecularData[] = genesetMolecularDataCachePromise.result!.get({molecularProfileId, genesetId})!.data!;
+            return Promise.resolve({
+                data: data.map(d=>{
+                    const value = d.value;
+                    return {
+                        uniqueSampleKey: d.uniqueSampleKey,
+                        value: Number(value)
+                    };
+                }),
+                genesetId: genesetId,
+                datatype: "number"
+            });
+        }
+    });
+}
+
 export function makeAxisDataPromise(
     selection:AxisMenuSelection,
     clinicalAttributeIdToClinicalAttribute:MobxPromise<{[clinicalAttributeId:string]:ClinicalAttribute}>,
@@ -570,7 +612,8 @@ export function makeAxisDataPromise(
     numericGeneMolecularDataCache:MobxPromiseCache<{entrezGeneId:number, molecularProfileId:string}, NumericGeneMolecularData[]>,
     studyToMutationMolecularProfile: MobxPromise<{[studyId: string]: MolecularProfile}>,
     coverageInformation:MobxPromise<CoverageInformation>,
-    samples:MobxPromise<Sample[]>
+    samples:MobxPromise<Sample[]>,
+    genesetMolecularDataCachePromise: MobxPromise<GenesetMolecularDataCache>
 ):MobxPromise<IAxisData> {
 
     let ret:MobxPromise<IAxisData> = remoteData(()=>new Promise<IAxisData>(()=>0)); // always isPending
@@ -579,6 +622,13 @@ export function makeAxisDataPromise(
             if (selection.dataSourceId !== undefined && clinicalAttributeIdToClinicalAttribute.isComplete) {
                 const attribute = clinicalAttributeIdToClinicalAttribute.result![selection.dataSourceId];
                 ret = makeAxisDataPromise_Clinical(attribute, clinicalDataCache, patientKeyToSamples, studyToMutationMolecularProfile);
+            }
+            break;
+        case GENESET_DATA_TYPE:
+            if (selection.genesetId !== undefined && selection.dataSourceId !== undefined) {
+                ret = makeAxisDataPromise_Geneset(
+                    selection.genesetId, selection.dataSourceId, genesetMolecularDataCachePromise,
+                    molecularProfileIdToMolecularProfile);
             }
             break;
         default:
@@ -610,6 +660,7 @@ export function getAxisLabel(
     clinicalAttributeIdToClinicalAttribute:{[clinicalAttributeId:string]:ClinicalAttribute}
 ) {
     let ret = "";
+    const profile = molecularProfileIdToMolecularProfile[selection.dataSourceId!];
     switch (selection.dataType) {
         case CLIN_ATTR_DATA_TYPE:
             const attribute = clinicalAttributeIdToClinicalAttribute[selection.dataSourceId!];
@@ -617,9 +668,13 @@ export function getAxisLabel(
                 ret = attribute.displayName;
             }
             break;
+        case GENESET_DATA_TYPE:
+            if (profile && selection.genesetId !== undefined) {
+                ret = `${selection.genesetId}: ${profile.name}`;
+            }
+            break;
         default:
             // molecular profile
-            const profile = molecularProfileIdToMolecularProfile[selection.dataSourceId!];
             if (profile && selection.entrezGeneId !== undefined) {
                 ret = `${entrezGeneIdToGene[selection.entrezGeneId].hugoGeneSymbol}: ${profile.name}`;
             }
@@ -711,6 +766,13 @@ export const oncoprintMutationTypeToAppearanceDrivers:{[mutType:string]:{symbol:
         stroke: "#000000",
         strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Promoter"
+    },
+    "other":{
+        symbol: "circle",
+        fill: MUT_COLOR_OTHER,
+        stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
+        legendLabel: "Other"
     }
 };
 
@@ -750,6 +812,13 @@ export const oncoprintMutationTypeToAppearanceDefault:{[mutType:string]:{symbol:
         stroke: "#000000",
         strokeOpacity:NON_CNA_STROKE_OPACITY,
         legendLabel: "Promoter"
+    },
+    "other":{
+        symbol: "circle",
+        fill: MUT_COLOR_OTHER,
+        stroke: "#000000",
+        strokeOpacity:NON_CNA_STROKE_OPACITY,
+        legendLabel: "Other"
     }
 };
 
@@ -765,11 +834,11 @@ export const mutationLegendOrder = [
     "promoter.driver", "promoter",
     "trunc.driver", "trunc",
     "inframe.driver", "inframe",
-    "missense.driver", "missense"
+    "missense.driver", "missense", "other"
 ];
 export const mutationRenderPriority = stringListToIndexSet([
     "fusion", "promoter.driver", "trunc.driver", "inframe.driver", "missense.driver",
-    "promoter", "trunc", "inframe", "missense", MUTATION_TYPE_NOT_MUTATED, MUTATION_TYPE_NOT_PROFILED
+    "promoter", "trunc", "inframe", "missense", "other", MUTATION_TYPE_NOT_MUTATED, MUTATION_TYPE_NOT_PROFILED
 ]);
 
 export const noMutationAppearance = {
@@ -833,6 +902,7 @@ const cnaToAppearance = {
 
 const cnaCategoryOrder = ["-2", "-1", "0", "1", "2"].map(x=>(cnaToAppearance as any)[x].legendLabel);
 export const MUT_PROFILE_COUNT_MUTATED = "Mutated";
+export const MUT_PROFILE_COUNT_MULTIPLE = "Multiple";
 export const MUT_PROFILE_COUNT_NOT_MUTATED = "Wild type";
 export const MUT_PROFILE_COUNT_NOT_PROFILED = "Not profiled";
 export const mutTypeCategoryOrder = [
@@ -841,6 +911,8 @@ export const mutTypeCategoryOrder = [
     mutationTypeToDisplayName.trunc,
     mutationTypeToDisplayName.fusion,
     mutationTypeToDisplayName.promoter,
+    mutationTypeToDisplayName.other,
+    MUT_PROFILE_COUNT_MULTIPLE,
     MUT_PROFILE_COUNT_NOT_MUTATED, MUT_PROFILE_COUNT_NOT_PROFILED
 ];
 export const mutVsWildCategoryOrder = [MUT_PROFILE_COUNT_MUTATED, MUT_PROFILE_COUNT_NOT_MUTATED, MUT_PROFILE_COUNT_NOT_PROFILED];
@@ -923,8 +995,8 @@ function mutationsProteinChanges(
 export function tooltipMutationsSection(
     mutations:AnnotatedMutation[],
 ) {
-    const oncoKbIcon = (mutation:AnnotatedMutation)=>(<img src="images/oncokb-oncogenic-1.svg" title={mutation.oncoKbOncogenic} style={{height:11, width:11, marginLeft:2, marginBottom: 2}}/>);
-    const hotspotIcon = <img src="images/cancer-hotspots.svg" title="Hotspot" style={{height:11, width:11, marginLeft:2, marginBottom:3}}/>;
+    const oncoKbIcon = (mutation:AnnotatedMutation)=>(<img src={require("../../../rootImages/oncokb-oncogenic-1.svg")} title={mutation.oncoKbOncogenic} style={{height:11, width:11, marginLeft:2, marginBottom: 2}}/>);
+    const hotspotIcon = <img src={require("../../../rootImages/cancer-hotspots.svg")} title="Hotspot" style={{height:11, width:11, marginLeft:2, marginBottom:3}}/>;
     const mutationsByGene = _.groupBy(mutations.filter(m=>!!m.proteinChange), m=>m.hugoGeneSymbol);
     const sorted = _.chain(mutationsByGene).entries().sortBy(x=>x[0]).value();
     return (
@@ -953,7 +1025,7 @@ export function tooltipMutationsSection(
 export function tooltipCnaSection(
     data:AnnotatedNumericGeneMolecularData[],
 ) {
-    const oncoKbIcon = (alt:AnnotatedNumericGeneMolecularData)=>(<img src="images/oncokb-oncogenic-1.svg" title={alt.oncoKbOncogenic} style={{height:11, width:11, marginLeft:2, marginBottom: 2}}/>);
+    const oncoKbIcon = (alt:AnnotatedNumericGeneMolecularData)=>(<img src={require("../../../rootImages/oncokb-oncogenic-1.svg")} title={alt.oncoKbOncogenic} style={{height:11, width:11, marginLeft:2, marginBottom: 2}}/>);
     const altsByGene = _.groupBy(data, alt=>alt.hugoGeneSymbol);
     const sorted = _.chain(altsByGene).entries().sortBy(x=>x[0]).value();
     return (
@@ -1020,10 +1092,18 @@ export function boxPlotTooltip(
 export function logScalePossible(
     axisSelection: AxisMenuSelection
 ) {
-    return !!(axisSelection.dataType !== CLIN_ATTR_DATA_TYPE &&
-         axisSelection.dataSourceId &&
-        !(/zscore/i.test(axisSelection.dataSourceId)) &&
-        /rna_seq/i.test(axisSelection.dataSourceId));
+    if (axisSelection.dataType !== CLIN_ATTR_DATA_TYPE) {
+        // molecular profile
+        return !!(
+            axisSelection.dataSourceId &&
+            !(/zscore/i.test(axisSelection.dataSourceId)) &&
+            /rna_seq/i.test(axisSelection.dataSourceId)
+        );
+    } else {
+        // clinical attribute
+        return axisSelection.dataSourceId === MUTATION_COUNT;
+    }
+
 }
 
 export function makeBoxScatterPlotData(
@@ -1084,7 +1164,7 @@ export function makeScatterPlotData(
         molecularProfileIds:string[],
         data:AnnotatedNumericGeneMolecularData[]
     }
-):IScatterPlotData[]
+):IScatterPlotData[];
 
 export function makeScatterPlotData(
     horzData: INumberAxisData|IStringAxisData,
@@ -1124,7 +1204,7 @@ export function makeScatterPlotData(
                 _.chain(sampleMutations)
                 .groupBy(mutation=>{
                     const mutationType = getOncoprintMutationType(mutation);
-                    const driverSuffix = (mutationType !== "fusion" && mutationType !== "promoter" && mutation.putativeDriver) ? ".driver" : "";
+                    const driverSuffix = (mutationType !== "fusion" && mutationType !== "promoter" && mutationType !== "other" && mutation.putativeDriver) ? ".driver" : "";
                     return `${mutationType}${driverSuffix}`;
                 })
                 .mapValues(muts=>muts.length)

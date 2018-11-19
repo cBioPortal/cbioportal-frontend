@@ -29,7 +29,6 @@ function cleanUrl(url) {
     }
 }
 
-
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 
@@ -121,8 +120,9 @@ var config = {
         new webpack.DefinePlugin({
             'VERSION': version, 
             'COMMIT': commit,
-            'ENV_CBIOPORTAL_URL': process.env.CBIOPORTAL_URL? JSON.stringify(cleanUrl(process.env.CBIOPORTAL_URL)) : '"replace_me_env_cbioportal_url"',
-            'ENV_GENOME_NEXUS_URL': process.env.GENOME_NEXUS_URL? JSON.stringify(cleanUrl(process.env.GENOME_NEXUS_URL)) : '"replace_me_env_genome_nexus_url"',
+            'IS_DEV_MODE': isDev,
+            'ENV_CBIOPORTAL_URL': isDev && process.env.CBIOPORTAL_URL? JSON.stringify(cleanUrl(process.env.CBIOPORTAL_URL)) : '"replace_me_env_cbioportal_url"',
+            'ENV_GENOME_NEXUS_URL': isDev && process.env.GENOME_NEXUS_URL? JSON.stringify(cleanUrl(process.env.GENOME_NEXUS_URL)) : '"replace_me_env_genome_nexus_url"',
         }),
         new HtmlWebpackPlugin({cache: false, template: 'my-index.ejs'}),
         WebpackFailPlugin,
@@ -133,6 +133,7 @@ var config = {
         }),
         new CopyWebpackPlugin([
             {from: './common-dist', to: 'reactapp'},
+            {from: './src/rootImages', to: 'images'},
             {from: './src/pages/resultsView/network', to: 'reactapp/network'},
             {from: './src/globalStyles/prefixed-bootstrap.min.css', to: 'reactapp/prefixed-bootstrap.min.css'},
             {from: './src/shared/legacy/igv.min.js', to: 'reactapp/igv.min.js'},
@@ -342,7 +343,7 @@ config.module.rules.push(
 );
 
 if (isDev) {
-    // add for testwriter
+    //add for testwriter
     config.module.rules.push(
         {
             test: /\.ts|tsx/,

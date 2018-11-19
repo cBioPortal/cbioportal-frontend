@@ -1,6 +1,7 @@
 import {IHotspotIndex} from "shared/model/CancerHotspots";
 import { assert } from 'chai';
-import {indexHotspots} from "./CancerHotspotsUtils";
+import {indexHotspots, isHotspot, filterMutationsOnNonHotspotGenes} from "./CancerHotspotsUtils";
+import {Mutation} from "../api/generated/CBioPortalAPI";
 
 describe('CancerHotspotsUtils', () => {
 
@@ -88,7 +89,18 @@ describe('CancerHotspotsUtils', () => {
                     }
                 }
             ]
-        }
+        },
+        {
+            genomicLocation: {
+                chromosome: "1",
+                start: 2,
+                end: 2,
+                referenceAllele: "A",
+                variantAllele: "T"
+            },
+            variant: "1:g.2>T",
+            hotspots: []
+        },
     ];
 
 
@@ -107,6 +119,17 @@ describe('CancerHotspotsUtils', () => {
 
         assert.equal(hotspotIndex["4,111,111,T,C"].hotspots.length, 1,
             "Only one SMURF1 3d hotspot mutation should be indexed.");
+    });
+
+    it('filters mutations on non hotspot genes', () => {
+        const mutations = [{gene:{hugoGeneSymbol:"TP53"}},{gene:{hugoGeneSymbol:"CLEC9A"}}] as Mutation[];
+        assert.isTrue(filterMutationsOnNonHotspotGenes(mutations).length === 1);
+    });
+
+    it("isHotspot works correctly", ()=>{
+        assert.isFalse(isHotspot({gene:{chromosome:"1"}, startPosition:2, endPosition:2, referenceAllele:"A", variantAllele:"T"} as Mutation, hotspotIndex));
+        assert.isTrue(isHotspot({gene:{chromosome:"4"}, startPosition:111, endPosition:111, referenceAllele:"T", variantAllele:"C"} as Mutation, hotspotIndex));
+        assert.isFalse(isHotspot({gene:{chromosome:"asdkfjpaosid"}, startPosition:-1, endPosition:-1, referenceAllele:"A", variantAllele:"T"} as Mutation, hotspotIndex));
     });
 
     after(() => {

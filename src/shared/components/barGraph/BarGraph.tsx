@@ -16,6 +16,7 @@ interface ICancerTypeStudy {
 
 export interface IBarGraphProps {
     data:ICancerTypeStudy[];
+    openStudy:(studyId:string)=>void;
 };
 
 export default class BarGraph extends React.Component<IBarGraphProps, {}> {
@@ -128,7 +129,12 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
             datasets
         };
 
+        var self = this;
+
         const options = {
+            animation:{
+                duration:0
+            },
             title: {
                 display: true,
                 text: 'Cases by Top 20 Primary Sites',
@@ -138,7 +144,7 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
             onClick: function (e: Event) {
                 if (this.getElementAtEvent(e)[0]) {
                     const {studyId} = datasets[this.getElementAtEvent(e)[0]._datasetIndex];
-                    window.location.href = 'study?id=' + studyId + '#summary';
+                    self.props.openStudy(studyId);
                 }
                 return false;
             },
@@ -182,20 +188,34 @@ export default class BarGraph extends React.Component<IBarGraphProps, {}> {
                     ticks: {fontSize: 11}
                 }]
             },
-            legend: { display: false }
+            legend: { display: false },
         };
 
         new Chart(this.chartTarget, {
             type: 'horizontalBar',
             data,
-            options
-        });
+            options,
+            plugins: [this.backgroundColorPlugin]
+        } as any);
 
     }
 
+    private backgroundColorPlugin = {
+        beforeDraw: function(chartInstance:any) {
+            var ctx = chartInstance.chart.ctx;
+            ctx.fillStyle = "#F1F6FE";
+            ctx.fillRect(0, 0, chartInstance.chart.width, chartInstance.chart.height);
+        }
+    };
+
     render() {
         const length = this.byPrimarySiteStudies.length;
-        return length ? <canvas ref={(el:HTMLCanvasElement) => this.chartTarget = el} height={70 + 430 * (length > 20 ? 20 : length)/20}/> : null;
+        return length ? (
+            <canvas
+                ref={(el:HTMLCanvasElement) => this.chartTarget = el}
+                height={70 + 430 * (length > 20 ? 20 : length)/20}
+            />
+        ): null;
     }
 
 };
