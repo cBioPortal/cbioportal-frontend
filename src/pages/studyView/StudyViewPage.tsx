@@ -102,7 +102,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                     <LoadingIndicator
                                                         isLoading={this.store.molecularProfileSampleCounts.isPending}/>
                                                     {this.store.molecularProfileSampleCounts.isComplete && (
-                                                        `${this.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples} with Mutations`)}
+                                                        `${this.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples.toLocaleString()} with Mutations`)}
                                                 </LabeledCheckbox>
                                             </button>
                                         )}
@@ -116,7 +116,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                     <LoadingIndicator
                                                         isLoading={this.store.molecularProfileSampleCounts.isPending}/>
                                                     {this.store.molecularProfileSampleCounts.isComplete && (
-                                                        `${this.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples} with CNA`)}
+                                                        `${this.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples.toLocaleString()} with CNA`)}
                                                 </LabeledCheckbox>
                                             </button>
                                         )}
