@@ -83,7 +83,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         },
         {
             name: '# Mut',
-            render: (data: MutationCountByGene) => <span>{data.totalCount}</span>,
+            render: (data: MutationCountByGene) => <span>{data.totalCount.toLocaleString()}</span>,
             sortBy: (data: MutationCountByGene) => data.totalCount,
             defaultSortDirection: 'desc' as 'desc',
             filter: (data: MutationCountByGene, filterString: string, filterStringUpper: string) => {
@@ -99,7 +99,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                     disabled={this.isDisabled(data.entrezGeneId)}
                     onChange={event => this.togglePreSelectRow(data.entrezGeneId)}
                 >
-                    {data.countByEntity}
+                    {data.countByEntity.toLocaleString()}
                 </LabeledCheckbox>,
             sortBy: (data: MutationCountByGene) => data.countByEntity,
             defaultSortDirection: 'desc' as 'desc',
