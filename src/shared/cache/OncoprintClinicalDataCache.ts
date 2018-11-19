@@ -16,7 +16,7 @@ import {OncoprintClinicalAttribute} from "../components/oncoprint/ResultsViewOnc
 export enum SpecialAttribute {
     MutationSpectrum = "NO_CONTEXT_MUTATION_SIGNATURE",
     StudyOfOrigin = "CANCER_STUDY",
-    Profiled = "PROFILED_IN"
+    ProfiledInPrefix = "PROFILED_IN"
 }
 
 type OncoprintClinicalData = ClinicalData[]|MutationSpectrum[];
@@ -92,7 +92,7 @@ async function fetch(
             } as ClinicalData));
             break;
         default:
-            if (attribute.clinicalAttributeId.indexOf(SpecialAttribute.Profiled) === 0) {
+            if (attribute.clinicalAttributeId.indexOf(SpecialAttribute.ProfiledInPrefix) === 0) {
                 ret = makeProfiledData(attribute, samples, coverageInformation);
             } else {
                 ret = await client.fetchClinicalDataUsingPOST({

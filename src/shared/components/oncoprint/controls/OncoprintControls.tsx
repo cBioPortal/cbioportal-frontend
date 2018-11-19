@@ -1,29 +1,24 @@
 import * as React from "react";
-import {observer} from "mobx-react";
-import {ButtonGroup, MenuItem, Button, Checkbox, Radio} from "react-bootstrap";
-import {Observer} from "mobx-react";
-import FontAwesome from "react-fontawesome";
-import {ChangeEvent, SyntheticEvent} from "react";
-import NonClosingDropdown from "./NonClosingDropdown";
+import {observer, Observer} from "mobx-react";
+import {Button, ButtonGroup} from "react-bootstrap";
 import CustomDropdown from "./CustomDropdown";
 import ReactSelect from "react-select";
 import {MobxPromise} from "mobxpromise";
-import {computed, IObservableObject, IObservableValue, observable, ObservableMap, reaction} from "mobx";
+import {computed, IObservableObject, observable, ObservableMap, reaction} from "mobx";
 import _ from "lodash";
 import {OncoprintClinicalAttribute, SortMode} from "../ResultsViewOncoprint";
-import {ClinicalAttribute, MolecularProfile} from "shared/api/generated/CBioPortalAPI";
+import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import Slider from "react-rangeslider";
-import 'react-rangeslider/lib/index.css';
+import "react-rangeslider/lib/index.css";
 import EditableSpan from "shared/components/editableSpan/EditableSpan";
-import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
-import './styles.scss';
+import "./styles.scss";
 import ErrorIcon from "../../ErrorIcon";
-import {getPercentage} from "../../../lib/FormatUtils";
-const CheckedSelect = require("react-select-checked").CheckedSelect;
 import classNames from "classnames";
 import {SpecialAttribute} from "../../../cache/OncoprintClinicalDataCache";
+import ClinicalAttributeSelector from "../../clinicalAttributeSelector/ClinicalAttributeSelector";
+import {ResultsViewPageStore} from "../../../../pages/resultsView/ResultsViewPageStore";
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?:(type:"sample"|"patient")=>void,
@@ -51,7 +46,7 @@ export interface IOncoprintControlsHandlers {
     onClickSortAlphabetical?:()=>void;
     onClickSortCaseListOrder?:()=>void;
     onClickDownload?:(type:string)=>void; // type is "pdf", "png", "svg", "order", or "tabular"
-    onChangeSelectedClinicalTracks?:(attributeIds:(string|SpecialAttribute)[])=>void;
+    onChangeSelectedClinicalTracks:(attributeIds:(string|SpecialAttribute)[])=>void;
 
     onClickAddGenesToHeatmap?:()=>void;
     onClickRemoveHeatmap?:()=>void;
@@ -88,9 +83,7 @@ export interface IOncoprintControlsState {
     annotateCOSMICInputValue?:string,
 
     sortMode:SortMode,
-    clinicalAttributesPromise?:MobxPromise<OncoprintClinicalAttribute[]>,
-    clinicalAttributeSampleCountPromise?:MobxPromise<{[clinicalAttributeId:string]:number}>,
-    selectedClinicalAttributeIds?:string[],
+    selectedClinicalAttributeIds:string[],
     heatmapProfilesPromise?:MobxPromise<MolecularProfile[]>,
     selectedHeatmapProfile?:string;
     heatmapIsDynamicallyQueried:boolean;
@@ -113,6 +106,7 @@ export interface IOncoprintControlsState {
 };
 
 export interface IOncoprintControlsProps {
+    store: ResultsViewPageStore;
     handlers: IOncoprintControlsHandlers;
     state: IOncoprintControlsState & IObservableObject
 }
@@ -206,7 +200,6 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         }
     }
     private onChangeSelectedClinicalTracks(options:{label:string, value:string|SpecialAttribute}[]) {
-        this.props.handlers.onChangeSelectedClinicalTracks &&
         this.props.handlers.onChangeSelectedClinicalTracks(options.map(o=>o.value));
     }
     private onHeatmapProfileSelect(option:{label:string, value:string}) {
@@ -366,37 +359,6 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         }
     }
 
-    @computed get clinicalTrackOptions() {
-        if (this.props.state.clinicalAttributesPromise &&
-            this.props.state.clinicalAttributesPromise.result &&
-            this.props.state.clinicalAttributeSampleCountPromise &&
-            this.props.state.clinicalAttributeSampleCountPromise.result
-        ) {
-            const clinicalAttributeIdToAvailableSampleCount = this.props.state.clinicalAttributeSampleCountPromise.result;
-            return _.reduce(this.props.state.clinicalAttributesPromise.result, (options:{label:string, value:string}[], next:ClinicalAttribute)=>{
-                let sampleCount = clinicalAttributeIdToAvailableSampleCount[next.clinicalAttributeId];
-                if (sampleCount === undefined && next.clinicalAttributeId.startsWith(SpecialAttribute.Profiled)) {
-                    // for 'Profiled In' tracks, we have data for all the samples - gene panel data
-                    // but these tracks have special, locally-constructed clinical attribute ids, and aren't placed in that map.
-                    // TODO: maybe they should be?
-                    sampleCount = this.props.state.sampleCount;
-                }
-                const newOption = {
-                    label: `${next.displayName} (${getPercentage(sampleCount/this.props.state.sampleCount, 0)})`,
-                    value: next.clinicalAttributeId,
-                    disabled: false
-                };
-                if (sampleCount === 0) {
-                    newOption.disabled = true;
-                }
-                options.push(newOption);
-                return options;
-            }, []);
-        } else {
-            return [];
-        }
-    }
-
     @computed get heatmapProfileOptions() {
         if (this.props.state.heatmapProfilesPromise && this.props.state.heatmapProfilesPromise.result) {
             return _.map(this.props.state.heatmapProfilesPromise.result, profile=>({
@@ -408,34 +370,20 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         }
     }
 
-    @computed get clinicalTracksMenuLoading() {
-        return ((this.props.state.clinicalAttributesPromise &&
-            this.props.state.clinicalAttributesPromise.isPending) ||
-            (this.props.state.clinicalAttributeSampleCountPromise &&
-            this.props.state.clinicalAttributeSampleCountPromise.isPending));
-    }
-
     private getClinicalTracksMenu() {
-        if (this.props.handlers.onChangeSelectedClinicalTracks &&
-            this.props.state.clinicalAttributesPromise) {
-            // TODO: put onFocus handler on CheckedSelect when possible
-            // TODO: pass unmodified string array as value prop when possible
-            // TODO: remove labelKey specification, leave to default prop, when possible
-            return (
-                <div className="clinical-track-selector">
-                    <CheckedSelect
-                        disabled={this.clinicalTracksMenuLoading}
-                        placeholder={this.clinicalTracksMenuLoading ? "Downloading clinical tracks..." : "Add clinical tracks.."}
-                        onChange={this.onChangeSelectedClinicalTracks}
-                        options={this.clinicalTrackOptions}
-                        value={(this.props.state.selectedClinicalAttributeIds || []).map(x=>({value:x}))}
-                        labelKey="label"
-                    />
-                </div>
-            );
-        } else {
-            return <span/>;
-        }
+        // TODO: put onFocus handler on CheckedSelect when possible
+        // TODO: pass unmodified string array as value prop when possible
+        // TODO: remove labelKey specification, leave to default prop, when possible
+        return (
+            <div className="clinical-track-selector">
+                <ClinicalAttributeSelector
+                    store={this.props.store}
+                    selectedClinicalAttributeIds={this.props.state.selectedClinicalAttributeIds}
+                    onChange={this.props.handlers.onChangeSelectedClinicalTracks}
+                    multiple={true}
+                />
+            </div>
+        );
     }
 
     private getHeatmapMenu() {
