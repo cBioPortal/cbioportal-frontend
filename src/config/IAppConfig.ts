@@ -47,6 +47,7 @@ export interface IServerConfig {
     "mdacc_heatmap_patient_url": string|null;
     "pubmed_url":string | null;
     "priority_studies": string|null;
+    "api_cache_limit":number;
     "show_hotspot": boolean | undefined;
     "show_oncokb": boolean;
     "show_civic": boolean;
