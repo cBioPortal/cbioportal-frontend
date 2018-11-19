@@ -121,21 +121,27 @@ export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: st
 }
 
 function getBinStatsForTooltip(d:IStudyViewDensityScatterPlotDatum) {
-    const mutCountExact = (d.maxY === d.minY);
-    const fgaExact = (d.maxX === d.minX);
-    const mutCount = (d.maxY + d.minY) / 2;
-    const fga = (d.maxX + d.minX) / 2;
-    return {
-        mutCount, fga, mutCountExact, fgaExact
-    };
+    let mutRange = "";
+    let fgaRange = "";
+    if (d.maxX.toFixed(2) !== d.minX.toFixed(2)) {
+        fgaRange = `${d.minX.toFixed(2)}-${d.maxX.toFixed(2)}`;
+    } else {
+        fgaRange = d.minX.toFixed(2);
+    }
+    if (d.maxY !== d.minY) {
+        mutRange = `${d.minY}-${d.maxY}`;
+    } else {
+        mutRange = d.minY.toString();
+    }
+    return {mutRange, fgaRange};
 }
 export function mutationCountVsCnaTooltip(d:IStudyViewDensityScatterPlotDatum) {
     const binStats = getBinStatsForTooltip(d);
     return (
         <div>
-            <div>Mutation Count: <b>{`${binStats.mutCountExact ? "" : "~"}${binStats.mutCount.toFixed()}`}</b></div>
-            <div>Fraction Genome Altered: <b>{`${binStats.fgaExact ? "" : "~"}${binStats.fga.toFixed(2)}`}</b></div>
-            <div>Count: <b>{d.count}</b></div>
+            <div>Mutation Count: <b>{binStats.mutRange}</b></div>
+            <div>Fraction Genome Altered: <b>{binStats.fgaRange}</b></div>
+            <div>Number of samples: <b>{d.count}</b></div>
         </div>
     );
 }
