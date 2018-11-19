@@ -127,13 +127,15 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
 
     @computed
     get bottomPadding(): number {
-        return this.tilted ? adjustedLongestLabelLength(this.tickFormat.map((tick: string | string[]) => {
+        const MAX_PADDING = 30;
+        const padding = this.tilted ? adjustedLongestLabelLength(this.tickFormat.map((tick: string | string[]) => {
             if (_.isArray(tick)) {
                 return tick.join();
             } else {
                 return tick;
             }
-        })) * 6 : 20;
+        })) * 7: 20;
+        return padding > MAX_PADDING ? MAX_PADDING : padding;
     }
 
     public render() {
