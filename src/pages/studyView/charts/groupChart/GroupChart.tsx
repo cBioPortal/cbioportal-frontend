@@ -3,7 +3,6 @@ import { observer } from "mobx-react";
 import { VictoryChart, VictoryGroup, VictoryBar, VictoryContainer, VictoryAxis, VictoryLabel } from 'victory';
 import { observable, computed, action, toJS } from "mobx";
 import _ from "lodash";
-import { toSvgDomNodeWithLegend, UNSELECTED_COLOR } from "pages/studyView/StudyViewUtils";
 import { AbstractChart } from "pages/studyView/charts/ChartContainer";
 import { bind } from "bind-decorator";
 import { ClinicalDataCountWithColor } from "pages/studyView/StudyViewPageStore";

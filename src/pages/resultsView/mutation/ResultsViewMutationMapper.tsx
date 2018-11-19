@@ -2,10 +2,12 @@ import * as React from 'react';
 import {observer} from "mobx-react";
 import {computed} from "mobx";
 
+import AppConfig from 'appConfig';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
+import GenomeNexusCache from "shared/cache/GenomeNexusCache";
 
 import {
     IMutationMapperProps, default as MutationMapper
@@ -14,6 +16,8 @@ import {
 import MutationRateSummary from "pages/resultsView/mutation/MutationRateSummary";
 import ResultsViewMutationMapperStore from "pages/resultsView/mutation/ResultsViewMutationMapperStore";
 import ResultsViewMutationTable from "pages/resultsView/mutation/ResultsViewMutationTable";
+import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
+import {AppStore} from "../../../AppStore";
 
 export interface IResultsViewMutationMapperProps extends IMutationMapperProps
 {
@@ -21,6 +25,8 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps
     discreteCNACache?:DiscreteCNACache;
     cancerTypeCache?:CancerTypeCache;
     mutationCountCache?:MutationCountCache;
+    genomeNexusCache?:GenomeNexusCache;
+    userEmailAddress:string;
 }
 
 @observer
@@ -50,6 +56,13 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
         }
     }
 
+    protected get isMutationTableDataLoading() {
+        return getMobxPromiseGroupStatus(
+            this.props.store.clinicalDataForSamples,
+            this.props.store.studiesForSamplesWithoutCancerTypeClinicalData
+        ) === "pending";
+    }
+
     protected mutationTableComponent(): JSX.Element|null
     {
         return (
@@ -62,6 +75,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
                 oncoKbEvidenceCache={this.props.oncoKbEvidenceCache}
                 pubMedCache={this.props.pubMedCache}
                 mutationCountCache={this.props.mutationCountCache}
+                genomeNexusCache={this.props.genomeNexusCache}
                 dataStore={this.props.store.dataStore}
                 itemsLabelPlural={this.itemsLabelPlural}
                 downloadDataFetcher={this.props.store.downloadDataFetcher}
@@ -72,12 +86,12 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
                 oncoKbData={this.props.store.oncoKbData}
                 civicGenes={this.props.store.civicGenes}
                 civicVariants={this.props.store.civicVariants}
-                userEmailAddress={this.props.config.userEmailAddress}
-                enableOncoKb={this.props.config.showOncoKB}
-                enableFunctionalImpact={this.props.config.showGenomeNexus}
-                enableHotspot={this.props.config.showHotspot}
-                enableMyCancerGenome={this.props.config.showMyCancerGenome}
-                enableCivic={this.props.config.showCivic}
+                userEmailAddress={this.props.userEmailAddress}
+                enableOncoKb={this.props.config.show_oncokb}
+                enableFunctionalImpact={this.props.config.show_genomenexus}
+                enableHotspot={this.props.config.show_hotspot}
+                enableMyCancerGenome={this.props.config.mycancergenome_show}
+                enableCivic={this.props.config.show_civic}
             />
         );
     }
@@ -86,18 +100,7 @@ export default class ResultsViewMutationMapper extends MutationMapper<IResultsVi
     {
         return (
             <span>
-                <LoadingIndicator
-                    isLoading={
-                        (this.props.store.clinicalDataForSamples &&
-                            this.props.store.clinicalDataForSamples.isPending) ||
-                        (this.props.store.studiesForSamplesWithoutCancerTypeClinicalData &&
-                            this.props.store.studiesForSamplesWithoutCancerTypeClinicalData.isPending)
-                    }
-                />
-                {(!this.props.store.clinicalDataForSamples ||
-                    !this.props.store.clinicalDataForSamples.isPending) &&
-                (!this.props.store.studiesForSamplesWithoutCancerTypeClinicalData ||
-                    !this.props.store.studiesForSamplesWithoutCancerTypeClinicalData.isPending) && (
+                {!this.isMutationTableDataLoading && (
                     this.mutationTableComponent()
                 )}
             </span>

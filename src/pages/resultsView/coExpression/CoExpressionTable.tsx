@@ -14,6 +14,8 @@ import {bind} from "bind-decorator";
 import { cytobandFilter } from "pages/resultsView/ResultsViewTableUtils";
 import {PotentialViewType} from "../plots/PlotsTab";
 import {PLOT_SIDELENGTH} from "../plots/PlotsTabUtils";
+import { toConditionalPrecision } from "shared/lib/NumberUtils";
+import { formatSignificanceValueWithStyle } from "shared/lib/FormatUtils";
 
 export interface ICoExpressionTableProps {
     referenceGene:{hugoGeneSymbol:string, cytoband:string};
@@ -23,7 +25,8 @@ export interface ICoExpressionTableProps {
 }
 
 const SPEARMANS_CORRELATION_COLUMN_NAME = "Spearman's Correlation";
-const P_VALUE_COLUMN_NAME = "P-value";
+const P_VALUE_COLUMN_NAME = "p-Value";
+const Q_VALUE_COLUMN_NAME = "q-Value";
 
 const COLUMNS = [
     {
@@ -42,23 +45,24 @@ const COLUMNS = [
         sortBy:(d:CoExpression)=>d.cytoband,
         width:"30%"
     },
-    makeNumberColumn(SPEARMANS_CORRELATION_COLUMN_NAME, "spearmansCorrelation"),
-    makeNumberColumn(P_VALUE_COLUMN_NAME, "pValue"),
-    makeNumberColumn("Q-value", "qValue"),
+    makeNumberColumn(SPEARMANS_CORRELATION_COLUMN_NAME, "spearmansCorrelation", true, false),
+    makeNumberColumn(P_VALUE_COLUMN_NAME, "pValue", false, false),
+    Object.assign(makeNumberColumn(Q_VALUE_COLUMN_NAME, "qValue", false, true), {sortBy:(d:CoExpression) => [d.qValue, d.pValue]}),
 ];
 
-function makeNumberColumn(name:string, key:keyof CoExpression) {
+function makeNumberColumn(name:string, key:keyof CoExpression, colorByValue:boolean, formatSignificance: boolean) {
     return {
         name:name,
         render:(d:CoExpression)=>{
             return (
                 <span
                     style={{
-                        color:correlationColor(d[key] as number),
+                        color:(colorByValue ? correlationColor(d[key] as number) : "#000000"),
                         textAlign:"right",
-                        float:"right"
+                        float:"right",
+                        whiteSpace:"nowrap"
                     }}
-                >{(d[key] as number).toFixed(2)}</span>
+                >{formatSignificance? formatSignificanceValueWithStyle(d[key] as number) : toConditionalPrecision((d[key] as number), 3, 0.01)}</span>
             );
         },
         download:(d:CoExpression)=>(d[key] as number).toString()+"",
@@ -69,42 +73,6 @@ function makeNumberColumn(name:string, key:keyof CoExpression) {
 
 @observer
 export default class CoExpressionTable extends React.Component<ICoExpressionTableProps, {}> {
-    private get columns() {
-        return [
-            {
-                name: "Correlated Gene",
-                render: (d:CoExpression)=>(<span style={{fontWeight:"bold"}}>{d.hugoGeneSymbol}</span>),
-                filter:(d:CoExpression, f:string, filterStringUpper:string)=>(d.hugoGeneSymbol.indexOf(filterStringUpper) > -1),
-                download:(d:CoExpression)=>d.hugoGeneSymbol,
-                sortBy:(d:CoExpression)=>d.hugoGeneSymbol,
-                width:"30%"
-            },
-            {
-                name:"Cytoband",
-                render:(d:CoExpression)=>(<span>{d.cytoband}</span>),
-                filter:cytobandFilter,
-                download:(d:CoExpression)=>d.cytoband,
-                sortBy:(d:CoExpression)=>d.cytoband,
-                width:"30%"
-            },
-            {
-                name:SPEARMANS_CORRELATION_COLUMN_NAME,
-                render:(d:CoExpression)=>{
-                    return (
-                        <span
-                            style={{
-                                color:correlationColor(d.spearmansCorrelation),
-                                textAlign:"right",
-                                float:"right"
-                            }}
-                        >{d.spearmansCorrelation.toFixed(2)}</span>
-                    );
-                },
-                download:(d:CoExpression)=>d.spearmansCorrelation+"",
-                sortBy:(d:CoExpression)=>correlationSortBy(d.spearmansCorrelation),
-                align: "right" as "right"
-            }];
-    }
 
     @bind
     private onRowClick(d:CoExpression) {
@@ -158,7 +126,7 @@ export default class CoExpressionTable extends React.Component<ICoExpressionTabl
                     />
                 </div>
                 <LazyMobXTable
-                    initialSortColumn={P_VALUE_COLUMN_NAME}
+                    initialSortColumn={Q_VALUE_COLUMN_NAME}
                     initialSortDirection="asc"
                     columns={COLUMNS}
                     showColumnVisibility={false}

@@ -11,7 +11,7 @@ import {
     filterSubQueryData,
     getOncoKbOncogenic,
     initializeCustomDriverAnnotationSettings,
-    fetchQueriedStudies, isRNASeqProfile, isPanCanStudy, isTCGAProvStudy, isTCGAPubStudy
+    fetchQueriedStudies, isRNASeqProfile, isPanCanStudy, isTCGAProvStudy, isTCGAPubStudy, buildResultsViewPageTitle
 } from "./ResultsViewPageStoreUtils";
 import {
     OQLLineFilterOutput, MergedTrackLineFilterOutput
@@ -1207,5 +1207,53 @@ describe("ResultsViewPageStoreUtils", ()=>{
                 done();
             });
         });
+
+
+
     });
+
+    describe('buildResultsViewPageTitle', ()=>{
+
+        it('handles various numbers of studies and genes',()=>{
+
+            let genes = ["KRAS","NRAS","BRAF"];
+            let studies = [{ shortName:"Study Number One"} as CancerStudy];
+            let ret = buildResultsViewPageTitle(genes, studies);
+            let expectedResult = "cBioPortal for Cancer Genomics: KRAS, NRAS and 1 other gene in Study Number One";
+            assert.equal(ret, expectedResult, "three genes, one study");
+
+            genes = ["KRAS","NRAS","BRAF","KFED"];
+            studies = [{ shortName:"Study Number One"} as CancerStudy];
+            ret = buildResultsViewPageTitle(genes, studies);
+            expectedResult = "cBioPortal for Cancer Genomics: KRAS, NRAS and 2 other genes in Study Number One";
+            assert.equal(ret, expectedResult, "two genes, one study");
+
+            genes = ["KRAS","NRAS"];
+            studies = [{ shortName:"Study Number One"} as CancerStudy];
+            ret = buildResultsViewPageTitle(genes, studies);
+            expectedResult = "cBioPortal for Cancer Genomics: KRAS, NRAS in Study Number One";
+            assert.equal(ret, expectedResult, "two genes, one study");
+
+            genes = ["KRAS"];
+            studies = [{ shortName:"Study Number One"} as CancerStudy];
+            ret = buildResultsViewPageTitle(genes, studies);
+            expectedResult = "cBioPortal for Cancer Genomics: KRAS in Study Number One";
+            assert.equal(ret, expectedResult, "one gene, one study");
+
+            genes = ["KRAS"];
+            studies = [{ shortName:"Study Number One"} as CancerStudy, { shortName:"Study Number Two"} as CancerStudy];
+            ret = buildResultsViewPageTitle(genes, studies);
+            expectedResult = "cBioPortal for Cancer Genomics: KRAS in Study Number One and 1 other study";
+            assert.equal(ret, expectedResult, "one gene two studies");
+
+            genes = ["KRAS"];
+            studies = [{ shortName:"Study Number One"} as CancerStudy, { shortName:"Study Number Two"} as CancerStudy,  { shortName:"Study Number Two"} as CancerStudy];
+            ret = buildResultsViewPageTitle(genes, studies);
+            expectedResult = "cBioPortal for Cancer Genomics: KRAS in Study Number One and 2 other studies";
+            assert.equal(ret, expectedResult, "one gene, three studies");
+
+        })
+
+    });
+
 });

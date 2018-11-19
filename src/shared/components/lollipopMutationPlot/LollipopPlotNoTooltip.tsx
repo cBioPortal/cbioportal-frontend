@@ -14,7 +14,12 @@ import {SyntheticEvent} from "react";
 export type LollipopSpec = {
     codon:number;
     count:number;
-    label?:string;
+    label?: {
+        text: string;
+        textAnchor?: string;
+        fontSize?: number;
+        fontFamily?: string;
+    };
     color?:string;
     tooltip?:JSX.Element;
 };

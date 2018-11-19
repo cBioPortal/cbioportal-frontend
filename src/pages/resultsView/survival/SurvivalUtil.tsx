@@ -107,11 +107,14 @@ export function getScatterDataWithOpacity(patientSurvivals: PatientSurvival[], e
     return chartData;
 }
 
-export function getStats(patientSurvivals: PatientSurvival[], estimates: number[]): [number, number, string] {
-
-    return [patientSurvivals.length,
-    patientSurvivals.filter(patientSurvival => patientSurvival.status === true).length,
-    getMedian(patientSurvivals, estimates)];
+export function getStats(patientSurvivals?: PatientSurvival[], estimates?: number[]): [number, number, string] {
+    if (patientSurvivals && estimates) {
+        return [patientSurvivals.length,
+        patientSurvivals.filter(patientSurvival => patientSurvival.status === true).length,
+        getMedian(patientSurvivals, estimates)];
+    } else {
+        return [0, 0, "N/A"];
+    }
 }
 
 export function calculateLogRank(alteredPatientSurvivals: PatientSurvival[],

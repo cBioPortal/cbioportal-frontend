@@ -18,13 +18,14 @@ interface IGenomicOverviewProps {
     sampleLabels: {[s:string]:string};
     sampleColors: {[s:string]:string};
     sampleManager: SampleManager;
-    getContainerWidth: ()=>number;
+    containerWidth: number;
 }
 
 export default class GenomicOverview extends React.Component<IGenomicOverviewProps, { frequencies:MutationFrequenciesBySample }> {
 
-    shouldComponentUpdate(){
-        return false;
+    shouldComponentUpdate(nextProps:IGenomicOverviewProps){
+        // only rerender to resize
+        return nextProps.containerWidth !== this.props.containerWidth;
     }
 
     constructor(props:IGenomicOverviewProps) {
@@ -36,13 +37,13 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
 
     }
 
-    componentDidMount(){
+    /*componentDidMount(){
 
         var debouncedResize =  _.debounce(()=>this.forceUpdate(),500);
 
         $(window).resize(debouncedResize);
 
-    }
+    }*/
 
 
     public render() {
@@ -76,11 +77,22 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
     }
 
     private shouldShowVAFPlot():boolean {
-        return this.props.mergedMutations.length > 0;
+        return this.props.mergedMutations.length > 0 && this.isFrequencyExist();
+    }
+
+    private isFrequencyExist():boolean {
+        for (const frequencyId of Object.keys(this.state.frequencies)){
+            if (this.state.frequencies.hasOwnProperty(frequencyId)){
+                for (const frequency of this.state.frequencies[frequencyId]){
+                    return !isNaN(frequency);
+                }
+            }
+        }
+        return false;
     }
 
     private getTracksWidth():number {
-        return this.props.getContainerWidth() - (this.shouldShowVAFPlot() ? 140 : 40);
+        return this.props.containerWidth - (this.shouldShowVAFPlot() ? 140 : 40);
     }
 
     private computeMutationFrequencyBySample(mergedMutations:Mutation[][]):MutationFrequenciesBySample {

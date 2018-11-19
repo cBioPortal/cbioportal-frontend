@@ -23,6 +23,7 @@ import {OncoprintClinicalAttribute} from "./ResultsViewOncoprint";
 import {CoverageInformation} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
 import { MUTATION_STATUS_GERMLINE } from "shared/constants";
 import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
+import {stringListToIndexSet} from "../../lib/StringUtils";
 
 const cnaDataToString:{[integerCNA:string]:string|undefined} = {
     "-2": "homdel",
@@ -31,14 +32,18 @@ const cnaDataToString:{[integerCNA:string]:string|undefined} = {
     "1": "gain",
     "2": "amp"
 };
-const mutRenderPriority = {
-    'trunc_rec':1,
-    'inframe_rec':2,
-    'missense_rec':3,
-    'trunc': 4,
-    'inframe': 5,
-    'missense': 6
-};
+const mutRenderPriority = stringListToIndexSet([
+    'trunc_rec',
+    'inframe_rec',
+    'promoter_rec',
+    'missense_rec',
+    'other_rec',
+    'trunc',
+    'inframe',
+    'promoter',
+    'missense',
+    'other'
+]);
 const cnaRenderPriority = {
     'amp': 0,
     'homdel': 0,
@@ -54,7 +59,7 @@ const protRenderPriority = {
     'down': 0
 };
 
-export type OncoprintMutationType = "missense" | "inframe" | "fusion" | "promoter" | "trunc";
+export type OncoprintMutationType = "missense" | "inframe" | "fusion" | "promoter" | "trunc" | "other";
 
 export function getOncoprintMutationType(d:Pick<Mutation, "proteinChange"|"mutationType">):OncoprintMutationType {
     if ((d.proteinChange || "").toLowerCase() === "promoter") {
@@ -66,6 +71,7 @@ export function getOncoprintMutationType(d:Pick<Mutation, "proteinChange"|"mutat
             case "missense":
             case "inframe":
             case "fusion":
+            case "other":
                 return simplifiedMutationType;
             default:
                 return "trunc";
@@ -352,21 +358,27 @@ export function fillClinicalTrackDatum(
         fillNoDataValue(trackDatum, attribute);
     } else {
         if (attribute.datatype.toLowerCase() === "number") {
-            let numValCount = 0;
-            let numValSum = 0;
+            let values = [];
             for (const x of data) {
                 const newVal = parseFloat((x as ClinicalData).value+"");
                 if (!isNaN(newVal)) {
-                    numValCount += 1;
-                    numValSum += newVal;
+                    values.push(newVal);
                 }
             }
-            if (numValCount === 0) {
+            if (values.length === 0) {
                 fillNoDataValue(trackDatum, attribute);
             } else {
-                // average
-                trackDatum.attr_val = numValSum / numValCount;
-                trackDatum.attr_val_counts[trackDatum.attr_val] = 1;
+                switch (attribute.clinicalAttributeId) {
+                    case "MUTATION_COUNT":
+                        // max
+                        trackDatum.attr_val = values.reduce((max, nextVal)=>Math.max(max, nextVal), Number.NEGATIVE_INFINITY);
+                        break;
+                    default:
+                        // average
+                        trackDatum.attr_val = values.reduce((sum, nextVal)=>sum+nextVal, 0) / values.length;
+                        break;
+                }
+                trackDatum.attr_val_counts[trackDatum.attr_val!] = 1;
             }
         } else if (attribute.datatype.toLowerCase() === "string") {
             const attr_val_counts = trackDatum.attr_val_counts;

@@ -27,6 +27,7 @@ describe('StoreUtils', () => {
         emptyMutationData =  {
             result: [],
             status: 'complete' as 'complete',
+            peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
@@ -36,6 +37,7 @@ describe('StoreUtils', () => {
         mutationDataWithNoKeyword =  {
             result: [{}, {}] as Mutation[],
             status: 'complete' as 'complete',
+            peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
@@ -45,6 +47,7 @@ describe('StoreUtils', () => {
         mutationDataWithKeywords =  {
             result: [{keyword:"one"}] as Mutation[],
             status: 'complete' as 'complete',
+            peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
@@ -54,6 +57,7 @@ describe('StoreUtils', () => {
         emptyUncalledMutationData =  {
             result: [],
             status: 'complete' as 'complete',
+            peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
@@ -127,6 +131,7 @@ describe('StoreUtils', () => {
                 })
             ],
             status: 'complete' as 'complete',
+            peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
@@ -136,6 +141,7 @@ describe('StoreUtils', () => {
         mutationDataWithFusionsOnly =  {
             result: fusions,
             status: 'complete' as 'complete',
+            peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
@@ -145,6 +151,7 @@ describe('StoreUtils', () => {
         mutationDataWithMutationsOnly =  {
             result: mutations,
             status: 'complete' as 'complete',
+            peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
@@ -154,6 +161,7 @@ describe('StoreUtils', () => {
         mutationDataWithBothMutationsAndFusions = {
             result: [...mutations, ...fusions],
             status: 'complete' as 'complete',
+            peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
@@ -306,6 +314,7 @@ describe('StoreUtils', () => {
                 "study_with_no_germline_data"
             ],
             status: 'complete' as 'complete',
+            peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
@@ -318,6 +327,7 @@ describe('StoreUtils', () => {
                 "mskimpact"
             ],
             status: 'complete' as 'complete',
+            peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
@@ -406,6 +416,7 @@ describe('StoreUtils', () => {
                 {sampleId: "Sample4", uniqueSampleKey: "Sample4"}
             ] as Sample[],
             status: 'complete' as 'complete',
+            peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
@@ -417,6 +428,7 @@ describe('StoreUtils', () => {
                 {sampleId: "Sample4", studyId: "study4", uniqueSampleKey: "Sample4"}
             ] as Sample[],
             status: 'complete' as 'complete',
+            peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
@@ -426,6 +438,7 @@ describe('StoreUtils', () => {
         let sampleIds: MobxPromise<string[]> = {
             result: ["Sample1", "Sample2", "Sample3", "Sample4"] as string[],
             status: 'complete' as 'complete',
+            peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
@@ -440,6 +453,7 @@ describe('StoreUtils', () => {
                 {clinicalAttributeId: 'CANCER_TYPE', sampleId: 'Sample3', value: "Skin", uniqueSampleKey: "Sample3"}
             ] as ClinicalData[],
             status: 'complete' as 'complete',
+            peekStatus: 'complete',
             isPending: false,
             isError: false,
             isComplete: true,
@@ -453,11 +467,12 @@ describe('StoreUtils', () => {
         });
 
         const fetchSamplesStub = sinon.stub();
-        const getStudyStub = sinon.stub();
+        const fetchStudiesStub = sinon.stub();
+
 
         const client = {
             fetchSamplesUsingPOST: fetchSamplesStub,
-            getStudyUsingGET: getStudyStub
+            fetchStudiesUsingPOST: fetchStudiesStub
         };
 
         it('fetches samples without cancer type clinical data', () => {
@@ -478,8 +493,8 @@ describe('StoreUtils', () => {
             const studies = fetchStudiesForSamplesWithoutCancerTypeClinicalData(
                 samplesWithoutCancerTypeClinicalData, client as any);
 
-            assert.isTrue(getStudyStub.calledOnce, "getStudy should be called only once");
-            assert.isTrue(getStudyStub.calledWith({studyId: "study4"}),
+            assert.isTrue(fetchStudiesStub.calledOnce, "fetchStudies should be called only once");
+            assert.isTrue(fetchStudiesStub.calledWith({studyIds: ["study4"], projection: "DETAILED"}),
                 "fetchStudy should be called with the correct study id (study4)");
         });
     });

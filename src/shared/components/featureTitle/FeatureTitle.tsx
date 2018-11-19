@@ -2,14 +2,19 @@ import * as React from 'react';
 import {ThreeBounce} from 'better-react-spinkit';
 import { If, Else } from 'react-if';
 import {CSSProperties, DetailedHTMLProps} from "react";
+import LoadingIndicator from "../loadingIndicator/LoadingIndicator";
 
 export interface IFeatureTitleProps {
-    isLoading:Boolean;
+    isLoading:boolean;
     title:string;
     className?:string;
     style?:CSSProperties;
-    isHidden?:Boolean;
+    isHidden?:boolean;
 }
+
+const style:CSSProperties = {
+  marginTop:0,
+};
 
 export default class FeatureTitle extends React.Component<IFeatureTitleProps, {}> {
 
@@ -17,11 +22,10 @@ export default class FeatureTitle extends React.Component<IFeatureTitleProps, {}
        return (
             <If condition={this.props.isHidden}>
 
-                <Else><h4 style={this.props.style || {}} className={this.props.className || ''}>{this.props.title}
-                    <If condition={this.props.isLoading}>
-                        <ThreeBounce style={{ display:'inline-block', marginLeft:10 }} />
-                    </If>
-                </h4></Else>
+                <Else>
+                    <h2 style={this.props.style || style} className={this.props.className || ''}>{this.props.title}
+                    <LoadingIndicator isLoading={this.props.isLoading} small={true}/>
+                </h2></Else>
             </If>
         );
     }
