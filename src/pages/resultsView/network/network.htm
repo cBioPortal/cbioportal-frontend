@@ -7,7 +7,6 @@
 <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"></link>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/js-url/2.5.3/url.min.js"></script>
 
-
 <script>
 
     var queryParams = url("?");
@@ -89,6 +88,33 @@
 
 </script>
 
+<script>
+    function formSubmit(path, params, target, method) {
+        // method="smart" means submit with GET iff the URL wouldn't be too long
+
+        const form = document.createElement('form');
+        let computedMethod = method;
+        if (method === "smart") {
+            computedMethod = buildCBioPortalPageUrl(path, params).length > 1800 ? "post" : "get"; // use POST if URL will be too large for some browsers
+        }
+        form.setAttribute('method', computedMethod);
+        form.setAttribute('action', path);
+        if (target) {
+            form.setAttribute('target', target);
+        }
+
+        for (const key of Object.keys(params)) {
+            const hiddenField = document.createElement('input');
+            hiddenField.setAttribute('type', 'hidden');
+            hiddenField.setAttribute('name', key);
+            hiddenField.setAttribute('value', params[key]);
+            form.appendChild(hiddenField);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+</script>
 
 <script type="text/javascript">
     // This is for the moustache-like templates
@@ -96,6 +122,27 @@
     _.templateSettings = {
         interpolate: /\{\{(.+?)\}\}/g
     };
+
+    // calls to network do must now include all case ids
+    // so we need to hijack click and form submit
+    $(document).ready(function(){
+        $("body").on("click","#netmsg a",function(e){
+            e.preventDefault();
+
+            switch(this.innerText) {
+                case "GraphML":
+                    e.preventDefault();
+                    formSubmit("http://www.cbioportal.org/beta/network.do?download=on", networkParams, "_self", "post");
+                    break;
+                case "SIF":
+                    e.preventDefault();
+                    formSubmit("http://www.cbioportal.org/beta/network.do?download=on&format=sif", networkParams, "_self", "post");
+                    break;
+            }
+
+        });
+    });
+
 </script>
 
 
