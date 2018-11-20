@@ -52,12 +52,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                         isUnaffected={!this.props.store.queryContainsMutationOql}
                         onToggle={this.onToggleOql}
                     />
-                    {this.props.store.mutationMapperStores.isComplete && ! this.props.store.mutationMapperStores.result[this.mutationsGeneTab].dataStore.showingAllData &&
-                        this.bannerAlert()
-                    }
                 </div>
-                
-
 
                 {(this.props.store.mutationMapperStores.isComplete) && (
                     <MSKTabs
@@ -99,6 +94,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                             pubMedCache={this.props.store.pubMedCache}
                             cancerTypeCache={this.props.store.cancerTypeCache}
                             mutationCountCache={this.props.store.mutationCountCache}
+                            genomeNexusCache={this.props.store.genomeNexusCache}
                             pdbHeaderCache={this.props.store.pdbHeaderCache}
                             myCancerGenomeData={this.props.store.myCancerGenomeData}
                             config={AppConfig.serverConfig}
@@ -110,26 +106,6 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
         });
 
         return tabs;
-    }
-
-    protected bannerAlert(): JSX.Element|null
-    {
-        let dataStore = this.props.store.mutationMapperStores.result[this.mutationsGeneTab].dataStore;
-
-        return (
-            <div className={classnames("alert" , "alert-success")}>
-                <span style={{verticalAlign:"middle"}}>
-                    {`${dataStore.sortedFilteredData.length}/${dataStore.allData.length} `}
-                    {"mutations are shown based on your filtering."}
-                    <button className="btn btn-default btn-xs" 
-                            style={{cursor:"pointer", marginLeft:6}} 
-                            onClick={()=>{dataStore.resetFilterAndSelection();}}
-                    >
-                        Show all mutations
-                    </button>
-                </span>
-            </div>
-        );
     }
     
     protected handleTabChange(id: string) {
