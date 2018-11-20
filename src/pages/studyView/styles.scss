@@ -69,3 +69,9 @@ $selectHeightInner: $selectHeight - 2px;
     line-height: 56px !important;
     font-size: 18px !important;
 }
+
+#geneBoxValidationStatus > div {
+    max-width: 280px;
+    white-space: normal;
+    width: 100%;
+}
