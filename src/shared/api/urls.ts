@@ -196,6 +196,10 @@ export function getMDAndersonHeatMapMetaUrl(patientId:string){
 }
 
 export function getMDAndersonHeatmapStudyMetaUrl(studyId:string){
+    return AppConfig.serverConfig.mdacc_heatmap_study_meta_url + studyId;
+}
+
+export function getMDAndersonHeatmapStudyUrl(studyId:string){
     return AppConfig.serverConfig.mdacc_heatmap_study_url + studyId;
 }
 
