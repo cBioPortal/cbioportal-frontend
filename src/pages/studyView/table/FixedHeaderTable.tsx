@@ -4,6 +4,7 @@ import {
     Column as RVColumn,
     SortDirection as RVSortDirection,
     Table as RVTable,
+    TableHeaderProps,
     TableCellProps
 } from 'react-virtualized';
 import 'react-virtualized/styles.css';
@@ -16,6 +17,7 @@ import classnames from 'classnames';
 import {If} from 'react-if';
 import autobind from 'autobind-decorator';
 import {inputBoxChangeTimeoutEvent} from "../../../shared/lib/EventUtils";
+import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 
 export type IFixedHeaderTableProps<T> = {
     columns: Column<T>[],
@@ -149,7 +151,26 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
 
                     {
                         this.props.columns.map(column => {
-                            return <RVColumn key={column.name} label={column.name} dataKey={column.name} width={Number(column.width)}
+                            return <RVColumn key={column.name} label={column.name} dataKey={column.name}
+                                             width={Number(column.width)}
+                                             headerRenderer={(props: TableHeaderProps) => {
+                                                 let label;
+                                                 if (column.headerRender) {
+                                                     label = column.headerRender(column.name);
+                                                 } else {
+                                                     label = (<span>{column.name}</span>);
+                                                 }
+
+                                                 if (column.tooltip) {
+                                                     return (
+                                                         <DefaultTooltip placement="top" overlay={column.tooltip}>
+                                                             {label}
+                                                         </DefaultTooltip>
+                                                     );
+                                                 } else {
+                                                     return label;
+                                                 }
+                                             }}
                                              cellRenderer={(props: TableCellProps) => {
                                                  return column.render(props.rowData);
                                              }}/>;
