@@ -17,6 +17,7 @@ import styles from './styles.module.scss';
 import SelectedInfo from "./SelectedInfo/SelectedInfo";
 import LabeledCheckbox from "../../shared/components/labeledCheckbox/LabeledCheckbox";
 import {Alert} from 'react-bootstrap';
+import {getMDAndersonHeatmapStudyUrl} from "../../shared/api/urls";
 
 export interface IStudyViewPageProps {
     routing: any;
