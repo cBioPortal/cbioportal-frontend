@@ -18,9 +18,7 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   display: inline-block;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
+  flex-grow: 1;
 }
 
 .labelContentSVG {
@@ -50,9 +48,6 @@
   text-overflow: ellipsis;
 }
 
-.shortenTextWithOneIcon {
-  width: calc(100% - 10px);
-}
 
 .headerColumn {
   text-transform: none;
@@ -77,7 +72,8 @@
 
 .gistic, .mutSig {
   height: 10px;
-  margin: 0 1px;
+  margin-left: 2px;
+  vertical-align:inherit !important;
 }
 
 .amp {
@@ -94,8 +90,5 @@
 
 .displayFlex {
   display: flex;
-}
-
-.noFlexShrink {
-  flex-shrink: 0;
+  align-items: center;
 }
