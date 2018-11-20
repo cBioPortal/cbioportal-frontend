@@ -31,6 +31,7 @@ import {remoteData} from "shared/api/remoteData";
 import {cached, labelMobxPromises, MobxPromise} from "mobxpromise";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
+import GenomeNexusCache from "shared/cache/GenomeNexusCache";
 import CancerTypeCache from "shared/cache/CancerTypeCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
@@ -127,6 +128,7 @@ import {
 } from "./ResultsViewPageHelpers";
 import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
 import {isRecurrentHotspot} from "../../shared/lib/AnnotationUtils";
+import {makeProfiledInClinicalAttributes} from "../../shared/components/oncoprint/ResultsViewOncoprintUtils";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -156,7 +158,7 @@ export const DataTypeConstants = {
 enum SampleListCategoryType {
     "w_mut"="w_mut",
     "w_cna"="w_cna",
-    "w_mut_cna"="w_cna_mut"
+    "w_mut_cna"="w_mut_cna"
 }
 
 export const SampleListCategoryTypeToFullId = {
@@ -541,13 +543,62 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly clinicalAttributes = remoteData({
-        await:()=>[this.studyIds],
+    readonly clinicalAttributes_profiledIn = remoteData<(ClinicalAttribute & {molecularProfileIds:string[]})[]>({
+        await:()=>[
+            this.samples,
+            this.coverageInformation,
+            this.molecularProfileIdToMolecularProfile,
+            this.selectedMolecularProfiles,
+            this.studyIds
+        ],
+        invoke:()=>{
+            return Promise.resolve(
+                makeProfiledInClinicalAttributes(
+                    this.coverageInformation.result!.samples,
+                    this.molecularProfileIdToMolecularProfile.result!,
+                    this.selectedMolecularProfiles.result!,
+                    this.studyIds.result!.length === 1
+                )
+            );
+        },
+    });
+
+    readonly clinicalAttributes = remoteData<(ClinicalAttribute & { molecularProfileIds?: string[] })[]>({
+        await:()=>[this.studyIds, this.clinicalAttributes_profiledIn],
         invoke:async()=>{
-            return client.fetchClinicalAttributesUsingPOST({
+            const serverAttributes = await client.fetchClinicalAttributesUsingPOST({
                 studyIds:this.studyIds.result!
             });
+            const specialAttributes = [
+                {
+                    clinicalAttributeId: SpecialAttribute.MutationSpectrum,
+                    datatype: "COUNTS_MAP",
+                    description: "Number of point mutations in the sample counted by different types of nucleotide changes.",
+                    displayName: "Mutation spectrum",
+                    patientAttribute: false,
+                    studyId: "",
+                    priority:"0" // TODO: change?
+                } as ClinicalAttribute
+            ];
+            if (this.studyIds.result!.length > 1) {
+                // if more than one study, add "Study of Origin" attribute
+                specialAttributes.push({
+                    clinicalAttributeId: SpecialAttribute.StudyOfOrigin,
+                    datatype: "STRING",
+                    description: "Study which the sample is a part of.",
+                    displayName: "Study of origin",
+                    patientAttribute: false,
+                    studyId: "",
+                    priority:"0" // TODO: change?
+                } as ClinicalAttribute);
+            }
+            return serverAttributes.concat(specialAttributes).concat(this.clinicalAttributes_profiledIn.result!);
         }
+    });
+
+    readonly clinicalAttributeIdToClinicalAttribute = remoteData({
+        await:()=>[this.clinicalAttributes],
+        invoke:()=>Promise.resolve(_.keyBy(this.clinicalAttributes.result!, "clinicalAttributeId"))
     });
 
     readonly clinicalAttributeIdToAvailableSampleCount = remoteData({
@@ -1367,6 +1418,7 @@ export class ResultsViewPageStore {
             // if YES, we need to derive the sample lists by:
             // 1. looking up all sample lists in selected studies
             // 2. using those with matching category
+
             if (!this.sampleListCategory) {
                 if (this.virtualStudies.result!.length > 0){
                     return populateSampleSpecificationsFromVirtualStudies(this._samplesSpecification, this.virtualStudies.result!);
@@ -1526,6 +1578,7 @@ export class ResultsViewPageStore {
                         this.oncoKbAnnotatedGenes.result || {},
                         () => (this.mutationsByGene[gene.hugoGeneSymbol] || []),
                         () => (this.mutationCountCache),
+                        () => (this.genomeNexusCache),
                         this.studyIdToStudy,
                         this.molecularProfileIdToMolecularProfile,
                         this.clinicalDataForSamples,
@@ -2343,7 +2396,7 @@ export class ResultsViewPageStore {
             if (AppConfig.serverConfig.show_oncokb) {
                 let result;
                 try {
-                    result = await fetchOncoKbData({}, this.oncoKbAnnotatedGenes.result!, this.mutations)
+                    result = await fetchOncoKbData({}, this.oncoKbAnnotatedGenes.result!, this.mutations, 'ONCOGENIC')
                 } catch(e) {
                     result = new Error();
                 }
@@ -2395,7 +2448,8 @@ export class ResultsViewPageStore {
                         {},
                         this.oncoKbAnnotatedGenes.result!,
                         this.molecularData,
-                        this.molecularProfileIdToMolecularProfile.result!
+                        this.molecularProfileIdToMolecularProfile.result!,
+                        'ONCOGENIC'
                     );
                 } catch(e) {
                     result = new Error();
@@ -2729,6 +2783,13 @@ export class ResultsViewPageStore {
 
     @cached get oncoKbEvidenceCache() {
         return new OncoKbEvidenceCache();
+    }
+
+    /*
+     * For annotations of Genome Nexus we want to fetch lazily
+     */
+    @cached get genomeNexusCache() {
+        return new GenomeNexusCache();
     }
 
     @cached get pubMedCache() {

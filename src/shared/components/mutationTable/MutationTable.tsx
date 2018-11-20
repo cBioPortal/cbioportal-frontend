@@ -35,6 +35,7 @@ import MrnaExprRankCache from "shared/cache/MrnaExprRankCache";
 import VariantCountCache from "shared/cache/VariantCountCache";
 import PubMedCache from "shared/cache/PubMedCache";
 import MutationCountCache from "shared/cache/MutationCountCache";
+import GenomeNexusCache from "shared/cache/GenomeNexusCache";
 import {ILazyMobXTableApplicationDataStore} from "shared/lib/ILazyMobXTableApplicationDataStore";
 import {ILazyMobXTableApplicationLazyDownloadDataFetcher} from "shared/lib/ILazyMobXTableApplicationLazyDownloadDataFetcher";
 import generalStyles from "./column/styles.module.scss";
@@ -54,6 +55,7 @@ export interface IMutationTableProps {
     variantCountCache?:VariantCountCache;
     pubMedCache?:PubMedCache;
     mutationCountCache?:MutationCountCache;
+    genomeNexusCache?:GenomeNexusCache;
     mutSigData?:IMutSigData;
     enableOncoKb?: boolean;
     enableMyCancerGenome?: boolean;
@@ -415,11 +417,11 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT] = {
             name:"Functional Impact",
-            render:(d:Mutation[])=>(this.props.indexedVariantAnnotations
-                ? FunctionalImpactColumnFormatter.renderFunction(d, this.props.indexedVariantAnnotations as MobxPromise<{ [genomicLocation: string]: VariantAnnotation; } | undefined>)
-                : (<span></span>)),
+            render:(d:Mutation[])=>(this.props.genomeNexusCache
+                ? FunctionalImpactColumnFormatter.renderFunction(d, this.props.genomeNexusCache)
+                : <span></span>),
             download: (d:Mutation[]) => FunctionalImpactColumnFormatter.download(
-                d, this.props.indexedVariantAnnotations as MobxPromise<{ [genomicLocation: string]: VariantAnnotation; } | undefined>),
+                d, this.props.genomeNexusCache as GenomeNexusCache),
             headerRender: FunctionalImpactColumnFormatter.headerRender,
             visible: false,
             shouldExclude: () => !this.props.enableFunctionalImpact
