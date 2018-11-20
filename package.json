@@ -150,6 +150,7 @@
     "mobxpromise": "github:cbioportal/mobxpromise#v1.0.2",
     "node-sass": "^4.9.3",
     "numeral": "^2.0.6",
+    "object-sizeof": "^1.2.0",
     "oncoprintjs": "^1.1.9",
     "parameter-validator": "^1.0.2",
     "pdfobject": "^2.0.201604172",
