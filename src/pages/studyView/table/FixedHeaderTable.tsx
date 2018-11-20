@@ -4,8 +4,8 @@ import {
     Column as RVColumn,
     SortDirection as RVSortDirection,
     Table as RVTable,
-    TableHeaderProps,
-    TableCellProps
+    TableCellProps,
+    TableHeaderProps
 } from 'react-virtualized';
 import 'react-virtualized/styles.css';
 import {action, observable} from "mobx";
@@ -81,11 +81,11 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
     @autobind
     rowClassName({index}: any) {
         if (index > -1 && this.isSelectedRow(this._store.dataStore.sortedFilteredData[index])) {
-            return styles.highlightedRow;
+            return classnames(styles.row, styles.highlightedRow);
         } else if (index < 0) {
             return styles.headerRow;
         } else {
-            return index % 2 === 0 ? styles.evenRow : styles.oddRow;
+            return classnames(styles.row, index % 2 === 0 ? styles.evenRow : styles.oddRow);
         }
     }
 
