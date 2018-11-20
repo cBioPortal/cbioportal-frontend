@@ -951,9 +951,9 @@ export function getHeightByDimension(chartDimension: ChartDimension, chartHeight
     return STUDY_VIEW_CONFIG.layout.grid.h * chartDimension.h + (chartDimension.h - 1) * STUDY_VIEW_CONFIG.layout.gridMargin.y - chartHeight;
 }
 
-// 35px tool section
+// 30px tool section
 export function getTableHeightByDimension(chartDimension: ChartDimension, chartHeight: number) {
-    return getHeightByDimension(chartDimension, chartHeight) - 35;
+    return getHeightByDimension(chartDimension, chartHeight) - 30;
 }
 
 export function getQValue(qvalue: number):string {

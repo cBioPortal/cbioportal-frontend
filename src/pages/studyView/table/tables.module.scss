@@ -10,7 +10,7 @@
 // May need to come back to clean up the important statements after in SPA
 .tableSearchInput {
   width: 200px !important;
-  height: 30px !important;
+  height: 25px !important;
 }
 
 .labelContent {
@@ -27,8 +27,14 @@
 .bottomTools {
   display: flex;
   justify-content: space-between;
-  padding: 1px 5px 2px 5px;
+  align-items: center;
   flex-grow: 1;
+  font-size: 13px !important;
+  padding: 0 5px;
+}
+
+.bottomToolsBtn {
+  padding: 2px 5px;
 }
 
 .geneSymbol:hover {
@@ -50,7 +56,8 @@
 
 .headerColumn {
   text-transform: none;
-  font-size: 12px;
+  font-size: 13px;
+  line-height: 15px;
 }
 
 .headerRow {
