@@ -134,7 +134,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         });
         onMobxPromise([props.store.samples, props.store.patients], (samples:any[], patients:any[])=>{
             if (samples.length !== patients.length) {
-                this.selectedClinicalAttributeIds.set(SpecialAttribute.NumSamplesOfPatient, true);
+                this.selectedClinicalAttributeIds.set(SpecialAttribute.NumSamplesPerPatient, true);
             }
         })
 
