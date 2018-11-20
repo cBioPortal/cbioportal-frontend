@@ -50,22 +50,20 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
             this.props.store.patients,
             this.props.store.genes
         ],
-        render:()=>(<div>
-            <h4 style={{fontSize:14}}><StudyLink study={this.props.store.queriedStudies.result[0]}/></h4>
-            {(this.props.store.sampleLists.result!.length > 0) && (<span>
-                    {this.props.store.sampleLists.result![0].name}&nbsp;
-                ({getPatientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)})
-                    - {getGeneSummary(this.props.store.hugoGeneSymbols)}
-                </span>)
-            }
-            {
-                (this.props.store.sampleLists.result!.length === 0) && (
-                    <span>User-defined Patient List&nbsp;
-                        ({this.props.store.samples.result!.length} samples)&nbsp;-&nbsp;
-                        {this.props.store.genes.result!.length} { (this.props.store.hugoGeneSymbols.length === 1) ? "Gene" : "Genes"  }
-                </span>)
-            }
-        </div>)
+        render:()=>{
+            const sampleListName = (this.props.store.sampleLists.result!.length > 0) ?
+                (<span>{this.props.store.sampleLists.result![0].name}</span>) :
+                (<span>User-defined Patient List</span>);
+
+            return (
+                <div>
+                    <h4><StudyLink study={this.props.store.queriedStudies.result[0]}/></h4>
+                    {sampleListName}&nbsp;({getPatientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)})
+                    &nbsp;-&nbsp;
+                    {getGeneSummary(this.props.store.hugoGeneSymbols)}
+                </div>
+            );
+        }
     });
 
     @autobind
@@ -89,6 +87,8 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                 </h4>
                 <span>
                     Querying {getPatientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)} in {this.props.store.queriedStudies.result.length} studies
+                    &nbsp;-&nbsp;
+                    {getGeneSummary(this.props.store.hugoGeneSymbols)}
                     &nbsp;
                     <DefaultTooltip
                         placement='bottom'
