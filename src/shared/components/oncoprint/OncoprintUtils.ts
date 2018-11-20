@@ -438,7 +438,7 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
                         (ret as any).numberRange = [0,1];
                     } else if (attribute.clinicalAttributeId === "MUTATION_COUNT") {
                         (ret as any).numberLogScale = true;
-                    } else if (attribute.clinicalAttributeId === SpecialAttribute.NumSamplesOfPatient) {
+                    } else if (attribute.clinicalAttributeId === SpecialAttribute.NumSamplesPerPatient) {
                         (ret as any).numberRange = [0,undefined];
                         ret.custom_options =
                             sampleMode ?
