@@ -2026,7 +2026,8 @@ export class StudyViewPageStore {
                     uniquePatientKeys: this.selectedSamples.result!.map(s=>s.uniquePatientKey)
                 } as PatientFilter
             });
-        }
+        },
+        default: []
     });
 
     readonly unSelectedPatientKeys = remoteData<string[]>({
