@@ -47,7 +47,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             tooltip:(<span>Gene</span>),
             render: (data: MutationCountByGene) => {
                 const addGeneOverlay = () =>
-                    <span>{`Click ${data.hugoGeneSymbol} to ${_.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? 'remove' : 'add'} from your query`}</span>;
+                    <span>{`Click ${data.hugoGeneSymbol} to ${_.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? 'remove from' : 'add to'} your query`}</span>;
                 const qvalOverlay = () =>
                     <div><b>MutSig</b><br/><i>Q-value: </i><span>{getQValue(data.qValue)}</span></div>;
                 return (
