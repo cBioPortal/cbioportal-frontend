@@ -17,7 +17,7 @@ export enum SpecialAttribute {
     MutationSpectrum = "NO_CONTEXT_MUTATION_SIGNATURE",
     StudyOfOrigin = "CANCER_STUDY",
     ProfiledInPrefix = "PROFILED_IN",
-    NumSamplesOfPatient = "NUM_SAMPLES_OF_PATIENT"
+    NumSamplesPerPatient = "NUM_SAMPLES_PER_PATIENT"
 }
 
 export function clinicalAttributeIsPROFILEDIN(attribute:{clinicalAttributeId:string|SpecialAttribute}) {
@@ -96,7 +96,7 @@ async function fetch(
                 value: studyIdToStudy[sample.studyId].name
             } as ClinicalData));
             break;
-        case SpecialAttribute.NumSamplesOfPatient:
+        case SpecialAttribute.NumSamplesPerPatient:
             const patientToSamples = _.groupBy(samples, "uniquePatientKey");
             const patientKeyToPatient = _.keyBy(patients, "uniquePatientKey");
             ret = _.map(patientToSamples, (samples, patientKey)=>{
