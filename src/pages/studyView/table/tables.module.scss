@@ -16,9 +16,8 @@
 .labelContent {
   overflow: hidden;
   white-space: nowrap;
-  text-overflow: ellipsis;
-  display: inline-block;
-  flex-grow: 1;
+  display: flex;
+  align-items: center;
 }
 
 .labelContentSVG {
