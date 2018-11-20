@@ -1190,6 +1190,7 @@ describe('StudyViewUtils', () => {
                 description: clinicalAttr.description,
                 uniqueKey: 'test' + i,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 chartType: ChartTypeEnum.PIE_CHART,
                 dimension: {w: 1, h: 1},
                 priority: 1,
@@ -1267,6 +1268,7 @@ describe('StudyViewUtils', () => {
                 description: clinicalAttr.description,
                 uniqueKey: 'test0',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 chartType: ChartTypeEnum.TABLE,
                 dimension: {w: 2, h: 2},
                 priority: 10,
@@ -1277,6 +1279,7 @@ describe('StudyViewUtils', () => {
                 uniqueKey: 'test1',
                 chartType: ChartTypeEnum.PIE_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 1, h: 1},
                 priority: 20,
             }];
@@ -1300,6 +1303,7 @@ describe('StudyViewUtils', () => {
                 uniqueKey: 'test0',
                 chartType: ChartTypeEnum.BAR_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 2, h: 1},
                 priority: 10,
             }, {
@@ -1309,6 +1313,7 @@ describe('StudyViewUtils', () => {
                 uniqueKey: 'test1',
                 chartType: ChartTypeEnum.TABLE,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 2, h: 2},
                 priority: 5,
             }, {
@@ -1318,6 +1323,7 @@ describe('StudyViewUtils', () => {
                 uniqueKey: 'test2',
                 chartType: ChartTypeEnum.PIE_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 1, h: 1},
                 priority: 2,
             }];
@@ -1346,6 +1352,7 @@ describe('StudyViewUtils', () => {
                 uniqueKey: 'test0',
                 chartType: ChartTypeEnum.BAR_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 2, h: 2},
                 priority: 1,
             }, {
@@ -1355,6 +1362,7 @@ describe('StudyViewUtils', () => {
                 uniqueKey: 'test1',
                 chartType: ChartTypeEnum.TABLE,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 2, h: 2},
                 priority: 1,
             }, {
@@ -1364,6 +1372,7 @@ describe('StudyViewUtils', () => {
                 uniqueKey: 'test2',
                 chartType: ChartTypeEnum.PIE_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 2, h: 1},
                 priority: 1,
             }, {
@@ -1373,6 +1382,7 @@ describe('StudyViewUtils', () => {
                 uniqueKey: 'test3',
                 chartType: ChartTypeEnum.PIE_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 1, h: 1},
                 priority: 1,
             }, {
@@ -1382,6 +1392,7 @@ describe('StudyViewUtils', () => {
                 uniqueKey: 'test4',
                 chartType: ChartTypeEnum.PIE_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 1, h: 1},
                 priority: 1,
             }];

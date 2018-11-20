@@ -145,6 +145,7 @@ export type ChartMeta = {
     dimension: ChartDimension,
     priority: number,
     dataType: ChartMetaDataType,
+    patientAttribute: boolean,
     chartType: ChartType
 }
 
@@ -160,6 +161,7 @@ export const SpecialCharts: ChartMeta[] = [{
     displayName: '# of Samples Per Patient',
     description: '# of Samples Per Patient',
     dataType: ChartMetaDataTypeEnum.CLINICAL,
+    patientAttribute:false,
     chartType: ChartTypeEnum.PIE_CHART,
     dimension: {
         w: 1,
@@ -171,6 +173,7 @@ export const SpecialCharts: ChartMeta[] = [{
     displayName: 'Cancer Studies',
     description: 'Cancer Studies',
     dataType: ChartMetaDataTypeEnum.CLINICAL,
+    patientAttribute:false,
     chartType: ChartTypeEnum.PIE_CHART,
     dimension: {
         w: 1,
@@ -1595,23 +1598,25 @@ export class StudyViewPageStore {
     @autobind
     @action addCustomChart(newChart:NewChart) {
         const uniqueKey = this.newCustomChartUniqueKey();
-        const chartMeta = {
+        let chartMeta = {
             uniqueKey: uniqueKey,
             displayName: newChart.name,
             description: newChart.name,
             chartType: ChartTypeEnum.PIE_CHART,
             dataType: getChartMetaDataType(uniqueKey),
+            patientAttribute: false,
             dimension: {
                 w: 1,
                 h: 1
             },
             priority: 1
         };
-        this._customCharts.set(uniqueKey, chartMeta);
-        this._chartVisibility.set(uniqueKey, true);
         let allCases: CustomChartIdentifierWithValue[] = [];
         _.each(newChart.groups, (group:CustomGroup) => {
             _.reduce(group.cases, (acc, next) => {
+                if(next.patientAttribute) {
+                    chartMeta.patientAttribute = true;
+                }
                 acc.push({
                     studyId: next.studyId,
                     sampleId: next.sampleId,
@@ -1621,7 +1626,9 @@ export class StudyViewPageStore {
                 });
                 return acc;
             }, allCases)
-        })
+        });
+        this._customCharts.set(uniqueKey, chartMeta);
+        this._chartVisibility.set(uniqueKey, true);
         this._customChartsSelectedCases.set(uniqueKey, allCases);
     }
 
@@ -1637,6 +1644,7 @@ export class StudyViewPageStore {
                     uniqueKey: uniqueKey,
                     chartType: chartType,
                     dataType: getChartMetaDataType(uniqueKey),
+                    patientAttribute:chartMeta.patientAttribute,
                     description: chartMeta.description,
                     dimension: this.chartsDimension.get(uniqueKey) || chartMeta.dimension,
                     priority: STUDY_VIEW_CONFIG.priority[uniqueKey] || chartMeta.priority
@@ -1661,6 +1669,7 @@ export class StudyViewPageStore {
                     uniqueKey: uniqueKey,
                     chartType: chartType,
                     dataType: getChartMetaDataType(uniqueKey),
+                    patientAttribute:attribute.patientAttribute,
                     description: attribute.description,
                     dimension: this.chartsDimension.get(uniqueKey)!,
                     priority: Number(attribute.priority),
@@ -1676,6 +1685,7 @@ export class StudyViewPageStore {
                 uniqueKey: survivalPlot.id,
                 chartType: this.chartsType.get(survivalPlot.id)!,
                 dataType: getChartMetaDataType(survivalPlot.id),
+                patientAttribute:true,
                 dimension: this.chartsDimension.get(survivalPlot.id)!,
                 displayName: survivalPlot.title,
                 priority: getDefaultPriorityByUniqueKey(survivalPlot.id),
@@ -1688,6 +1698,7 @@ export class StudyViewPageStore {
             _chartMetaSet[UniqueKey.MUTATED_GENES_TABLE] = {
                 uniqueKey: UniqueKey.MUTATED_GENES_TABLE,
                 dataType: getChartMetaDataType(UniqueKey.MUTATED_GENES_TABLE),
+                patientAttribute:false,
                 chartType: this.chartsType.get(UniqueKey.MUTATED_GENES_TABLE)!,
                 dimension: this.chartsDimension.get(UniqueKey.MUTATED_GENES_TABLE)!,
                 displayName: 'Mutated Genes',
@@ -1700,6 +1711,7 @@ export class StudyViewPageStore {
             _chartMetaSet[UniqueKey.CNA_GENES_TABLE] = {
                 uniqueKey: UniqueKey.CNA_GENES_TABLE,
                 dataType: getChartMetaDataType(UniqueKey.CNA_GENES_TABLE),
+                patientAttribute:false,
                 chartType: this.chartsType.get(UniqueKey.CNA_GENES_TABLE)!,
                 dimension: this.chartsDimension.get(UniqueKey.CNA_GENES_TABLE)!,
                 displayName: 'CNA Genes',
@@ -1721,6 +1733,7 @@ export class StudyViewPageStore {
         if (scatterRequiredParams[MUTATION_COUNT] && scatterRequiredParams[FRACTION_GENOME_ALTERED]) {
             _chartMetaSet[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = {
                 dataType: getChartMetaDataType(UniqueKey.MUTATION_COUNT_CNA_FRACTION),
+                patientAttribute:false,
                 uniqueKey: UniqueKey.MUTATION_COUNT_CNA_FRACTION,
                 chartType: ChartTypeEnum.SCATTER,
                 displayName: 'Mutation Count vs Fraction of Genome Altered',
