@@ -595,10 +595,10 @@ export class ResultsViewPageStore {
             if (this.samples.result!.length !== this.patients.result!.length) {
                 // if different number of samples and patients, add "Num Samples of Patient" attribute
                 specialAttributes.push({
-                    clinicalAttributeId: SpecialAttribute.NumSamplesOfPatient,
+                    clinicalAttributeId: SpecialAttribute.NumSamplesPerPatient,
                     datatype: "NUMBER",
-                    description: "Number of queried samples in each patient.",
-                    displayName: "# Samples of Patient",
+                    description: "Number of queried samples for each patient.",
+                    displayName: "# Samples per Patient",
                     patientAttribute: true
                 } as ClinicalAttribute);
             }
@@ -657,7 +657,7 @@ export class ResultsViewPageStore {
                 }
             }
             // add counts for "special" clinical attributes
-            ret[SpecialAttribute.NumSamplesOfPatient] = this.samples.result!.length;
+            ret[SpecialAttribute.NumSamplesPerPatient] = this.samples.result!.length;
             ret[SpecialAttribute.StudyOfOrigin] = this.samples.result!.length;
             let samplesWithMutationData = 0, samplesWithCNAData = 0;
             for (const sample of this.samples.result!) {
