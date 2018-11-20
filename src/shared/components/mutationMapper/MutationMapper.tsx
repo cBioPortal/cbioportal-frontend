@@ -4,6 +4,7 @@ import _ from 'lodash';
 import autobind from "autobind-decorator";
 import {observer, Observer} from "mobx-react";
 import {computed, action, observable} from "mobx";
+import classnames from "classnames";
 // tslint:disable-next-line:no-import-side-effect
 import 'react-select/dist/react-select.css';
 import './styles.scss';
@@ -21,7 +22,6 @@ import ProteinImpactTypePanel from "shared/components/mutationTypePanel/ProteinI
 import ProteinChainPanel from "shared/components/proteinChainPanel/ProteinChainPanel";
 
 import MutationMapperStore from "./MutationMapperStore";
-import { DropdownButton, MenuItem } from 'react-bootstrap';
 import { EnsemblTranscript } from 'shared/api/generated/GenomeNexusAPI';
 import Mutations from 'pages/resultsView/mutation/Mutations';
 import {IServerConfig} from "../../../config/IAppConfig";
@@ -347,12 +347,19 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
 
     protected filterResetPanel(): JSX.Element|null
     {
+        const dataStore = this.props.store.dataStore;
+
         return (
-            <div style={{marginTop:"5px", marginBottom:"5px"}}>
-                <span style={{color:"red", fontSize:"14px", fontFamily:"verdana,arial,sans-serif"}}>
-                    <span>Current view shows filtered results. Click </span>
-                    <a style={{cursor:"pointer"}} onClick={this.handlers.resetDataStore}>here</a>
-                    <span> to reset all filters.</span>
+            <div className={classnames("alert" , "alert-success")}>
+                <span style={{verticalAlign:"middle"}}>
+                    {`${dataStore.tableData.length}/${dataStore.allData.length} mutations are shown based on your filtering.`}
+                    <button
+                        className="btn btn-default btn-xs"
+                        style={{cursor:"pointer", marginLeft:6}}
+                        onClick={() => dataStore.resetFilterAndSelection()}
+                    >
+                        Show all mutations
+                    </button>
                 </span>
             </div>
         );
@@ -396,6 +403,9 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                 {
                     (!this.isLoading) && (
                     <div>
+                        {!this.props.store.dataStore.showingAllData &&
+                            this.filterResetPanel()
+                        }
                         <div style={{ display:'flex' }}>
                             <div className="borderedChart" style={{ marginRight:10 }}>
                                 {this.mutationPlot()}
