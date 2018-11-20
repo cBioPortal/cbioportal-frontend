@@ -51,7 +51,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                 const qvalOverlay = () =>
                     <div><b>Gistic</b><br/><i>Q-value: </i><span>{getQValue(data.qValue)}</span></div>;
                 return (
-                    <div className={classnames(styles.noFlexShrink, styles.displayFlex)}>
+                    <div className={classnames(styles.displayFlex)}>
                         <DefaultTooltip
                             placement="left"
                             overlay={addGeneOverlay}
@@ -69,7 +69,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                                 overlay={qvalOverlay}
                                 destroyTooltipOnHide={true}
                             >
-                                <img src={require("./images/gistic.png")} className={styles.mutSig}></img>
+                                <span><img src={require("./images/gistic.png")} className={styles.gistic}></img></span>
                             </DefaultTooltip>
                         </If>
                     </div>
