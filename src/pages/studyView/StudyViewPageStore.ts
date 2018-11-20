@@ -215,6 +215,15 @@ export type CustomChartIdentifierWithValue = CustomChartIdentifier & {
     value: string
 }
 
+export type GeneIdentifier = {
+    entrezGeneId: number,
+    hugoGeneSymbol: string
+}
+
+export type CopyNumberAlterationIdentifier = CopyNumberGeneFilterElement & {
+    hugoGeneSymbol: string
+}
+
 export class StudyViewPageStore {
 
     constructor() {
@@ -248,6 +257,8 @@ export class StudyViewPageStore {
     @observable private geneQueries: SingleGeneQuery[] = [];
 
     @observable private queriedGeneSet = observable.map<boolean>();
+
+    private geneMapCache:{[entrezGeneId:number]:string} = {};
 
     @observable private chartsDimension = observable.map<ChartDimension>();
 
@@ -393,6 +404,11 @@ export class StudyViewPageStore {
     @action updateSelectedGenes(query: SingleGeneQuery[], genesInQuery: Gene[]) {
         this.geneQueries = query;
         this.queriedGeneSet = new ObservableMap(stringListToSet(genesInQuery.map(gene => gene.hugoGeneSymbol)))
+    }
+
+    @autobind
+    getKnownHugoGeneSymbolByEntrezGeneId(entrezGeneId: number): string | undefined {
+        return this.geneMapCache[entrezGeneId];
     }
 
     @autobind
@@ -660,8 +676,9 @@ export class StudyViewPageStore {
 
     @autobind
     @action
-    addGeneFilters(entrezGeneIds: number[]) {
-        this._mutatedGeneFilter = [...this._mutatedGeneFilter, {entrezGeneIds: entrezGeneIds}];
+    addGeneFilters(genes: GeneIdentifier[]) {
+        genes.forEach(gene => this.geneMapCache[gene.entrezGeneId] = gene.hugoGeneSymbol);
+        this._mutatedGeneFilter = [...this._mutatedGeneFilter, {entrezGeneIds: genes.map(gene => gene.entrezGeneId)}];
     }
 
     @autobind
@@ -732,8 +749,16 @@ export class StudyViewPageStore {
 
     @autobind
     @action
-    addCNAGeneFilters(filters: CopyNumberGeneFilterElement[]) {
-        this._cnaGeneFilter = [...this._cnaGeneFilter, {alterations: filters}];
+    addCNAGeneFilters(filters: CopyNumberAlterationIdentifier[]) {
+        filters.forEach(filter => this.geneMapCache[filter.entrezGeneId]  = filter.hugoGeneSymbol);
+        this._cnaGeneFilter = [...this._cnaGeneFilter, {
+            alterations: filters.map(filter => {
+                return {
+                    alteration: filter.alteration,
+                    entrezGeneId: filter.entrezGeneId
+                } as CopyNumberGeneFilterElement
+            })
+        }];
     }
 
     @autobind

@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as _ from "lodash";
-import {CNAGenesData} from "pages/studyView/StudyViewPageStore";
+import {CNAGenesData, CopyNumberAlterationIdentifier} from "pages/studyView/StudyViewPageStore";
 import {action, computed, observable} from "mobx";
 import {observer} from "mobx-react";
 import styles from "./tables.module.scss";
@@ -15,7 +15,7 @@ import autobind from 'autobind-decorator';
 import {getCNAByAlteration, getCNAColorByAlteration, getFrequencyStr, getQValue} from "../StudyViewUtils";
 
 
-export type  CNAGenesTableUserSelectionWithIndex = CopyNumberGeneFilterElement & {
+export type  CNAGenesTableUserSelectionWithIndex = CopyNumberAlterationIdentifier & {
     rowIndex: number;
 }
 
@@ -24,7 +24,7 @@ export interface ICNAGenesTablePros {
     width: number;
     height: number;
     filters: CopyNumberGeneFilterElement[];
-    onUserSelection: (selection: CopyNumberGeneFilterElement[]) => void;
+    onUserSelection: (selection: CopyNumberAlterationIdentifier[]) => void;
     numOfSelectedSamples: number;
     onGeneSelect: (hugoGeneSymbol: string) => void;
     selectedGenes: string[]
@@ -172,7 +172,8 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                 this.preSelectedRows.push({
                     rowIndex: dataIndex,
                     entrezGeneId: datum.entrezGeneId,
-                    alteration: datum.alteration
+                    alteration: datum.alteration,
+                    hugoGeneSymbol: datum.hugoGeneSymbol
                 })
             }
         } else {
@@ -186,7 +187,8 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         this.props.onUserSelection(this.preSelectedRows.map(row => {
             return {
                 entrezGeneId: row.entrezGeneId,
-                alteration: row.alteration
+                alteration: row.alteration,
+                hugoGeneSymbol: row.hugoGeneSymbol
             };
         }));
         this.preSelectedRows = [];
@@ -202,7 +204,8 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                     acc.push({
                         rowIndex: index,
                         entrezGeneId: row.entrezGeneId,
-                        alteration: row.alteration
+                        alteration: row.alteration,
+                        hugoGeneSymbol: row.hugoGeneSymbol
                     });
                 }
                 return acc;
