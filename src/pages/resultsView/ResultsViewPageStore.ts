@@ -1063,28 +1063,26 @@ export class ResultsViewPageStore {
     readonly sequencedSampleKeys = remoteData<string[]>({
         await:()=>[
             this.samples,
-            this.coverageInformation
+            this.coverageInformation,
+            this.selectedMolecularProfiles
         ],
         invoke:()=>{
             const genePanelInformation = this.coverageInformation.result!;
-            return Promise.resolve(this.samples.result!.map(s=>s.uniqueSampleKey).filter(k=>{
-                const sequencedInfo = genePanelInformation.samples[k];
-                return !!sequencedInfo.allGenes.length || !!Object.keys(sequencedInfo.byGene).length;
-            }));
+            const profileIds = this.selectedMolecularProfiles.result!.map(p=>p.molecularProfileId);
+            return Promise.resolve(_.chain(this.samples.result!).filter(sample=>{
+                return _.some(isSampleProfiledInMultiple(sample.uniqueSampleKey, profileIds, genePanelInformation));
+            }).map(s=>s.uniqueSampleKey).value());
         }
     });
 
     readonly sequencedPatientKeys = remoteData<string[]>({
         await:()=>[
-            this.patients,
-            this.coverageInformation
+            this.sampleKeyToSample,
+            this.sequencedSampleKeys
         ],
-        invoke:()=>{
-            const genePanelInformation = this.coverageInformation.result!;
-            return Promise.resolve(this.patients.result!.map(p=>p.uniquePatientKey).filter(k=>{
-                const sequencedInfo = genePanelInformation.patients[k];
-                return !!sequencedInfo.allGenes.length || !!Object.keys(sequencedInfo.byGene).length;
-            }));
+        invoke:async()=>{
+            const sampleKeyToSample = this.sampleKeyToSample.result!;
+            return _.chain(this.sequencedSampleKeys.result!).map(k=>sampleKeyToSample[k].uniquePatientKey).uniq().value();
         }
     });
 
