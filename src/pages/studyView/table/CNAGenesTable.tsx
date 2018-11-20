@@ -44,6 +44,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
     private _columns = [
         {
             name: 'Gene',
+            tooltip:(<span>Gene</span>),
             render: (data: CopyNumberCountByGene) => {
                 const addGeneOverlay = () =>
                     <span>{`Click ${data.hugoGeneSymbol} to ${_.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? 'remove' : 'add'} from your query`}</span>;
@@ -83,6 +84,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         },
         {
             name: 'Cytoband',
+            tooltip:(<span>Cytoband</span>),
             render: (data: CopyNumberCountByGene) => <span>{data.cytoband}</span>,
             sortBy: (data: CopyNumberCountByGene) => data.cytoband,
             defaultSortDirection: 'asc' as 'asc',
@@ -93,6 +95,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         },
         {
             name: 'CNA',
+            tooltip:(<span>Copy number alteration, only amplifications and deep deletions are shown</span>),
             render: (data: CopyNumberCountByGene) =>
                 <span style={{color: getCNAColorByAlteration(data.alteration)}}>
                     {getCNAByAlteration(data.alteration)}
@@ -106,6 +109,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         },
         {
             name: '#',
+            tooltip:(<span>Number of samples with the listed copy number alteration</span>),
             render: (data: CopyNumberCountByGene) =>
                 <LabeledCheckbox
                     checked={this.isChecked(data.entrezGeneId, data.alteration)}
@@ -123,6 +127,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         },
         {
             name: 'Freq',
+            tooltip:(<span>Percentage of samples with the listed copy number alteration</span>),
             render: (data: CopyNumberCountByGene) => <span>{getFrequencyStr(data.frequency)}</span>,
             sortBy: (data: CopyNumberCountByGene) => data.frequency,
             defaultSortDirection: 'desc' as 'desc',
