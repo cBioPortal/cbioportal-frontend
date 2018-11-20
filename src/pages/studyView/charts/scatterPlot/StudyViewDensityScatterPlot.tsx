@@ -341,12 +341,12 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
             );
 
             const labels = [
-                <text fontSize={11} x={rectX+rectWidth+4} y={rectY} dy="1em">{this.plotComputations.countMax}</text>,
-                <text fontSize={11} x={rectX+rectWidth+4} y={rectY+rectHeight} dy="-0.3em">{this.plotComputations.countMin}</text>
+                <text fontSize={11} x={rectX+rectWidth+4} y={rectY} dy="1em">{this.plotComputations.countMax.toLocaleString()}</text>,
+                <text fontSize={11} x={rectX+rectWidth+4} y={rectY+rectHeight} dy="-0.3em">{this.plotComputations.countMin.toLocaleString()}</text>
             ];
             if (largeRange) {
                 // only add a middle label if theres room for another whole number in between
-                labels.push(<text fontSize={11} x={rectX+rectWidth+4} y={rectY+(rectHeight/2)} dy="0.3em">{Math.round(colorCoordToCount(0.5))}</text>);
+                labels.push(<text fontSize={11} x={rectX+rectWidth+4} y={rectY+(rectHeight/2)} dy="0.3em">{Math.round(colorCoordToCount(0.5)).toLocaleString()}</text>);
             }
 
             const title = <text fontSize={11} x={rectX} y={rectY} dy="-0.5em" dx="-12px"># samples</text>;
