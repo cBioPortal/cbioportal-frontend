@@ -8,7 +8,7 @@ import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 import {AbstractChart} from "pages/studyView/charts/ChartContainer";
 import ifndef from "shared/lib/ifndef";
 import autobind from 'autobind-decorator';
-import { ClinicalDataCountWithColor } from "pages/studyView/StudyViewPageStore";
+import {ClinicalDataCountWithColor, ClinicalDataType} from "pages/studyView/StudyViewPageStore";
 import classnames from 'classnames';
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
 import {If} from 'react-if';
@@ -22,7 +22,9 @@ export interface IPieChartProps {
     onUserSelection: (values: string[]) => void;
     active: boolean;
     placement: 'left' | 'right';
+    patientAttribute: boolean;
     label?: string;
+    labelDescription?: string;
 }
 
 @observer
@@ -239,6 +241,8 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                                 width={300}
                                 height={150}
                                 data={this.props.data}
+                                labelDescription={this.props.labelDescription}
+                                patientAttribute={this.props.patientAttribute}
                                 filters={this.props.filters}
                                 highlightedRow={this.highlightedRow}
                                 onUserSelection={this.props.onUserSelection}
