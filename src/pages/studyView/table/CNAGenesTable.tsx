@@ -44,13 +44,14 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
     private _columns = [
         {
             name: 'Gene',
+            tooltip:(<span>Gene</span>),
             render: (data: CopyNumberCountByGene) => {
                 const addGeneOverlay = () =>
-                    <span>{`Click ${data.hugoGeneSymbol} to ${_.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? 'remove' : 'add'} from your query`}</span>;
+                    <span>{`Click ${data.hugoGeneSymbol} to ${_.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? 'remove from' : 'add to'} your query`}</span>;
                 const qvalOverlay = () =>
                     <div><b>Gistic</b><br/><i>Q-value: </i><span>{getQValue(data.qValue)}</span></div>;
                 return (
-                    <div className={classnames(styles.noFlexShrink, styles.displayFlex)}>
+                    <div className={classnames(styles.displayFlex)}>
                         <DefaultTooltip
                             placement="left"
                             overlay={addGeneOverlay}
@@ -68,7 +69,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                                 overlay={qvalOverlay}
                                 destroyTooltipOnHide={true}
                             >
-                                <img src={require("./images/gistic.png")} className={styles.mutSig}></img>
+                                <span><img src={require("./images/gistic.png")} className={styles.gistic}></img></span>
                             </DefaultTooltip>
                         </If>
                     </div>
@@ -83,6 +84,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         },
         {
             name: 'Cytoband',
+            tooltip:(<span>Cytoband</span>),
             render: (data: CopyNumberCountByGene) => <span>{data.cytoband}</span>,
             sortBy: (data: CopyNumberCountByGene) => data.cytoband,
             defaultSortDirection: 'asc' as 'asc',
@@ -93,6 +95,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         },
         {
             name: 'CNA',
+            tooltip:(<span>Copy number alteration, only amplifications and deep deletions are shown</span>),
             render: (data: CopyNumberCountByGene) =>
                 <span style={{color: getCNAColorByAlteration(data.alteration)}}>
                     {getCNAByAlteration(data.alteration)}
@@ -106,13 +109,14 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         },
         {
             name: '#',
+            tooltip:(<span>Number of samples with the listed copy number alteration</span>),
             render: (data: CopyNumberCountByGene) =>
                 <LabeledCheckbox
                     checked={this.isChecked(data.entrezGeneId, data.alteration)}
                     disabled={this.isDisabled(data.entrezGeneId, data.alteration)}
                     onChange={event => this.togglePreSelectRow(data.entrezGeneId, data.alteration)}
                 >
-                    {data.countByEntity}
+                    {data.countByEntity.toLocaleString()}
                 </LabeledCheckbox>,
             sortBy: (data: CopyNumberCountByGene) => data.countByEntity,
             defaultSortDirection: 'desc' as 'desc',
@@ -123,6 +127,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         },
         {
             name: 'Freq',
+            tooltip:(<span>Percentage of samples with the listed copy number alteration</span>),
             render: (data: CopyNumberCountByGene) => <span>{getFrequencyStr(data.frequency)}</span>,
             sortBy: (data: CopyNumberCountByGene) => data.frequency,
             defaultSortDirection: 'desc' as 'desc',
