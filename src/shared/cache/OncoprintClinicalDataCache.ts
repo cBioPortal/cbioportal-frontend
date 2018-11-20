@@ -20,6 +20,10 @@ export enum SpecialAttribute {
     NumSamplesOfPatient = "NUM_SAMPLES_OF_PATIENT"
 }
 
+export function clinicalAttributeIsPROFILEDIN(attribute:{clinicalAttributeId:string|SpecialAttribute}) {
+    return attribute.clinicalAttributeId.startsWith(SpecialAttribute.ProfiledInPrefix);
+}
+
 type OncoprintClinicalData = ClinicalData[]|MutationSpectrum[];
 
 function makeProfiledData(

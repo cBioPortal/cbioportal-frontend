@@ -29,6 +29,7 @@ export type ClinicalTrackSpec = {
     data: ClinicalTrackDatum[];
     altered_uids?:string[];
     na_legend_label?:string;
+    na_tooltip_value?:string; // If given, then show a tooltip over NA columns that has this value
     custom_options?:CustomTrackOption[];
 } & ({
     datatype: "counts";
