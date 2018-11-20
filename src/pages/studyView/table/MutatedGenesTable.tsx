@@ -44,6 +44,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
     private _tableColumns = [
         {
             name: 'Gene',
+            tooltip:(<span>Gene</span>),
             render: (data: MutationCountByGene) => {
                 const addGeneOverlay = () =>
                     <span>{`Click ${data.hugoGeneSymbol} to ${_.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? 'remove' : 'add'} from your query`}</span>;
@@ -83,6 +84,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         },
         {
             name: '# Mut',
+            tooltip:(<span>Total number of mutations</span>),
             render: (data: MutationCountByGene) => <span>{data.totalCount.toLocaleString()}</span>,
             sortBy: (data: MutationCountByGene) => data.totalCount,
             defaultSortDirection: 'desc' as 'desc',
@@ -93,6 +95,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         },
         {
             name: '#',
+            tooltip:(<span>Number of samples with one or more mutations</span>),
             render: (data: MutationCountByGene) =>
                 <LabeledCheckbox
                     checked={this.isChecked(data.entrezGeneId)}
@@ -110,6 +113,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         },
         {
             name: 'Freq',
+            tooltip:(<span>Percentage of samples with one or more mutations</span>),
             render: (data: MutationCountByGene) => <span>{getFrequencyStr(data.frequency)}</span>,
             sortBy: (data: MutationCountByGene) => data.frequency,
             defaultSortDirection: 'desc' as 'desc',
