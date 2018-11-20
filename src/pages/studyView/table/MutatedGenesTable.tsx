@@ -51,7 +51,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                 const qvalOverlay = () =>
                     <div><b>MutSig</b><br/><i>Q-value: </i><span>{getQValue(data.qValue)}</span></div>;
                 return (
-                    <div className={styles.ellipsisText}>
+                    <div className={styles.displayFlex}>
                         <DefaultTooltip
                             placement="left"
                             overlay={addGeneOverlay}
@@ -69,7 +69,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                                 overlay={qvalOverlay}
                                 destroyTooltipOnHide={true}
                             >
-                                <img src={require("./images/mutsig.png")} className={styles.mutSig}></img>
+                                <span><img src={require("./images/mutsig.png")} className={styles.mutSig}></img></span>
                             </DefaultTooltip>
                         </If>
                     </div>
