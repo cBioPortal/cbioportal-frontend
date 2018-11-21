@@ -19,15 +19,18 @@ describe("QuerySummaryUtils", () => {
     });
     describe("getAlterationSummary", ()=>{
         it("gives correct summary for various inputs", ()=>{
-            expect(getAlterationSummary(10, 10, 10, 10, 5)).toEqualJSX(<strong>
-                Queried genes are altered in 10 (100%) of queried samples
-            </strong>, "all altered, same number samples and patients");
-            expect(getAlterationSummary(10, 8, 7, 4, 1)).toEqualJSX(<strong>
-                Queried gene is altered in 4 (50%) of queried patients and 7 (70%) of queried samples
-            </strong>, "not all altered, different number samples and patients");
-            expect(getAlterationSummary(8, 8, 0, 0, 1)).toEqualJSX(<strong>
-                Queried gene is altered in 0 (0%) of queried samples
-            </strong>, "none altered, same number samples and patients");
+            expect(getAlterationSummary(10, 10, 10, 10, 5)).toEqualJSX(<strong><span>
+                Queried genes are altered in 10 (100%) of queried patients/samples
+            </span></strong>, "all altered, same number samples and patients");
+
+            const notAllAlteredDifferentSamplesAndPatients = getAlterationSummary(10, 8, 7, 4, 1);
+            expect(notAllAlteredDifferentSamplesAndPatients).toIncludeJSX("Queried gene is altered in ", "not all altered, different number samples and patients 1");
+            expect(notAllAlteredDifferentSamplesAndPatients).toIncludeJSX("4 (50%) of queried patients", "not all altered, different number samples and patients 2");
+            expect(notAllAlteredDifferentSamplesAndPatients).toIncludeJSX("7 (70%) of queried samples", "not all altered, different number samples and patients 3");
+
+            expect(getAlterationSummary(8, 8, 0, 0, 1)).toEqualJSX(<strong><span>
+                Queried gene is altered in 0 (0%) of queried patients/samples
+            </span></strong>, "none altered, same number samples and patients");
         });
     });
 });
