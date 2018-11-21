@@ -138,9 +138,9 @@ export function mutationCountVsCnaTooltip(d:IStudyViewDensityScatterPlotDatum) {
     const binStats = getBinStatsForTooltip(d);
     return (
         <div>
+            <div>Number of Samples: <b>{d.count.toLocaleString()}</b></div>
             <div>Mutation Count: <b>{binStats.mutRange}</b></div>
             <div>Fraction Genome Altered: <b>{binStats.fgaRange}</b></div>
-            <div>Number of samples: <b>{d.count.toLocaleString()}</b></div>
         </div>
     );
 }
