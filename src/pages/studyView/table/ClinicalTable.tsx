@@ -4,7 +4,7 @@ import {computed, toJS} from "mobx";
 import autobind from 'autobind-decorator';
 import _ from "lodash";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
-import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
+import {ClinicalDataCountWithColor, ClinicalDataType, ClinicalDataTypeEnum} from "pages/studyView/StudyViewPageStore";
 import FixedHeaderTable from "./FixedHeaderTable";
 import styles from "./tables.module.scss";
 import {getFrequencyStr} from "../StudyViewUtils";
@@ -15,6 +15,8 @@ export interface IClinicalTableProps {
     highlightedRow?: (value: string | undefined) => void;
     onUserSelection: (values: string[]) => void;
     label?: string,
+    labelDescription?: string,
+    patientAttribute: boolean,
     width?: number,
     height?: number
 }
@@ -59,6 +61,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
                 </div>
             )
         },
+        tooltip: this.props.labelDescription ? (<span>{this.props.labelDescription}</span>) : undefined,
         filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => (d.value.toUpperCase().indexOf(filterStringUpper) > -1),
         sortBy: (d: ClinicalDataCountWithColor) => d.value,
         defaultSortDirection: 'asc' as 'asc',
@@ -71,6 +74,8 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
                 onChange={event => this.onUserSelection(data.value)}>
                 {data.count.toLocaleString()}
             </LabeledCheckbox>,
+        tooltip: (
+            <span>Number of {this.props.patientAttribute ? 'patients' : 'samples'}</span>),
         filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => (d.count.toString().indexOf(f) > -1),
         sortBy: (d: ClinicalDataCountWithColor) => d.count,
         defaultSortDirection: 'desc' as 'desc',
@@ -79,6 +84,8 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
         name: 'Freq',
         render: (data: ClinicalDataCountWithColor) =>
             <span>{getFrequencyStr((data.count / this.totalCount) * 100)}</span>,
+        tooltip: (
+            <span>Percentage of {this.props.patientAttribute ? 'patients' : 'samples'}</span>),
         filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => {
             let freq = getFrequencyStr((d.count / this.totalCount) * 100);
             return (freq.indexOf(filterStringUpper) > -1)

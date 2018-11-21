@@ -5,8 +5,8 @@ import {observable} from 'mobx';
 import {
     AnalysisGroup,
     ChartMeta,
-    ChartType,
-    CUSTOM_CHART_KEYS,
+    ChartType, CopyNumberAlterationIdentifier,
+    CUSTOM_CHART_KEYS, GeneIdentifier,
     StudyViewPageStore,
     UniqueKey
 } from 'pages/studyView/StudyViewPageStore';
@@ -60,8 +60,8 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             onToggleLogScale: (chartMeta: ChartMeta) => {
                 this.store.toggleLogScale(chartMeta);
             },
-            addGeneFilters: (entrezGeneIds: number[]) => {
-                this.store.addGeneFilters(entrezGeneIds);
+            addGeneFilters: (genes: GeneIdentifier[]) => {
+                this.store.addGeneFilters(genes);
             },
             removeGeneFilter: (entrezGeneId:number) => {
                 this.store.removeGeneFilter(entrezGeneId);
@@ -78,8 +78,8 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             resetMutationCountVsCNAFilter: ()=>{
                 this.store.resetMutationCountVsCNAFilter();
             },
-            addCNAGeneFilters: (filters:CopyNumberGeneFilterElement[]) => {
-                this.store.addCNAGeneFilters(filters);
+            addCNAGeneFilters: (genes:CopyNumberAlterationIdentifier[]) => {
+                this.store.addCNAGeneFilters(genes);
             },
             onDeleteChart: (chartMeta: ChartMeta) => {
                 // reset analysis groups settings if theyre based on this chart
@@ -341,6 +341,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
 
                     <UserSelections
                             filter={this.props.store.userSelections}
+                            getSelectedGene={this.props.store.getKnownHugoGeneSymbolByEntrezGeneId}
                             attributesMetaSet={this.props.store.chartMetaSet}
                             updateClinicalDataEqualityFilter={this.props.store.updateClinicalDataEqualityFilters}
                             updateClinicalDataIntervalFilter={ this.props.store.updateClinicalDataIntervalFiltersByValues}
