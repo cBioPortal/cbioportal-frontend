@@ -2,6 +2,7 @@ import $ from 'jquery';
 import AppConfig from "appConfig";
 import getBrowserWindow from "./getBrowserWindow";
 import * as _ from 'lodash';
+import {log} from "./consoleLog";
 
 
 export function initializeTracking(){
@@ -31,6 +32,7 @@ export function embedGoogleAnalytics(ga_code:string){
 }
 
 export function sendSentryMessage(msg:string) {
+    log("sentry message", msg);
     if ((window as any).Sentry) {
         (window as any).Sentry.captureException(new Error(msg));
     }
