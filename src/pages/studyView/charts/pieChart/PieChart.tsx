@@ -8,7 +8,7 @@ import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 import {AbstractChart} from "pages/studyView/charts/ChartContainer";
 import ifndef from "shared/lib/ifndef";
 import autobind from 'autobind-decorator';
-import {ClinicalDataCountWithColor, ClinicalDataType} from "pages/studyView/StudyViewPageStore";
+import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
 import classnames from 'classnames';
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
 import {If} from 'react-if';
@@ -148,7 +148,8 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
 
     @autobind
     private label(d: ClinicalDataCountWithColor) {
-        return ((d.count * 360) / this.totalCount) < 20 ? '' : d.count.toLocaleString();
+        // Roughly let's say do not show label when the percentage is lower than (digits of the count * 5% )
+        return (d.count / this.totalCount) < (0.05 * d.count.toLocaleString().length) ? '' : d.count.toLocaleString();
     }
 
     // We do want to show a bigger pie chart when the height is way smaller than width
@@ -166,7 +167,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                 groupComponent={<g className="studyViewPieChartGroup" />}
                 width={this.props.width}
                 height={this.chartSize}
-                labelRadius={20}
+                labelRadius={15}
                 padding={30}
                 labels={this.label}
                 data={this.props.data}
