@@ -146,7 +146,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
 
     @autobind
     private label(d: ClinicalDataCountWithColor) {
-        return ((d.count * 360) / this.totalCount) < 20 ? '' : d.count;
+        return ((d.count * 360) / this.totalCount) < 20 ? '' : d.count.toLocaleString();
     }
 
     // We do want to show a bigger pie chart when the height is way smaller than width

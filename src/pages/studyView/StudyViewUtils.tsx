@@ -129,9 +129,9 @@ function getBinStatsForTooltip(d:IStudyViewDensityScatterPlotDatum) {
         fgaRange = d.minX.toFixed(2);
     }
     if (d.maxY !== d.minY) {
-        mutRange = `${d.minY}-${d.maxY}`;
+        mutRange = `${d.minY.toLocaleString()}-${d.maxY.toLocaleString()}`;
     } else {
-        mutRange = d.minY.toString();
+        mutRange = d.minY.toLocaleString();
     }
     return {mutRange, fgaRange};
 }
@@ -139,9 +139,9 @@ export function mutationCountVsCnaTooltip(d:IStudyViewDensityScatterPlotDatum) {
     const binStats = getBinStatsForTooltip(d);
     return (
         <div>
+            <div>Number of Samples: <b>{d.count.toLocaleString()}</b></div>
             <div>Mutation Count: <b>{binStats.mutRange}</b></div>
             <div>Fraction Genome Altered: <b>{binStats.fgaRange}</b></div>
-            <div>Number of samples: <b>{d.count}</b></div>
         </div>
     );
 }

@@ -12,7 +12,8 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     digital_slide_archive_meta_url:"https://api.digitalslidearchive.org/api/v1/tcga/image?caseName=",
 
     mdacc_heatmap_patient_url: "https://bioinformatics.mdanderson.org/participant2maps?participant=",
-    mdacc_heatmap_study_url: "https://bioinformatics.mdanderson.org/study2url?studyid=",
+    mdacc_heatmap_study_meta_url: "https://bioinformatics.mdanderson.org/study2url?studyid=",
+    mdacc_heatmap_study_url: "https:// bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?",
 
     mygene_info_url: "https://mygene.info/v3/gene/<%= entrezGeneId %>?fields=uniprot",
 

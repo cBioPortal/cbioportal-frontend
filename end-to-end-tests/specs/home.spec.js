@@ -893,6 +893,11 @@ describe('oncoprint', function() {
                 "new sorted patient order correct - 4"
             );
 
+            while (!browser.isVisible('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]')) {
+                // behavior varies whether this menu is still visible, so we have to go into this loop to make sure its visible before clicking to sample mode
+                browser.click('.oncoprintContainer .oncoprint__controls #viewDropdownButton')// open view menu
+                browser.pause(100);
+            }
             $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
 
             waitForOncoprint(10000);
