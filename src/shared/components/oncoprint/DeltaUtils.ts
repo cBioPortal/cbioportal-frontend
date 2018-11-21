@@ -678,7 +678,8 @@ function transitionClinicalTrack(
             sortCmpFn: getClinicalTrackSortComparator(nextSpec),
             init_sort_direction: 0 as 0,
             target_group: CLINICAL_TRACK_GROUP_INDEX,
-            onSortDirectionChange: nextProps.onTrackSortDirectionChange
+            onSortDirectionChange: nextProps.onTrackSortDirectionChange,
+            custom_track_options: nextSpec.custom_options
         };
         trackSpecKeyToTrackId[nextSpec.key] = oncoprint.addTracks([clinicalTrackParams])[0];
     } else if (nextSpec && prevSpec) {
@@ -694,6 +695,10 @@ function transitionClinicalTrack(
         }
         // set tooltip, its cheap
         oncoprint.setTrackTooltipFn(trackId, makeClinicalTrackTooltip(nextSpec, true));
+        // set custom track options if they've shallow changed - its cheap
+        if (prevSpec.custom_options !== nextSpec.custom_options) {
+            oncoprint.setTrackCustomOptions(trackId, nextSpec.custom_options);
+        }
     }
 }
 function transitionGenesetHeatmapTrack(
