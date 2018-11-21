@@ -17,6 +17,7 @@ import styles from './styles.module.scss';
 import SelectedInfo from "./SelectedInfo/SelectedInfo";
 import LabeledCheckbox from "../../shared/components/labeledCheckbox/LabeledCheckbox";
 import {Alert} from 'react-bootstrap';
+import {getMDAndersonHeatmapStudyUrl} from "../../shared/api/urls";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -102,7 +103,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                     <LoadingIndicator
                                                         isLoading={this.store.molecularProfileSampleCounts.isPending}/>
                                                     {this.store.molecularProfileSampleCounts.isComplete && (
-                                                        `${this.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples} with Mutations`)}
+                                                        `${this.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples.toLocaleString()} with mutation data`)}
                                                 </LabeledCheckbox>
                                             </button>
                                         )}
@@ -116,7 +117,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                     <LoadingIndicator
                                                         isLoading={this.store.molecularProfileSampleCounts.isPending}/>
                                                     {this.store.molecularProfileSampleCounts.isComplete && (
-                                                        `${this.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples} with CNA`)}
+                                                        `${this.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples.toLocaleString()} with CNA data`)}
                                                 </LabeledCheckbox>
                                             </button>
                                         )}

@@ -620,6 +620,7 @@ export class StudyViewPageStore {
         }
     });
 
+    @autobind
     @action
     updateClinicalDataEqualityFilters(chartMeta: ChartMeta, values: string[]) {
         if (values.length > 0) {
@@ -641,6 +642,7 @@ export class StudyViewPageStore {
         this.updateClinicalDataIntervalFiltersByValues(chartMeta, values);
     }
 
+    @autobind
     @action
     updateClinicalDataIntervalFiltersByValues(chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) {
         if (values.length > 0) {
@@ -656,11 +658,13 @@ export class StudyViewPageStore {
         }
     }
 
+    @autobind
     @action
     addGeneFilters(entrezGeneIds: number[]) {
         this._mutatedGeneFilter = [...this._mutatedGeneFilter, {entrezGeneIds: entrezGeneIds}];
     }
 
+    @autobind
     @action
     removeGeneFilter(toBeRemoved: number) {
         this._mutatedGeneFilter = _.reduce(this._mutatedGeneFilter, (acc, next) => {
@@ -679,12 +683,14 @@ export class StudyViewPageStore {
         }, [] as MutationGeneFilter[]);
     }
 
+    @autobind
     @action resetGeneFilter() {
         if(this._mutatedGeneFilter.length > 0) {
             this._mutatedGeneFilter = [];
         }
     }
 
+    @autobind
     @action
     updateChartSampleIdentifierFilter(chartKey:string, cases: SampleIdentifier[], keepCurrent?:boolean) {
 
@@ -724,11 +730,13 @@ export class StudyViewPageStore {
         return this._customCharts.has(uniqueKey);
     }
 
+    @autobind
     @action
     addCNAGeneFilters(filters: CopyNumberGeneFilterElement[]) {
         this._cnaGeneFilter = [...this._cnaGeneFilter, {alterations: filters}];
     }
 
+    @autobind
     @action
     removeCNAGeneFilters(toBeRemoved: CopyNumberGeneFilterElement) {
         this._cnaGeneFilter = _.reduce(this._cnaGeneFilter, (acc, next) => {
@@ -747,6 +755,7 @@ export class StudyViewPageStore {
         }, [] as CopyNumberGeneFilter[]);
     }
 
+    @autobind
     @action
     resetCNAGeneFilter() {
         if(this._cnaGeneFilter.length > 0) {
@@ -762,11 +771,13 @@ export class StudyViewPageStore {
         }
     }
 
+    @autobind
     @action
     setMutationCountVsCNAFilter(bounds:RectangleBounds) {
         this._mutationCountVsCNAFilter = bounds;
     }
 
+    @autobind
     @action
     resetMutationCountVsCNAFilter() {
         this._mutationCountVsCNAFilter = undefined;
