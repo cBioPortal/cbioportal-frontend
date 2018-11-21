@@ -21,7 +21,7 @@ export default class SelectedInfo extends React.Component<ISelectedInfoProps, {}
         return <div className={styles.main}>
             <span className={styles.title}>Selected:</span>
             <span className={styles.content}>
-                {this.selectedPatientsCount} patients | {this.props.selectedSamples.length} samples
+                {this.selectedPatientsCount.toLocaleString()} patients | {this.props.selectedSamples.length.toLocaleString()} samples
             </span>
         </div>
     }
