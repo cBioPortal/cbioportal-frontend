@@ -1514,6 +1514,9 @@ export class StudyViewPageStore {
                 if (obj.datatype === 'NUMBER') {
                     this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
                     this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.BAR_CHART]);
+                } else {
+                    this.chartsType.set(uniqueKey, ChartTypeEnum.PIE_CHART);
+                    this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.PIE_CHART]);
                 }
 
                 if(obj.datatype === 'NUMBER') {
