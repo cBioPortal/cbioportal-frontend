@@ -5,7 +5,6 @@ import {
     ClinicalDataCount,
     ClinicalDataIntervalFilterValue,
     DataBin,
-    DensityPlotBin,
     SampleIdentifier,
     StudyViewFilter
 } from "shared/api/generated/CBioPortalAPIInternal";
@@ -776,8 +775,10 @@ export function getFrequencyStr(value: number) {
         return 'NA';
     } else if (value === 0) {
         str = '0';
+    } else if (value < 100 && value >= 99.9) {
+        str = `99.9`;
     } else if (value >= 0.1) {
-        str = (Math.floor(value * 10) / 10).toString();
+        str = (Math.round(value * 10) / 10).toString();
     } else {
         str = '<0.1';
     }
