@@ -1602,12 +1602,12 @@ describe('StudyViewUtils', () => {
             assert.equal(getFrequencyStr(positiveValues[1]), "0.6%");
             assert.equal(getFrequencyStr(positiveValues[2]), "1%");
             assert.equal(getFrequencyStr(positiveValues[3]), "1%");
-            assert.equal(getFrequencyStr(positiveValues[4]), "1.5%");
+            assert.equal(getFrequencyStr(positiveValues[4]), "1.6%");
             assert.equal(getFrequencyStr(positiveValues[5]), "1.8%");
-            assert.equal(getFrequencyStr(positiveValues[6]), "16.9%");
-            assert.equal(getFrequencyStr(positiveValues[7]), "16.7%");
+            assert.equal(getFrequencyStr(positiveValues[6]), "17%");
+            assert.equal(getFrequencyStr(positiveValues[7]), "16.8%");
             assert.equal(getFrequencyStr(positiveValues[8]), "16.7%");
-            assert.equal(getFrequencyStr(positiveValues[9]), "666.6%");
+            assert.equal(getFrequencyStr(positiveValues[9]), "666.7%");
         });
     });
 
@@ -1644,12 +1644,12 @@ describe('StudyViewUtils', () => {
             assert.equal(formatFrequency(positiveValues[1]), 0.6);
             assert.equal(formatFrequency(positiveValues[2]), 1);
             assert.equal(formatFrequency(positiveValues[3]), 1);
-            assert.equal(formatFrequency(positiveValues[4]), 1.5);
+            assert.equal(formatFrequency(positiveValues[4]), 1.6);
             assert.equal(formatFrequency(positiveValues[5]), 1.8);
-            assert.equal(formatFrequency(positiveValues[6]), 16.9);
-            assert.equal(formatFrequency(positiveValues[7]), 16.7);
+            assert.equal(formatFrequency(positiveValues[6]), 17);
+            assert.equal(formatFrequency(positiveValues[7]), 16.8);
             assert.equal(formatFrequency(positiveValues[8]), 16.7);
-            assert.equal(formatFrequency(positiveValues[9]), 666.6);
+            assert.equal(formatFrequency(positiveValues[9]), 666.7);
         });
     });
 
