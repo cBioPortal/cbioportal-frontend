@@ -63,10 +63,9 @@ export class DataAccessTokens extends React.Component<IDataAccessTokensProps, {}
             {
                 id:"datDownload",
                 action:<a onClick={() => this.downloadDataAccessTokenFile()}>Download token</a>,
-                hide:AppConfig.serverConfig.authenticationMethod === "social_auth"
+                hide:(AppConfig.serverConfig.authenticationMethod === "social_auth" || (AppConfig.serverConfig.dat_method !== "uuid" && AppConfig.serverConfig.dat_method !== "jwt"))
             }
         ];
-
         const shownListItems = listItems.filter((l)=>{
             return !l.hide;
         });
@@ -90,7 +89,6 @@ export class DataAccessTokens extends React.Component<IDataAccessTokensProps, {}
                 internalClient.createDataAccessTokenUsingPOST(
                     {'allowRevocationOfOtherTokens':AppConfig.serverConfig.dat_revoke_other_tokens}))
             const dat = new UserDataAccessToken(_token.token, _token.creation, _token.expiration, _token.username);
-            this.setState({userDataAccessToken : dat})
             return dat;
         } else {
             return undefined;
