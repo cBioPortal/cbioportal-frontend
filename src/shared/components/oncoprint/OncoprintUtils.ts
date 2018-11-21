@@ -39,6 +39,7 @@ import {
     Sample
 } from "../../api/generated/CBioPortalAPI";
 import {clinicalAttributeIsPROFILEDIN, SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
+import {STUDY_VIEW_CONFIG} from "../../../pages/studyView/StudyViewConfig";
 
 interface IGenesetExpansionMap {
         [genesetTrackKey: string]: IGeneHeatmapTrackSpec[];
@@ -201,26 +202,34 @@ export function getGeneticTrackRuleSetParams(distinguishMutationType?:boolean, d
 }
 
 export function getClinicalTrackRuleSetParams(track:ClinicalTrackSpec) {
-    if (track.datatype === "number") {
-        return {
-            type: 'bar',
-            value_key: "attr_val",
-            value_range: track.numberRange,
-            log_scale: track.numberLogScale
-        };
-    } else if (track.datatype === "counts") {
-        return {
-            type: "stacked_bar",
-            value_key: "attr_val",
-            categories: track.countsCategoryLabels,
-            fills: track.countsCategoryFills
-        };
-    } else {
-        return {
-            type: 'categorical',
-            category_key: "attr_val"
-        };
+    let params:RuleSetParams;
+    switch (track.datatype) {
+        case "number":
+            params = {
+                type: 'bar',
+                value_key: "attr_val",
+                value_range: track.numberRange,
+                log_scale: track.numberLogScale
+            };
+            break;
+        case "counts":
+            params = {
+                type: "stacked_bar",
+                value_key: "attr_val",
+                categories: track.countsCategoryLabels,
+                fills: track.countsCategoryFills
+            };
+            break;
+        case "string":
+        default:
+            params = {
+                type: 'categorical',
+                category_key: "attr_val",
+                category_to_color: STUDY_VIEW_CONFIG.colors.reservedValue
+            };
+            break;
     }
+    return params;
 }
 
 export function percentAltered(altered:number, sequenced:number) {
