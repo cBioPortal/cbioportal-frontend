@@ -4,13 +4,7 @@ import {observer} from "mobx-react";
 import styles from "./styles.module.scss";
 import {ChildButton, MainButton, Menu} from 'react-mfb';
 import 'react-mfb/mfb.css';
-import {
-    ChartMeta, ChartMetaDataType,
-    ChartMetaDataTypeEnum,
-    ClinicalDataCountSet,
-    NewChart,
-    StudyViewPageStore
-} from "../StudyViewPageStore";
+import {ChartMetaDataTypeEnum, ClinicalDataCountSet, NewChart, StudyViewPageStore} from "../StudyViewPageStore";
 import autobind from 'autobind-decorator';
 import classnames from "classnames";
 import * as _ from 'lodash';
@@ -31,7 +25,11 @@ enum CurrentOpenedDialogEnum {
     CLOSED = 'CLOSED'
 }
 
-type CurrentOpenedDialog = CurrentOpenedDialogEnum.CUSTOM_GROUPS | CurrentOpenedDialogEnum.CLOSED | CurrentOpenedDialogEnum.ADD_GENOMIC | CurrentOpenedDialogEnum.ADD_CLINICAL;
+type CurrentOpenedDialog =
+    CurrentOpenedDialogEnum.CUSTOM_GROUPS
+    | CurrentOpenedDialogEnum.CLOSED
+    | CurrentOpenedDialogEnum.ADD_GENOMIC
+    | CurrentOpenedDialogEnum.ADD_CLINICAL;
 
 export type ChartOption = {
     label: string,
@@ -58,6 +56,7 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
     @observable currentOpenedDialog: CurrentOpenedDialog = CurrentOpenedDialogEnum.CLOSED;
 
     readonly getClinicalDataCount = remoteData<ClinicalDataCountSet>({
+        await: () => [this.props.store.clinicalDataWithCount, this.props.store.selectedSamples],
         invoke: async () => {
             return calculateClinicalDataCountFrequency(this.props.store.clinicalDataWithCount.result, this.props.store.selectedSamples.result.length);
         },
@@ -66,6 +65,7 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
 
 
     readonly getGenomicDataCount = remoteData<ClinicalDataCountSet>({
+        await: () => [this.props.store.genomicDataWithCount, this.props.store.selectedSamples],
         invoke: async () => {
             return calculateClinicalDataCountFrequency(this.props.store.genomicDataWithCount.result, this.props.store.selectedSamples.result.length);
         },
@@ -89,7 +89,7 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
     }
 
     @computed
-    get selectedAttrs():string[] {
+    get selectedAttrs(): string[] {
         return this.props.store.visibleAttributes.map(attr => attr.uniqueKey);
     }
 
@@ -134,7 +134,7 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
 
         // Register main button onClick event
         // The implementation of the library forbids the onClick event binding.
-        $('.mfb-component__button--main').click((event:any) => {
+        $('.mfb-component__button--main').click((event: any) => {
             event.preventDefault();
             this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.ADD_CLINICAL);
         })
