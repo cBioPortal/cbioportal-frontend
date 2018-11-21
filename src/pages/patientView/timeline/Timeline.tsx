@@ -12,6 +12,8 @@ import SampleManager from "../sampleManager";
 
 import {PatientViewPageStore} from "../clinicalInformation/PatientViewPageStore";
 import {ClinicalEvent, ClinicalEventData} from "../../../shared/api/generated/CBioPortalAPI";
+import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
+import autobind from "autobind-decorator";
 
 interface ITimelineProps {
     sampleManager:SampleManager;
@@ -87,11 +89,24 @@ export default class Timeline extends React.Component<ITimelineProps, {}> {
 
     }
 
+    private svgContainer: HTMLDivElement;
+    @autobind
+    private getSvg() {
+        return this.svgContainer.firstChild as SVGElement;
+    }
+
     public render() {
 
         return (
-            <div id="timeline-container">
-                <div id="timeline"></div>
+            <div id="timeline-container" className="timelineContainer">
+                <div id="timeline" ref = {(container) => {this.svgContainer = container!}}></div>
+                <DownloadControls
+                getSvg={this.getSvg}
+                filename="timeline"
+                dontFade={true}
+                collapse={true}
+                style={{position:"absolute", top:0, right:5}}
+                />
             </div>
         )
     }

@@ -75,6 +75,11 @@ export enum ChartTypeEnum {
 
 // TODO: The priority and tableAttrs are duplicated in serverConfigDefaults.
 // We need to update in next visit before the release.
+const YES_COLOR = "#66AA00";
+const NO_COLOR = "#666666";
+const FEMALE_COLOR = '#DC3912';
+const MALE_COLOR = '#2986E2';
+
 const studyViewFrontEnd = {
     alwaysShownClinicalAttributes: ['SAMPLE_CANCER_TYPE', 'SAMPLE_CANCER_TYPE_DETAILED'],
     defaultPriority: 1,
@@ -166,14 +171,14 @@ const studyViewFrontEnd = {
             clinicalFilterContent: '#2986E2',
         },
         reservedValue: {
-            TRUE: "#66AA00",
-            FALSE: "#666666",
-            YES: "#66AA00",
-            NO: "#666666",
-            FEMALE: '#DC3912',
-            MALE: '#2986E2',
-            F: '#DC3912',
-            M: '#2986E2',
+            TRUE: YES_COLOR,
+            FALSE: NO_COLOR,
+            YES: YES_COLOR,
+            NO: NO_COLOR,
+            FEMALE: FEMALE_COLOR,
+            MALE: MALE_COLOR,
+            F: FEMALE_COLOR,
+            M: MALE_COLOR,
         },
 
         na: "#CCCCCC",
@@ -182,4 +187,10 @@ const studyViewFrontEnd = {
         amplification: '#FF0000',
     }
 };
+
+_.forEach(studyViewFrontEnd.colors.reservedValue, (color, key)=>{
+    // expand reservedValue entries to handle other case possibilities. eg expand TRUE to True and true
+    (studyViewFrontEnd.colors.reservedValue as any)[key.toLowerCase()] = color;
+    (studyViewFrontEnd.colors.reservedValue as any)[key[0] + key.slice(1).toLowerCase()] = color;
+});
 export const STUDY_VIEW_CONFIG: StudyViewConfig = _.assign(studyViewFrontEnd, AppConfig.serverConfig.study_view);
