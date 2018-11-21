@@ -27,7 +27,7 @@ import tabularDownload from "./tabularDownload";
 import * as URL from "url";
 import classNames from 'classnames';
 import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
-import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
+import {clinicalAttributeIsLocallyComputed, SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
 import OqlStatusBanner from "../oqlStatusBanner/OqlStatusBanner";
 import autobind from "autobind-decorator";
 import {getAnnotatingProgressMessage} from "./ResultsViewOncoprintUtils";
@@ -908,12 +908,39 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
-    @computed get progressItems():IProgressIndicatorItem[] {
+    @autobind
+    private getProgressItems(elapsedSecs:number):IProgressIndicatorItem[] {
         const ret = [];
 
+        let queryingLabel:string;
+        if (this.props.store.genes.isComplete && this.props.store.samples.isComplete) {
+            const numGenes = this.props.store.genes.result!.length;
+            const numSamples = this.props.store.samples.result!.length;
+            queryingLabel = `Querying ${numGenes} genes in ${numSamples} samples`;
+        } else {
+            queryingLabel = "Querying ... genes in ... samples";
+        }
+
+        let waitingLabel:string = "";
+        if (elapsedSecs > 2) {
+            waitingLabel = " - this can take several seconds";
+        }
+
         ret.push({
-            label: "Loading genomic data",
-            promises: [this.props.store.molecularData, this.props.store.mutations]
+            label: `${queryingLabel}${waitingLabel}`,
+            promises: [], // empty promises means insta-complete
+            hideIcon: true, // dont show any icon, this is just a message
+            style:{ fontWeight:"bold" }
+        });
+
+        const areNonLocalClinicalAttributesSelected =
+            _.some(this.selectedClinicalAttributeIds.keys(),
+                    clinicalAttributeId=>!clinicalAttributeIsLocallyComputed({clinicalAttributeId})
+            );
+
+        ret.push({
+            label: `Loading genomic ${areNonLocalClinicalAttributesSelected ? "and clinical " : ""}data`,
+            promises: [this.props.store.molecularData, this.props.store.mutations, ...(areNonLocalClinicalAttributesSelected ? [this.clinicalTracks] : [])]
         });
 
         const usingOncokb = this.props.store.mutationAnnotationSettings.oncoKb;
@@ -935,7 +962,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             <div className="posRelative">
 
                 <LoadingIndicator isLoading={this.isHidden} size={"big"} center={true} className="oncoprintLoadingIndicator">
-                    <ProgressIndicator items={this.progressItems} show={this.isHidden} sequential={true}/>
+                    <div style={{marginTop:20}}>
+                        <ProgressIndicator getItems={this.getProgressItems} show={this.isHidden} sequential={true}/>
+                    </div>
                 </LoadingIndicator>
 
                 <div className={"tabMessageContainer"}>
