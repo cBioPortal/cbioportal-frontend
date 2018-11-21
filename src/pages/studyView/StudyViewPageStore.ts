@@ -2049,9 +2049,12 @@ export class StudyViewPageStore {
     readonly unSelectedPatientKeys = remoteData<string[]>({
         await: () => [this.samples, this.selectedPatientKeys],
         invoke: async () => {
-
+            const selectedPatientKeysObj = _.reduce(this.selectedPatientKeys.result, (acc, next)=>{
+                acc[next] = true;
+                return acc;
+            },{} as {[patientKey:string]:boolean});
             const unselectedPatientSet = _.reduce(this.samples.result, (acc: { [id: string]: boolean }, next) => {
-                if (!_.includes(this.selectedPatientKeys.result, next.uniquePatientKey)) {
+                if (selectedPatientKeysObj[next.uniquePatientKey] === undefined) {
                     acc[next.uniquePatientKey] = true;
                 }
                 return acc;
