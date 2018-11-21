@@ -32,7 +32,6 @@ export interface IUserSelectionsProps {
 
 @observer
 export default class UserSelections extends React.Component<IUserSelectionsProps, {}> {
-    @observable promiseGroup = observable.map<MobxPromise<void>>();
 
     constructor(props: IUserSelectionsProps) {
         super(props);
@@ -99,7 +98,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
             components.push(<div className={styles.parentGroupLogic}><GroupLogic
                 components={this.props.filter.mutatedGenes.map(filter => {
                     return <GroupLogic
-                        components={filter.entrezGeneIds.map((entrezGene, index) => {
+                        components={filter.entrezGeneIds.map(entrezGene => {
                             const hugoGeneSymbol = this.props.getSelectedGene(entrezGene);
                             return <PillTag
                                 content={hugoGeneSymbol === undefined ? `Entrez Gene ID: ${entrezGene}` : hugoGeneSymbol}
@@ -119,7 +118,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
             components.push(<div className={styles.parentGroupLogic}><GroupLogic
                 components={this.props.filter.cnaGenes.map(filter => {
                     return <GroupLogic
-                        components={filter.alterations.map((filter, index) => {
+                        components={filter.alterations.map(filter => {
                             const hugoGeneSymbol = this.props.getSelectedGene(filter.entrezGeneId);
                             let tagColor = getCNAColorByAlteration(filter.alteration);
                             tagColor = tagColor === undefined ? STUDY_VIEW_CONFIG.colors.na : tagColor;
