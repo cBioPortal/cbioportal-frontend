@@ -38,7 +38,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                     label: next.label,
                     key: next.key,
                     disabled: disabled,
-                    selected: next.selected,
+                    selected: !disabled && next.selected,
                     freq: disabled ? 0 : this.props.freqPromise.result![next.key]
                 });
                 return acc;
@@ -76,11 +76,12 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
             sortBy: (d: ChartOption) => d.label,
             defaultSortDirection: 'asc' as 'asc'
         }, {
-            name: 'Freq',
+            name: '% samples with data',
             render: (option: ChartOption) =>
                 <span>{getFrequencyStr(option.freq)}</span>,
             sortBy: (d: ChartOption) => d.freq,//sort freq column using count
             defaultSortDirection: 'desc' as 'desc',
+            width: 180,
             visible: !this.hideFreq
         }];
         return columns;
@@ -101,7 +102,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                             <AddChartTableComponent
                                 columns={this.columns}
                                 data={this.options}
-                                initialSortColumn={this.hideFreq ? 'Name' : 'Freq'}
+                                initialSortColumn={this.hideFreq ? 'Name' : '% samples with data'}
                                 initialSortDirection={this.hideFreq ? 'asc' : 'desc'}
                                 showColumnVisibility={false}
                                 showCopyDownload={false}
