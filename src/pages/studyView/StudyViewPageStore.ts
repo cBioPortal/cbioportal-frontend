@@ -279,7 +279,7 @@ export class StudyViewPageStore {
         }
         if (studyIdsString) {
             studyIds = studyIdsString.trim().split(",");
-            if (!_.isEqual(studyIds, this.studyIds)) {
+            if (!_.isEqual(studyIds, toJS(this.studyIds))) {
                 // update if different
                 this.studyIds = studyIds;
             }
@@ -347,6 +347,7 @@ export class StudyViewPageStore {
                 return acc;
             }, [] as CopyNumberGeneFilter[]);
         }
+        //TODO: do not re-initialize if nothing is changed
         this.initialFiltersQuery = filters;
     }
 
