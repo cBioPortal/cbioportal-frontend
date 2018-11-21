@@ -790,9 +790,13 @@ export function formatFrequency(value: number) {
         return -1;
     } else if (value === 0) {
         return 0;
+    } else if (value < 100 && value >= 99.9) {
+         return 99.9;
     } else if (value >= 0.1) {
-        value = Math.floor(value * 10) / 10;
+        value = Math.round(value * 10) / 10;
     } else {
+        // This is a default value for anything that lower than 0.1 since we only keep one digit.
+        // This equals to <0.1 ain the getFrequencyStr function
         value = 0.05;
     }
     return value;
