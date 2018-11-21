@@ -40,6 +40,7 @@ export type ClinicalTrackSpec = {
     numberLogScale:boolean;
 } | {
     datatype: "string";
+    category_to_color?:{[category:string]:string}
 });
 
 export interface IBaseHeatmapTrackDatum {
