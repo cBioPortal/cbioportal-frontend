@@ -617,6 +617,7 @@ export class ResultsViewPageStore {
             this.studies,
             this.clinicalAttributes,
             this.studyToDataQueryFilter,
+            this.clinicalAttributes_profiledIn
         ],
         invoke:async()=>{
             let clinicalAttributeFilter:ClinicalAttributeFilter;
@@ -665,6 +666,10 @@ export class ResultsViewPageStore {
                 samplesWithCNAData += +!!sample.copyNumberSegmentPresent;
             }
             ret[SpecialAttribute.MutationSpectrum] = samplesWithMutationData;
+            // add counts for "ProfiledIn" clinical attributes
+            for (const attr of this.clinicalAttributes_profiledIn.result!) {
+                ret[attr.clinicalAttributeId] = this.samples.result!.length;
+            }
             return ret;
         }
     });
