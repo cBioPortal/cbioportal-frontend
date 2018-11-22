@@ -1,5 +1,5 @@
 import * as React from "react";
-import {MutatedGenesData} from "pages/studyView/StudyViewPageStore";
+import {GeneIdentifier, MutatedGenesData} from "pages/studyView/StudyViewPageStore";
 import {observer} from "mobx-react";
 import styles from "./tables.module.scss";
 import {MutationCountByGene} from "shared/api/generated/CBioPortalAPIInternal";
@@ -19,7 +19,7 @@ export interface IMutatedGenesTablePros {
     width: number;
     height: number;
     filters: number[];
-    onUserSelection: (value: number[]) => void;
+    onUserSelection: (value: GeneIdentifier[]) => void;
     numOfSelectedSamples: number;
     onGeneSelect: (hugoGeneSymbol: string) => void;
     selectedGenes: string[];
@@ -27,6 +27,7 @@ export interface IMutatedGenesTablePros {
 
 type MutatedGenesTableUserSelectionWithIndex = {
     entrezGeneId: number;
+    hugoGeneSymbol: string;
     rowIndex: number;
 }
 
@@ -156,7 +157,8 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             if (!_.isUndefined(datum)) {
                 this.preSelectedRows.push({
                     rowIndex: dataIndex,
-                    entrezGeneId: datum.entrezGeneId
+                    entrezGeneId: datum.entrezGeneId,
+                    hugoGeneSymbol: datum.hugoGeneSymbol
                 })
             }
         } else {
@@ -168,7 +170,12 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
     @autobind
     @action
     afterSelectingRows() {
-        this.props.onUserSelection(this.preSelectedRows.map(row => row.entrezGeneId));
+        this.props.onUserSelection(this.preSelectedRows.map(row => {
+            return {
+                entrezGeneId: row.entrezGeneId,
+                hugoGeneSymbol: row.hugoGeneSymbol
+            };
+        }));
         this.preSelectedRows = [];
     }
 
@@ -181,7 +188,8 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                 if (_.includes(this.props.filters, row.entrezGeneId)) {
                     acc.push({
                         rowIndex: index,
-                        entrezGeneId: row.entrezGeneId
+                        entrezGeneId: row.entrezGeneId,
+                        hugoGeneSymbol: row.hugoGeneSymbol
                     });
                 }
                 return acc;

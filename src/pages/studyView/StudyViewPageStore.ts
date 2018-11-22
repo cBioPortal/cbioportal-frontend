@@ -145,6 +145,7 @@ export type ChartMeta = {
     dimension: ChartDimension,
     priority: number,
     dataType: ChartMetaDataType,
+    patientAttribute: boolean,
     chartType: ChartType
 }
 
@@ -160,6 +161,7 @@ export const SpecialCharts: ChartMeta[] = [{
     displayName: '# of Samples Per Patient',
     description: '# of Samples Per Patient',
     dataType: ChartMetaDataTypeEnum.CLINICAL,
+    patientAttribute:false,
     chartType: ChartTypeEnum.PIE_CHART,
     dimension: {
         w: 1,
@@ -171,6 +173,7 @@ export const SpecialCharts: ChartMeta[] = [{
     displayName: 'Cancer Studies',
     description: 'Cancer Studies',
     dataType: ChartMetaDataTypeEnum.CLINICAL,
+    patientAttribute:false,
     chartType: ChartTypeEnum.PIE_CHART,
     dimension: {
         w: 1,
@@ -215,6 +218,15 @@ export type CustomChartIdentifierWithValue = CustomChartIdentifier & {
     value: string
 }
 
+export type GeneIdentifier = {
+    entrezGeneId: number,
+    hugoGeneSymbol: string
+}
+
+export type CopyNumberAlterationIdentifier = CopyNumberGeneFilterElement & {
+    hugoGeneSymbol: string
+}
+
 export class StudyViewPageStore {
 
     constructor() {
@@ -249,6 +261,8 @@ export class StudyViewPageStore {
 
     @observable private queriedGeneSet = observable.map<boolean>();
 
+    private geneMapCache:{[entrezGeneId:number]:string} = {};
+
     @observable private chartsDimension = observable.map<ChartDimension>();
 
     @observable private chartsType = observable.map<ChartType>();
@@ -265,7 +279,7 @@ export class StudyViewPageStore {
         }
         if (studyIdsString) {
             studyIds = studyIdsString.trim().split(",");
-            if (!_.isEqual(studyIds, this.studyIds)) {
+            if (!_.isEqual(studyIds, toJS(this.studyIds))) {
                 // update if different
                 this.studyIds = studyIds;
             }
@@ -333,6 +347,7 @@ export class StudyViewPageStore {
                 return acc;
             }, [] as CopyNumberGeneFilter[]);
         }
+        //TODO: do not re-initialize if nothing is changed
         this.initialFiltersQuery = filters;
     }
 
@@ -393,6 +408,11 @@ export class StudyViewPageStore {
     @action updateSelectedGenes(query: SingleGeneQuery[], genesInQuery: Gene[]) {
         this.geneQueries = query;
         this.queriedGeneSet = new ObservableMap(stringListToSet(genesInQuery.map(gene => gene.hugoGeneSymbol)))
+    }
+
+    @autobind
+    getKnownHugoGeneSymbolByEntrezGeneId(entrezGeneId: number): string | undefined {
+        return this.geneMapCache[entrezGeneId];
     }
 
     @autobind
@@ -660,8 +680,9 @@ export class StudyViewPageStore {
 
     @autobind
     @action
-    addGeneFilters(entrezGeneIds: number[]) {
-        this._mutatedGeneFilter = [...this._mutatedGeneFilter, {entrezGeneIds: entrezGeneIds}];
+    addGeneFilters(genes: GeneIdentifier[]) {
+        genes.forEach(gene => this.geneMapCache[gene.entrezGeneId] = gene.hugoGeneSymbol);
+        this._mutatedGeneFilter = [...this._mutatedGeneFilter, {entrezGeneIds: genes.map(gene => gene.entrezGeneId)}];
     }
 
     @autobind
@@ -732,8 +753,16 @@ export class StudyViewPageStore {
 
     @autobind
     @action
-    addCNAGeneFilters(filters: CopyNumberGeneFilterElement[]) {
-        this._cnaGeneFilter = [...this._cnaGeneFilter, {alterations: filters}];
+    addCNAGeneFilters(filters: CopyNumberAlterationIdentifier[]) {
+        filters.forEach(filter => this.geneMapCache[filter.entrezGeneId]  = filter.hugoGeneSymbol);
+        this._cnaGeneFilter = [...this._cnaGeneFilter, {
+            alterations: filters.map(filter => {
+                return {
+                    alteration: filter.alteration,
+                    entrezGeneId: filter.entrezGeneId
+                } as CopyNumberGeneFilterElement
+            })
+        }];
     }
 
     @autobind
@@ -1486,6 +1515,9 @@ export class StudyViewPageStore {
                 if (obj.datatype === 'NUMBER') {
                     this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
                     this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.BAR_CHART]);
+                } else {
+                    this.chartsType.set(uniqueKey, ChartTypeEnum.PIE_CHART);
+                    this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.PIE_CHART]);
                 }
 
                 if(obj.datatype === 'NUMBER') {
@@ -1570,23 +1602,25 @@ export class StudyViewPageStore {
     @autobind
     @action addCustomChart(newChart:NewChart) {
         const uniqueKey = this.newCustomChartUniqueKey();
-        const chartMeta = {
+        let chartMeta = {
             uniqueKey: uniqueKey,
             displayName: newChart.name,
             description: newChart.name,
             chartType: ChartTypeEnum.PIE_CHART,
             dataType: getChartMetaDataType(uniqueKey),
+            patientAttribute: false,
             dimension: {
                 w: 1,
                 h: 1
             },
             priority: 1
         };
-        this._customCharts.set(uniqueKey, chartMeta);
-        this._chartVisibility.set(uniqueKey, true);
         let allCases: CustomChartIdentifierWithValue[] = [];
         _.each(newChart.groups, (group:CustomGroup) => {
             _.reduce(group.cases, (acc, next) => {
+                if(next.patientAttribute) {
+                    chartMeta.patientAttribute = true;
+                }
                 acc.push({
                     studyId: next.studyId,
                     sampleId: next.sampleId,
@@ -1596,7 +1630,9 @@ export class StudyViewPageStore {
                 });
                 return acc;
             }, allCases)
-        })
+        });
+        this._customCharts.set(uniqueKey, chartMeta);
+        this._chartVisibility.set(uniqueKey, true);
         this._customChartsSelectedCases.set(uniqueKey, allCases);
     }
 
@@ -1612,6 +1648,7 @@ export class StudyViewPageStore {
                     uniqueKey: uniqueKey,
                     chartType: chartType,
                     dataType: getChartMetaDataType(uniqueKey),
+                    patientAttribute:chartMeta.patientAttribute,
                     description: chartMeta.description,
                     dimension: this.chartsDimension.get(uniqueKey) || chartMeta.dimension,
                     priority: STUDY_VIEW_CONFIG.priority[uniqueKey] || chartMeta.priority
@@ -1636,6 +1673,7 @@ export class StudyViewPageStore {
                     uniqueKey: uniqueKey,
                     chartType: chartType,
                     dataType: getChartMetaDataType(uniqueKey),
+                    patientAttribute:attribute.patientAttribute,
                     description: attribute.description,
                     dimension: this.chartsDimension.get(uniqueKey)!,
                     priority: Number(attribute.priority),
@@ -1651,6 +1689,7 @@ export class StudyViewPageStore {
                 uniqueKey: survivalPlot.id,
                 chartType: this.chartsType.get(survivalPlot.id)!,
                 dataType: getChartMetaDataType(survivalPlot.id),
+                patientAttribute:true,
                 dimension: this.chartsDimension.get(survivalPlot.id)!,
                 displayName: survivalPlot.title,
                 priority: getDefaultPriorityByUniqueKey(survivalPlot.id),
@@ -1663,6 +1702,7 @@ export class StudyViewPageStore {
             _chartMetaSet[UniqueKey.MUTATED_GENES_TABLE] = {
                 uniqueKey: UniqueKey.MUTATED_GENES_TABLE,
                 dataType: getChartMetaDataType(UniqueKey.MUTATED_GENES_TABLE),
+                patientAttribute:false,
                 chartType: this.chartsType.get(UniqueKey.MUTATED_GENES_TABLE)!,
                 dimension: this.chartsDimension.get(UniqueKey.MUTATED_GENES_TABLE)!,
                 displayName: 'Mutated Genes',
@@ -1675,6 +1715,7 @@ export class StudyViewPageStore {
             _chartMetaSet[UniqueKey.CNA_GENES_TABLE] = {
                 uniqueKey: UniqueKey.CNA_GENES_TABLE,
                 dataType: getChartMetaDataType(UniqueKey.CNA_GENES_TABLE),
+                patientAttribute:false,
                 chartType: this.chartsType.get(UniqueKey.CNA_GENES_TABLE)!,
                 dimension: this.chartsDimension.get(UniqueKey.CNA_GENES_TABLE)!,
                 displayName: 'CNA Genes',
@@ -1696,6 +1737,7 @@ export class StudyViewPageStore {
         if (scatterRequiredParams[MUTATION_COUNT] && scatterRequiredParams[FRACTION_GENOME_ALTERED]) {
             _chartMetaSet[UniqueKey.MUTATION_COUNT_CNA_FRACTION] = {
                 dataType: getChartMetaDataType(UniqueKey.MUTATION_COUNT_CNA_FRACTION),
+                patientAttribute:false,
                 uniqueKey: UniqueKey.MUTATION_COUNT_CNA_FRACTION,
                 chartType: ChartTypeEnum.SCATTER,
                 displayName: 'Mutation Count vs Fraction of Genome Altered',
@@ -2001,15 +2043,19 @@ export class StudyViewPageStore {
                     uniquePatientKeys: this.selectedSamples.result!.map(s=>s.uniquePatientKey)
                 } as PatientFilter
             });
-        }
+        },
+        default: []
     });
 
     readonly unSelectedPatientKeys = remoteData<string[]>({
         await: () => [this.samples, this.selectedPatientKeys],
         invoke: async () => {
-
+            const selectedPatientKeysObj = _.reduce(this.selectedPatientKeys.result, (acc, next)=>{
+                acc[next] = true;
+                return acc;
+            },{} as {[patientKey:string]:boolean});
             const unselectedPatientSet = _.reduce(this.samples.result, (acc: { [id: string]: boolean }, next) => {
-                if (!_.includes(this.selectedPatientKeys.result, next.uniquePatientKey)) {
+                if (selectedPatientKeysObj[next.uniquePatientKey] === undefined) {
                     acc[next.uniquePatientKey] = true;
                 }
                 return acc;
