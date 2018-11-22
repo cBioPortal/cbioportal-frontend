@@ -1,11 +1,10 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import {Sample} from 'shared/api/generated/CBioPortalAPIInternal';
 import {observer} from "mobx-react";
 import {action, computed, observable} from 'mobx';
 import styles from "../styles.module.scss";
 import autobind from "autobind-decorator";
-import {getSampleViewUrl} from 'shared/api/urls';
+import {getPatientViewUrl} from 'shared/api/urls';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
 import {Gene} from 'shared/api/generated/CBioPortalAPI';
 import GeneSelectionBox, {GeneBoxType} from 'shared/components/GeneSelectionBox/GeneSelectionBox';
@@ -13,7 +12,7 @@ import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import VirtualStudy from 'pages/studyView/virtualStudy/VirtualStudy';
 import fileDownload from 'react-file-download';
 import {Else, If, Then} from 'react-if';
-import {StudyViewPageStore, UniqueKey} from 'pages/studyView/StudyViewPageStore';
+import {StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
 import classnames from "classnames";
 import shareUIstyles from '../../../resultsView/querySummary/shareUI.module.scss';
 
@@ -50,14 +49,14 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
 
     @autobind
     private openCases() {
-        if (!_.isEmpty(this.props.store.selectedSamples.result)) {
-            const firstSample = this.props.store.selectedSamples.result[0];
+        if (!_.isEmpty(this.props.store.selectedPatients.result)) {
+            const firstPatient = this.props.store.selectedPatients.result[0];
 
-            let navCaseIds = _.map(this.props.store.selectedSamples.result, sample => {
-                return {patientId: sample.patientId, studyId: sample.studyId}
-            })
+            let navCaseIds = _.map(this.props.store.selectedPatients.result, patient => {
+                return {patientId: patient.patientId, studyId: patient.studyId}
+            });
 
-            window.open(getSampleViewUrl(firstSample.studyId, firstSample.sampleId, navCaseIds));
+            window.open(getPatientViewUrl(firstPatient.studyId, firstPatient.patientId, navCaseIds));
         }
     }
 
