@@ -1190,6 +1190,7 @@ describe('StudyViewUtils', () => {
                 description: clinicalAttr.description,
                 uniqueKey: 'test' + i,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 chartType: ChartTypeEnum.PIE_CHART,
                 dimension: {w: 1, h: 1},
                 priority: 1,
@@ -1267,6 +1268,7 @@ describe('StudyViewUtils', () => {
                 description: clinicalAttr.description,
                 uniqueKey: 'test0',
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 chartType: ChartTypeEnum.TABLE,
                 dimension: {w: 2, h: 2},
                 priority: 10,
@@ -1277,6 +1279,7 @@ describe('StudyViewUtils', () => {
                 uniqueKey: 'test1',
                 chartType: ChartTypeEnum.PIE_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 1, h: 1},
                 priority: 20,
             }];
@@ -1300,6 +1303,7 @@ describe('StudyViewUtils', () => {
                 uniqueKey: 'test0',
                 chartType: ChartTypeEnum.BAR_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 2, h: 1},
                 priority: 10,
             }, {
@@ -1309,6 +1313,7 @@ describe('StudyViewUtils', () => {
                 uniqueKey: 'test1',
                 chartType: ChartTypeEnum.TABLE,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 2, h: 2},
                 priority: 5,
             }, {
@@ -1318,6 +1323,7 @@ describe('StudyViewUtils', () => {
                 uniqueKey: 'test2',
                 chartType: ChartTypeEnum.PIE_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 1, h: 1},
                 priority: 2,
             }];
@@ -1346,6 +1352,7 @@ describe('StudyViewUtils', () => {
                 uniqueKey: 'test0',
                 chartType: ChartTypeEnum.BAR_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 2, h: 2},
                 priority: 1,
             }, {
@@ -1355,6 +1362,7 @@ describe('StudyViewUtils', () => {
                 uniqueKey: 'test1',
                 chartType: ChartTypeEnum.TABLE,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 2, h: 2},
                 priority: 1,
             }, {
@@ -1364,6 +1372,7 @@ describe('StudyViewUtils', () => {
                 uniqueKey: 'test2',
                 chartType: ChartTypeEnum.PIE_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 2, h: 1},
                 priority: 1,
             }, {
@@ -1373,6 +1382,7 @@ describe('StudyViewUtils', () => {
                 uniqueKey: 'test3',
                 chartType: ChartTypeEnum.PIE_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 1, h: 1},
                 priority: 1,
             }, {
@@ -1382,6 +1392,7 @@ describe('StudyViewUtils', () => {
                 uniqueKey: 'test4',
                 chartType: ChartTypeEnum.PIE_CHART,
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
+                patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 1, h: 1},
                 priority: 1,
             }];
@@ -1591,12 +1602,12 @@ describe('StudyViewUtils', () => {
             assert.equal(getFrequencyStr(positiveValues[1]), "0.6%");
             assert.equal(getFrequencyStr(positiveValues[2]), "1%");
             assert.equal(getFrequencyStr(positiveValues[3]), "1%");
-            assert.equal(getFrequencyStr(positiveValues[4]), "1.5%");
+            assert.equal(getFrequencyStr(positiveValues[4]), "1.6%");
             assert.equal(getFrequencyStr(positiveValues[5]), "1.8%");
-            assert.equal(getFrequencyStr(positiveValues[6]), "16.9%");
-            assert.equal(getFrequencyStr(positiveValues[7]), "16.7%");
+            assert.equal(getFrequencyStr(positiveValues[6]), "17%");
+            assert.equal(getFrequencyStr(positiveValues[7]), "16.8%");
             assert.equal(getFrequencyStr(positiveValues[8]), "16.7%");
-            assert.equal(getFrequencyStr(positiveValues[9]), "666.6%");
+            assert.equal(getFrequencyStr(positiveValues[9]), "666.7%");
         });
     });
 
@@ -1633,12 +1644,12 @@ describe('StudyViewUtils', () => {
             assert.equal(formatFrequency(positiveValues[1]), 0.6);
             assert.equal(formatFrequency(positiveValues[2]), 1);
             assert.equal(formatFrequency(positiveValues[3]), 1);
-            assert.equal(formatFrequency(positiveValues[4]), 1.5);
+            assert.equal(formatFrequency(positiveValues[4]), 1.6);
             assert.equal(formatFrequency(positiveValues[5]), 1.8);
-            assert.equal(formatFrequency(positiveValues[6]), 16.9);
-            assert.equal(formatFrequency(positiveValues[7]), 16.7);
+            assert.equal(formatFrequency(positiveValues[6]), 17);
+            assert.equal(formatFrequency(positiveValues[7]), 16.8);
             assert.equal(formatFrequency(positiveValues[8]), 16.7);
-            assert.equal(formatFrequency(positiveValues[9]), 666.6);
+            assert.equal(formatFrequency(positiveValues[9]), 666.7);
         });
     });
 

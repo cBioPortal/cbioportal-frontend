@@ -4,8 +4,8 @@ import {
     Column as RVColumn,
     SortDirection as RVSortDirection,
     Table as RVTable,
-    TableHeaderProps,
-    TableCellProps
+    TableCellProps,
+    TableHeaderProps
 } from 'react-virtualized';
 import 'react-virtualized/styles.css';
 import {action, observable} from "mobx";
@@ -81,11 +81,11 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
     @autobind
     rowClassName({index}: any) {
         if (index > -1 && this.isSelectedRow(this._store.dataStore.sortedFilteredData[index])) {
-            return styles.highlightedRow;
+            return classnames(styles.row, styles.highlightedRow);
         } else if (index < 0) {
             return styles.headerRow;
         } else {
-            return index % 2 === 0 ? styles.evenRow : styles.oddRow;
+            return classnames(styles.row, index % 2 === 0 ? styles.evenRow : styles.oddRow);
         }
     }
 
@@ -137,7 +137,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                 <RVTable
                     width={this.props.width!}
                     height={this.props.height!}
-                    headerHeight={20}
+                    headerHeight={25}
                     rowHeight={25}
                     rowCount={this._store.dataStore.sortedFilteredData.length}
                     rowGetter={this.rowGetter}
@@ -181,7 +181,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                     <input placeholder={"Search..."} type="text" onInput={this.onFilterTextChange()}
                            className={classnames('form-control', styles.tableSearchInput)}/>
                     <If condition={this.props.showSelectSamples}>
-                        <button className={classnames("btn btn-primary btn-sm", studyViewStyles.studyViewBtn)} onClick={this.afterSelectingRows}>Select Samples</button>
+                        <button className={classnames("btn btn-primary btn-sm", styles.bottomToolsBtn)} onClick={this.afterSelectingRows}>Select Samples</button>
                     </If>
                 </div>
             </div>
