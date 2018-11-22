@@ -9,7 +9,7 @@ import {
     AnalysisGroup,
     ChartMeta,
     ChartType,
-    ClinicalDataCountWithColor,
+    ClinicalDataCountWithColor, ClinicalDataType,
     StudyViewPageStore
 } from "pages/studyView/StudyViewPageStore";
 import {DataBin} from "shared/api/generated/CBioPortalAPIInternal";
@@ -249,6 +249,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     active={this.mouseInChart}
                     placement={this.placement}
                     label={this.props.title}
+                    labelDescription={this.props.chartMeta.description}
+                    patientAttribute={this.props.chartMeta.patientAttribute}
                 />);
             }
             case ChartTypeEnum.BAR_CHART: {
@@ -271,6 +273,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     filters={this.props.filters}
                     onUserSelection={this.handlers.onValueSelection}
                     label={this.props.title}
+                    labelDescription={this.props.chartMeta.description}
+                    patientAttribute={this.props.chartMeta.patientAttribute}
                 />);
             }
             case ChartTypeEnum.MUTATED_GENES_TABLE: {

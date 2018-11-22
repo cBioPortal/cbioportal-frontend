@@ -5,7 +5,6 @@ import {
     ClinicalDataCount,
     ClinicalDataIntervalFilterValue,
     DataBin,
-    DensityPlotBin,
     SampleIdentifier,
     StudyViewFilter
 } from "shared/api/generated/CBioPortalAPIInternal";
@@ -776,8 +775,10 @@ export function getFrequencyStr(value: number) {
         return 'NA';
     } else if (value === 0) {
         str = '0';
+    } else if (value < 100 && value >= 99.9) {
+        str = `99.9`;
     } else if (value >= 0.1) {
-        str = (Math.floor(value * 10) / 10).toString();
+        str = (Math.round(value * 10) / 10).toString();
     } else {
         str = '<0.1';
     }
@@ -789,9 +790,13 @@ export function formatFrequency(value: number) {
         return -1;
     } else if (value === 0) {
         return 0;
+    } else if (value < 100 && value >= 99.9) {
+         return 99.9;
     } else if (value >= 0.1) {
-        value = Math.floor(value * 10) / 10;
+        value = Math.round(value * 10) / 10;
     } else {
+        // This is a default value for anything that lower than 0.1 since we only keep one digit.
+        // This equals to <0.1 ain the getFrequencyStr function
         value = 0.05;
     }
     return value;
@@ -951,9 +956,9 @@ export function getHeightByDimension(chartDimension: ChartDimension, chartHeight
     return STUDY_VIEW_CONFIG.layout.grid.h * chartDimension.h + (chartDimension.h - 1) * STUDY_VIEW_CONFIG.layout.gridMargin.y - chartHeight;
 }
 
-// 35px tool section
+// 30px tool section
 export function getTableHeightByDimension(chartDimension: ChartDimension, chartHeight: number) {
-    return getHeightByDimension(chartDimension, chartHeight) - 35;
+    return getHeightByDimension(chartDimension, chartHeight) - 30;
 }
 
 export function getQValue(qvalue: number):string {

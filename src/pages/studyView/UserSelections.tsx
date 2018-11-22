@@ -1,29 +1,20 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import {observer} from "mobx-react";
-import {computed, observable, action} from 'mobx';
+import {computed, observable} from 'mobx';
 import styles from "./styles.module.scss";
-import {
-    ClinicalDataIntervalFilterValue,
-    CopyNumberGeneFilterElement
-} from 'shared/api/generated/CBioPortalAPIInternal';
-import {ChartMeta, UniqueKey, StudyViewFilterWithSampleIdentifierFilters} from 'pages/studyView/StudyViewPageStore';
-import {
-    getCNAColorByAlteration, getHugoSymbolByEntrezGeneId,
-    intervalFiltersDisplayValue,
-    isFiltered
-} from 'pages/studyView/StudyViewUtils';
+import {ClinicalDataIntervalFilterValue, CopyNumberGeneFilterElement} from 'shared/api/generated/CBioPortalAPIInternal';
+import {ChartMeta, StudyViewFilterWithSampleIdentifierFilters, UniqueKey} from 'pages/studyView/StudyViewPageStore';
+import {getCNAColorByAlteration, intervalFiltersDisplayValue} from 'pages/studyView/StudyViewUtils';
 import {PillTag} from "../../shared/components/PillTag/PillTag";
 import {GroupLogic} from "./filters/groupLogic/GroupLogic";
-import {Gene} from "../../shared/api/generated/CBioPortalAPI";
 import classnames from 'classnames';
 import MobxPromise from 'mobxpromise';
-import {remoteData} from "../../shared/api/remoteData";
-import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 
 export interface IUserSelectionsProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
+    getSelectedGene: (entrezGeneId: number) => string|undefined;
     attributesMetaSet: { [id: string]: ChartMeta };
     updateClinicalDataEqualityFilter: (chartMeta: ChartMeta, value: string[]) => void;
     updateClinicalDataIntervalFilter: (chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) => void;
@@ -31,7 +22,7 @@ export interface IUserSelectionsProps {
     clearCNAGeneFilter: () => void;
     removeGeneFilter: (entrezGeneId: number) => void;
     removeCNAGeneFilter: (filter: CopyNumberGeneFilterElement) => void;
-    resetMutationCountVsCNAFilter: ()=>void;
+    resetMutationCountVsCNAFilter: () => void;
     removeWithMutationDataFilter: () => void;
     removeWithCNADataFilter: () => void;
     clearChartSampleIdentifierFilter: (chartMeta: ChartMeta) => void;
@@ -41,51 +32,13 @@ export interface IUserSelectionsProps {
 
 @observer
 export default class UserSelections extends React.Component<IUserSelectionsProps, {}> {
-    @observable hugoSymbolsMap = observable.map<string>();
-    @observable promiseGroup = observable.map<MobxPromise<void>>()
-
-    private getPromiseGroupId(entrezGeneIds:number[]) {
-        return entrezGeneIds.sort().join(',');
-    }
-
-    @action updateGroupPromise() {
-        if(this.props.filter.mutatedGenes !== undefined || this.props.filter.cnaGenes !== undefined){
-            let genes:number[][] = [];
-
-            if(!_.isEmpty(this.props.filter.mutatedGenes)) {
-                genes = genes.concat(this.props.filter.mutatedGenes.map(group => group.entrezGeneIds));
-            }
-
-            if(!_.isEmpty(this.props.filter.cnaGenes)) {
-                genes = genes.concat(this.props.filter.cnaGenes.map(group => group.alterations.map(alteration => alteration.entrezGeneId)));
-            }
-
-            _.each(genes, group => {
-                let id = this.getPromiseGroupId(group);
-                if(!this.promiseGroup.has(id)) {
-                    this.promiseGroup.set(id, remoteData({
-                        invoke: async () => {
-                            if (this.props.filter.mutatedGenes !== undefined) {
-                                await Promise.all(_.filter(group, item => !this.hugoSymbolsMap.has(item.toString()))
-                                    .map(entrezGeneId => getHugoSymbolByEntrezGeneId(entrezGeneId)
-                                        .then(gene => this.hugoSymbolsMap.set(entrezGeneId.toString(), gene))));
-                            }
-                        }
-                    }))
-                }
-            })
-        }
-    }
-
-    componentWillReceiveProps() {
-        this.updateGroupPromise();
-    }
 
     constructor(props: IUserSelectionsProps) {
         super(props);
     }
 
-    @computed get showFilters() {
+    @computed
+    get showFilters() {
         //return isFiltered(this.props.filter)
         return this.allComponents.length > 0;
     }
@@ -144,25 +97,18 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
         if (chartMeta && !_.isEmpty(this.props.filter.mutatedGenes)) {
             components.push(<div className={styles.parentGroupLogic}><GroupLogic
                 components={this.props.filter.mutatedGenes.map(filter => {
-                    let promise = this.promiseGroup.get(this.getPromiseGroupId(filter.entrezGeneIds));
-                    if(promise === undefined){
-                        return <span></span>;
-                    }else if(promise.isPending) {
-                        return <LoadingIndicator isLoading={true}/>
-                    }else {
-                        return <GroupLogic
-                            components={filter.entrezGeneIds.map((entrezGene, index) => {
-                                const hugoSymbol = this.hugoSymbolsMap.get(entrezGene.toString());
-                                return <PillTag
-                                    content={hugoSymbol === undefined ? `Entrez Gene ID: ${entrezGene}` : hugoSymbol}
-                                    backgroundColor={STUDY_VIEW_CONFIG.colors.mutatedGene}
-                                    onDelete={() => this.props.removeGeneFilter(entrezGene)}
-                                />
-                            })}
-                            operation="or"
-                            group={filter.entrezGeneIds.length > 1}
-                        />
-                    }
+                    return <GroupLogic
+                        components={filter.entrezGeneIds.map(entrezGene => {
+                            const hugoGeneSymbol = this.props.getSelectedGene(entrezGene);
+                            return <PillTag
+                                content={hugoGeneSymbol === undefined ? `Entrez Gene ID: ${entrezGene}` : hugoGeneSymbol}
+                                backgroundColor={STUDY_VIEW_CONFIG.colors.mutatedGene}
+                                onDelete={() => this.props.removeGeneFilter(entrezGene)}
+                            />
+                        })}
+                        operation="or"
+                        group={filter.entrezGeneIds.length > 1}
+                    />
                 })} operation={"and"} group={false}/></div>);
         }
 
@@ -171,27 +117,20 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
         if (chartMeta && !_.isEmpty(this.props.filter.cnaGenes)) {
             components.push(<div className={styles.parentGroupLogic}><GroupLogic
                 components={this.props.filter.cnaGenes.map(filter => {
-                    let promise = this.promiseGroup.get(this.getPromiseGroupId(filter.alterations.map(alteration => alteration.entrezGeneId)));
-                    if(promise === undefined){
-                        return <span></span>;
-                    }else if(promise.isPending) {
-                        return <LoadingIndicator isLoading={true}/>
-                    }else {
-                        return <GroupLogic
-                            components={filter.alterations.map((filter, index) => {
-                                const hugoSymbol = this.hugoSymbolsMap.get(filter.entrezGeneId.toString());
-                                let tagColor = getCNAColorByAlteration(filter.alteration);
-                                tagColor = tagColor === undefined ? STUDY_VIEW_CONFIG.colors.na : tagColor;
-                                return <PillTag
-                                    content={hugoSymbol === undefined ? `Entrez Gene ID: ${filter.entrezGeneId}` : hugoSymbol}
-                                    backgroundColor={tagColor}
-                                    onDelete={() => this.props.removeCNAGeneFilter(filter)}
-                                />
-                            })}
-                            operation="or"
-                            group={filter.alterations.length > 1}
-                        />
-                    }
+                    return <GroupLogic
+                        components={filter.alterations.map(filter => {
+                            const hugoGeneSymbol = this.props.getSelectedGene(filter.entrezGeneId);
+                            let tagColor = getCNAColorByAlteration(filter.alteration);
+                            tagColor = tagColor === undefined ? STUDY_VIEW_CONFIG.colors.na : tagColor;
+                            return <PillTag
+                                content={hugoGeneSymbol === undefined ? `Entrez Gene ID: ${filter.entrezGeneId}` : hugoGeneSymbol}
+                                backgroundColor={tagColor}
+                                onDelete={() => this.props.removeCNAGeneFilter(filter)}
+                            />
+                        })}
+                        operation="or"
+                        group={filter.alterations.length > 1}
+                    />
                 })} operation={"and"} group={false}/></div>);
         }
 
@@ -213,7 +152,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
             );
         }
 
-        if(this.props.filter.withMutationData) {
+        if (this.props.filter.withMutationData) {
             components.push(
                 <div className={styles.parentGroupLogic}><PillTag
                     content={`Samples with mutation data`}
@@ -223,7 +162,7 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
             );
         }
 
-        if(this.props.filter.withCNAData) {
+        if (this.props.filter.withCNAData) {
             components.push(
                 <div className={styles.parentGroupLogic}><PillTag
                     content={`Samples with CNA data`}

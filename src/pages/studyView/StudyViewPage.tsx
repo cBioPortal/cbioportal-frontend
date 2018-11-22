@@ -75,7 +75,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                             <div className={styles.mainTabs}>
                                 <MSKTabs id="studyViewTabs" activeTabId={this.props.routing.location.query.tab}
                                          onTabClick={(id: string) => this.handleTabChange(id)}
-                                         className="mainTabs">
+                                         className="mainTabs"
+                                         unmountOnHide={false}>
 
                                     <MSKTab key={0} id="summary" linkText="Summary">
                                         <StudySummaryTab store={this.store}></StudySummaryTab>
