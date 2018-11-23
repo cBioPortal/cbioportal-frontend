@@ -564,7 +564,7 @@ export class ResultsViewPageStore {
     });
 
     readonly clinicalAttributes = remoteData<(ClinicalAttribute & { molecularProfileIds?: string[] })[]>({
-        await:()=>[this.studyIds, this.clinicalAttributes_profiledIn],
+        await:()=>[this.studyIds, this.clinicalAttributes_profiledIn, this.samples, this.patients],
         invoke:async()=>{
             const serverAttributes = await client.fetchClinicalAttributesUsingPOST({
                 studyIds:this.studyIds.result!
@@ -590,6 +590,16 @@ export class ResultsViewPageStore {
                     patientAttribute: false,
                     studyId: "",
                     priority:"0" // TODO: change?
+                } as ClinicalAttribute);
+            }
+            if (this.samples.result!.length !== this.patients.result!.length) {
+                // if different number of samples and patients, add "Num Samples of Patient" attribute
+                specialAttributes.push({
+                    clinicalAttributeId: SpecialAttribute.NumSamplesPerPatient,
+                    datatype: "NUMBER",
+                    description: "Number of queried samples for each patient.",
+                    displayName: "# Samples per Patient",
+                    patientAttribute: true
                 } as ClinicalAttribute);
             }
             return serverAttributes.concat(specialAttributes).concat(this.clinicalAttributes_profiledIn.result!);
@@ -647,6 +657,7 @@ export class ResultsViewPageStore {
                 }
             }
             // add counts for "special" clinical attributes
+            ret[SpecialAttribute.NumSamplesPerPatient] = this.samples.result!.length;
             ret[SpecialAttribute.StudyOfOrigin] = this.samples.result!.length;
             let samplesWithMutationData = 0, samplesWithCNAData = 0;
             for (const sample of this.samples.result!) {
@@ -1279,27 +1290,6 @@ export class ResultsViewPageStore {
                 return _.groupBy(alterations, (alteration: ExtendedAlteration) => alteration.uniqueSampleKey);
             });
         }
-    });
-
-    readonly totalAlterationStats = remoteData<{ alteredSampleCount:number, sampleCount:number }>({
-       await:() => [
-           this.alterationsByGeneBySampleKey,
-           this.samplesExtendedWithClinicalData
-       ],
-       invoke: async ()=>{
-           const countsByGroup = getAlterationCountsForCancerTypesForAllGenes(
-               this.alterationsByGeneBySampleKey.result!,
-               this.samplesExtendedWithClinicalData.result!,
-               'cancerType');
-
-           const ret = _.reduce(countsByGroup, (memo, alterationData:IAlterationData)=>{
-                memo.alteredSampleCount += alterationData.alteredSampleCount;
-                memo.sampleCount += alterationData.sampleTotal;
-                return memo;
-           }, { alteredSampleCount: 0, sampleCount:0 } as any);
-
-           return ret;
-       }
     });
 
     //contains all the physical studies for the current selected cohort ids
