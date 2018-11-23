@@ -39,6 +39,7 @@ import {
     Sample
 } from "../../api/generated/CBioPortalAPI";
 import {clinicalAttributeIsPROFILEDIN, SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
+import {STUDY_VIEW_CONFIG} from "../../../pages/studyView/StudyViewConfig";
 
 interface IGenesetExpansionMap {
         [genesetTrackKey: string]: IGeneHeatmapTrackSpec[];
@@ -201,26 +202,34 @@ export function getGeneticTrackRuleSetParams(distinguishMutationType?:boolean, d
 }
 
 export function getClinicalTrackRuleSetParams(track:ClinicalTrackSpec) {
-    if (track.datatype === "number") {
-        return {
-            type: 'bar',
-            value_key: "attr_val",
-            value_range: track.numberRange,
-            log_scale: track.numberLogScale
-        };
-    } else if (track.datatype === "counts") {
-        return {
-            type: "stacked_bar",
-            value_key: "attr_val",
-            categories: track.countsCategoryLabels,
-            fills: track.countsCategoryFills
-        };
-    } else {
-        return {
-            type: 'categorical',
-            category_key: "attr_val"
-        };
+    let params:RuleSetParams;
+    switch (track.datatype) {
+        case "number":
+            params = {
+                type: 'bar',
+                value_key: "attr_val",
+                value_range: track.numberRange,
+                log_scale: track.numberLogScale
+            };
+            break;
+        case "counts":
+            params = {
+                type: "stacked_bar",
+                value_key: "attr_val",
+                categories: track.countsCategoryLabels,
+                fills: track.countsCategoryFills
+            };
+            break;
+        case "string":
+        default:
+            params = {
+                type: 'categorical',
+                category_key: "attr_val",
+                category_to_color: STUDY_VIEW_CONFIG.colors.reservedValue
+            };
+            break;
     }
+    return params;
 }
 
 export function percentAltered(altered:number, sequenced:number) {
@@ -410,7 +419,7 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
             }
             const attributes = oncoprint.selectedClinicalAttributeIds.keys().map(attrId=>{
                 return oncoprint.props.store.clinicalAttributeIdToClinicalAttribute.result![attrId];
-            }).filter(x=>!!x);
+            }).filter(x=>!!x);// filter out nonexistent attributes
             return attributes.map((attribute:ClinicalAttribute)=>{
                 const data = oncoprint.props.store.oncoprintClinicalDataCache.get(attribute).result!;
                 let altered_uids = undefined;
@@ -438,6 +447,12 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
                         (ret as any).numberRange = [0,1];
                     } else if (attribute.clinicalAttributeId === "MUTATION_COUNT") {
                         (ret as any).numberLogScale = true;
+                    } else if (attribute.clinicalAttributeId === SpecialAttribute.NumSamplesPerPatient) {
+                        (ret as any).numberRange = [0,undefined];
+                        ret.custom_options =
+                            sampleMode ?
+                                [{ label: "Show one column per patient.", onClick:()=>oncoprint.controlsHandlers.onSelectColumnType("patient")}] :
+                                [{ label: "Show one column per sample.", onClick:()=>oncoprint.controlsHandlers.onSelectColumnType("sample")}];
                     }
                 } else if (attribute.datatype === "STRING") {
                     ret.datatype = "string";

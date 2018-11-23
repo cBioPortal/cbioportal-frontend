@@ -1,44 +1,37 @@
 import * as React from "react";
-import {observer} from "mobx-react";
-import {
-    action,
-    autorun,
-    computed, IObservableObject, IObservableValue, IReactionDisposer, observable, ObservableMap,
-    reaction
-} from "mobx";
+import {observer, Observer} from "mobx-react";
+import {action, computed, IObservableObject, IReactionDisposer, observable, ObservableMap, reaction} from "mobx";
 import {remoteData} from "../../api/remoteData";
 import Oncoprint, {GENETIC_TRACK_GROUP_INDEX} from "./Oncoprint";
 import OncoprintControls, {
     IOncoprintControlsHandlers,
     IOncoprintControlsState
 } from "shared/components/oncoprint/controls/OncoprintControls";
-import {AlterationTypeConstants, ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
-import {ClinicalAttribute, Gene, MolecularProfile, Mutation, Sample} from "../../api/generated/CBioPortalAPI";
+import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
+import {ClinicalAttribute, Gene, MolecularProfile, Sample} from "../../api/generated/CBioPortalAPI";
 import {
-    percentAltered, makeGeneticTracksMobxPromise,
-    makeGenesetHeatmapExpansionsMobxPromise, makeGenesetHeatmapTracksMobxPromise,
-    makeHeatmapTracksMobxPromise, makeClinicalTracksMobxPromise
+    makeClinicalTracksMobxPromise,
+    makeGenesetHeatmapExpansionsMobxPromise,
+    makeGenesetHeatmapTracksMobxPromise,
+    makeGeneticTracksMobxPromise,
+    makeHeatmapTracksMobxPromise
 } from "./OncoprintUtils";
 import _ from "lodash";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import AppConfig from "appConfig";
-import LoadingIndicator, {GlobalLoader} from "shared/components/loadingIndicator/LoadingIndicator";
+import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import OncoprintJS, {TrackId} from "oncoprintjs";
 import fileDownload from 'react-file-download';
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
-import {Button} from "react-bootstrap";
 import tabularDownload from "./tabularDownload";
 import * as URL from "url";
 import classNames from 'classnames';
 import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
-import naturalSort from "javascript-natural-sort";
 import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
-import Spec = Mocha.reporters.Spec;
 import OqlStatusBanner from "../oqlStatusBanner/OqlStatusBanner";
-import {getAnnotatingProgressMessage, makeProfiledInClinicalAttributes} from "./ResultsViewOncoprintUtils";
+import autobind from "autobind-decorator";
+import {getAnnotatingProgressMessage} from "./ResultsViewOncoprintUtils";
 import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
-import {getMobxPromiseGroupStatus} from "../../lib/getMobxPromiseGroupStatus";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -119,10 +112,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     public molecularProfileIdToHeatmapTracks =
         observable.map<HeatmapTrackGroupRecord>();
 
-    private controlsHandlers:IOncoprintControlsHandlers;
+    public controlsHandlers:IOncoprintControlsHandlers;
     private controlsState:IOncoprintControlsState & IObservableObject;
 
-    private oncoprint:OncoprintJS<any>;
+    @observable.ref private oncoprint:OncoprintJS<any>;
 
     private putativeDriverSettingsReaction:IReactionDisposer;
     private urlParamsReaction:IReactionDisposer;
@@ -139,6 +132,11 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 this.selectedClinicalAttributeIds.set(SpecialAttribute.StudyOfOrigin, true);
             }
         });
+        onMobxPromise([props.store.samples, props.store.patients], (samples:any[], patients:any[])=>{
+            if (samples.length !== patients.length) {
+                this.selectedClinicalAttributeIds.set(SpecialAttribute.NumSamplesPerPatient, true);
+            }
+        })
 
         onMobxPromise(props.store.clinicalAttributes_profiledIn, (result:any[])=>{
             for (const attr of result) {
@@ -826,19 +824,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         };
     }
 
-    readonly caseSetName = remoteData({
-        await:()=>[
-            this.props.store.sampleLists
-        ],
-        invoke:()=>{
-            if (this.props.store.sampleLists.result!.length === 1) {
-                return Promise.resolve(this.props.store.sampleLists.result![0].name);
-            } else {
-                return Promise.resolve(undefined);
-            }
-        }
-    });
-
+    /* commenting this out because I predict it could make a comeback
     @computed get headerColumnModeButton() {
         if (!this.props.store.samples.isComplete ||
             !this.props.store.patients.isComplete ||
@@ -872,48 +858,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 </Button>
             </DefaultTooltip>
         );
-    }
-
-    @computed get caseSetInfo() {
-        let caseSetText = null;
-
-        if (this.props.store.patients.isComplete &&
-            this.props.store.samples.isComplete &&
-            this.caseSetName.isComplete)
-        {
-            const caseSetName = this.caseSetName.result || "User-defined Patient List";
-            const patientCount = this.props.store.patients.result.length;
-            const sampleCount = this.props.store.samples.result.length;
-
-            caseSetText = <span>Case Set: {caseSetName} ({patientCount} patients / {sampleCount} samples)</span>;
-        }
-
-        return (
-            <div>
-                {caseSetText}
-                {this.headerColumnModeButton}
-            </div>
-        );
-    }
-
-    @computed get alterationInfo() {
-        const alteredIdsPromise = (this.columnMode === "sample" ? this.props.store.alteredSampleKeys : this.props.store.alteredPatientKeys);
-        const sequencedIdsPromise = (this.columnMode === "sample" ? this.props.store.sequencedSampleKeys: this.props.store.sequencedPatientKeys);
-        const allIdsPromise = (this.columnMode === "sample" ? this.props.store.samples : this.props.store.patients);
-        if (allIdsPromise.isComplete && alteredIdsPromise.isComplete && sequencedIdsPromise.isComplete) {
-            return (
-                <span style={{marginTop:"15px", marginBottom:"15px", display: "block"}}>
-                    {`Altered in ${alteredIdsPromise.result.length} `+
-                    `(${percentAltered(alteredIdsPromise.result.length, sequencedIdsPromise.result.length)}) `+
-                    `of ${sequencedIdsPromise.result.length} sequenced `+
-                    `${this.columnMode === "sample" ? "samples" : "cases/patients"} `+
-                    `(${allIdsPromise.result.length} total)`}
-                </span>
-            )
-        } else {
-            return null;
-        }
-    }
+    }*/
 
     @computed get isLoading() {
         return this.clinicalTracks.isPending
@@ -945,6 +890,21 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             return _.uniq(this.props.store.selectedMolecularProfiles.result.map(x=>x.molecularAlterationType));
         } else {
             return [];
+        }
+    }
+
+    @autobind
+    private getControls() {
+        if (this.oncoprint && !this.oncoprint.webgl_unavailable)  {
+            return (<FadeInteraction showByDefault={true} show={true}>
+                <OncoprintControls
+                    handlers={this.controlsHandlers}
+                    state={this.controlsState}
+                    store={this.props.store}
+                />
+            </FadeInteraction>);
+        } else {
+            return <span/>;
         }
     }
 
@@ -986,21 +946,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                      onMouseEnter={this.onMouseEnter}
                      onMouseLeave={this.onMouseLeave}
                 >
+                    <Observer>
+                        {this.getControls}
+                    </Observer>
 
-                    {this.caseSetInfo}
-
-                    {(this.oncoprint && !this.oncoprint.webgl_unavailable) &&
-                    (<FadeInteraction showByDefault={true} show={this.mouseInsideBounds}>
-                        <OncoprintControls
-                            store={this.props.store}
-                            handlers={this.controlsHandlers}
-                            state={this.controlsState}
-                        />
-                    </FadeInteraction>)}
-
-                    <div style={{position:"relative"}} >
+                    <div style={{position:"relative", marginTop:15}} >
                         <div>
-                            {this.alterationInfo}
                             <Oncoprint
                                 oncoprintRef={this.oncoprintRef}
                                 clinicalTracks={this.clinicalTracks.result}
