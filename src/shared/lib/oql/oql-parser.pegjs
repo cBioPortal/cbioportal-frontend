@@ -19,7 +19,7 @@ zmbs = zero_or_more_breaks_and_spaces:[; \t\r\n]*
 ombs = one_or_more_breaks_and_spaces:[; \t\r\n]+
 
 StartMergedGenes
-	= "[" zmbs "\"" StringExceptQuotes "\"" {return {"label": label, "list":[]};}
+	= "[" zmbs "\"" label:StringExceptQuotes "\"" {return {"label": label, "list":[]};}
 	/ "[" zmbs {return {"label": undefined, "list":[]};}
 
 // Case-insensitive keywords
@@ -72,10 +72,12 @@ CNACommand
         / constrval:CNAType { return {"alteration_type":"cna", "constr_rel":"=", "constr_val":constrval}; }
 
 MUTCommand
-	= "MUT" msp "=" msp mutation:Mutation { return {"alteration_type":"mut", "constr_rel": "=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info}; }
-	/ "MUT" msp "!=" msp mutation:Mutation { return {"alteration_type":"mut", "constr_rel": "!=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info}; }
-	/ "MUT" { return {"alteration_type":"mut", "info":{}}; }
-	/ mutation:Mutation { return {"alteration_type":"mut", "constr_rel": "=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info}; }
+	= "MUT" msp "=" msp mutation:MutationWithModifiers { return {"alteration_type":"mut", "constr_rel": "=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info, modifiers: mutation.modifiers}; }
+	/ "MUT" msp "!=" msp mutation:MutationWithModifiers { return {"alteration_type":"mut", "constr_rel": "!=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info, modifiers: mutation.modifiers}; }
+	/ "MUT" modifiers:MutationModifiers { return {"alteration_type":"mut", "info":{}, "modifiers":modifiers}; }
+	/ "MUT" { return {"alteration_type":"mut", "info":{}, "modifiers":[]}; }
+	/ modifiers:MutationModifiers { return {"alteration_type":"mut", "info":{}, modifiers:modifiers}; }
+	/ mutation:MutationWithModifiers { return {"alteration_type":"mut", "constr_rel": "=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info, modifiers: mutation.modifiers}; }
 
 EXPCommand
 	= "EXP" msp op:ComparisonOp msp constrval:Number { return {"alteration_type":"exp", "constr_rel":op, "constr_val":parseFloat(constrval)}; }
@@ -92,6 +94,14 @@ ComparisonOp
 	/ ">" { return ">"; }
 	/ "<" { return "<"; }
 
+MutationWithModifiers
+    = mutation:Mutation modifiers:MutationModifiers { mutation.modifiers = modifiers; return mutation; }
+    / mutation:Mutation { mutation.modifiers = []; return mutation; }
+
+MutationModifiers
+    = modifier:MutationModifier more:MutationModifiers { return [modifier].concat(more); }
+    / modifier:MutationModifier { return [modifier]; }
+
 Mutation
 	= "MISSENSE"i { return {"type":"class", "value":"MISSENSE", "info":{}}; }
 	/ "NONSENSE"i { return {"type":"class", "value":"NONSENSE", "info":{}}; }
@@ -105,3 +115,7 @@ Mutation
     / letter:AminoAcid position:NaturalNumber string:String { return {"type":"name" , "value":(letter+position+string), "info":{}};}
     / letter:AminoAcid position:NaturalNumber { return {"type":"position", "value":parseInt(position), "info":{"amino_acid":letter.toUpperCase()}}; }
 	/ mutation_name:String { return {"type":"name", "value":mutation_name, "info":{"unrecognized":true}}; }
+
+MutationModifier
+    = "\+GERMLINE"i { return "GERMLINE";}
+    / "\+SOMATIC"i { return "SOMATIC";}
