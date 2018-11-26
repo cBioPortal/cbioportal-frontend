@@ -1186,7 +1186,7 @@ describe('case set selection in front page query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
-        browser.waitUntil(()=>(browser.getText(selectedCaseSet_sel) === "All (21333)"), 5000);
+        browser.waitUntil(()=>(/All \(\d+\)/.test(browser.getText(selectedCaseSet_sel))), 5000); // since sample #s change across studies, dont depend this test on specific number
 
         // Deselect all tcga -provisional studies
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
