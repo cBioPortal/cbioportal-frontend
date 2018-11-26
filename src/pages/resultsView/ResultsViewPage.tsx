@@ -181,8 +181,8 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     }
 
     @autobind
-    private customTabMountCallback(div:HTMLDivElement,tab:any){
-        showCustomTab(div, tab, this.props.routing.location, this.resultsViewPageStore);
+    private customTabCallback(div:HTMLDivElement,tab:any, isUnmount = false){
+        showCustomTab(div, tab, this.props.routing.location, this.resultsViewPageStore, isUnmount);
     }
 
     componentWillUnmount(){
@@ -408,7 +408,10 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             const customResultsTabs = AppConfig.serverConfig.custom_tabs.filter((tab: any) => tab.location === "RESULTS_PAGE").map((tab: any, i: number) => {
                 return (<MSKTab key={100 + i} id={'customTab' + i} unmountOnHide={(tab.unmountOnHide === true)}
                                 onTabDidMount={(div) => {
-                                    this.customTabMountCallback(div, tab)
+                                    this.customTabCallback(div, tab);
+                                }}
+                                onTabUnmount={(div) => {
+                                    this.customTabCallback(div, tab, true);
                                 }}
                                 linkText={tab.title}
                     />
