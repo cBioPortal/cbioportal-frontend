@@ -1,44 +1,39 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import {
-    action,
-    autorun,
-    computed, IObservableObject, IObservableValue, IReactionDisposer, observable, ObservableMap,
-    reaction
-} from "mobx";
+import {action, computed, IObservableObject, IReactionDisposer, observable, ObservableMap, reaction} from "mobx";
 import {remoteData} from "../../api/remoteData";
 import Oncoprint, {GENETIC_TRACK_GROUP_INDEX} from "./Oncoprint";
 import OncoprintControls, {
     IOncoprintControlsHandlers,
     IOncoprintControlsState
 } from "shared/components/oncoprint/controls/OncoprintControls";
-import {AlterationTypeConstants, ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
-import {ClinicalAttribute, Gene, MolecularProfile, Mutation, Sample} from "../../api/generated/CBioPortalAPI";
+import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
+import {ClinicalAttribute, Gene, MolecularProfile, Sample} from "../../api/generated/CBioPortalAPI";
 import {
-    percentAltered, makeGeneticTracksMobxPromise,
-    makeGenesetHeatmapExpansionsMobxPromise, makeGenesetHeatmapTracksMobxPromise,
-    makeHeatmapTracksMobxPromise, makeClinicalTracksMobxPromise
+    makeClinicalTracksMobxPromise,
+    makeGenesetHeatmapExpansionsMobxPromise,
+    makeGenesetHeatmapTracksMobxPromise,
+    makeGeneticTracksMobxPromise,
+    makeHeatmapTracksMobxPromise,
+    percentAltered
 } from "./OncoprintUtils";
 import _ from "lodash";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import AppConfig from "appConfig";
-import LoadingIndicator, {GlobalLoader} from "shared/components/loadingIndicator/LoadingIndicator";
+import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import OncoprintJS, {TrackId} from "oncoprintjs";
 import fileDownload from 'react-file-download';
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import {Button} from "react-bootstrap";
 import tabularDownload from "./tabularDownload";
-import * as URL from "url";
 import classNames from 'classnames';
 import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
-import naturalSort from "javascript-natural-sort";
 import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
-import Spec = Mocha.reporters.Spec;
 import OqlStatusBanner from "../oqlStatusBanner/OqlStatusBanner";
-import {getAnnotatingProgressMessage, makeProfiledInClinicalAttributes} from "./ResultsViewOncoprintUtils";
+import {getAnnotatingProgressMessage} from "./ResultsViewOncoprintUtils";
 import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
-import {getMobxPromiseGroupStatus} from "../../lib/getMobxPromiseGroupStatus";
+import getBrowserWindow from "../../lib/getBrowserWindow";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -66,9 +61,9 @@ export interface IGenesetExpansionRecord {
     correlationValue: number;
 }
 
-const SAMPLE_MODE_URL_PARAM = "show_samples";
-const CLINICAL_TRACKS_URL_PARAM = "clinicallist";
-const HEATMAP_TRACKS_URL_PARAM = "heatmap_track_groups";
+export const SAMPLE_MODE_URL_PARAM = "show_samples";
+export const CLINICAL_TRACKS_URL_PARAM = "clinicallist";
+export const HEATMAP_TRACKS_URL_PARAM = "heatmap_track_groups";
 
 const CLINICAL_TRACK_KEY_PREFIX = "CLINICALTRACK_";
 
@@ -132,7 +127,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
         (window as any).resultsViewOncoprint = this;
 
-        this.initFromUrlParams(URL.parse(window.location.href, true).query);
+        this.initFromUrlParams(getBrowserWindow().globalStores.routing.location.query);
 
         onMobxPromise(props.store.studyIds, (studyIds:string[])=>{
             if (studyIds.length > 1) {
@@ -178,23 +173,19 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 this.clinicalTracksUrlParam
             ],
             ()=>{
-                const parsedURL = URL.parse(window.location.href, true);
-                const query = Object.assign({}, parsedURL.query);
-                //this.props.routing.updateRoute({
-                query[SAMPLE_MODE_URL_PARAM] = (this.columnMode === "sample") + "";
+                const newParams = Object.assign({}, getBrowserWindow().globalStores.routing.location.query);
+                newParams[SAMPLE_MODE_URL_PARAM] = (this.columnMode === "sample") + "";
                 if (!this.clinicalTracksUrlParam) {
-                    delete query[CLINICAL_TRACKS_URL_PARAM];
+                    delete newParams[CLINICAL_TRACKS_URL_PARAM];
                 } else {
-                    query[CLINICAL_TRACKS_URL_PARAM] = this.clinicalTracksUrlParam;
+                    newParams[CLINICAL_TRACKS_URL_PARAM] = this.clinicalTracksUrlParam;
                 }
                 if (!this.heatmapTrackGroupsUrlParam) {
-                    delete query[HEATMAP_TRACKS_URL_PARAM];
+                    delete newParams[HEATMAP_TRACKS_URL_PARAM];
                 } else {
-                    query[HEATMAP_TRACKS_URL_PARAM] = this.heatmapTrackGroupsUrlParam;
+                    newParams[HEATMAP_TRACKS_URL_PARAM] = this.heatmapTrackGroupsUrlParam;
                 }
-                //});
-                const newParsedURL = Object.assign(parsedURL, { query, search:null });
-                window.history.replaceState({}, '', URL.format(newParsedURL));
+                getBrowserWindow().globalStores.routing.updateRoute(newParams, undefined, true, true);
             }
         );
 
