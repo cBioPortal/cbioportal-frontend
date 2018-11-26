@@ -3,7 +3,7 @@ import {observer} from "mobx-react";
 import {MobxPromise} from "mobxpromise";
 import {OncoprintClinicalAttribute} from "../oncoprint/ResultsViewOncoprint";
 import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
-import {computed} from "mobx";
+import {computed, observable} from "mobx";
 import {remoteData} from "../../api/remoteData";
 import _ from "lodash";
 import {ClinicalAttribute} from "../../api/generated/CBioPortalAPI";
@@ -12,6 +12,7 @@ import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageSt
 import {makeProfiledInClinicalAttributes} from "../oncoprint/ResultsViewOncoprintUtils";
 const CheckedSelect = require("react-select-checked").CheckedSelect;
 import ReactSelect from "react-select";
+import autobind from "autobind-decorator";
 
 export interface IClinicalAttributeSelectorProps {
     store:ResultsViewPageStore;
@@ -23,6 +24,8 @@ export interface IClinicalAttributeSelectorProps {
 
 @observer
 export default class ClinicalAttributeSelector extends React.Component<IClinicalAttributeSelectorProps, {}> {
+
+    @observable private focused = false;
 
     readonly sortedClinicalAttributes = remoteData({
         await: ()=>[
@@ -108,27 +111,40 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
         };
     }
 
+    @autobind private onFocus() {
+        this.focused = true;
+    }
+
     render() {
         let disabled:boolean, placeholder:string, options:any[];
-        switch (this.options.status) {
-            case "pending":
-                disabled = true;
-                placeholder = "Downloading clinical tracks...";
-                options = [];
-                break;
-            case "error":
-                disabled = true;
-                placeholder = "Error downloading clinical tracks.";
-                options = [];
-                break;
-            default:
-                // complete
-                disabled = false;
-                placeholder = "Add clinical tracks..";
-                options = this.options.result!;
+        if (this.focused) {
+            switch (this.options.status) {
+                case "pending":
+                    disabled = false;
+                    placeholder = "Downloading clinical tracks...";
+                    options = [];
+                    break;
+                case "error":
+                    disabled = true;
+                    placeholder = "Error downloading clinical tracks.";
+                    options = [];
+                    break;
+                default:
+                    // complete
+                    disabled = false;
+                    placeholder = "Add clinical tracks..";
+                    options = this.options.result!;
+            }
+        } else {
+            // not loading yet - only load on click
+            disabled = false;
+            placeholder = "Add clinical tracks..";
+            options = [];
         }
+
+        let selectElt:any = null;
         if (this.props.multiple) {
-            return (
+            selectElt = (
                 <CheckedSelect
                     name={this.props.name}
                     disabled={disabled}
@@ -140,7 +156,7 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
                 />
             );
         } else {
-            return (
+            selectElt = (
                 <ReactSelect
                     name={this.props.name}
                     disabled={disabled}
@@ -153,5 +169,11 @@ export default class ClinicalAttributeSelector extends React.Component<IClinical
                 />
             );
         }
+
+        return (
+            <span onFocus={this.onFocus}>
+                {selectElt}
+            </span>
+        );
     }
 }
