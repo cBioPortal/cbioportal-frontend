@@ -1,5 +1,6 @@
 import {Mutation, MolecularProfile, NumericGeneMolecularData} from "../../api/generated/CBioPortalAPI";
 import * as _ from 'lodash';
+import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
 
 var cna_profile_data_to_string: any = {
     "-2": "homdel",
@@ -107,6 +108,18 @@ export default class accessors {
                 return "promoter";
             } else {
                 return getSimplifiedMutationType(d.mutationType);
+            }
+        } else {
+            return null;
+        }
+    }
+
+    public mut_status(d:Mutation) {
+        if (this.molecularAlterationType(d.molecularProfileId) === AlterationTypeConstants.MUTATION_EXTENDED) {
+            if (d.mutationStatus && (d.mutationStatus.toLowerCase() === "germline")) {
+                return "germline";
+            } else {
+                return "somatic"
             }
         } else {
             return null;
