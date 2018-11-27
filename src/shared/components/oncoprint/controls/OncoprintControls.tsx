@@ -21,7 +21,7 @@ import ClinicalAttributeSelector from "../../clinicalAttributeSelector/ClinicalA
 import {ResultsViewPageStore} from "../../../../pages/resultsView/ResultsViewPageStore";
 
 export interface IOncoprintControlsHandlers {
-    onSelectColumnType?:(type:"sample"|"patient")=>void,
+    onSelectColumnType:(type:"sample"|"patient")=>void,
     onSelectShowUnalteredColumns?:(unalteredColumnsShown:boolean)=>void,
     onSelectShowWhitespaceBetweenColumns?:(showWhitespace:boolean)=>void,
     onSelectShowClinicalTrackLegends?:(showLegends:boolean)=>void,
@@ -231,10 +231,10 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                 this.props.handlers.onSelectOnlyShowClinicalLegendForAlteredCases(!this.props.state.onlyShowClinicalLegendForAlteredCases);
                 break;
             case EVENT_KEY.columnTypeSample:
-                this.props.handlers.onSelectColumnType && this.props.handlers.onSelectColumnType("sample");
+                this.props.handlers.onSelectColumnType("sample");
                 break;
             case EVENT_KEY.columnTypePatient:
-                this.props.handlers.onSelectColumnType && this.props.handlers.onSelectColumnType("patient");
+                this.props.handlers.onSelectColumnType("patient");
                 break;
             case EVENT_KEY.sortByData:
                 this.props.handlers.onClickSortByData && this.props.handlers.onClickSortByData();
