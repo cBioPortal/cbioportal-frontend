@@ -516,8 +516,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 const keyToCase = (this.columnMode === "sample" ? sampleKeyToSample : patientKeyToPatient);
                                 const caseIds = this.oncoprint.getIdOrder().map(
                                     this.columnMode === "sample" ?
-                                        (id=>(sampleKeyToSample[id].sampleId)) :
-                                        (id=>(patientKeyToPatient[id].patientId))
+                                        ((id:string)=>(sampleKeyToSample[id].sampleId)) :
+                                        ((id:string)=>(patientKeyToPatient[id].patientId))
                                 );
                                 for (const caseId of caseIds) {
                                     file += `${caseId}\n`;
