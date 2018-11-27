@@ -29,11 +29,12 @@ export interface IResultsViewPageProps {
     routing: any;
 }
 
-export function createQueryStore(currentQuery?:any) {
+export function createQueryStore(forQuickTab: boolean, currentQuery?:any) {
 
     const win:any = window;
 
     const queryStore = new QueryStore(currentQuery);
+    queryStore.forQuickTab = forQuickTab;
 
     queryStore.singlePageAppSubmitRoutine = function(query:CancerStudyQueryUrlParams) {
 
@@ -62,7 +63,7 @@ export default class HomePage extends React.Component<IResultsViewPageProps, {}>
     }
 
     componentWillMount(){
-        this.queryStore = createQueryStore();
+        this.queryStore = createQueryStore(true);
     }
 
     private handleTabChange(id: string) {
