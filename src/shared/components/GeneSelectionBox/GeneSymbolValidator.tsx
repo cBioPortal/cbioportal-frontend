@@ -150,7 +150,7 @@ export default class GeneSymbolValidator extends React.Component<IGeneSymbolVali
 				<ReactSelect
 					placeholder='select a symbol'
 					options={options}
-					onChange={option => option && this.replaceGene(alias, option.value)}
+					onChange={(option: any) => option && this.replaceGene(alias, option.value)}
 					autosize
 				/>
 			</div>

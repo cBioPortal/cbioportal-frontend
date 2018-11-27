@@ -40,3 +40,5 @@ declare module 'react-portal';
 declare module 'little-loader';
 declare module 'igv/dist/igv.esm.js';
 declare module 'react-mfb';
+declare module 'react-select2';
+declare module 'react-select';
