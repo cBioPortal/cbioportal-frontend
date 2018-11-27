@@ -103,7 +103,7 @@ describe('MutationTypeColumnFormatter', () => {
         testRenderedValues(nonFsDelComponent, "NonFrameShift_deletion", "inframe-mutation", "IF");
         testRenderedValues(spliceComponent, "Splice Site", "trunc-mutation", "Splice");
         testRenderedValues(fsDelComponent, "FrameShift_Deletion", "trunc-mutation", "FS del");
-        testRenderedValues(unknownMutComponent, "a_strange_type_of_mutation", "other-mutation", "a_strange_type_of_mutation");
+        testRenderedValues(unknownMutComponent, "a_strange_type_of_mutation", "other-mutation", "Other");
         testRenderedValues(otherMutComponent, "other", "other-mutation", "Other");
     });
 
