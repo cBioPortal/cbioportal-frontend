@@ -1465,8 +1465,13 @@ export class ResultsViewPageStore {
         }
     }, {});
 
-    readonly virtualStudies = remoteData(async ()=>{
-        return ServerConfigHelpers.sessionServiceIsEnabled() ? getVirtualStudies(this.cohortIdsList) : [];
+    readonly virtualStudies = remoteData({
+        invoke: async ()=> {
+            return ServerConfigHelpers.sessionServiceIsEnabled() ? getVirtualStudies(this.cohortIdsList) : [];
+        },
+        onError: () => {
+            // fail silently when an error occurs with the virtual studies
+        }
     });
 
     readonly studyIds = remoteData({
