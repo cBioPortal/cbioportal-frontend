@@ -323,12 +323,12 @@ export function makeGeneticTrackWith({
             ? makeGeneticTrackData(dataByCase.samples, geneSymbolArray, samples as Sample[], coverageInformation, selectedMolecularProfiles)
             : makeGeneticTrackData(dataByCase.patients, geneSymbolArray, patients as Patient[], coverageInformation, selectedMolecularProfiles)
         );
-        const info = alterationInfoForCaseAggregatedDataByOQLLine(
+        const alterationInfo = alterationInfoForCaseAggregatedDataByOQLLine(
             sampleMode,
             {cases: dataByCase, oql: geneSymbolArray},
             sequencedSampleKeysByGene,
             sequencedPatientKeysByGene
-        ).percent;
+        );
         const trackKey = (parentKey === undefined
             ? `GENETICTRACK_${index}`
             : `${parentKey}_EXPANSION_${index}`
@@ -349,12 +349,24 @@ export function makeGeneticTrackWith({
         ).map(expansionIndex => makeTrack(
             subTrackData![expansionIndex], expansionIndex, trackKey
         ));
+
+        let info = alterationInfo.percent;
+        let infoTooltip = undefined;
+        if (alterationInfo.sequenced !== 0) {
+            // show tooltip explaining percent calculation, as long as its not N/P
+            infoTooltip = `altered / profiled = ${alterationInfo.altered} / ${alterationInfo.sequenced}`;
+        }
+        if (alterationInfo.sequenced < (sampleMode ? samples : patients).length) {
+            // add asterisk to percentage if not all samples/patients are profiled for this track
+            info = `${info}*`;
+        }
         return {
             key: trackKey,
             label: (parentKey !== undefined ? '  ' : '') + formatGeneticTrackLabel(oql),
             labelColor: parentKey !== undefined ? 'grey' : undefined,
             oql: formatGeneticTrackOql(oql),
             info,
+            infoTooltip,
             data,
             expansionCallback,
             removeCallback,
@@ -372,7 +384,7 @@ export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
             oncoprint.props.store.coverageInformation,
             oncoprint.props.store.sequencedSampleKeysByGene,
             oncoprint.props.store.sequencedPatientKeysByGene,
-            oncoprint.props.store.selectedMolecularProfiles
+            oncoprint.props.store.selectedMolecularProfiles,
         ],
         invoke: async () => {
             const trackFunction = makeGeneticTrackWith({
@@ -419,7 +431,7 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
             }
             const attributes = oncoprint.selectedClinicalAttributeIds.keys().map(attrId=>{
                 return oncoprint.props.store.clinicalAttributeIdToClinicalAttribute.result![attrId];
-            }).filter(x=>!!x);
+            }).filter(x=>!!x);// filter out nonexistent attributes
             return attributes.map((attribute:ClinicalAttribute)=>{
                 const data = oncoprint.props.store.oncoprintClinicalDataCache.get(attribute).result!;
                 let altered_uids = undefined;
@@ -447,6 +459,12 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
                         (ret as any).numberRange = [0,1];
                     } else if (attribute.clinicalAttributeId === "MUTATION_COUNT") {
                         (ret as any).numberLogScale = true;
+                    } else if (attribute.clinicalAttributeId === SpecialAttribute.NumSamplesPerPatient) {
+                        (ret as any).numberRange = [0,undefined];
+                        ret.custom_options =
+                            sampleMode ?
+                                [{ label: "Show one column per patient.", onClick:()=>oncoprint.controlsHandlers.onSelectColumnType("patient")}] :
+                                [{ label: "Show one column per sample.", onClick:()=>oncoprint.controlsHandlers.onSelectColumnType("sample")}];
                     }
                 } else if (attribute.datatype === "STRING") {
                     ret.datatype = "string";

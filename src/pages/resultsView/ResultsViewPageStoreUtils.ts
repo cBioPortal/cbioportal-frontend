@@ -20,30 +20,29 @@ import {
 } from "./ResultsViewPageStore";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import _ from "lodash";
-import sessionServiceClient from "shared/api//sessionServiceInstance";
-import { VirtualStudy } from "shared/model/VirtualStudy";
 import client from "shared/api/cbioportalClientInstance";
+import { VirtualStudy } from "shared/model/VirtualStudy";
+import {
+    getVirtualStudies,
+} from "./ResultsViewPageHelpers";
 
 type CustomDriverAnnotationReport = {
     hasBinary: boolean,
     tiers: string[];
 };
 
+export type CoverageInformationForCase = {
+    byGene:{[hugoGeneSymbol:string]:GenePanelData[]},
+    allGenes:GenePanelData[],
+    notProfiledByGene:{[hugoGeneSymbol:string]:GenePanelData[]}
+    notProfiledAllGenes:GenePanelData[];
+};
+
 export type CoverageInformation = {
     samples:
-        {[uniqueSampleKey:string]:{
-            byGene:{[hugoGeneSymbol:string]:GenePanelData[]},
-            allGenes:GenePanelData[],
-            notProfiledByGene:{[hugoGeneSymbol:string]:GenePanelData[]}
-            notProfiledAllGenes:GenePanelData[];
-        }};
+        {[uniqueSampleKey:string]:CoverageInformationForCase};
     patients:
-        {[uniquePatientKey:string]:{
-            byGene:{[hugoGeneSymbol:string]:GenePanelData[]},
-            allGenes:GenePanelData[],
-            notProfiledByGene:{[hugoGeneSymbol:string]:GenePanelData[]}
-            notProfiledAllGenes:GenePanelData[];
-        }};
+        {[uniquePatientKey:string]:CoverageInformationForCase};
 };
 
 export function computeCustomDriverAnnotationReport(mutations:Mutation[]):CustomDriverAnnotationReport {
@@ -230,7 +229,7 @@ export async function fetchQueriedStudies(filteredPhysicalStudies:{[id:string]:C
     let unknownIds:{[id:string]:boolean} = {};
     for(const id of queriedIds){
         if(filteredPhysicalStudies[id]){
-            queriedStudies.push(filteredPhysicalStudies[id])
+            queriedStudies.push(filteredPhysicalStudies[id]);
         } else {
             unknownIds[id]=true;
         }
@@ -246,23 +245,22 @@ export async function fetchQueriedStudies(filteredPhysicalStudies:{[id:string]:C
                 delete unknownIds[study.studyId];
             })
     
-        }).catch(() => {}) //this is for private instances. it throws error when the study is not found
+        }).catch(() => {}); //this is for private instances. it throws error when the study is not found
+
+        await getVirtualStudies(Object.keys(unknownIds)).then((virtualStudies: VirtualStudy[]) => {
+            virtualStudies.forEach(virtualStudy=>{
+                // tslint:disable-next-line:no-object-literal-type-assertion
+                const cancerStudy = {
+                    allSampleCount: _.sumBy(virtualStudy.data.studies, study=>study.samples.length),
+                    studyId: virtualStudy.id,
+                    name: virtualStudy.data.name,
+                    description: virtualStudy.data.description,
+                    cancerTypeId: "My Virtual Studies"
+                } as CancerStudy;
+                queriedStudies.push(cancerStudy);
+            });
+        });
     }
-
-    let virtualStudypromises = Object.keys(unknownIds).map(id =>sessionServiceClient.getVirtualStudy(id))
-
-    await Promise.all(virtualStudypromises).then((allData: VirtualStudy[]) => {
-        allData.forEach(virtualStudy=>{
-            let study = {
-                allSampleCount:_.sumBy(virtualStudy.data.studies, study=>study.samples.length),
-                studyId: virtualStudy.id,
-                name: virtualStudy.data.name,
-                description: virtualStudy.data.description,
-                cancerTypeId: "My Virtual Studies"
-            } as CancerStudy;
-            queriedStudies.push(study)
-        })
-    });
 
     return queriedStudies;
 }

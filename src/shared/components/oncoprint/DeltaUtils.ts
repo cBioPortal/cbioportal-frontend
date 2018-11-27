@@ -570,6 +570,7 @@ function transitionGeneticTrack(
             data: nextSpec.data,
             tooltipFn: makeGeneticTrackTooltip(true, getMolecularProfileMap, nextProps.alterationTypesInQuery),
             track_info: nextSpec.info,
+            $track_info_tooltip_elt: nextSpec.infoTooltip ? $('<div>'+nextSpec.infoTooltip+'</div>') : undefined,
             removeCallback: () => {
                 delete getTrackSpecKeyToTrackId()[nextSpec.key];
                 if (nextSpec.removeCallback) nextSpec.removeCallback();
@@ -609,6 +610,9 @@ function transitionGeneticTrack(
 
         if (nextSpec.info !== prevSpec.info) {
             oncoprint.setTrackInfo(trackId, nextSpec.info);
+        }
+        if (nextSpec.infoTooltip !== prevSpec.infoTooltip) {
+            oncoprint.setTrackInfoTooltip(trackId, nextSpec.infoTooltip ? $('<div>'+nextSpec.infoTooltip+'</div>') : undefined);
         }
 
         // update ruleset if its changed
@@ -678,7 +682,8 @@ function transitionClinicalTrack(
             sortCmpFn: getClinicalTrackSortComparator(nextSpec),
             init_sort_direction: 0 as 0,
             target_group: CLINICAL_TRACK_GROUP_INDEX,
-            onSortDirectionChange: nextProps.onTrackSortDirectionChange
+            onSortDirectionChange: nextProps.onTrackSortDirectionChange,
+            custom_track_options: nextSpec.custom_options
         };
         trackSpecKeyToTrackId[nextSpec.key] = oncoprint.addTracks([clinicalTrackParams])[0];
     } else if (nextSpec && prevSpec) {
@@ -694,6 +699,10 @@ function transitionClinicalTrack(
         }
         // set tooltip, its cheap
         oncoprint.setTrackTooltipFn(trackId, makeClinicalTrackTooltip(nextSpec, true));
+        // set custom track options if they've shallow changed - its cheap
+        if (prevSpec.custom_options !== nextSpec.custom_options) {
+            oncoprint.setTrackCustomOptions(trackId, nextSpec.custom_options);
+        }
     }
 }
 function transitionGenesetHeatmapTrack(
