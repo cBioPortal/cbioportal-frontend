@@ -1136,21 +1136,15 @@ describe("ResultsViewPageStoreUtils", ()=>{
             } as CancerStudy
         };
 
-        let virtualStudies: { [id: string]: VirtualStudy } = {
-            'virtual_study_1': $.extend({},virtualStudy,{"id": "virtual_study_1"}) as VirtualStudy,
-            'virtual_study_2': $.extend({},virtualStudy,{"id": "virtual_study_2"}) as VirtualStudy
-        };
+        let virtualStudies: VirtualStudy[] = [
+            $.extend({},virtualStudy,{"id": "virtual_study_1"}) as VirtualStudy,
+            $.extend({},virtualStudy,{"id": "virtual_study_2"}) as VirtualStudy
+        ];
 
         before(()=>{
-            sinon.stub(sessionServiceClient, "getVirtualStudy").callsFake(function fakeFn(id:string) {
+            sinon.stub(sessionServiceClient, "getUserVirtualStudies").callsFake(function fakeFn(id:string) {
                 return new Promise((resolve, reject) => {
-                    let obj = virtualStudies[id]
-                    if(_.isUndefined(obj)){
-                        reject()
-                    }
-                    else{
-                        resolve(obj);
-                    }
+                    resolve(virtualStudies);
                 });
             });
             //
@@ -1202,10 +1196,10 @@ describe("ResultsViewPageStoreUtils", ()=>{
 
         //this case is not possible because id in these scenarios are first identified in QueryBuilder.java and
         //returned to query selector page
-        it("when virtual study query having private study or unknow virtual study id", (done)=>{
-            fetchQueriedStudies({},['shared_study1']).catch((error)=>{
-                done();
-            });
+        it("when virtual study query having private study or unknow virtual study id", async ()=>{
+            let test = await fetchQueriedStudies({},['shared_study1']);
+            // assume no studies returned
+            assert.equal(test.length, 0);
         });
 
 
