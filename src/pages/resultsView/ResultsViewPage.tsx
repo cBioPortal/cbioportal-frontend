@@ -1,23 +1,22 @@
-import * as React from 'react';
-import * as _ from 'lodash';
-import $ from 'jquery';
-import {observer, inject, Observer} from "mobx-react";
-import {reaction, computed, observable, runInAction} from "mobx";
+import * as React from "react";
+import * as _ from "lodash";
+import $ from "jquery";
+import {inject, observer} from "mobx-react";
+import {computed, reaction, runInAction} from "mobx";
 import {ResultsViewPageStore, SamplesSpecificationElement} from "./ResultsViewPageStore";
 import CancerSummaryContainer from "pages/resultsView/cancerSummary/CancerSummaryContainer";
 import Mutations from "./mutation/Mutations";
 import MutualExclusivityTab from "./mutualExclusivity/MutualExclusivityTab";
 import SurvivalTab from "./survival/SurvivalTab";
 import DownloadTab from "./download/DownloadTab";
-import AppConfig from 'appConfig';
+import AppConfig from "appConfig";
 import CNSegments from "./cnSegments/CNSegments";
-import './styles.scss';
-import {genes, parseOQLQuery} from "shared/lib/oql/oqlfilter.js";
+import "./styles.scss";
 import Network from "./network/Network";
 import ResultsViewOncoprint from "shared/components/oncoprint/ResultsViewOncoprint";
 import QuerySummary from "./querySummary/QuerySummary";
 import ExpressionWrapper from "./expression/ExpressionWrapper";
-import EnrichmentsTab from 'pages/resultsView/enrichments/EnrichmentsTab';
+import EnrichmentsTab from "pages/resultsView/enrichments/EnrichmentsTab";
 import PlotsTab from "./plots/PlotsTab";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
@@ -26,17 +25,12 @@ import {ITabConfiguration} from "../../shared/model/ITabConfiguration";
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 import CoExpressionTab from "./coExpression/CoExpressionTab";
 import Helmet from "react-helmet";
-import {createQueryStore} from "../home/HomePage";
-import {ServerConfigHelpers} from "../../config/config";
 import {showCustomTab} from "../../shared/lib/customTabs";
-import {
-    getTabId, parseConfigDisabledTabs, ResultsViewTab,
-    updateStoreFromQuery
-} from "./ResultsViewPageHelpers";
+import {getTabId, parseConfigDisabledTabs, ResultsViewTab} from "./ResultsViewPageHelpers";
 import {buildResultsViewPageTitle, doesQueryHaveCNSegmentData} from "./ResultsViewPageStoreUtils";
-import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
 import {AppStore} from "../../AppStore";
 import {bind} from "bind-decorator";
+import {updateResultsViewQuery} from "./ResultsViewQuery";
 
 function initStore() {
 
@@ -121,7 +115,10 @@ function initStore() {
                             throw("INVALID QUERY");
                         }
 
-                        updateStoreFromQuery(resultsViewPageStore, query, samplesSpecification, cancerStudyIds, oql, cancerStudyIds);
+                        const changes = updateResultsViewQuery(resultsViewPageStore.rvQuery, query, samplesSpecification, cancerStudyIds, oql);
+                        if (changes.cohortIdsList) {
+                            resultsViewPageStore.initMutationAnnotationSettings();
+                        }
                         lastQuery = query;
                     }
                     if (pathnameChanged) {
@@ -339,9 +336,9 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                         {
                             (store.studies.isComplete && store.sampleLists.isComplete && store.samples.isComplete) &&
                             (<Network genes={store.genes.result!}
-                                      profileIds={store.selectedMolecularProfileIds}
+                                      profileIds={store.rvQuery.selectedMolecularProfileIds}
                                       cancerStudyId={store.studies.result[0].studyId}
-                                      zScoreThreshold={store.zScoreThreshold}
+                                      zScoreThreshold={store.rvQuery.zScoreThreshold}
                                       caseSetId={(store.sampleLists.result!.length > 0) ? store.sampleLists.result![0].sampleListId : "-1"}
                                       sampleIds={store.samples.result.map((sample)=>sample.sampleId)}
                                       caseIdsKey={""}
@@ -460,7 +457,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
                 {
                     (this.resultsViewPageStore.studies.isComplete) && (
-                        <MSKTabs key={this.resultsViewPageStore.queryHash} activeTabId={this.currentTab(this.resultsViewPageStore.tabId)} unmountOnHide={false}
+                        <MSKTabs key={this.resultsViewPageStore.rvQuery.hash} activeTabId={this.currentTab(this.resultsViewPageStore.tabId)} unmountOnHide={false}
                                  onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
                             {
                                 this.tabs

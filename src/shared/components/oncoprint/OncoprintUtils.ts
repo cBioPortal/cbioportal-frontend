@@ -627,7 +627,7 @@ export function makeGenesetHeatmapTracksMobxPromise(
                 return [];
             }
             const molecularProfileId = molecularProfile.value.molecularProfileId;
-            const genesetIds = oncoprint.props.store.genesetIds;
+            const genesetIds = oncoprint.props.store.rvQuery.genesetIds;
 
             const cacheQueries = genesetIds.map((genesetId) => ({molecularProfileId, genesetId}));
             await dataCache.getPromise(cacheQueries, true);
