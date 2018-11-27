@@ -10,13 +10,13 @@ const styles = styles_any as {
 	QueryAndDownloadTabs: string,
 };
 
-const DOWNLOAD = 'download';
-const QUERY = 'query';
+const ADVANCED = 'advanced';
+const QUICK = 'quick';
 
 interface IQueryAndDownloadTabsProps
 {
 	onSubmit?:()=>void;
-	showDownloadTab?:boolean;
+	showQuickSearchTab?:boolean;
     getQueryStore:()=>QueryStore;
     showAlerts?:boolean;
 }
@@ -40,7 +40,8 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
 
 	onSelectTab = (eventKey:string) =>
 	{
-		this.store.forDownloadTab = eventKey === DOWNLOAD;
+		this.store.forDownloadTab = false;
+		this.store.forQuickTab = eventKey === QUICK;
 		this.store.selectableSelectedStudyIds = [];
 	}
 
@@ -58,15 +59,13 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
 				<Tabs
 					id='QueryAndDownloadTabs'
 					animation={false}
-					activeKey={this.store.forDownloadTab ? DOWNLOAD : QUERY}
+					activeKey={this.store.forQuickTab ? QUICK : ADVANCED}
 					onSelect={this.onSelectTab as ReactBootstrap.SelectCallback}
 				>
-
-					<Tab eventKey='query' title="Query"/>
-
 					{
-						(this.props.showDownloadTab !== false) && (<Tab eventKey='download' title="Download Data"/>)
+						(this.props.showQuickSearchTab !== false) && (<Tab eventKey='quick' title="Quick Search"/>)
 					}
+					<Tab eventKey='advanced' title="Advanced Search"/>
 
 				</Tabs>
 				<QueryContainer onSubmit={this.props.onSubmit} store={this.store}/>
