@@ -1,11 +1,23 @@
 import {computed, observable} from "mobx";
-import {remoteData} from "shared/api/remoteData";
+import {addErrorHandler, remoteData} from "shared/api/remoteData";
 import {initializeAPIClients} from "./config/config";
 import * as _ from 'lodash';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
+import {sendSentryMessage} from "./shared/lib/tracking";
 
 
 export class AppStore {
+
+    constructor(){
+        addErrorHandler((error: any) => {
+            try{
+                sendSentryMessage("ERRORHANDLER:" + error);
+            } catch (ex) {};
+            this.ajaxErrors.push(error);
+        });
+    }
+
+    @observable ajaxErrors: Error[] = [];
 
     @observable userName:string | undefined;
 
