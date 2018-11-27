@@ -82,6 +82,7 @@ export type GeneticTrackSpec = {
     label: string;
     oql: string; // OQL corresponding to the track
     info: string;
+    infoTooltip?:string;
     data: GeneticTrackDatum[];
     expansionCallback?: () => void;
     removeCallback?: () => void;
