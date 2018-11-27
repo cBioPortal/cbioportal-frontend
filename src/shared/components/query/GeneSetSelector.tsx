@@ -91,7 +91,7 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}>
 				<ReactSelect
 					value={this.selectedGeneListOption}
 					options={this.geneListOptions}
-					onChange={option => this.store.geneQuery = option ? option.value : ''}
+					onChange={(option:any) => this.store.geneQuery = option ? option.value : ''}
 				/>
 
 				{!!(this.store.mutSigForSingleStudy.result.length || this.store.gisticForSingleStudy.result.length) && (

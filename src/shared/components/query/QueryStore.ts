@@ -232,6 +232,8 @@ export class QueryStore
 
 	@observable forDownloadTab:boolean = false;
 
+	@observable forQuickTab:boolean = true;
+
 	@observable transposeDataMatrix = false;
 
 	@observable searchText:string = '';
