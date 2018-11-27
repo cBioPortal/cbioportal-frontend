@@ -110,7 +110,9 @@ import {
 } from "./ResultsViewPageStoreUtils";
 import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alterationCountHelpers";
 import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
-import {isSampleProfiledInMultiple} from "../../shared/lib/isSampleProfiled";
+import {
+    isSampleProfiledInMultiple
+} from "../../shared/lib/isSampleProfiled";
 import {BookmarkLinks} from "../../shared/model/BookmarkLinks";
 import {getBitlyServiceUrl} from "../../shared/api/urls";
 import url from "url";
@@ -525,7 +527,7 @@ export class ResultsViewPageStore {
     });
 
     readonly clinicalAttributes = remoteData<(ClinicalAttribute & { molecularProfileIds?: string[] })[]>({
-        await:()=>[this.studyIds, this.clinicalAttributes_profiledIn],
+        await:()=>[this.studyIds, this.clinicalAttributes_profiledIn, this.samples, this.patients],
         invoke:async()=>{
             const serverAttributes = await client.fetchClinicalAttributesUsingPOST({
                 studyIds:this.studyIds.result!
@@ -553,6 +555,16 @@ export class ResultsViewPageStore {
                     priority:"0" // TODO: change?
                 } as ClinicalAttribute);
             }
+            if (this.samples.result!.length !== this.patients.result!.length) {
+                // if different number of samples and patients, add "Num Samples of Patient" attribute
+                specialAttributes.push({
+                    clinicalAttributeId: SpecialAttribute.NumSamplesPerPatient,
+                    datatype: "NUMBER",
+                    description: "Number of queried samples for each patient.",
+                    displayName: "# Samples per Patient",
+                    patientAttribute: true
+                } as ClinicalAttribute);
+            }
             return serverAttributes.concat(specialAttributes).concat(this.clinicalAttributes_profiledIn.result!);
         }
     });
@@ -568,6 +580,7 @@ export class ResultsViewPageStore {
             this.studies,
             this.clinicalAttributes,
             this.studyToDataQueryFilter,
+            this.clinicalAttributes_profiledIn
         ],
         invoke:async()=>{
             let clinicalAttributeCountFilter:ClinicalAttributeCountFilter;
@@ -607,6 +620,7 @@ export class ResultsViewPageStore {
                 }
             }
             // add counts for "special" clinical attributes
+            ret[SpecialAttribute.NumSamplesPerPatient] = this.samples.result!.length;
             ret[SpecialAttribute.StudyOfOrigin] = this.samples.result!.length;
             let samplesWithMutationData = 0, samplesWithCNAData = 0;
             for (const sample of this.samples.result!) {
@@ -614,6 +628,10 @@ export class ResultsViewPageStore {
                 samplesWithCNAData += +!!sample.copyNumberSegmentPresent;
             }
             ret[SpecialAttribute.MutationSpectrum] = samplesWithMutationData;
+            // add counts for "ProfiledIn" clinical attributes
+            for (const attr of this.clinicalAttributes_profiledIn.result!) {
+                ret[attr.clinicalAttributeId] = this.samples.result!.length;
+            }
             return ret;
         }
     });
@@ -1005,28 +1023,26 @@ export class ResultsViewPageStore {
     readonly sequencedSampleKeys = remoteData<string[]>({
         await:()=>[
             this.samples,
-            this.coverageInformation
+            this.coverageInformation,
+            this.selectedMolecularProfiles
         ],
         invoke:()=>{
             const genePanelInformation = this.coverageInformation.result!;
-            return Promise.resolve(this.samples.result!.map(s=>s.uniqueSampleKey).filter(k=>{
-                const sequencedInfo = genePanelInformation.samples[k];
-                return !!sequencedInfo.allGenes.length || !!Object.keys(sequencedInfo.byGene).length;
-            }));
+            const profileIds = this.selectedMolecularProfiles.result!.map(p=>p.molecularProfileId);
+            return Promise.resolve(_.chain(this.samples.result!).filter(sample=>{
+                return _.some(isSampleProfiledInMultiple(sample.uniqueSampleKey, profileIds, genePanelInformation));
+            }).map(s=>s.uniqueSampleKey).value());
         }
     });
 
     readonly sequencedPatientKeys = remoteData<string[]>({
         await:()=>[
-            this.patients,
-            this.coverageInformation
+            this.sampleKeyToSample,
+            this.sequencedSampleKeys
         ],
-        invoke:()=>{
-            const genePanelInformation = this.coverageInformation.result!;
-            return Promise.resolve(this.patients.result!.map(p=>p.uniquePatientKey).filter(k=>{
-                const sequencedInfo = genePanelInformation.patients[k];
-                return !!sequencedInfo.allGenes.length || !!Object.keys(sequencedInfo.byGene).length;
-            }));
+        invoke:async()=>{
+            const sampleKeyToSample = this.sampleKeyToSample.result!;
+            return _.chain(this.sequencedSampleKeys.result!).map(k=>sampleKeyToSample[k].uniquePatientKey).uniq().value();
         }
     });
 
@@ -1034,14 +1050,15 @@ export class ResultsViewPageStore {
         await: ()=>[
             this.samples,
             this.genes,
-            this.coverageInformation
+            this.coverageInformation,
+            this.selectedMolecularProfiles
         ],
         invoke:()=>{
             const genePanelInformation = this.coverageInformation.result!;
+            const profileIds = this.selectedMolecularProfiles.result!.map(p=>p.molecularProfileId);
             return Promise.resolve(this.genes.result!.reduce((map:{[hugoGeneSymbol:string]:string[]}, next:Gene)=>{
                 map[next.hugoGeneSymbol] = this.samples.result!.map(s=>s.uniqueSampleKey).filter(k=>{
-                    const sequencedInfo = genePanelInformation.samples[k];
-                    return (!!sequencedInfo.allGenes.length || sequencedInfo.byGene.hasOwnProperty(next.hugoGeneSymbol));
+                    return _.some(isSampleProfiledInMultiple(k, profileIds, genePanelInformation, next.hugoGeneSymbol));
                 });
                 return map;
             }, {}));
@@ -1050,19 +1067,14 @@ export class ResultsViewPageStore {
 
     readonly sequencedPatientKeysByGene = remoteData<{[hugoGeneSymbol:string]:string[]}>({
         await: ()=>[
-            this.patients,
-            this.genes,
-            this.coverageInformation
+            this.sampleKeyToSample,
+            this.sequencedSampleKeysByGene
         ],
-        invoke:()=>{
-            const genePanelInformation = this.coverageInformation.result!;
-            return Promise.resolve(this.genes.result!.reduce((map:{[hugoGeneSymbol:string]:string[]}, next:Gene)=>{
-                map[next.hugoGeneSymbol] = this.patients.result!.map(p=>p.uniquePatientKey).filter(k=>{
-                    const sequencedInfo = genePanelInformation.patients[k];
-                    return (!!sequencedInfo.allGenes.length || sequencedInfo.byGene.hasOwnProperty(next.hugoGeneSymbol));
-                });
-                return map;
-            }, {}));
+        invoke:async()=>{
+            const sampleKeyToSample = this.sampleKeyToSample.result!;
+            return _.mapValues(this.sequencedSampleKeysByGene.result!, sampleKeys=>{
+                return _.chain(sampleKeys).map(k=>sampleKeyToSample[k].uniquePatientKey).uniq().value();
+            });
         }
     });
 
@@ -1241,27 +1253,6 @@ export class ResultsViewPageStore {
         }
     });
 
-    readonly totalAlterationStats = remoteData<{ alteredSampleCount:number, sampleCount:number }>({
-       await:() => [
-           this.alterationsByGeneBySampleKey,
-           this.samplesExtendedWithClinicalData
-       ],
-       invoke: async ()=>{
-           const countsByGroup = getAlterationCountsForCancerTypesForAllGenes(
-               this.alterationsByGeneBySampleKey.result!,
-               this.samplesExtendedWithClinicalData.result!,
-               'cancerType');
-
-           const ret = _.reduce(countsByGroup, (memo, alterationData:IAlterationData)=>{
-                memo.alteredSampleCount += alterationData.alteredSampleCount;
-                memo.sampleCount += alterationData.sampleTotal;
-                return memo;
-           }, { alteredSampleCount: 0, sampleCount:0 } as any);
-
-           return ret;
-       }
-    });
-
     //contains all the physical studies for the current selected cohort ids
     //selected cohort ids can be any combination of physical_study_id and virtual_study_id(shared or saved ones)
     public get physicalStudySet():{ [studyId:string]:CancerStudy } {
@@ -1429,8 +1420,13 @@ export class ResultsViewPageStore {
         }
     }, {});
 
-    readonly virtualStudies = remoteData(async ()=>{
-        return ServerConfigHelpers.sessionServiceIsEnabled() ? getVirtualStudies(this.rvQuery.cohortIdsList) : [];
+    readonly virtualStudies = remoteData({
+        invoke: async ()=> {
+            return ServerConfigHelpers.sessionServiceIsEnabled() ? getVirtualStudies(this.rvQuery.cohortIdsList) : [];
+        },
+        onError: () => {
+            // fail silently when an error occurs with the virtual studies
+        }
     });
 
     readonly studyIds = remoteData({

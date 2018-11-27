@@ -1,5 +1,5 @@
 import * as React from "react";
-import OncoprintJS, {TrackId} from "oncoprintjs";
+import OncoprintJS, {TrackId, CustomTrackOption} from "oncoprintjs";
 import {GenePanelData, MolecularProfile} from "../../api/generated/CBioPortalAPI";
 import {observer} from "mobx-react";
 import {computed} from "mobx";
@@ -30,6 +30,7 @@ export type ClinicalTrackSpec = {
     altered_uids?:string[];
     na_legend_label?:string;
     na_tooltip_value?:string; // If given, then show a tooltip over NA columns that has this value
+    custom_options?:CustomTrackOption[];
 } & ({
     datatype: "counts";
     countsCategoryLabels:string[];
@@ -81,6 +82,7 @@ export type GeneticTrackSpec = {
     label: string;
     oql: string; // OQL corresponding to the track
     info: string;
+    infoTooltip?:string;
     data: GeneticTrackDatum[];
     expansionCallback?: () => void;
     removeCallback?: () => void;
