@@ -59,7 +59,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
 
             return (
                 <div>
-                    <h4><StudyLink studyId={study.studyId}/></h4>
+                    <h4><StudyLink studyId={study.studyId}>{study.name}</StudyLink></h4>
                     {sampleListName}&nbsp;({getPatientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)})
                     &nbsp;-&nbsp;
                     {getGeneSummary(this.props.store.hugoGeneSymbols)}
@@ -127,7 +127,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                 <ul className="list-unstyled" style={{marginBottom:0}}>
                 {
                     this.props.store.queriedStudies.result.map((study:CancerStudy)=>{
-                        return <li><StudyLink studyId={study.studyId}/></li>
+                        return <li><StudyLink studyId={study.studyId}>{study.name}</StudyLink></li>
                     })
                 }
                 </ul>
