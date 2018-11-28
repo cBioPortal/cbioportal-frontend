@@ -106,7 +106,7 @@ export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,
     }
 
     private get bottomPadding(){
-        return adjustedLongestLabelLength(this.props.xLabels) * 7 + 40;
+        return adjustedLongestLabelLength(this.props.xLabels) * 5 + 40;
     }
 
     private get topPadding(){
