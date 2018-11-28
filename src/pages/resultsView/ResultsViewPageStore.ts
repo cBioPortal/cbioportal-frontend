@@ -71,8 +71,11 @@ import {
     filterCBioPortalWebServiceDataByUnflattenedOQLLine,
     OQLLineFilterOutput,
     parseOQLQuery,
-    UnflattenedOQLLineFilterOutput
+    UnflattenedOQLLineFilterOutput,
+    MergedTrackLineFilterOutput,
 } from "../../shared/lib/oql/oqlfilter";
+import oql_parser from '../../shared/lib/oql/oql-parser';
+import {MergedGeneQuery} from '../../shared/lib/oql/oql-parser';
 import GeneMolecularDataCache from "../../shared/cache/GeneMolecularDataCache";
 import GenesetMolecularDataCache from "../../shared/cache/GenesetMolecularDataCache";
 import GenesetCorrelatedGeneCache from "../../shared/cache/GenesetCorrelatedGeneCache";
@@ -978,6 +981,90 @@ export class ResultsViewPageStore {
         }
     });
 
+
+    readonly filteredAlterationsDataByUnflattenedOQLLine = remoteData<
+    IQueriedMergedTrackCaseData[]
+>({
+    await: () => [
+        this.filteredAlterations,
+        this.annotatedMolecularData,
+        this.selectedMolecularProfiles,
+        this.defaultOQLQuery,
+        this.samples,
+        this.patients
+    ],
+    invoke: () => {
+        const data = [...(this.filteredAlterations.result!), ...(this.annotatedMolecularData.result!)];
+        const accessorsInstance = new accessors(this.selectedMolecularProfiles.result!);
+        const defaultOQLQuery = this.defaultOQLQuery.result!;
+        const samples = this.samples.result!;
+        const patients = this.patients.result!;
+
+        if (this.oqlQuery.trim() === '') {
+            return Promise.resolve([]);
+        } else {
+            const filteredAlterationsByOQLLine: UnflattenedOQLLineFilterOutput<AnnotatedExtendedAlteration>[] = (
+                filterCBioPortalWebServiceDataByUnflattenedOQLLine(
+                    this.oqlQuery,
+                    data,
+                    accessorsInstance,
+                    defaultOQLQuery
+                )
+            );
+
+            return Promise.resolve(filteredAlterationsByOQLLine.map(
+                (oql) => ({
+                    cases: groupDataByCase(oql, samples, patients),
+                    oql,
+                    list: filterSubQueryData(
+                        oql, defaultOQLQuery,
+                        data, accessorsInstance,
+                        samples, patients
+                    )
+                })
+            ));
+        }
+    }
+});
+
+    readonly isSampleAlteredMap = remoteData({
+        await: () => [this.filteredAlterationsDataByUnflattenedOQLLine, this.samples],
+        invoke: async() => {
+            const result : {[x: string]: boolean[]} = {};
+            this.filteredAlterationsDataByUnflattenedOQLLine.result!.forEach((element, key) => {
+                //1: is not group(1.1, 1.2)
+                if (element.list === undefined) {
+                    const notGroupedOql = element.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>;                    
+                    const sampleKeys = _.map(notGroupedOql.data, (data) => data.uniqueSampleKey);
+                    const isOnlyGene = (oql_parser.parse(this.oqlQuery)![key] as oql_parser.SingleGeneQuery).alterations === false;
+                    //1.1: gene
+                    if (isOnlyGene) {
+                        result[notGroupedOql.gene] = this.samples.result.map((sample: Sample) => {
+                            return _.includes(sampleKeys, sample.uniqueSampleKey);
+                        });
+                    }
+                    //1.2: gene alteration
+                    else {
+                        result[notGroupedOql.oql_line] = this.samples.result.map((sample: Sample) => {
+                            return _.includes(sampleKeys, sample.uniqueSampleKey);
+                        });
+                    }
+                }
+                //2: is group
+                else {
+                    const groupedOql = element.oql as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>;
+                    const oqlData = _.flatten(_.map(groupedOql.list, (list) => list.data));
+                    const sampleKeys = _.map(oqlData, (data) => data.uniqueSampleKey);
+                    result[groupedOql.label!] = this.samples.result.map((sample: Sample) => {
+                        return _.includes(sampleKeys, sample.uniqueSampleKey);
+                    });
+                }
+            });
+
+            return result;
+        }
+    });
+
     readonly putativeDriverFilteredCaseAggregatedDataByOQLLine = remoteData<IQueriedCaseData<AnnotatedExtendedAlteration>[]>({
         await:()=>[
             this.putativeDriverAnnotatedMutations,
@@ -1315,17 +1402,6 @@ export class ResultsViewPageStore {
         ],
         invoke: async() => {
             return _.mapValues(this.filteredAlterations.result, (mutations: Mutation[]) => _.map(mutations, mutation => mutation.uniquePatientKey));
-        }
-    });
-
-    readonly isSampleAlteredMap = remoteData({
-        await: () => [this.filteredAlterationsByGeneAsSampleKeyArrays, this.samples],
-        invoke: async() => {
-            return _.mapValues(this.filteredAlterationsByGeneAsSampleKeyArrays.result, (sampleKeys: string[]) => {
-                return this.samples.result.map((sample: Sample) => {
-                    return _.includes(sampleKeys, sample.uniqueSampleKey);
-                });
-            });
         }
     });
 
