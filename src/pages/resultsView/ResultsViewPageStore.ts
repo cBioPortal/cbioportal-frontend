@@ -71,8 +71,9 @@ import {
     filterCBioPortalWebServiceDataByUnflattenedOQLLine,
     OQLLineFilterOutput,
     parseOQLQuery,
-    UnflattenedOQLLineFilterOutput
+    UnflattenedOQLLineFilterOutput,
 } from "../../shared/lib/oql/oqlfilter";
+import {MergedGeneQuery} from '../../shared/lib/oql/oql-parser';
 import GeneMolecularDataCache from "../../shared/cache/GeneMolecularDataCache";
 import GenesetMolecularDataCache from "../../shared/cache/GenesetMolecularDataCache";
 import GenesetCorrelatedGeneCache from "../../shared/cache/GenesetCorrelatedGeneCache";
@@ -106,7 +107,8 @@ import {
     getOncoKbOncogenic,
     groupDataByCase,
     initializeCustomDriverAnnotationSettings,
-    isRNASeqProfile
+    isRNASeqProfile,
+    getSampleAlteredMap
 } from "./ResultsViewPageStoreUtils";
 import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alterationCountHelpers";
 import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
@@ -228,10 +230,10 @@ export interface IQueriedCaseData<DataInOQL> {
  * non-aggregated copy of the data and, in case of a merged track, an array of
  * records per individual gene queried
  */
-interface IQueriedMergedTrackCaseData {
+export interface IQueriedMergedTrackCaseData {
     cases: CaseAggregatedData<AnnotatedExtendedAlteration>;
     oql: UnflattenedOQLLineFilterOutput<AnnotatedExtendedAlteration>;
-    list?: IQueriedCaseData<object>[];
+    mergedTrackOqlList?: IQueriedCaseData<object>[];
 }
 
 export function buildDefaultOQLProfile(profilesTypes: string[], zScoreThreshold: number, rppaScoreThreshold: number) {
@@ -959,17 +961,70 @@ export class ResultsViewPageStore {
                 );
 
                 return Promise.resolve(filteredAlterationsByOQLLine.map(
-                    (oql) => ({
-                        cases: groupDataByCase(oql, samples, patients),
-                        oql,
-                        list: filterSubQueryData(
-                            oql, defaultOQLQuery,
+                    (oqlLine) => ({
+                        cases: groupDataByCase(oqlLine, samples, patients),
+                        oql: oqlLine,
+                        mergedTrackOqlList: filterSubQueryData(
+                            oqlLine, defaultOQLQuery,
                             data, accessorsInstance,
                             samples, patients
                         )
                     })
                 ));
             }
+        }
+    });
+
+
+    readonly filteredAlterationsDataByUnflattenedOQLLine = remoteData<
+    IQueriedMergedTrackCaseData[]
+>({
+    await: () => [
+        this.filteredAlterations,
+        this.annotatedMolecularData,
+        this.selectedMolecularProfiles,
+        this.defaultOQLQuery,
+        this.samples,
+        this.patients
+    ],
+    invoke: () => {
+        const data = [...(this.filteredAlterations.result!), ...(this.annotatedMolecularData.result!)];
+        const accessorsInstance = new accessors(this.selectedMolecularProfiles.result!);
+        const defaultOQLQuery = this.defaultOQLQuery.result!;
+        const samples = this.samples.result!;
+        const patients = this.patients.result!;
+
+        if (this.rvQuery.oqlQuery.trim() === '') {
+            return Promise.resolve([]);
+        } else {
+            const filteredAlterationsByOQLLine: UnflattenedOQLLineFilterOutput<AnnotatedExtendedAlteration>[] = (
+                filterCBioPortalWebServiceDataByUnflattenedOQLLine(
+                    this.rvQuery.oqlQuery,
+                    data,
+                    accessorsInstance,
+                    defaultOQLQuery
+                )
+            );
+
+            return Promise.resolve(filteredAlterationsByOQLLine.map(
+                (oql) => ({
+                    cases: groupDataByCase(oql, samples, patients),
+                    oql,
+                    mergedTrackOqlList: filterSubQueryData(
+                        oql, defaultOQLQuery,
+                        data, accessorsInstance,
+                        samples, patients
+                    )
+                })
+            ));
+        }
+    }
+});
+
+    readonly isSampleAlteredMap = remoteData({
+        await: () => [this.filteredAlterationsDataByUnflattenedOQLLine, this.samples],
+        invoke: async() => {
+            return getSampleAlteredMap(this.filteredAlterationsDataByUnflattenedOQLLine.result!, this.samples.result, this.rvQuery.oqlQuery);
         }
     });
 
@@ -1310,17 +1365,6 @@ export class ResultsViewPageStore {
         ],
         invoke: async() => {
             return _.mapValues(this.filteredAlterations.result, (mutations: Mutation[]) => _.map(mutations, mutation => mutation.uniquePatientKey));
-        }
-    });
-
-    readonly isSampleAlteredMap = remoteData({
-        await: () => [this.filteredAlterationsByGeneAsSampleKeyArrays, this.samples],
-        invoke: async() => {
-            return _.mapValues(this.filteredAlterationsByGeneAsSampleKeyArrays.result, (sampleKeys: string[]) => {
-                return this.samples.result.map((sample: Sample) => {
-                    return _.includes(sampleKeys, sample.uniqueSampleKey);
-                });
-            });
         }
     });
 
