@@ -462,3 +462,23 @@ describe('result page tabs, loading from session id', function(){
 
     runResultsTestSuite('session');
 });
+
+describe('new study view screenshot test', function(){
+    before(function(){
+        var url = `${CBIOPORTAL_URL}/study?id=laml_tcga`;
+        goToUrlAndSetLocalStorage(url);
+    });
+
+    it('study view laml_tcga', function() {
+        browser.waitForVisible('#study-tabs',10000)
+        var res = browser.checkElement('#study-tabs', {hide:['.qtip', '#footer-span-version'] });
+        assertScreenShotMatch(res);
+    });
+
+    it('study view laml_tcga clinical data clicked', function() {
+        browser.click('#study-tab-clinical-a');
+        browser.waitForVisible('#study-tabs',10000);
+        var res = browser.checkElement('#study-tabs', {hide:['.qtip', '#footer-span-version'] });
+        assertScreenShotMatch(res);
+    });
+});
