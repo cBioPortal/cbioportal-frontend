@@ -87,7 +87,7 @@ export class DataAccessTokens extends React.Component<IDataAccessTokensProps, {}
         if (this.props.appStore.isLoggedIn) {
             let _token = await Promise.resolve(
                 internalClient.createDataAccessTokenUsingPOST(
-                    {'allowRevocationOfOtherTokens':AppConfig.serverConfig.dat_revoke_other_tokens}))
+                    {'allowRevocationOfOtherTokens':AppConfig.serverConfig.dat_uuid_revoke_other_tokens}))
             const dat = new UserDataAccessToken(_token.token, _token.creation, _token.expiration, _token.username);
             return dat;
         } else {
