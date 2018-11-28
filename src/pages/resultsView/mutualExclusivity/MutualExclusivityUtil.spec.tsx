@@ -1,8 +1,9 @@
 import { assert } from 'chai';
 import React from 'react';
+import * as _ from 'lodash';
 import {
     calculateAssociation, countOccurences, calculatePValue, calculateLogOddsRatio, getMutuallyExclusiveCounts,
-    getCountsText, getData, getFilteredData, formatPValue, formatPValueWithStyle, formatLogOddsRatio, calculateAdjustedPValue
+    getTrackPairsCountText, getData, getFilteredData, formatPValue, formatPValueWithStyle, formatLogOddsRatio, calculateAdjustedPValue
 } from "./MutualExclusivityUtil";
 import { MutualExclusivity } from "../../../shared/model/MutualExclusivity";
 import expect from 'expect';
@@ -15,8 +16,8 @@ expect.extend(expectJSX);
 
 const exampleData = [
     {
-        "geneA": "EGFR",
-        "geneB": "KRAS",
+        "trackA": "EGFR",
+        "trackB": "KRAS",
         "neitherCount": 0,
         "aNotBCount": 5,
         "bNotACount": 5,
@@ -27,8 +28,8 @@ const exampleData = [
         "association": "Mutual exclusivity"
     },
     {
-        "geneA": "TP53",
-        "geneB": "BRAF",
+        "trackA": "TP53",
+        "trackB": "BRAF",
         "neitherCount": 6,
         "aNotBCount": 0,
         "bNotACount": 1,
@@ -39,8 +40,8 @@ const exampleData = [
         "association": "Co-occurrence"
     },
     {
-        "geneA": "EGFR",
-        "geneB": "TP53",
+        "trackA": "EGFR",
+        "trackB": "TP53",
         "neitherCount": 2,
         "aNotBCount": 5,
         "bNotACount": 3,
@@ -51,8 +52,8 @@ const exampleData = [
         "association": "Mutual exclusivity"
     },
     {
-        "geneA": "KRAS",
-        "geneB": "TP53",
+        "trackA": "KRAS",
+        "trackB": "TP53",
         "neitherCount": 5,
         "aNotBCount": 2,
         "bNotACount": 0,
@@ -63,8 +64,8 @@ const exampleData = [
         "association": "Co-occurrence"
     },
     {
-        "geneA": "EGFR",
-        "geneB": "BRAF",
+        "trackA": "EGFR",
+        "trackB": "BRAF",
         "neitherCount": 2,
         "aNotBCount": 4,
         "bNotACount": 3,
@@ -75,8 +76,8 @@ const exampleData = [
         "association": "Mutual exclusivity"
     },
     {
-        "geneA": "KRAS",
-        "geneB": "BRAF",
+        "trackA": "KRAS",
+        "trackB": "BRAF",
         "neitherCount": 4,
         "aNotBCount": 2,
         "bNotACount": 1,
@@ -158,7 +159,7 @@ describe("MutualExclusivityUtil", () => {
         });
     });
 
-    describe("#getMutuallyExclusiveCounts()", () => {
+/*     describe("#getMutuallyExclusiveCounts()", () => {
         it("returns [<span><b>no</b> gene pair</span>, null] for empty list", () => {
             const data: MutualExclusivity[] = [];
             const result = getMutuallyExclusiveCounts(data, n => n <= 0);
@@ -169,8 +170,8 @@ describe("MutualExclusivityUtil", () => {
         it("returns [<span><b>no</b> gene pair</span>, null] for 0 matched data", () => {
             const data: MutualExclusivity[] = [
                 {
-                    "geneA": "EGFR",
-                    "geneB": "KRAS",
+                    "trackA": "EGFR",
+                    "trackB": "KRAS",
                     "neitherCount": 0,
                     "aNotBCount": 5,
                     "bNotACount": 5,
@@ -191,8 +192,8 @@ describe("MutualExclusivityUtil", () => {
 
                 const data: MutualExclusivity[] = [
                     {
-                        "geneA": "EGFR",
-                        "geneB": "KRAS",
+                        "trackA": "EGFR",
+                        "trackB": "KRAS",
                         "neitherCount": 0,
                         "aNotBCount": 5,
                         "bNotACount": 5,
@@ -213,8 +214,8 @@ describe("MutualExclusivityUtil", () => {
 
                 const data: MutualExclusivity[] = [
                     {
-                        "geneA": "EGFR",
-                        "geneB": "KRAS",
+                        "trackA": "EGFR",
+                        "trackB": "KRAS",
                         "neitherCount": 0,
                         "aNotBCount": 5,
                         "bNotACount": 5,
@@ -235,8 +236,8 @@ describe("MutualExclusivityUtil", () => {
 
                 const data: MutualExclusivity[] = [
                     {
-                        "geneA": "EGFR",
-                        "geneB": "KRAS",
+                        "trackA": "EGFR",
+                        "trackB": "KRAS",
                         "neitherCount": 0,
                         "aNotBCount": 5,
                         "bNotACount": 5,
@@ -247,8 +248,8 @@ describe("MutualExclusivityUtil", () => {
                         "association": "Mutual exclusivity"
                     },
                     {
-                        "geneA": "EGFR",
-                        "geneB": "TP53",
+                        "trackA": "EGFR",
+                        "trackB": "TP53",
                         "neitherCount": 2,
                         "aNotBCount": 5,
                         "bNotACount": 3,
@@ -263,41 +264,12 @@ describe("MutualExclusivityUtil", () => {
                 expect(result[0]).toEqualJSX(<span><b>2</b> gene pairs</span>);
                 expect(result[1]).toEqualJSX(<span> (<b>2</b> significant)</span>);
             });
-    });
+    }); */
 
     describe("#getCountsText()", () => {
         it("returns correct text", () => {
-
-            const data: MutualExclusivity[] = [
-                {
-                    "geneA": "EGFR",
-                    "geneB": "KRAS",
-                    "neitherCount": 0,
-                    "aNotBCount": 5,
-                    "bNotACount": 5,
-                    "bothCount": 0,
-                    "logOddsRatio": -6.51,
-                    "pValue": 0.02,
-                    "adjustedPValue": 0.04,
-                    "association": "Mutual exclusivity"
-                },
-                {
-                    "geneA": "EGFR",
-                    "geneB": "TP53",
-                    "neitherCount": 2,
-                    "aNotBCount": 5,
-                    "bNotACount": 3,
-                    "bothCount": 0,
-                    "logOddsRatio": -2.1,
-                    "pValue": 0.001,
-                    "adjustedPValue": 0.002,
-                    "association": "Mutual exclusivity"
-                }
-            ];
-            const result = getCountsText(data);
-            expect(result).toEqualJSX(<p>The query contains <span><b>2</b> gene pairs</span> with mutually exclusive
-                alterations<span> (<b>2</b> significant)</span>, and <span><b>no</b> gene pair</span> with co-occurrent
-                alterations.</p>);
+            const result = getTrackPairsCountText(exampleData, _.size(isSampleAlteredMap));
+            expect(result).toEqualJSX(<p>The analysis tested <b>6</b> pairs between the <b>4</b> tracks in the OncoPrint.</p>);
         });
     });
 
@@ -316,8 +288,8 @@ describe("MutualExclusivityUtil", () => {
             assert.deepEqual(result,
                 [
                     {
-                        "geneA": "EGFR",
-                        "geneB": "KRAS",
+                        "trackA": "EGFR",
+                        "trackB": "KRAS",
                         "neitherCount": 0,
                         "aNotBCount": 5,
                         "bNotACount": 5,
@@ -387,8 +359,8 @@ describe("MutualExclusivityUtil", () => {
 
             const data = [
                 {
-                    "geneA": "KRAS",
-                    "geneB": "BRAF",
+                    "trackA": "KRAS",
+                    "trackB": "BRAF",
                     "neitherCount": 4,
                     "aNotBCount": 2,
                     "bNotACount": 1,
@@ -399,8 +371,8 @@ describe("MutualExclusivityUtil", () => {
                     "association": "Co-occurrence"
                 },
                 {
-                    "geneA": "TP53",
-                    "geneB": "BRAF",
+                    "trackA": "TP53",
+                    "trackB": "BRAF",
                     "neitherCount": 6,
                     "aNotBCount": 0,
                     "bNotACount": 1,
