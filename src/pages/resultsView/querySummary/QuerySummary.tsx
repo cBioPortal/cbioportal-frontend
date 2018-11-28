@@ -136,7 +136,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
     @autobind
     onSubmit(){
         this.closeQueryForm();
-        getGAInstance()('send', 'event', 'studyView', 'query modified');
+        getGAInstance()('send', 'event', 'resultsView', 'query modified');
     }
 
     render() {
