@@ -34,8 +34,8 @@ export interface IDataAccessTokensProps {
 function buildDataAccessTokenFileContents(dat:UserDataAccessToken | undefined) {
     if (!isNullOrUndefined(dat)) {
         const fileContents = "token: " + dat!.token + "\n" +
-            "creation_date: " + dat!.creationDate + "\n" +
-            "expiration_date: " + dat!.expirationDate;
+            "creation_date: " + new Date(dat!.creationDate).toISOString()+ "\n" +
+            "expiration_date: " + new Date(dat!.expirationDate).toISOString();
         return fileContents;
     } else {
         alert("Cannot create Data Access Token file for user with non-existent tokens.");

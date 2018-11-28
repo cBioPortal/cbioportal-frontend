@@ -119,7 +119,7 @@ export default class PortalHeader extends React.Component<{ appStore:AppStore },
                 <If condition={this.props.appStore.isLoggedIn}>
                     <Then>
                         <div className="identity">
-                            <Dropdown id="mydropdown">
+                            <Dropdown id="dat-dropdown">
                                 <Dropdown.Toggle {...({rootCloseEvent: "click"} as DropdownToggleProps)} className="btn-sm">
                                     Logged in as {this.props.appStore.userName}
                                 </Dropdown.Toggle>
