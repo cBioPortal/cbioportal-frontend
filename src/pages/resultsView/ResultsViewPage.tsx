@@ -37,6 +37,8 @@ import {buildResultsViewPageTitle, doesQueryHaveCNSegmentData} from "./ResultsVi
 import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
 import {AppStore} from "../../AppStore";
 import {bind} from "bind-decorator";
+import {trackQuery} from "../../shared/lib/tracking";
+import {onMobxPromise} from "../../shared/lib/onMobxPromise";
 
 function initStore() {
 
@@ -122,6 +124,13 @@ function initStore() {
                         }
 
                         updateStoreFromQuery(resultsViewPageStore, query, samplesSpecification, cancerStudyIds, oql, cancerStudyIds);
+
+                        onMobxPromise(resultsViewPageStore.studyIds, ()=>{
+                            try {
+                                trackQuery(resultsViewPageStore.studyIds.result!, oql, resultsViewPageStore.hugoGeneSymbols, resultsViewPageStore.virtualStudies.result!.length > 0);
+                            } catch {};
+                        });
+
                         lastQuery = query;
                     }
                     if (pathnameChanged) {
