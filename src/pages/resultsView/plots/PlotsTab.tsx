@@ -42,12 +42,16 @@ import ScrollBar from "../../../shared/components/Scrollbar/ScrollBar";
 import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
 import {getTablePlotDownloadData} from "../../../shared/components/plots/TablePlotUtils";
 import {getMobxPromiseGroupStatus} from "../../../shared/lib/getMobxPromiseGroupStatus";
+import StackedBarPlot from "../../../shared/components/plots/StackedBarPlot";
+import {STUDY_VIEW_CONFIG} from "../../studyView/StudyViewConfig";
 
 enum EventKey {
     horz_logScale,
     vert_logScale,
     utilities_viewMutationType,
     utilities_viewCopyNumber,
+    utilities_discreteVsDiscreteTable,
+    utilities_stackedBarHorizontalBars
 }
 
 
@@ -68,7 +72,12 @@ export enum PotentialViewType {
 export enum PlotType {
     ScatterPlot,
     BoxPlot,
-    Table
+    DiscreteVsDiscrete,
+}
+
+export enum DiscreteVsDiscretePlotType {
+    Table,
+    StackedBar
 }
 
 export enum MutationCountBy {
@@ -117,6 +126,9 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     @observable searchMutationInput:string;
     @observable viewMutationType:boolean = true;
     @observable viewCopyNumber:boolean = false;
+    // discrete vs discrete settings
+    @observable discreteVsDiscretePlotType = DiscreteVsDiscretePlotType.StackedBar;
+    @observable stackedBarHorizontalBars = false;
 
     @observable searchCase:string = "";
     @observable searchMutation:string = "";
@@ -153,7 +165,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
     }
 
     @computed get potentialViewType():PotentialViewType {
-        if (this.plotType.result === PlotType.Table) {
+        if (this.plotType.result === PlotType.DiscreteVsDiscrete) {
             // cant show either in table
             return PotentialViewType.None;
         }
@@ -350,6 +362,16 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
             case EventKey.utilities_viewMutationType:
                 this.viewMutationType = !this.viewMutationType;
                 break;
+            case EventKey.utilities_discreteVsDiscreteTable:
+                if (this.discreteVsDiscretePlotType === DiscreteVsDiscretePlotType.Table) {
+                    this.discreteVsDiscretePlotType = DiscreteVsDiscretePlotType.StackedBar;
+                } else {
+                    this.discreteVsDiscretePlotType = DiscreteVsDiscretePlotType.Table;
+                }
+                break;
+            case EventKey.utilities_stackedBarHorizontalBars:
+                this.stackedBarHorizontalBars = !this.stackedBarHorizontalBars;
+                break;
         }
     }
 
@@ -387,7 +409,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             filename
                         );
                         break;
-                    case PlotType.Table:
+                    case PlotType.DiscreteVsDiscrete:
                         fileDownload(
                             getTablePlotDownloadData(
                                 (this.horzAxisDataPromise.result! as IStringAxisData).data,
@@ -1066,9 +1088,11 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     @autobind
     private getUtilitiesMenu() {
-        const showTopPart = this.plotType.isComplete && this.plotType.result !== PlotType.Table;
-        const showBottomPart = this.potentialViewType !== PotentialViewType.None;
-        if (!showTopPart && !showBottomPart) {
+        const showSearchOptions = this.plotType.isComplete && this.plotType.result !== PlotType.DiscreteVsDiscrete;
+        const showDiscreteVsDiscreteOption = this.plotType.isComplete && this.plotType.result === PlotType.DiscreteVsDiscrete;
+        const showStackedBarHorizontalOption = showDiscreteVsDiscreteOption && this.discreteVsDiscretePlotType === DiscreteVsDiscretePlotType.StackedBar;
+        const showSampleColoringOptions = this.mutationDataCanBeShown || this.cnaDataCanBeShown;
+        if (!showSearchOptions && !showSampleColoringOptions && !showDiscreteVsDiscreteOption && !showStackedBarHorizontalOption) {
             return <span></span>;
         }
         return (
@@ -1076,7 +1100,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 <hr/>
                 <h4>Utilities</h4>
                 <div>
-                    {showTopPart && (<div>
+                    {showSearchOptions && (<div>
                         <div className="form-group">
                             <label>Search Case(s)</label>
                             <FormControl
@@ -1098,7 +1122,31 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                             </div>
                         )}
                     </div>)}
-                    {showBottomPart && (
+                    {showDiscreteVsDiscreteOption && (
+                        <div className="checkbox"><label>
+                            <input
+                                data-test="DiscreteVsDiscreteTable"
+                                type="checkbox"
+                                name="utilities_discreteVsDiscreteTable"
+                                value={EventKey.utilities_discreteVsDiscreteTable}
+                                checked={this.discreteVsDiscretePlotType === DiscreteVsDiscretePlotType.Table}
+                                onClick={this.onInputClick}
+                            /> Show Table Plot
+                        </label></div>
+                    )}
+                    {showStackedBarHorizontalOption && (
+                        <div className="checkbox"><label>
+                            <input
+                                data-test="StackedBarHorizontalBars"
+                                type="checkbox"
+                                name="utilities_stackedBarHorizontalBars"
+                                value={EventKey.utilities_stackedBarHorizontalBars}
+                                checked={this.stackedBarHorizontalBars}
+                                onClick={this.onInputClick}
+                            /> Horizontal Bars
+                        </label></div>
+                    )}
+                    {showSampleColoringOptions && (
                         <div>
                             <label>Color Samples By</label>
                             {this.mutationDataCanBeShown && (
@@ -1177,7 +1225,7 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 return new Promise<PlotType>(()=>0); // dont resolve
             } else {
                 if (isStringData(horzAxisData) && isStringData(vertAxisData)) {
-                    return Promise.resolve(PlotType.Table);
+                    return Promise.resolve(PlotType.DiscreteVsDiscrete);
                 } else if (isNumberData(horzAxisData) && isNumberData(vertAxisData)) {
                     return Promise.resolve(PlotType.ScatterPlot);
                 } else {
@@ -1323,22 +1371,41 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                 const plotType = this.plotType.result!;
                 let plotElt:any = null;
                 switch (plotType) {
-                    case PlotType.Table:
-                        plotElt = (
-                            <TablePlot
-                                svgId={SVG_ID}
-                                horzData={(this.horzAxisDataPromise.result! as IStringAxisData).data}
-                                vertData={(this.vertAxisDataPromise.result! as IStringAxisData).data}
-                                horzCategoryOrder={(this.horzAxisDataPromise.result! as IStringAxisData).categoryOrder}
-                                vertCategoryOrder={(this.vertAxisDataPromise.result! as IStringAxisData).categoryOrder}
-                                minCellWidth={35}
-                                minCellHeight={35}
-                                minChartWidth={PLOT_SIDELENGTH}
-                                minChartHeight={PLOT_SIDELENGTH}
-                                axisLabelX={this.horzLabel.result!}
-                                axisLabelY={this.vertLabel.result!}
-                            />
-                        );
+                    case PlotType.DiscreteVsDiscrete:
+                        if (this.discreteVsDiscretePlotType === DiscreteVsDiscretePlotType.Table) {
+                            plotElt = (
+                                <TablePlot
+                                    svgId={SVG_ID}
+                                    horzData={(this.horzAxisDataPromise.result! as IStringAxisData).data}
+                                    vertData={(this.vertAxisDataPromise.result! as IStringAxisData).data}
+                                    horzCategoryOrder={(this.horzAxisDataPromise.result! as IStringAxisData).categoryOrder}
+                                    vertCategoryOrder={(this.vertAxisDataPromise.result! as IStringAxisData).categoryOrder}
+                                    minCellWidth={35}
+                                    minCellHeight={35}
+                                    minChartWidth={PLOT_SIDELENGTH}
+                                    minChartHeight={PLOT_SIDELENGTH}
+                                    axisLabelX={this.horzLabel.result!}
+                                    axisLabelY={this.vertLabel.result!}
+                                />
+                            );
+                        } else {
+                            plotElt = (
+                                <StackedBarPlot
+                                    svgId={SVG_ID}
+                                    horzData={(this.horzAxisDataPromise.result! as IStringAxisData).data}
+                                    vertData={(this.vertAxisDataPromise.result! as IStringAxisData).data}
+                                    categoryToColor={STUDY_VIEW_CONFIG.colors.reservedValue}
+                                    horzCategoryOrder={(this.horzAxisDataPromise.result! as IStringAxisData).categoryOrder}
+                                    vertCategoryOrder={(this.vertAxisDataPromise.result! as IStringAxisData).categoryOrder}
+                                    barWidth={50}
+                                    chartBase={PLOT_SIDELENGTH}
+                                    axisLabelX={this.horzLabel.result!}
+                                    axisLabelY={this.vertLabel.result!}
+                                    legendLocationWidthThreshold={550}
+                                    horizontalBars={this.stackedBarHorizontalBars}
+                                />
+                            );
+                        }
                         break;
                     case PlotType.ScatterPlot:
                         if (this.scatterPlotData.isComplete) {
