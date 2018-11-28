@@ -19,6 +19,9 @@ import AppConfig from "appConfig";
 import {StudyLink} from "../../../shared/components/StudyLink/StudyLink";
 import {createQueryStore} from "../../home/HomePage";
 import getBrowserWindow from "../../../shared/lib/getBrowserWindow";
+import {remoteData} from "../../../shared/api/remoteData";
+import {getAlterationSummary, getGeneSummary, getPatientSampleSummary} from "./QuerySummaryUtils";
+import {MakeMobxView} from "../../../shared/components/MobxView";
 
 @observer
 export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore }, {}> {
@@ -39,24 +42,31 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
         return !!this.queryStore;
     }
 
-    private get singleStudyUI() {
-        return <div>
-            <h4 style={{fontSize:14}}><StudyLink studyId={this.props.store.queriedStudies.result[0].studyId}/></h4>
-            {(this.props.store.sampleLists.result!.length > 0) && (<span>
-                        {this.props.store.sampleLists.result![0].name}&nbsp;
-                (<strong>{this.props.store.sampleLists.result![0].sampleCount}</strong> samples)
-                        / <strong data-test='QuerySummaryGeneCount'>{this.props.store.hugoGeneSymbols.length}</strong> { (this.props.store.hugoGeneSymbols.length === 1) ? "Gene" : "Genes"  }
-                    </span>)
-            }
-            {
-                (this.props.store.sampleLists.result!.length === 0) && (
-                    <span>User-defined Patient List&nbsp;
-                        ({this.props.store.samples.result!.length} samples)&nbsp;/&nbsp;
-                        {this.props.store.genes.result!.length} { (this.props.store.hugoGeneSymbols.length === 1) ? "Gene" : "Genes"  }
-                    </span>)
-            }
-        </div>
-    }
+    readonly singleStudyUI = MakeMobxView({
+        await:()=>[
+            this.props.store.queriedStudies,
+            this.props.store.sampleLists,
+            this.props.store.samples,
+            this.props.store.patients,
+            this.props.store.genes
+        ],
+        render:()=>{
+            const sampleListName = (this.props.store.sampleLists.result!.length > 0) ?
+                (<span>{this.props.store.sampleLists.result![0].name}</span>) :
+                (<span>User-defined Patient List</span>);
+
+            const study = this.props.store.queriedStudies.result[0];
+
+            return (
+                <div>
+                    <h4><StudyLink studyId={study.studyId}>{study.name}</StudyLink></h4>
+                    {sampleListName}&nbsp;({getPatientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)})
+                    &nbsp;-&nbsp;
+                    {getGeneSummary(this.props.store.hugoGeneSymbols)}
+                </div>
+            );
+        }
+    });
 
     @autobind
     @action
@@ -65,25 +75,51 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
         $(document).scrollTop(0);
     }
 
-    private get multipleStudyUI() {
-        return <div>
-            <h4>
-                <StudyLink studyId={this.props.store.queriedStudies.result.map(study => study.studyId).join(',')}>
-                    {`Combined Study (${this.props.store.samples.result.length} samples)`}
-                </StudyLink>
-            </h4>
-            <span>
-                Querying {this.props.store.samples.result.length} samples in {this.props.store.queriedStudies.result.length} studies
-                 &nbsp;
-                 <DefaultTooltip
-                     placement='bottom'
-                     overlay={this.studyList}
-                     destroyTooltipOnHide={true}
-                 ><i className="fa fa-info-circle"/>
-                </DefaultTooltip>
-            </span>
-        </div>
-    }
+    readonly multipleStudyUI = MakeMobxView({
+        await:()=>[this.props.store.samples, this.props.store.patients, this.props.store.queriedStudies],
+        render:()=>(
+            <div>
+                <h4>
+                    <a
+                        href={`study?id=${this.props.store.queriedStudies.result.map(study => study.studyId).join(',')}`}
+                        target="_blank"
+                    >
+                        Combined Study ({this.props.store.samples.result.length} samples)
+                    </a>
+                </h4>
+                <span>
+                    Querying {getPatientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)} in {this.props.store.queriedStudies.result.length} studies
+                    &nbsp;-&nbsp;
+                    {getGeneSummary(this.props.store.hugoGeneSymbols)}
+                    &nbsp;
+                    <DefaultTooltip
+                        placement='bottom'
+                        overlay={this.studyList}
+                        destroyTooltipOnHide={true}
+                    ><i className="fa fa-info-circle"/>
+                    </DefaultTooltip>
+                </span>
+            </div>
+        )
+    });
+
+    readonly cohortAndGeneSummary = MakeMobxView({
+        await:()=>[this.singleStudyUI, this.multipleStudyUI, this.props.store.queriedStudies],
+        render:()=>{
+            if (this.props.store.queriedStudies.result.length === 1) {
+                return this.singleStudyUI.component!;
+            } else {
+                return this.multipleStudyUI.component!;
+            }
+        }
+    });
+
+    readonly alterationSummary = MakeMobxView({
+        await:()=>[this.props.store.samples, this.props.store.patients,
+            this.props.store.alteredSampleKeys, this.props.store.alteredPatientKeys],
+        render:()=>(getAlterationSummary(this.props.store.samples.result!.length, this.props.store.patients.result!.length,
+            this.props.store.alteredSampleKeys.result!.length, this.props.store.alteredPatientKeys.result!.length, this.props.store.hugoGeneSymbols.length))
+    });
 
     private get studyList(){
 
@@ -91,7 +127,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                 <ul className="list-unstyled" style={{marginBottom:0}}>
                 {
                     this.props.store.queriedStudies.result.map((study:CancerStudy)=>{
-                        return <li><StudyLink studyId={study.studyId}/></li>
+                        return <li><StudyLink studyId={study.studyId}>{study.name}</StudyLink></li>
                     })
                 }
                 </ul>
@@ -100,12 +136,9 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
 
     render() {
 
-        if (!this.props.store.totalAlterationStats.isError && !this.props.store.queriedStudies.isError) {
+        if (!this.cohortAndGeneSummary.isError && !this.alterationSummary.isError) {
 
-            const loadingComplete = this.props.store.totalAlterationStats.isComplete && this.props.store.queriedStudies.isComplete && this.props.store.samples.isComplete;
-
-            let alterationPercentage = (loadingComplete) ?
-                (this.props.store.totalAlterationStats.result!.alteredSampleCount / this.props.store.totalAlterationStats.result!.sampleCount * 100) : 0;
+            const loadingComplete = this.cohortAndGeneSummary.isComplete && this.alterationSummary.isComplete;
 
             return (
                 <div>
@@ -119,20 +152,16 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
 
                             <LoadingIndicator isLoading={!loadingComplete} small={true}/>
                             {
-                                (loadingComplete) && ((this.props.store.queriedStudies.result.length === 1) ? this.singleStudyUI : this.multipleStudyUI)
+                                (loadingComplete) && this.cohortAndGeneSummary.component!
                             }
                         </div>
 
                         <div className="query-summary__rightItems">
-
+                            <div className="query-summary__alterationData">
                             {
-                                (loadingComplete) && (
-                                    <div className="query-summary__alterationData">
-                                        <strong>Gene Set / Pathway is altered
-                                            in {this.props.store.totalAlterationStats.result!.alteredSampleCount} ({_.round(alterationPercentage, 1)}%) of queried samples</strong>
-                                    </div>
-                                )
+                                (loadingComplete) && <strong>{this.alterationSummary.component!}</strong>
                             }
+                            </div>
 
                             <ShareUI sessionEnabled={ServerConfigHelpers.sessionServiceIsEnabled()}
                                      bitlyAccessToken={AppConfig.serverConfig.bitly_access_token}
