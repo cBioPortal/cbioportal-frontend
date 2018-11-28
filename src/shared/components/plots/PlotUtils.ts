@@ -108,6 +108,57 @@ export function scatterPlotSize(
     }
 }
 
+function darkenHexChannel(c:string) {
+    let cNum = parseInt(c, 16);
+    cNum *= 0.95;
+    cNum = Math.round(cNum);
+    c = cNum.toString(16);
+    if (c.length === 1) {
+        c = '0' + c;
+    }
+    return c;
+};
+function darkenHexColor(str:string) {
+    let r = str[1] + str[2];
+    let g = str[3] + str[4];
+    let b = str[5] + str[6];
+    r = darkenHexChannel(r);
+    g = darkenHexChannel(g);
+    b = darkenHexChannel(b);
+    return '#' + r + g + b;
+};
+
+export function makeUniqueColorGetter(init_used_colors?:string[]) {
+    init_used_colors = init_used_colors || [];
+    const colors = ["#3366cc", "#dc3912", "#ff9900", "#109618",
+        "#990099", "#0099c6", "#dd4477", "#66aa00",
+        "#b82e2e", "#316395", "#994499", "#22aa99",
+        "#aaaa11", "#6633cc", "#e67300", "#8b0707",
+        "#651067", "#329262", "#5574a6", "#3b3eac",
+        "#b77322", "#16d620", "#b91383", "#f4359e",
+        "#9c5935", "#a9c413", "#2a778d", "#668d1c",
+        "#bea413", "#0c5922", "#743411"]; // Source: D3
+    let index = 0;
+    const used_colors:{[color:string]:boolean} = {};
+    for (const color of init_used_colors) {
+        used_colors[color] = true;
+    }
+    return function() {
+        // return unused color
+        var next_color = colors[index % colors.length];
+        while (used_colors[next_color]) {
+            var darker_next_color = darkenHexColor(next_color);
+            if (darker_next_color === next_color) {
+                break;
+            }
+            next_color = darker_next_color;
+        }
+        used_colors[next_color] = true;
+        index += 1;
+
+        return next_color;
+    };
+};
 
 export function separateScatterDataByAppearance<D>(
     data:D[],
