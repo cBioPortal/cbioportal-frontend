@@ -1,5 +1,5 @@
 import {assert} from "chai";
-import {getDeterministicRandomNumber} from "./PlotUtils";
+import {computeCorrelationPValue, getDeterministicRandomNumber} from "./PlotUtils";
 
 describe("PlotUtils", ()=>{
     describe("getDeterministicRandomNumber", ()=>{
@@ -19,6 +19,17 @@ describe("PlotUtils", ()=>{
                 assert.equal(getDeterministicRandomNumber(i), getDeterministicRandomNumber(i));
                 assert.equal(getDeterministicRandomNumber(i), getDeterministicRandomNumber(i));
             }
+        });
+    });
+
+    describe("computeCorrelationPValue", ()=>{
+        it("gives the correct result on sample data", ()=>{
+            // source: https://www.wessa.net/rwasp_spearman.wasp
+            assert.approximately(
+                computeCorrelationPValue(-0.423285542595266, 23),
+                0.0441623330731344,
+                0.0000000005
+            );
         });
     });
 });
