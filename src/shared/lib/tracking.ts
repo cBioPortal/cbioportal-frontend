@@ -58,7 +58,7 @@ enum GACustomFieldsEnum {
 
 
 export function trackQuery(cancerStudyIds:string[], oql:string, geneSymbols:string[], isVirtualStudy:boolean){
-    getGAInstance()('send', 'event', 'studyView', 'query', cancerStudyIds.join(",")+",", {
+    getGAInstance()('send', 'event', 'resultsView', 'query', cancerStudyIds.join(",")+",", {
         [GACustomFieldsEnum.QueryCount]:queryCount++,
         [GACustomFieldsEnum.OQL]:oql,
         [GACustomFieldsEnum.StudyCount]:cancerStudyIds.length,
