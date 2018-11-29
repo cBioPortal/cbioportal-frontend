@@ -1,6 +1,14 @@
 import AppConfig from "appConfig";
 import {StudyView} from "../../config/IAppConfig";
 import * as _ from 'lodash';
+import {
+    CNA_COLOR_AMP, CNA_COLOR_GAIN, CNA_COLOR_HETLOSS, CNA_COLOR_HOMDEL,
+    DEFAULT_GREY,
+    MUT_COLOR_FUSION,
+    MUT_COLOR_INFRAME,
+    MUT_COLOR_MISSENSE, MUT_COLOR_OTHER, MUT_COLOR_PROMOTER,
+    MUT_COLOR_TRUNC
+} from "../../shared/components/oncoprint/geneticrules";
 
 export type StudyViewColor = {
     theme: StudyViewColorTheme,
@@ -98,6 +106,18 @@ const studyViewFrontEnd = {
             MALE: MALE_COLOR,
             F: FEMALE_COLOR,
             M: MALE_COLOR,
+            MISSENSE: MUT_COLOR_MISSENSE,
+            INFRAME: MUT_COLOR_INFRAME,
+            TRUNCATING: MUT_COLOR_TRUNC,
+            FUSION: MUT_COLOR_FUSION,
+            PROMOTER: MUT_COLOR_PROMOTER,
+            OTHER: MUT_COLOR_OTHER,
+            "WILD TYPE": DEFAULT_GREY,
+            AMPLIFICATION: CNA_COLOR_AMP,
+            GAIN: CNA_COLOR_GAIN,
+            DIPLOID: DEFAULT_GREY,
+            "SHALLOW DELETION": CNA_COLOR_HETLOSS,
+            "DEEP DELETION": CNA_COLOR_HOMDEL
         },
 
         na: "#CCCCCC",
