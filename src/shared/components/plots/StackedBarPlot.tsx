@@ -55,8 +55,12 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
 
     @computed get getColor() {
         const uniqueColorGetter = makeUniqueColorGetter(_.values(this.props.categoryToColor));
-        const categoryToColor = Object.assign({}, this.props.categoryToColor);
+        const categoryToColor:{[category:string]:string} = {};
+        _.forEach(this.props.categoryToColor, (color, category)=>{
+            categoryToColor[category.toLowerCase()] = color;
+        });
         return function(category:string) {
+            category = category.toLowerCase();
             if (!(category in categoryToColor)) {
                 categoryToColor[category] = uniqueColorGetter();
             }
@@ -78,7 +82,6 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
                             mutation: (props: any) => {
                                 this.tooltipModel = props;
                                 this.pointHovered = true;
-                                console.log(props);
 
                                 if (disappearTimeout !== null) {
                                     clearTimeout(disappearTimeout);
@@ -520,7 +523,7 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
     private tooltip(datum:any) {
         return (
             <div>
-                <strong>{datum.category}</strong>:&nbsp;{datum.count}&nbsp;samples
+                <strong>{datum.category}</strong>:&nbsp;{datum.count}&nbsp;sample{datum.count === 1 ? "" : "s"}
             </div>
         );
     }
