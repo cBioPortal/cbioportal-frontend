@@ -26,17 +26,13 @@ import {ITabConfiguration} from "../../shared/model/ITabConfiguration";
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 import CoExpressionTab from "./coExpression/CoExpressionTab";
 import Helmet from "react-helmet";
-import {createQueryStore} from "../home/HomePage";
-import {ServerConfigHelpers} from "../../config/config";
 import {showCustomTab} from "../../shared/lib/customTabs";
 import {
     getTabId, parseConfigDisabledTabs, ResultsViewTab,
     updateStoreFromQuery
 } from "./ResultsViewPageHelpers";
 import {buildResultsViewPageTitle, doesQueryHaveCNSegmentData} from "./ResultsViewPageStoreUtils";
-import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
 import {AppStore} from "../../AppStore";
-import {bind} from "bind-decorator";
 import {trackQuery} from "../../shared/lib/tracking";
 import {onMobxPromise} from "../../shared/lib/onMobxPromise";
 
@@ -166,8 +162,7 @@ export interface IResultsViewPageProps {
     params: any; // from react router
 }
 
-@inject('routing')
-@inject('appStore')
+@inject('appStore','routing')
 @observer
 export default class ResultsViewPage extends React.Component<IResultsViewPageProps, {}> {
 
@@ -426,7 +421,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
     }
 
-    @bind
+    @autobind
     public evaluateTabInclusion(tab:ITabConfiguration){
         const excludedTabs = AppConfig.serverConfig.disabled_tabs || "";
         const isExcludedInList = parseConfigDisabledTabs(excludedTabs).includes(tab.id);
@@ -437,15 +432,16 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         return isRoutedTo || (!isExcludedInList && !isExcluded);
     }
 
-    // if it's undefined, MSKTabs will default to first
-    public currentTab(tabId:string|undefined):string | undefined {
+    public currentTab(tabId:string|undefined):string {
         // if we have no tab defined (query submission, no tab click)
         // we need to evaluate which should be the default tab
+        // this can only be determined by know the count of physical studies in the query
+        // (for virtual studies we need to fetch data determine constituent physical studies)
         if (tabId === undefined) {
             if (this.resultsViewPageStore.studies.result!.length > 1 && this.resultsViewPageStore.hugoGeneSymbols.length === 1) {
                 return ResultsViewTab.CANCER_TYPES_SUMMARY; // cancer type study
             } else {
-                return undefined; // this will resolve to first tab
+                return ResultsViewTab.ONCOPRINT; // this will resolve to first tab
             }
         } else {
             return tabId;
@@ -453,6 +449,8 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     }
 
     @computed get pageContent(){
+
+        // if studies are complete but we don't have a tab id in route, we need to derive default
         return (<div>
             {
                 (this.resultsViewPageStore.studies.isComplete) && (
@@ -461,34 +459,41 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     </Helmet>
                 )
             }
+            {(this.resultsViewPageStore.studies.isComplete) && (
+                    <div>
+                        <div style={{margin:"0 20px 10px 20px"}}>
+                            <QuerySummary routingStore={this.props.routing} store={this.resultsViewPageStore}/>
+                        </div>
 
-            <div>
-                <div style={{margin:"0 20px 10px 20px"}}>
-                    <QuerySummary routingStore={this.props.routing} store={this.resultsViewPageStore}/>
-                </div>
-
-                {
-                    (this.resultsViewPageStore.studies.isComplete) && (
                         <MSKTabs key={this.resultsViewPageStore.queryHash} activeTabId={this.currentTab(this.resultsViewPageStore.tabId)} unmountOnHide={false}
                                  onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
                             {
                                 this.tabs
                             }
                         </MSKTabs>
-                    )
-                }
-            </div>
+
+                    </div>
+                )
+            }
         </div>)
     }
 
     public render() {
-        return (
-            <PageLayout noMargin={true}>
-                {
-                    this.pageContent
-                }
-            </PageLayout>
-        )
+
+        if (this.resultsViewPageStore.studies.isComplete && !this.resultsViewPageStore.tabId) {
+            setTimeout(()=>{
+                this.handleTabChange(this.currentTab(this.resultsViewPageStore.tabId));
+            });
+            return null;
+        } else {
+            return (
+                <PageLayout noMargin={true}>
+                    {
+                        this.pageContent
+                    }
+                </PageLayout>
+            )
+        }
 
     }
 
