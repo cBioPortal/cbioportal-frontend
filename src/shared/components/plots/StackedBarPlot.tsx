@@ -39,6 +39,7 @@ const DEFAULT_BOTTOM_PADDING = 10;
 const LEGEND_ITEMS_PER_ROW = 4;
 const BOTTOM_LEGEND_PADDING = 15;
 const RIGHT_PADDING_FOR_LONG_LABELS = 50;
+const COUNT_AXIS_LABEL = "# samples";
 
 @observer
 export default class StackedBarPlot extends React.Component<IStackedBarPlotProps, {}> {
@@ -402,12 +403,16 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
     @computed get horzAxis() {
         // several props below are undefined in horizontal mode, thats because in horizontal mode
         //  this axis is for numbers, not categories
+        const label = [this.props.axisLabelX];
+        if (this.props.horizontalBars) {
+            label.unshift(COUNT_AXIS_LABEL);
+        }
         return (
             <VictoryAxis
                 orientation="bottom"
                 offsetY={50}
                 crossAxis={false}
-                label={this.props.axisLabelX}
+                label={label}
 
                 tickValues={this.props.horizontalBars ? undefined: this.categoryTickValues}
                 tickCount={this.props.horizontalBars ? NUM_AXIS_TICKS: undefined }
@@ -422,17 +427,21 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
     }
 
     @computed get vertAxis() {
+        const label = [this.props.axisLabelY];
+        if (!this.props.horizontalBars) {
+            label.push(COUNT_AXIS_LABEL);
+        }
         return (
             <VictoryAxis
                 orientation="left"
                 offsetX={50}
                 crossAxis={false}
-                label={this.props.axisLabelY}
+                label={label}
                 dependentAxis={true}
                 tickValues={this.props.horizontalBars ? this.categoryTickValues : undefined}
                 tickCount={this.props.horizontalBars ? undefined : NUM_AXIS_TICKS}
                 tickFormat={this.props.horizontalBars ? this.formatCategoryTick : this.formatNumericalTick}
-                axisLabelComponent={<VictoryLabel dy={this.props.horizontalBars ? -1*this.biggestCategoryLabelSize - 24 : -50}/>}
+                axisLabelComponent={<VictoryLabel dy={this.props.horizontalBars ? -1*this.biggestCategoryLabelSize - 24 : -40}/>}
             />
         );
     }
