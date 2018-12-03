@@ -8,10 +8,32 @@ function doTest(query:string, expectedParsedResult:OQLQuery) {
 }
 
 describe("OQL parser", ()=>{
+    doTest("     TP53", [{gene:"TP53", alterations:false}]);
+    doTest("                      [TP53 BRCA1] NRAS",
+        [
+            {
+                "label": undefined,
+                "list": [
+                    {
+                        "gene": "TP53",
+                        "alterations": false
+                    },
+                    {
+                        "gene": "BRCA1",
+                        "alterations": false
+                    }
+                ]
+            },
+            {
+                "gene": "NRAS",
+                "alterations": false
+            }
+        ]);
     doTest("TP53", [{gene:"TP53", alterations:false}]);
     doTest("TP53;", [{gene:"TP53", alterations:false}]);
     doTest("TP53\n", [{gene:"TP53", alterations:false}]);
     doTest("TP53 BRCA1 KRAS NRAS", [{gene:"TP53", alterations:false}, {gene:"BRCA1", alterations:false}, {gene:"KRAS", alterations:false}, {gene:"NRAS", alterations:false}]);
+    doTest("TP53: MUT BRCA1", [{gene:"TP53", alterations:[{alteration_type:"mut", info:{}, modifiers:[]}, {alteration_type:"mut", constr_rel:"=", constr_type:"name", constr_val:"BRCA1", info:{unrecognized:true}, modifiers:[]}]}]);
     doTest("TP53:MUT", [{gene:"TP53", alterations:[{alteration_type: "mut", info:{}, modifiers:[]}]}])
     doTest("TP53: _GERMLINE", [{gene:"TP53", alterations:[{alteration_type:"mut", info:{}, modifiers:["GERMLINE"]}]}]);
     doTest("TP53: _GERMLINE_SOMATIC", [{gene:"TP53", alterations:[{alteration_type:"mut", info:{}, modifiers:["GERMLINE", "SOMATIC"]}]}]);
