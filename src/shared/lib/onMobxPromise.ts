@@ -1,7 +1,7 @@
 import {MobxPromise} from "mobxpromise";
 import {autorun, IReactionDisposer} from "mobx";
 
-export default function onMobxPromise<T>(promise:MobxPromise<T>|Array<MobxPromise<T>>,
+export function onMobxPromise<T>(promise:MobxPromise<T>|Array<MobxPromise<T>>,
                                          onComplete:(...results:T[])=>void,
                                          times:number = 1,
                                         onDispose?:()=>void):IReactionDisposer {
@@ -26,3 +26,5 @@ export default function onMobxPromise<T>(promise:MobxPromise<T>|Array<MobxPromis
     });
     return disposer;
 }
+
+export default onMobxPromise;
