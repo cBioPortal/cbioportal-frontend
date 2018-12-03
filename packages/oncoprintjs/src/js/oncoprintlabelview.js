@@ -19,6 +19,8 @@ var OncoprintLabelView = (function () {
 	this.cell_heights_view_space = {};
 	this.label_middles_view_space = {};
 	this.labels = {};
+	this.sublabels = {};
+	this.show_sublabels = model.getShowTrackSublabels();
 	this.label_colors = {};
 	this.html_labels = {};
 	this.track_link_urls = {};
@@ -26,8 +28,7 @@ var OncoprintLabelView = (function () {
 	this.tracks = [];
 	this.minimum_track_height = Number.POSITIVE_INFINITY;
 	this.maximum_label_width = Number.NEGATIVE_INFINITY;
-	
-	this.maximum_label_length = 18;
+
 	this.rendering_suppressed = false;
 	
 	this.highlighted_track = null;
@@ -107,6 +108,7 @@ var OncoprintLabelView = (function () {
 	if (view.rendering_suppressed) {
 	    return;
 	}
+	view.show_sublabels = model.getShowTrackSublabels();
 	view.scroll_y = model.getVertScroll();
 	view.track_tops = model.getZoomedTrackTops();
 	view.cell_tops = model.getCellTops();
@@ -121,7 +123,9 @@ var OncoprintLabelView = (function () {
 	for (var i=0; i<view.tracks.length; i++) {
 	    view.minimum_track_height = Math.min(view.minimum_track_height, model.getTrackHeight(view.tracks[i]));
 	    var shortened_label = shortenLabelIfNecessary(view, view.labels[view.tracks[i]]);
-	    view.maximum_label_width = Math.max(view.maximum_label_width, view.ctx.measureText(shortened_label).width);
+	    var shortened_sublabel = shortenLabelIfNecessary(view, view.sublabels[view.tracks[i]]);
+	    var measured_width = view.ctx.measureText(shortened_label).width + (view.show_sublabels ? view.ctx.measureText(shortened_sublabel).width : 0);
+	    view.maximum_label_width = Math.max(view.maximum_label_width, measured_width);
 	    
 	    view.cell_tops_view_space[view.tracks[i]] = view.cell_tops[view.tracks[i]]*view.supersampling_ratio - view.scroll_y*view.supersampling_ratio;
 	    view.track_descriptions[view.tracks[i]] = model.getTrackDescription(view.tracks[i]);
@@ -148,11 +152,11 @@ var OncoprintLabelView = (function () {
 	setUpContext(view);
     }
     var isNecessaryToShortenLabel = function(view, label) {
-	return label.length > view.maximum_label_length;
+	return label.length > getMaximumLabelLength(view);
     };
     var shortenLabelIfNecessary = function(view, label) {
 	if (isNecessaryToShortenLabel(view, label)) {
-	    return label.substring(0, view.maximum_label_length-3) + '...';
+	    return label.substring(0, getMaximumLabelLength(view)-3) + '...';
 	} else {
 	    return label;
 	}
@@ -185,14 +189,28 @@ var OncoprintLabelView = (function () {
 	view.ctx.font = 'bold '+font_size +'px Arial';
 	view.ctx.fillStyle = 'black';
 	var tracks = view.tracks;
+        var sublabelX = {};
 	for (var i=0; i<tracks.length; i++) {
 	    if (view.label_colors && view.label_colors[tracks[i]]) {
 		//override color, if set:
 		view.ctx.fillStyle = view.label_colors[tracks[i]];
 	    }
-	    view.ctx.fillText(shortenLabelIfNecessary(view, view.labels[tracks[i]]), 0, view.label_middles_view_space[tracks[i]]);
+	    var label = shortenLabelIfNecessary(view, view.labels[tracks[i]]);
+	    view.ctx.fillText(label, 0, view.label_middles_view_space[tracks[i]]);
+	    sublabelX[tracks[i]] = view.ctx.measureText(label).width;
+	}
+	if (view.show_sublabels) {
+		// render sublabels - not bold, gray
+		view.ctx.font = font_size+'px Arial';
+		view.ctx.fillStyle='rgb(166,166,166)';
+		for (var i=0; i<tracks.length; i++) {
+			if (view.sublabels[tracks[i]]) {
+				view.ctx.fillText(shortenLabelIfNecessary(view, view.sublabels[tracks[i]]), sublabelX[tracks[i]], view.label_middles_view_space[tracks[i]]);
+			}
+		}
 	}
 	if (view.dragged_label_track_id !== null) {
+        view.ctx.font = 'bold '+font_size +'px Arial';
 	    view.ctx.fillStyle = 'rgba(255,0,0,0.95)';
 	    view.ctx.fillText(shortenLabelIfNecessary(view, view.labels[view.dragged_label_track_id]), 0, view.supersampling_ratio*view.drag_mouse_y);
 	    view.ctx.fillStyle = 'rgba(0,0,0,0.15)';
@@ -278,6 +296,10 @@ var OncoprintLabelView = (function () {
 	view.dragged_label_track_id = null;
 	renderAllLabels(view);
     }
+
+    var getMaximumLabelLength = function(view) {
+		return 18;
+	};
     
     OncoprintLabelView.prototype.getWidth = function() {
 	//return this.maximum_label_width + 20;
@@ -307,6 +329,7 @@ var OncoprintLabelView = (function () {
     OncoprintLabelView.prototype.addTracks = function (model, track_ids) {
 	for (var i=0; i<track_ids.length; i++) {
 	    this.labels[track_ids[i]] = model.getTrackLabel(track_ids[i]);
+        this.sublabels[track_ids[i]] = model.getTrackSublabel(track_ids[i]);
 	    this.label_colors[track_ids[i]] = model.getTrackLabelColor(track_ids[i]);
 	    this.html_labels[track_ids[i]] = model.getOptionalHtmlTrackLabel(track_ids[i]);
 	    this.track_link_urls[track_ids[i]] = model.getTrackLinkUrl(track_ids[i]);
@@ -315,6 +338,12 @@ var OncoprintLabelView = (function () {
 	resizeAndClear(this, model);
 	renderAllLabels(this, model);
     }
+
+    OncoprintLabelView.prototype.setShowTrackSublabels = function(model) {
+        updateFromModel(this, model);
+        resizeAndClear(this, model);
+        renderAllLabels(this, model);
+	}
     
     OncoprintLabelView.prototype.setScroll = function(model) {
 	this.setVertScroll(model);

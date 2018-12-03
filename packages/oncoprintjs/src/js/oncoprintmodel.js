@@ -130,11 +130,13 @@ var OncoprintModel = (function () {
 	this.id_order = [];
 	this.hidden_ids = {};
 	this.track_group_legend_order = [];
+	this.show_track_sublabels = false;
 	
 	// Track Properties
 	this.track_important_ids = {}; // a set of "important" ids - only these ids will cause a used rule to become active and thus shown in the legend
 	this.track_label = {};
 	this.track_label_color = {};
+	this.track_sublabel = {};
 	this.track_html_label = {};
 	this.track_link_url = {};
 	this.track_description = {};
@@ -742,7 +744,7 @@ var OncoprintModel = (function () {
 	    addTrack(this, params.track_id, params.target_group, params.track_group_header,
 		    params.cell_height, params.track_padding, params.has_column_spacing,
 		    params.data_id_key, params.tooltipFn, params.link_url, params.removable,
-		    params.removeCallback, params.label, params.description, params.track_info,
+		    params.removeCallback, params.label, params.sublabel, params.description, params.track_info,
 		    params.sortCmpFn, params.sort_direction_changeable, params.init_sort_direction, params.onSortDirectionChange,
 		    params.data, params.rule_set, params.track_label_color, params.html_label,
 		    params.expansion_of, params.expandCallback, params.expandButtonTextGetter, params.important_ids,
@@ -755,7 +757,7 @@ var OncoprintModel = (function () {
     var addTrack = function (model, track_id, target_group, track_group_header,
 	    cell_height, track_padding, has_column_spacing,
 	    data_id_key, tooltipFn, link_url, removable,
-	    removeCallback, label, description, track_info,
+	    removeCallback, label, sublabel, description, track_info,
 	    sortCmpFn, sort_direction_changeable, init_sort_direction, onSortDirectionChange,
 	    data, rule_set, track_label_color, html_label,
 	    expansion_of, expandCallback, expandButtonTextGetter,
@@ -764,6 +766,7 @@ var OncoprintModel = (function () {
 	model.$track_info_tooltip_elt[track_id] = $track_info_tooltip_elt;
 	model.track_custom_options[track_id] = ifndef(custom_track_options, []);
 	model.track_label[track_id] = ifndef(label, "Label");
+	model.track_sublabel[track_id] = ifndef(sublabel, "");
 	model.track_label_color[track_id] = ifndef(track_label_color, "black");
 	model.track_link_url[track_id] = ifndef(link_url, null);
 	model.track_description[track_id] = ifndef(description, "");
@@ -1151,6 +1154,18 @@ var OncoprintModel = (function () {
 
     OncoprintModel.prototype.getTrackLabel = function (track_id) {
 	return this.track_label[track_id];
+    }
+
+    OncoprintModel.prototype.getTrackSublabel = function(track_id) {
+    	return this.track_sublabel[track_id];
+	}
+
+	OncoprintModel.prototype.getShowTrackSublabels = function() {
+    	return this.show_track_sublabels;
+	}
+
+    OncoprintModel.prototype.setShowTrackSublabels = function(show) {
+        return this.show_track_sublabels = show;
     }
     
     OncoprintModel.prototype.getTrackLabelColor = function (track_id) {
