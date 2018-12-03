@@ -1,5 +1,6 @@
-import {CopyNumberSeg} from "shared/api/generated/CBioPortalAPI";
 import * as _ from "lodash";
+import {CopyNumberSeg} from "shared/api/generated/CBioPortalAPI";
+import {TrackProps} from "shared/components/igv/IntegrativeGenomicsViewer";
 
 export const WHOLE_GENOME = "all";
 
@@ -23,6 +24,26 @@ export function defaultSegmentTrackProps()
         displayMode: "FILL",
         features: []
     };
+}
+
+export function keyTracksByName(tracks?: TrackProps) {
+    return _.keyBy(tracks || [], "name");
+}
+
+export function getModifiedTrackNames(currentTracks: TrackProps[], nextTracks: TrackProps[])
+{
+    const currentByName = keyTracksByName(currentTracks);
+    const nextByName = keyTracksByName(nextTracks);
+
+    const tracksToUpdate = nextTracks
+        .filter(track => !_.isEqual(nextByName[track.name], currentByName[track.name]))
+        .map(track => track.name);
+
+    const tracksToRemove = _.difference(
+        currentTracks.map(track => track.name),
+        nextTracks.map(track => track.name));
+
+    return [...tracksToUpdate, ...tracksToRemove];
 }
 
 export function generateSegmentFileContent(segments: CopyNumberSeg[]): string
