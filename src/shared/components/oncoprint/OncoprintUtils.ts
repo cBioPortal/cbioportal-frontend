@@ -356,8 +356,9 @@ export function makeGeneticTrackWith({
             // show tooltip explaining percent calculation, as long as its not N/P
             infoTooltip = `altered / profiled = ${alterationInfo.altered} / ${alterationInfo.sequenced}`;
         }
-        if (alterationInfo.sequenced < (sampleMode ? samples : patients).length) {
+        if ((alterationInfo.sequenced > 0) && (alterationInfo.sequenced < (sampleMode ? samples : patients).length)) {
             // add asterisk to percentage if not all samples/patients are profiled for this track
+            // dont add asterisk if none are profiled
             info = `${info}*`;
         }
         return {
