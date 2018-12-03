@@ -3,8 +3,9 @@ import {autorun, IReactionDisposer} from "mobx";
 
 export function onMobxPromise<T>(promise:MobxPromise<T>|Array<MobxPromise<T>>,
                                          onComplete:(...results:T[])=>void,
-                                         times:number = 1,
-                                        onDispose?:()=>void):IReactionDisposer {
+                                        disposeOnUnmountTarget?:React.Component<any, any>,
+                                         times:number = 1
+                                ):IReactionDisposer {
     let disposer:IReactionDisposer;
     let count:number = 0;
     let promiseArray:Array<MobxPromise<T>>;
@@ -21,9 +22,17 @@ export function onMobxPromise<T>(promise:MobxPromise<T>|Array<MobxPromise<T>>,
         }
         if (count >= times) {
             reaction.dispose();
-            onDispose && onDispose();
         }
     });
+
+    if (disposeOnUnmountTarget) {
+        const oldFn = disposeOnUnmountTarget.componentWillUnmount || (()=>{});
+        disposeOnUnmountTarget.componentWillUnmount = function() {
+            disposer();
+            oldFn.apply(this, arguments);
+        };
+    }
+
     return disposer;
 }
 

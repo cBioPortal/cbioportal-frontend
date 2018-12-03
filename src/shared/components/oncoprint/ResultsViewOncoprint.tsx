@@ -165,7 +165,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
         this.heatmapGeneInputValueUpdater = onMobxPromise(this.props.store.genes, (genes:Gene[])=>{
             this.heatmapGeneInputValue = genes.map(g=>g.hugoGeneSymbol).join(" ");
-        }, Number.POSITIVE_INFINITY);
+        }, undefined, Number.POSITIVE_INFINITY);
 
         this.onMouseEnter = this.onMouseEnter.bind(this);
         this.onMouseLeave = this.onMouseLeave.bind(this);
