@@ -32,6 +32,7 @@ import {getAnnotatingProgressMessage} from "./ResultsViewOncoprintUtils";
 import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
 import autobind from "autobind-decorator";
 import getBrowserWindow from "../../lib/getBrowserWindow";
+import MobxPromise from "mobxpromise";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -512,8 +513,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 const keyToCase = (this.columnMode === "sample" ? sampleKeyToSample : patientKeyToPatient);
                                 const caseIds = this.oncoprint.getIdOrder().map(
                                     this.columnMode === "sample" ?
-                                        (id=>(sampleKeyToSample[id].sampleId)) :
-                                        (id=>(patientKeyToPatient[id].patientId))
+                                        ((id:string)=>(sampleKeyToSample[id].sampleId)) :
+                                        ((id:string)=>(patientKeyToPatient[id].patientId))
                                 );
                                 for (const caseId of caseIds) {
                                     file += `${caseId}\n`;
@@ -669,20 +670,13 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
-    readonly unalteredKeys = remoteData({
-        await: ()=>[
-            this.props.store.unalteredSampleKeys,
-            this.props.store.unalteredPatientKeys,
-        ],
-        invoke:async()=>{
-            if (this.columnMode === "sample") {
-               return this.props.store.unalteredSampleKeys.result!;
-            } else {
-               return this.props.store.unalteredPatientKeys.result!;
-            }
-        },
-        default: []
-    });
+    @computed get unalteredKeys():MobxPromise<string[]> {
+        if (this.columnMode === "sample") {
+            return this.props.store.unalteredSampleKeys;
+        } else {
+            return this.props.store.unalteredPatientKeys;
+        }
+    }
 
     private onMinimapClose() {
         this.showMinimap = false;
