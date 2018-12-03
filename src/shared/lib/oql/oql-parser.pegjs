@@ -8,6 +8,7 @@ Number = "-" number: Number { return "-"+number;}
         / "." decimal_part:NaturalNumber { return "."+decimal_part;}
         / whole_part:NaturalNumber {return whole_part;}
 String = word:[-_.@/a-zA-Z0-9*]+ { return word.join("") }
+ProteinChangeCode = word:[-./a-zA-Z0-9*]+ { return word.join("") } // make sure we exclude underscore here, or else mutation modifiers like _GERMLINE will not be recognized for custom protein change codes
 AminoAcid = letter:[GPAVLIMCFYWHKRQNEDST] { return letter; }
 // any character, except " :
 StringExceptQuotes = stringExceptQuotes:[^"]+ { return stringExceptQuotes.join("") }
@@ -31,19 +32,40 @@ MUT = "MUT"i
 EXP = "EXP"i
 PROT = "PROT"i
 
+// IMPORTANT GRAMMAR CONVENTION THAT MAKES THINGS WORK AND EASIER TO REASON ABOUT:
+// Every object in a list (e.g. Query, MergedQuery, StandardQuery) only swallow spaces on the *left* (and in the inner part of the line).
+// If they swallow spaces to the right *and* left, then we can get bugs, because this grammar engine works
+//  by going through each definition top to bottom and choosing the first result it can make work to parse,
+//  then proceeding. It doesn't backtrack. So queries that may seem valid will cause parser errors.
+//
+// FOR EXAMPLE: There was a bug like this:
+//              Query = part1:Subquery ombs part2:Query { return part1.concat(part2); }
+//                    / end:Subquery zmbs { return [end]; }
+//
+//              Subquery = zmbs gene:String zmbs { return gene; }
+//
+//  Where `ombs` means one or more breaks and spaces, `zmbs` means zero or more breaks and spaces
+//  This means that "BRCA1 BRCA2" is not parseable. Trying to parse it:
+//      (1) we enter into the Query definition
+//      (2) we enter into Subquery, and successfully swallow "BRCA1 " and return "BRCA1"
+//      (3) Now we have "BRCA2" but expect at least one space, so it fails.
+//
+//  Changing the `ombs` in the Query definition to `zmbs` doesn't work in general if you want to enforce a space between the objects in the list.
+//
+
 Query
-	= mqr:MergedQuery sqr:Query {return mqr.concat(sqr);}
-	/ qr:StandardQuery sqr:Query {return qr.concat(sqr);}
-	/ mqr:MergedQuery {return mqr;}
-	/ qr:StandardQuery {return qr; }
+	= mqr:MergedQuery ombs sqr:Query {return mqr.concat(sqr);}
+	/ qr:StandardQuery ombs sqr:Query {return qr.concat(sqr);}
+	/ mqr:MergedQuery zmbs {return mqr;}
+	/ qr:StandardQuery zmbs {return qr; }
 
 MergedQuery
 	= zmbs mergedGenes:StartMergedGenes qr:StandardQuery zmbs "]" zmbs mqr:MergedQuery { mergedGenes.list = qr; return [mergedGenes].concat(mqr);; }
-	/ zmbs mergedGenes:StartMergedGenes qr:StandardQuery zmbs "]" zmbs { mergedGenes.list = qr; return [mergedGenes]; }
+	/ zmbs mergedGenes:StartMergedGenes qr:StandardQuery zmbs "]" { mergedGenes.list = qr; return [mergedGenes]; }
 
 StandardQuery
 	= zmbs first:SingleGeneQuery ombs rest:StandardQuery  { return [first].concat(rest); }
-	/ zmbs first:SingleGeneQuery zmbs { return [first]; }
+	/ zmbs first:SingleGeneQuery { return [first]; }
 
 SingleGeneQuery 
 	= geneName:String msp ":" msp alts:Alterations { return {"gene": geneName, "alterations": alts}; }
@@ -114,8 +136,8 @@ Mutation
     / "PROMOTER"i { return {"type":"class", "value":"PROMOTER", "info":{}}; }
     / letter:AminoAcid position:NaturalNumber string:String { return {"type":"name" , "value":(letter+position+string), "info":{}};}
     / letter:AminoAcid position:NaturalNumber { return {"type":"position", "value":parseInt(position), "info":{"amino_acid":letter.toUpperCase()}}; }
-	/ mutation_name:String { return {"type":"name", "value":mutation_name, "info":{"unrecognized":true}}; }
+	/ mutation_name:ProteinChangeCode { return {"type":"name", "value":mutation_name, "info":{"unrecognized":true}}; }
 
 MutationModifier
-    = "\+GERMLINE"i { return "GERMLINE";}
-    / "\+SOMATIC"i { return "SOMATIC";}
+    = "_GERMLINE"i { return "GERMLINE";}
+    / "_SOMATIC"i { return "SOMATIC";}
