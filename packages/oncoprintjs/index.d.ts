@@ -14,7 +14,7 @@ declare module "oncoprintjs"
 
     // track properties
     export type TrackId = number;
-    export type TrackGroup = number[];
+    export type TrackGroup = TrackId[];
     export type TrackGroupIndex = number;
     export type TrackSortDirection = 0|1|-1;
     export type TrackSortComparator<D> = (d1:D, d2:D)=>number;//returns (0|1|2|-1|-2); for comparison-based sort, where 2 and -2 mean force to end or beginning (resp) no matter what direction sorted in
@@ -111,6 +111,7 @@ declare module "oncoprintjs"
         removable?:boolean;
         removeCallback?:(track_id:TrackId)=>void;
         label?: string;
+        sublabel?: string;
         html_label?: string;
         label_color?: string;
         link_url?: string;
@@ -192,6 +193,7 @@ declare module "oncoprintjs"
         getIdClipboardContents:()=>string[];
         onClipboardChange:(callback:(array:string[])=>void)=>void;
         setTrackCustomOptions:(track_id:TrackId, custom_options?:CustomTrackOption[])=>void;
+        setShowTrackSublabels:(show:boolean)=>void;
 
         constructor(ctr_selector:string, width:number);
         destroy:()=>void;

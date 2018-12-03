@@ -14629,6 +14629,13 @@ var Oncoprint = (function () {
         }
 	this.model.setTrackTooltipFn(track_id, tooltipFn);
     }
+
+    Oncoprint.prototype.setShowTrackSublabels = function(show) {
+    	this.model.setShowTrackSublabels(show);
+    	this.label_view.setShowTrackSublabels(this.model);
+
+        resizeAndOrganizeAfterTimeout(this);
+	}
     
     Oncoprint.prototype.sort = function() {
         if(this.webgl_unavailable || this.destroyed) {
@@ -15116,11 +15123,13 @@ var OncoprintModel = (function () {
 	this.id_order = [];
 	this.hidden_ids = {};
 	this.track_group_legend_order = [];
+	this.show_track_sublabels = false;
 	
 	// Track Properties
 	this.track_important_ids = {}; // a set of "important" ids - only these ids will cause a used rule to become active and thus shown in the legend
 	this.track_label = {};
 	this.track_label_color = {};
+	this.track_sublabel = {};
 	this.track_html_label = {};
 	this.track_link_url = {};
 	this.track_description = {};
@@ -15728,7 +15737,7 @@ var OncoprintModel = (function () {
 	    addTrack(this, params.track_id, params.target_group, params.track_group_header,
 		    params.cell_height, params.track_padding, params.has_column_spacing,
 		    params.data_id_key, params.tooltipFn, params.link_url, params.removable,
-		    params.removeCallback, params.label, params.description, params.track_info,
+		    params.removeCallback, params.label, params.sublabel, params.description, params.track_info,
 		    params.sortCmpFn, params.sort_direction_changeable, params.init_sort_direction, params.onSortDirectionChange,
 		    params.data, params.rule_set, params.track_label_color, params.html_label,
 		    params.expansion_of, params.expandCallback, params.expandButtonTextGetter, params.important_ids,
@@ -15741,7 +15750,7 @@ var OncoprintModel = (function () {
     var addTrack = function (model, track_id, target_group, track_group_header,
 	    cell_height, track_padding, has_column_spacing,
 	    data_id_key, tooltipFn, link_url, removable,
-	    removeCallback, label, description, track_info,
+	    removeCallback, label, sublabel, description, track_info,
 	    sortCmpFn, sort_direction_changeable, init_sort_direction, onSortDirectionChange,
 	    data, rule_set, track_label_color, html_label,
 	    expansion_of, expandCallback, expandButtonTextGetter,
@@ -15750,6 +15759,7 @@ var OncoprintModel = (function () {
 	model.$track_info_tooltip_elt[track_id] = $track_info_tooltip_elt;
 	model.track_custom_options[track_id] = ifndef(custom_track_options, []);
 	model.track_label[track_id] = ifndef(label, "Label");
+	model.track_sublabel[track_id] = ifndef(sublabel, "");
 	model.track_label_color[track_id] = ifndef(track_label_color, "black");
 	model.track_link_url[track_id] = ifndef(link_url, null);
 	model.track_description[track_id] = ifndef(description, "");
@@ -16137,6 +16147,18 @@ var OncoprintModel = (function () {
 
     OncoprintModel.prototype.getTrackLabel = function (track_id) {
 	return this.track_label[track_id];
+    }
+
+    OncoprintModel.prototype.getTrackSublabel = function(track_id) {
+    	return this.track_sublabel[track_id];
+	}
+
+	OncoprintModel.prototype.getShowTrackSublabels = function() {
+    	return this.show_track_sublabels;
+	}
+
+    OncoprintModel.prototype.setShowTrackSublabels = function(show) {
+        return this.show_track_sublabels = show;
     }
     
     OncoprintModel.prototype.getTrackLabelColor = function (track_id) {
@@ -22591,6 +22613,8 @@ var OncoprintLabelView = (function () {
 	this.cell_heights_view_space = {};
 	this.label_middles_view_space = {};
 	this.labels = {};
+	this.sublabels = {};
+	this.show_sublabels = model.getShowTrackSublabels();
 	this.label_colors = {};
 	this.html_labels = {};
 	this.track_link_urls = {};
@@ -22598,8 +22622,7 @@ var OncoprintLabelView = (function () {
 	this.tracks = [];
 	this.minimum_track_height = Number.POSITIVE_INFINITY;
 	this.maximum_label_width = Number.NEGATIVE_INFINITY;
-	
-	this.maximum_label_length = 18;
+
 	this.rendering_suppressed = false;
 	
 	this.highlighted_track = null;
@@ -22679,6 +22702,7 @@ var OncoprintLabelView = (function () {
 	if (view.rendering_suppressed) {
 	    return;
 	}
+	view.show_sublabels = model.getShowTrackSublabels();
 	view.scroll_y = model.getVertScroll();
 	view.track_tops = model.getZoomedTrackTops();
 	view.cell_tops = model.getCellTops();
@@ -22693,7 +22717,9 @@ var OncoprintLabelView = (function () {
 	for (var i=0; i<view.tracks.length; i++) {
 	    view.minimum_track_height = Math.min(view.minimum_track_height, model.getTrackHeight(view.tracks[i]));
 	    var shortened_label = shortenLabelIfNecessary(view, view.labels[view.tracks[i]]);
-	    view.maximum_label_width = Math.max(view.maximum_label_width, view.ctx.measureText(shortened_label).width);
+	    var shortened_sublabel = shortenLabelIfNecessary(view, view.sublabels[view.tracks[i]]);
+	    var measured_width = view.ctx.measureText(shortened_label).width + (view.show_sublabels ? view.ctx.measureText(shortened_sublabel).width : 0);
+	    view.maximum_label_width = Math.max(view.maximum_label_width, measured_width);
 	    
 	    view.cell_tops_view_space[view.tracks[i]] = view.cell_tops[view.tracks[i]]*view.supersampling_ratio - view.scroll_y*view.supersampling_ratio;
 	    view.track_descriptions[view.tracks[i]] = model.getTrackDescription(view.tracks[i]);
@@ -22720,11 +22746,11 @@ var OncoprintLabelView = (function () {
 	setUpContext(view);
     }
     var isNecessaryToShortenLabel = function(view, label) {
-	return label.length > view.maximum_label_length;
+	return label.length > getMaximumLabelLength(view);
     };
     var shortenLabelIfNecessary = function(view, label) {
 	if (isNecessaryToShortenLabel(view, label)) {
-	    return label.substring(0, view.maximum_label_length-3) + '...';
+	    return label.substring(0, getMaximumLabelLength(view)-3) + '...';
 	} else {
 	    return label;
 	}
@@ -22757,14 +22783,28 @@ var OncoprintLabelView = (function () {
 	view.ctx.font = 'bold '+font_size +'px Arial';
 	view.ctx.fillStyle = 'black';
 	var tracks = view.tracks;
+        var sublabelX = {};
 	for (var i=0; i<tracks.length; i++) {
 	    if (view.label_colors && view.label_colors[tracks[i]]) {
 		//override color, if set:
 		view.ctx.fillStyle = view.label_colors[tracks[i]];
 	    }
-	    view.ctx.fillText(shortenLabelIfNecessary(view, view.labels[tracks[i]]), 0, view.label_middles_view_space[tracks[i]]);
+	    var label = shortenLabelIfNecessary(view, view.labels[tracks[i]]);
+	    view.ctx.fillText(label, 0, view.label_middles_view_space[tracks[i]]);
+	    sublabelX[tracks[i]] = view.ctx.measureText(label).width;
+	}
+	if (view.show_sublabels) {
+		// render sublabels - not bold, gray
+		view.ctx.font = font_size+'px Arial';
+		view.ctx.fillStyle='rgb(166,166,166)';
+		for (var i=0; i<tracks.length; i++) {
+			if (view.sublabels[tracks[i]]) {
+				view.ctx.fillText(shortenLabelIfNecessary(view, view.sublabels[tracks[i]]), sublabelX[tracks[i]], view.label_middles_view_space[tracks[i]]);
+			}
+		}
 	}
 	if (view.dragged_label_track_id !== null) {
+        view.ctx.font = 'bold '+font_size +'px Arial';
 	    view.ctx.fillStyle = 'rgba(255,0,0,0.95)';
 	    view.ctx.fillText(shortenLabelIfNecessary(view, view.labels[view.dragged_label_track_id]), 0, view.supersampling_ratio*view.drag_mouse_y);
 	    view.ctx.fillStyle = 'rgba(0,0,0,0.15)';
@@ -22850,6 +22890,10 @@ var OncoprintLabelView = (function () {
 	view.dragged_label_track_id = null;
 	renderAllLabels(view);
     }
+
+    var getMaximumLabelLength = function(view) {
+		return 18;
+	};
     
     OncoprintLabelView.prototype.getWidth = function() {
 	//return this.maximum_label_width + 20;
@@ -22879,6 +22923,7 @@ var OncoprintLabelView = (function () {
     OncoprintLabelView.prototype.addTracks = function (model, track_ids) {
 	for (var i=0; i<track_ids.length; i++) {
 	    this.labels[track_ids[i]] = model.getTrackLabel(track_ids[i]);
+        this.sublabels[track_ids[i]] = model.getTrackSublabel(track_ids[i]);
 	    this.label_colors[track_ids[i]] = model.getTrackLabelColor(track_ids[i]);
 	    this.html_labels[track_ids[i]] = model.getOptionalHtmlTrackLabel(track_ids[i]);
 	    this.track_link_urls[track_ids[i]] = model.getTrackLinkUrl(track_ids[i]);
@@ -22887,6 +22932,12 @@ var OncoprintLabelView = (function () {
 	resizeAndClear(this, model);
 	renderAllLabels(this, model);
     }
+
+    OncoprintLabelView.prototype.setShowTrackSublabels = function(model) {
+        updateFromModel(this, model);
+        resizeAndClear(this, model);
+        renderAllLabels(this, model);
+	}
     
     OncoprintLabelView.prototype.setScroll = function(model) {
 	this.setVertScroll(model);

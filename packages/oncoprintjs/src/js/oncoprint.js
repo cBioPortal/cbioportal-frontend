@@ -870,6 +870,13 @@ var Oncoprint = (function () {
         }
 	this.model.setTrackTooltipFn(track_id, tooltipFn);
     }
+
+    Oncoprint.prototype.setShowTrackSublabels = function(show) {
+    	this.model.setShowTrackSublabels(show);
+    	this.label_view.setShowTrackSublabels(this.model);
+
+        resizeAndOrganizeAfterTimeout(this);
+	}
     
     Oncoprint.prototype.sort = function() {
         if(this.webgl_unavailable || this.destroyed) {
