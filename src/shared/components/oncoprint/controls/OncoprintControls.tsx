@@ -26,6 +26,7 @@ export interface IOncoprintControlsHandlers {
     onSelectShowWhitespaceBetweenColumns?:(showWhitespace:boolean)=>void,
     onSelectShowClinicalTrackLegends?:(showLegends:boolean)=>void,
     onSelectOnlyShowClinicalLegendForAlteredCases?:(showLegends:boolean)=>void,
+    onSelectShowOqlInLabels?:(show:boolean)=>void,
     onSelectShowMinimap?:(showMinimap:boolean)=>void,
     onSelectDistinguishMutationType?:(distinguish:boolean)=>void,
     onSelectDistinguishDrivers?:(distinguish:boolean)=>void,
@@ -64,6 +65,7 @@ export interface IOncoprintControlsState {
     showWhitespaceBetweenColumns?:boolean,
     showClinicalTrackLegends?:boolean,
     onlyShowClinicalLegendForAlteredCases?:boolean,
+    showOqlInLabels?:boolean;
     showMinimap?:boolean,
     distinguishMutationType?:boolean,
     distinguishDrivers?:boolean,
@@ -118,6 +120,7 @@ const EVENT_KEY = {
     showWhitespaceBetweenColumns: "3",
     showClinicalTrackLegends: "4",
     onlyShowClinicalLegendForAlteredCases: "4.1",
+    showOqlInLabels:"4.2",
     distinguishMutationType: "5",
     sortByMutationType: "6",
     sortAlphabetical: "7",
@@ -229,6 +232,10 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
             case EVENT_KEY.onlyShowClinicalLegendForAlteredCases:
                 this.props.handlers.onSelectOnlyShowClinicalLegendForAlteredCases &&
                 this.props.handlers.onSelectOnlyShowClinicalLegendForAlteredCases(!this.props.state.onlyShowClinicalLegendForAlteredCases);
+                break;
+            case EVENT_KEY.showOqlInLabels:
+                this.props.handlers.onSelectShowOqlInLabels &&
+                this.props.handlers.onSelectShowOqlInLabels(!this.props.state.showOqlInLabels);
                 break;
             case EVENT_KEY.columnTypeSample:
                 this.props.handlers.onSelectColumnType("sample");
@@ -738,6 +745,14 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                         onClick={this.onInputClick}
                         disabled={!this.props.state.showClinicalTrackLegends}
                     /> Only show clinical track legends for altered {this.props.state.columnMode === "patient" ? "patients" : "samples"}.
+                </label></div>
+                <div className="checkbox"><label>
+                    <input
+                        type="checkbox"
+                        value={EVENT_KEY.showOqlInLabels}
+                        checked={this.props.state.showOqlInLabels}
+                        onClick={this.onInputClick}
+                    /> Show OQL filters
                 </label></div>
             </CustomDropdown>
         );

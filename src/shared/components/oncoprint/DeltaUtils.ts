@@ -36,6 +36,7 @@ export function transition(
     transitionWhitespaceBetweenColumns(nextProps, prevProps, oncoprint);
     transitionShowMinimap(nextProps, prevProps, oncoprint);
     transitionOnMinimapCloseCallback(nextProps, prevProps, oncoprint);
+    transitionShowSublabels(nextProps, prevProps, oncoprint);
     transitionTracks(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId, getMolecularProfileMap);
     transitionSortConfig(nextProps, prevProps, oncoprint);
     transitionTrackGroupSortPriority(nextProps, prevProps, oncoprint);
@@ -48,6 +49,16 @@ export function transition(
     }
     if (suppressingRendering) {
         doReleaseRendering(nextProps, oncoprint);
+    }
+}
+
+export function transitionShowSublabels(
+    nextProps:IOncoprintProps,
+    prevProps:Partial<IOncoprintProps>,
+    oncoprint: OncoprintJS<any>
+) {
+    if (nextProps.showSublabels !== prevProps.showSublabels) {
+        oncoprint.setShowTrackSublabels(!!nextProps.showSublabels);
     }
 }
 
@@ -562,6 +573,7 @@ function transitionGeneticTrack(
         const geneticTrackParams = {
             rule_set_params: getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers),
             label: nextSpec.label,
+            sublabel: nextSpec.sublabel,
             track_label_color: nextSpec.labelColor || undefined,
             target_group: GENETIC_TRACK_GROUP_INDEX,
             sortCmpFn: getGeneticTrackSortComparator(sortByMutationType(nextProps), sortByDrivers(nextProps)),
