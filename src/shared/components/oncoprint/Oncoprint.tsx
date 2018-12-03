@@ -80,6 +80,7 @@ export type GeneticTrackDatum = {
 export type GeneticTrackSpec = {
     key: string; // for efficient diffing, just like in React. must be unique
     label: string;
+    sublabel?: string;
     oql: string; // OQL corresponding to the track
     info: string;
     infoTooltip?:string;
@@ -135,6 +136,8 @@ export interface IOncoprintProps {
 
     distinguishMutationType?:boolean;
     distinguishDrivers?:boolean;
+
+    showSublabels?:boolean;
 
     sortConfig?:{
         order?:string[]; // overrides below options if present
