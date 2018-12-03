@@ -27,7 +27,6 @@ export default class CNSegmentsDownloader extends React.Component<CNSegmentsDown
     };
 
     @observable downloading = false;
-    private downloadFileContent: string|undefined;
 
     public render() {
         return (
@@ -51,20 +50,14 @@ export default class CNSegmentsDownloader extends React.Component<CNSegmentsDown
 
     @autobind
     private handleDownload() {
-        if (this.downloadFileContent) {
-            fileDownload(this.downloadFileContent, this.props.filename);
-        }
-        else {
-            this.downloading = true;
+        this.downloading = true;
 
-            onMobxPromise(
-                this.props.promise,
-                data => {
-                    this.downloadFileContent = generateSegmentFileContent(data);
-                    fileDownload(this.downloadFileContent, this.props.filename);
-                    this.downloading = false;
-                }
-            );
-        }
+        onMobxPromise(
+            this.props.promise,
+            data => {
+                fileDownload(generateSegmentFileContent(data), this.props.filename);
+                this.downloading = false;
+            }
+        );
     }
 }
