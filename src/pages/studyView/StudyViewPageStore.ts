@@ -33,6 +33,7 @@ import {
     ClinicalAttributeCountFilter,
     ClinicalData,
     ClinicalDataMultiStudyFilter,
+    CopyNumberSeg,
     Gene,
     MolecularProfile,
     MolecularProfileFilter,
@@ -40,6 +41,7 @@ import {
     PatientFilter,
     SampleFilter
 } from 'shared/api/generated/CBioPortalAPI';
+import {fetchCopyNumberSegmentsForSamples} from "shared/lib/StoreUtils";
 import {PatientSurvival} from 'shared/model/PatientSurvival';
 import {getPatientSurvivals} from 'pages/resultsView/SurvivalStoreHelper';
 import {
@@ -74,6 +76,7 @@ import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
 import autobind from "autobind-decorator";
 import {updateGeneQuery} from 'pages/studyView/StudyViewUtils';
+import {generateDownloadFilenamePrefixByStudies} from "shared/lib/FilenameUtils";
 import {stringListToSet} from 'shared/lib/StringUtils';
 import {unparseOQLQueryLine} from 'shared/lib/oql/oqlfilter';
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
@@ -111,17 +114,19 @@ export enum UniqueKey {
 export enum StudyViewPageTabKeyEnum {
     SUMMARY = 'summary',
     CLINICAL_DATA = 'clinicalData',
-    HEATMAPS = 'heatmaps'
+    HEATMAPS = 'heatmaps',
+    CN_SEGMENTS = 'cnSegments'
 }
 
 export type StudyViewPageTabKey =
-    StudyViewPageTabKeyEnum.CLINICAL_DATA | StudyViewPageTabKeyEnum.SUMMARY | StudyViewPageTabKeyEnum.HEATMAPS;
-
+    StudyViewPageTabKeyEnum.CLINICAL_DATA | StudyViewPageTabKeyEnum.SUMMARY | StudyViewPageTabKeyEnum.HEATMAPS |
+    StudyViewPageTabKeyEnum.CN_SEGMENTS;
 
 export enum StudyViewPageTabDescriptions {
     SUMMARY = 'Summary',
     CLINICAL_DATA = 'Clinical Data',
-    HEATMAPS = 'Heatmaps'
+    HEATMAPS = 'Heatmaps',
+    CN_SEGMENTS = 'CN Segments'
 }
 
 const DEFAULT_CHART_NAME = 'Custom Chart';
@@ -170,6 +175,7 @@ export type ChartMeta = {
 }
 
 export type StudyViewURLQuery = {
+    tab: StudyViewPageTabKeyEnum,
     id: string,
     studyId: string,
     cancer_study_id: string,
@@ -2329,6 +2335,13 @@ export class StudyViewPageStore {
         default: []
     });
 
+    readonly cnSegments = remoteData<CopyNumberSeg[]>({
+        await: () => [
+            this.selectedSamples
+        ],
+        invoke: () => fetchCopyNumberSegmentsForSamples(this.selectedSamples.result)
+    }, []);
+
     @computed private get survivalPlots() {
         let osStatusFlag = false;
         let osMonthsFlag = false;
@@ -2854,19 +2867,12 @@ export class StudyViewPageStore {
     @computed
     public get clinicalDataDownloadFilename()
     {
-        // generic filename in case no study studyIds is empty
-        let filename = "clinical_data.tsv";
+        return `${this.downloadFilenamePrefix}clinical_data.tsv`;
+    }
 
-        if (this.studyIds.length > 1) {
-            // prepend multi study to the filename
-            filename = `combined_study_${filename}`;
-        }
-        else if (this.studyIds.length > 0) {
-            // prepend the actual study id to the filename
-            filename = `${this.studyIds[0]}_${filename}`;
-        }
-
-        return filename;
+    @computed
+    public get downloadFilenamePrefix() {
+        return generateDownloadFilenamePrefixByStudies(_.values(this.physicalStudiesSet.result));
     }
 
     @autobind

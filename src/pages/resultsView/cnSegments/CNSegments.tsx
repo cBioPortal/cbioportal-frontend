@@ -6,6 +6,7 @@ import autobind from "autobind-decorator";
 import {Nav, NavItem} from "react-bootstrap";
 
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
+import {ResultsViewTab} from "../ResultsViewPageHelpers";
 import {CopyNumberSeg, Gene} from "shared/api/generated/CBioPortalAPI";
 import IntegrativeGenomicsViewer from "shared/components/igv/IntegrativeGenomicsViewer";
 import CNSegmentsDownloader from "shared/components/cnSegments/CNSegmentsDownloader";
@@ -52,18 +53,7 @@ export default class CNSegments extends React.Component<{ store: ResultsViewPage
 
     @computed get filename()
     {
-        let prefix = "";
-
-        if (this.props.store.studies.result) {
-            if (this.props.store.studies.result.length > 1) {
-                prefix = "multi_study_";
-            }
-            else if (this.props.store.studies.result.length === 1) {
-                prefix = `${this.props.store.studies.result[0].studyId}_`;
-            }
-        }
-
-        return `${prefix}segments.seg`;
+        return `${this.props.store.downloadFilenamePrefix}segments.seg`;
     }
 
     @computed get isHidden() {
@@ -107,7 +97,7 @@ export default class CNSegments extends React.Component<{ store: ResultsViewPage
     @computed get progressItems(): IProgressIndicatorItem[] {
         return [
             {
-                label: "Downloading copy number segments data...",
+                label: "Loading copy number segments data...",
                 promises: this.indicatorPromises
             },
             {
@@ -143,7 +133,7 @@ export default class CNSegments extends React.Component<{ store: ResultsViewPage
                         ))
                     }
                 </Nav>
-                {!this.isLoading && (
+                <div style={this.isHidden ? {opacity: 0} : undefined}>
                     <IntegrativeGenomicsViewer
                         tracks={[
                             {
@@ -156,8 +146,9 @@ export default class CNSegments extends React.Component<{ store: ResultsViewPage
                         onRenderingStart={this.onIgvRenderingStart}
                         onRenderingComplete={this.onIgvRenderingComplete}
                         disableSearch={this.activeLocus !== WHOLE_GENOME}
+                        isVisible={this.props.store.tabId === ResultsViewTab.CN_SEGMENTS && !this.isHidden}
                     />
-                )}
+                </div>
             </div>
         );
     }
