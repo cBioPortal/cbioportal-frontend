@@ -1,4 +1,4 @@
-import { getProteinImpactType } from './getCanonicalMutationType';
+import { getProteinImpactType, default as getCanonicalMutationType } from './getCanonicalMutationType';
 import { assert } from 'chai';
 
 describe('getProteinImpactType', ()=>{
@@ -12,8 +12,13 @@ describe('getProteinImpactType', ()=>{
         assert.equal(getProteinImpactType('In_Frame_Deletion'),'inframe');
 
 
-
     })
 
 
+});
+
+describe('getCanonicalMutationType', ()=>{
+    it("maps unknown mutation types to 'other'", ()=>{
+        assert.equal(getCanonicalMutationType("iasjdpfoai"), "other");
+    });
 });

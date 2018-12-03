@@ -9,7 +9,8 @@ import jStat from "jStat";
 import ScatterPlotTooltip from "./ScatterPlotTooltip";
 import ifndef from "shared/lib/ifndef";
 import {tickFormatNumeral} from "./TickUtils";
-import {makeScatterPlotSizeFunction, separateScatterDataByAppearance} from "./PlotUtils";
+import {computeCorrelationPValue, makeScatterPlotSizeFunction, separateScatterDataByAppearance} from "./PlotUtils";
+import {toConditionalPrecision} from "../../lib/NumberUtils";
 
 export interface IBaseScatterPlotData {
     x:number;
@@ -180,13 +181,13 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                                text={`Spearman: ${this.spearmanCorr.toFixed(2)}`}
                                style={style}
                 ></VictoryLabel>
-                <VictoryLabel  x={x + approxTextWidth}
+                { (this.spearmanPval !== null) && <VictoryLabel  x={x + approxTextWidth}
                                y={CORRELATION_INFO_Y}
                                textAnchor="end"
                                dy="4"
-                               text={`P-Value: ${this.spearmanPval.toFixed(2)}`}
+                               text={`p-Value: ${toConditionalPrecision(this.spearmanPval, 3, 0.01)}`}
                                style={style}
-                ></VictoryLabel>
+                ></VictoryLabel>}
             </g>
         );
     }
@@ -250,10 +251,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
     }
 
     @computed get spearmanPval() {
-        const R = this.spearmanCorr;
-        const n = this.splitData.x.length;
-        const tStatistic = R*Math.sqrt((n - 2) / Math.max(0.00001, (1 - R*R)));
-        return jStat.ttest(tStatistic, 2);
+        return computeCorrelationPValue(this.spearmanCorr, this.splitData.x.length);
     }
 
     @computed get rightPadding() {
@@ -300,7 +298,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         // need to regenerate this function whenever highlight changes in order to trigger immediate Victory rerender
         return makeScatterPlotSizeFunction(highlight, size);
     }
-    
+
     private tickFormat(t:number, ticks:number[], logScale:boolean) {
         if (logScale && !this.props.useLogSpaceTicks) {
             t = this.invLogScale(t);
