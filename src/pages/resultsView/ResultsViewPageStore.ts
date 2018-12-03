@@ -134,6 +134,7 @@ import {
 } from "./ResultsViewPageHelpers";
 import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
 import {isRecurrentHotspot} from "../../shared/lib/AnnotationUtils";
+import {generateDownloadFilenamePrefixByStudies} from "shared/lib/FilenameUtils";
 import {makeProfiledInClinicalAttributes} from "../../shared/components/oncoprint/ResultsViewOncoprintUtils";
 import {ResultsViewQuery} from "./ResultsViewQuery";
 import {annotateAlterationTypes} from "../../shared/lib/oql/annotateAlterationTypes";
@@ -1481,6 +1482,10 @@ export class ResultsViewPageStore {
             return Promise.resolve(physicalStudies);
         }
     });
+
+    @computed get downloadFilenamePrefix() {
+        return generateDownloadFilenamePrefixByStudies(this.studies.result);
+    }
 
     @computed get myCancerGenomeData() {
         return fetchMyCancerGenomeData();
