@@ -32,6 +32,7 @@ import {getAnnotatingProgressMessage} from "./ResultsViewOncoprintUtils";
 import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
 import autobind from "autobind-decorator";
 import getBrowserWindow from "../../lib/getBrowserWindow";
+import MobxPromise from "mobxpromise";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -87,6 +88,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @observable showWhitespaceBetweenColumns:boolean = true;
     @observable showClinicalTrackLegends:boolean = true;
     @observable _onlyShowClinicalLegendForAlteredCases = false;
+    @observable showOqlInLabels = false;
 
     @computed get onlyShowClinicalLegendForAlteredCases() {
         return this.showClinicalTrackLegends && this._onlyShowClinicalLegendForAlteredCases;
@@ -123,6 +125,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     constructor(props:IResultsViewOncoprintProps) {
         super(props);
 
+        this.showOqlInLabels = props.store.queryContainsOql;
         (window as any).resultsViewOncoprint = this;
 
         this.initFromUrlParams(getBrowserWindow().globalStores.routing.location.query);
@@ -212,6 +215,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             },
             get onlyShowClinicalLegendForAlteredCases() {
                 return self.onlyShowClinicalLegendForAlteredCases;
+            },
+            get showOqlInLabels() {
+                return self.showOqlInLabels;
             },
             get showMinimap() {
                 return self.showMinimap;
@@ -389,6 +395,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             onSelectShowWhitespaceBetweenColumns:(show:boolean)=>{this.showWhitespaceBetweenColumns = show;},
             onSelectShowClinicalTrackLegends:(show:boolean)=>{this.showClinicalTrackLegends = show; },
             onSelectOnlyShowClinicalLegendForAlteredCases:(show:boolean)=>{this._onlyShowClinicalLegendForAlteredCases = show; },
+            onSelectShowOqlInLabels:(show:boolean)=>{this.showOqlInLabels = show;},
             onSelectShowMinimap:(show:boolean)=>{this.showMinimap = show;},
             onSelectDistinguishMutationType:(s:boolean)=>{this.distinguishMutationType = s;},
             onSelectDistinguishDrivers:action((s:boolean)=>{
@@ -512,8 +519,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 const keyToCase = (this.columnMode === "sample" ? sampleKeyToSample : patientKeyToPatient);
                                 const caseIds = this.oncoprint.getIdOrder().map(
                                     this.columnMode === "sample" ?
-                                        (id=>(sampleKeyToSample[id].sampleId)) :
-                                        (id=>(patientKeyToPatient[id].patientId))
+                                        ((id:string)=>(sampleKeyToSample[id].sampleId)) :
+                                        ((id:string)=>(patientKeyToPatient[id].patientId))
                                 );
                                 for (const caseId of caseIds) {
                                     file += `${caseId}\n`;
@@ -669,20 +676,13 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
-    readonly unalteredKeys = remoteData({
-        await: ()=>[
-            this.props.store.unalteredSampleKeys,
-            this.props.store.unalteredPatientKeys,
-        ],
-        invoke:async()=>{
-            if (this.columnMode === "sample") {
-               return this.props.store.unalteredSampleKeys.result!;
-            } else {
-               return this.props.store.unalteredPatientKeys.result!;
-            }
-        },
-        default: []
-    });
+    @computed get unalteredKeys():MobxPromise<string[]> {
+        if (this.columnMode === "sample") {
+            return this.props.store.unalteredSampleKeys;
+        } else {
+            return this.props.store.unalteredPatientKeys;
+        }
+    }
 
     private onMinimapClose() {
         this.showMinimap = false;
@@ -962,6 +962,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 hiddenIds={!this.showUnalteredColumns ? this.unalteredKeys.result : undefined}
                                 molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
                                 alterationTypesInQuery={this.alterationTypesInQuery}
+                                showSublabels={this.showOqlInLabels}
 
                                 horzZoomToFitIds={this.horzZoomToFitIds}
                                 distinguishMutationType={this.distinguishMutationType}

@@ -22,6 +22,7 @@ import getBrowserWindow from "../../../shared/lib/getBrowserWindow";
 import {remoteData} from "../../../shared/api/remoteData";
 import {getAlterationSummary, getGeneSummary, getPatientSampleSummary} from "./QuerySummaryUtils";
 import {MakeMobxView} from "../../../shared/components/MobxView";
+import {getGAInstance} from "../../../shared/lib/tracking";
 
 @observer
 export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore }, {}> {
@@ -134,6 +135,12 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
         </div>)
     }
 
+    @autobind
+    onSubmit(){
+        this.closeQueryForm();
+        getGAInstance()('send', 'event', 'resultsView', 'query modified');
+    }
+
     render() {
 
         if (!this.cohortAndGeneSummary.isError && !this.alterationSummary.isError) {
@@ -173,7 +180,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                     {
                         (this.queryFormVisible) && (
                             <div style={{marginTop:10}}>
-                                <QueryAndDownloadTabs onSubmit={this.closeQueryForm} showDownloadTab={false} store={this.queryStore!} />
+                                <QueryAndDownloadTabs onSubmit={this.onSubmit} showDownloadTab={false} store={this.queryStore!} />
                             </div>
                         )
                     }
