@@ -104,22 +104,7 @@ export function getOncoQueryDocUrl() {
     return buildCBioPortalPageUrl("/oql");
 }
 
-export function getOncoKbApiUrl() {
-    let url = AppConfig.serverConfig.oncokb_public_api_url;
-
-    if (typeof url === 'string') {
-        // we need to support legacy configuration values
-        url = url.replace(/^http[s]?:\/\//,''); // get rid of protocol
-        url = url.replace(/\/$/,""); // get rid of trailing slashes
-
-        return buildCBioPortalAPIUrl(`proxy/${url}`)
-    } else {
-        return undefined;
-    }
-
-}
-export function getGenomeNexusApiUrl() {
-    let url = AppConfig.serverConfig.genomenexus_url;
+export function getProxyUrlIfNecessary(url:any) {
     if (typeof url === 'string') {
         // use url if https, otherwise use proxy
         if (url.startsWith('https://')) {
@@ -129,11 +114,21 @@ export function getGenomeNexusApiUrl() {
             url = url.replace(/^http[s]?:\/\//,''); // get rid of protocol
             url = url.replace(/\/$/,""); // get rid of trailing slashes
             url = url.replace(/^\/+/,""); // get rid of leading slashes
+
             return buildCBioPortalAPIUrl(`proxy/${url}`)
         }
     } else {
         return undefined;
     }
+}
+
+export function getOncoKbApiUrl() {
+    let url = AppConfig.serverConfig.oncokb_public_api_url;
+    return getProxyUrlIfNecessary(url);
+}
+export function getGenomeNexusApiUrl() {
+    let url = AppConfig.serverConfig.genomenexus_url;
+    return getProxyUrlIfNecessary(url);
 }
 
 export function getVirtualStudyServiceUrl() {
