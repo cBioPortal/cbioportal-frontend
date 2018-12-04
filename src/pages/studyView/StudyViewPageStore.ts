@@ -2005,7 +2005,7 @@ export class StudyViewPageStore {
                     negateFilters: true
                 });
                 const uniqueSampleKeysWithoutNA = _.keyBy(samplesWithoutNA, s=>s.uniqueSampleKey);
-                const samplesWithNA = samplesWithoutNA.filter(s=>!(s.uniqueSampleKey in uniqueSampleKeysWithoutNA));
+                const samplesWithNA = this.samples.result.filter(s=>!(s.uniqueSampleKey in uniqueSampleKeysWithoutNA));
                 return samplesWithNA;
             }
             return []
@@ -2019,7 +2019,8 @@ export class StudyViewPageStore {
             return Promise.resolve(
                 _.uniq(this.samplesWithNAInSelectedClinicalData.result!.map(s=>s.uniquePatientKey))
             );
-        }
+        },
+        default: []
     });
 
     @computed
