@@ -51,6 +51,7 @@ export interface ISurvivalChartProps {
     fileName: string;
     showTable?: boolean;
     legendLocation?:LegendLocation;
+    showNaPatientsHiddenToggle?:boolean;
     showLogRankPVal?:boolean;
     showDownloadButtons?: boolean;
     disableZoom?: boolean;
@@ -201,6 +202,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
         disableZoom: false,
         legendLocation: LegendLocation.CHART,
         showLogRankPVal: true,
+        showNaPatientsHiddenToggle: false,
         showDownloadButtons: true,
     };
 
@@ -414,7 +416,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                         {!!group.legendText ? group.legendText : group.value}
                     </span>
                 ))}
-                { this.props.toggleSurvivalHideNAPatients && (
+                { this.props.showNaPatientsHiddenToggle && (
                     <div className="checkbox"><label>
                         <input
                             type="checkbox"
