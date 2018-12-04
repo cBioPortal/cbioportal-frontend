@@ -2019,7 +2019,8 @@ export class StudyViewPageStore {
             return Promise.resolve(
                 _.uniq(this.samplesWithNAInSelectedClinicalData.result!.map(s=>s.uniquePatientKey))
             );
-        }
+        },
+        default: []
     });
 
     @computed
