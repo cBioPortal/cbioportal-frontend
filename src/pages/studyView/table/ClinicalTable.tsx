@@ -76,7 +76,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
             </LabeledCheckbox>,
         tooltip: (
             <span>Number of {this.props.patientAttribute ? 'patients' : 'samples'}</span>),
-        filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => (d.count.toString().indexOf(f) > -1),
+        filter: (d: ClinicalDataCountWithColor, f: string) => (d.count.toString().indexOf(f) > -1),
         sortBy: (d: ClinicalDataCountWithColor) => d.count,
         defaultSortDirection: 'desc' as 'desc',
         width: this.columnWidth[1]
@@ -86,9 +86,9 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
             <span>{getFrequencyStr((data.count / this.totalCount) * 100)}</span>,
         tooltip: (
             <span>Percentage of {this.props.patientAttribute ? 'patients' : 'samples'}</span>),
-        filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => {
+        filter: (d: ClinicalDataCountWithColor, f: string) => {
             let freq = getFrequencyStr((d.count / this.totalCount) * 100);
-            return (freq.indexOf(filterStringUpper) > -1)
+            return (freq.indexOf(f) > -1)
         },
         sortBy: (d: ClinicalDataCountWithColor) => d.count,//sort freq column using count
         defaultSortDirection: 'desc' as 'desc',

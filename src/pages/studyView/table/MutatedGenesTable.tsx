@@ -79,7 +79,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             sortBy: (data: MutationCountByGene) => data.hugoGeneSymbol,
             defaultSortDirection: 'asc' as 'asc',
             filter: (data: MutationCountByGene, filterString: string, filterStringUpper: string) => {
-                return data.hugoGeneSymbol.indexOf(filterStringUpper) > -1;
+                return data.hugoGeneSymbol.toUpperCase().indexOf(filterStringUpper) > -1;
             },
             width: 150
         },
@@ -89,8 +89,8 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             render: (data: MutationCountByGene) => <span>{data.totalCount.toLocaleString()}</span>,
             sortBy: (data: MutationCountByGene) => data.totalCount,
             defaultSortDirection: 'desc' as 'desc',
-            filter: (data: MutationCountByGene, filterString: string, filterStringUpper: string) => {
-                return _.toString(data.totalCount).indexOf(filterStringUpper) > -1;
+            filter: (data: MutationCountByGene, filterString: string) => {
+                return _.toString(data.totalCount).indexOf(filterString) > -1;
             },
             width: 90
         },
@@ -107,8 +107,8 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                 </LabeledCheckbox>,
             sortBy: (data: MutationCountByGene) => data.countByEntity,
             defaultSortDirection: 'desc' as 'desc',
-            filter: (data: MutationCountByGene, filterString: string, filterStringUpper: string) => {
-                return _.toString(data.countByEntity).indexOf(filterStringUpper) > -1;
+            filter: (data: MutationCountByGene, filterString: string) => {
+                return _.toString(data.countByEntity).indexOf(filterString) > -1;
             },
             width: 90
         },
@@ -119,7 +119,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             sortBy: (data: MutationCountByGene) => data.frequency,
             defaultSortDirection: 'desc' as 'desc',
             filter: (data: MutationCountByGene, filterString: string, filterStringUpper: string) => {
-                return _.toString(data.frequency).indexOf(filterStringUpper) > -1;
+                return _.toString(getFrequencyStr(data.frequency)).indexOf(filterString) > -1;
             },
             width: 70
         }
