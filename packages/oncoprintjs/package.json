@@ -52,7 +52,7 @@
   "dependencies": {
     "express": "^4.15.3",
     "gl-matrix": "2.3.2",
-    "jquery": "^1.11.3",
+    "jquery": "^3.0.0",
     "jstat": "^1.7.1",
     "tayden-clusterfck": "^0.7.0",
     "underscore": "^1.7.0"
