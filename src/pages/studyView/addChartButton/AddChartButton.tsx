@@ -153,16 +153,16 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
                     </MainButton>
                     <ChildButton
                         className={styles.child}
-                        icon="fa fa-pie-chart fa-lg"
-                        label={this.addCustomGroupsChartTitle}
-                        onClick={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.CUSTOM_GROUPS)}
+                        icon={classnames("fa fa-lg", styles.faCharG)}
+                        label={this.addGenomicDataChartTitle}
+                        onClick={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.ADD_GENOMIC)}
                     >
                     </ChildButton>
                     <ChildButton
                         className={styles.child}
-                        icon={classnames("fa fa-lg", styles.faCharG)}
-                        label={this.addGenomicDataChartTitle}
-                        onClick={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.ADD_GENOMIC)}
+                        icon="fa fa-pie-chart fa-lg"
+                        label={this.addCustomGroupsChartTitle}
+                        onClick={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.CUSTOM_GROUPS)}
                     >
                     </ChildButton>
                 </Menu>
