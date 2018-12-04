@@ -127,7 +127,7 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                         alignItems: "center"
                     }}
                 >
-                    <span>Data Set:</span>
+                    <span>Profile:</span>
                     <div style={{display:"inline-block", width:376, marginLeft:4, marginRight:4, zIndex:10 /* so that on top when opened*/}}>
                         <MolecularProfileSelector
                             name="data-set-select"
@@ -204,6 +204,9 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                             );
                         })}
                     </MSKTabs>
+                    <Observer>
+                        {this.header}
+                    </Observer>
                     {coExpressionVizElements}
                 </div>
             );
@@ -221,9 +224,6 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
             this.props.store.coexpressionTabMolecularProfiles.result.length > 0) {
             divContents = (
                 <div>
-                    <Observer>
-                        {this.header}
-                    </Observer>
                     <Observer>
                         {this.geneTabs}
                     </Observer>
