@@ -1,12 +1,13 @@
 import * as React from 'react';
 import styles from "./studySummaryTabStyles.module.scss";
 import {ChartContainer, IChartContainerProps} from 'pages/studyView/charts/ChartContainer';
-import {observable} from 'mobx';
+import {observable, computed} from 'mobx';
 import {
     AnalysisGroup,
     ChartMeta,
-    ChartType, CopyNumberAlterationIdentifier,
-    CUSTOM_CHART_KEYS, GeneIdentifier,
+    ChartType,
+    CopyNumberAlterationIdentifier,
+    GeneIdentifier,
     StudyViewPageStore,
     UniqueKey
 } from 'pages/studyView/StudyViewPageStore';
@@ -26,6 +27,7 @@ import 'react-resizable/css/styles.css';
 import {observer} from 'mobx-react';
 import UserSelections from "../UserSelections";
 import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
+import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/components/progressIndicator/ProgressIndicator";
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore
@@ -137,7 +139,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             case ChartTypeEnum.PIE_CHART: {
 
                 //if the chart is one of the custom charts then get the appropriate promise
-                if (_.includes(CUSTOM_CHART_KEYS, chartMeta.uniqueKey)) {
+                if (_.includes(this.store.customChartKeys, chartMeta.uniqueKey)) {
                     props.filters = this.store.getCustomChartFilters(props.chartMeta ? props.chartMeta.uniqueKey : '');
                     props.onValueSelection = this.handlers.setCustomChartFilters;
                     props.onResetSelection = this.handlers.setCustomChartFilters;
@@ -193,7 +195,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 break;
             }
             case ChartTypeEnum.TABLE: {
-                if (_.includes(CUSTOM_CHART_KEYS, chartMeta.uniqueKey)) {
+                if (_.includes(this.store.customChartKeys, chartMeta.uniqueKey)) {
                     props.filters = this.store.getCustomChartFilters(props.chartMeta ? props.chartMeta.uniqueKey : '');
                     props.onValueSelection = this.handlers.setCustomChartFilters;
                     props.onResetSelection = this.handlers.setCustomChartFilters;
@@ -318,16 +320,31 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
         </div>);
     };
 
+    @computed
+    get progressItems(): IProgressIndicatorItem[] {
+        return [{
+            label: 'Loading meta information',
+            promises: [this.store.defaultVisibleAttributes]
+        }, {
+            label: 'Loading clinical data',
+            promises: [this.store.initialVisibleAttributesClinicalDataBinCountData, this.store.initialVisibleAttributesClinicalDataCountData]
+        }];
+    }
+
     render() {
         return (
             <div>
-                <LoadingIndicator isLoading={this.store.defaultVisibleAttributes.isPending} size={"big"} center={true}/>
+                <LoadingIndicator isLoading={this.store.loadingInitialDataForSummaryTab} size={"big"} center={true}>
+                    <ProgressIndicator items={this.progressItems} show={this.store.loadingInitialDataForSummaryTab} sequential={false}/>
+                </LoadingIndicator>
+
                 {
                     this.store.invalidSampleIds.result.length > 0 &&
                     this.showErrorMessage &&
                     <div>
                         <div className="alert alert-danger">
-                            <button type="button" className="close" onClick={(event) => this.showErrorMessage = false}>&times;</button>
+                            <button type="button" className="close"
+                                    onClick={(event) => this.showErrorMessage = false}>&times;</button>
                             The following sample(s) might have been deleted/updated with the recent data updates
                             <br />
 
@@ -338,47 +355,44 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                     </div>
                 }
 
-                    <UserSelections
-                            filter={this.props.store.userSelections}
-                            getSelectedGene={this.props.store.getKnownHugoGeneSymbolByEntrezGeneId}
-                            attributesMetaSet={this.props.store.chartMetaSet}
-                            updateClinicalDataEqualityFilter={this.props.store.updateClinicalDataEqualityFilters}
-                            updateClinicalDataIntervalFilter={ this.props.store.updateClinicalDataIntervalFiltersByValues}
-                            removeGeneFilter={this.props.store.removeGeneFilter}
-                            removeCNAGeneFilter={this.props.store.removeCNAGeneFilters}
-                            resetMutationCountVsCNAFilter={this.handlers.resetMutationCountVsCNAFilter}clearCNAGeneFilter={this.props.store.clearCNAGeneFilter}
-                            clearGeneFilter={this.props.store.clearGeneFilter}
-                            removeWithMutationDataFilter={this.props.store.removeWithMutationDataFilter}
-                            removeWithCNADataFilter={this.props.store.removeWithCNADataFilter}
-                            clearChartSampleIdentifierFilter={this.props.store.clearChartSampleIdentifierFilter}
-                            clearAllFilters={this.props.store.clearAllFilters}
-                />
-                <div className={styles.studyViewFlexContainer}>
-                    {this.store.defaultVisibleAttributes.isComplete && (
-                        <ReactGridLayout className="layout"
-                                            style={{ width: this.store.containerWidth }}
-                                            width={this.store.containerWidth}
-                                            cols={this.store.studyViewPageLayoutProps.cols}
-                                            rowHeight={this.store.studyViewPageLayoutProps.grid.h}
-                                            layout={this.store.studyViewPageLayoutProps.layout}
-                                            margin={[STUDY_VIEW_CONFIG.layout.gridMargin.x, STUDY_VIEW_CONFIG.layout.gridMargin.y]}
-                                            useCSSTransforms={false}
-                                            draggableHandle={'.fa-arrows'}>
-                            {this.store.visibleAttributes.map(this.renderAttributeChart)}
-                        </ReactGridLayout>
-                    )}
+                {!this.store.loadingInitialDataForSummaryTab &&
+                <div>
 
-                     {/* Always show a loader when study view loading the initial data */}
-                    <LoadingIndicator isLoading={
-                        this.store.defaultVisibleAttributes.isComplete && (
-                            this.store.initialVisibleAttributesClinicalDataCountData.isPending
-                            || this.store.initialVisibleAttributesClinicalDataBinCountData.isPending
-                            || this.store.samplesPerPatientData.isPending
-                            || this.store.cancerStudiesData.isPending
-                        )
-                    } size={"big"} center={false}/>
+                    <UserSelections
+                        filter={this.props.store.userSelections}
+                        getSelectedGene={this.props.store.getKnownHugoGeneSymbolByEntrezGeneId}
+                        attributesMetaSet={this.props.store.chartMetaSet}
+                        updateClinicalDataEqualityFilter={this.props.store.updateClinicalDataEqualityFilters}
+                        updateClinicalDataIntervalFilter={this.props.store.updateClinicalDataIntervalFiltersByValues}
+                        removeGeneFilter={this.props.store.removeGeneFilter}
+                        removeCNAGeneFilter={this.props.store.removeCNAGeneFilters}
+                        resetMutationCountVsCNAFilter={this.handlers.resetMutationCountVsCNAFilter}
+                        clearCNAGeneFilter={this.props.store.clearCNAGeneFilter}
+                        clearGeneFilter={this.props.store.clearGeneFilter}
+                        removeWithMutationDataFilter={this.props.store.removeWithMutationDataFilter}
+                        removeWithCNADataFilter={this.props.store.removeWithCNADataFilter}
+                        clearChartSampleIdentifierFilter={this.props.store.clearChartSampleIdentifierFilter}
+                        clearAllFilters={this.props.store.clearAllFilters}
+                    />
+                    <div className={styles.studyViewFlexContainer}>
+                        {this.store.defaultVisibleAttributes.isComplete && (
+                            <ReactGridLayout className="layout"
+                                             style={{width: this.store.containerWidth}}
+                                             width={this.store.containerWidth}
+                                             cols={this.store.studyViewPageLayoutProps.cols}
+                                             rowHeight={this.store.studyViewPageLayoutProps.grid.h}
+                                             layout={this.store.studyViewPageLayoutProps.layout}
+                                             margin={[STUDY_VIEW_CONFIG.layout.gridMargin.x, STUDY_VIEW_CONFIG.layout.gridMargin.y]}
+                                             useCSSTransforms={false}
+                                             draggableHandle={'.fa-arrows'}>
+                                {this.store.visibleAttributes.map(this.renderAttributeChart)}
+                            </ReactGridLayout>
+                        )}
+
+                    </div>
 
                 </div>
+                }
             </div>
         )
     }
