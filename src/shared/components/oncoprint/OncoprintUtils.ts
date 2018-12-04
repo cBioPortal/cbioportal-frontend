@@ -107,6 +107,14 @@ function makeGenesetHeatmapUnexpandHandler(
     });
 }
 
+function formatGeneticTrackSublabel(oqlFilter: UnflattenedOQLLineFilterOutput<object>): string {
+    if (isMergedTrackFilter(oqlFilter)) {
+        return ""; // no oql sublabel for merged tracks - too cluttered
+    } else {
+        return oqlFilter.oql_line.substring(oqlFilter.gene.length).replace(";",""); // get rid of gene in beginning of OQL line, and semicolon at end
+    }
+}
+
 function formatGeneticTrackLabel(oqlFilter: UnflattenedOQLLineFilterOutput<object>): string {
     return (isMergedTrackFilter(oqlFilter)
         ? oqlFilter.label || oqlFilter.list.map(geneLine => geneLine.gene).join(' / ')
@@ -364,6 +372,7 @@ export function makeGeneticTrackWith({
         return {
             key: trackKey,
             label: (parentKey !== undefined ? '  ' : '') + formatGeneticTrackLabel(oql),
+            sublabel: formatGeneticTrackSublabel(oql),
             labelColor: parentKey !== undefined ? 'grey' : undefined,
             oql: formatGeneticTrackOql(oql),
             info,
