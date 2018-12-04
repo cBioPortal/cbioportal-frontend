@@ -1,6 +1,7 @@
 import _ from "lodash";
 
 import Timer = NodeJS.Timer;
+import jStat from "jStat";
 export function getDeterministicRandomNumber(seed:number, range?:[number, number]) {
     // source: https://stackoverflow.com/a/23304189
     seed = Math.sin(seed)*10000;
@@ -176,4 +177,23 @@ export function separateScatterDataByAppearance<D>(
         buckets = _.sortBy<typeof buckets[0]>(buckets, sortBy);
     }
     return buckets;
+}
+
+export function computeCorrelationPValue(correlation:number, numSamples:number) {
+    const R = correlation;
+    if (Math.abs(R) === 1) {
+        return 0;
+    }
+
+    const n = numSamples;
+    if (n > 2) {
+        // degrees of freedom has to be > 0
+        const tStatistic = Math.abs(R)*Math.sqrt((n - 2) / (1 - R*R)); // we know |R| < 1 so no divide by zero risk
+
+        // 2-sided t-test
+        // have to pass in n-1 as # samples argument, to get jStat to internally use a t distribution with (n-2) DOF
+        return jStat.ttest(tStatistic, n-1, 2);
+    } else {
+        return null;
+    }
 }

@@ -107,6 +107,14 @@ function makeGenesetHeatmapUnexpandHandler(
     });
 }
 
+function formatGeneticTrackSublabel(oqlFilter: UnflattenedOQLLineFilterOutput<object>): string {
+    if (isMergedTrackFilter(oqlFilter)) {
+        return ""; // no oql sublabel for merged tracks - too cluttered
+    } else {
+        return oqlFilter.oql_line.substring(oqlFilter.gene.length).replace(";",""); // get rid of gene in beginning of OQL line, and semicolon at end
+    }
+}
+
 function formatGeneticTrackLabel(oqlFilter: UnflattenedOQLLineFilterOutput<object>): string {
     return (isMergedTrackFilter(oqlFilter)
         ? oqlFilter.label || oqlFilter.list.map(geneLine => geneLine.gene).join(' / ')
@@ -356,13 +364,15 @@ export function makeGeneticTrackWith({
             // show tooltip explaining percent calculation, as long as its not N/P
             infoTooltip = `altered / profiled = ${alterationInfo.altered} / ${alterationInfo.sequenced}`;
         }
-        if (alterationInfo.sequenced < (sampleMode ? samples : patients).length) {
+        if ((alterationInfo.sequenced > 0) && (alterationInfo.sequenced < (sampleMode ? samples : patients).length)) {
             // add asterisk to percentage if not all samples/patients are profiled for this track
+            // dont add asterisk if none are profiled
             info = `${info}*`;
         }
         return {
             key: trackKey,
             label: (parentKey !== undefined ? '  ' : '') + formatGeneticTrackLabel(oql),
+            sublabel: formatGeneticTrackSublabel(oql),
             labelColor: parentKey !== undefined ? 'grey' : undefined,
             oql: formatGeneticTrackOql(oql),
             info,
