@@ -88,6 +88,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @observable showWhitespaceBetweenColumns:boolean = true;
     @observable showClinicalTrackLegends:boolean = true;
     @observable _onlyShowClinicalLegendForAlteredCases = false;
+    @observable showOqlInLabels = false;
 
     @computed get onlyShowClinicalLegendForAlteredCases() {
         return this.showClinicalTrackLegends && this._onlyShowClinicalLegendForAlteredCases;
@@ -124,6 +125,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     constructor(props:IResultsViewOncoprintProps) {
         super(props);
 
+        this.showOqlInLabels = props.store.queryContainsOql;
         (window as any).resultsViewOncoprint = this;
 
         this.initFromUrlParams(getBrowserWindow().globalStores.routing.location.query);
@@ -213,6 +215,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             },
             get onlyShowClinicalLegendForAlteredCases() {
                 return self.onlyShowClinicalLegendForAlteredCases;
+            },
+            get showOqlInLabels() {
+                return self.showOqlInLabels;
             },
             get showMinimap() {
                 return self.showMinimap;
@@ -390,6 +395,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             onSelectShowWhitespaceBetweenColumns:(show:boolean)=>{this.showWhitespaceBetweenColumns = show;},
             onSelectShowClinicalTrackLegends:(show:boolean)=>{this.showClinicalTrackLegends = show; },
             onSelectOnlyShowClinicalLegendForAlteredCases:(show:boolean)=>{this._onlyShowClinicalLegendForAlteredCases = show; },
+            onSelectShowOqlInLabels:(show:boolean)=>{this.showOqlInLabels = show;},
             onSelectShowMinimap:(show:boolean)=>{this.showMinimap = show;},
             onSelectDistinguishMutationType:(s:boolean)=>{this.distinguishMutationType = s;},
             onSelectDistinguishDrivers:action((s:boolean)=>{
@@ -956,6 +962,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 hiddenIds={!this.showUnalteredColumns ? this.unalteredKeys.result : undefined}
                                 molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
                                 alterationTypesInQuery={this.alterationTypesInQuery}
+                                showSublabels={this.showOqlInLabels}
 
                                 horzZoomToFitIds={this.horzZoomToFitIds}
                                 distinguishMutationType={this.distinguishMutationType}
