@@ -707,10 +707,10 @@ export function intervalFiltersDisplayValue(values: ClinicalDataIntervalFilterVa
             displayValues.push(`${formatValue(start)}`);
         }
         else if (numericals[0].start === numericals[0].end) {
-            displayValues.push(`${formatValue(start)} ≤ ~ ≤ ${formatValue(end)}`);
+            displayValues.push(`${formatValue(start)} ≤ x ≤ ${formatValue(end)}`);
         }
         else {
-            displayValues.push(`${formatValue(start)} < ~ ≤ ${formatValue(end)}`);
+            displayValues.push(`${formatValue(start)} < x ≤ ${formatValue(end)}`);
         }
     }
 
