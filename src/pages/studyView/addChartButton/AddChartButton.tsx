@@ -105,10 +105,9 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
     }
 
     @autobind
-    private onClearAll(options: ChartOption[]) {
-        const optionsCases = _.map(options, option => option.key);
+    private onClearAll(keys: string[]) {
         this.props.store.updateChartsVisibility(_.reduce(this.selectedAttrs, (acc, attr) => {
-            if (!optionsCases.includes(attr)) {
+            if (!keys.includes(attr)) {
                 acc.push(attr);
             }
             return acc;
@@ -188,9 +187,7 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
                                         freqPromise={this.getClinicalDataCount}
                                         onClose={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.CLOSED)}
                                         onAddAll={this.onAddAll}
-                                        onClear={() => {
-                                            this.onClearAll(this.clinicalDataOptions);
-                                        }}
+                                        onClearAll={this.onClearAll}
                                         onToggleOption={this.onToggleOption}
                         />
                     )
@@ -202,9 +199,7 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
                                         freqPromise={this.getGenomicDataCount}
                                         onClose={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.CLOSED)}
                                         onAddAll={this.onAddAll}
-                                        onClear={() => {
-                                            this.onClearAll(this.genomicDataOptions);
-                                        }}
+                                        onClearAll={this.onClearAll}
                                         onToggleOption={this.onToggleOption}
                         />
                     )

@@ -8,9 +8,8 @@ import {
     TableHeaderProps
 } from 'react-virtualized';
 import 'react-virtualized/styles.css';
-import {action, observable} from "mobx";
+import {action, observable, computed} from "mobx";
 import styles from "./tables.module.scss";
-import studyViewStyles from "pages/studyView/styles.module.scss";
 import * as _ from 'lodash';
 import {observer} from "mobx-react";
 import classnames from 'classnames';
@@ -27,6 +26,8 @@ export type IFixedHeaderTableProps<T> = {
     height?: number;
     showSelectSamples?: boolean;
     afterSelectingRows?: () => void;
+    addAll?: (data:T[]) => void;
+    removeAll?: (data:T[]) => void;
     isSelectedRow?: (data:T) => boolean;
 };
 
@@ -57,25 +58,26 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
         this.initDataStore();
     }
 
-    componentWillReceiveProps() {
-        this.updateDataStore();
+    componentWillReceiveProps(nextProps:any) {
+        this.updateDataStore(nextProps);
     }
 
-    get storeProps() {
-        return {
+    updateDataStore(nextProps:any) {
+        this._store.setProps({
+            columns: nextProps.columns,
+            data: nextProps.data,
+            initialSortColumn: this._sortBy,
+            initialSortDirection: this._sortDirection
+        });
+    }
+
+    initDataStore() {
+        this._store = new LazyMobXTableStore<T>({
             columns: this.props.columns,
             data: this.props.data,
             initialSortColumn: this._sortBy,
             initialSortDirection: this._sortDirection
-        };
-    }
-
-    updateDataStore() {
-        this._store.setProps(this.storeProps);
-    }
-
-    initDataStore() {
-        this._store = new LazyMobXTableStore<T>(this.storeProps);
+        });
     }
 
     @autobind
@@ -131,6 +133,20 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
         }
     }
 
+    @autobind
+    onAddAll() {
+        if (this.props.addAll) {
+            this.props.addAll(this._store.dataStore.sortedFilteredData);
+        }
+    }
+
+    @autobind
+    onRemoveAll() {
+        if (this.props.removeAll) {
+            this.props.removeAll(this._store.dataStore.sortedFilteredData);
+        }
+    }
+
     public render() {
         return (
             <div className={styles.studyViewTablesTable}>
@@ -180,8 +196,22 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                 <div className={classnames(styles.bottomTools)}>
                     <input placeholder={"Search..."} type="text" onInput={this.onFilterTextChange()}
                            className={classnames('form-control', styles.tableSearchInput)}/>
+
+                    <div className={"btn-group"} role={"group"}>
+                        {this.props.addAll && (
+                            <button className="btn btn-default btn-xs" onClick={this.onAddAll}>
+                                Add All
+                            </button>
+                        )}
+                        {this.props.removeAll && (
+                            <button className="btn btn-default btn-xs" onClick={this.onRemoveAll}>
+                                Remove All
+                            </button>
+                        )}
+                    </div>
+
                     <If condition={this.props.showSelectSamples}>
-                        <button className={classnames("btn btn-primary btn-sm", styles.bottomToolsBtn)} onClick={this.afterSelectingRows}>Select Samples</button>
+                        <button className={classnames("btn btn-primary btn-xs", styles.bottomToolsBtn)} onClick={this.afterSelectingRows}>Select Samples</button>
                     </If>
                 </div>
             </div>
