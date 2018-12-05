@@ -44,6 +44,7 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
             MutationTableColumnType.PROTEIN_CHANGE,
             MutationTableColumnType.MUTATION_TYPE,
             MutationTableColumnType.CLONAL,
+            MutationTableColumnType.CANCER_CELL_FRACTION,
             MutationTableColumnType.MUTANT_COPIES,
             MutationTableColumnType.COSMIC,
             MutationTableColumnType.TUMOR_ALLELE_FREQ,
@@ -76,6 +77,7 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT].order = 38;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 40;
         this._columns[MutationTableColumnType.CLONAL].order = 45;
+        this._columns[MutationTableColumnType.CANCER_CELL_FRACTION].order = 46;
         this._columns[MutationTableColumnType.MUTANT_COPIES].order = 47;
         this._columns[MutationTableColumnType.COPY_NUM].order = 50;
         this._columns[MutationTableColumnType.COSMIC].order = 60;
@@ -104,15 +106,19 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
             return !this.hasCcfMCopies;
         };
 
-        this._columns[MutationTableColumnType.MUTANT_COPIES].shouldExclude = () => {
-            return !this.hasTotalCopyNumber;
+        this._columns[MutationTableColumnType.CANCER_CELL_FRACTION].shouldExclude = () => {
+            return !this.hasCcfMCopies;
         };
-        
+
+        this._columns[MutationTableColumnType.MUTANT_COPIES].shouldExclude = () => {
+            return !this.hasMutantCopies;
+        };
+
         this._columns[MutationTableColumnType.NUM_MUTATIONS].shouldExclude = ()=>{
             return !this.props.mutationCountCache;
         };
     }
-    
+
     @computed private get hasCcfMCopies():boolean {
         let data:Mutation[][] = [];
         if (this.props.dataStore) {
@@ -127,16 +133,20 @@ export default class ResultsViewMutationTable extends MutationTable<IResultsView
         });
     }
 
-    @computed private get hasTotalCopyNumber():boolean {
+    @computed private get hasMutantCopies():boolean {
         let data:Mutation[][] = [];
-        if (this.props.dataStore) {
-            data = this.props.dataStore.allData;
-        } else if (this.props.data) {
+        let clinicalData:{[sampleId:string]:ClinicalData[]} = {};
+        if (this.props.sampleIdToClinicalDataMap) {
+            clinicalData = this.props.sampleIdToClinicalDataMap;
+        }
+        if (this.props.data) {
             data = this.props.data;
+        } else if (this.props.dataStore) {
+            data = this.props.dataStore.allData;
         }
         return data.some((row:Mutation[]) => {
             return row.some((m:Mutation) => {
-                return (m.totalCopyNumber !== -1);
+                return (m.totalCopyNumber !== -1 && clinicalData[m.sampleId].filter((cd: ClinicalData) => cd.clinicalAttributeId === "FACETS_PURITY").length > 0);
             });
         });
     }

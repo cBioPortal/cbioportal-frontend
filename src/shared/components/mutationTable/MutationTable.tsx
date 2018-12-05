@@ -16,6 +16,7 @@ import ChromosomeColumnFormatter from "./column/ChromosomeColumnFormatter";
 import ProteinChangeColumnFormatter from "./column/ProteinChangeColumnFormatter";
 import MutationTypeColumnFormatter from "./column/MutationTypeColumnFormatter";
 import ClonalColumnFormatter from "./column/ClonalColumnFormatter";
+import CancerCellFractionColumnFormatter from "./column/CancerCellFractionColumnFormatter";
 import MutantCopiesColumnFormatter from "./column/MutantCopiesColumnFormatter";
 import FunctionalImpactColumnFormatter from "./column/FunctionalImpactColumnFormatter";
 import CosmicColumnFormatter from "./column/CosmicColumnFormatter";
@@ -104,6 +105,7 @@ export enum MutationTableColumnType {
     VALIDATION_STATUS,
     MUTATION_TYPE,
     CLONAL,
+    CANCER_CELL_FRACTION,
     MUTANT_COPIES,
     CENTER,
     TUMOR_ALLELE_FREQ,
@@ -426,6 +428,16 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             tooltip: (<span>FACETS Clonal</span>),
             filter:(d:Mutation[], filterString:string, filterStringUpper:string) =>
                 ClonalColumnFormatter.getDisplayValue(d).toUpperCase().indexOf(filterStringUpper) > -1
+        };
+
+        this._columns[MutationTableColumnType.CANCER_CELL_FRACTION] = {
+            name: "CCF",
+            render:CancerCellFractionColumnFormatter.renderFunction,
+            download:CancerCellFractionColumnFormatter.getCancerCellFractionValue,
+            sortBy:(d:Mutation[])=>CancerCellFractionColumnFormatter.getDisplayValue(d),
+            tooltip: (<span>FACETS Cancer Cell Fraction</span>),
+            filter:(d:Mutation[], filterString:string, filterStringUpper:string) =>
+                CancerCellFractionColumnFormatter.getDisplayValue(d).toUpperCase().indexOf(filterStringUpper) > -1
         };
 
         this._columns[MutationTableColumnType.MUTANT_COPIES] = {

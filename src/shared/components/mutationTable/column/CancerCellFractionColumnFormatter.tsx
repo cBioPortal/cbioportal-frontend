@@ -16,27 +16,14 @@ interface IMutationTypeFormat {
 /**
  * @author Avery Wang
  */
-export default class ClonalColumnFormatter {
+export default class CancerCellFractionColumnFormatter {
     /* Determines the display value by using the impact field.
      *
      * @param data  column formatter data
-     * @returns {string}    "Clonal" text value
+     * @returns {string}    "CancerCellFraction" text value
      */
     public static getDisplayValue(data:Mutation[]):string {
-        return ClonalColumnFormatter.getClonalValue(data);
-    }
-
-    public static getTooltipValue(data:Mutation[]):string {
-        const ccfMCopiesValue = ClonalColumnFormatter.getCcfMCopiesValue(data);
-        if (floatValueIsNA(ccfMCopiesValue)) {
-            return "FACETS data not available";
-        } 
-        return "CCF: " + ClonalColumnFormatter.getTextValue(ccfMCopiesValue);
-    } 
-            
-    public static getCcfMCopiesUpperValue(data:Mutation[]):number {
-        const ccfMCopiesUpperValue = data[0].ccfMCopiesUpper;
-        return ccfMCopiesUpperValue;
+        return CancerCellFractionColumnFormatter.getCancerCellFractionValue(data);
     }
 
     public static getCcfMCopiesValue(data:Mutation[]):number {
@@ -44,15 +31,13 @@ export default class ClonalColumnFormatter {
         return ccfMCopiesValue;
     }
 
-    public static getClonalValue(data:Mutation[]):string {
+    public static getCancerCellFractionValue(data:Mutation[]):string {
         let textValue:string = "";
-        const ccfMCopiesUpperValue = ClonalColumnFormatter.getCcfMCopiesUpperValue(data);
-        if (floatValueIsNA(ccfMCopiesUpperValue)) {
+        const ccfMCopiesValue = CancerCellFractionColumnFormatter.getCcfMCopiesValue(data);
+        if (floatValueIsNA(ccfMCopiesValue)) {
             textValue = "NA";
-        } else if (ccfMCopiesUpperValue === 1) {
-            textValue = "yes";
         } else {
-            textValue = "no";
+            textValue = ccfMCopiesValue.toFixed(2);
         }
         return textValue;
     }
@@ -67,7 +52,7 @@ export default class ClonalColumnFormatter {
 
     public static renderFunction(data:Mutation[]) {
         // use text for all purposes (display, sort, filter)
-        const text:string = ClonalColumnFormatter.getDisplayValue(data);
+        const text:string = CancerCellFractionColumnFormatter.getDisplayValue(data);
         let content = <span>{text}</span>;
         return content;
     }

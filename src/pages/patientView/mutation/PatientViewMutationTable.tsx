@@ -51,6 +51,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             MutationTableColumnType.PROTEIN_CHANGE,
             MutationTableColumnType.MUTATION_TYPE,
             MutationTableColumnType.CLONAL,
+            MutationTableColumnType.CANCER_CELL_FRACTION,
             MutationTableColumnType.MUTANT_COPIES,
             MutationTableColumnType.FUNCTIONAL_IMPACT,
             MutationTableColumnType.COSMIC,
@@ -126,6 +127,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.VALIDATION_STATUS].order = 100;
         this._columns[MutationTableColumnType.MUTATION_TYPE].order = 110;
         this._columns[MutationTableColumnType.CLONAL].order = 115;
+        this._columns[MutationTableColumnType.CANCER_CELL_FRACTION].order = 116;
         this._columns[MutationTableColumnType.MUTANT_COPIES].order = 117;
         this._columns[MutationTableColumnType.CENTER].order = 120;
         this._columns[MutationTableColumnType.TUMOR_ALLELE_FREQ].order = 130;
@@ -149,8 +151,12 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             return !this.hasCcfMCopies;
         };
 
+        this._columns[MutationTableColumnType.CANCER_CELL_FRACTION].shouldExclude = ()=>{
+            return !this.hasCcfMCopies;
+        };
+
         this._columns[MutationTableColumnType.MUTANT_COPIES].shouldExclude = ()=>{
-            return !this.hasTotalCopyNumber;
+            return !this.hasMutantCopies;
         };
 
         this._columns[MutationTableColumnType.TUMORS].shouldExclude = ()=>{
@@ -175,8 +181,12 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         });
     }
 
-    @computed private get hasTotalCopyNumber():boolean {
+    @computed private get hasMutantCopies():boolean {
         let data:Mutation[][] = [];
+        let clinicalData:{[sampleId:string]:ClinicalData[]} = {};
+        if (this.props.sampleIdToClinicalDataMap) {
+            clinicalData = this.props.sampleIdToClinicalDataMap;
+        }
         if (this.props.data) {
             data = this.props.data;
         } else if (this.props.dataStore) {
@@ -184,7 +194,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         }
         return data.some((row:Mutation[]) => {
             return row.some((m:Mutation) => {
-                return (m.totalCopyNumber !== -1);
+                return (m.totalCopyNumber !== -1 && clinicalData[m.sampleId].filter((cd: ClinicalData) => cd.clinicalAttributeId === "FACETS_PURITY").length > 0);
             });
         });
     }
