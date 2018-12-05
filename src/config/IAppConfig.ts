@@ -4,6 +4,7 @@ export interface IAppConfig {
     configurationServiceUrl?: string;
     frontendUrl?: string;
     serverConfig:IServerConfig;
+    hide_login?:boolean;
 }
 
 export type PriorityStudies = {
