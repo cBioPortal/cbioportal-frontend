@@ -125,6 +125,17 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
         return _.sumBy(this.props.data, obj => obj.count);
     }
 
+    @autobind
+    addAll(selectedRows: ClinicalDataCountWithColor[]) {
+        this.props.onUserSelection(selectedRows.map(row => row.value));
+    }
+
+    @autobind
+    removeAll(deselectedRows: ClinicalDataCountWithColor[]) {
+        const deselectRows = deselectedRows.map(row => row.value);
+        this.props.onUserSelection(this.props.filters.filter(filter => !_.includes(deselectRows, filter)));
+    }
+
     render() {
         return (
             <ClinicalTableComponent
@@ -132,6 +143,8 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
                 height={this.props.height}
                 data={this.props.data || []}
                 columns={this._columns}
+                addAll={this.addAll}
+                removeAll={this.removeAll}
                 sortBy='#'
             />
         )
