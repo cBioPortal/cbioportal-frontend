@@ -113,6 +113,9 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             clearChartSampleIdentifierFilter: (chartMeta: ChartMeta) => {
                 this.store.clearChartSampleIdentifierFilter(chartMeta);
             },
+            isChartHighlighted:(uniqueKey: string) => {
+                return this.store.isChartHighlighted(uniqueKey);
+            },
             clearAllFilters: () => {
                 this.store.clearAllFilters();
             },
@@ -128,6 +131,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             title: chartMeta.displayName,
             filters: [],
             onDeleteChart: this.handlers.onDeleteChart,
+            isChartHighlighted: this.handlers.isChartHighlighted,
             analysisGroupsPossible:this.store.analysisGroupsPossible,
             setAnalysisGroupsSettings: (attribute:ClinicalAttribute, grps:ReadonlyArray<AnalysisGroup>)=>{
                 this.store.updateAnalysisGroupsSettings(attribute, grps);
