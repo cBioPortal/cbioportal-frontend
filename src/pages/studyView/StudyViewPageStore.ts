@@ -1166,7 +1166,7 @@ export class StudyViewPageStore {
                 await: () => {
                     if (this.isInitialFilterState && _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined) {
                         return [this.initialVisibleAttributesClinicalDataBinCountData];
-                    } else if (this._clinicalDataIntervalFilterSet.has(uniqueKey)) {
+                    } else if (!this.chartsAreFiltered || this._clinicalDataIntervalFilterSet.has(uniqueKey)) {
                         return [];
                     } else {
                         return [this.unfilteredClinicalDataBinCount];
@@ -1180,7 +1180,7 @@ export class StudyViewPageStore {
                     if (this.isInitialFilterState && _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined) {
                         result = this.initialVisibleAttributesClinicalDataBinCountData.result;
                     } else {
-                        if (this._clinicalDataIntervalFilterSet.has(uniqueKey)) {
+                        if (!this.chartsAreFiltered || this._clinicalDataIntervalFilterSet.has(uniqueKey)) {
                             result = await internalClient.fetchClinicalDataBinCountsUsingPOST({
                                 dataBinMethod,
                                 clinicalDataBinCountFilter: {
