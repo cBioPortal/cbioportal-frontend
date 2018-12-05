@@ -1,8 +1,9 @@
 import { assert } from 'chai';
 import React from 'react';
+import * as _ from 'lodash';
 import {
     calculateAssociation, countOccurences, calculatePValue, calculateLogOddsRatio, getMutuallyExclusiveCounts,
-    getCountsText, getData, getFilteredData, formatPValue, formatPValueWithStyle, formatLogOddsRatio, calculateAdjustedPValue
+    getTrackPairsCountText, getData, getFilteredData, formatPValue, formatPValueWithStyle, formatLogOddsRatio, calculateAdjustedPValue
 } from "./MutualExclusivityUtil";
 import { MutualExclusivity } from "../../../shared/model/MutualExclusivity";
 import expect from 'expect';
@@ -265,41 +266,12 @@ describe("MutualExclusivityUtil", () => {
             });
     }); */
 
-/*     describe("#getCountsText()", () => {
+    describe("#getCountsText()", () => {
         it("returns correct text", () => {
-
-            const data: MutualExclusivity[] = [
-                {
-                    "trackA": "EGFR",
-                    "trackB": "KRAS",
-                    "neitherCount": 0,
-                    "aNotBCount": 5,
-                    "bNotACount": 5,
-                    "bothCount": 0,
-                    "logOddsRatio": -6.51,
-                    "pValue": 0.02,
-                    "adjustedPValue": 0.04,
-                    "association": "Mutual exclusivity"
-                },
-                {
-                    "trackA": "EGFR",
-                    "trackB": "TP53",
-                    "neitherCount": 2,
-                    "aNotBCount": 5,
-                    "bNotACount": 3,
-                    "bothCount": 0,
-                    "logOddsRatio": -2.1,
-                    "pValue": 0.001,
-                    "adjustedPValue": 0.002,
-                    "association": "Mutual exclusivity"
-                }
-            ];
-            const result = getCountsText(data);
-            expect(result).toEqualJSX(<p>The query contains <span><b>2</b> gene pairs</span> with mutually exclusive
-                alterations<span> (<b>2</b> significant)</span>, and <span><b>no</b> gene pair</span> with co-occurrent
-                alterations.</p>);
+            const result = getTrackPairsCountText(exampleData, _.size(isSampleAlteredMap));
+            expect(result).toEqualJSX(<p>The analysis tested <b>6</b> pairs of the <b>4</b> tracks in OncoPrint.</p>);
         });
-    }); */
+    });
 
     describe("#getData()", () => {
         it("returns correct data", () => {
