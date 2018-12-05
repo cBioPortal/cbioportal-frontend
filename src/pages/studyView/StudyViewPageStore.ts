@@ -1113,7 +1113,7 @@ export class StudyViewPageStore {
                 await: () => {
                     if (this.isInitialFilterState && _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined) {
                         return [this.initialVisibleAttributesClinicalDataCountData];
-                    } else if (this._clinicalDataEqualityFilterSet.has(uniqueKey)) {
+                    } else if (!this.chartsAreFiltered || this._clinicalDataEqualityFilterSet.has(uniqueKey)) {
                         return [];
                     } else {
                         return [this.unfilteredClinicalDataCount];
@@ -1125,7 +1125,11 @@ export class StudyViewPageStore {
                     if (this.isInitialFilterState && _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined) {
                         result = this.initialVisibleAttributesClinicalDataCountData.result;
                     } else {
-                        if (this._clinicalDataEqualityFilterSet.has(uniqueKey)) {
+                        // Mostly the case when user adds new chart. It would be nice only fetching
+                        // the chart specific data instead of using the unfilteredClinicalDataCount which will require
+                        // all unfiltered clinical attributes data.
+
+                        if (!this.chartsAreFiltered || this._clinicalDataEqualityFilterSet.has(uniqueKey)) {
                             result = await internalClient.fetchClinicalDataCountsUsingPOST({
                                 clinicalDataCountFilter: {
                                     attributes: [{
