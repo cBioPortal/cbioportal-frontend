@@ -959,7 +959,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     public render() {
         return (
-            <div className="posRelative">
+            <div>
 
                 <LoadingIndicator isLoading={this.isHidden} size={"big"} center={true} className="oncoprintLoadingIndicator">
                     <div style={{marginTop:20}}>
