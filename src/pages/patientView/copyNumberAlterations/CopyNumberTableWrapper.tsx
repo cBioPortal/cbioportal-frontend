@@ -46,6 +46,7 @@ type ICopyNumberTableWrapperProps = {
     columnVisibility?: {[columnId: string]: boolean};
     columnVisibilityProps?: IColumnVisibilityControlsProps;
     status:"loading"|"available"|"unavailable";
+    onGeneClick?: (hugoSymbol: string) => void;
 };
 
 
@@ -73,7 +74,14 @@ export default class CopyNumberTableWrapper extends React.Component<ICopyNumberT
 
         columns.push({
             name: "Gene",
-            render: (d:DiscreteCopyNumberData[])=><span>{d[0].gene.hugoGeneSymbol}</span>,
+            render: (d:DiscreteCopyNumberData[]) => (
+                <span
+                    onClick={() => this.props.onGeneClick && this.props.onGeneClick(d[0].gene.hugoGeneSymbol)}
+                    style={{cursor: "pointer"}}
+                >
+                    {d[0].gene.hugoGeneSymbol}
+                </span>
+            ),
             filter: (d:DiscreteCopyNumberData[], filterString:string, filterStringUpper:string)=>{
                 return d[0].gene.hugoGeneSymbol.indexOf(filterStringUpper) > -1;
             },

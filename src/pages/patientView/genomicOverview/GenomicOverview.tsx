@@ -1,14 +1,16 @@
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 import * as _ from 'lodash';
-import $ from 'jquery';
 import {If, Then, Else} from 'react-if';
-import Tracks from './Tracks';
 import {ThumbnailExpandVAFPlot} from '../vafPlot/ThumbnailExpandVAFPlot';
-import {Mutation, Sample} from "../../../shared/api/generated/CBioPortalAPI";
-import SampleManager from "../sampleManager";
-import {ClinicalDataBySampleId} from "../../../shared/api/api-types-extended";
 import {MutationFrequenciesBySample} from "../vafPlot/VAFPlot";
+import {ClinicalDataBySampleId} from "shared/api/api-types-extended";
+import {CopyNumberSeg, Mutation, Sample} from "shared/api/generated/CBioPortalAPI";
+import IntegrativeGenomicsViewer from "shared/components/igv/IntegrativeGenomicsViewer";
+import {
+    WHOLE_GENOME, calcSegmentTrackHeight, defaultSegmentTrackProps, generateSegmentFeatures
+} from "shared/lib/IGVUtils";
+import {getColorForProteinImpactType} from "shared/lib/MutationUtils";
+import SampleManager from "../sampleManager";
 
 interface IGenomicOverviewProps {
     mergedMutations: Mutation[][];
@@ -19,13 +21,21 @@ interface IGenomicOverviewProps {
     sampleColors: {[s:string]:string};
     sampleManager: SampleManager;
     containerWidth: number;
+    locus?: string;
 }
 
 export default class GenomicOverview extends React.Component<IGenomicOverviewProps, { frequencies:MutationFrequenciesBySample }> {
 
+    public static defaultProps: Partial<IGenomicOverviewProps> = {
+        locus: WHOLE_GENOME
+    };
+
     shouldComponentUpdate(nextProps:IGenomicOverviewProps){
-        // only rerender to resize
-        return nextProps.containerWidth !== this.props.containerWidth;
+        // only rerender to resize or to search
+        return (
+            nextProps.containerWidth !== this.props.containerWidth ||
+            nextProps.locus !== this.props.locus
+        );
     }
 
     constructor(props:IGenomicOverviewProps) {
@@ -45,6 +55,50 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
 
     }*/
 
+    public get tracks() {
+        const tracks: any[] = [];
+
+        if (this.props.cnaSegments.length > 0) {
+            // sort segments by sample order
+            const segFeatures = generateSegmentFeatures(this.props.cnaSegments.sort(
+                (a: CopyNumberSeg, b: CopyNumberSeg) =>
+                    this.props.sampleOrder[a.sampleId] - this.props.sampleOrder[b.sampleId])
+            );
+
+            const segHeight = calcSegmentTrackHeight(segFeatures);
+
+            tracks.push({
+                ...defaultSegmentTrackProps(),
+                height: segHeight,
+                features: segFeatures
+            });
+        }
+
+        // TODO enable this for mutation track
+        // if (this.props.mergedMutations.length > 0) {
+        //     const mutFeatures = _.flatten(this.props.mergedMutations).map(mutation => ({
+        //         // TODO sampleKey: mutation.uniqueSampleKey,
+        //         sample: mutation.sampleId,
+        //         chr: mutation.gene.chromosome,
+        //         start: mutation.startPosition,
+        //         end: mutation.endPosition,
+        //         proteinChange: mutation.proteinChange,
+        //         mutationType: mutation.mutationType,
+        //         color: getColorForProteinImpactType([mutation])
+        //     }));
+        //
+        //     tracks.push({
+        //         type: "annotation",
+        //         visibilityWindow: 3088286401,
+        //         displayMode: "FILL",
+        //         name: "MUT",
+        //         height: 25,
+        //         features: mutFeatures
+        //     });
+        // }
+
+        return tracks;
+    }
 
     public render() {
 
@@ -55,13 +109,12 @@ export default class GenomicOverview extends React.Component<IGenomicOverviewPro
 
         return (
             <div style={{ display:'flex' }}>
-                <Tracks mutations={_.flatten(this.props.mergedMutations)}
-                        key={Math.random() /* Force remounting on every render */}
-                        sampleManager={this.props.sampleManager}
-                        width={this.getTracksWidth()}
-                        cnaSegments={this.props.cnaSegments}
-                        samples={this.props.samples}
-                />
+                <span style={{width: this.getTracksWidth()}}>
+                    <IntegrativeGenomicsViewer
+                        tracks={this.tracks}
+                        locus={this.props.locus}
+                    />
+                </span>
                 <If condition={this.shouldShowVAFPlot()}>
                     <ThumbnailExpandVAFPlot
                         data={this.state.frequencies}

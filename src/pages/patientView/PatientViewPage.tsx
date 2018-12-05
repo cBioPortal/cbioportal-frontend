@@ -79,6 +79,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     @observable private mutationTableColumnVisibility: {[columnId: string]: boolean}|undefined;
     @observable private cnaTableColumnVisibility: {[columnId: string]: boolean}|undefined;
+    @observable private activeLocus: string|undefined;
 
     constructor(props: IPatientViewPageProps) {
 
@@ -194,6 +195,11 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     @autobind
     private customTabMountCallback(div:HTMLDivElement,tab:any){
         showCustomTab(div, tab, this.props.routing.location, patientViewPageStore);
+    }
+
+    @autobind
+    private handleCNATableGeneClick(hugoGeneSymbol: string) {
+        this.activeLocus = hugoGeneSymbol;
     }
 
     private wholeSlideViewerUrl = remoteData<string | undefined>({
@@ -404,6 +410,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                                     sampleColors={sampleManager.sampleColors}
                                                     sampleManager={sampleManager}
                                                     containerWidth={WindowStore.size.width-20}
+                                                    locus={this.activeLocus}
                                                 />
                                                 <hr />
                                             </div>
@@ -461,29 +468,29 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         (patientViewPageStore.studyIdToStudy.isComplete) && (
                                             <CopyNumberTableWrapper
                                             studyIdToStudy={patientViewPageStore.studyIdToStudy.result}
-                                            sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
-                                            sampleManager={sampleManager}
-                                            cnaOncoKbData={patientViewPageStore.cnaOncoKbData}
-                                            cnaCivicGenes={patientViewPageStore.cnaCivicGenes}
-                                            cnaCivicVariants={patientViewPageStore.cnaCivicVariants}
-                                            oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
-                                            oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
-                                            enableOncoKb={AppConfig.serverConfig.show_oncokb}
-                                            enableCivic={AppConfig.serverConfig.show_civic}
-                                            userEmailAddress={AppConfig.serverConfig.user_email_address}
-                                            pubMedCache={patientViewPageStore.pubMedCache}
-                                            data={patientViewPageStore.mergedDiscreteCNAData}
-                                            copyNumberCountCache={patientViewPageStore.copyNumberCountCache}
-                                            mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
-                                            gisticData={patientViewPageStore.gisticData.result}
-                                            mrnaExprRankMolecularProfileId={patientViewPageStore.mrnaRankMolecularProfileId.result || undefined}
-                                            status={this.cnaTableStatus}
-                                            columnVisibility={this.cnaTableColumnVisibility}
-                                            columnVisibilityProps={{
-                                                onColumnToggled: this.onCnaTableColumnVisibilityToggled
-                                            }}
-                                        />
-                                        )
+                                        sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
+                                        sampleManager={sampleManager}
+                                        cnaOncoKbData={patientViewPageStore.cnaOncoKbData}
+                                        cnaCivicGenes={patientViewPageStore.cnaCivicGenes}
+                                        cnaCivicVariants={patientViewPageStore.cnaCivicVariants}
+                                        oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
+                                        oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
+                                        enableOncoKb={AppConfig.serverConfig.show_oncokb}
+                                        enableCivic={AppConfig.serverConfig.show_civic}
+                                        userEmailAddress={AppConfig.serverConfig.user_email_address}
+                                        pubMedCache={patientViewPageStore.pubMedCache}
+                                        data={patientViewPageStore.mergedDiscreteCNAData}
+                                        copyNumberCountCache={patientViewPageStore.copyNumberCountCache}
+                                        mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
+                                        gisticData={patientViewPageStore.gisticData.result}
+                                        mrnaExprRankMolecularProfileId={patientViewPageStore.mrnaRankMolecularProfileId.result || undefined}
+                                        status={this.cnaTableStatus}
+                                        columnVisibility={this.cnaTableColumnVisibility}
+                                        columnVisibilityProps={{
+                                            onColumnToggled: this.onCnaTableColumnVisibilityToggled
+                                        }}
+                                        onGeneClick={this.handleCNATableGeneClick}
+                                    />)
                                     }
                                 </MSKTab>
 
@@ -510,7 +517,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             )
                             }
                         </div>
-                        
+
                     </MSKTab>
 
 
