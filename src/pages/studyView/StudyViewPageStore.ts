@@ -259,6 +259,8 @@ export class StudyViewPageStore {
     // ChartContainer should be modified, instead of accepting a promise, it should accept data and loading state.
     @observable private _chartVisibility = observable.map<boolean>();
 
+    @observable private _chartToBeHighlighted = observable.map<Date>();
+
     @observable geneQueryStr: string;
 
     @observable private geneQueries: SingleGeneQuery[] = [];
@@ -270,6 +272,27 @@ export class StudyViewPageStore {
     @observable private chartsDimension = observable.map<ChartDimension>();
 
     @observable private chartsType = observable.map<ChartType>();
+
+    // We highlight newly added charts by comparing the updated time.
+    // Chart visibility is computed and does not carry any status to indicate a chart is newly added except creating
+    // a new observable map to record the time. The highlight style will no be updated until user interects with the
+    // chart.
+    @autobind
+    isChartHighlighted(uniqueKey: string): boolean {
+        // Highlight survival analysis chart
+        if (this.analysisGroupsSettings.clinicalAttribute &&
+            (getClinicalAttributeUniqueKey(this.analysisGroupsSettings.clinicalAttribute) === uniqueKey)) {
+            return true;
+        }
+        const date = this._chartToBeHighlighted.get(uniqueKey);
+        if (date === undefined) {
+            return false;
+        } else if (new Date().getTime() - date.getTime() < STUDY_VIEW_CONFIG.thresholds.chartHighlight) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     @action
     updateStoreFromURL(query: Partial<StudyViewURLQuery>) {
@@ -894,9 +917,12 @@ export class StudyViewPageStore {
                 this._chartVisibility.delete(chartId);
             }
         })
-        _.each(visibleChartIds,attributeId=>{
-            this._chartVisibility.set(attributeId,true);
-        })
+        _.each(visibleChartIds,uniqueKey=>{
+            if(this._chartVisibility.get(uniqueKey) === undefined) {
+                this._chartVisibility.set(uniqueKey, true);
+                this._chartToBeHighlighted.set(uniqueKey, new Date());
+            }
+        });
     }
 
     @computed get clinicalDataEqualityFilters() {

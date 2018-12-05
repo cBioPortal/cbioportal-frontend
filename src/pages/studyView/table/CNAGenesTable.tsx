@@ -78,7 +78,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             sortBy: (data: CopyNumberCountByGene) => data.hugoGeneSymbol,
             defaultSortDirection: 'asc' as 'asc',
             filter: (data: CopyNumberCountByGene, filterString: string, filterStringUpper: string) => {
-                return data.hugoGeneSymbol.indexOf(filterStringUpper) > -1;
+                return data.hugoGeneSymbol.toUpperCase().includes(filterStringUpper);
             },
             width: 90
         },
@@ -89,7 +89,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             sortBy: (data: CopyNumberCountByGene) => data.cytoband,
             defaultSortDirection: 'asc' as 'asc',
             filter: (data: CopyNumberCountByGene, filterString: string, filterStringUpper: string) => {
-                return _.isUndefined(data.cytoband) ? false : data.cytoband.indexOf(filterStringUpper) > -1;
+                return _.isUndefined(data.cytoband) ? false : data.cytoband.toUpperCase().includes(filterStringUpper);
             },
             width: 105
         },
@@ -103,7 +103,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             sortBy: (data: CopyNumberCountByGene) => data.alteration,
             defaultSortDirection: 'asc' as 'asc',
             filter: (data: CopyNumberCountByGene, filterString: string, filterStringUpper: string) => {
-                return getCNAByAlteration(data.alteration).indexOf(filterStringUpper) > -1;
+                return getCNAByAlteration(data.alteration).includes(filterStringUpper);
             },
             width: 50
         },
@@ -120,8 +120,8 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                 </LabeledCheckbox>,
             sortBy: (data: CopyNumberCountByGene) => data.countByEntity,
             defaultSortDirection: 'desc' as 'desc',
-            filter: (data: CopyNumberCountByGene, filterString: string, filterStringUpper: string) => {
-                return _.toString(data.countByEntity).indexOf(filterStringUpper) > -1;
+            filter: (data: CopyNumberCountByGene, filterString: string) => {
+                return _.toString(data.countByEntity).includes(filterString);
             },
             width: 85
         },
@@ -131,8 +131,8 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             render: (data: CopyNumberCountByGene) => <span>{getFrequencyStr(data.frequency)}</span>,
             sortBy: (data: CopyNumberCountByGene) => data.frequency,
             defaultSortDirection: 'desc' as 'desc',
-            filter: (data: CopyNumberCountByGene, filterString: string, filterStringUpper: string) => {
-                return _.toString(data.frequency).indexOf(filterStringUpper) > -1;
+            filter: (data: CopyNumberCountByGene, filterString: string) => {
+                return _.toString(getFrequencyStr(data.frequency)).includes(filterString);
             },
             width: 70
         }
