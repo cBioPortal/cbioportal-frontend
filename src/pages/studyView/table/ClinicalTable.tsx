@@ -62,7 +62,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
             )
         },
         tooltip: this.props.labelDescription ? (<span>{this.props.labelDescription}</span>) : undefined,
-        filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => (d.value.toUpperCase().indexOf(filterStringUpper) > -1),
+        filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => (d.value.toUpperCase().includes(filterStringUpper)),
         sortBy: (d: ClinicalDataCountWithColor) => d.value,
         defaultSortDirection: 'asc' as 'asc',
         width: this.columnWidth[0]
@@ -76,7 +76,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
             </LabeledCheckbox>,
         tooltip: (
             <span>Number of {this.props.patientAttribute ? 'patients' : 'samples'}</span>),
-        filter: (d: ClinicalDataCountWithColor, f: string) => (d.count.toString().indexOf(f) > -1),
+        filter: (d: ClinicalDataCountWithColor, f: string) => (d.count.toString().includes(f)),
         sortBy: (d: ClinicalDataCountWithColor) => d.count,
         defaultSortDirection: 'desc' as 'desc',
         width: this.columnWidth[1]
@@ -88,7 +88,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
             <span>Percentage of {this.props.patientAttribute ? 'patients' : 'samples'}</span>),
         filter: (d: ClinicalDataCountWithColor, f: string) => {
             let freq = getFrequencyStr((d.count / this.totalCount) * 100);
-            return (freq.indexOf(f) > -1)
+            return (freq.includes(f))
         },
         sortBy: (d: ClinicalDataCountWithColor) => d.count,//sort freq column using count
         defaultSortDirection: 'desc' as 'desc',
@@ -133,7 +133,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
     @autobind
     removeAll(deselectedRows: ClinicalDataCountWithColor[]) {
         const deselectRows = deselectedRows.map(row => row.value);
-        this.props.onUserSelection(this.props.filters.filter(filter => !_.includes(deselectRows, filter)));
+        this.props.onUserSelection(this.props.filters.filter(filter => !deselectRows.includes(filter)));
     }
 
     render() {

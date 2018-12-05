@@ -269,6 +269,10 @@ export class StudyViewPageStore {
 
     @observable private chartsType = observable.map<ChartType>();
 
+    // We highlight newly added charts by comparing the updated time.
+    // Chart visibility is computed and does not carry any status to indicate a chart is newly added except creating
+    // a new observable map to record the time. The highlight style will no be updated until user interects with the
+    // chart.
     @autobind
     isChartHighlighted(uniqueKey: string): boolean {
         // Highlight survival analysis chart
@@ -279,7 +283,7 @@ export class StudyViewPageStore {
         const date = this._chartToBeHighlighted.get(uniqueKey);
         if (date === undefined) {
             return false;
-        } else if (new Date().getTime() - date.getTime() < 5000) {
+        } else if (new Date().getTime() - date.getTime() < STUDY_VIEW_CONFIG.thresholds.chartHighlight) {
             return true;
         } else {
             return false;

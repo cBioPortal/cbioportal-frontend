@@ -79,7 +79,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             sortBy: (data: MutationCountByGene) => data.hugoGeneSymbol,
             defaultSortDirection: 'asc' as 'asc',
             filter: (data: MutationCountByGene, filterString: string, filterStringUpper: string) => {
-                return data.hugoGeneSymbol.toUpperCase().indexOf(filterStringUpper) > -1;
+                return data.hugoGeneSymbol.toUpperCase().includes(filterStringUpper);
             },
             width: 150
         },
@@ -90,7 +90,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             sortBy: (data: MutationCountByGene) => data.totalCount,
             defaultSortDirection: 'desc' as 'desc',
             filter: (data: MutationCountByGene, filterString: string) => {
-                return _.toString(data.totalCount).indexOf(filterString) > -1;
+                return _.toString(data.totalCount).includes(filterString);
             },
             width: 90
         },
@@ -108,7 +108,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             sortBy: (data: MutationCountByGene) => data.countByEntity,
             defaultSortDirection: 'desc' as 'desc',
             filter: (data: MutationCountByGene, filterString: string) => {
-                return _.toString(data.countByEntity).indexOf(filterString) > -1;
+                return _.toString(data.countByEntity).includes(filterString);
             },
             width: 90
         },
@@ -119,7 +119,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             sortBy: (data: MutationCountByGene) => data.frequency,
             defaultSortDirection: 'desc' as 'desc',
             filter: (data: MutationCountByGene, filterString: string, filterStringUpper: string) => {
-                return _.toString(getFrequencyStr(data.frequency)).indexOf(filterString) > -1;
+                return _.toString(getFrequencyStr(data.frequency)).includes(filterString);
             },
             width: 70
         }
