@@ -132,7 +132,7 @@ describe('StudyViewUtils', () => {
                     },
                     genes
                 ).startsWith('4 samples from 2 studies:\n- Study 1 (2 samples)\n- Study 2 (2 samples)\n\nFilters:\n- CNA Genes:\n' +
-                    '  - GENE2-DEL\n- Mutated Genes:\n  - GENE1\n- attribute1 name: value1\n- attribute2 name: 10 < ~ ≤ 0\n' +
+                    '  - GENE2-DEL\n- Mutated Genes:\n  - GENE1\n- attribute1 name: value1\n- attribute2 name: 10 < x ≤ 0\n' +
                     '- attribute3 name: 2 samples'));
         });
         it('when username is not null', () => {
@@ -818,12 +818,12 @@ describe('StudyViewUtils', () => {
 
         it ('generates display value for filter values with both ends closed', () => {
             const value = intervalFiltersDisplayValue(filterValuesWithBothEndsClosed);
-            assert.equal(value, "10 < ~ ≤ 50");
+            assert.equal(value, "10 < x ≤ 50");
         });
 
         it ('generates display value for filter values with both ends closed, with special values', () => {
             const value = intervalFiltersDisplayValue(filterValuesWithBothEndsClosedAndSpecialValues);
-            assert.equal(value, "10 < ~ ≤ 50, NA, REDACTED");
+            assert.equal(value, "10 < x ≤ 50, NA, REDACTED");
         });
 
         it ('generates display value for filter values with both ends open', () => {
@@ -863,12 +863,12 @@ describe('StudyViewUtils', () => {
 
         it ('generates display value for filter values with distinct values only', () => {
             const value = intervalFiltersDisplayValue(filterValuesWithDistinctNumerals);
-            assert.equal(value, "20 ≤ ~ ≤ 40");
+            assert.equal(value, "20 ≤ x ≤ 40");
         });
 
         it ('generates display value for filter values with distinct values and special values', () => {
             const value = intervalFiltersDisplayValue(filterValuesWithDistinctNumeralsAndSpecialValues);
-            assert.equal(value, "20 ≤ ~ ≤ 40, NA, REDACTED");
+            assert.equal(value, "20 ≤ x ≤ 40, NA, REDACTED");
         });
 
         it ('generates display value for filter values with a single distinct value', () => {
