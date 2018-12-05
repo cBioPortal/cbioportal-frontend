@@ -17,7 +17,7 @@ import styles from './styles.module.scss';
 import SelectedInfo from "./SelectedInfo/SelectedInfo";
 import LabeledCheckbox from "../../shared/components/labeledCheckbox/LabeledCheckbox";
 import {Alert} from 'react-bootstrap';
-import {getMDAndersonHeatmapStudyUrl} from "../../shared/api/urls";
+import AddChartButton from "./addChartButton/AddChartButton";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -90,6 +90,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                       url={`//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this.store.MDACCHeatmapStudyMeta.result[0]}`}/>
                                     </MSKTab>
                                 </MSKTabs>
+
+                                {this.props.routing.location.query.tab === 'summary' &&
+                                <AddChartButton store={this.store}/>}
 
                                 <div className={styles.selectedInfo}>
                                     <SelectedInfo selectedSamples={this.store.selectedSamples.result}/>
