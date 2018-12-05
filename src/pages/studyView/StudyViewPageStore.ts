@@ -154,7 +154,6 @@ export type StudyViewURLQuery = {
     studyId: string,
     filters: string,
 }
-export const CUSTOM_CHART_KEYS = [UniqueKey.SAMPLES_PER_PATIENT, UniqueKey.CANCER_STUDIES];
 
 export const SpecialCharts: ChartMeta[] = [{
     uniqueKey: UniqueKey.SAMPLES_PER_PATIENT,
@@ -231,6 +230,11 @@ export class StudyViewPageStore {
 
     constructor() {
         reaction(()=>this.filters, ()=>this.clearAnalysisGroupsSettings()); // whenever any data filters change, reset survival analysis settings
+        reaction(()=>this.loadingInitialDataForSummaryTab, ()=>{
+            if(!this.loadingInitialDataForSummaryTab){
+                this.updateChartStats();
+            }
+        });
     }
 
     @observable private initialFiltersQuery: Partial<StudyViewFilter> = {};
@@ -525,7 +529,7 @@ export class StudyViewPageStore {
                 },{
                     value: SELECTED_ANALYSIS_GROUP_VALUE,
                     // In the initial load when no case selected(the same affect of all cases selected), the curve should be shown as blue instead of red
-                    color: isFiltered(this.userSelections) ? STUDY_VIEW_CONFIG.colors.theme.selectedGroup : STUDY_VIEW_CONFIG.colors.theme.unselectedGroup,
+                    color: this.chartsAreFiltered ? STUDY_VIEW_CONFIG.colors.theme.selectedGroup : STUDY_VIEW_CONFIG.colors.theme.unselectedGroup,
                     legendText: "Selected patients"
                 }] as AnalysisGroup[]
             }
@@ -1096,6 +1100,12 @@ export class StudyViewPageStore {
         default: []
     });
 
+    @autobind
+    @action
+    hideChart(uniqueKey: string) {
+        this.changeChartVisibility(uniqueKey, false);
+    }
+
     public getClinicalDataCount(chartMeta: ChartMeta) {
         let uniqueKey:string = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!);
         if(!this.clinicalDataCountPromises.hasOwnProperty(uniqueKey)) {
@@ -1477,14 +1487,7 @@ export class StudyViewPageStore {
         invoke: async ()=>{
             return this.molecularProfiles.result.filter(profile => profile.molecularAlterationType === "MUTATION_EXTENDED")
         },
-        default: [],
-        onResult:(mutationProfiles)=>{
-            if (!_.isEmpty(mutationProfiles)) {
-                this.changeChartVisibility(UniqueKey.MUTATED_GENES_TABLE, true);
-                this.chartsType.set(UniqueKey.MUTATED_GENES_TABLE, ChartTypeEnum.MUTATED_GENES_TABLE);
-                this.chartsDimension.set(UniqueKey.MUTATED_GENES_TABLE, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.MUTATED_GENES_TABLE])
-            }
-        }
+        default: []
     });
 
 
@@ -1496,14 +1499,7 @@ export class StudyViewPageStore {
             .filter(profile => profile.molecularAlterationType === "COPY_NUMBER_ALTERATION" && profile.datatype === "DISCRETE")
 
         },
-        default: [],
-        onResult:(cnaProfiles)=>{
-            if (!_.isEmpty(cnaProfiles)) {
-                this.changeChartVisibility(UniqueKey.CNA_GENES_TABLE, true);
-                this.chartsType.set(UniqueKey.CNA_GENES_TABLE, ChartTypeEnum.CNA_GENES_TABLE);
-                this.chartsDimension.set(UniqueKey.CNA_GENES_TABLE, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.CNA_GENES_TABLE])
-            }
-        }
+        default: []
     });
 
     readonly clinicalAttributes = remoteData({
@@ -1513,39 +1509,7 @@ export class StudyViewPageStore {
         }),
         default: [],
         onResult:(clinicalAttributes)=>{
-            let osStatusFlag = false;
-            let osMonthsFlag = false;
-            let dfsStatusFlag = false;
-            let dfsMonthsFlag = false;
-            let mutationCountFlag = false;
-            let fractionGenomeAlteredFlag = false;
-
             clinicalAttributes.forEach((obj:ClinicalAttribute) => {
-                const uniqueKey = getClinicalAttributeUniqueKey(obj);
-                if (obj.priority !== "0") {
-                    if (obj.clinicalAttributeId === OS_STATUS) {
-                        osStatusFlag = true;
-                    } else if (obj.clinicalAttributeId === OS_MONTHS) {
-                        osMonthsFlag = true;
-                    } else if (obj.clinicalAttributeId === DFS_STATUS) {
-                        dfsStatusFlag = true;
-                    } else if (obj.clinicalAttributeId === DFS_MONTHS) {
-                        dfsMonthsFlag = true;
-                    } else if (MUTATION_COUNT === obj.clinicalAttributeId) {
-                        mutationCountFlag = true;
-                    } else if (FRACTION_GENOME_ALTERED === obj.clinicalAttributeId) {
-                        fractionGenomeAlteredFlag = true;
-                    }
-                }
-
-                if (obj.datatype === 'NUMBER') {
-                    this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
-                    this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.BAR_CHART]);
-                } else {
-                    this.chartsType.set(uniqueKey, ChartTypeEnum.PIE_CHART);
-                    this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.PIE_CHART]);
-                }
-
                 if(obj.datatype === 'NUMBER') {
                     const uniqueKey = getClinicalAttributeUniqueKey(obj);
                     let filter = {
@@ -1559,36 +1523,6 @@ export class StudyViewPageStore {
                     }
                     this._clinicalDataBinFilterSet.set(uniqueKey, filter);
                 }
-            });
-
-            const cancerTypeIds = _.uniq(this.queriedPhysicalStudies.result.map(study=>study.cancerTypeId));
-
-            if (osStatusFlag && osMonthsFlag && getDefaultPriorityByUniqueKey(UniqueKey.OVERALL_SURVIVAL) !== 0) {
-                this.chartsType.set(UniqueKey.OVERALL_SURVIVAL, ChartTypeEnum.SURVIVAL);
-                this.chartsDimension.set(UniqueKey.OVERALL_SURVIVAL, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SURVIVAL]);
-                // hide OVERALL_SURVIVAL chart if cacner type is mixed or have moer than one cancer type
-                if(cancerTypeIds.length === 1 && cancerTypeIds[0] !== 'mixed') {
-                    this.changeChartVisibility(UniqueKey.OVERALL_SURVIVAL, true);
-                }
-            }
-            if (dfsStatusFlag && dfsMonthsFlag && getDefaultPriorityByUniqueKey(UniqueKey.DISEASE_FREE_SURVIVAL) !== 0) {
-                this.chartsType.set(UniqueKey.DISEASE_FREE_SURVIVAL, ChartTypeEnum.SURVIVAL);
-                this.chartsDimension.set(UniqueKey.DISEASE_FREE_SURVIVAL, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SURVIVAL]);
-                // hide DISEASE_FREE_SURVIVAL chart if cacner type is mixed or have moer than one cancer type
-                if(cancerTypeIds.length === 1 && cancerTypeIds[0] !== 'mixed') {
-                    this.changeChartVisibility(UniqueKey.DISEASE_FREE_SURVIVAL, true);
-                }
-            }
-
-            if (mutationCountFlag && fractionGenomeAlteredFlag && getDefaultPriorityByUniqueKey(UniqueKey.MUTATION_COUNT_CNA_FRACTION) !== 0) {
-                this.changeChartVisibility(UniqueKey.MUTATION_COUNT_CNA_FRACTION, true);
-                this.chartsType.set(UniqueKey.MUTATION_COUNT_CNA_FRACTION, ChartTypeEnum.SCATTER);
-                this.chartsDimension.set(UniqueKey.MUTATION_COUNT_CNA_FRACTION, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SCATTER])
-            }
-
-            // This is also the proper place to initialize the special charts visibility
-            _.each(SpecialCharts, chart=>{
-                this.showAsPieChart(chart.uniqueKey, 2);
             });
         }
     });
@@ -1665,7 +1599,7 @@ export class StudyViewPageStore {
     @computed
     get chartMetaSet(): { [id: string]: ChartMeta } {
         
-        let _chartMetaSet: { [id: string]: ChartMeta } = _.reduce(SpecialCharts, (acc: { [id: string]: ChartMeta }, chartMeta) => {
+        let _chartMetaSet: { [id: string]: ChartMeta } = _.reduce(SpecialCharts.filter(chart => _.includes(this.customChartKeys, chart.uniqueKey)), (acc: { [id: string]: ChartMeta }, chartMeta) => {
             const uniqueKey = chartMeta.uniqueKey;
             const chartType = this.chartsType.get(uniqueKey) || chartMeta.chartType;
             if (chartType !== undefined) {
@@ -1792,6 +1726,103 @@ export class StudyViewPageStore {
         }, [] as ChartMeta[]);
     }
 
+    @computed
+    get loadingInitialDataForSummaryTab() {
+        if (this.defaultVisibleAttributes.isPending ||
+            this.initialVisibleAttributesClinicalDataBinCountData.isPending ||
+            this.initialVisibleAttributesClinicalDataCountData.isPending) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @autobind
+    @action
+    updateChartStats() {
+        this.initializeChartStatsByClinicalAttributes();
+
+        if (!_.isEmpty(this.mutationProfiles.result)) {
+            this.changeChartVisibility(UniqueKey.MUTATED_GENES_TABLE, true);
+            this.chartsType.set(UniqueKey.MUTATED_GENES_TABLE, ChartTypeEnum.MUTATED_GENES_TABLE);
+            this.chartsDimension.set(UniqueKey.MUTATED_GENES_TABLE, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.MUTATED_GENES_TABLE])
+        }
+        if (!_.isEmpty(this.cnaProfiles.result)) {
+            this.changeChartVisibility(UniqueKey.CNA_GENES_TABLE, true);
+            this.chartsType.set(UniqueKey.CNA_GENES_TABLE, ChartTypeEnum.CNA_GENES_TABLE);
+            this.chartsDimension.set(UniqueKey.CNA_GENES_TABLE, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.CNA_GENES_TABLE])
+        }
+
+        this.initializeClinicalDataCountCharts();
+        this.initializeClinicalDataBinCountCharts();
+    }
+
+    @action
+    initializeChartStatsByClinicalAttributes() {
+        let osStatusFlag = false;
+        let osMonthsFlag = false;
+        let dfsStatusFlag = false;
+        let dfsMonthsFlag = false;
+        let mutationCountFlag = false;
+        let fractionGenomeAlteredFlag = false;
+
+        this.clinicalAttributes.result.forEach((obj: ClinicalAttribute) => {
+            const uniqueKey = getClinicalAttributeUniqueKey(obj);
+            if (obj.priority !== "0") {
+                if (obj.clinicalAttributeId === OS_STATUS) {
+                    osStatusFlag = true;
+                } else if (obj.clinicalAttributeId === OS_MONTHS) {
+                    osMonthsFlag = true;
+                } else if (obj.clinicalAttributeId === DFS_STATUS) {
+                    dfsStatusFlag = true;
+                } else if (obj.clinicalAttributeId === DFS_MONTHS) {
+                    dfsMonthsFlag = true;
+                } else if (MUTATION_COUNT === obj.clinicalAttributeId) {
+                    mutationCountFlag = true;
+                } else if (FRACTION_GENOME_ALTERED === obj.clinicalAttributeId) {
+                    fractionGenomeAlteredFlag = true;
+                }
+            }
+
+            if (obj.datatype === 'NUMBER') {
+                this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
+                this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.BAR_CHART]);
+            } else {
+                this.chartsType.set(uniqueKey, ChartTypeEnum.PIE_CHART);
+                this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.PIE_CHART]);
+            }
+        });
+
+        const cancerTypeIds = _.uniq(this.queriedPhysicalStudies.result.map(study => study.cancerTypeId));
+
+        if (osStatusFlag && osMonthsFlag && getDefaultPriorityByUniqueKey(UniqueKey.OVERALL_SURVIVAL) !== 0) {
+            this.chartsType.set(UniqueKey.OVERALL_SURVIVAL, ChartTypeEnum.SURVIVAL);
+            this.chartsDimension.set(UniqueKey.OVERALL_SURVIVAL, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SURVIVAL]);
+            // hide OVERALL_SURVIVAL chart if cacner type is mixed or have moer than one cancer type
+            if (cancerTypeIds.length === 1 && cancerTypeIds[0] !== 'mixed') {
+                this.changeChartVisibility(UniqueKey.OVERALL_SURVIVAL, true);
+            }
+        }
+        if (dfsStatusFlag && dfsMonthsFlag && getDefaultPriorityByUniqueKey(UniqueKey.DISEASE_FREE_SURVIVAL) !== 0) {
+            this.chartsType.set(UniqueKey.DISEASE_FREE_SURVIVAL, ChartTypeEnum.SURVIVAL);
+            this.chartsDimension.set(UniqueKey.DISEASE_FREE_SURVIVAL, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SURVIVAL]);
+            // hide DISEASE_FREE_SURVIVAL chart if cacner type is mixed or have moer than one cancer type
+            if (cancerTypeIds.length === 1 && cancerTypeIds[0] !== 'mixed') {
+                this.changeChartVisibility(UniqueKey.DISEASE_FREE_SURVIVAL, true);
+            }
+        }
+
+        if (mutationCountFlag && fractionGenomeAlteredFlag && getDefaultPriorityByUniqueKey(UniqueKey.MUTATION_COUNT_CNA_FRACTION) !== 0) {
+            this.changeChartVisibility(UniqueKey.MUTATION_COUNT_CNA_FRACTION, true);
+            this.chartsType.set(UniqueKey.MUTATION_COUNT_CNA_FRACTION, ChartTypeEnum.SCATTER);
+            this.chartsDimension.set(UniqueKey.MUTATION_COUNT_CNA_FRACTION, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SCATTER])
+        }
+
+        // This is also the proper place to initialize the special charts visibility
+        _.each(this.customChartKeys, key => {
+            this.showAsPieChart(key, 2);
+        });
+    }
     private getTableDimensionByNumberOfRecords(records: number) {
         return records <= STUDY_VIEW_CONFIG.thresholds.rowsInTableForOneGrid ? {
             w: 2,
@@ -1799,11 +1830,20 @@ export class StudyViewPageStore {
         } : {w: 2, h: 2};
     }
 
+    @computed
+    get customChartKeys() {
+        if (this.queriedPhysicalStudyIds.result.length > 1) {
+            return [UniqueKey.SAMPLES_PER_PATIENT, UniqueKey.CANCER_STUDIES];
+        } else {
+            return [UniqueKey.SAMPLES_PER_PATIENT]
+        }
+    }
+
     @action
     changeChartType(attr: ChartMeta, newChartType: ChartType) {
         let data: MobxPromise<ClinicalDataCountWithColor[]> | undefined
         if (newChartType === ChartTypeEnum.TABLE) {
-            if (_.includes(CUSTOM_CHART_KEYS, attr.uniqueKey)) {
+            if (_.includes(this.customChartKeys, attr.uniqueKey)) {
                 if (attr.uniqueKey === UniqueKey.SAMPLES_PER_PATIENT) {
                     data = this.samplesPerPatientData;
                 } else if (attr.uniqueKey === UniqueKey.CANCER_STUDIES) {
@@ -1898,9 +1938,6 @@ export class StudyViewPageStore {
                 } as ClinicalDataCountFilter
             });
         },
-        onResult: (data) => {
-            this.initializeClinicalDataCountCharts(data);
-        },
         default: []
     });
 
@@ -1921,23 +1958,20 @@ export class StudyViewPageStore {
                 } as ClinicalDataBinCountFilter
             });
         },
-        onResult: (data) => {
-            this.initializeClinicalDataBinCountCharts(data);
-        },
         default: []
     });
 
     @action
-    initializeClinicalDataCountCharts(data: ClinicalDataCountItem[]) {
-        _.each(data, item => {
+    initializeClinicalDataCountCharts() {
+        _.each(this.initialVisibleAttributesClinicalDataCountData.result, item => {
             const uniqueKey = getClinicalAttributeUniqueKeyByDataTypeAttrId(item.clinicalDataType, item.attributeId);
             this.showAsPieChart(uniqueKey, item.counts.length);
         });
     }
 
     @action
-    initializeClinicalDataBinCountCharts(data: DataBin[]) {
-        _.each(_.groupBy(data, 'attributeId'), (item:DataBin[], attributeId:string) => {
+    initializeClinicalDataBinCountCharts() {
+        _.each(_.groupBy(this.initialVisibleAttributesClinicalDataBinCountData.result, 'attributeId'), (item:DataBin[], attributeId:string) => {
             const uniqueKey = getClinicalAttributeUniqueKeyByDataTypeAttrId(item[0].clinicalDataType, attributeId);
             if (isFiltered(this.initialFilters) || item.length >= 2) {
                 this._chartVisibility.set(uniqueKey, true);
@@ -1945,6 +1979,11 @@ export class StudyViewPageStore {
             this.chartsType.set(uniqueKey, ChartTypeEnum.BAR_CHART);
             this.chartsDimension.set(uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.BAR_CHART]);
         });
+    }
+
+    @computed
+    get chartsAreFiltered() {
+        return isFiltered(this.userSelections);
     }
 
     readonly samples = remoteData<Sample[]>({
@@ -2000,7 +2039,7 @@ export class StudyViewPageStore {
         await: () => [this.samples],
         invoke: () => {
             //fetch samples when there are only filters applied
-            if (isFiltered(this.userSelections)) {
+            if (this.chartsAreFiltered) {
                 return internalClient.fetchFilteredSamplesUsingPOST({
                     studyViewFilter: this.filters
                 })
@@ -2013,7 +2052,7 @@ export class StudyViewPageStore {
     readonly samplesWithNAInSelectedClinicalData = remoteData<Sample[]>({
         await:()=>[ this.samples, this.queriedSampleIdentifiers, this.queriedPhysicalStudyIds ],
         invoke: async() => {
-            if (isFiltered(this.userSelections)) {
+            if (this.chartsAreFiltered) {
                 let studyViewFilter = {} as any
                 //this logic is need since fetchFilteredSamplesUsingPOST api accepts sampleIdentifiers or studyIds not both
                 if(this.queriedSampleIdentifiers.result.length>0){
@@ -2698,7 +2737,7 @@ export class StudyViewPageStore {
             formOps.data_priority = data_priority;
         }
 
-        if (isFiltered(this.userSelections)) {
+        if (this.chartsAreFiltered) {
             formOps.case_set_id = '-1'
             formOps.case_ids = _.map(this.selectedSamples.result, sample => {
                 return sample.studyId + ":" + sample.sampleId;
@@ -2786,7 +2825,12 @@ export class StudyViewPageStore {
                 return acc
             }, {} as { [id: string]: ClinicalDataCountWithColor }));
         },
-        default: []
+        default: [],
+        onResult: (data:ClinicalDataCountWithColor[]) =>{
+            if(!this.chartsAreFiltered && data.length <= 1) {
+                this.hideChart(UniqueKey.SAMPLES_PER_PATIENT);
+            }
+        }
     });
 
     readonly cancerStudiesData = remoteData<ClinicalDataCountWithColor[]>({
