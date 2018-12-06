@@ -31,6 +31,7 @@ export type StudyViewThreshold = {
     escapeTick: number,
     rowsInTableForOneGrid: number,
     clinicalChartsPerGroup: number,
+    chartHighlight: number,
 }
 
 export type ChartDimension = {
@@ -108,8 +109,9 @@ const studyViewFrontEnd = {
     thresholds: {
         pieToTable: 20,
         escapeTick: 10,
-        rowsInTableForOneGrid: 8,
-        clinicalChartsPerGroup: 5,
+        rowsInTableForOneGrid: 4,
+        clinicalChartsPerGroup: 10,
+        chartHighlight: 2000
     },
     layout: {
         layout: [],
