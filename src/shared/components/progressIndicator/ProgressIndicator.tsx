@@ -2,22 +2,24 @@ import * as React from "react";
 import {observer} from "mobx-react";
 import styles from "./styles.module.scss";
 import classnames from "classnames";
-import LoadingIndicator from "../loadingIndicator/LoadingIndicator";
-import {computed} from "mobx";
+import {computed, observable} from "mobx";
 import _ from "lodash";
 import ErrorMessage from "../ErrorMessage";
 import Spinner from "react-spinkit";
 import {MobxPromise} from "mobxpromise";
 import {getMobxPromiseGroupStatus} from "../../lib/getMobxPromiseGroupStatus";
 import autobind from "autobind-decorator";
+import Timer = NodeJS.Timer;
 
 export interface IProgressIndicatorItem {
     label: string;
+    style?:any;
     promises?:MobxPromise<any>[]; // if `promises` is not defined, then just show pending
+    hideIcon?:boolean; // dont show any icon for this item if `hideIcon` is true
 };
 
 export interface IProgressIndicatorProps {
-    items:IProgressIndicatorItem[];
+    getItems:(elapsedSecs:number)=>IProgressIndicatorItem[];
     show:boolean;
     sequential?:boolean; // if true, things further in list are not showed as loading until previous in list are completed
 }
@@ -36,16 +38,42 @@ function getItemStatus(item:IProgressIndicatorItem):"complete"|"pending"|"error"
 
 @observer
 export default class ProgressIndicator extends React.Component<IProgressIndicatorProps, {}> {
+
+    @observable timeShown = 0;
+    private timeShownInterval:Timer;
+
+    componentWillMount() {
+        this.timeShownInterval = setInterval(()=>{
+            if (this.props.show) {
+                this.timeShown += 1;
+            } else {
+                if (this.timeShown > 0) {
+                    this.timeShown = 0;
+                }
+            }
+        }, 1000);
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.timeShownInterval);
+    }
+
+    @computed get items() {
+        return this.props.getItems(this.timeShown);
+    }
+
     @computed get firstIncompleteIndex() {
-        return this.props.items.findIndex(item=>(getItemStatus(item) !== "complete"));
+        return this.items.findIndex(item=>(getItemStatus(item) !== "complete"));
     }
 
     @autobind
     private makeItem(item:IProgressIndicatorItem, index:number) {
         let icon:any = null;
-        // if sequential option is true, then only show any indicator if all previous items are complete
+        // if sequential option is true, then only show any icon if all previous items are complete
         const notInvoked = this.props.sequential && (index > this.firstIncompleteIndex);
-        if (!notInvoked) {
+        // also don't show any icon if user specifies it
+        const showIcon = !notInvoked && !item.hideIcon;
+        if (showIcon) {
             switch (getItemStatus(item)) {
                 case "complete":
                     icon = <i className={classnames("fa fa-sm fa-check", styles["fa-check"])}/>;
@@ -59,10 +87,13 @@ export default class ProgressIndicator extends React.Component<IProgressIndicato
             }
         }
         return (
-            <span className={classnames(styles["item-row"], {[styles["item-row-not-first"]]:(index > 0), [styles["not-invoked-item"]]:notInvoked})}>
-            {item.label}
+            <span
+                className={classnames(styles["item-row"], {[styles["not-invoked-item"]]:notInvoked})}
+                style={item.style}
+            >
+                {item.label}
                 <span style={{marginLeft:7}}>{icon}</span>
-        </span>
+            </span>
         );
     }
 
@@ -71,9 +102,9 @@ export default class ProgressIndicator extends React.Component<IProgressIndicato
             return (
                 <div className={styles.container}>
                         <div className={styles["items-container"]}>
-                            {this.props.items.map(this.makeItem)}
+                            {this.items.map(this.makeItem)}
                         </div>
-                    { _.some(this.props.items, i=>(getItemStatus(i)==="error")) &&
+                    { _.some(this.items, i=>(getItemStatus(i)==="error")) &&
                         <ErrorMessage/>}
                 </div>
             );
