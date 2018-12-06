@@ -107,6 +107,18 @@ export enum UniqueKey {
     FRACTION_GENOME_ALTERED = "SAMPLE_FRACTION_GENOME_ALTERED",
 }
 
+export enum StudyViewPageTabKeys {
+    SUMMARY = 'summary',
+    CLINICAL_DATA = 'clinicalData',
+    HEATMAPS = 'heatmaps'
+}
+
+export enum StudyViewPageTabDescriptions {
+    SUMMARY = 'Summary',
+    CLINICAL_DATA = 'Clinical Data',
+    HEATMAPS = 'Heatmaps'
+}
+
 export const MUTATION_COUNT = 'MUTATION_COUNT';
 export const FRACTION_GENOME_ALTERED = 'FRACTION_GENOME_ALTERED';
 export const OS_STATUS = "OS_STATUS";
