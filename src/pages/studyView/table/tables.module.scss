@@ -1,6 +1,5 @@
 
 .studyViewTablesTable {
-  padding: 0 1px;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
@@ -101,4 +100,8 @@
 .displayFlex {
   display: flex;
   align-items: center;
+}
+
+.headerSortingIcon {
+  margin-left: 5px;
 }

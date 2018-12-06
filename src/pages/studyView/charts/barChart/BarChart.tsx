@@ -142,6 +142,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
 
         return (
             <div>
+                {this.barData.length > 0 &&
                 <VictoryChart
                     containerComponent={
                         <VictorySelectionContainer
@@ -184,7 +185,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                         }}
                         data={this.barData}
                     />
-                </VictoryChart>
+                </VictoryChart>}
             </div>
         );
     }

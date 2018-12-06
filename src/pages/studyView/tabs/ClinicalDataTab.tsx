@@ -9,9 +9,8 @@ import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicato
 import {StudyViewPageStore} from "pages/studyView/StudyViewPageStore";
 import {remoteData} from "shared/api/remoteData";
 import {Else, If, Then} from 'react-if';
-import {
-    sortByClinicalAttributePriorityThenName
-} from "../../../shared/lib/SortUtils";
+import {sortByClinicalAttributePriorityThenName} from "../../../shared/lib/SortUtils";
+import ProgressIndicator from "../../../shared/components/progressIndicator/ProgressIndicator";
 
 export interface IClinicalDataTabTable {
     store: StudyViewPageStore
@@ -74,7 +73,12 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
                     <Then>
                         <LoadingIndicator
                             isLoading={this.columns.isPending || this.props.store.getDataForClinicalDataTab.isPending}
-                        />
+                            size={"big"} center={true}>
+                            <ProgressIndicator items={[{
+                                label: 'Loading clinical data',
+                                promises: [this.props.store.getDataForClinicalDataTab]
+                            }]} show={this.columns.isPending || this.props.store.getDataForClinicalDataTab.isPending}/>
+                        </LoadingIndicator>
                     </Then>
                     <Else>
                         <ClinicalDataTabTableComponent

@@ -58,6 +58,7 @@ import {
     getFilteredStudiesWithSamples,
     getFrequencyStr,
     getQValue,
+    getRequestedAwaitPromisesForClinicalData,
     getSamplesByExcludingFiltersOnChart,
     isFiltered,
     isLogScaleByDataBins,
@@ -105,6 +106,18 @@ export enum UniqueKey {
     CANCER_STUDIES = 'CANCER-STUDIES',
     MUTATION_COUNT = "SAMPLE_MUTATION_COUNT",
     FRACTION_GENOME_ALTERED = "SAMPLE_FRACTION_GENOME_ALTERED",
+}
+
+export enum StudyViewPageTabKeys {
+    SUMMARY = 'summary',
+    CLINICAL_DATA = 'clinicalData',
+    HEATMAPS = 'heatmaps'
+}
+
+export enum StudyViewPageTabDescriptions {
+    SUMMARY = 'Summary',
+    CLINICAL_DATA = 'Clinical Data',
+    HEATMAPS = 'Heatmaps'
 }
 
 export const MUTATION_COUNT = 'MUTATION_COUNT';
@@ -259,8 +272,6 @@ export class StudyViewPageStore {
     // ChartContainer should be modified, instead of accepting a promise, it should accept data and loading state.
     @observable private _chartVisibility = observable.map<boolean>();
 
-    @observable private _chartToBeHighlighted = observable.map<Date>();
-
     @observable geneQueryStr: string;
 
     @observable private geneQueries: SingleGeneQuery[] = [];
@@ -273,25 +284,13 @@ export class StudyViewPageStore {
 
     @observable private chartsType = observable.map<ChartType>();
 
-    // We highlight newly added charts by comparing the updated time.
-    // Chart visibility is computed and does not carry any status to indicate a chart is newly added except creating
-    // a new observable map to record the time. The highlight style will no be updated until user interects with the
-    // chart.
-    @autobind
-    isChartHighlighted(uniqueKey: string): boolean {
-        // Highlight survival analysis chart
-        if (this.analysisGroupsSettings.clinicalAttribute &&
-            (getClinicalAttributeUniqueKey(this.analysisGroupsSettings.clinicalAttribute) === uniqueKey)) {
-            return true;
-        }
-        const date = this._chartToBeHighlighted.get(uniqueKey);
-        if (date === undefined) {
-            return false;
-        } else if (new Date().getTime() - date.getTime() < STUDY_VIEW_CONFIG.thresholds.chartHighlight) {
-            return true;
-        } else {
-            return false;
-        }
+    @observable private newlyAddedCharts:string[] = [];
+
+    private unfilteredClinicalDataCountCache: { [uniqueKey: string]: ClinicalDataCountItem } = {};
+    private unfilteredClinicalDataBinCountCache: { [uniqueKey: string]: DataBin } = {};
+
+    public isNewlyAdded(uniqueKey:string) {
+        return this.newlyAddedCharts.includes(uniqueKey);
     }
 
     @action
@@ -374,13 +373,14 @@ export class StudyViewPageStore {
                 return acc;
             }, [] as CopyNumberGeneFilter[]);
         }
-        //TODO: do not re-initialize if nothing is changed
-        this.initialFiltersQuery = filters;
+        if(!_.isEqual(toJS(this.initialFiltersQuery), filters)) {
+            this.initialFiltersQuery = filters;
+        }
     }
 
     @computed
     get initialFilters() {
-        return _.merge(this.initialFiltersQuery, {studyIds: this.queriedPhysicalStudyIds.result});
+        return Object.assign({}, this.initialFiltersQuery, {studyIds: this.queriedPhysicalStudyIds.result});
     }
 
     @computed
@@ -909,6 +909,11 @@ export class StudyViewPageStore {
             !this._clinicalDataBinFilterSet.get(uniqueKey)!.disableLogScale;
     }
 
+    @action addCharts(visibleChartIds:string[]) {
+        this.newlyAddedCharts = visibleChartIds.filter(chartId => !this._chartVisibility.keys().includes(chartId));
+        this.updateChartsVisibility(visibleChartIds);
+    }
+
     @action updateChartsVisibility(visibleChartIds:string[]){
         _.each(this._chartVisibility.keys(),chartId=>{
             if(!_.includes(visibleChartIds,chartId) || !this._chartVisibility.get(chartId)){
@@ -920,7 +925,6 @@ export class StudyViewPageStore {
         _.each(visibleChartIds,uniqueKey=>{
             if(this._chartVisibility.get(uniqueKey) === undefined) {
                 this._chartVisibility.set(uniqueKey, true);
-                this._chartToBeHighlighted.set(uniqueKey, new Date());
             }
         });
     }
@@ -1020,13 +1024,6 @@ export class StudyViewPageStore {
         return result ? result.values : [];
     }
 
-    /**
-     * This is really not the best way to generate unfiltered attrs.
-     * But probably the best way to do in the current structure.
-     * We do not send duplicate API call by relying on the API caching.
-     * Maybe the server side should tell the frontend what attribute should be visualized.
-     *
-     */
     @computed
     get unfilteredAttrsForNonNumerical() {
         const visibleNonNumericalAttributes = this.visibleAttributes.filter((chartMeta: ChartMeta) => {
@@ -1037,46 +1034,70 @@ export class StudyViewPageStore {
             return false;
         });
 
-        const defaultVisibleNonNumericalAttributes = this.defaultVisibleAttributes.result.filter(
-            (attr: ClinicalAttribute) => attr.datatype !== "NUMBER");
-
-        return _.sortBy(_.unionBy(visibleNonNumericalAttributes.map((chartMeta: ChartMeta) => {
+        return visibleNonNumericalAttributes.map((chartMeta: ChartMeta) => {
             return {
                 attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
                 clinicalDataType: chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE'
             } as ClinicalDataFilter;
-        }), defaultVisibleNonNumericalAttributes.map((attr:ClinicalAttribute) => {
+        });
+    }
+
+    @computed
+    get newlyAddedUnfilteredAttrsForNonNumerical() {
+        return this.clinicalAttributes.result.filter((attr:ClinicalAttribute) => {
+            if(attr.datatype !== "NUMBER") {
+                const key = getClinicalAttributeUniqueKey(attr);
+                if(this.newlyAddedCharts.includes(key)) {
+                    return true;
+                }
+                return false;
+            }
+            return false;
+        }).map(attr => {
             return {
                 attributeId: attr.clinicalAttributeId,
                 clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE'
-            } as ClinicalDataFilter;
-        }), attr => [attr.attributeId, attr.clinicalDataType].join('')),
-            attr => [attr.attributeId, attr.clinicalDataType].join(''));
+            };
+        });
     }
+
+    @computed
+    get newlyAddedUnfilteredAttrsForNumerical() {
+        return this.clinicalAttributes.result.filter((attr:ClinicalAttribute) => {
+            if(attr.datatype === "NUMBER") {
+                const key = getClinicalAttributeUniqueKey(attr);
+                if(this.newlyAddedCharts.includes(key)) {
+                    return true;
+                }
+                return false;
+            }
+            return false;
+        }).map(attr => {
+            return {
+                attributeId: attr.clinicalAttributeId,
+                clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE'
+            };
+        });
+    }
+
 
     @computed
     get unfilteredAttrsForNumerical() {
         const visibleNumericalAttributes = this.visibleAttributes.filter((chartMeta: ChartMeta) => {
-            if(chartMeta.clinicalAttribute !== undefined && chartMeta.clinicalAttribute.datatype === "NUMBER") {
+            if (chartMeta.clinicalAttribute !== undefined && chartMeta.clinicalAttribute.datatype === "NUMBER") {
                 const key = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute);
                 return !this._clinicalDataIntervalFilterSet.has(key);
             }
             return false;
         });
 
-        const defaultVisibleNumericalAttributes = this.defaultVisibleAttributes.result.filter(
-            (attr: ClinicalAttribute) => attr.datatype === "NUMBER");
-
-        return _.sortBy(_.unionBy(visibleNumericalAttributes.map((chartMeta: ChartMeta) => {
-                return this._clinicalDataBinFilterSet.get(getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!))!;;
-            }), defaultVisibleNumericalAttributes.map((attr:ClinicalAttribute) => {
-                return this._clinicalDataBinFilterSet.get(getClinicalAttributeUniqueKey(attr))!;;
-            }), attr => [attr.attributeId, attr.clinicalDataType].join('')),
-            attr => [attr.attributeId, attr.clinicalDataType].join(''));
+        return visibleNumericalAttributes.map((chartMeta: ChartMeta) => {
+            return this._clinicalDataBinFilterSet.get(getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!))!;
+        });
     }
 
     readonly unfilteredClinicalDataCount = remoteData<ClinicalDataCountItem[]>({
-        invoke: async () => {
+        invoke: () => {
             return internalClient.fetchClinicalDataCountsUsingPOST({
                 clinicalDataCountFilter: {
                     attributes: this.unfilteredAttrsForNonNumerical,
@@ -1087,8 +1108,45 @@ export class StudyViewPageStore {
         default: []
     });
 
+    readonly newlyAddedUnfilteredClinicalDataCount = remoteData<ClinicalDataCountItem[]>({
+        invoke: () => {
+            return internalClient.fetchClinicalDataCountsUsingPOST({
+                clinicalDataCountFilter: {
+                    attributes: this.newlyAddedUnfilteredAttrsForNonNumerical,
+                    studyViewFilter: this.filters
+                } as ClinicalDataCountFilter
+            });
+        },
+        default: [],
+        onResult: (data) => {
+            data.forEach(item => {
+                const uniqueKey = getClinicalAttributeUniqueKeyByDataTypeAttrId(item.clinicalDataType, item.attributeId);
+                this.unfilteredClinicalDataCountCache[uniqueKey] = item;
+            });
+        }
+    });
+
+    readonly newlyAddedUnfilteredClinicalDataBinCount = remoteData<DataBin[]>({
+        invoke: () => {
+            return internalClient.fetchClinicalDataBinCountsUsingPOST({
+                dataBinMethod: 'STATIC',
+                clinicalDataBinCountFilter: {
+                    attributes: this.newlyAddedUnfilteredAttrsForNumerical,
+                    studyViewFilter: this.filters
+                } as ClinicalDataBinCountFilter
+            });
+        },
+        default: [],
+        onResult: (data) => {
+            data.forEach(item => {
+                const uniqueKey = getClinicalAttributeUniqueKeyByDataTypeAttrId(item.clinicalDataType, item.attributeId);
+                this.unfilteredClinicalDataBinCountCache[uniqueKey] = item;
+            });
+        }
+    });
+
     readonly unfilteredClinicalDataBinCount = remoteData<DataBin[]>({
-        invoke: async () => {
+        invoke: () => {
             return internalClient.fetchClinicalDataBinCountsUsingPOST({
                 dataBinMethod: 'STATIC',
                 clinicalDataBinCountFilter: {
@@ -1111,13 +1169,12 @@ export class StudyViewPageStore {
         if(!this.clinicalDataCountPromises.hasOwnProperty(uniqueKey)) {
             this.clinicalDataCountPromises[uniqueKey] = remoteData<ClinicalDataCountWithColor[]>({
                 await: () => {
-                    if (this.isInitialFilterState && _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined) {
-                        return [this.initialVisibleAttributesClinicalDataCountData];
-                    } else if (this._clinicalDataEqualityFilterSet.has(uniqueKey)) {
-                        return [];
-                    } else {
-                        return [this.unfilteredClinicalDataCount];
-                    }
+                    return getRequestedAwaitPromisesForClinicalData(
+                        _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined,
+                        this.isInitialFilterState, this.chartsAreFiltered,
+                        this.newlyAddedCharts.includes(uniqueKey), this._clinicalDataEqualityFilterSet.has(uniqueKey),
+                        this.unfilteredClinicalDataCount, this.newlyAddedUnfilteredClinicalDataCount,
+                        this.initialVisibleAttributesClinicalDataCountData);
                 },
                 invoke: async () => {
                     let dataType = chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE';
@@ -1125,6 +1182,10 @@ export class StudyViewPageStore {
                     if (this.isInitialFilterState && _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined) {
                         result = this.initialVisibleAttributesClinicalDataCountData.result;
                     } else {
+                        // Mostly the case when user adds new chart. It would be nice only fetching
+                        // the chart specific data instead of using the unfilteredClinicalDataCount which will require
+                        // all unfiltered clinical attributes data.
+
                         if (this._clinicalDataEqualityFilterSet.has(uniqueKey)) {
                             result = await internalClient.fetchClinicalDataCountsUsingPOST({
                                 clinicalDataCountFilter: {
@@ -1135,7 +1196,9 @@ export class StudyViewPageStore {
                                     studyViewFilter: this.filters
                                 } as ClinicalDataCountFilter
                             });
-                        } else {
+                        } else if (!this.chartsAreFiltered) {
+                            result = [this.unfilteredClinicalDataCountCache[uniqueKey]];
+                        } else{
                             result = this.unfilteredClinicalDataCount.result;
                         }
                     }
@@ -1160,13 +1223,11 @@ export class StudyViewPageStore {
         if (!this.clinicalDataBinPromises.hasOwnProperty(uniqueKey)) {
             this.clinicalDataBinPromises[uniqueKey] = remoteData<DataBin[]>({
                 await: () => {
-                    if (this.isInitialFilterState && _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined) {
-                        return [this.initialVisibleAttributesClinicalDataBinCountData];
-                    } else if (this._clinicalDataIntervalFilterSet.has(uniqueKey)) {
-                        return [];
-                    } else {
-                        return [this.unfilteredClinicalDataBinCount];
-                    }
+                    return getRequestedAwaitPromisesForClinicalData(
+                        _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined, this.isInitialFilterState, this.chartsAreFiltered,
+                        this.newlyAddedCharts.includes(uniqueKey), this._clinicalDataIntervalFilterSet.has(uniqueKey),
+                        this.unfilteredClinicalDataBinCount, this.newlyAddedUnfilteredClinicalDataBinCount,
+                        this.initialVisibleAttributesClinicalDataBinCountData);
                 },
                 invoke: async () => {
                     const clinicalDataType = chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE';
@@ -1184,15 +1245,16 @@ export class StudyViewPageStore {
                                     studyViewFilter: this.filters
                                 } as ClinicalDataBinCountFilter
                             });
-                        }
-                        else {
+                        } else if (!this.chartsAreFiltered) {
+                            result = [this.unfilteredClinicalDataBinCountCache[uniqueKey]];
+                        } else {
                             result = this.unfilteredClinicalDataBinCount.result;
                         }
                     }
 
                     return _.filter(result, {
                         attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId
-                    });
+                    }) || [];
                 },
                 default: []
             });
@@ -1730,7 +1792,10 @@ export class StudyViewPageStore {
     get loadingInitialDataForSummaryTab() {
         if (this.defaultVisibleAttributes.isPending ||
             this.initialVisibleAttributesClinicalDataBinCountData.isPending ||
-            this.initialVisibleAttributesClinicalDataCountData.isPending) {
+            this.initialVisibleAttributesClinicalDataCountData.isPending ||
+            this.mutationProfiles.isPending ||
+            this.cnaProfiles.isPending
+        ) {
             return true;
         } else {
             return false;
@@ -2458,6 +2523,11 @@ export class StudyViewPageStore {
                     yBinSize:-1
                 };
             }
+        },
+        default: {
+            bins: [],
+            xBinSize:-1,
+            yBinSize:-1
         }
     });
 
