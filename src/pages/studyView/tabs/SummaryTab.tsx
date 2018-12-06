@@ -328,7 +328,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
     get progressItems(): IProgressIndicatorItem[] {
         return [{
             label: 'Loading meta information',
-            promises: [this.store.defaultVisibleAttributes]
+            promises: [this.store.defaultVisibleAttributes, this.store.mutationProfiles, this.store.cnaProfiles]
         }, {
             label: 'Loading clinical data',
             promises: [this.store.initialVisibleAttributesClinicalDataBinCountData, this.store.initialVisibleAttributesClinicalDataCountData]
