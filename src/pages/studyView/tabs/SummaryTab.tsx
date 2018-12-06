@@ -143,17 +143,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
             case ChartTypeEnum.PIE_CHART: {
 
                 //if the chart is one of the custom charts then get the appropriate promise
-                if (_.includes(this.store.customChartKeys, chartMeta.uniqueKey)) {
-                    props.filters = this.store.getCustomChartFilters(props.chartMeta ? props.chartMeta.uniqueKey : '');
-                    props.onValueSelection = this.handlers.setCustomChartFilters;
-                    props.onResetSelection = this.handlers.setCustomChartFilters;
-
-                    if (chartMeta.uniqueKey === UniqueKey.SAMPLES_PER_PATIENT) {
-                        props.promise = this.store.samplesPerPatientData;
-                    } else if (chartMeta.uniqueKey === UniqueKey.CANCER_STUDIES) {
-                        props.promise = this.store.cancerStudiesData;
-                    }
-                } else if(this.store.isCustomChart(chartMeta.uniqueKey)) {
+                if(this.store.isCustomChart(chartMeta.uniqueKey)) {
                     props.filters = this.store.getCustomChartFilters(props.chartMeta!.uniqueKey);
                     props.onValueSelection = this.handlers.setCustomChartFilters;
                     props.onResetSelection = this.handlers.setCustomChartFilters;
@@ -199,17 +189,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 break;
             }
             case ChartTypeEnum.TABLE: {
-                if (_.includes(this.store.customChartKeys, chartMeta.uniqueKey)) {
-                    props.filters = this.store.getCustomChartFilters(props.chartMeta ? props.chartMeta.uniqueKey : '');
-                    props.onValueSelection = this.handlers.setCustomChartFilters;
-                    props.onResetSelection = this.handlers.setCustomChartFilters;
-
-                    if (chartMeta.uniqueKey === UniqueKey.SAMPLES_PER_PATIENT) {
-                        props.promise = this.store.samplesPerPatientData;
-                    } else if (chartMeta.uniqueKey === UniqueKey.CANCER_STUDIES) {
-                        props.promise = this.store.cancerStudiesData;
-                    }
-                } else if (this.store.isCustomChart(chartMeta.uniqueKey)) {
+                if (this.store.isCustomChart(chartMeta.uniqueKey)) {
                     props.filters = this.store.getCustomChartFilters(props.chartMeta!.uniqueKey);
                     props.onValueSelection = this.handlers.setCustomChartFilters;
                     props.onResetSelection = this.handlers.setCustomChartFilters;
@@ -364,10 +344,12 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
 
                     <UserSelections
                         filter={this.props.store.userSelections}
+                        customChartsFilter={this.props.store.customChartFilterSet.toJS()}
                         getSelectedGene={this.props.store.getKnownHugoGeneSymbolByEntrezGeneId}
                         attributesMetaSet={this.props.store.chartMetaSet}
                         updateClinicalDataEqualityFilter={this.props.store.updateClinicalDataEqualityFilters}
                         updateClinicalDataIntervalFilter={this.props.store.updateClinicalDataIntervalFiltersByValues}
+                        updateCustomChartFilter={this.props.store.setCustomChartFilters}
                         removeGeneFilter={this.props.store.removeGeneFilter}
                         removeCNAGeneFilter={this.props.store.removeCNAGeneFilters}
                         resetMutationCountVsCNAFilter={this.handlers.resetMutationCountVsCNAFilter}
