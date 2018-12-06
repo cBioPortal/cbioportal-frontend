@@ -24,12 +24,12 @@ export default class MutationCountColumnFormatter {
         );
     }
 
-    public static sortBy(d:Mutation[], mutationCountCache?:MutationCountCache) {
-        let ret;
+    public static sortBy(d:Mutation[], mutationCountCache?:MutationCountCache): number|null {
+        let ret:number|null = null;;
         if (mutationCountCache) {
             const cacheDatum = mutationCountCache.get({sampleId:d[0].sampleId, studyId:d[0].studyId});
             if (cacheDatum && cacheDatum.data) {
-                ret = cacheDatum.data.value;
+                ret = parseInt(cacheDatum.data.value);
             } else {
                 ret = null;
             }
