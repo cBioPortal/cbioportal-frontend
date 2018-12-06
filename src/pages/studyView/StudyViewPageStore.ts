@@ -1833,7 +1833,10 @@ export class StudyViewPageStore {
     get loadingInitialDataForSummaryTab() {
         if (this.defaultVisibleAttributes.isPending ||
             this.initialVisibleAttributesClinicalDataBinCountData.isPending ||
-            this.initialVisibleAttributesClinicalDataCountData.isPending) {
+            this.initialVisibleAttributesClinicalDataCountData.isPending ||
+            this.mutationProfiles.isPending ||
+            this.cnaProfiles.isPending
+        ) {
             return true;
         } else {
             return false;
