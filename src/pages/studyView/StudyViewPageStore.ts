@@ -1295,7 +1295,7 @@ export class StudyViewPageStore {
 
                     return _.filter(result, {
                         attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId
-                    });
+                    }) || [];
                 },
                 default: []
             });
