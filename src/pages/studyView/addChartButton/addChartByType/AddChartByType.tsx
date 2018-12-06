@@ -99,7 +99,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
     @autobind
     @action
     addAll(selectedOptions: ChartOption[]) {
-        this.props.onAddAll(_.uniq(_.filter(this.options, option=>option.selected).concat(selectedOptions)).map(option => option.key));
+        this.props.onAddAll(_.uniq(_.filter(this.options, option=>option.selected).concat(_.filter(selectedOptions, option=>!option.disabled))).map(option => option.key));
     }
 
     @autobind
