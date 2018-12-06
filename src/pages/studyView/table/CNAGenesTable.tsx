@@ -13,6 +13,7 @@ import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import FixedHeaderTable from "./FixedHeaderTable";
 import autobind from 'autobind-decorator';
 import {getCNAByAlteration, getCNAColorByAlteration, getFrequencyStr, getQValue} from "../StudyViewUtils";
+import {SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 
 
 export type  CNAGenesTableUserSelectionWithIndex = CopyNumberAlterationIdentifier & {
@@ -36,6 +37,8 @@ class CNAGenesTableComponent extends FixedHeaderTable<CopyNumberCountByGene> {
 @observer
 export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
     @observable private preSelectedRows: CNAGenesTableUserSelectionWithIndex[] = [];
+    @observable private sortBy:string = '#';
+    @observable private sortDirection: SortDirection;
 
     constructor(props: ICNAGenesTablePros) {
         super(props);
@@ -105,7 +108,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             filter: (data: CopyNumberCountByGene, filterString: string, filterStringUpper: string) => {
                 return getCNAByAlteration(data.alteration).includes(filterStringUpper);
             },
-            width: 50
+            width: 60
         },
         {
             name: '#',
@@ -123,7 +126,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             filter: (data: CopyNumberCountByGene, filterString: string) => {
                 return _.toString(data.countByEntity).includes(filterString);
             },
-            width: 85
+            width: 75
         },
         {
             name: 'Freq',
@@ -220,6 +223,13 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         }));
     }
 
+    @autobind
+    @action
+    afterSorting(sortBy: string, sortDirection: SortDirection) {
+        this.sortBy = sortBy;
+        this.sortDirection = sortDirection;
+    }
+
     public render() {
         return (
             <CNAGenesTableComponent
@@ -230,7 +240,9 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                 showSelectSamples={true && this.preSelectedRows.length > 0}
                 afterSelectingRows={this.afterSelectingRows}
                 isSelectedRow={this.isSelectedRow}
-                sortBy='#'
+                sortBy={this.sortBy}
+                sortDirection={this.sortDirection}
+                afterSorting={this.afterSorting}
             />
         );
     }
