@@ -9,7 +9,7 @@ import {
     AnalysisGroup,
     ChartMeta,
     ChartType,
-    ClinicalDataCountWithColor, ClinicalDataType,
+    ClinicalDataCountWithColor,
     StudyViewPageStore
 } from "pages/studyView/StudyViewPageStore";
 import {DataBin} from "shared/api/generated/CBioPortalAPIInternal";
@@ -64,7 +64,7 @@ export interface IChartContainerProps {
     showLogScaleToggle?:boolean;
     selectedGenes?:any;
     onGeneSelect?:any;
-    isChartHighlighted: (uniqueKey: string) => boolean;
+    isNewlyAdded: (uniqueKey: string) => boolean;
 
     setAnalysisGroupsSettings: (attribute:ClinicalAttribute, grp:ReadonlyArray<AnalysisGroup>)=>void;
     analysisGroupsSettings:StudyViewPageStore["analysisGroupsSettings"];
@@ -85,6 +85,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @observable placement: 'left' | 'right' = 'right';
     @observable chartType: ChartType;
 
+    @observable newlyAdded = false;
     @observable naPatientsHiddenInSurvival = true; // only relevant for survival charts - whether cases with NA clinical value are shown
 
     constructor(props: IChartContainerProps) {
@@ -411,9 +412,21 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         }, [] as IChartContainerDownloadProps[]);
     }
 
+    @computed
+    get highlightChart() {
+        return this.newlyAdded || this.isAnalysisTarget;
+    }
+
+    componentDidMount() {
+        if (this.props.isNewlyAdded(this.props.chartMeta.uniqueKey)) {
+            this.newlyAdded = true;
+            setTimeout(() => this.newlyAdded = false, STUDY_VIEW_CONFIG.thresholds.chartHighlight);
+        }
+    }
+
     public render() {
         return (
-            <div className={classnames(styles.chart, { [styles.highlight]:this.props.isChartHighlighted(this.props.chartMeta.uniqueKey)})}
+            <div className={classnames(styles.chart, { [styles.highlight]: this.highlightChart})}
                  onMouseEnter={this.handlers.onMouseEnterChart}
                  onMouseLeave={this.handlers.onMouseLeaveChart}>
                 <ChartHeader
