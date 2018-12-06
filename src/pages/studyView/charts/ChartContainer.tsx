@@ -250,7 +250,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     onUserSelection={this.handlers.onValueSelection}
                     filters={this.props.filters}
                     data={this.props.promise.result}
-                    active={this.mouseInChart}
                     placement={this.placement}
                     label={this.props.title}
                     labelDescription={this.props.chartMeta.description}
