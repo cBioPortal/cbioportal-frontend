@@ -111,7 +111,7 @@ const studyViewFrontEnd = {
         escapeTick: 10,
         rowsInTableForOneGrid: 4,
         clinicalChartsPerGroup: 10,
-        chartHighlight: 2000
+        chartHighlight: 10000
     },
     layout: {
         layout: [],
