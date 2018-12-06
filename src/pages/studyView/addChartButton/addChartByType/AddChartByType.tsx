@@ -85,7 +85,8 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
     }, {
         name: '% samples with data',
         render: (option: ChartOption) =>
-            <span className={classnames(option.disabled ? styles.labelDisabled: '')}>{getFrequencyStr(option.freq)}</span>,
+            <span
+                className={classnames(option.disabled ? styles.labelDisabled : '')}>{this.props.freqPromise.isComplete ? getFrequencyStr(option.freq) : ''}</span>,
         sortBy: (d: ChartOption) => d.freq,
         defaultSortDirection: 'desc' as 'desc',
         width: 160
