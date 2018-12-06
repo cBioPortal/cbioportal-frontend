@@ -20,8 +20,14 @@ export enum SpecialAttribute {
     NumSamplesPerPatient = "NUM_SAMPLES_PER_PATIENT"
 }
 
+const locallyComputedSpecialAttributes = [SpecialAttribute.StudyOfOrigin, SpecialAttribute.NumSamplesPerPatient];
+
 export function clinicalAttributeIsPROFILEDIN(attribute:{clinicalAttributeId:string|SpecialAttribute}) {
     return attribute.clinicalAttributeId.startsWith(SpecialAttribute.ProfiledInPrefix);
+}
+
+export function clinicalAttributeIsLocallyComputed(attribute:{clinicalAttributeId:string|SpecialAttribute}) {
+    return clinicalAttributeIsPROFILEDIN(attribute) || (locallyComputedSpecialAttributes.indexOf(attribute.clinicalAttributeId as any) > -1);
 }
 
 type OncoprintClinicalData = ClinicalData[]|MutationSpectrum[];
