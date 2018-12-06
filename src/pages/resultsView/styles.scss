@@ -1,9 +1,27 @@
+$scollbarWidth:5px;
+
 .Safari {
   // this is necessary to fix hidden scroll bars when position:absolute
   .oncoprintjs__scroll_div {
     position:static !important;
   }
 }
+
+.oncoprintjs__scroll_div::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: $scollbarWidth;
+  height:$scollbarWidth;
+  background-color: #eee;
+}
+
+
+.oncoprintjs__scroll_div::-webkit-scrollbar-thumb {
+  border-radius: 2px;
+  width:$scollbarWidth;
+  height:$scollbarWidth;
+  background-color: #ddd;
+}
+
 
 .oncoprintContainer {
   border: none !important;
