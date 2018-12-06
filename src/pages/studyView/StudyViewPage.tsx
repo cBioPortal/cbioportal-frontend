@@ -2,7 +2,11 @@ import * as React from 'react';
 import {inject, observer} from "mobx-react";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import {reaction} from 'mobx';
-import {StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
+import {
+    StudyViewPageStore,
+    StudyViewPageTabDescriptions,
+    StudyViewPageTabKeys
+} from 'pages/studyView/StudyViewPageStore';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {ClinicalDataTab} from "./tabs/ClinicalDataTab";
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
@@ -78,20 +82,20 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                          className="mainTabs"
                                          unmountOnHide={false}>
 
-                                    <MSKTab key={0} id="summary" linkText="Summary">
+                                    <MSKTab key={0} id={StudyViewPageTabKeys.SUMMARY} linkText={StudyViewPageTabDescriptions.SUMMARY}>
                                         <StudySummaryTab store={this.store}></StudySummaryTab>
                                     </MSKTab>
-                                    <MSKTab key={1} id={"clinicalData"} linkText={"Clinical Data"}>
+                                    <MSKTab key={1} id={StudyViewPageTabKeys.CLINICAL_DATA} linkText={StudyViewPageTabDescriptions.CLINICAL_DATA}>
                                         <ClinicalDataTab store={this.store}/>
                                     </MSKTab>
-                                    <MSKTab key={2} id={"heatmaps"} linkText={"Heatmaps"}
+                                    <MSKTab key={2} id={StudyViewPageTabKeys.HEATMAPS} linkText={StudyViewPageTabDescriptions.HEATMAPS}
                                             hide={this.store.MDACCHeatmapStudyMeta.result.length === 0}>
                                         <IFrameLoader height={700}
                                                       url={`//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this.store.MDACCHeatmapStudyMeta.result[0]}`}/>
                                     </MSKTab>
                                 </MSKTabs>
 
-                                {(this.props.routing.location.query.tab === undefined || this.props.routing.location.query.tab === 'summary') &&
+                                {(this.props.routing.location.query.tab === undefined || this.props.routing.location.query.tab === StudyViewPageTabKeys.SUMMARY) &&
                                 <AddChartButton store={this.store}/>}
 
                                 <div className={styles.selectedInfo}>
