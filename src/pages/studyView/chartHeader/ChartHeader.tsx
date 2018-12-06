@@ -100,6 +100,10 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                     destroyTooltipOnHide={true}
                     onVisibleChange={this.onTooltipVisibleChange as any}
                     trigger={["click"]}
+                    getTooltipContainer={(...args:any[])=>{
+                        // this weirdness is necessary to fix broken type
+                        return args[0].parentNode;
+                    }}
                 >
                     <i className={classnames("fa", "fa-download", styles.item, styles.clickable)}
                        aria-hidden="true"></i>
