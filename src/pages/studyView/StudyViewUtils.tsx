@@ -35,6 +35,7 @@ import {VirtualStudy} from "shared/model/VirtualStudy";
 import defaultClient from "shared/api/cbioportalClientInstance";
 import {ChartDimension, ChartTypeEnum, Position, STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 import {IStudyViewDensityScatterPlotDatum} from "./charts/scatterPlot/StudyViewDensityScatterPlot";
+import MobxPromise from 'mobxpromise';
 
 export const COLORS = [
     STUDY_VIEW_CONFIG.colors.theme.primary, STUDY_VIEW_CONFIG.colors.theme.secondary,
@@ -1109,6 +1110,23 @@ export function getSamplesByExcludingFiltersOnChart(
     return internalClient.fetchFilteredSamplesUsingPOST({
         studyViewFilter: updatedFilter
     });
+}
+
+export function getRequestedAwaitPromisesForClinicalData(isDefaultVisibleAttribute:boolean, isInitialFilterState: boolean, chartsAreFiltered: boolean, chartIsNewlyAdded: boolean, chartIsFiltered: boolean, unfilteredPromise: MobxPromise<any>, newlyAddedUnfilteredPromise: MobxPromise<any>, initialVisibleAttributesPromise: MobxPromise<any>): MobxPromise<any>[] {
+    if (isInitialFilterState && isDefaultVisibleAttribute) {
+        return [initialVisibleAttributesPromise];
+    } else if (!chartsAreFiltered) {
+        if (chartIsNewlyAdded) {
+            return [newlyAddedUnfilteredPromise];
+        } else {
+            return [];
+        }
+    } else if (chartIsFiltered) {
+        // It will get a new Promise assigned in the invoke function
+        return [];
+    } else {
+        return [unfilteredPromise];
+    }
 }
 
 export async function getHugoSymbolByEntrezGeneId(entrezGeneId: number): Promise<string> {
