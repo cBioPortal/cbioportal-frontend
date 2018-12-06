@@ -1,17 +1,20 @@
 import * as React from 'react';
-import {computed} from 'mobx';
+import {action, computed} from 'mobx';
 import {observer} from "mobx-react";
 import styles from "./styles.module.scss";
 import addChartStyles from "../styles.module.scss";
-import {Button, ButtonGroup, Modal} from 'react-bootstrap';
+import {Modal} from 'react-bootstrap';
 import {ChartOption} from "../AddChartButton";
 import * as _ from 'lodash';
 import LabeledCheckbox from "../../../../shared/components/labeledCheckbox/LabeledCheckbox";
-import LazyMobXTable, {Column} from "../../../../shared/components/lazyMobXTable/LazyMobXTable";
+import {Column} from "../../../../shared/components/lazyMobXTable/LazyMobXTable";
 import {getFrequencyStr} from "../../StudyViewUtils";
 import LoadingIndicator from "../../../../shared/components/loadingIndicator/LoadingIndicator";
 import MobxPromise from 'mobxpromise';
 import {ClinicalDataCountSet} from "../../StudyViewPageStore";
+import FixedHeaderTable from "../../table/FixedHeaderTable";
+import autobind from 'autobind-decorator';
+import classnames from 'classnames';
 
 export interface IAddChartByTypeProps {
     title: string;
@@ -19,13 +22,15 @@ export interface IAddChartByTypeProps {
     freqPromise: MobxPromise<ClinicalDataCountSet>;
     onClose: () => void;
     onAddAll: (keys: string[]) => void;
-    onClear: () => void;
+    onClearAll: (keys: string[]) => void;
     onToggleOption: (key: string) => void;
 }
 
 
-export class AddChartTableComponent extends LazyMobXTable<ChartOption> {
+class AddChartTableComponent extends FixedHeaderTable<ChartOption> {
 }
+
+const NUM_ROWS_SHOWN = 20;
 
 @observer
 export default class AddChartByType extends React.Component<IAddChartByTypeProps, {}> {
@@ -42,49 +47,65 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                     freq: disabled ? 0 : this.props.freqPromise.result![next.key]
                 });
                 return acc;
-            }, [] as ChartOption[]);
+            }, [] as ChartOption[]).sort((a: ChartOption, b: ChartOption) => {
+                return b.freq - a.freq || a.label.localeCompare(b.label);
+            });
         } else {
-            return this.props.options;
+            return this.props.options.sort((a, b) => a.label.localeCompare(b.label));
         }
     }
 
-    @computed
-    get hideFreq() {
-        return _.keys(this.props.freqPromise.result!).length === 0;
-    }
+    private _columns: Column<ChartOption>[] = [{
+        name: 'Name',
+        render: (option: ChartOption) => {
+            return (
+                <div className={styles.option}>
+                    <LabeledCheckbox
+                        checked={option.selected}
+                        disabled={option.disabled}
+                        labelProps={{
+                            className: classnames(styles.label, option.disabled ? styles.labelDisabled: '')
+                        }}
+                        inputProps={{
+                            className: styles.input
+                        }}
+                        onChange={() => {
+                            this.props.onToggleOption(option.key)
+                        }}
+                    >
+                        {option.label}
+                    </LabeledCheckbox>
+                </div>
+            )
+        },
+        filter: (d: ChartOption, f: string, filterStringUpper: string) => (d.label.toUpperCase().indexOf(filterStringUpper) > -1),
+        sortBy: (d: ChartOption) => d.label,
+        width: 400,
+        defaultSortDirection: 'asc' as 'asc'
+    }, {
+        name: '% samples with data',
+        render: (option: ChartOption) =>
+            <span className={classnames(option.disabled ? styles.labelDisabled: '')}>{getFrequencyStr(option.freq)}</span>,
+        sortBy: (d: ChartOption) => d.freq,
+        defaultSortDirection: 'desc' as 'desc',
+        width: 160
+    }];
 
     @computed
-    get columns(): Column<ChartOption>[] {
-        const columns = [{
-            name: 'Name',
-            render: (option: ChartOption) => {
-                return (
-                    <div className={styles.option}>
-                        <LabeledCheckbox
-                            checked={option.selected}
-                            disabled={option.disabled}
-                            onChange={() => {
-                                this.props.onToggleOption(option.key)
-                            }}
-                        >
-                            {option.label}
-                        </LabeledCheckbox>
-                    </div>
-                )
-            },
-            filter: (d: ChartOption, f: string, filterStringUpper: string) => (d.label.toUpperCase().indexOf(filterStringUpper) > -1),
-            sortBy: (d: ChartOption) => d.label,
-            defaultSortDirection: 'asc' as 'asc'
-        }, {
-            name: '% samples with data',
-            render: (option: ChartOption) =>
-                <span>{getFrequencyStr(option.freq)}</span>,
-            sortBy: (d: ChartOption) => d.freq,//sort freq column using count
-            defaultSortDirection: 'desc' as 'desc',
-            width: 180,
-            visible: !this.hideFreq
-        }];
-        return columns;
+    get tableHeight() {
+        return this.options.length > NUM_ROWS_SHOWN ? NUM_ROWS_SHOWN * 25 : this.options.length * 25;
+    }
+
+    @autobind
+    @action
+    addAll(selectedOptions: ChartOption[]) {
+        this.props.onAddAll(_.uniq(_.filter(this.options, option=>option.selected).concat(selectedOptions)).map(option => option.key));
+    }
+
+    @autobind
+    @action
+    removeAll(selectedOptions: ChartOption[]) {
+        this.props.onClearAll(selectedOptions.map(option => option.key));
     }
 
     render() {
@@ -97,19 +118,15 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                     <span className={addChartStyles.modalHeader}>{this.props.title}</span>
                 </Modal.Header>
                 <Modal.Body>
-                    <div className={styles.main}>
-                        <div className={styles.options}>
-                            <AddChartTableComponent
-                                columns={this.columns}
-                                data={this.options}
-                                initialSortColumn={this.hideFreq ? 'Name' : '% samples with data'}
-                                initialSortDirection={this.hideFreq ? 'asc' : 'desc'}
-                                showColumnVisibility={false}
-                                showCopyDownload={false}
-                                initialItemsPerPage={10}
-                            />
-                        </div>
-                    </div>
+                    <AddChartTableComponent
+                        width={560}
+                        height={this.tableHeight}
+                        columns={this._columns}
+                        data={this.options}
+                        addAll={this.addAll}
+                        removeAll={this.removeAll}
+                        sortBy={'% samples with data'}
+                    />
                 </Modal.Body>
                 <Modal.Footer>
                     <div className={styles.footer}>
@@ -123,16 +140,6 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                                 )
                             }
                         </div>
-                        <ButtonGroup>
-                            <Button onClick={() => {
-                                this.props.onAddAll(
-                                    _.uniq(
-                                        this.options.concat(
-                                            _.filter(this.props.options, option => option.selected)
-                                        ).map(option => option.key)));
-                            }}>Add All Charts</Button>
-                            <Button onClick={this.props.onClear}>Remove All Charts</Button>
-                        </ButtonGroup>
                     </div>
                 </Modal.Footer>
             </Modal>
