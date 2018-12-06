@@ -91,7 +91,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     </MSKTab>
                                 </MSKTabs>
 
-                                {this.props.routing.location.query.tab === 'summary' &&
+                                {(this.props.routing.location.query.tab === undefined || this.props.routing.location.query.tab === 'summary') &&
                                 <AddChartButton store={this.store}/>}
 
                                 <div className={styles.selectedInfo}>
