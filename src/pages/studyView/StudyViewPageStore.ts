@@ -2561,6 +2561,11 @@ export class StudyViewPageStore {
                     yBinSize:-1
                 };
             }
+        },
+        default: {
+            bins: [],
+            xBinSize:-1,
+            yBinSize:-1
         }
     });
 
