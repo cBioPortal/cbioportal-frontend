@@ -1,6 +1,6 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import {computed, toJS} from "mobx";
+import {computed, toJS, action, observable} from "mobx";
 import autobind from 'autobind-decorator';
 import _ from "lodash";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
@@ -8,6 +8,7 @@ import {ClinicalDataCountWithColor, ClinicalDataType, ClinicalDataTypeEnum} from
 import FixedHeaderTable from "./FixedHeaderTable";
 import styles from "./tables.module.scss";
 import {getFrequencyStr} from "../StudyViewUtils";
+import {SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 
 export interface IClinicalTableProps {
     data: ClinicalDataCountWithColor[];
@@ -27,6 +28,8 @@ class ClinicalTableComponent extends FixedHeaderTable<ClinicalDataCountWithColor
 
 @observer
 export default class ClinicalTable extends React.Component<IClinicalTableProps, {}> {
+    @observable private sortBy:string = '#';
+    @observable private sortDirection: SortDirection;
 
     constructor(props: IClinicalTableProps) {
         super(props);
@@ -136,6 +139,13 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
         this.props.onUserSelection(this.props.filters.filter(filter => !deselectRows.includes(filter)));
     }
 
+    @autobind
+    @action
+    afterSorting(sortBy: string, sortDirection: SortDirection) {
+        this.sortBy = sortBy;
+        this.sortDirection = sortDirection;
+    }
+
     render() {
         return (
             <ClinicalTableComponent
@@ -145,7 +155,9 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
                 columns={this._columns}
                 addAll={this.addAll}
                 removeAll={this.removeAll}
-                sortBy='#'
+                sortBy={this.sortBy}
+                sortDirection={this.sortDirection}
+                afterSorting={this.afterSorting}
             />
         )
     }
