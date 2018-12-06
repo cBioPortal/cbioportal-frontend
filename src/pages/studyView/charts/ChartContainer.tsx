@@ -26,7 +26,9 @@ import autobind from 'autobind-decorator';
 import BarChart from "./barChart/BarChart";
 import {CopyNumberGeneFilterElement} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import {
-    getHeightByDimension, getTableHeightByDimension, getWidthByDimension,
+    getHeightByDimension,
+    getTableHeightByDimension,
+    getWidthByDimension,
     mutationCountVsCnaTooltip,
     MutationCountVsCnaYBinsMin
 } from "../StudyViewUtils";
@@ -62,6 +64,7 @@ export interface IChartContainerProps {
     showLogScaleToggle?:boolean;
     selectedGenes?:any;
     onGeneSelect?:any;
+    isChartHighlighted: (uniqueKey: string) => boolean;
 
     setAnalysisGroupsSettings: (attribute:ClinicalAttribute, grp:ReadonlyArray<AnalysisGroup>)=>void;
     analysisGroupsSettings:StudyViewPageStore["analysisGroupsSettings"];
@@ -410,7 +413,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     public render() {
         return (
-            <div className={classnames(styles.chart, { [styles.analysisTarget]:this.isAnalysisTarget })}
+            <div className={classnames(styles.chart, { [styles.highlight]:this.props.isChartHighlighted(this.props.chartMeta.uniqueKey)})}
                  onMouseEnter={this.handlers.onMouseEnterChart}
                  onMouseLeave={this.handlers.onMouseLeaveChart}>
                 <ChartHeader
