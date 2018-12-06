@@ -97,7 +97,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             name: 'CNA',
             tooltip:(<span>Copy number alteration, only amplifications and deep deletions are shown</span>),
             render: (data: CopyNumberCountByGene) =>
-                <span style={{color: getCNAColorByAlteration(data.alteration)}}>
+                <span style={{color: getCNAColorByAlteration(data.alteration), fontWeight: 'bold'}}>
                     {getCNAByAlteration(data.alteration)}
                 </span>,
             sortBy: (data: CopyNumberCountByGene) => data.alteration,
