@@ -15,9 +15,31 @@
 
 .option {
   margin-top: 5px;
+  overflow: hidden;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
 }
 
 .footer {
   display: flex;
   justify-content: space-between;
+}
+
+.input {
+  margin-right: 5px !important;
+}
+
+.label {
+  white-space: nowrap;
+  overflow: hidden;
+  -ms-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  font-weight: normal !important;
+  cursor: pointer;
+}
+
+.labelDisabled{
+  color: #cccccc;
+  cursor: default;
 }
