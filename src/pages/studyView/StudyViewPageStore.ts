@@ -58,6 +58,7 @@ import {
     getFilteredStudiesWithSamples,
     getFrequencyStr,
     getQValue,
+    getRequestedAwaitPromisesForClinicalData,
     getSamplesByExcludingFiltersOnChart,
     isFiltered,
     isLogScaleByDataBins,
@@ -372,13 +373,14 @@ export class StudyViewPageStore {
                 return acc;
             }, [] as CopyNumberGeneFilter[]);
         }
-        //TODO: do not re-initialize if nothing is changed
-        this.initialFiltersQuery = filters;
+        if(!_.isEqual(toJS(this.initialFiltersQuery), filters)) {
+            this.initialFiltersQuery = filters;
+        }
     }
 
     @computed
     get initialFilters() {
-        return _.merge(this.initialFiltersQuery, {studyIds: this.queriedPhysicalStudyIds.result});
+        return Object.assign({}, this.initialFiltersQuery, {studyIds: this.queriedPhysicalStudyIds.result});
     }
 
     @computed
@@ -908,13 +910,7 @@ export class StudyViewPageStore {
     }
 
     @action addCharts(visibleChartIds:string[]) {
-        // Every time a chart is added, we reset the list.
-        this.newlyAddedCharts = [];
-        visibleChartIds.forEach(chartId => {
-            if(!this._chartVisibility.keys().includes(chartId)) {
-                this.newlyAddedCharts.push(chartId);
-            }
-        });
+        this.newlyAddedCharts = visibleChartIds.filter(chartId => !this._chartVisibility.keys().includes(chartId));
         this.updateChartsVisibility(visibleChartIds);
     }
 
@@ -1028,13 +1024,6 @@ export class StudyViewPageStore {
         return result ? result.values : [];
     }
 
-    /**
-     * This is really not the best way to generate unfiltered attrs.
-     * But probably the best way to do in the current structure.
-     * We do not send duplicate API call by relying on the API caching.
-     * Maybe the server side should tell the frontend what attribute should be visualized.
-     *
-     */
     @computed
     get unfilteredAttrsForNonNumerical() {
         const visibleNonNumericalAttributes = this.visibleAttributes.filter((chartMeta: ChartMeta) => {
@@ -1045,21 +1034,12 @@ export class StudyViewPageStore {
             return false;
         });
 
-        const defaultVisibleNonNumericalAttributes = this.defaultVisibleAttributes.result.filter(
-            (attr: ClinicalAttribute) => attr.datatype !== "NUMBER");
-
-        return _.sortBy(_.unionBy(visibleNonNumericalAttributes.map((chartMeta: ChartMeta) => {
+        return visibleNonNumericalAttributes.map((chartMeta: ChartMeta) => {
             return {
                 attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
                 clinicalDataType: chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE'
             } as ClinicalDataFilter;
-        }), defaultVisibleNonNumericalAttributes.map((attr:ClinicalAttribute) => {
-            return {
-                attributeId: attr.clinicalAttributeId,
-                clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE'
-            } as ClinicalDataFilter;
-        }), attr => [attr.attributeId, attr.clinicalDataType].join('')),
-            attr => [attr.attributeId, attr.clinicalDataType].join(''));
+        });
     }
 
     @computed
@@ -1104,26 +1084,20 @@ export class StudyViewPageStore {
     @computed
     get unfilteredAttrsForNumerical() {
         const visibleNumericalAttributes = this.visibleAttributes.filter((chartMeta: ChartMeta) => {
-            if(chartMeta.clinicalAttribute !== undefined && chartMeta.clinicalAttribute.datatype === "NUMBER") {
+            if (chartMeta.clinicalAttribute !== undefined && chartMeta.clinicalAttribute.datatype === "NUMBER") {
                 const key = getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute);
                 return !this._clinicalDataIntervalFilterSet.has(key);
             }
             return false;
         });
 
-        const defaultVisibleNumericalAttributes = this.defaultVisibleAttributes.result.filter(
-            (attr: ClinicalAttribute) => attr.datatype === "NUMBER");
-
-        return _.sortBy(_.unionBy(visibleNumericalAttributes.map((chartMeta: ChartMeta) => {
-                return this._clinicalDataBinFilterSet.get(getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!))!;;
-            }), defaultVisibleNumericalAttributes.map((attr:ClinicalAttribute) => {
-                return this._clinicalDataBinFilterSet.get(getClinicalAttributeUniqueKey(attr))!;;
-            }), attr => [attr.attributeId, attr.clinicalDataType].join('')),
-            attr => [attr.attributeId, attr.clinicalDataType].join(''));
+        return visibleNumericalAttributes.map((chartMeta: ChartMeta) => {
+            return this._clinicalDataBinFilterSet.get(getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute!))!;
+        });
     }
 
     readonly unfilteredClinicalDataCount = remoteData<ClinicalDataCountItem[]>({
-        invoke: async () => {
+        invoke: () => {
             return internalClient.fetchClinicalDataCountsUsingPOST({
                 clinicalDataCountFilter: {
                     attributes: this.unfilteredAttrsForNonNumerical,
@@ -1135,7 +1109,7 @@ export class StudyViewPageStore {
     });
 
     readonly newlyAddedUnfilteredClinicalDataCount = remoteData<ClinicalDataCountItem[]>({
-        invoke: async () => {
+        invoke: () => {
             return internalClient.fetchClinicalDataCountsUsingPOST({
                 clinicalDataCountFilter: {
                     attributes: this.newlyAddedUnfilteredAttrsForNonNumerical,
@@ -1153,7 +1127,7 @@ export class StudyViewPageStore {
     });
 
     readonly newlyAddedUnfilteredClinicalDataBinCount = remoteData<DataBin[]>({
-        invoke: async () => {
+        invoke: () => {
             return internalClient.fetchClinicalDataBinCountsUsingPOST({
                 dataBinMethod: 'STATIC',
                 clinicalDataBinCountFilter: {
@@ -1172,7 +1146,7 @@ export class StudyViewPageStore {
     });
 
     readonly unfilteredClinicalDataBinCount = remoteData<DataBin[]>({
-        invoke: async () => {
+        invoke: () => {
             return internalClient.fetchClinicalDataBinCountsUsingPOST({
                 dataBinMethod: 'STATIC',
                 clinicalDataBinCountFilter: {
@@ -1195,19 +1169,12 @@ export class StudyViewPageStore {
         if(!this.clinicalDataCountPromises.hasOwnProperty(uniqueKey)) {
             this.clinicalDataCountPromises[uniqueKey] = remoteData<ClinicalDataCountWithColor[]>({
                 await: () => {
-                    if (this.isInitialFilterState && _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined) {
-                        return [this.initialVisibleAttributesClinicalDataCountData];
-                    } else if (!this.chartsAreFiltered) {
-                        if (this.newlyAddedCharts.includes(uniqueKey)) {
-                            return [this.newlyAddedUnfilteredClinicalDataCount];
-                        } else {
-                            return [];
-                        }
-                    } else if (this._clinicalDataEqualityFilterSet.has(uniqueKey)) {
-                        return [];
-                    } else {
-                        return [this.unfilteredClinicalDataCount];
-                    }
+                    return getRequestedAwaitPromisesForClinicalData(
+                        _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined,
+                        this.isInitialFilterState, this.chartsAreFiltered,
+                        this.newlyAddedCharts.includes(uniqueKey), this._clinicalDataEqualityFilterSet.has(uniqueKey),
+                        this.unfilteredClinicalDataCount, this.newlyAddedUnfilteredClinicalDataCount,
+                        this.initialVisibleAttributesClinicalDataCountData);
                 },
                 invoke: async () => {
                     let dataType = chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE';
@@ -1256,19 +1223,11 @@ export class StudyViewPageStore {
         if (!this.clinicalDataBinPromises.hasOwnProperty(uniqueKey)) {
             this.clinicalDataBinPromises[uniqueKey] = remoteData<DataBin[]>({
                 await: () => {
-                    if (this.isInitialFilterState && _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined) {
-                        return [this.initialVisibleAttributesClinicalDataBinCountData];
-                    } else if (!this.chartsAreFiltered) {
-                        if (this.newlyAddedCharts.includes(uniqueKey)) {
-                            return [this.newlyAddedUnfilteredClinicalDataBinCount];
-                        } else {
-                            return [];
-                        }
-                    } else if (this._clinicalDataIntervalFilterSet.has(uniqueKey)) {
-                        return [];
-                    } else {
-                        return [this.unfilteredClinicalDataBinCount];
-                    }
+                    return getRequestedAwaitPromisesForClinicalData(
+                        _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined, this.isInitialFilterState, this.chartsAreFiltered,
+                        this.newlyAddedCharts.includes(uniqueKey), this._clinicalDataIntervalFilterSet.has(uniqueKey),
+                        this.unfilteredClinicalDataBinCount, this.newlyAddedUnfilteredClinicalDataBinCount,
+                        this.initialVisibleAttributesClinicalDataBinCountData);
                 },
                 invoke: async () => {
                     const clinicalDataType = chartMeta.clinicalAttribute!.patientAttribute ? 'PATIENT' : 'SAMPLE';
