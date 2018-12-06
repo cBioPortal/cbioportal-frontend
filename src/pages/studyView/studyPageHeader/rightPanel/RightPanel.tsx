@@ -72,7 +72,7 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
                                 },
                                 queryStr: string,
                                 status: "pending" | "error" | "complete") {
-        this._isQueryButtonDisabled = (status === 'pending') || !_.isUndefined(oql.error) || genes.suggestions.length !== 0;
+        this._isQueryButtonDisabled = queryStr==='' || (status === 'pending') || !_.isUndefined(oql.error) || genes.suggestions.length !== 0;
         if (status === "complete") {
             this.props.store.updateSelectedGenes(oql.query, genes.found);
         }
