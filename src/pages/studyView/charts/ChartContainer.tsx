@@ -3,7 +3,6 @@ import styles from "./styles.module.scss";
 import {observer} from "mobx-react";
 import {action, computed, observable} from "mobx";
 import _ from "lodash";
-import {StudyViewComponentLoader} from "./StudyViewComponentLoader";
 import {ChartControls, ChartHeader} from "pages/studyView/chartHeader/ChartHeader";
 import {
     AnalysisGroup,
@@ -36,6 +35,7 @@ import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
 import StudyViewDensityScatterPlot from "./scatterPlot/StudyViewDensityScatterPlot";
 import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
+import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
@@ -443,7 +443,19 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     download={this.downloadTypes}
                     setAnalysisGroups={this.setAnalysisGroups}
                 />
-                <StudyViewComponentLoader promises={this.loadingPromises} render={this.chart}/>
+                <div className={classnames(this.props.promise.isPending  ? styles.studyViewAutoMargin : null, styles.studyViewLoadingIndicator)}>
+                    {(this.props.promise.isPending) && (
+                        <LoadingIndicator
+                            isLoading={true}
+                            center={true}
+                        />
+                    )}
+                    {this.props.promise.isError && (<div>Error when loading data.</div>)}
+
+                    <div style={{visibility: this.props.promise.isPending ? 'hidden' : 'visible'}}>
+                        {this.chart && this.chart()}
+                    </div>
+                </div>
             </div>
         );
     }
