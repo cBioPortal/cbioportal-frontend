@@ -27,6 +27,7 @@ export type IFixedHeaderTableProps<T> = {
     height?: number;
     showSelectSamples?: boolean;
     afterSelectingRows?: () => void;
+    showAddRemoveAllButtons?: boolean;
     addAll?: (data:T[]) => void;
     removeAll?: (data:T[]) => void;
     isSelectedRow?: (data:T) => boolean;
@@ -46,6 +47,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
 
     public static defaultProps = {
         showSelectSamples: false,
+        showAddRemoveAllButtons: false,
         width : 398,
         height: 350,
         sortBy: ''
@@ -216,6 +218,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                     <input placeholder={"Search..."} type="text" onInput={this.onFilterTextChange()}
                            className={classnames('form-control', styles.tableSearchInput)}/>
 
+                    <If condition={this.props.showAddRemoveAllButtons}>
                     <div className={"btn-group"} role={"group"}>
                         {this.props.addAll && (
                             <button className="btn btn-default btn-xs" onClick={this.onAddAll}>
@@ -228,6 +231,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                             </button>
                         )}
                     </div>
+                    </If>
 
                     <If condition={this.props.showSelectSamples}>
                         <button className={classnames("btn btn-primary btn-xs", styles.bottomToolsBtn)} onClick={this.afterSelectingRows}>Select Samples</button>
