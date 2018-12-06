@@ -19,7 +19,8 @@ export interface IClinicalTableProps {
     labelDescription?: string,
     patientAttribute: boolean,
     width?: number,
-    height?: number
+    height?: number,
+    showAddRemoveAllButtons?: boolean
 }
 
 class ClinicalTableComponent extends FixedHeaderTable<ClinicalDataCountWithColor> {
@@ -36,7 +37,8 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
     }
 
     static readonly defaultProps = {
-        width: 300
+        width: 300,
+        showAddRemoveAllButtons: false
     };
 
     @computed
@@ -155,6 +157,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
                 columns={this._columns}
                 addAll={this.addAll}
                 removeAll={this.removeAll}
+                showAddRemoveAllButtons={this.props.showAddRemoveAllButtons}
                 sortBy={this.sortBy}
                 sortDirection={this.sortDirection}
                 afterSorting={this.afterSorting}

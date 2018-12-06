@@ -279,6 +279,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     label={this.props.title}
                     labelDescription={this.props.chartMeta.description}
                     patientAttribute={this.props.chartMeta.patientAttribute}
+                    showAddRemoveAllButtons={this.mouseInChart}
                 />);
             }
             case ChartTypeEnum.MUTATED_GENES_TABLE: {
