@@ -112,6 +112,13 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             download:(d:Mutation[])=>ClonalColumnFormatter.getClonalDownload(d)
         };
 
+        this._columns[MutationTableColumnType.MUTANT_COPIES] = {
+            name: "Mutant Copies",
+             tooltip: (<span>FACETS Best Guess for Mutant Copies / Total Copies</span>),
+            render:(d:Mutation[])=>MutantCopiesColumnFormatter.renderFunction(d, this.props.sampleIdToClinicalDataMap, this.getSamples()),
+            sortBy:(d:Mutation[])=>MutantCopiesColumnFormatter.getDisplayValueAsString(d, this.props.sampleIdToClinicalDataMap, this.getSamples())        
+        };
+
         // customization for allele count columns
 
         this._columns[MutationTableColumnType.REF_READS_N].render =
@@ -178,7 +185,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         // hide if multiple samples (same as Copy Number column)
         // included because Mutant copies should only be shown in conjunction with Copy Num
         this._columns[MutationTableColumnType.MUTANT_COPIES].shouldExclude = ()=>{
-            return (!this.hasMutantCopies || this.getSamples().length > 1 || !this.props.discreteCNAMolecularProfileId);
+            return (!this.hasMutantCopies || !this.props.discreteCNAMolecularProfileId);
         };
 
         // only hide tumor column if there is one sample and no uncalled
@@ -188,7 +195,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             return this.getSamples().length < 2 && !this.hasUncalledMutations;
         };
         this._columns[MutationTableColumnType.COPY_NUM].shouldExclude = ()=>{
-            return (!this.props.discreteCNAMolecularProfileId) || (this.getSamples().length > 1);
+            return (!this.props.discreteCNAMolecularProfileId);
         };
     }
 

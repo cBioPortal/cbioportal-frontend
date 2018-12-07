@@ -441,9 +441,9 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
         this._columns[MutationTableColumnType.MUTANT_COPIES] = {
             name: "Mutant Copies",
             tooltip: (<span>FACETS Best Guess for Mutant Copies / Total Copies</span>),
-            render:(d:Mutation[])=>MutantCopiesColumnFormatter.renderFunction(d, this.props.sampleIdToClinicalDataMap),
-            download:(d:Mutation[])=>MutantCopiesColumnFormatter.getDisplayValue(d, this.props.sampleIdToClinicalDataMap),
-            sortBy:(d:Mutation[])=>MutantCopiesColumnFormatter.getDisplayValue(d, this.props.sampleIdToClinicalDataMap)
+            render:(d:Mutation[])=>MutantCopiesColumnFormatter.renderFunction(d, this.props.sampleIdToClinicalDataMap, [d[0].sampleId]),
+            download:(d:Mutation[])=>MutantCopiesColumnFormatter.getDisplayValueAsString(d, this.props.sampleIdToClinicalDataMap, [d[0].sampleId]),
+            sortBy:(d:Mutation[])=>MutantCopiesColumnFormatter.getDisplayValueAsString(d, this.props.sampleIdToClinicalDataMap, [d[0].sampleId])
         };
 
         this._columns[MutationTableColumnType.FUNCTIONAL_IMPACT] = {
