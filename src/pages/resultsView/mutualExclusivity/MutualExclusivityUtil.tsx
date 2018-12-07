@@ -83,7 +83,7 @@ export function getTrackPairsCountText(data: MutualExclusivity[], trackCount: nu
 
     const trackPairsCount = _.size(data);
     const pairText = trackPairsCount > 1 ? "pairs" : "pair";
-    return <p>The analysis tested <b>{trackPairsCount}</b> {pairText} of the <b>{trackCount}</b> tracks in OncoPrint.</p>;
+    return <p>The analysis tested <b>{trackPairsCount}</b> {pairText} between the <b>{trackCount}</b> tracks in the OncoPrint.</p>;
 }
 
 export function getCountsText(data: MutualExclusivity[]): JSX.Element {

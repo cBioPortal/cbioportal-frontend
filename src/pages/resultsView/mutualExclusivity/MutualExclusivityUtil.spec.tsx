@@ -269,7 +269,7 @@ describe("MutualExclusivityUtil", () => {
     describe("#getCountsText()", () => {
         it("returns correct text", () => {
             const result = getTrackPairsCountText(exampleData, _.size(isSampleAlteredMap));
-            expect(result).toEqualJSX(<p>The analysis tested <b>6</b> pairs of the <b>4</b> tracks in OncoPrint.</p>);
+            expect(result).toEqualJSX(<p>The analysis tested <b>6</b> pairs between the <b>4</b> tracks in the OncoPrint.</p>);
         });
     });
 

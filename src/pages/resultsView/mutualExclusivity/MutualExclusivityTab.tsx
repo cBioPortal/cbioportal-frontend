@@ -85,7 +85,7 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
                 );
             } else {
                 return <div className={"tabMessageContainer"}>
-                            <div className={"alert alert-info"}>Mutual exclusivity analysis cannot be provided when only a track is selected.</div>
+                            <div className={"alert alert-info"}>Mutual exclusivity analysis cannot be provided when only a single track is selected.</div>
                         </div>
             }
         } else {

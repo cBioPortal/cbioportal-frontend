@@ -63,9 +63,9 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
         this._columns = {};
 
         this._columns[MutualExclusivityTableColumnType.TRACK_A] = {
-            name: "Track A",
+            name: "A",
             render: (d: MutualExclusivity) => <span><b>{d.trackA}</b></span>,
-            tooltip: <span>Track A</span>,
+            tooltip: <span>A</span>,
             filter: (d: MutualExclusivity, filterString: string, filterStringUpper: string) =>
                 d.trackA.toUpperCase().includes(filterStringUpper),
             sortBy: (d: MutualExclusivity) => d.trackA,
@@ -73,9 +73,9 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
         };
 
         this._columns[MutualExclusivityTableColumnType.TRACK_B] = {
-            name: "Track B",
+            name: "B",
             render: (d: MutualExclusivity) => <span><b>{d.trackB}</b></span>,
-            tooltip: <span>Track B</span>,
+            tooltip: <span>B</span>,
             filter: (d: MutualExclusivity, filterString: string, filterStringUpper: string) =>
                 d.trackB.toUpperCase().includes(filterStringUpper),
             sortBy: (d: MutualExclusivity) => d.trackB,
@@ -85,7 +85,7 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
         this._columns[MutualExclusivityTableColumnType.NEITHER] = {
             name: "Neither",
             render: (d: MutualExclusivity) => <span>{d.neitherCount}</span>,
-            tooltip: <span>Number of samples with alterations in neither Track A nor Track B</span>,
+            tooltip: <span>Number of samples with alterations in neither A nor B</span>,
             sortBy: (d: MutualExclusivity) => d.neitherCount,
             download: (d: MutualExclusivity) => d.neitherCount.toString()
         };
@@ -93,7 +93,7 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
         this._columns[MutualExclusivityTableColumnType.A_NOT_B] = {
             name: "A Not B",
             render: (d: MutualExclusivity) => <span>{d.aNotBCount}</span>,
-            tooltip: <span>Number of samples with alterations in Track A but not in Track B</span>,
+            tooltip: <span>Number of samples with alterations in A but not in B</span>,
             sortBy: (d: MutualExclusivity) => d.aNotBCount,
             download: (d: MutualExclusivity) => d.aNotBCount.toString()
         };
@@ -101,7 +101,7 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
         this._columns[MutualExclusivityTableColumnType.B_NOT_A] = {
             name: "B Not A",
             render: (d: MutualExclusivity) => <span>{d.bNotACount}</span>,
-            tooltip: <span>Number of samples with alterations in Track B but not in Track A</span>,
+            tooltip: <span>Number of samples with alterations in B but not in A</span>,
             sortBy: (d: MutualExclusivity) => d.bNotACount,
             download: (d: MutualExclusivity) => d.bNotACount.toString()
         };
@@ -109,7 +109,7 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
         this._columns[MutualExclusivityTableColumnType.BOTH] = {
             name: "Both",
             render: (d: MutualExclusivity) => <span>{d.bothCount}</span>,
-            tooltip: <span>Number of samples with alterations in both Track A and Track B</span>,
+            tooltip: <span>Number of samples with alterations in both A and B</span>,
             sortBy: (d: MutualExclusivity) => d.bothCount,
             download: (d: MutualExclusivity) => d.bothCount.toString()
         };
@@ -118,7 +118,7 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
             name: "Log Odds Ratio",
             render: (d: MutualExclusivity) => <span>{formatLogOddsRatio(d.logOddsRatio)}</span>,
             tooltip: <span style={{ display: 'inline-block', maxWidth: 300 }}>Quantifies how strongly the presence or
-                absence of alterations in Track A are associated with the presence or absence of alterations in Track B in
+                absence of alterations in A are associated with the presence or absence of alterations in B in
                 the selected samples.</span>,
             sortBy: (d: MutualExclusivity) => d.logOddsRatio,
             download: (d: MutualExclusivity) => formatLogOddsRatio(d.logOddsRatio)

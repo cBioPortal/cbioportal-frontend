@@ -1029,7 +1029,7 @@ export class ResultsViewPageStore {
 
     readonly isSampleAlteredMap = remoteData({
         await: () => [this.filteredAlterationsDataByUnflattenedOQLLine, this.samples],
-        invoke: async() => {
+        invoke: async() => {          
             const result : {[x: string]: boolean[]} = {};
             this.filteredAlterationsDataByUnflattenedOQLLine.result!.forEach((element, key) => {
                 //1: is not group(1.1, 1.2)
@@ -1045,7 +1045,7 @@ export class ResultsViewPageStore {
                     }
                     //1.2: gene alteration
                     else {
-                        result[notGroupedOql.oql_line] = this.samples.result.map((sample: Sample) => {
+                        result[notGroupedOql.oql_line.slice(0, -1)] = this.samples.result.map((sample: Sample) => {
                             return _.includes(sampleKeys, sample.uniqueSampleKey);
                         });
                     }
@@ -1055,7 +1055,8 @@ export class ResultsViewPageStore {
                     const groupedOql = element.oql as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>;
                     const oqlData = _.flatten(_.map(groupedOql.list, (list) => list.data));
                     const sampleKeys = _.map(oqlData, (data) => data.uniqueSampleKey);
-                    result[groupedOql.label!] = this.samples.result.map((sample: Sample) => {
+                    const resultKey = groupedOql.label! === undefined ? _.map(groupedOql.list, (data) => data.gene).join(' / ') : groupedOql.label!;
+                    result[resultKey] = this.samples.result.map((sample: Sample) => {
                         return _.includes(sampleKeys, sample.uniqueSampleKey);
                     });
                 }
