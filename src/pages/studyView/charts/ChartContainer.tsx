@@ -250,7 +250,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     onUserSelection={this.handlers.onValueSelection}
                     filters={this.props.filters}
                     data={this.props.promise.result}
-                    active={this.mouseInChart}
                     placement={this.placement}
                     label={this.props.title}
                     labelDescription={this.props.chartMeta.description}
@@ -279,6 +278,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     label={this.props.title}
                     labelDescription={this.props.chartMeta.description}
                     patientAttribute={this.props.chartMeta.patientAttribute}
+                    showAddRemoveAllButtons={this.mouseInChart}
                 />);
             }
             case ChartTypeEnum.MUTATED_GENES_TABLE: {
