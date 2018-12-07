@@ -10,6 +10,8 @@ import OncoprintControls, {
 import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
 import {ClinicalAttribute, Gene, MolecularProfile, Sample} from "../../api/generated/CBioPortalAPI";
 import {
+    getAlteredUids,
+    getUnalteredUids,
     makeClinicalTracksMobxPromise,
     makeGenesetHeatmapExpansionsMobxPromise,
     makeGenesetHeatmapTracksMobxPromise,
@@ -80,6 +82,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @observable columnMode:"sample"|"patient" = "patient";
     @observable sortMode:SortMode = {type:"data"};
 
+    @observable distinguishGermlineMutations:boolean = true;
+    @observable hideGermlineMutations:boolean = false;
     @observable distinguishMutationType:boolean = true;
     @observable sortByMutationType:boolean = true;
     @observable sortByDrivers:boolean = true;
@@ -241,6 +245,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             get distinguishDrivers() {
                 return self.distinguishDrivers;
             },
+            get distinguishGermlineMutations() {
+                return self.distinguishGermlineMutations;
+            },
             get annotateDriversOncoKb() {
                 return self.props.store.mutationAnnotationSettings.oncoKb;
             },
@@ -267,6 +274,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             },
             get hidePutativePassengers() {
                 return self.props.store.mutationAnnotationSettings.ignoreUnknown;
+            },
+            get hideGermlineMutations() {
+                return self.hideGermlineMutations;
             },
             get annotateCBioPortalInputValue() {
                 return self.props.store.mutationAnnotationSettings.cbioportalCountThreshold + "";
@@ -428,6 +438,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     });
                 }
             }),
+            onSelectDistinguishGermlineMutations:(s:boolean)=>{this.distinguishGermlineMutations = s; },
             onSelectAnnotateOncoKb:action((s:boolean)=>{
                 this.props.store.mutationAnnotationSettings.oncoKb = s;
             }),
@@ -456,6 +467,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             }),
             onSelectHidePutativePassengers:(s:boolean)=>{
                 this.props.store.mutationAnnotationSettings.ignoreUnknown = s;
+            },
+            onSelectHideGermlineMutations:(s:boolean)=>{
+                this.hideGermlineMutations = s;
             },
             onSelectSortByMutationType:(s:boolean)=>{this.sortByMutationType = s;},
             onClickSortAlphabetical:()=>{
@@ -655,20 +669,16 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
         this.oncoprint.onHorzZoom(z=>(this.horzZoom = z));
         this.horzZoom = this.oncoprint.getHorzZoom();
-        onMobxPromise([this.props.store.alteredSampleKeys, this.props.store.alteredPatientKeys],
-            (sampleUIDs:string[], patientUIDs:string[])=>{
-                this.oncoprint.setHorzZoomToFit(
-                    this.columnMode === "sample" ? sampleUIDs: patientUIDs
-                );
+        onMobxPromise(this.alteredKeys,
+            (alteredUids:string[])=>{
+                this.oncoprint.setHorzZoomToFit(alteredUids);
             });
 
     }
 
     @computed get horzZoomToFitIds() {
-        if (this.columnMode === "sample" && this.props.store.alteredSampleKeys.isComplete) {
-            return this.props.store.alteredSampleKeys.result;
-        } else if (this.columnMode === "patient" && this.props.store.alteredPatientKeys.isComplete) {
-            return this.props.store.alteredPatientKeys.result;
+        if (this.alteredKeys.isComplete) {
+            return this.alteredKeys.result;
         } else {
             return [];
         }
@@ -680,13 +690,16 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
-    @computed get unalteredKeys():MobxPromise<string[]> {
-        if (this.columnMode === "sample") {
-            return this.props.store.unalteredSampleKeys;
-        } else {
-            return this.props.store.unalteredPatientKeys;
-        }
-    }
+    readonly alteredKeys = remoteData({
+        await:()=>[this.geneticTracks],
+        invoke:async()=>getAlteredUids(this.geneticTracks.result!)
+    });
+
+    private readonly unalteredKeys = remoteData({
+        await:()=>[this.geneticTracks],
+        invoke:async()=>getUnalteredUids(this.geneticTracks.result!)
+    });
+
 
     private onMinimapClose() {
         this.showMinimap = false;
@@ -1000,6 +1013,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 horzZoomToFitIds={this.horzZoomToFitIds}
                                 distinguishMutationType={this.distinguishMutationType}
                                 distinguishDrivers={this.distinguishDrivers}
+                                distinguishGermlineMutations={this.distinguishGermlineMutations}
                                 sortConfig={this.sortConfig}
                                 showClinicalTrackLegends={this.showClinicalTrackLegends}
                                 showWhitespaceBetweenColumns={this.showWhitespaceBetweenColumns}
