@@ -166,6 +166,7 @@ export type ChartMeta = {
 export type StudyViewURLQuery = {
     id: string,
     studyId: string,
+    cancer_study_id: string,
     filters: string,
 }
 
@@ -324,6 +325,9 @@ export class StudyViewPageStore {
         let studyIds: string[] = [];
         if (query.studyId) {
             studyIdsString = query.studyId;
+        }
+        if (query.cancer_study_id) {
+            studyIdsString = query.cancer_study_id;
         }
         if (query.id) {
             studyIdsString = query.id;
