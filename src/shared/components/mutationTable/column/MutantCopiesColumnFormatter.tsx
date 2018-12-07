@@ -29,7 +29,7 @@ export default class MutantCopiesColumnFormatter
 
     public static invalidTotalCopyNumber(value:number):boolean
     { 
-        if (value === -1 || value === 0 || value === null) {
+        if (value === -1 || value === null) {
             return true;
         }
         return false;
@@ -61,7 +61,7 @@ export default class MutantCopiesColumnFormatter
         if (purity === null) {
             return -1;
         }
-        const mutantCopies:number = Math.max(1, Math.min(totalCopyNumber, Math.round((variantAlleleFraction/purity)*totalCopyNumber)))
+        const mutantCopies:number = Math.min(totalCopyNumber, Math.round((variantAlleleFraction/purity)*totalCopyNumber))
         return mutantCopies;
     }
  
@@ -71,9 +71,9 @@ export default class MutantCopiesColumnFormatter
         const totalCopyNumber:number = data[0].totalCopyNumber;
         const mutantCopies:number = MutantCopiesColumnFormatter.getMutantCopies(data, sampleIdToClinicalDataMap)
         if (mutantCopies === -1 || MutantCopiesColumnFormatter.invalidTotalCopyNumber(totalCopyNumber)) {
-            textValue = "NA";
+            textValue = "";
         } else {
-            textValue = mutantCopies.toString(10) + "/" + totalCopyNumber.toString(10);
+            textValue = mutantCopies.toString() + "/" + totalCopyNumber.toString();
         }
         return textValue;
     }

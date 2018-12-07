@@ -259,13 +259,14 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                     return (<span></span>);
                 }
             },
-            sortBy: (d:Mutation[]):number|null=>{
+            sortBy: (d:Mutation[]):string|null=>{
                 if (this.props.discreteCNACache && this.props.molecularProfileIdToMolecularProfile) {
                     return DiscreteCNAColumnFormatter.getSortValue(d,
                         this.props.molecularProfileIdToMolecularProfile as {[molecularProfileId:string]:MolecularProfile},
-                        this.props.discreteCNACache as DiscreteCNACache);
+                        this.props.discreteCNACache as DiscreteCNACache,
+                        this.props.sampleIdToClinicalDataMap);
                 } else {
-                    return 0;
+                    return "";
                 }
             },
             filter:(d:Mutation[], filterString:string)=>{
@@ -273,6 +274,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                     return DiscreteCNAColumnFormatter.filter(d,
                         this.props.molecularProfileIdToMolecularProfile as {[molecularProfileId:string]:MolecularProfile},
                         this.props.discreteCNACache as DiscreteCNACache,
+                        this.props.sampleIdToClinicalDataMap,
                         filterString);
                 } else {
                     return false;
@@ -422,29 +424,25 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
 
         this._columns[MutationTableColumnType.CLONAL] = {
             name: "Clonal",
-            render:ClonalColumnFormatter.renderFunction,
-            download:ClonalColumnFormatter.getClonalValue,
-            sortBy:(d:Mutation[])=>ClonalColumnFormatter.getDisplayValue(d),
             tooltip: (<span>FACETS Clonal</span>),
-            filter:(d:Mutation[], filterString:string, filterStringUpper:string) =>
-                ClonalColumnFormatter.getDisplayValue(d).toUpperCase().indexOf(filterStringUpper) > -1
+            render:(d:Mutation[])=>ClonalColumnFormatter.renderFunction(d, [d[0].sampleId]),
+            download:ClonalColumnFormatter.getClonalValue,
+            sortBy:(d:Mutation[])=>d.map(m=>m.ccfMCopiesUpper)
         };
 
         this._columns[MutationTableColumnType.CANCER_CELL_FRACTION] = {
             name: "CCF",
+            tooltip: (<span>FACETS Cancer Cell Fraction</span>),
             render:CancerCellFractionColumnFormatter.renderFunction,
             download:CancerCellFractionColumnFormatter.getCancerCellFractionValue,
-            sortBy:(d:Mutation[])=>CancerCellFractionColumnFormatter.getDisplayValue(d),
-            tooltip: (<span>FACETS Cancer Cell Fraction</span>),
-            filter:(d:Mutation[], filterString:string, filterStringUpper:string) =>
-                CancerCellFractionColumnFormatter.getDisplayValue(d).toUpperCase().indexOf(filterStringUpper) > -1
+            sortBy:(d:Mutation[])=>d.map(m=>m.ccfMCopies)
         };
 
         this._columns[MutationTableColumnType.MUTANT_COPIES] = {
             name: "Mutant Copies",
+            tooltip: (<span>FACETS Best Guess for Mutant Copies / Total Copies</span>),
             render:(d:Mutation[])=>MutantCopiesColumnFormatter.renderFunction(d, this.props.sampleIdToClinicalDataMap),
             download:(d:Mutation[])=>MutantCopiesColumnFormatter.getDisplayValue(d, this.props.sampleIdToClinicalDataMap),
-            tooltip: (<span>FACETS Best Guess for Mutant Copies / Total Copies</span>),
             sortBy:(d:Mutation[])=>MutantCopiesColumnFormatter.getDisplayValue(d, this.props.sampleIdToClinicalDataMap)
         };
 

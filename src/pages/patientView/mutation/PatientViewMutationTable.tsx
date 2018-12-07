@@ -7,6 +7,9 @@ import {
 import SampleManager from "../sampleManager";
 import {Mutation, ClinicalData} from "shared/api/generated/CBioPortalAPI";
 import AlleleCountColumnFormatter from "shared/components/mutationTable/column/AlleleCountColumnFormatter";
+import MutantCopiesColumnFormatter from "shared/components/mutationTable/column/MutantCopiesColumnFormatter";
+import CancerCellFractionColumnFormatter from "shared/components/mutationTable/column/CancerCellFractionColumnFormatter";
+import ClonalColumnFormatter from "shared/components/mutationTable/column/ClonalColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import FACETSColumnFormatter from "./column/FACETSColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
@@ -83,17 +86,30 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
                 this.props.dataStore ? this.props.dataStore.allData : this.props.data)
         };
 
-        this._columns[MutationTableColumnType.CANCER_CELL_FRACTION] = {
-            name: "Tester CCF",
-            render: (d:Mutation[])=>FACETSColumnFormatter.renderFunction(d, this.props.sampleManager),
-            tooltip:(<span>frontend is the bane of my existence</span>),
-        };
-
         this._columns[MutationTableColumnType.TUMORS] = {
             name: "Tumors",
             render:(d:Mutation[])=>TumorColumnFormatter.renderFunction(d, this.props.sampleManager),
             sortBy:(d:Mutation[])=>TumorColumnFormatter.getSortValue(d, this.props.sampleManager),
             download: (d:Mutation[])=>TumorColumnFormatter.getSample(d),
+        };
+
+        // customization for FACETS count columns 
+        // primarily to change display in case of patient with a shared mutation across multiple samples
+
+        this._columns[MutationTableColumnType.CANCER_CELL_FRACTION] = {
+            name: "CCF",
+            tooltip:(<span>Cancer Cell Fraction</span>),
+            render: (d:Mutation[])=>FACETSColumnFormatter.renderFunction(d, this.props.sampleManager),
+            sortBy:(d:Mutation[])=>d.map(m=>m.ccfMCopies),
+            download:(d:Mutation[])=>CancerCellFractionColumnFormatter.getCancerCellFractionDownload(d)
+        };
+
+        this._columns[MutationTableColumnType.CLONAL] = {
+            name: "Clonal",
+            tooltip: (<span>FACETS Clonal</span>),
+            render:(d:Mutation[])=>ClonalColumnFormatter.renderFunction(d, this.getSamples()),
+            sortBy:(d:Mutation[])=>d.map(m=>m.ccfMCopiesUpper),
+            download:(d:Mutation[])=>ClonalColumnFormatter.getClonalDownload(d)
         };
 
         // customization for allele count columns
@@ -117,7 +133,6 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             (d:Mutation[])=>AlleleCountColumnFormatter.renderFunction(d, this.getSamples(), "tumorAltCount");
         this._columns[MutationTableColumnType.VAR_READS].download =
             (d:Mutation[])=>AlleleCountColumnFormatter.getReads(d, "tumorAltCount");
-
 
         // order columns
         this._columns[MutationTableColumnType.TUMORS].order = 5;
@@ -151,9 +166,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.MRNA_EXPR].shouldExclude = ()=>{
             return (!this.props.mrnaExprRankMolecularProfileId) || (this.getSamples().length > 1);
         };
-        // only hide tumor column if there is one sample and no uncalled
-        // mutations (there is no information added in that case by the sample
-        // label)
+
         this._columns[MutationTableColumnType.CLONAL].shouldExclude = ()=>{
             return !this.hasCcfMCopies;
         };
@@ -162,10 +175,15 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             return !this.hasCcfMCopies;
         };
 
+        // hide if multiple samples (same as Copy Number column)
+        // included because Mutant copies should only be shown in conjunction with Copy Num
         this._columns[MutationTableColumnType.MUTANT_COPIES].shouldExclude = ()=>{
-            return !this.hasMutantCopies;
+            return (!this.hasMutantCopies || this.getSamples().length > 1 || !this.props.discreteCNAMolecularProfileId);
         };
 
+        // only hide tumor column if there is one sample and no uncalled
+        // mutations (there is no information added in that case by the sample
+        // label)
         this._columns[MutationTableColumnType.TUMORS].shouldExclude = ()=>{
             return this.getSamples().length < 2 && !this.hasUncalledMutations;
         };

@@ -35,7 +35,7 @@ export default class CancerCellFractionColumnFormatter {
         let textValue:string = "";
         const ccfMCopiesValue = CancerCellFractionColumnFormatter.getCcfMCopiesValue(data);
         if (floatValueIsNA(ccfMCopiesValue)) {
-            textValue = "NA";
+            textValue = "";
         } else {
             textValue = ccfMCopiesValue.toFixed(2);
         }
@@ -55,6 +55,20 @@ export default class CancerCellFractionColumnFormatter {
         const text:string = CancerCellFractionColumnFormatter.getDisplayValue(data);
         let content = <span>{text}</span>;
         return content;
+    }
+    
+    public static getCancerCellFractionDownload(mutations:Mutation[]): string|string[]
+    {
+        let result = [];
+        if (mutations) {
+            for (let mutation of mutations) {
+                result.push(CancerCellFractionColumnFormatter.getCancerCellFractionValue([mutation]));
+            }
+        }
+        if (result.length == 1) {
+            return result[0];
+        }
+        return result;
     }
 }
 
