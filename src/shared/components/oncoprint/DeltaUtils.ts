@@ -347,9 +347,9 @@ function hasGeneticTrackRuleSetChanged(
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
 ) {
-    return (getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers) !==
-    getGeneticTrackRuleSetParams(prevProps.distinguishMutationType, prevProps.distinguishDrivers));
-    // we can do shallow equality because getGeneticTrackRuleSetParams do not create new objects each time - see impl to understand
+    return ((nextProps.distinguishMutationType !== prevProps.distinguishMutationType) ||
+        (nextProps.distinguishDrivers !== prevProps.distinguishDrivers) ||
+        (nextProps.distinguishGermlineMutations !== prevProps.distinguishGermlineMutations));
 }
 
 function transitionTracks(
@@ -571,7 +571,7 @@ function transitionGeneticTrack(
     } else if (nextSpec && !prevSpec) {
         // Add track
         const geneticTrackParams = {
-            rule_set_params: getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers),
+            rule_set_params: getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers, nextProps.distinguishGermlineMutations),
             label: nextSpec.label,
             sublabel: nextSpec.sublabel,
             track_label_color: nextSpec.labelColor || undefined,
@@ -634,7 +634,7 @@ function transitionGeneticTrack(
                 oncoprint.shareRuleSet(trackIdForRuleSetSharing.genetic, trackId);
             } else {
                 // otherwise, update ruleset
-                oncoprint.setRuleSet(trackId, getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers));
+                oncoprint.setRuleSet(trackId, getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers, nextProps.distinguishGermlineMutations));
             }
         }
         // either way, use this one now
