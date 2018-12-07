@@ -101,36 +101,36 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
                                 <div className={styles.selectedInfo}>
                                     <SelectedInfo selectedSamples={this.store.selectedSamples.result}/>
-                                    <div className={"btn-group"} role={"group"}>
-                                        {this.store.mutationProfiles.result.length > 0 && (
-                                            <button className="btn btn-default btn-sm">
-                                                <LabeledCheckbox
-                                                    inputProps={{className: styles.selectedInfoCheckbox}}
-                                                    checked={!!this.store.filters.withMutationData}
-                                                    onChange={this.store.toggleWithMutationDataFilter}
-                                                >
-                                                    <LoadingIndicator
-                                                        isLoading={this.store.molecularProfileSampleCounts.isPending}/>
-                                                    {this.store.molecularProfileSampleCounts.isComplete && (
-                                                        `${this.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples.toLocaleString()} with mutation data`)}
-                                                </LabeledCheckbox>
-                                            </button>
-                                        )}
-                                        {this.store.cnaProfiles.result.length > 0 && (
-                                            <button className="btn btn-default btn-sm">
-                                                <LabeledCheckbox
-                                                    inputProps={{className: styles.selectedInfoCheckbox}}
-                                                    checked={!!this.store.filters.withCNAData}
-                                                    onChange={this.store.toggleWithCNADataFilter}
-                                                >
-                                                    <LoadingIndicator
-                                                        isLoading={this.store.molecularProfileSampleCounts.isPending}/>
-                                                    {this.store.molecularProfileSampleCounts.isComplete && (
-                                                        `${this.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples.toLocaleString()} with CNA data`)}
-                                                </LabeledCheckbox>
-                                            </button>
-                                        )}
-                                    </div>
+
+                                    {this.store.mutationProfiles.result.length > 0 && (
+                                        <div>
+                                            <LabeledCheckbox
+                                                inputProps={{className: styles.selectedInfoCheckbox}}
+                                                checked={!!this.store.filters.withMutationData}
+                                                onChange={this.store.toggleWithMutationDataFilter}
+                                            >
+                                                <LoadingIndicator
+                                                    isLoading={this.store.molecularProfileSampleCounts.isPending}/>
+                                                {this.store.molecularProfileSampleCounts.isComplete && (
+                                                    `${this.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples.toLocaleString()} w/ mutation data`)}
+                                            </LabeledCheckbox>
+                                        </div>
+                                    )}
+                                    {this.store.cnaProfiles.result.length > 0 && (
+                                        <div>
+                                            <LabeledCheckbox
+                                                inputProps={{className: styles.selectedInfoCheckbox}}
+                                                checked={!!this.store.filters.withCNAData}
+                                                onChange={this.store.toggleWithCNADataFilter}
+                                            >
+                                                <LoadingIndicator
+                                                    isLoading={this.store.molecularProfileSampleCounts.isPending}/>
+                                                {this.store.molecularProfileSampleCounts.isComplete && (
+                                                    `${this.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples.toLocaleString()} w/ CNA data`)}
+                                            </LabeledCheckbox>
+                                        </div>
+                                    )}
+
                                 </div>
                             </div>
                         </div>
