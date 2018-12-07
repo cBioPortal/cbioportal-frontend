@@ -1608,11 +1608,11 @@ describe('StudyViewUtils', () => {
             //assert.equal(getFrequencyStr(positiveValues[0]), "0.0025");
             assert.equal(getFrequencyStr(positiveValues[0]), "<0.1%");
             assert.equal(getFrequencyStr(positiveValues[1]), "0.6%");
-            assert.equal(getFrequencyStr(positiveValues[2]), "1%");
-            assert.equal(getFrequencyStr(positiveValues[3]), "1%");
+            assert.equal(getFrequencyStr(positiveValues[2]), "1.0%");
+            assert.equal(getFrequencyStr(positiveValues[3]), "1.0%");
             assert.equal(getFrequencyStr(positiveValues[4]), "1.6%");
             assert.equal(getFrequencyStr(positiveValues[5]), "1.8%");
-            assert.equal(getFrequencyStr(positiveValues[6]), "17%");
+            assert.equal(getFrequencyStr(positiveValues[6]), "17.0%");
             assert.equal(getFrequencyStr(positiveValues[7]), "16.8%");
             assert.equal(getFrequencyStr(positiveValues[8]), "16.7%");
             assert.equal(getFrequencyStr(positiveValues[9]), "666.7%");
