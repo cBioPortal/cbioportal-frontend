@@ -168,7 +168,7 @@ export type StudyViewURLQuery = {
     filters: string,
 }
 
-export const SpecialCharts: ChartMeta[] = [{
+export const SPECIAL_CHARTS: ChartMeta[] = [{
     uniqueKey: UniqueKey.SAMPLES_PER_PATIENT,
     displayName: '# of Samples Per Patient',
     description: '# of Samples Per Patient',
@@ -250,7 +250,7 @@ export class StudyViewPageStore {
         });
 
         // Include special charts into custom charts list
-       SpecialCharts.forEach(chartMeta => {
+       SPECIAL_CHARTS.forEach(chartMeta => {
            const uniqueKey = chartMeta.uniqueKey;
            const chartType = this.chartsType.get(uniqueKey) || chartMeta.chartType;
            if (chartType !== undefined) {

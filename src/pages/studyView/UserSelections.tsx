@@ -112,7 +112,8 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                                     })} operation={'or'} group={false}/>
                                 ]}
                                 operation={':'}
-                                group={false}/></div>
+                                group={false}/>
+                        </div>
                     );
                 }
                 return acc;
