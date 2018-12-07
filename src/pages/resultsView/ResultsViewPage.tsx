@@ -480,7 +480,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     }
 
     public render() {
-
         if (this.resultsViewPageStore.studies.isComplete && !this.resultsViewPageStore.tabId) {
             setTimeout(()=>{
                 this.handleTabChange(this.currentTab(this.resultsViewPageStore.tabId));
@@ -495,7 +494,6 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                 </PageLayout>
             )
         }
-
     }
 
 
