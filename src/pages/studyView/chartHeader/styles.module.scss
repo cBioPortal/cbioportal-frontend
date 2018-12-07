@@ -21,7 +21,11 @@ $fontSize: 11px;
   color: grey;
   display: flex;
   align-items: baseline;
-  padding: 2px 0 1px 0;
+  padding: 2px;
+  position:absolute;
+  border-radius:$border-radius-base;
+  right:0;
+  background:$lightGrey;
 }
 
 .item {

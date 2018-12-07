@@ -96,12 +96,12 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
     @autobind
     @action
     private onChangeSelectedCharts(options: ChartOption[]) {
-        this.props.store.updateChartsVisibility(options.map(option => option.key));
+        this.props.store.addCharts(options.map(option => option.key));
     }
 
     @autobind
     private onAddAll(keys: string[]) {
-        this.props.store.updateChartsVisibility(this.selectedAttrs.concat(keys));
+        this.props.store.addCharts(this.selectedAttrs.concat(keys));
     }
 
     @autobind
@@ -117,14 +117,14 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
     @autobind
     private onToggleOption(key: string) {
         if (this.selectedAttrs.includes(key)) {
-            this.props.store.updateChartsVisibility(_.reduce(this.selectedAttrs, (acc, next) => {
+            this.props.store.addCharts(_.reduce(this.selectedAttrs, (acc, next) => {
                 if (next !== key) {
                     acc.push(next);
                 }
                 return acc;
             }, [] as string[]));
         } else {
-            this.props.store.updateChartsVisibility(this.selectedAttrs.concat([key]));
+            this.props.store.addCharts(this.selectedAttrs.concat([key]));
         }
     }
 
