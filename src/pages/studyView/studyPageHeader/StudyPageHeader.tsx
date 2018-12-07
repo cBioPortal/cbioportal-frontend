@@ -16,8 +16,8 @@ export interface IStudyPageHeaderProps {
 export default class StudyPageHeader extends React.Component<IStudyPageHeaderProps, {}> {
     render() {
         return (
-            <div style={{display: 'flex', flexDirection:'column',margin: '5px 20px'}}>
-                <div style={{display: 'flex'}}>
+            <div style={{display: 'flex', flexDirection:'column',margin: '0 20px 5px 20px'}}>
+                <div style={{display: 'flex', marginBottom:10}}>
                 <StudySummary
                     studies={this.props.store.displayedStudies.result}
                     originStudies={this.props.store.originStudies}
