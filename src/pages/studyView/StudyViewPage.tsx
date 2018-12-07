@@ -22,6 +22,7 @@ import SelectedInfo from "./SelectedInfo/SelectedInfo";
 import LabeledCheckbox from "../../shared/components/labeledCheckbox/LabeledCheckbox";
 import {Alert} from 'react-bootstrap';
 import AddChartButton from "./addChartButton/AddChartButton";
+import UserSelections from "./UserSelections";
 
 export interface IStudyViewPageProps {
     routing: any;
