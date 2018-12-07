@@ -779,7 +779,7 @@ export function getFrequencyStr(value: number) {
     } else if (value < 100 && value >= 99.9) {
         str = `99.9`;
     } else if (value >= 0.1) {
-        str = (Math.round(value * 10) / 10).toString();
+        str = value.toFixed(1).toString();
     } else {
         str = '<0.1';
     }
