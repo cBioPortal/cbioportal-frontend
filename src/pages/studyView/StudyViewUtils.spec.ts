@@ -19,6 +19,7 @@ import {
     getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples,
     getFrequencyStr,
+    getPriorityByClinicalAttribute,
     getQValue,
     getRequestedAwaitPromisesForClinicalData,
     getSamplesByExcludingFiltersOnChart,
@@ -1769,6 +1770,33 @@ describe('StudyViewUtils', () => {
 
             promises = getRequestedAwaitPromisesForClinicalData(false, false, true, false, true, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
             assert.equal(promises.length, 0);
+        });
+    })
+
+    describe('getPriorityByClinicalAttribute', () => {
+        it('The priority from database needs to overwrite the frontned config in the frontend', () => {
+            let attr = {
+                'clinicalAttributeId': 'AGE',
+                'datatype': 'STRING',
+                'description': '',
+                'displayName': '',
+                'patientAttribute': true,
+                'priority': '10',
+                'studyId': ''
+            };
+            assert.equal(getPriorityByClinicalAttribute(attr), 10);
+        });
+        it('The frontned config priority should be used when the DB priority is set to default', () => {
+            let attr = {
+                'clinicalAttributeId': 'AGE',
+                'datatype': 'STRING',
+                'description': '',
+                'displayName': '',
+                'patientAttribute': true,
+                'priority': '1',
+                'studyId': ''
+            };
+            assert.equal(getPriorityByClinicalAttribute(attr), 9);
         });
     })
 });

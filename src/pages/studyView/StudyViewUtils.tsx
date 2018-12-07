@@ -947,6 +947,18 @@ export function getDefaultPriorityByUniqueKey(uniqueKey: string): number {
     return STUDY_VIEW_CONFIG.priority[uniqueKey] === undefined ? 1 : STUDY_VIEW_CONFIG.priority[uniqueKey];
 }
 
+export function getPriorityByClinicalAttribute(clinicalAttribute: ClinicalAttribute): number {
+    // If the priority is the default which means the priority has not been manually modified, then we should check
+    // the whether there are priorities predefined
+    const priorityFromDB = Number(clinicalAttribute.priority);
+    if (priorityFromDB === STUDY_VIEW_CONFIG.defaultPriority) {
+        const uniqueKey = getClinicalAttributeUniqueKey(clinicalAttribute);
+        return STUDY_VIEW_CONFIG.priority[uniqueKey] === undefined ? STUDY_VIEW_CONFIG.defaultPriority : STUDY_VIEW_CONFIG.priority[uniqueKey];
+    } else {
+        return priorityFromDB
+    }
+}
+
 // Grid includes 10px margin
 export function getWidthByDimension(chartDimension: ChartDimension) {
     return STUDY_VIEW_CONFIG.layout.grid.w * chartDimension.w + (chartDimension.w - 1) * STUDY_VIEW_CONFIG.layout.gridMargin.x - 2;
