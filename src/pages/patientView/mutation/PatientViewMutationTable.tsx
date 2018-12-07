@@ -8,6 +8,7 @@ import SampleManager from "../sampleManager";
 import {Mutation, ClinicalData} from "shared/api/generated/CBioPortalAPI";
 import AlleleCountColumnFormatter from "shared/components/mutationTable/column/AlleleCountColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
+import FACETSColumnFormatter from "./column/FACETSColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
 import {isUncalled} from "shared/lib/MutationUtils";
 import {floatValueIsNA} from "shared/lib/NumberUtils";
@@ -80,6 +81,12 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             tooltip:(<span>Variant allele frequency in the tumor sample</span>),
             visible: AlleleFreqColumnFormatter.isVisible(this.props.sampleManager,
                 this.props.dataStore ? this.props.dataStore.allData : this.props.data)
+        };
+
+        this._columns[MutationTableColumnType.CANCER_CELL_FRACTION] = {
+            name: "Tester CCF",
+            render: (d:Mutation[])=>FACETSColumnFormatter.renderFunction(d, this.props.sampleManager),
+            tooltip:(<span>frontend is the bane of my existence</span>),
         };
 
         this._columns[MutationTableColumnType.TUMORS] = {
