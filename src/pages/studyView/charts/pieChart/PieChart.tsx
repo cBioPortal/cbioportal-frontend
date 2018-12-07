@@ -13,6 +13,7 @@ import classnames from 'classnames';
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
 import {If} from 'react-if';
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
+import DefaultTooltip from "../../../../shared/components/defaultTooltip/DefaultTooltip";
 
 export interface IPieChartProps {
     width: number;
@@ -20,7 +21,6 @@ export interface IPieChartProps {
     data: ClinicalDataCountWithColor[];
     filters: string[];
     onUserSelection: (values: string[]) => void;
-    active: boolean;
     placement: 'left' | 'right';
     patientAttribute: boolean;
     label?: string;
@@ -74,10 +74,6 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         this.tooltipHighlightedRow = value;
     }
 
-    @computed private get showTooltip() {
-        return this.props.active || this.isTooltipHovered
-    }
-
     public downloadData() {
         return this.props.data.map(obj => obj.value + '\t' + obj.count).join('\n');
     }
@@ -124,16 +120,6 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
             }
             return 1;
         };
-    }
-
-    @autobind
-    private tooltipMouseEnter(): void {
-        this.isTooltipHovered = true;
-    }
-
-    @autobind
-    private tooltipMouseLeave(): void {
-        this.isTooltipHovered = false;
     }
 
     @autobind
@@ -224,34 +210,23 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     }
 
     public render() {
-        // 350px => width of tooltip
-        // 195px => width of chart
-        let left = _.isEqual(this.props.placement, 'right') ? '195px' : '-350px'
         return (
-            <div>
-                <If condition={this.showTooltip}>
-                    <div
-                        className={classnames('popover', this.props.placement)}
-                        onMouseLeave={() => this.tooltipMouseLeave()}
-                        onMouseEnter={() => this.tooltipMouseEnter()}
-                        style={{ display: 'block', position: 'absolute', left: left, width: '350px', maxWidth: '350px' }}>
-
-                        <div className="arrow" style={{ top: 20 }}></div>
-                        <div className="popover-content">
-                            <ClinicalTable
-                                width={300}
-                                height={150}
-                                data={this.props.data}
-                                labelDescription={this.props.labelDescription}
-                                patientAttribute={this.props.patientAttribute}
-                                filters={this.props.filters}
-                                highlightedRow={this.highlightedRow}
-                                onUserSelection={this.props.onUserSelection}
-                            />
-                        </div>
-                    </div>
-                </If>
-
+            <DefaultTooltip
+                placement="right"
+                overlay={(
+                    <ClinicalTable
+                        width={300}
+                        height={150}
+                        data={this.props.data}
+                        labelDescription={this.props.labelDescription}
+                        patientAttribute={this.props.patientAttribute}
+                        filters={this.props.filters}
+                        highlightedRow={this.highlightedRow}
+                        onUserSelection={this.props.onUserSelection}
+                    />)}
+                destroyTooltipOnHide={true}
+                trigger={["hover"]}
+            >
                 <svg
                     width={this.props.width}
                     height={this.props.height}
@@ -260,7 +235,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                     {this.victoryPie}
                     {this.victoryLegend}
                 </svg>
-            </div>
+            </DefaultTooltip>
         );
     }
 
