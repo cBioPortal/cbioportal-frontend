@@ -8,7 +8,7 @@ import {
     TableHeaderProps
 } from 'react-virtualized';
 import 'react-virtualized/styles.css';
-import {action, observable, computed} from "mobx";
+import {action, computed, observable} from "mobx";
 import styles from "./tables.module.scss";
 import * as _ from 'lodash';
 import {observer} from "mobx-react";
@@ -22,6 +22,7 @@ export type IFixedHeaderTableProps<T> = {
     columns: Column<T>[],
     data: T[];
     sortBy?: string;
+    sortDirection?: SortDirection;
     width?: number;
     height?: number;
     showSelectSamples?: boolean;
@@ -29,6 +30,7 @@ export type IFixedHeaderTableProps<T> = {
     addAll?: (data:T[]) => void;
     removeAll?: (data:T[]) => void;
     isSelectedRow?: (data:T) => boolean;
+    afterSorting?: (sortBy:string, sortDirection:SortDirection) => void;
 };
 
 const RVSDTtoStrType = {
@@ -53,7 +55,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
         super(props);
         this._sortBy = props.sortBy!;
         const sortByColumn = _.find(this.props.columns, column => column.name === this._sortBy);
-        this._sortDirection = _.isUndefined(sortByColumn) ? 'desc' as 'desc' : sortByColumn.defaultSortDirection || 'desc' as 'desc';
+        this._sortDirection = props.sortDirection === undefined? (_.isUndefined(sortByColumn) ? 'desc' as 'desc' : sortByColumn.defaultSortDirection || 'desc' as 'desc') : props.sortDirection;
 
         this.initDataStore();
     }
@@ -107,6 +109,9 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
         this._store.defaultHeaderClick(this.getColumn(sortBy));
         this._sortBy = sortBy;
         this._sortDirection = this._store.dataStore.sortAscending ? 'asc' as 'asc' : 'desc' as 'desc';
+        if(this.props.afterSorting) {
+            this.props.afterSorting(this._sortBy, this._sortDirection);
+        }
     }
 
     @autobind
@@ -147,6 +152,37 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
         }
     }
 
+    @computed
+    get columnHeaders() {
+        return this.props.columns.map(column => {
+            return (props: TableHeaderProps) => {
+                let label = [];
+
+                if (column.headerRender) {
+                    label.push(column.headerRender(column.name));
+                } else {
+                    label.push(<span>{column.name}</span>);
+                }
+
+                if (column.name === this._sortBy) {
+                    label.push(<i
+                        className={classnames(styles.headerSortingIcon, 'fa', this._sortDirection === 'desc' ? 'fa-sort-desc' : 'fa-sort-asc')}></i>);
+                }
+
+                const content = <div>{label}</div>
+                if (column.tooltip) {
+                    return (
+                        <DefaultTooltip placement="top" overlay={column.tooltip}>
+                            {content}
+                        </DefaultTooltip>
+                    );
+                } else {
+                    return content;
+                }
+            };
+        });
+    }
+
     public render() {
         return (
             <div className={styles.studyViewTablesTable}>
@@ -166,27 +202,10 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                 >
 
                     {
-                        this.props.columns.map(column => {
+                        this.props.columns.map((column, index) => {
                             return <RVColumn key={column.name} label={column.name} dataKey={column.name}
                                              width={Number(column.width)}
-                                             headerRenderer={(props: TableHeaderProps) => {
-                                                 let label;
-                                                 if (column.headerRender) {
-                                                     label = column.headerRender(column.name);
-                                                 } else {
-                                                     label = (<span>{column.name}</span>);
-                                                 }
-
-                                                 if (column.tooltip) {
-                                                     return (
-                                                         <DefaultTooltip placement="top" overlay={column.tooltip}>
-                                                             {label}
-                                                         </DefaultTooltip>
-                                                     );
-                                                 } else {
-                                                     return label;
-                                                 }
-                                             }}
+                                             headerRenderer={this.columnHeaders[index]}
                                              cellRenderer={(props: TableCellProps) => {
                                                  return column.render(props.rowData);
                                              }}/>;
