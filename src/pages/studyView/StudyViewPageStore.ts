@@ -405,7 +405,13 @@ export class StudyViewPageStore {
 
     @computed
     get initialFilters() {
-        return Object.assign({}, this.initialFiltersQuery, {studyIds: this.queriedPhysicalStudyIds.result});
+        let initialFilter = {} as StudyViewFilter;
+        if(_.isEmpty(this.queriedSampleIdentifiers.result)){
+            initialFilter.studyIds = this.queriedPhysicalStudyIds.result;
+        } else {
+            initialFilter.sampleIdentifiers = this.queriedSampleIdentifiers.result;
+        }
+        return Object.assign({}, this.initialFiltersQuery, initialFilter);
     }
 
     @computed
