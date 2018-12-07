@@ -361,23 +361,6 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
 
                 {!this.store.loadingInitialDataForSummaryTab &&
                 <div>
-
-                    <UserSelections
-                        filter={this.props.store.userSelections}
-                        getSelectedGene={this.props.store.getKnownHugoGeneSymbolByEntrezGeneId}
-                        attributesMetaSet={this.props.store.chartMetaSet}
-                        updateClinicalDataEqualityFilter={this.props.store.updateClinicalDataEqualityFilters}
-                        updateClinicalDataIntervalFilter={this.props.store.updateClinicalDataIntervalFiltersByValues}
-                        removeGeneFilter={this.props.store.removeGeneFilter}
-                        removeCNAGeneFilter={this.props.store.removeCNAGeneFilters}
-                        resetMutationCountVsCNAFilter={this.handlers.resetMutationCountVsCNAFilter}
-                        clearCNAGeneFilter={this.props.store.clearCNAGeneFilter}
-                        clearGeneFilter={this.props.store.clearGeneFilter}
-                        removeWithMutationDataFilter={this.props.store.removeWithMutationDataFilter}
-                        removeWithCNADataFilter={this.props.store.removeWithCNADataFilter}
-                        clearChartSampleIdentifierFilter={this.props.store.clearChartSampleIdentifierFilter}
-                        clearAllFilters={this.props.store.clearAllFilters}
-                    />
                     <div className={styles.studyViewFlexContainer}>
                         {this.store.defaultVisibleAttributes.isComplete && (
                             <ReactGridLayout className="layout"
