@@ -3,7 +3,7 @@ import React from 'react';
 import * as _ from 'lodash';
 import {
     calculateAssociation, countOccurences, calculatePValue, calculateLogOddsRatio, getMutuallyExclusiveCounts,
-    getTrackPairsCountText, getData, getFilteredData, formatPValue, formatPValueWithStyle, formatLogOddsRatio, calculateAdjustedPValue
+    getTrackPairsCountText, getData, getFilteredData, formatPValue, formatPValueWithStyle, formatLogOddsRatio, calculateAdjustedPValue, calculateQValue
 } from "./MutualExclusivityUtil";
 import { MutualExclusivity } from "../../../shared/model/MutualExclusivity";
 import expect from 'expect';
@@ -36,7 +36,7 @@ const exampleData = [
         "bothCount": 3,
         "logOddsRatio": Infinity,
         "pValue": 0.03333333333333314,
-        "adjustedPValue": 0.19999999999999885,
+        "adjustedPValue": 0.09999999999999942,
         "association": "Co-occurrence"
     },
     {
@@ -48,7 +48,7 @@ const exampleData = [
         "bothCount": 0,
         "logOddsRatio": -Infinity,
         "pValue": 0.08333333333333293,
-        "adjustedPValue": 0.49999999999999756,
+        "adjustedPValue": 0.12499999999999939,
         "association": "Mutual exclusivity"
     },
     {
@@ -60,7 +60,7 @@ const exampleData = [
         "bothCount": 3,
         "logOddsRatio": Infinity,
         "pValue": 0.08333333333333293,
-        "adjustedPValue": 0.49999999999999756,
+        "adjustedPValue": 0.12499999999999939,
         "association": "Co-occurrence"
     },
     {
@@ -72,7 +72,7 @@ const exampleData = [
         "bothCount": 1,
         "logOddsRatio": -1.791759469228055,
         "pValue": 0.2619047619047609,
-        "adjustedPValue": 1,
+        "adjustedPValue": 0.2619047619047609,
         "association": "Mutual exclusivity"
     },
     {
@@ -84,7 +84,7 @@ const exampleData = [
         "bothCount": 3,
         "logOddsRatio": 1.791759469228055,
         "pValue": 0.2619047619047609,
-        "adjustedPValue": 1,
+        "adjustedPValue": 0.2619047619047609,
         "association": "Co-occurrence"
     }
 ];
@@ -302,6 +302,12 @@ describe("MutualExclusivityUtil", () => {
                 ]
             );
         });
+    });
+
+    describe("#calculateQValue()", () => {
+        it("returns correct QValue", () => {
+            assert.deepEqual(exampleData, calculateQValue(exampleData));
+        })
     });
 
     describe("#formatPValue()", () => {

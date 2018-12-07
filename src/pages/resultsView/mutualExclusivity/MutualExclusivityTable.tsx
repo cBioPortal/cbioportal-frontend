@@ -56,7 +56,7 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
             MutualExclusivityTableColumnType.ADJUSTED_P_VALUE,
             MutualExclusivityTableColumnType.ASSOCIATION
         ],
-        initialSortColumn: "Adjusted p-Value"
+        initialSortColumn: "q-Value"
     };
 
     protected generateColumns() {
@@ -133,9 +133,9 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
         };
 
         this._columns[MutualExclusivityTableColumnType.ADJUSTED_P_VALUE] = {
-            name: "Adjusted p-Value",
+            name: "q-Value",
             render: (d: MutualExclusivity) => formatPValueWithStyle(d.adjustedPValue),
-            tooltip: <span>Bonferroni adjusted p-Value</span>,
+            tooltip: <span>Benjamini–Hochberg q-Value</span>,
             sortBy: (d: MutualExclusivity) => d.adjustedPValue,
             download: (d: MutualExclusivity) => formatPValue(d.adjustedPValue)
         };
@@ -155,7 +155,7 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
                         <td>: Tendency towards mutual exclusivity</td>
                     </tr>
                     <tr>
-                        <td>Adjusted p-Value &lt; 0.05</td>
+                        <td>q-Value &lt; 0.05</td>
                         <td>: Significant association</td>
                     </tr>
                 </table>,

@@ -41,6 +41,18 @@ export function calculateAdjustedPValue(pValue: number, count: number): number {
     return value > 1 ? 1 : value;
 }
 
+export function calculateQValue(sortedData: MutualExclusivity[]): MutualExclusivity[] {
+    const DataLength = sortedData.length;
+    for (let i = DataLength - 1; i >= 0; i--) {
+        if (i == DataLength - 1) {
+            sortedData[i].adjustedPValue = sortedData[i].pValue;
+        } else {
+            sortedData[i].adjustedPValue = Math.min(sortedData[i + 1].adjustedPValue, sortedData[i].pValue * DataLength / (i + 1));
+        }
+    }
+    return sortedData;
+}
+
 export function calculateLogOddsRatio(a: number, b: number, c: number, d: number): number {
 
     if ((a * d) === 0 && (b * c) === 0) {
@@ -111,9 +123,9 @@ export function getData(isSampleAlteredMap: Dictionary<boolean[]>): MutualExclus
         const association = calculateAssociation(logOddsRatio);
         data.push({ trackA, trackB, neitherCount: counts[0], bNotACount: counts[1], aNotBCount: counts[2], 
             bothCount: counts[3], logOddsRatio, pValue, 
-            adjustedPValue: calculateAdjustedPValue(pValue, combinations.length), association });
+            adjustedPValue: 0, association });
     });
-    return _.sortBy(data, ["pValue"]);
+    return calculateQValue(_.sortBy(data, ["pValue"]));
 }
 
 export function getFilteredData(data: MutualExclusivity[], mutualExclusivityFilter: boolean, coOccurenceFilter: boolean,
