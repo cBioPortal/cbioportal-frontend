@@ -13,6 +13,7 @@ import FixedHeaderTable from "./FixedHeaderTable";
 import {action, computed, observable} from "mobx";
 import autobind from 'autobind-decorator';
 import {getFrequencyStr, getQValue} from "../StudyViewUtils";
+import {SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 
 export interface IMutatedGenesTablePros {
     promise: MobxPromise<MutatedGenesData>;
@@ -37,6 +38,8 @@ class MutatedGenesTableComponent extends FixedHeaderTable<MutationCountByGene> {
 @observer
 export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {}> {
     @observable private preSelectedRows: MutatedGenesTableUserSelectionWithIndex[] = [];
+    @observable private sortBy:string = '#';
+    @observable private sortDirection: SortDirection;
 
     constructor(props: IMutatedGenesTablePros) {
         super(props);
@@ -204,6 +207,13 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         }));
     }
 
+    @autobind
+    @action
+    afterSorting(sortBy: string, sortDirection: SortDirection) {
+        this.sortBy = sortBy;
+        this.sortDirection = sortDirection;
+    }
+
     public render() {
         return (
             <MutatedGenesTableComponent
@@ -214,7 +224,9 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                 showSelectSamples={true && this.preSelectedRows.length > 0}
                 isSelectedRow={this.isSelectedRow}
                 afterSelectingRows={this.afterSelectingRows}
-                sortBy='#'
+                sortBy={this.sortBy}
+                sortDirection={this.sortDirection}
+                afterSorting={this.afterSorting}
             />
         );
     }

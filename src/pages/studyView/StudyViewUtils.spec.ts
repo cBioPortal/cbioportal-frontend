@@ -20,6 +20,7 @@ import {
     getFilteredStudiesWithSamples,
     getFrequencyStr,
     getQValue,
+    getRequestedAwaitPromisesForClinicalData,
     getSamplesByExcludingFiltersOnChart,
     getVirtualStudyDescription,
     intervalFiltersDisplayValue,
@@ -33,19 +34,25 @@ import {
     toFixedDigit,
     updateGeneQuery
 } from 'pages/studyView/StudyViewUtils';
-import {DataBin, StudyViewFilter, ClinicalDataIntervalFilterValue, Sample} from 'shared/api/generated/CBioPortalAPIInternal';
-import {ClinicalAttribute, Gene, CancerStudy} from 'shared/api/generated/CBioPortalAPI';
+import {
+    ClinicalDataIntervalFilterValue,
+    DataBin,
+    Sample,
+    StudyViewFilter
+} from 'shared/api/generated/CBioPortalAPIInternal';
+import {CancerStudy, ClinicalAttribute, Gene} from 'shared/api/generated/CBioPortalAPI';
 import {
     ChartMeta,
     ChartMetaDataTypeEnum,
-    StudyViewFilterWithSampleIdentifierFilters, UniqueKey
+    StudyViewFilterWithSampleIdentifierFilters,
+    UniqueKey
 } from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
 import sinon from 'sinon';
 import internalClient from 'shared/api/cbioportalInternalClientInstance';
-import { VirtualStudy } from 'shared/model/VirtualStudy';
-import {ChartTypeEnum} from "./StudyViewConfig";
-import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
+import {VirtualStudy} from 'shared/model/VirtualStudy';
+import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "./StudyViewConfig";
+import {MobxPromise} from "mobxpromise";
 
 describe('StudyViewUtils', () => {
 
@@ -1700,4 +1707,68 @@ describe('StudyViewUtils', () => {
             assert.equal(clinicalDataCountComparator({value: "FEMALE", count: 666}, {value: "MALE", count: 666}), 0);
         });
     });
+
+    describe('getRequestedAwaitPromisesForClinicalData', () => {
+        // Create some references
+        const unfilteredPromise: MobxPromise<any> = {
+            result: [],
+            status: 'complete' as 'complete',
+            peekStatus: 'complete',
+            isPending: false,
+            isError: false,
+            isComplete: true,
+            error: undefined
+        };
+        const newlyAddedUnfilteredPromise: MobxPromise<any> = {
+            result: [],
+            status: 'complete' as 'complete',
+            peekStatus: 'complete',
+            isPending: false,
+            isError: false,
+            isComplete: true,
+            error: undefined
+        };
+        const initialVisibleAttributesPromise: MobxPromise<any> = {
+            result: [],
+            status: 'complete' as 'complete',
+            peekStatus: 'complete',
+            isPending: false,
+            isError: false,
+            isComplete: true,
+            error: undefined
+        };
+        it('initialVisibleAttributesPromise should be used when the chart is default visible attribute and in initial state', () => {
+            const promises = getRequestedAwaitPromisesForClinicalData(true, true, false, false, false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            assert.equal(promises.length, 1);
+            assert.isTrue(promises[0] === initialVisibleAttributesPromise);
+        });
+        it('newlyAddedUnfilteredPromise should be used when the chart is not default visible attribute, at the time the chart is not filtered', () => {
+            const promises = getRequestedAwaitPromisesForClinicalData(false, true, false, true, false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            assert.equal(promises.length, 1);
+            assert.isTrue(promises[0] === newlyAddedUnfilteredPromise);
+        });
+        it('unfilteredPromise should be used when there are filters applied, but attribute is unfiltered, ignore whether the chart is default visible attribute', () => {
+            let promises = getRequestedAwaitPromisesForClinicalData(true, false, true, false, false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            assert.equal(promises.length, 1);
+            assert.isTrue(promises[0] === unfilteredPromise);
+
+            promises = getRequestedAwaitPromisesForClinicalData(false, false, true, false, false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            assert.equal(promises.length, 1);
+            assert.isTrue(promises[0] === unfilteredPromise);
+        });
+
+        it('unfilteredPromise should be used when there are filters applied, when it is newly added chart', () => {
+            let promises = getRequestedAwaitPromisesForClinicalData(true, false, true, true, false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            assert.equal(promises.length, 1);
+            assert.isTrue(promises[0] === unfilteredPromise);
+        });
+
+        it('When chart is filtered and not in initial state, empty array should be returned. Ignore whether the chart is default visible attribute', () => {
+            let promises = getRequestedAwaitPromisesForClinicalData(true, false, true, false, true, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            assert.equal(promises.length, 0);
+
+            promises = getRequestedAwaitPromisesForClinicalData(false, false, true, false, true, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            assert.equal(promises.length, 0);
+        });
+    })
 });
