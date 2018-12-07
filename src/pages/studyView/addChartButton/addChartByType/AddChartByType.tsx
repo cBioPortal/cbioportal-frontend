@@ -127,6 +127,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                         data={this.options}
                         addAll={this.addAll}
                         removeAll={this.removeAll}
+                        showAddRemoveAllButtons={true}
                         sortBy={'% samples with data'}
                     />
                 </Modal.Body>
