@@ -71,7 +71,7 @@ export default class StudySummary extends React.Component<IStudySummaryProps, {}
     render() {
         return (
             <div className={classnames(styles.summary)}>
-                <h3>{this.name}</h3>
+                <h3 style={{marginBottom:3}}>{this.name}</h3>
                 <div className={styles.description}>
                     <div>
                         {this.descriptionFirstLine}
