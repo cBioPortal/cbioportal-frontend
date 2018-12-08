@@ -163,7 +163,10 @@ var config = {
                 use: [{
                     loader: "babel-loader"
                 }],
-                exclude: /node_modules/,
+                exclude: function(modulePath) {
+                    return /node_modules/.test(modulePath) &&
+                        !/node_modules\/igv\/dist/.test(modulePath);
+                }
             },
             {
                 test: /\.otf(\?\S*)?$/,
