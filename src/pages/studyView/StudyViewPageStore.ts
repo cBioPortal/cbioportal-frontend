@@ -57,6 +57,7 @@ import {
     getFilteredSampleIdentifiers,
     getFilteredStudiesWithSamples,
     getFrequencyStr,
+    getPriorityByClinicalAttribute,
     getQValue,
     getRequestedAwaitPromisesForClinicalData,
     getSamplesByExcludingFiltersOnChart,
@@ -165,6 +166,7 @@ export type ChartMeta = {
 export type StudyViewURLQuery = {
     id: string,
     studyId: string,
+    cancer_study_id: string,
     filters: string,
 }
 
@@ -311,7 +313,7 @@ export class StudyViewPageStore {
     @observable private newlyAddedCharts:string[] = [];
 
     private unfilteredClinicalDataCountCache: { [uniqueKey: string]: ClinicalDataCountItem } = {};
-    private unfilteredClinicalDataBinCountCache: { [uniqueKey: string]: DataBin } = {};
+    private unfilteredClinicalDataBinCountCache: { [uniqueKey: string]: DataBin[] } = {};
 
     public isNewlyAdded(uniqueKey:string) {
         return this.newlyAddedCharts.includes(uniqueKey);
@@ -323,6 +325,9 @@ export class StudyViewPageStore {
         let studyIds: string[] = [];
         if (query.studyId) {
             studyIdsString = query.studyId;
+        }
+        if (query.cancer_study_id) {
+            studyIdsString = query.cancer_study_id;
         }
         if (query.id) {
             studyIdsString = query.id;
@@ -404,7 +409,13 @@ export class StudyViewPageStore {
 
     @computed
     get initialFilters() {
-        return Object.assign({}, this.initialFiltersQuery, {studyIds: this.queriedPhysicalStudyIds.result});
+        let initialFilter = {} as StudyViewFilter;
+        if(_.isEmpty(this.queriedSampleIdentifiers.result)){
+            initialFilter.studyIds = this.queriedPhysicalStudyIds.result;
+        } else {
+            initialFilter.sampleIdentifiers = this.queriedSampleIdentifiers.result;
+        }
+        return Object.assign({}, this.initialFiltersQuery, initialFilter);
     }
 
     @computed
@@ -1097,10 +1108,7 @@ export class StudyViewPageStore {
             }
             return false;
         }).map(attr => {
-            return {
-                attributeId: attr.clinicalAttributeId,
-                clinicalDataType: attr.patientAttribute ? 'PATIENT' : 'SAMPLE'
-            };
+            return this._clinicalDataBinFilterSet.get(getClinicalAttributeUniqueKey( attr))!;
         });
     }
 
@@ -1162,9 +1170,8 @@ export class StudyViewPageStore {
         },
         default: [],
         onResult: (data) => {
-            data.forEach(item => {
-                const uniqueKey = getClinicalAttributeUniqueKeyByDataTypeAttrId(item.clinicalDataType, item.attributeId);
-                this.unfilteredClinicalDataBinCountCache[uniqueKey] = item;
+            _.each(_.groupBy(data, item => getClinicalAttributeUniqueKeyByDataTypeAttrId(item.clinicalDataType, item.attributeId)), (item, key) => {
+                this.unfilteredClinicalDataBinCountCache[key] = item;
             });
         }
     });
@@ -1270,7 +1277,7 @@ export class StudyViewPageStore {
                                 } as ClinicalDataBinCountFilter
                             });
                         } else if (!this.chartsAreFiltered) {
-                            result = [this.unfilteredClinicalDataBinCountCache[uniqueKey]];
+                            result = this.unfilteredClinicalDataBinCountCache[uniqueKey];
                         } else {
                             result = this.unfilteredClinicalDataBinCount.result;
                         }
@@ -1704,7 +1711,7 @@ export class StudyViewPageStore {
                     patientAttribute:attribute.patientAttribute,
                     description: attribute.description,
                     dimension: this.chartsDimension.get(uniqueKey)!,
-                    priority: Number(attribute.priority),
+                    priority: getPriorityByClinicalAttribute(attribute),
                     clinicalAttribute: attribute
                 };
             }
@@ -1937,10 +1944,7 @@ export class StudyViewPageStore {
         await: () => [this.clinicalAttributes],
         invoke: async () => {
             let queriedAttributes = this.clinicalAttributes.result.map(attr => {
-                attr.priority = _.isNumber(Number(attr.priority)) ? attr.priority : STUDY_VIEW_CONFIG.defaultPriority.toString();
-                if(attr.priority === STUDY_VIEW_CONFIG.defaultPriority.toString()) {
-                    attr.priority = getDefaultPriorityByUniqueKey(getClinicalAttributeUniqueKey(attr)).toString();
-                }
+                attr.priority = getPriorityByClinicalAttribute(attr).toString();
                 return attr;
             });
 
