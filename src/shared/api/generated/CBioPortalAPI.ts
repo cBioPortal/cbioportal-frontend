@@ -47,6 +47,12 @@ export type CancerStudy = {
         'studyId': string
 
 };
+export type CancerStudyTags = {
+    'cancerStudyId': number
+
+        'tags': string
+
+};
 export type ClinicalAttribute = {
     'clinicalAttributeId': string
 
@@ -430,7 +436,9 @@ export type NumericGeneMolecularData = {
 
 };
 export type Patient = {
-    'patientId': string
+    'cancerStudy': CancerStudy
+
+        'patientId': string
 
         'studyId': string
 
@@ -1172,11 +1180,16 @@ export default class CBioPortalAPI {
         };
     fetchCopyNumberSegmentsUsingPOSTURL(parameters: {
         'sampleIdentifiers': Array < SampleIdentifier > ,
+        'chromosome' ? : string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
         let path = '/copy-number-segments/fetch';
+
+        if (parameters['chromosome'] !== undefined) {
+            queryParameters['chromosome'] = parameters['chromosome'];
+        }
 
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
@@ -1197,10 +1210,12 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#fetchCopyNumberSegmentsUsingPOST
      * @param {} sampleIdentifiers - List of sample identifiers
+     * @param {string} chromosome - Chromosome
      * @param {string} projection - Level of detail of the response
      */
     fetchCopyNumberSegmentsUsingPOSTWithHttpInfo(parameters: {
         'sampleIdentifiers': Array < SampleIdentifier > ,
+        'chromosome' ? : string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         $queryParameters ? : any,
         $domain ? : string
@@ -1226,6 +1241,10 @@ export default class CBioPortalAPI {
                 return;
             }
 
+            if (parameters['chromosome'] !== undefined) {
+                queryParameters['chromosome'] = parameters['chromosome'];
+            }
+
             if (parameters['projection'] !== undefined) {
                 queryParameters['projection'] = parameters['projection'];
             }
@@ -1247,10 +1266,12 @@ export default class CBioPortalAPI {
      * @method
      * @name CBioPortalAPI#fetchCopyNumberSegmentsUsingPOST
      * @param {} sampleIdentifiers - List of sample identifiers
+     * @param {string} chromosome - Chromosome
      * @param {string} projection - Level of detail of the response
      */
     fetchCopyNumberSegmentsUsingPOST(parameters: {
             'sampleIdentifiers': Array < SampleIdentifier > ,
+            'chromosome' ? : string,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             $queryParameters ? : any,
             $domain ? : string
@@ -1281,7 +1302,7 @@ export default class CBioPortalAPI {
      * Fetch gene panel data
      * @method
      * @name CBioPortalAPI#fetchGenePanelDataInMultipleMolecularProfilesUsingPOST
-     * @param {} genePanelMultipleStudyFilter - List of Molecular Profile ID and Sample ID pairs or List of MolecularProfile IDs and Entrez Gene IDs
+     * @param {} genePanelMultipleStudyFilter - List of Molecular Profile ID and Sample ID pairs
      */
     fetchGenePanelDataInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters: {
         'genePanelMultipleStudyFilter': GenePanelMultipleStudyFilter,
@@ -1325,7 +1346,7 @@ export default class CBioPortalAPI {
      * Fetch gene panel data
      * @method
      * @name CBioPortalAPI#fetchGenePanelDataInMultipleMolecularProfilesUsingPOST
-     * @param {} genePanelMultipleStudyFilter - List of Molecular Profile ID and Sample ID pairs or List of MolecularProfile IDs and Entrez Gene IDs
+     * @param {} genePanelMultipleStudyFilter - List of Molecular Profile ID and Sample ID pairs
      */
     fetchGenePanelDataInMultipleMolecularProfilesUsingPOST(parameters: {
             'genePanelMultipleStudyFilter': GenePanelMultipleStudyFilter,
@@ -1629,6 +1650,7 @@ export default class CBioPortalAPI {
         });
     };
     getAllGenesUsingGETURL(parameters: {
+        'keyword' ? : string,
         'alias' ? : string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
@@ -1639,6 +1661,10 @@ export default class CBioPortalAPI {
     }): string {
         let queryParameters: any = {};
         let path = '/genes';
+        if (parameters['keyword'] !== undefined) {
+            queryParameters['keyword'] = parameters['keyword'];
+        }
+
         if (parameters['alias'] !== undefined) {
             queryParameters['alias'] = parameters['alias'];
         }
@@ -1677,6 +1703,7 @@ export default class CBioPortalAPI {
      * Get all genes
      * @method
      * @name CBioPortalAPI#getAllGenesUsingGET
+     * @param {string} keyword - Search keyword that applies to hugo gene symbol of the genes
      * @param {string} alias - Alias of the gene
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
@@ -1685,6 +1712,7 @@ export default class CBioPortalAPI {
      * @param {string} direction - Direction of the sort
      */
     getAllGenesUsingGETWithHttpInfo(parameters: {
+        'keyword' ? : string,
         'alias' ? : string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
@@ -1704,6 +1732,10 @@ export default class CBioPortalAPI {
         let form: any = {};
         return new Promise(function(resolve, reject) {
             headers['Accept'] = 'application/json';
+
+            if (parameters['keyword'] !== undefined) {
+                queryParameters['keyword'] = parameters['keyword'];
+            }
 
             if (parameters['alias'] !== undefined) {
                 queryParameters['alias'] = parameters['alias'];
@@ -1745,6 +1777,7 @@ export default class CBioPortalAPI {
      * Get all genes
      * @method
      * @name CBioPortalAPI#getAllGenesUsingGET
+     * @param {string} keyword - Search keyword that applies to hugo gene symbol of the genes
      * @param {string} alias - Alias of the gene
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
@@ -1753,6 +1786,7 @@ export default class CBioPortalAPI {
      * @param {string} direction - Direction of the sort
      */
     getAllGenesUsingGET(parameters: {
+            'keyword' ? : string,
             'alias' ? : string,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
@@ -3496,7 +3530,7 @@ export default class CBioPortalAPI {
      * Fetch mutations in multiple molecular profiles by sample IDs
      * @method
      * @name CBioPortalAPI#fetchMutationsInMultipleMolecularProfilesUsingPOST
-     * @param {} mutationMultipleStudyFilter - List of Molecular Profile ID and Sample ID pairs and Entrez Gene IDs
+     * @param {} mutationMultipleStudyFilter - List of Molecular Profile IDs or List of Molecular Profile ID / Sample ID pairs, and List of Entrez Gene IDs
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
      * @param {integer} pageNumber - Page number of the result list
@@ -3570,7 +3604,7 @@ export default class CBioPortalAPI {
      * Fetch mutations in multiple molecular profiles by sample IDs
      * @method
      * @name CBioPortalAPI#fetchMutationsInMultipleMolecularProfilesUsingPOST
-     * @param {} mutationMultipleStudyFilter - List of Molecular Profile ID and Sample ID pairs and Entrez Gene IDs
+     * @param {} mutationMultipleStudyFilter - List of Molecular Profile IDs or List of Molecular Profile ID / Sample ID pairs, and List of Entrez Gene IDs
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
      * @param {integer} pageNumber - Page number of the result list
@@ -3589,6 +3623,138 @@ export default class CBioPortalAPI {
         }): Promise < Array < Mutation >
         > {
             return this.fetchMutationsInMultipleMolecularProfilesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    getAllPatientsUsingGETURL(parameters: {
+        'keyword' ? : string,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'pageSize' ? : number,
+        'pageNumber' ? : number,
+        'direction' ? : "ASC" | "DESC",
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/patients';
+        if (parameters['keyword'] !== undefined) {
+            queryParameters['keyword'] = parameters['keyword'];
+        }
+
+        if (parameters['projection'] !== undefined) {
+            queryParameters['projection'] = parameters['projection'];
+        }
+
+        if (parameters['pageSize'] !== undefined) {
+            queryParameters['pageSize'] = parameters['pageSize'];
+        }
+
+        if (parameters['pageNumber'] !== undefined) {
+            queryParameters['pageNumber'] = parameters['pageNumber'];
+        }
+
+        queryParameters['sortBy'] = 'patientId';
+
+        if (parameters['direction'] !== undefined) {
+            queryParameters['direction'] = parameters['direction'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+    * Get all patients
+    * @method
+    * @name CBioPortalAPI#getAllPatientsUsingGET
+         * @param {string} keyword - Search keyword that applies to ID of the patients
+         * @param {string} projection - Level of detail of the response
+         * @param {integer} pageSize - Page size of the result list
+         * @param {integer} pageNumber - Page number of the result list
+        
+         * @param {string} direction - Direction of the sort
+    */
+    getAllPatientsUsingGETWithHttpInfo(parameters: {
+        'keyword' ? : string,
+        'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+        'pageSize' ? : number,
+        'pageNumber' ? : number,
+        'direction' ? : "ASC" | "DESC",
+        $queryParameters ? : any,
+            $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/patients';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+
+            if (parameters['keyword'] !== undefined) {
+                queryParameters['keyword'] = parameters['keyword'];
+            }
+
+            if (parameters['projection'] !== undefined) {
+                queryParameters['projection'] = parameters['projection'];
+            }
+
+            if (parameters['pageSize'] !== undefined) {
+                queryParameters['pageSize'] = parameters['pageSize'];
+            }
+
+            if (parameters['pageNumber'] !== undefined) {
+                queryParameters['pageNumber'] = parameters['pageNumber'];
+            }
+
+            queryParameters['sortBy'] = 'patientId';
+
+            if (parameters['direction'] !== undefined) {
+                queryParameters['direction'] = parameters['direction'];
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+    * Get all patients
+    * @method
+    * @name CBioPortalAPI#getAllPatientsUsingGET
+         * @param {string} keyword - Search keyword that applies to ID of the patients
+         * @param {string} projection - Level of detail of the response
+         * @param {integer} pageSize - Page size of the result list
+         * @param {integer} pageNumber - Page number of the result list
+        
+         * @param {string} direction - Direction of the sort
+    */
+    getAllPatientsUsingGET(parameters: {
+            'keyword' ? : string,
+            'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
+            'pageSize' ? : number,
+            'pageNumber' ? : number,
+            'direction' ? : "ASC" | "DESC",
+            $queryParameters ? : any,
+                $domain ? : string
+        }): Promise < Array < Patient >
+        > {
+            return this.getAllPatientsUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
@@ -4140,6 +4306,7 @@ export default class CBioPortalAPI {
             });
         };
     getAllStudiesUsingGETURL(parameters: {
+        'keyword' ? : string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
@@ -4149,6 +4316,10 @@ export default class CBioPortalAPI {
     }): string {
         let queryParameters: any = {};
         let path = '/studies';
+        if (parameters['keyword'] !== undefined) {
+            queryParameters['keyword'] = parameters['keyword'];
+        }
+
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
         }
@@ -4183,6 +4354,7 @@ export default class CBioPortalAPI {
      * Get all studies
      * @method
      * @name CBioPortalAPI#getAllStudiesUsingGET
+     * @param {string} keyword - Search keyword that applies to name and cancer type of the studies
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
      * @param {integer} pageNumber - Page number of the result list
@@ -4190,6 +4362,7 @@ export default class CBioPortalAPI {
      * @param {string} direction - Direction of the sort
      */
     getAllStudiesUsingGETWithHttpInfo(parameters: {
+        'keyword' ? : string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
@@ -4208,6 +4381,10 @@ export default class CBioPortalAPI {
         let form: any = {};
         return new Promise(function(resolve, reject) {
             headers['Accept'] = 'application/json';
+
+            if (parameters['keyword'] !== undefined) {
+                queryParameters['keyword'] = parameters['keyword'];
+            }
 
             if (parameters['projection'] !== undefined) {
                 queryParameters['projection'] = parameters['projection'];
@@ -4245,6 +4422,7 @@ export default class CBioPortalAPI {
      * Get all studies
      * @method
      * @name CBioPortalAPI#getAllStudiesUsingGET
+     * @param {string} keyword - Search keyword that applies to name and cancer type of the studies
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
      * @param {integer} pageNumber - Page number of the result list
@@ -4252,6 +4430,7 @@ export default class CBioPortalAPI {
      * @param {string} direction - Direction of the sort
      */
     getAllStudiesUsingGET(parameters: {
+            'keyword' ? : string,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
@@ -4352,6 +4531,83 @@ export default class CBioPortalAPI {
         }): Promise < Array < CancerStudy >
         > {
             return this.fetchStudiesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    getTagsForMultipleStudiesUsingPOSTURL(parameters: {
+        'studyIds': Array < string > ,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/studies/tags/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get the study tags by IDs
+     * @method
+     * @name CBioPortalAPI#getTagsForMultipleStudiesUsingPOST
+     * @param {} studyIds - List of Study IDs
+     */
+    getTagsForMultipleStudiesUsingPOSTWithHttpInfo(parameters: {
+        'studyIds': Array < string > ,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/studies/tags/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['studyIds'] !== undefined) {
+                body = parameters['studyIds'];
+            }
+
+            if (parameters['studyIds'] === undefined) {
+                reject(new Error('Missing required  parameter: studyIds'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get the study tags by IDs
+     * @method
+     * @name CBioPortalAPI#getTagsForMultipleStudiesUsingPOST
+     * @param {} studyIds - List of Study IDs
+     */
+    getTagsForMultipleStudiesUsingPOST(parameters: {
+            'studyIds': Array < string > ,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < CancerStudyTags >
+        > {
+            return this.getTagsForMultipleStudiesUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
@@ -6317,6 +6573,7 @@ export default class CBioPortalAPI {
     getCopyNumberSegmentsInSampleInStudyUsingGETURL(parameters: {
         'studyId': string,
         'sampleId': string,
+        'chromosome' ? : string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
@@ -6330,6 +6587,10 @@ export default class CBioPortalAPI {
         path = path.replace('{studyId}', parameters['studyId'] + '');
 
         path = path.replace('{sampleId}', parameters['sampleId'] + '');
+        if (parameters['chromosome'] !== undefined) {
+            queryParameters['chromosome'] = parameters['chromosome'];
+        }
+
         if (parameters['projection'] !== undefined) {
             queryParameters['projection'] = parameters['projection'];
         }
@@ -6366,6 +6627,7 @@ export default class CBioPortalAPI {
      * @name CBioPortalAPI#getCopyNumberSegmentsInSampleInStudyUsingGET
      * @param {string} studyId - Study ID e.g. acc_tcga
      * @param {string} sampleId - Sample ID e.g. TCGA-OR-A5J2-01
+     * @param {string} chromosome - Chromosome
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
      * @param {integer} pageNumber - Page number of the result list
@@ -6375,6 +6637,7 @@ export default class CBioPortalAPI {
     getCopyNumberSegmentsInSampleInStudyUsingGETWithHttpInfo(parameters: {
         'studyId': string,
         'sampleId': string,
+        'chromosome' ? : string,
         'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
         'pageSize' ? : number,
         'pageNumber' ? : number,
@@ -6406,6 +6669,10 @@ export default class CBioPortalAPI {
             if (parameters['sampleId'] === undefined) {
                 reject(new Error('Missing required  parameter: sampleId'));
                 return;
+            }
+
+            if (parameters['chromosome'] !== undefined) {
+                queryParameters['chromosome'] = parameters['chromosome'];
             }
 
             if (parameters['projection'] !== undefined) {
@@ -6446,6 +6713,7 @@ export default class CBioPortalAPI {
      * @name CBioPortalAPI#getCopyNumberSegmentsInSampleInStudyUsingGET
      * @param {string} studyId - Study ID e.g. acc_tcga
      * @param {string} sampleId - Sample ID e.g. TCGA-OR-A5J2-01
+     * @param {string} chromosome - Chromosome
      * @param {string} projection - Level of detail of the response
      * @param {integer} pageSize - Page size of the result list
      * @param {integer} pageNumber - Page number of the result list
@@ -6455,6 +6723,7 @@ export default class CBioPortalAPI {
     getCopyNumberSegmentsInSampleInStudyUsingGET(parameters: {
             'studyId': string,
             'sampleId': string,
+            'chromosome' ? : string,
             'projection' ? : "ID" | "SUMMARY" | "DETAILED" | "META",
             'pageSize' ? : number,
             'pageNumber' ? : number,
@@ -6468,4 +6737,79 @@ export default class CBioPortalAPI {
                 return response.body;
             });
         };
+    getTagsUsingGETURL(parameters: {
+        'studyId': string,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/studies/{studyId}/tags';
+
+        path = path.replace('{studyId}', parameters['studyId'] + '');
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Get the tags of a study
+     * @method
+     * @name CBioPortalAPI#getTagsUsingGET
+     * @param {string} studyId - Study ID e.g. acc_tcga
+     */
+    getTagsUsingGETWithHttpInfo(parameters: {
+        'studyId': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/studies/{studyId}/tags';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+
+            path = path.replace('{studyId}', parameters['studyId'] + '');
+
+            if (parameters['studyId'] === undefined) {
+                reject(new Error('Missing required  parameter: studyId'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('GET', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Get the tags of a study
+     * @method
+     * @name CBioPortalAPI#getTagsUsingGET
+     * @param {string} studyId - Study ID e.g. acc_tcga
+     */
+    getTagsUsingGET(parameters: {
+        'studyId': string,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < {} > {
+        return this.getTagsUsingGETWithHttpInfo(parameters).then(function(response: request.Response) {
+            return response.body;
+        });
+    };
 }
