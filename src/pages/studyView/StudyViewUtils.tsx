@@ -779,7 +779,7 @@ export function getFrequencyStr(value: number) {
     } else if (value < 100 && value >= 99.9) {
         str = `99.9`;
     } else if (value >= 0.1) {
-        str = (Math.round(value * 10) / 10).toString();
+        str = value.toFixed(1).toString();
     } else {
         str = '<0.1';
     }
@@ -945,6 +945,18 @@ export function calculateLayout(visibleAttributes: ChartMeta[], cols: number): L
 
 export function getDefaultPriorityByUniqueKey(uniqueKey: string): number {
     return STUDY_VIEW_CONFIG.priority[uniqueKey] === undefined ? 1 : STUDY_VIEW_CONFIG.priority[uniqueKey];
+}
+
+export function getPriorityByClinicalAttribute(clinicalAttribute: ClinicalAttribute): number {
+    // If the priority is the default which means the priority has not been manually modified, then we should check
+    // the whether there are priorities predefined
+    const priorityFromDB = Number(clinicalAttribute.priority);
+    if (priorityFromDB === STUDY_VIEW_CONFIG.defaultPriority) {
+        const uniqueKey = getClinicalAttributeUniqueKey(clinicalAttribute);
+        return STUDY_VIEW_CONFIG.priority[uniqueKey] === undefined ? STUDY_VIEW_CONFIG.defaultPriority : STUDY_VIEW_CONFIG.priority[uniqueKey];
+    } else {
+        return priorityFromDB
+    }
 }
 
 // Grid includes 10px margin
