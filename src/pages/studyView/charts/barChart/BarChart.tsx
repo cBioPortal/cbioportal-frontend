@@ -13,7 +13,7 @@ import {
     filterNumericalBins,
     formatNumericalTickValues,
     generateCategoricalData,
-    generateNumericalData
+    generateNumericalData, getMaxLengthStringPixel
 } from "../../StudyViewUtils";
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
 import {adjustedLongestLabelLength} from "../../../../shared/lib/VictoryChartUtils";
@@ -128,13 +128,13 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
     @computed
     get bottomPadding(): number {
         const MAX_PADDING = 30;
-        const padding = this.tilted ? adjustedLongestLabelLength(this.tickFormat.map((tick: string | string[]) => {
+        const padding = this.tilted ? getMaxLengthStringPixel(this.tickFormat.map((tick: string | string[]) => {
             if (_.isArray(tick)) {
                 return tick.join();
             } else {
                 return tick;
             }
-        })) * 7: 20;
+        })): 20;
         return padding > MAX_PADDING ? MAX_PADDING : padding;
     }
 

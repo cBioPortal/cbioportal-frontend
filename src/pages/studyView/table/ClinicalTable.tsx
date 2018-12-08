@@ -1,13 +1,13 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import {computed, toJS, action, observable} from "mobx";
+import {action, computed, observable, toJS, reaction} from "mobx";
 import autobind from 'autobind-decorator';
 import _ from "lodash";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
-import {ClinicalDataCountWithColor, ClinicalDataType, ClinicalDataTypeEnum} from "pages/studyView/StudyViewPageStore";
+import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
 import FixedHeaderTable from "./FixedHeaderTable";
 import styles from "./tables.module.scss";
-import {getFrequencyStr} from "../StudyViewUtils";
+import {getFixedHeaderNumberCellMargin, getFrequencyStr, getMaxLengthStringPixel} from "../StudyViewUtils";
 import {SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 
 export interface IClinicalTableProps {
@@ -42,7 +42,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
     };
 
     @computed
-    get columnWidth() {
+    get columnsWidth() {
         // last two columns width are 80, 60
         return [this.props.width! - 140, 80, 60]
     }
@@ -70,13 +70,20 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
         filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => (d.value.toUpperCase().includes(filterStringUpper)),
         sortBy: (d: ClinicalDataCountWithColor) => d.value,
         defaultSortDirection: 'asc' as 'asc',
-        width: this.columnWidth[0]
+        width: this.columnsWidth[0]
     }, {
         name: '#',
         render: (data: ClinicalDataCountWithColor) =>
             <LabeledCheckbox
                 checked={_.includes(this.props.filters, data.value)}
-                onChange={event => this.onUserSelection(data.value)}>
+                onChange={event => this.onUserSelection(data.value)}
+                labelProps={{
+                    style: {
+                        display: 'flex',
+                        justifyContent: 'space-between'
+                    }
+                }}
+            >
                 {data.count.toLocaleString()}
             </LabeledCheckbox>,
         tooltip: (
@@ -84,11 +91,19 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
         filter: (d: ClinicalDataCountWithColor, f: string) => (d.count.toString().includes(f)),
         sortBy: (d: ClinicalDataCountWithColor) => d.count,
         defaultSortDirection: 'desc' as 'desc',
-        width: this.columnWidth[1]
+        width: this.columnsWidth[1]
     }, {
         name: 'Freq',
+        headerRender: () => {
+            return <div style={{marginLeft: 15}}>Freq</div>
+        },
         render: (data: ClinicalDataCountWithColor) =>
-            <span>{getFrequencyStr((data.count / this.totalCount) * 100)}</span>,
+            <span
+                style={{
+                    flexDirection: 'row-reverse',
+                    display: 'flex'
+                }}
+            >{getFrequencyStr((data.count / this.totalCount) * 100)}</span>,
         tooltip: (
             <span>Percentage of {this.props.patientAttribute ? 'patients' : 'samples'}</span>),
         filter: (d: ClinicalDataCountWithColor, f: string) => {
@@ -97,7 +112,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
         },
         sortBy: (d: ClinicalDataCountWithColor) => d.count,//sort freq column using count
         defaultSortDirection: 'desc' as 'desc',
-        width: this.columnWidth[2]
+        width: this.columnsWidth[2]
     }];
 
     @autobind
