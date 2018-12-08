@@ -3,7 +3,7 @@ import request from "superagent";
 import Response = request.Response;
 import {
     default as CBioPortalAPI, MolecularProfile, Mutation, MutationFilter, DiscreteCopyNumberData,
-    DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier,
+    DiscreteCopyNumberFilter, ClinicalData, Sample, CancerStudy, CopyNumberCountIdentifier, CopyNumberSeg,
     ClinicalDataSingleStudyFilter, ClinicalDataMultiStudyFilter, NumericGeneMolecularData, SampleFilter, Gene
 } from "shared/api/generated/CBioPortalAPI";
 import { EnsemblFilter, EnsemblTranscript } from "shared/api/generated/GenomeNexusAPI";
@@ -249,6 +249,26 @@ export async function fetchCopyNumberSegments(studyId:string,
     }
     else {
         return [];
+    }
+}
+
+export function fetchCopyNumberSegmentsForSamples(samples: Sample[],
+                                                  chromosome?: string,
+                                                  client:CBioPortalAPI = defaultClient): Promise<CopyNumberSeg[]>
+{
+    if (samples.length > 0)
+    {
+        return client.fetchCopyNumberSegmentsUsingPOST({
+            sampleIdentifiers: samples.map(sample => ({
+                sampleId: sample.sampleId,
+                studyId: sample.studyId
+            })),
+            chromosome,
+            projection: 'DETAILED',
+        });
+    }
+    else {
+        return Promise.resolve([]);
     }
 }
 
