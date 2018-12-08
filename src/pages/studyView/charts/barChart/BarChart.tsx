@@ -1,11 +1,11 @@
 import * as React from "react";
-import { observer } from "mobx-react";
-import { VictoryChart, VictoryBar, VictoryAxis, VictorySelectionContainer } from 'victory';
-import { computed } from "mobx";
+import {observer} from "mobx-react";
+import {VictoryAxis, VictoryBar, VictoryChart, VictorySelectionContainer} from 'victory';
+import {computed} from "mobx";
 import _ from "lodash";
 import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 import {ClinicalDataIntervalFilterValue, DataBin} from "shared/api/generated/CBioPortalAPIInternal";
-import { AbstractChart } from "pages/studyView/charts/ChartContainer";
+import {AbstractChart} from "pages/studyView/charts/ChartContainer";
 import autobind from 'autobind-decorator';
 import BarChartAxisLabel from "./BarChartAxisLabel";
 import {
@@ -176,6 +176,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                         tickFormat={(t: number) => Number.isInteger(t) ? t.toFixed(0) : ''}
                     />
                     <VictoryBar
+                        barRatio={0.8}
                         style={{
                             data: {
                                 fill: (d: BarDatum) =>
