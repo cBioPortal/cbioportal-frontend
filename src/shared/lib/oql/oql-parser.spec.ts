@@ -35,15 +35,19 @@ describe("OQL parser", ()=>{
     doTest("TP53 BRCA1 KRAS NRAS", [{gene:"TP53", alterations:false}, {gene:"BRCA1", alterations:false}, {gene:"KRAS", alterations:false}, {gene:"NRAS", alterations:false}]);
     doTest("TP53: MUT BRCA1", [{gene:"TP53", alterations:[{alteration_type:"mut", info:{}, modifiers:[]}, {alteration_type:"mut", constr_rel:"=", constr_type:"name", constr_val:"BRCA1", info:{unrecognized:true}, modifiers:[]}]}]);
     doTest("TP53:MUT", [{gene:"TP53", alterations:[{alteration_type: "mut", info:{}, modifiers:[]}]}])
-    doTest("TP53: _GERMLINE", [{gene:"TP53", alterations:[{alteration_type:"mut", info:{}, modifiers:["GERMLINE"]}]}]);
-    doTest("TP53: _GERMLINE_SOMATIC", [{gene:"TP53", alterations:[{alteration_type:"mut", info:{}, modifiers:["GERMLINE", "SOMATIC"]}]}]);
+    doTest("TP53: GERMLINE", [{gene:"TP53", alterations:[{alteration_type:"mut", info:{}, modifiers:["GERMLINE"]}]}]);
+    doTest("TP53: GERMLINE_SOMATIC", [{gene:"TP53", alterations:[{alteration_type:"mut", info:{}, modifiers:["GERMLINE", "SOMATIC"]}]}]);
     doTest("TP53: proteinchangecode", [{gene:"TP53", alterations:[{alteration_type:"mut", constr_type:"name", constr_rel:"=", constr_val:"proteinchangecode", info:{unrecognized:true}, modifiers:[]}]}]);
     doTest("TP53: proteinchangecode_GERMLINE", [{gene:"TP53", alterations:[{alteration_type:"mut", constr_type:"name", constr_rel:"=", constr_val:"proteinchangecode", info:{unrecognized:true}, modifiers:["GERMLINE"]}]}]);
     doTest("TP53:MISSENSE_GERMLINE", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE"]}]}])
     doTest("TP53:MISSENSE_GERMLINE_SOMATIC", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE", "SOMATIC"]}]}])
+    doTest("TP53:GERMLINE_MISSENSE", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE"]}]}])
+    doTest("TP53:GERMLINE_SOMATIC_MISSENSE", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE", "SOMATIC"]}]}])
     doTest("TP53:MISSENSE_GERMLINE PROMOTER", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE"]},{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "PROMOTER", info: {}, modifiers:[]}]}])
     doTest("TP53:MISSENSE_GERMLINE PROMOTER_SOMATIC", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE"]},{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "PROMOTER", info: {}, modifiers:["SOMATIC"]}]}])
     doTest("TP53:MISSENSE PROMOTER_GERMLINE", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:[]},{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "PROMOTER", info: {}, modifiers:["GERMLINE"]}]}])
+    doTest("TP53:MISSENSE GERMLINE_PROMOTER", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:[]},{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "PROMOTER", info: {}, modifiers:["GERMLINE"]}]}])
+    doTest("TP53:SOMATIC GERMLINE_PROMOTER", [{gene:"TP53", alterations:[{alteration_type: "mut", info: {}, modifiers:["SOMATIC"]},{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "PROMOTER", info: {}, modifiers:["GERMLINE"]}]}])
     doTest("TP53:MISSENSE PROMOTER", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:[]},{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "PROMOTER", info: {}, modifiers:[]}]}])
     doTest("TP53:MUT;", [{gene:"TP53", alterations:[{alteration_type: "mut", info:{}, modifiers:[]}]}])
     doTest("TP53:MUT\n", [{gene:"TP53", alterations:[{alteration_type: "mut", info:{}, modifiers:[]}]}])
