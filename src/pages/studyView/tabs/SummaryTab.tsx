@@ -1,15 +1,14 @@
 import * as React from 'react';
 import styles from "./studySummaryTabStyles.module.scss";
 import {ChartContainer, IChartContainerProps} from 'pages/studyView/charts/ChartContainer';
-import {observable, computed} from 'mobx';
+import {observable} from 'mobx';
 import {
     AnalysisGroup,
     ChartMeta,
     ChartType,
     CopyNumberAlterationIdentifier,
     GeneIdentifier,
-    StudyViewPageStore,
-    UniqueKey
+    StudyViewPageStore
 } from 'pages/studyView/StudyViewPageStore';
 import {ClinicalAttribute, Gene, SampleIdentifier} from 'shared/api/generated/CBioPortalAPI';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -20,7 +19,6 @@ import {
     RectangleBounds
 } from "shared/api/generated/CBioPortalAPIInternal";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import * as _ from 'lodash';
 import ReactGridLayout from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -28,6 +26,7 @@ import {observer} from 'mobx-react';
 import UserSelections from "../UserSelections";
 import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/components/progressIndicator/ProgressIndicator";
+import autobind from 'autobind-decorator';
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore
@@ -304,13 +303,13 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
         </div>);
     };
 
-    @computed
-    get progressItems(): IProgressIndicatorItem[] {
+    @autobind
+    getProgressItems(elapsedSecs:number): IProgressIndicatorItem[] {
         return [{
             label: 'Loading meta information',
             promises: [this.store.defaultVisibleAttributes, this.store.mutationProfiles, this.store.cnaProfiles]
         }, {
-            label: 'Loading clinical data',
+            label: 'Loading clinical data' + (elapsedSecs > 2 ? ' - this can take several seconds' : ''),
             promises: [this.store.initialVisibleAttributesClinicalDataBinCountData, this.store.initialVisibleAttributesClinicalDataCountData]
         }];
     }
@@ -319,7 +318,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
         return (
             <div>
                 <LoadingIndicator isLoading={this.store.loadingInitialDataForSummaryTab} size={"big"} center={true}>
-                    <ProgressIndicator items={this.progressItems} show={this.store.loadingInitialDataForSummaryTab} sequential={false}/>
+                    <ProgressIndicator getItems={this.getProgressItems} show={this.store.loadingInitialDataForSummaryTab} sequential={false}/>
                 </LoadingIndicator>
 
                 {

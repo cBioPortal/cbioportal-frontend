@@ -10,7 +10,8 @@ import {StudyViewPageStore} from "pages/studyView/StudyViewPageStore";
 import {remoteData} from "shared/api/remoteData";
 import {Else, If, Then} from 'react-if';
 import {sortByClinicalAttributePriorityThenName} from "../../../shared/lib/SortUtils";
-import ProgressIndicator from "../../../shared/components/progressIndicator/ProgressIndicator";
+import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/components/progressIndicator/ProgressIndicator";
+import autobind from 'autobind-decorator';
 
 export interface IClinicalDataTabTable {
     store: StudyViewPageStore
@@ -66,6 +67,14 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
         default: []
     });
 
+    @autobind
+    getProgressItems(elapsedSecs:number): IProgressIndicatorItem[] {
+        return [{
+            label: 'Loading clinical data' + (elapsedSecs > 2 ? ' - this can take several seconds' : ''),
+            promises: [this.props.store.getDataForClinicalDataTab]
+        }];
+    }
+
     public render() {
         return (
             <div>
@@ -74,10 +83,7 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
                         <LoadingIndicator
                             isLoading={this.columns.isPending || this.props.store.getDataForClinicalDataTab.isPending}
                             size={"big"} center={true}>
-                            <ProgressIndicator items={[{
-                                label: 'Loading clinical data',
-                                promises: [this.props.store.getDataForClinicalDataTab]
-                            }]} show={this.columns.isPending || this.props.store.getDataForClinicalDataTab.isPending}/>
+                            <ProgressIndicator getItems={this.getProgressItems} show={this.columns.isPending || this.props.store.getDataForClinicalDataTab.isPending}/>
                         </LoadingIndicator>
                     </Then>
                     <Else>
