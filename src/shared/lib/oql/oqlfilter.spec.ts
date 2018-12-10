@@ -97,8 +97,7 @@ describe("doesQueryContainMutationOQL", ()=>{
         assert.equal(doesQueryContainMutationOQL("TP53;"), false);
         assert.equal(doesQueryContainMutationOQL("TP53 BRCA1 BRCA2;"), false);
         assert.equal(doesQueryContainMutationOQL("TP53: MUT"), false);
-        assert.equal(doesQueryContainMutationOQL("TP53: MUT_GERMLINE"), true);
-        assert.equal(doesQueryContainMutationOQL("TP53: _GERMLINE"), true);
+        assert.equal(doesQueryContainMutationOQL("TP53: GERMLINE"), true);
         assert.equal(doesQueryContainMutationOQL("TP53: proteinchange"), true);
         assert.equal(doesQueryContainMutationOQL("TP53: proteinchange_GERMLINE"), true);
     });
@@ -126,23 +125,23 @@ describe("unparseOQLQueryLine", ()=>{
         assert.equal(unparseOQLQueryLine(parsedLine), "TP53: MUT=MISSENSE MUT=proteinchange HOMDEL EXP<-4 PROT>1 FUSION;");
     });
     it("unparses queries with germline and somatic mutation modifiers", ()=>{
-        const parsedLine = parseOQLQuery("TP53: _GERMLINE MISSENSE_SOMATIC proteinchange_GERMLINE;")[0];
+        const parsedLine = parseOQLQuery("TP53: GERMLINE SOMATIC_MISSENSE proteinchange_GERMLINE;")[0];
         assert.equal(unparseOQLQueryLine(parsedLine), "TP53: MUT_GERMLINE MUT=MISSENSE_SOMATIC MUT=proteinchange_GERMLINE;");
     });
 });
 
 describe('filterCBioPortalWebServiceData', ()=>{
-    it('filters properly using the _GERMLINE and _SOMATIC mutation modifiers', ()=>{
+    it('filters properly using the GERMLINE and SOMATIC mutation modifiers', ()=>{
         const accessorsInstance = new accessors([MUTATION_PROFILE]);
         let filteredData = filterCBioPortalWebServiceData(
-            "BRCA1:_GERMLINE",
+            "BRCA1:GERMLINE",
             MUTATION_DATA,
             accessorsInstance,
             ""
         );
         assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [0]);
         filteredData = filterCBioPortalWebServiceData(
-            "BRCA1:_SOMATIC",
+            "BRCA1:SOMATIC",
             MUTATION_DATA,
             accessorsInstance,
             ""
