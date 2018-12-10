@@ -98,8 +98,13 @@ MUTCommand
 	/ "MUT" msp "!=" msp mutation:MutationWithModifiers { return {"alteration_type":"mut", "constr_rel": "!=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info, modifiers: mutation.modifiers}; }
 	/ "MUT" modifiers:MutationModifiers { return {"alteration_type":"mut", "info":{}, "modifiers":modifiers}; }
 	/ "MUT" { return {"alteration_type":"mut", "info":{}, "modifiers":[]}; }
-	/ modifiers:MutationModifiers { return {"alteration_type":"mut", "info":{}, modifiers:modifiers}; }
-	/ mutation:MutationWithModifiers { return {"alteration_type":"mut", "constr_rel": "=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info, modifiers: mutation.modifiers}; }
+	/ mutation:MutationWithModifiers {
+	        if (mutation.type) {
+	            return {"alteration_type":"mut", "constr_rel": "=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info, modifiers: mutation.modifiers};
+            } else {
+                return {"alteration_type":"mut", "info":{}, "modifiers": mutation.modifiers};
+            }
+        }
 
 EXPCommand
 	= "EXP" msp op:ComparisonOp msp constrval:Number { return {"alteration_type":"exp", "constr_rel":op, "constr_val":parseFloat(constrval)}; }
@@ -117,11 +122,18 @@ ComparisonOp
 	/ "<" { return "<"; }
 
 MutationWithModifiers
-    = mutation:Mutation modifiers:MutationModifiers { mutation.modifiers = modifiers; return mutation; }
+    = modifiersThenMaybeMutation:ModifiersThenMaybeMutation { return modifiersThenMaybeMutation; } // this has to come first because mutation matches every string as protein change code
+    / mutation:Mutation "_" modifiers:MutationModifiers { mutation.modifiers = modifiers; return mutation; }
     / mutation:Mutation { mutation.modifiers = []; return mutation; }
 
+ModifiersThenMaybeMutation
+    // the order here is important: first we check for modifier + lookahead to ensure theres another modifier, next for modifier + mutation (mutation swallows all strings, so this has to come after), finally a modifier alone
+    = modifier:MutationModifier "_" &MutationModifier modifiersThenMaybeMutation:ModifiersThenMaybeMutation { modifiersThenMaybeMutation.modifiers.unshift(modifier); return modifiersThenMaybeMutation; }
+    / modifier:MutationModifier "_" mutation:Mutation { mutation.modifiers = [modifier]; return mutation; }
+    / modifier:MutationModifier { return { modifiers: [modifier] }; }
+
 MutationModifiers
-    = modifier:MutationModifier more:MutationModifiers { return [modifier].concat(more); }
+    = modifier:MutationModifier "_" more:MutationModifiers { return [modifier].concat(more); }
     / modifier:MutationModifier { return [modifier]; }
 
 Mutation
@@ -139,5 +151,5 @@ Mutation
 	/ mutation_name:ProteinChangeCode { return {"type":"name", "value":mutation_name, "info":{"unrecognized":true}}; }
 
 MutationModifier
-    = "_GERMLINE"i { return "GERMLINE";}
-    / "_SOMATIC"i { return "SOMATIC";}
+    = "GERMLINE"i { return "GERMLINE";}
+    / "SOMATIC"i { return "SOMATIC";}
