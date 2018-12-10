@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as _ from 'lodash';
 import * as React from 'react';
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
@@ -36,7 +37,7 @@ export interface GenesetsVolcanoSelectorProps
     onSelect: (map_genesets_selected:ObservableMap<boolean>) => void;
 }
 
-@observer
+@cbioObserver
 export default class GenesetsVolcanoSelector extends QueryStoreComponent<GenesetsVolcanoSelectorProps, {plotData:{x: number, y: number, fill: string}[]}>
 {
     readonly percentileOptions = [{label: '50%', value: '50'}, {label: '75%', value: '75'}, {label: '100%', value: '100'}];

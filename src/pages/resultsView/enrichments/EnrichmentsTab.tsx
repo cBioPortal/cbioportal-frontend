@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import { observer } from "mobx-react";
 import { ResultsViewPageStore } from "../ResultsViewPageStore";
@@ -15,7 +16,7 @@ export interface IEnrichmentsTabProps {
     store: ResultsViewPageStore
 }
 
-@observer
+@cbioObserver
 export default class EnrichmentsTab extends React.Component<IEnrichmentsTabProps, {}> {
 
     @observable currentTabId:string;

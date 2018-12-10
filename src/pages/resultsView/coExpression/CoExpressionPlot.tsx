@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {
     VictoryAxis,
@@ -76,7 +77,7 @@ function noop() {};
 
 const SVG_ID = "coexpression-plot-svg";
 
-@observer
+@cbioObserver
 export default class CoExpressionPlot extends React.Component<ICoExpressionPlotProps, {}> {
 
     @bind

@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import { observer } from "mobx-react";
 import { ResultsViewPageStore } from "../ResultsViewPageStore";
@@ -22,7 +23,7 @@ export interface IExpressionEnrichmentContainerProps {
     store: ResultsViewPageStore;
 }
 
-@observer
+@cbioObserver
 export default class ExpressionEnrichmentContainer extends React.Component<IExpressionEnrichmentContainerProps, {}> {
 
     @observable overExpressedFilter: boolean = true;

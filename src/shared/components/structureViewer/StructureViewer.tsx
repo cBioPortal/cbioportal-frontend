@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import {observer} from "mobx-react";
@@ -14,7 +15,7 @@ export interface IStructureViewerProps extends IStructureVisualizerProps {
     containerRef?: (div: HTMLDivElement) => void;
 }
 
-@observer
+@cbioObserver
 export default class StructureViewer extends React.Component<IStructureViewerProps, {}>
 {
     private _3dMolDiv: HTMLDivElement|undefined;

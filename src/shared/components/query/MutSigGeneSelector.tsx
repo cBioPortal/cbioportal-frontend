@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as _ from 'lodash';
 import * as React from 'react';
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
@@ -27,7 +28,7 @@ export interface MutSigGeneSelectorProps
 	onSelect: (map_geneSymbol_selected:ObservableMap<boolean>) => void;
 }
 
-@observer
+@cbioObserver
 export default class MutSigGeneSelector extends React.Component<MutSigGeneSelectorProps, {}>
 {
 	constructor(props:MutSigGeneSelectorProps)

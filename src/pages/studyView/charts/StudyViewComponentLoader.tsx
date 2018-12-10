@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {If} from 'react-if';
 import MobxPromise from "mobxpromise";
@@ -12,7 +13,7 @@ export interface StudyViewComponentLoaderProps {
     promises: MobxPromise<any> | (MobxPromise<any>[])
 }
 
-@observer
+@cbioObserver
 export class StudyViewComponentLoader extends React.Component<StudyViewComponentLoaderProps> {
     @computed get status():"error"|"complete"|"pending" {
         let promises:MobxPromise<any>[];

@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {MutatedGenesData} from "pages/studyView/StudyViewPageStore";
 import {observer} from "mobx-react";
@@ -33,7 +34,7 @@ type MutatedGenesTableUserSelectionWithIndex = {
 class MutatedGenesTableComponent extends FixedHeaderTable<MutationCountByGene> {
 }
 
-@observer
+@cbioObserver
 export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {}> {
     @observable private preSelectedRows: MutatedGenesTableUserSelectionWithIndex[] = [];
 

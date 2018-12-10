@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import {observer} from "mobx-react";
 import {computed, observable} from "mobx";
@@ -21,7 +22,7 @@ type LollipopProps = {
     spec:LollipopSpec;
 };
 
-@observer
+@cbioObserver
 export default class Lollipop extends React.Component<LollipopProps, {}> {
 
     @observable public isHovered:boolean = false;

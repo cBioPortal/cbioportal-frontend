@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import styles from "./styles.module.scss";
 import {If} from 'react-if';
@@ -34,7 +35,7 @@ export interface ChartControls {
     logScaleChecked?    : boolean;
 }
 
-@observer
+@cbioObserver
 export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
     constructor(props: IChartHeaderProps) {
         super(props);

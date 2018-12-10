@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 
 import {observer} from "mobx-react";
@@ -8,7 +9,7 @@ import { TestimonialStore } from 'shared/components/testimonials/Testimonials';
 import styles from './testimonialsPage.module.scss';
 import {PageLayout} from "../../../shared/components/PageLayout/PageLayout";
 
-@observer
+@cbioObserver
 export default class TestimonialsPage extends React.Component<{},{}> {
 
     private store:TestimonialStore;

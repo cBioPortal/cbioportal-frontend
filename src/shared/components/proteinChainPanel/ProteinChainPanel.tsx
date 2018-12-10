@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import ProteinChainView from "./ProteinChainView";
 import PdbChainTable from "./PdbChainTable"
@@ -23,7 +24,7 @@ type ProteinChainPanelProps = {
     pdbHeaderCache?:PdbHeaderCache;
 };
 
-@observer
+@cbioObserver
 export default class ProteinChainPanel extends React.Component<ProteinChainPanelProps, {}> {
 
     @observable private isExpanded:boolean = false;

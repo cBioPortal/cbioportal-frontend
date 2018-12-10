@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import { observer } from "mobx-react";
 import { VictoryChart, VictorySelectionContainer, VictoryAxis, VictoryLabel, VictoryScatter } from 'victory';
@@ -20,7 +21,7 @@ export interface IMiniScatterChartProps {
     onSelectionCleared: () => void;
 }
 
-@observer
+@cbioObserver
 export default class MiniScatterChart extends React.Component<IMiniScatterChartProps, {}> {
 
     @observable tooltipModel: any;

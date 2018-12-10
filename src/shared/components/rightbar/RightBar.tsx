@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import BarGraph from "../barGraph/BarGraph";
@@ -25,7 +26,7 @@ interface IRightBarState
     twitterLoading: boolean;
 }
 
-@observer
+@cbioObserver
 export default class RightBar extends React.Component<IRightBarProps, IRightBarState> {
     constructor(props:IRightBarProps) {
         super(props);

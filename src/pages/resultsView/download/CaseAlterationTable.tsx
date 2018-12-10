@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import {observer} from "mobx-react";
 import * as React from 'react';
 import * as _ from 'lodash';
@@ -102,7 +103,7 @@ export function generateOqlDisplayValue(oqlData: {[oqlLine: string]: IOqlData}, 
 
 class CaseAlterationTableComponent extends LazyMobXTable<ICaseAlteration> {}
 
-@observer
+@cbioObserver
 export default class CaseAlterationTable extends React.Component<ICaseAlterationTableProps, {}> {
     public render()
     {

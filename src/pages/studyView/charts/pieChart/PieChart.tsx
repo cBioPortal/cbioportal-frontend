@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import { observer } from "mobx-react";
 import { VictoryPie, VictoryContainer, VictoryLabel, VictoryLegend, Slice } from 'victory';
@@ -23,7 +24,7 @@ export interface IPieChartProps {
     label?: string;
 }
 
-@observer
+@cbioObserver
 export default class PieChart extends React.Component<IPieChartProps, {}> implements AbstractChart {
 
     private svg: SVGElement;

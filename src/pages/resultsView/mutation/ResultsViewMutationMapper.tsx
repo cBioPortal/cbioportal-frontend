@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import {observer} from "mobx-react";
 import {computed} from "mobx";
@@ -29,7 +30,7 @@ export interface IResultsViewMutationMapperProps extends IMutationMapperProps
     userEmailAddress:string;
 }
 
-@observer
+@cbioObserver
 export default class ResultsViewMutationMapper extends MutationMapper<IResultsViewMutationMapperProps>
 {
     constructor(props: IResultsViewMutationMapperProps) {

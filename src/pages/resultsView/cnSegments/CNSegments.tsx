@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import $ from 'jquery';
 import {observer} from "mobx-react";
@@ -107,7 +108,7 @@ class CNASegmentIframe extends React.Component<CNSegmentsIframeProps,{}>{
     
 }
 
-@observer
+@cbioObserver
 export default class CNSegments extends React.Component<{ store: ResultsViewPageStore}, {}> {
 
     @observable activeTabId:string;

@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import {observer} from "mobx-react";
@@ -11,7 +12,7 @@ export interface IGroupLogicProps {
     group: boolean,
 }
 
-@observer
+@cbioObserver
 export class GroupLogic extends React.Component<IGroupLogicProps, {}> {
     @computed
     get child() {

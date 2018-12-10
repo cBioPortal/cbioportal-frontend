@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import {observer} from "mobx-react";
 import {MSKTabs, MSKTab} from "shared/components/MSKTabs/MSKTabs";
@@ -21,7 +22,7 @@ export interface IMutationsPageProps {
     appStore:AppStore;
 }
 
-@observer
+@cbioObserver
 export default class Mutations extends React.Component<IMutationsPageProps, {}>
 {
     @observable mutationsGeneTab:string;

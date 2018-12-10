@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as _ from 'lodash';
 import * as React from 'react';
 import UnsupportedBrowserModal from "shared/components/unsupportedBrowserModal/UnsupportedBrowserModal";
@@ -37,7 +38,7 @@ interface IContainerProps {
     children: React.ReactNode;
 }
 
-@observer
+@cbioObserver
 export default class Container extends React.Component<IContainerProps, {}> {
 
     static contextTypes = {

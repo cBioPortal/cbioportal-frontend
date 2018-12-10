@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import styles from "./styles.module.scss";
 import {observer} from "mobx-react";
@@ -27,7 +28,7 @@ export interface IGeneSymbolValidatorProps {
 	hideValidatingMessage?:boolean
 }
 
-@observer
+@cbioObserver
 export default class GeneSymbolValidator extends React.Component<IGeneSymbolValidatorProps, {}> {
 
 	@computed get message(){

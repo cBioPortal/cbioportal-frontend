@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {observer} from "mobx-react";
 import {computed, observable} from "mobx";
@@ -118,7 +119,7 @@ class VictoryTableCell extends React.Component<IVictoryTableCellProps, {}> {
     }
 }
 
-@observer
+@cbioObserver
 export default class TablePlot extends React.Component<ITablePlotProps, {}> {
     @observable.ref private container:HTMLDivElement;
 

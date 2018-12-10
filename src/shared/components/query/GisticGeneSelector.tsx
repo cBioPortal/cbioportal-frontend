@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as styles_any from './styles/styles.module.scss';
 import {ObservableMap, expr, toJS, computed, observable} from "mobx";
@@ -39,7 +40,7 @@ export interface GisticGeneSelectorProps
 	onSelect: (map_geneSymbol_selected: ObservableMap<boolean>) => void;
 }
 
-@observer
+@cbioObserver
 export default class GisticGeneSelector extends React.Component<GisticGeneSelectorProps, {}>
 {
 	constructor(props: GisticGeneSelectorProps)
@@ -168,7 +169,7 @@ export default class GisticGeneSelector extends React.Component<GisticGeneSelect
 	}
 }
 
-@observer
+@cbioObserver
 class GisticGeneToggles extends React.Component<{gistic?: Gistic, map_geneSymbol_selected: ObservableMap<boolean>}, {}>
 {
 	@observable showAll = false;

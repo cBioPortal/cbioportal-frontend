@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as _ from "lodash";
 import * as React from "react";
 import Dictionary = _.Dictionary;
@@ -59,7 +60,7 @@ export interface ICancerStudySelectorProps {
     queryStore:QueryStore;
 }
 
-@observer
+@cbioObserver
 export default class CancerStudySelector extends React.Component<ICancerStudySelectorProps, {}> {
     private handlers = {
         onSummaryClick: () => {

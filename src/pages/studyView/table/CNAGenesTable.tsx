@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import * as _ from "lodash";
 import {CNAGenesData} from "pages/studyView/StudyViewPageStore";
@@ -33,7 +34,7 @@ export interface ICNAGenesTablePros {
 class CNAGenesTableComponent extends FixedHeaderTable<CopyNumberCountByGene> {
 }
 
-@observer
+@cbioObserver
 export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
     @observable private preSelectedRows: CNAGenesTableUserSelectionWithIndex[] = [];
 

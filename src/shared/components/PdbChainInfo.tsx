@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import PdbHeaderCache from "../cache/PdbHeaderCache";
 import {observer} from "mobx-react";
@@ -14,7 +15,7 @@ export interface IPdbChainInfoProps {
     summaryFormat?:boolean;
 };
 
-@observer
+@cbioObserver
 export default class PdbChainInfo extends React.Component<IPdbChainInfoProps, {}> {
     render() {
         let pdbInfo = null;

@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import {computed, observable} from "mobx";
@@ -28,7 +29,7 @@ export interface IDownloadTabProps {
     store: ResultsViewPageStore;
 }
 
-@observer
+@cbioObserver
 export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
 {
     constructor(props: IDownloadTabProps)

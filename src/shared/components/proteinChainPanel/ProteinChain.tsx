@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {ProteinChainSpec} from "./ProteinChainView";
 import {observer} from "mobx-react";
@@ -12,7 +13,7 @@ type ProteinChainProps = ProteinChainSpec & {
     highlighted?:boolean;
 };
 
-@observer
+@cbioObserver
 export default class ProteinChain extends React.Component<ProteinChainProps, {}> {
 
     @computed get segmentsAndGaps():{gap:boolean, start:number, end:number}[] {

@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import styles from "./styles.module.scss";
 import {observer} from "mobx-react";
@@ -69,7 +70,7 @@ export interface IChartContainerProps {
     sampleToAnalysisGroup?:MobxPromise<{[uniqueSampleKey:string]:string}>;
 }
 
-@observer
+@cbioObserver
 export class ChartContainer extends React.Component<IChartContainerProps, {}> {
 
     private handlers: any;

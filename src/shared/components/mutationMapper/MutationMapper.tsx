@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import Select from 'react-select';
 import _ from 'lodash';
@@ -39,7 +40,7 @@ export interface IMutationMapperProps {
     showOnlyAnnotatedTranscriptsInDropdown?: boolean;
 }
 
-@observer
+@cbioObserver
 export default class MutationMapper<P extends IMutationMapperProps> extends React.Component<P, {}>
 {
     @observable protected is3dPanelOpen = false;

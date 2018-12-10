@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import {SequenceSpec} from "./LollipopPlotNoTooltip";
 import {observer} from "mobx-react";
@@ -13,7 +14,7 @@ interface ISequenceProps {
     spec:SequenceSpec;
 }
 
-@observer
+@cbioObserver
 export default class Sequence extends React.Component<ISequenceProps, {}> {
     @observable private isMounted:boolean = false;
 

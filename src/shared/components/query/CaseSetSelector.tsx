@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as styles_any from './styles/styles.module.scss';
 import * as _ from 'lodash';
@@ -26,7 +27,7 @@ export function filterCaseSetOptions(opt: ReactSelectOptionWithName, filter: str
 	return _.includes(opt.textLabel.toLowerCase(), filter.toLowerCase());
 }
 
-@observer
+@cbioObserver
 export default class CaseSetSelector extends QueryStoreComponent<{}, {}>
 {
 	@computed get caseSetOptions() : ReactSelectOptionWithName[]

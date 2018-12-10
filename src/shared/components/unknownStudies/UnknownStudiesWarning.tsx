@@ -1,7 +1,8 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import {observer} from "mobx-react";
 
-@observer
+@cbioObserver
 export default class UnknownStudiesWarning extends React.Component<{ ids:String[] }, {}>{
     render(){
         if (this.props.ids.length > 0) {

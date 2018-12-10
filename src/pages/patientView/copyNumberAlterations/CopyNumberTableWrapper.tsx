@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import {observer} from "mobx-react";
 import * as _ from 'lodash';
@@ -48,7 +49,7 @@ type ICopyNumberTableWrapperProps = {
 };
 
 
-@observer
+@cbioObserver
 export default class CopyNumberTableWrapper extends React.Component<ICopyNumberTableWrapperProps, {}> {
 
     public static defaultProps = {

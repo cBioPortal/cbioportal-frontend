@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import WindowStore from "../window/WindowStore";
 import * as React from "react";
 import {computed, observable} from "mobx";
@@ -8,7 +9,7 @@ interface IWindowWidthBoxProps extends React.HTMLProps<HTMLDivElement> {
     offset:number;
 }
 
-@observer
+@cbioObserver
 export class WindowWidthBox extends React.Component<IWindowWidthBoxProps,{}>{
 
     wrapper:HTMLDivElement;

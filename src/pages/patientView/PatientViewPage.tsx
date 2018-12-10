@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import * as _ from "lodash";
 import $ from "jquery";
@@ -69,7 +70,7 @@ export interface PatientViewUrlParams extends QueryParams{
 }
 
 @inject('routing')
-@observer
+@cbioObserver
 export default class PatientViewPage extends React.Component<IPatientViewPageProps, {}> {
 
     @observable private mutationTableColumnVisibility: {[columnId: string]: boolean}|undefined;

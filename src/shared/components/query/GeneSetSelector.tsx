@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as styles_any from './styles/styles.module.scss';
 import {Modal} from 'react-bootstrap';
@@ -27,7 +28,7 @@ const styles = styles_any as {
 	sectionSpinner: string,
 };
 
-@observer
+@cbioObserver
 export default class GeneSetSelector extends QueryStoreComponent<{}, {}>
 {
 	@computed get selectedGeneListOption()

@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import { observer } from "mobx-react";
 import { ResultsViewPageStore } from "../ResultsViewPageStore";
@@ -14,7 +15,7 @@ export interface ICopyNumberEnrichmentsTabProps {
     store: ResultsViewPageStore
 }
 
-@observer
+@cbioObserver
 export default class CopyNumberEnrichmentsTab extends React.Component<ICopyNumberEnrichmentsTabProps, {}> {
 
     @autobind

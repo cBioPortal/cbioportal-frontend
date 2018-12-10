@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import { observer } from "mobx-react";
 import { observable } from 'mobx';
@@ -27,7 +28,7 @@ export interface IMiniBoxPlotProps {
 
 const FILE_NAME: string = "enrichments-boxplot";
 
-@observer
+@cbioObserver
 export default class MiniBoxPlot extends React.Component<IMiniBoxPlotProps, {}> {
 
     @observable tooltipModel: any;

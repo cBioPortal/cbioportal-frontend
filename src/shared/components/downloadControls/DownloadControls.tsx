@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 import FadeInteraction from "../fadeInteraction/FadeInteraction";
@@ -51,7 +52,7 @@ function makeMenuItem(spec:ButtonSpec) {
     );
 }
 
-@observer
+@cbioObserver
 export default class DownloadControls extends React.Component<IDownloadControlsProps, {}> {
     @observable private collapsed = true;
 

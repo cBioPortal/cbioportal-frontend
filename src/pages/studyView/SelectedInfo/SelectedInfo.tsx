@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import {computed} from "mobx";
@@ -9,7 +10,7 @@ export interface ISelectedInfoProps {
     selectedSamples: Sample[];
 }
 
-@observer
+@cbioObserver
 export default class SelectedInfo extends React.Component<ISelectedInfoProps, {}> {
 
     @computed

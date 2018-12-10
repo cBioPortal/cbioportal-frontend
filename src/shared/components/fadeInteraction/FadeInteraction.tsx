@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {observer} from "mobx-react";
 import {action, computed, observable, reaction} from "mobx";
@@ -9,7 +10,7 @@ export interface IFadeInteractionProps {
     show?: boolean;
 }
 
-@observer
+@cbioObserver
 export default class FadeInteraction extends React.Component<IFadeInteractionProps, {}> {
 
     static defaultProps = {

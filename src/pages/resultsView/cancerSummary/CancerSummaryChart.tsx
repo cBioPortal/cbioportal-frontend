@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import * as _ from 'lodash';
 import { VictoryChart, VictoryTheme, VictoryLegend, VictoryContainer, VictoryAxis, VictoryLabel, VictoryStack, VictoryBar } from 'victory';
@@ -56,7 +57,7 @@ export function mergeAlterationDataAcrossAlterationTypes(alterationData:ICancerS
 }
 
 
-@observer
+@cbioObserver
 export class CancerSummaryChart extends React.Component<CancerSummaryChartProps,{}> {
 
     private hideTooltipTimeout:any;

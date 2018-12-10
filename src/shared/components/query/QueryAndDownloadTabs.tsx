@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import {Tabs, Tab, default as ReactBootstrap} from 'react-bootstrap';
 import * as styles_any from './styles/styles.module.scss';
@@ -20,7 +21,7 @@ interface IQueryAndDownloadTabsProps
 }
 
 
-@observer
+@cbioObserver
 export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownloadTabsProps, {}>
 {
 

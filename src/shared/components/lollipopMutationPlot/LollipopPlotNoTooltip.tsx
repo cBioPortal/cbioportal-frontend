@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import _ from "lodash";
 import Sequence from "./Sequence";
@@ -56,7 +57,7 @@ const LOLLIPOP_ID_CLASS_PREFIX = "lollipop-";
 const DOMAIN_ID_CLASS_PREFIX = "domain-";
 const SEQUENCE_ID_CLASS_PREFIX = "sequence-";
 
-@observer
+@cbioObserver
 export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotNoTooltipProps, {}> {
 
     private lollipopComponents:{[lollipopIndex:string]:Lollipop};

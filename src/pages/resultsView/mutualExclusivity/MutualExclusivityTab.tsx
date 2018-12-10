@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import MutualExclusivityTable from "./MutualExclusivityTable";
@@ -17,7 +18,7 @@ export interface IMutualExclusivityTabProps {
     store: ResultsViewPageStore
 }
 
-@observer
+@cbioObserver
 export default class MutualExclusivityTab extends React.Component<IMutualExclusivityTabProps, {}> {
 
     @observable mutualExclusivityFilter: boolean = true;

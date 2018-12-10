@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
 import {observer} from "mobx-react";
@@ -14,7 +15,7 @@ interface IOqlStatusBannerProps {
     style?:any;
 }
 
-@observer
+@cbioObserver
 export default class OqlStatusBanner extends React.Component<IOqlStatusBannerProps, {}> {
     @computed get toggleButton() {
         if (this.props.onToggle && !this.props.isUnaffected) {

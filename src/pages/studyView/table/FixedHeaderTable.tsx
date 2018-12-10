@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {Column, LazyMobXTableStore, SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 import {
@@ -33,7 +34,7 @@ const RVSDTtoStrType = {
     ['asc' as SortDirection]: RVSortDirection.ASC
 };
 
-@observer
+@cbioObserver
 export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTableProps<T>, {}> {
     private _store: LazyMobXTableStore<T>;
     @observable private _sortBy: string;

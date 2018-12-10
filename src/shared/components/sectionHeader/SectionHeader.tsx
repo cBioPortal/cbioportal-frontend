@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import MobxPromise from "mobxpromise";
 import {observer} from "mobx-react";
@@ -21,7 +22,7 @@ interface ISectionHeaderProps extends React.DetailedHTMLProps<React.HTMLAttribut
 	secondaryComponent?:ReactElement<any>;
 }
 
-@observer
+@cbioObserver
 export default class SectionHeader extends React.Component<ISectionHeaderProps, {}>
 {
 	render()

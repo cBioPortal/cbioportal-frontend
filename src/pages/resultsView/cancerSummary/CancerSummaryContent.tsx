@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import * as _ from 'lodash';
 import {Checkbox, ButtonGroup, Panel, Radio} from 'react-bootstrap';
@@ -102,7 +103,7 @@ export function calculatePercentage(part:number, whole:number){
     return  (part / whole) * 100;
 }
 
-@observer
+@cbioObserver
 export class CancerSummaryContent extends React.Component<ICancerSummaryContentProps, {}> {
 
     private inputYAxisEl: any;

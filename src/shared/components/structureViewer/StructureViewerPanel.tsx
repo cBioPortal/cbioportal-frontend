@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import {FormControl, Checkbox, Button, ButtonGroup} from 'react-bootstrap';
@@ -39,7 +40,7 @@ export interface IStructureViewerPanelProps extends IProteinImpactTypeColors
     onClose?: () => void;
 }
 
-@observer
+@cbioObserver
 export default class StructureViewerPanel extends React.Component<IStructureViewerPanelProps, {}> {
 
     @observable protected isCollapsed:boolean = false;

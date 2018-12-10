@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {observer} from "mobx-react";
 import {computed, observable, action} from "mobx";
@@ -27,7 +28,7 @@ type ProteinChainViewProps = {
 };
 
 const CHAIN_ID_PREFIX = "chain-";
-@observer
+@cbioObserver
 export default class ProteinChainView extends React.Component<ProteinChainViewProps, {}> {
     @observable private rowHeight = 6;
     @observable private rowPadding = 3;

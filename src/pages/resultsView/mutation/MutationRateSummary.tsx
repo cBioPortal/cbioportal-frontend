@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import {MolecularProfile, Mutation, SampleIdentifier} from "shared/api/generated/CBioPortalAPI";
 import {germlineMutationRate, somaticMutationRate} from "shared/lib/MutationUtils";
@@ -13,7 +14,7 @@ export interface IMutationRateSummaryProps {
     molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>;
 }
 
-@observer
+@cbioObserver
 export default class MutationRateSummary extends React.Component<IMutationRateSummaryProps, {}>
 {
     public somaticMutationFrequency(): JSX.Element

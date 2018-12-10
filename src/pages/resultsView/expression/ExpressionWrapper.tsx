@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import {observer, Observer} from "mobx-react";
@@ -86,7 +87,7 @@ type ExpressionTooltipModel = {
     style: ExpressionStyle
 };
 
-@observer
+@cbioObserver
 export default class ExpressionWrapper extends React.Component<ExpressionWrapperProps, {}> {
 
     constructor(props: ExpressionWrapperProps) {

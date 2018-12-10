@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import {ObservableMap, observable} from "mobx";
 import {observer} from "mobx-react";
@@ -12,7 +13,7 @@ export interface GenesetsHierarchySelectorProps
     onSelect: (map_geneSet_selected:ObservableMap<boolean>) => void;
 }
 
-@observer
+@cbioObserver
 export default class GenesetsHierarchySelector extends React.Component<GenesetsHierarchySelectorProps, {}>
 {
     @observable percentile: validPercentile = 75;

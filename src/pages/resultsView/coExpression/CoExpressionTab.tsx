@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {Gene, MolecularProfile} from "../../../shared/api/generated/CBioPortalAPI";
 import {action, computed, observable} from "mobx";
@@ -23,7 +24,7 @@ export interface ICoExpressionTabProps {
 
 export class CoExpressionCache extends MobxPromiseCache<{entrezGeneId:number, molecularProfile:MolecularProfile, allData:boolean}, CoExpression[]> {};
 
-@observer
+@cbioObserver
 export default class CoExpressionTab extends React.Component<ICoExpressionTabProps, {}> {
     @observable _selectedMolecularProfile:MolecularProfile|undefined; // only undefined initially, until molecular profiles downloaded
     @observable _selectedEntrezGeneId:number | undefined; // only undefined initially, until genes downloaded

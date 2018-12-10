@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {CoExpression} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import {correlationColor, correlationSortBy} from "./CoExpressionTableUtils";
@@ -71,7 +72,7 @@ function makeNumberColumn(name:string, key:keyof CoExpression, colorByValue:bool
     };
 }
 
-@observer
+@cbioObserver
 export default class CoExpressionTable extends React.Component<ICoExpressionTableProps, {}> {
 
     @bind

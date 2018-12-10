@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {observer} from "mobx-react";
 import ErrorIcon from "./ErrorIcon";
@@ -5,7 +6,7 @@ import ErrorIcon from "./ErrorIcon";
 export interface IErrorMessageProps {
 }
 
-@observer
+@cbioObserver
 export default class ErrorMessage extends React.Component<IErrorMessageProps, {}> {
     render() {
         return <span>

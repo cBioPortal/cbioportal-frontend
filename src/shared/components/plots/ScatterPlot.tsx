@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {observer, Observer} from "mobx-react";
 import bind from "bind-decorator";
@@ -56,7 +57,7 @@ const MIN_LOG_ARGUMENT = 0.01;
 const LEFT_PADDING = 25;
 
 
-@observer
+@cbioObserver
 export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.Component<IScatterPlotProps<D>, {}> {
     @observable.ref tooltipModel:any|null = null;
     @observable pointHovered:boolean = false;

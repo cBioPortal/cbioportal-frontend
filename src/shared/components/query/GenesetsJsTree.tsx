@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import React from 'react';
 import $ from 'jquery';
 import {getHierarchyData} from "shared/lib/StoreUtils";
@@ -27,7 +28,7 @@ type JSNode = {
     original: {description: string, geneset: boolean};
 };
 
-@observer
+@cbioObserver
 export default class GenesetsJsTree extends React.Component<GenesetsJsTreeProps, {}>
 {
     tree: Element|null;

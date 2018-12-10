@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import {PathologyReportPDF} from "../clinicalInformation/PatientViewPageStore";
 import { If, Then, Else } from 'react-if';
@@ -13,7 +14,7 @@ export type IPathologyReportProps = {
 }
 
 
-@observer
+@cbioObserver
 export default class PathologyReport extends React.Component<IPathologyReportProps,{ pdfUrl:string; }> {
 
     pdfSelectList:any;

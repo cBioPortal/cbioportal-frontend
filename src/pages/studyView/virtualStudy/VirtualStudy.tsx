@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import styles from "./styles.module.scss";
@@ -26,7 +27,7 @@ export interface IVirtualStudyProps {
     user?: string;
 }
 
-@observer
+@cbioObserver
 export class StudySummaryRecord extends React.Component<CancerStudy, {}> {
     @observable private showDescription = false;
 
@@ -55,7 +56,7 @@ export class StudySummaryRecord extends React.Component<CancerStudy, {}> {
     }
 }
 
-@observer
+@cbioObserver
 export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}> {
 
     @observable private name: string = '';

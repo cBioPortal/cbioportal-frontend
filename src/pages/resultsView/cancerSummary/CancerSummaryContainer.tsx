@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import * as _ from 'lodash';
 import {action, computed, observable} from "mobx";
@@ -26,7 +27,7 @@ interface ICancerSummaryContainerProps {
 };
 
 
-@observer
+@cbioObserver
 export default class CancerSummaryContainer extends React.Component<ICancerSummaryContainerProps, {}> {
 
     @observable private activeTab: string = "all";

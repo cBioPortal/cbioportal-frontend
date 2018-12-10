@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import { observer } from "mobx-react";
 import { VictoryChart, VictoryBar, VictoryAxis, VictorySelectionContainer } from 'victory';
@@ -38,7 +39,7 @@ function generateTheme() {
 
 const VICTORY_THEME = generateTheme();
 
-@observer
+@cbioObserver
 export default class BarChart extends React.Component<IBarChartProps, {}> implements AbstractChart {
 
     private svgContainer: any;

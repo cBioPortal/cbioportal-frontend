@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import { observer } from "mobx-react";
 import StandaloneMutationTable from "./StandaloneMutationTable";
@@ -11,7 +12,7 @@ export interface IStandaloneMutationMapperProps extends IMutationMapperProps {
     // add standalone view specific props here if needed
     downloadDataFetcher?:MutationTableDownloadDataFetcher;
 }
-@observer
+@cbioObserver
 export default class StandaloneMutationMapper extends MutationMapper<IStandaloneMutationMapperProps>
 {
     constructor(props: IMutationMapperProps) {

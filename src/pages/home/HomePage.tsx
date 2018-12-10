@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import {If, Then, Else} from 'react-if';
@@ -49,7 +50,7 @@ export function createQueryStore(currentQuery?:any) {
 }
 
 @inject('routing')
-@observer
+@cbioObserver
 export default class HomePage extends React.Component<IResultsViewPageProps, {}> {
 
     @observable showQuerySelector = true;

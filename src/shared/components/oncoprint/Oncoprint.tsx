@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import OncoprintJS, {TrackId, CustomTrackOption} from "oncoprintjs";
 import {GenePanelData, MolecularProfile} from "../../api/generated/CBioPortalAPI";
@@ -160,7 +161,7 @@ export interface IOncoprintProps {
     onReleaseRendering?:()=>void;
 }
 
-@observer
+@cbioObserver
 export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
     private div:HTMLDivElement;
     public oncoprint:OncoprintJS<any>|undefined;

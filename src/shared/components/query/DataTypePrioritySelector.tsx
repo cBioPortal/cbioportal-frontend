@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as _ from 'lodash';
 import * as React from 'react';
 import * as styles_any from './styles/styles.module.scss';
@@ -16,7 +17,7 @@ const styles = styles_any as {
 	DataTypePriorityLabel: string,
 };
 
-@observer
+@cbioObserver
 export default class DataTypePrioritySelector extends QueryStoreComponent<{}, {}>
 {
 	render()

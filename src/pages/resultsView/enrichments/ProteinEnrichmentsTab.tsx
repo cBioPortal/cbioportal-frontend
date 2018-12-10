@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import { observer } from "mobx-react";
 import {AlterationTypeConstants, ResultsViewPageStore} from "../ResultsViewPageStore";
@@ -13,7 +14,7 @@ export interface IProteinEnrichmentsTabProps {
     store: ResultsViewPageStore
 }
 
-@observer
+@cbioObserver
 export default class ProteinEnrichmentsTab extends React.Component<IProteinEnrichmentsTabProps, {}> {
 
     @autobind

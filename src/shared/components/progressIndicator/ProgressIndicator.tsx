@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {observer} from "mobx-react";
 import styles from "./styles.module.scss";
@@ -36,7 +37,7 @@ function getItemStatus(item:IProgressIndicatorItem):"complete"|"pending"|"error"
     }
 }
 
-@observer
+@cbioObserver
 export default class ProgressIndicator extends React.Component<IProgressIndicatorProps, {}> {
 
     @observable timeShown = 0;

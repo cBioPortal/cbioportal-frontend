@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {observer, Observer} from "mobx-react";
 import {action, computed, IObservableObject, IReactionDisposer, observable, ObservableMap, reaction} from "mobx";
@@ -75,7 +76,7 @@ type HeatmapTrackGroupRecord = {
 /* fields and methods in the class below are ordered based on roughly
 /* chronological setup concerns, rather than on encapsulation and public API */
 /* tslint:disable: member-ordering */
-@observer
+@cbioObserver
 export default class ResultsViewOncoprint extends React.Component<IResultsViewOncoprintProps, {}> {
     @observable columnMode:"sample"|"patient" = "patient";
     @observable sortMode:SortMode = {type:"data"};

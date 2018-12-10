@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import {observer} from "mobx-react";
 import * as React from "react";
 import {VictoryChart, VictorySelectionContainer, VictoryAxis, VictoryLabel, VictoryScatter} from "victory";
@@ -46,7 +47,7 @@ export interface IStudyViewScatterPlotProps {
 const NUM_AXIS_TICKS = 8;
 const DOMAIN_PADDING = 50;
 
-@observer
+@cbioObserver
 export default class StudyViewScatterPlot extends React.Component<IStudyViewScatterPlotProps, {}> implements AbstractChart {
     @observable tooltipModel:any|null = null;
     @observable pointHovered:boolean = false;

@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import { observer } from "mobx-react";
 import {computed, observable} from 'mobx';
@@ -16,7 +17,7 @@ export interface IEnrichmentsDataSetDropdownProps {
     molecularProfileIdToProfiledSampleCount:{[molecularProfileId:string]:number};
 }
 
-@observer
+@cbioObserver
 export default class EnrichmentsDataSetDropdown extends React.Component<IEnrichmentsDataSetDropdownProps, {}> {
 
     @autobind

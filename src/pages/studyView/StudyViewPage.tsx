@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import {inject, observer} from "mobx-react";
 import styles from "./styles.module.scss";
@@ -28,7 +29,7 @@ export interface IStudyViewPageProps {
 }
 
 @inject('routing')
-@observer
+@cbioObserver
 export default class StudyViewPage extends React.Component<IStudyViewPageProps, {}> {
     private store: StudyViewPageStore;
     constructor(props: IStudyViewPageProps) {
@@ -126,7 +127,7 @@ interface IStudySummaryProps {
     showOriginStudiesInSummaryDescription: boolean
 }
 
-@observer
+@cbioObserver
 class StudySummary extends React.Component<IStudySummaryProps, {}> {
 
     @observable private showMoreDescription = false;

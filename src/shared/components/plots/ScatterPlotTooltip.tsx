@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import {observer} from "mobx-react";
 import * as React from "react";
 import {observable} from "mobx";
@@ -14,7 +15,7 @@ export interface IScatterPlotTooltipProps {
     placement?:string;
 }
 
-@observer
+@cbioObserver
 export default class ScatterPlotTooltip extends React.Component<IScatterPlotTooltipProps, {}> {
     @observable isHovered = false; // allows persistence when mouse rolls over tooltip
 

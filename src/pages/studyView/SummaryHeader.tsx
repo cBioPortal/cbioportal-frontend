@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import {
@@ -60,7 +61,7 @@ export interface ISummaryHeaderProps {
 
 export type GeneReplacement = {alias: string, genes: Gene[]};
 
-@observer
+@cbioObserver
 export default class SummaryHeader extends React.Component<ISummaryHeaderProps, {}> {
 
     @observable private isCustomCaseBoxOpen = false;

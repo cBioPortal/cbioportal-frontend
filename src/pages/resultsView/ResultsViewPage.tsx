@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import $ from 'jquery';
@@ -163,7 +164,7 @@ export interface IResultsViewPageProps {
 }
 
 @inject('appStore','routing')
-@observer
+@cbioObserver
 export default class ResultsViewPage extends React.Component<IResultsViewPageProps, {}> {
 
     private resultsViewPageStore: ResultsViewPageStore;

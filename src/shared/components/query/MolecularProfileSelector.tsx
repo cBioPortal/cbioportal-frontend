@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as _ from 'lodash';
 import * as React from 'react';
 import {MolecularProfile} from "../../api/generated/CBioPortalAPI";
@@ -23,7 +24,7 @@ const styles = styles_any as {
 	tooltip: string,
 };
 
-@observer
+@cbioObserver
 export default class MolecularProfileSelector extends QueryStoreComponent<{}, {}>
 {
 	render()

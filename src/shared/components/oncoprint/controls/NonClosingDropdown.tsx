@@ -1,9 +1,10 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {DropdownButtonProps, DropdownButton} from "react-bootstrap";
 import {observer} from "mobx-react";
 import {computed, observable} from "mobx";
 
-@observer
+@cbioObserver
 export default class NonClosingDropdown extends React.Component<DropdownButtonProps, {}> {
     private _forceOpen:boolean = false;
     @observable private open:boolean = false;

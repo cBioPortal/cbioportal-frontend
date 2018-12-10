@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {observer} from "mobx-react";
 import {
@@ -10,7 +11,7 @@ export interface IResultsViewMutationTableProps extends IMutationTableProps {
     // add results view specific props here if needed
 }
 //
-@observer
+@cbioObserver
 export default class ResultsViewMutationTable extends MutationTable<IResultsViewMutationTableProps> {
 
     constructor(props:IResultsViewMutationTableProps) {

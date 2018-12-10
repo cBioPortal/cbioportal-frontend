@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {Gene, MolecularProfile, Mutation, NumericGeneMolecularData} from "../../../shared/api/generated/CBioPortalAPI";
 import {observer, Observer} from "mobx-react";
@@ -83,7 +84,7 @@ export class CoExpressionDataStore extends SimpleGetterLazyMobXTableApplicationD
     }
 }
 
-@observer
+@cbioObserver
 export default class CoExpressionViz extends React.Component<ICoExpressionVizProps, {}> {
 
     @observable.ref highlightedCoExpression:CoExpression|undefined; // only undefined initially, before data loaded

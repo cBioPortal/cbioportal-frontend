@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import {inject, observer} from "mobx-react";
@@ -24,7 +25,7 @@ import {getAlterationSummary, getGeneSummary, getPatientSampleSummary} from "./Q
 import {MakeMobxView} from "../../../shared/components/MobxView";
 import {getGAInstance} from "../../../shared/lib/tracking";
 
-@observer
+@cbioObserver
 export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore }, {}> {
 
     @observable.ref queryStore: QueryStore | undefined;

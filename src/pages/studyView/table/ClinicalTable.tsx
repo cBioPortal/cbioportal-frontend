@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {observer} from "mobx-react";
 import {computed, toJS} from "mobx";
@@ -23,7 +24,7 @@ class ClinicalTableComponent extends FixedHeaderTable<ClinicalDataCountWithColor
 
 }
 
-@observer
+@cbioObserver
 export default class ClinicalTable extends React.Component<IClinicalTableProps, {}> {
 
     constructor(props: IClinicalTableProps) {

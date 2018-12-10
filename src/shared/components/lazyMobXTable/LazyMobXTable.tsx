@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import SimpleTable from "../simpleTable/SimpleTable";
 import * as React from 'react';
 import {action, computed, IReactionDisposer, observable, reaction} from "mobx";
@@ -598,7 +599,7 @@ export class LazyMobXTableStore<T> {
     }
 }
 
-@observer
+@cbioObserver
 export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps<T>, {}> {
     private store:LazyMobXTableStore<T>;
     private handlers:{[fnName:string]:(...args:any[])=>void};

@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {Button, Dropdown, ButtonProps} from "react-bootstrap";
 import {RootCloseWrapper} from "react-overlays";
@@ -32,7 +33,7 @@ class CustomMenu extends React.Component<any,{}> {
     }
 }
 
-@observer
+@cbioObserver
 export default class CustomDropdown extends React.Component<ButtonProps, {}> {
     @observable private open:boolean = false;
 

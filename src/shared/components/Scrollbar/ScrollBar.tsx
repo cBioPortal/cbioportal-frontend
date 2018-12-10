@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import Draggable from "react-draggable";
 import {CSSProperties} from "react";
@@ -17,7 +18,7 @@ interface IScrollBar {
     style?:CSSProperties
 }
 
-@observer
+@cbioObserver
 export default class ScrollBar extends React.Component<IScrollBar,{}> {
 
     public scrollbarEl:HTMLDivElement|undefined;

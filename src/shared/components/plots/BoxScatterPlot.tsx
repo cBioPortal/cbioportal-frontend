@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {observer, Observer} from "mobx-react";
 import {computed, observable} from "mobx";
@@ -84,7 +85,7 @@ const BOX_STYLES = {
     median: {stroke: "#999999", strokeWidth: 1},
 };
 
-@observer
+@cbioObserver
 export default class BoxScatterPlot<D extends IBaseBoxScatterPlotPoint> extends React.Component<IBoxScatterPlotProps<D>, {}> {
     @observable.ref tooltipModel:any|null = null;
     @observable pointHovered:boolean = false;

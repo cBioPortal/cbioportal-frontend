@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {Modal} from "react-bootstrap";
 import {observer} from "mobx-react";
@@ -38,7 +39,7 @@ export function hideArrow(tooltipEl: any) {
 /**
  * @author Selcuk Onur Sumer
  */
-@observer
+@cbioObserver
 export default class OncoKB extends React.Component<IOncoKbProps, {}>
 {
     @observable showFeedback:boolean = false;

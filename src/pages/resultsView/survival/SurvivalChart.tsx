@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import { observer } from "mobx-react";
 import { PatientSurvival } from "../../../shared/model/PatientSurvival";
@@ -60,7 +61,7 @@ export interface ISurvivalChartProps {
 // Start to down sampling when there are more than 1000 dots in the plot.
 const SURVIVAL_DOWN_SAMPLING_THRESHOLD = 1000;
 
-@observer
+@cbioObserver
 export default class SurvivalChart extends React.Component<ISurvivalChartProps, {}> implements AbstractChart {
 
     @observable.ref tooltipModel: any;

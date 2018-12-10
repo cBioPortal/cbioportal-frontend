@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import classnames from 'classnames';
@@ -24,7 +25,7 @@ export interface IMSKTabProps {
     onTabDidMount?:(tab:HTMLDivElement)=>void;
 }
 
-@observer
+@cbioObserver
 export class DeferredRender extends React.Component<{ className:string, loadingState?:JSX.Element },{}> {
 
     @observable renderedOnce = false;

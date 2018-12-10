@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import CancerStudySelector from "./CancerStudySelector";
 import {FlexCol, FlexRow} from "../flexbox/FlexBox";
@@ -32,7 +33,7 @@ interface QueryContainerProps
 }
 
 @providesStoreContext(QueryStore)
-@observer
+@cbioObserver
 export default class QueryContainer extends React.Component<QueryContainerProps, {}>
 {
 	constructor(){

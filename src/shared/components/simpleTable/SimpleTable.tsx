@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import './styles.scss';
 import { If, Then,  Else } from 'react-if';
@@ -11,7 +12,7 @@ interface ISimpleTableProps {
     className?:string;
 };
 
-@observer
+@cbioObserver
 export default class SimpleTable extends React.Component<ISimpleTableProps, {}> {
 
     public render() {

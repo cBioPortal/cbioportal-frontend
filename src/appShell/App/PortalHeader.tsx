@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import { Link } from 'react-router';
@@ -8,7 +9,7 @@ import {AppStore} from "../../AppStore";
 import {observer} from "mobx-react";
 import {buildCBioPortalPageUrl} from "../../shared/api/urls";
 
-@observer
+@cbioObserver
 export default class PortalHeader extends React.Component<{ appStore:AppStore }, {}> {
 
     private tabs(){

@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import LollipopPlot from "./LollipopPlot";
 import {Mutation} from "../../api/generated/CBioPortalAPI";
@@ -29,7 +30,7 @@ export interface ILollipopMutationPlotProps extends IProteinImpactTypeColors
     geneWidth:number;
 }
 
-@observer
+@cbioObserver
 export default class LollipopMutationPlot extends React.Component<ILollipopMutationPlotProps, {}> {
 
     @observable private mouseInPlot:boolean = true;

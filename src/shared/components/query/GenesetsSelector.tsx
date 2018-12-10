@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as styles_any from './styles/styles.module.scss';
 import {Modal} from 'react-bootstrap';
@@ -31,7 +32,7 @@ export interface GenesetsSelectorProps
 {
 }
 
-@observer
+@cbioObserver
 export default class GenesetsSelector extends QueryStoreComponent<GenesetsSelectorProps, {}>
 {
     @computed get selectedGeneListOption()

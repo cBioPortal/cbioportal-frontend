@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import {ThreeBounce} from 'better-react-spinkit';
 import LoadingIndicator from "../loadingIndicator/LoadingIndicator";
@@ -5,7 +6,7 @@ import {observer} from "mobx-react";
 import {observable} from "mobx";
 import autobind from "autobind-decorator";
 
-@observer
+@cbioObserver
 export default class IFrameLoader extends React.Component<{ url:string; iframeId?:string; height:Number }, {}> {
 
     constructor(){

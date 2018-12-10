@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 
 import {Mutation} from "../../api/generated/CBioPortalAPI";
@@ -30,7 +31,7 @@ export function mutationTypeButton(count:number, label:string, color:string, onC
     );
 }
 
-@observer
+@cbioObserver
 export default class ProteinImpactTypePanel extends React.Component<IProteinImpactTypePanelProps, {}> {
 
     public handleMutationClick(type: string){

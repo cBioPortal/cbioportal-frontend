@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import {observer} from "mobx-react";
 import * as React from 'react';
 import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
@@ -17,7 +18,7 @@ export interface IGeneAlterationTableProps {
 
 class GeneAlterationTableComponent extends LazyMobXTable<IGeneAlteration> {}
 
-@observer
+@cbioObserver
 export default class GeneAlterationTable extends React.Component<IGeneAlterationTableProps, {}> {
     public render()
     {

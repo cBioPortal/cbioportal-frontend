@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import {Modal, Button} from 'react-bootstrap';
 import {ThreeBounce} from 'better-react-spinkit';
@@ -24,7 +25,7 @@ export interface ICopyDownloadData {
  * @author Selcuk Onur Sumer
  * @author Aaron Lisman
  */
-@observer
+@cbioObserver
 export class CopyDownloadControls extends React.Component<IAsyncCopyDownloadControlsProps, {}>
 {
     @observable downloadingData = false;

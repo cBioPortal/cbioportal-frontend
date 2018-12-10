@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import {observer} from "mobx-react";
 import * as React from "react";
 import {MolecularProfile} from "../api/generated/CBioPortalAPI";
@@ -16,7 +17,7 @@ export interface IMolecularProfileSelector {
     molecularProfileIdToProfiledSampleCount:{[molecularProfileId:string]:number} | MobxPromise<{[molecularProfileId:string]:number}>;
 }
 
-@observer
+@cbioObserver
 export default class MolecularProfileSelector extends React.Component<IMolecularProfileSelector, {}> {
     readonly resolvedPromise = remoteData(()=>Promise.resolve());
 

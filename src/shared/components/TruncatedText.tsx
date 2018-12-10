@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import classNames from 'classnames';
 import {observer} from "mobx-react";
@@ -34,7 +35,7 @@ export function truncateText(text: string, suffix: string, maxLength: number, bu
 /**
  * @author Selcuk Onur Sumer
  */
-@observer
+@cbioObserver
 export default class TruncatedText extends React.Component<ITruncatedTextProps, {}> {
     public static defaultProps = {
         maxLength: 50,

@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import OncoKbCard from "./OncoKbCard";
 import {observer} from "mobx-react";
@@ -22,7 +23,7 @@ export interface IOncoKbTooltipProps {
 /**
  * @author Selcuk Onur Sumer
  */
-@observer
+@cbioObserver
 export default class OncoKbTooltip extends React.Component<IOncoKbTooltipProps, {}>
 {
     public get evidenceCacheData():ICacheData<IEvidence>|undefined

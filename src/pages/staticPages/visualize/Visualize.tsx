@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import {observer} from 'mobx-react';
 import Helmet from "react-helmet";
@@ -6,7 +7,7 @@ import {PageLayout} from "shared/components/PageLayout/PageLayout";
 import './styles.scss';
 import styles from './visualize.module.scss';
 
-@observer
+@cbioObserver
 export default class Visualize extends React.Component<{}, {}> {
 
     public render() {

@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import {observer} from "mobx-react";
 import {observable, computed} from "mobx";
@@ -30,7 +31,7 @@ type HitZoneConfig = {
     onMouseOut?: () => void;
 }
 
-@observer
+@cbioObserver
 export default class LollipopPlot extends React.Component<LollipopPlotProps, {}> {
     @observable private hitZoneConfig: HitZoneConfig = {
         hitRect: {

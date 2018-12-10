@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {action, computed, observable} from "mobx";
 import {Observer, observer} from "mobx-react";
@@ -106,7 +107,7 @@ const mutationCountByOptions = [
     { value: MutationCountBy.MutatedVsWildType, label: "Mutated vs Wild-type" }
 ];
 
-@observer
+@cbioObserver
 export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
 
     private horzSelection:AxisMenuSelection;

@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import { observer } from "mobx-react";
 import { observable } from 'mobx';
@@ -15,7 +16,7 @@ export interface IMiniBarChartProps {
     selectedGeneStats: [number, number, number, number]|null;
 }
 
-@observer
+@cbioObserver
 export default class MiniBarChart extends React.Component<IMiniBarChartProps, {}> {
 
     @observable tooltipModel: any;

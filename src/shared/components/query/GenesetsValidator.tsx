@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as styles_any from './styles/styles.module.scss';
 import {observer} from "mobx-react";
@@ -18,7 +19,7 @@ const styles = styles_any as {
     multiChoiceLabel: string,
 };
 
-@observer
+@cbioObserver
 export default class GenesetsValidator extends QueryStoreComponent<{}, {}>
 {
     render()

@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {observer} from "mobx-react";
 import {observable, computed} from "mobx";
@@ -152,7 +153,7 @@ export function defaultFilter(data:Mutation[], dataField:string, filterStringUpp
     }
 }
 
-@observer
+@cbioObserver
 export default class MutationTable<P extends IMutationTableProps> extends React.Component<P, {}> {
     @observable protected _columns:{[columnEnum:number]:MutationTableColumn};
 

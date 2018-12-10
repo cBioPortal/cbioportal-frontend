@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import LazyMobXTable, {Column} from "../lazyMobXTable/LazyMobXTable";
 import {observer} from "mobx-react";
@@ -18,7 +19,7 @@ export interface IPdbChainTableProps {
     cache?:PdbHeaderCache;
 }
 
-@observer
+@cbioObserver
 export default class PdbChainTable extends React.Component<IPdbChainTableProps, {}> {
     @computed private get columns():Column<IPdbChain>[] {
         const ret:Column<IPdbChain>[] = [];

@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import { observer } from "mobx-react";
@@ -46,7 +47,7 @@ function isInteger(str: string) {
     return Number.isInteger(Number(str));
 }
 
-@observer
+@cbioObserver
 export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxProps, {}> {
 
     @observable private geneQuery = '';

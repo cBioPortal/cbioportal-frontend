@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import {observer} from "mobx-react";
 import {If, Else, Then} from 'react-if';
@@ -13,7 +14,7 @@ export interface ITextExpanderProps
     truncateText?: string;
 }
 
-@observer
+@cbioObserver
 export default class TextExpander extends React.Component<ITextExpanderProps, {}> {
     @observable protected isTextTruncated: boolean = true;
 

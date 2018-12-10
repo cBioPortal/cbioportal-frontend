@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import {Button, ButtonGroup, FormGroup, FormControl} from 'react-bootstrap';
 import styles from "./paginationControls.module.scss";
@@ -45,7 +46,7 @@ export interface IPaginationControlsProps {
     bsStyle?:"default"|"primary"|"success"|"info"|"warning";
 }
 
-@observer
+@cbioObserver
 export class PaginationControls extends React.Component<IPaginationControlsProps, {}> {
     public static defaultProps = {
         itemsPerPage: SHOW_ALL_PAGE_SIZE,

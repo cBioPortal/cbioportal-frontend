@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import { inject, observer } from "mobx-react";
 import {action, computed, observable} from "mobx";
@@ -22,7 +23,7 @@ interface IMutationMapperToolProps {
 }
 
 @inject('routing')
-@observer
+@cbioObserver
 export default class MutationMapperTool extends React.Component<IMutationMapperToolProps, {}>
 {
     @observable standaloneMutationMapperGeneTab:string|undefined;

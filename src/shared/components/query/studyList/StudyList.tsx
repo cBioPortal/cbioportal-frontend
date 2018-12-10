@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {TypeOfCancer as CancerType, CancerStudy} from "../../../api/generated/CBioPortalAPI";
 import * as styles_any from "./styles.module.scss";
@@ -51,7 +52,7 @@ export interface IStudyListProps
 	showSelectedStudiesOnly?: boolean;
 }
 
-@observer
+@cbioObserver
 export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
 {
 	private _view:FilteredCancerTreeView;
@@ -348,7 +349,7 @@ export interface ICancerTreeCheckboxProps
 	node: CancerTreeNode;
 }
 
-@observer
+@cbioObserver
 export class CancerTreeCheckbox extends QueryStoreComponent<ICancerTreeCheckboxProps, {}>
 {
 	@computed.struct get checkboxProps()

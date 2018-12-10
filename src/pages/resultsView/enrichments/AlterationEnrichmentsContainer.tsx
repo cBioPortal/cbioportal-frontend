@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from "lodash";
 import { observer } from "mobx-react";
@@ -25,7 +26,7 @@ export interface IAlterationEnrichmentContainerProps {
     alterationType: string;
 }
 
-@observer
+@cbioObserver
 export default class AlterationEnrichmentContainer extends React.Component<IAlterationEnrichmentContainerProps, {}> {
 
     @observable mutualExclusivityFilter: boolean = true;

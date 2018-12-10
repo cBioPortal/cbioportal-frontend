@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import {observer} from "mobx-react";
@@ -19,7 +20,7 @@ export function hideArrow(tooltipEl: any) {
     arrowEl.style.display = 'none';
 }
 
-@observer
+@cbioObserver
 export default class Civic extends React.Component<ICivicProps, {}>
 {
     @observable tooltipDataLoadComplete:boolean = false;

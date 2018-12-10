@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import {remoteData} from "../../../shared/api/remoteData";
 import getBrowserWindow from "../../../shared/lib/getBrowserWindow";
 import ExtendedRouterStore from "../../../shared/lib/ExtendedRouterStore";
@@ -25,7 +26,7 @@ export interface ShareUrls {
     fullUrl:string;
 }
 
-@observer
+@cbioObserver
 export class ShareUI extends React.Component<IShareUI, {}> {
 
     constructor() {

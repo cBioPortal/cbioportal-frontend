@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import _ from "lodash";
 import $ from 'jquery';
@@ -17,7 +18,7 @@ type DomainProps = {
     spec:DomainSpec;
 };
 
-@observer
+@cbioObserver
 export default class Domain extends React.Component<DomainProps, {}> {
     @observable private textElt:SVGTextElement | null;
     @observable private isMounted:boolean = false;

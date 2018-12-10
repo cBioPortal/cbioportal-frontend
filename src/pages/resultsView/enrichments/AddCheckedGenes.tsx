@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import { observer } from "mobx-react";
 import { observable } from 'mobx';
@@ -12,7 +13,7 @@ export interface IAddCheckedGenesProps {
     store: ResultsViewPageStore;
 }
 
-@observer
+@cbioObserver
 export default class AddCheckedGenes extends React.Component<IAddCheckedGenesProps, {}> {
 
     @autobind

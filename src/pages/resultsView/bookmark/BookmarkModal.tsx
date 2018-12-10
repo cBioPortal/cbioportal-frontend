@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import * as _ from 'lodash';
 import {observer} from "mobx-react";
@@ -15,7 +16,7 @@ import autobind from "autobind-decorator";
 var Clipboard = require('clipboard');
 
 
-@observer
+@cbioObserver
 export class BookmarkModal extends React.Component<{ onHide: () => void, urlPromise:Promise<any> }, {}> {
 
     constructor(){

@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import styles from "./studySummaryTabStyles.module.scss";
 import {ChartContainer, IChartContainerProps} from 'pages/studyView/charts/ChartContainer';
@@ -32,7 +33,7 @@ export interface IStudySummaryTabProps {
 // making this an observer (mobx-react) causes this component to re-render any time
 // there is a change to any observable value which is referenced in its render method.
 // Even if this value is referenced deep within some helper method
-@observer
+@cbioObserver
 export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> {
 
     private store: StudyViewPageStore;

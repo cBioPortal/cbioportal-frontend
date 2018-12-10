@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import Collapse from 'react-collapse';
@@ -33,7 +34,7 @@ export type OncoKbCardProps =
     (OncoKbCardPropsBase & { geneNotExist:false}) |
     (Partial<OncoKbCardPropsBase> & {geneNotExist: true});
 
-@observer
+@cbioObserver
 export default class OncoKbCard extends React.Component<OncoKbCardProps>
 {
     @observable activeTab:"oncogenicity" | "mutationEffect" = "oncogenicity";

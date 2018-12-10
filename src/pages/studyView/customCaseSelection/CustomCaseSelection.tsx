@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import { Sample } from 'shared/api/generated/CBioPortalAPIInternal';
@@ -23,7 +24,7 @@ const GroupByOptions: { value: 'sample' | 'patient'; label: string; }[] = [
     { value: 'patient', label: 'By patient ID' }
 ];
 
-@observer
+@cbioObserver
 export default class CustomCaseSelection extends React.Component<ICustomCaseSelectionProps, {}> {
 
     @observable showCaseIds: boolean = false;

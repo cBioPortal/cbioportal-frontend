@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {observer, Observer} from "mobx-react";
 import {Button, ButtonGroup} from "react-bootstrap";
@@ -149,7 +150,7 @@ const EVENT_KEY = {
     horzZoomSlider:"30",
 };
 
-@observer
+@cbioObserver
 export default class OncoprintControls extends React.Component<IOncoprintControlsProps, {}> {
     @observable horzZoomSliderState:number;
 

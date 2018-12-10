@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import SurvivalChart from "./SurvivalChart";
 import { ResultsViewPageStore } from "../ResultsViewPageStore";
@@ -22,7 +23,7 @@ const analysisGroups = [{
     legendText: "Cases without Alteration(s) in Query Gene(s)"
 }];
 
-@observer
+@cbioObserver
 export default class SurvivalTab extends React.Component<ISurvivalTabProps, {}> {
 
     private overallSurvivalTitleText = 'Overall Survival Kaplan-Meier Estimate';

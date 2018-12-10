@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import AppConfig from "appConfig";
 import { If } from 'react-if';
@@ -13,7 +14,7 @@ import {AppStore} from "../../AppStore";
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 import {observer} from "mobx-react";
 
-@observer export default class PortalFooter extends React.Component<{appStore:AppStore}, {}> {
+@cbioObserver export default class PortalFooter extends React.Component<{appStore:AppStore}, {}> {
 
     render() {
             var version;

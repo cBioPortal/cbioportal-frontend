@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import DatasetList from './DatasetList';
@@ -20,7 +21,7 @@ export class DatasetPageStore {
     });
 }
 
-@observer
+@cbioObserver
 export default class DatasetPage extends React.Component<{}, {}> {
 
     private store:DatasetPageStore;

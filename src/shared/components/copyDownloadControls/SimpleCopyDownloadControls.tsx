@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import fileDownload from 'react-file-download';
 import {observer} from "mobx-react";
@@ -11,7 +12,7 @@ export interface ISimpleCopyDownloadControlsProps extends ICopyDownloadControlsP
     downloadData?: () => string;
 }
 
-@observer
+@cbioObserver
 export class SimpleCopyDownloadControls extends React.Component<ISimpleCopyDownloadControlsProps, {}>
 {
     public static defaultProps: ISimpleCopyDownloadControlsProps = {

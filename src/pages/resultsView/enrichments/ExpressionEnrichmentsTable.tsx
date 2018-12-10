@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from "lodash";
 import LazyMobXTable, { Column } from "../../../shared/components/lazyMobXTable/LazyMobXTable";
@@ -40,7 +41,7 @@ type ExpressionEnrichmentTableColumn = Column<ExpressionEnrichmentRow> & { order
 export class ExpressionEnrichmentTableComponent extends LazyMobXTable<ExpressionEnrichmentRow> {
 }
 
-@observer
+@cbioObserver
 export default class ExpressionEnrichmentTable extends React.Component<IExpressionEnrichmentTableProps, {}> {
 
     @observable protected _columns: { [columnEnum: number]: ExpressionEnrichmentTableColumn };

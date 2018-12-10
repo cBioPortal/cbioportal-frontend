@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import CSSTransitionGroup from 'react-transition-group/CSSTransitionGroup';
 import {observable, action} from "mobx";
@@ -85,7 +86,7 @@ export class TestimonialStore {
 
 }
 
-@observer
+@cbioObserver
 export default class Testimonials extends React.Component <{}, {}> {
 
     private store:TestimonialStore;

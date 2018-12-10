@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import $ from 'jquery';
 import {observer} from 'mobx-react';
@@ -16,7 +17,7 @@ function setImageRoot(path:string){
     return `${AppConfig.serverConfig.skin_documentation_baseurl}/${path}`
 }
 
-@observer
+@cbioObserver
 export default class StaticContent extends React.Component<{ sourceUrl:string, title?:string, renderers?:{ [k:string]:any } }, {}> {
 
     private get url(){

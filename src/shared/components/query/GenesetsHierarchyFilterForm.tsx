@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import {observable} from "mobx";
 import {observer} from "mobx-react";
@@ -13,7 +14,7 @@ interface GenesetsHierarchyFilterFormProps
     onApply: (percentile: validPercentile, pvalueThreshold: number, scoreThreshold: number) => void;
 }
 
-@observer
+@cbioObserver
 export default class GenesetsHierarchyFilterForm extends React.Component<GenesetsHierarchyFilterFormProps, {}>
 {
     @observable percentile = this.props.percentile;

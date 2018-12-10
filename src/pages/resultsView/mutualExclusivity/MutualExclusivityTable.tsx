@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from "lodash";
 import LazyMobXTable, { Column } from "../../../shared/components/lazyMobXTable/LazyMobXTable";
@@ -32,7 +33,7 @@ type MutualExclusivityTableColumn = Column<MutualExclusivity> & { order?: number
 export class MutualExclusivityTableComponent extends LazyMobXTable<MutualExclusivity> {
 }
 
-@observer
+@cbioObserver
 export default class MutualExclusivityTable extends React.Component<IMutualExclusivityTableProps, {}> {
 
     @observable protected _columns: { [columnEnum: number]: MutualExclusivityTableColumn };

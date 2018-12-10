@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {Column, default as LazyMobXTable} from "shared/components/lazyMobXTable/LazyMobXTable";
 import {observer} from "mobx-react";
@@ -18,7 +19,7 @@ export interface IClinicalDataTabTable {
 class ClinicalDataTabTableComponent extends LazyMobXTable<{ [id: string]: string }> {
 }
 
-@observer
+@cbioObserver
 export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> {
 
     getDefaultColumnConfig(key: string) {

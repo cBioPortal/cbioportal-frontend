@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import * as _ from 'lodash';
 import {observer} from "mobx-react";
@@ -36,7 +37,7 @@ export interface IUserSelectionsProps {
 }
 
 
-@observer
+@cbioObserver
 export default class UserSelections extends React.Component<IUserSelectionsProps, {}> {
     @observable hugoSymbolsMap = observable.map<string>();
     @observable promiseGroup = observable.map<MobxPromise<void>>()

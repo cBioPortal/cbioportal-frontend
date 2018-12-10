@@ -1,10 +1,11 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from 'react';
 import {observer} from 'mobx-react';
 import {PageLayout} from "../../../shared/components/PageLayout/PageLayout";
 import './styles.scss';
 import Helmet from "react-helmet";
 
-@observer
+@cbioObserver
 export default class WebAPIPage extends React.Component<{}, {}> {
 
     public render() {

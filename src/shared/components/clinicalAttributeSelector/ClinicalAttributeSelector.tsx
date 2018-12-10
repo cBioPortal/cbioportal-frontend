@@ -1,3 +1,4 @@
+import cbioObserver from "shared/lib/decorators/cbioObserver/cbioObserver";
 import * as React from "react";
 import {observer} from "mobx-react";
 import {MobxPromise} from "mobxpromise";
@@ -22,7 +23,7 @@ export interface IClinicalAttributeSelectorProps {
     name?:string;
 }
 
-@observer
+@cbioObserver
 export default class ClinicalAttributeSelector extends React.Component<IClinicalAttributeSelectorProps, {}> {
 
     @observable private focused = false;
