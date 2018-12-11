@@ -458,15 +458,17 @@ export function calcIntervalBinValues(intervalBins: DataBin[]) {
     return values;
 }
 
+export function needAdditionShiftForLogScaleBarChart(numericalBins: DataBin[]):boolean {
+    return isLogScaleByDataBins(numericalBins) &&
+        numericalBins[0].start !== undefined &&
+        numericalBins[0].start !== 0 &&
+        !isIntegerPowerOfTen(numericalBins[0].start);
+}
+
 export function generateNumericalData(numericalBins: DataBin[]): BarDatum[] {
     // by default shift all x values by 1 -- we do not want to show a value right on the origin (zero)
     // additional possible shift for log scale
-    const xShift = (
-        isLogScaleByDataBins(numericalBins) &&
-        numericalBins[0].start !== undefined &&
-        numericalBins[0].start !== 0 &&
-        !isIntegerPowerOfTen(numericalBins[0].start)
-    ) ? 2 : 1;
+    const xShift = needAdditionShiftForLogScaleBarChart(numericalBins) ? 2 : 1;
 
     return numericalBins.map((dataBin: DataBin, index: number) => {
         let x;
