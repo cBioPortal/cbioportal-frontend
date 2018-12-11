@@ -30,6 +30,7 @@ import {
     isLogScaleByValues,
     isOccupied,
     makePatientToClinicalAnalysisGroup,
+    needAdditionShiftForLogScaleBarChart,
     pickClinicalDataColors,
     showOriginStudiesInSummaryDescription,
     toFixedDigit,
@@ -555,6 +556,9 @@ describe('StudyViewUtils', () => {
             const categoryBins = filterCategoryBins(linearScaleDataBinsWithNa);
             assert.equal(categoryBins.length, 1, "Only the bin with NA special value should be included");
 
+            const needAdditionShift = needAdditionShiftForLogScaleBarChart(numericalBins);
+            assert.isFalse(needAdditionShift);
+
             const normalizedNumericalData = generateNumericalData(numericalBins);
             assert.deepEqual(normalizedNumericalData.map(data => data.x), [1, 2.5, 3.5, 4.5, 5.5]);
 
@@ -582,6 +586,9 @@ describe('StudyViewUtils', () => {
             const categoryBins = filterCategoryBins(logScaleDataBinsWithNaAndSpecialValues);
             assert.equal(categoryBins.length, 2,
                 "Only the bins with NA and REDACTED special values should be included");
+
+            const needAdditionShift = needAdditionShiftForLogScaleBarChart(numericalBins);
+            assert.isFalse(needAdditionShift);
 
             const normalizedNumericalData = generateNumericalData(numericalBins);
             assert.deepEqual(normalizedNumericalData.map(data => data.x),
@@ -612,6 +619,9 @@ describe('StudyViewUtils', () => {
             assert.equal(categoryBins.length, 2,
                 "Only the bins with NA and REDACTED special values should be included");
 
+            const needAdditionShift = needAdditionShiftForLogScaleBarChart(numericalBins);
+            assert.isTrue(needAdditionShift);
+
             const normalizedNumericalData = generateNumericalData(numericalBins);
             assert.deepEqual(normalizedNumericalData.map(data => data.x),
                 [2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5, 10.5, 11.5, 12.5]);
@@ -641,6 +651,9 @@ describe('StudyViewUtils', () => {
             assert.equal(categoryBins.length, 1,
                 "Only NA bin should be included");
 
+            const needAdditionShift = needAdditionShiftForLogScaleBarChart(numericalBins);
+            assert.isFalse(needAdditionShift);
+
             const normalizedNumericalData = generateNumericalData(numericalBins);
             assert.deepEqual(normalizedNumericalData.map(data => data.x),
                 [1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5]);
@@ -669,6 +682,9 @@ describe('StudyViewUtils', () => {
             const categoryBins = filterCategoryBins(scientificSmallNumberBins);
             assert.equal(categoryBins.length, 0, "There should not be any category bin");
 
+            const needAdditionShift = needAdditionShiftForLogScaleBarChart(numericalBins);
+            assert.isFalse(needAdditionShift);
+            
             const normalizedNumericalData = generateNumericalData(numericalBins);
             assert.deepEqual(normalizedNumericalData.map(data => data.x),
                 [1.5, 2.5, 3.5, 5]);
