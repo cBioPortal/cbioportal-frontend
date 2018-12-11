@@ -29,6 +29,7 @@ export type StudyViewColorTheme = {
 export type StudyViewThreshold = {
     pieToTable: number,
     escapeTick: number,
+    barRatio: number,
     rowsInTableForOneGrid: number,
     clinicalChartsPerGroup: number,
     chartHighlight: number,
@@ -109,6 +110,7 @@ const studyViewFrontEnd = {
     thresholds: {
         pieToTable: 20,
         escapeTick: 10,
+        barRatio: 0.8,
         rowsInTableForOneGrid: 4,
         clinicalChartsPerGroup: 10,
         chartHighlight: 10000
