@@ -110,7 +110,7 @@ const studyViewFrontEnd = {
     },
     thresholds: {
         pieToTable: 20,
-        piePadding: 5,
+        piePadding: 20,
         escapeTick: 10,
         barRatio: 0.8,
         rowsInTableForOneGrid: 4,
