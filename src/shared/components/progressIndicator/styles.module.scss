@@ -37,10 +37,11 @@
   flex-direction:row;
   align-items:center;
   justify-content: center;
-}
-
-.item-row-not-first {
   margin-top:4px;
+
+  &:nth-child(1) {
+    margin-top: 0px !important;
+  }
 }
 
 .pulse-spinner {

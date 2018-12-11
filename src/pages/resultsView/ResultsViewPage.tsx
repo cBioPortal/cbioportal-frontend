@@ -177,8 +177,8 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         getBrowserWindow().resultsViewPageStore = this.resultsViewPageStore;
     }
 
-    private handleTabChange(id: string) {
-        this.props.routing.updateRoute({},`results/${id}`);
+    private handleTabChange(id: string, replace?:boolean) {
+        this.props.routing.updateRoute({},`results/${id}`, false, replace);
     }
 
     @autobind
@@ -482,7 +482,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
         if (this.resultsViewPageStore.studies.isComplete && !this.resultsViewPageStore.tabId) {
             setTimeout(()=>{
-                this.handleTabChange(this.currentTab(this.resultsViewPageStore.tabId));
+                this.handleTabChange(this.currentTab(this.resultsViewPageStore.tabId), true);
             });
             return null;
         } else {
