@@ -132,7 +132,7 @@ export declare type ComparisonOp = '>=' | '<=' | '>' | '<';
 // 	/ mutation_name:String { return {"type":"name", "value":mutation_name, "info":{}}; }
 export declare type MutationType = 'MISSENSE'|'NONSENSE'|'NONSTART'|'NONSTOP'|'FRAMESHIFT'|'INFRAME'|'SPLICE'|'TRUNC'|'PROMOTER';
 
-export declare type MutationModifier = 'GERMLINE'|'SOMATIC';
+export declare type MutationModifier = 'GERMLINE'|'SOMATIC'|'DRIVER';
 
 export declare type Mutation = (
 	{type:'class', value:MutationType, info:{}, modifiers:MutationModifier[]} |
