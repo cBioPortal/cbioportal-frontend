@@ -153,3 +153,4 @@ Mutation
 MutationModifier
     = "GERMLINE"i { return "GERMLINE";}
     / "SOMATIC"i { return "SOMATIC";}
+    / "DRIVER"i { return "DRIVER";}
