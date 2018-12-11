@@ -234,7 +234,10 @@ export function unparseOQLQueryLine(parsed_oql_query_line) {
  *	},
  *	'fusion': function(d) {
  *	    // returns true, false, or null
- *	}
+ *	},
+ *  'is_driver': function(d) {
+ *      // returns true, false, or null
+ *  },
  * }
  */
 var isDatumWantedByOQL = function (parsed_oql_query, datum, accessors) {
@@ -439,6 +442,8 @@ var isDatumWantedByOQLMutationModifier = function(modifier, datum, accessors) {
         case "GERMLINE":
         case "SOMATIC":
             return accessors.mut_status(datum) === modifier.toLowerCase();
+        case "DRIVER":
+            return accessors.is_driver(datum);
         default:
             return false;
     }
