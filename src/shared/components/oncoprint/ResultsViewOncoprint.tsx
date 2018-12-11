@@ -729,7 +729,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     private onDeleteClinicalTrack(clinicalTrackKey:string) {
-        this.selectedClinicalAttributeIds.delete(this.clinicalTrackKeyToAttributeId(clinicalTrackKey));
+        // ignore tracks being deleted due to rendering process reasons
+        if (!this.isHidden) {
+            this.selectedClinicalAttributeIds.delete(this.clinicalTrackKeyToAttributeId(clinicalTrackKey));
+        }
     }
 
     private onTrackSortDirectionChange(trackId:TrackId, dir:number) {
