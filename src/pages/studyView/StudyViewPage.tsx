@@ -139,7 +139,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     }
 
     render() {
-        return <PageLayout noMargin={true}>
+        return <PageLayout noMargin={true} hideFooter={true} className={"subhead-dark"}>
             {
                 this.content()
             }
