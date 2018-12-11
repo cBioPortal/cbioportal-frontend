@@ -127,7 +127,7 @@ function transitionHorzZoomToFit(
     prevProps:Partial<IOncoprintProps>,
     oncoprint:OncoprintJS<any>
 ) {
-    if (nextProps.horzZoomToFitIds !== prevProps.horzZoomToFitIds) {
+    if (!_.isEqual(nextProps.horzZoomToFitIds, prevProps.horzZoomToFitIds)) {
         oncoprint.updateHorzZoomToFitIds(nextProps.horzZoomToFitIds || []);
     }
 }
@@ -227,7 +227,10 @@ function allTracks(props:Partial<IOncoprintProps>) {
     );
 }
 
-function shouldSuppressRenderingForTransition(nextProps: IOncoprintProps, prevProps: Partial<IOncoprintProps>) {
+function shouldSuppressRenderingForTransition(
+    nextProps: IOncoprintProps,
+    prevProps: Partial<IOncoprintProps>,
+) {
     // If cost of rerendering everything less than cost of all the rerenders that would happen in the process
     //  of incrementally changing the oncoprint state.
     return !nextProps.suppressRendering && // dont add suppress if already suppressing
