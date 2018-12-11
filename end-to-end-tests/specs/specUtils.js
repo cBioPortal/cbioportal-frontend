@@ -6,6 +6,21 @@ function waitForOncoprint(timeout) {
     }, timeout);
 }
 
+function getTextInOncoprintLegend() {
+    return browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
+}
+
+function openOncoprintMutationsMenu() {
+    const mutationColorMenuButton = "#mutationColorDropdown";
+    const mutationColorMenuDropdown = "div.oncoprint__controls__mutation_color_menu";
+    browser.moveToObject("div.oncoprint__controls");
+    browser.waitForVisible(mutationColorMenuButton);
+    while (!browser.isVisible(mutationColorMenuDropdown)) {
+        browser.click(mutationColorMenuButton);
+        browser.pause(2000);
+    }
+}
+
 function goToUrlAndSetLocalStorage(url) {
     if (!useExternalFrontend) {
         browser.url(url);
@@ -59,5 +74,7 @@ module.exports = {
     useExternalFrontend: useExternalFrontend,
     sessionServiceIsEnabled: sessionServiceIsEnabled,
     waitForNumberOfStudyCheckboxes: waitForNumberOfStudyCheckboxes,
-    waitForNetworkQuiet:waitForNetworkQuiet
+    waitForNetworkQuiet:waitForNetworkQuiet,
+    getTextInOncoprintLegend: getTextInOncoprintLegend,
+    openOncoprintMutationsMenu: openOncoprintMutationsMenu
 };
