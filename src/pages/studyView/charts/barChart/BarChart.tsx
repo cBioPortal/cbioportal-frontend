@@ -13,7 +13,8 @@ import {
     filterNumericalBins,
     formatNumericalTickValues,
     generateCategoricalData,
-    generateNumericalData
+    generateNumericalData,
+    needAdditionShiftForLogScaleBarChart
 } from "../../StudyViewUtils";
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
 import {getTextWidth} from "../../../../shared/lib/wrapText";
@@ -151,6 +152,14 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
         return padding > MAX_PADDING ? MAX_PADDING : padding;
     }
 
+    @computed
+    get barRatio(): number {
+        // In log scale bar chart, when the first bin is .5 exponential, the bars will be shifted to the right
+        // for one bar. We need to adjust the bar ratio since it's calculated based on the range / # of bars
+        const additionRatio = needAdditionShiftForLogScaleBarChart(this.numericalBins) ? this.barData.length / (this.barData.length + 1) : 1;
+        return additionRatio * STUDY_VIEW_CONFIG.thresholds.barRatio;
+    }
+
     public render() {
 
         return (
@@ -191,7 +200,7 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                         tickFormat={(t: number) => Number.isInteger(t) ? t.toFixed(0) : ''}
                     />
                     <VictoryBar
-                        barRatio={0.8}
+                        barRatio={this.barRatio}
                         style={{
                             data: {
                                 fill: (d: BarDatum) =>
