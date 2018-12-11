@@ -94,8 +94,8 @@ export declare type CNACommand = {alteration_type:'cna', constr_rel:ComparisonOp
 // 	/ "MUT" { return {"alteration_type":"mut"}; }
 // 	/ mutation:Mutation { return {"alteration_type":"mut", "constr_rel": "=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info}; }
 export declare type MUTCommand<M extends Mutation> = (
-	{alteration_type:'mut', info:{}} |
-	{alteration_type:'mut', constr_rel:'='|'!=', constr_type:M['type'], constr_val:M['value'], info:M['info']}
+	{alteration_type:'mut', info:{}, modifiers:M['modifiers']} |
+	{alteration_type:'mut', constr_rel:'='|'!=', constr_type:M['type'], constr_val:M['value'], info:M['info'], modifiers:M['modifiers']}
 );
 //
 // EXPCommand
@@ -132,8 +132,10 @@ export declare type ComparisonOp = '>=' | '<=' | '>' | '<';
 // 	/ mutation_name:String { return {"type":"name", "value":mutation_name, "info":{}}; }
 export declare type MutationType = 'MISSENSE'|'NONSENSE'|'NONSTART'|'NONSTOP'|'FRAMESHIFT'|'INFRAME'|'SPLICE'|'TRUNC'|'PROMOTER';
 
+export declare type MutationModifier = 'GERMLINE'|'SOMATIC';
+
 export declare type Mutation = (
-	{type:'class', value:MutationType, info:{}} |
-	{type:'name', value:string, info:{unrecognized?:boolean}} |
-	{type:'position', value:number, info:{amino_acid:AminoAcid}}
+	{type:'class', value:MutationType, info:{}, modifiers:MutationModifier[]} |
+	{type:'name', value:string, info:{unrecognized?:boolean}, modifiers:MutationModifier[]} |
+	{type:'position', value:number, info:{amino_acid:AminoAcid}, modifiers:MutationModifier[]}
 );
