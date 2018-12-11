@@ -184,6 +184,9 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                             marginRight: this.cellMargin[ColumnKey.NUMBER]
                         }
                     }}
+                    inputProps={{
+                        className: styles.autoMarginCheckbox
+                    }}
                 >
                     <span>{data.countByEntity.toLocaleString()}</span>
                 </LabeledCheckbox>,
