@@ -36,6 +36,8 @@ import defaultClient from "shared/api/cbioportalClientInstance";
 import {ChartDimension, ChartTypeEnum, Position, STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 import {IStudyViewDensityScatterPlotDatum} from "./charts/scatterPlot/StudyViewDensityScatterPlot";
 import MobxPromise from 'mobxpromise';
+import {adjustedLongestLabelLength} from "../../shared/lib/VictoryChartUtils";
+import {getTextWidth} from "../../shared/lib/wrapText";
 
 export const COLORS = [
     STUDY_VIEW_CONFIG.colors.theme.primary, STUDY_VIEW_CONFIG.colors.theme.secondary,
@@ -768,6 +770,23 @@ export function getChartMetaDataType(uniqueKey: string): ChartMetaDataType {
         UniqueKey.MUTATION_COUNT, UniqueKey.FRACTION_GENOME_ALTERED
     ];
     return _.includes(GENOMIC_DATA_TYPES, uniqueKey) ? ChartMetaDataTypeEnum.GENOMIC : ChartMetaDataTypeEnum.CLINICAL;
+}
+
+// 10px is reserved by ReactVisualized library as margin right
+export function getFixedHeaderNumberCellMargin(columnWidth: number, theLongestString:string) {
+    return (columnWidth - 10 - getFixedHeaderTableMaxLengthStringPixel(theLongestString)) / 2
+}
+
+export function getFixedHeaderTableMaxLengthStringPixel(text:string) {
+    // This is a very specified function to calculate the text length
+    // For fixed header table used in study view only
+    const FRONT_SIZE = '13px';
+    const FRONT_FAMILY = 'Helvetica Neue';
+    return getTextWidth(text, FRONT_FAMILY, FRONT_SIZE)
+}
+
+export function correctMargin(margin: number) {
+    return margin > 0 ? margin : 0;
 }
 
 export function getFrequencyStr(value: number) {

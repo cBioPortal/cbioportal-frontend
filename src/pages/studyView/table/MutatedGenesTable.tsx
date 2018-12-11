@@ -10,9 +10,15 @@ import * as _ from 'lodash';
 import classnames from 'classnames';
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import FixedHeaderTable from "./FixedHeaderTable";
-import {action, computed, observable} from "mobx";
+import {action, computed, observable, reaction} from "mobx";
 import autobind from 'autobind-decorator';
-import {getFrequencyStr, getQValue} from "../StudyViewUtils";
+import {
+    correctMargin,
+    getFixedHeaderNumberCellMargin,
+    getFixedHeaderTableMaxLengthStringPixel,
+    getFrequencyStr,
+    getQValue
+} from "../StudyViewUtils";
 import {SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 
 export interface IMutatedGenesTablePros {
@@ -32,23 +38,78 @@ type MutatedGenesTableUserSelectionWithIndex = {
     rowIndex: number;
 }
 
+enum ColumnKey {
+    GENE = 'Gene',
+    NUMBER_MUTATIONS = '# Mut',
+    NUMBER = '#',
+    FREQ = 'Freq'
+}
+
 class MutatedGenesTableComponent extends FixedHeaderTable<MutationCountByGene> {
 }
 
 @observer
 export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {}> {
     @observable private preSelectedRows: MutatedGenesTableUserSelectionWithIndex[] = [];
-    @observable private sortBy:string = '#';
+    @observable private sortBy: string = '#';
     @observable private sortDirection: SortDirection;
+    @observable private cellMargin: { [key: string]: number } = {
+        [ColumnKey.GENE]: 0,
+        [ColumnKey.NUMBER_MUTATIONS]: 0,
+        [ColumnKey.NUMBER]: 0,
+        [ColumnKey.FREQ]: 0,
+    };
 
     constructor(props: IMutatedGenesTablePros) {
         super(props);
+        reaction(() => this.columnsWidth, () => {
+            this.updateCellMargin();
+        }, {fireImmediately: true});
+        reaction(() => this.props.promise.result, () => {
+            this.updateCellMargin();
+        }, {fireImmediately: true});
     }
 
-    private _tableColumns = [
-        {
-            name: 'Gene',
-            tooltip:(<span>Gene</span>),
+    @computed
+    get columnsWidth() {
+        return {
+            [ColumnKey.GENE]: this.props.width * 0.35,
+            [ColumnKey.NUMBER_MUTATIONS]: this.props.width * 0.25,
+            [ColumnKey.NUMBER]: this.props.width * 0.25,
+            [ColumnKey.FREQ]: this.props.width * 0.15
+        };
+    }
+
+    @autobind
+    @action
+    updateCellMargin() {
+        if (this.props.promise.result!.length > 0) {
+            this.cellMargin[ColumnKey.NUMBER_MUTATIONS] = correctMargin(
+                getFixedHeaderNumberCellMargin(
+                    this.columnsWidth[ColumnKey.NUMBER_MUTATIONS],
+                    _.max(this.props.promise.result!.map(item => item.totalCount))!.toLocaleString()
+                )
+            );
+            this.cellMargin[ColumnKey.NUMBER] = correctMargin(
+                (this.columnsWidth[ColumnKey.NUMBER] - 10 - (
+                        getFixedHeaderTableMaxLengthStringPixel(
+                            _.max(this.props.promise.result!.map(item => item.countByEntity))!.toLocaleString()
+                        ) + 20)
+                ) / 2);
+            this.cellMargin[ColumnKey.FREQ] = correctMargin(
+                getFixedHeaderNumberCellMargin(
+                    this.columnsWidth[ColumnKey.FREQ],
+                    getFrequencyStr(_.max(this.props.promise.result!.map(item => item.frequency))!)
+                )
+            );
+        }
+    }
+
+    @computed
+    get tableColumns() {
+        return [{
+            name: ColumnKey.GENE,
+            tooltip: (<span>Gene</span>),
             render: (data: MutationCountByGene) => {
                 const addGeneOverlay = () =>
                     <span>{`Click ${data.hugoGeneSymbol} to ${_.includes(this.props.selectedGenes, data.hugoGeneSymbol) ? 'remove from' : 'add to'} your query`}</span>;
@@ -73,7 +134,8 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                                 overlay={qvalOverlay}
                                 destroyTooltipOnHide={true}
                             >
-                                <span><img src={require("./images/mutsig.png")} className={styles.mutSig}></img></span>
+                                    <span><img src={require("./images/mutsig.png")}
+                                               className={styles.mutSig}></img></span>
                             </DefaultTooltip>
                         </If>
                     </div>
@@ -84,49 +146,73 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
             filter: (data: MutationCountByGene, filterString: string, filterStringUpper: string) => {
                 return data.hugoGeneSymbol.toUpperCase().includes(filterStringUpper);
             },
-            width: 150
-        },
-        {
-            name: '# Mut',
-            tooltip:(<span>Total number of mutations</span>),
-            render: (data: MutationCountByGene) => <span>{data.totalCount.toLocaleString()}</span>,
+            width: this.columnsWidth[ColumnKey.GENE]
+        }, {
+            name: ColumnKey.NUMBER_MUTATIONS,
+            tooltip: (<span>Total number of mutations</span>),
+            headerRender: () => {
+                return <div style={{marginLeft: this.cellMargin[ColumnKey.NUMBER_MUTATIONS]}}># Mut</div>
+            },
+            render: (data: MutationCountByGene) => <span
+                style={{
+                    flexDirection: 'row-reverse',
+                    display: 'flex',
+                    marginRight: this.cellMargin[ColumnKey.NUMBER_MUTATIONS]
+                }}>{data.totalCount.toLocaleString()}</span>,
             sortBy: (data: MutationCountByGene) => data.totalCount,
             defaultSortDirection: 'desc' as 'desc',
             filter: (data: MutationCountByGene, filterString: string) => {
                 return _.toString(data.totalCount).includes(filterString);
             },
-            width: 90
-        },
-        {
-            name: '#',
-            tooltip:(<span>Number of samples with one or more mutations</span>),
+            width: this.columnsWidth[ColumnKey.NUMBER_MUTATIONS]
+        }, {
+            name: ColumnKey.NUMBER,
+            tooltip: (<span>Number of samples with one or more mutations</span>),
+            headerRender: () => {
+                return <div style={{marginLeft: this.cellMargin[ColumnKey.NUMBER]}}>#</div>
+            },
             render: (data: MutationCountByGene) =>
                 <LabeledCheckbox
                     checked={this.isChecked(data.entrezGeneId)}
                     disabled={this.isDisabled(data.entrezGeneId)}
                     onChange={event => this.togglePreSelectRow(data.entrezGeneId)}
+                    labelProps={{
+                        style: {
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            marginLeft: this.cellMargin[ColumnKey.NUMBER],
+                            marginRight: this.cellMargin[ColumnKey.NUMBER]
+                        }
+                    }}
                 >
-                    {data.countByEntity.toLocaleString()}
+                    <span>{data.countByEntity.toLocaleString()}</span>
                 </LabeledCheckbox>,
             sortBy: (data: MutationCountByGene) => data.countByEntity,
             defaultSortDirection: 'desc' as 'desc',
             filter: (data: MutationCountByGene, filterString: string) => {
                 return _.toString(data.countByEntity).includes(filterString);
             },
-            width: 90
-        },
-        {
-            name: 'Freq',
-            tooltip:(<span>Percentage of samples with one or more mutations</span>),
-            render: (data: MutationCountByGene) => <span>{getFrequencyStr(data.frequency)}</span>,
+            width: this.columnsWidth[ColumnKey.NUMBER]
+        }, {
+            name: ColumnKey.FREQ,
+            tooltip: (<span>Percentage of samples with one or more mutations</span>),
+            headerRender: () => {
+                return <div style={{marginLeft: this.cellMargin[ColumnKey.FREQ]}}>Freq</div>
+            },
+            render: (data: MutationCountByGene) => <span
+                style={{
+                    flexDirection: 'row-reverse',
+                    display: 'flex',
+                    marginRight: this.cellMargin[ColumnKey.FREQ]
+                }}>{getFrequencyStr(data.frequency)}</span>,
             sortBy: (data: MutationCountByGene) => data.frequency,
             defaultSortDirection: 'desc' as 'desc',
-            filter: (data: MutationCountByGene, filterString: string, filterStringUpper: string) => {
+            filter: (data: MutationCountByGene, filterString: string) => {
                 return _.toString(getFrequencyStr(data.frequency)).includes(filterString);
             },
-            width: 70
-        }
-    ];
+            width: this.columnsWidth[ColumnKey.FREQ]
+        }];
+    }
 
     @autobind
     isChecked(entrezGeneId: number) {
@@ -201,7 +287,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
     }
 
     @autobind
-    isSelectedRow(data:MutationCountByGene) {
+    isSelectedRow(data: MutationCountByGene) {
         return !_.isUndefined(_.find(_.union(this.selectedRows, this.preSelectedRows), function (row) {
             return row.entrezGeneId === data.entrezGeneId;
         }));
@@ -220,7 +306,7 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
                 width={this.props.width}
                 height={this.props.height}
                 data={this.props.promise.result || []}
-                columns={this._tableColumns}
+                columns={this.tableColumns}
                 showSelectSamples={true && this.preSelectedRows.length > 0}
                 isSelectedRow={this.isSelectedRow}
                 afterSelectingRows={this.afterSelectingRows}
