@@ -544,10 +544,7 @@ describe('oncoprint', function() {
             cosmicCheckbox = mutationColorMenuDropdown + ' input[data-test="annotateCOSMICCount"]';
         });
         it("annotates all types of mutations with cbioportal count and cosmic", ()=>{
-            browser.moveToObject("div.oncoprint__controls");
-            browser.waitForVisible(mutationColorMenuButton);
-            browser.click(mutationColorMenuButton);
-            browser.waitForVisible(mutationColorMenuDropdown, 2000);
+            openOncoprintMutationsMenu();
             // select only mutation coloring by cbioportal count
             browser.click(cbioportalCheckbox);
             waitForOncoprint(2000);
@@ -565,6 +562,7 @@ describe('oncoprint', function() {
             assert(legendText.indexOf("Truncating Mutation (putative driver)") > -1, "cbio count annotates truncating mutations");
 
             // select only mutation coloring by cosmic count
+            openOncoprintMutationsMenu();
             browser.click(cosmicCheckbox);
             waitForOncoprint(2000);
             browser.click(cbioportalCheckbox);
