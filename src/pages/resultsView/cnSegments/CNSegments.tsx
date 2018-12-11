@@ -121,7 +121,7 @@ export default class CNSegments extends React.Component<{ store: ResultsViewPage
         return (
             <div className="pillTabs">
                 <LoadingIndicator isLoading={this.isHidden} size={"big"} center={true}>
-                    <ProgressIndicator items={this.progressItems} show={this.isHidden} sequential={true}/>
+                    <ProgressIndicator getItems={() => this.progressItems} show={this.isHidden} sequential={true}/>
                 </LoadingIndicator>
                 <CNSegmentsDownloader
                     promise={this.props.store.cnSegments}
