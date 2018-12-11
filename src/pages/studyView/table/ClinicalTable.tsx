@@ -138,6 +138,9 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
                         marginRight: this.cellMargin[ColumnKey.NUMBER]
                     }
                 }}
+                inputProps={{
+                    className: styles.autoMarginCheckbox
+                }}
             >
                 {data.count.toLocaleString()}
             </LabeledCheckbox>,
