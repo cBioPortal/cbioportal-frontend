@@ -488,7 +488,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             return null;
         } else {
             return (
-                <PageLayout noMargin={true}>
+                <PageLayout noMargin={true} hideFooter={true} className={"subhead-dark"}>
                     {
                         this.pageContent
                     }
