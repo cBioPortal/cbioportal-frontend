@@ -559,6 +559,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                         </label></div>
                         <div className="checkbox"><label>
                             <input
+                                data-test="ColorByGermline"
                                 type="checkbox"
                                 value={EVENT_KEY.distinguishGermlineMutations}
                                 checked={this.props.state.distinguishGermlineMutations}
@@ -709,6 +710,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                         </label></div>
                         <div className="checkbox"><label>
                             <input
+                                data-test="HideGermline"
                                 type="checkbox"
                                 value={EVENT_KEY.hideGermlineMutations}
                                 checked={!this.props.state.hideGermlineMutations}
