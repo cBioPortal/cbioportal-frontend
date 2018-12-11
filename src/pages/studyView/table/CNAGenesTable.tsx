@@ -13,11 +13,12 @@ import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import FixedHeaderTable from "./FixedHeaderTable";
 import autobind from 'autobind-decorator';
 import {
+    correctMargin,
     getCNAByAlteration,
     getCNAColorByAlteration,
     getFixedHeaderNumberCellMargin,
+    getFixedHeaderTableMaxLengthStringPixel,
     getFrequencyStr,
-    getMaxLengthStringPixel,
     getQValue
 } from "../StudyViewUtils";
 import {SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
@@ -41,12 +42,26 @@ export interface ICNAGenesTablePros {
 class CNAGenesTableComponent extends FixedHeaderTable<CopyNumberCountByGene> {
 }
 
+enum ColumnKey {
+    GENE = 'Gene',
+    CYTOBAND = 'Cytoband',
+    CNA = 'CNA',
+    NUMBER = '#',
+    FREQ = 'Freq'
+}
+
 @observer
 export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
     @observable private preSelectedRows: CNAGenesTableUserSelectionWithIndex[] = [];
     @observable private sortBy: string = '#';
     @observable private sortDirection: SortDirection;
-    @observable private cellMargin: number[] = [0, 0, 0, 0, 0];
+    @observable private cellMargin: { [key: string]: number } = {
+        [ColumnKey.GENE]: 0,
+        [ColumnKey.CYTOBAND]: 0,
+        [ColumnKey.CNA]: 0,
+        [ColumnKey.NUMBER]: 0,
+        [ColumnKey.FREQ]: 0,
+    };
 
     constructor(props: ICNAGenesTablePros) {
         super(props);
@@ -61,31 +76,40 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
 
     @computed
     get columnsWidth() {
-        return [
-            this.props.width * 0.25,
-            this.props.width * 0.25,
-            this.props.width * 0.14,
-            this.props.width * 0.18,
-            this.props.width * 0.18,
-        ];
+        return {
+            [ColumnKey.GENE]: this.props.width * 0.25,
+            [ColumnKey.CYTOBAND]: this.props.width * 0.25,
+            [ColumnKey.CNA]: this.props.width * 0.14,
+            [ColumnKey.NUMBER]: this.props.width * 0.18,
+            [ColumnKey.FREQ]: this.props.width * 0.18,
+        };
     }
 
     @autobind
     @action
     updateCellMargin() {
-        this.cellMargin = [
-            0,
-            0,
-            0,
-            (this.columnsWidth[3] - 10 - (getMaxLengthStringPixel(this.props.promise.result!.map(item => item.countByEntity.toLocaleString())) + 20)) / 2,
-            getFixedHeaderNumberCellMargin(this.columnsWidth[4], this.props.promise.result!.map(item => getFrequencyStr(item.frequency))),
-        ].map(margin => margin > 0 ? margin : 0);
+        if (this.props.promise.result!.length > 0) {
+            this.cellMargin[ColumnKey.NUMBER] = correctMargin(
+                (this.columnsWidth[ColumnKey.NUMBER] - 10 - (
+                    getFixedHeaderTableMaxLengthStringPixel(
+                        _.max(this.props.promise.result!.map(item => item.countByEntity))!.toLocaleString()
+                    ) + 20
+                )) / 2);
+            this.cellMargin[ColumnKey.FREQ] = correctMargin(
+                getFixedHeaderNumberCellMargin(
+                    this.columnsWidth[ColumnKey.FREQ],
+                    getFrequencyStr(
+                        _.max(this.props.promise.result!.map(item => item.frequency))!
+                    )
+                )
+            );
+        }
     }
 
     @computed
     get tableColumns() {
         return [{
-            name: 'Gene',
+            name: ColumnKey.GENE,
             tooltip: (<span>Gene</span>),
             render: (data: CopyNumberCountByGene) => {
                 const addGeneOverlay = () =>
@@ -125,7 +149,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             },
             width: 90
         }, {
-            name: 'Cytoband',
+            name: ColumnKey.CYTOBAND,
             tooltip: (<span>Cytoband</span>),
             render: (data: CopyNumberCountByGene) => <span>{data.cytoband}</span>,
             sortBy: (data: CopyNumberCountByGene) => data.cytoband,
@@ -135,7 +159,7 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             },
             width: 105
         }, {
-            name: 'CNA',
+            name: ColumnKey.CNA,
             tooltip: (<span>Copy number alteration, only amplifications and deep deletions are shown</span>),
             render: (data: CopyNumberCountByGene) =>
                 <span style={{color: getCNAColorByAlteration(data.alteration), fontWeight: 'bold'}}>
@@ -148,10 +172,10 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             },
             width: 60
         }, {
-            name: '#',
+            name: ColumnKey.NUMBER,
             tooltip: (<span>Number of samples with the listed copy number alteration</span>),
             headerRender: () => {
-                return <div style={{marginLeft: this.cellMargin[3]}}>#</div>
+                return <div style={{marginLeft: this.cellMargin[ColumnKey.NUMBER]}}>#</div>
             },
             render: (data: CopyNumberCountByGene) =>
                 <LabeledCheckbox
@@ -162,8 +186,8 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                         style: {
                             display: 'flex',
                             justifyContent: 'space-between',
-                            marginLeft: this.cellMargin[3],
-                            marginRight: this.cellMargin[3]
+                            marginLeft: this.cellMargin[ColumnKey.NUMBER],
+                            marginRight: this.cellMargin[ColumnKey.NUMBER]
                         }
                     }}
                 >
@@ -176,16 +200,16 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
             },
             width: 75
         }, {
-            name: 'Freq',
+            name: ColumnKey.FREQ,
             tooltip: (<span>Percentage of samples with the listed copy number alteration</span>),
             headerRender: () => {
-                return <div style={{marginLeft: this.cellMargin[4]}}>Freq</div>
+                return <div style={{marginLeft: this.cellMargin[ColumnKey.FREQ]}}>Freq</div>
             },
             render: (data: CopyNumberCountByGene) => <span
                 style={{
                     flexDirection: 'row-reverse',
                     display: 'flex',
-                    marginRight: this.cellMargin[4]
+                    marginRight: this.cellMargin[ColumnKey.FREQ]
                 }}>{getFrequencyStr(data.frequency)}</span>,
             sortBy: (data: CopyNumberCountByGene) => data.frequency,
             defaultSortDirection: 'desc' as 'desc',
