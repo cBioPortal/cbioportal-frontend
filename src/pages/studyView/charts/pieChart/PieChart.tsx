@@ -13,6 +13,7 @@ import ClinicalTable from "pages/studyView/table/ClinicalTable";
 import {If} from 'react-if';
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
 import DefaultTooltip from "../../../../shared/components/defaultTooltip/DefaultTooltip";
+import {getTextWidth} from "../../../../shared/lib/wrapText";
 
 export interface IPieChartProps {
     width: number;
@@ -140,7 +141,13 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     @autobind
     private label(d: ClinicalDataCountWithColor) {
         // Roughly let's say do not show label when the percentage is lower than (digits of the count * 5% )
-        return (d.count / this.totalCount) < (0.05 * d.count.toLocaleString().length) ? '' : d.count.toLocaleString();
+        return d.count / this.totalCount > 0.5 ? d.count.toLocaleString() : (
+            this.maxLength(d.count / this.totalCount, this.pieSliceRadius / 2) <
+            getTextWidth(
+                d.count.toLocaleString(),
+                CBIOPORTAL_VICTORY_THEME.axis.style.tickLabels.fontFamily,
+                `${CBIOPORTAL_VICTORY_THEME.axis.style.tickLabels.fontSize}px`
+            ) ? '' : d.count.toLocaleString());
     }
 
     // We do want to show a bigger pie chart when the height is way smaller than width
@@ -152,7 +159,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     @computed
     get pieSliceRadius(): number {
         const chartWidth = this.props.width > this.props.height ? this.props.height : this.props.width;
-        return chartWidth / 2 ;
+        return chartWidth / 2 - STUDY_VIEW_CONFIG.thresholds.piePadding;
     }
 
     @computed
@@ -166,7 +173,6 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                 width={this.props.width}
                 height={this.chartSize}
                 labelRadius={this.pieSliceRadius / 2}
-                padding={STUDY_VIEW_CONFIG.thresholds.piePadding}
                 radius={this.pieSliceRadius}
                 labels={this.label}
                 data={this.props.data}
@@ -221,6 +227,10 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                 groupComponent={<g className="studyViewPieChartLegend"/>}
             />
         );
+    }
+
+    private maxLength(ratioOfPie: number, radius: number) {
+        return Math.abs(Math.tan(Math.PI * ratioOfPie / 2)) * radius * 2;
     }
 
     public render() {
