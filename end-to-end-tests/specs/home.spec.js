@@ -532,7 +532,7 @@ describe('oncoprint', function() {
         let cosmicCheckbox;
 
         before(()=>{
-            browser.url(CBIOPORTAL_URL+'/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_cna_seq&gene_list=FBXW7&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations');
+            goToUrlAndSetLocalStorage(CBIOPORTAL_URL+'/index.do?cancer_study_id=coadread_tcga_pub&Z_SCORE_THRESHOLD=2&RPPA_SCORE_THRESHOLD=2&data_priority=0&case_set_id=coadread_tcga_pub_cna_seq&gene_list=FBXW7&geneset_list=+&tab_index=tab_visualize&Action=Submit&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations');
             waitForOncoprint(10000);
 
             mutationColorMenuButton = "#mutationColorDropdown";

@@ -676,14 +676,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     }
 
-    @computed get horzZoomToFitIds() {
-        if (this.alteredKeys.isComplete) {
-            return this.alteredKeys.result;
-        } else {
-            return [];
-        }
-    }
-
     private setColumnMode(type:"sample"|"patient") {
         if (this.columnMode !== type) {
             this.columnMode = type;
@@ -692,7 +684,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     readonly alteredKeys = remoteData({
         await:()=>[this.geneticTracks],
-        invoke:async()=>getAlteredUids(this.geneticTracks.result!)
+        invoke:async()=>getAlteredUids(this.geneticTracks.result!),
+        default: []
     });
 
     private readonly unalteredKeys = remoteData({
@@ -1013,7 +1006,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 alterationTypesInQuery={this.alterationTypesInQuery}
                                 showSublabels={this.showOqlInLabels}
 
-                                horzZoomToFitIds={this.horzZoomToFitIds}
+                                horzZoomToFitIds={this.alteredKeys.result}
                                 distinguishMutationType={this.distinguishMutationType}
                                 distinguishDrivers={this.distinguishDrivers}
                                 distinguishGermlineMutations={this.distinguishGermlineMutations}

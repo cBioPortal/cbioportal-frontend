@@ -15,10 +15,14 @@ function openOncoprintMutationsMenu() {
     const mutationColorMenuDropdown = "div.oncoprint__controls__mutation_color_menu";
     browser.moveToObject("div.oncoprint__controls");
     browser.waitForVisible(mutationColorMenuButton);
-    while (!browser.isVisible(mutationColorMenuDropdown)) {
-        browser.click(mutationColorMenuButton);
-        browser.pause(2000);
-    }
+    browser.waitUntil(()=>{
+        if (browser.isVisible(mutationColorMenuDropdown)) {
+            return true;
+        } else {
+            browser.click(mutationColorMenuButton);
+            return false;
+        }
+    }, 10000, "Couldn't open Mutations menu in Oncoprint", 2000);
 }
 
 function goToUrlAndSetLocalStorage(url) {
