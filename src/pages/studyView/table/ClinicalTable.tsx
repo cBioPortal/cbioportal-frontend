@@ -7,7 +7,11 @@ import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
 import FixedHeaderTable from "./FixedHeaderTable";
 import styles from "./tables.module.scss";
-import {getFixedHeaderNumberCellMargin, getFrequencyStr, getMaxLengthStringPixel} from "../StudyViewUtils";
+import {
+    correctMargin,
+    getFixedHeaderNumberCellMargin, getFixedHeaderTableMaxLengthStringPixel,
+    getFrequencyStr
+} from "../StudyViewUtils";
 import {SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 
 export interface IClinicalTableProps {
@@ -27,13 +31,28 @@ class ClinicalTableComponent extends FixedHeaderTable<ClinicalDataCountWithColor
 
 }
 
+enum ColumnKey {
+    CATEGORY = 'Category',
+    NUMBER = '#',
+    FREQ = 'Freq'
+}
+
 @observer
 export default class ClinicalTable extends React.Component<IClinicalTableProps, {}> {
-    @observable private sortBy:string = '#';
+    @observable private sortBy: string = '#';
     @observable private sortDirection: SortDirection;
+    @observable private cellMargin: { [key: string]: number } = {
+        [ColumnKey.CATEGORY]: 0,
+        [ColumnKey.NUMBER]: 0,
+        [ColumnKey.FREQ]: 0,
+    };
 
     constructor(props: IClinicalTableProps) {
         super(props);
+
+        reaction(() => this.columnsWidth, () => {
+            this.updateCellMargin();
+        }, {fireImmediately: true});
     }
 
     static readonly defaultProps = {
@@ -44,11 +63,42 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
     @computed
     get columnsWidth() {
         // last two columns width are 80, 60
-        return [this.props.width! - 140, 80, 60]
+        return {
+            [ColumnKey.CATEGORY]: this.props.width! - 140,
+            [ColumnKey.NUMBER]: 80,
+            [ColumnKey.FREQ]: 60
+        };
+    }
+
+    getFrequencyByCount(count:number) {
+        return (count / this.totalCount) * 100;
+    }
+
+    @autobind
+    @action
+    updateCellMargin() {
+        if (this.props.data.length > 0) {
+            this.cellMargin[ColumnKey.NUMBER] = correctMargin(
+                (this.columnsWidth[ColumnKey.NUMBER] - 10 - (
+                        getFixedHeaderTableMaxLengthStringPixel(
+                            _.max(this.props.data.map(item => item.count))!.toLocaleString()
+                        ) + 20)
+                ) / 2);
+            this.cellMargin[ColumnKey.FREQ] = correctMargin(
+                getFixedHeaderNumberCellMargin(
+                    this.columnsWidth[ColumnKey.FREQ],
+                    getFrequencyStr(
+                        this.getFrequencyByCount(
+                            _.max(this.props.data.map(item => this.getFrequencyByCount(item.count)))!
+                        )
+                    )
+                )
+            );
+        }
     }
 
     private _columns = [{
-        name: this.props.label ? this.props.label : 'Category',
+        name: this.props.label ? this.props.label : ColumnKey.CATEGORY,
         render: (data: ClinicalDataCountWithColor) => {
             return (
                 <div
@@ -70,9 +120,12 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
         filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => (d.value.toUpperCase().includes(filterStringUpper)),
         sortBy: (d: ClinicalDataCountWithColor) => d.value,
         defaultSortDirection: 'asc' as 'asc',
-        width: this.columnsWidth[0]
+        width: this.columnsWidth[ColumnKey.CATEGORY]
     }, {
-        name: '#',
+        name: ColumnKey.NUMBER,
+        headerRender: () => {
+            return <div style={{marginLeft: this.cellMargin[ColumnKey.NUMBER]}}>#</div>
+        },
         render: (data: ClinicalDataCountWithColor) =>
             <LabeledCheckbox
                 checked={_.includes(this.props.filters, data.value)}
@@ -80,7 +133,9 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
                 labelProps={{
                     style: {
                         display: 'flex',
-                        justifyContent: 'space-between'
+                        justifyContent: 'space-between',
+                        marginLeft: this.cellMargin[ColumnKey.NUMBER],
+                        marginRight: this.cellMargin[ColumnKey.NUMBER]
                     }
                 }}
             >
@@ -91,28 +146,29 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
         filter: (d: ClinicalDataCountWithColor, f: string) => (d.count.toString().includes(f)),
         sortBy: (d: ClinicalDataCountWithColor) => d.count,
         defaultSortDirection: 'desc' as 'desc',
-        width: this.columnsWidth[1]
+        width: this.columnsWidth[ColumnKey.NUMBER]
     }, {
-        name: 'Freq',
+        name: ColumnKey.FREQ,
         headerRender: () => {
-            return <div style={{marginLeft: 15}}>Freq</div>
+            return <div style={{marginLeft: this.cellMargin[ColumnKey.FREQ]}}>Freq</div>
         },
         render: (data: ClinicalDataCountWithColor) =>
             <span
                 style={{
                     flexDirection: 'row-reverse',
-                    display: 'flex'
+                    display: 'flex',
+                    marginRight: this.cellMargin[ColumnKey.FREQ]
                 }}
-            >{getFrequencyStr((data.count / this.totalCount) * 100)}</span>,
+            >{getFrequencyStr(this.getFrequencyByCount(data.count))}</span>,
         tooltip: (
             <span>Percentage of {this.props.patientAttribute ? 'patients' : 'samples'}</span>),
         filter: (d: ClinicalDataCountWithColor, f: string) => {
-            let freq = getFrequencyStr((d.count / this.totalCount) * 100);
+            let freq = getFrequencyStr(this.getFrequencyByCount(d.count));
             return (freq.includes(f))
         },
         sortBy: (d: ClinicalDataCountWithColor) => d.count,//sort freq column using count
         defaultSortDirection: 'desc' as 'desc',
-        width: this.columnsWidth[2]
+        width: this.columnsWidth[ColumnKey.FREQ]
     }];
 
     @autobind
@@ -161,6 +217,10 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
     afterSorting(sortBy: string, sortDirection: SortDirection) {
         this.sortBy = sortBy;
         this.sortDirection = sortDirection;
+    }
+
+    componentWillReceiveProps() {
+        this.updateCellMargin();
     }
 
     render() {
