@@ -142,7 +142,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     private label(d: ClinicalDataCountWithColor) {
         // Roughly let's say do not show label when the percentage is lower than (digits of the count * 5% )
         return d.count / this.totalCount > 0.5 ? d.count.toLocaleString() : (
-            this.maxLength(d.count / this.totalCount, this.pieSliceRadius / 2) <
+            this.maxLength(d.count / this.totalCount, this.pieSliceRadius / 3) <
             getTextWidth(
                 d.count.toLocaleString(),
                 CBIOPORTAL_VICTORY_THEME.axis.style.tickLabels.fontFamily,
@@ -172,7 +172,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                 groupComponent={<g className="studyViewPieChartGroup"/>}
                 width={this.props.width}
                 height={this.chartSize}
-                labelRadius={this.pieSliceRadius / 2}
+                labelRadius={this.pieSliceRadius / 3}
                 radius={this.pieSliceRadius}
                 labels={this.label}
                 data={this.props.data}
