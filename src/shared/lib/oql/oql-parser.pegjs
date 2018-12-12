@@ -76,12 +76,16 @@ Alterations
 	/ a1:Alteration { return [a1]; }
 
 Alteration
-	= cmd:CNACommand { return cmd; }
+	= cmd:AnyTypeWithModifiersCommand { return cmd; }
+	/ cmd:CNACommand { return cmd; }
 	/ cmd:EXPCommand { return cmd; }
 	/ cmd:PROTCommand { return cmd; }
         / cmd:FUSIONCommand { return cmd; }
 // MUT has to go at the end because it matches an arbitrary string at the end as a type of mutation
 	/ cmd:MUTCommand { return cmd; }
+
+AnyTypeWithModifiersCommand
+    = d:DriverModifier !"_" { return {"alteration_type":"any", modifiers:[d]}; }
 
 CNAType
         = "AMP"i { return "AMP"; }
@@ -90,8 +94,10 @@ CNAType
         / "HETLOSS"i { return "HETLOSS"; }
 
 CNACommand
-	= "CNA"i msp op:ComparisonOp msp constrval:CNAType { return {"alteration_type":"cna", "constr_rel":op, "constr_val":constrval}; }
-        / constrval:CNAType { return {"alteration_type":"cna", "constr_rel":"=", "constr_val":constrval}; }
+	= "CNA"i msp op:ComparisonOp msp constrval:CNAType { return {"alteration_type":"cna", "constr_rel":op, "constr_val":constrval, modifiers:[]}; }
+	/ constrval:CNAType "_" mod:CNAModifier { return {"alteration_type":"cna", "constr_rel":"=", "constr_val":constrval, modifiers:[mod]}; }
+	/ mod:CNAModifier "_" constrval:CNAType { return {"alteration_type":"cna", "constr_rel":"=", "constr_val":constrval, modifiers:[mod]}; }
+    / constrval:CNAType { return {"alteration_type":"cna", "constr_rel":"=", "constr_val":constrval, modifiers:[]}; }
 
 MUTCommand
 	= "MUT" msp "=" msp mutation:MutationWithModifiers { return {"alteration_type":"mut", "constr_rel": "=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info, modifiers: mutation.modifiers}; }
@@ -110,7 +116,9 @@ EXPCommand
 	= "EXP" msp op:ComparisonOp msp constrval:Number { return {"alteration_type":"exp", "constr_rel":op, "constr_val":parseFloat(constrval)}; }
 
 FUSIONCommand
-        = "FUSION" { return {"alteration_type":"fusion"}; }
+        = "FUSION"i "_" mod:FusionModifier { return {"alteration_type":"fusion", modifiers: [mod] }; }
+        / mod:FusionModifier "_FUSION"i { return {"alteration_type":"fusion", modifiers: [mod] }; }
+        / "FUSION"i { return {"alteration_type":"fusion", modifiers:[]}; }
 
 PROTCommand
 	= "PROT" msp op:ComparisonOp msp constrval:Number { return {"alteration_type":"prot", "constr_rel":op, "constr_val":parseFloat(constrval)}; }
@@ -153,4 +161,13 @@ Mutation
 MutationModifier
     = "GERMLINE"i { return "GERMLINE";}
     / "SOMATIC"i { return "SOMATIC";}
-    / "DRIVER"i { return "DRIVER";}
+    / mod:DriverModifier { return mod; }
+
+CNAModifier
+    = d:DriverModifier { return d; }
+
+FusionModifier
+    = d:DriverModifier { return d; }
+
+DriverModifier
+    = "DRIVER"i { return "DRIVER";}

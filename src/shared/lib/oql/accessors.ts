@@ -1,6 +1,10 @@
 import {Mutation, MolecularProfile, NumericGeneMolecularData} from "../../api/generated/CBioPortalAPI";
 import * as _ from 'lodash';
-import {AlterationTypeConstants, AnnotatedMutation} from "../../../pages/resultsView/ResultsViewPageStore";
+import {
+    AlterationTypeConstants,
+    AnnotatedExtendedAlteration,
+    AnnotatedMutation, AnnotatedNumericGeneMolecularData
+} from "../../../pages/resultsView/ResultsViewPageStore";
 
 var cna_profile_data_to_string: any = {
     "-2": "homdel",
@@ -168,11 +172,14 @@ export default class accessors {
         return (getSimplifiedMutationType(d.mutationType) === "fusion") ? true : null;
     }
 
-    public is_driver(d: AnnotatedMutation) {
+    public is_driver(d: AnnotatedMutation|AnnotatedNumericGeneMolecularData) {
         if (this.molecularAlterationType(d.molecularProfileId) === AlterationTypeConstants.MUTATION_EXTENDED) {
-            return !!d.putativeDriver;
+            // covers mutations and fusions
+            return !!(d as AnnotatedMutation).putativeDriver;
+        } else if (this.molecularAlterationType(d.molecularProfileId) === AlterationTypeConstants.COPY_NUMBER_ALTERATION) {
+            // covers CNA
+            return !!(d as AnnotatedNumericGeneMolecularData).oncoKbOncogenic;
         } else {
-            // for now, we will only pick driver for mutations
             return null;
         }
     }
