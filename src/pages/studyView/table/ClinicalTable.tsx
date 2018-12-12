@@ -8,7 +8,7 @@ import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
 import FixedHeaderTable from "./FixedHeaderTable";
 import styles from "./tables.module.scss";
 import {
-    correctMargin,
+    correctMargin, getClinicalAttributeOverlay,
     getFixedHeaderNumberCellMargin, getFixedHeaderTableMaxLengthStringPixel,
     getFrequencyStr
 } from "../StudyViewUtils";
@@ -97,8 +97,13 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
         }
     }
 
+    @computed
+    get firstColumnName() {
+        return this.props.label ? this.props.label : ColumnKey.CATEGORY;
+    }
+
     private _columns = [{
-        name: this.props.label ? this.props.label : ColumnKey.CATEGORY,
+        name: this.firstColumnName,
         render: (data: ClinicalDataCountWithColor) => {
             return (
                 <div
@@ -116,7 +121,10 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
                 </div>
             )
         },
-        tooltip: this.props.labelDescription ? (<span>{this.props.labelDescription}</span>) : undefined,
+        headerRender: () => {
+            return <div className={styles.ellipsisText}>{this.firstColumnName}</div>
+        },
+        tooltip: getClinicalAttributeOverlay(this.firstColumnName, this.props.labelDescription ? this.props.labelDescription : ''),
         filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => (d.value.toUpperCase().includes(filterStringUpper)),
         sortBy: (d: ClinicalDataCountWithColor) => d.value,
         defaultSortDirection: 'asc' as 'asc',
