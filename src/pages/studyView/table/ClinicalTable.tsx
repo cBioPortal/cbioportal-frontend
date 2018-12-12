@@ -13,6 +13,7 @@ import {
     getFrequencyStr
 } from "../StudyViewUtils";
 import {SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
+import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
 
 export interface IClinicalTableProps {
     data: ClinicalDataCountWithColor[];
@@ -112,7 +113,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
                             <rect x="0" y="0" width="12" height="12" fill={data.color}/>
                         </g>
                     </svg>
-                    <span className={styles.ellipsisText} title={data.value}>{data.value}</span>
+                    <EllipsisTextTooltip content={data.value}/>
                 </div>
             )
         },
