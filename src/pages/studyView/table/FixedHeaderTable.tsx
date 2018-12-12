@@ -171,7 +171,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                         className={classnames(styles.headerSortingIcon, 'fa', this._sortDirection === 'desc' ? 'fa-sort-desc' : 'fa-sort-asc')}></i>);
                 }
 
-                const content = <div>{label}</div>
+                const content = <div style={{display:'flex'}}>{label}</div>
                 if (column.tooltip) {
                     return (
                         <DefaultTooltip placement="top" overlay={column.tooltip}>
@@ -207,6 +207,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                         this.props.columns.map((column, index) => {
                             return <RVColumn key={column.name} label={column.name} dataKey={column.name}
                                              width={Number(column.width)}
+                                             className={styles.columnCell}
                                              headerRenderer={this.columnHeaders[index]}
                                              cellRenderer={(props: TableCellProps) => {
                                                  return column.render(props.rowData);

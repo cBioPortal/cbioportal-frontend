@@ -128,8 +128,8 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
         const max = {x:Number.NEGATIVE_INFINITY, y:Number.NEGATIVE_INFINITY};
         const min = {x:Number.POSITIVE_INFINITY, y:Number.POSITIVE_INFINITY};
         for (const d of this.data) {
-            max.x = Math.max(d.x, max.x);
-            max.y = Math.max(d.y, max.y);
+            max.x = Math.max(d.x + this.props.xBinSize, max.x);
+            max.y = Math.max(d.y + this.props.yBinSize, max.y);
             min.x = Math.min(d.x, min.x);
             min.y = Math.min(d.y, min.y);
         }
@@ -174,6 +174,28 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
             // add bin size to get proper bound
             xEnd += this.props.xBinSize;
             yEnd += this.props.yBinSize;
+
+            if (Math.abs(yEnd - this.dataDomain.y[1]) < 0.00005) {
+                // if yEnd === dataDomain.y[1], then bump it up by 1. This is because of how the mutationCountVsCNA filter
+                //  works, in conjunction with how the clinical data density plot API works. The clinical data density plot API,
+                //  if you don't pass in an explicit bin range, will make bins based on the min/max of the data. We don't pass in
+                //  a max mutation count, so that's what happens for mutation count: the endpoint of the binning range is the max
+                //  mutation count value in the query.
+                // Now, the mutationCountVsCNA filter works with *right-open-ended* intervals: beginning <= value < end. So if
+                //  we select only the topmost bin, we're going to get a selection of all samples with values which are >= the
+                //  bottom of the bin, and STRICTLY LESS THAN the top of the bin. The trouble is that because of how we establish the bins, this
+                //  topmost dot could possibly only contain a sample with a value EQUAL to the end of the bin. Thus, selecting
+                //  the dot leads to an empty selection.
+                // To fix this, we bump up yEnd by 1 in this case, to include this last sample.
+
+                yEnd += 1;
+            }
+            if (Math.abs(xEnd - 1) < 0.00005) {
+                // same reasoning as above, in case a sample has 1.0 FGA
+                // but we don't have to check the data because we know the bin range ends at 1
+                
+                xEnd += 1;
+            }
             this.props.onSelection({ xStart, xEnd, yStart, yEnd });
         }
     }
