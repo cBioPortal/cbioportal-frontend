@@ -13,6 +13,18 @@ var arrayFindIndex = function (arr, callback, start_index) {
     return -1;
 };
 
+var getNewCanvas = function(view) {
+    var old_canvas = view.$canvas[0];
+    old_canvas.removeEventListener("webglcontextlost", view.handleContextLost);
+    var new_canvas = old_canvas.cloneNode();
+    new_canvas.addEventListener("webglcontextlost", view.handleContextLost);
+    var parent_node = old_canvas.parentNode;
+    parent_node.removeChild(old_canvas);
+    parent_node.insertBefore(new_canvas, view.$overlay_canvas[0]);
+    view.$canvas = $(new_canvas);
+    view.ctx = null;
+};
+
 var getWebGLCanvasContext = function (view) {
     try {
 	var canvas = view.$canvas[0];
@@ -33,6 +45,23 @@ var getWebGLCanvasContext = function (view) {
 	return null;
     }
 };
+
+var ensureWebGLContext = function(view) {
+    for (var i=0; i<5; i++) {
+        if (!view.ctx || view.ctx.isContextLost()) {
+        	// have to get a new canvas when context is lost by browser
+        	getNewCanvas(view);
+            view.ctx = getWebGLCanvasContext(view);
+            setUpShaders(view);
+        } else {
+            break;
+        }
+    }
+    if (!view.ctx || view.ctx.isContextLost()) {
+        throw new Error("Unable to get WebGL context for Oncoprint Minimap");
+    }
+};
+
 var createShaderProgram = function (view, vertex_shader, fragment_shader) {
     var program = view.ctx.createProgram();
     view.ctx.attachShader(program, vertex_shader);
@@ -75,6 +104,7 @@ var getWebGLContextAndSetUpMatrices = function (view) {
 	self.pMatrix = pMatrix;
     })(view);
 };
+
 var setUpShaders = function(self, vertex_bank_size) {
     var vertex_shader_source = ['precision highp float;',
 	'attribute float aPosVertex;',
@@ -151,6 +181,15 @@ var OncoprintMinimapView = (function () {
 	var vertical_zoom_area_width = 20;
 	var horizontal_zoom_area_height = 20;
 	var window_bar_height = 20;
+
+	this.handleContextLost = (function() {
+		// catch when context lost and refresh it
+		// eg if cell view uses a ton of contexts, then browser clears oldest context,
+		//	then the minimap would be empty until we refresh the context and rerender
+		drawOncoprintAndOverlayRect(this, model, cell_view);
+	}).bind(this);
+
+	this.$canvas[0].addEventListener("webglcontextlost", this.handleContextLost);
 
 	this.layout_numbers = {
 	    window_width: padding + width + padding + vertical_zoom_area_width,
@@ -694,6 +733,8 @@ var OncoprintMinimapView = (function () {
 	if (view.rendering_suppressed) {
 	    return;
 	}
+
+	ensureWebGLContext(view);
 
 	var zoom = getZoom(view, model);
 
