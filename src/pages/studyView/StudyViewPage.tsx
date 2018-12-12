@@ -31,6 +31,7 @@ export interface IStudyViewPageProps {
 @observer
 export default class StudyViewPage extends React.Component<IStudyViewPageProps, {}> {
     private store: StudyViewPageStore;
+    private enableAddChartInTabs = [StudyViewPageTabKeys.SUMMARY, StudyViewPageTabKeys.CLINICAL_DATA];
 
     constructor(props: IStudyViewPageProps) {
         super();
@@ -95,8 +96,11 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     </MSKTab>
                                 </MSKTabs>
 
-                                {(this.props.routing.location.query.tab === undefined || this.props.routing.location.query.tab === StudyViewPageTabKeys.SUMMARY) &&
-                                <AddChartButton store={this.store}/>}
+                                {(this.props.routing.location.query.tab === undefined || this.enableAddChartInTabs.includes(this.props.routing.location.query.tab)) &&
+                                <AddChartButton
+                                    store={this.store}
+                                    disableAddGenomicButton={this.props.routing.location.query.tab === StudyViewPageTabKeys.CLINICAL_DATA}
+                                />}
 
                                 <div className={styles.selectedInfo}>
                                     <SelectedInfo selectedSamples={this.store.selectedSamples.result}/>

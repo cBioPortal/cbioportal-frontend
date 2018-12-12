@@ -109,6 +109,13 @@ const OPERATOR_MAP: {[op:string]: string} = {
     ">": ">"
 };
 
+export function getClinicalAttributeOverlay(displayName: string, description: string): JSX.Element {
+    return <div style={{maxWidth: '500px'}}>
+        <b>{displayName}</b><br/>
+        {description}
+    </div>;
+}
+
 export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: string): string {
 
     let updatedQueries = _.filter(geneQueries,query=> query.gene !== selectedGene)

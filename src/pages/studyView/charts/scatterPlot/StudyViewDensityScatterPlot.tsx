@@ -347,7 +347,7 @@ export default class StudyViewDensityScatterPlot extends React.Component<IStudyV
                 );
             }
             const gradientElt = (
-                <linearGradient id={gradientId} x1="0%" y1="100%" x2="0%" y2="0%">
+                <linearGradient id={gradientId} key={gradientId} x1="0%" y1="100%" x2="0%" y2="0%">
                     {gradientStopPoints}
                 </linearGradient>
             );
