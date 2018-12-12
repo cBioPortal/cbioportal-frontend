@@ -45,12 +45,12 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
 
     @computed
     get addGenomicDataChartTitle() {
-        return `Add genomic data chart (${_.filter(this.genomicDataOptions, chartOption => !chartOption.selected).length} more to add)`
+        return `Select genomic data chart (${_.filter(this.genomicDataOptions, chartOption => !chartOption.selected).length} more to add)`
     }
 
     @computed
     get addClinicalDataChartTitle() {
-        return `Add clinical data chart (${_.filter(this.clinicalDataOptions, chartOption => !chartOption.selected).length} more to add)`
+        return `Select clinical data chart (${_.filter(this.clinicalDataOptions, chartOption => !chartOption.selected).length} more to add)`
     }
 
     @observable currentOpenedDialog: CurrentOpenedDialog = CurrentOpenedDialogEnum.CLOSED;
