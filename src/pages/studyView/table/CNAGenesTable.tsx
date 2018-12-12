@@ -190,6 +190,9 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
                             marginRight: this.cellMargin[ColumnKey.NUMBER]
                         }
                     }}
+                    inputProps={{
+                        className: styles.autoMarginCheckbox
+                    }}
                 >
                     {data.countByEntity.toLocaleString()}
                 </LabeledCheckbox>,
