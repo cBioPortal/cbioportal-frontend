@@ -113,6 +113,19 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
                     </button>
                     <div className={classnames(shareUIstyles.shareModule, styles.iconGroup)}>
                         <DefaultTooltip
+                            trigger={["hover"]}
+                            placement={"top"}
+                            overlay={<span>View selected cases</span>}
+                        >
+                            <a onClick={this.openCases}>
+                                <span className="fa-stack fa-4x">
+                                    <i className="fa fa-circle fa-stack-2x"></i>
+                                    <i className="fa fa-user-circle-o fa-stack-1x"></i>
+                                </span>
+                            </a>
+                        </DefaultTooltip>
+
+                        <DefaultTooltip
                             trigger={['click']}
                             destroyTooltipOnHide={true}
                             overlay={
@@ -138,19 +151,6 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
                                     </span>
                                 </a>
                             </DefaultTooltip>
-                        </DefaultTooltip>
-
-                        <DefaultTooltip
-                            trigger={["hover"]}
-                            placement={"top"}
-                            overlay={<span>View selected cases</span>}
-                        >
-                            <a onClick={this.openCases}>
-                                <span className="fa-stack fa-4x">
-                                    <i className="fa fa-circle fa-stack-2x"></i>
-                                    <i className="fa fa-user-circle-o fa-stack-1x"></i>
-                                </span>
-                            </a>
                         </DefaultTooltip>
 
                         <DefaultTooltip

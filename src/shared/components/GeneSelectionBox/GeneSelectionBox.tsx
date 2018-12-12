@@ -222,8 +222,8 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
                     className={classnames(...this.textAreaClasses)}
                     rows={5}
                     cols={80}
-                    placeholder={'Select Genes'}
-                    title="Enter HUGO Gene Symbols or Gene Aliases"
+                    placeholder={'Click gene symbols below or enter here'}
+                    title="Click gene symbols below or enter here"
                     value={this.showValidationBox ? this.geneQuery : this.focusOutValue}
                     onChange={event => this.updateGeneQuery(event.currentTarget.value)}
                     data-test='geneSet'
