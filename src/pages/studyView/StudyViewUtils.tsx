@@ -988,8 +988,8 @@ export function getPriorityByClinicalAttribute(clinicalAttribute: ClinicalAttrib
 }
 
 // Grid includes 10px margin
-export function getWidthByDimension(chartDimension: ChartDimension) {
-    return STUDY_VIEW_CONFIG.layout.grid.w * chartDimension.w + (chartDimension.w - 1) * STUDY_VIEW_CONFIG.layout.gridMargin.x - 2;
+export function getWidthByDimension(chartDimension: ChartDimension, borderWidth: number) {
+    return STUDY_VIEW_CONFIG.layout.grid.w * chartDimension.w + (chartDimension.w - 1) * STUDY_VIEW_CONFIG.layout.gridMargin.x - borderWidth * 2;
 }
 
 // Grid includes 15px header and 35px tool section
