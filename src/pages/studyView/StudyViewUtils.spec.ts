@@ -1217,6 +1217,7 @@ describe('StudyViewUtils', () => {
                 patientAttribute: clinicalAttr.patientAttribute,
                 chartType: ChartTypeEnum.PIE_CHART,
                 dimension: {w: 1, h: 1},
+                renderWhenDataChange: false,
                 priority: 1,
             });
         }
@@ -1295,6 +1296,7 @@ describe('StudyViewUtils', () => {
                 patientAttribute: clinicalAttr.patientAttribute,
                 chartType: ChartTypeEnum.TABLE,
                 dimension: {w: 2, h: 2},
+                renderWhenDataChange: true,
                 priority: 10,
             }, {
                 clinicalAttribute: clinicalAttr,
@@ -1305,6 +1307,7 @@ describe('StudyViewUtils', () => {
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 1, h: 1},
+                renderWhenDataChange: false,
                 priority: 20,
             }];
 
@@ -1329,6 +1332,7 @@ describe('StudyViewUtils', () => {
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 2, h: 1},
+                renderWhenDataChange: false,
                 priority: 10,
             }, {
                 clinicalAttribute: clinicalAttr,
@@ -1339,6 +1343,7 @@ describe('StudyViewUtils', () => {
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 2, h: 2},
+                renderWhenDataChange: true,
                 priority: 5,
             }, {
                 clinicalAttribute: clinicalAttr,
@@ -1349,6 +1354,7 @@ describe('StudyViewUtils', () => {
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 1, h: 1},
+                renderWhenDataChange: false,
                 priority: 2,
             }];
 
@@ -1378,6 +1384,7 @@ describe('StudyViewUtils', () => {
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 2, h: 2},
+                renderWhenDataChange: false,
                 priority: 1,
             }, {
                 clinicalAttribute: clinicalAttr,
@@ -1388,6 +1395,7 @@ describe('StudyViewUtils', () => {
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 2, h: 2},
+                renderWhenDataChange: true,
                 priority: 1,
             }, {
                 clinicalAttribute: clinicalAttr,
@@ -1398,6 +1406,7 @@ describe('StudyViewUtils', () => {
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 2, h: 1},
+                renderWhenDataChange: false,
                 priority: 1,
             }, {
                 clinicalAttribute: clinicalAttr,
@@ -1408,6 +1417,7 @@ describe('StudyViewUtils', () => {
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 1, h: 1},
+                renderWhenDataChange: false,
                 priority: 1,
             }, {
                 clinicalAttribute: clinicalAttr,
@@ -1418,6 +1428,7 @@ describe('StudyViewUtils', () => {
                 dataType: ChartMetaDataTypeEnum.CLINICAL,
                 patientAttribute: clinicalAttr.patientAttribute,
                 dimension: {w: 1, h: 1},
+                renderWhenDataChange: false,
                 priority: 1,
             }];
 
