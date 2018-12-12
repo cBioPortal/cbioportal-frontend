@@ -170,9 +170,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 break;
             }
             case ChartTypeEnum.TABLE: {
-                if (!_.isEqual(this.props.chartMeta.chartType, ChartTypeEnum.TABLE)) {
-                    controls = {showPieIcon: true}
-                }
+                controls = {showPieIcon: true}
                 break;
             }
         }
@@ -457,9 +455,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     )}
                     {this.props.promise.isError && (<div>Error when loading data.</div>)}
 
+                    {(!this.props.chartMeta.renderWhenDataChange || this.props.promise.isComplete) &&
                     <div style={{visibility: this.props.promise.isPending ? 'hidden' : 'visible', display: 'flex'}}>
                         {this.chart && this.chart()}
                     </div>
+                    }
                 </div>
             </div>
         );
