@@ -30,12 +30,14 @@ export interface IOncoprintControlsHandlers {
     onSelectShowMinimap?:(showMinimap:boolean)=>void,
     onSelectDistinguishMutationType?:(distinguish:boolean)=>void,
     onSelectDistinguishDrivers?:(distinguish:boolean)=>void,
+    onSelectDistinguishGermlineMutations?:(distinguish:boolean)=>void,
 
     onSelectAnnotateOncoKb?:(annotate:boolean)=>void,
     onSelectAnnotateHotspots?:(annotate:boolean)=>void,
     onSelectAnnotateCBioPortal?:(annotate:boolean)=>void,
     onSelectAnnotateCOSMIC?:(annotate:boolean)=>void,
     onSelectHidePutativePassengers?:(hide:boolean)=>void,
+    onSelectHideGermlineMutations?:(hide:boolean)=>void,
     onChangeAnnotateCBioPortalInputValue?:(value:string)=>void,
     onChangeAnnotateCOSMICInputValue?:(value:string)=>void,
     onSelectCustomDriverAnnotationBinary?:(s:boolean)=>void;
@@ -69,6 +71,7 @@ export interface IOncoprintControlsState {
     showMinimap?:boolean,
     distinguishMutationType?:boolean,
     distinguishDrivers?:boolean,
+    distinguishGermlineMutations?:boolean,
     sortByMutationType?:boolean,
     sortByDrivers?:boolean,
     sortByCaseListDisabled?:boolean,
@@ -81,6 +84,7 @@ export interface IOncoprintControlsState {
     annotateDriversCBioPortal?:boolean,
     annotateDriversCOSMIC?:boolean,
     hidePutativePassengers?:boolean,
+    hideGermlineMutations?:boolean,
     annotateCBioPortalInputValue?:string,
     annotateCOSMICInputValue?:string,
 
@@ -122,6 +126,7 @@ const EVENT_KEY = {
     onlyShowClinicalLegendForAlteredCases: "4.1",
     showOqlInLabels:"4.2",
     distinguishMutationType: "5",
+    distinguishGermlineMutations:"5.1",
     sortByMutationType: "6",
     sortAlphabetical: "7",
     sortCaseListOrder: "8",
@@ -139,6 +144,7 @@ const EVENT_KEY = {
     annotateCBioPortalInput:"20",
     annotateCOSMICInput:"21",
     hidePutativePassengers:"22",
+    hideGermlineMutations: "22.1",
     customDriverBinaryAnnotation:"23",
     customDriverTierAnnotation:"24",
     downloadPDF:"25",
@@ -268,6 +274,10 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                 this.props.handlers.onSelectDistinguishMutationType &&
                 this.props.handlers.onSelectDistinguishMutationType(!this.props.state.distinguishMutationType);
                 break;
+            case EVENT_KEY.distinguishGermlineMutations:
+                this.props.handlers.onSelectDistinguishGermlineMutations &&
+                this.props.handlers.onSelectDistinguishGermlineMutations(!this.props.state.distinguishGermlineMutations);
+                break;
             case EVENT_KEY.annotateOncoKb:
                 this.props.handlers.onSelectAnnotateOncoKb &&
                 this.props.handlers.onSelectAnnotateOncoKb(!this.props.state.annotateDriversOncoKb);
@@ -287,6 +297,10 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
             case EVENT_KEY.hidePutativePassengers:
                 this.props.handlers.onSelectHidePutativePassengers &&
                 this.props.handlers.onSelectHidePutativePassengers(!this.props.state.hidePutativePassengers);
+                break;
+            case EVENT_KEY.hideGermlineMutations:
+                this.props.handlers.onSelectHideGermlineMutations &&
+                this.props.handlers.onSelectHideGermlineMutations(!this.props.state.hideGermlineMutations);
                 break;
             case EVENT_KEY.customDriverBinaryAnnotation:
                 this.props.handlers.onSelectCustomDriverAnnotationBinary &&
@@ -531,9 +545,10 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
 
     private getMutationColorMenu() {
         return (
-            <CustomDropdown bsStyle="default" title="Mutation Color" id="mutationColorDropdown">
+            <CustomDropdown bsStyle="default" title="Mutations" id="mutationColorDropdown">
                 <div className="oncoprint__controls__mutation_color_menu">
-                    <form action="" style={{marginBottom: "0"}}>
+                    <h5>Color by</h5>
+                    <div style={{marginLeft: "10px"}}>
                         <div className="checkbox"><label>
                             <input
                                 type="checkbox"
@@ -544,13 +559,21 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                         </label></div>
                         <div className="checkbox"><label>
                             <input
+                                data-test="ColorByGermline"
+                                type="checkbox"
+                                value={EVENT_KEY.distinguishGermlineMutations}
+                                checked={this.props.state.distinguishGermlineMutations}
+                                onClick={this.onInputClick}
+                            /> Somatic vs Germline
+                        </label></div>
+                        <div className="checkbox"><label>
+                            <input
                                 type="checkbox"
                                 value={EVENT_KEY.distinguishDrivers}
                                 checked={this.props.state.distinguishDrivers}
                                 onClick={this.onInputClick}
-                            /> Putative drivers based on:
-                        </label>
-                        </div>
+                            /> Putative drivers vs VUS:
+                        </label></div>
                         <div style={{marginLeft: "20px"}}>
                             { !this.props.state.annotateDriversOncoKbDisabled && (
                                 <div className="checkbox"><label>
@@ -672,17 +695,29 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                                     </div>
                                 </span>
                             )}
-                            <div className="checkbox"><label>
-                                <input
-                                    type="checkbox"
-                                    value={EVENT_KEY.hidePutativePassengers}
-                                    checked={this.props.state.hidePutativePassengers}
-                                    onClick={this.onInputClick}
-                                    disabled={!this.props.state.distinguishDrivers}
-                                /> Hide VUS (variants of unknown significance)
-                            </label></div>
                         </div>
-                    </form>
+                    </div>
+                    <h5>Filter</h5>
+                    <div style={{marginLeft:10}}>
+                        <div className="checkbox"><label>
+                            <input
+                                type="checkbox"
+                                value={EVENT_KEY.hidePutativePassengers}
+                                checked={!this.props.state.hidePutativePassengers}
+                                onClick={this.onInputClick}
+                                disabled={!this.props.state.distinguishDrivers}
+                            /> Show VUS (variants of unknown significance)
+                        </label></div>
+                        <div className="checkbox"><label>
+                            <input
+                                data-test="HideGermline"
+                                type="checkbox"
+                                value={EVENT_KEY.hideGermlineMutations}
+                                checked={!this.props.state.hideGermlineMutations}
+                                onClick={this.onInputClick}
+                            /> Show germline mutations
+                        </label></div>
+                    </div>
                 </div>
             </CustomDropdown>
         );
