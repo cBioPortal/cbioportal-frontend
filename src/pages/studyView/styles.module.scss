@@ -2,19 +2,7 @@
     position: absolute;
     top: 8px;
     right:20px;
-    display: flex;
     z-index: 2;
-    align-items: center;
-    padding:3px 10px;
-    background:#ddd;
-    border-radius:$border-radius-base;
-
-    > div {
-        white-space: nowrap;
-        &:nth-child(n+2) {
-            margin-left:15px;
-        }
-    }
 }
 
 .selectedInfoCheckbox {
@@ -83,4 +71,15 @@
     .description{
         font-size: 13px;
     }
+}
+
+.resultSummaryContainer {
+    transition: all 500ms ease-out;
+    opacity:0;
+    background:#eee;
+    border:1px solid $borderColor;
+    transform:translateY(50%);
+    display:flex;
+    align-items:baseline;
+    min-width:300px;
 }
