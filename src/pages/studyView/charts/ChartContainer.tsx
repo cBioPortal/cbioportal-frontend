@@ -240,11 +240,16 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     @computed
+    get borderWidth() {
+        return this.highlightChart ? 2 : 1;
+    }
+
+    @computed
     get chart() {
         switch (this.chartType) {
             case ChartTypeEnum.PIE_CHART: {
                 return ()=>(<PieChart
-                    width={getWidthByDimension(this.props.chartMeta.dimension)}
+                    width={getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)}
                     height={getHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
                     ref={this.handlers.ref}
                     onUserSelection={this.handlers.onValueSelection}
@@ -259,7 +264,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             case ChartTypeEnum.BAR_CHART: {
                 return ()=>(
                     <BarChart
-                        width={getWidthByDimension(this.props.chartMeta.dimension)}
+                        width={getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)}
                         height={getHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
                         ref={this.handlers.ref}
                         onUserSelection={this.handlers.onDataBinSelection}
@@ -271,7 +276,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             case ChartTypeEnum.TABLE: {
                 return ()=>(<ClinicalTable
                     data={this.props.promise.result}
-                    width={getWidthByDimension(this.props.chartMeta.dimension)}
+                    width={getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)}
                     height={getTableHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
                     filters={this.props.filters}
                     onUserSelection={this.handlers.onValueSelection}
@@ -285,7 +290,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 return ()=>(
                     <MutatedGenesTable
                         promise={this.props.promise}
-                        width={getWidthByDimension(this.props.chartMeta.dimension)}
+                        width={getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)}
                         height={getTableHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
                         numOfSelectedSamples={100}
                         filters={this.props.filters}
@@ -299,7 +304,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 return ()=>(
                     <CNAGenesTable
                         promise={this.props.promise}
-                        width={getWidthByDimension(this.props.chartMeta.dimension)}
+                        width={getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)}
                         height={getTableHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
                         numOfSelectedSamples={100}
                         filters={this.props.filters}
@@ -335,7 +340,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                        disableZoom={true}
                                        showTable={false}
                                        styleOpts={{
-                                           width: getWidthByDimension(this.props.chartMeta.dimension),
+                                           width: getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth),
                                            height: getHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight),
                                            legend: {
                                                x: 190,
@@ -365,7 +370,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                         <div style={{marginTop:-33}}>
                             <StudyViewDensityScatterPlot
                                 ref={this.handlers.ref}
-                                width={getWidthByDimension(this.props.chartMeta.dimension)}
+                                width={getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)}
                                 height={this.getScatterPlotHeight()}
                                 yBinsMin={MutationCountVsCnaYBinsMin}
                                 onSelection={this.props.onValueSelection}
