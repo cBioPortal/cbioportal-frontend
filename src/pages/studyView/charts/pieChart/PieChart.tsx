@@ -9,11 +9,11 @@ import {AbstractChart} from "pages/studyView/charts/ChartContainer";
 import ifndef from "shared/lib/ifndef";
 import autobind from 'autobind-decorator';
 import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
-import classnames from 'classnames';
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
 import {If} from 'react-if';
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
 import DefaultTooltip from "../../../../shared/components/defaultTooltip/DefaultTooltip";
+import {getTextWidth} from "../../../../shared/lib/wrapText";
 
 export interface IPieChartProps {
     width: number;
@@ -70,7 +70,8 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     @observable tooltipHighlightedRow: string | undefined = undefined;
 
     @autobind
-    @action private highlightedRow(value: string): void {
+    @action
+    private highlightedRow(value: string): void {
         this.tooltipHighlightedRow = value;
     }
 
@@ -82,11 +83,13 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         return toSvgDomNodeWithLegend(this.svg, ".studyViewPieChartLegend", ".studyViewPieChartGroup", true);
     }
 
-    @computed get totalCount() {
+    @computed
+    get totalCount() {
         return _.sumBy(this.props.data, obj => obj.count)
     }
 
-    @computed get fill() {
+    @computed
+    get fill() {
         return (d: ClinicalDataCountWithColor) => {
             if (!_.isEmpty(this.props.filters) && !_.includes(this.props.filters, d.value)) {
                 return STUDY_VIEW_CONFIG.colors.na;
@@ -95,7 +98,8 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         };
     }
 
-    @computed get stroke() {
+    @computed
+    get stroke() {
         return (d: ClinicalDataCountWithColor) => {
             if (!_.isEmpty(this.props.filters) && _.includes(this.props.filters, d.value)) {
                 return "#cccccc";
@@ -104,7 +108,8 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         };
     }
 
-    @computed get strokeWidth() {
+    @computed
+    get strokeWidth() {
         return (d: ClinicalDataCountWithColor) => {
             if (!_.isEmpty(this.props.filters) && _.includes(this.props.filters, d.value)) {
                 return 3;
@@ -113,7 +118,8 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         };
     }
 
-    @computed get fillOpacity() {
+    @computed
+    get fillOpacity() {
         return (d: ClinicalDataCountWithColor) => {
             if (!_.isEmpty(this.props.filters) && !_.includes(this.props.filters, d.value)) {
                 return '0.5';
@@ -135,7 +141,13 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
     @autobind
     private label(d: ClinicalDataCountWithColor) {
         // Roughly let's say do not show label when the percentage is lower than (digits of the count * 5% )
-        return (d.count / this.totalCount) < (0.05 * d.count.toLocaleString().length) ? '' : d.count.toLocaleString();
+        return d.count / this.totalCount > 0.5 ? d.count.toLocaleString() : (
+            this.maxLength(d.count / this.totalCount, this.pieSliceRadius / 2) <
+            getTextWidth(
+                d.count.toLocaleString(),
+                CBIOPORTAL_VICTORY_THEME.axis.style.tickLabels.fontFamily,
+                `${CBIOPORTAL_VICTORY_THEME.axis.style.tickLabels.fontSize}px`
+            ) ? '' : d.count.toLocaleString());
     }
 
     // We do want to show a bigger pie chart when the height is way smaller than width
@@ -144,21 +156,28 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         return (this.props.width + this.props.height ) / 2;
     }
 
-    @computed get victoryPie() {
+    @computed
+    get pieSliceRadius(): number {
+        const chartWidth = this.props.width > this.props.height ? this.props.height : this.props.width;
+        return chartWidth / 2 - STUDY_VIEW_CONFIG.thresholds.piePadding;
+    }
+
+    @computed
+    get victoryPie() {
         return (
             <VictoryPie
                 standalone={false}
                 theme={CBIOPORTAL_VICTORY_THEME}
-                containerComponent={<VictoryContainer responsive={false} />}
-                groupComponent={<g className="studyViewPieChartGroup" />}
+                containerComponent={<VictoryContainer responsive={false}/>}
+                groupComponent={<g className="studyViewPieChartGroup"/>}
                 width={this.props.width}
                 height={this.chartSize}
-                labelRadius={15}
-                padding={30}
+                labelRadius={this.pieSliceRadius / 2}
+                radius={this.pieSliceRadius}
                 labels={this.label}
                 data={this.props.data}
-                dataComponent={<CustomSlice />}
-                labelComponent={<VictoryLabel />}
+                dataComponent={<CustomSlice/>}
+                labelComponent={<VictoryLabel/>}
                 events={this.userEvents}
                 style={{
                     data: {
@@ -179,7 +198,8 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         );
     }
 
-    @computed get victoryLegend() {
+    @computed
+    get victoryLegend() {
         const legendData = this.props.data.map(data =>
             ({name: `${data.value}: ${data.count} (${getFrequencyStr(100 * data.count / this.totalCount)})`}));
         const colorScale = this.props.data.map(data => data.color);
@@ -202,11 +222,15 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                 rowGutter={-10}
                 title={this.props.label || "Legend"}
                 centerTitle={true}
-                style={{ title: { fontWeight: "bold" } }}
+                style={{title: {fontWeight: "bold"}}}
                 data={legendData}
-                groupComponent={<g className="studyViewPieChartLegend" />}
+                groupComponent={<g className="studyViewPieChartLegend"/>}
             />
         );
+    }
+
+    private maxLength(ratioOfPie: number, radius: number) {
+        return Math.abs(Math.tan(Math.PI * ratioOfPie / 2)) * radius * 2;
     }
 
     public render() {
