@@ -452,7 +452,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     )}
                     {this.props.promise.isError && (<div>Error when loading data.</div>)}
 
-                    <div style={{visibility: this.props.promise.isPending ? 'hidden' : 'visible'}}>
+                    <div style={{visibility: this.props.promise.isPending ? 'hidden' : 'visible', display: 'flex'}}>
                         {this.chart && this.chart()}
                     </div>
                 </div>
