@@ -15,7 +15,8 @@ import {calculateClinicalDataCountFrequency, getOptionsByChartMetaDataType} from
 import $ from 'jquery';
 
 export interface IAddChartButtonProps {
-    store: StudyViewPageStore
+    store: StudyViewPageStore,
+    disableAddGenomicButton?: boolean
 }
 
 enum CurrentOpenedDialogEnum {
@@ -43,14 +44,18 @@ export type ChartOption = {
 export default class AddChartButton extends React.Component<IAddChartButtonProps, {}> {
     private addCustomGroupsChartTitle = 'Add custom groups as Pie Chart';
 
+    public static defaultProps = {
+        disableAddGenomicButton: false
+    };
+
     @computed
     get addGenomicDataChartTitle() {
-        return `Select genomic data chart (${_.filter(this.genomicDataOptions, chartOption => !chartOption.selected).length} more to add)`
+        return `Select genomic data (${_.filter(this.genomicDataOptions, chartOption => !chartOption.selected).length} more to add)`
     }
 
     @computed
     get addClinicalDataChartTitle() {
-        return `Select clinical data chart (${_.filter(this.clinicalDataOptions, chartOption => !chartOption.selected).length} more to add)`
+        return `Select clinical data (${_.filter(this.clinicalDataOptions, chartOption => !chartOption.selected).length} more to add)`
     }
 
     @observable currentOpenedDialog: CurrentOpenedDialog = CurrentOpenedDialogEnum.CLOSED;
@@ -139,6 +144,27 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
         })
     }
 
+    getChildButtons() {
+        let buttons = [];
+        if (!this.props.disableAddGenomicButton)
+            buttons.push(<ChildButton
+                className={styles.child}
+                icon={classnames("fa fa-lg", styles.faCharG)}
+                label={this.addGenomicDataChartTitle}
+                onClick={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.ADD_GENOMIC)}
+            >
+            </ChildButton>);
+        buttons.push(
+            <ChildButton
+                className={styles.child}
+                icon="fa fa-pie-chart fa-lg"
+                label={this.addCustomGroupsChartTitle}
+                onClick={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.CUSTOM_GROUPS)}
+            >
+            </ChildButton>);
+        return buttons;
+    }
+
     render() {
         return (
             <div className={styles.addChart}>
@@ -150,20 +176,7 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
                         label={this.addClinicalDataChartTitle}
                     >
                     </MainButton>
-                    <ChildButton
-                        className={styles.child}
-                        icon={classnames("fa fa-lg", styles.faCharG)}
-                        label={this.addGenomicDataChartTitle}
-                        onClick={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.ADD_GENOMIC)}
-                    >
-                    </ChildButton>
-                    <ChildButton
-                        className={styles.child}
-                        icon="fa fa-pie-chart fa-lg"
-                        label={this.addCustomGroupsChartTitle}
-                        onClick={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.CUSTOM_GROUPS)}
-                    >
-                    </ChildButton>
+                    {this.getChildButtons()}
                 </Menu>
                 {
                     (this.currentOpenedDialog === CurrentOpenedDialogEnum.CUSTOM_GROUPS) && (
