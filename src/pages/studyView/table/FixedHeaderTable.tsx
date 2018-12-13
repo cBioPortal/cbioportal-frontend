@@ -163,7 +163,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                 if (column.headerRender) {
                     label.push(column.headerRender(column.name));
                 } else {
-                    label.push(<span>{column.name}</span>);
+                    label.push(<span key={column.name}>{column.name}</span>);
                 }
 
                 if (column.name === this._sortBy) {
