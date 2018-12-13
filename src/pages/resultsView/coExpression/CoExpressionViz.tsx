@@ -27,6 +27,7 @@ export interface ICoExpressionVizProps {
     plotState:{
         plotLogScale:boolean;
         plotShowMutations:boolean;
+        plotShowRegressionLine:boolean;
     };
     plotHandlers:ICoExpressionPlotProps["handlers"];
     gene:Gene;
@@ -323,6 +324,7 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
                                 showLogScaleControls={this.showLogScaleControls}
                                 showMutationControls={this.showMutationControls}
                                 showMutations={this.plotShowMutations}
+                                showRegressionLine={this.props.plotState.plotShowRegressionLine}
                                 logScale={this.plotLogScale}
                                 handlers={this.props.plotHandlers}
                                 molecularProfile={this.props.molecularProfile}
