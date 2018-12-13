@@ -26,14 +26,14 @@ describe('homepage', function() {
         });
     }
 
-    it('it should have 27 (small test db), 29 (public test db) or 31 studies (production) in list', function () {
+    it('it should have 27 (small test db), 29 (public test db) or 32 studies (production) in list', function () {
         goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
         var studies = $('[data-test="cancerTypeListContainer"] > ul > ul');
 
         studies.waitForExist(10000); // same as `browser.waitForExist('.notification', 10000)`
 
-        expect([27, 29, 31]).to.include(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length);
+        expect([27, 29, 32]).to.include(browser.elements('[data-test="cancerTypeListContainer"] > ul > ul').value.length);
 
     });
 
