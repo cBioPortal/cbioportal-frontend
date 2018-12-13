@@ -22,10 +22,57 @@ import SelectedInfo from "./SelectedInfo/SelectedInfo";
 import LabeledCheckbox from "../../shared/components/labeledCheckbox/LabeledCheckbox";
 import {Alert} from 'react-bootstrap';
 import AddChartButton from "./addChartButton/AddChartButton";
+import UserSelections from "./UserSelections";
+import {CSSTransition} from "react-transition-group";
+import classNames from 'classnames';
 
 export interface IStudyViewPageProps {
     routing: any;
 }
+
+export class StudyResultsSummary extends React.Component<{ store:StudyViewPageStore },{}> {
+
+    render(){
+        return (
+            <div className={"studyFilterResult"}>
+                <SelectedInfo selectedSamples={this.props.store.selectedSamples.result}/>
+
+                {this.props.store.mutationProfiles.result.length > 0 && (
+                    <div>
+                        <LabeledCheckbox
+                            inputProps={{className: styles.selectedInfoCheckbox}}
+                            checked={!!this.props.store.filters.withMutationData}
+                            onChange={this.props.store.toggleWithMutationDataFilter}
+                        >
+                            <LoadingIndicator
+                                isLoading={this.props.store.molecularProfileSampleCounts.isPending}/>
+                            {this.props.store.molecularProfileSampleCounts.isComplete && (
+                                `${this.props.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples.toLocaleString()} w/ mutation data`)}
+                        </LabeledCheckbox>
+                    </div>
+                )}
+                {this.props.store.cnaProfiles.result.length > 0 && (
+                    <div>
+                        <LabeledCheckbox
+                            inputProps={{className: styles.selectedInfoCheckbox}}
+                            checked={!!this.props.store.filters.withCNAData}
+                            onChange={this.props.store.toggleWithCNADataFilter}
+                        >
+                            <LoadingIndicator
+                                isLoading={this.props.store.molecularProfileSampleCounts.isPending}/>
+                            {this.props.store.molecularProfileSampleCounts.isComplete && (
+                                `${this.props.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples.toLocaleString()} w/ CNA data`)}
+                        </LabeledCheckbox>
+                    </div>
+                )}
+
+            </div>
+        )
+    }
+
+}
+
+
 
 @inject('routing')
 @observer
@@ -56,6 +103,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     }
 
     content() {
+
+        const summaryStatus = this.store.mutationProfiles.isComplete && this.store.cnaProfiles.isComplete && this.store.selectedSamples.isComplete && this.store.molecularProfileSampleCounts.isComplete;
+
         return (
             <div className="studyView">
                 {this.store.unknownQueriedIds.isComplete &&
@@ -103,38 +153,19 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                 />}
 
                                 <div className={styles.selectedInfo}>
-                                    <SelectedInfo selectedSamples={this.store.selectedSamples.result}/>
-                                    <div className={"btn-group"} role={"group"}>
-                                        {this.store.mutationProfiles.result.length > 0 && (
-                                            <button className="btn btn-default btn-sm">
-                                                <LabeledCheckbox
-                                                    inputProps={{className: styles.selectedInfoCheckbox}}
-                                                    checked={!!this.store.filters.withMutationData}
-                                                    onChange={this.store.toggleWithMutationDataFilter}
-                                                >
-                                                    <LoadingIndicator
-                                                        isLoading={this.store.molecularProfileSampleCounts.isPending}/>
-                                                    {this.store.molecularProfileSampleCounts.isComplete && (
-                                                        `${this.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples.toLocaleString()} with mutation data`)}
-                                                </LabeledCheckbox>
-                                            </button>
-                                        )}
-                                        {this.store.cnaProfiles.result.length > 0 && (
-                                            <button className="btn btn-default btn-sm">
-                                                <LabeledCheckbox
-                                                    inputProps={{className: styles.selectedInfoCheckbox}}
-                                                    checked={!!this.store.filters.withCNAData}
-                                                    onChange={this.store.toggleWithCNADataFilter}
-                                                >
-                                                    <LoadingIndicator
-                                                        isLoading={this.store.molecularProfileSampleCounts.isPending}/>
-                                                    {this.store.molecularProfileSampleCounts.isComplete && (
-                                                        `${this.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples.toLocaleString()} with CNA data`)}
-                                                </LabeledCheckbox>
-                                            </button>
-                                        )}
+                                    {
+                                        (summaryStatus) && (
+                                            <CSSTransition classNames="studyFilterResult" in={summaryStatus} appear timeout={{ enter:200 }}>
+                                                { ()=> <StudyResultsSummary store={this.store}/>
+                                                }
+                                            </CSSTransition>
+                                        )
+                                    }
+                                    <div style={{padding:5,position:"absolute",right:20, width:200,top:5,zIndex:0}}>
+                                        <LoadingIndicator isLoading={true} size={"small"}/>
                                     </div>
                                 </div>
+
                             </div>
                         </div>
                     )}
