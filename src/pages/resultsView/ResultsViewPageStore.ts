@@ -148,6 +148,13 @@ export const AlterationTypeConstants = {
     METHYLATION: 'METHYLATION'
 };
 
+export const AlterationTypeDisplayConstants = {
+    COPY_NUMBER_ALTERATION: 'CNA',
+    MRNA_EXPRESSION: 'EXP',
+    PROTEIN_LEVEL: 'PROT',
+    MUTATION_EXTENDED: ['MUT', 'FUSION']
+};
+
 export const DataTypeConstants = {
     DISCRETE: "DISCRETE",
     CONTINUOUS: "CONTINUOUS",
@@ -563,6 +570,34 @@ export class ResultsViewPageStore {
                 )
             );
         },
+    });
+
+    readonly alterationsBySelectedMolecularProfiles = remoteData<string[]>({
+        await: ()=>[
+            this.selectedMolecularProfiles
+        ],
+        invoke: () => {
+            const profiles: MolecularProfile[] = this.selectedMolecularProfiles.result!;
+            const alterations: string[] = [];
+            profiles.forEach(profile => {
+                switch(profile.molecularAlterationType){
+                    case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
+                        alterations.push(AlterationTypeDisplayConstants.COPY_NUMBER_ALTERATION);
+                        break;
+                    case AlterationTypeConstants.MRNA_EXPRESSION:
+                        alterations.push(AlterationTypeDisplayConstants.MRNA_EXPRESSION);
+                        break;
+                    case AlterationTypeConstants.PROTEIN_LEVEL:
+                        alterations.push(AlterationTypeDisplayConstants.PROTEIN_LEVEL);
+                        break;
+                    case AlterationTypeConstants.MUTATION_EXTENDED:
+                        AlterationTypeDisplayConstants.MUTATION_EXTENDED.forEach(mutationSubType => alterations.push(mutationSubType));
+                        break;
+                    default:
+                }
+            });
+            return Promise.resolve(_.uniq(alterations));
+        }
     });
 
     readonly clinicalAttributes = remoteData<(ClinicalAttribute & { molecularProfileIds?: string[] })[]>({
