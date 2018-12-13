@@ -48,7 +48,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
 
 const DEFAULT_FONT_FAMILY = "Verdana,Arial,sans-serif";
 const CORRELATION_INFO_Y = 100; // experimentally determined
-export const LEGEND_Y = CORRELATION_INFO_Y + 30 /* approximate correlation info height */ + 30 /* top padding*/
+export const LEGEND_Y = CORRELATION_INFO_Y + 60 /* approximate correlation info height */ + 30 /* top padding*/
 const RIGHT_PADDING = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 50;
@@ -145,8 +145,6 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
 
     private get legend() {
         const x = this.legendX;
-        const topPadding = 30;
-        const approximateCorrelationInfoHeight = 30;
         if (this.props.legendData && this.props.legendData.length) {
             return (
                 <VictoryLegend
@@ -171,23 +169,30 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                 <VictoryLabel  x={x + approxTextWidth}
                                y={CORRELATION_INFO_Y}
                                textAnchor="end"
-                               text={`Pearson: ${this.pearsonCorr.toFixed(2)}`}
+                               text={`Spearman: ${this.spearmanCorr.toFixed(2)}`}
                                style={style}
-                ></VictoryLabel>
+                />
+                { (this.spearmanPval !== null) && <VictoryLabel  x={x + approxTextWidth}
+                                                                 y={CORRELATION_INFO_Y}
+                                                                 textAnchor="end"
+                                                                 dy="2"
+                                                                 text={`(p = ${toConditionalPrecision(this.spearmanPval, 3, 0.01)})`}
+                                                                 style={style}
+                />}
                 <VictoryLabel  x={x + approxTextWidth}
                                y={CORRELATION_INFO_Y}
                                textAnchor="end"
-                               dy="2"
-                               text={`Spearman: ${this.spearmanCorr.toFixed(2)}`}
+                               dy="5"
+                               text={`Pearson: ${this.pearsonCorr.toFixed(2)}`}
                                style={style}
-                ></VictoryLabel>
-                { (this.spearmanPval !== null) && <VictoryLabel  x={x + approxTextWidth}
-                               y={CORRELATION_INFO_Y}
-                               textAnchor="end"
-                               dy="4"
-                               text={`p-Value: ${toConditionalPrecision(this.spearmanPval, 3, 0.01)}`}
-                               style={style}
-                ></VictoryLabel>}
+                />
+                { (this.pearsonPval !== null) && <VictoryLabel  x={x + approxTextWidth}
+                                                                 y={CORRELATION_INFO_Y}
+                                                                 textAnchor="end"
+                                                                 dy="7"
+                                                                 text={`(p = ${toConditionalPrecision(this.pearsonPval, 3, 0.01)})`}
+                                                                 style={style}
+                />}
             </g>
         );
     }
@@ -252,6 +257,10 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
 
     @computed get spearmanPval() {
         return computeCorrelationPValue(this.spearmanCorr, this.splitData.x.length);
+    }
+
+    @computed get pearsonPval() {
+        return computeCorrelationPValue(this.pearsonCorr, this.splitData.x.length);
     }
 
     @computed get rightPadding() {
