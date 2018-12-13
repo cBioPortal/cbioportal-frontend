@@ -4,13 +4,14 @@ import bind from "bind-decorator";
 import {computed, observable} from "mobx";
 import CBIOPORTAL_VICTORY_THEME, {baseLabelStyles} from "../../theme/cBioPoralTheme";
 import Timer = NodeJS.Timer;
-import {VictoryChart, VictoryAxis, VictoryScatter, VictoryLegend, VictoryLabel} from "victory";
+import {VictoryChart, VictoryAxis, VictoryScatter, VictoryLegend, VictoryLabel, VictoryLine} from "victory";
 import jStat from "jStat";
 import ScatterPlotTooltip from "./ScatterPlotTooltip";
 import ifndef from "shared/lib/ifndef";
 import {tickFormatNumeral} from "./TickUtils";
 import {computeCorrelationPValue, makeScatterPlotSizeFunction, separateScatterDataByAppearance} from "./PlotUtils";
 import {toConditionalPrecision} from "../../lib/NumberUtils";
+import regression from "regression";
 
 export interface IBaseScatterPlotData {
     x:number;
@@ -37,7 +38,8 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
     correlation?: {
         pearson: number;
         spearman: number;
-    }
+    };
+    showRegressionLine?:boolean;
     logX?:boolean;
     logY?:boolean;
     useLogSpaceTicks?:boolean; // if log scale for an axis, then this prop determines whether the ticks are shown in post-log coordinate, or original data coordinate space
@@ -54,7 +56,6 @@ const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 50;
 const MIN_LOG_ARGUMENT = 0.01;
 const LEFT_PADDING = 25;
-
 
 @observer
 export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.Component<IScatterPlotProps<D>, {}> {
@@ -251,6 +252,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         if (this.props.correlation) {
             return this.props.correlation.spearman;
         } else {
+            // spearman is invariant to monotonic increasing transformations, so we dont need to check about log
             return jStat.spearmancoeff(this.splitData.x, this.splitData.y);
         }
     }
@@ -338,6 +340,44 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         );
     }
 
+    @computed get regressionLineComputations() {
+        return regression.linear(this.props.data.map(
+            // perform same transformations on data for this calculation as we do for plot (i.e. log if necessary)
+            d=>([this.x(d), this.y(d)]))
+        );
+    }
+
+    private get regressionLine() {
+        if (this.props.showRegressionLine) {
+            const coeffs = this.regressionLineComputations.equation;
+            const y = (x:number)=>(coeffs[0]*x + coeffs[1]);
+            const labelX = 0.7;
+            const xPoints = [this.plotDomain.x[0], this.plotDomain.x[0]*(1-labelX) + this.plotDomain.x[1]*labelX, this.plotDomain.x[1]];
+            const data:any[] = xPoints.map(x=>({ x, y:y(x), label:""}));
+            data[1].label = [this.regressionLineComputations.string, `R^2 = ${this.regressionLineComputations.r2}`];
+            return [
+                <VictoryLine
+                    style={{
+                        data: {
+                            stroke: "#c43a31", strokeWidth: 2
+                        },
+                        labels: {
+                            fontSize: 15,
+                            fill: "#000000",
+                            stroke: "#ffffff",
+                            strokeWidth:6,
+                            fontWeight:"bold",
+                            paintOrder:"stroke"
+                        }
+                    }}
+                    data={data}
+                    labelComponent={<VictoryLabel lineHeight={1.3}/>}
+                />
+            ];
+        } else {
+            return null;
+        }
+    }
 
     @bind
     private getChart() {
@@ -412,6 +452,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
                                     y={this.y}
                                 />
                             ))}
+                            {this.regressionLine}
                         </VictoryChart>
                         {this.correlationInfo}
                     </g>
