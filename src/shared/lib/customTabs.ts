@@ -23,12 +23,12 @@ export function loadCustomTabDeps(tab:any){
     }
 }
 
-export function showCustomTab(div:HTMLDivElement, tab:ICustomTabConfiguration, url:string, store:any){
+export function showCustomTab(div:HTMLDivElement, tab:ICustomTabConfiguration, url:string, store:any, isUnmount = false){
     tab.dependencyPromise = tab.dependencyPromise || loadCustomTabDeps(tab);
 
     const runCallback = (tab:ICustomTabConfiguration)=>{
         if (getBrowserWindow()[tab.mountCallbackName]) {
-            getBrowserWindow()[tab.mountCallbackName](div, tab, url, store, autorun);
+            getBrowserWindow()[tab.mountCallbackName](div, tab, url, store, autorun, isUnmount);
         } else {
             alert(`Callback for tab ${tab.title} not found`);
         }
@@ -38,3 +38,19 @@ export function showCustomTab(div:HTMLDivElement, tab:ICustomTabConfiguration, u
         runCallback(tab);
     });
 }
+
+// SAMPLE USAGE
+
+// const myFeatureGlobal = {};
+
+// function sampleTabCallback(div, tab, url, store, autorun, isUnmount){
+//     if (isMount) {
+//         myGlobal.myDisposer = autorun(function(){
+//             if (store.someData.isComplete) {
+//                 $(div).append(`<div>${store.someData.result}</div>`);
+//             }
+//         });
+//     } else { // clean up!
+//         myGlobal.myDisposer();
+//     }
+// }
