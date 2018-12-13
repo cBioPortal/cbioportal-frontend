@@ -450,8 +450,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                 <div>
                     { (this.props.legendLocation === LegendLocation.TOOLTIP) ? (
                         <DefaultTooltip
-                            mouseEnterDelay={0}
-                            mouseLeaveDelay={0.5}
+                            mouseLeaveDelay={0}
                             placement="rightBottom"
                             overlay={this.chartTooltip}
                         >
