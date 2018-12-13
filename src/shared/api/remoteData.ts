@@ -4,7 +4,7 @@ type errorHandler = (error:Error)=>void;
 
 let errorHandlers: errorHandler[] = [];
 
-export function addErrorHandler(handler: errorHandler) {
+export function addServiceErrorHandler(handler: errorHandler) {
 
     errorHandlers.push(handler);
 
