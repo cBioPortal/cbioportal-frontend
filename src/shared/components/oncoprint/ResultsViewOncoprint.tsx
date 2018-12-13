@@ -10,6 +10,8 @@ import OncoprintControls, {
 import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
 import {ClinicalAttribute, Gene, MolecularProfile, Sample} from "../../api/generated/CBioPortalAPI";
 import {
+    getAlteredUids,
+    getUnalteredUids,
     makeClinicalTracksMobxPromise,
     makeGenesetHeatmapExpansionsMobxPromise,
     makeGenesetHeatmapTracksMobxPromise,
@@ -27,7 +29,7 @@ import tabularDownload from "./tabularDownload";
 import * as URL from "url";
 import classNames from 'classnames';
 import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
-import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
+import {clinicalAttributeIsLocallyComputed, SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
 import OqlStatusBanner from "../oqlStatusBanner/OqlStatusBanner";
 import autobind from "autobind-decorator";
 import {getAnnotatingProgressMessage} from "./ResultsViewOncoprintUtils";
@@ -80,6 +82,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @observable columnMode:"sample"|"patient" = "patient";
     @observable sortMode:SortMode = {type:"data"};
 
+    @observable distinguishGermlineMutations:boolean = true;
+    @observable hideGermlineMutations:boolean = false;
     @observable distinguishMutationType:boolean = true;
     @observable sortByMutationType:boolean = true;
     @observable sortByDrivers:boolean = true;
@@ -88,6 +92,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @observable showWhitespaceBetweenColumns:boolean = true;
     @observable showClinicalTrackLegends:boolean = true;
     @observable _onlyShowClinicalLegendForAlteredCases = false;
+    @observable showOqlInLabels = false;
 
     @computed get onlyShowClinicalLegendForAlteredCases() {
         return this.showClinicalTrackLegends && this._onlyShowClinicalLegendForAlteredCases;
@@ -124,6 +129,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     constructor(props:IResultsViewOncoprintProps) {
         super(props);
 
+        this.showOqlInLabels = props.store.queryContainsOql;
         (window as any).resultsViewOncoprint = this;
 
         this.initFromUrlParams(URL.parse(window.location.href, true).query);
@@ -218,6 +224,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             get onlyShowClinicalLegendForAlteredCases() {
                 return self.onlyShowClinicalLegendForAlteredCases;
             },
+            get showOqlInLabels() {
+                return self.showOqlInLabels;
+            },
             get showMinimap() {
                 return self.showMinimap;
             },
@@ -235,6 +244,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             },
             get distinguishDrivers() {
                 return self.distinguishDrivers;
+            },
+            get distinguishGermlineMutations() {
+                return self.distinguishGermlineMutations;
             },
             get annotateDriversOncoKb() {
                 return self.props.store.mutationAnnotationSettings.oncoKb;
@@ -262,6 +274,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             },
             get hidePutativePassengers() {
                 return self.props.store.mutationAnnotationSettings.ignoreUnknown;
+            },
+            get hideGermlineMutations() {
+                return self.hideGermlineMutations;
             },
             get annotateCBioPortalInputValue() {
                 return self.props.store.mutationAnnotationSettings.cbioportalCountThreshold + "";
@@ -394,6 +409,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             onSelectShowWhitespaceBetweenColumns:(show:boolean)=>{this.showWhitespaceBetweenColumns = show;},
             onSelectShowClinicalTrackLegends:(show:boolean)=>{this.showClinicalTrackLegends = show; },
             onSelectOnlyShowClinicalLegendForAlteredCases:(show:boolean)=>{this._onlyShowClinicalLegendForAlteredCases = show; },
+            onSelectShowOqlInLabels:(show:boolean)=>{this.showOqlInLabels = show;},
             onSelectShowMinimap:(show:boolean)=>{this.showMinimap = show;},
             onSelectDistinguishMutationType:(s:boolean)=>{this.distinguishMutationType = s;},
             onSelectDistinguishDrivers:action((s:boolean)=>{
@@ -422,6 +438,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     });
                 }
             }),
+            onSelectDistinguishGermlineMutations:(s:boolean)=>{this.distinguishGermlineMutations = s; },
             onSelectAnnotateOncoKb:action((s:boolean)=>{
                 this.props.store.mutationAnnotationSettings.oncoKb = s;
             }),
@@ -450,6 +467,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             }),
             onSelectHidePutativePassengers:(s:boolean)=>{
                 this.props.store.mutationAnnotationSettings.ignoreUnknown = s;
+            },
+            onSelectHideGermlineMutations:(s:boolean)=>{
+                this.hideGermlineMutations = s;
             },
             onSelectSortByMutationType:(s:boolean)=>{this.sortByMutationType = s;},
             onClickSortAlphabetical:()=>{
@@ -649,23 +669,11 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
         this.oncoprint.onHorzZoom(z=>(this.horzZoom = z));
         this.horzZoom = this.oncoprint.getHorzZoom();
-        onMobxPromise([this.props.store.alteredSampleKeys, this.props.store.alteredPatientKeys],
-            (sampleUIDs:string[], patientUIDs:string[])=>{
-                this.oncoprint.setHorzZoomToFit(
-                    this.columnMode === "sample" ? sampleUIDs: patientUIDs
-                );
+        onMobxPromise(this.alteredKeys,
+            (alteredUids:string[])=>{
+                this.oncoprint.setHorzZoomToFit(alteredUids);
             });
 
-    }
-
-    @computed get horzZoomToFitIds() {
-        if (this.columnMode === "sample" && this.props.store.alteredSampleKeys.isComplete) {
-            return this.props.store.alteredSampleKeys.result;
-        } else if (this.columnMode === "patient" && this.props.store.alteredPatientKeys.isComplete) {
-            return this.props.store.alteredPatientKeys.result;
-        } else {
-            return [];
-        }
     }
 
     private setColumnMode(type:"sample"|"patient") {
@@ -674,13 +682,17 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
-    @computed get unalteredKeys():MobxPromise<string[]> {
-        if (this.columnMode === "sample") {
-            return this.props.store.unalteredSampleKeys;
-        } else {
-            return this.props.store.unalteredPatientKeys;
-        }
-    }
+    readonly alteredKeys = remoteData({
+        await:()=>[this.geneticTracks],
+        invoke:async()=>getAlteredUids(this.geneticTracks.result!),
+        default: []
+    });
+
+    private readonly unalteredKeys = remoteData({
+        await:()=>[this.geneticTracks],
+        invoke:async()=>getUnalteredUids(this.geneticTracks.result!)
+    });
+
 
     private onMinimapClose() {
         this.showMinimap = false;
@@ -710,7 +722,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     private onDeleteClinicalTrack(clinicalTrackKey:string) {
-        this.selectedClinicalAttributeIds.delete(this.clinicalTrackKeyToAttributeId(clinicalTrackKey));
+        // ignore tracks being deleted due to rendering process reasons
+        if (!this.isHidden) {
+            this.selectedClinicalAttributeIds.delete(this.clinicalTrackKeyToAttributeId(clinicalTrackKey));
+        }
     }
 
     private onTrackSortDirectionChange(trackId:TrackId, dir:number) {
@@ -902,12 +917,39 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
-    @computed get progressItems():IProgressIndicatorItem[] {
+    @autobind
+    private getProgressItems(elapsedSecs:number):IProgressIndicatorItem[] {
         const ret = [];
 
+        let queryingLabel:string;
+        if (this.props.store.genes.isComplete && this.props.store.samples.isComplete) {
+            const numGenes = this.props.store.genes.result!.length;
+            const numSamples = this.props.store.samples.result!.length;
+            queryingLabel = `Querying ${numGenes} genes in ${numSamples} samples`;
+        } else {
+            queryingLabel = "Querying ... genes in ... samples";
+        }
+
+        let waitingLabel:string = "";
+        if (elapsedSecs > 2) {
+            waitingLabel = " - this can take several seconds";
+        }
+
         ret.push({
-            label: "Loading genomic data",
-            promises: [this.props.store.molecularData, this.props.store.mutations]
+            label: `${queryingLabel}${waitingLabel}`,
+            promises: [], // empty promises means insta-complete
+            hideIcon: true, // dont show any icon, this is just a message
+            style:{ fontWeight:"bold" }
+        });
+
+        const areNonLocalClinicalAttributesSelected =
+            _.some(this.selectedClinicalAttributeIds.keys(),
+                    clinicalAttributeId=>!clinicalAttributeIsLocallyComputed({clinicalAttributeId})
+            );
+
+        ret.push({
+            label: `Loading genomic ${areNonLocalClinicalAttributesSelected ? "and clinical " : ""}data`,
+            promises: [this.props.store.molecularData, this.props.store.mutations, ...(areNonLocalClinicalAttributesSelected ? [this.clinicalTracks] : [])]
         });
 
         const usingOncokb = this.props.store.mutationAnnotationSettings.oncoKb;
@@ -926,10 +968,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     public render() {
         return (
-            <div className="posRelative">
+            <div>
 
                 <LoadingIndicator isLoading={this.isHidden} size={"big"} center={true} className="oncoprintLoadingIndicator">
-                    <ProgressIndicator items={this.progressItems} show={this.isHidden} sequential={true}/>
+                    <div style={{marginTop:20}}>
+                        <ProgressIndicator getItems={this.getProgressItems} show={this.isHidden} sequential={true}/>
+                    </div>
                 </LoadingIndicator>
 
                 <div className={"tabMessageContainer"}>
@@ -960,10 +1004,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 hiddenIds={!this.showUnalteredColumns ? this.unalteredKeys.result : undefined}
                                 molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
                                 alterationTypesInQuery={this.alterationTypesInQuery}
+                                showSublabels={this.showOqlInLabels}
 
-                                horzZoomToFitIds={this.horzZoomToFitIds}
+                                horzZoomToFitIds={this.alteredKeys.result}
                                 distinguishMutationType={this.distinguishMutationType}
                                 distinguishDrivers={this.distinguishDrivers}
+                                distinguishGermlineMutations={this.distinguishGermlineMutations}
                                 sortConfig={this.sortConfig}
                                 showClinicalTrackLegends={this.showClinicalTrackLegends}
                                 showWhitespaceBetweenColumns={this.showWhitespaceBetweenColumns}

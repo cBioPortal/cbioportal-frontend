@@ -1,16 +1,18 @@
-import OncoprintJS, {RuleSetParams, TrackSortComparator} from "oncoprintjs";
+import OncoprintJS, {IGeneticAlterationRuleSetParams, RuleSetParams, TrackSortComparator} from "oncoprintjs";
 import {
-    ClinicalTrackSpec,
+    ClinicalTrackSpec, GeneticTrackDatum,
     GeneticTrackSpec,
     IGeneHeatmapTrackDatum,
     IGeneHeatmapTrackSpec,
     IGenesetHeatmapTrackDatum,
     IGenesetHeatmapTrackSpec,
 } from "./Oncoprint";
-import {genetic_rule_set_same_color_for_all_no_recurrence,
+import {
+    genetic_rule_set_same_color_for_all_no_recurrence,
     genetic_rule_set_same_color_for_all_recurrence,
     genetic_rule_set_different_colors_no_recurrence,
-    genetic_rule_set_different_colors_recurrence} from "./geneticrules";
+    genetic_rule_set_different_colors_recurrence, germline_rule_params
+} from "./geneticrules";
 import {OncoprintPatientGeneticTrackData, OncoprintSampleGeneticTrackData} from "../../lib/QuerySession";
 import {
     AlterationTypeConstants,
@@ -107,6 +109,14 @@ function makeGenesetHeatmapUnexpandHandler(
     });
 }
 
+function formatGeneticTrackSublabel(oqlFilter: UnflattenedOQLLineFilterOutput<object>): string {
+    if (isMergedTrackFilter(oqlFilter)) {
+        return ""; // no oql sublabel for merged tracks - too cluttered
+    } else {
+        return oqlFilter.oql_line.substring(oqlFilter.gene.length).replace(";",""); // get rid of gene in beginning of OQL line, and semicolon at end
+    }
+}
+
 function formatGeneticTrackLabel(oqlFilter: UnflattenedOQLLineFilterOutput<object>): string {
     return (isMergedTrackFilter(oqlFilter)
         ? oqlFilter.label || oqlFilter.list.map(geneLine => geneLine.gene).join(' / ')
@@ -189,16 +199,26 @@ export function getGenesetHeatmapTrackRuleSetParams() {
     };
 }
 
-export function getGeneticTrackRuleSetParams(distinguishMutationType?:boolean, distinguishDrivers?:boolean):RuleSetParams {
+export function getGeneticTrackRuleSetParams(
+    distinguishMutationType?:boolean,
+    distinguishDrivers?:boolean,
+    distinguishGermlineMutations?:boolean
+):IGeneticAlterationRuleSetParams {
+    let rule_set;
     if (!distinguishMutationType && !distinguishDrivers) {
-        return genetic_rule_set_same_color_for_all_no_recurrence;
+        rule_set = genetic_rule_set_same_color_for_all_no_recurrence;
     } else if (!distinguishMutationType && distinguishDrivers) {
-        return genetic_rule_set_same_color_for_all_recurrence;
+        rule_set = genetic_rule_set_same_color_for_all_recurrence;
     } else if (distinguishMutationType && !distinguishDrivers) {
-        return genetic_rule_set_different_colors_no_recurrence;
+        rule_set = genetic_rule_set_different_colors_no_recurrence;
     } else {
-        return genetic_rule_set_different_colors_recurrence;
+        rule_set = genetic_rule_set_different_colors_recurrence;
     }
+    rule_set = _.cloneDeep(rule_set);
+    if (distinguishGermlineMutations) {
+        Object.assign(rule_set.rule_params, germline_rule_params);
+    }
+    return rule_set;
 }
 
 export function getClinicalTrackRuleSetParams(track:ClinicalTrackSpec) {
@@ -253,33 +273,58 @@ export function percentAltered(altered:number, sequenced:number) {
     return fixed+"%";
 }
 
+function getAlterationInfoSequenced(
+    sampleMode: boolean,
+    oql: {gene: string} | string[],
+    sequencedSampleKeysByGene: {[hugoGeneSymbol:string]:string[]},
+    sequencedPatientKeysByGene: {[hugoGeneSymbol:string]:string[]}
+) {
+    const geneSymbolArray = (oql instanceof Array
+            ? oql
+            : [oql.gene]
+    );
+    const sequenced = (sampleMode
+            ? _.uniq(_.flatMap(geneSymbolArray, symbol => sequencedSampleKeysByGene[symbol])).length
+            : _.uniq(_.flatMap(geneSymbolArray, symbol => sequencedPatientKeysByGene[symbol])).length
+    );
+
+    return sequenced;
+}
+
+export function alterationInfoForOncoprintTrackData(
+    sampleMode: boolean,
+    data: {
+        trackData: GeneticTrackDatum[],
+        oql: {gene: string} | string[]
+    },
+    sequencedSampleKeysByGene: {[hugoGeneSymbol:string]:string[]},
+    sequencedPatientKeysByGene: {[hugoGeneSymbol:string]:string[]}
+) {
+    const sequenced = getAlterationInfoSequenced(sampleMode, data.oql, sequencedSampleKeysByGene, sequencedPatientKeysByGene);
+    const altered = _.sumBy(data.trackData!, d=>(+isAltered(d)));
+    const percent = percentAltered(altered, sequenced);
+    return {
+        sequenced, altered, percent
+    };
+}
+
+
 export function alterationInfoForCaseAggregatedDataByOQLLine(
     sampleMode: boolean,
     data: {
-        cases: CaseAggregatedData<AnnotatedExtendedAlteration>,
+        cases: CaseAggregatedData<AnnotatedExtendedAlteration>, // one of `cases` or `trackData` must be present
         oql: {gene: string} | string[]
     },
     sequencedSampleKeysByGene: {[hugoGeneSymbol:string]:string[]},
     sequencedPatientKeysByGene: {[hugoGeneSymbol:string]:string[]})
 {
-    const geneSymbolArray = (data.oql instanceof Array
-        ? data.oql
-        : [data.oql.gene]
-    );
-    const sequenced = (sampleMode
-        ? _.uniq(_.flatMap(geneSymbolArray, symbol => sequencedSampleKeysByGene[symbol])).length
-        : _.uniq(_.flatMap(geneSymbolArray, symbol => sequencedPatientKeysByGene[symbol])).length
-    );
-
-    const altered =
-        sampleMode ?
-            Object.keys(data.cases.samples).filter(k=>!!data.cases.samples[k].length).length :
-            Object.keys(data.cases.patients).filter(k=>!!data.cases.patients[k].length).length;
-
+    const sequenced = getAlterationInfoSequenced(sampleMode, data.oql, sequencedSampleKeysByGene, sequencedPatientKeysByGene);
+    const altered = sampleMode ?
+        Object.keys(data.cases.samples).filter(k=>!!data.cases.samples[k].length).length :
+        Object.keys(data.cases.patients).filter(k=>!!data.cases.patients[k].length).length;
+    const percent = percentAltered(altered, sequenced);
     return {
-        sequenced,
-        altered,
-        percent: percentAltered(altered, sequenced)
+        sequenced, altered, percent
     };
 }
 
@@ -287,16 +332,40 @@ interface IGeneticTrackAppState {
     sampleMode: boolean;
     samples: Pick<Sample, 'sampleId'|'studyId'|'uniqueSampleKey'>[];
     patients: Pick<Patient, 'patientId'|'studyId'|'uniquePatientKey'>[];
+    hideGermlineMutations:boolean;
     coverageInformation: CoverageInformation;
     sequencedSampleKeysByGene: any;
     sequencedPatientKeysByGene: any;
     selectedMolecularProfiles: MolecularProfile[];
     expansionIndexMap: ObservableMap<number[]>;
 }
+
+function isAltered(d:GeneticTrackDatum) {
+    return d.data.length > 0;
+}
+
+export function getAlteredUids(tracks:GeneticTrackSpec[]) {
+    const isAlteredMap:{[uid:string]:boolean} = {};
+    for (const track of tracks) {
+        for (const d of track.data) {
+            if (isAltered(d)) {
+                isAlteredMap[d.uid] = true;
+            }
+        }
+    }
+    return Object.keys(isAlteredMap);
+}
+
+export function getUnalteredUids(tracks:GeneticTrackSpec[]) {
+    const allUids:string[] = _.chain(tracks).map(spec=>spec.data.map(d=>d.uid)).flatten().uniq().value();
+    return _.difference(allUids, getAlteredUids(tracks));
+}
+
 export function makeGeneticTrackWith({
     sampleMode,
     samples,
     patients,
+    hideGermlineMutations,
     coverageInformation,
     sequencedSampleKeysByGene,
     sequencedPatientKeysByGene,
@@ -320,12 +389,12 @@ export function makeGeneticTrackWith({
             : [oql.gene]
         );
         const data = (sampleMode
-            ? makeGeneticTrackData(dataByCase.samples, geneSymbolArray, samples as Sample[], coverageInformation, selectedMolecularProfiles)
-            : makeGeneticTrackData(dataByCase.patients, geneSymbolArray, patients as Patient[], coverageInformation, selectedMolecularProfiles)
+            ? makeGeneticTrackData(dataByCase.samples, geneSymbolArray, samples as Sample[], coverageInformation, selectedMolecularProfiles, hideGermlineMutations)
+            : makeGeneticTrackData(dataByCase.patients, geneSymbolArray, patients as Patient[], coverageInformation, selectedMolecularProfiles, hideGermlineMutations)
         );
-        const alterationInfo = alterationInfoForCaseAggregatedDataByOQLLine(
+        const alterationInfo = alterationInfoForOncoprintTrackData(
             sampleMode,
-            {cases: dataByCase, oql: geneSymbolArray},
+            {trackData: data, oql: geneSymbolArray},
             sequencedSampleKeysByGene,
             sequencedPatientKeysByGene
         );
@@ -356,13 +425,15 @@ export function makeGeneticTrackWith({
             // show tooltip explaining percent calculation, as long as its not N/P
             infoTooltip = `altered / profiled = ${alterationInfo.altered} / ${alterationInfo.sequenced}`;
         }
-        if (alterationInfo.sequenced < (sampleMode ? samples : patients).length) {
+        if ((alterationInfo.sequenced > 0) && (alterationInfo.sequenced < (sampleMode ? samples : patients).length)) {
             // add asterisk to percentage if not all samples/patients are profiled for this track
+            // dont add asterisk if none are profiled
             info = `${info}*`;
         }
         return {
             key: trackKey,
             label: (parentKey !== undefined ? '  ' : '') + formatGeneticTrackLabel(oql),
+            sublabel: formatGeneticTrackSublabel(oql),
             labelColor: parentKey !== undefined ? 'grey' : undefined,
             oql: formatGeneticTrackOql(oql),
             info,
@@ -391,6 +462,7 @@ export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
                 sampleMode,
                 samples: oncoprint.props.store.samples.result!,
                 patients: oncoprint.props.store.patients.result!,
+                hideGermlineMutations: oncoprint.hideGermlineMutations,
                 coverageInformation: oncoprint.props.store.coverageInformation.result!,
                 sequencedSampleKeysByGene: oncoprint.props.store.sequencedSampleKeysByGene.result!,
                 sequencedPatientKeysByGene: oncoprint.props.store.sequencedPatientKeysByGene.result!,
@@ -414,8 +486,7 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
                 oncoprint.props.store.samples,
                 oncoprint.props.store.patients,
                 oncoprint.props.store.clinicalAttributeIdToClinicalAttribute,
-                oncoprint.props.store.alteredSampleKeys,
-                oncoprint.props.store.alteredPatientKeys
+                oncoprint.alteredKeys,
             ];
             if (oncoprint.props.store.clinicalAttributeIdToClinicalAttribute.isComplete) {
                 const attributes = oncoprint.selectedClinicalAttributeIds.keys().map(attrId=>{
@@ -436,7 +507,7 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
                 const data = oncoprint.props.store.oncoprintClinicalDataCache.get(attribute).result!;
                 let altered_uids = undefined;
                 if (oncoprint.onlyShowClinicalLegendForAlteredCases) {
-                    altered_uids = (sampleMode ? oncoprint.props.store.alteredSampleKeys.result! : oncoprint.props.store.alteredPatientKeys.result!);
+                    altered_uids = oncoprint.alteredKeys.result!;
                 }
                 const ret:Partial<ClinicalTrackSpec> = {
                     key: oncoprint.clinicalAttributeIdToTrackKey(attribute.clinicalAttributeId),
