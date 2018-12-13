@@ -136,6 +136,7 @@ export interface IOncoprintProps {
 
     distinguishMutationType?:boolean;
     distinguishDrivers?:boolean;
+    distinguishGermlineMutations?:boolean;
 
     showSublabels?:boolean;
 
