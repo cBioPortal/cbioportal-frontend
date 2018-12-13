@@ -4,6 +4,7 @@ import {computed, observable} from "mobx";
 import {observer} from 'mobx-react';
 import fileDownload from 'react-file-download';
 import {AnnotatedExtendedAlteration, ExtendedAlteration, ResultsViewPageStore} from "../ResultsViewPageStore";
+import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 import {OQLLineFilterOutput} from "shared/lib/oql/oqlfilter";
 import FeatureTitle from "shared/components/featureTitle/FeatureTitle";
 import {SimpleCopyDownloadControls} from "shared/components/copyDownloadControls/SimpleCopyDownloadControls";
@@ -23,6 +24,7 @@ import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWi
 import {remoteData} from "../../../shared/api/remoteData";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import onMobxPromise from "shared/lib/onMobxPromise";
+import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 
 export interface IDownloadTabProps {
     store: ResultsViewPageStore;
@@ -67,14 +69,16 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
             this.props.store.putativeDriverFilteredCaseAggregatedDataByOQLLine,
             this.props.store.coverageInformation,
             this.props.store.samples,
-            this.geneAlterationDataByGene
+            this.geneAlterationDataByGene,
+            this.props.store.molecularProfileIdToMolecularProfile
         ],
         invoke: ()=>Promise.resolve(generateCaseAlterationData(
             this.props.store.selectedMolecularProfiles.result!,
             this.props.store.putativeDriverFilteredCaseAggregatedDataByOQLLine.result!,
             this.props.store.coverageInformation.result!,
             this.props.store.samples.result!,
-            this.geneAlterationDataByGene.result!
+            this.geneAlterationDataByGene.result!,
+            this.props.store.molecularProfileIdToMolecularProfile.result!
         ))
     });
 
@@ -271,10 +275,11 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                         isLoading={this.caseAlterationData.isPending || this.oqls.isPending}
                         className="pull-left forceHeaderStyle h4"
                     />
-                    {this.oqls.isComplete && this.caseAlterationData.isComplete && (
+                    {this.oqls.isComplete && this.caseAlterationData.isComplete && this.props.store.alterationsBySelectedMolecularProfiles.isComplete && (
                         <CaseAlterationTable
                             caseAlterationData={this.caseAlterationData.result}
                             oqls={this.oqls.result}
+                            alterationTypes={this.props.store.alterationsBySelectedMolecularProfiles.result}
                         />
                     )}
                 </div>
