@@ -73,13 +73,3 @@
     }
 }
 
-.resultSummaryContainer {
-    transition: all 500ms ease-out;
-    opacity:0;
-    background:#eee;
-    border:1px solid $borderColor;
-    transform:translateY(50%);
-    display:flex;
-    align-items:baseline;
-    min-width:300px;
-}
