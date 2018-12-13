@@ -10,7 +10,7 @@ import {
     Gistic, GisticToGene, default as CBioPortalAPIInternal, MutSig
 } from "shared/api/generated/CBioPortalAPIInternal";
 import {computed, observable, action} from "mobx";
-import {remoteData, addErrorHandler} from "../../../shared/api/remoteData";
+import {remoteData} from "../../../shared/api/remoteData";
 import {IGisticData} from "shared/model/Gistic";
 import {labelMobxPromises, cached} from "mobxpromise";
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
@@ -108,10 +108,6 @@ export class PatientViewPageStore {
         labelMobxPromises(this);
 
         this.internalClient = internalClient;
-
-        addErrorHandler((error) => {
-            this.ajaxErrors.push(error);
-        });
 
     }
 
