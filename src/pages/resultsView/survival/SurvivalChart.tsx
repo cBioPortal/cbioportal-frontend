@@ -361,6 +361,20 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     }
 
     @computed
+    get xAxisTickCount() {
+        return this.getAxisTickCount(this.styleOpts.width);
+    }
+
+    @computed
+    get yAxisTickCount() {
+        return this.getAxisTickCount(this.styleOpts.height)
+    }
+
+    getAxisTickCount(size: number) {
+        return Math.ceil(size / 200) * 5;
+    }
+
+    @computed
     get chart() {
         return (
             <div className={this.props.className} data-test={'SurvivalChart'}>
@@ -387,10 +401,10 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                               padding={this.styleOpts.padding}
                               theme={CBIOPORTAL_VICTORY_THEME}
                               domainPadding={{x: [10, 50], y: [20, 20]}}>
-                    <VictoryAxis style={this.styleOpts.axis.x} crossAxis={false} tickCount={11}
+                    <VictoryAxis style={this.styleOpts.axis.x} crossAxis={false} tickCount={this.xAxisTickCount}
                                  label={this.props.xAxisLabel}/>
                     <VictoryAxis label={this.props.yAxisLabel} dependentAxis={true} tickFormat={(t: any) => `${t}%`}
-                                 tickCount={11}
+                                 tickCount={this.yAxisTickCount}
                                  style={this.styleOpts.axis.y} domain={[0, 100]} crossAxis={false}/>
                     {this.scattersAndLines}
                     {(this.victoryLegendData.length > 0) &&
