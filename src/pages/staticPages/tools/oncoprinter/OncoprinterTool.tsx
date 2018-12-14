@@ -11,6 +11,7 @@ import autobind from "autobind-decorator";
 import {exampleData} from "./OncoprinterConstants";
 import $ from "jquery";
 import {SyntheticEvent} from "react";
+import onMobxPromise from "../../../../shared/lib/onMobxPromise";
 
 export interface IOncoprinterToolProps {
 }
@@ -133,6 +134,12 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
 
     @action private doSubmit(dataInput:string) {
         this.store.setInput(dataInput, this.geneOrderInput, this.sampleOrderInput);
+
+        onMobxPromise(this.store.alteredSampleIds,
+            (alteredUids:string[])=>{
+                this.oncoprinter && this.oncoprinter.oncoprint.setHorzZoomToFit(alteredUids);
+            });
+
     }
 
     @autobind private filesInputRef(input:HTMLInputElement|null) {
@@ -222,6 +229,7 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
                         {this.getInputSection}
                     </Observer>
                     <Oncoprinter
+                        ref={this.oncoprinterRef}
                         divId="oncoprinter"
                         store={this.store}
                     />
