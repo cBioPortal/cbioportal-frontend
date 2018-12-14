@@ -5,6 +5,15 @@
     z-index: 2;
 }
 
+.selectedInfoLoadingIndicator {
+    padding: 5;
+    position: absolute;
+    right: 20px;
+    width: 200px;
+    top: 5px;
+    z-index: 0;
+}
+
 .selectedInfoCheckbox {
     margin: 2px 3px 0 0 !important;
 }
