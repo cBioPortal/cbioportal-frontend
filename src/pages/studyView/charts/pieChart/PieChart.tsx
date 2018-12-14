@@ -140,7 +140,6 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
 
     @autobind
     private label(d: ClinicalDataCountWithColor) {
-        // Roughly let's say do not show label when the percentage is lower than (digits of the count * 5% )
         return d.count / this.totalCount > 0.5 ? d.count.toLocaleString() : (
             this.maxLength(d.count / this.totalCount, this.pieSliceRadius / 3) <
             getTextWidth(
