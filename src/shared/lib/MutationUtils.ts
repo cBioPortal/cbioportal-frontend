@@ -13,6 +13,7 @@ import {
     MUT_COLOR_INFRAME, MUT_COLOR_MISSENSE, MUT_COLOR_OTHER,
     MUT_COLOR_TRUNC
 } from "../components/oncoprint/geneticrules";
+import {AlterationTypeConstants, AnnotatedExtendedAlteration} from "../../pages/resultsView/ResultsViewPageStore";
 
 export interface IProteinImpactTypeColors
 {
@@ -175,6 +176,7 @@ export function getProteinStartPositionsByRange(data: Mutation[][], start: numbe
     return _.uniq(positions);
 }
 
+const GERMLINE_REGEXP = new RegExp(MUTATION_STATUS_GERMLINE, "i");
 /**
  * Percentage of cases/samples with a germline mutation in given gene.
  * Assumes all given sample ids in the study had germline screening for all
@@ -194,7 +196,7 @@ export function germlineMutationRate(hugoGeneSymbol:string,
                 if (profile) {
                     return (
                         m.gene.hugoGeneSymbol === hugoGeneSymbol &&
-                        new RegExp(MUTATION_STATUS_GERMLINE, "i").test(m.mutationStatus) &&
+                        GERMLINE_REGEXP.test(m.mutationStatus) &&
                         // filter for given sample IDs
                         !!sampleIds[toSampleUuid(profile.studyId, m.sampleId)]
                     );
@@ -227,7 +229,7 @@ export function somaticMutationRate(hugoGeneSymbol: string, mutations: Mutation[
                     if (profile) {
                         return (
                             m.gene.hugoGeneSymbol === hugoGeneSymbol &&
-                            !(new RegExp(MUTATION_STATUS_GERMLINE, "i").test(m.mutationStatus)) &&
+                            !(GERMLINE_REGEXP.test(m.mutationStatus)) &&
                             // filter for given sample IDs
                             !!sampleIds[toSampleUuid(profile.studyId, m.sampleId)]
                         );
@@ -244,6 +246,12 @@ export function somaticMutationRate(hugoGeneSymbol: string, mutations: Mutation[
     } else {
         return 0;
     }
+}
+
+export function isNotGermlineMutation(
+    m:any
+) {
+    return !m.mutationStatus || !(GERMLINE_REGEXP.test(m.mutationStatus));
 }
 
 export function updateMissingGeneInfo(mutations: Partial<Mutation>[],

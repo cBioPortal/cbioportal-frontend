@@ -127,7 +127,7 @@ function transitionHorzZoomToFit(
     prevProps:Partial<IOncoprintProps>,
     oncoprint:OncoprintJS<any>
 ) {
-    if (nextProps.horzZoomToFitIds !== prevProps.horzZoomToFitIds) {
+    if (!_.isEqual(nextProps.horzZoomToFitIds, prevProps.horzZoomToFitIds)) {
         oncoprint.updateHorzZoomToFitIds(nextProps.horzZoomToFitIds || []);
     }
 }
@@ -227,7 +227,10 @@ function allTracks(props:Partial<IOncoprintProps>) {
     );
 }
 
-function shouldSuppressRenderingForTransition(nextProps: IOncoprintProps, prevProps: Partial<IOncoprintProps>) {
+function shouldSuppressRenderingForTransition(
+    nextProps: IOncoprintProps,
+    prevProps: Partial<IOncoprintProps>,
+) {
     // If cost of rerendering everything less than cost of all the rerenders that would happen in the process
     //  of incrementally changing the oncoprint state.
     return !nextProps.suppressRendering && // dont add suppress if already suppressing
@@ -347,9 +350,9 @@ function hasGeneticTrackRuleSetChanged(
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
 ) {
-    return (getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers) !==
-    getGeneticTrackRuleSetParams(prevProps.distinguishMutationType, prevProps.distinguishDrivers));
-    // we can do shallow equality because getGeneticTrackRuleSetParams do not create new objects each time - see impl to understand
+    return ((nextProps.distinguishMutationType !== prevProps.distinguishMutationType) ||
+        (nextProps.distinguishDrivers !== prevProps.distinguishDrivers) ||
+        (nextProps.distinguishGermlineMutations !== prevProps.distinguishGermlineMutations));
 }
 
 function transitionTracks(
@@ -571,7 +574,7 @@ function transitionGeneticTrack(
     } else if (nextSpec && !prevSpec) {
         // Add track
         const geneticTrackParams = {
-            rule_set_params: getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers),
+            rule_set_params: getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers, nextProps.distinguishGermlineMutations),
             label: nextSpec.label,
             sublabel: nextSpec.sublabel,
             track_label_color: nextSpec.labelColor || undefined,
@@ -634,7 +637,7 @@ function transitionGeneticTrack(
                 oncoprint.shareRuleSet(trackIdForRuleSetSharing.genetic, trackId);
             } else {
                 // otherwise, update ruleset
-                oncoprint.setRuleSet(trackId, getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers));
+                oncoprint.setRuleSet(trackId, getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers, nextProps.distinguishGermlineMutations));
             }
         }
         // either way, use this one now

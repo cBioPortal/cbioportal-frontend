@@ -22,6 +22,7 @@ export interface IMSKTabProps {
     anchorStyle?:{[k:string]:string|number|boolean};
     unmountOnHide?:boolean;
     onTabDidMount?:(tab:HTMLDivElement)=>void;
+    onTabUnmount?:(tab:HTMLDivElement)=>void;
 }
 
 @observer
@@ -58,6 +59,12 @@ export class MSKTab extends React.Component<IMSKTabProps,{}> {
     componentDidMount(){
         if (this.props.onTabDidMount) {
             this.props.onTabDidMount(this.div);
+        }
+    }
+
+    componentWillUnmount(){
+        if (this.props.onTabUnmount) {
+            this.props.onTabUnmount(this.div);
         }
     }
 
