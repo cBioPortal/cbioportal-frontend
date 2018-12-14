@@ -40,7 +40,7 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
         this.showDownloadErrorMessage = false;
         this.props.store.getDownloadDataPromise().then(text => {
             this.downloadingData = false;
-            fileDownload(text, 'data.tsv');
+            fileDownload(text, this.props.store.clinicalDataDownloadFilename);
         }).catch(() => {
             this.downloadingData = false;
             this.showDownloadErrorMessage = true;

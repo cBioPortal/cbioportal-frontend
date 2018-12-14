@@ -2764,6 +2764,24 @@ export class StudyViewPageStore {
         default: {}
     });
 
+    @computed
+    public get clinicalDataDownloadFilename()
+    {
+        // generic filename in case no study studyIds is empty
+        let filename = "clinical_data.tsv";
+
+        if (this.studyIds.length > 1) {
+            // prepend multi study to the filename
+            filename = `combined_study_${filename}`;
+        }
+        else if (this.studyIds.length > 0) {
+            // prepend the actual study id to the filename
+            filename = `${this.studyIds[0]}_${filename}`;
+        }
+
+        return filename;
+    }
+
     @autobind
     public async getDownloadDataPromise() {
 
