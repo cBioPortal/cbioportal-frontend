@@ -117,6 +117,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                 height={this.tableHeight}
                 columns={this._columns}
                 data={this.options}
+                showControlsAtTop={true}
                 addAll={this.addAll}
                 removeAll={this.removeAll}
                 showAddRemoveAllButtons={true}

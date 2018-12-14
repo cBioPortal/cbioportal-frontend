@@ -27,11 +27,16 @@ export type IFixedHeaderTableProps<T> = {
     height?: number;
     showSelectSamples?: boolean;
     afterSelectingRows?: () => void;
+    showControls?: boolean;
+    // used only when showControlsAtTop === true (show controls at bottom otherwise)
+    showControlsAtTop?: boolean;
     showAddRemoveAllButtons?: boolean;
-    addAll?: (data:T[]) => void;
-    removeAll?: (data:T[]) => void;
-    isSelectedRow?: (data:T) => boolean;
-    afterSorting?: (sortBy:string, sortDirection:SortDirection) => void;
+    addAllContent?: string;
+    addAll?: (data: T[]) => void;
+    removeAllContent?: string;
+    removeAll?: (data: T[]) => void;
+    isSelectedRow?: (data: T) => boolean;
+    afterSorting?: (sortBy: string, sortDirection: SortDirection) => void;
 };
 
 const RVSDTtoStrType = {
@@ -46,10 +51,14 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
     @observable private _sortDirection: SortDirection;
 
     public static defaultProps = {
+        showControls: true,
+        showControlsAtTop: false,
         showSelectSamples: false,
         showAddRemoveAllButtons: false,
-        width : 398,
+        width: 398,
         height: 350,
+        addAllContent: 'Select all',
+        removeAllContent: 'Deselect all',
         sortBy: ''
     };
 
@@ -57,16 +66,16 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
         super(props);
         this._sortBy = props.sortBy!;
         const sortByColumn = _.find(this.props.columns, column => column.name === this._sortBy);
-        this._sortDirection = props.sortDirection === undefined? (_.isUndefined(sortByColumn) ? 'desc' as 'desc' : sortByColumn.defaultSortDirection || 'desc' as 'desc') : props.sortDirection;
+        this._sortDirection = props.sortDirection === undefined ? (_.isUndefined(sortByColumn) ? 'desc' as 'desc' : sortByColumn.defaultSortDirection || 'desc' as 'desc') : props.sortDirection;
 
         this.initDataStore();
     }
 
-    componentWillReceiveProps(nextProps:any) {
+    componentWillReceiveProps(nextProps: any) {
         this.updateDataStore(nextProps);
     }
 
-    updateDataStore(nextProps:any) {
+    updateDataStore(nextProps: any) {
         this._store.setProps({
             columns: nextProps.columns,
             data: nextProps.data,
@@ -111,7 +120,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
         this._store.defaultHeaderClick(this.getColumn(sortBy));
         this._sortBy = sortBy;
         this._sortDirection = this._store.dataStore.sortAscending ? 'asc' as 'asc' : 'desc' as 'desc';
-        if(this.props.afterSorting) {
+        if (this.props.afterSorting) {
             this.props.afterSorting(this._sortBy, this._sortDirection);
         }
     }
@@ -171,7 +180,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                         className={classnames(styles.headerSortingIcon, 'fa', this._sortDirection === 'desc' ? 'fa-sort-desc' : 'fa-sort-asc')}></i>);
                 }
 
-                const content = <div style={{display:'flex'}}>{label}</div>
+                const content = <div style={{display: 'flex'}}>{label}</div>
                 if (column.tooltip) {
                     return (
                         <DefaultTooltip placement="top" overlay={column.tooltip}>
@@ -185,9 +194,41 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
         });
     }
 
+    getControls() {
+        return <div className={classnames(styles.controls)}>
+            {!this.props.showControlsAtTop &&
+            <input placeholder={"Search..."} type="text" onInput={this.onFilterTextChange()}
+                   className={classnames('form-control', styles.tableSearchInput)}/>}
+            <If condition={this.props.showAddRemoveAllButtons}>
+                <div className={"btn-group"} role={"group"}>
+                    {this.props.addAll && (
+                        <button className="btn btn-default btn-xs" onClick={this.onAddAll}>
+                            {this.props.addAllContent}
+                        </button>
+                    )}
+                    {this.props.removeAll && (
+                        <button className="btn btn-default btn-xs" onClick={this.onRemoveAll}>
+                            {this.props.removeAllContent}
+                        </button>
+                    )}
+                </div>
+            </If>
+
+            <If condition={this.props.showSelectSamples}>
+                <button className={classnames("btn btn-primary btn-xs", styles.controlsBtn)}
+                        onClick={this.afterSelectingRows}>Select Sample
+                </button>
+            </If>
+            {this.props.showControlsAtTop &&
+            <input placeholder={"Search..."} type="text" onInput={this.onFilterTextChange()}
+                   className={classnames('form-control', styles.tableSearchInput)}/>}
+        </div>
+    }
+
     public render() {
         return (
             <div className={styles.studyViewTablesTable}>
+                {this.props.showControlsAtTop && this.getControls()}
                 <RVTable
                     width={this.props.width!}
                     height={this.props.height!}
@@ -215,29 +256,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                         })
                     }
                 </RVTable>
-                <div className={classnames(styles.bottomTools)}>
-                    <input placeholder={"Search..."} type="text" onInput={this.onFilterTextChange()}
-                           className={classnames('form-control', styles.tableSearchInput)}/>
-
-                    <If condition={this.props.showAddRemoveAllButtons}>
-                    <div className={"btn-group"} role={"group"}>
-                        {this.props.addAll && (
-                            <button className="btn btn-default btn-xs" onClick={this.onAddAll}>
-                                Select All
-                            </button>
-                        )}
-                        {this.props.removeAll && (
-                            <button className="btn btn-default btn-xs" onClick={this.onRemoveAll}>
-                                Deselect All
-                            </button>
-                        )}
-                    </div>
-                    </If>
-
-                    <If condition={this.props.showSelectSamples}>
-                        <button className={classnames("btn btn-primary btn-xs", styles.bottomToolsBtn)} onClick={this.afterSelectingRows}>Select Samples</button>
-                    </If>
-                </div>
+                {!this.props.showControlsAtTop && this.getControls()}
             </div>
         );
     }
