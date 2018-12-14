@@ -45,7 +45,9 @@ $sample-color-xenograft: pink;
     .clinical-attribute[attr-id="MOUSE_STRAIN"],
     .clinical-attribute[attr-id="BREAST_CANCER_RECEPTOR_STATUS"],
     .clinical-attribute[attr-id="DERIVED_NORMALIZED_CASE_TYPE"],
-    .clinical-attribute[attr-id="DERIVED_SAMPLE_LOCATION"] {
+    .clinical-attribute[attr-id="DERIVED_SAMPLE_LOCATION"],
+    .clinical-attribute[attr-id="PATIENT_DISPLAY_NAME"],
+    .clinical-attribute[attr-id="SAMPLE_DISPLAY_NAME"] {
         display: inline;
         order: 6;
     }
