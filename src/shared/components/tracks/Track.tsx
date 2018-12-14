@@ -4,6 +4,7 @@ import {observer} from "mobx-react";
 import {SyntheticEvent} from "react";
 import {action, computed, observable} from "mobx";
 import autobind from "autobind-decorator";
+import classnames from "classnames";
 
 import {defaultHitzoneConfig, HitZoneConfig, initHitZoneFromConfig} from "../HitZone";
 import TrackCircle, {TrackItemSpec} from "./TrackCircle";
@@ -121,25 +122,25 @@ export default class Track extends React.Component<TrackProps, {}>
 
         const target = e.target as SVGElement;
         const className = target.getAttribute("class") || "";
-        const hotspotIndex: number | null = this.getComponentIndex(className);
+        const componentIndex: number | null = this.getComponentIndex(className);
 
-        if (hotspotIndex !== null)
+        if (componentIndex !== null)
         {
-            const hotspotComponent = this.circles[hotspotIndex];
+            const circleComponent = this.circles[componentIndex];
 
-            if (hotspotComponent)
+            if (circleComponent)
             {
                 this.setHitZone(
-                    hotspotComponent.hitRectangle,
-                    hotspotComponent.props.spec.tooltip,
+                    circleComponent.hitRectangle,
+                    circleComponent.props.spec.tooltip,
                     action(() => {
                         if (this.props.dataHighlightFilter) {
                             this.props.dataStore.setDataHighlightFilter(this.props.dataHighlightFilter);
                         }
-                        this.props.dataStore.setPositionHighlighted(hotspotComponent.props.spec.codon, true);
-                        hotspotComponent.isHovered = true;
+                        this.props.dataStore.setPositionHighlighted(circleComponent.props.spec.codon, true);
+                        circleComponent.isHovered = true;
                     }),
-                    action(() => this.onTrackCircleClick(hotspotComponent.props.spec.codon)),
+                    action(() => this.onTrackCircleClick(circleComponent.props.spec.codon)),
                     () => undefined,
                     "pointer",
                     "bottom"
@@ -224,48 +225,48 @@ export default class Track extends React.Component<TrackProps, {}>
     public render()
     {
         return (
-            <div>
-                <span className={styles.trackTitle}>
+            <div style={{position: "relative"}}>
+                <span className={classnames(styles.trackTitle, "small")}>
                     {this.props.trackTitle}
                 </span>
                 <span>
-                <DefaultTooltip
-                    placement={this.getOverlayPlacement()}
-                    overlay={this.getOverlay}
-                    {...this.tooltipVisibleProps}
-                >
-                    {this.hitZone}
-                </DefaultTooltip>
-                <span
-                    style={{marginLeft: this.props.xOffset}}
-                    onMouseOver={this.onMouseOver}
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                         width={this.props.width}
-                         height={this.svgHeight}
-                         className="track-svgnode"
-                         onMouseLeave={this.onSVGMouseLeave}
+                    <DefaultTooltip
+                        placement={this.getOverlayPlacement()}
+                        overlay={this.getOverlay}
+                        {...this.tooltipVisibleProps}
                     >
-                        <rect
-                            fill="#FFFFFF"
-                            x={0}
-                            y={0}
-                            width={this.props.width}
-                            height={this.svgHeight}
-                            onClick={action(this.onBackgroundClick)}
-                            onMouseMove={this.onBackgroundMouseMove}
-                        />
-                        <line
-                            stroke="#666666"
-                            strokeWidth="0.5"
-                            x1={0}
-                            x2={this.props.width}
-                            y1={this.svgHeight / 2}
-                            y2={this.svgHeight / 2}
-                        />
-                        {this.items}
-                    </svg>
-                </span>
+                        {this.hitZone}
+                    </DefaultTooltip>
+                    <span
+                        style={{marginLeft: this.props.xOffset}}
+                        onMouseOver={this.onMouseOver}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             width={this.props.width}
+                             height={this.svgHeight}
+                             className="track-svgnode"
+                             onMouseLeave={this.onSVGMouseLeave}
+                        >
+                            <rect
+                                fill="#FFFFFF"
+                                x={0}
+                                y={0}
+                                width={this.props.width}
+                                height={this.svgHeight}
+                                onClick={action(this.onBackgroundClick)}
+                                onMouseMove={this.onBackgroundMouseMove}
+                            />
+                            <line
+                                stroke="#666666"
+                                strokeWidth="0.5"
+                                x1={0}
+                                x2={this.props.width}
+                                y1={this.svgHeight / 2}
+                                y2={this.svgHeight / 2}
+                            />
+                            {this.items}
+                        </svg>
+                    </span>
                 </span>
             </div>
         );

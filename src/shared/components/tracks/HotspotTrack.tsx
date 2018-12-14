@@ -43,18 +43,9 @@ export function hotspotTooltip(mutations: Mutation[], hotspotIndex: IHotspotInde
 }
 
 export function getHotspotImage() {
-    const hotspotsImgWidth = 10;
-    const hotspotsImgHeight = 10;
     const hotspotsImgSrc = require("../annotation/images/cancer-hotspots.svg");
 
-    return (
-        <img
-            width={hotspotsImgWidth}
-            height={hotspotsImgHeight}
-            src={hotspotsImgSrc}
-            alt='Recurrent Hotspot Symbol'
-        />
-    );
+    return <img src={hotspotsImgSrc} alt='Recurrent Hotspot Symbol'/>;
 }
 
 @observer
@@ -67,7 +58,7 @@ export default class HotspotTrack extends React.Component<HotspotTrackProps, {}>
     @computed get trackTitle() {
         return (
             <span>
-                <span style={{marginRight: 3}}>
+                <span style={{marginRight: 2}}>
                     {getHotspotImage()}
                 </span>
                 Cancer Hotspots
