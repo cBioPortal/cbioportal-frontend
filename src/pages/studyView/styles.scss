@@ -73,7 +73,7 @@ $selectHeightInner: $selectHeight - 2px;
 }
 
 .studyFilterResult {
-    transition: all 200ms;
+    transition: all 500ms;
     background:#eee;
     border:1px solid $borderColor;
     transform: scale(0); /* Standard syntax */
