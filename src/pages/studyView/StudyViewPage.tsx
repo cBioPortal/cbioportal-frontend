@@ -28,6 +28,8 @@ import {CSSTransition} from "react-transition-group";
 import classNames from 'classnames';
 import {sleep} from "../../shared/lib/TimeUtils";
 import {remoteData} from "../../shared/api/remoteData";
+import shareUIstyles from "../resultsView/querySummary/shareUI.module.scss";
+import DefaultTooltip from "../../shared/components/defaultTooltip/DefaultTooltip";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -169,14 +171,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     </MSKTab>
                                 </MSKTabs>
 
-                                {(this.props.routing.location.query.tab === undefined || this.enableAddChartInTabs.includes(this.props.routing.location.query.tab)) &&
-                                <AddChartButton
-                                    store={this.store}
-                                    disableAddGenomicButton={this.props.routing.location.query.tab === StudyViewPageTabKeys.CLINICAL_DATA}
-                                />}
 
-
-                                <Observer>
+                                <div className={styles.absolutePanel}>
+                                    <Observer>
                                     {
                                         () => {
                                         return (
@@ -198,7 +195,12 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     }
                                     </Observer>
 
-
+                                    {(this.props.routing.location.query.tab === undefined || this.enableAddChartInTabs.includes(this.props.routing.location.query.tab)) &&
+                                    <AddChartButton
+                                        store={this.store}
+                                        disableAddGenomicButton={this.props.routing.location.query.tab === StudyViewPageTabKeys.CLINICAL_DATA}
+                                    />}
+                                </div>
                             </div>
                         </div>
                     )}

@@ -223,12 +223,12 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                     <div className={"btn-group"} role={"group"}>
                         {this.props.addAll && (
                             <button className="btn btn-default btn-xs" onClick={this.onAddAll}>
-                                Add All
+                                Select All
                             </button>
                         )}
                         {this.props.removeAll && (
                             <button className="btn btn-default btn-xs" onClick={this.onRemoveAll}>
-                                Remove All
+                                Deselect All
                             </button>
                         )}
                     </div>

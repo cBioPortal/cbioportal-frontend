@@ -80,7 +80,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
         },
         filter: (d: ChartOption, f: string, filterStringUpper: string) => (d.label.toUpperCase().indexOf(filterStringUpper) > -1),
         sortBy: (d: ChartOption) => d.label,
-        width: 400,
+        width: 500,
         defaultSortDirection: 'asc' as 'asc'
     }, {
         name: '% samples with data',
@@ -112,40 +112,16 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
 
     render() {
         return (
-            <Modal
-                onHide={this.props.onClose}
-                show={true}
-            >
-                <Modal.Header closeButton>
-                    <span className={addChartStyles.modalHeader}>{this.props.title}</span>
-                </Modal.Header>
-                <Modal.Body>
-                    <AddChartTableComponent
-                        width={560}
-                        height={this.tableHeight}
-                        columns={this._columns}
-                        data={this.options}
-                        addAll={this.addAll}
-                        removeAll={this.removeAll}
-                        showAddRemoveAllButtons={true}
-                        sortBy={'% samples with data'}
-                    />
-                </Modal.Body>
-                <Modal.Footer>
-                    <div className={styles.footer}>
-                        <div>
-                            {
-                                this.props.freqPromise.isPending && (
-                                    <span>
-                                        <LoadingIndicator isLoading={true}/>
-                                        Calculating data availability...
-                                    </span>
-                                )
-                            }
-                        </div>
-                    </div>
-                </Modal.Footer>
-            </Modal>
+            <AddChartTableComponent
+                width={670}
+                height={this.tableHeight}
+                columns={this._columns}
+                data={this.options}
+                addAll={this.addAll}
+                removeAll={this.removeAll}
+                showAddRemoveAllButtons={true}
+                sortBy={'% samples with data'}
+            />
         )
     }
 }
