@@ -8,7 +8,7 @@ import {ChartOption} from "../AddChartButton";
 import * as _ from 'lodash';
 import LabeledCheckbox from "../../../../shared/components/labeledCheckbox/LabeledCheckbox";
 import {Column} from "../../../../shared/components/lazyMobXTable/LazyMobXTable";
-import {getFrequencyStr} from "../../StudyViewUtils";
+import {getClinicalAttributeOverlay, getFrequencyStr} from "../../StudyViewUtils";
 import LoadingIndicator from "../../../../shared/components/loadingIndicator/LoadingIndicator";
 import MobxPromise from 'mobxpromise';
 import {ClinicalDataCountSet} from "../../StudyViewPageStore";
@@ -17,10 +17,8 @@ import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 
 export interface IAddChartByTypeProps {
-    title: string;
     options: ChartOption[];
     freqPromise: MobxPromise<ClinicalDataCountSet>;
-    onClose: () => void;
     onAddAll: (keys: string[]) => void;
     onClearAll: (keys: string[]) => void;
     onToggleOption: (key: string) => void;
@@ -30,7 +28,7 @@ export interface IAddChartByTypeProps {
 class AddChartTableComponent extends FixedHeaderTable<ChartOption> {
 }
 
-const NUM_ROWS_SHOWN = 20;
+const NUM_ROWS_SHOWN = 10;
 
 @observer
 export default class AddChartByType extends React.Component<IAddChartByTypeProps, {}> {
@@ -80,22 +78,27 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
         },
         filter: (d: ChartOption, f: string, filterStringUpper: string) => (d.label.toUpperCase().indexOf(filterStringUpper) > -1),
         sortBy: (d: ChartOption) => d.label,
-        width: 500,
+        width: 290,
         defaultSortDirection: 'asc' as 'asc'
     }, {
-        name: '% samples with data',
+        name: 'Freq',
+        tooltip: <span>% samples with data</span>,
         render: (option: ChartOption) =>
-            <span className={classnames(option.disabled ? styles.labelDisabled : '')}>
+            <span style={{display: 'flex', flexDirection: 'row-reverse'}}
+                  className={classnames(option.disabled ? styles.labelDisabled : '')}>
                 {this.props.freqPromise.isComplete ? getFrequencyStr(option.freq) : ''}
             </span>,
         sortBy: (d: ChartOption) => d.freq,
+        headerRender: () => {
+            return <span style={{display: 'flex', flexDirection: 'row-reverse', flexGrow: 1}}>Freq</span>
+        },
         defaultSortDirection: 'desc' as 'desc',
-        width: 160
+        width: 60
     }];
 
     @computed
     get tableHeight() {
-        return this.options.length > NUM_ROWS_SHOWN ? NUM_ROWS_SHOWN * 25 : this.options.length * 25;
+        return this.options.length > NUM_ROWS_SHOWN ? NUM_ROWS_SHOWN * 25 : (this.options.length + 1) * 25;
     }
 
     @autobind
@@ -113,7 +116,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
     render() {
         return (
             <AddChartTableComponent
-                width={670}
+                width={350}
                 height={this.tableHeight}
                 columns={this._columns}
                 data={this.options}
@@ -121,7 +124,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                 addAll={this.addAll}
                 removeAll={this.removeAll}
                 showAddRemoveAllButtons={true}
-                sortBy={'% samples with data'}
+                sortBy={''}
             />
         )
     }

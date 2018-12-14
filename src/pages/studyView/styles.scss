@@ -100,3 +100,11 @@ $selectHeightInner: $selectHeight - 2px;
 .studyFilterResult-enter-done {
     transform: scale(1); /* Standard syntax */
 }
+
+.studyViewAddChartOverlay.rc-tooltip-placement-bottomRight .rc-tooltip-arrow {
+    right: 2% !important;
+}
+
+.addChartTabs .tab-content {
+    min-height: 100px !important;
+}

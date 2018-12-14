@@ -26,23 +26,26 @@ import IFrameLoader from "../../../shared/components/iframeLoader/IFrameLoader";
 import shareUIstyles from "../../resultsView/querySummary/shareUI.module.scss";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 
-export interface IAddChartButtonProps {
+export interface IAddChartTabsProps {
     store: StudyViewPageStore,
     disableAddGenomicButton?: boolean
 }
 
-enum CurrentOpenedDialogEnum {
-    CUSTOM_GROUPS = 'CUSTOM_GROUPS',
-    ADD_CLINICAL = 'ADD_CLINICAL',
-    ADD_GENOMIC = 'ADD_GENOMIC',
-    CLOSED = 'CLOSED'
+export interface IAddChartButtonProps extends IAddChartTabsProps {
+    addChartOverlayClassName?: string
 }
 
-type CurrentOpenedDialog =
-    CurrentOpenedDialogEnum.CUSTOM_GROUPS
-    | CurrentOpenedDialogEnum.CLOSED
-    | CurrentOpenedDialogEnum.ADD_GENOMIC
-    | CurrentOpenedDialogEnum.ADD_CLINICAL;
+
+enum TabKeysEnum {
+    CUSTOM_GROUPS = 'Custom groups',
+    CLINICAL = 'Clinical',
+    GENOMIC = 'Genomic'
+}
+
+type TabKeys =
+    TabKeysEnum.CUSTOM_GROUPS
+    | TabKeysEnum.GENOMIC
+    | TabKeysEnum.CLINICAL;
 
 export type ChartOption = {
     label: string,
@@ -53,24 +56,13 @@ export type ChartOption = {
 }
 
 @observer
-export default class AddChartButton extends React.Component<IAddChartButtonProps, {}> {
-    private addCustomGroupsChartTitle = 'Add custom groups as Pie Chart';
+class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
+    @observable activeId: TabKeys = TabKeysEnum.CLINICAL;
 
     public static defaultProps = {
         disableAddGenomicButton: false
     };
 
-    @computed
-    get addGenomicDataChartTitle() {
-        return `Select genomic data (${_.filter(this.genomicDataOptions, chartOption => !chartOption.selected).length} more to add)`
-    }
-
-    @computed
-    get addClinicalDataChartTitle() {
-        return `Select clinical data (${_.filter(this.clinicalDataOptions, chartOption => !chartOption.selected).length} more to add)`
-    }
-
-    @observable currentOpenedDialog: CurrentOpenedDialog = CurrentOpenedDialogEnum.CLOSED;
 
     readonly getClinicalDataCount = remoteData<ClinicalDataCountSet>({
         await: () => [this.props.store.clinicalDataWithCount, this.props.store.selectedSamples],
@@ -91,8 +83,8 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
 
     @autobind
     @action
-    updateCurrentOpenedDialog(dialog: CurrentOpenedDialog) {
-        this.currentOpenedDialog = dialog;
+    updateActiveId(newId: string) {
+        this.activeId = newId as TabKeys;
     }
 
     @computed
@@ -145,95 +137,67 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
         }
     }
 
+    render() {
+        return <div style={{marginTop: '10px', width: '400px'}}>
+            <MSKTabs activeTabId={this.activeId}
+                     onTabClick={this.updateActiveId}
+                     unmountOnHide={false}
+                     className="addChartTabs mainTabs">
 
-    componentDidMount() {
-
-        // Register main button onClick event
-        // The implementation of the library forbids the onClick event binding.
-        $('.mfb-component__button--main').click((event: any) => {
-            event.preventDefault();
-            this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.ADD_CLINICAL);
-        })
-    }
-
-    getChildButtons() {
-        let buttons = [];
-        if (!this.props.disableAddGenomicButton)
-            buttons.push(<ChildButton
-                className={styles.child}
-                icon={classnames("fa fa-lg", styles.faCharG)}
-                label={this.addGenomicDataChartTitle}
-                onClick={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.ADD_GENOMIC)}
-            >
-            </ChildButton>);
-        buttons.push(
-            <ChildButton
-                className={styles.child}
-                icon="fa fa-pie-chart fa-lg"
-                label={this.addCustomGroupsChartTitle}
-                onClick={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.CUSTOM_GROUPS)}
-            >
-            </ChildButton>);
-        return buttons;
-    }
-
-    @autobind
-    private overlay() {
-        return <div style={{marginTop: '10px'}}>
-            <MSKTabs id="addchart" activeTabId={'clinical'}
-                     className="mainTabs">
-
-                <MSKTab key={0} id={'clinical'} linkText={this.addClinicalDataChartTitle}>
-                    <AddChartByType title={this.addClinicalDataChartTitle}
-                                    options={this.clinicalDataOptions}
+                <MSKTab key={0} id={TabKeysEnum.CLINICAL} linkText={TabKeysEnum.CLINICAL}>
+                    <AddChartByType options={this.clinicalDataOptions}
                                     freqPromise={this.getClinicalDataCount}
-                                    onClose={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.CLOSED)}
                                     onAddAll={this.onAddAll}
                                     onClearAll={this.onClearAll}
                                     onToggleOption={this.onToggleOption}
                     />
                 </MSKTab>
-                <MSKTab key={1} id={'genomic'} linkText={this.addGenomicDataChartTitle}>
-                    <AddChartByType title={this.addGenomicDataChartTitle}
-                                    options={this.genomicDataOptions}
+                <MSKTab key={1} id={TabKeysEnum.GENOMIC} linkText={TabKeysEnum.GENOMIC}>
+                    <AddChartByType options={this.genomicDataOptions}
                                     freqPromise={this.getGenomicDataCount}
-                                    onClose={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.CLOSED)}
                                     onAddAll={this.onAddAll}
                                     onClearAll={this.onClearAll}
                                     onToggleOption={this.onToggleOption}/>
                 </MSKTab>
-                <MSKTab key={2} id={'custom'} linkText={this.addCustomGroupsChartTitle}>
+                <MSKTab key={2} id={TabKeysEnum.CUSTOM_GROUPS} linkText={TabKeysEnum.CUSTOM_GROUPS}>
                     <CustomCaseSelection
-                        title={this.addCustomGroupsChartTitle}
-                        show={true}
                         selectedSamples={this.props.store.selectedSamples.result}
                         queriedStudies={this.props.store.queriedPhysicalStudyIds.result}
-                        onClose={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.CLOSED)}
                         onSubmit={(chart: NewChart) => {
                             this.props.store.addCustomChart(chart);
-                            this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.CLOSED)
                         }}
                     />
                 </MSKTab>
             </MSKTabs>
         </div>
     }
+}
 
+@observer
+export default class AddChartButton extends React.Component<IAddChartButtonProps, {}> {
     render() {
-        return (<DefaultTooltip
-                trigger={["click"]}
-                placement={"bottom"}
-                overlay={this.overlay}
+        return (
+            <DefaultTooltip
+                trigger={["hover"]}
+                placement={"top"}
+                overlay={<span>Add Chart</span>}
             >
-                <div className={shareUIstyles.shareModule}>
-
-                    <a>
-                                <span className="fa-stack fa-4x">
-                                    <i className="fa fa-circle fa-stack-2x"></i>
-                                    <i className="fa fa-plus fa-stack-1x"></i>
-                                </span>
-                    </a>
-                </div>
+                <DefaultTooltip
+                    trigger={["click"]}
+                    placement={"bottomRight"}
+                    overlay={() => <AddChartTabs store={this.props.store}
+                                                 disableAddGenomicButton={this.props.disableAddGenomicButton}/>}
+                    overlayClassName={this.props.addChartOverlayClassName}
+                >
+                    <div className={shareUIstyles.shareModule}>
+                        <a>
+                            <span className="fa-stack fa-4x">
+                                <i className="fa fa-circle fa-stack-2x"></i>
+                                <i className="fa fa-plus fa-stack-1x"></i>
+                            </span>
+                        </a>
+                    </div>
+                </DefaultTooltip>
             </DefaultTooltip>
         )
     }

@@ -13,10 +13,7 @@ import {getDefaultTitle, parseContent, ParseResult} from "./CustomCaseSelectionU
 import autobind from 'autobind-decorator';
 
 export interface ICustomCaseSelectionProps {
-    title: string;
     selectedSamples: Sample[];
-    show: boolean;
-    onClose: () => void;
     onSubmit: (chart: NewChart) => void;
     queriedStudies: string[];
 }
@@ -122,32 +119,20 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                                          error={message.message}/>
                     })
                 }
+                <button
+                    disabled={this.result.validationResult.error.length > 0 || this.newChartInfo.groups.length === 0}
+                    className="btn btn-default btn-sm"
+                    style={{float: "right"}}
+                    onClick={event => this.props.onSubmit(this.newChartInfo)}>
+                    Add Chart
+                </button>
             </div>
         );
     }
 
     render() {
         return (
-            <Modal
-                show={this.props.show}
-                onHide={this.props.onClose}
-            >
-                <Modal.Header closeButton>
-                    <span className={addChartStyles.modalHeader}>{this.props.title}</span>
-                </Modal.Header>
-                <Modal.Body>
-                    {this.mainContent()}
-                </Modal.Body>
-                <Modal.Footer>
-                    <button
-                        disabled={this.result.validationResult.error.length > 0 || this.newChartInfo.groups.length === 0}
-                        className="btn btn-default btn-sm"
-                        style={{float: "right"}}
-                        onClick={event => this.props.onSubmit(this.newChartInfo)}>
-                        Add Chart
-                    </button>
-                </Modal.Footer>
-            </Modal>
+            this.mainContent()
         )
     }
 }
