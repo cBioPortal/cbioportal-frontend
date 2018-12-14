@@ -160,7 +160,8 @@ export type ChartMeta = {
     priority: number,
     dataType: ChartMetaDataType,
     patientAttribute: boolean,
-    chartType: ChartType
+    chartType: ChartType,
+    renderWhenDataChange: boolean
 }
 
 export type StudyViewURLQuery = {
@@ -181,6 +182,7 @@ export const SPECIAL_CHARTS: ChartMeta[] = [{
         w: 1,
         h: 1
     },
+    renderWhenDataChange: false,
     priority: 40
 },{
     uniqueKey: UniqueKey.CANCER_STUDIES,
@@ -193,6 +195,7 @@ export const SPECIAL_CHARTS: ChartMeta[] = [{
         w: 1,
         h: 1
     },
+    renderWhenDataChange: false,
     priority: 70
 }];
 
@@ -263,6 +266,7 @@ export class StudyViewPageStore {
                    dataType: getChartMetaDataType(uniqueKey),
                    patientAttribute: chartMeta.patientAttribute,
                    description: chartMeta.description,
+                   renderWhenDataChange: false,
                    dimension: this.chartsDimension.get(uniqueKey) || chartMeta.dimension,
                    priority: STUDY_VIEW_CONFIG.priority[uniqueKey] || chartMeta.priority
                });
@@ -1666,6 +1670,7 @@ export class StudyViewPageStore {
                 w: 1,
                 h: 1
             },
+            renderWhenDataChange: false,
             priority: 1
         };
         let allCases: CustomChartIdentifierWithValue[] = [];
@@ -1691,7 +1696,7 @@ export class StudyViewPageStore {
 
     @computed
     get chartMetaSet(): { [id: string]: ChartMeta } {
-        
+
         let _chartMetaSet: { [id: string]: ChartMeta } = _.reduce(this._customCharts.values(), (acc: { [id: string]: ChartMeta }, chartMeta:ChartMeta) => {
             acc[chartMeta.uniqueKey] = toJS(chartMeta);
             return acc
@@ -1712,6 +1717,7 @@ export class StudyViewPageStore {
                     description: attribute.description,
                     dimension: this.chartsDimension.get(uniqueKey)!,
                     priority: getPriorityByClinicalAttribute(attribute),
+                    renderWhenDataChange: chartType === ChartTypeEnum.TABLE,
                     clinicalAttribute: attribute
                 };
             }
@@ -1728,6 +1734,7 @@ export class StudyViewPageStore {
                 dimension: this.chartsDimension.get(survivalPlot.id)!,
                 displayName: survivalPlot.title,
                 priority: getDefaultPriorityByUniqueKey(survivalPlot.id),
+                renderWhenDataChange: false,
                 description: ''
             };
             return acc;
@@ -1742,6 +1749,7 @@ export class StudyViewPageStore {
                 dimension: this.chartsDimension.get(UniqueKey.MUTATED_GENES_TABLE)!,
                 displayName: 'Mutated Genes',
                 priority: getDefaultPriorityByUniqueKey(UniqueKey.MUTATED_GENES_TABLE),
+                renderWhenDataChange: true,
                 description: ''
             };
         }
@@ -1754,6 +1762,7 @@ export class StudyViewPageStore {
                 chartType: this.chartsType.get(UniqueKey.CNA_GENES_TABLE)!,
                 dimension: this.chartsDimension.get(UniqueKey.CNA_GENES_TABLE)!,
                 displayName: 'CNA Genes',
+                renderWhenDataChange: true,
                 priority: getDefaultPriorityByUniqueKey(UniqueKey.CNA_GENES_TABLE),
                 description: ''
             };
@@ -1778,6 +1787,7 @@ export class StudyViewPageStore {
                 displayName: 'Mutation Count vs Fraction of Genome Altered',
                 priority: getDefaultPriorityByUniqueKey(UniqueKey.MUTATION_COUNT_CNA_FRACTION),
                 dimension: STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SCATTER],
+                renderWhenDataChange: false,
                 description: ''
             };
         }
@@ -1928,16 +1938,17 @@ export class StudyViewPageStore {
                     data = this.cancerStudiesData;
                 }
             } else if (this.isCustomChart(attr.uniqueKey)) {
-                    data = this.getCustomChartDataCount(attr);
-                } else {
-                    data = this.getClinicalDataCount(attr);
-                }
-                if(data !== undefined){
-                    this.chartsDimension.set(attr.uniqueKey, this.getTableDimensionByNumberOfRecords(data.result!.length));
-                }
-            }else{
-                this.chartsDimension.set(attr.uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[newChartType]);
+                data = this.getCustomChartDataCount(attr);
+            } else {
+                data = this.getClinicalDataCount(attr);
             }
+            if (data !== undefined) {
+                this.chartsDimension.set(attr.uniqueKey, this.getTableDimensionByNumberOfRecords(data.result!.length));
+            }
+            this.chartsType.set(attr.uniqueKey, ChartTypeEnum.TABLE);
+        } else {
+            this.chartsDimension.set(attr.uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[newChartType]);
+        }
     }
 
     readonly defaultVisibleAttributes = remoteData({

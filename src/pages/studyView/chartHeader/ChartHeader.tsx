@@ -12,6 +12,7 @@ import {observer} from "mobx-react";
 import {IChartContainerDownloadProps} from "../charts/ChartContainer";
 import {saveSvgAsPng} from "save-svg-as-png";
 import {ChartTypeEnum} from "../StudyViewConfig";
+import {getClinicalAttributeOverlay} from "../StudyViewUtils";
 
 export interface IChartHeaderProps {
     chartMeta: ChartMeta;
@@ -123,12 +124,6 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
     }
 
     public render() {
-        const overlay = () => {
-            return <div style={{maxWidth: '250px'}}>
-                <b>{this.props.chartMeta.displayName}</b><br/>
-                {this.props.chartMeta.description}
-            </div>
-        };
         return (
             <div className={styles.header}
                  style={{height: `${this.props.height}px`, lineHeight: `${this.props.height}px`}}>
@@ -164,7 +159,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                         <If condition={!!this.props.chartMeta.description}>
                             <DefaultTooltip
                                 placement="top"
-                                overlay={overlay}
+                                overlay={getClinicalAttributeOverlay(this.props.chartMeta.displayName, this.props.chartMeta.description)}
                                 destroyTooltipOnHide={true}
                             >
                                 <i className={classnames("fa", "fa-info-circle", styles.item)} aria-hidden="true"></i>

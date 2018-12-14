@@ -109,6 +109,13 @@ const OPERATOR_MAP: {[op:string]: string} = {
     ">": ">"
 };
 
+export function getClinicalAttributeOverlay(displayName: string, description: string): JSX.Element {
+    return <div style={{maxWidth: '500px'}}>
+        <b>{displayName}</b><br/>
+        {description}
+    </div>;
+}
+
 export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: string): string {
 
     let updatedQueries = _.filter(geneQueries,query=> query.gene !== selectedGene)
@@ -981,8 +988,8 @@ export function getPriorityByClinicalAttribute(clinicalAttribute: ClinicalAttrib
 }
 
 // Grid includes 10px margin
-export function getWidthByDimension(chartDimension: ChartDimension) {
-    return STUDY_VIEW_CONFIG.layout.grid.w * chartDimension.w + (chartDimension.w - 1) * STUDY_VIEW_CONFIG.layout.gridMargin.x - 2;
+export function getWidthByDimension(chartDimension: ChartDimension, borderWidth: number) {
+    return STUDY_VIEW_CONFIG.layout.grid.w * chartDimension.w + (chartDimension.w - 1) * STUDY_VIEW_CONFIG.layout.gridMargin.x - borderWidth * 2;
 }
 
 // Grid includes 15px header and 35px tool section
