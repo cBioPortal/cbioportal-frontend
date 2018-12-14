@@ -16,6 +16,7 @@ import classNames from "classnames";
 import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
 import OncoprinterStore from "./OncoprinterStore";
 import autobind from "autobind-decorator";
+import onMobxPromise from "../../../../shared/lib/onMobxPromise";
 
 interface IOncoprinterProps {
     divId: string;
@@ -43,7 +44,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
     private controlsHandlers:IOncoprintControlsHandlers;
     private controlsState:IOncoprintControlsState & IObservableObject;
 
-    @observable.ref private oncoprint:OncoprintJS<any>;
+    @observable.ref public oncoprint:OncoprintJS<any>;
 
     constructor(props:IOncoprinterProps) {
         super(props);
