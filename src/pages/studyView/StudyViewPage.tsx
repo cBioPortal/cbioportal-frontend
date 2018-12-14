@@ -1,5 +1,6 @@
 import * as React from 'react';
-import {inject, observer} from "mobx-react";
+import * as _ from 'lodash';
+import {inject, Observer, observer} from "mobx-react";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import {reaction} from 'mobx';
 import {
@@ -25,6 +26,8 @@ import AddChartButton from "./addChartButton/AddChartButton";
 import UserSelections from "./UserSelections";
 import {CSSTransition} from "react-transition-group";
 import classNames from 'classnames';
+import {sleep} from "../../shared/lib/TimeUtils";
+import {remoteData} from "../../shared/api/remoteData";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -102,9 +105,28 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         this.props.routing.updateRoute({tab: id});
     }
 
-    content() {
+    private chartDataPromises = remoteData({
+        await:()=>{
+           return [
+               ..._.values(this.store.clinicalDataBinPromises),
+               ..._.values(this.store.clinicalDataCountPromises),
+               ..._.values(this.store.customChartsPromises),
+               this.store.mutationProfiles,
+               this.store.cnaProfiles,
+               this.store.selectedSamples,
+               this.store.molecularProfileSampleCounts,
 
-        const summaryStatus = this.store.mutationProfiles.isComplete && this.store.cnaProfiles.isComplete && this.store.selectedSamples.isComplete && this.store.molecularProfileSampleCounts.isComplete;
+            ]
+        },
+        invoke: async ()=>{
+            // this gives time for charts to render
+            // product requirement that the summary data show after charts have rendered
+            // to call attention to the summary results
+            return await sleep(3000);
+        }
+    });
+
+    content() {
 
         return (
             <div className="studyView">
@@ -152,19 +174,29 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     disableAddGenomicButton={this.props.routing.location.query.tab === StudyViewPageTabKeys.CLINICAL_DATA}
                                 />}
 
-                                <div className={styles.selectedInfo}>
+
+                                <Observer>
                                     {
-                                        (summaryStatus) && (
-                                            <CSSTransition classNames="studyFilterResult" in={summaryStatus} appear timeout={{ enter:200 }}>
-                                                { ()=> <StudyResultsSummary store={this.store}/>
+                                        () => {
+                                        return (
+                                            <div className={styles.selectedInfo}>
+                                                {
+                                                    (this.chartDataPromises.isComplete) && (
+                                                        <CSSTransition classNames="studyFilterResult" in={true}
+                                                                       appear timeout={{enter: 200}}>
+                                                            {() => <StudyResultsSummary store={this.store}/>
+                                                            }
+                                                        </CSSTransition>
+                                                    )
                                                 }
-                                            </CSSTransition>
-                                        )
+                                                <div className={styles.selectedInfoLoadingIndicator}>
+                                                    <LoadingIndicator isLoading={true} size={"small"}/>
+                                                </div>
+                                            </div>)
+                                        }
                                     }
-                                    <div style={{padding:5,position:"absolute",right:20, width:200,top:5,zIndex:0}}>
-                                        <LoadingIndicator isLoading={true} size={"small"}/>
-                                    </div>
-                                </div>
+                                    </Observer>
+
 
                             </div>
                         </div>
