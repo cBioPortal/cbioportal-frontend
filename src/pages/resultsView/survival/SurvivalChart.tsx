@@ -362,16 +362,16 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
     @computed
     get xAxisTickCount() {
-        return this.getAxisTickCount(this.styleOpts.width);
-    }
-
-    @computed
-    get yAxisTickCount() {
-        return this.getAxisTickCount(this.styleOpts.height)
+        return this.getAxisTickCount(this.showLegend ? this.styleOpts.legend.x : this.styleOpts.width);
     }
 
     getAxisTickCount(size: number) {
         return Math.ceil(size / 200) * 5;
+    }
+
+    @computed
+    get showLegend() {
+        return this.victoryLegendData.length > 0;
     }
 
     @computed
@@ -404,10 +404,10 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                     <VictoryAxis style={this.styleOpts.axis.x} crossAxis={false} tickCount={this.xAxisTickCount}
                                  label={this.props.xAxisLabel}/>
                     <VictoryAxis label={this.props.yAxisLabel} dependentAxis={true} tickFormat={(t: any) => `${t}%`}
-                                 tickCount={this.yAxisTickCount}
+                                 tickCount={11}
                                  style={this.styleOpts.axis.y} domain={[0, 100]} crossAxis={false}/>
                     {this.scattersAndLines}
-                    {(this.victoryLegendData.length > 0) &&
+                    {this.showLegend &&
                     <VictoryLegend x={this.styleOpts.legend.x} y={this.styleOpts.legend.y}
                                    data={this.victoryLegendData} />
                     }
