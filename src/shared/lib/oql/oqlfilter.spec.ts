@@ -1,13 +1,18 @@
 import {
     filterCBioPortalWebServiceDataByUnflattenedOQLLine,
     OQLLineFilterOutput,
-    MergedTrackLineFilterOutput
+    MergedTrackLineFilterOutput,
+    filterCBioPortalWebServiceData,
+    parseOQLQuery,
+    unparseOQLQueryLine,
+    doesQueryContainMutationOQL, doesQueryContainOQL
 } from './oqlfilter';
-import {NumericGeneMolecularData, MolecularProfile} from '../../api/generated/CBioPortalAPI';
+import {NumericGeneMolecularData, MolecularProfile, Mutation} from '../../api/generated/CBioPortalAPI';
 import accessors from './accessors';
 import * as _ from 'lodash';
 import {assert} from 'chai';
 import sinon from 'sinon';
+import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
 
 // This file uses type assertions to force functions that use overly specific
 // Swagger-generated types as parameters to accept mocked literals believed to
@@ -30,6 +35,155 @@ const DATA_PROFILE = {
     "molecularProfileId": "gbm_tcga_gistic",
     "studyId": "gbm_tcga",
 } as MolecularProfile;
+
+const MUTATION_PROFILE = {
+    "molecularAlterationType": AlterationTypeConstants.MUTATION_EXTENDED,
+    "molecularProfileId": "gbm_tcga_mutations",
+    "studyId": "gbm_tcga",
+} as MolecularProfile;
+
+const MUTATION_DATA = [{
+    gene: {
+        hugoGeneSymbol:"BRCA1",
+    },
+    molecularProfileId: "gbm_tcga_mutations",
+    mutationType:"Missense_Variant",
+    mutationStatus: "germline",
+    __id: 0
+},{
+    gene: {
+        hugoGeneSymbol:"BRCA1",
+    },
+    molecularProfileId: "gbm_tcga_mutations",
+    mutationType:"Missense_Variant",
+    mutationStatus:"aspdoifjpasoid",
+    __id: 1
+},{
+    gene: {
+        hugoGeneSymbol:"BRCA1",
+    },
+    molecularProfileId: "gbm_tcga_mutations",
+    mutationType:"Missense_Variant",
+    mutationStatus:null,
+    __id: 2
+},{
+    gene: {
+        hugoGeneSymbol:"BRCA1",
+    },
+    molecularProfileId: "gbm_tcga_mutations",
+    mutationType:"in_frame_ins",
+    mutationStatus:undefined,
+    __id: 3
+}] as any as Mutation[];
+
+describe("doesQueryContainOQL", ()=>{
+    it("returns correct result in various cases", ()=>{
+        assert.equal(doesQueryContainOQL("TP53 BRCA1 BRCA2"), false);
+        assert.equal(doesQueryContainOQL("TP53"), false);
+        assert.equal(doesQueryContainOQL("TP53 BRCA1 BRCA2;"), false);
+        assert.equal(doesQueryContainOQL("TP53;"), false);
+        assert.equal(doesQueryContainOQL("TP53 BRCA1 BRCA2:MUT"), true);
+        assert.equal(doesQueryContainOQL("TP53 BRCA1 BRCA2:AMP"), true);
+        assert.equal(doesQueryContainOQL("TP53 BRCA1 BRCA2:HOMDEL"), true);
+        assert.equal(doesQueryContainOQL("TP53 BRCA1 BRCA2:EXP>0"), true);
+        assert.equal(doesQueryContainOQL("TP53 BRCA1 BRCA2:FUSION"), true);
+    });
+});
+
+describe("doesQueryContainMutationOQL", ()=>{
+    it("returns correct result in various cases", ()=>{
+        assert.equal(doesQueryContainMutationOQL("TP53: AMP"), false);
+        assert.equal(doesQueryContainMutationOQL("TP53: EXP>0"), false);
+        assert.equal(doesQueryContainMutationOQL("TP53;"), false);
+        assert.equal(doesQueryContainMutationOQL("TP53 BRCA1 BRCA2;"), false);
+        assert.equal(doesQueryContainMutationOQL("TP53: MUT"), false);
+        assert.equal(doesQueryContainMutationOQL("TP53: GERMLINE"), true);
+        assert.equal(doesQueryContainMutationOQL("TP53: proteinchange"), true);
+        assert.equal(doesQueryContainMutationOQL("TP53: proteinchange_GERMLINE"), true);
+    });
+});
+
+describe("unparseOQLQueryLine", ()=>{
+    it("unparses query with no alterations", ()=>{
+        const parsedLine = parseOQLQuery("TP53;")[0];
+        assert.equal(unparseOQLQueryLine(parsedLine), "TP53;");
+    });
+    it("unparses query with MUT keyword", ()=>{
+        const parsedLine = parseOQLQuery("TP53: MUT;")[0];
+        assert.equal(unparseOQLQueryLine(parsedLine), "TP53: MUT;");
+    });
+    it("unparses query with complex mutation specifications", ()=>{
+        const parsedLine = parseOQLQuery("TP53: MISSENSE proteinchange;")[0];
+        assert.equal(unparseOQLQueryLine(parsedLine), "TP53: MUT=MISSENSE MUT=proteinchange;");
+    });
+    it("unparses query with EXP and PROT", ()=>{
+        const parsedLine = parseOQLQuery("TP53: EXP > 0 PROT < -2")[0];
+        assert.equal(unparseOQLQueryLine(parsedLine), "TP53: EXP>0 PROT<-2;");
+    });
+    it("unparses query with many alteration types", ()=>{
+        const parsedLine = parseOQLQuery("TP53: MISSENSE proteinchange HOMDEL EXP<-4 PROT>1 FUSION;")[0];
+        assert.equal(unparseOQLQueryLine(parsedLine), "TP53: MUT=MISSENSE MUT=proteinchange HOMDEL EXP<-4 PROT>1 FUSION;");
+    });
+    it("unparses queries with germline and somatic mutation modifiers", ()=>{
+        const parsedLine = parseOQLQuery("TP53: GERMLINE SOMATIC_MISSENSE proteinchange_GERMLINE;")[0];
+        assert.equal(unparseOQLQueryLine(parsedLine), "TP53: MUT_GERMLINE MUT=MISSENSE_SOMATIC MUT=proteinchange_GERMLINE;");
+    });
+});
+
+describe('filterCBioPortalWebServiceData', ()=>{
+    it('filters properly using the GERMLINE and SOMATIC mutation modifiers', ()=>{
+        const accessorsInstance = new accessors([MUTATION_PROFILE]);
+        let filteredData = filterCBioPortalWebServiceData(
+            "BRCA1:GERMLINE",
+            MUTATION_DATA,
+            accessorsInstance,
+            ""
+        );
+        assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [0]);
+        filteredData = filterCBioPortalWebServiceData(
+            "BRCA1:SOMATIC",
+            MUTATION_DATA,
+            accessorsInstance,
+            ""
+        );
+        assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [1,2,3]);
+        filteredData = filterCBioPortalWebServiceData(
+            "BRCA1:MISSENSE_SOMATIC",
+            MUTATION_DATA,
+            accessorsInstance,
+            ""
+        );
+        assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [1,2]);
+        filteredData = filterCBioPortalWebServiceData(
+            "BRCA1:INFRAME_SOMATIC",
+            MUTATION_DATA,
+            accessorsInstance,
+            ""
+        );
+        assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [3]);
+        filteredData = filterCBioPortalWebServiceData(
+            "BRCA1:INFRAME_GERMLINE",
+            MUTATION_DATA,
+            accessorsInstance,
+            ""
+        );
+        assert.deepEqual((filteredData as any).map((x:any)=>x.__id), []);
+        filteredData = filterCBioPortalWebServiceData(
+            "BRCA1:MISSENSE_GERMLINE",
+            MUTATION_DATA,
+            accessorsInstance,
+            ""
+        );
+        assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [0]);
+        filteredData = filterCBioPortalWebServiceData(
+            "BRCA1:MISSENSE_GERMLINE INFRAME_SOMATIC",
+            MUTATION_DATA,
+            accessorsInstance,
+            ""
+        );
+        assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [0,3]);
+    });
+});
 
 describe('filterCBioPortalWebServiceDataByUnflattenedOQLLine', () => {
     it('returns a single .data object for a single-gene query', () => {
