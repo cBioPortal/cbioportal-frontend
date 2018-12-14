@@ -8,11 +8,10 @@ import {
 } from "shared/components/oncoprint/OncoprintUtils";
 import {makeGeneticTrackData} from "shared/components/oncoprint/DataUtils";
 import {GeneticTrackDatum} from "shared/components/oncoprint/Oncoprint";
-import {Sample, Gene, MolecularProfile} from "shared/api/generated/CBioPortalAPI";
+import {Sample, Gene, MolecularProfile, GenePanelData} from "shared/api/generated/CBioPortalAPI";
 import {ICaseAlteration, IOqlData, ISubAlteration} from "./CaseAlterationTable";
 import {IGeneAlteration} from "./GeneAlterationTable";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
-
 
 export interface IDownloadFileRow {
     studyId: string;
@@ -22,20 +21,21 @@ export interface IDownloadFileRow {
 }
 
 export function generateOqlData(datum: GeneticTrackDatum,
-                                geneAlterationDataByGene?: {[gene: string]: IGeneAlteration}): IOqlData
+                                geneAlterationDataByGene?: {[gene: string]: IGeneAlteration},
+                                molecularProfileIdToMolecularProfile?: {[molecularProfileId:string]:MolecularProfile}): IOqlData
 {
     const proteinChanges: string[] = [];
     const fusions: string[] = [];
     const cnaAlterations: ISubAlteration[] = [];
     const proteinLevels: ISubAlteration[] = [];
     const mrnaExpressions: ISubAlteration[] = [];
+    const alterationTypes: string[] = [];
 
     // there might be multiple alterations for a single sample
     for (const alteration of datum.data)
     {
         const molecularAlterationType = alteration.molecularProfileAlterationType;
         const alterationSubType = alteration.alterationSubType.toUpperCase();
-
         switch (molecularAlterationType)
         {
             case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
@@ -44,6 +44,7 @@ export function generateOqlData(datum: GeneticTrackDatum,
                         type: alterationSubType,
                         value: alteration.value
                     });
+                    alterationTypes.push("CNA");
                 }
                 break;
             case AlterationTypeConstants.MRNA_EXPRESSION:
@@ -52,6 +53,7 @@ export function generateOqlData(datum: GeneticTrackDatum,
                         type: alterationSubType,
                         value: alteration.value
                     });
+                    alterationTypes.push("EXP");
                 }
                 break;
             case AlterationTypeConstants.PROTEIN_LEVEL:
@@ -60,14 +62,17 @@ export function generateOqlData(datum: GeneticTrackDatum,
                         type: alterationSubType,
                         value: alteration.value
                     });
+                    alterationTypes.push("PROT");
                 }
                 break;
             case AlterationTypeConstants.MUTATION_EXTENDED:
                 if (alteration.mutationType.toLowerCase().includes("fusion")) {
                     fusions.push(alteration.proteinChange);
+                    alterationTypes.push("FUSION");
                 }
                 else {
                     proteinChanges.push(alteration.proteinChange);
+                    alterationTypes.push("MUT");
                 }
                 break;
         }
@@ -86,8 +91,61 @@ export function generateOqlData(datum: GeneticTrackDatum,
         fusion: fusions,
         cna: cnaAlterations,
         mrnaExp: mrnaExpressions,
-        proteinLevel: proteinLevels
+        proteinLevel: proteinLevels,
+        isMutationNotProfiled: false,
+        isFusionNotProfiled: false,
+        isCnaNotProfiled: false,
+        isMrnaExpNotProfiled: false,
+        isProteinLevelNotProfiled: false,
+        alterationTypes: alterationTypes
     });
+}
+
+export function updateOqlData(datum: GeneticTrackDatum,
+    oql: IOqlData,
+    molecularProfileIdToMolecularProfile?: {[molecularProfileId:string]:MolecularProfile}): IOqlData
+{
+    let isMutationNotProfiled = true;
+    let isFusionNotProfiled = true;
+    let isCnaNotProfiled = true;
+    let isMrnaExpNotProfiled = true;
+    let isProteinLevelNotProfiled = true;
+
+    //record the profile information
+    if (datum.profiled_in)
+    {
+        for (const profile of datum.profiled_in)
+        {
+            if (molecularProfileIdToMolecularProfile)
+            {
+                const molecularAlterationType = molecularProfileIdToMolecularProfile[profile.molecularProfileId].molecularAlterationType;
+                switch (molecularAlterationType)
+                {
+                    case AlterationTypeConstants.COPY_NUMBER_ALTERATION:
+                        isCnaNotProfiled = false;
+                        break;
+                    case AlterationTypeConstants.MRNA_EXPRESSION:
+                        isMrnaExpNotProfiled = false;
+                        break;
+                    case AlterationTypeConstants.PROTEIN_LEVEL:
+                        isProteinLevelNotProfiled = false;
+                        break;
+                    case AlterationTypeConstants.MUTATION_EXTENDED:
+                        isMutationNotProfiled = false;
+                    case AlterationTypeConstants.FUSION:
+                        isFusionNotProfiled = false;
+                        break;
+                }                
+            }
+        }
+    }
+    oql.isMutationNotProfiled = isMutationNotProfiled;
+    oql.isFusionNotProfiled = isFusionNotProfiled;
+    oql.isCnaNotProfiled = isCnaNotProfiled;
+    oql.isMrnaExpNotProfiled = isMrnaExpNotProfiled;
+    oql.isProteinLevelNotProfiled = isProteinLevelNotProfiled;
+    
+    return oql;
 }
 
 export function generateGeneAlterationData(
@@ -277,7 +335,8 @@ export function generateCaseAlterationData(
     caseAggregatedDataByOQLLine?: IQueriedCaseData<AnnotatedExtendedAlteration>[],
     genePanelInformation?: CoverageInformation,
     samples: Sample[] = [],
-    geneAlterationDataByGene?: {[gene: string]: IGeneAlteration}
+    geneAlterationDataByGene?: {[gene: string]: IGeneAlteration},
+    molecularProfileIdToMolecularProfile?: {[molecularProfileId:string]:MolecularProfile}
 ): ICaseAlteration[] {
     const caseAlterationData: {[studyCaseId: string] : ICaseAlteration} = {};
 
@@ -310,11 +369,11 @@ export function generateCaseAlterationData(
 
                 // for each track (for each oql line/gene) the oql data is different
                 // that's why we need a map here
-                caseAlterationData[key].oqlData[data.oql.oql_line] = generateOqlData(datum, geneAlterationDataByGene);
+                caseAlterationData[key].oqlData[data.oql.oql_line] = generateOqlData(datum, geneAlterationDataByGene, molecularProfileIdToMolecularProfile);
+                updateOqlData(datum, caseAlterationData[key].oqlData[data.oql.oql_line], molecularProfileIdToMolecularProfile);
             });
         });
     }
-
     return _.values(caseAlterationData);
 }
 
