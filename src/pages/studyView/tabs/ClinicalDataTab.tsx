@@ -6,7 +6,7 @@ import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import {getPatientViewUrl, getSampleViewUrl} from "shared/api/urls";
 import {getClinicalAttributeUniqueKey} from "../StudyViewUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import {StudyViewPageStore} from "pages/studyView/StudyViewPageStore";
+import {ChartMeta, StudyViewPageStore} from "pages/studyView/StudyViewPageStore";
 import {remoteData} from "shared/api/remoteData";
 import {Else, If, Then} from 'react-if';
 import {sortByClinicalAttributePriorityThenName} from "../../../shared/lib/SortUtils";
@@ -29,18 +29,17 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
             render: (data: { [id: string]: string }) => <span>{data[key]}</span>,
             download: (data: { [id: string]: string }) => data[key] || '',
             sortBy: (data: { [id: string]: string }) => data[key],
-            filter: (data: { [id: string]: string }, filterString: string, filterStringUpper: string) =>  (data[key] || '').toUpperCase().includes(filterStringUpper)
+            filter: (data: { [id: string]: string }, filterString: string, filterStringUpper: string) => (data[key] || '').toUpperCase().includes(filterStringUpper)
         };
     }
 
     readonly columns = remoteData({
-        await: () => [this.props.store.clinicalAttributes],
         invoke: async () => {
-
             let defaultColumns: Column<{ [id: string]: string }>[] = [{
                 ...this.getDefaultColumnConfig('patientId'),
                 render: (data: { [id: string]: string }) => {
-                    return <a href={getPatientViewUrl(data.studyId, data.patientId)} target='_blank'>{data.patientId}</a>
+                    return <a href={getPatientViewUrl(data.studyId, data.patientId)}
+                              target='_blank'>{data.patientId}</a>
                 },
                 name: 'Patient ID'
             }, {
@@ -54,21 +53,22 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
                 name: 'Cancer Study'
             }];
             // Descent sort priority then ascent sort by display name
-            return _.reduce(this.props.store.clinicalAttributes.result.sort(sortByClinicalAttributePriorityThenName),
-                (acc: Column<{ [id: string]: string }>[], attr: ClinicalAttribute, index: number) => {
-                acc.push({
-                    ...this.getDefaultColumnConfig(getClinicalAttributeUniqueKey(attr)),
-                    name: attr.displayName,
-                    visible: index < 5
-                });
-                return acc;
-            }, defaultColumns);
+            return _.reduce(this.props.store.visibleAttributes,
+                (acc: Column<{ [id: string]: string }>[], chartMeta: ChartMeta, index: number) => {
+                    if (chartMeta.clinicalAttribute !== undefined) {
+                        acc.push({
+                            ...this.getDefaultColumnConfig(getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute)),
+                            name: chartMeta.clinicalAttribute.displayName
+                        });
+                    }
+                    return acc;
+                }, defaultColumns);
         },
         default: []
     });
 
     @autobind
-    getProgressItems(elapsedSecs:number): IProgressIndicatorItem[] {
+    getProgressItems(elapsedSecs: number): IProgressIndicatorItem[] {
         return [{
             label: 'Loading clinical data' + (elapsedSecs > 2 ? ' - this can take several seconds' : ''),
             promises: [this.props.store.getDataForClinicalDataTab]
@@ -83,14 +83,15 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
                         <LoadingIndicator
                             isLoading={this.columns.isPending || this.props.store.getDataForClinicalDataTab.isPending}
                             size={"big"} center={true}>
-                            <ProgressIndicator getItems={this.getProgressItems} show={this.columns.isPending || this.props.store.getDataForClinicalDataTab.isPending}/>
+                            <ProgressIndicator getItems={this.getProgressItems}
+                                               show={this.columns.isPending || this.props.store.getDataForClinicalDataTab.isPending}/>
                         </LoadingIndicator>
                     </Then>
                     <Else>
                         <ClinicalDataTabTableComponent
-                            initialItemsPerPage={10}
+                            initialItemsPerPage={20}
                             showCopyDownload={true}
-                            showColumnVisibility={true}
+                            showColumnVisibility={false}
                             data={this.props.store.getDataForClinicalDataTab.result || []}
                             columns={this.columns.result}
                         />
