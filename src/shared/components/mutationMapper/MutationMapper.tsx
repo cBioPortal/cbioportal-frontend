@@ -53,9 +53,6 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
     constructor(props: P) {
         super(props);
 
-
-
-
         this.open3dPanel = this.open3dPanel.bind(this);
         this.close3dPanel = this.close3dPanel.bind(this);
         this.toggle3dPanel = this.toggle3dPanel.bind(this);
@@ -434,8 +431,8 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                         <div style={{ display:'flex' }}>
                             <div className="borderedChart" style={{ marginRight:10 }}>
                                 {this.mutationPlot()}
-                                {this.proteinChainPanel()}
                                 {this.trackPanel()}
+                                {this.proteinChainPanel()}
                             </div>
 
                             <div className="mutationMapperMetaColumn">

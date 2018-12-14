@@ -299,7 +299,7 @@ export default class LollipopPlotNoTooltip extends React.Component<LollipopPlotN
     }
 
     @computed private get geneX() {
-        return this.yAxisWidth + 50;
+        return this.yAxisWidth + 60;
     }
 
     @computed private get geneY() {

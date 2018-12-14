@@ -12,7 +12,7 @@ import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome"
 import {IHotspotDataWrapper} from "shared/model/CancerHotspots";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
-import {generateQueryVariantId, generateQueryVariant} from "shared/lib/OncoKbUtils";
+import {getEvidenceQuery, getIndicatorData} from "shared/lib/OncoKbUtils";
 import {is3dHotspot, isRecurrentHotspot} from "shared/lib/AnnotationUtils";
 import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData, ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
 import {buildCivicEntry} from "shared/lib/CivicUtils";
@@ -173,28 +173,12 @@ export default class AnnotationColumnFormatter
 
     public static getIndicatorData(mutation:Mutation, oncoKbData:IOncoKbData): IndicatorQueryResp|undefined
     {
-        if (oncoKbData.uniqueSampleKeyToTumorType === null || oncoKbData.indicatorMap === null) {
-            return undefined;
-        }
-
-        const id = generateQueryVariantId(mutation.gene.entrezGeneId,
-            oncoKbData.uniqueSampleKeyToTumorType[mutation.uniqueSampleKey],
-            mutation.proteinChange,
-            mutation.mutationType);
-
-        return oncoKbData.indicatorMap[id];
+        return getIndicatorData(mutation, oncoKbData);
     }
 
     public static getEvidenceQuery(mutation:Mutation, oncoKbData:IOncoKbData): Query|undefined
     {
-        // return null in case sampleToTumorMap is null
-        return oncoKbData.uniqueSampleKeyToTumorType ? generateQueryVariant(mutation.gene.entrezGeneId,
-            oncoKbData.uniqueSampleKeyToTumorType[mutation.uniqueSampleKey],
-            mutation.proteinChange,
-            mutation.mutationType,
-            mutation.proteinPosStart,
-            mutation.proteinPosEnd
-        ) : undefined;
+        return getEvidenceQuery(mutation, oncoKbData);
     }
 
     public static getMyCancerGenomeLinks(mutation:Mutation, myCancerGenomeData: IMyCancerGenomeData):string[] {
