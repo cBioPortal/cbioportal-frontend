@@ -1,5 +1,4 @@
 import * as React from "react";
-import {Modal} from "react-bootstrap";
 import {observer} from "mobx-react";
 import {Circle} from "better-react-spinkit";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
@@ -15,9 +14,8 @@ import {
 import {observable} from "mobx";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import OncoKbTooltip from "./OncoKbTooltip";
+import OncoKbFeedback from "./OncoKbFeedback";
 import OncokbPubMedCache from "shared/cache/PubMedCache";
-import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
-import AppConfig from "appConfig";
 
 export interface IOncoKbProps {
     status: "pending" | "error" | "complete";
@@ -118,7 +116,13 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
                 oncoKbContent = (
                     <span>
                         {oncoKbContent}
-                        {this.feedbackModal(this.props.hugoGeneSymbol, this.props.evidenceQuery && this.props.evidenceQuery.alteration)}
+                        <OncoKbFeedback
+                            userEmailAddress={this.props.userEmailAddress}
+                            hugoSymbol={this.props.hugoGeneSymbol}
+                            alteration={this.props.evidenceQuery ? this.props.evidenceQuery.alteration : undefined}
+                            showFeedback={this.showFeedback}
+                            handleFeedbackClose={this.handleFeedbackClose}
+                        />
                     </span>
                 );
             }
@@ -161,33 +165,6 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
                     <i className="fa fa-exclamation-triangle text-danger" />
                 </span>
             </DefaultTooltip>
-        );
-    }
-
-    public feedbackModal(hugoSymbol?:string, alteration?:string)
-    {
-        const url = "https://docs.google.com/forms/d/1lt6TtecxHrhIE06gAKVF_JW4zKFoowNFzxn6PJv4g7A/viewform";
-        const geneParam = `entry.1744186665=${hugoSymbol || ''}`;
-        const alterationParam = `entry.1671960263=${alteration || ''}`;
-        const userParam = `entry.1381123986=${this.props.userEmailAddress || ''}`;
-        const uriParam = `entry.1083850662=${encodeURIComponent(window.location.href)}`;
-
-        return (
-            <Modal show={this.showFeedback} onHide={this.handleFeedbackClose}>
-                <Modal.Header closeButton>
-                    <Modal.Title>OncoKB Annotation Feedback</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <iframe
-                        src={`${url}?${geneParam}&${alterationParam}&entry.118699694&entry.1568641202&${userParam}&${uriParam}&embedded=true`}
-                        style={{width:550, height:500, border:"none", marginLeft:"10px"}}
-                        marginHeight={0}
-                        marginWidth={0}
-                    >
-                        <TableCellStatusIndicator status={TableCellStatus.LOADING} />
-                    </iframe>
-                </Modal.Body>
-            </Modal>
         );
     }
 
