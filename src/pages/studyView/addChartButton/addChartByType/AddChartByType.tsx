@@ -15,6 +15,7 @@ import {ClinicalDataCountSet} from "../../StudyViewPageStore";
 import FixedHeaderTable from "../../table/FixedHeaderTable";
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
+import EllipsisTextTooltip from "../../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
 
 export interface IAddChartByTypeProps {
     options: ChartOption[];
@@ -71,7 +72,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                             this.props.onToggleOption(option.key)
                         }}
                     >
-                        {option.label}
+                        <EllipsisTextTooltip text={option.label}/>
                     </LabeledCheckbox>
                 </div>
             )
@@ -126,6 +127,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                     removeAll={this.removeAll}
                     showSelectableNumber={true}
                     showAddRemoveAllButtons={true}
+                    autoFocusSearchAfterRendering={true}
                     sortBy={''}
                 />
                 {

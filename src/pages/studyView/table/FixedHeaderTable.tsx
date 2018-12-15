@@ -35,6 +35,7 @@ export type IFixedHeaderTableProps<T> = {
     removeAll?: (data: T[]) => void;
     showSelectableNumber?: boolean;
     isSelectedRow?: (data: T) => boolean;
+    autoFocusSearchAfterRendering?:boolean;
     afterSorting?: (sortBy: string, sortDirection: SortDirection) => void;
 };
 
@@ -46,6 +47,8 @@ const RVSDTtoStrType = {
 @observer
 export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTableProps<T>, {}> {
     private _store: LazyMobXTableStore<T>;
+    inputElement:HTMLSpanElement;
+
     @observable private _sortBy: string;
     @observable private _sortDirection: SortDirection;
 
@@ -54,6 +57,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
         showControlsAtTop: false,
         showSelectSamples: false,
         showAddRemoveAllButtons: false,
+        autoFocusSearchAfterRendering: false,
         width: 398,
         height: 350,
         showSelectableNumber: false,
@@ -192,6 +196,17 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
         });
     }
 
+    @autobind
+    setInputRef(el: any ) {
+        this.inputElement = el;
+    }
+
+    componentDidMount(): void {
+        if (this.props.autoFocusSearchAfterRendering) {
+            this.inputElement.focus();
+        }
+    }
+
     getControls() {
         return <div className={classnames(styles.controls)}>
             {!this.props.showControlsAtTop &&
@@ -217,6 +232,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
             </If>
             {this.props.showControlsAtTop &&
             <input placeholder={"Search..."} type="text" onInput={this.onFilterTextChange()}
+                   ref={this.setInputRef}
                    className={classnames('form-control', styles.tableSearchInput)}/>}
         </div>
     }
