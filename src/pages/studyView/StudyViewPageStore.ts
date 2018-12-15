@@ -1584,9 +1584,9 @@ export class StudyViewPageStore {
 
     readonly clinicalAttributes = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
-        invoke: () => defaultClient.fetchClinicalAttributesUsingPOST({
+        invoke: async () => _.uniqBy(await defaultClient.fetchClinicalAttributesUsingPOST({
             studyIds: this.queriedPhysicalStudyIds.result
-        }),
+        }), clinicalAttribute => `${clinicalAttribute.patientAttribute}-${clinicalAttribute.clinicalAttributeId}`),
         default: [],
         onResult:(clinicalAttributes)=>{
             clinicalAttributes.forEach((obj:ClinicalAttribute) => {
