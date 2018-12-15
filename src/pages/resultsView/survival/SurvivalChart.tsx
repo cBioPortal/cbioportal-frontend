@@ -15,7 +15,7 @@ import {
     getDownloadContent, convertScatterDataToDownloadData, downSampling, GroupedScatterData, filterScatterData,
     SurvivalPlotFilters
 } from "./SurvivalUtil";
-import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
+import CBIOPORTAL_VICTORY_THEME, {baseLabelStyles} from "../../../shared/theme/cBioPoralTheme";
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import {getPatientViewUrl} from "../../../shared/api/urls";
 import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
@@ -91,9 +91,14 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
             }
         },
+        pValue: {
+            x: 610,
+            y: 30,
+            textAnchor:"start"
+        },
         legend: {
             x: 600,
-            y: 40
+            y: 50
         }
     };
 
@@ -235,13 +240,23 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                 });
             }
         }
-        if (this.props.showLogRankPVal && this.logRankTestPVal !== null) {
-            data.push({
-                name: `Logrank Test P-Value: ${toConditionalPrecision(this.logRankTestPVal, 3, 0.001)}`,
-                symbol: { opacity: 0 }
-            });
-        }
         return data;
+    }
+
+    private get pValueText() {
+        if (this.props.showLogRankPVal && this.logRankTestPVal !== null) {
+            return (
+                <VictoryLabel
+                    x={this.styleOpts.pValue.x}
+                    y={this.styleOpts.pValue.y}
+                    style={baseLabelStyles}
+                    textAnchor={this.styleOpts.pValue.textAnchor}
+                    text={`Logrank Test P-Value: ${toConditionalPrecision(this.logRankTestPVal, 3, 0.01)}`}
+                />
+            );
+        } else {
+            return null;
+        }
     }
 
     @computed get legendDataForDownload() {
@@ -361,6 +376,20 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
     }
 
     @computed
+    get xAxisTickCount() {
+        return this.getAxisTickCount(this.showLegend ? this.styleOpts.legend.x : this.styleOpts.width);
+    }
+
+    getAxisTickCount(size: number) {
+        return Math.ceil(size / 200) * 5;
+    }
+
+    @computed
+    get showLegend() {
+        return this.victoryLegendData.length > 0;
+    }
+
+    @computed
     get chart() {
         return (
             <div className={this.props.className} data-test={'SurvivalChart'}>
@@ -387,17 +416,18 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                               padding={this.styleOpts.padding}
                               theme={CBIOPORTAL_VICTORY_THEME}
                               domainPadding={{x: [10, 50], y: [20, 20]}}>
-                    <VictoryAxis style={this.styleOpts.axis.x} crossAxis={false} tickCount={11}
+                    <VictoryAxis style={this.styleOpts.axis.x} crossAxis={false} tickCount={this.xAxisTickCount}
                                  label={this.props.xAxisLabel}/>
                     <VictoryAxis label={this.props.yAxisLabel} dependentAxis={true} tickFormat={(t: any) => `${t}%`}
                                  tickCount={11}
                                  style={this.styleOpts.axis.y} domain={[0, 100]} crossAxis={false}/>
                     {this.scattersAndLines}
-                    {(this.victoryLegendData.length > 0) &&
+                    {this.showLegend &&
                     <VictoryLegend x={this.styleOpts.legend.x} y={this.styleOpts.legend.y}
                                    data={this.victoryLegendData} />
                     }
                     {this.legendForDownload}
+                    {this.pValueText}
                 </VictoryChart>
             </div>
         );
