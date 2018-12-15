@@ -85,7 +85,6 @@ import {ChartDimension, ChartTypeEnum, STUDY_VIEW_CONFIG, StudyViewLayout} from 
 import {getMDAndersonHeatmapStudyMetaUrl} from "../../shared/api/urls";
 import onMobxPromise from "../../shared/lib/onMobxPromise";
 
-
 export enum ClinicalDataTypeEnum {
     SAMPLE = 'SAMPLE',
     PATIENT = 'PATIENT',
@@ -445,9 +444,9 @@ export class StudyViewPageStore {
         };
     }
 
-    private clinicalDataBinPromises: { [id: string]: MobxPromise<DataBin[]> } = {};
-    private clinicalDataCountPromises: { [id: string]: MobxPromise<ClinicalDataCountWithColor[]> } = {};
-    private customChartsPromises: { [id: string]: MobxPromise<ClinicalDataCountWithColor[]> } = {};
+    public clinicalDataBinPromises: { [id: string]: MobxPromise<DataBin[]> } = {};
+    public clinicalDataCountPromises: { [id: string]: MobxPromise<ClinicalDataCountWithColor[]> } = {};
+    public customChartsPromises: { [id: string]: MobxPromise<ClinicalDataCountWithColor[]> } = {};
 
     @observable.ref private _analysisGroupsClinicalAttribute:ClinicalAttribute|undefined;
     @observable.ref private _analysisGroups:ReadonlyArray<AnalysisGroup>|undefined;
