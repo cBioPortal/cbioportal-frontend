@@ -41,7 +41,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                     label: next.label,
                     key: next.key,
                     disabled: disabled,
-                    selected: !disabled && next.selected,
+                    selected: next.selected,
                     freq: disabled ? 0 : this.props.freqPromise.result![next.key]
                 });
                 return acc;
@@ -115,17 +115,28 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
 
     render() {
         return (
-            <AddChartTableComponent
-                width={350}
-                height={this.tableHeight}
-                columns={this._columns}
-                data={this.options}
-                showControlsAtTop={true}
-                addAll={this.addAll}
-                removeAll={this.removeAll}
-                showAddRemoveAllButtons={true}
-                sortBy={''}
-            />
+            <div style={{display: 'flex', flexDirection: 'column'}}>
+                <AddChartTableComponent
+                    width={350}
+                    height={this.tableHeight}
+                    columns={this._columns}
+                    data={this.options}
+                    showControlsAtTop={true}
+                    addAll={this.addAll}
+                    removeAll={this.removeAll}
+                    showSelectableNumber={true}
+                    showAddRemoveAllButtons={true}
+                    sortBy={''}
+                />
+                {
+                    this.props.freqPromise.isPending && (
+                        <span>
+                            <LoadingIndicator isLoading={true}/>
+                            Calculating data availability...
+                        </span>
+                    )
+                }
+            </div>
         )
     }
 }

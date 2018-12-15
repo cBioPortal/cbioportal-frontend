@@ -1,102 +1,122 @@
 import {assert} from 'chai';
 import * as _ from 'lodash';
 import {
-    CHART_NAME_LINE_START,
-    ErrorCodeEnum,
+    DEFAULT_GROUP_NAME_WITH_USER_INPUT,
+    DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT,
+    ErrorCodeEnum, getGroups,
     getLine,
     getLines,
     InputLine,
     LineTypeEnum,
     LineValidationResult,
-    purifyLine,
     validateLines
 } from "./CustomCaseSelectionUtils";
 import {ClinicalDataTypeEnum} from "../../StudyViewPageStore";
 import {Sample} from "../../../../shared/api/generated/CBioPortalAPI";
 
 describe('CustomCaseSelectionUtils', () => {
+    describe('getGroups', () => {
+        const s1 = {
+            "studyId": "s1",
+            "sampleId": "c1",
+            "patientId": "p1",
+            "copyNumberSegmentPresent": false,
+            "sampleType": "Primary Solid Tumor",
+            "sequenced": true,
+            "uniquePatientKey": "s1_p1",
+            "uniqueSampleKey": "s1_c1"
+        } as Sample;
+
+        const s2 = {
+            "studyId": "s1",
+            "sampleId": "c2",
+            "patientId": "p2",
+            "copyNumberSegmentPresent": false,
+            "sampleType": "Primary Solid Tumor",
+            "sequenced": true,
+            "uniquePatientKey": "s1_p2",
+            "uniqueSampleKey": "s1_c2"
+        } as Sample;
+
+        it('group name should be Selected when it\'s not specified by user', () => {
+            const groups = getGroups([{
+                line: 's1:c1',
+                studyId: 's1',
+                caseId: 'c1'
+            }], 's1', ClinicalDataTypeEnum.SAMPLE, [s1], false);
+            assert.isTrue(groups.length === 1);
+            assert.isTrue(groups[0].name === DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT);
+        });
+
+        it('group name should be NA when it\'s specified by user', () => {
+            const groups = getGroups([{line: 's1:c1', studyId: 's1', caseId: 'c1'}, {
+                line: 's1:c2',
+                studyId: 's1',
+                caseId: 'c2',
+                groupName: 'Group1'
+            }], 's1', ClinicalDataTypeEnum.SAMPLE, [s1, s2], true);
+            assert.isTrue(groups.length === 2);
+            assert.isTrue(groups[0].name === DEFAULT_GROUP_NAME_WITH_USER_INPUT);
+            assert.isTrue(groups[1].name === 'Group1');
+        });
+    });
+
     describe('getLine', () => {
-        it('CHART NAME should be properly assigned', () => {
-            assert.isTrue(getLine('#chart_name:test').type === LineTypeEnum.CHART_NAME);
-            assert.isTrue(getLine('#chart_name: test').type === LineTypeEnum.CHART_NAME);
-            assert.isTrue(getLine('#chart_name: test ').type === LineTypeEnum.CHART_NAME);
-            assert.isTrue(getLine('#chart_name:').type === LineTypeEnum.CHART_NAME);
+        it('study id should be properly assigned', () => {
+            const result = getLine('test:test1');
+            assert.equal(result.studyId, 'test');
+            assert.equal(result.caseId, 'test1');
         });
-        it('GROUP NAME should be properly assigned', () => {
-            assert.isTrue(getLine('>group:test').type === LineTypeEnum.GROUP_NAME);
-            assert.isTrue(getLine('>group: test').type === LineTypeEnum.GROUP_NAME);
-            assert.isTrue(getLine('>group: test ').type === LineTypeEnum.GROUP_NAME);
-            assert.isTrue(getLine('>group:').type === LineTypeEnum.GROUP_NAME);
+        it('case id should be properly assigned', () => {
+            const result = getLine('test');
+            assert.equal(result.caseId, 'test');
         });
-        it('CASE_ID should be properly assigned', () => {
-            assert.isTrue(getLine('>:test').type === LineTypeEnum.CASE_ID);
-            assert.isTrue(getLine('#: test').type === LineTypeEnum.CASE_ID);
-            assert.isTrue(getLine(': test ').type === LineTypeEnum.CASE_ID);
-            assert.isTrue(getLine('test').type === LineTypeEnum.CASE_ID);
-            assert.isTrue(getLine('').type === LineTypeEnum.CASE_ID);
+        it('group name should be properly assigned when separate by space', () => {
+            const result = getLine('test:test1 group1');
+            assert.equal(result.studyId, 'test');
+            assert.equal(result.caseId, 'test1');
+            assert.equal(result.groupName, 'group1');
+        });
+        it('group name should be properly assigned when separate by tab', () => {
+            const result = getLine('test:test1\tgroup1');
+            assert.equal(result.studyId, 'test');
+            assert.equal(result.caseId, 'test1');
+            assert.equal(result.groupName, 'group1');
         });
     });
     describe('getLines', () => {
-        it('parse chart name properly', () => {
-            const line = '#chart_name: test';
+        it('proper number of lines should be returned - 1', () => {
+            const line = 'test\n';
             const result = getLines(line);
             assert.isTrue(result.length === 1);
-            assert.isTrue(result[0].type === LineTypeEnum.CHART_NAME);
-            assert.isTrue(result[0].content.length === 1);
-            assert.isTrue(result[0].content[0] === 'test');
         });
 
-        it('parse group name properly', () => {
-            const line = '#chart_name: test\n>group: test1\n';
+        it('proper number of lines should be returned - 2', () => {
+            const line = 'test\n\n';
             const result = getLines(line);
-            assert.isTrue(result.length === 2);
-            assert.isTrue(result[1].type === LineTypeEnum.GROUP_NAME);
-            assert.isTrue(result[1].content.length === 1);
-            assert.isTrue(result[1].content[0] === 'test1');
+            assert.isTrue(result.length === 1);
+        });
+
+        it('proper number of lines should be returned - 3', () => {
+            const line = 'test';
+            const result = getLines(line);
+            assert.isTrue(result.length === 1);
+        });
+
+        it('study id should be undefined', () => {
+            const line = 'c1';
+            const result = getLines(line);
+            assert.isTrue(result.length === 1);
+            assert.isTrue(result[0].studyId === undefined);
+            assert.isTrue(result[0].caseId === 'c1');
         });
 
         it('parse case id properly', () => {
-            const line = '#chart_name: test\n>group: test1\ns1:c1';
+            const line = 's1:c1';
             const result = getLines(line);
-            assert.isTrue(result.length === 3);
-            assert.isTrue(result[2].type === LineTypeEnum.CASE_ID);
-            assert.isTrue(result[2].content.length === 2);
-            assert.isTrue(result[2].content[0] === 's1');
-            assert.isTrue(result[2].content[1] === 'c1');
-        });
-    });
-    describe('purifyLine', () => {
-        it('parse chart name properly - 1', () => {
-            const line = '#chart_name: test';
-            const result = purifyLine(line, CHART_NAME_LINE_START);
             assert.isTrue(result.length === 1);
-            assert.isTrue(result[0] === 'test');
-        });
-
-        it('parse chart name properly - 2', () => {
-            const line = '#chart_name:test';
-            const result = purifyLine(line, CHART_NAME_LINE_START);
-            assert.isTrue(result.length === 1);
-            assert.isTrue(result[0] === 'test');
-        });
-
-        it('parse chart name properly - 3', () => {
-            const line = '#chart_name:test ';
-            const result = purifyLine(line, CHART_NAME_LINE_START);
-            assert.isTrue(result.length === 1);
-            assert.isTrue(result[0] === 'test');
-        });
-
-        it('parse chart name properly - 4', () => {
-            const line = '#chart_name:      ';
-            const result = purifyLine(line, CHART_NAME_LINE_START);
-            assert.isTrue(result.length === 0);
-        });
-
-        it('parse chart name properly - 5', () => {
-            const line = '   #chart_name:      ';
-            const result = purifyLine(line, CHART_NAME_LINE_START);
-            assert.isTrue(result.length === 0);
+            assert.isTrue(result[0].studyId === 's1');
+            assert.isTrue(result[0].caseId === 'c1');
         });
     });
 
@@ -127,47 +147,20 @@ describe('CustomCaseSelectionUtils', () => {
             };
         }) as Sample[];
 
-        it('chart name/group name should be specified - 1', () => {
-            const lines: InputLine[] = [];
-            const result = validateLines(lines, ClinicalDataTypeEnum.PATIENT, st1, true, ['chol_nus_2012']);
-            assert.isTrue(result.error.length !== 0);
-            assert.isTrue(_.keyBy(result.error, 'code')[ErrorCodeEnum.NO_CHART_NAME] !== undefined);
-            assert.isTrue(_.keyBy(result.error, 'code')[ErrorCodeEnum.NO_GROUP_NAME] !== undefined);
-        });
-
-        it('chart name/group name should be specified - 2', () => {
-            const lines: InputLine[] = [{
-                type: LineTypeEnum.CASE_ID,
-                line: 'chol_nus_2012:s1',
-                content: ['chol_nus_2012', 's1']
-            }];
-            const result: LineValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1, true, ['chol_nus_2012']);
-            assert.isTrue(result.error.length !== 0);
-            assert.isTrue(_.keyBy(result.error, 'code')[ErrorCodeEnum.NO_CHART_NAME] !== undefined);
-            assert.isTrue(_.keyBy(result.error, 'code')[ErrorCodeEnum.NO_GROUP_NAME] !== undefined);
-        });
-
         it('In multiple studies, study id needs to be specified', () => {
             const lines: InputLine[] = [{
-                type: LineTypeEnum.CHART_NAME,
-                line: '#chart_name: test',
-                content: ['chol_nus_2012', 's1']
-            }, {
-                type: LineTypeEnum.GROUP_NAME,
-                line: '>group:group1',
-                content: ['group1']
-            }, {
-                type: LineTypeEnum.CASE_ID,
                 line: 'chol_nus_2012:s1',
-                content: ['chol_nus_2012', 's1']
+                studyId: 'chol_nus_2012',
+                caseId: 's1'
             }, {
-                type: LineTypeEnum.CASE_ID,
+
                 line: 'lgg_tcga:s1',
-                content: ['lgg_tcga', 's1']
+                studyId: 'lgg_tcga',
+                caseId: 's1'
             }, {
-                type: LineTypeEnum.CASE_ID,
+
                 line: 's1',
-                content: ['s1']
+                caseId: 's1'
             }];
             const result: LineValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1.concat(st2), false, ['chol_nus_2012', 'lgg_tcga']);
 
@@ -177,25 +170,17 @@ describe('CustomCaseSelectionUtils', () => {
 
         it('Give error for unknown study ids', () => {
             const lines: InputLine[] = [{
-                type: LineTypeEnum.CHART_NAME,
-                line: '#chart_name: test',
-                content: ['chol_nus_2012', 's1']
-            }, {
-                type: LineTypeEnum.GROUP_NAME,
-                line: '>group:group1',
-                content: ['group1']
-            }, {
-                type: LineTypeEnum.CASE_ID,
                 line: 'chol_nus_2012:s1',
-                content: ['chol_nus_2012', 's1']
+                studyId: 'chol_nus_2012',
+                caseId: 's1'
             }, {
-                type: LineTypeEnum.CASE_ID,
                 line: 'lgg_tcga:s1',
-                content: ['lgg_tcga', 's1']
+                studyId: 'lgg_tcga',
+                caseId: 's1'
             }, {
-                type: LineTypeEnum.CASE_ID,
                 line: 'test:s1',
-                content: ['test', 's1']
+                studyId: 'test',
+                caseId: 's1'
             }];
             const result: LineValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1.concat(st2), false, ['chol_nus_2012', 'lgg_tcga']);
             assert.isTrue(result.error.length !== 0);
@@ -204,21 +189,12 @@ describe('CustomCaseSelectionUtils', () => {
 
         it('In single study, study id does not need to be specified', () => {
             const lines: InputLine[] = [{
-                type: LineTypeEnum.CHART_NAME,
-                line: '#chart_name: test',
-                content: ['chol_nus_2012', 's1']
-            }, {
-                type: LineTypeEnum.GROUP_NAME,
-                line: '>group:group1',
-                content: ['group1']
-            }, {
-                type: LineTypeEnum.CASE_ID,
                 line: 'chol_nus_2012:s1',
-                content: ['chol_nus_2012', 's1']
+                studyId: 'chol_nus_2012',
+                caseId: 's1'
             }, {
-                type: LineTypeEnum.CASE_ID,
                 line: 's1',
-                content: ['s1']
+                caseId: 's1'
             }];
             const result: LineValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1, true, ['chol_nus_2012']);
             assert.isTrue(result.error.length === 0);
@@ -226,27 +202,13 @@ describe('CustomCaseSelectionUtils', () => {
 
 
         it('TOO_MANY_INVALID_CASE_ID should be given when there are too many invalid case ids', () => {
-            let lines: InputLine[] = [{
-                type: LineTypeEnum.CHART_NAME,
-                line: '#chart_name: test',
-                content: ['chol_nus_2012', 's1']
-            }, {
-                type: LineTypeEnum.GROUP_NAME,
-                line: '>group:group1',
-                content: ['group1']
-            }, {
-                type: LineTypeEnum.CASE_ID,
-                line: 'chol_nus_2012:s1',
-                content: ['chol_nus_2012', 's1']
-            }];
-
-            lines = lines.concat(new Array(20).fill('').map((item, index) => {
+            const lines: InputLine[] = new Array(20).fill('').map((item, index) => {
                 return {
-                    type: LineTypeEnum.CASE_ID,
                     line: 'chol_nus_2012:ss' + index,
-                    content: ['chol_nus_2012', 'ss' + index]
+                    studyId: 'chol_nus_2012',
+                    caseId: 'ss' + index
                 };
-            }));
+            });
 
             const result: LineValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1, false, ['chol_nus_2012']);
             const errors = _.keyBy(result.error, 'code');

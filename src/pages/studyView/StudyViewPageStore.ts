@@ -1675,6 +1675,9 @@ export class StudyViewPageStore {
         this._customCharts.set(uniqueKey, chartMeta);
         this._chartVisibility.set(uniqueKey, true);
         this._customChartsSelectedCases.set(uniqueKey, allCases);
+
+        // Autoselect the groups
+        this.setCustomChartFilters(chartMeta, newChart.groups.map(group=>group.name));
     }
 
     @computed

@@ -2,14 +2,13 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import {Sample} from 'shared/api/generated/CBioPortalAPIInternal';
 import {observer} from "mobx-react";
-import addChartStyles from "../styles.module.scss";
 import styles from "./styles.module.scss";
 import {action, computed, observable} from 'mobx';
 import {ButtonGroup, Modal, Radio} from 'react-bootstrap';
 import {ClinicalDataType, ClinicalDataTypeEnum, NewChart} from "../../StudyViewPageStore";
 import ErrorBox from "../../../../shared/components/errorBox/ErrorBox";
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
-import {getDefaultTitle, parseContent, ParseResult} from "./CustomCaseSelectionUtils";
+import {parseContent, ParseResult} from "./CustomCaseSelectionUtils";
 import autobind from 'autobind-decorator';
 
 export interface ICustomCaseSelectionProps {
@@ -23,13 +22,17 @@ const GroupByOptions: { value: ClinicalDataType, label: string; }[] = [
     {value: ClinicalDataTypeEnum.PATIENT, label: 'By patient ID'}
 ];
 
+const DEFAULT_CHART_NAME = 'Custom Chart';
+
 @observer
 export default class CustomCaseSelection extends React.Component<ICustomCaseSelectionProps, {}> {
     private validateContent: boolean = false;
+    @observable chartName: string;
     @observable showCaseIds: boolean = false;
     @observable caseIdsMode: ClinicalDataType = ClinicalDataTypeEnum.SAMPLE;
     @observable content: string = '';
     @observable validContent: string = '';
+    @observable chartAdded: boolean = false;
 
     @computed
     get sampleSet(): { [id: string]: Sample } {
@@ -48,17 +51,16 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
 
     @computed
     get newChartInfo(): NewChart {
-        return this.result.validationResult.error.length === 0 ? this.result.chart : {
-            name: '',
-            groups: []
-        };
+        return {
+            name: this.chartName ? this.chartName : DEFAULT_CHART_NAME,
+            groups: this.result.validationResult.error.length === 0 ? this.result.groups : []
+        }
     }
 
     @autobind
     @action
     onClick() {
-        const content = getDefaultTitle();
-        this.content = content + this.props.selectedSamples.map(sample => {
+        this.content = this.props.selectedSamples.map(sample => {
             return `${sample.studyId}:${(this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE) ? sample.sampleId : sample.patientId}`
         }).join("\n")
         this.validateContent = false;
@@ -72,6 +74,20 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
         this.validateContent = true;
     }
 
+    @autobind
+    @action
+    onChartNameChange(event: any) {
+        this.chartName = event.currentTarget.value;
+    }
+
+    @autobind
+    @action
+    onAddChart() {
+        this.props.onSubmit(this.newChartInfo);
+        this.chartAdded = true;
+        setTimeout(() => this.chartAdded = false, 5000);
+    }
+
     public mainContent() {
         return (
             <div className={styles.body}>
@@ -82,6 +98,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                                 checked={option.value === this.caseIdsMode}
                                 onChange={(e) => {
                                     this.caseIdsMode = $(e.target).attr("data-value") as any;
+                                    this.validateContent = true;
                                 }}
                                 inline
                                 data-value={option.value}
@@ -119,13 +136,26 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                                          error={message.message}/>
                     })
                 }
-                <button
-                    disabled={this.result.validationResult.error.length > 0 || this.newChartInfo.groups.length === 0}
-                    className="btn btn-default btn-sm"
-                    style={{float: "right"}}
-                    onClick={event => this.props.onSubmit(this.newChartInfo)}>
-                    Add Chart
-                </button>
+                <div className={styles.operations}>
+                    <input placeholder={"Chart name (optional)"}
+                           style={{width: '200px'}}
+                           type="text"
+                           onInput={this.onChartNameChange}
+                           className='form-control input-sm'/>
+                    <button
+                        disabled={this.result.validationResult.error.length > 0 || this.newChartInfo.groups.length === 0}
+                        className="btn btn-primary btn-sm"
+                        onClick={this.onAddChart}>
+                        Add Chart
+                    </button>
+                </div>
+                {this.chartAdded &&
+                <div className='alert alert-success' style={{marginTop: '10px', marginBottom: '0 !important'}}>
+                    <span>
+                        <i className='fa fa-md fa-check'/> Chart Added
+                    </span>
+                </div>
+                }
             </div>
         );
     }

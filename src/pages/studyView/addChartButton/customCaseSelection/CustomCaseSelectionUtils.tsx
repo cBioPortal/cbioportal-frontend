@@ -1,4 +1,10 @@
-import {ClinicalDataType, ClinicalDataTypeEnum, CustomChartIdentifier, NewChart} from "../../StudyViewPageStore";
+import {
+    ClinicalDataType,
+    ClinicalDataTypeEnum,
+    CustomChartIdentifier,
+    CustomGroup,
+    NewChart
+} from "../../StudyViewPageStore";
 import * as _ from 'lodash';
 import {Sample} from "../../../../shared/api/generated/CBioPortalAPI";
 
@@ -12,15 +18,10 @@ type Code =
     | 'INPUT_ERROR'
     | 'NO_CHART_NAME';
 
-export const CHART_NAME_LINE_START = '#chart_name:';
-export const GROUP_LINE_START = '>group:';
-export const DEFAULT_CHART_NAME = 'Custom Chart';
-export const DEFAULT_GROUP_NAME = 'Selected';
+export const DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT = 'Selected';
+export const DEFAULT_GROUP_NAME_WITH_USER_INPUT = 'Unselected';
 
 export enum ErrorCodeEnum {
-    MULTI_NAME = 'MULTI_NAME',
-    NO_CHART_NAME = 'NO_CHART_NAME',
-    NO_GROUP_NAME = 'NO_GROUP_NAME',
     OVERLAP = 'OVERLAP',
     INVALID_CASE_ID = 'INVALID_CASE_ID',
     TOO_MANY_INVALID_CASE_ID = 'TOO_MANY_INVALID_CASE_ID',
@@ -39,7 +40,7 @@ export type ValidationMessage = {
 };
 
 export type ParseResult = {
-    chart: NewChart,
+    groups: CustomGroup[],
     validationResult: LineValidationResult
 }
 
@@ -49,12 +50,11 @@ export enum LineTypeEnum {
     CASE_ID = 'CASE_ID',
 }
 
-export type LineType = LineTypeEnum.CHART_NAME | LineTypeEnum.CASE_ID | LineTypeEnum.GROUP_NAME;
-
 export type InputLine = {
-    type: LineType,
     line: string,
-    content: string[]
+    studyId?: string,
+    caseId: string,
+    groupName?: string
 }
 
 export type LineValidationResult = {
@@ -63,22 +63,23 @@ export type LineValidationResult = {
 }
 
 export function getLine(line: string): InputLine {
-    let type = LineTypeEnum.CASE_ID;
-    let content = [];
-    if (line.startsWith(CHART_NAME_LINE_START)) {
-        type = LineTypeEnum.CHART_NAME;
-        content = purifyLine(line, CHART_NAME_LINE_START);
-    } else if (line.startsWith(GROUP_LINE_START)) {
-        type = LineTypeEnum.GROUP_NAME;
-        content = purifyLine(line, GROUP_LINE_START);
-    } else {
-        content = line.split(':');
-    }
-    return {
-        type: type,
+    let parsedResult: InputLine = {
         line: line,
-        content: content
+        caseId: ''
+    };
+
+    const content = line.split(':');
+    if (content.length === 1) {
+        parsedResult.caseId = content[0];
+    } else if (content.length > 1) {
+        parsedResult.studyId = content[0];
+        const groupInfo = content[1].split(/\s|\t/g);
+        if (groupInfo.length > 1) {
+            parsedResult.groupName = groupInfo[1];
+        }
+        parsedResult.caseId = groupInfo[0];
     }
+    return parsedResult;
 }
 
 export function getLines(content: string): InputLine[] {
@@ -95,74 +96,76 @@ export function validateLines(lines: InputLine[], caseType: ClinicalDataType, al
     let errorMessages: ValidationMessage[] = [];
     let warningMessages: ValidationMessage[] = [];
 
-    const chartNames: InputLine[] = findChartNameLines(lines);
-    const groupNames: InputLine[] = findGroupNameLines(lines);
-
     const TOO_MANY = 10;
-
-    if (chartNames.length > 1) {
-        errorMessages.push({
-            code: ErrorCodeEnum.MULTI_NAME,
-            message: new Error('There are multiple rows to define chart name')
-        });
-    } else if (chartNames.length === 0) {
-        errorMessages.push({
-            code: WarningCodeEnum.NO_CHART_NAME,
-            message: new Error(`Chart name is not specified.`)
-        });
-    } else {
-        const name = chartNames[0];
-        if (name.content.length === 0) {
-            errorMessages.push({
-                code: ErrorCodeEnum.NO_CHART_NAME,
-                message: new Error('Chart name is not specified.')
-            });
-        }
-    }
-
-    const groupsWithName = _.filter(groupNames, group => group.content.length > 0);
-    if (groupsWithName.length === 0) {
-        errorMessages.push({
-            code: ErrorCodeEnum.NO_GROUP_NAME,
-            message: new Error('Group name needs to be specified')
-        });
-    }
 
     // Find out the invalid cases
     let invalidCases: string[] = [];
-    const caseLines: string[][] = _.filter(lines, line => line.type === LineTypeEnum.CASE_ID).map(line => line.content);
+
     const validPair: { [key: string]: boolean } = _.reduce(allSamples, (acc, sample) => {
         acc[`${sample.studyId}:${caseType === ClinicalDataTypeEnum.PATIENT ? sample.patientId : sample.sampleId}`] = true;
         return acc;
     }, {} as { [key: string]: boolean });
 
-    _.each(caseLines, line => {
-        if (line.length === 1) {
+    let occurrence: { [key: string]: number } = {};
+
+    _.each(lines, line => {
+        let _case = '';
+        if (line.studyId === undefined || line.studyId === '') {
             if (!isSingleStudy) {
                 errorMessages.push({
                     code: ErrorCodeEnum.INVALID_CASE_ID,
-                    message: new Error(`No study specified for ${caseType} id: ${line[0]}, and more than one study selected for query.`)
+                    message: new Error(`No study specified for ${caseType} id: ${line.caseId}, and more than one study selected for query.`)
                 });
-            }
-        } else if (line.length === 2) {
-            if (!_.includes(selectedStudies, line[0])) {
-                errorMessages.push({
-                    code: ErrorCodeEnum.STUDY_NOT_SELECTED,
-                    message: new Error(`Study ${line[0]} is not selected.`)
-                });
-            } else if (validPair[`${line[0]}:${line[1]}`] === undefined) {
-                invalidCases.push(`${line[0]}:${line[1]}`);
-                if (invalidCases.length >= TOO_MANY) {
-                    return false;
+            } else {
+                _case = `${selectedStudies[0]}:${line.caseId}`;
+                if (validPair[_case] === undefined) {
+                    errorMessages.push({
+                        code: ErrorCodeEnum.INVALID_CASE_ID,
+                        message: new Error(`The case id: ${line.caseId} is invalid.`)
+                    });
+                } else {
+                    if (occurrence[_case] === undefined) {
+                        occurrence[_case] = 0;
+                    }
+                    occurrence[_case]++;
                 }
             }
         } else {
-            errorMessages.push({
-                code: ErrorCodeEnum.INPUT_ERROR,
-                message: new Error(`Input error for entity: ${line.join('')}.`)
-            });
+            if (!_.includes(selectedStudies, line.studyId)) {
+                errorMessages.push({
+                    code: ErrorCodeEnum.STUDY_NOT_SELECTED,
+                    message: new Error(`Study ${line.caseId} is not selected.`)
+                });
+            } else {
+                _case = `${line.studyId}:${line.caseId}`;
+                if (validPair[_case] === undefined) {
+                    invalidCases.push(`${line.studyId}:${line.caseId}`);
+                    if (invalidCases.length >= TOO_MANY) {
+                        return false;
+                    }
+                } else {
+                    if (occurrence[_case] === undefined) {
+                        occurrence[_case] = 0;
+                    }
+                    occurrence[_case]++;
+                }
+            }
         }
     });
+
+    // Find duplication cases
+    const dups = _.reduce(occurrence, (acc, count, caseId) => {
+        if (count > 1) {
+            acc.push(caseId);
+        }
+        return acc;
+    }, [] as string[]);
+    if (dups.length > 0) {
+        errorMessages.push({
+            code: ErrorCodeEnum.OVERLAP,
+            message: new Error(`There are duplicate cases. Such as ${dups.slice(0, 3).join(', ')}`)
+        });
+    }
 
     if (invalidCases.length >= TOO_MANY) {
         errorMessages.push({
@@ -187,9 +190,7 @@ export function validateLines(lines: InputLine[], caseType: ClinicalDataType, al
 }
 
 // the lines should already be validated
-export function getNewChart(lines: InputLine[], singleStudyId: string, caseType: ClinicalDataType, allSamples: Sample[]): NewChart {
-    const chartNameLines = findChartNameLines(lines);
-    const chartName = chartNameLines.length > 0 ? chartNameLines[0].content[0] : DEFAULT_CHART_NAME;
+export function getGroups(lines: InputLine[], singleStudyId: string, caseType: ClinicalDataType, allSamples: Sample[], hasGroupName: boolean): CustomGroup[] {
     const sampleMap: { [id: string]: Sample } = {};
     const patientMap: { [id: string]: Sample[] } = {};
     const isPatientId = caseType === ClinicalDataTypeEnum.PATIENT;
@@ -204,64 +205,21 @@ export function getNewChart(lines: InputLine[], singleStudyId: string, caseType:
         patientMap[patientKey].push(sample);
     });
 
-    let groups = [];
-
-    lines = _.filter(lines, line => line.type === LineTypeEnum.GROUP_NAME || line.type === LineTypeEnum.CASE_ID);
-
-    while (lines.length > 0) {
-        const groupIndexStart = _.findIndex(lines, line => line.type === LineTypeEnum.GROUP_NAME);
-        let groupIndexEnd = (groupIndexStart - 1 < lines.length) ? _.findIndex(lines.slice(groupIndexStart + 1), line => line.type === LineTypeEnum.GROUP_NAME) : -1;
-
-        if (groupIndexStart === -1) {
-            lines = [];
-        } else {
-            if (groupIndexEnd === -1) {
-                groupIndexEnd = lines.length - 1;
+    return _.values(_.reduce(lines, (acc, line) => {
+        const groupName = line.groupName || (hasGroupName ? DEFAULT_GROUP_NAME_WITH_USER_INPUT : DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT);
+        if (acc[groupName] == undefined) {
+            acc[groupName] = {
+                name: groupName,
+                cases: []
             }
-            const groupBlock: InputLine[] = lines.splice(groupIndexStart, groupIndexEnd - groupIndexStart + 1);
-            const groupNameLine: InputLine = groupBlock.splice(0, 1)[0];
-            groups.push({
-                name: groupNameLine.content[0],
-                cases: _.reduce(groupBlock, (acc, caseLine) => {
-                    const caseId = caseLine.content.length === 1 ? `${singleStudyId}:${caseLine.content[0]}` : `${caseLine.content[0]}:${caseLine.content[1]}`;
-                    const maps = isPatientId ? patientMap[caseId] : [sampleMap[caseId]];
-                    const matches = parseCase(singleStudyId, isPatientId, maps);
-                    acc.push(...matches);
-                    return acc;
-                }, [] as CustomChartIdentifier[])
-            });
         }
-    }
 
-    return {
-        name: chartName,
-        groups: groups
-    }
-}
-
-
-export function findChartNameLines(lines: InputLine[]) {
-    return _.filter(lines, line => line.type === LineTypeEnum.CHART_NAME);
-}
-
-export function findGroupNameLines(lines: InputLine[]) {
-    return _.filter(lines, line => line.type === LineTypeEnum.GROUP_NAME);
-}
-
-export function getDefaultChartName(): InputLine {
-    return {
-        type: LineTypeEnum.CHART_NAME,
-        line: DEFAULT_CHART_NAME,
-        content: [DEFAULT_CHART_NAME]
-    };
-}
-
-export function getDefaultGroupName(): InputLine {
-    return {
-        type: LineTypeEnum.GROUP_NAME,
-        line: DEFAULT_GROUP_NAME,
-        content: [DEFAULT_GROUP_NAME]
-    };
+        const caseId = line.studyId === undefined ? `${singleStudyId}:${line.caseId}` : `${line.studyId}:${line.caseId}`;
+        const maps = isPatientId ? patientMap[caseId] : [sampleMap[caseId]];
+        const matches = maps === undefined ? [] : parseCase(singleStudyId, isPatientId, maps);
+        acc[groupName].cases.push(...matches);
+        return acc;
+    }, {} as { [key: string]: CustomGroup }));
 }
 
 export function parseContent(content: string, needToValidate: boolean = false, selectedStudies: string[], caseType: ClinicalDataType, allSamples: Sample[], isSingleStudy: boolean): ParseResult {
@@ -271,23 +229,6 @@ export function parseContent(content: string, needToValidate: boolean = false, s
     };
     let lines: InputLine[] = getLines(content);
     if (lines.length > 0) {
-        const chartNameLines = findChartNameLines(lines);
-        if (chartNameLines.length === 0) {
-            validationResult.warning.push({
-                code: WarningCodeEnum.NO_CHART_NAME,
-                message: new Error(`No chart name specified, ${DEFAULT_CHART_NAME} will be used`)
-            });
-            lines.unshift(getDefaultChartName())
-        }
-        const groupNames = findGroupNameLines(lines);
-        if (groupNames.length === 0) {
-            validationResult.warning.push({
-                code: WarningCodeEnum.NO_GROUP_NAME,
-                message: new Error(`No group name specified, ${DEFAULT_GROUP_NAME} will be used`)
-            });
-            lines.unshift(getDefaultGroupName());
-        }
-
         if (needToValidate) {
             const result = validateLines(lines, caseType, allSamples, isSingleStudy, selectedStudies);
             validationResult.warning.push(...result.warning);
@@ -295,17 +236,16 @@ export function parseContent(content: string, needToValidate: boolean = false, s
         }
     }
 
+    const hasGroupName = _.find(lines, (line => line.groupName !== undefined && line.groupName !== '')) !== undefined;
+
     if (validationResult.error.length > 0) {
         return {
-            chart: {
-                name: '',
-                groups: []
-            },
+            groups: [],
             validationResult: validationResult
         };
     } else {
         return {
-            chart: getNewChart(lines, selectedStudies[0], caseType, allSamples),
+            groups: getGroups(lines, selectedStudies[0], caseType, allSamples, hasGroupName),
             validationResult: validationResult
         };
     }
@@ -320,12 +260,4 @@ export function parseCase(studyId: string, isPatientId: boolean, mappedSamples: 
             patientId: sample.patientId
         }
     });
-}
-
-export function purifyLine(line: string, separator: string): string[] {
-    return _.filter(line.split(separator).map(item => item.trim()), item => !!item);
-}
-
-export function getDefaultTitle() {
-    return `${CHART_NAME_LINE_START} ${DEFAULT_CHART_NAME}\n\n${GROUP_LINE_START} ${DEFAULT_GROUP_NAME}\n`;
 }

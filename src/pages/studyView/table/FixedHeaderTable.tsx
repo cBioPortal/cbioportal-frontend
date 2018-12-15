@@ -31,10 +31,9 @@ export type IFixedHeaderTableProps<T> = {
     // used only when showControlsAtTop === true (show controls at bottom otherwise)
     showControlsAtTop?: boolean;
     showAddRemoveAllButtons?: boolean;
-    addAllContent?: string;
     addAll?: (data: T[]) => void;
-    removeAllContent?: string;
     removeAll?: (data: T[]) => void;
+    showSelectableNumber?: boolean;
     isSelectedRow?: (data: T) => boolean;
     afterSorting?: (sortBy: string, sortDirection: SortDirection) => void;
 };
@@ -57,8 +56,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
         showAddRemoveAllButtons: false,
         width: 398,
         height: 350,
-        addAllContent: 'Select all',
-        removeAllContent: 'Deselect all',
+        showSelectableNumber: false,
         sortBy: ''
     };
 
@@ -203,13 +201,11 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
                 <div className={"btn-group"} role={"group"}>
                     {this.props.addAll && (
                         <button className="btn btn-default btn-xs" onClick={this.onAddAll}>
-                            {this.props.addAllContent}
+                        {`Select all${this.props.showSelectableNumber ? ` (${this._store.dataStore.sortedFilteredData.length})` : ''}`}
                         </button>
                     )}
                     {this.props.removeAll && (
-                        <button className="btn btn-default btn-xs" onClick={this.onRemoveAll}>
-                            {this.props.removeAllContent}
-                        </button>
+                        <button className="btn btn-default btn-xs" onClick={this.onRemoveAll}>Deselect all</button>
                     )}
                 </div>
             </If>

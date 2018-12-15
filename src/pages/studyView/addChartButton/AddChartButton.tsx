@@ -141,7 +141,6 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         return <div style={{marginTop: '10px', width: '400px'}}>
             <MSKTabs activeTabId={this.activeId}
                      onTabClick={this.updateActiveId}
-                     unmountOnHide={false}
                      className="addChartTabs mainTabs">
 
                 <MSKTab key={0} id={TabKeysEnum.CLINICAL} linkText={TabKeysEnum.CLINICAL}>
