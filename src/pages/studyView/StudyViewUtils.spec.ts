@@ -1484,7 +1484,7 @@ describe('StudyViewUtils', () => {
 
         it('no filters selected', (done) => {
             getSamplesByExcludingFiltersOnChart(
-                UniqueKey.SAMPLES_PER_PATIENT,
+                UniqueKey.CANCER_STUDIES,
                 emptyStudyViewFilter,
                 {},
                 [{ sampleId: 'sample1', studyId: 'study1' }],
@@ -1498,9 +1498,9 @@ describe('StudyViewUtils', () => {
 
         it('has filter for one chart', (done) => {
             getSamplesByExcludingFiltersOnChart(
-                UniqueKey.SAMPLES_PER_PATIENT,
+                UniqueKey.MUTATION_COUNT,
                 emptyStudyViewFilter,
-                { [UniqueKey.SAMPLES_PER_PATIENT]: [{ sampleId: 'sample1', studyId: 'study1' }], [UniqueKey.CANCER_STUDIES]: [{ sampleId: 'sample1', studyId: 'study1' }] },
+                { [UniqueKey.CANCER_STUDIES]: [{ sampleId: 'sample1', studyId: 'study1' }] },
                 [{ sampleId: 'sample1', studyId: 'study1' }, { sampleId: 'sample2', studyId: 'study1' }],
                 ['study1']
             ).then(() => {
@@ -1511,7 +1511,7 @@ describe('StudyViewUtils', () => {
 
         it('no filters selected and queriedSampleIdentifiers is empty', (done) => {
             getSamplesByExcludingFiltersOnChart(
-                UniqueKey.SAMPLES_PER_PATIENT,
+                UniqueKey.CANCER_STUDIES,
                 emptyStudyViewFilter,
                 {},
                 [],
@@ -1524,9 +1524,9 @@ describe('StudyViewUtils', () => {
 
         it('has filter for one chart and queriedSampleIdentifiers is empty', (done) => {
             getSamplesByExcludingFiltersOnChart(
-                UniqueKey.SAMPLES_PER_PATIENT,
+                UniqueKey.MUTATION_COUNT,
                 emptyStudyViewFilter,
-                { [UniqueKey.SAMPLES_PER_PATIENT]: [{ sampleId: 'sample1', studyId: 'study1' }], [UniqueKey.CANCER_STUDIES]: [{ sampleId: 'sample1', studyId: 'study1' }] },
+                { [UniqueKey.CANCER_STUDIES]: [{ sampleId: 'sample1', studyId: 'study1' }] },
                 [],
                 ['study1']
             ).then(() => {
