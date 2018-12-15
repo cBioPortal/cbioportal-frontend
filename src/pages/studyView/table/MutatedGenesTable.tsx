@@ -10,7 +10,7 @@ import * as _ from 'lodash';
 import classnames from 'classnames';
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import FixedHeaderTable from "./FixedHeaderTable";
-import {action, computed, observable, reaction} from "mobx";
+import {action, computed, IReactionDisposer, observable, reaction} from "mobx";
 import autobind from 'autobind-decorator';
 import {
     correctMargin,
@@ -60,14 +60,26 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
         [ColumnKey.FREQ]: 0,
     };
 
+    private reactions:IReactionDisposer[] = [];
+
     constructor(props: IMutatedGenesTablePros) {
         super(props);
-        reaction(() => this.columnsWidth, () => {
-            this.updateCellMargin();
-        }, {fireImmediately: true});
-        reaction(() => this.props.promise.result, () => {
-            this.updateCellMargin();
-        }, {fireImmediately: true});
+        this.reactions.push(
+            reaction(() => this.columnsWidth, () => {
+                this.updateCellMargin();
+            }, {fireImmediately: true})
+        );
+        this.reactions.push(
+            reaction(() => this.props.promise.result, () => {
+                this.updateCellMargin();
+            }, {fireImmediately: true})
+        );
+    }
+
+    componentWillUnmount() {
+        for (const disposer of this.reactions) {
+            disposer();
+        }
     }
 
     @computed

@@ -15,7 +15,7 @@ import {
     getDownloadContent, convertScatterDataToDownloadData, downSampling, GroupedScatterData, filterScatterData,
     SurvivalPlotFilters
 } from "./SurvivalUtil";
-import CBIOPORTAL_VICTORY_THEME from "../../../shared/theme/cBioPoralTheme";
+import CBIOPORTAL_VICTORY_THEME, {baseLabelStyles} from "../../../shared/theme/cBioPoralTheme";
 import { toConditionalPrecision } from 'shared/lib/NumberUtils';
 import {getPatientViewUrl} from "../../../shared/api/urls";
 import DownloadControls from "../../../shared/components/downloadControls/DownloadControls";
@@ -91,9 +91,14 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
 
             }
         },
+        pValue: {
+            x: 610,
+            y: 30,
+            textAnchor:"start"
+        },
         legend: {
             x: 600,
-            y: 40
+            y: 50
         }
     };
 
@@ -235,13 +240,23 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                 });
             }
         }
-        if (this.props.showLogRankPVal && this.logRankTestPVal !== null) {
-            data.push({
-                name: `Logrank Test P-Value: ${toConditionalPrecision(this.logRankTestPVal, 3, 0.001)}`,
-                symbol: { opacity: 0 }
-            });
-        }
         return data;
+    }
+
+    private get pValueText() {
+        if (this.props.showLogRankPVal && this.logRankTestPVal !== null) {
+            return (
+                <VictoryLabel
+                    x={this.styleOpts.pValue.x}
+                    y={this.styleOpts.pValue.y}
+                    style={baseLabelStyles}
+                    textAnchor={this.styleOpts.pValue.textAnchor}
+                    text={`Logrank Test P-Value: ${toConditionalPrecision(this.logRankTestPVal, 3, 0.01)}`}
+                />
+            );
+        } else {
+            return null;
+        }
     }
 
     @computed get legendDataForDownload() {
@@ -412,6 +427,7 @@ export default class SurvivalChart extends React.Component<ISurvivalChartProps, 
                                    data={this.victoryLegendData} />
                     }
                     {this.legendForDownload}
+                    {this.pValueText}
                 </VictoryChart>
             </div>
         );
