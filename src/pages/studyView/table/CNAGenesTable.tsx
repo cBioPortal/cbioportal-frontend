@@ -1,7 +1,7 @@
 import * as React from "react";
 import * as _ from "lodash";
 import {CNAGenesData, CopyNumberAlterationIdentifier} from "pages/studyView/StudyViewPageStore";
-import {action, computed, observable, reaction} from "mobx";
+import {action, computed, IReactionDisposer, observable, reaction} from "mobx";
 import {observer} from "mobx-react";
 import styles from "./tables.module.scss";
 import {CopyNumberCountByGene, CopyNumberGeneFilterElement} from "shared/api/generated/CBioPortalAPIInternal";
@@ -63,15 +63,27 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
         [ColumnKey.FREQ]: 0,
     };
 
+    private reactions:IReactionDisposer[] = [];
+
     constructor(props: ICNAGenesTablePros) {
         super(props);
 
-        reaction(() => this.columnsWidth, () => {
-            this.updateCellMargin();
-        }, {fireImmediately: true});
-        reaction(() => this.props.promise.result, () => {
-            this.updateCellMargin();
-        }, {fireImmediately: true});
+        this.reactions.push(
+            reaction(() => this.columnsWidth, () => {
+                this.updateCellMargin();
+            }, {fireImmediately: true})
+        );
+        this.reactions.push(
+            reaction(() => this.props.promise.result, () => {
+                this.updateCellMargin();
+            }, {fireImmediately: true})
+        );
+    }
+
+    componentWillUnmount() {
+        for (const disposer of this.reactions) {
+            disposer();
+        }
     }
 
     @computed
