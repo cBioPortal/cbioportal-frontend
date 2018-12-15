@@ -4,7 +4,6 @@
     "description": "OncoKB, a comprehensive and curated precision oncology knowledge base, offers oncologists detailed, evidence-based information about individual somatic mutations and structural alterations present in patient tumors with the goal of supporting optimal treatment decisions.",
     "version": "v1.0.0",
     "title": "OncoKB APIs",
-    "termsOfService": "http://oncokb.org/#/terms",
     "contact": {
       "name": "OncoKB",
       "url": "http://www.oncokb.org",
@@ -15,8 +14,6 @@
       "url": "http://oncokb.org/#/terms"
     }
   },
-  "host": "oncokb.org",
-  "basePath": "/api/v1",
   "tags": [
     {
       "name": "levels-api-controller",
@@ -1063,6 +1060,57 @@
         }
       }
     },
+    "/utils/allCuratedGenes": {
+      "get": {
+        "tags": [
+          "Utils"
+        ],
+        "summary": "utilsAllCuratedGenesGet",
+        "description": "Get list of genes OncoKB curated",
+        "operationId": "utilsAllCuratedGenesGetUsingGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CuratedGene"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/utils/allCuratedGenes.txt": {
+      "get": {
+        "tags": [
+          "Utils"
+        ],
+        "summary": "utilsAllCuratedGenesTxtGet",
+        "description": "Get list of genes OncoKB curated in text file.",
+        "operationId": "utilsAllCuratedGenesTxtGetUsingGET",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
     "/utils/cancerGeneList": {
       "get": {
         "tags": [
@@ -1967,6 +2015,39 @@
           "items": {
             "type": "string"
           }
+        }
+      }
+    },
+    "CuratedGene": {
+      "type": "object",
+      "properties": {
+        "entrezGeneId": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "highestResistancLevel": {
+          "type": "string"
+        },
+        "highestSensitiveLevel": {
+          "type": "string"
+        },
+        "hugoSymbol": {
+          "type": "string"
+        },
+        "isoform": {
+          "type": "string"
+        },
+        "oncogene": {
+          "type": "boolean"
+        },
+        "refSeq": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "tsg": {
+          "type": "boolean"
         }
       }
     },
