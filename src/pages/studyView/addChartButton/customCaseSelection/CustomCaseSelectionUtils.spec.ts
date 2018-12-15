@@ -189,10 +189,6 @@ describe('CustomCaseSelectionUtils', () => {
 
         it('In single study, study id does not need to be specified', () => {
             const lines: InputLine[] = [{
-                line: 'chol_nus_2012:s1',
-                studyId: 'chol_nus_2012',
-                caseId: 's1'
-            }, {
                 line: 's1',
                 caseId: 's1'
             }];
