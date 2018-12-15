@@ -14,6 +14,7 @@ import {
 } from "../StudyViewUtils";
 import {SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
+import {DEFAULT_SORTING_COLUMN} from "../StudyViewConfig";
 
 export interface IClinicalTableProps {
     data: ClinicalDataCountWithColor[];
@@ -40,7 +41,7 @@ enum ColumnKey {
 
 @observer
 export default class ClinicalTable extends React.Component<IClinicalTableProps, {}> {
-    @observable private sortBy: string = '#';
+    @observable private sortBy: string = DEFAULT_SORTING_COLUMN;
     @observable private sortDirection: SortDirection;
     @observable private cellMargin: { [key: string]: number } = {
         [ColumnKey.CATEGORY]: 0,

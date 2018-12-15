@@ -76,6 +76,8 @@ export enum ChartTypeEnum {
     NONE = 'NONE'
 }
 
+export const DEFAULT_SORTING_COLUMN = 'Freq';
+
 // TODO: The priority and tableAttrs are duplicated in serverConfigDefaults.
 const YES_COLOR = "#109618";
 const NO_COLOR = "#DC3912";
