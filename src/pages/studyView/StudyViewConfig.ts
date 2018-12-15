@@ -77,9 +77,8 @@ export enum ChartTypeEnum {
 }
 
 // TODO: The priority and tableAttrs are duplicated in serverConfigDefaults.
-// We need to update in next visit before the release.
-const YES_COLOR = "#66AA00";
-const NO_COLOR = "#666666";
+const YES_COLOR = "#109618";
+const NO_COLOR = "#DC3912";
 const FEMALE_COLOR = '#DC3912';
 const MALE_COLOR = '#2986E2';
 
@@ -185,6 +184,8 @@ const studyViewFrontEnd = {
             MALE: MALE_COLOR,
             F: FEMALE_COLOR,
             M: MALE_COLOR,
+            POSITIVE: YES_COLOR,
+            NEGATIVE: NO_COLOR
         },
 
         na: "#CCCCCC",
