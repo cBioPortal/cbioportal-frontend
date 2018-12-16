@@ -2,19 +2,17 @@ import * as React from "react";
 import {Column, default as LazyMobXTable} from "shared/components/lazyMobXTable/LazyMobXTable";
 import {observer} from "mobx-react";
 import * as _ from 'lodash';
-import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import {getPatientViewUrl, getSampleViewUrl} from "shared/api/urls";
 import {getClinicalAttributeUniqueKey} from "../StudyViewUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {ChartMeta, StudyViewPageStore} from "pages/studyView/StudyViewPageStore";
 import {remoteData} from "shared/api/remoteData";
 import {Else, If, Then} from 'react-if';
-import {sortByClinicalAttributePriorityThenName} from "../../../shared/lib/SortUtils";
 import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/components/progressIndicator/ProgressIndicator";
 import autobind from 'autobind-decorator';
 
 export interface IClinicalDataTabTable {
-    store: StudyViewPageStore
+    store: StudyViewPageStore;
 }
 
 class ClinicalDataTabTableComponent extends LazyMobXTable<{ [id: string]: string }> {
@@ -94,6 +92,10 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
                             showColumnVisibility={false}
                             data={this.props.store.getDataForClinicalDataTab.result || []}
                             columns={this.columns.result}
+                            copyDownloadProps={{
+                                showCopy: false,
+                                downloadFilename: this.props.store.clinicalDataDownloadFilename
+                            }}
                         />
                     </Else>
                 </If>
