@@ -12,6 +12,7 @@ import {DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT, parseContent, ParseResult} from "
 import autobind from 'autobind-decorator';
 import InfoBanner from "../../infoBanner/InfoBanner";
 import {INFO_TIMEOUT} from "../AddChartButton";
+import Collapse from "react-collapse";
 
 export interface ICustomCaseSelectionProps {
     selectedSamples: Sample[];
@@ -29,6 +30,7 @@ const DEFAULT_CHART_NAME = 'Custom Chart';
 @observer
 export default class CustomCaseSelection extends React.Component<ICustomCaseSelectionProps, {}> {
     private validateContent: boolean = false;
+    @observable dataFormatCollapsed: boolean = true;
     @observable chartName: string;
     @observable showCaseIds: boolean = false;
     @observable caseIdsMode: ClinicalDataType = ClinicalDataTypeEnum.SAMPLE;
@@ -90,6 +92,12 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
         setTimeout(() => this.chartAdded = false, INFO_TIMEOUT);
     }
 
+    @autobind
+    @action
+    protected handleDataFormatToggle() {
+        this.dataFormatCollapsed = !this.dataFormatCollapsed;
+    }
+
     public mainContent() {
         return (
             <div className={styles.body}>
@@ -108,14 +116,30 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                         })
                     }
                 </ButtonGroup>
-                <div>
+
+                <div style={{display: 'flex', justifyContent:'space-between'}}>
                     <span
                         className={styles.fillIds}
                         onClick={this.onClick}>
                         Use current selected samples/patients
                     </span>
 
+                    <div className="collapsible-header" onClick={this.handleDataFormatToggle}>
+                        <a>Data Format</a>
+                        <span style={{paddingLeft: 4, cursor: 'pointer'}}>
+                            {this.dataFormatCollapsed ?
+                                <i className="fa fa-chevron-down"/> :
+                                <i className="fa fa-chevron-up"/>
+                            }
+                        </span>
+                    </div>
                 </div>
+
+                <Collapse isOpened={!this.dataFormatCollapsed}>
+                    <div style={{marginTop: '5px'}}>Each row can have two columns separated by space or tab:
+                        <br/>1) study_id:{this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE ? 'sample_id' : 'patient_id'}
+                        and<br/>2) group_name of your choice<br/>group_name is optional if there is only one group.</div>
+                </Collapse>
 
                 <textarea
                     value={this.content}
