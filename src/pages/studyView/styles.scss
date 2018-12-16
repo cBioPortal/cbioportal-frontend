@@ -105,6 +105,20 @@ $selectHeightInner: $selectHeight - 2px;
     right: 2% !important;
 }
 
-.addChartTabs .tab-content {
-    min-height: 100px !important;
+.addChartTabs {
+    .nav > li > a {
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+    .nav .active a {
+        padding-top: 5px !important;
+    }
+    .tab-content {
+        min-height: 100px !important;
+        padding: 10px 0 10px 0 !important;
+        .msk-tab {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+        }
+    }
 }

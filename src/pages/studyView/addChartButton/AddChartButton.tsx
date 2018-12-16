@@ -5,7 +5,7 @@ import styles from "./styles.module.scss";
 import {ChildButton, MainButton, Menu} from 'react-mfb';
 import 'react-mfb/mfb.css';
 import {
-    ChartMetaDataTypeEnum,
+    ChartMetaDataTypeEnum, ChartType,
     ClinicalDataCountSet,
     NewChart,
     StudyViewPageStore,
@@ -37,7 +37,7 @@ export interface IAddChartButtonProps extends IAddChartTabsProps {
 
 
 enum TabKeysEnum {
-    CUSTOM_GROUPS = 'Custom groups',
+    CUSTOM_GROUPS = 'Custom Groups',
     CLINICAL = 'Clinical',
     GENOMIC = 'Genomic'
 }
@@ -50,11 +50,13 @@ type TabKeys =
 export type ChartOption = {
     label: string,
     key: string,
+    chartType: ChartType,
     disabled?: boolean,
     selected?: boolean,
     freq: number
 }
 
+export const INFO_TIMEOUT = 5000;
 @observer
 class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     @observable activeId: TabKeys = TabKeysEnum.CLINICAL;
@@ -138,7 +140,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     }
 
     render() {
-        return <div style={{marginTop: '10px', width: '400px'}}>
+        return <div style={{width: '400px'}}>
             <MSKTabs activeTabId={this.activeId}
                      onTabClick={this.updateActiveId}
                      className="addChartTabs mainTabs">

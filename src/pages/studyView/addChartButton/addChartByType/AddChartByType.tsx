@@ -1,10 +1,10 @@
 import * as React from 'react';
-import {action, computed} from 'mobx';
+import {action, computed, observable, IReactionDisposer, reaction} from 'mobx';
 import {observer} from "mobx-react";
 import styles from "./styles.module.scss";
 import addChartStyles from "../styles.module.scss";
 import {Modal} from 'react-bootstrap';
-import {ChartOption} from "../AddChartButton";
+import {ChartOption, INFO_TIMEOUT} from "../AddChartButton";
 import * as _ from 'lodash';
 import LabeledCheckbox from "../../../../shared/components/labeledCheckbox/LabeledCheckbox";
 import {Column} from "../../../../shared/components/lazyMobXTable/LazyMobXTable";
@@ -16,6 +16,8 @@ import FixedHeaderTable from "../../table/FixedHeaderTable";
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import EllipsisTextTooltip from "../../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
+import InfoBanner from "../../infoBanner/InfoBanner";
+import {ChartTypeNameEnum} from "../../StudyViewConfig";
 
 export interface IAddChartByTypeProps {
     options: ChartOption[];
@@ -29,10 +31,24 @@ export interface IAddChartByTypeProps {
 class AddChartTableComponent extends FixedHeaderTable<ChartOption> {
 }
 
-const NUM_ROWS_SHOWN = 10;
+const NUM_ROWS_SHOWN = 15;
 
 @observer
 export default class AddChartByType extends React.Component<IAddChartByTypeProps, {}> {
+    @observable infoMessage: string = "";
+    private reactions: IReactionDisposer[] = [];
+    private infoMessageTimeout: NodeJS.Timer;
+
+    constructor(props: IAddChartByTypeProps) {
+        super(props);
+        this.reactions.push(reaction(() => this.infoMessage, () => {
+            if (this.infoMessage) {
+                clearTimeout(this.infoMessageTimeout);
+                this.infoMessageTimeout = setTimeout(() => this.infoMessage = "", INFO_TIMEOUT);
+            }
+        }));
+    }
+
     @computed
     get options() {
         if (this.props.freqPromise.isComplete) {
@@ -41,6 +57,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                 acc.push({
                     label: next.label,
                     key: next.key,
+                    chartType: next.chartType,
                     disabled: disabled,
                     selected: next.selected,
                     freq: disabled ? 0 : this.props.freqPromise.result![next.key]
@@ -68,9 +85,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                         inputProps={{
                             className: styles.input
                         }}
-                        onChange={() => {
-                            this.props.onToggleOption(option.key)
-                        }}
+                        onChange={()=>this.onOptionChange(option)}
                     >
                         <EllipsisTextTooltip text={option.label}/>
                     </LabeledCheckbox>
@@ -79,7 +94,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
         },
         filter: (d: ChartOption, f: string, filterStringUpper: string) => (d.label.toUpperCase().indexOf(filterStringUpper) > -1),
         sortBy: (d: ChartOption) => d.label,
-        width: 290,
+        width: 320,
         defaultSortDirection: 'asc' as 'asc'
     }, {
         name: 'Freq',
@@ -103,22 +118,56 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
     }
 
     @autobind
+    getCurrentSelectedRows() {
+        return _.filter(this.options, option => option.selected);
+    }
+
+    @autobind
+    getCurrentSelectedRowKeys(){
+        return this.getCurrentSelectedRows().map(option => option.key);
+    }
+
+    @autobind
     @action
     addAll(selectedOptions: ChartOption[]) {
-        this.props.onAddAll(_.uniq(_.filter(this.options, option=>option.selected).concat(_.filter(selectedOptions, option=>!option.disabled))).map(option => option.key));
+        const alreadySelected = this.getCurrentSelectedRows();
+        const allSelected = _.filter(selectedOptions, option => !option.disabled);
+        const numOfNewCharts = allSelected.length - alreadySelected.length;
+        this.props.onAddAll(_.uniq(alreadySelected.concat(allSelected).map(option => option.key)));
+        this.infoMessage = `${numOfNewCharts} chart${numOfNewCharts > 1 ? 's' : ''} added`;
     }
 
     @autobind
     @action
     removeAll(selectedOptions: ChartOption[]) {
+        const alreadySelected = this.getCurrentSelectedRowKeys();
+        const allSelected = _.filter(selectedOptions, option => !option.disabled).map(option => option.key);
+        const numOfChartsRemoved = _.intersection(alreadySelected, allSelected).length;
         this.props.onClearAll(selectedOptions.map(option => option.key));
+        this.infoMessage = `${numOfChartsRemoved} chart${numOfChartsRemoved > 1 ? 's' : ''} removed`;
+    }
+
+    @autobind
+    @action
+    onOptionChange(option: ChartOption) {
+        const selectedKeys = this.getCurrentSelectedRowKeys();
+        this.props.onToggleOption(option.key)
+        if (selectedKeys.includes(option.key)) {
+            this.infoMessage = `${option.label} is deleted`;
+        }else {
+            this.infoMessage = `${option.label} added as a ${ChartTypeNameEnum[option.chartType]}`;
+        }
+    }
+
+    componentWillUnmount(): void {
+        this.reactions.forEach(reaction => reaction());
     }
 
     render() {
         return (
             <div style={{display: 'flex', flexDirection: 'column'}}>
                 <AddChartTableComponent
-                    width={350}
+                    width={380}
                     height={this.tableHeight}
                     columns={this._columns}
                     data={this.options}
@@ -137,6 +186,9 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                             Calculating data availability...
                         </span>
                     )
+                }
+                {this.infoMessage &&
+                <InfoBanner message={this.infoMessage} />
                 }
             </div>
         )

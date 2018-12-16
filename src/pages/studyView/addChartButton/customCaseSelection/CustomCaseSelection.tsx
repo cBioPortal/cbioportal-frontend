@@ -8,8 +8,10 @@ import {ButtonGroup, Modal, Radio} from 'react-bootstrap';
 import {ClinicalDataType, ClinicalDataTypeEnum, NewChart} from "../../StudyViewPageStore";
 import ErrorBox from "../../../../shared/components/errorBox/ErrorBox";
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
-import {parseContent, ParseResult} from "./CustomCaseSelectionUtils";
+import {DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT, parseContent, ParseResult} from "./CustomCaseSelectionUtils";
 import autobind from 'autobind-decorator';
+import InfoBanner from "../../infoBanner/InfoBanner";
+import {INFO_TIMEOUT} from "../AddChartButton";
 
 export interface ICustomCaseSelectionProps {
     selectedSamples: Sample[];
@@ -61,7 +63,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     @action
     onClick() {
         this.content = this.props.selectedSamples.map(sample => {
-            return `${sample.studyId}:${(this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE) ? sample.sampleId : sample.patientId}`
+            return `${sample.studyId}:${(this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE) ? sample.sampleId : sample.patientId} ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`
         }).join("\n")
         this.validateContent = false;
         this.validContent = this.content;
@@ -85,7 +87,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     onAddChart() {
         this.props.onSubmit(this.newChartInfo);
         this.chartAdded = true;
-        setTimeout(() => this.chartAdded = false, 5000);
+        setTimeout(() => this.chartAdded = false, INFO_TIMEOUT);
     }
 
     public mainContent() {
@@ -150,11 +152,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                     </button>
                 </div>
                 {this.chartAdded &&
-                <div className='alert alert-success' style={{marginTop: '10px', marginBottom: '0 !important'}}>
-                    <span>
-                        <i className='fa fa-md fa-check'/> Chart Added
-                    </span>
-                </div>
+                    <InfoBanner message="Chart Added" />
                 }
             </div>
         );
