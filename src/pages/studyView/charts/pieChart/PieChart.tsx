@@ -243,6 +243,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                         data={this.props.data}
                         labelDescription={this.props.labelDescription}
                         patientAttribute={this.props.patientAttribute}
+                        showAddRemoveAllButtons={true}
                         filters={this.props.filters}
                         highlightedRow={this.highlightedRow}
                         onUserSelection={this.props.onUserSelection}
