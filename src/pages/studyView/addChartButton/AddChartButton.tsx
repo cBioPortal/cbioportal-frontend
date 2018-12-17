@@ -4,7 +4,13 @@ import {observer} from "mobx-react";
 import styles from "./styles.module.scss";
 import {ChildButton, MainButton, Menu} from 'react-mfb';
 import 'react-mfb/mfb.css';
-import {ChartMetaDataTypeEnum, ClinicalDataCountSet, NewChart, StudyViewPageStore} from "../StudyViewPageStore";
+import {
+    ChartMetaDataTypeEnum, ChartType,
+    ClinicalDataCountSet,
+    NewChart,
+    StudyViewPageStore,
+    StudyViewPageTabDescriptions, StudyViewPageTabKeys
+} from "../StudyViewPageStore";
 import autobind from 'autobind-decorator';
 import classnames from "classnames";
 import * as _ from 'lodash';
@@ -13,52 +19,54 @@ import {remoteData} from "../../../shared/api/remoteData";
 import CustomCaseSelection from "./customCaseSelection/CustomCaseSelection";
 import {calculateClinicalDataCountFrequency, getOptionsByChartMetaDataType} from "../StudyViewUtils";
 import $ from 'jquery';
+import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
+import {StudySummaryTab} from "../tabs/SummaryTab";
+import {ClinicalDataTab} from "../tabs/ClinicalDataTab";
+import IFrameLoader from "../../../shared/components/iframeLoader/IFrameLoader";
+import shareUIstyles from "../../resultsView/querySummary/shareUI.module.scss";
+import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import {ChartTypeEnum} from "../StudyViewConfig";
 
-export interface IAddChartButtonProps {
+export interface IAddChartTabsProps {
     store: StudyViewPageStore,
+    currentTab: string,
     disableAddGenomicButton?: boolean
 }
 
-enum CurrentOpenedDialogEnum {
-    CUSTOM_GROUPS = 'CUSTOM_GROUPS',
-    ADD_CLINICAL = 'ADD_CLINICAL',
-    ADD_GENOMIC = 'ADD_GENOMIC',
-    CLOSED = 'CLOSED'
+export interface IAddChartButtonProps extends IAddChartTabsProps {
+    addChartOverlayClassName?: string
 }
 
-type CurrentOpenedDialog =
-    CurrentOpenedDialogEnum.CUSTOM_GROUPS
-    | CurrentOpenedDialogEnum.CLOSED
-    | CurrentOpenedDialogEnum.ADD_GENOMIC
-    | CurrentOpenedDialogEnum.ADD_CLINICAL;
+
+enum TabKeysEnum {
+    CUSTOM_GROUPS = 'Custom Groups',
+    CLINICAL = 'Clinical',
+    GENOMIC = 'Genomic'
+}
+
+type TabKeys =
+    TabKeysEnum.CUSTOM_GROUPS
+    | TabKeysEnum.GENOMIC
+    | TabKeysEnum.CLINICAL;
 
 export type ChartOption = {
     label: string,
     key: string,
+    chartType: ChartType,
     disabled?: boolean,
     selected?: boolean,
     freq: number
 }
 
+export const INFO_TIMEOUT = 5000;
 @observer
-export default class AddChartButton extends React.Component<IAddChartButtonProps, {}> {
-    private addCustomGroupsChartTitle = 'Add custom groups as Pie Chart';
+class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
+    @observable activeId: TabKeys = TabKeysEnum.CLINICAL;
 
     public static defaultProps = {
         disableAddGenomicButton: false
     };
 
-    @computed
-    get addGenomicDataChartTitle() {
-        return `Select genomic data (${_.filter(this.genomicDataOptions, chartOption => !chartOption.selected).length} more to add)`
-    }
-
-    @computed
-    get addClinicalDataChartTitle() {
-        return `Select clinical data (${_.filter(this.clinicalDataOptions, chartOption => !chartOption.selected).length} more to add)`
-    }
-
-    @observable currentOpenedDialog: CurrentOpenedDialog = CurrentOpenedDialogEnum.CLOSED;
 
     readonly getClinicalDataCount = remoteData<ClinicalDataCountSet>({
         await: () => [this.props.store.clinicalDataWithCount, this.props.store.selectedSamples],
@@ -79,13 +87,18 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
 
     @autobind
     @action
-    updateCurrentOpenedDialog(dialog: CurrentOpenedDialog) {
-        this.currentOpenedDialog = dialog;
+    updateActiveId(newId: string) {
+        this.activeId = newId as TabKeys;
     }
 
     @computed
     get genomicDataOptions(): ChartOption[] {
-        return getOptionsByChartMetaDataType(ChartMetaDataTypeEnum.GENOMIC, this.props.store.chartMetaSet, this.selectedAttrs);
+        const genomicDataOptions = getOptionsByChartMetaDataType(ChartMetaDataTypeEnum.GENOMIC, this.props.store.chartMetaSet, this.selectedAttrs);
+        if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
+            return genomicDataOptions.filter(option => option.chartType === ChartTypeEnum.BAR_CHART || option.chartType === ChartTypeEnum.PIE_CHART);
+        } else {
+            return genomicDataOptions;
+        }
     }
 
     @computed
@@ -133,91 +146,72 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
         }
     }
 
+    render() {
+        return <div style={{width: '400px'}}>
+            <MSKTabs activeTabId={this.activeId}
+                     onTabClick={this.updateActiveId}
+                     className="addChartTabs mainTabs">
 
-    componentDidMount() {
-
-        // Register main button onClick event
-        // The implementation of the library forbids the onClick event binding.
-        $('.mfb-component__button--main').click((event: any) => {
-            event.preventDefault();
-            this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.ADD_CLINICAL);
-        })
+                <MSKTab key={0} id={TabKeysEnum.CLINICAL} linkText={TabKeysEnum.CLINICAL}>
+                    <AddChartByType options={this.clinicalDataOptions}
+                                    currentTab={this.props.currentTab}
+                                    freqPromise={this.getClinicalDataCount}
+                                    onAddAll={this.onAddAll}
+                                    onClearAll={this.onClearAll}
+                                    onToggleOption={this.onToggleOption}
+                    />
+                </MSKTab>
+                <MSKTab key={1} id={TabKeysEnum.GENOMIC} linkText={TabKeysEnum.GENOMIC}>
+                    <AddChartByType options={this.genomicDataOptions}
+                                    currentTab={this.props.currentTab}
+                                    freqPromise={this.getGenomicDataCount}
+                                    onAddAll={this.onAddAll}
+                                    onClearAll={this.onClearAll}
+                                    onToggleOption={this.onToggleOption}/>
+                </MSKTab>
+                <MSKTab key={2} id={TabKeysEnum.CUSTOM_GROUPS} linkText={TabKeysEnum.CUSTOM_GROUPS}
+                        hide={this.props.currentTab !== '' && this.props.currentTab !== StudyViewPageTabKeys.SUMMARY}>
+                    <CustomCaseSelection
+                        selectedSamples={this.props.store.selectedSamples.result}
+                        queriedStudies={this.props.store.queriedPhysicalStudyIds.result}
+                        isChartNameValid={this.props.store.isChartNameValid}
+                        getDefaultChartName={this.props.store.getDefaultCustomChartName}
+                        onSubmit={(chart: NewChart) => {
+                            this.props.store.addCustomChart(chart);
+                        }}
+                    />
+                </MSKTab>
+            </MSKTabs>
+        </div>
     }
+}
 
-    getChildButtons() {
-        let buttons = [];
-        if (!this.props.disableAddGenomicButton)
-            buttons.push(<ChildButton
-                className={styles.child}
-                icon={classnames("fa fa-lg", styles.faCharG)}
-                label={this.addGenomicDataChartTitle}
-                onClick={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.ADD_GENOMIC)}
-            >
-            </ChildButton>);
-        buttons.push(
-            <ChildButton
-                className={styles.child}
-                icon="fa fa-pie-chart fa-lg"
-                label={this.addCustomGroupsChartTitle}
-                onClick={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.CUSTOM_GROUPS)}
-            >
-            </ChildButton>);
-        return buttons;
+@observer
+export default class AddChartButton extends React.Component<IAddChartButtonProps, {}> {
+    @computed
+    get buttonText() {
+        if (!this.props.currentTab || this.props.currentTab === StudyViewPageTabKeys.SUMMARY) {
+            return '+ Add Chart';
+        } else if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
+            return '+ Add Column'
+        } else {
+            return '';
+        }
     }
 
     render() {
         return (
-            <div className={styles.addChart}>
-                <Menu effect={'zoomin'} method={'hover'} position={'br'}>
-                    <MainButton
-                        iconResting="fa fa-plus fa-lg"
-                        iconActive={classnames("fa fa-lg", styles.faCharC)}
-                        className={styles.child}
-                        label={this.addClinicalDataChartTitle}
-                    >
-                    </MainButton>
-                    {this.getChildButtons()}
-                </Menu>
-                {
-                    (this.currentOpenedDialog === CurrentOpenedDialogEnum.CUSTOM_GROUPS) && (
-                        <CustomCaseSelection
-                            title={this.addCustomGroupsChartTitle}
-                            show={true}
-                            selectedSamples={this.props.store.selectedSamples.result}
-                            queriedStudies={this.props.store.queriedPhysicalStudyIds.result}
-                            onClose={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.CLOSED)}
-                            onSubmit={(chart: NewChart) => {
-                                this.props.store.addCustomChart(chart);
-                                this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.CLOSED)
-                            }}
-                        />
-                    )
-                }
-                {
-                    (this.currentOpenedDialog === CurrentOpenedDialogEnum.ADD_CLINICAL) && (
-                        <AddChartByType title={this.addClinicalDataChartTitle}
-                                        options={this.clinicalDataOptions}
-                                        freqPromise={this.getClinicalDataCount}
-                                        onClose={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.CLOSED)}
-                                        onAddAll={this.onAddAll}
-                                        onClearAll={this.onClearAll}
-                                        onToggleOption={this.onToggleOption}
-                        />
-                    )
-                }
-                {
-                    (this.currentOpenedDialog === CurrentOpenedDialogEnum.ADD_GENOMIC) && (
-                        <AddChartByType title={this.addGenomicDataChartTitle}
-                                        options={this.genomicDataOptions}
-                                        freqPromise={this.getGenomicDataCount}
-                                        onClose={() => this.updateCurrentOpenedDialog(CurrentOpenedDialogEnum.CLOSED)}
-                                        onAddAll={this.onAddAll}
-                                        onClearAll={this.onClearAll}
-                                        onToggleOption={this.onToggleOption}
-                        />
-                    )
-                }
-            </div>
+            <DefaultTooltip
+                trigger={["click"]}
+                placement={"bottomRight"}
+                destroyTooltipOnHide={true}
+                overlay={() => <AddChartTabs store={this.props.store}
+                                             currentTab={this.props.currentTab}
+                                             disableAddGenomicButton={this.props.disableAddGenomicButton}/>}
+                overlayClassName={this.props.addChartOverlayClassName}
+            >
+                <button className='btn btn-primary btn-xs' style={{marginLeft: '10px'}}>{this.buttonText}</button>
+            </DefaultTooltip>
         )
     }
 }

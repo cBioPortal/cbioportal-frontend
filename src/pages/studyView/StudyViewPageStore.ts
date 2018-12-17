@@ -119,6 +119,8 @@ export enum StudyViewPageTabDescriptions {
     HEATMAPS = 'Heatmaps'
 }
 
+const DEFAULT_CHART_NAME = 'Custom Chart';
+
 export const MUTATION_COUNT = 'MUTATION_COUNT';
 export const FRACTION_GENOME_ALTERED = 'FRACTION_GENOME_ALTERED';
 export const OS_STATUS = "OS_STATUS";
@@ -902,6 +904,7 @@ export class StudyViewPageStore {
                 default:
                     this._clinicalDataEqualityFilterSet.delete(chartMeta.uniqueKey);
                     this._clinicalDataIntervalFilterSet.delete(chartMeta.uniqueKey);
+                    this.clearChartSampleIdentifierFilter(chartMeta);
                     break;
             }
         }
@@ -1640,12 +1643,23 @@ export class StudyViewPageStore {
     }
 
     @autobind
+    isChartNameValid(chartName: string) {
+        const match = _.find(this.chartMetaSet, chartMeta => chartMeta.displayName.toUpperCase() === chartName.toUpperCase());
+        return match === undefined;
+    }
+    @autobind
+    getDefaultCustomChartName() {
+        return `${DEFAULT_CHART_NAME} ${this._customCharts.size - SPECIAL_CHARTS.length + 1}`;
+    }
+
+    @autobind
     @action addCustomChart(newChart:NewChart) {
         const uniqueKey = this.newCustomChartUniqueKey();
+        const newChartName = newChart.name ? newChart.name : this.getDefaultCustomChartName();
         let chartMeta = {
             uniqueKey: uniqueKey,
-            displayName: newChart.name,
-            description: newChart.name,
+            displayName: newChartName,
+            description: newChartName,
             chartType: ChartTypeEnum.PIE_CHART,
             dataType: getChartMetaDataType(uniqueKey),
             patientAttribute: false,
@@ -1675,6 +1689,10 @@ export class StudyViewPageStore {
         this._customCharts.set(uniqueKey, chartMeta);
         this._chartVisibility.set(uniqueKey, true);
         this._customChartsSelectedCases.set(uniqueKey, allCases);
+
+        // Autoselect the groups
+        this.setCustomChartFilters(chartMeta, newChart.groups.map(group=>group.name));
+        this.newlyAddedCharts = [uniqueKey];
     }
 
     @computed
@@ -2922,9 +2940,9 @@ export class StudyViewPageStore {
         let uniqueKey: string = chartMeta.uniqueKey;
         if (!this.customChartsPromises.hasOwnProperty(uniqueKey)) {
             this.customChartsPromises[uniqueKey] = remoteData<ClinicalDataCountWithColor[]>({
-                await: () => [],
+                await: () => [this.selectedSamples],
                 invoke: async () => {
-                    const result = _.reduce(this.samples.result, (acc, sample) => {
+                    const result = _.reduce(this.selectedSamples.result, (acc, sample) => {
                         const findCase = _.find(this._customChartsSelectedCases.get(uniqueKey), (selectedCase:CustomChartIdentifierWithValue) => selectedCase.sampleId === sample.sampleId);
                         let value =  'NA';
                         if(findCase !== undefined) {
