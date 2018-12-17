@@ -11,7 +11,7 @@ import {Column} from "../../../../shared/components/lazyMobXTable/LazyMobXTable"
 import {getClinicalAttributeOverlay, getFrequencyStr} from "../../StudyViewUtils";
 import LoadingIndicator from "../../../../shared/components/loadingIndicator/LoadingIndicator";
 import MobxPromise from 'mobxpromise';
-import {ClinicalDataCountSet} from "../../StudyViewPageStore";
+import {ClinicalDataCountSet, StudyViewPageTabKeys} from "../../StudyViewPageStore";
 import FixedHeaderTable from "../../table/FixedHeaderTable";
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
@@ -21,6 +21,7 @@ import {ChartTypeNameEnum} from "../../StudyViewConfig";
 
 export interface IAddChartByTypeProps {
     options: ChartOption[];
+    currentTab: string,
     freqPromise: MobxPromise<ClinicalDataCountSet>;
     onAddAll: (keys: string[]) => void;
     onClearAll: (keys: string[]) => void;
@@ -134,7 +135,16 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
         const allSelected = _.filter(selectedOptions, option => !option.disabled);
         const numOfNewCharts = allSelected.length - alreadySelected.length;
         this.props.onAddAll(_.uniq(alreadySelected.concat(allSelected).map(option => option.key)));
-        this.infoMessage = `${numOfNewCharts} chart${numOfNewCharts > 1 ? 's' : ''} added`;
+
+        const addInSummaryInfoMessage= `${numOfNewCharts} chart${numOfNewCharts > 1 ? 's' : ''} added`;
+
+        if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
+            this.infoMessage = `${numOfNewCharts} column${numOfNewCharts > 1 ? 's' : ''} added to table and ${addInSummaryInfoMessage} in Summary tab`;
+        } else if (this.props.currentTab === StudyViewPageTabKeys.SUMMARY) {
+            this.infoMessage = addInSummaryInfoMessage;
+        } else {
+            this.infoMessage = `Added`;
+        }
     }
 
     @autobind
@@ -144,7 +154,16 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
         const allSelected = selectedOptions.map(option => option.key);
         const numOfChartsRemoved = _.intersection(alreadySelected, allSelected).length;
         this.props.onClearAll(selectedOptions.map(option => option.key));
-        this.infoMessage = `${numOfChartsRemoved} chart${numOfChartsRemoved > 1 ? 's' : ''} removed`;
+
+        const removeInSummaryInfoMessage= `${numOfChartsRemoved} chart${numOfChartsRemoved > 1 ? 's' : ''} removed`;
+
+        if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
+            this.infoMessage = `${numOfChartsRemoved} column${numOfChartsRemoved > 1 ? 's' : ''} removed from table and ${removeInSummaryInfoMessage} from Summary tab`;
+        } else if (this.props.currentTab === StudyViewPageTabKeys.SUMMARY) {
+            this.infoMessage = removeInSummaryInfoMessage;
+        } else {
+            this.infoMessage = `Removed`;
+        }
     }
 
     @autobind
@@ -152,10 +171,23 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
     onOptionChange(option: ChartOption) {
         const selectedKeys = this.getCurrentSelectedRowKeys();
         this.props.onToggleOption(option.key)
+
         if (selectedKeys.includes(option.key)) {
-            this.infoMessage = `${option.label} is deleted`;
-        }else {
-            this.infoMessage = `${option.label} added as a ${ChartTypeNameEnum[option.chartType]}`;
+            let additionType = '';
+            if (this.props.currentTab === StudyViewPageTabKeys.SUMMARY) {
+                additionType = ` ${ChartTypeNameEnum[option.chartType]}`;
+            } else if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
+                additionType = ' column';
+            }
+            this.infoMessage = `${option.label}${additionType} was removed`;
+        } else {
+            let additionType = '';
+            if (this.props.currentTab === StudyViewPageTabKeys.SUMMARY) {
+                additionType = ` as a ${ChartTypeNameEnum[option.chartType]}`;
+            } else if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
+                additionType = ` to table and as ${ChartTypeNameEnum[option.chartType]} in Summary tab`;
+            }
+            this.infoMessage = `${option.label} added${additionType}`;
         }
     }
 

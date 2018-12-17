@@ -154,6 +154,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
                 <MSKTab key={0} id={TabKeysEnum.CLINICAL} linkText={TabKeysEnum.CLINICAL}>
                     <AddChartByType options={this.clinicalDataOptions}
+                                    currentTab={this.props.currentTab}
                                     freqPromise={this.getClinicalDataCount}
                                     onAddAll={this.onAddAll}
                                     onClearAll={this.onClearAll}
@@ -162,13 +163,14 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 </MSKTab>
                 <MSKTab key={1} id={TabKeysEnum.GENOMIC} linkText={TabKeysEnum.GENOMIC}>
                     <AddChartByType options={this.genomicDataOptions}
+                                    currentTab={this.props.currentTab}
                                     freqPromise={this.getGenomicDataCount}
                                     onAddAll={this.onAddAll}
                                     onClearAll={this.onClearAll}
                                     onToggleOption={this.onToggleOption}/>
                 </MSKTab>
                 <MSKTab key={2} id={TabKeysEnum.CUSTOM_GROUPS} linkText={TabKeysEnum.CUSTOM_GROUPS}
-                        hide={this.props.currentTab !== StudyViewPageTabKeys.SUMMARY}>
+                        hide={this.props.currentTab !== '' && this.props.currentTab !== StudyViewPageTabKeys.SUMMARY}>
                     <CustomCaseSelection
                         selectedSamples={this.props.store.selectedSamples.result}
                         queriedStudies={this.props.store.queriedPhysicalStudyIds.result}
@@ -202,6 +204,7 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
             <DefaultTooltip
                 trigger={["click"]}
                 placement={"bottomRight"}
+                destroyTooltipOnHide={true}
                 overlay={() => <AddChartTabs store={this.props.store}
                                              currentTab={this.props.currentTab}
                                              disableAddGenomicButton={this.props.disableAddGenomicButton}/>}

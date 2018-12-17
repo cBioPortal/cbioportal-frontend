@@ -199,7 +199,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     {(this.props.routing.location.query.tab === undefined || this.enableAddChartInTabs.includes(this.props.routing.location.query.tab)) &&
                                     <AddChartButton
                                         store={this.store}
-                                        currentTab={this.props.routing.location.query.tab}
+                                        currentTab={this.props.routing.location.query.tab ? this.props.routing.location.query.tab : ''}
                                         addChartOverlayClassName='studyViewAddChartOverlay'
                                         disableAddGenomicButton={this.props.routing.location.query.tab === StudyViewPageTabKeys.CLINICAL_DATA}
                                     />}
