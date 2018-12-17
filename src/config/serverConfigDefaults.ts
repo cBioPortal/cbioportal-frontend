@@ -98,7 +98,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
             "STUDY_ID": 70,
             "SEQUENCED": 60,
             "HAS_CNA_DATA": 50,
-            "SAMPLE_COUNT_PATIENT": 40,
+            "PATIENT_SAMPLE_COUNT": 40,
             "MUTATION_COUNT": 30,
             "FRACTION_GENOME_ALTERED": 20,
             "PATIENT_GENDER": 9,
