@@ -100,3 +100,25 @@ $selectHeightInner: $selectHeight - 2px;
 .studyFilterResult-enter-done {
     transform: scale(1); /* Standard syntax */
 }
+
+.studyViewAddChartOverlay.rc-tooltip-placement-bottomRight .rc-tooltip-arrow {
+    right: 2% !important;
+}
+
+.addChartTabs {
+    .nav > li > a {
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+    .nav .active a {
+        padding-top: 5px !important;
+    }
+    .tab-content {
+        min-height: 100px !important;
+        padding: 10px 0 10px 0 !important;
+        .msk-tab {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+        }
+    }
+}

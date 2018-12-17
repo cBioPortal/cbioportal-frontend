@@ -1069,6 +1069,7 @@ export function getOptionsByChartMetaDataType(type: ChartMetaDataType, allCharts
             return {
                 label: chartMeta.displayName,
                 key: chartMeta.uniqueKey,
+                chartType: chartMeta.chartType,
                 disabled: false,
                 selected: selectedAttrs.includes(chartMeta.uniqueKey),
                 freq: 100
