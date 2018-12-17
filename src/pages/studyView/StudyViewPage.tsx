@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import {inject, Observer, observer} from "mobx-react";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
-import {reaction} from 'mobx';
+import {reaction, IReactionDisposer} from 'mobx';
 import {
     StudyViewPageStore,
     StudyViewPageTabDescriptions,
@@ -82,12 +82,13 @@ export class StudyResultsSummary extends React.Component<{ store:StudyViewPageSt
 export default class StudyViewPage extends React.Component<IStudyViewPageProps, {}> {
     private store: StudyViewPageStore;
     private enableAddChartInTabs = [StudyViewPageTabKeys.SUMMARY, StudyViewPageTabKeys.CLINICAL_DATA];
+    private queryReaction:IReactionDisposer;
 
     constructor(props: IStudyViewPageProps) {
         super();
         this.store = new StudyViewPageStore();
 
-        reaction(
+        this.queryReaction = reaction(
             () => props.routing.location.query,
             query => {
 
@@ -203,6 +204,10 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     )}
             </div>)
 
+    }
+
+    componentWillUnmount(): void {
+        this.queryReaction();
     }
 
     render() {

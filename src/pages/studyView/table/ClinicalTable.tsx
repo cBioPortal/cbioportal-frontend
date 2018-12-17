@@ -1,6 +1,6 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import {action, computed, observable, toJS, reaction} from "mobx";
+import {action, computed, observable, toJS, reaction, IReactionDisposer} from "mobx";
 import autobind from 'autobind-decorator';
 import _ from "lodash";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
@@ -41,6 +41,7 @@ enum ColumnKey {
 
 @observer
 export default class ClinicalTable extends React.Component<IClinicalTableProps, {}> {
+    private updateCellReaction:IReactionDisposer;
     @observable private sortBy: string = DEFAULT_SORTING_COLUMN;
     @observable private sortDirection: SortDirection;
     @observable private cellMargin: { [key: string]: number } = {
@@ -52,7 +53,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
     constructor(props: IClinicalTableProps) {
         super(props);
 
-        reaction(() => this.columnsWidth, () => {
+        this.updateCellReaction = reaction(() => this.columnsWidth, () => {
             this.updateCellMargin();
         }, {fireImmediately: true});
     }
@@ -234,6 +235,10 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
 
     componentWillReceiveProps() {
         this.updateCellMargin();
+    }
+
+    componentWillUnmount(): void {
+        this.updateCellReaction();
     }
 
     render() {
