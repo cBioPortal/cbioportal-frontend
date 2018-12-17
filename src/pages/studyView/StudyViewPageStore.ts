@@ -904,6 +904,7 @@ export class StudyViewPageStore {
                 default:
                     this._clinicalDataEqualityFilterSet.delete(chartMeta.uniqueKey);
                     this._clinicalDataIntervalFilterSet.delete(chartMeta.uniqueKey);
+                    this.clearChartSampleIdentifierFilter(chartMeta);
                     break;
             }
         }
@@ -2941,7 +2942,7 @@ export class StudyViewPageStore {
             this.customChartsPromises[uniqueKey] = remoteData<ClinicalDataCountWithColor[]>({
                 await: () => [],
                 invoke: async () => {
-                    const result = _.reduce(this.samples.result, (acc, sample) => {
+                    const result = _.reduce(this.selectedSamples.result, (acc, sample) => {
                         const findCase = _.find(this._customChartsSelectedCases.get(uniqueKey), (selectedCase:CustomChartIdentifierWithValue) => selectedCase.sampleId === sample.sampleId);
                         let value =  'NA';
                         if(findCase !== undefined) {
