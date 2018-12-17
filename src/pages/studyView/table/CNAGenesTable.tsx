@@ -22,6 +22,7 @@ import {
     getQValue
 } from "../StudyViewUtils";
 import {SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
+import {DEFAULT_SORTING_COLUMN} from "../StudyViewConfig";
 
 
 export type  CNAGenesTableUserSelectionWithIndex = CopyNumberAlterationIdentifier & {
@@ -53,7 +54,7 @@ enum ColumnKey {
 @observer
 export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
     @observable private preSelectedRows: CNAGenesTableUserSelectionWithIndex[] = [];
-    @observable private sortBy: string = '#';
+    @observable private sortBy: string = DEFAULT_SORTING_COLUMN;
     @observable private sortDirection: SortDirection;
     @observable private cellMargin: { [key: string]: number } = {
         [ColumnKey.GENE]: 0,
