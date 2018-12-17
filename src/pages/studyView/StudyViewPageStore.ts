@@ -102,7 +102,6 @@ export enum UniqueKey {
     MUTATION_COUNT_CNA_FRACTION = 'MUTATION_COUNT_CNA_FRACTION',
     DISEASE_FREE_SURVIVAL = 'DFS_SURVIVAL',
     OVERALL_SURVIVAL = 'OS_SURVIVAL',
-    SAMPLES_PER_PATIENT = 'SAMPLES_PER_PATIENT',
     CANCER_STUDIES = 'CANCER_STUDIES',
     MUTATION_COUNT = "SAMPLE_MUTATION_COUNT",
     FRACTION_GENOME_ALTERED = "SAMPLE_FRACTION_GENOME_ALTERED",
@@ -171,19 +170,6 @@ export type StudyViewURLQuery = {
 }
 
 export const SPECIAL_CHARTS: ChartMeta[] = [{
-    uniqueKey: UniqueKey.SAMPLES_PER_PATIENT,
-    displayName: '# of Samples Per Patient',
-    description: '# of Samples Per Patient',
-    dataType: ChartMetaDataTypeEnum.CLINICAL,
-    patientAttribute:false,
-    chartType: ChartTypeEnum.PIE_CHART,
-    dimension: {
-        w: 1,
-        h: 1
-    },
-    renderWhenDataChange: false,
-    priority: 40
-},{
     uniqueKey: UniqueKey.CANCER_STUDIES,
     displayName: 'Cancer Studies',
     description: 'Cancer Studies',
@@ -270,9 +256,7 @@ export class StudyViewPageStore {
                    priority: STUDY_VIEW_CONFIG.priority[uniqueKey] || chartMeta.priority
                });
 
-               if (uniqueKey === UniqueKey.SAMPLES_PER_PATIENT) {
-                   this.customChartsPromises[uniqueKey] = this.samplesPerPatientData;
-               } else if (uniqueKey === UniqueKey.CANCER_STUDIES) {
+               if (uniqueKey === UniqueKey.CANCER_STUDIES) {
                    this.customChartsPromises[uniqueKey] = this.cancerStudiesData;
                }
            }
@@ -1600,9 +1584,9 @@ export class StudyViewPageStore {
 
     readonly clinicalAttributes = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
-        invoke: () => defaultClient.fetchClinicalAttributesUsingPOST({
+        invoke: async () => _.uniqBy(await defaultClient.fetchClinicalAttributesUsingPOST({
             studyIds: this.queriedPhysicalStudyIds.result
-        }),
+        }), clinicalAttribute => `${clinicalAttribute.patientAttribute}-${clinicalAttribute.clinicalAttributeId}`),
         default: [],
         onResult:(clinicalAttributes)=>{
             clinicalAttributes.forEach((obj:ClinicalAttribute) => {
@@ -1920,9 +1904,9 @@ export class StudyViewPageStore {
     @computed
     get specialChartKeysInCustomCharts() {
         if (this.queriedPhysicalStudyIds.result.length > 1) {
-            return [UniqueKey.SAMPLES_PER_PATIENT, UniqueKey.CANCER_STUDIES];
+            return [UniqueKey.CANCER_STUDIES];
         } else {
-            return [UniqueKey.SAMPLES_PER_PATIENT]
+            return []
         }
     }
 
@@ -1931,9 +1915,7 @@ export class StudyViewPageStore {
         let data: MobxPromise<ClinicalDataCountWithColor[]> | undefined
         if (newChartType === ChartTypeEnum.TABLE) {
             if (_.includes(this.specialChartKeysInCustomCharts, attr.uniqueKey)) {
-                if (attr.uniqueKey === UniqueKey.SAMPLES_PER_PATIENT) {
-                    data = this.samplesPerPatientData;
-                } else if (attr.uniqueKey === UniqueKey.CANCER_STUDIES) {
+                if (attr.uniqueKey === UniqueKey.CANCER_STUDIES) {
                     data = this.cancerStudiesData;
                 }
             } else if (this.isCustomChart(attr.uniqueKey)) {
@@ -2661,7 +2643,6 @@ export class StudyViewPageStore {
             this.survivalPlotData,
             this.clinicalAttributeIdToClinicalAttribute,
             this.clinicalAttributesCounts,
-            this.samplesPerPatientData,
             this.cancerStudiesData,
         ],
         invoke: async () => {
@@ -2683,11 +2664,7 @@ export class StudyViewPageStore {
                     if (survivalPlot.id in this.chartMetaSet) {
                         ret[survivalPlot.id] = survivalPlot.alteredGroup.length;
                     }
-                })
-
-                if (UniqueKey.SAMPLES_PER_PATIENT in this.chartMetaSet) {
-                    ret[UniqueKey.SAMPLES_PER_PATIENT] = _.sumBy(this.samplesPerPatientData.result, data => data.count);
-                }
+                });
 
                 if (UniqueKey.CANCER_STUDIES in this.chartMetaSet) {
                     ret[UniqueKey.CANCER_STUDIES] = _.sumBy(this.cancerStudiesData.result, data => data.count);
@@ -2874,15 +2851,6 @@ export class StudyViewPageStore {
             let filteredSampleIdentifiers: SampleIdentifier[] = [];
             let valuesSet = _.keyBy(values);
             switch (chartMeta.uniqueKey) {
-                case UniqueKey.SAMPLES_PER_PATIENT: {
-                    let patientSampleGroups = _.groupBy(this.selectedSamplesForSamplesPerPatientChart.result, (sample) => sample.uniquePatientKey);
-                    _.forEach(patientSampleGroups,samples=>{
-                        if (samples.length in valuesSet) {
-                            filteredSampleIdentifiers = filteredSampleIdentifiers.concat(getFilteredSampleIdentifiers(samples));
-                        }
-                    })
-                    break;
-                }
                 case UniqueKey.CANCER_STUDIES: {
                     filteredSampleIdentifiers = filteredSampleIdentifiers.concat(getFilteredSampleIdentifiers(this.samples.result.filter(sample => values.includes(sample.studyId))));
                     break;
@@ -2906,47 +2874,6 @@ export class StudyViewPageStore {
             this.customChartFilterSet.delete(chartMeta.uniqueKey)
         }
     }
-
-    readonly selectedSamplesForSamplesPerPatientChart = remoteData({
-        await: () => [this.selectedSamples],
-        invoke: () => {
-            /* return all samples by removing filter(s) applied on this chart */
-            if (_.includes(this._chartSampleIdentifiersFilterSet.keys(), UniqueKey.SAMPLES_PER_PATIENT)) {
-                return getSamplesByExcludingFiltersOnChart(
-                    UniqueKey.SAMPLES_PER_PATIENT,
-                    this.filters,
-                    this._chartSampleIdentifiersFilterSet.toJS(),
-                    this.queriedSampleIdentifiers.result,
-                    this.queriedPhysicalStudyIds.result
-                );
-            } else {
-                return Promise.resolve(this.selectedSamples.result);
-            }
-        },
-        default: []
-    });
-
-    readonly samplesPerPatientData = remoteData<ClinicalDataCountWithColor[]>({
-        await: () => [this.selectedSamplesForSamplesPerPatientChart],
-        invoke: async () => {
-            let groupedPatientSamples = _.groupBy(this.selectedSamplesForSamplesPerPatientChart.result, (sample) => sample.uniquePatientKey);
-            return _.values(_.reduce(groupedPatientSamples, (acc, next) => {
-                let sampleCount = next.length;
-                if (acc[sampleCount]) {
-                    acc[sampleCount].count = acc[sampleCount].count + 1
-                } else {
-                    acc[sampleCount] = { value: `${sampleCount}`, count: 1, color: COLORS[sampleCount - 1] || STUDY_VIEW_CONFIG.colors.na }
-                }
-                return acc
-            }, {} as { [id: string]: ClinicalDataCountWithColor }));
-        },
-        default: [],
-        onResult: (data:ClinicalDataCountWithColor[]) =>{
-            if(!this.chartsAreFiltered && data.length <= 1) {
-                this.hideChart(UniqueKey.SAMPLES_PER_PATIENT);
-            }
-        }
-    });
 
     readonly cancerStudiesData = remoteData<ClinicalDataCountWithColor[]>({
         await: () => [this.selectedSamples],
