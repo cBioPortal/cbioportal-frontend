@@ -140,7 +140,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
 
         if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
             this.infoMessage = `${numOfNewCharts} column${numOfNewCharts > 1 ? 's' : ''} added to table and ${addInSummaryInfoMessage} in Summary tab`;
-        } else if (this.props.currentTab === StudyViewPageTabKeys.SUMMARY) {
+        } else if (this.props.currentTab === ''|| this.props.currentTab === StudyViewPageTabKeys.SUMMARY) {
             this.infoMessage = addInSummaryInfoMessage;
         } else {
             this.infoMessage = `Added`;
@@ -159,7 +159,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
 
         if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
             this.infoMessage = `${numOfChartsRemoved} column${numOfChartsRemoved > 1 ? 's' : ''} removed from table and ${removeInSummaryInfoMessage} from Summary tab`;
-        } else if (this.props.currentTab === StudyViewPageTabKeys.SUMMARY) {
+        } else if (this.props.currentTab === ''|| this.props.currentTab === StudyViewPageTabKeys.SUMMARY) {
             this.infoMessage = removeInSummaryInfoMessage;
         } else {
             this.infoMessage = `Removed`;
