@@ -77,7 +77,7 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
 
     public render() {
         return (
-            <WindowWidthBox offset={100}>
+            <WindowWidthBox offset={60}>
                 <If condition={this.columns.isPending || this.props.store.getDataForClinicalDataTab.isPending}>
                     <Then>
                         <LoadingIndicator
