@@ -76,6 +76,17 @@ export enum ChartTypeEnum {
     NONE = 'NONE'
 }
 
+export enum ChartTypeNameEnum {
+    PIE_CHART = 'pie chart',
+    BAR_CHART = 'bar chart',
+    SURVIVAL = 'survival plot',
+    TABLE = 'table',
+    SCATTER = 'density plot',
+    MUTATED_GENES_TABLE = 'table',
+    CNA_GENES_TABLE = 'table',
+    NONE = 'none'
+}
+
 export const DEFAULT_SORTING_COLUMN = 'Freq';
 
 // TODO: The priority and tableAttrs are duplicated in serverConfigDefaults.
