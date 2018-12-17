@@ -165,7 +165,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
 
                 <Collapse isOpened={!this.dataFormatCollapsed}>
                     <div style={{marginTop: '5px'}}>Each row can have two columns separated by space or tab:
-                        <br/>1) study_id:{this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE ? 'sample_id' : 'patient_id'}
+                        <br/>1) study_id:{this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE ? 'sample_id ' : 'patient_id '}
                         and<br/>2) group_name of your choice<br/>group_name is optional if there is only one group.</div>
                 </Collapse>
 
