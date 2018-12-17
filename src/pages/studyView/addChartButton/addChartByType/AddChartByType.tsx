@@ -209,7 +209,6 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                     showSelectableNumber={true}
                     showAddRemoveAllButtons={true}
                     autoFocusSearchAfterRendering={true}
-                    sortBy={''}
                 />
                 {
                     this.props.freqPromise.isPending && (
