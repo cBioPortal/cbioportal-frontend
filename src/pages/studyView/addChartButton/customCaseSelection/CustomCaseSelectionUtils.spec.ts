@@ -8,7 +8,7 @@ import {
     getLines,
     InputLine,
     LineTypeEnum,
-    LineValidationResult,
+    ValidationResult,
     validateLines
 } from "./CustomCaseSelectionUtils";
 import {ClinicalDataTypeEnum} from "../../StudyViewPageStore";
@@ -162,7 +162,7 @@ describe('CustomCaseSelectionUtils', () => {
                 line: 's1',
                 caseId: 's1'
             }];
-            const result: LineValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1.concat(st2), false, ['chol_nus_2012', 'lgg_tcga']);
+            const result: ValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1.concat(st2), false, ['chol_nus_2012', 'lgg_tcga']);
 
             assert.isTrue(result.error.length !== 0);
             assert.isTrue(_.keyBy(result.error, 'code')[ErrorCodeEnum.INVALID_CASE_ID] !== undefined);
@@ -182,7 +182,7 @@ describe('CustomCaseSelectionUtils', () => {
                 studyId: 'test',
                 caseId: 's1'
             }];
-            const result: LineValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1.concat(st2), false, ['chol_nus_2012', 'lgg_tcga']);
+            const result: ValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1.concat(st2), false, ['chol_nus_2012', 'lgg_tcga']);
             assert.isTrue(result.error.length !== 0);
             assert.isTrue(_.keyBy(result.error, 'code')[ErrorCodeEnum.STUDY_NOT_SELECTED] !== undefined);
         });
@@ -192,7 +192,7 @@ describe('CustomCaseSelectionUtils', () => {
                 line: 's1',
                 caseId: 's1'
             }];
-            const result: LineValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1, true, ['chol_nus_2012']);
+            const result: ValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1, true, ['chol_nus_2012']);
             assert.isTrue(result.error.length === 0);
         });
 
@@ -206,7 +206,7 @@ describe('CustomCaseSelectionUtils', () => {
                 };
             });
 
-            const result: LineValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1, false, ['chol_nus_2012']);
+            const result: ValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1, false, ['chol_nus_2012']);
             const errors = _.keyBy(result.error, 'code');
 
             assert.isTrue(result.error.length !== 0);

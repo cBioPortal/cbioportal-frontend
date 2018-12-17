@@ -12,6 +12,7 @@ type Code =
     'MULTI_NAME'
     | 'NO_GROUP_NAME'
     | 'OVERLAP'
+    | 'INVALID'
     | 'INVALID_CASE_ID'
     | 'TOO_MANY_INVALID_CASE_ID'
     | 'STUDY_NOT_SELECTED'
@@ -23,6 +24,7 @@ export const DEFAULT_GROUP_NAME_WITH_USER_INPUT = 'Unselected';
 
 export enum ErrorCodeEnum {
     OVERLAP = 'OVERLAP',
+    INVALID = 'INVALID',
     INVALID_CASE_ID = 'INVALID_CASE_ID',
     TOO_MANY_INVALID_CASE_ID = 'TOO_MANY_INVALID_CASE_ID',
     STUDY_NOT_SELECTED = 'STUDY_NOT_SELECTED',
@@ -41,7 +43,7 @@ export type ValidationMessage = {
 
 export type ParseResult = {
     groups: CustomGroup[],
-    validationResult: LineValidationResult
+    validationResult: ValidationResult
 }
 
 export enum LineTypeEnum {
@@ -57,7 +59,7 @@ export type InputLine = {
     groupName?: string
 }
 
-export type LineValidationResult = {
+export type ValidationResult = {
     error: ValidationMessage[],
     warning: ValidationMessage[],
 }
@@ -92,7 +94,7 @@ export function getLines(content: string): InputLine[] {
     }, [] as InputLine[])
 }
 
-export function validateLines(lines: InputLine[], caseType: ClinicalDataType, allSamples: Sample[], isSingleStudy: boolean, selectedStudies: string[]): LineValidationResult {
+export function validateLines(lines: InputLine[], caseType: ClinicalDataType, allSamples: Sample[], isSingleStudy: boolean, selectedStudies: string[]): ValidationResult {
     let errorMessages: ValidationMessage[] = [];
     let warningMessages: ValidationMessage[] = [];
 
@@ -223,7 +225,7 @@ export function getGroups(lines: InputLine[], singleStudyId: string, caseType: C
 }
 
 export function parseContent(content: string, needToValidate: boolean = false, selectedStudies: string[], caseType: ClinicalDataType, allSamples: Sample[], isSingleStudy: boolean): ParseResult {
-    let validationResult: LineValidationResult = {
+    let validationResult: ValidationResult = {
         error: [],
         warning: []
     };

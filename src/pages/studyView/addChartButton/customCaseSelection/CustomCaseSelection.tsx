@@ -8,7 +8,12 @@ import {ButtonGroup, Modal, Radio} from 'react-bootstrap';
 import {ClinicalDataType, ClinicalDataTypeEnum, NewChart} from "../../StudyViewPageStore";
 import ErrorBox from "../../../../shared/components/errorBox/ErrorBox";
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
-import {DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT, parseContent, ParseResult} from "./CustomCaseSelectionUtils";
+import {
+    DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT, ErrorCodeEnum,
+    parseContent,
+    ParseResult,
+    ValidationResult
+} from "./CustomCaseSelectionUtils";
 import autobind from 'autobind-decorator';
 import InfoBanner from "../../infoBanner/InfoBanner";
 import {INFO_TIMEOUT} from "../AddChartButton";
@@ -18,6 +23,8 @@ export interface ICustomCaseSelectionProps {
     selectedSamples: Sample[];
     onSubmit: (chart: NewChart) => void;
     queriedStudies: string[];
+    getDefaultChartName: () => string;
+    isChartNameValid: (chartName: string) => boolean
 }
 
 const GroupByOptions: { value: ClinicalDataType, label: string; }[] = [
@@ -25,11 +32,11 @@ const GroupByOptions: { value: ClinicalDataType, label: string; }[] = [
     {value: ClinicalDataTypeEnum.PATIENT, label: 'By patient ID'}
 ];
 
-const DEFAULT_CHART_NAME = 'Custom Chart';
-
 @observer
 export default class CustomCaseSelection extends React.Component<ICustomCaseSelectionProps, {}> {
     private validateContent: boolean = false;
+    private chartNameValidation: ValidationResult = {warning: [], error: []};
+    private lastAdded: NewChart;
     @observable dataFormatCollapsed: boolean = true;
     @observable chartName: string;
     @observable showCaseIds: boolean = false;
@@ -56,7 +63,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     @computed
     get newChartInfo(): NewChart {
         return {
-            name: this.chartName ? this.chartName : DEFAULT_CHART_NAME,
+            name: this.chartName ? this.chartName : this.props.getDefaultChartName(),
             groups: this.result.validationResult.error.length === 0 ? this.result.groups : []
         }
     }
@@ -82,11 +89,27 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     @action
     onChartNameChange(event: any) {
         this.chartName = event.currentTarget.value;
+        const validChartName = this.props.isChartNameValid(this.chartName);
+        if (!validChartName) {
+            this.chartNameValidation = {
+                error: [{
+                    code: ErrorCodeEnum.INVALID,
+                    message: new Error('Chart name exists.')
+                }],
+                warning: []
+            }
+        } else {
+            this.chartNameValidation = {
+                error: [],
+                warning: []
+            }
+        }
     }
 
     @autobind
     @action
     onAddChart() {
+        this.lastAdded = this.newChartInfo;
         this.props.onSubmit(this.newChartInfo);
         this.chartAdded = true;
         setTimeout(() => this.chartAdded = false, INFO_TIMEOUT);
@@ -96,6 +119,11 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     @action
     protected handleDataFormatToggle() {
         this.dataFormatCollapsed = !this.dataFormatCollapsed;
+    }
+
+    @computed
+    get addChartButtonDisabled() {
+        return this.result.validationResult.error.length > 0 || this.newChartInfo.groups.length === 0 || this.chartNameValidation.error.length > 0;
     }
 
     public mainContent() {
@@ -152,12 +180,12 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                     data-test='CustomCaseSetInput'
                 />
                 {
-                    this.result.validationResult.error.map(message => {
+                    this.result.validationResult.error.concat(this.chartNameValidation.error).map(message => {
                         return <ErrorBox className={styles.error} error={message.message}/>
                     })
                 }
                 {
-                    this.result.validationResult.warning.map(message => {
+                    this.result.validationResult.warning.concat(this.chartNameValidation.warning).map(message => {
                         return <ErrorBox style={{backgroundColor: STUDY_VIEW_CONFIG.colors.theme.tertiary}}
                                          error={message.message}/>
                     })
@@ -169,14 +197,14 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                            onInput={this.onChartNameChange}
                            className='form-control input-sm'/>
                     <button
-                        disabled={this.result.validationResult.error.length > 0 || this.newChartInfo.groups.length === 0}
+                        disabled={this.addChartButtonDisabled}
                         className="btn btn-primary btn-sm"
                         onClick={this.onAddChart}>
                         Add Chart
                     </button>
                 </div>
                 {this.chartAdded &&
-                    <InfoBanner message="Chart Added" />
+                <InfoBanner message={`${this.lastAdded.name} has been added.`}/>
                 }
             </div>
         );

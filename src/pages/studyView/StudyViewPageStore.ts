@@ -119,6 +119,8 @@ export enum StudyViewPageTabDescriptions {
     HEATMAPS = 'Heatmaps'
 }
 
+const DEFAULT_CHART_NAME = 'Custom Chart';
+
 export const MUTATION_COUNT = 'MUTATION_COUNT';
 export const FRACTION_GENOME_ALTERED = 'FRACTION_GENOME_ALTERED';
 export const OS_STATUS = "OS_STATUS";
@@ -1640,12 +1642,23 @@ export class StudyViewPageStore {
     }
 
     @autobind
+    isChartNameValid(chartName: string) {
+        const match = _.find(this.chartMetaSet, chartMeta => chartMeta.displayName.toUpperCase() === chartName.toUpperCase());
+        return match === undefined;
+    }
+    @autobind
+    getDefaultCustomChartName() {
+        return `${DEFAULT_CHART_NAME} ${this._customCharts.size - SPECIAL_CHARTS.length + 1}`;
+    }
+
+    @autobind
     @action addCustomChart(newChart:NewChart) {
         const uniqueKey = this.newCustomChartUniqueKey();
+        const newChartName = newChart.name ? newChart.name : this.getDefaultCustomChartName();
         let chartMeta = {
             uniqueKey: uniqueKey,
-            displayName: newChart.name,
-            description: newChart.name,
+            displayName: newChartName,
+            description: newChartName,
             chartType: ChartTypeEnum.PIE_CHART,
             dataType: getChartMetaDataType(uniqueKey),
             patientAttribute: false,
@@ -1678,6 +1691,7 @@ export class StudyViewPageStore {
 
         // Autoselect the groups
         this.setCustomChartFilters(chartMeta, newChart.groups.map(group=>group.name));
+        this.newlyAddedCharts = [uniqueKey];
     }
 
     @computed

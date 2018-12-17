@@ -28,6 +28,7 @@ import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultToo
 
 export interface IAddChartTabsProps {
     store: StudyViewPageStore,
+    currentTab: string,
     disableAddGenomicButton?: boolean
 }
 
@@ -160,10 +161,13 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     onClearAll={this.onClearAll}
                                     onToggleOption={this.onToggleOption}/>
                 </MSKTab>
-                <MSKTab key={2} id={TabKeysEnum.CUSTOM_GROUPS} linkText={TabKeysEnum.CUSTOM_GROUPS}>
+                <MSKTab key={2} id={TabKeysEnum.CUSTOM_GROUPS} linkText={TabKeysEnum.CUSTOM_GROUPS}
+                        hide={this.props.currentTab !== StudyViewPageTabKeys.SUMMARY}>
                     <CustomCaseSelection
                         selectedSamples={this.props.store.selectedSamples.result}
                         queriedStudies={this.props.store.queriedPhysicalStudyIds.result}
+                        isChartNameValid={this.props.store.isChartNameValid}
+                        getDefaultChartName={this.props.store.getDefaultCustomChartName}
                         onSubmit={(chart: NewChart) => {
                             this.props.store.addCustomChart(chart);
                         }}
@@ -187,6 +191,7 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
                     trigger={["click"]}
                     placement={"bottomRight"}
                     overlay={() => <AddChartTabs store={this.props.store}
+                                                 currentTab={this.props.currentTab}
                                                  disableAddGenomicButton={this.props.disableAddGenomicButton}/>}
                     overlayClassName={this.props.addChartOverlayClassName}
                 >

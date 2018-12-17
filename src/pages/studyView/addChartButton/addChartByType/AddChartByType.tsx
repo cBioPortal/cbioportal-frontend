@@ -141,7 +141,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
     @action
     removeAll(selectedOptions: ChartOption[]) {
         const alreadySelected = this.getCurrentSelectedRowKeys();
-        const allSelected = _.filter(selectedOptions, option => !option.disabled).map(option => option.key);
+        const allSelected = selectedOptions.map(option => option.key);
         const numOfChartsRemoved = _.intersection(alreadySelected, allSelected).length;
         this.props.onClearAll(selectedOptions.map(option => option.key));
         this.infoMessage = `${numOfChartsRemoved} chart${numOfChartsRemoved > 1 ? 's' : ''} removed`;
