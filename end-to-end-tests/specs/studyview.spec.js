@@ -13,14 +13,14 @@ describe('study view screenshot test', function(){
         goToUrlAndSetLocalStorage(url);
     });
      it('study view laml_tcga', function() {
-        browser.waitForVisible('#mainColumn',10000);
+        browser.waitForVisible('#mainColumn',15000);
         waitForNetworkQuiet();
         var res = browser.checkElement('#mainColumn', {hide:['.qtip', '#footer-span-version'] });
         assertScreenShotMatch(res);
     });
      it('study view laml_tcga clinical data clicked', function() {
         browser.click('.tabAnchor_clinicalData');
-        browser.waitForVisible('#mainColumn',10000);
+        browser.waitForVisible('#mainColumn',15000);
         waitForNetworkQuiet();
         var res = browser.checkElement('#mainColumn', {hide:['.qtip', '#footer-span-version'] });
         assertScreenShotMatch(res);
