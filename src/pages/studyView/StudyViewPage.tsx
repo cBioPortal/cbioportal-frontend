@@ -28,6 +28,7 @@ import {CSSTransition} from "react-transition-group";
 import classNames from 'classnames';
 import {sleep} from "../../shared/lib/TimeUtils";
 import {remoteData} from "../../shared/api/remoteData";
+import {If, Else, Then} from 'react-if';
 import shareUIstyles from "../resultsView/querySummary/shareUI.module.scss";
 import DefaultTooltip from "../../shared/components/defaultTooltip/DefaultTooltip";
 
@@ -174,25 +175,25 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
                                 <div className={styles.absolutePanel}>
                                     <Observer>
-                                    {
-                                        () => {
-                                        return (
-                                            <div className={styles.selectedInfo}>
-                                                {
-                                                    (this.chartDataPromises.isComplete) && (
-                                                        <CSSTransition classNames="studyFilterResult" in={true}
-                                                                       appear timeout={{enter: 200}}>
-                                                            {() => <StudyResultsSummary store={this.store}/>
-                                                            }
-                                                        </CSSTransition>
-                                                    )
-                                                }
-                                                <div className={styles.selectedInfoLoadingIndicator}>
-                                                    <LoadingIndicator isLoading={true} size={"small"}/>
-                                                </div>
-                                            </div>)
+                                        {
+                                            () => {
+                                                return (
+                                                    <div className={styles.selectedInfo}>
+                                                        <If condition={this.chartDataPromises.isComplete}>
+                                                            <Then>
+                                                                <CSSTransition classNames="studyFilterResult" in={true}
+                                                                               appear timeout={{enter: 200}}>
+                                                                    {() => <StudyResultsSummary store={this.store}/>
+                                                                    }
+                                                                </CSSTransition>
+                                                            </Then>
+                                                            <Else>
+                                                                <LoadingIndicator isLoading={true} size={"small"} className={styles.selectedInfoLoadingIndicator}/>
+                                                            </Else>
+                                                        </If>
+                                                    </div>)
+                                            }
                                         }
-                                    }
                                     </Observer>
 
                                     {(this.props.routing.location.query.tab === undefined || this.enableAddChartInTabs.includes(this.props.routing.location.query.tab)) &&

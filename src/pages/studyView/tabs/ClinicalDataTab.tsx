@@ -10,6 +10,8 @@ import {remoteData} from "shared/api/remoteData";
 import {Else, If, Then} from 'react-if';
 import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/components/progressIndicator/ProgressIndicator";
 import autobind from 'autobind-decorator';
+import windowStore from "../../../shared/components/window/WindowStore";
+import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWidthBox";
 
 export interface IClinicalDataTabTable {
     store: StudyViewPageStore;
@@ -75,7 +77,7 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
 
     public render() {
         return (
-            <div>
+            <WindowWidthBox offset={100}>
                 <If condition={this.columns.isPending || this.props.store.getDataForClinicalDataTab.isPending}>
                     <Then>
                         <LoadingIndicator
@@ -99,7 +101,7 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
                         />
                     </Else>
                 </If>
-            </div>
+            </WindowWidthBox>
         );
     }
 }

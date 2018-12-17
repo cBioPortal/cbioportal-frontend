@@ -186,30 +186,28 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
 @observer
 export default class AddChartButton extends React.Component<IAddChartButtonProps, {}> {
+    @computed
+    get buttonText() {
+        if (!this.props.currentTab || this.props.currentTab === StudyViewPageTabKeys.SUMMARY) {
+            return '+ Add Chart';
+        } else if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
+            return '+ Add Column'
+        } else {
+            return '';
+        }
+    }
+
     render() {
         return (
             <DefaultTooltip
-                trigger={["hover"]}
-                placement={"top"}
-                overlay={<span>Add Chart</span>}
+                trigger={["click"]}
+                placement={"bottomRight"}
+                overlay={() => <AddChartTabs store={this.props.store}
+                                             currentTab={this.props.currentTab}
+                                             disableAddGenomicButton={this.props.disableAddGenomicButton}/>}
+                overlayClassName={this.props.addChartOverlayClassName}
             >
-                <DefaultTooltip
-                    trigger={["click"]}
-                    placement={"bottomRight"}
-                    overlay={() => <AddChartTabs store={this.props.store}
-                                                 currentTab={this.props.currentTab}
-                                                 disableAddGenomicButton={this.props.disableAddGenomicButton}/>}
-                    overlayClassName={this.props.addChartOverlayClassName}
-                >
-                    <div className={shareUIstyles.shareModule}>
-                        <a>
-                            <span className="fa-stack fa-4x">
-                                <i className="fa fa-circle fa-stack-2x"></i>
-                                <i className="fa fa-plus fa-stack-1x"></i>
-                            </span>
-                        </a>
-                    </div>
-                </DefaultTooltip>
+                <button className='btn btn-primary btn-xs' style={{marginLeft: '10px'}}>{this.buttonText}</button>
             </DefaultTooltip>
         )
     }
