@@ -25,6 +25,7 @@ import {ClinicalDataTab} from "../tabs/ClinicalDataTab";
 import IFrameLoader from "../../../shared/components/iframeLoader/IFrameLoader";
 import shareUIstyles from "../../resultsView/querySummary/shareUI.module.scss";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
+import {ChartTypeEnum} from "../StudyViewConfig";
 
 export interface IAddChartTabsProps {
     store: StudyViewPageStore,
@@ -92,7 +93,12 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
     @computed
     get genomicDataOptions(): ChartOption[] {
-        return getOptionsByChartMetaDataType(ChartMetaDataTypeEnum.GENOMIC, this.props.store.chartMetaSet, this.selectedAttrs);
+        const genomicDataOptions = getOptionsByChartMetaDataType(ChartMetaDataTypeEnum.GENOMIC, this.props.store.chartMetaSet, this.selectedAttrs);
+        if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
+            return genomicDataOptions.filter(option => option.chartType === ChartTypeEnum.BAR_CHART || option.chartType === ChartTypeEnum.PIE_CHART);
+        } else {
+            return genomicDataOptions;
+        }
     }
 
     @computed
