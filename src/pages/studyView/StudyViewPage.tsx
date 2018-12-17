@@ -126,7 +126,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             // this gives time for charts to render
             // product requirement that the summary data show after charts have rendered
             // to call attention to the summary results
-            return await sleep(3000);
+            return await sleep(10);
         }
     });
 
