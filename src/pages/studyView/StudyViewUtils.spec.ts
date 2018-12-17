@@ -1059,16 +1059,16 @@ describe('StudyViewUtils', () => {
         it ('picks predefined colors for known clinical attribute values', () => {
             const colors = pickClinicalDataColors(clinicalDataCountWithFixedValues);
 
-            assert.equal(colors["TRUE"], "#66AA00");
-            assert.equal(colors["FALSE"], "#666666");
+            assert.equal(colors["TRUE"], "#109618");
+            assert.equal(colors["FALSE"], "#DC3912");
             assert.equal(colors["NA"], "#CCCCCC");
         });
 
         it ('picks predefined colors for known clinical attribute values in mixed letter case', () => {
             const colors = pickClinicalDataColors(clinicalDataCountWithFixedMixedCaseValues);
 
-            assert.equal(colors["Yes"], "#66AA00");
-            assert.equal(colors["No"], "#666666");
+            assert.equal(colors["Yes"], "#109618");
+            assert.equal(colors["No"], "#DC3912");
             assert.equal(colors["Na"], "#CCCCCC");
             assert.equal(colors["Male"], "#2986E2");
             assert.equal(colors["F"], "#DC3912");
@@ -1079,11 +1079,11 @@ describe('StudyViewUtils', () => {
 
             const colors = pickClinicalDataColors(clinicalDataCountWithBothFixedAndOtherValues, availableColors);
 
-            assert.equal(colors["Yes"], "#66AA00");
-            assert.equal(colors["NO"], "#666666");
+            assert.equal(colors["Yes"], "#109618");
+            assert.equal(colors["NO"], "#DC3912");
             assert.equal(colors["na"], "#CCCCCC");
-            assert.equal(colors["maybe"], "#2986E2");
-            assert.equal(colors["WHY"], "#DC3912");
+            assert.equal(colors["maybe"], "#66AA00");
+            assert.equal(colors["WHY"], "#666666");
         });
     });
 
@@ -1484,7 +1484,7 @@ describe('StudyViewUtils', () => {
 
         it('no filters selected', (done) => {
             getSamplesByExcludingFiltersOnChart(
-                UniqueKey.SAMPLES_PER_PATIENT,
+                UniqueKey.CANCER_STUDIES,
                 emptyStudyViewFilter,
                 {},
                 [{ sampleId: 'sample1', studyId: 'study1' }],
@@ -1498,9 +1498,9 @@ describe('StudyViewUtils', () => {
 
         it('has filter for one chart', (done) => {
             getSamplesByExcludingFiltersOnChart(
-                UniqueKey.SAMPLES_PER_PATIENT,
+                UniqueKey.MUTATION_COUNT,
                 emptyStudyViewFilter,
-                { [UniqueKey.SAMPLES_PER_PATIENT]: [{ sampleId: 'sample1', studyId: 'study1' }], [UniqueKey.CANCER_STUDIES]: [{ sampleId: 'sample1', studyId: 'study1' }] },
+                { [UniqueKey.CANCER_STUDIES]: [{ sampleId: 'sample1', studyId: 'study1' }] },
                 [{ sampleId: 'sample1', studyId: 'study1' }, { sampleId: 'sample2', studyId: 'study1' }],
                 ['study1']
             ).then(() => {
@@ -1511,7 +1511,7 @@ describe('StudyViewUtils', () => {
 
         it('no filters selected and queriedSampleIdentifiers is empty', (done) => {
             getSamplesByExcludingFiltersOnChart(
-                UniqueKey.SAMPLES_PER_PATIENT,
+                UniqueKey.CANCER_STUDIES,
                 emptyStudyViewFilter,
                 {},
                 [],
@@ -1524,9 +1524,9 @@ describe('StudyViewUtils', () => {
 
         it('has filter for one chart and queriedSampleIdentifiers is empty', (done) => {
             getSamplesByExcludingFiltersOnChart(
-                UniqueKey.SAMPLES_PER_PATIENT,
+                UniqueKey.MUTATION_COUNT,
                 emptyStudyViewFilter,
-                { [UniqueKey.SAMPLES_PER_PATIENT]: [{ sampleId: 'sample1', studyId: 'study1' }], [UniqueKey.CANCER_STUDIES]: [{ sampleId: 'sample1', studyId: 'study1' }] },
+                { [UniqueKey.CANCER_STUDIES]: [{ sampleId: 'sample1', studyId: 'study1' }] },
                 [],
                 ['study1']
             ).then(() => {
