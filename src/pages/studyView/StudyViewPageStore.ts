@@ -2940,7 +2940,7 @@ export class StudyViewPageStore {
         let uniqueKey: string = chartMeta.uniqueKey;
         if (!this.customChartsPromises.hasOwnProperty(uniqueKey)) {
             this.customChartsPromises[uniqueKey] = remoteData<ClinicalDataCountWithColor[]>({
-                await: () => [],
+                await: () => [this.selectedSamples],
                 invoke: async () => {
                     const result = _.reduce(this.selectedSamples.result, (acc, sample) => {
                         const findCase = _.find(this._customChartsSelectedCases.get(uniqueKey), (selectedCase:CustomChartIdentifierWithValue) => selectedCase.sampleId === sample.sampleId);
