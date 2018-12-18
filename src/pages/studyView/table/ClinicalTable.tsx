@@ -1,6 +1,6 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import {action, computed, observable, toJS, reaction} from "mobx";
+import {action, computed, observable, toJS, reaction, IReactionDisposer} from "mobx";
 import autobind from 'autobind-decorator';
 import _ from "lodash";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
@@ -14,6 +14,7 @@ import {
 } from "../StudyViewUtils";
 import {SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
+import {DEFAULT_SORTING_COLUMN} from "../StudyViewConfig";
 
 export interface IClinicalTableProps {
     data: ClinicalDataCountWithColor[];
@@ -40,7 +41,8 @@ enum ColumnKey {
 
 @observer
 export default class ClinicalTable extends React.Component<IClinicalTableProps, {}> {
-    @observable private sortBy: string = '#';
+    private updateCellReaction:IReactionDisposer;
+    @observable private sortBy: string = DEFAULT_SORTING_COLUMN;
     @observable private sortDirection: SortDirection;
     @observable private cellMargin: { [key: string]: number } = {
         [ColumnKey.CATEGORY]: 0,
@@ -51,7 +53,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
     constructor(props: IClinicalTableProps) {
         super(props);
 
-        reaction(() => this.columnsWidth, () => {
+        this.updateCellReaction = reaction(() => this.columnsWidth, () => {
             this.updateCellMargin();
         }, {fireImmediately: true});
     }
@@ -233,6 +235,10 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
 
     componentWillReceiveProps() {
         this.updateCellMargin();
+    }
+
+    componentWillUnmount(): void {
+        this.updateCellReaction();
     }
 
     render() {

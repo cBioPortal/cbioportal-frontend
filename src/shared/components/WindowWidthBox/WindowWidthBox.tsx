@@ -18,7 +18,7 @@ export class WindowWidthBox extends React.Component<IWindowWidthBoxProps,{}>{
     }
 
     @computed get style():CSSProperties {
-        return {width: WindowStore.size.width - this.offset };
+        return {width: WindowStore.size.width - this.offset, overflowX: 'auto'};
     }
 
     render(){
