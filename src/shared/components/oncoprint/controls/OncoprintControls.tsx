@@ -583,6 +583,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                     <div style={{marginLeft: "10px"}}>
                         <div className="checkbox"><label>
                             <input
+                                data-test="ColorByType"
                                 type="checkbox"
                                 value={EVENT_KEY.distinguishMutationType}
                                 checked={this.props.state.distinguishMutationType}
@@ -600,6 +601,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                         </label></div>
                         <div className="checkbox"><label>
                             <input
+                                data-test="ColorByDriver"
                                 type="checkbox"
                                 value={EVENT_KEY.distinguishDrivers}
                                 checked={this.props.state.distinguishDrivers}
@@ -733,6 +735,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
                     <div style={{marginLeft:10}}>
                         <div className="checkbox"><label>
                             <input
+                                data-test="HideVUS"
                                 type="checkbox"
                                 value={EVENT_KEY.hidePutativePassengers}
                                 checked={!this.props.state.hidePutativePassengers}

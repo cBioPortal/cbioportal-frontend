@@ -305,7 +305,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
                     </Observer>
 
                     <div style={{position:"relative"}} >
-                        <div>
+                        <div id="oncoprintDiv">
                             {this.alterationInfo}
                             <Oncoprint
                                 oncoprintRef={this.oncoprintRef}
