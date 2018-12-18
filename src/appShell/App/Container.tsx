@@ -79,7 +79,7 @@ export default class Container extends React.Component<IContainerProps, {}> {
                         </Else>
                     </If>
 
-                    <PortalFooter appStore={this.appStore}/>
+
                 </div>
                 <Else>
                     <LoadingIndicator isLoading={!this.isSessionLoaded} center={true} size={"big"}/>

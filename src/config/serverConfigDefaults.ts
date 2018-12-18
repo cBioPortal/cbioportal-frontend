@@ -12,7 +12,8 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
     digital_slide_archive_meta_url:"https://api.digitalslidearchive.org/api/v1/tcga/image?caseName=",
 
     mdacc_heatmap_patient_url: "https://bioinformatics.mdanderson.org/participant2maps?participant=",
-    mdacc_heatmap_study_url: "https://bioinformatics.mdanderson.org/study2url?studyid=",
+    mdacc_heatmap_study_meta_url: "https://bioinformatics.mdanderson.org/study2url?studyid=",
+    mdacc_heatmap_study_url: "https:// bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?",
 
     mygene_info_url: "https://mygene.info/v3/gene/<%= entrezGeneId %>?fields=uniprot",
 
@@ -97,7 +98,7 @@ const ServerConfigDefaults: Partial<IServerConfig> = {
             "STUDY_ID": 70,
             "SEQUENCED": 60,
             "HAS_CNA_DATA": 50,
-            "SAMPLE_COUNT_PATIENT": 40,
+            "PATIENT_SAMPLE_COUNT": 40,
             "MUTATION_COUNT": 30,
             "FRACTION_GENOME_ALTERED": 20,
             "PATIENT_GENDER": 9,

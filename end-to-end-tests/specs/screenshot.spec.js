@@ -234,26 +234,6 @@ describe('patient view page screenshot test', function(){
     });
 });
 
-describe('study view screenshot test', function(){
-    before(function(){
-        var url = `${CBIOPORTAL_URL}/study.do?cancer_study_id=lgg_ucsf_2014`;
-        goToUrlAndSetLocalStorage(url);
-    });
-
-    it('study view lgg_ucsf_2014', function() {
-        // assume that when mutated genes header is loaded the full page is
-        // done loading
-        var mutatedGenesHeader = $('#chart-new-mutated_genes-chart-header');
-        mutatedGenesHeader.waitForExist(30000);
-
-        // give charts time to render
-        browser.pause(5000);
-
-        var res = browser.checkElement('#page_wrapper_table', {hide:['.qtip', '#footer-span-version'] });
-        assertScreenShotMatch(res);
-    });
-});
-
 describe("coexpression tab screenshot tests", function() {
     before(function() {
         var url = `${CBIOPORTAL_URL}/results/coexpression?tab_index=tab_visualize&cancer_study_list=coadread_tcga_pub&cancer_study_id=coadread_tcga_pub&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=coadread_tcga_pub_mutations&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=coadread_tcga_pub_gistic&Z_SCORE_THRESHOLD=2.0&case_set_id=coadread_tcga_pub_nonhypermut&case_ids=&gene_list=KRAS+NRAS+BRAF&gene_set_choice=user-defined-list&Action=Submit`;

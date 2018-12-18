@@ -12,7 +12,7 @@ import { Link } from 'react-router';
 import getBrowserWindow from "../../lib/getBrowserWindow";
 import ExtendedRouterStore from "../../lib/ExtendedRouterStore";
 import LoadingIndicator from "../loadingIndicator/LoadingIndicator";
-import {openStudySummaryFormSubmit} from "../../api/urls";
+import {redirectToStudyView} from "../../api/urls";
 import {ResultsViewTab} from "../../../pages/resultsView/ResultsViewPageHelpers";
 
 
@@ -169,7 +169,7 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
 
                                 <BarGraph data={this.CancerTypeDescendantStudies(this.CancerTypeList())}
                                           openStudy={(studyId)=>{
-                                              openStudySummaryFormSubmit(studyId);
+                                              redirectToStudyView(studyId);
                                           }}
                                 />
 
