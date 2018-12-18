@@ -2,37 +2,37 @@ import {MutationAnnotationSettings} from "../../../resultsView/ResultsViewPageSt
 import {action, computed, observable} from "mobx";
 import AppConfig from "appConfig";
 import {
-    annotateGeneticTrackData, fetchOncoKbDataForCna, fetchOncoKbDataForMutations,
+    annotateGeneticTrackData,
+    fetchOncoKbDataForCna,
+    fetchOncoKbDataForMutations,
     getGeneSymbols,
-    getGeneticTracks, getOncoprintData, getSampleGeneticTrackData,
+    getGeneticTracks,
+    getOncoprintData,
+    getSampleGeneticTrackData,
     getSampleIds,
-    initMutationAnnotationSettings, isAltered, isType3NoGene,
-    OncoprinterInputLine, OncoprinterInputLineType3, OncoprinterInputLineType3_Incomplete,
+    initMutationAnnotationSettings,
+    isAltered,
+    OncoprinterInputLine,
     parseInput
 } from "./OncoprinterUtils";
 import {remoteData} from "../../../../shared/api/remoteData";
 import {IOncoKbData} from "../../../../shared/model/OncoKB";
-import {
-    fetchOncoKbAnnotatedGenesSuppressErrors,
-    ONCOKB_DEFAULT
-} from "../../../../shared/lib/StoreUtils";
+import {fetchOncoKbAnnotatedGenesSuppressErrors, ONCOKB_DEFAULT} from "../../../../shared/lib/StoreUtils";
 import client from "../../../../shared/api/cbioportalClientInstance";
-import gnClient from "../../../../shared/api/genomeNexusClientInstance";
 import _ from "lodash";
 import {countMutations, mutationCountByPositionKey} from "../../../resultsView/mutationCountHelpers";
 import {Mutation, MutationCountByPosition} from "../../../../shared/api/generated/CBioPortalAPI";
-import {sendSentryMessage} from "../../../../shared/lib/tracking";
-import {recurrentHotspotFilter} from "../../../../shared/lib/AnnotationUtils";
 
 export type OncoprinterMutationAnnotationSettings = Pick<MutationAnnotationSettings, "ignoreUnknown" | "hotspots" | "cbioportalCount" | "cbioportalCountThreshold" | "oncoKb" | "driversAnnotated">;
 
+/* Leaving commented only for reference, this will be replaced by unified input strategy
 function genomeNexusKey(l:OncoprinterInputLineType3_Incomplete){
     return `${l.chromosome}_${l.startPosition}_${l.endPosition}_${l.referenceAllele}_${l.variantAllele}`;
 }
 
 function genomeNexusKey2(l:{chromosome:string, start:number, end:number, referenceAllele:string, variantAllele:string}){
     return `${l.chromosome}_${l.start}_${l.end}_${l.referenceAllele}_${l.variantAllele}`;
-}
+}*/
 
 export default class OncoprinterStore {
 
@@ -104,6 +104,7 @@ export default class OncoprinterStore {
                 throw new Error(parsed.error);
             } else {
                 let parsedLines = parsed.result;
+                /* Leaving commented only for reference, this will be replaced by unified input strategy
                 // fetch hugoGeneSymbols and hotspot for Type3 input lines
                 const toAnnotate =
                     _.chain(parsedLines as any).filter(l=>isType3NoGene(l)).uniqBy(genomeNexusKey).values().value();
@@ -132,7 +133,7 @@ export default class OncoprinterStore {
                         sendSentryMessage("There was an error fetching GenomeNexus data from Oncoprinter.");
                         parsedLines = parsedLines.filter(l=>!isType3NoGene(l));
                     }
-                }
+                }*/
                 return parsedLines as OncoprinterInputLine[];
             }
         }
