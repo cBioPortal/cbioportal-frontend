@@ -2474,15 +2474,6 @@
         "mutationCountVsCNASelection": {
           "$ref": "#/definitions/RectangleBounds"
         },
-        "numberOfSamplesPerPatient": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "int32",
-            "minimum": 1,
-            "maximum": 2147483647
-          }
-        },
         "sampleIdentifiers": {
           "type": "array",
           "items": {

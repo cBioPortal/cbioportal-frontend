@@ -460,8 +460,6 @@ export type StudyViewFilter = {
 
         'mutationCountVsCNASelection': RectangleBounds
 
-        'numberOfSamplesPerPatient': Array < number >
-
         'sampleIdentifiers': Array < SampleIdentifier >
 
         'studyIds': Array < string >
