@@ -217,7 +217,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                 standalone={false}
                 theme={theme}
                 colorScale={colorScale}
-                x={0} y={181}
+                x={0} y={this.props.height + 1}
                 rowGutter={-10}
                 title={this.props.label || "Legend"}
                 centerTitle={true}
