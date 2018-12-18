@@ -400,8 +400,13 @@ export function getOncoprintData(
 
 export function getGeneticTracks(
     geneToOncoprintData:{[hugoGeneSymbol:string]:OncoprinterGeneticTrackDatum[]},
-    geneOrder?:string[]
+    geneOrder?:string[],
+    excludedSampleIds?:string[]
 ):OncoprinterGeneticTrackSpec[] {
+    // remove excluded sample data
+    const excludedSampleIdsMap = _.keyBy(excludedSampleIds || []);
+    geneToOncoprintData = _.mapValues(geneToOncoprintData, data=>data.filter(d=>!(d.sample in excludedSampleIdsMap)));
+
     const geneToPercentAltered:{[hugoGeneSymbol:string]:string} = _.mapValues(geneToOncoprintData, getPercentAltered);
     const genes = geneOrder ? geneOrder.filter(gene=>(gene in geneToOncoprintData)) : Object.keys(geneToOncoprintData);
     return genes.map(gene=>({

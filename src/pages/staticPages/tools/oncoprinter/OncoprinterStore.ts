@@ -39,10 +39,11 @@ export default class OncoprinterStore {
     // NOTE: we are not annotating hotspot because that needs nucleotide positions
     //      we are not annotating COSMIC because that needs keywords
 
-    @observable.ref _sampleIdOrder:string | undefined = undefined;
+    @observable.ref _inputSampleIdOrder:string | undefined = undefined;
     @observable.ref _geneOrder:string | undefined = undefined;
     @observable mutationAnnotationSettings:OncoprinterMutationAnnotationSettings = initMutationAnnotationSettings(this);
     @observable.ref _dataInput:string|undefined = undefined;
+    @observable public showUnalteredColumns:boolean = true;
 
     @computed get didOncoKbFail() {
         return this.oncoKbData.peekStatus === "complete" && (this.oncoKbData.result instanceof Error);
@@ -51,25 +52,44 @@ export default class OncoprinterStore {
     readonly sampleIds = remoteData({
         await:()=>[this.parsedInputLines],
         invoke:async()=>{
-            if (this.sampleIdOrder) {
-                return this.sampleIdOrder;
+            if (this.inputSampleIdOrder) {
+                return this.inputSampleIdOrder;
             } else {
-                return getSampleIds(this.parsedInputLines.result!);
+                return this.allSampleIds;
             }
         }
     });
 
-    @action setSampleIdOrder(input:string) {
-        this._sampleIdOrder = input.trim();
+    @computed get allSampleIds() {
+        return getSampleIds(this.parsedInputLines.result!);
     }
 
-    @computed get sampleIdOrder() {
-        if (this._sampleIdOrder) {
-            return this._sampleIdOrder.split(/[,\s]+/);
+    @action setSampleIdOrder(input:string) {
+        this._inputSampleIdOrder = input.trim();
+    }
+
+    @computed get inputSampleIdOrder() {
+        if (this._inputSampleIdOrder) {
+            // intersection - only take into account specified sample ids
+            return _.intersection(this._inputSampleIdOrder.split(/[,\s]+/), this.allSampleIds);
         } else {
             return undefined;
         }
     }
+
+    @computed get sampleIdsNotInInputOrder() {
+        if (this.inputSampleIdOrder) {
+            return _.difference(this.allSampleIds, this.inputSampleIdOrder);
+        } else {
+            undefined;
+        }
+    }
+
+    readonly hiddenSampleIds = remoteData({
+        await:()=>[this.unalteredSampleIds],
+        invoke:async()=>(this.showUnalteredColumns ? [] : this.unalteredSampleIds.result!),
+        default: []
+    });
 
     @action setGeneOrder(input:string) {
         this._geneOrder = input.trim();
@@ -237,10 +257,12 @@ export default class OncoprinterStore {
     });
 
     readonly alteredSampleIds = remoteData({
-        await:()=>[this.geneticTracks],
+        await:()=>[this.sampleIds, this.geneticTracks],
         invoke: async()=>{
-            return _.chain(this.geneticTracks.result!).map(track=>track.data.filter(isAltered))
+            const allAlteredIds = _.chain(this.geneticTracks.result!).map(track=>track.data.filter(isAltered))
                     .flatten().map(datum=>datum.sample).uniq().value();
+            const visibleAlteredIds = _.intersection(this.sampleIds.result!, allAlteredIds);
+            return visibleAlteredIds;
         },
         default: []
     });
@@ -306,7 +328,11 @@ export default class OncoprinterStore {
 
     readonly geneticTracks = remoteData({
         await:()=>[this.annotatedOncoprintData],
-        invoke:async()=>getGeneticTracks(this.annotatedOncoprintData.result!, this.geneOrder),
+        invoke:async()=>getGeneticTracks(
+            this.annotatedOncoprintData.result!,
+            this.geneOrder,
+            this.sampleIdsNotInInputOrder
+        ),
         default:[]
     });
 }
