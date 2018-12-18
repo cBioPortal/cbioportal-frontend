@@ -2,7 +2,7 @@ var assert = require('assert');
 var expect = require('chai').expect;
 var waitForOncoprint = require('./specUtils').waitForOncoprint;
 var getTextInOncoprintLegend = require('./specUtils').getTextInOncoprintLegend;
-var openOncoprintMutationsMenu = require('./specUtils').openOncoprintMutationsMenu;
+var setOncoprintMutationsMenuOpen = require('./specUtils').setOncoprintMutationsMenuOpen;
 var goToUrlAndSetLocalStorage = require('./specUtils').goToUrlAndSetLocalStorage;
 var useExternalFrontend = require('./specUtils').useExternalFrontend;
 var waitForNumberOfStudyCheckboxes = require('./specUtils').waitForNumberOfStudyCheckboxes;
@@ -544,7 +544,7 @@ describe('oncoprint', function() {
             cosmicCheckbox = mutationColorMenuDropdown + ' input[data-test="annotateCOSMICCount"]';
         });
         it("annotates all types of mutations with cbioportal count and cosmic", ()=>{
-            openOncoprintMutationsMenu();
+            setOncoprintMutationsMenuOpen(true);
             // select only mutation coloring by cbioportal count
             browser.click(cbioportalCheckbox);
             waitForOncoprint(2000);
@@ -562,7 +562,7 @@ describe('oncoprint', function() {
             assert(legendText.indexOf("Truncating Mutation (putative driver)") > -1, "cbio count annotates truncating mutations");
 
             // select only mutation coloring by cosmic count
-            openOncoprintMutationsMenu();
+            setOncoprintMutationsMenuOpen(true);
             browser.click(cosmicCheckbox);
             waitForOncoprint(2000);
             browser.click(cbioportalCheckbox);
@@ -644,7 +644,7 @@ describe('oncoprint', function() {
             assert(legendText.indexOf("Germline Mutation") > -1, "by default, there are germline mutations");
             assert(oncoprintDivText.indexOf("12%") > -1, "by default, 12% altered");
 
-            openOncoprintMutationsMenu();
+            setOncoprintMutationsMenuOpen(true);
             const hideGermlineButton = 'input[data-test="HideGermline"]';
             browser.waitForVisible(hideGermlineButton, 1000);
             browser.click(hideGermlineButton);
@@ -654,7 +654,7 @@ describe('oncoprint', function() {
             assert(legendText.indexOf("Germline Mutation") === -1, "now, there are no germline mutations");
             assert(oncoprintDivText.indexOf("4%") > -1, "now, 4% altered");
 
-            openOncoprintMutationsMenu();
+            setOncoprintMutationsMenuOpen(true);
             browser.waitForVisible(hideGermlineButton, 1000);
             browser.click(hideGermlineButton);
             waitForOncoprint(10000);
@@ -671,7 +671,7 @@ describe('oncoprint', function() {
             assert(legendText.indexOf("Germline Mutation") > -1, "by default, there are germline mutations");
             assert(oncoprintDivText.indexOf("12%") > -1, "12% altered");
 
-            openOncoprintMutationsMenu();
+            setOncoprintMutationsMenuOpen(true);
             const colorByGermline = 'input[data-test="ColorByGermline"]';
             browser.waitForVisible(colorByGermline, 1000);
             browser.click(colorByGermline);
@@ -681,7 +681,7 @@ describe('oncoprint', function() {
             assert(legendText.indexOf("Germline Mutation") === -1, "now, there are no germline mutations");
             assert(oncoprintDivText.indexOf("12%") > -1, "still 12% altered");
 
-            openOncoprintMutationsMenu();
+            setOncoprintMutationsMenuOpen(true);
             browser.waitForVisible(colorByGermline, 1000);
             browser.click(colorByGermline);
             waitForOncoprint(10000);

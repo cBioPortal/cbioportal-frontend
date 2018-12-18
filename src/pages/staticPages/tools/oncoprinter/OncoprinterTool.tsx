@@ -180,8 +180,9 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
     private getInputSection() {
         return (
             <FormGroup>
-                <ControlLabel>Input genomic alteration data:<Button style={{marginLeft:7}} bsStyle="primary" bsSize="small" onClick={this.populateExampleData}>Load example data</Button></ControlLabel>
+                <ControlLabel>Input genomic alteration data:<Button className="oncoprinterExampleData" style={{marginLeft:7}} bsStyle="primary" bsSize="small" onClick={this.populateExampleData}>Load example data</Button></ControlLabel>
                 <FormControl
+                    className="oncoprinterDataInput"
                     componentClass="textarea"
                     value={this.dataInput}
                     placeholder="Enter data here..."
@@ -193,6 +194,7 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
                 <br/>
                 <ControlLabel>Please define the order of genes (optional):</ControlLabel>
                 <FormControl
+                    className="oncoprinterGenesInput"
                     componentClass="textarea"
                     value={this.geneOrderInput}
                     placeholder="Enter genes here, comma- or whitespace-delimited..."
@@ -202,6 +204,7 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
                 <br/>
                 <ControlLabel>Please define the order of samples (optional):</ControlLabel>
                 <FormControl
+                    className="oncoprinterSamplesInput"
                     componentClass="textarea"
                     value={this.sampleOrderInput}
                     placeholder="Enter samples here, comma- or whitespace-delimited..."
@@ -209,7 +212,7 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
                     style={{"height":35, width:475}}
                 />
                 <br/>
-                <Button bsStyle="default" onClick={this.onClickSubmit} disabled={!!this.inputError}>Submit</Button>
+                <Button className="oncoprinterSubmit" bsStyle="default" onClick={this.onClickSubmit} disabled={!!this.inputError}>Submit</Button>
             </FormGroup>
         );
     }
