@@ -72,7 +72,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                         const fileName = `${this.fileName}.${props.type.substring(0, 3).toLowerCase()}`;
                                         if (props.type === "PNG") {
                                             saveSvgAsPng(data, fileName, {backgroundColor:"#ffffff"});
-                                        } else if (typeof data === "string" && data.length > 0) {
+                                        } else if ((props.type === "PDF" || typeof data === "string") && data.length > 0) {
                                             fileDownload(data, fileName);
                                         }
                                     }
