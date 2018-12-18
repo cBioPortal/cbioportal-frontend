@@ -21,7 +21,7 @@ export class GroupLogic extends React.Component<IGroupLogicProps, {}> {
         }
         _.reduce(this.props.components, (acc, next, index): any => {
                 if (index > 0) {
-                    acc.push(<span className={styles.text}>{this.props.operation}</span>);
+                    acc.push(<span key={this.props.operation} className={styles.text}>{this.props.operation}</span>);
                 }
                 acc.push(next);
                 return acc;

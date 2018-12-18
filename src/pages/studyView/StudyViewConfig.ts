@@ -76,10 +76,22 @@ export enum ChartTypeEnum {
     NONE = 'NONE'
 }
 
+export enum ChartTypeNameEnum {
+    PIE_CHART = 'pie chart',
+    BAR_CHART = 'bar chart',
+    SURVIVAL = 'survival plot',
+    TABLE = 'table',
+    SCATTER = 'density plot',
+    MUTATED_GENES_TABLE = 'table',
+    CNA_GENES_TABLE = 'table',
+    NONE = 'none'
+}
+
+export const DEFAULT_SORTING_COLUMN = 'Freq';
+
 // TODO: The priority and tableAttrs are duplicated in serverConfigDefaults.
-// We need to update in next visit before the release.
-const YES_COLOR = "#66AA00";
-const NO_COLOR = "#666666";
+const YES_COLOR = "#109618";
+const NO_COLOR = "#DC3912";
 const FEMALE_COLOR = '#DC3912';
 const MALE_COLOR = '#2986E2';
 
@@ -101,7 +113,7 @@ const studyViewFrontEnd = {
         "CANCER_STUDIES": 70,
         "SEQUENCED": 60,
         "HAS_CNA_DATA": 50,
-        "SAMPLE_COUNT_PATIENT": 40,
+        "PATIENT_SAMPLE_COUNT": 40,
         "MUTATION_COUNT": 30,
         "FRACTION_GENOME_ALTERED": 20,
         "PATIENT_GENDER": 9,
@@ -185,6 +197,8 @@ const studyViewFrontEnd = {
             MALE: MALE_COLOR,
             F: FEMALE_COLOR,
             M: MALE_COLOR,
+            POSITIVE: YES_COLOR,
+            NEGATIVE: NO_COLOR
         },
 
         na: "#CCCCCC",
