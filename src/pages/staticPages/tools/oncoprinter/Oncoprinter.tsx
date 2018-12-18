@@ -30,7 +30,6 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
     @observable sortByMutationType:boolean = true;
     @observable sortByDrivers:boolean = true;
 
-    @observable showUnalteredColumns:boolean = true;
     @observable showWhitespaceBetweenColumns:boolean = true;
 
     @observable showMinimap:boolean = false;
@@ -57,7 +56,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
 
         this.controlsState = observable({
             get showUnalteredColumns() {
-                return self.showUnalteredColumns;
+                return self.props.store.showUnalteredColumns;
             },
             get showWhitespaceBetweenColumns() {
                 return self.showWhitespaceBetweenColumns;
@@ -69,7 +68,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
                 return self.sortByMutationType;
             },
             get sortByCaseListDisabled() {
-                return !self.props.store.sampleIdOrder;
+                return !self.props.store.inputSampleIdOrder;
             },
             get distinguishMutationType() {
                 return self.distinguishMutationType;
@@ -135,7 +134,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
 
     private buildControlsHandlers() {
         return {
-            onSelectShowUnalteredColumns:(show:boolean)=>{this.showUnalteredColumns = show;},
+            onSelectShowUnalteredColumns:(show:boolean)=>{this.props.store.showUnalteredColumns = show;},
             onSelectShowWhitespaceBetweenColumns:(show:boolean)=>{this.showWhitespaceBetweenColumns = show;},
             onSelectShowMinimap:(show:boolean)=>{this.showMinimap = show;},
             onSelectDistinguishMutationType:(s:boolean)=>{this.distinguishMutationType = s;},
@@ -250,7 +249,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
         return {
             sortByMutationType:this.sortByMutationType,
             sortByDrivers:this.sortByDrivers,
-            order: this.props.store.sampleIdOrder,
+            order: this.props.store.inputSampleIdOrder,
         };
     }
 
@@ -320,7 +319,7 @@ export default class Oncoprinter extends React.Component<IOncoprinterProps, {}> 
                                 suppressRendering={this.isLoading}
                                 onSuppressRendering={this.onSuppressRendering}
                                 onReleaseRendering={this.onReleaseRendering}
-                                hiddenIds={!this.showUnalteredColumns ? this.props.store.unalteredSampleIds.result : undefined}
+                                hiddenIds={this.props.store.hiddenSampleIds.result}
 
                                 horzZoomToFitIds={this.props.store.alteredSampleIds.result}
                                 distinguishMutationType={this.distinguishMutationType}
