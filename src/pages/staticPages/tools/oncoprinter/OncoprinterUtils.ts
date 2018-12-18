@@ -207,7 +207,7 @@ function makeGeneticTrackDatum_Data_Type3(oncoprinterInputLine:OncoprinterInputL
     return ret as OncoprinterGeneticTrackDatum_Data;
 }*/
 
-function makeGeneticTrackDatum_Data_Type2(oncoprinterInputLine:OncoprinterInputLineType2, hugoGeneSymbolToGene:{[hugoGeneSymbol:string]:Gene}) {
+export function makeGeneticTrackDatum_Data_Type2(oncoprinterInputLine:OncoprinterInputLineType2, hugoGeneSymbolToGene:{[hugoGeneSymbol:string]:Gene}) {
     let ret:Partial<OncoprinterGeneticTrackDatum_Data> = {
         // we'll never set these values - theyre not needed for oncoprinter
         driverFilter:"",
