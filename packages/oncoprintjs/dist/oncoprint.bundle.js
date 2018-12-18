@@ -14511,7 +14511,7 @@ var OncoprintModel = (function () {
 	var rule_set_id = model.track_rule_set_id[track_id];
 	var track_active_rules = model.track_active_rules[track_id];
 	var rule_set_active_rules = model.rule_set_active_rules[rule_set_id];
-	
+
 	var track_active_rule_ids = Object.keys(track_active_rules);
 	for (var i=0; i<track_active_rule_ids.length; i++) {
 	    var rule_id = track_active_rule_ids[i];
@@ -14926,6 +14926,11 @@ var OncoprintModel = (function () {
    
     OncoprintModel.prototype.removeTrack = function (track_id) {
 	var rule_set_id = this.track_rule_set_id[track_id];
+
+	// subtract this tracks active rules from usage count,
+	//   so that we don't show unused rules in the legend
+	clearTrackActiveRules(this, track_id);
+
 	this.track_remove_callback[track_id](track_id);
 	
 	delete this.track_data[track_id];
@@ -14963,7 +14968,8 @@ var OncoprintModel = (function () {
 	this.track_present_ids.update(this, track_id);
 	this.track_id_to_datum.update(this, track_id);
 	this.setIdOrder(Object.keys(this.present_ids.get()));
-	
+
+	// delete rule set if its now unused
 	var rule_set_used = isRuleSetUsed(this, rule_set_id);
 	if (!rule_set_used) {
 	    removeRuleSet(this, rule_set_id);
