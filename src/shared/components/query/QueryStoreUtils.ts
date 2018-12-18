@@ -17,30 +17,11 @@ export type MolecularProfileQueryParams = Pick<CancerStudyQueryUrlParams,
 export function currentQueryParams(store:QueryStore) {
     let nonProfileParams = nonMolecularProfileParams(store);
     let profileParams = molecularProfileParams(store);
-    let path = queryUrl(store, nonProfileParams);
-    return queryParams(nonProfileParams, profileParams, path);
-}
-
-export function queryUrl(store:QueryStore, nonMolecularProfileParams:NonMolecularProfileQueryParams) {
-
-    /*if (store.selectedStudyIds.length != 1)
-    {
-        let studyIds = store.selectedStudyIds;
-        if (!studyIds.length) {
-            studyIds = store.cancerStudies.result.map(study => study.studyId);
-        }
-
-        const hash = `crosscancer/overview/${nonMolecularProfileParams.data_priority}/${encodeURIComponent(nonMolecularProfileParams.gene_list)}/${encodeURIComponent(studyIds.join(","))}`;
-        return `cross_cancer.do?#${hash}`;
-    } else {
-        return 'index.do';
-    }*/
-    return 'index.do';
+    return queryParams(nonProfileParams, profileParams);
 }
 
 export function queryParams(nonMolecularProfileParams:NonMolecularProfileQueryParams,
-                            molecularProfileParams:MolecularProfileQueryParams,
-                            path:string) {
+                            molecularProfileParams:MolecularProfileQueryParams) {
     let params:CancerStudyQueryUrlParams = Object.assign({}, nonMolecularProfileParams, molecularProfileParams);
 
     // Remove params with no value, because they may cause problems.
@@ -51,7 +32,7 @@ export function queryParams(nonMolecularProfileParams:NonMolecularProfileQueryPa
         }
     }
 
-    return {pathname: path, query:params};
+    return {query:params};
 }
 
 export function nonMolecularProfileParams(store:QueryStore, whitespace_separated_case_ids?:string):NonMolecularProfileQueryParams {
