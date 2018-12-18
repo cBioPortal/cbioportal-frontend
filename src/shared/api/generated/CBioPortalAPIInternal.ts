@@ -19,6 +19,26 @@ export type AlterationEnrichment = {
         'unalteredCount': number
 
 };
+export type ClinicalDataBinCountFilter = {
+    'attributes': Array < ClinicalDataBinFilter >
+
+        'studyViewFilter': StudyViewFilter
+
+};
+export type ClinicalDataBinFilter = {
+    'attributeId': string
+
+        'clinicalDataType': "SAMPLE" | "PATIENT"
+
+        'customBins': Array < number >
+
+        'disableLogScale': boolean
+
+        'end': number
+
+        'start': number
+
+};
 export type ClinicalDataCount = {
     'count': number
 
@@ -130,6 +150,8 @@ export type CosmicMutation = {
 export type DataBin = {
     'attributeId': string
 
+        'clinicalDataType': "SAMPLE" | "PATIENT"
+
         'count': number
 
         'end': number
@@ -137,6 +159,22 @@ export type DataBin = {
         'specialValue': string
 
         'start': number
+
+};
+export type DensityPlotBin = {
+    'binX': number
+
+        'binY': number
+
+        'count': number
+
+        'maxX': number
+
+        'maxY': number
+
+        'minX': number
+
+        'minY': number
 
 };
 export type EnrichmentFilter = {
@@ -377,6 +415,16 @@ export type MutationSpectrumFilter = {
         'sampleListId': string
 
 };
+export type RectangleBounds = {
+    'xEnd': number
+
+        'xStart': number
+
+        'yEnd': number
+
+        'yStart': number
+
+};
 export type Sample = {
     'copyNumberSegmentPresent': boolean
 
@@ -410,9 +458,15 @@ export type StudyViewFilter = {
 
         'mutatedGenes': Array < MutationGeneFilter >
 
+        'mutationCountVsCNASelection': RectangleBounds
+
         'sampleIdentifiers': Array < SampleIdentifier >
 
         'studyIds': Array < string >
+
+        'withCNAData': boolean
+
+        'withMutationData': boolean
 
 };
 export type VariantCount = {
@@ -491,27 +545,14 @@ export default class CBioPortalAPIInternal {
     }
 
     fetchClinicalDataBinCountsUsingPOSTURL(parameters: {
-        'attributeId': string,
-        'clinicalDataType' ? : "SAMPLE" | "PATIENT",
         'dataBinMethod' ? : "STATIC" | "DYNAMIC",
-        'disableLogScale' ? : boolean,
-        'studyViewFilter': StudyViewFilter,
+        'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
         $queryParameters ? : any
     }): string {
         let queryParameters: any = {};
-        let path = '/attributes/{attributeId}/clinical-data-bin-counts/fetch';
-
-        path = path.replace('{attributeId}', parameters['attributeId'] + '');
-        if (parameters['clinicalDataType'] !== undefined) {
-            queryParameters['clinicalDataType'] = parameters['clinicalDataType'];
-        }
-
+        let path = '/clinical-data-bin-counts/fetch';
         if (parameters['dataBinMethod'] !== undefined) {
             queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
-        }
-
-        if (parameters['disableLogScale'] !== undefined) {
-            queryParameters['disableLogScale'] = parameters['disableLogScale'];
         }
 
         if (parameters.$queryParameters) {
@@ -528,25 +569,19 @@ export default class CBioPortalAPIInternal {
      * Fetch clinical data bin counts by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchClinicalDataBinCountsUsingPOST
-     * @param {string} attributeId - Attribute ID e.g. AGE
-     * @param {string} clinicalDataType - Type of the clinical data
      * @param {string} dataBinMethod - Method for data binning
-     * @param {boolean} disableLogScale - Whether to disable log scaling
-     * @param {} studyViewFilter - Study view filter
+     * @param {} clinicalDataBinCountFilter - Clinical data bin count filter
      */
     fetchClinicalDataBinCountsUsingPOSTWithHttpInfo(parameters: {
-        'attributeId': string,
-        'clinicalDataType' ? : "SAMPLE" | "PATIENT",
         'dataBinMethod' ? : "STATIC" | "DYNAMIC",
-        'disableLogScale' ? : boolean,
-        'studyViewFilter': StudyViewFilter,
+        'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
         $queryParameters ? : any,
-        $domain ? : string
+            $domain ? : string
     }): Promise < request.Response > {
         const domain = parameters.$domain ? parameters.$domain : this.domain;
         const errorHandlers = this.errorHandlers;
         const request = this.request;
-        let path = '/attributes/{attributeId}/clinical-data-bin-counts/fetch';
+        let path = '/clinical-data-bin-counts/fetch';
         let body: any;
         let queryParameters: any = {};
         let headers: any = {};
@@ -555,31 +590,16 @@ export default class CBioPortalAPIInternal {
             headers['Accept'] = 'application/json';
             headers['Content-Type'] = 'application/json';
 
-            path = path.replace('{attributeId}', parameters['attributeId'] + '');
-
-            if (parameters['attributeId'] === undefined) {
-                reject(new Error('Missing required  parameter: attributeId'));
-                return;
-            }
-
-            if (parameters['clinicalDataType'] !== undefined) {
-                queryParameters['clinicalDataType'] = parameters['clinicalDataType'];
-            }
-
             if (parameters['dataBinMethod'] !== undefined) {
                 queryParameters['dataBinMethod'] = parameters['dataBinMethod'];
             }
 
-            if (parameters['disableLogScale'] !== undefined) {
-                queryParameters['disableLogScale'] = parameters['disableLogScale'];
+            if (parameters['clinicalDataBinCountFilter'] !== undefined) {
+                body = parameters['clinicalDataBinCountFilter'];
             }
 
-            if (parameters['studyViewFilter'] !== undefined) {
-                body = parameters['studyViewFilter'];
-            }
-
-            if (parameters['studyViewFilter'] === undefined) {
-                reject(new Error('Missing required  parameter: studyViewFilter'));
+            if (parameters['clinicalDataBinCountFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: clinicalDataBinCountFilter'));
                 return;
             }
 
@@ -599,20 +619,14 @@ export default class CBioPortalAPIInternal {
      * Fetch clinical data bin counts by study view filter
      * @method
      * @name CBioPortalAPIInternal#fetchClinicalDataBinCountsUsingPOST
-     * @param {string} attributeId - Attribute ID e.g. AGE
-     * @param {string} clinicalDataType - Type of the clinical data
      * @param {string} dataBinMethod - Method for data binning
-     * @param {boolean} disableLogScale - Whether to disable log scaling
-     * @param {} studyViewFilter - Study view filter
+     * @param {} clinicalDataBinCountFilter - Clinical data bin count filter
      */
     fetchClinicalDataBinCountsUsingPOST(parameters: {
-            'attributeId': string,
-            'clinicalDataType' ? : "SAMPLE" | "PATIENT",
             'dataBinMethod' ? : "STATIC" | "DYNAMIC",
-            'disableLogScale' ? : boolean,
-            'studyViewFilter': StudyViewFilter,
+            'clinicalDataBinCountFilter': ClinicalDataBinCountFilter,
             $queryParameters ? : any,
-            $domain ? : string
+                $domain ? : string
         }): Promise < Array < DataBin >
         > {
             return this.fetchClinicalDataBinCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
@@ -693,6 +707,214 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < ClinicalDataCountItem >
         > {
             return this.fetchClinicalDataCountsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchClinicalDataDensityPlotUsingPOSTURL(parameters: {
+        'xAxisAttributeId': string,
+        'xAxisBinCount' ? : number,
+        'xAxisStart' ? : number,
+        'xAxisEnd' ? : number,
+        'yAxisAttributeId': string,
+        'yAxisBinCount' ? : number,
+        'yAxisStart' ? : number,
+        'yAxisEnd' ? : number,
+        'clinicalDataType': "SAMPLE" | "PATIENT",
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/clinical-data-density-plot/fetch';
+        if (parameters['xAxisAttributeId'] !== undefined) {
+            queryParameters['xAxisAttributeId'] = parameters['xAxisAttributeId'];
+        }
+
+        if (parameters['xAxisBinCount'] !== undefined) {
+            queryParameters['xAxisBinCount'] = parameters['xAxisBinCount'];
+        }
+
+        if (parameters['xAxisStart'] !== undefined) {
+            queryParameters['xAxisStart'] = parameters['xAxisStart'];
+        }
+
+        if (parameters['xAxisEnd'] !== undefined) {
+            queryParameters['xAxisEnd'] = parameters['xAxisEnd'];
+        }
+
+        if (parameters['yAxisAttributeId'] !== undefined) {
+            queryParameters['yAxisAttributeId'] = parameters['yAxisAttributeId'];
+        }
+
+        if (parameters['yAxisBinCount'] !== undefined) {
+            queryParameters['yAxisBinCount'] = parameters['yAxisBinCount'];
+        }
+
+        if (parameters['yAxisStart'] !== undefined) {
+            queryParameters['yAxisStart'] = parameters['yAxisStart'];
+        }
+
+        if (parameters['yAxisEnd'] !== undefined) {
+            queryParameters['yAxisEnd'] = parameters['yAxisEnd'];
+        }
+
+        if (parameters['clinicalDataType'] !== undefined) {
+            queryParameters['clinicalDataType'] = parameters['clinicalDataType'];
+        }
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch clinical data density plot bins by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchClinicalDataDensityPlotUsingPOST
+     * @param {string} xAxisAttributeId - Clinical Attribute ID of the X axis
+     * @param {integer} xAxisBinCount - Number of the bins in X axis
+     * @param {number} xAxisStart - Starting point of the X axis, if different than smallest value
+     * @param {number} xAxisEnd - Starting point of the X axis, if different than largest value
+     * @param {string} yAxisAttributeId - Clinical Attribute ID of the Y axis
+     * @param {integer} yAxisBinCount - Number of the bins in Y axis
+     * @param {number} yAxisStart - Starting point of the Y axis, if different than smallest value
+     * @param {number} yAxisEnd - Starting point of the Y axis, if different than largest value
+     * @param {string} clinicalDataType - Clinical data type of both attributes
+     * @param {} studyViewFilter - Study view filter
+     */
+    fetchClinicalDataDensityPlotUsingPOSTWithHttpInfo(parameters: {
+        'xAxisAttributeId': string,
+        'xAxisBinCount' ? : number,
+        'xAxisStart' ? : number,
+        'xAxisEnd' ? : number,
+        'yAxisAttributeId': string,
+        'yAxisBinCount' ? : number,
+        'yAxisStart' ? : number,
+        'yAxisEnd' ? : number,
+        'clinicalDataType': "SAMPLE" | "PATIENT",
+        'studyViewFilter': StudyViewFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/clinical-data-density-plot/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['xAxisAttributeId'] !== undefined) {
+                queryParameters['xAxisAttributeId'] = parameters['xAxisAttributeId'];
+            }
+
+            if (parameters['xAxisAttributeId'] === undefined) {
+                reject(new Error('Missing required  parameter: xAxisAttributeId'));
+                return;
+            }
+
+            if (parameters['xAxisBinCount'] !== undefined) {
+                queryParameters['xAxisBinCount'] = parameters['xAxisBinCount'];
+            }
+
+            if (parameters['xAxisStart'] !== undefined) {
+                queryParameters['xAxisStart'] = parameters['xAxisStart'];
+            }
+
+            if (parameters['xAxisEnd'] !== undefined) {
+                queryParameters['xAxisEnd'] = parameters['xAxisEnd'];
+            }
+
+            if (parameters['yAxisAttributeId'] !== undefined) {
+                queryParameters['yAxisAttributeId'] = parameters['yAxisAttributeId'];
+            }
+
+            if (parameters['yAxisAttributeId'] === undefined) {
+                reject(new Error('Missing required  parameter: yAxisAttributeId'));
+                return;
+            }
+
+            if (parameters['yAxisBinCount'] !== undefined) {
+                queryParameters['yAxisBinCount'] = parameters['yAxisBinCount'];
+            }
+
+            if (parameters['yAxisStart'] !== undefined) {
+                queryParameters['yAxisStart'] = parameters['yAxisStart'];
+            }
+
+            if (parameters['yAxisEnd'] !== undefined) {
+                queryParameters['yAxisEnd'] = parameters['yAxisEnd'];
+            }
+
+            if (parameters['clinicalDataType'] !== undefined) {
+                queryParameters['clinicalDataType'] = parameters['clinicalDataType'];
+            }
+
+            if (parameters['clinicalDataType'] === undefined) {
+                reject(new Error('Missing required  parameter: clinicalDataType'));
+                return;
+            }
+
+            if (parameters['studyViewFilter'] !== undefined) {
+                body = parameters['studyViewFilter'];
+            }
+
+            if (parameters['studyViewFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: studyViewFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch clinical data density plot bins by study view filter
+     * @method
+     * @name CBioPortalAPIInternal#fetchClinicalDataDensityPlotUsingPOST
+     * @param {string} xAxisAttributeId - Clinical Attribute ID of the X axis
+     * @param {integer} xAxisBinCount - Number of the bins in X axis
+     * @param {number} xAxisStart - Starting point of the X axis, if different than smallest value
+     * @param {number} xAxisEnd - Starting point of the X axis, if different than largest value
+     * @param {string} yAxisAttributeId - Clinical Attribute ID of the Y axis
+     * @param {integer} yAxisBinCount - Number of the bins in Y axis
+     * @param {number} yAxisStart - Starting point of the Y axis, if different than smallest value
+     * @param {number} yAxisEnd - Starting point of the Y axis, if different than largest value
+     * @param {string} clinicalDataType - Clinical data type of both attributes
+     * @param {} studyViewFilter - Study view filter
+     */
+    fetchClinicalDataDensityPlotUsingPOST(parameters: {
+            'xAxisAttributeId': string,
+            'xAxisBinCount' ? : number,
+            'xAxisStart' ? : number,
+            'xAxisEnd' ? : number,
+            'yAxisAttributeId': string,
+            'yAxisBinCount' ? : number,
+            'yAxisStart' ? : number,
+            'yAxisEnd' ? : number,
+            'clinicalDataType': "SAMPLE" | "PATIENT",
+            'studyViewFilter': StudyViewFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < DensityPlotBin >
+        > {
+            return this.fetchClinicalDataDensityPlotUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };

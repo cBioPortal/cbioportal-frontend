@@ -1,5 +1,5 @@
 import * as React from "react";
-import {observer, Observer} from "mobx-react";
+import {Observer, observer} from "mobx-react";
 import {action, computed, IObservableObject, IReactionDisposer, observable, ObservableMap, reaction} from "mobx";
 import {remoteData} from "../../api/remoteData";
 import Oncoprint, {GENETIC_TRACK_GROUP_INDEX} from "./Oncoprint";
@@ -26,14 +26,14 @@ import OncoprintJS, {TrackId} from "oncoprintjs";
 import fileDownload from 'react-file-download';
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 import tabularDownload from "./tabularDownload";
-import * as URL from "url";
 import classNames from 'classnames';
 import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
 import {clinicalAttributeIsLocallyComputed, SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
 import OqlStatusBanner from "../oqlStatusBanner/OqlStatusBanner";
-import autobind from "autobind-decorator";
 import {getAnnotatingProgressMessage} from "./ResultsViewOncoprintUtils";
 import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
+import autobind from "autobind-decorator";
+import getBrowserWindow from "../../lib/getBrowserWindow";
 import MobxPromise from "mobxpromise";
 
 interface IResultsViewOncoprintProps {
@@ -62,9 +62,9 @@ export interface IGenesetExpansionRecord {
     correlationValue: number;
 }
 
-const SAMPLE_MODE_URL_PARAM = "show_samples";
-const CLINICAL_TRACKS_URL_PARAM = "clinicallist";
-const HEATMAP_TRACKS_URL_PARAM = "heatmap_track_groups";
+export const SAMPLE_MODE_URL_PARAM = "show_samples";
+export const CLINICAL_TRACKS_URL_PARAM = "clinicallist";
+export const HEATMAP_TRACKS_URL_PARAM = "heatmap_track_groups";
 
 const CLINICAL_TRACK_KEY_PREFIX = "CLINICALTRACK_";
 
@@ -132,7 +132,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         this.showOqlInLabels = props.store.queryContainsOql;
         (window as any).resultsViewOncoprint = this;
 
-        this.initFromUrlParams(URL.parse(window.location.href, true).query);
+        this.initFromUrlParams(getBrowserWindow().globalStores.routing.location.query);
 
         onMobxPromise(props.store.studyIds, (studyIds:string[])=>{
             if (studyIds.length > 1) {
@@ -183,23 +183,19 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 this.clinicalTracksUrlParam
             ],
             ()=>{
-                const parsedURL = URL.parse(window.location.href, true);
-                const query = Object.assign({}, parsedURL.query);
-                //this.props.routing.updateRoute({
-                query[SAMPLE_MODE_URL_PARAM] = (this.columnMode === "sample") + "";
+                const newParams = Object.assign({}, getBrowserWindow().globalStores.routing.location.query);
+                newParams[SAMPLE_MODE_URL_PARAM] = (this.columnMode === "sample") + "";
                 if (!this.clinicalTracksUrlParam) {
-                    delete query[CLINICAL_TRACKS_URL_PARAM];
+                    delete newParams[CLINICAL_TRACKS_URL_PARAM];
                 } else {
-                    query[CLINICAL_TRACKS_URL_PARAM] = this.clinicalTracksUrlParam;
+                    newParams[CLINICAL_TRACKS_URL_PARAM] = this.clinicalTracksUrlParam;
                 }
                 if (!this.heatmapTrackGroupsUrlParam) {
-                    delete query[HEATMAP_TRACKS_URL_PARAM];
+                    delete newParams[HEATMAP_TRACKS_URL_PARAM];
                 } else {
-                    query[HEATMAP_TRACKS_URL_PARAM] = this.heatmapTrackGroupsUrlParam;
+                    newParams[HEATMAP_TRACKS_URL_PARAM] = this.heatmapTrackGroupsUrlParam;
                 }
-                //});
-                const newParsedURL = Object.assign(parsedURL, { query, search:null });
-                window.history.replaceState({}, '', URL.format(newParsedURL));
+                getBrowserWindow().globalStores.routing.updateRoute(newParams, undefined, true, true);
             }
         );
 
@@ -919,7 +915,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     @autobind
     private getProgressItems(elapsedSecs:number):IProgressIndicatorItem[] {
-        const ret = [];
+        const ret:IProgressIndicatorItem[] = [];
 
         let queryingLabel:string;
         if (this.props.store.genes.isComplete && this.props.store.samples.isComplete) {

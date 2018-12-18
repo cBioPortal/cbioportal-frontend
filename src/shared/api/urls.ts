@@ -64,11 +64,9 @@ export function getStudySummaryUrl(studyIds:string | ReadonlyArray<string>) {
     const params = getStudySummaryUrlParams(studyIds);
     return buildCBioPortalPageUrl(params.pathname, params.query);
 }
-export function openStudySummaryFormSubmit(studyIds: string | ReadonlyArray<string>) {
+export function redirectToStudyView(studyIds: string | ReadonlyArray<string>) {
     const params = getStudySummaryUrlParams(studyIds);
-    const method:"get"|"post" = params.query.id.length > 1800 ? "post" : "get";
-    //(window as any).routingStore.updateRoute(params.query,"newstudy");
-    formSubmit(params.pathname, params.query, "_blank", method);
+    (window as any).routingStore.updateRoute(params.query,"study", true);
 }
 export function getSampleViewUrl(studyId:string, sampleId:string, navIds?:{patientId:string, studyId:string}[]) {
     let hash:any = undefined;
@@ -193,6 +191,10 @@ export function getMDAndersonHeatMapMetaUrl(patientId:string){
 }
 
 export function getMDAndersonHeatmapStudyMetaUrl(studyId:string){
+    return AppConfig.serverConfig.mdacc_heatmap_study_meta_url + studyId;
+}
+
+export function getMDAndersonHeatmapStudyUrl(studyId:string){
     return AppConfig.serverConfig.mdacc_heatmap_study_url + studyId;
 }
 

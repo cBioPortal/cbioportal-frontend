@@ -2,15 +2,16 @@
     border: 1px solid #d3d3d3;
     flex-direction: column;
     position: relative;
-    flex-direction: column;
     display: flex;
     height: 100%;
     border-radius:$border-radius-base;
+    background: white;
 
-    &.analysisTarget {
+    &.highlight {
         border: 2px solid #e5e076;
     }
 }
+
 
 .chartHeightOne {
     height: 195px;
