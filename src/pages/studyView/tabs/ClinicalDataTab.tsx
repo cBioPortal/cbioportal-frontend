@@ -3,13 +3,15 @@ import {Column, default as LazyMobXTable} from "shared/components/lazyMobXTable/
 import {observer} from "mobx-react";
 import * as _ from 'lodash';
 import {getPatientViewUrl, getSampleViewUrl} from "shared/api/urls";
-import {getClinicalAttributeUniqueKey} from "../StudyViewUtils";
+import {getClinicalAttributeOverlay, getClinicalAttributeUniqueKey} from "../StudyViewUtils";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {ChartMeta, StudyViewPageStore} from "pages/studyView/StudyViewPageStore";
 import {remoteData} from "shared/api/remoteData";
 import {Else, If, Then} from 'react-if';
 import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/components/progressIndicator/ProgressIndicator";
 import autobind from 'autobind-decorator';
+import windowStore from "../../../shared/components/window/WindowStore";
+import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWidthBox";
 
 export interface IClinicalDataTabTable {
     store: StudyViewPageStore;
@@ -56,6 +58,7 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
                     if (chartMeta.clinicalAttribute !== undefined) {
                         acc.push({
                             ...this.getDefaultColumnConfig(getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute)),
+                            tooltip: getClinicalAttributeOverlay(chartMeta.clinicalAttribute.displayName, chartMeta.description ? chartMeta.description : ''),
                             name: chartMeta.clinicalAttribute.displayName
                         });
                     }
@@ -75,7 +78,7 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
 
     public render() {
         return (
-            <div>
+            <WindowWidthBox offset={60}>
                 <If condition={this.columns.isPending || this.props.store.getDataForClinicalDataTab.isPending}>
                     <Then>
                         <LoadingIndicator
@@ -99,7 +102,7 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
                         />
                     </Else>
                 </If>
-            </div>
+            </WindowWidthBox>
         );
     }
 }

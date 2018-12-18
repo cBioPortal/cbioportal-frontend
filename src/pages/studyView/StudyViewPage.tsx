@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import {inject, Observer, observer} from "mobx-react";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
-import {reaction} from 'mobx';
+import {reaction, IReactionDisposer} from 'mobx';
 import {
     StudyViewPageStore,
     StudyViewPageTabDescriptions,
@@ -28,6 +28,9 @@ import {CSSTransition} from "react-transition-group";
 import classNames from 'classnames';
 import {sleep} from "../../shared/lib/TimeUtils";
 import {remoteData} from "../../shared/api/remoteData";
+import {If, Else, Then} from 'react-if';
+import shareUIstyles from "../resultsView/querySummary/shareUI.module.scss";
+import DefaultTooltip from "../../shared/components/defaultTooltip/DefaultTooltip";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -82,12 +85,13 @@ export class StudyResultsSummary extends React.Component<{ store:StudyViewPageSt
 export default class StudyViewPage extends React.Component<IStudyViewPageProps, {}> {
     private store: StudyViewPageStore;
     private enableAddChartInTabs = [StudyViewPageTabKeys.SUMMARY, StudyViewPageTabKeys.CLINICAL_DATA];
+    private queryReaction:IReactionDisposer;
 
     constructor(props: IStudyViewPageProps) {
         super();
         this.store = new StudyViewPageStore();
 
-        reaction(
+        this.queryReaction = reaction(
             () => props.routing.location.query,
             query => {
 
@@ -122,7 +126,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             // this gives time for charts to render
             // product requirement that the summary data show after charts have rendered
             // to call attention to the summary results
-            return await sleep(3000);
+            return await sleep(10);
         }
     });
 
@@ -168,41 +172,47 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     </MSKTab>
                                 </MSKTabs>
 
-                                {(this.props.routing.location.query.tab === undefined || this.enableAddChartInTabs.includes(this.props.routing.location.query.tab)) &&
-                                <AddChartButton
-                                    store={this.store}
-                                    disableAddGenomicButton={this.props.routing.location.query.tab === StudyViewPageTabKeys.CLINICAL_DATA}
-                                />}
 
-
-                                <Observer>
-                                    {
-                                        () => {
-                                        return (
-                                            <div className={styles.selectedInfo}>
-                                                {
-                                                    (this.chartDataPromises.isComplete) && (
-                                                        <CSSTransition classNames="studyFilterResult" in={true}
-                                                                       appear timeout={{enter: 200}}>
-                                                            {() => <StudyResultsSummary store={this.store}/>
-                                                            }
-                                                        </CSSTransition>
-                                                    )
-                                                }
-                                                <div className={styles.selectedInfoLoadingIndicator}>
-                                                    <LoadingIndicator isLoading={true} size={"small"}/>
-                                                </div>
-                                            </div>)
+                                <div className={styles.absolutePanel}>
+                                    <Observer>
+                                        {
+                                            () => {
+                                                return (
+                                                    <div className={styles.selectedInfo}>
+                                                        <If condition={this.chartDataPromises.isComplete}>
+                                                            <Then>
+                                                                <CSSTransition classNames="studyFilterResult" in={true}
+                                                                               appear timeout={{enter: 200}}>
+                                                                    {() => <StudyResultsSummary store={this.store}/>
+                                                                    }
+                                                                </CSSTransition>
+                                                            </Then>
+                                                            <Else>
+                                                                <LoadingIndicator isLoading={true} size={"small"} className={styles.selectedInfoLoadingIndicator}/>
+                                                            </Else>
+                                                        </If>
+                                                    </div>)
+                                            }
                                         }
-                                    }
                                     </Observer>
 
-
+                                    {(this.props.routing.location.query.tab === undefined || this.enableAddChartInTabs.includes(this.props.routing.location.query.tab)) &&
+                                    <AddChartButton
+                                        store={this.store}
+                                        currentTab={this.props.routing.location.query.tab ? this.props.routing.location.query.tab : ''}
+                                        addChartOverlayClassName='studyViewAddChartOverlay'
+                                        disableAddGenomicButton={this.props.routing.location.query.tab === StudyViewPageTabKeys.CLINICAL_DATA}
+                                    />}
+                                </div>
                             </div>
                         </div>
                     )}
             </div>)
 
+    }
+
+    componentWillUnmount(): void {
+        this.queryReaction();
     }
 
     render() {

@@ -1,17 +1,17 @@
 .selectedInfo {
+}
+
+.absolutePanel {
     position: absolute;
     top: 8px;
     right:20px;
     z-index: 2;
+    display: flex;
 }
 
 .selectedInfoLoadingIndicator {
-    padding: 5;
-    position: absolute;
-    right: 20px;
+    padding: 5px;
     width: 200px;
-    top: 5px;
-    z-index: 0;
 }
 
 .selectedInfoCheckbox {
