@@ -12,6 +12,7 @@ import {exampleData} from "./OncoprinterConstants";
 import $ from "jquery";
 import {SyntheticEvent} from "react";
 import onMobxPromise from "../../../../shared/lib/onMobxPromise";
+import {WindowWidthBox} from "../../../../shared/components/WindowWidthBox/WindowWidthBox";
 
 export interface IOncoprinterToolProps {
 }
@@ -219,21 +220,23 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
                 <Helmet>
                     <title>{'cBioPortal for Cancer Genomics::Oncoprinter'}</title>
                 </Helmet>
-                <div className="cbioportal-frontend">
-                    <h1 style={{display: "inline"}}>Oncoprinter</h1> generates Oncoprints from your own data.
-                    <br/><br/>
-                    <Observer>
-                        {this.getHelpSection}
-                    </Observer>
-                    <Observer>
-                        {this.getInputSection}
-                    </Observer>
-                    <Oncoprinter
-                        ref={this.oncoprinterRef}
-                        divId="oncoprinter"
-                        store={this.store}
-                    />
-                </div>
+                <WindowWidthBox offset={60}>
+                    <div className="cbioportal-frontend">
+                        <h1 style={{display: "inline"}}>Oncoprinter</h1> generates Oncoprints from your own data.
+                        <br/><br/>
+                        <Observer>
+                            {this.getHelpSection}
+                        </Observer>
+                        <Observer>
+                            {this.getInputSection}
+                        </Observer>
+                        <Oncoprinter
+                            ref={this.oncoprinterRef}
+                            divId="oncoprinter"
+                            store={this.store}
+                        />
+                    </div>
+                </WindowWidthBox>
             </PageLayout>
         );
     }
