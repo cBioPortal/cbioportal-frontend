@@ -51,19 +51,26 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         const self = this;
         return [{
             target: "data",
-            eventHandlers: {
-                onClick: () => {
-                    return [
-                        {
-                            target: "data",
-                            mutation: (props: any) => {
-                                this.onUserSelection(props.datum.value);
-                            }
-                        }
-                    ];
-                }
-            }
+            eventHandlers: this.pieSliceOnClickEventHandlers
+        }, {
+            target: "labels",
+            eventHandlers: this.pieSliceOnClickEventHandlers
         }];
+    }
+
+    private get pieSliceOnClickEventHandlers() {
+        return {
+            onClick: () => {
+                return [
+                    {
+                        target: "data",
+                        mutation: (props: any) => {
+                            this.onUserSelection(props.datum.value);
+                        }
+                    }
+                ];
+            }
+        }
     }
 
     @observable isTooltipHovered: boolean = false;
