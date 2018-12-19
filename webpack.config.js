@@ -423,7 +423,7 @@ if (isDev || isTest) {
 } else {
 
 
-    config.devtool = 'cheap-module-source-map',
+    config.devtool = 'source-map',
         config.output.publicPath = '/';
 
     // css modules for any scss matching test
