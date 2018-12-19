@@ -5,9 +5,7 @@ export declare class SyntaxError
 	message: string;
 	expected: string;
 	found: string;
-	offset: number;
-	line: number;
-	column: number;
+	location:{ start: {offset:number, line:number, column:number}, end: { offset:number, line:number, column:number }};
 	name: "SyntaxError";
 }
 
@@ -90,7 +88,7 @@ export declare type CNAType = 'AMP' | 'HOMDEL' | 'GAIN' | 'HETLOSS';
 // CNACommand
 // 	= "CNA"i msp op:ComparisonOp msp constrval:CNAType { return {"alteration_type":"cna", "constr_rel":op, "constr_val":constrval}; }
 //         / constrval:CNAType { return {"alteration_type":"cna", "constr_rel":"=", "constr_val":constrval}; }
-export declare type CNACommand = {alteration_type:'cna', constr_rel:ComparisonOp | '=', constr_val:CNAType, modifiers:CNAModifier[]};
+export declare type CNACommand = {alteration_type:'cna', constr_rel?:ComparisonOp | '=', constr_val?:CNAType, modifiers:CNAModifier[]};
 //
 // MUTCommand
 // 	= "MUT" msp "=" msp mutation:Mutation { return {"alteration_type":"mut", "constr_rel": "=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info}; }
@@ -136,7 +134,7 @@ export declare type ComparisonOp = '>=' | '<=' | '>' | '<';
 // 	/ mutation_name:String { return {"type":"name", "value":mutation_name, "info":{}}; }
 export declare type MutationType = 'MISSENSE'|'NONSENSE'|'NONSTART'|'NONSTOP'|'FRAMESHIFT'|'INFRAME'|'SPLICE'|'TRUNC'|'PROMOTER';
 
-export declare type MutationModifier = 'GERMLINE'|'SOMATIC';
+export declare type MutationModifier = 'GERMLINE'|'SOMATIC'|DriverModifier;
 
 export declare type CNAModifier = DriverModifier;
 
