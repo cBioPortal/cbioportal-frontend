@@ -23,14 +23,10 @@ import SelectedInfo from "./SelectedInfo/SelectedInfo";
 import LabeledCheckbox from "../../shared/components/labeledCheckbox/LabeledCheckbox";
 import {Alert} from 'react-bootstrap';
 import AddChartButton from "./addChartButton/AddChartButton";
-import UserSelections from "./UserSelections";
 import {CSSTransition} from "react-transition-group";
-import classNames from 'classnames';
 import {sleep} from "../../shared/lib/TimeUtils";
 import {remoteData} from "../../shared/api/remoteData";
 import {If, Else, Then} from 'react-if';
-import shareUIstyles from "../resultsView/querySummary/shareUI.module.scss";
-import DefaultTooltip from "../../shared/components/defaultTooltip/DefaultTooltip";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -41,7 +37,7 @@ export class StudyResultsSummary extends React.Component<{ store:StudyViewPageSt
     render(){
         return (
             <div className={"studyFilterResult"}>
-                <SelectedInfo selectedSamples={this.props.store.selectedSamples.result}/>
+                <SelectedInfo selectedSamplesCount={this.props.store.selectedSamples.result.length} selectedPatientsCount={this.props.store.selectedPatients.length}/>
 
                 {this.props.store.mutationProfiles.result.length > 0 && (
                     <div>
