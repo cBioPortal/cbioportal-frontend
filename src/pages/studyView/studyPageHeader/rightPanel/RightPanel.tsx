@@ -49,10 +49,10 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
 
     @autobind
     private openCases() {
-        if (!_.isEmpty(this.props.store.selectedPatients.result)) {
-            const firstPatient = this.props.store.selectedPatients.result[0];
+        if (!_.isEmpty(this.props.store.selectedPatients)) {
+            const firstPatient = this.props.store.selectedPatients[0];
 
-            let navCaseIds = _.map(this.props.store.selectedPatients.result, patient => {
+            let navCaseIds = _.map(this.props.store.selectedPatients, patient => {
                 return {patientId: patient.patientId, studyId: patient.studyId}
             });
 
