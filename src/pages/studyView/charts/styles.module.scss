@@ -28,3 +28,14 @@
 .chartWidthTwo {
     width:400px;
 }
+
+.chartLoader {
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform: translate(-50%, -50%);
+    > div {
+        margin-left:0px !important;
+    }
+
+}
