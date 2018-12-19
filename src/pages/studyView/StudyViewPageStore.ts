@@ -2090,7 +2090,6 @@ export class StudyViewPageStore {
     readonly samples = remoteData<Sample[]>({
         await: () => [this.clinicalAttributes, this.queriedSampleIdentifiers, this.queriedPhysicalStudyIds],
         invoke: () => {
-            console.log('samples');
             let sampleFilter: SampleFilter = {} as any
             //this logic is need since fetchFilteredSamplesUsingPOST api accepts sampleIdentifiers or studyIds not both
             if (this.queriedSampleIdentifiers.result.length > 0) {
@@ -2143,7 +2142,6 @@ export class StudyViewPageStore {
     readonly selectedSamples = remoteData<Sample[]>({
         await: () => [this.samples],
         invoke: () => {
-            console.log('selectedSamples');
             //fetch samples when there are only filters applied
             if (this.chartsAreFiltered) {
                 return internalClient.fetchFilteredSamplesUsingPOST({
