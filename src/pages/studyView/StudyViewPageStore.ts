@@ -613,7 +613,7 @@ export class StudyViewPageStore {
     });
 
     readonly clinicalAnalysisGroupsData = remoteData({
-        await:()=>[this.selectedSamples, this.selectedPatients],
+        await:()=>[this.selectedSamples],
         invoke:async()=>{
             if (this.analysisGroupsSettings.clinicalAttribute !== undefined) {
                 const attr = this.analysisGroupsSettings.clinicalAttribute;
@@ -622,7 +622,7 @@ export class StudyViewPageStore {
                     clinicalDataMultiStudyFilter:{
                         attributeIds: [attr.clinicalAttributeId],
                         identifiers: attr.patientAttribute ?
-                            this.selectedPatients.result!.map(p=>({entityId:p.patientId, studyId:p.studyId})) :
+                            this.selectedPatients.map(p=>({entityId:p.patientId, studyId:p.studyId})) :
                             this.selectedSamples.result!.map(p=>({entityId:p.sampleId, studyId:p.studyId}))
                     },
                     projection: "SUMMARY"
@@ -637,7 +637,7 @@ export class StudyViewPageStore {
                 }, {} as {[caseKey:string]:string});
                 // add NA entries
                 if (attr.patientAttribute) {
-                    for (const patient of this.selectedPatients.result!) {
+                    for (const patient of this.selectedPatients) {
                         if (!(patient.uniquePatientKey in ret)) {
                             ret[patient.uniquePatientKey] = "NA";
                         }
@@ -2074,6 +2074,7 @@ export class StudyViewPageStore {
     readonly samples = remoteData<Sample[]>({
         await: () => [this.clinicalAttributes, this.queriedSampleIdentifiers, this.queriedPhysicalStudyIds],
         invoke: () => {
+            console.log('samples');
             let sampleFilter: SampleFilter = {} as any
             //this logic is need since fetchFilteredSamplesUsingPOST api accepts sampleIdentifiers or studyIds not both
             if (this.queriedSampleIdentifiers.result.length > 0) {
@@ -2123,6 +2124,7 @@ export class StudyViewPageStore {
     readonly selectedSamples = remoteData<Sample[]>({
         await: () => [this.samples],
         invoke: () => {
+            console.log('selectedSamples');
             //fetch samples when there are only filters applied
             if (this.chartsAreFiltered) {
                 return internalClient.fetchFilteredSamplesUsingPOST({
@@ -2186,17 +2188,18 @@ export class StudyViewPageStore {
         default: []
     });
 
-    readonly selectedPatients = remoteData<Patient[]>({
-        await:()=>[this.selectedSamples],
-        invoke:()=>{
-            return defaultClient.fetchPatientsUsingPOST({
-                patientFilter: {
-                    uniquePatientKeys: this.selectedSamples.result!.map(s=>s.uniquePatientKey)
-                } as PatientFilter
-            });
-        },
-        default: []
-    });
+    @computed
+    get selectedPatients(): Patient[] {
+        return _.values(_.reduce(this.selectedSamples.result, (acc, sample) => {
+            acc[sample.uniquePatientKey] = {
+                patientId: sample.patientId,
+                uniquePatientKey: sample.uniquePatientKey,
+                studyId: sample.studyId,
+                uniqueSampleKey: sample.uniqueSampleKey
+            };
+            return acc;
+        }, {} as { [key: string]: Patient }))
+    };
 
     readonly unSelectedPatientKeys = remoteData<string[]>({
         await: () => [this.samples, this.selectedPatientKeys],
@@ -2345,7 +2348,7 @@ export class StudyViewPageStore {
                 header.push(chartMeta.displayName);
                 let data = [header.join("\t")];
                 if (isPatientChart) {
-                    data = data.concat(this.selectedPatients.result!.map((patient: Patient) => {
+                    data = data.concat(this.selectedPatients.map((patient: Patient) => {
                         let record = _.find(this._customChartsSelectedCases.get(chartMeta.uniqueKey), (caseIdentifier: CustomChartIdentifierWithValue) => {
                             return caseIdentifier.studyId === patient.studyId && patient.patientId === caseIdentifier.patientId;
                         });
