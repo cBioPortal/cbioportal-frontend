@@ -2090,17 +2090,17 @@ export class StudyViewPageStore {
     readonly samples = remoteData<Sample[]>({
         await: () => [this.clinicalAttributes, this.queriedSampleIdentifiers, this.queriedPhysicalStudyIds],
         invoke: () => {
-            let sampleFilter: SampleFilter = {} as any
+            let studyViewFilter: StudyViewFilter = {} as any
             //this logic is need since fetchFilteredSamplesUsingPOST api accepts sampleIdentifiers or studyIds not both
             if (this.queriedSampleIdentifiers.result.length > 0) {
-                sampleFilter.sampleIdentifiers = this.queriedSampleIdentifiers.result
+                studyViewFilter.sampleIdentifiers = this.queriedSampleIdentifiers.result;
             } else {
-                sampleFilter.sampleListIds = this.queriedPhysicalStudyIds.result.map(studyId => `${studyId}_all`)
+                studyViewFilter.studyIds = this.queriedPhysicalStudyIds.result;
             }
 
-            return defaultClient.fetchSamplesUsingPOST({
-                sampleFilter: sampleFilter
-            })
+            return internalClient.fetchFilteredSamplesUsingPOST({
+                studyViewFilter: studyViewFilter
+            });
         },
         onError: (error => {}),
         default: []
