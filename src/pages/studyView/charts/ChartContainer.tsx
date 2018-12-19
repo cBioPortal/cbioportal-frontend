@@ -451,7 +451,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     {(this.props.promise.isPending) && (
                         <LoadingIndicator
                             isLoading={true}
-                            center={true}
+                            className={styles.chartLoader}
                         />
                     )}
                     {this.props.promise.isError && (<div>Error when loading data.</div>)}
