@@ -49,6 +49,14 @@ describe("OQL parser", ()=>{
     doTest("TP53: proteinchangecode_GERMLINE", [{gene:"TP53", alterations:[{alteration_type:"mut", constr_type:"name", constr_rel:"=", constr_val:"proteinchangecode", info:{unrecognized:true}, modifiers:["GERMLINE"]}]}]);
     doTest("TP53: DRIVER_proteinchangecode", [{gene:"TP53", alterations:[{alteration_type:"mut", constr_type:"name", constr_rel:"=", constr_val:"proteinchangecode", info:{unrecognized:true}, modifiers:["DRIVER"]}]}]);
     doTest("TP53: proteinchangecode_DRIVER", [{gene:"TP53", alterations:[{alteration_type:"mut", constr_type:"name", constr_rel:"=", constr_val:"proteinchangecode", info:{unrecognized:true}, modifiers:["DRIVER"]}]}]);
+    doTest("KRAS: G12D_DRIVER", [{gene:"KRAS", alterations:[{alteration_type:"mut", constr_type:"name", constr_rel:"=", constr_val:"G12D", info:{}, modifiers:["DRIVER"]}]}]);
+    doTest("KRAS: G12_DRIVER", [{gene:"KRAS", alterations:[{alteration_type:"mut", constr_type:"position", constr_rel:"=", constr_val:12, info:{amino_acid:"G"}, modifiers:["DRIVER"]}]}]);
+    doTest("KRAS: DRIVER_G12D", [{gene:"KRAS", alterations:[{alteration_type:"mut", constr_type:"name", constr_rel:"=", constr_val:"G12D", info:{}, modifiers:["DRIVER"]}]}]);
+    doTest("KRAS: DRIVER_G12", [{gene:"KRAS", alterations:[{alteration_type:"mut", constr_type:"position", constr_rel:"=", constr_val:12, info:{amino_acid:"G"}, modifiers:["DRIVER"]}]}]);
+    doTest("KRAS: MUT=G12D_DRIVER", [{gene:"KRAS", alterations:[{alteration_type:"mut", constr_type:"name", constr_rel:"=", constr_val:"G12D", info:{}, modifiers:["DRIVER"]}]}]);
+    doTest("KRAS: MUT=G12_DRIVER", [{gene:"KRAS", alterations:[{alteration_type:"mut", constr_type:"position", constr_rel:"=", constr_val:12, info:{amino_acid:"G"}, modifiers:["DRIVER"]}]}]);
+    doTest("KRAS: MUT=DRIVER_G12D", [{gene:"KRAS", alterations:[{alteration_type:"mut", constr_type:"name", constr_rel:"=", constr_val:"G12D", info:{}, modifiers:["DRIVER"]}]}]);
+    doTest("KRAS: MUT=DRIVER_G12", [{gene:"KRAS", alterations:[{alteration_type:"mut", constr_type:"position", constr_rel:"=", constr_val:12, info:{amino_acid:"G"}, modifiers:["DRIVER"]}]}]);
     doTest("TP53:MISSENSE_GERMLINE", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE"]}]}])
     doTest("TP53:MISSENSE_GERMLINE_SOMATIC", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE", "SOMATIC"]}]}])
     doTest("TP53:GERMLINE_MISSENSE", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE"]}]}])
