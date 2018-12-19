@@ -120,9 +120,7 @@ export class ServerConfigHelpers {
         try {
             return JSON.parse(json);
         } catch (ex) {
-            throw("Cannot parse query_sets_of_genes json");
-        } finally {
-            return null;
+            return undefined;
         }
     }
 
