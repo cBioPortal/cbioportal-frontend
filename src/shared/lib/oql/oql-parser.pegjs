@@ -95,14 +95,17 @@ CNAType
 
 CNACommand
 	= "CNA"i msp op:ComparisonOp msp constrval:CNAType { return {"alteration_type":"cna", "constr_rel":op, "constr_val":constrval, modifiers:[]}; }
+	/ "CNA_" mod:CNAModifier { return {"alteration_type":"cna", modifiers:[mod]}; }
 	/ constrval:CNAType "_" mod:CNAModifier { return {"alteration_type":"cna", "constr_rel":"=", "constr_val":constrval, modifiers:[mod]}; }
+	/ mod:CNAModifier "_CNA" { return {"alteration_type":"cna", modifiers:[mod]}; }
 	/ mod:CNAModifier "_" constrval:CNAType { return {"alteration_type":"cna", "constr_rel":"=", "constr_val":constrval, modifiers:[mod]}; }
     / constrval:CNAType { return {"alteration_type":"cna", "constr_rel":"=", "constr_val":constrval, modifiers:[]}; }
 
 MUTCommand
 	= "MUT" msp "=" msp mutation:MutationWithModifiers { return {"alteration_type":"mut", "constr_rel": "=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info, modifiers: mutation.modifiers}; }
 	/ "MUT" msp "!=" msp mutation:MutationWithModifiers { return {"alteration_type":"mut", "constr_rel": "!=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info, modifiers: mutation.modifiers}; }
-	/ "MUT" modifiers:MutationModifiers { return {"alteration_type":"mut", "info":{}, "modifiers":modifiers}; }
+	/ "MUT_" modifiers:MutationModifiers { return {"alteration_type":"mut", "info":{}, "modifiers":modifiers}; }
+	/ modifiers:MutationModifiers "_MUT" { return {"alteration_type":"mut", "info":{}, "modifiers":modifiers}; }
 	/ "MUT" { return {"alteration_type":"mut", "info":{}, "modifiers":[]}; }
 	/ mutation:MutationWithModifiers {
 	        if (mutation.type) {
