@@ -98,7 +98,7 @@ declare module "oncoprintjs"
 
     export type ShapeSpec = any; // TODO
 
-    export type CustomTrackOption = { label:string, onClick:(id:TrackId)=>void, weight?:string, disabled?:boolean};
+    export type CustomTrackOption = {label?:string, separator?: boolean, onClick?:(id:TrackId)=>void, weight?:string, disabled?:boolean};
 
     export type TrackSpec<D> = {
         target_group?:TrackGroupIndex;

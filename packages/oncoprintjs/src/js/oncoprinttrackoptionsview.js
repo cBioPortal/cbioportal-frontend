@@ -8,7 +8,7 @@ var SEPARATOR_CLASS = "oncoprintjs__track_options__separator";
 var NTH_CLASS_PREFIX = "nth-";
 
 var OncoprintTrackOptionsView = (function () {
-    function OncoprintTrackOptionsView($div, moveUpCallback, moveDownCallback, removeCallback, sortChangeCallback, unexpandCallback, custom_options) {
+    function OncoprintTrackOptionsView($div, moveUpCallback, moveDownCallback, removeCallback, sortChangeCallback, unexpandCallback) {
 	var position = $div.css('position');
 	if (position !== 'absolute' && position !== 'relative') {
 	    console.log("WARNING: div passed to OncoprintTrackOptionsView must be absolute or relative positioned - layout problems will occur");
@@ -19,7 +19,6 @@ var OncoprintTrackOptionsView = (function () {
 	this.removeCallback = removeCallback; // function(track_id) { ... }
 	this.sortChangeCallback = sortChangeCallback; // function(track_id, dir) { ... }
 	this.unexpandCallback = unexpandCallback; // function(track_id)
-	this.custom_options = custom_options;
 
 	this.$div = $div;
 	this.$ctr = $('<div></div>').css({'position': 'absolute', 'overflow-y':'hidden', 'overflow-x':'hidden'}).appendTo(this.$div);
@@ -121,14 +120,20 @@ var OncoprintTrackOptionsView = (function () {
     var $makeDropdownOption = function (text, weight, disabled, callback) {
 	var li = $('<li>').text(text).css({'font-weight': weight, 'font-size': 12, 'border-bottom': '1px solid rgba(0,0,0,0.3)'})
 		if (!disabled) {
-            li.css({'cursor': 'pointer'})
-				.click(callback)
-                .hover(function () {
-                    $(this).css({'background-color': 'rgb(200,200,200)'});
-                }, function () {
-                    $(this).css({'background-color': 'rgba(255,255,255,0)'});
-                });
+            if (callback) {
+            	li.addClass("clickable");
+                li.css({'cursor': 'pointer'});
+				li.click(callback)
+					.hover(function () {
+						$(this).css({'background-color': 'rgb(200,200,200)'});
+					}, function () {
+						$(this).css({'background-color': 'rgba(255,255,255,0)'});
+					});
+			} else {
+            	li.click(function(evt) { evt.stopPropagation(); });
+			}
 		} else {
+			li.addClass("disabled");
 			li.css({'color': 'rgb(200, 200, 200)', 'cursor': 'default'});
 		}
 	return li;
@@ -277,13 +282,19 @@ var OncoprintTrackOptionsView = (function () {
 	// Add custom options
 	var custom_options = model.getTrackCustomOptions(track_id);
 	if (custom_options && custom_options.length > 0) {
-		$dropdown.append($makeDropdownSeparator());
 		for (var i=0; i<custom_options.length; i++) {
-			var option = custom_options[i];
-			$dropdown.append($makeDropdownOption(option.label, option.weight || "normal", !!option.disabled, function (evt) {
-				evt.stopPropagation();
-				option.onClick(track_id);
-			}));
+			(function() {
+				// wrapped in function to prevent scope issues
+				var option = custom_options[i];
+				if (option.separator) {
+					$dropdown.append($makeDropdownSeparator());
+				} else {
+					$dropdown.append($makeDropdownOption(option.label || "", option.weight || "normal", !!option.disabled, option.onClick && function (evt) {
+						evt.stopPropagation();
+						option.onClick(track_id);
+					}));
+				}
+			})()
 		}
 	}
     };
