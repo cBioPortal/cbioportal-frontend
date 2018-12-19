@@ -12,6 +12,7 @@ ProteinChangeCode = word:[-./a-zA-Z0-9*]+ { return word.join("") } // make sure 
 AminoAcid = letter:[GPAVLIMCFYWHKRQNEDST] { return letter; }
 // any character, except " :
 StringExceptQuotes = stringExceptQuotes:[^"]+ { return stringExceptQuotes.join("") }
+ProteinChangeCodeAfterPosition = word:[-.@/a-zA-Z0-9*]+ { return word.join("") } // exclude underscore or else it will bleed into modifiers
 
 sp = space:[ \t\r]+
 msp = space:[ \t\r]*
@@ -157,7 +158,7 @@ Mutation
 	/ "SPLICE"i { return {"type":"class", "value":"SPLICE", "info":{}}; }
 	/ "TRUNC"i { return {"type":"class", "value":"TRUNC", "info":{}}; }
     / "PROMOTER"i { return {"type":"class", "value":"PROMOTER", "info":{}}; }
-    / letter:AminoAcid position:NaturalNumber string:String { return {"type":"name" , "value":(letter+position+string), "info":{}};}
+    / letter:AminoAcid position:NaturalNumber string:ProteinChangeCodeAfterPosition { return {"type":"name" , "value":(letter+position+string), "info":{}};}
     / letter:AminoAcid position:NaturalNumber { return {"type":"position", "value":parseInt(position), "info":{"amino_acid":letter.toUpperCase()}}; }
 	/ mutation_name:ProteinChangeCode { return {"type":"name", "value":mutation_name, "info":{"unrecognized":true}}; }
 
