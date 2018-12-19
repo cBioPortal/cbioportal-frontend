@@ -10,8 +10,9 @@ import { ResultsViewPageStore } from "../ResultsViewPageStore";
 import DiscreteCNACache from "../../../shared/cache/DiscreteCNACache";
 import { If, Then, Else } from 'react-if';
 import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
-import { getCountsText, getData, getFilteredData } from "./MutualExclusivityUtil";
+import { getTrackPairsCountText, getData, getFilteredData } from "./MutualExclusivityUtil";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
+import { OQLLineFilterOutput } from "../../../shared/lib/oql/oqlfilter";
 
 export interface IMutualExclusivityTabProps {
     store: ResultsViewPageStore
@@ -53,7 +54,6 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
     }
 
     public render() {
-
         if (this.props.store.isSampleAlteredMap.isPending) {
             return <Loader isLoading={true} />
         } else if (this.props.store.isSampleAlteredMap.isComplete) {
@@ -64,7 +64,7 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
                             <OqlStatusBanner className="mutex-oql-status-banner" store={this.props.store} tabReflectsOql={true} />
                         </div>
 
-                        {getCountsText(this.data)}
+                        {getTrackPairsCountText(this.data, _.size(this.props.store.isSampleAlteredMap.result))}
 
                         <div className={styles.Checkboxes}>
                             <Checkbox checked={this.mutualExclusivityFilter}
@@ -85,7 +85,7 @@ export default class MutualExclusivityTab extends React.Component<IMutualExclusi
                 );
             } else {
                 return <div className={"tabMessageContainer"}>
-                            <div className={"alert alert-info"}>Mutual exclusivity analysis cannot be provided when only a single gene is selected.</div>
+                            <div className={"alert alert-info"}>Mutual exclusivity analysis cannot be provided when only a single track is selected.</div>
                         </div>
             }
         } else {
