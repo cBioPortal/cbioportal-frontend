@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import {inject, Observer, observer} from "mobx-react";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
-import {reaction, IReactionDisposer} from 'mobx';
+import {reaction, IReactionDisposer, computed} from 'mobx';
 import {
     StudyViewPageStore,
     StudyViewPageTabDescriptions,
@@ -22,7 +22,8 @@ import styles from './styles.module.scss';
 import SelectedInfo from "./SelectedInfo/SelectedInfo";
 import LabeledCheckbox from "../../shared/components/labeledCheckbox/LabeledCheckbox";
 import {Alert} from 'react-bootstrap';
-import AddChartButton from "./addChartButton/AddChartButton";
+import AddChartButton, {TabKeysEnum} from "./addChartButton/AddChartButton";
+import UserSelections from "./UserSelections";
 import {CSSTransition} from "react-transition-group";
 import {sleep} from "../../shared/lib/TimeUtils";
 import {remoteData} from "../../shared/api/remoteData";
@@ -126,6 +127,17 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         }
     });
 
+    @computed
+    get addChartButtonText() {
+        if (!this.props.routing.location.query.tab || this.props.routing.location.query.tab === StudyViewPageTabKeys.SUMMARY) {
+            return '+ Add Chart';
+        } else if (this.props.routing.location.query.tab === StudyViewPageTabKeys.CLINICAL_DATA) {
+            return '+ Add Column'
+        } else {
+            return '';
+        }
+    }
+
     content() {
 
         return (
@@ -191,14 +203,28 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                             }
                                         }
                                     </Observer>
-
-                                    {(this.props.routing.location.query.tab === undefined || this.enableAddChartInTabs.includes(this.props.routing.location.query.tab)) &&
-                                    <AddChartButton
-                                        store={this.store}
-                                        currentTab={this.props.routing.location.query.tab ? this.props.routing.location.query.tab : ''}
-                                        addChartOverlayClassName='studyViewAddChartOverlay'
-                                        disableAddGenomicButton={this.props.routing.location.query.tab === StudyViewPageTabKeys.CLINICAL_DATA}
-                                    />}
+                                    {(this.props.routing.location.query.tab === undefined || this.enableAddChartInTabs.includes(this.props.routing.location.query.tab))
+                                    && (
+                                        <div style={{display: 'flex'}}>
+                                            <AddChartButton
+                                                key={'custom'}
+                                                buttonText='Custom Selection'
+                                                store={this.store}
+                                                currentTab={this.props.routing.location.query.tab ? this.props.routing.location.query.tab : ''}
+                                                addChartOverlayClassName='studyViewAddChartOverlay'
+                                                disableClinicalTab={true}
+                                                disableGenomicTab={true}
+                                            />
+                                            <AddChartButton
+                                                key={'addChart'}
+                                                buttonText={this.addChartButtonText}
+                                                store={this.store}
+                                                currentTab={this.props.routing.location.query.tab ? this.props.routing.location.query.tab : ''}
+                                                addChartOverlayClassName='studyViewAddChartOverlay'
+                                                disableCustomTab={this.props.routing.location.query.tab === StudyViewPageTabKeys.CLINICAL_DATA}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

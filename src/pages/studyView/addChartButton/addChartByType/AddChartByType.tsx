@@ -1,27 +1,22 @@
 import * as React from 'react';
-import {action, computed, observable, IReactionDisposer, reaction} from 'mobx';
+import {action, computed} from 'mobx';
 import {observer} from "mobx-react";
 import styles from "./styles.module.scss";
-import addChartStyles from "../styles.module.scss";
-import {Modal} from 'react-bootstrap';
-import {ChartOption, INFO_TIMEOUT} from "../AddChartButton";
+import {ChartOption} from "../AddChartButton";
 import * as _ from 'lodash';
 import LabeledCheckbox from "../../../../shared/components/labeledCheckbox/LabeledCheckbox";
 import {Column} from "../../../../shared/components/lazyMobXTable/LazyMobXTable";
-import {getClinicalAttributeOverlay, getFrequencyStr} from "../../StudyViewUtils";
+import {getFrequencyStr} from "../../StudyViewUtils";
 import LoadingIndicator from "../../../../shared/components/loadingIndicator/LoadingIndicator";
 import MobxPromise from 'mobxpromise';
-import {ClinicalDataCountSet, StudyViewPageTabKeys} from "../../StudyViewPageStore";
+import {ClinicalDataCountSet} from "../../StudyViewPageStore";
 import FixedHeaderTable from "../../table/FixedHeaderTable";
 import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import EllipsisTextTooltip from "../../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
-import InfoBanner from "../../infoBanner/InfoBanner";
-import {ChartTypeNameEnum} from "../../StudyViewConfig";
 
 export interface IAddChartByTypeProps {
     options: ChartOption[];
-    currentTab: string,
     freqPromise: MobxPromise<ClinicalDataCountSet>;
     onAddAll: (keys: string[]) => void;
     onClearAll: (keys: string[]) => void;
@@ -36,18 +31,9 @@ const NUM_ROWS_SHOWN = 15;
 
 @observer
 export default class AddChartByType extends React.Component<IAddChartByTypeProps, {}> {
-    @observable infoMessage: string = "";
-    private reactions: IReactionDisposer[] = [];
-    private infoMessageTimeout: NodeJS.Timer;
 
     constructor(props: IAddChartByTypeProps) {
         super(props);
-        this.reactions.push(reaction(() => this.infoMessage, () => {
-            if (this.infoMessage) {
-                clearTimeout(this.infoMessageTimeout);
-                this.infoMessageTimeout = setTimeout(() => this.infoMessage = "", INFO_TIMEOUT);
-            }
-        }));
     }
 
     @computed
@@ -81,12 +67,12 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                         checked={option.selected}
                         disabled={option.disabled}
                         labelProps={{
-                            className: classnames(styles.label, option.disabled ? styles.labelDisabled: '')
+                            className: classnames(styles.label, option.disabled ? styles.labelDisabled : '')
                         }}
                         inputProps={{
                             className: styles.input
                         }}
-                        onChange={()=>this.onOptionChange(option)}
+                        onChange={() => this.onOptionChange(option)}
                     >
                         <EllipsisTextTooltip text={option.label}/>
                     </LabeledCheckbox>
@@ -124,75 +110,26 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
     }
 
     @autobind
-    getCurrentSelectedRowKeys(){
+    getCurrentSelectedRowKeys() {
         return this.getCurrentSelectedRows().map(option => option.key);
     }
 
     @autobind
     @action
     addAll(selectedOptions: ChartOption[]) {
-        const alreadySelected = this.getCurrentSelectedRows();
-        const allSelected = _.filter(selectedOptions, option => !option.disabled);
-        const numOfNewCharts = allSelected.length - alreadySelected.length;
-        this.props.onAddAll(_.uniq(alreadySelected.concat(allSelected).map(option => option.key)));
-
-        const addInSummaryInfoMessage= `${numOfNewCharts} chart${numOfNewCharts > 1 ? 's' : ''} added`;
-
-        if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
-            this.infoMessage = `${numOfNewCharts} column${numOfNewCharts > 1 ? 's' : ''} added to table and ${addInSummaryInfoMessage} in Summary tab`;
-        } else if (this.props.currentTab === ''|| this.props.currentTab === StudyViewPageTabKeys.SUMMARY) {
-            this.infoMessage = addInSummaryInfoMessage;
-        } else {
-            this.infoMessage = `Added`;
-        }
+        this.props.onAddAll(_.filter(selectedOptions, option => !option.disabled).map(option => option.key));
     }
 
     @autobind
     @action
     removeAll(selectedOptions: ChartOption[]) {
-        const alreadySelected = this.getCurrentSelectedRowKeys();
-        const allSelected = selectedOptions.map(option => option.key);
-        const numOfChartsRemoved = _.intersection(alreadySelected, allSelected).length;
         this.props.onClearAll(selectedOptions.map(option => option.key));
-
-        const removeInSummaryInfoMessage= `${numOfChartsRemoved} chart${numOfChartsRemoved > 1 ? 's' : ''} removed`;
-
-        if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
-            this.infoMessage = `${numOfChartsRemoved} column${numOfChartsRemoved > 1 ? 's' : ''} removed from table and ${removeInSummaryInfoMessage} from Summary tab`;
-        } else if (this.props.currentTab === ''|| this.props.currentTab === StudyViewPageTabKeys.SUMMARY) {
-            this.infoMessage = removeInSummaryInfoMessage;
-        } else {
-            this.infoMessage = `Removed`;
-        }
     }
 
     @autobind
     @action
     onOptionChange(option: ChartOption) {
-        const selectedKeys = this.getCurrentSelectedRowKeys();
-        this.props.onToggleOption(option.key)
-
-        if (selectedKeys.includes(option.key)) {
-            let additionType = '';
-            if (this.props.currentTab === StudyViewPageTabKeys.SUMMARY) {
-                additionType = ` ${ChartTypeNameEnum[option.chartType]}`;
-            } else if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
-                additionType = ' column';
-            }
-            this.infoMessage = `${option.label}${additionType} was removed`;
-        } else {
-            let additionType = '';
-            if (this.props.currentTab === StudyViewPageTabKeys.SUMMARY) {
-                additionType = ` as a ${ChartTypeNameEnum[option.chartType]}`;
-            } else if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
-                additionType = ` to table and as ${ChartTypeNameEnum[option.chartType]} in Summary tab`;
-            }
-            this.infoMessage = `${option.label} added${additionType}`;
-        }
-    }
-
-    componentWillUnmount(): void {
-        this.reactions.forEach(reaction => reaction());
+        this.props.onToggleOption(option.key);
     }
 
     render() {
@@ -217,9 +154,6 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
                             Calculating data availability...
                         </span>
                     )
-                }
-                {this.infoMessage &&
-                <InfoBanner message={this.infoMessage} />
                 }
             </div>
         )
