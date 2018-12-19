@@ -635,7 +635,7 @@ function transitionGeneticTrack(
         const nextSortByDrivers = sortByDrivers(nextProps);
         if ((nextSortByMutationType !== sortByMutationType(prevProps)) ||
             (nextSortByDrivers !== sortByDrivers(prevProps))) {
-            oncoprint.setTrackSortComparator(trackId, getGeneticTrackSortComparator(sortByMutationType(nextProps), sortByDrivers(nextProps)));
+            oncoprint.setTrackSortComparator(trackId, getGeneticTrackSortComparator(nextSortByMutationType, nextSortByDrivers));
         }
         if (nextSpec.data !== prevSpec.data) {
             // shallow equality check
