@@ -662,6 +662,7 @@ export class StudyViewPageStore {
 
     readonly patientToClinicalAnalysisGroup = remoteData({
         await:()=>[this.selectedSamples, this.clinicalAnalysisGroupsData],
+        onError: (error => {}),
         invoke:()=>{
             const data = this.clinicalAnalysisGroupsData.result!;
             if (data.patientAttribute) {
@@ -677,6 +678,7 @@ export class StudyViewPageStore {
 
     readonly sampleToClinicalAnalysisGroup = remoteData({
         await:()=>[this.selectedSamples, this.clinicalAnalysisGroupsData],
+        onError: (error => {}),
         invoke:()=>{
             const data = this.clinicalAnalysisGroupsData.result!;
             if (!data.patientAttribute) {
@@ -1127,6 +1129,7 @@ export class StudyViewPageStore {
                 } as ClinicalDataCountFilter
             });
         },
+        onError: (error => {}),
         default: []
     });
 
@@ -1140,6 +1143,7 @@ export class StudyViewPageStore {
             });
         },
         default: [],
+        onError: (error => {}),
         onResult: (data) => {
             data.forEach(item => {
                 const uniqueKey = getClinicalAttributeUniqueKeyByDataTypeAttrId(item.clinicalDataType, item.attributeId);
@@ -1159,6 +1163,7 @@ export class StudyViewPageStore {
             });
         },
         default: [],
+        onError: (error => {}),
         onResult: (data) => {
             _.each(_.groupBy(data, item => getClinicalAttributeUniqueKeyByDataTypeAttrId(item.clinicalDataType, item.attributeId)), (item, key) => {
                 this.unfilteredClinicalDataBinCountCache[key] = item;
@@ -1176,6 +1181,7 @@ export class StudyViewPageStore {
                 } as ClinicalDataBinCountFilter
             });
         },
+        onError: (error => {}),
         default: []
     });
 
@@ -1233,6 +1239,7 @@ export class StudyViewPageStore {
                     }
                     return getClinicalDataCountWithColorByClinicalDataCount(counts)
                 },
+                onError: (error => {}),
                 default: []
             });
         }
@@ -1277,6 +1284,7 @@ export class StudyViewPageStore {
                         attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId
                     }) || [];
                 },
+                onError: (error => {}),
                 default: []
             });
         }
@@ -1334,6 +1342,7 @@ export class StudyViewPageStore {
                 } as MolecularProfileFilter
             })
         },
+        onError: (error => {}),
         default: []
     });
 
@@ -1562,6 +1571,7 @@ export class StudyViewPageStore {
             _.each(this.filteredVirtualStudies.result,study => validIds.push(study.id));
             return _.filter(this.studyIds, id => !_.includes(validIds, id));
         },
+        onError: (error => {}),
         default: []
     });
 
@@ -1570,6 +1580,7 @@ export class StudyViewPageStore {
         invoke: async ()=>{
             return this.molecularProfiles.result.filter(profile => profile.molecularAlterationType === "MUTATION_EXTENDED")
         },
+        onError: (error => {}),
         default: []
     });
 
@@ -1582,6 +1593,7 @@ export class StudyViewPageStore {
             .filter(profile => profile.molecularAlterationType === "COPY_NUMBER_ALTERATION" && profile.datatype === "DISCRETE")
 
         },
+        onError: (error => {}),
         default: []
     });
 
@@ -1619,6 +1631,7 @@ export class StudyViewPageStore {
 
     readonly MDACCHeatmapStudyMeta = remoteData({
         await: () => [this.queriedPhysicalStudyIds],
+        onError: (error => {}),
         invoke: async () => {
             let isSinglePhysicalStudy = this.queriedPhysicalStudyIds.result.length === 1;
             if (isSinglePhysicalStudy) {
@@ -2000,6 +2013,7 @@ export class StudyViewPageStore {
             });
             return filterAttributes;
         },
+        onError: (error => {}),
         default: []
     });
 
@@ -2023,6 +2037,7 @@ export class StudyViewPageStore {
                 } as ClinicalDataCountFilter
             });
         },
+        onError: (error => {}),
         default: []
     });
 
@@ -2043,6 +2058,7 @@ export class StudyViewPageStore {
                 } as ClinicalDataBinCountFilter
             });
         },
+        onError: (error => {}),
         default: []
     });
 
@@ -2087,6 +2103,7 @@ export class StudyViewPageStore {
                 sampleFilter: sampleFilter
             })
         },
+        onError: (error => {}),
         default: []
     });
 
@@ -2106,6 +2123,7 @@ export class StudyViewPageStore {
             }
             return []
         },
+        onError: (error => {}),
         default: []
     });
 
@@ -2118,6 +2136,7 @@ export class StudyViewPageStore {
                 this.filteredPhysicalStudies.result,
                 this.filteredVirtualStudies.result));
         },
+        onError: (error => {}),
         default: []
     });
 
@@ -2133,6 +2152,7 @@ export class StudyViewPageStore {
             }
             return Promise.resolve(this.samples.result)
         },
+        onError: (error => {}),
         default: []
     });
 
@@ -2162,6 +2182,7 @@ export class StudyViewPageStore {
             }
             return []
         },
+        onError: (error => {}),
         default: []
     });
 
@@ -2172,6 +2193,7 @@ export class StudyViewPageStore {
                 _.uniq(this.samplesWithNAInSelectedClinicalData.result!.map(s=>s.uniquePatientKey))
             );
         },
+        onError: (error => {}),
         default: []
     });
 
@@ -2185,6 +2207,7 @@ export class StudyViewPageStore {
         invoke: async () => {
             return _.uniq(this.selectedSamples.result.map(sample => sample.uniquePatientKey));
         },
+        onError: (error => {}),
         default: []
     });
 
@@ -2216,6 +2239,7 @@ export class StudyViewPageStore {
             }, {});
             return Object.keys(unselectedPatientSet);
         },
+        onError: (error => {}),
         default: []
     });
 
@@ -2231,6 +2255,7 @@ export class StudyViewPageStore {
                 return [];
             }
         },
+        onError: (error => {}),
         default: []
     });
 
@@ -2246,6 +2271,7 @@ export class StudyViewPageStore {
                 return [];
             }
         },
+        onError: (error => {}),
         default: []
     });
 
@@ -2478,6 +2504,7 @@ export class StudyViewPageStore {
                 return obj
             });
         },
+        onError: (error => {}),
         default: []
     });
 
@@ -2505,6 +2532,7 @@ export class StudyViewPageStore {
             }
             return {}
         },
+        onError: (error => {}),
         default: {}
     });
 
@@ -2547,6 +2575,7 @@ export class StudyViewPageStore {
                 };
             }
         },
+        onError: (error => {}),
         default: {
             bins: [],
             xBinSize:-1,
@@ -2572,11 +2601,13 @@ export class StudyViewPageStore {
                 clinicalDataMultiStudyFilter: filter
             });
         },
+        onError: (error => {}),
         default: []
     });
 
     readonly mutationCountVsFGAData = remoteData({
         await:()=>[this.sampleMutationCountAndFractionGenomeAlteredData],
+        onError: (error => {}),
         invoke: async ()=>{
             return _.reduce(_.groupBy(this.sampleMutationCountAndFractionGenomeAlteredData.result, datum => datum.uniqueSampleKey), (acc, data) => {
                 if (data.length == 2) { // 2 => number of attribute ids
@@ -2613,6 +2644,7 @@ export class StudyViewPageStore {
 
     readonly getDataForClinicalDataTab = remoteData({
         await: () => [this.clinicalAttributes, this.selectedSamples],
+        onError: (error => {}),
         invoke: async () => {
             let sampleClinicalDataMap: { [attributeId: string]: { [attributeId: string]: string; } } = await this.getClinicalDataBySamples(this.selectedSamples.result)
             return _.reduce(this.selectedSamples.result, (acc, next) => {
@@ -2632,6 +2664,7 @@ export class StudyViewPageStore {
     });
 
     readonly molecularProfileSampleCounts = remoteData<MolecularProfileSampleCount>({
+        onError: (error => {}),
         invoke: async () => {
             return internalClient.fetchMolecularProfileSampleCountsUsingPOST({
                 studyViewFilter: this.filters
@@ -2641,6 +2674,7 @@ export class StudyViewPageStore {
 
     readonly clinicalAttributesCounts = remoteData({
         await: () => [this.selectedSamples],
+        onError: (error => {}),
         invoke: () => {
             let sampleIdentifiers = this.selectedSamples.result.map(sample => {
                 return {
@@ -2704,6 +2738,7 @@ export class StudyViewPageStore {
             }
             return {}
         },
+        onError: (error => {}),
         default: {}
     });
 
@@ -2758,6 +2793,7 @@ export class StudyViewPageStore {
             }
             return {}
         },
+        onError: (error => {}),
         default: {}
     });
 
@@ -2921,6 +2957,7 @@ export class StudyViewPageStore {
                 return acc
             }, {} as { [id: string]: ClinicalDataCount })));
         },
+        onError: (error => {}),
         default: []
     });
 
