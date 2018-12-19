@@ -379,10 +379,10 @@ var isDatumWantedByOQLCNACommand = function(alt_cmd, datum, accessors) {
         datum.alterationSubType = d_cna;
         datum.alterationType = 'COPY_NUMBER_ALTERATION';
         // Otherwise, return -1 if it doesnt match, 1 if it matches
-        var match;
+        var match = true;
         if (alt_cmd.constr_rel === "=") {
             match = (d_cna === alt_cmd.constr_val.toLowerCase());
-        } else {
+        } else if (alt_cmd.constr_rel) {
             var integer_copy_number = {"amp":2, "gain":1, "hetloss":-1, "homdel":-2};
             var d_int_cna = integer_copy_number[d_cna];
             var alt_int_cna = integer_copy_number[alt_cmd.constr_val.toLowerCase()];

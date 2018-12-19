@@ -3,7 +3,15 @@ import {assert} from "chai";
 
 function doTest(query:string, expectedParsedResult:OQLQuery) {
     it(query, ()=>{
-        assert.deepEqual(expectedParsedResult, oql_parser.parse(query));
+        try {
+            assert.deepEqual(oql_parser.parse(query), expectedParsedResult);
+        } catch (e) {
+            if (e.name === "SyntaxError") {
+                throw new Error(`SyntaxError at character ${e.location.start.offset}: ${e.message}`);
+            } else {
+                throw e;
+            }
+        }
     });
 }
 
@@ -39,6 +47,8 @@ describe("OQL parser", ()=>{
     doTest("TP53: GERMLINE_SOMATIC", [{gene:"TP53", alterations:[{alteration_type:"mut", info:{}, modifiers:["GERMLINE", "SOMATIC"]}]}]);
     doTest("TP53: proteinchangecode", [{gene:"TP53", alterations:[{alteration_type:"mut", constr_type:"name", constr_rel:"=", constr_val:"proteinchangecode", info:{unrecognized:true}, modifiers:[]}]}]);
     doTest("TP53: proteinchangecode_GERMLINE", [{gene:"TP53", alterations:[{alteration_type:"mut", constr_type:"name", constr_rel:"=", constr_val:"proteinchangecode", info:{unrecognized:true}, modifiers:["GERMLINE"]}]}]);
+    doTest("TP53: DRIVER_proteinchangecode", [{gene:"TP53", alterations:[{alteration_type:"mut", constr_type:"name", constr_rel:"=", constr_val:"proteinchangecode", info:{unrecognized:true}, modifiers:["DRIVER"]}]}]);
+    doTest("TP53: proteinchangecode_DRIVER", [{gene:"TP53", alterations:[{alteration_type:"mut", constr_type:"name", constr_rel:"=", constr_val:"proteinchangecode", info:{unrecognized:true}, modifiers:["DRIVER"]}]}]);
     doTest("TP53:MISSENSE_GERMLINE", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE"]}]}])
     doTest("TP53:MISSENSE_GERMLINE_SOMATIC", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE", "SOMATIC"]}]}])
     doTest("TP53:GERMLINE_MISSENSE", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE"]}]}])
@@ -57,6 +67,12 @@ describe("OQL parser", ()=>{
         {alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "INFRAME", info: {}, modifiers:["DRIVER", "GERMLINE"]},
         {alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "INFRAME", info: {}, modifiers:["DRIVER", "GERMLINE"]}
     ] as Alteration[]}])
+    doTest("TP53:MUT_DRIVER DRIVER_MUT CNA_DRIVER DRIVER_CNA", [{gene:"TP53", alterations:[
+            {alteration_type: "mut", info: {}, modifiers:["DRIVER"]},
+            {alteration_type: "mut", info: {}, modifiers:["DRIVER"]},
+            {alteration_type: "cna", modifiers:["DRIVER"]},
+            {alteration_type: "cna", modifiers:["DRIVER"]}
+        ] as Alteration[]}])
     doTest("TP53:AMP_DRIVER DRIVER_AMP FUSION_DRIVER DRIVER_FUSION DRIVER_HOMDEL HETLOSS DRIVER", [{gene:"TP53", alterations:[
             {alteration_type: "cna", constr_rel:"=", constr_val:"AMP", modifiers:["DRIVER"]},
             {alteration_type: "cna", constr_rel:"=", constr_val:"AMP", modifiers:["DRIVER"]},
