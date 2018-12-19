@@ -15,8 +15,6 @@ import {
     ValidationResult
 } from "./CustomCaseSelectionUtils";
 import autobind from 'autobind-decorator';
-import InfoBanner from "../../infoBanner/InfoBanner";
-import {INFO_TIMEOUT} from "../AddChartButton";
 import Collapse from "react-collapse";
 
 export interface ICustomCaseSelectionProps {
@@ -36,14 +34,12 @@ const GroupByOptions: { value: ClinicalDataType, label: string; }[] = [
 export default class CustomCaseSelection extends React.Component<ICustomCaseSelectionProps, {}> {
     private validateContent: boolean = false;
     private chartNameValidation: ValidationResult = {warning: [], error: []};
-    private lastAdded: NewChart;
     @observable dataFormatCollapsed: boolean = true;
     @observable chartName: string;
     @observable showCaseIds: boolean = false;
     @observable caseIdsMode: ClinicalDataType = ClinicalDataTypeEnum.SAMPLE;
     @observable content: string = '';
     @observable validContent: string = '';
-    @observable chartAdded: boolean = false;
 
     @computed
     get sampleSet(): { [id: string]: Sample } {
@@ -109,10 +105,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     @autobind
     @action
     onAddChart() {
-        this.lastAdded = this.newChartInfo;
         this.props.onSubmit(this.newChartInfo);
-        this.chartAdded = true;
-        setTimeout(() => this.chartAdded = false, INFO_TIMEOUT);
     }
 
     @autobind
@@ -200,12 +193,9 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                         disabled={this.addChartButtonDisabled}
                         className="btn btn-primary btn-sm"
                         onClick={this.onAddChart}>
-                        Add Chart
+                        Select / Add Chart
                     </button>
                 </div>
-                {this.chartAdded &&
-                <InfoBanner message={`${this.lastAdded.name} has been added.`}/>
-                }
             </div>
         );
     }
