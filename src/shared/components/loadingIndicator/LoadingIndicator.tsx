@@ -45,7 +45,7 @@ export default class LoadingIndicator extends React.Component<ILoader, {}> {
                     <div className={classNames(parentStyles, this.props.className)} style={this.props.style||{}}>
                         <Spinner fadeIn="none"
                                  className={classNames(styles.color, spinnerStyles)}
-                                 style={{display: 'inline-block', marginLeft: 10}}
+                                 style={{display: 'inline-block'}}
                                  name="line-scale-pulse-out"/>
                         {
                             this.props.children
