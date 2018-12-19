@@ -8,15 +8,18 @@ import {
     OQLLineFilterOutput,
     UnflattenedOQLLineFilterOutput,
     filterCBioPortalWebServiceDataByUnflattenedOQLLine,
-    isMergedTrackFilter
+    isMergedTrackFilter,
+    MergedTrackLineFilterOutput
 } from "../../shared/lib/oql/oqlfilter";
+import oql_parser from '../../shared/lib/oql/oql-parser';
 import {groupBy} from "../../shared/lib/StoreUtils";
 import {
     AnnotatedExtendedAlteration,
     AnnotatedNumericGeneMolecularData,
     AnnotatedMutation,
     CaseAggregatedData,
-    IQueriedCaseData
+    IQueriedCaseData,
+    IQueriedMergedTrackCaseData
 } from "./ResultsViewPageStore";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
 import _ from "lodash";
@@ -394,4 +397,42 @@ export function doesQueryHaveCNSegmentData(
     } else {
         return _.some(detailedSamples, s=>!!s.copyNumberSegmentPresent);
     }
+}
+
+export function getSampleAlteredMap(filteredAlterationData: IQueriedMergedTrackCaseData[], samples: Sample[], oqlQuery: string){
+    const result : {[x: string]: boolean[]} = {};  
+    filteredAlterationData.forEach((element, key) => {
+        //1: is not group
+        if (element.mergedTrackOqlList === undefined) {
+            const notGroupedOql = element.oql as OQLLineFilterOutput<AnnotatedExtendedAlteration>;                    
+            const sampleKeys = _.map(notGroupedOql.data, (data) => data.uniqueSampleKey);
+            result[getSingleGeneResultKey(key, oqlQuery, notGroupedOql)] = samples.map((sample: Sample) => {
+                return sampleKeys.includes(sample.uniqueSampleKey);
+            });
+        }
+        //2: is group
+        else {
+            const groupedOql = element.oql as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>;
+            const sampleKeys = _.map(_.flatten(_.map(groupedOql.list, (list) => list.data)), (data) => data.uniqueSampleKey);
+            result[getMultipleGeneResultKey(groupedOql)] = samples.map((sample: Sample) => {
+                return sampleKeys.includes(sample.uniqueSampleKey);
+            });
+        }
+    });
+    return result;
+}
+
+export function getSingleGeneResultKey(key: number, oqlQuery: string, notGroupedOql: OQLLineFilterOutput<AnnotatedExtendedAlteration>){  
+    //only gene
+    if ((oql_parser.parse(oqlQuery)![key] as oql_parser.SingleGeneQuery).alterations === false) { 
+        return notGroupedOql.gene;
+    }
+    //gene with alteration type
+    else {
+        return notGroupedOql.oql_line.slice(0, -1);
+    }
+}
+
+export function getMultipleGeneResultKey(groupedOql: MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>){
+    return groupedOql.label ? groupedOql.label : _.map(groupedOql.list, (data) => data.gene).join(' / ');
 }
