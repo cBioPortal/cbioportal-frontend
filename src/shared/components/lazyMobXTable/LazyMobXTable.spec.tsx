@@ -37,7 +37,7 @@ function getVisibleColumnHeaders(tableWrapper:ReactWrapper<any, any>):string[] {
 
 function simulateTableSearchInput(table:ReactWrapper<any, any>, str:string) {
     let input = table.find('input.tableSearchInput');
-    (input as any).getNode().value = str;
+    (input as any).instance().value = str;
     input.simulate('input');
 }
 
@@ -71,6 +71,7 @@ function selectItemsPerPage(table:ReactWrapper<any, any>, opt:number) {
     }*/
     let onChangeItemsPerPage = table.find(PaginationControls).props().onChangeItemsPerPage;
     onChangeItemsPerPage && onChangeItemsPerPage(opt);
+    table.update();
 }
 
 function getItemsPerPage(table:ReactWrapper<any,any>):number|undefined {
@@ -102,11 +103,15 @@ function getTextBeforeButtons(table:ReactWrapper<any, any>):string | undefined {
 }
 
 function clickColumnVisibilityCheckbox(table:ReactWrapper<any, any>, columnName:string):boolean {
-    let checkbox: any = table.find(ColumnVisibilityControls).find(Checkbox)
+    let checkbox: any = table.update().find(ColumnVisibilityControls).find(Checkbox)
                     .find('input[type="checkbox"]')
-                    .filterWhere(x=>(((x.props() as any)['data-id'] as string) === columnName))
-    checkbox.simulate('change', {target: {checked:true}});
-    return !!checkbox.props().checked;
+                    .filterWhere(x=>(((x.props() as any)['data-id'] as string) === columnName)).first();
+
+    const isChecked = checkbox.instance().checked;
+
+    checkbox.simulate('change', {target: {checked:isChecked}});
+
+    return checkbox.instance().checked;
 }
 
 describe('LazyMobXTable', ()=>{
@@ -442,28 +447,35 @@ describe('LazyMobXTable', ()=>{
             assert.equal(nameHeader.text(), "Name", "we're dealing with the name header");
             assert.isTrue(nameHeader.hasClass("sort-des"), "table starts with the initial sort specs given in the props");
             nameHeader.simulate('click');
-            assert.isTrue(nameHeader.hasClass("sort-asc") && !nameHeader.hasClass("sort-des"), "toggles to ascending sort");
+            assert.isTrue(nameHeader.render().hasClass("sort-asc") && !nameHeader.render().hasClass("sort-des"), "toggles to ascending sort");
             nameHeader.simulate('click');
-            assert.isTrue(nameHeader.hasClass("sort-des") && !nameHeader.hasClass("sort-asc"), "toggles to descending sort");
+
+
+
+            assert.isTrue(nameHeader.render().hasClass("sort-des") && !nameHeader.render().hasClass("sort-asc"), "toggles to descending sort");
             nameHeader.simulate('click');
-            assert.isTrue(nameHeader.hasClass("sort-asc") && !nameHeader.hasClass("sort-des"), "goes back to ascending sort");
+            assert.isTrue(nameHeader.render().hasClass("sort-asc") && !nameHeader.render().hasClass("sort-des"), "goes back to ascending sort");
             nameHeader.simulate('click');
-            assert.isTrue(nameHeader.hasClass("sort-des") && !nameHeader.hasClass("sort-asc"), "goes back to descending sort");
+            assert.isTrue(nameHeader.render().hasClass("sort-des") && !nameHeader.render().hasClass("sort-asc"), "goes back to descending sort");
+
 
             let stringHeader = table.find(SimpleTable).find('th').at(2);
             assert.equal(stringHeader.text(), "String", "we're dealing with the string header");
             assert.isFalse(stringHeader.hasClass("sort-asc") || stringHeader.hasClass("sort-des"), "string header doesnt have any sort classes to start");
             stringHeader.simulate('click');
-            assert.isTrue(stringHeader.hasClass("sort-des") && !stringHeader.hasClass("sort-asc"), "string header starts with descending sort, its defaultSortDirection");
-            assert.isFalse(nameHeader.hasClass("sort-asc") || nameHeader.hasClass("sort-des"), "name header no longer has any sort classes");
+
+            assert.isTrue(stringHeader.render().hasClass("sort-des") && !stringHeader.render().hasClass("sort-asc"), "string header starts with descending sort, its defaultSortDirection");
+            assert.isFalse(nameHeader.render().hasClass("sort-asc") || nameHeader.render().hasClass("sort-des"), "name header no longer has any sort classes");
+
             stringHeader.simulate('click');
-            assert.isTrue(stringHeader.hasClass("sort-asc") && !stringHeader.hasClass("sort-des"), "string header toggles to ascending sort");
-            assert.isFalse(nameHeader.hasClass("sort-asc") || nameHeader.hasClass("sort-des"), "name header no longer has any sort classes");
+            assert.isTrue(stringHeader.render().hasClass("sort-asc") && !stringHeader.render().hasClass("sort-des"), "string header toggles to ascending sort");
+            assert.isFalse(nameHeader.render().hasClass("sort-asc") || nameHeader.render().hasClass("sort-des"), "name header no longer has any sort classes");
+
             stringHeader.simulate('click');
-            assert.isTrue(stringHeader.hasClass("sort-des") && !stringHeader.hasClass("sort-asc"), "string header toggles to descending sort");
-            assert.isFalse(nameHeader.hasClass("sort-asc") || nameHeader.hasClass("sort-des"), "name header still has no sort classes");
+            assert.isTrue(stringHeader.render().hasClass("sort-des") && !stringHeader.render().hasClass("sort-asc"), "string header toggles to descending sort");
+            assert.isFalse(nameHeader.render().hasClass("sort-asc") || nameHeader.render().hasClass("sort-des"), "name header still has no sort classes");
             stringHeader.simulate('click');
-            assert.isTrue(stringHeader.hasClass("sort-asc") && !stringHeader.hasClass("sort-des"), "string header toggles back to ascending sort");
+            assert.isTrue(stringHeader.render().hasClass("sort-asc") && !stringHeader.render().hasClass("sort-des"), "string header toggles back to ascending sort");
         });
 
         it("does nothing on click of a header of an unsortable column", ()=>{
@@ -647,9 +659,9 @@ describe('LazyMobXTable', ()=>{
             let header = table.find(SimpleTable).find('th').at(1);
             assert.equal(header.text(), "Number", "we're dealing with the number header");
             header.simulate('click');
-            assert.isTrue(header.hasClass("sort-des"), "Number column starts with descending, its defaultSortDirection");
+            assert.isTrue(header.render().hasClass("sort-des"), "Number column starts with descending, its defaultSortDirection");
             header.simulate('click');
-            assert.isTrue(header.hasClass("sort-asc"), "we're dealing with ascending sort");
+            assert.isTrue(header.render().hasClass("sort-asc"), "we're dealing with ascending sort");
             rows = getVisibleRows(table);
 
             expect(rows[0]).toEqualJSX(
@@ -751,7 +763,7 @@ describe('LazyMobXTable', ()=>{
             );
 
             header.simulate('click');
-            assert.isTrue(header.hasClass("sort-des"), "we're dealing with descending sort");
+            assert.isTrue(header.render().hasClass("sort-des"), "we're dealing with descending sort");
             rows = getVisibleRows(table);
 
             expect(rows[0]).toEqualJSX(
@@ -798,7 +810,7 @@ describe('LazyMobXTable', ()=>{
             header = table.find(SimpleTable).find('th').at(0);
             assert.equal(header.text(), "Name", "we're dealing with the name header");
             header.simulate('click');
-            assert.isTrue(header.hasClass("sort-asc"), "we're dealing with ascending sort");
+            assert.isTrue(header.render().hasClass("sort-asc"), "we're dealing with ascending sort");
             rows = getVisibleRows(table);
             expect(rows[0]).toEqualJSX(
                 <tr>
@@ -847,7 +859,7 @@ describe('LazyMobXTable', ()=>{
             assert.equal(getItemsPerPage(table), 50, "for this test we're assuming 50 items per page");
             assert.equal(simpleData.length, 120, "for this test we're assuming 120 rows total");
             header.simulate('click');
-            assert.isTrue(header.hasClass("sort-asc"), "ascending sort");
+            assert.isTrue(header.render().hasClass("sort-asc"), "ascending sort");
             let rows = getVisibleRows(table);
             for (let i=0; i<rows.length; i++) {
                 expect(rows[i]).toEqualJSX(<tr><td><span>{i}</span></td></tr>);
@@ -859,7 +871,7 @@ describe('LazyMobXTable', ()=>{
                 expect(rows[i]).toEqualJSX(<tr><td><span>{i+50}</span></td></tr>);
             }
             header.simulate('click');
-            assert.isTrue(header.hasClass("sort-des"), "descending sort");
+            assert.isTrue(header.render().hasClass("sort-des"), "descending sort");
             assert.equal(getCurrentPage(table), 0, "back to page 0");
             rows = getVisibleRows(table);
             for (let i=0; i<rows.length; i++) {
@@ -967,7 +979,7 @@ describe('LazyMobXTable', ()=>{
                     </tr>
                 );
             }
-            assert.isTrue(clickColumnVisibilityCheckbox(table, "Initially invisible column"), "Iic column is now checked")
+            assert.isTrue(clickColumnVisibilityCheckbox(table, "Initially invisible column"), "IIC column is now checked")
             assert.deepEqual(getVisibleColumnHeaders(table), ["Number", "String", "Number List", "Initially invisible column", "String without filter function"],
                 "Initially invisible column is now visible, and in the specified order");
             rows = getVisibleRows(table);
@@ -1036,7 +1048,7 @@ describe('LazyMobXTable', ()=>{
             let table = mount(<Table columns={columns} data={data}/>);
             simulateTableSearchInput(table, filterString);
             clock.tick(1000);
-            assert.equal(table.find(SimpleTable).props().rows.length, 0);
+            assert.equal(table.update().find(SimpleTable).props().rows.length, 0);
         });
         it("shows no rows if filtering is attempted when no columns have defined filter functions", ()=>{
             let column = columns[6];
@@ -1045,40 +1057,40 @@ describe('LazyMobXTable', ()=>{
             let table = mount(<Table columns={[column]} data={data}/>);
             simulateTableSearchInput(table, filterString);
             clock.tick(1000);
-            assert.equal(table.find(SimpleTable).props().rows.length, 0);
+            assert.equal(table.update().find(SimpleTable).props().rows.length, 0);
         });
         it("filters columns with a defined filter function, and shows all rows when filtered with empty string", ()=>{
             let filterString = "asdfj";
             let table = mount(<Table columns={columns} data={data}/>);
             simulateTableSearchInput(table, filterString);
             clock.tick(1000);
-            assert.equal(table.find(SimpleTable).props().rows.length, 1);
+            assert.equal(table.update().find(SimpleTable).props().rows.length, 1);
 
             filterString = "f";
             simulateTableSearchInput(table, filterString);
             clock.tick(1000);
-            assert.equal(table.find(SimpleTable).props().rows.length, 2);
+            assert.equal(table.update().find(SimpleTable).props().rows.length, 2);
 
             filterString = "0";
             simulateTableSearchInput(table, filterString);
             clock.tick(1000);
-            assert.equal(table.find(SimpleTable).props().rows.length, 1);
+            assert.equal(table.update().find(SimpleTable).props().rows.length, 1);
 
             filterString = "";
             simulateTableSearchInput(table, filterString);
             clock.tick(1000);
-            assert.equal(table.find(SimpleTable).props().rows.length, data.length);
+            assert.equal(table.update().find(SimpleTable).props().rows.length, data.length);
         });
         it("keeps filtering intact even after re-rendering", ()=>{
             const filterString = "asdfj";
             const table = mount(<Table columns={columns} data={data}/>);
             simulateTableSearchInput(table, filterString);
             clock.tick(1000);
-            assert.equal(table.find(SimpleTable).props().rows.length, 1);
+            assert.equal(table.update().find(SimpleTable).props().rows.length, 1);
 
             // force re-render
             table.update();
-            assert.equal(table.find(SimpleTable).props().rows.length, 1);
+            assert.equal(table.update().find(SimpleTable).props().rows.length, 1);
         });
     });
     describe('downloading data', ()=>{
@@ -1164,7 +1176,7 @@ describe('LazyMobXTable', ()=>{
             assert.isFalse(clickNextPage(table), "next page button is disabled with 1 row");
             assert.equal(getCurrentPage(table), 0, "havent changed pages");
 
-            assert.equal(getItemsPerPage(table), 50, "make sure setting is 50 items per page for these tests");
+            assert.equal(getItemsPerPage(table.update()), 50, "make sure setting is 50 items per page for these tests");
             table.setProps({columns:simpleColumns, data:simpleData.slice(0,20)});
             assert.equal(getCurrentPage(table), 0, "starts on page 0");
             assert.isFalse(clickPrevPage(table), "prev page disabled on page 0");
