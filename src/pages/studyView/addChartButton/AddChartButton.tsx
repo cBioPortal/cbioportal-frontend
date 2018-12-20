@@ -38,13 +38,13 @@ export interface IAddChartButtonProps extends IAddChartTabsProps {
 
 
 export enum TabKeysEnum {
-    CUSTOM = 'Custom',
+    CUSTOM_GROUPS = 'Custom Groups',
     CLINICAL = 'Clinical',
     GENOMIC = 'Genomic'
 }
 
 export type TabKeys =
-    TabKeysEnum.CUSTOM
+    TabKeysEnum.CUSTOM_GROUPS
     | TabKeysEnum.GENOMIC
     | TabKeysEnum.CLINICAL
     | "";
@@ -73,7 +73,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     constructor(props: IAddChartTabsProps, context: any) {
         super(props, context);
 
-        this.activeId = props.initialActiveTab || (props.disableClinicalTab ? "" : TabKeysEnum.CLINICAL) || (props.disableGenomicTab ? "" : TabKeysEnum.GENOMIC) || (props.disableCustomTab ? "" : TabKeysEnum.CUSTOM)
+        this.activeId = props.initialActiveTab || (props.disableClinicalTab ? "" : TabKeysEnum.CLINICAL) || (props.disableGenomicTab ? "" : TabKeysEnum.GENOMIC) || (props.disableCustomTab ? "" : TabKeysEnum.CUSTOM_GROUPS)
     }
 
     readonly getClinicalDataCount = remoteData<ClinicalDataCountSet>({
@@ -234,16 +234,18 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                                     onClearAll={this.onClearAll}
                                     onToggleOption={this.onToggleOption}/>
                 </MSKTab>
-                <MSKTab key={2} id={TabKeysEnum.CUSTOM} linkText={TabKeysEnum.CUSTOM}
+                <MSKTab key={2} id={TabKeysEnum.CUSTOM_GROUPS} linkText={TabKeysEnum.CUSTOM_GROUPS}
                         hide={this.props.disableCustomTab}>
                     <CustomCaseSelection
                         allSamples={this.props.store.samples.result}
+                        submitButtonText={"Add Chart"}
                         queriedStudies={this.props.store.queriedPhysicalStudyIds.result}
                         isChartNameValid={this.props.store.isChartNameValid}
                         getDefaultChartName={this.props.store.getDefaultCustomChartName}
                         onSubmit={(chart: NewChart) => {
                             this.infoMessage = `${chart.name} has been added.`;
                             this.props.store.addCustomChart(chart);
+
                         }}
                     />
                 </MSKTab>
