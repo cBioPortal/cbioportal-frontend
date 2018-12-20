@@ -12,7 +12,10 @@ import accessors from './accessors';
 import * as _ from 'lodash';
 import {assert} from 'chai';
 import sinon from 'sinon';
-import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPageStore";
+import {
+    AlterationTypeConstants, AnnotatedMutation,
+    AnnotatedNumericGeneMolecularData
+} from "../../../pages/resultsView/ResultsViewPageStore";
 
 // This file uses type assertions to force functions that use overly specific
 // Swagger-generated types as parameters to accept mocked literals believed to
@@ -21,13 +24,13 @@ import {AlterationTypeConstants} from "../../../pages/resultsView/ResultsViewPag
 
 // I believe DETAILED projection to have enough details for the filter function
 const THREE_GENE_TWO_SAMPLE_CNA_DATA = [
-    {"sampleId": "TCGA-02-0001-01", "entrezGeneId": 672, "value": 1, "molecularProfileId": "gbm_tcga_gistic", "uniqueSampleKey": "VENHQS0wMi0wMDAxLTAxOmdibV90Y2dh", "uniquePatientKey": "VENHQS0wMi0wMDAxOmdibV90Y2dh", "patientId": "TCGA-02-0001", "studyId": "gbm_tcga", "gene": {"entrezGeneId": 672, "hugoGeneSymbol": "BRCA1", "type": "protein-coding", "cytoband": "17q21.31", "length": 8922}},
-    {"sampleId": "TCGA-02-0001-01", "entrezGeneId": 5728, "value": 0, "molecularProfileId": "gbm_tcga_gistic", "uniqueSampleKey": "VENHQS0wMi0wMDAxLTAxOmdibV90Y2dh", "uniquePatientKey": "VENHQS0wMi0wMDAxOmdibV90Y2dh", "patientId": "TCGA-02-0001", "studyId": "gbm_tcga", "gene": {"entrezGeneId": 5728, "hugoGeneSymbol": "PTEN", "type": "protein-coding", "cytoband": "10q23.31", "length": 11581}},
-    {"sampleId": "TCGA-02-0001-01", "entrezGeneId": 7157, "value": -1, "molecularProfileId": "gbm_tcga_gistic", "uniqueSampleKey": "VENHQS0wMi0wMDAxLTAxOmdibV90Y2dh", "uniquePatientKey": "VENHQS0wMi0wMDAxOmdibV90Y2dh", "patientId": "TCGA-02-0001", "studyId": "gbm_tcga", "gene": {"entrezGeneId": 7157, "hugoGeneSymbol": "TP53", "type": "protein-coding", "cytoband": "17p13.1", "length": 4576}},
-    {"sampleId": "TCGA-02-0003-01", "entrezGeneId": 672, "value": 0, "molecularProfileId": "gbm_tcga_gistic", "uniqueSampleKey": "VENHQS0wMi0wMDAzLTAxOmdibV90Y2dh", "uniquePatientKey": "VENHQS0wMi0wMDAzOmdibV90Y2dh", "patientId": "TCGA-02-0003", "studyId": "gbm_tcga", "gene": {"entrezGeneId": 672, "hugoGeneSymbol": "BRCA1", "type": "protein-coding", "cytoband": "17q21.31", "length": 8922}},
-    {"sampleId": "TCGA-02-0003-01", "entrezGeneId": 5728, "value": -1, "molecularProfileId": "gbm_tcga_gistic", "uniqueSampleKey": "VENHQS0wMi0wMDAzLTAxOmdibV90Y2dh", "uniquePatientKey": "VENHQS0wMi0wMDAzOmdibV90Y2dh", "patientId": "TCGA-02-0003", "studyId": "gbm_tcga", "gene": {"entrezGeneId": 5728, "hugoGeneSymbol": "PTEN", "type": "protein-coding", "cytoband": "10q23.31", "length": 11581}},
-    {"sampleId": "TCGA-02-0003-01", "entrezGeneId": 7157, "value": 0, "molecularProfileId": "gbm_tcga_gistic", "uniqueSampleKey": "VENHQS0wMi0wMDAzLTAxOmdibV90Y2dh", "uniquePatientKey": "VENHQS0wMi0wMDAzOmdibV90Y2dh", "patientId": "TCGA-02-0003", "studyId": "gbm_tcga", "gene": {"entrezGeneId": 7157, "hugoGeneSymbol": "TP53", "type": "protein-coding", "cytoband": "17p13.1", "length": 4576}}
-] as NumericGeneMolecularData[];
+    {__id: 4, oncoKbOncogenic: "", "sampleId": "TCGA-02-0001-01", "entrezGeneId": 672, "value": 1, "molecularProfileId": "gbm_tcga_gistic", "uniqueSampleKey": "VENHQS0wMi0wMDAxLTAxOmdibV90Y2dh", "uniquePatientKey": "VENHQS0wMi0wMDAxOmdibV90Y2dh", "patientId": "TCGA-02-0001", "studyId": "gbm_tcga", "gene": {"entrezGeneId": 672, "hugoGeneSymbol": "BRCA1", "type": "protein-coding", "cytoband": "17q21.31", "length": 8922}},
+    {__id: 5, oncoKbOncogenic: "", "sampleId": "TCGA-02-0001-01", "entrezGeneId": 5728, "value": 0, "molecularProfileId": "gbm_tcga_gistic", "uniqueSampleKey": "VENHQS0wMi0wMDAxLTAxOmdibV90Y2dh", "uniquePatientKey": "VENHQS0wMi0wMDAxOmdibV90Y2dh", "patientId": "TCGA-02-0001", "studyId": "gbm_tcga", "gene": {"entrezGeneId": 5728, "hugoGeneSymbol": "PTEN", "type": "protein-coding", "cytoband": "10q23.31", "length": 11581}},
+    {__id: 6, oncoKbOncogenic: "", "sampleId": "TCGA-02-0001-01", "entrezGeneId": 7157, "value": -1, "molecularProfileId": "gbm_tcga_gistic", "uniqueSampleKey": "VENHQS0wMi0wMDAxLTAxOmdibV90Y2dh", "uniquePatientKey": "VENHQS0wMi0wMDAxOmdibV90Y2dh", "patientId": "TCGA-02-0001", "studyId": "gbm_tcga", "gene": {"entrezGeneId": 7157, "hugoGeneSymbol": "TP53", "type": "protein-coding", "cytoband": "17p13.1", "length": 4576}},
+    {__id: 7, oncoKbOncogenic: "oncogenic", "sampleId": "TCGA-02-0003-01", "entrezGeneId": 672, "value": 0, "molecularProfileId": "gbm_tcga_gistic", "uniqueSampleKey": "VENHQS0wMi0wMDAzLTAxOmdibV90Y2dh", "uniquePatientKey": "VENHQS0wMi0wMDAzOmdibV90Y2dh", "patientId": "TCGA-02-0003", "studyId": "gbm_tcga", "gene": {"entrezGeneId": 672, "hugoGeneSymbol": "BRCA1", "type": "protein-coding", "cytoband": "17q21.31", "length": 8922}},
+    {__id: 8, oncoKbOncogenic: "predicted Oncogenic", "sampleId": "TCGA-02-0003-01", "entrezGeneId": 5728, "value": -1, "molecularProfileId": "gbm_tcga_gistic", "uniqueSampleKey": "VENHQS0wMi0wMDAzLTAxOmdibV90Y2dh", "uniquePatientKey": "VENHQS0wMi0wMDAzOmdibV90Y2dh", "patientId": "TCGA-02-0003", "studyId": "gbm_tcga", "gene": {"entrezGeneId": 5728, "hugoGeneSymbol": "PTEN", "type": "protein-coding", "cytoband": "10q23.31", "length": 11581}},
+    {__id: 9, oncoKbOncogenic: "Likely Oncogenic", "sampleId": "TCGA-02-0003-01", "entrezGeneId": 7157, "value": 0, "molecularProfileId": "gbm_tcga_gistic", "uniqueSampleKey": "VENHQS0wMi0wMDAzLTAxOmdibV90Y2dh", "uniquePatientKey": "VENHQS0wMi0wMDAzOmdibV90Y2dh", "patientId": "TCGA-02-0003", "studyId": "gbm_tcga", "gene": {"entrezGeneId": 7157, "hugoGeneSymbol": "TP53", "type": "protein-coding", "cytoband": "17p13.1", "length": 4576}}
+] as any as AnnotatedNumericGeneMolecularData[];
 // I believe these metadata to be all `new accessors()` needs
 const DATA_PROFILE = {
     "molecularAlterationType": "COPY_NUMBER_ALTERATION",
@@ -42,13 +45,24 @@ const MUTATION_PROFILE = {
     "studyId": "gbm_tcga",
 } as MolecularProfile;
 
-const MUTATION_DATA = [{
+const MUTATION_DATA = [
+{
+        gene: {
+            hugoGeneSymbol:"BRCA1",
+        },
+        molecularProfileId: "gbm_tcga_mutations",
+        mutationType:"fusion",
+        mutationStatus:undefined,
+        putativeDriver: true,
+        __id: -1
+},{
     gene: {
         hugoGeneSymbol:"BRCA1",
     },
     molecularProfileId: "gbm_tcga_mutations",
     mutationType:"Missense_Variant",
     mutationStatus: "germline",
+    putativeDriver: true,
     __id: 0
 },{
     gene: {
@@ -57,6 +71,7 @@ const MUTATION_DATA = [{
     molecularProfileId: "gbm_tcga_mutations",
     mutationType:"Missense_Variant",
     mutationStatus:"aspdoifjpasoid",
+    putativeDriver: true,
     __id: 1
 },{
     gene: {
@@ -65,6 +80,7 @@ const MUTATION_DATA = [{
     molecularProfileId: "gbm_tcga_mutations",
     mutationType:"Missense_Variant",
     mutationStatus:null,
+    putativeDriver: false,
     __id: 2
 },{
     gene: {
@@ -73,8 +89,9 @@ const MUTATION_DATA = [{
     molecularProfileId: "gbm_tcga_mutations",
     mutationType:"in_frame_ins",
     mutationStatus:undefined,
+    putativeDriver: true,
     __id: 3
-}] as any as Mutation[];
+}] as any as AnnotatedMutation[];
 
 describe("doesQueryContainOQL", ()=>{
     it("returns correct result in various cases", ()=>{
@@ -127,6 +144,10 @@ describe("unparseOQLQueryLine", ()=>{
     it("unparses queries with germline and somatic mutation modifiers", ()=>{
         const parsedLine = parseOQLQuery("TP53: GERMLINE SOMATIC_MISSENSE proteinchange_GERMLINE;")[0];
         assert.equal(unparseOQLQueryLine(parsedLine), "TP53: MUT_GERMLINE MUT=MISSENSE_SOMATIC MUT=proteinchange_GERMLINE;");
+    });
+    it("unparses queries with driver modifier", ()=>{
+        const parsedLine = parseOQLQuery("TP53: DRIVER CNA_DRIVER DRIVER_CNA FUSION_DRIVER DRIVER_FUSION TRUNC_DRIVER DRIVER_TRUNC AMP_DRIVER DRIVER_HOMDEL GERMLINE SOMATIC_MISSENSE proteinchange_GERMLINE;")[0];
+        assert.equal(unparseOQLQueryLine(parsedLine), "TP53: DRIVER CNA_DRIVER CNA_DRIVER FUSION_DRIVER FUSION_DRIVER MUT=TRUNC_DRIVER MUT=TRUNC_DRIVER AMP_DRIVER HOMDEL_DRIVER MUT_GERMLINE MUT=MISSENSE_SOMATIC MUT=proteinchange_GERMLINE;");
     });
 });
 
@@ -182,6 +203,71 @@ describe('filterCBioPortalWebServiceData', ()=>{
             ""
         );
         assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [0,3]);
+    });
+    it("filters properly using the DRIVER modifier", ()=>{
+        const accessorsInstance = new accessors([MUTATION_PROFILE, DATA_PROFILE], true);
+        let filteredData = filterCBioPortalWebServiceData(
+            "BRCA1:DRIVER",
+            [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
+            accessorsInstance,
+            ""
+        );
+        assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [-1, 0, 1, 3, 7]);
+
+        filteredData = filterCBioPortalWebServiceData(
+            "BRCA1:MISSENSE_DRIVER",
+            [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
+            accessorsInstance,
+            ""
+        );
+        assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [0, 1]);
+
+        filteredData = filterCBioPortalWebServiceData(
+            "BRCA1:DRIVER_MISSENSE",
+            [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
+            accessorsInstance,
+            ""
+        );
+        assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [0, 1]);
+
+        filteredData = filterCBioPortalWebServiceData(
+            "PTEN:DRIVER_HETLOSS",
+            [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
+            accessorsInstance,
+            ""
+        );
+        assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [8]);
+
+        filteredData = filterCBioPortalWebServiceData(
+            "PTEN:CNA_DRIVER",
+            [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
+            accessorsInstance,
+            ""
+        );
+        assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [8]);
+
+        filteredData = filterCBioPortalWebServiceData(
+            "BRCA1: DRIVER; PTEN:HETLOSS_DRIVER; TP53: DRIVER",
+            [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
+            accessorsInstance,
+            ""
+        );
+        assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [-1, 0,1,3,7,8,9]);
+
+        filteredData = filterCBioPortalWebServiceData(
+            "BRCA1:FUSION_DRIVER",
+            [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
+            accessorsInstance,
+            ""
+        );
+        assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [-1]);
+        filteredData = filterCBioPortalWebServiceData(
+            "BRCA1:DRIVER_FUSION",
+            [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
+            accessorsInstance,
+            ""
+        );
+        assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [-1]);
     });
 });
 
