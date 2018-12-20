@@ -299,7 +299,7 @@ export class StudyViewPageStore {
 
     @observable private chartsType = observable.map<ChartType>();
 
-    @observable private newlyAddedCharts:string[] = [];
+    private newlyAddedCharts = observable.array<string>();
 
     private unfilteredClinicalDataCountCache: { [uniqueKey: string]: ClinicalDataCountItem } = {};
     private unfilteredClinicalDataBinCountCache: { [uniqueKey: string]: DataBin[] } = {};
@@ -937,7 +937,11 @@ export class StudyViewPageStore {
     }
 
     @action addCharts(visibleChartIds:string[]) {
-        this.newlyAddedCharts = visibleChartIds.filter(chartId => !this._chartVisibility.keys().includes(chartId));
+        visibleChartIds.filter(chartId => {
+            if(!this._chartVisibility.keys().includes(chartId)) {
+                this.newlyAddedCharts.push(chartId);
+            }
+        });
         this.updateChartsVisibility(visibleChartIds);
     }
 
@@ -1148,6 +1152,7 @@ export class StudyViewPageStore {
             data.forEach(item => {
                 const uniqueKey = getClinicalAttributeUniqueKeyByDataTypeAttrId(item.clinicalDataType, item.attributeId);
                 this.unfilteredClinicalDataCountCache[uniqueKey] = item;
+                this.newlyAddedCharts.remove(uniqueKey);
             });
         }
     });
@@ -1167,6 +1172,7 @@ export class StudyViewPageStore {
         onResult: (data) => {
             _.each(_.groupBy(data, item => getClinicalAttributeUniqueKeyByDataTypeAttrId(item.clinicalDataType, item.attributeId)), (item, key) => {
                 this.unfilteredClinicalDataBinCountCache[key] = item;
+                this.newlyAddedCharts.remove(key);
             });
         }
     });
@@ -1199,7 +1205,7 @@ export class StudyViewPageStore {
                     return getRequestedAwaitPromisesForClinicalData(
                         _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined,
                         this.isInitialFilterState, this.chartsAreFiltered,
-                        this.newlyAddedCharts.includes(uniqueKey), this._clinicalDataEqualityFilterSet.has(uniqueKey),
+                        this._clinicalDataEqualityFilterSet.has(uniqueKey),
                         this.unfilteredClinicalDataCount, this.newlyAddedUnfilteredClinicalDataCount,
                         this.initialVisibleAttributesClinicalDataCountData);
                 },
@@ -1253,7 +1259,7 @@ export class StudyViewPageStore {
                 await: () => {
                     return getRequestedAwaitPromisesForClinicalData(
                         _.find(this.defaultVisibleAttributes.result, attr => getClinicalAttributeUniqueKey(attr) === uniqueKey) !== undefined, this.isInitialFilterState, this.chartsAreFiltered,
-                        this.newlyAddedCharts.includes(uniqueKey), this._clinicalDataIntervalFilterSet.has(uniqueKey),
+                        this._clinicalDataIntervalFilterSet.has(uniqueKey),
                         this.unfilteredClinicalDataBinCount, this.newlyAddedUnfilteredClinicalDataBinCount,
                         this.initialVisibleAttributesClinicalDataBinCountData);
                 },
@@ -1705,7 +1711,8 @@ export class StudyViewPageStore {
 
         // Autoselect the groups
         this.setCustomChartFilters(chartMeta, newChart.groups.map(group=>group.name));
-        this.newlyAddedCharts = [uniqueKey];
+        this.newlyAddedCharts.clear();
+        this.newlyAddedCharts.push(uniqueKey);
     }
 
     @computed
