@@ -334,16 +334,35 @@ var isDatumWantedByOQLAlterationCommand = function(alt_cmd, datum, accessors) {
 };
 
 var isDatumWantedByAnyTypeWithModifiersCommand = function(alt_cmd, datum, accessors) {
-    var match = true;
-    // and logic on the modifiers
+    // if any modifier is false, its not wanted (-1)
+    // else if any modifier is true, its wanted (1)
+    // else its not addressed (0)
+    var isWantedBySome = false;
+    var isUnwantedBySome = false;
+
     for (var i=0; i<alt_cmd.modifiers.length; i++) {
-        switch (alt_cmd.modifiers[i]) {
+        var modifier = alt_cmd.modifiers[i];
+        var datumWanted = null;
+        switch (modifier) {
             case "DRIVER":
-                match = match && isDatumWantedByOQLAlterationModifier(alt_cmd.modifiers[i], datum, accessors);
-                break;
+            default:
+                datumWanted = isDatumWantedByOQLAlterationModifier(modifier, datum, accessors);
         }
+        if (datumWanted === true) {
+            isWantedBySome = true;
+        } else if (datumWanted === false) {
+            isUnwantedBySome = true;
+            break;
+        }
+    };
+
+    if (isUnwantedBySome) {
+        return -1;
+    } else if (isWantedBySome) {
+        return 1;
+    } else {
+        return 0;
     }
-    return 2*(+match) - 1;
 };
 
 // this command can ONLY return null or TRUE
@@ -361,7 +380,10 @@ var isDatumWantedByFUSIONCommand = function(alt_cmd, datum, accessors) {
         var match = true;
         // now filter by modifiers with AND logic
         for (var i=0; i<alt_cmd.modifiers.length; i++) {
-            match = match && isDatumWantedByOQLAlterationModifier(alt_cmd.modifiers[i], datum, accessors);
+            const datumWanted = isDatumWantedByOQLAlterationModifier(alt_cmd.modifiers[i], datum, accessors);
+            if (datumWanted !== null) {
+                match = match && datumWanted;
+            }
         }
         return 2 * (+match) - 1; // map 0,1 to -1,1
     }
@@ -399,7 +421,10 @@ var isDatumWantedByOQLCNACommand = function(alt_cmd, datum, accessors) {
 
         // now filter by modifiers with AND logic
         for (var i=0; i<alt_cmd.modifiers.length; i++) {
-            match = match && isDatumWantedByOQLAlterationModifier(alt_cmd.modifiers[i], datum, accessors);
+            const datumWanted = isDatumWantedByOQLAlterationModifier(alt_cmd.modifiers[i], datum, accessors);
+            if (datumWanted !== null) {
+                match = match && datumWanted;
+            }
         }
         return 2 * (+match) - 1; // map 0,1 to -1,1
     }
@@ -463,7 +488,10 @@ var isDatumWantedByOQLMUTCommand = function(alt_cmd, datum, accessors) {
 
         // now filter by modifiers with AND logic
         for (var i=0; i<alt_cmd.modifiers.length; i++) {
-            matches = matches && isDatumWantedByOQLMutationModifier(alt_cmd.modifiers[i], datum, accessors);
+            const datumWanted = isDatumWantedByOQLMutationModifier(alt_cmd.modifiers[i], datum, accessors);
+            if (datumWanted !== null) {
+                matches = matches && datumWanted;
+            }
         }
 
         return 2*(+matches) - 1; // return 1 if true, -1 if false
