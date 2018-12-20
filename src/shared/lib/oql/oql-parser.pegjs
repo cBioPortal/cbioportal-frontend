@@ -134,15 +134,11 @@ ComparisonOp
 	/ "<" { return "<"; }
 
 MutationWithModifiers
-    = modifiersThenMaybeMutation:ModifiersThenMaybeMutation { return modifiersThenMaybeMutation; } // this has to come first because mutation matches every string as protein change code
+    // modifier has to come first because mutation matches every string as protein change code
+    = modifier:MutationModifier "_" mutationWithModifiers:MutationWithModifiers { mutationWithModifiers.modifiers.unshift(modifier); return mutationWithModifiers; }
     / mutation:Mutation "_" modifiers:MutationModifiers { mutation.modifiers = modifiers; return mutation; }
-    / mutation:Mutation { mutation.modifiers = []; return mutation; }
-
-ModifiersThenMaybeMutation
-    // the order here is important: first we check for modifier + lookahead to ensure theres another modifier, next for modifier + mutation (mutation swallows all strings, so this has to come after), finally a modifier alone
-    = modifier:MutationModifier "_" &MutationModifier modifiersThenMaybeMutation:ModifiersThenMaybeMutation { modifiersThenMaybeMutation.modifiers.unshift(modifier); return modifiersThenMaybeMutation; }
-    / modifier:MutationModifier "_" mutation:Mutation { mutation.modifiers = [modifier]; return mutation; }
     / modifier:MutationModifier { return { modifiers: [modifier] }; }
+    / mutation:Mutation { mutation.modifiers = []; return mutation; }
 
 MutationModifiers
     = modifier:MutationModifier "_" more:MutationModifiers { return [modifier].concat(more); }
@@ -168,9 +164,13 @@ MutationModifier
     / mod:DriverModifier { return mod; }
 
 CNAModifier
+    // NOTE: if you ever want to add more modifiers, then to be able to specify in any order need to do
+    //  same thing as in MutationWithModifiers
     = d:DriverModifier { return d; }
 
 FusionModifier
+    // NOTE: if you ever want to add more modifiers, then to be able to specify in any order with FUSION need to do
+    //  same thing as in MutationWithModifiers
     = d:DriverModifier { return d; }
 
 DriverModifier
