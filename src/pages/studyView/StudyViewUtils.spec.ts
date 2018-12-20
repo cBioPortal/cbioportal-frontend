@@ -954,6 +954,7 @@ describe('StudyViewUtils', () => {
             -666.666,
             -3,
             -2.2499999999999,
+            -2.0000000000001,
             -1,
             -0.6000000000000001,
             -0.002499999998
@@ -965,6 +966,7 @@ describe('StudyViewUtils', () => {
             1,
             1.5999999999999999,
             1.7999999999999998,
+            2.0000000000000001,
             16.99999999999998,
             666.666
         ];
@@ -973,9 +975,10 @@ describe('StudyViewUtils', () => {
             assert.equal(toFixedDigit(negativeValues[0]), "-666.67");
             assert.equal(toFixedDigit(negativeValues[1]), "-3");
             assert.equal(toFixedDigit(negativeValues[2]), "-2.25");
-            assert.equal(toFixedDigit(negativeValues[3]), "-1");
-            assert.equal(toFixedDigit(negativeValues[4]), "-0.6");
-            assert.equal(toFixedDigit(negativeValues[5]), "-0.0025");
+            assert.equal(toFixedDigit(negativeValues[3]), "-2");
+            assert.equal(toFixedDigit(negativeValues[4]), "-1");
+            assert.equal(toFixedDigit(negativeValues[5]), "-0.6");
+            assert.equal(toFixedDigit(negativeValues[6]), "-0.0025");
         });
 
         it ('handles zero properly', () => {
@@ -989,8 +992,9 @@ describe('StudyViewUtils', () => {
             assert.equal(toFixedDigit(positiveValues[2]), "1");
             assert.equal(toFixedDigit(positiveValues[3]), "1.6");
             assert.equal(toFixedDigit(positiveValues[4]), "1.8");
-            assert.equal(toFixedDigit(positiveValues[5]), "17");
-            assert.equal(toFixedDigit(positiveValues[6]), "666.67");
+            assert.equal(toFixedDigit(positiveValues[5]), "2");
+            assert.equal(toFixedDigit(positiveValues[6]), "17");
+            assert.equal(toFixedDigit(positiveValues[7]), "666.67");
         });
     });
 
