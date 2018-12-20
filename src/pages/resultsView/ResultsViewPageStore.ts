@@ -312,7 +312,7 @@ export function extendSamplesWithCancerType(samples:Sample[], clinicalDataForSam
 
 }
 
-export type MutationAnnotationSettings = {
+export type DriverAnnotationSettings = {
     ignoreUnknown: boolean;
     cbioportalCount:boolean;
     cbioportalCountThreshold:number;
@@ -340,7 +340,7 @@ export class ResultsViewPageStore {
 
         const store = this;
 
-        this.mutationAnnotationSettings = observable({
+        this.driverAnnotationSettings = observable({
             cbioportalCount: false,
             cbioportalCountThreshold: 0,
             cosmicCount: false,
@@ -384,7 +384,7 @@ export class ResultsViewPageStore {
             }
         });
 
-        this.initMutationAnnotationSettings();
+        this.initDriverAnnotationSettings();
     }
 
     public queryReactionDisposer:any;
@@ -409,7 +409,7 @@ export class ResultsViewPageStore {
 
     @observable expressionTabSeqVersion: number = 2;
 
-    public mutationAnnotationSettings:MutationAnnotationSettings;
+    public driverAnnotationSettings:DriverAnnotationSettings;
 
     @observable.ref public _selectedEnrichmentMutationProfile: MolecularProfile;
     @observable.ref public _selectedEnrichmentCopyNumberProfile: MolecularProfile;
@@ -468,17 +468,17 @@ export class ResultsViewPageStore {
         return doesQueryContainMutationOQL(this.rvQuery.oqlQuery);
     }
 
-    public initMutationAnnotationSettings() {
-        this.mutationAnnotationSettings.cbioportalCount = false;
-        this.mutationAnnotationSettings.cbioportalCountThreshold = 10;
-        this.mutationAnnotationSettings.cosmicCount = false;
-        this.mutationAnnotationSettings.cosmicCountThreshold = 10;
-        this.mutationAnnotationSettings.driverFilter = !!AppConfig.serverConfig.oncoprint_custom_driver_annotation_default;
-        this.mutationAnnotationSettings.driverTiers = observable.map<boolean>();
+    public initDriverAnnotationSettings() {
+        this.driverAnnotationSettings.cbioportalCount = false;
+        this.driverAnnotationSettings.cbioportalCountThreshold = 10;
+        this.driverAnnotationSettings.cosmicCount = false;
+        this.driverAnnotationSettings.cosmicCountThreshold = 10;
+        this.driverAnnotationSettings.driverFilter = !!AppConfig.serverConfig.oncoprint_custom_driver_annotation_default;
+        this.driverAnnotationSettings.driverTiers = observable.map<boolean>();
 
-        this.mutationAnnotationSettings.hotspots = !AppConfig.serverConfig.oncoprint_oncokb_hotspots_default;
-        (this.mutationAnnotationSettings as any)._oncoKb = !AppConfig.serverConfig.oncoprint_oncokb_hotspots_default;
-        (this.mutationAnnotationSettings as any)._ignoreUnknown = !!AppConfig.serverConfig.oncoprint_hide_vus_default;
+        this.driverAnnotationSettings.hotspots = !AppConfig.serverConfig.oncoprint_oncokb_hotspots_default;
+        (this.driverAnnotationSettings as any)._oncoKb = !AppConfig.serverConfig.oncoprint_oncokb_hotspots_default;
+        (this.driverAnnotationSettings as any)._ignoreUnknown = !!AppConfig.serverConfig.oncoprint_hide_vus_default;
     }
 
     private getURL() {
@@ -2178,7 +2178,7 @@ export class ResultsViewPageStore {
         onResult:result=>{
             initializeCustomDriverAnnotationSettings(
                 result!,
-                this.mutationAnnotationSettings,
+                this.driverAnnotationSettings,
                 !(_.isEmpty(AppConfig.serverConfig.oncoprint_custom_driver_annotation_tiers_menu_label)),
                 AppConfig.serverConfig.oncoprint_oncokb_hotspots_default === "custom"
             );
@@ -2192,7 +2192,7 @@ export class ResultsViewPageStore {
             this.entrezGeneIdToGene
         ],
         invoke:()=>{
-            return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutations.result!, this.getPutativeDriverInfo.result!, this.entrezGeneIdToGene.result!, !!this.mutationAnnotationSettings.ignoreUnknown));
+            return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutations.result!, this.getPutativeDriverInfo.result!, this.entrezGeneIdToGene.result!, !!this.driverAnnotationSettings.ignoreUnknown));
         }
     });
 
@@ -2205,7 +2205,7 @@ export class ResultsViewPageStore {
                     this.entrezGeneIdToGene
                 ],
                 invoke: ()=>{
-                    return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutationCache.get(q).result!, this.getPutativeDriverInfo.result!, this.entrezGeneIdToGene.result!, !!this.mutationAnnotationSettings.ignoreUnknown));
+                    return Promise.resolve(computePutativeDriverAnnotatedMutations(this.mutationCache.get(q).result!, this.getPutativeDriverInfo.result!, this.entrezGeneIdToGene.result!, !!this.driverAnnotationSettings.ignoreUnknown));
                 }
             })
         );
@@ -2274,16 +2274,16 @@ export class ResultsViewPageStore {
     readonly getPutativeDriverInfo = remoteData({
         await:()=>{
             const toAwait = [];
-            if (this.mutationAnnotationSettings.oncoKb) {
+            if (this.driverAnnotationSettings.oncoKb) {
                 toAwait.push(this.getOncoKbMutationAnnotationForOncoprint);
             }
-            if (this.mutationAnnotationSettings.hotspots) {
+            if (this.driverAnnotationSettings.hotspots) {
                 toAwait.push(this.isHotspotForOncoprint);
             }
-            if (this.mutationAnnotationSettings.cbioportalCount) {
+            if (this.driverAnnotationSettings.cbioportalCount) {
                 toAwait.push(this.getCBioportalCount);
             }
-            if (this.mutationAnnotationSettings.cosmicCount) {
+            if (this.driverAnnotationSettings.cosmicCount) {
                 toAwait.push(this.getCosmicCount);
             }
             return toAwait;
@@ -2291,7 +2291,7 @@ export class ResultsViewPageStore {
         invoke:()=>{
             return Promise.resolve((mutation:Mutation):{oncoKb:string, hotspots:boolean, cbioportalCount:boolean, cosmicCount:boolean, customDriverBinary:boolean, customDriverTier?:string}=>{
                 const getOncoKbMutationAnnotationForOncoprint = this.getOncoKbMutationAnnotationForOncoprint.result!;
-                const oncoKbDatum:IndicatorQueryResp | undefined | null | false = this.mutationAnnotationSettings.oncoKb &&
+                const oncoKbDatum:IndicatorQueryResp | undefined | null | false = this.driverAnnotationSettings.oncoKb &&
                     getOncoKbMutationAnnotationForOncoprint &&
                     (!(getOncoKbMutationAnnotationForOncoprint instanceof Error)) &&
                     getOncoKbMutationAnnotationForOncoprint(mutation);
@@ -2302,27 +2302,27 @@ export class ResultsViewPageStore {
                 }
 
                 const hotspots:boolean =
-                    (this.mutationAnnotationSettings.hotspots &&
+                    (this.driverAnnotationSettings.hotspots &&
                     (!(this.isHotspotForOncoprint.result instanceof Error)) &&
                     this.isHotspotForOncoprint.result!(mutation));
 
                 const cbioportalCount:boolean =
-                    (this.mutationAnnotationSettings.cbioportalCount &&
+                    (this.driverAnnotationSettings.cbioportalCount &&
                     this.getCBioportalCount.isComplete &&
                     this.getCBioportalCount.result!(mutation) >=
-                    this.mutationAnnotationSettings.cbioportalCountThreshold);
+                    this.driverAnnotationSettings.cbioportalCountThreshold);
 
                 const cosmicCount:boolean =
-                    (this.mutationAnnotationSettings.cosmicCount &&
+                    (this.driverAnnotationSettings.cosmicCount &&
                     this.getCosmicCount.isComplete &&
-                    this.getCosmicCount.result!(mutation) >= this.mutationAnnotationSettings.cosmicCountThreshold);
+                    this.getCosmicCount.result!(mutation) >= this.driverAnnotationSettings.cosmicCountThreshold);
 
                 const customDriverBinary:boolean =
-                    (this.mutationAnnotationSettings.driverFilter &&
+                    (this.driverAnnotationSettings.driverFilter &&
                         mutation.driverFilter === "Putative_Driver") || false;
 
                 const customDriverTier:string|undefined =
-                    (mutation.driverTiersFilter && this.mutationAnnotationSettings.driverTiers.get(mutation.driverTiersFilter)) ?
+                    (mutation.driverTiersFilter && this.driverAnnotationSettings.driverTiers.get(mutation.driverTiersFilter)) ?
                     mutation.driverTiersFilter : undefined;
 
                 return {
@@ -2541,13 +2541,17 @@ export class ResultsViewPageStore {
                 return Promise.resolve(new Error());
             } else {
                 return Promise.resolve((data:NumericGeneMolecularData)=>{
-                    const uniqueSampleKeyToTumorType = cnaOncoKbDataForOncoprint.uniqueSampleKeyToTumorType!;
-                    const id = generateQueryVariantId(
-                        data.entrezGeneId,
-                        cancerTypeForOncoKb(data.uniqueSampleKey, uniqueSampleKeyToTumorType),
-                        getAlterationString(data.value)
-                    );
-                    return cnaOncoKbDataForOncoprint.indicatorMap![id];
+                    if (this.driverAnnotationSettings.oncoKb) {
+                        const uniqueSampleKeyToTumorType = cnaOncoKbDataForOncoprint.uniqueSampleKeyToTumorType!;
+                        const id = generateQueryVariantId(
+                            data.entrezGeneId,
+                            cancerTypeForOncoKb(data.uniqueSampleKey, uniqueSampleKeyToTumorType),
+                            getAlterationString(data.value)
+                        );
+                        return cnaOncoKbDataForOncoprint.indicatorMap![id];
+                    } else {
+                        return undefined;
+                    }
                 });
             }
         }
