@@ -447,11 +447,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     download={this.downloadTypes}
                     setAnalysisGroups={this.setAnalysisGroups}
                 />
-                <div className={classnames(this.props.promise.isPending  ? styles.studyViewAutoMargin : null, styles.studyViewLoadingIndicator)}>
+                <div style={{display: 'flex', flexGrow: 1, margin: 'auto', alignItems: 'center'}}>
                     {(this.props.promise.isPending) && (
                         <LoadingIndicator
                             isLoading={true}
-                            center={true}
+                            className={styles.chartLoader}
                         />
                     )}
                     {this.props.promise.isError && (<div>Error when loading data.</div>)}

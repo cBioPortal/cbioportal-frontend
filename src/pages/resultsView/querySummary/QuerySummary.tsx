@@ -60,7 +60,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
 
             return (
                 <div>
-                    <h4><StudyLink studyId={study.studyId}>{study.name}</StudyLink></h4>
+                    <h3><StudyLink studyId={study.studyId}>{study.name}</StudyLink></h3>
                     {sampleListName}&nbsp;({getPatientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)})
                     &nbsp;-&nbsp;
                     {getGeneSummary(this.props.store.hugoGeneSymbols)}
