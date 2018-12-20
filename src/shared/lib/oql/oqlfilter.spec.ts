@@ -205,7 +205,7 @@ describe('filterCBioPortalWebServiceData', ()=>{
         assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [0,3]);
     });
     it("filters properly using the DRIVER modifier", ()=>{
-        const accessorsInstance = new accessors([MUTATION_PROFILE, DATA_PROFILE]);
+        const accessorsInstance = new accessors([MUTATION_PROFILE, DATA_PROFILE], true);
         let filteredData = filterCBioPortalWebServiceData(
             "BRCA1:DRIVER",
             [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
