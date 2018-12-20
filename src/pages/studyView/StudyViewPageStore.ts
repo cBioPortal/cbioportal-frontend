@@ -1823,8 +1823,8 @@ export class StudyViewPageStore {
                 let dimension = this.chartsDimension.get(chartUniqueKey);
                 if (dimension !== undefined) {
                     chartMeta.dimension = dimension;
-                }else {
-                    chartMeta.dimension = STUDY_VIEW_CONFIG.layout.dimensions[chartMeta.chartType];
+                } else {
+                    chartMeta.dimension = STUDY_VIEW_CONFIG.layout.dimensions[chartMeta.chartType] || {w: 1, h: 1};
                 }
                 acc.push(chartMeta);
             }
@@ -1904,27 +1904,27 @@ export class StudyViewPageStore {
 
         const cancerTypeIds = _.uniq(this.queriedPhysicalStudies.result.map(study => study.cancerTypeId));
 
+        this.chartsType.set(UniqueKey.OVERALL_SURVIVAL, ChartTypeEnum.SURVIVAL);
+        this.chartsDimension.set(UniqueKey.OVERALL_SURVIVAL, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SURVIVAL]);
         if (osStatusFlag && osMonthsFlag && getDefaultPriorityByUniqueKey(UniqueKey.OVERALL_SURVIVAL) !== 0) {
-            this.chartsType.set(UniqueKey.OVERALL_SURVIVAL, ChartTypeEnum.SURVIVAL);
-            this.chartsDimension.set(UniqueKey.OVERALL_SURVIVAL, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SURVIVAL]);
             // hide OVERALL_SURVIVAL chart if cacner type is mixed or have moer than one cancer type
             if (cancerTypeIds.length === 1 && cancerTypeIds[0] !== 'mixed') {
                 this.changeChartVisibility(UniqueKey.OVERALL_SURVIVAL, true);
             }
         }
+        this.chartsType.set(UniqueKey.DISEASE_FREE_SURVIVAL, ChartTypeEnum.SURVIVAL);
+        this.chartsDimension.set(UniqueKey.DISEASE_FREE_SURVIVAL, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SURVIVAL]);
         if (dfsStatusFlag && dfsMonthsFlag && getDefaultPriorityByUniqueKey(UniqueKey.DISEASE_FREE_SURVIVAL) !== 0) {
-            this.chartsType.set(UniqueKey.DISEASE_FREE_SURVIVAL, ChartTypeEnum.SURVIVAL);
-            this.chartsDimension.set(UniqueKey.DISEASE_FREE_SURVIVAL, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SURVIVAL]);
             // hide DISEASE_FREE_SURVIVAL chart if cacner type is mixed or have moer than one cancer type
             if (cancerTypeIds.length === 1 && cancerTypeIds[0] !== 'mixed') {
                 this.changeChartVisibility(UniqueKey.DISEASE_FREE_SURVIVAL, true);
             }
         }
 
+        this.chartsType.set(UniqueKey.MUTATION_COUNT_CNA_FRACTION, ChartTypeEnum.SCATTER);
+        this.chartsDimension.set(UniqueKey.MUTATION_COUNT_CNA_FRACTION, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SCATTER]);
         if (mutationCountFlag && fractionGenomeAlteredFlag && getDefaultPriorityByUniqueKey(UniqueKey.MUTATION_COUNT_CNA_FRACTION) !== 0) {
             this.changeChartVisibility(UniqueKey.MUTATION_COUNT_CNA_FRACTION, true);
-            this.chartsType.set(UniqueKey.MUTATION_COUNT_CNA_FRACTION, ChartTypeEnum.SCATTER);
-            this.chartsDimension.set(UniqueKey.MUTATION_COUNT_CNA_FRACTION, STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.SCATTER])
         }
 
         // This is also the proper place to initialize the special charts visibility
