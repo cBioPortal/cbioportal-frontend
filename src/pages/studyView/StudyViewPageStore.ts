@@ -1715,6 +1715,12 @@ export class StudyViewPageStore {
         this.newlyAddedCharts.push(uniqueKey);
     }
 
+    @autobind
+    @action resetFiltersAndAddCustomChart(newChart:NewChart) {
+        this.clearAllFilters();
+        this.addCustomChart(newChart);
+    }
+
     @computed
     get chartMetaSet(): { [id: string]: ChartMeta } {
 
