@@ -24,7 +24,7 @@ import {QuerySession} from "../../lib/QuerySession";
 import {stringListToIndexSet, stringListToSet} from "../../lib/StringUtils";
 import chunkMapReduce from "shared/lib/chunkMapReduce";
 import {
-	MolecularProfileQueryParams, NonMolecularProfileQueryParams, queryUrl,
+	MolecularProfileQueryParams, NonMolecularProfileQueryParams,
 	nonMolecularProfileParams, currentQueryParams, molecularProfileParams, queryParams, profileAvailability, categorizedSamplesCount
 } from "./QueryStoreUtils";
 import onMobxPromise from "shared/lib/onMobxPromise";
@@ -149,7 +149,7 @@ export class QueryStore
         );
 	}
 
-	public singlePageAppSubmitRoutine: (path:string, query:CancerStudyQueryUrlParams)=>void;
+	public singlePageAppSubmitRoutine: (query:CancerStudyQueryUrlParams)=>void;
 
 	@observable studiesHaveChangedSinceInitialization:boolean = false;
 
@@ -1745,7 +1745,7 @@ export class QueryStore
 		if (this.forDownloadTab) {
             formSubmit(buildCBioPortalPageUrl("data_download"), urlParams.query, undefined, "smart");
 		} else {
-            this.singlePageAppSubmitRoutine(urlParams.pathname, urlParams.query);
+            this.singlePageAppSubmitRoutine(urlParams.query);
 		}
 
 

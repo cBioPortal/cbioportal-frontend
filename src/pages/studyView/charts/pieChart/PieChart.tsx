@@ -51,19 +51,26 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         const self = this;
         return [{
             target: "data",
-            eventHandlers: {
-                onClick: () => {
-                    return [
-                        {
-                            target: "data",
-                            mutation: (props: any) => {
-                                this.onUserSelection(props.datum.value);
-                            }
-                        }
-                    ];
-                }
-            }
+            eventHandlers: this.pieSliceOnClickEventHandlers
+        }, {
+            target: "labels",
+            eventHandlers: this.pieSliceOnClickEventHandlers
         }];
+    }
+
+    private get pieSliceOnClickEventHandlers() {
+        return {
+            onClick: () => {
+                return [
+                    {
+                        target: "data",
+                        mutation: (props: any) => {
+                            this.onUserSelection(props.datum.value);
+                        }
+                    }
+                ];
+            }
+        }
     }
 
     @observable isTooltipHovered: boolean = false;
@@ -217,7 +224,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                 standalone={false}
                 theme={theme}
                 colorScale={colorScale}
-                x={0} y={181}
+                x={0} y={this.props.height + 1}
                 rowGutter={-10}
                 title={this.props.label || "Legend"}
                 centerTitle={true}

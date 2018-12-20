@@ -34,7 +34,7 @@ export function createQueryStore(currentQuery?:any) {
 
     const queryStore = new QueryStore(currentQuery);
 
-    queryStore.singlePageAppSubmitRoutine = function(path:string, query:CancerStudyQueryUrlParams) {
+    queryStore.singlePageAppSubmitRoutine = function(query:CancerStudyQueryUrlParams) {
 
         // normalize this
         query.cancer_study_list = query.cancer_study_list || query.cancer_study_id;
