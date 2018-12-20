@@ -83,7 +83,10 @@ export function getSimplifiedMutationType(type: string):SimplifiedMutationType {
 export default class accessors {
     private molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile};
 
-    constructor(molecularProfiles: MolecularProfile[]) {
+    constructor(
+        molecularProfiles: MolecularProfile[],
+        private filterDrivers?:boolean // TODO: take out this option, and always filterDrivers, once we use the same driver-annotated data across the portal
+    ) {
         this.molecularProfileIdToMolecularProfile = _.keyBy(molecularProfiles, p=>p.molecularProfileId);
     }
 
@@ -173,12 +176,16 @@ export default class accessors {
     }
 
     public is_driver(d: AnnotatedMutation|AnnotatedNumericGeneMolecularData) {
-        if (this.molecularAlterationType(d.molecularProfileId) === AlterationTypeConstants.MUTATION_EXTENDED) {
-            // covers mutations and fusions
-            return !!(d as AnnotatedMutation).putativeDriver;
-        } else if (this.molecularAlterationType(d.molecularProfileId) === AlterationTypeConstants.COPY_NUMBER_ALTERATION) {
-            // covers CNA
-            return !!(d as AnnotatedNumericGeneMolecularData).oncoKbOncogenic;
+        if (this.filterDrivers) {
+            if (this.molecularAlterationType(d.molecularProfileId) === AlterationTypeConstants.MUTATION_EXTENDED) {
+                // covers mutations and fusions
+                return !!(d as AnnotatedMutation).putativeDriver;
+            } else if (this.molecularAlterationType(d.molecularProfileId) === AlterationTypeConstants.COPY_NUMBER_ALTERATION) {
+                // covers CNA
+                return !!(d as AnnotatedNumericGeneMolecularData).oncoKbOncogenic;
+            } else {
+                return null;
+            }
         } else {
             return null;
         }
