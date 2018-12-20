@@ -119,7 +119,7 @@ function initStore() {
 
                         const changes = updateResultsViewQuery(resultsViewPageStore.rvQuery, query, samplesSpecification, cancerStudyIds, oql);
                         if (changes.cohortIdsList) {
-                            resultsViewPageStore.initMutationAnnotationSettings();
+                            resultsViewPageStore.initDriverAnnotationSettings();
                         }
 
                         onMobxPromise(resultsViewPageStore.studyIds, ()=>{

@@ -71,7 +71,7 @@ export function isType3NoGene(inputLine:OncoprinterInputLine):inputLine is Oncop
     return inputLine.hasOwnProperty("chromosome");
 }*/
 
-export function initMutationAnnotationSettings(store:OncoprinterStore) {
+export function initDriverAnnotationSettings(store:OncoprinterStore) {
     return observable({
         cbioportalCount: false,
         cbioportalCountThreshold: 0,
