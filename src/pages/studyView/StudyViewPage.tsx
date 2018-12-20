@@ -4,6 +4,7 @@ import {inject, Observer, observer} from "mobx-react";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import {reaction, IReactionDisposer, computed} from 'mobx';
 import {
+    NewChart,
     StudyViewPageStore,
     StudyViewPageTabDescriptions,
     StudyViewPageTabKeys
@@ -28,6 +29,9 @@ import {CSSTransition} from "react-transition-group";
 import {sleep} from "../../shared/lib/TimeUtils";
 import {remoteData} from "../../shared/api/remoteData";
 import {If, Else, Then} from 'react-if';
+import shareUIstyles from "../resultsView/querySummary/shareUI.module.scss";
+import DefaultTooltip from "../../shared/components/defaultTooltip/DefaultTooltip";
+import CustomCaseSelection from "./addChartButton/customCaseSelection/CustomCaseSelection";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -83,6 +87,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     private store: StudyViewPageStore;
     private enableAddChartInTabs = [StudyViewPageTabKeys.SUMMARY, StudyViewPageTabKeys.CLINICAL_DATA];
     private queryReaction:IReactionDisposer;
+    private customSelctionTooltipVisible = true;
 
     constructor(props: IStudyViewPageProps) {
         super();
@@ -206,15 +211,29 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     {(this.props.routing.location.query.tab === undefined || this.enableAddChartInTabs.includes(this.props.routing.location.query.tab))
                                     && (
                                         <div style={{display: 'flex'}}>
-                                            <AddChartButton
-                                                key={'custom'}
-                                                buttonText='Custom Selection'
-                                                store={this.store}
-                                                currentTab={this.props.routing.location.query.tab ? this.props.routing.location.query.tab : ''}
-                                                addChartOverlayClassName='studyViewAddChartOverlay'
-                                                disableClinicalTab={true}
-                                                disableGenomicTab={true}
-                                            />
+                                            <DefaultTooltip
+                                                trigger={["click"]}
+                                                placement={"bottomLeft"}
+                                                destroyTooltipOnHide={true}
+                                                overlay={() => (
+                                                    <div style={{width: '300px'}}>
+                                                        <CustomCaseSelection
+                                                            allSamples={this.store.samples.result}
+                                                            submitButtonText={"Select"}
+                                                            disableGrouping={true}
+                                                            queriedStudies={this.store.queriedPhysicalStudyIds.result}
+                                                            onSubmit={(chart: NewChart) => {
+                                                                this.store.resetFiltersAndAddCustomChart(chart);
+                                                            }}
+                                                        />
+                                                    </div>
+                                                )}
+                                            >
+                                                <button className='btn btn-primary btn-xs'
+
+                                                        style={{marginLeft: '10px'}}>Custom Selection
+                                                </button>
+                                            </DefaultTooltip>
                                             <AddChartButton
                                                 key={'addChart'}
                                                 buttonText={this.addChartButtonText}
