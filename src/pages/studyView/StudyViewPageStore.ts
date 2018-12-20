@@ -937,7 +937,7 @@ export class StudyViewPageStore {
     }
 
     @action addCharts(visibleChartIds:string[]) {
-        visibleChartIds.filter(chartId => {
+        visibleChartIds.forEach(chartId => {
             if(!this._chartVisibility.keys().includes(chartId)) {
                 this.newlyAddedCharts.push(chartId);
             }
