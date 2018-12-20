@@ -1,19 +1,30 @@
 import oql_parser, {Alteration, OQLQuery} from './oql-parser';
 import {assert} from "chai";
 
-function doTest(query:string, expectedParsedResult:OQLQuery) {
-    it(query, ()=>{
-        try {
-            assert.deepEqual(oql_parser.parse(query), expectedParsedResult);
-        } catch (e) {
-            if (e.name === "SyntaxError") {
-                throw new Error(`SyntaxError at character ${e.location.start.offset}: ${e.message}`);
-            } else {
-                throw e;
-            }
+function testCallback(query:string, expectedParsedResult:OQLQuery) {
+    try {
+        assert.deepEqual(oql_parser.parse(query), expectedParsedResult);
+    } catch (e) {
+        if (e.name === "SyntaxError") {
+            throw new Error(`SyntaxError at character ${e.location.start.offset}: ${e.message}`);
+        } else {
+            throw e;
         }
-    });
+    }
 }
+
+type DoTest = {
+    (query:string, expectedParsedResult:OQLQuery):void;
+    only: (query:string, expectedParsedResult:OQLQuery)=>void;
+};
+
+const doTest:DoTest = function(query:string, expectedParsedResult:OQLQuery) {
+    it(query, ()=>testCallback(query, expectedParsedResult));
+} as DoTest;
+
+doTest.only = function(query:string, expectedParsedResult:OQLQuery) {
+    it.only(query, ()=>testCallback(query, expectedParsedResult));
+};
 
 describe("OQL parser", ()=>{
     doTest("     TP53", [{gene:"TP53", alterations:false}]);
@@ -58,7 +69,12 @@ describe("OQL parser", ()=>{
     doTest("KRAS: MUT=DRIVER_G12D", [{gene:"KRAS", alterations:[{alteration_type:"mut", constr_type:"name", constr_rel:"=", constr_val:"G12D", info:{}, modifiers:["DRIVER"]}]}]);
     doTest("KRAS: MUT=DRIVER_G12", [{gene:"KRAS", alterations:[{alteration_type:"mut", constr_type:"position", constr_rel:"=", constr_val:12, info:{amino_acid:"G"}, modifiers:["DRIVER"]}]}]);
     doTest("TP53:MISSENSE_GERMLINE", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE"]}]}])
-    doTest("TP53:MISSENSE_GERMLINE_SOMATIC", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE", "SOMATIC"]}]}])
+    doTest("TP53:MISSENSE_GERMLINE_SOMATIC GERMLINE_INFRAME_SOMATIC_DRIVER GERMLINE_DRIVER_INFRAME_SOMATIC DRIVER_SOMATIC_GERMLINE_NONSENSE", [{gene:"TP53", alterations:[
+        {alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE", "SOMATIC"]},
+        {alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "INFRAME", info: {}, modifiers:["GERMLINE", "SOMATIC", "DRIVER"]},
+        {alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "INFRAME", info: {}, modifiers:["GERMLINE", "DRIVER", "SOMATIC"]},
+        {alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "NONSENSE", info: {}, modifiers:["DRIVER", "SOMATIC", "GERMLINE"]}
+    ]}]);
     doTest("TP53:GERMLINE_MISSENSE", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE"]}]}])
     doTest("TP53:GERMLINE_SOMATIC_MISSENSE", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE", "SOMATIC"]}]}])
     doTest("TP53:MISSENSE_GERMLINE PROMOTER", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE"]},{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "PROMOTER", info: {}, modifiers:[]}]}])
