@@ -698,17 +698,19 @@ export class ResultsViewPageStore {
                     });
                 });
 
-                return client.fetchMolecularDataInMultipleMolecularProfilesUsingPOST({
-                    projection:'DETAILED',
-                    molecularDataMultipleStudyFilter:({
-                        entrezGeneIds: _.map(this.genes.result,(gene:Gene)=>gene.entrezGeneId),
-                        sampleMolecularIdentifiers:identifiers
-                    } as MolecularDataMultipleStudyFilter)
-                });
-
-            } else {
-                return Promise.resolve([]);
+                if (identifiers.length) {
+                    return client.fetchMolecularDataInMultipleMolecularProfilesUsingPOST({
+                        projection:'DETAILED',
+                        molecularDataMultipleStudyFilter:({
+                            entrezGeneIds: _.map(this.genes.result,(gene:Gene)=>gene.entrezGeneId),
+                            sampleMolecularIdentifiers:identifiers
+                        } as MolecularDataMultipleStudyFilter)
+                    });
+                }
             }
+
+            return Promise.resolve([]);
+
         }
     });
 
