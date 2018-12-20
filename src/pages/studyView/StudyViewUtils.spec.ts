@@ -1770,36 +1770,36 @@ describe('StudyViewUtils', () => {
             error: undefined
         };
         it('initialVisibleAttributesPromise should be used when the chart is default visible attribute and in initial state', () => {
-            const promises = getRequestedAwaitPromisesForClinicalData(true, true, false, false, false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            const promises = getRequestedAwaitPromisesForClinicalData(true, true, false, false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
             assert.equal(promises.length, 1);
             assert.isTrue(promises[0] === initialVisibleAttributesPromise);
         });
         it('newlyAddedUnfilteredPromise should be used when the chart is not default visible attribute, at the time the chart is not filtered', () => {
-            const promises = getRequestedAwaitPromisesForClinicalData(false, true, false, true, false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            const promises = getRequestedAwaitPromisesForClinicalData(false, true, false,  false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
             assert.equal(promises.length, 1);
             assert.isTrue(promises[0] === newlyAddedUnfilteredPromise);
         });
         it('unfilteredPromise should be used when there are filters applied, but attribute is unfiltered, ignore whether the chart is default visible attribute', () => {
-            let promises = getRequestedAwaitPromisesForClinicalData(true, false, true, false, false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            let promises = getRequestedAwaitPromisesForClinicalData(true, false, true,  false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
             assert.equal(promises.length, 1);
             assert.isTrue(promises[0] === unfilteredPromise);
 
-            promises = getRequestedAwaitPromisesForClinicalData(false, false, true, false, false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            promises = getRequestedAwaitPromisesForClinicalData(false, false, true,  false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
             assert.equal(promises.length, 1);
             assert.isTrue(promises[0] === unfilteredPromise);
         });
 
         it('unfilteredPromise should be used when there are filters applied, when it is newly added chart', () => {
-            let promises = getRequestedAwaitPromisesForClinicalData(true, false, true, true, false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            let promises = getRequestedAwaitPromisesForClinicalData(true, false, true, false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
             assert.equal(promises.length, 1);
             assert.isTrue(promises[0] === unfilteredPromise);
         });
 
         it('When chart is filtered and not in initial state, empty array should be returned. Ignore whether the chart is default visible attribute', () => {
-            let promises = getRequestedAwaitPromisesForClinicalData(true, false, true, false, true, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            let promises = getRequestedAwaitPromisesForClinicalData(true, false, true,  true, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
             assert.equal(promises.length, 0);
 
-            promises = getRequestedAwaitPromisesForClinicalData(false, false, true, false, true, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            promises = getRequestedAwaitPromisesForClinicalData(false, false, true,  true, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
             assert.equal(promises.length, 0);
         });
     })
