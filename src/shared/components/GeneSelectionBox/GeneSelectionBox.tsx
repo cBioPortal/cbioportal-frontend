@@ -118,7 +118,7 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
                     error: { start: 0, end: 0, message: `Unexpected ${error}` }
                 };
 
-            let { offset } = error as SyntaxError;
+            let {location:{start:{offset}}} = error as SyntaxError;
             let near, start, end;
             if (offset === this.geneQuery.length)
                 [near, start, end] = ['after', offset - 1, offset];
