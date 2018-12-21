@@ -104,6 +104,7 @@ describe("doesQueryContainOQL", ()=>{
         assert.equal(doesQueryContainOQL("TP53 BRCA1 BRCA2:HOMDEL"), true);
         assert.equal(doesQueryContainOQL("TP53 BRCA1 BRCA2:EXP>0"), true);
         assert.equal(doesQueryContainOQL("TP53 BRCA1 BRCA2:FUSION"), true);
+        assert.equal(doesQueryContainOQL("TP53 BRCA1 BRCA2:DRIVER"), true);
     });
 });
 
@@ -117,6 +118,7 @@ describe("doesQueryContainMutationOQL", ()=>{
         assert.equal(doesQueryContainMutationOQL("TP53: GERMLINE"), true);
         assert.equal(doesQueryContainMutationOQL("TP53: proteinchange"), true);
         assert.equal(doesQueryContainMutationOQL("TP53: proteinchange_GERMLINE"), true);
+        assert.equal(doesQueryContainMutationOQL("TP53: DRIVER"), true);
     });
 });
 
