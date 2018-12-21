@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {observer} from "mobx-react";
 import styles from "./styles.module.scss";
-import {StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
+import {StudyViewPageStore, UniqueKey} from 'pages/studyView/StudyViewPageStore';
 import RightPanel from "./rightPanel/RightPanel";
 import StudySummary from "./studySummary/StudySummary";
 import {ServerConfigHelpers} from "../../../config/config";
@@ -30,6 +30,7 @@ export default class StudyPageHeader extends React.Component<IStudyPageHeaderPro
 
                 <UserSelections
                     filter={this.props.store.userSelections}
+                    numberOfSelectedSamplesInCustomSelection={this.props.store.numberOfSelectedSamplesInCustomSelection}
                     customChartsFilter={this.props.store.customChartFilterSet.toJS()}
                     getSelectedGene={this.props.store.getKnownHugoGeneSymbolByEntrezGeneId}
                     attributesMetaSet={this.props.store.chartMetaSet}
@@ -41,6 +42,7 @@ export default class StudyPageHeader extends React.Component<IStudyPageHeaderPro
                     resetMutationCountVsCNAFilter={this.props.store.resetMutationCountVsCNAFilter}
                     clearCNAGeneFilter={this.props.store.clearCNAGeneFilter}
                     clearGeneFilter={this.props.store.clearGeneFilter}
+                    removeCustomSelectionFilter={this.props.store.removeCustomSelectFilter}
                     removeWithMutationDataFilter={this.props.store.removeWithMutationDataFilter}
                     removeWithCNADataFilter={this.props.store.removeWithCNADataFilter}
                     clearChartSampleIdentifierFilter={this.props.store.clearChartSampleIdentifierFilter}

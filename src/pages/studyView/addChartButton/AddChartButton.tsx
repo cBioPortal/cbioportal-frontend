@@ -239,6 +239,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                         hide={this.props.disableCustomTab}>
                     <CustomCaseSelection
                         allSamples={this.props.store.samples.result}
+                        selectedSamples={this.props.store.selectedSamples.result}
                         submitButtonText={"Add Chart"}
                         queriedStudies={this.props.store.queriedPhysicalStudyIds.result}
                         isChartNameValid={this.props.store.isChartNameValid}
