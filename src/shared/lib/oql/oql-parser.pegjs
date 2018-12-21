@@ -12,6 +12,7 @@ ProteinChangeCode = word:[-./a-zA-Z0-9*]+ { return word.join("") } // make sure 
 AminoAcid = letter:[GPAVLIMCFYWHKRQNEDST] { return letter; }
 // any character, except " :
 StringExceptQuotes = stringExceptQuotes:[^"]+ { return stringExceptQuotes.join("") }
+ProteinChangeCodeAfterPosition = word:[-.@/a-zA-Z0-9*]+ { return word.join("") } // exclude underscore or else it will bleed into modifiers
 
 sp = space:[ \t\r]+
 msp = space:[ \t\r]*
@@ -76,12 +77,16 @@ Alterations
 	/ a1:Alteration { return [a1]; }
 
 Alteration
-	= cmd:CNACommand { return cmd; }
+	= cmd:AnyTypeWithModifiersCommand { return cmd; }
+	/ cmd:CNACommand { return cmd; }
 	/ cmd:EXPCommand { return cmd; }
 	/ cmd:PROTCommand { return cmd; }
         / cmd:FUSIONCommand { return cmd; }
 // MUT has to go at the end because it matches an arbitrary string at the end as a type of mutation
 	/ cmd:MUTCommand { return cmd; }
+
+AnyTypeWithModifiersCommand
+    = d:DriverModifier !"_" { return {"alteration_type":"any", modifiers:[d]}; }
 
 CNAType
         = "AMP"i { return "AMP"; }
@@ -90,13 +95,18 @@ CNAType
         / "HETLOSS"i { return "HETLOSS"; }
 
 CNACommand
-	= "CNA"i msp op:ComparisonOp msp constrval:CNAType { return {"alteration_type":"cna", "constr_rel":op, "constr_val":constrval}; }
-        / constrval:CNAType { return {"alteration_type":"cna", "constr_rel":"=", "constr_val":constrval}; }
+	= "CNA"i msp op:ComparisonOp msp constrval:CNAType { return {"alteration_type":"cna", "constr_rel":op, "constr_val":constrval, modifiers:[]}; }
+	/ "CNA_" mod:CNAModifier { return {"alteration_type":"cna", modifiers:[mod]}; }
+	/ constrval:CNAType "_" mod:CNAModifier { return {"alteration_type":"cna", "constr_rel":"=", "constr_val":constrval, modifiers:[mod]}; }
+	/ mod:CNAModifier "_CNA" { return {"alteration_type":"cna", modifiers:[mod]}; }
+	/ mod:CNAModifier "_" constrval:CNAType { return {"alteration_type":"cna", "constr_rel":"=", "constr_val":constrval, modifiers:[mod]}; }
+    / constrval:CNAType { return {"alteration_type":"cna", "constr_rel":"=", "constr_val":constrval, modifiers:[]}; }
 
 MUTCommand
 	= "MUT" msp "=" msp mutation:MutationWithModifiers { return {"alteration_type":"mut", "constr_rel": "=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info, modifiers: mutation.modifiers}; }
 	/ "MUT" msp "!=" msp mutation:MutationWithModifiers { return {"alteration_type":"mut", "constr_rel": "!=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info, modifiers: mutation.modifiers}; }
-	/ "MUT" modifiers:MutationModifiers { return {"alteration_type":"mut", "info":{}, "modifiers":modifiers}; }
+	/ "MUT_" modifiers:MutationModifiers { return {"alteration_type":"mut", "info":{}, "modifiers":modifiers}; }
+	/ modifiers:MutationModifiers "_MUT" { return {"alteration_type":"mut", "info":{}, "modifiers":modifiers}; }
 	/ "MUT" { return {"alteration_type":"mut", "info":{}, "modifiers":[]}; }
 	/ mutation:MutationWithModifiers {
 	        if (mutation.type) {
@@ -110,7 +120,9 @@ EXPCommand
 	= "EXP" msp op:ComparisonOp msp constrval:Number { return {"alteration_type":"exp", "constr_rel":op, "constr_val":parseFloat(constrval)}; }
 
 FUSIONCommand
-        = "FUSION" { return {"alteration_type":"fusion"}; }
+        = "FUSION"i "_" mod:FusionModifier { return {"alteration_type":"fusion", modifiers: [mod] }; }
+        / mod:FusionModifier "_FUSION"i { return {"alteration_type":"fusion", modifiers: [mod] }; }
+        / "FUSION"i { return {"alteration_type":"fusion", modifiers:[]}; }
 
 PROTCommand
 	= "PROT" msp op:ComparisonOp msp constrval:Number { return {"alteration_type":"prot", "constr_rel":op, "constr_val":parseFloat(constrval)}; }
@@ -122,15 +134,11 @@ ComparisonOp
 	/ "<" { return "<"; }
 
 MutationWithModifiers
-    = modifiersThenMaybeMutation:ModifiersThenMaybeMutation { return modifiersThenMaybeMutation; } // this has to come first because mutation matches every string as protein change code
+    // modifier has to come first because mutation matches every string as protein change code
+    = modifier:MutationModifier "_" mutationWithModifiers:MutationWithModifiers { mutationWithModifiers.modifiers.unshift(modifier); return mutationWithModifiers; }
     / mutation:Mutation "_" modifiers:MutationModifiers { mutation.modifiers = modifiers; return mutation; }
-    / mutation:Mutation { mutation.modifiers = []; return mutation; }
-
-ModifiersThenMaybeMutation
-    // the order here is important: first we check for modifier + lookahead to ensure theres another modifier, next for modifier + mutation (mutation swallows all strings, so this has to come after), finally a modifier alone
-    = modifier:MutationModifier "_" &MutationModifier modifiersThenMaybeMutation:ModifiersThenMaybeMutation { modifiersThenMaybeMutation.modifiers.unshift(modifier); return modifiersThenMaybeMutation; }
-    / modifier:MutationModifier "_" mutation:Mutation { mutation.modifiers = [modifier]; return mutation; }
     / modifier:MutationModifier { return { modifiers: [modifier] }; }
+    / mutation:Mutation { mutation.modifiers = []; return mutation; }
 
 MutationModifiers
     = modifier:MutationModifier "_" more:MutationModifiers { return [modifier].concat(more); }
@@ -146,10 +154,24 @@ Mutation
 	/ "SPLICE"i { return {"type":"class", "value":"SPLICE", "info":{}}; }
 	/ "TRUNC"i { return {"type":"class", "value":"TRUNC", "info":{}}; }
     / "PROMOTER"i { return {"type":"class", "value":"PROMOTER", "info":{}}; }
-    / letter:AminoAcid position:NaturalNumber string:String { return {"type":"name" , "value":(letter+position+string), "info":{}};}
+    / letter:AminoAcid position:NaturalNumber string:ProteinChangeCodeAfterPosition { return {"type":"name" , "value":(letter+position+string), "info":{}};}
     / letter:AminoAcid position:NaturalNumber { return {"type":"position", "value":parseInt(position), "info":{"amino_acid":letter.toUpperCase()}}; }
 	/ mutation_name:ProteinChangeCode { return {"type":"name", "value":mutation_name, "info":{"unrecognized":true}}; }
 
 MutationModifier
     = "GERMLINE"i { return "GERMLINE";}
     / "SOMATIC"i { return "SOMATIC";}
+    / mod:DriverModifier { return mod; }
+
+CNAModifier
+    // NOTE: if you ever want to add more modifiers, then to be able to specify in any order need to do
+    //  same thing as in MutationWithModifiers
+    = d:DriverModifier { return d; }
+
+FusionModifier
+    // NOTE: if you ever want to add more modifiers, then to be able to specify in any order with FUSION need to do
+    //  same thing as in MutationWithModifiers
+    = d:DriverModifier { return d; }
+
+DriverModifier
+    = "DRIVER"i { return "DRIVER";}
