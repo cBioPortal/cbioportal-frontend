@@ -105,9 +105,6 @@ CNACommand
 MUTCommand
 	= "MUT" msp "=" msp mutation:MutationWithModifiers { return {"alteration_type":"mut", "constr_rel": "=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info, modifiers: mutation.modifiers}; }
 	/ "MUT" msp "!=" msp mutation:MutationWithModifiers { return {"alteration_type":"mut", "constr_rel": "!=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info, modifiers: mutation.modifiers}; }
-	/ "MUT_" modifiers:MutationModifiers { return {"alteration_type":"mut", "info":{}, "modifiers":modifiers}; }
-	/ modifiers:MutationModifiers "_MUT" { return {"alteration_type":"mut", "info":{}, "modifiers":modifiers}; }
-	/ "MUT" { return {"alteration_type":"mut", "info":{}, "modifiers":[]}; }
 	/ mutation:MutationWithModifiers {
 	        if (mutation.type) {
 	            return {"alteration_type":"mut", "constr_rel": "=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info, modifiers: mutation.modifiers};
@@ -145,7 +142,8 @@ MutationModifiers
     / modifier:MutationModifier { return [modifier]; }
 
 Mutation
-	= "MISSENSE"i { return {"type":"class", "value":"MISSENSE", "info":{}}; }
+	= "MUT"i { return {}; }
+	/ "MISSENSE"i { return {"type":"class", "value":"MISSENSE", "info":{}}; }
 	/ "NONSENSE"i { return {"type":"class", "value":"NONSENSE", "info":{}}; }
 	/ "NONSTART"i { return {"type":"class", "value":"NONSTART", "info":{}}; }
 	/ "NONSTOP"i { return {"type":"class", "value":"NONSTOP", "info":{}}; }
