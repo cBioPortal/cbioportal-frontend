@@ -285,7 +285,8 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
                                                 className="btn btn-default"
                                                 onClick={(event) => {
                                                     if (this.virtualStudy.result) {
-                                                        window.open(buildCBioPortalPageUrl('index.do', { cancer_study_id: this.virtualStudy.result.id }), "_blank")
+                                                        localStorage.setItem("visualStudyPageQuery", JSON.stringify({ cancer_study_id: this.virtualStudy.result.id }));
+                                                        window.open(buildCBioPortalPageUrl(''), "_blank")
                                                     }
                                                 }}>
                                                 Query

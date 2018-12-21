@@ -61,7 +61,8 @@ export default class HomePage extends React.Component<IResultsViewPageProps, {}>
     }
 
     componentWillMount(){
-        this.queryStore = createQueryStore(getBrowserWindow().globalStores.routing.location.query);
+        this.queryStore = createQueryStore(JSON.parse(localStorage.getItem("visualStudyPageQuery")!) || getBrowserWindow().globalStores.routing.location.query);
+        localStorage.removeItem("visualStudyPageQuery");
     }
 
     private handleTabChange(id: string) {
