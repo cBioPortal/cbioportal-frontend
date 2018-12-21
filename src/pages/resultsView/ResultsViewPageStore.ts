@@ -873,14 +873,16 @@ export class ResultsViewPageStore {
 
     readonly filteredAlterations = remoteData<ExtendedAlteration[]>({
         await:()=>[
-            this.unfilteredAlterations,
+            this.putativeDriverAnnotatedMutations,
+            this.annotatedMolecularData,
             this.selectedMolecularProfiles,
             this.defaultOQLQuery
         ],
         invoke:()=>{
             if (this.rvQuery.oqlQuery.trim() != "") {
+                const data = [...(this.putativeDriverAnnotatedMutations.result!), ...(this.annotatedMolecularData.result!)];
                 return Promise.resolve(
-                        filterCBioPortalWebServiceData(this.rvQuery.oqlQuery, this.unfilteredAlterations.result!, (new accessors(this.selectedMolecularProfiles.result!)), this.defaultOQLQuery.result!)
+                        filterCBioPortalWebServiceData(this.rvQuery.oqlQuery, data, (new accessors(this.selectedMolecularProfiles.result!)), this.defaultOQLQuery.result!)
                 );
             } else {
                 return Promise.resolve([]);
@@ -890,12 +892,14 @@ export class ResultsViewPageStore {
 
     readonly filteredAlterationsByOQLLine = remoteData<OQLLineFilterOutput<ExtendedAlteration>[]>({
         await: ()=>[
-            this.unfilteredAlterations,
+            this.putativeDriverAnnotatedMutations,
+            this.annotatedMolecularData,
             this.selectedMolecularProfiles,
             this.defaultOQLQuery
         ],
         invoke: ()=>{
-            return Promise.resolve(filterCBioPortalWebServiceDataByOQLLine(this.rvQuery.oqlQuery, this.unfilteredAlterations.result!,
+            const data = [...(this.putativeDriverAnnotatedMutations.result!), ...(this.annotatedMolecularData.result!)];
+            return Promise.resolve(filterCBioPortalWebServiceDataByOQLLine(this.rvQuery.oqlQuery, data,
                 (new accessors(this.selectedMolecularProfiles.result!)), this.defaultOQLQuery.result!));
         }
     });
@@ -978,55 +982,10 @@ export class ResultsViewPageStore {
     });
 
 
-    readonly filteredAlterationsDataByUnflattenedOQLLine = remoteData<
-    IQueriedMergedTrackCaseData[]
->({
-    await: () => [
-        this.filteredAlterations,
-        this.annotatedMolecularData,
-        this.selectedMolecularProfiles,
-        this.defaultOQLQuery,
-        this.samples,
-        this.patients
-    ],
-    invoke: () => {
-        const data = [...(this.filteredAlterations.result!), ...(this.annotatedMolecularData.result!)];
-        const accessorsInstance = new accessors(this.selectedMolecularProfiles.result!);
-        const defaultOQLQuery = this.defaultOQLQuery.result!;
-        const samples = this.samples.result!;
-        const patients = this.patients.result!;
-
-        if (this.rvQuery.oqlQuery.trim() === '') {
-            return Promise.resolve([]);
-        } else {
-            const filteredAlterationsByOQLLine: UnflattenedOQLLineFilterOutput<AnnotatedExtendedAlteration>[] = (
-                filterCBioPortalWebServiceDataByUnflattenedOQLLine(
-                    this.rvQuery.oqlQuery,
-                    data,
-                    accessorsInstance,
-                    defaultOQLQuery
-                )
-            );
-
-            return Promise.resolve(filteredAlterationsByOQLLine.map(
-                (oql) => ({
-                    cases: groupDataByCase(oql, samples, patients),
-                    oql,
-                    mergedTrackOqlList: filterSubQueryData(
-                        oql, defaultOQLQuery,
-                        data, accessorsInstance,
-                        samples, patients
-                    )
-                })
-            ));
-        }
-    }
-});
-
     readonly isSampleAlteredMap = remoteData({
-        await: () => [this.filteredAlterationsDataByUnflattenedOQLLine, this.samples],
+        await: () => [this.putativeDriverFilteredCaseAggregatedDataByUnflattenedOQLLine, this.samples],
         invoke: async() => {
-            return getSampleAlteredMap(this.filteredAlterationsDataByUnflattenedOQLLine.result!, this.samples.result, this.rvQuery.oqlQuery);
+            return getSampleAlteredMap(this.putativeDriverFilteredCaseAggregatedDataByUnflattenedOQLLine.result!, this.samples.result, this.rvQuery.oqlQuery);
         }
     });
 
@@ -1173,20 +1132,13 @@ export class ResultsViewPageStore {
     readonly alteredSampleKeys = remoteData({
         await:()=>[
             this.samples,
-            this.putativeDriverFilteredCaseAggregatedDataByOQLLine
+            this.caseAggregatedData
         ],
         invoke:()=>{
-            const caseAggregatedDataByLine = this.putativeDriverFilteredCaseAggregatedDataByOQLLine.result!;
+            const caseAggregatedData = this.caseAggregatedData.result!.samples;
             return Promise.resolve(
                 this.samples.result!.map(s=>s.uniqueSampleKey).filter(sampleKey=>{
-                    let isAltered = false;
-                    for (const caseData of caseAggregatedDataByLine) {
-                        if (caseData.cases.samples[sampleKey].length > 0) {
-                            isAltered = true;
-                            break;
-                        }
-                    }
-                    return isAltered;
+                    return caseAggregatedData[sampleKey].length > 0;
                 })
             );
         }
