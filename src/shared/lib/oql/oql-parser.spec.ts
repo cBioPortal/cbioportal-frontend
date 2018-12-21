@@ -69,11 +69,12 @@ describe("OQL parser", ()=>{
     doTest("KRAS: MUT=DRIVER_G12D", [{gene:"KRAS", alterations:[{alteration_type:"mut", constr_type:"name", constr_rel:"=", constr_val:"G12D", info:{}, modifiers:["DRIVER"]}]}]);
     doTest("KRAS: MUT=DRIVER_G12", [{gene:"KRAS", alterations:[{alteration_type:"mut", constr_type:"position", constr_rel:"=", constr_val:12, info:{amino_acid:"G"}, modifiers:["DRIVER"]}]}]);
     doTest("TP53:MISSENSE_GERMLINE", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE"]}]}])
-    doTest("TP53:MISSENSE_GERMLINE_SOMATIC GERMLINE_INFRAME_SOMATIC_DRIVER GERMLINE_DRIVER_INFRAME_SOMATIC DRIVER_SOMATIC_GERMLINE_NONSENSE", [{gene:"TP53", alterations:[
+    doTest("TP53:MISSENSE_GERMLINE_SOMATIC GERMLINE_INFRAME_SOMATIC_DRIVER GERMLINE_DRIVER_INFRAME_SOMATIC DRIVER_SOMATIC_GERMLINE_NONSENSE DRIVER_MUT_GERMLINE", [{gene:"TP53", alterations:[
         {alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE", "SOMATIC"]},
         {alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "INFRAME", info: {}, modifiers:["GERMLINE", "SOMATIC", "DRIVER"]},
         {alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "INFRAME", info: {}, modifiers:["GERMLINE", "DRIVER", "SOMATIC"]},
-        {alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "NONSENSE", info: {}, modifiers:["DRIVER", "SOMATIC", "GERMLINE"]}
+        {alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "NONSENSE", info: {}, modifiers:["DRIVER", "SOMATIC", "GERMLINE"]},
+        {alteration_type: "mut", info: {}, modifiers:["DRIVER", "GERMLINE"]}
     ]}]);
     doTest("TP53:GERMLINE_MISSENSE", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE"]}]}])
     doTest("TP53:GERMLINE_SOMATIC_MISSENSE", [{gene:"TP53", alterations:[{alteration_type: "mut", constr_rel: "=", constr_type: "class", constr_val: "MISSENSE", info: {}, modifiers:["GERMLINE", "SOMATIC"]}]}])
