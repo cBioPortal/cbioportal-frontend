@@ -20,7 +20,7 @@ import {INFO_TIMEOUT} from "../AddChartButton";
 import Collapse from "react-collapse";
 
 export interface ICustomCaseSelectionProps {
-    selectedSamples: Sample[];
+    allSamples: Sample[];
     onSubmit: (chart: NewChart) => void;
     queriedStudies: string[];
     getDefaultChartName: () => string;
@@ -47,7 +47,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
 
     @computed
     get sampleSet(): { [id: string]: Sample } {
-        return _.keyBy(this.props.selectedSamples, s => `${s.studyId}:${s.sampleId}`)
+        return _.keyBy(this.props.allSamples, s => `${s.studyId}:${s.sampleId}`)
     }
 
     @computed
@@ -57,7 +57,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
 
     @computed
     get result(): ParseResult {
-        return parseContent(this.validContent, this.validateContent, this.props.queriedStudies, this.caseIdsMode, this.props.selectedSamples, this.isSingleStudy);
+        return parseContent(this.validContent, this.validateContent, this.props.queriedStudies, this.caseIdsMode, this.props.allSamples, this.isSingleStudy);
     }
 
     @computed
@@ -71,7 +71,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     @autobind
     @action
     onClick() {
-        this.content = this.props.selectedSamples.map(sample => {
+        this.content = this.props.allSamples.map(sample => {
             return `${sample.studyId}:${(this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE) ? sample.sampleId : sample.patientId} ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`
         }).join("\n")
         this.validateContent = false;
