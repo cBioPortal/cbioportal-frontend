@@ -10,19 +10,19 @@ function getTextInOncoprintLegend() {
     return browser.getText("#oncoprintDiv .oncoprint-legend-div svg");
 }
 
-function openOncoprintMutationsMenu() {
+function setOncoprintMutationsMenuOpen(open) {
     const mutationColorMenuButton = "#mutationColorDropdown";
     const mutationColorMenuDropdown = "div.oncoprint__controls__mutation_color_menu";
     browser.moveToObject("div.oncoprint__controls");
     browser.waitForVisible(mutationColorMenuButton);
     browser.waitUntil(()=>{
-        if (browser.isVisible(mutationColorMenuDropdown)) {
+        if (open === browser.isVisible(mutationColorMenuDropdown)) {
             return true;
         } else {
             browser.click(mutationColorMenuButton);
             return false;
         }
-    }, 10000, "Couldn't open Mutations menu in Oncoprint", 2000);
+    }, 10000, `Couldn't ${open ? "open" : "close"} Mutations menu in Oncoprint`, 2000);
 }
 
 function goToUrlAndSetLocalStorage(url) {
@@ -80,5 +80,5 @@ module.exports = {
     waitForNumberOfStudyCheckboxes: waitForNumberOfStudyCheckboxes,
     waitForNetworkQuiet:waitForNetworkQuiet,
     getTextInOncoprintLegend: getTextInOncoprintLegend,
-    openOncoprintMutationsMenu: openOncoprintMutationsMenu
+    setOncoprintMutationsMenuOpen: setOncoprintMutationsMenuOpen
 };
