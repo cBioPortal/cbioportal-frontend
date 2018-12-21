@@ -1159,15 +1159,11 @@ export function getSamplesByExcludingFiltersOnChart(
     });
 }
 
-export function getRequestedAwaitPromisesForClinicalData(isDefaultVisibleAttribute:boolean, isInitialFilterState: boolean, chartsAreFiltered: boolean, chartIsNewlyAdded: boolean, chartIsFiltered: boolean, unfilteredPromise: MobxPromise<any>, newlyAddedUnfilteredPromise: MobxPromise<any>, initialVisibleAttributesPromise: MobxPromise<any>): MobxPromise<any>[] {
+export function getRequestedAwaitPromisesForClinicalData(isDefaultVisibleAttribute:boolean, isInitialFilterState: boolean, chartsAreFiltered: boolean, chartIsFiltered: boolean, unfilteredPromise: MobxPromise<any>, newlyAddedUnfilteredPromise: MobxPromise<any>, initialVisibleAttributesPromise: MobxPromise<any>): MobxPromise<any>[] {
     if (isInitialFilterState && isDefaultVisibleAttribute) {
         return [initialVisibleAttributesPromise];
     } else if (!chartsAreFiltered) {
-        if (chartIsNewlyAdded) {
-            return [newlyAddedUnfilteredPromise];
-        } else {
-            return [];
-        }
+        return [newlyAddedUnfilteredPromise];
     } else if (chartIsFiltered) {
         // It will get a new Promise assigned in the invoke function
         return [];
