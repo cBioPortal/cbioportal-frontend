@@ -420,6 +420,10 @@ function transitionTracks(
                         getMolecularProfileMap, oncoprint, nextProps, prevProps, trackIdForRuleSetSharing);
         }
     }
+    // Oncce tracks have been added and deleted, transition order
+    transitionGeneticTrackOrder(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId);
+
+
 
     // Transition clinical tracks
     const prevClinicalTracks = _.keyBy(prevProps.clinicalTracks || [], track=>track.key);
@@ -462,6 +466,25 @@ function transitionTracks(
             transitionHeatmapTrack(undefined, prevHeatmapTracks[track.key], getTrackSpecKeyToTrackId,
                                    () => undefined, oncoprint, nextProps, {}, trackIdForRuleSetSharing);
         }
+    }
+}
+
+function transitionGeneticTrackOrder(
+    nextProps:IOncoprintProps,
+    prevProps:Partial<IOncoprintProps>,
+    oncoprint:OncoprintJS<any>,
+    getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId}
+) {
+    const nextTracksMap = _.keyBy(nextProps.geneticTracks, "key");
+    const prevTracksMap = _.keyBy(prevProps.geneticTracks || [], "key");
+    const nextOrder = (nextProps.geneticTracksOrder || nextProps.geneticTracks.map(t=>t.key))
+                    .filter(key=>(key in nextTracksMap));
+    const prevOrder = (prevProps.geneticTracksOrder || (prevProps.geneticTracks || []).map(t=>t.key))
+                    .filter(key=>(key in prevTracksMap));
+
+    if (!_.isEqual(nextOrder, prevOrder)) {
+        const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
+        oncoprint.setTrackGroupOrder(GENETIC_TRACK_GROUP_INDEX, nextOrder.map(key=>trackSpecKeyToTrackId[key]));
     }
 }
 
@@ -583,7 +606,7 @@ function transitionGeneticTrack(
             description: nextSpec.oql,
             data_id_key: "uid",
             data: nextSpec.data,
-            tooltipFn: makeGeneticTrackTooltip(true, getMolecularProfileMap, nextProps.alterationTypesInQuery),
+            tooltipFn: makeGeneticTrackTooltip(getMolecularProfileMap, nextProps.alterationTypesInQuery),
             track_info: nextSpec.info,
             $track_info_tooltip_elt: nextSpec.infoTooltip ? $('<div>'+nextSpec.infoTooltip+'</div>') : undefined,
             removeCallback: () => {
@@ -612,7 +635,7 @@ function transitionGeneticTrack(
         const nextSortByDrivers = sortByDrivers(nextProps);
         if ((nextSortByMutationType !== sortByMutationType(prevProps)) ||
             (nextSortByDrivers !== sortByDrivers(prevProps))) {
-            oncoprint.setTrackSortComparator(trackId, getGeneticTrackSortComparator(sortByMutationType(nextProps), sortByDrivers(nextProps)));
+            oncoprint.setTrackSortComparator(trackId, getGeneticTrackSortComparator(nextSortByMutationType, nextSortByDrivers));
         }
         if (nextSpec.data !== prevSpec.data) {
             // shallow equality check
@@ -620,7 +643,7 @@ function transitionGeneticTrack(
         }
 
         if (hasGeneticTrackTooltipChanged(nextProps, prevProps)) {
-            oncoprint.setTrackTooltipFn(trackId, makeGeneticTrackTooltip(true, getMolecularProfileMap, nextProps.alterationTypesInQuery));
+            oncoprint.setTrackTooltipFn(trackId, makeGeneticTrackTooltip(getMolecularProfileMap, nextProps.alterationTypesInQuery));
         }
 
         if (nextSpec.info !== prevSpec.info) {
