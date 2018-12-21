@@ -462,6 +462,7 @@ describe('oncoprint', function() {
             )
         });
     });
+
     describe("heatmap clustering", ()=>{
         describe("'Cluster Heatmap' button", ()=>{
             // THESE TESTs ARE RUN IN SERIAL, cannot be run alone
