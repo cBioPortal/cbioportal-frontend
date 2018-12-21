@@ -59,9 +59,9 @@ export default class Visualize extends React.Component<{}, {}> {
 
                 <div style={{display: "flex"}} className={styles.toolArray}>
                     <div style={{marginRight: 60}}>
-                        <h2><a href="/oncoprinter.jsp">OncoPrinter</a></h2>
+                        <h2><a href="oncoprinter">OncoPrinter</a></h2>
                         <p>Generates oncoprints from your own data. <a href="/oncoprinter.jsp">Try it!</a></p>
-                        <a href="/oncoprinter.jsp">
+                        <a href="oncoprinter">
                             <img className="tile-image top-image" alt="Oncoprint" src={require("./images/oncoprint_example_small.png")} />
                         </a>
                     </div>

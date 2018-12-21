@@ -6,7 +6,7 @@ import {
     AnnotatedMutation, AnnotatedNumericGeneMolecularData
 } from "../../../pages/resultsView/ResultsViewPageStore";
 
-var cna_profile_data_to_string: any = {
+export const cna_profile_data_to_string: any = {
     "-2": "homdel",
     "-1": "hetloss",
     "0": null,
