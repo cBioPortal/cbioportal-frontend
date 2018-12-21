@@ -17,7 +17,7 @@ import {OncoprintPatientGeneticTrackData, OncoprintSampleGeneticTrackData} from 
 import {
     AlterationTypeConstants,
     AnnotatedExtendedAlteration,
-    AnnotatedMutation, CaseAggregatedData, ExtendedAlteration,
+    AnnotatedMutation, CaseAggregatedData, ExtendedAlteration, IQueriedCaseData, IQueriedMergedTrackCaseData,
     ResultsViewPageStore
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import {CoverageInformation} from "../../../pages/resultsView/ResultsViewPageStoreUtils";
@@ -373,21 +373,16 @@ export function makeGeneticTrackWith({
     expansionIndexMap
 }: IGeneticTrackAppState) {
     return function makeTrack(
-        {cases: dataByCase, oql, list: subTrackData}: {
-            cases: CaseAggregatedData<AnnotatedExtendedAlteration>,
-            oql: UnflattenedOQLLineFilterOutput<object>,
-            list?: {
-                cases: CaseAggregatedData<AnnotatedExtendedAlteration>,
-                oql: UnflattenedOQLLineFilterOutput<object>
-            }[]
-        },
+        caseData:IQueriedMergedTrackCaseData | (IQueriedCaseData<any> & { mergedTrackOqlList?:never }), // the & is to get around annoying TS error -- its never passed in, as the `never` type indicates
         index: number,
         parentKey?: string
     ): GeneticTrackSpec {
+        const oql = caseData.oql;
         const geneSymbolArray = (isMergedTrackFilter(oql)
             ? oql.list.map(({gene}) => gene)
             : [oql.gene]
         );
+        const dataByCase = caseData.cases;
         const data = (sampleMode
             ? makeGeneticTrackData(dataByCase.samples, geneSymbolArray, samples as Sample[], coverageInformation, selectedMolecularProfiles, hideGermlineMutations)
             : makeGeneticTrackData(dataByCase.patients, geneSymbolArray, patients as Patient[], coverageInformation, selectedMolecularProfiles, hideGermlineMutations)
@@ -413,11 +408,16 @@ export function makeGeneticTrackWith({
             }
             : undefined
         );
-        const expansions: GeneticTrackSpec[] = (
-            expansionIndexMap.get(trackKey) || []
-        ).map(expansionIndex => makeTrack(
-            subTrackData![expansionIndex], expansionIndex, trackKey
-        ));
+        let expansions: GeneticTrackSpec[] = [];
+
+        if (caseData.mergedTrackOqlList) {
+            const subTrackData = caseData.mergedTrackOqlList;
+            expansions = (
+                expansionIndexMap.get(trackKey) || []
+            ).map(expansionIndex => makeTrack(
+                subTrackData[expansionIndex], expansionIndex, trackKey
+            ));
+        }
 
         let info = alterationInfo.percent;
         let infoTooltip = undefined;
