@@ -148,6 +148,12 @@ export function doesQueryContainMutationOQL(oql_query) {
                     // nontrivial mutation specification
                     ret = true;
                     break;
+                } else if (alteration.alteration_type === "any") {
+                    // any DRIVER specification, which includes mutation
+                    if (alteration.modifiers.indexOf("DRIVER") > -1) {
+                        ret = true;
+                        break;
+                    }
                 }
             }
             if (ret) {
