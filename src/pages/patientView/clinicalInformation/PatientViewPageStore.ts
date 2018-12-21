@@ -78,6 +78,10 @@ import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
 import getBrowserWindow from "../../../shared/lib/getBrowserWindow";
 import {getNavCaseIdsCache} from "../../../shared/lib/handleLongUrls";
 import {CancerGene} from "shared/api/generated/OncoKbAPI";
+import {
+    postMatchMinerTrialMatches, postMatchMinerTrialsById
+} from "../../../shared/api/MatchMinerAPI";
+import { ITrial, ITrialMatch, ITrialQuery } from "../../../shared/model/MatchMiner";
 
 type PageMode = 'patient' | 'sample';
 
@@ -314,7 +318,7 @@ export class PatientViewPageStore {
                             return getPathologyReport(patientId, i+1);
                         }, () => reports);
                 }
-                
+
                return getPathologyReport(this.patientId, 0);
             } else {
                 return Promise.resolve([]);
@@ -674,6 +678,58 @@ export class PatientViewPageStore {
             // fail silently, leave the error handling responsibility to the data consumer
         }
     }, ONCOKB_DEFAULT);
+
+    readonly trialMatches = remoteData<ITrialMatch[]>({
+        invoke: () => {
+            return postMatchMinerTrialMatches({mrn: this.patientId});
+        },
+        onError: (err: Error) => {
+            // fail silently
+        }
+    }, []);
+
+    readonly trialIds = remoteData<ITrialQuery>({
+        await: () => [
+            this.trialMatches
+        ],
+        invoke: async() => {
+            let nctIds = new Set<string>();
+            let protocolNos = new Set<string>();
+            _.forEach(this.trialMatches.result, (trialMatch: ITrialMatch) => {
+                if (_.isEmpty(trialMatch.protocolNo)) {
+                    nctIds.add(trialMatch.nctId);
+                } else {
+                    protocolNos.add(trialMatch.protocolNo);
+                }
+            });
+            return {
+                nct_id: [...nctIds],
+                protocol_no: [...protocolNos]
+            };
+        },
+        onError: (err: Error) => {
+            // fail silently
+        }
+    }, {
+        nct_id: [],
+        protocol_no: []
+    });
+
+    readonly matchMinerTrials = remoteData<ITrial[]>({
+        await: () => [
+            this.trialIds
+        ],
+        invoke: async () => {
+            if (this.trialIds.result.protocol_no.length > 0 || this.trialIds.result.nct_id.length > 0) {
+                return postMatchMinerTrialsById(this.trialIds.result);
+            } else {
+                return [];
+            }
+        },
+        onError: (err: Error) => {
+            // fail silently
+        }
+    }, []);
 
     readonly cnaCivicGenes = remoteData<ICivicGene | undefined>({
         await: () => [

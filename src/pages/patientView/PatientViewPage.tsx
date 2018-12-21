@@ -47,6 +47,8 @@ import {QueryParams} from "url";
 import {AppStore} from "../../AppStore";
 import request from 'superagent';
 import {remoteData} from "../../shared/api/remoteData";
+import TrialMatchTable from "./trialMatch/TrialMatchTable";
+import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -183,6 +185,10 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     private shouldShowPathologyReport(patientViewPageStore: PatientViewPageStore): boolean {
         return patientViewPageStore.pathologyReport.isComplete && patientViewPageStore.pathologyReport.result.length > 0;
+    }
+    private shouldShowTrialMatch(patientViewPageStore: PatientViewPageStore): boolean {
+        return patientViewPageStore.trialMatches.isComplete && patientViewPageStore.trialMatches.result.length > 0 &&
+            patientViewPageStore.matchMinerTrials.isComplete;
     }
 
     hideTissueImageTab(){
@@ -539,6 +545,16 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             <IFrameLoader height={WindowStore.size.height - 220} url={ this.wholeSlideViewerUrl.result! } />
                         </div>
                     </MSKTab>
+                    )}
+
+                    {(getBrowserWindow().localStorage.trialmatch === 'true') && (
+                        <MSKTab key={7} id="trialMatchTab" linkText="Trial Match"
+                                hide={!this.shouldShowTrialMatch(patientViewPageStore)}>
+                            <TrialMatchTable sampleManager={sampleManager}
+                                             trialMatches={patientViewPageStore.trialMatches.result}
+                                             trials={patientViewPageStore.matchMinerTrials.result}
+                                             containerWidth={WindowStore.size.width-20}/>
+                        </MSKTab>
                     )}
 
                     {/*<MSKTab key={5} id="mutationalSignatures" linkText="Mutational Signature Data" hide={true}>*/}

@@ -688,15 +688,15 @@ export async function fetchCnaCivicGenes(discreteCNAData:MobxPromise<DiscreteCop
 {
     if (discreteCNAData.result && discreteCNAData.result.length > 0) {
         let entrezGeneSymbols: Set<number> = new Set([]);
-        
+
         discreteCNAData.result.forEach(function(cna: DiscreteCopyNumberData) {
             entrezGeneSymbols.add(cna.gene.entrezGeneId);
         });
-        
+
         let querySymbols: Array<number> = Array.from(entrezGeneSymbols);
-    
+
         let civicGenes: ICivicGene = (await getCivicGenes(querySymbols));
-    
+
         return civicGenes;
     } else {
         return {};
