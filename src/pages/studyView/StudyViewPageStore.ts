@@ -107,11 +107,15 @@ export enum UniqueKey {
     FRACTION_GENOME_ALTERED = "SAMPLE_FRACTION_GENOME_ALTERED",
 }
 
-export enum StudyViewPageTabKeys {
+export enum StudyViewPageTabKeyEnum {
     SUMMARY = 'summary',
     CLINICAL_DATA = 'clinicalData',
     HEATMAPS = 'heatmaps'
 }
+
+export type StudyViewPageTabKey =
+    StudyViewPageTabKeyEnum.CLINICAL_DATA | StudyViewPageTabKeyEnum.SUMMARY | StudyViewPageTabKeyEnum.HEATMAPS;
+
 
 export enum StudyViewPageTabDescriptions {
     SUMMARY = 'Summary',
@@ -303,6 +307,13 @@ export class StudyViewPageStore {
 
     private unfilteredClinicalDataCountCache: { [uniqueKey: string]: ClinicalDataCountItem } = {};
     private unfilteredClinicalDataBinCountCache: { [uniqueKey: string]: DataBin[] } = {};
+
+    @observable currentTab: StudyViewPageTabKey;
+
+    @action
+    updateCurrentTab(newTabId: StudyViewPageTabKey | undefined) {
+        this.currentTab = newTabId === undefined ? StudyViewPageTabKeyEnum.SUMMARY : newTabId;
+    }
 
     public isNewlyAdded(uniqueKey:string) {
         return this.newlyAddedCharts.includes(uniqueKey);
