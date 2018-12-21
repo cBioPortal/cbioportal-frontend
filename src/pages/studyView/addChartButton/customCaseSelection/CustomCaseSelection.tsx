@@ -19,6 +19,7 @@ import Collapse from "react-collapse";
 
 export interface ICustomCaseSelectionProps {
     allSamples: Sample[];
+    selectedSamples: Sample[];
     submitButtonText: string;
     onSubmit: (chart: NewChart) => void;
     queriedStudies: string[];
@@ -49,7 +50,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
 
     @computed
     get sampleSet(): { [id: string]: Sample } {
-        return _.keyBy(this.props.allSamples, s => `${s.studyId}:${s.sampleId}`)
+        return _.keyBy(this.props.selectedSamples, s => `${s.studyId}:${s.sampleId}`)
     }
 
     @computed
@@ -73,7 +74,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     @autobind
     @action
     onClick() {
-        let cases = this.props.allSamples.map(sample => {
+        let cases = this.props.selectedSamples.map(sample => {
             return `${sample.studyId}:${(this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE) ? sample.sampleId : sample.patientId}${this.props.disableGrouping ? '' : ` ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`}`
         });
         if (this.caseIdsMode === ClinicalDataTypeEnum.PATIENT) {
@@ -131,14 +132,9 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
 
     @computed
     get dataFormatContent() {
-        if (this.props.disableGrouping) {
-            return <span>Each row should have following format:<br/>
-                study_id:{this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE ? 'sample_id ' : 'patient_id '}</span>;
-        } else {
-            return <span>Each row can have two columns separated by space or tab:
+        return <span>Each row can have two columns separated by space or tab:
                 <br/>1) study_id:{this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE ? 'sample_id ' : 'patient_id '}
-                and<br/>2) group_name of your choice<br/>group_name is optional if there is only one group.</span>;
-        }
+            and<br/>2) group_name of your choice<br/>group_name is optional if there is only one group.</span>;
     }
 
     public mainContent() {
@@ -160,27 +156,31 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                     }
                 </ButtonGroup>
 
-                <div style={{display: 'flex', justifyContent:'space-between'}}>
-                    <span
-                        className={styles.fillIds}
-                        onClick={this.onClick}>
-                        Use current selected samples/patients
+
+                {!this.props.disableGrouping && (
+                    <span>
+                        <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                            <span
+                                className={styles.fillIds}
+                                onClick={this.onClick}>
+                                Use current selected samples/patients
+                            </span>
+
+                            <div className="collapsible-header" onClick={this.handleDataFormatToggle}>
+                                <a>Data Format</a>
+                                <span style={{paddingLeft: 4, cursor: 'pointer'}}>
+                                {this.dataFormatCollapsed ?
+                                    <i className="fa fa-chevron-down"/> :
+                                    <i className="fa fa-chevron-up"/>
+                                }
+                            </span>
+                            </div>
+                        </div>
+                        <Collapse isOpened={!this.dataFormatCollapsed}>
+                            <div style={{marginTop: '5px'}}>{this.dataFormatContent}</div>
+                        </Collapse>
                     </span>
-
-                    <div className="collapsible-header" onClick={this.handleDataFormatToggle}>
-                        <a>Data Format</a>
-                        <span style={{paddingLeft: 4, cursor: 'pointer'}}>
-                            {this.dataFormatCollapsed ?
-                                <i className="fa fa-chevron-down"/> :
-                                <i className="fa fa-chevron-up"/>
-                            }
-                        </span>
-                    </div>
-                </div>
-
-                <Collapse isOpened={!this.dataFormatCollapsed}>
-                    <div style={{marginTop: '5px'}}>{this.dataFormatContent}</div>
-                </Collapse>
+                )}
 
                 <textarea
                     value={this.content}
