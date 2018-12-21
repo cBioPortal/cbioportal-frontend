@@ -1734,11 +1734,11 @@ export class QueryStore
 		{
 			this.geneQueryErrorDisplayStatus = 'shouldFocus';
 			this.genesetQueryErrorDisplayStatus = 'shouldFocus';
-			return;
+			return false;
 		}
 
 		if (!this.submitEnabled || !this.asyncUrlParams.isComplete)
-			return;
+			return false;
 
 		let urlParams = this.asyncUrlParams.result;
 
@@ -1748,7 +1748,7 @@ export class QueryStore
             this.singlePageAppSubmitRoutine(urlParams.query);
 		}
 
-
+		return true;
 
 	}
 
