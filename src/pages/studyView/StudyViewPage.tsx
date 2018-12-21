@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import {inject, Observer, observer} from "mobx-react";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
-import {computed, IReactionDisposer, reaction} from 'mobx';
+import {computed, IReactionDisposer, reaction, observable} from 'mobx';
 import {
     NewChart,
     StudyViewPageStore,
@@ -86,6 +86,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     private store: StudyViewPageStore;
     private enableAddChartInTabs = [StudyViewPageTabKeyEnum.SUMMARY, StudyViewPageTabKeyEnum.CLINICAL_DATA];
     private queryReaction:IReactionDisposer;
+    @observable showCustomSelectTooltip = false;
 
     constructor(props: IStudyViewPageProps) {
         super();
@@ -211,25 +212,27 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                     && (
                                         <div style={{display: 'flex'}}>
                                             <DefaultTooltip
-                                                trigger={["click"]}
+                                                visible={this.showCustomSelectTooltip}
                                                 placement={"bottomLeft"}
                                                 destroyTooltipOnHide={true}
                                                 overlay={() => (
                                                     <div style={{width: '300px'}}>
                                                         <CustomCaseSelection
                                                             allSamples={this.store.samples.result}
+                                                            selectedSamples={this.store.selectedSamples.result}
                                                             submitButtonText={"Select"}
                                                             disableGrouping={true}
                                                             queriedStudies={this.store.queriedPhysicalStudyIds.result}
                                                             onSubmit={(chart: NewChart) => {
-                                                                this.store.resetFiltersAndAddCustomChart(chart);
+                                                                this.showCustomSelectTooltip = false;
+                                                                this.store.updateCustomSelect(chart);
                                                             }}
                                                         />
                                                     </div>
                                                 )}
                                             >
                                                 <button className='btn btn-primary btn-xs'
-
+                                                        onClick={() => this.showCustomSelectTooltip = true}
                                                         style={{marginLeft: '10px'}}>Custom Selection
                                                 </button>
                                             </DefaultTooltip>

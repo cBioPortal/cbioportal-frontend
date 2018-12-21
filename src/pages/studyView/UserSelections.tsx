@@ -15,6 +15,7 @@ export interface IUserSelectionsProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
     customChartsFilter: {[key:string]:string[]};
     getSelectedGene: (entrezGeneId: number) => string|undefined;
+    numberOfSelectedSamplesInCustomSelection: number;
     attributesMetaSet: { [id: string]: ChartMeta };
     updateClinicalDataEqualityFilter: (chartMeta: ChartMeta, value: string[]) => void;
     updateClinicalDataIntervalFilter: (chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) => void;
@@ -26,6 +27,7 @@ export interface IUserSelectionsProps {
     resetMutationCountVsCNAFilter: () => void;
     removeWithMutationDataFilter: () => void;
     removeWithCNADataFilter: () => void;
+    removeCustomSelectionFilter: () => void,
     clearChartSampleIdentifierFilter: (chartMeta: ChartMeta) => void;
     clearAllFilters: () => void
 }
@@ -47,6 +49,22 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
     @computed
     get allComponents() {
         let components = [] as JSX.Element[];
+
+        // Show the filter for the custom selection
+        if (this.props.numberOfSelectedSamplesInCustomSelection > 0) {
+            components.push(<div className={styles.parentGroupLogic}>
+                <GroupLogic
+                    components={[
+                        <span className={styles.filterClinicalAttrName}>Custom Selection</span>,
+                        <PillTag
+                            content={`${this.props.numberOfSelectedSamplesInCustomSelection} sample${this.props.numberOfSelectedSamplesInCustomSelection > 1 ? 's' : ''}`}
+                            backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
+                            onDelete={() => this.props.removeCustomSelectionFilter()}
+                        />
+                    ]}
+                    operation={':'}
+                    group={false}/></div>);
+        }
 
         // Pie chart filters
         _.reduce((this.props.filter.clinicalDataEqualityFilters || []), (acc, clinicalDataEqualityFilter) => {
