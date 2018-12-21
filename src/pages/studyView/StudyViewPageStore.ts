@@ -2220,6 +2220,7 @@ export class StudyViewPageStore {
     get selectedPatients(): Patient[] {
         return _.values(_.reduce(this.selectedSamples.result, (acc, sample) => {
             acc[sample.uniquePatientKey] = {
+                cancerStudy: {} as any,
                 patientId: sample.patientId,
                 uniquePatientKey: sample.uniquePatientKey,
                 studyId: sample.studyId,
