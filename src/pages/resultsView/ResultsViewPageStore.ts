@@ -945,7 +945,7 @@ export class ResultsViewPageStore {
         ],
         invoke: () => {
             const data = [...(this.putativeDriverAnnotatedMutations.result!), ...(this.annotatedMolecularData.result!)];
-            const accessorsInstance = new accessors(this.selectedMolecularProfiles.result!, true);
+            const accessorsInstance = new accessors(this.selectedMolecularProfiles.result!);
             const defaultOQLQuery = this.defaultOQLQuery.result!;
             const samples = this.samples.result!;
             const patients = this.patients.result!;
@@ -1046,7 +1046,7 @@ export class ResultsViewPageStore {
                 const filteredAlterationsByOQLLine:OQLLineFilterOutput<AnnotatedExtendedAlteration>[] = filterCBioPortalWebServiceDataByOQLLine(
                     this.rvQuery.oqlQuery,
                     [...(this.putativeDriverAnnotatedMutations.result!), ...(this.annotatedMolecularData.result!)],
-                    (new accessors(this.selectedMolecularProfiles.result!, true)),
+                    (new accessors(this.selectedMolecularProfiles.result!)),
                     this.defaultOQLQuery.result!
                 );
 
@@ -1173,12 +1173,21 @@ export class ResultsViewPageStore {
     readonly alteredSampleKeys = remoteData({
         await:()=>[
             this.samples,
-            this.caseAggregatedData
+            this.putativeDriverFilteredCaseAggregatedDataByOQLLine
         ],
         invoke:()=>{
-            const caseAggregatedData = this.caseAggregatedData.result!;
+            const caseAggregatedDataByLine = this.putativeDriverFilteredCaseAggregatedDataByOQLLine.result!;
             return Promise.resolve(
-                this.samples.result!.map(s=>s.uniqueSampleKey).filter(sampleKey=>!!caseAggregatedData.samples[sampleKey].length)
+                this.samples.result!.map(s=>s.uniqueSampleKey).filter(sampleKey=>{
+                    let isAltered = false;
+                    for (const caseData of caseAggregatedDataByLine) {
+                        if (caseData.cases.samples[sampleKey].length > 0) {
+                            isAltered = true;
+                            break;
+                        }
+                    }
+                    return isAltered;
+                })
             );
         }
     });
