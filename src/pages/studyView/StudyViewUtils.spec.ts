@@ -954,6 +954,7 @@ describe('StudyViewUtils', () => {
             -666.666,
             -3,
             -2.2499999999999,
+            -2.0000000000001,
             -1,
             -0.6000000000000001,
             -0.002499999998
@@ -965,6 +966,7 @@ describe('StudyViewUtils', () => {
             1,
             1.5999999999999999,
             1.7999999999999998,
+            2.0000000000000001,
             16.99999999999998,
             666.666
         ];
@@ -973,9 +975,10 @@ describe('StudyViewUtils', () => {
             assert.equal(toFixedDigit(negativeValues[0]), "-666.67");
             assert.equal(toFixedDigit(negativeValues[1]), "-3");
             assert.equal(toFixedDigit(negativeValues[2]), "-2.25");
-            assert.equal(toFixedDigit(negativeValues[3]), "-1");
-            assert.equal(toFixedDigit(negativeValues[4]), "-0.6");
-            assert.equal(toFixedDigit(negativeValues[5]), "-0.0025");
+            assert.equal(toFixedDigit(negativeValues[3]), "-2");
+            assert.equal(toFixedDigit(negativeValues[4]), "-1");
+            assert.equal(toFixedDigit(negativeValues[5]), "-0.6");
+            assert.equal(toFixedDigit(negativeValues[6]), "-0.0025");
         });
 
         it ('handles zero properly', () => {
@@ -989,8 +992,9 @@ describe('StudyViewUtils', () => {
             assert.equal(toFixedDigit(positiveValues[2]), "1");
             assert.equal(toFixedDigit(positiveValues[3]), "1.6");
             assert.equal(toFixedDigit(positiveValues[4]), "1.8");
-            assert.equal(toFixedDigit(positiveValues[5]), "17");
-            assert.equal(toFixedDigit(positiveValues[6]), "666.67");
+            assert.equal(toFixedDigit(positiveValues[5]), "2");
+            assert.equal(toFixedDigit(positiveValues[6]), "17");
+            assert.equal(toFixedDigit(positiveValues[7]), "666.67");
         });
     });
 
@@ -1766,36 +1770,36 @@ describe('StudyViewUtils', () => {
             error: undefined
         };
         it('initialVisibleAttributesPromise should be used when the chart is default visible attribute and in initial state', () => {
-            const promises = getRequestedAwaitPromisesForClinicalData(true, true, false, false, false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            const promises = getRequestedAwaitPromisesForClinicalData(true, true, false, false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
             assert.equal(promises.length, 1);
             assert.isTrue(promises[0] === initialVisibleAttributesPromise);
         });
         it('newlyAddedUnfilteredPromise should be used when the chart is not default visible attribute, at the time the chart is not filtered', () => {
-            const promises = getRequestedAwaitPromisesForClinicalData(false, true, false, true, false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            const promises = getRequestedAwaitPromisesForClinicalData(false, true, false,  false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
             assert.equal(promises.length, 1);
             assert.isTrue(promises[0] === newlyAddedUnfilteredPromise);
         });
         it('unfilteredPromise should be used when there are filters applied, but attribute is unfiltered, ignore whether the chart is default visible attribute', () => {
-            let promises = getRequestedAwaitPromisesForClinicalData(true, false, true, false, false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            let promises = getRequestedAwaitPromisesForClinicalData(true, false, true,  false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
             assert.equal(promises.length, 1);
             assert.isTrue(promises[0] === unfilteredPromise);
 
-            promises = getRequestedAwaitPromisesForClinicalData(false, false, true, false, false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            promises = getRequestedAwaitPromisesForClinicalData(false, false, true,  false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
             assert.equal(promises.length, 1);
             assert.isTrue(promises[0] === unfilteredPromise);
         });
 
         it('unfilteredPromise should be used when there are filters applied, when it is newly added chart', () => {
-            let promises = getRequestedAwaitPromisesForClinicalData(true, false, true, true, false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            let promises = getRequestedAwaitPromisesForClinicalData(true, false, true, false, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
             assert.equal(promises.length, 1);
             assert.isTrue(promises[0] === unfilteredPromise);
         });
 
         it('When chart is filtered and not in initial state, empty array should be returned. Ignore whether the chart is default visible attribute', () => {
-            let promises = getRequestedAwaitPromisesForClinicalData(true, false, true, false, true, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            let promises = getRequestedAwaitPromisesForClinicalData(true, false, true,  true, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
             assert.equal(promises.length, 0);
 
-            promises = getRequestedAwaitPromisesForClinicalData(false, false, true, false, true, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
+            promises = getRequestedAwaitPromisesForClinicalData(false, false, true,  true, unfilteredPromise, newlyAddedUnfilteredPromise, initialVisibleAttributesPromise);
             assert.equal(promises.length, 0);
         });
     })

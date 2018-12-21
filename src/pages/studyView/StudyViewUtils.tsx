@@ -560,7 +560,7 @@ export function isLogScaleByDataBins(data?: DataBin[]) {
 
 export function isScientificSmallValue(value: number) {
     // value should be between -0.001 and 0.001 (except 0) to be considered as scientific small number
-    return value !== 0 && -0.001 < value && value < 0.001;
+    return value !== 0 && -0.001 <= value && value <= 0.001;
 }
 
 export function formatNumericalTickValues(numericalBins: DataBin[]) {
@@ -603,7 +603,8 @@ export function formatNumericalTickValues(numericalBins: DataBin[]) {
     if (isLogScale) {
         formatted = formatLogScaleValues(values);
     }
-    else if (intervalBins.length > 0 && isScientificSmallValue(intervalBins[intervalBins.length - 1].end))
+    else if (intervalBins.length > 0 &&
+        isScientificSmallValue(intervalBins[Math.floor(intervalBins.length / 2)].end))
     {
         // scientific notation
         formatted = values.map(value => value.toExponential(0));
@@ -624,8 +625,10 @@ export function formatNumericalTickValues(numericalBins: DataBin[]) {
     return formatted;
 }
 
-export function formatLinearScaleValues(values: number[]) {
-    return values.map(value => toFixedDigit(value));
+export function formatLinearScaleValues(values: number[])
+{
+    return values.map(value => isScientificSmallValue(value) ?
+        value.toExponential(0) : toFixedDigit(value));
 }
 
 export function formatLogScaleValues(values: number[]) {
@@ -741,11 +744,8 @@ export function formatValue(value: number|undefined) {
         if (isScientificSmallValue(value)) {
             formatted = value.toExponential(0);
         }
-        else if (value < 1 && value > -1 && value !== 0) {
-            formatted = toFixedDigit(value);
-        }
         else {
-            formatted = `${value}`;
+            formatted = toFixedDigit(value);
         }
     }
 
@@ -765,12 +765,18 @@ export function toFixedDigit(value: number, fractionDigits: number = 2)
         return `${value}`;
     }
 
-    const absLogValue = Math.abs(Math.log10(absValue % 1));
+    let digits = fractionDigits;
 
-    const numberOfLeadingDecimalZeroes = Number.isInteger(absLogValue) ?
-        Math.floor(absLogValue) - 1 : Math.floor(absLogValue);
+    // for small numbers we need to know the exact number of leading decimal zeroes
+    if (value < 1 && value > -1) {
+        const absLogValue = Math.abs(Math.log10(absValue % 1));
+        const numberOfLeadingDecimalZeroes = Number.isInteger(absLogValue) ?
+            Math.floor(absLogValue) - 1 : Math.floor(absLogValue);
 
-    return `${Number(value.toFixed(numberOfLeadingDecimalZeroes + fractionDigits))}`;
+        digits += numberOfLeadingDecimalZeroes;
+    }
+
+    return `${Number(value.toFixed(digits))}`;
 }
 
 export function getChartMetaDataType(uniqueKey: string): ChartMetaDataType {
@@ -1153,15 +1159,11 @@ export function getSamplesByExcludingFiltersOnChart(
     });
 }
 
-export function getRequestedAwaitPromisesForClinicalData(isDefaultVisibleAttribute:boolean, isInitialFilterState: boolean, chartsAreFiltered: boolean, chartIsNewlyAdded: boolean, chartIsFiltered: boolean, unfilteredPromise: MobxPromise<any>, newlyAddedUnfilteredPromise: MobxPromise<any>, initialVisibleAttributesPromise: MobxPromise<any>): MobxPromise<any>[] {
+export function getRequestedAwaitPromisesForClinicalData(isDefaultVisibleAttribute:boolean, isInitialFilterState: boolean, chartsAreFiltered: boolean, chartIsFiltered: boolean, unfilteredPromise: MobxPromise<any>, newlyAddedUnfilteredPromise: MobxPromise<any>, initialVisibleAttributesPromise: MobxPromise<any>): MobxPromise<any>[] {
     if (isInitialFilterState && isDefaultVisibleAttribute) {
         return [initialVisibleAttributesPromise];
     } else if (!chartsAreFiltered) {
-        if (chartIsNewlyAdded) {
-            return [newlyAddedUnfilteredPromise];
-        } else {
-            return [];
-        }
+        return [newlyAddedUnfilteredPromise];
     } else if (chartIsFiltered) {
         // It will get a new Promise assigned in the invoke function
         return [];
