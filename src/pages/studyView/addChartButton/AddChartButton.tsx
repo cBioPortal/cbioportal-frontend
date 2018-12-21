@@ -7,8 +7,8 @@ import {
     ChartMetaDataTypeEnum, ChartType,
     ClinicalDataCountSet,
     NewChart,
-    StudyViewPageStore,
-    StudyViewPageTabKeys
+    StudyViewPageStore, StudyViewPageTabKey,
+    StudyViewPageTabKeyEnum
 } from "../StudyViewPageStore";
 import autobind from 'autobind-decorator';
 import * as _ from 'lodash';
@@ -23,7 +23,7 @@ import InfoBanner from "../infoBanner/InfoBanner";
 
 export interface IAddChartTabsProps {
     store: StudyViewPageStore,
-    currentTab: string,
+    currentTab: StudyViewPageTabKey,
     initialActiveTab?: TabKeys,
     disableGenomicTab?: boolean,
     disableClinicalTab?: boolean,
@@ -119,7 +119,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     @computed
     get genomicDataOptions(): ChartOption[] {
         const genomicDataOptions = getOptionsByChartMetaDataType(ChartMetaDataTypeEnum.GENOMIC, this.props.store.chartMetaSet, this.selectedAttrs);
-        if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
+        if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
             return genomicDataOptions.filter(option => option.chartType === ChartTypeEnum.BAR_CHART || option.chartType === ChartTypeEnum.PIE_CHART);
         } else {
             return genomicDataOptions;
@@ -148,9 +148,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
         this.props.store.addCharts(this.selectedAttrs.concat(keys));
 
         const addInSummaryInfoMessage = `${keys.length} chart${keys.length > 1 ? 's' : ''} added`;
-        if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
+        if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
             this.infoMessage = `${keys.length} column${keys.length > 1 ? 's' : ''} added to table and ${addInSummaryInfoMessage} in Summary tab`;
-        } else if (this.props.currentTab === '' || this.props.currentTab === StudyViewPageTabKeys.SUMMARY) {
+        } else if (this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
             this.infoMessage = addInSummaryInfoMessage;
         } else {
             this.infoMessage = `Added`;
@@ -168,9 +168,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
 
         const removeInSummaryInfoMessage = `${keys.length} chart${keys.length > 1 ? 's' : ''} removed`;
 
-        if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
+        if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
             this.infoMessage = `${keys.length} column${keys.length > 1 ? 's' : ''} removed from table and ${removeInSummaryInfoMessage} from Summary tab`;
-        } else if (this.props.currentTab === '' || this.props.currentTab === StudyViewPageTabKeys.SUMMARY) {
+        } else if (this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
             this.infoMessage = removeInSummaryInfoMessage;
         } else {
             this.infoMessage = `Removed`;
@@ -178,6 +178,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     }
 
     @autobind
+    @action
     private onToggleOption(key: string) {
         const option = _.find(this.clinicalDataOptions.concat(this.genomicDataOptions), option => option.key === key);
         if (option !== undefined) {
@@ -190,9 +191,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 }, [] as string[]));
 
                 let additionType = '';
-                if (this.props.currentTab === StudyViewPageTabKeys.SUMMARY) {
+                if (this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
                     additionType = ` ${ChartTypeNameEnum[option.chartType]}`;
-                } else if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
+                } else if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
                     additionType = ' column';
                 }
                 this.infoMessage = `${option.label}${additionType} was removed`;
@@ -201,9 +202,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 this.props.store.addCharts(this.selectedAttrs.concat([key]));
 
                 let additionType = '';
-                if (this.props.currentTab === StudyViewPageTabKeys.SUMMARY) {
+                if (this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
                     additionType = ` as a ${ChartTypeNameEnum[option.chartType]}`;
-                } else if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
+                } else if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
                     additionType = ` to table and as ${ChartTypeNameEnum[option.chartType]} in Summary tab`;
                 }
                 this.infoMessage = `${option.label} added${additionType}`;
