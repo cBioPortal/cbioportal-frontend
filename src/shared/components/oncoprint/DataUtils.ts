@@ -11,7 +11,7 @@ import {
 } from "../../api/generated/CBioPortalAPI";
 import {
     ClinicalTrackDatum,
-    GeneticTrackDatum,
+    GeneticTrackDatum, GeneticTrackDatum_Data,
     IBaseHeatmapTrackDatum,
     IGeneHeatmapTrackDatum,
 } from "./Oncoprint";
@@ -109,7 +109,7 @@ export function fillGeneticTrackDatum(
     // must already have all non-disp* fields except trackLabel and data
     newDatum:Partial<GeneticTrackDatum>,
     trackLabel:string,
-    data:AnnotatedExtendedAlteration[]
+    data:GeneticTrackDatum_Data[]
 ): GeneticTrackDatum {
     newDatum.trackLabel = trackLabel;
     newDatum.data = data;
@@ -126,7 +126,7 @@ export function fillGeneticTrackDatum(
         const molecularAlterationType = event.molecularProfileAlterationType;
         switch (molecularAlterationType) {
             case "COPY_NUMBER_ALTERATION":
-                const cnaEvent = cnaDataToString[(event as NumericGeneMolecularData).value];
+                const cnaEvent = cnaDataToString[event.value as NumericGeneMolecularData["value"]];
                 if (cnaEvent) {
                     // not diploid
                     dispCnaCounts[cnaEvent] = dispCnaCounts[cnaEvent] || 0;
@@ -148,7 +148,7 @@ export function fillGeneticTrackDatum(
                 }
                 break;
             case "MUTATION_EXTENDED":
-                let oncoprintMutationType = getOncoprintMutationType(event as Mutation);
+                let oncoprintMutationType = getOncoprintMutationType(event as Pick<Mutation, "proteinChange"|"mutationType">);
                 if (oncoprintMutationType === "fusion") {
                     dispFusion = true;
                 } else {

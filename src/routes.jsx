@@ -23,6 +23,7 @@ import DatasetPage from 'bundle-loader?lazy!babel-loader!./pages/staticPages/dat
 import Homepage from 'bundle-loader?lazy!babel-loader!./pages/home/HomePage';
 import StudyViewPage from 'bundle-loader?lazy!babel-loader!./pages/studyView/StudyViewPage';
 import MutationMapperTool from 'bundle-loader?lazy!babel-loader!./pages/staticPages/tools/mutationMapper/MutationMapperTool';
+import OncoprinterTool from 'bundle-loader?lazy!babel-loader!./pages/staticPages/tools/oncoprinter/OncoprinterTool';
 import WebAPIPage from 'bundle-loader?lazy!babel-loader!./pages/staticPages/webAPI/WebAPIPage';
 import RMATLAB from 'bundle-loader?lazy!babel-loader!./pages/staticPages/rmatlab/RMatLAB';
 import Tutorials from 'bundle-loader?lazy!babel-loader!./pages/staticPages/tutorials/Tutorials';
@@ -81,6 +82,7 @@ export const makeRoutes = (routing) => {
                 <Route path="/study" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(StudyViewPage)} />
 
                 <Route path="/mutation_mapper" getComponent={lazyLoadComponent(MutationMapperTool)} />
+                <Route path="/oncoprinter" getComponent={lazyLoadComponent(OncoprinterTool)} />
 
                 <Route path="/webAPI" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(WebAPIPage)} />
                 <Route path="/rmatlab" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(RMATLAB)} />
