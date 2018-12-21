@@ -186,14 +186,16 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                         tickValues={this.tickValues}
                         tickFormat={(t: number) => this.tickFormat[t - 1]}
                         domain={[0, this.tickValues[this.tickValues.length - 1] + 1]}
-                        tickLabelComponent={<BarChartAxisLabel/>}
-                        style={{
-                            tickLabels: {
-                                angle: this.tilted ? TILT_ANGLE : 0,
-                                verticalAnchor: "start",
-                                textAnchor: "start"
-                            }
-                        }}
+                        tickLabelComponent={<BarChartAxisLabel />}
+                        style={
+                            this.tilted ? {
+                                tickLabels: {
+                                    angle: TILT_ANGLE,
+                                    verticalAnchor: "start",
+                                    textAnchor: "start"
+                                }
+                            } : undefined
+                        }
                     />
                     <VictoryAxis
                         dependentAxis={true}
