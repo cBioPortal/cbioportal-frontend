@@ -172,7 +172,7 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 <MSKTab key={2} id={TabKeysEnum.CUSTOM_GROUPS} linkText={TabKeysEnum.CUSTOM_GROUPS}
                         hide={this.props.currentTab !== '' && this.props.currentTab !== StudyViewPageTabKeys.SUMMARY}>
                     <CustomCaseSelection
-                        selectedSamples={this.props.store.selectedSamples.result}
+                        allSamples={this.props.store.samples.result}
                         queriedStudies={this.props.store.queriedPhysicalStudyIds.result}
                         isChartNameValid={this.props.store.isChartNameValid}
                         getDefaultChartName={this.props.store.getDefaultCustomChartName}
