@@ -99,6 +99,7 @@ export type ChartType = 'PIE_CHART' | 'BAR_CHART' | 'SURVIVAL' | 'TABLE' | 'SCAT
 export enum UniqueKey {
     MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
     CNA_GENES_TABLE = 'CNA_GENES_TABLE',
+    CUSTOM_SELECT = 'CUSTOM_SELECT',
     MUTATION_COUNT_CNA_FRACTION = 'MUTATION_COUNT_CNA_FRACTION',
     DISEASE_FREE_SURVIVAL = 'DFS_SURVIVAL',
     OVERALL_SURVIVAL = 'OS_SURVIVAL',
@@ -452,6 +453,8 @@ export class StudyViewPageStore {
 
     public customChartFilterSet =  observable.map<string[]>();
 
+    @observable numberOfSelectedSamplesInCustomSelection: number = 0;
+
     @observable private _customCharts = observable.shallowMap<ChartMeta>();
     @observable private _customChartsSelectedCases = observable.shallowMap<CustomChartIdentifierWithValue[]>();
 
@@ -508,6 +511,7 @@ export class StudyViewPageStore {
         this.customChartFilterSet.clear();
         this._withMutationDataFilter = false;
         this._withCNADataFilter = false;
+        this.numberOfSelectedSamplesInCustomSelection = 0;
     }
 
     @action
@@ -922,6 +926,13 @@ export class StudyViewPageStore {
             }
         }
         this.changeChartVisibility(chartMeta.uniqueKey, visible);
+    }
+
+    @autobind
+    @action
+    removeCustomSelectFilter() {
+        this._chartSampleIdentifiersFilterSet.delete(UniqueKey.CUSTOM_SELECT);
+        this.numberOfSelectedSamplesInCustomSelection = 0;
     }
 
     @action
@@ -1727,9 +1738,19 @@ export class StudyViewPageStore {
     }
 
     @autobind
-    @action resetFiltersAndAddCustomChart(newChart:NewChart) {
-        this.clearAllFilters();
-        this.addCustomChart(newChart);
+    @action
+    updateCustomSelect(newChart: NewChart) {
+        const sampleIdentifiers = _.reduce(newChart.groups, (acc, next) => {
+            acc.push(...next.cases.map((customCase: CustomChartIdentifier) => {
+                return {
+                    sampleId: customCase.sampleId,
+                    studyId: customCase.studyId
+                };
+            }));
+            return acc;
+        }, [] as SampleIdentifier[]);
+        this.numberOfSelectedSamplesInCustomSelection = sampleIdentifiers.length;
+        this.updateChartSampleIdentifierFilter(UniqueKey.CUSTOM_SELECT, sampleIdentifiers, false);
     }
 
     @computed
