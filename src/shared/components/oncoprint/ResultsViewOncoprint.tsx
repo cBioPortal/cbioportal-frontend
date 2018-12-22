@@ -123,7 +123,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     @observable.ref private oncoprint:OncoprintJS<any>;
 
-    private putativeDriverSettingsReaction:IReactionDisposer;
     private urlParamsReaction:IReactionDisposer;
 
     constructor(props:IResultsViewOncoprintProps) {
@@ -354,13 +353,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     return self.horzZoom;
                 }
             },
-            get sampleCount() {
-                if (self.props.store.samples.isComplete) {
-                    return self.props.store.samples.result.length;
-                } else {
-                    return 1;
-                }
-            }
         });
     }
 
@@ -377,7 +369,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     componentWillUnmount() {
-        if (this.putativeDriverSettingsReaction) this.putativeDriverSettingsReaction();
         this.urlParamsReaction();
     }
 
@@ -690,7 +681,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     });
 
 
-    private onMinimapClose() {
+    @action private onMinimapClose() {
         this.showMinimap = false;
     }
 
