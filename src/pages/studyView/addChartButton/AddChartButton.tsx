@@ -1,53 +1,53 @@
 import * as React from 'react';
 import {action, computed, observable} from "mobx";
 import {observer} from "mobx-react";
-import styles from "./styles.module.scss";
 import {ChildButton, MainButton, Menu} from 'react-mfb';
 import 'react-mfb/mfb.css';
 import {
     ChartMetaDataTypeEnum, ChartType,
     ClinicalDataCountSet,
     NewChart,
-    StudyViewPageStore,
-    StudyViewPageTabDescriptions, StudyViewPageTabKeys
+    StudyViewPageStore, StudyViewPageTabKey,
+    StudyViewPageTabKeyEnum
 } from "../StudyViewPageStore";
 import autobind from 'autobind-decorator';
-import classnames from "classnames";
 import * as _ from 'lodash';
 import AddChartByType from "./addChartByType/AddChartByType";
 import {remoteData} from "../../../shared/api/remoteData";
 import CustomCaseSelection from "./customCaseSelection/CustomCaseSelection";
 import {calculateClinicalDataCountFrequency, getOptionsByChartMetaDataType} from "../StudyViewUtils";
-import $ from 'jquery';
 import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
-import {StudySummaryTab} from "../tabs/SummaryTab";
-import {ClinicalDataTab} from "../tabs/ClinicalDataTab";
-import IFrameLoader from "../../../shared/components/iframeLoader/IFrameLoader";
-import shareUIstyles from "../../resultsView/querySummary/shareUI.module.scss";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
-import {ChartTypeEnum} from "../StudyViewConfig";
+import {ChartTypeEnum, ChartTypeNameEnum} from "../StudyViewConfig";
+import InfoBanner from "../infoBanner/InfoBanner";
 
 export interface IAddChartTabsProps {
     store: StudyViewPageStore,
-    currentTab: string,
-    disableAddGenomicButton?: boolean
+    currentTab: StudyViewPageTabKey,
+    initialActiveTab?: TabKeys,
+    disableGenomicTab?: boolean,
+    disableClinicalTab?: boolean,
+    disableCustomTab?: boolean,
+    onInfoMessageChange?: (newMessage: string) => void,
 }
 
 export interface IAddChartButtonProps extends IAddChartTabsProps {
+    buttonText: string,
     addChartOverlayClassName?: string
 }
 
 
-enum TabKeysEnum {
+export enum TabKeysEnum {
     CUSTOM_GROUPS = 'Custom Groups',
     CLINICAL = 'Clinical',
     GENOMIC = 'Genomic'
 }
 
-type TabKeys =
+export type TabKeys =
     TabKeysEnum.CUSTOM_GROUPS
     | TabKeysEnum.GENOMIC
-    | TabKeysEnum.CLINICAL;
+    | TabKeysEnum.CLINICAL
+    | "";
 
 export type ChartOption = {
     label: string,
@@ -59,14 +59,22 @@ export type ChartOption = {
 }
 
 export const INFO_TIMEOUT = 5000;
+
 @observer
 class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
-    @observable activeId: TabKeys = TabKeysEnum.CLINICAL;
-
+    @observable activeId: TabKeys;
+    @observable infoMessage: string = '';
     public static defaultProps = {
-        disableAddGenomicButton: false
+        disableGenomicTab: false,
+        disableClinicalTab: false,
+        disableCustomTab: false
     };
 
+    constructor(props: IAddChartTabsProps, context: any) {
+        super(props, context);
+
+        this.activeId = props.initialActiveTab || (props.disableClinicalTab ? "" : TabKeysEnum.CLINICAL) || (props.disableGenomicTab ? "" : TabKeysEnum.GENOMIC) || (props.disableCustomTab ? "" : TabKeysEnum.CUSTOM_GROUPS)
+    }
 
     readonly getClinicalDataCount = remoteData<ClinicalDataCountSet>({
         await: () => [this.props.store.clinicalDataWithCount, this.props.store.selectedSamples],
@@ -89,12 +97,29 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     @action
     updateActiveId(newId: string) {
         this.activeId = newId as TabKeys;
+        this.resetInfoMessage();
+    }
+
+    @autobind
+    @action
+    onInfoMessageChange(newMessage: string) {
+        this.infoMessage = newMessage;
+        if (this.props.onInfoMessageChange) {
+            this.props.onInfoMessageChange(newMessage);
+        }
+        setTimeout(this.resetInfoMessage, INFO_TIMEOUT);
+    }
+
+    @autobind
+    @action
+    resetInfoMessage() {
+        this.infoMessage = "";
     }
 
     @computed
     get genomicDataOptions(): ChartOption[] {
         const genomicDataOptions = getOptionsByChartMetaDataType(ChartMetaDataTypeEnum.GENOMIC, this.props.store.chartMetaSet, this.selectedAttrs);
-        if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
+        if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
             return genomicDataOptions.filter(option => option.chartType === ChartTypeEnum.BAR_CHART || option.chartType === ChartTypeEnum.PIE_CHART);
         } else {
             return genomicDataOptions;
@@ -118,8 +143,18 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
     }
 
     @autobind
+    @action
     private onAddAll(keys: string[]) {
         this.props.store.addCharts(this.selectedAttrs.concat(keys));
+
+        const addInSummaryInfoMessage = `${keys.length} chart${keys.length > 1 ? 's' : ''} added`;
+        if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
+            this.infoMessage = `${keys.length} column${keys.length > 1 ? 's' : ''} added to table and ${addInSummaryInfoMessage} in Summary tab`;
+        } else if (this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
+            this.infoMessage = addInSummaryInfoMessage;
+        } else {
+            this.infoMessage = `Added`;
+        }
     }
 
     @autobind
@@ -130,74 +165,100 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
             }
             return acc;
         }, [] as string[]));
+
+        const removeInSummaryInfoMessage = `${keys.length} chart${keys.length > 1 ? 's' : ''} removed`;
+
+        if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
+            this.infoMessage = `${keys.length} column${keys.length > 1 ? 's' : ''} removed from table and ${removeInSummaryInfoMessage} from Summary tab`;
+        } else if (this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
+            this.infoMessage = removeInSummaryInfoMessage;
+        } else {
+            this.infoMessage = `Removed`;
+        }
     }
 
     @autobind
+    @action
     private onToggleOption(key: string) {
-        if (this.selectedAttrs.includes(key)) {
-            this.props.store.addCharts(_.reduce(this.selectedAttrs, (acc, next) => {
-                if (next !== key) {
-                    acc.push(next);
+        const option = _.find(this.clinicalDataOptions.concat(this.genomicDataOptions), option => option.key === key);
+        if (option !== undefined) {
+            if (this.selectedAttrs.includes(key)) {
+                this.props.store.addCharts(_.reduce(this.selectedAttrs, (acc, next) => {
+                    if (next !== key) {
+                        acc.push(next);
+                    }
+                    return acc;
+                }, [] as string[]));
+
+                let additionType = '';
+                if (this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
+                    additionType = ` ${ChartTypeNameEnum[option.chartType]}`;
+                } else if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
+                    additionType = ' column';
                 }
-                return acc;
-            }, [] as string[]));
-        } else {
-            this.props.store.addCharts(this.selectedAttrs.concat([key]));
+                this.infoMessage = `${option.label}${additionType} was removed`;
+
+            } else {
+                this.props.store.addCharts(this.selectedAttrs.concat([key]));
+
+                let additionType = '';
+                if (this.props.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
+                    additionType = ` as a ${ChartTypeNameEnum[option.chartType]}`;
+                } else if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
+                    additionType = ` to table and as ${ChartTypeNameEnum[option.chartType]} in Summary tab`;
+                }
+                this.infoMessage = `${option.label} added${additionType}`;
+            }
         }
     }
 
     render() {
-        return <div style={{width: '400px'}}>
+        return <div style={{width: '400px', display: 'flex', flexDirection: 'column'}}>
             <MSKTabs activeTabId={this.activeId}
                      onTabClick={this.updateActiveId}
                      className="addChartTabs mainTabs">
 
-                <MSKTab key={0} id={TabKeysEnum.CLINICAL} linkText={TabKeysEnum.CLINICAL}>
+                <MSKTab key={0} id={TabKeysEnum.CLINICAL} linkText={TabKeysEnum.CLINICAL}
+                        hide={this.props.disableClinicalTab}>
                     <AddChartByType options={this.clinicalDataOptions}
-                                    currentTab={this.props.currentTab}
                                     freqPromise={this.getClinicalDataCount}
                                     onAddAll={this.onAddAll}
                                     onClearAll={this.onClearAll}
                                     onToggleOption={this.onToggleOption}
                     />
                 </MSKTab>
-                <MSKTab key={1} id={TabKeysEnum.GENOMIC} linkText={TabKeysEnum.GENOMIC}>
+                <MSKTab key={1} id={TabKeysEnum.GENOMIC} linkText={TabKeysEnum.GENOMIC}
+                        hide={this.props.disableGenomicTab}>
                     <AddChartByType options={this.genomicDataOptions}
-                                    currentTab={this.props.currentTab}
                                     freqPromise={this.getGenomicDataCount}
                                     onAddAll={this.onAddAll}
                                     onClearAll={this.onClearAll}
                                     onToggleOption={this.onToggleOption}/>
                 </MSKTab>
                 <MSKTab key={2} id={TabKeysEnum.CUSTOM_GROUPS} linkText={TabKeysEnum.CUSTOM_GROUPS}
-                        hide={this.props.currentTab !== '' && this.props.currentTab !== StudyViewPageTabKeys.SUMMARY}>
+                        hide={this.props.disableCustomTab}>
                     <CustomCaseSelection
                         allSamples={this.props.store.samples.result}
+                        selectedSamples={this.props.store.selectedSamples.result}
+                        submitButtonText={"Add Chart"}
                         queriedStudies={this.props.store.queriedPhysicalStudyIds.result}
                         isChartNameValid={this.props.store.isChartNameValid}
                         getDefaultChartName={this.props.store.getDefaultCustomChartName}
                         onSubmit={(chart: NewChart) => {
+                            this.infoMessage = `${chart.name} has been added.`;
                             this.props.store.addCustomChart(chart);
+
                         }}
                     />
                 </MSKTab>
             </MSKTabs>
+            {this.infoMessage && <InfoBanner message={this.infoMessage}/>}
         </div>
     }
 }
 
 @observer
 export default class AddChartButton extends React.Component<IAddChartButtonProps, {}> {
-    @computed
-    get buttonText() {
-        if (!this.props.currentTab || this.props.currentTab === StudyViewPageTabKeys.SUMMARY) {
-            return '+ Add Chart';
-        } else if (this.props.currentTab === StudyViewPageTabKeys.CLINICAL_DATA) {
-            return '+ Add Column'
-        } else {
-            return '';
-        }
-    }
 
     render() {
         return (
@@ -206,11 +267,14 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
                 placement={"bottomRight"}
                 destroyTooltipOnHide={true}
                 overlay={() => <AddChartTabs store={this.props.store}
+                                             initialActiveTab={this.props.initialActiveTab}
                                              currentTab={this.props.currentTab}
-                                             disableAddGenomicButton={this.props.disableAddGenomicButton}/>}
+                                             disableClinicalTab={this.props.disableClinicalTab}
+                                             disableGenomicTab={this.props.disableGenomicTab}
+                                             disableCustomTab={this.props.disableCustomTab}/>}
                 overlayClassName={this.props.addChartOverlayClassName}
             >
-                <button className='btn btn-primary btn-xs' style={{marginLeft: '10px'}}>{this.buttonText}</button>
+                <button className='btn btn-primary btn-xs' style={{marginLeft: '10px'}}>{this.props.buttonText}</button>
             </DefaultTooltip>
         )
     }
