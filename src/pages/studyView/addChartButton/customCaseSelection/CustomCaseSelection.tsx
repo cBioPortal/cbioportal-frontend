@@ -15,16 +15,17 @@ import {
     ValidationResult
 } from "./CustomCaseSelectionUtils";
 import autobind from 'autobind-decorator';
-import InfoBanner from "../../infoBanner/InfoBanner";
-import {INFO_TIMEOUT} from "../AddChartButton";
 import Collapse from "react-collapse";
 
 export interface ICustomCaseSelectionProps {
     allSamples: Sample[];
+    selectedSamples: Sample[];
+    submitButtonText: string;
     onSubmit: (chart: NewChart) => void;
     queriedStudies: string[];
-    getDefaultChartName: () => string;
-    isChartNameValid: (chartName: string) => boolean
+    disableGrouping?: boolean;
+    getDefaultChartName?: () => string;
+    isChartNameValid?: (chartName: string) => boolean
 }
 
 const GroupByOptions: { value: ClinicalDataType, label: string; }[] = [
@@ -36,18 +37,20 @@ const GroupByOptions: { value: ClinicalDataType, label: string; }[] = [
 export default class CustomCaseSelection extends React.Component<ICustomCaseSelectionProps, {}> {
     private validateContent: boolean = false;
     private chartNameValidation: ValidationResult = {warning: [], error: []};
-    private lastAdded: NewChart;
     @observable dataFormatCollapsed: boolean = true;
     @observable chartName: string;
     @observable showCaseIds: boolean = false;
     @observable caseIdsMode: ClinicalDataType = ClinicalDataTypeEnum.SAMPLE;
     @observable content: string = '';
     @observable validContent: string = '';
-    @observable chartAdded: boolean = false;
+
+    public static defaultProps = {
+        disableGrouping: false
+    };
 
     @computed
     get sampleSet(): { [id: string]: Sample } {
-        return _.keyBy(this.props.allSamples, s => `${s.studyId}:${s.sampleId}`)
+        return _.keyBy(this.props.selectedSamples, s => `${s.studyId}:${s.sampleId}`)
     }
 
     @computed
@@ -63,7 +66,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     @computed
     get newChartInfo(): NewChart {
         return {
-            name: this.chartName ? this.chartName : this.props.getDefaultChartName(),
+            name: this.chartName ? this.chartName : this.props.getDefaultChartName ? this.props.getDefaultChartName() : '',
             groups: this.result.validationResult.error.length === 0 ? this.result.groups : []
         }
     }
@@ -71,9 +74,13 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     @autobind
     @action
     onClick() {
-        this.content = this.props.allSamples.map(sample => {
-            return `${sample.studyId}:${(this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE) ? sample.sampleId : sample.patientId} ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`
-        }).join("\n")
+        let cases = this.props.selectedSamples.map(sample => {
+            return `${sample.studyId}:${(this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE) ? sample.sampleId : sample.patientId}${this.props.disableGrouping ? '' : ` ${DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT}`}`
+        });
+        if (this.caseIdsMode === ClinicalDataTypeEnum.PATIENT) {
+            cases = _.uniq(cases);
+        }
+        this.content = cases.join("\n")
         this.validateContent = false;
         this.validContent = this.content;
     }
@@ -89,7 +96,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     @action
     onChartNameChange(event: any) {
         this.chartName = event.currentTarget.value;
-        const validChartName = this.props.isChartNameValid(this.chartName);
+        const validChartName = this.props.isChartNameValid ? this.props.isChartNameValid(this.chartName) : true;
         if (!validChartName) {
             this.chartNameValidation = {
                 error: [{
@@ -109,10 +116,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     @autobind
     @action
     onAddChart() {
-        this.lastAdded = this.newChartInfo;
         this.props.onSubmit(this.newChartInfo);
-        this.chartAdded = true;
-        setTimeout(() => this.chartAdded = false, INFO_TIMEOUT);
     }
 
     @autobind
@@ -124,6 +128,13 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
     @computed
     get addChartButtonDisabled() {
         return this.result.validationResult.error.length > 0 || this.newChartInfo.groups.length === 0 || this.chartNameValidation.error.length > 0;
+    }
+
+    @computed
+    get dataFormatContent() {
+        return <span>Each row can have two columns separated by space or tab:
+                <br/>1) study_id:{this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE ? 'sample_id ' : 'patient_id '}
+            and<br/>2) group_name of your choice<br/>group_name is optional if there is only one group.</span>;
     }
 
     public mainContent() {
@@ -145,29 +156,31 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                     }
                 </ButtonGroup>
 
-                <div style={{display: 'flex', justifyContent:'space-between'}}>
-                    <span
-                        className={styles.fillIds}
-                        onClick={this.onClick}>
-                        Use current selected samples/patients
+
+                {!this.props.disableGrouping && (
+                    <span>
+                        <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                            <span
+                                className={styles.fillIds}
+                                onClick={this.onClick}>
+                                Use current selected samples/patients
+                            </span>
+
+                            <div className="collapsible-header" onClick={this.handleDataFormatToggle}>
+                                <a>Data Format</a>
+                                <span style={{paddingLeft: 4, cursor: 'pointer'}}>
+                                {this.dataFormatCollapsed ?
+                                    <i className="fa fa-chevron-down"/> :
+                                    <i className="fa fa-chevron-up"/>
+                                }
+                            </span>
+                            </div>
+                        </div>
+                        <Collapse isOpened={!this.dataFormatCollapsed}>
+                            <div style={{marginTop: '5px'}}>{this.dataFormatContent}</div>
+                        </Collapse>
                     </span>
-
-                    <div className="collapsible-header" onClick={this.handleDataFormatToggle}>
-                        <a>Data Format</a>
-                        <span style={{paddingLeft: 4, cursor: 'pointer'}}>
-                            {this.dataFormatCollapsed ?
-                                <i className="fa fa-chevron-down"/> :
-                                <i className="fa fa-chevron-up"/>
-                            }
-                        </span>
-                    </div>
-                </div>
-
-                <Collapse isOpened={!this.dataFormatCollapsed}>
-                    <div style={{marginTop: '5px'}}>Each row can have two columns separated by space or tab:
-                        <br/>1) study_id:{this.caseIdsMode === ClinicalDataTypeEnum.SAMPLE ? 'sample_id ' : 'patient_id '}
-                        and<br/>2) group_name of your choice<br/>group_name is optional if there is only one group.</div>
-                </Collapse>
+                )}
 
                 <textarea
                     value={this.content}
@@ -191,21 +204,20 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                     })
                 }
                 <div className={styles.operations}>
-                    <input placeholder={"Chart name (optional)"}
-                           style={{width: '200px'}}
-                           type="text"
-                           onInput={this.onChartNameChange}
-                           className='form-control input-sm'/>
+                    {!this.props.disableGrouping && (
+                        <input placeholder={"Chart name (optional)"}
+                               style={{width: '200px'}}
+                               type="text"
+                               onInput={this.onChartNameChange}
+                               className='form-control input-sm'/>
+                    )}
                     <button
                         disabled={this.addChartButtonDisabled}
                         className="btn btn-primary btn-sm"
                         onClick={this.onAddChart}>
-                        Add Chart
+                        {this.props.submitButtonText}
                     </button>
                 </div>
-                {this.chartAdded &&
-                <InfoBanner message={`${this.lastAdded.name} has been added.`}/>
-                }
             </div>
         );
     }

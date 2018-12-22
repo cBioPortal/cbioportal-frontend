@@ -99,6 +99,7 @@ export type ChartType = 'PIE_CHART' | 'BAR_CHART' | 'SURVIVAL' | 'TABLE' | 'SCAT
 export enum UniqueKey {
     MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
     CNA_GENES_TABLE = 'CNA_GENES_TABLE',
+    CUSTOM_SELECT = 'CUSTOM_SELECT',
     MUTATION_COUNT_CNA_FRACTION = 'MUTATION_COUNT_CNA_FRACTION',
     DISEASE_FREE_SURVIVAL = 'DFS_SURVIVAL',
     OVERALL_SURVIVAL = 'OS_SURVIVAL',
@@ -107,11 +108,15 @@ export enum UniqueKey {
     FRACTION_GENOME_ALTERED = "SAMPLE_FRACTION_GENOME_ALTERED",
 }
 
-export enum StudyViewPageTabKeys {
+export enum StudyViewPageTabKeyEnum {
     SUMMARY = 'summary',
     CLINICAL_DATA = 'clinicalData',
     HEATMAPS = 'heatmaps'
 }
+
+export type StudyViewPageTabKey =
+    StudyViewPageTabKeyEnum.CLINICAL_DATA | StudyViewPageTabKeyEnum.SUMMARY | StudyViewPageTabKeyEnum.HEATMAPS;
+
 
 export enum StudyViewPageTabDescriptions {
     SUMMARY = 'Summary',
@@ -304,6 +309,13 @@ export class StudyViewPageStore {
     private unfilteredClinicalDataCountCache: { [uniqueKey: string]: ClinicalDataCountItem } = {};
     private unfilteredClinicalDataBinCountCache: { [uniqueKey: string]: DataBin[] } = {};
 
+    @observable currentTab: StudyViewPageTabKey;
+
+    @action
+    updateCurrentTab(newTabId: StudyViewPageTabKey | undefined) {
+        this.currentTab = newTabId === undefined ? StudyViewPageTabKeyEnum.SUMMARY : newTabId;
+    }
+
     public isNewlyAdded(uniqueKey:string) {
         return this.newlyAddedCharts.includes(uniqueKey);
     }
@@ -441,6 +453,8 @@ export class StudyViewPageStore {
 
     public customChartFilterSet =  observable.map<string[]>();
 
+    @observable numberOfSelectedSamplesInCustomSelection: number = 0;
+
     @observable private _customCharts = observable.shallowMap<ChartMeta>();
     @observable private _customChartsSelectedCases = observable.shallowMap<CustomChartIdentifierWithValue[]>();
 
@@ -497,6 +511,7 @@ export class StudyViewPageStore {
         this.customChartFilterSet.clear();
         this._withMutationDataFilter = false;
         this._withCNADataFilter = false;
+        this.numberOfSelectedSamplesInCustomSelection = 0;
     }
 
     @action
@@ -911,6 +926,13 @@ export class StudyViewPageStore {
             }
         }
         this.changeChartVisibility(chartMeta.uniqueKey, visible);
+    }
+
+    @autobind
+    @action
+    removeCustomSelectFilter() {
+        this._chartSampleIdentifiersFilterSet.delete(UniqueKey.CUSTOM_SELECT);
+        this.numberOfSelectedSamplesInCustomSelection = 0;
     }
 
     @action
@@ -1713,6 +1735,22 @@ export class StudyViewPageStore {
         this.setCustomChartFilters(chartMeta, newChart.groups.map(group=>group.name));
         this.newlyAddedCharts.clear();
         this.newlyAddedCharts.push(uniqueKey);
+    }
+
+    @autobind
+    @action
+    updateCustomSelect(newChart: NewChart) {
+        const sampleIdentifiers = _.reduce(newChart.groups, (acc, next) => {
+            acc.push(...next.cases.map((customCase: CustomChartIdentifier) => {
+                return {
+                    sampleId: customCase.sampleId,
+                    studyId: customCase.studyId
+                };
+            }));
+            return acc;
+        }, [] as SampleIdentifier[]);
+        this.numberOfSelectedSamplesInCustomSelection = sampleIdentifiers.length;
+        this.updateChartSampleIdentifierFilter(UniqueKey.CUSTOM_SELECT, sampleIdentifiers, false);
     }
 
     @computed

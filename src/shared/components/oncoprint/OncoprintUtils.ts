@@ -534,8 +534,8 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
                         (ret as any).numberRange = [0,undefined];
                         ret.custom_options =
                             sampleMode ?
-                                [{ label: "Show one column per patient.", onClick:()=>oncoprint.controlsHandlers.onSelectColumnType("patient")}] :
-                                [{ label: "Show one column per sample.", onClick:()=>oncoprint.controlsHandlers.onSelectColumnType("sample")}];
+                                [{ label: "Show one column per patient.", onClick:()=>oncoprint.controlsHandlers.onSelectColumnType!("patient")}] :
+                                [{ label: "Show one column per sample.", onClick:()=>oncoprint.controlsHandlers.onSelectColumnType!("sample")}];
                     }
                 } else if (attribute.datatype === "STRING") {
                     ret.datatype = "string";

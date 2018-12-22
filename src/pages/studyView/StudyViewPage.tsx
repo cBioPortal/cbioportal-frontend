@@ -2,11 +2,13 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import {inject, Observer, observer} from "mobx-react";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
-import {reaction, IReactionDisposer} from 'mobx';
+import {computed, IReactionDisposer, reaction, observable} from 'mobx';
 import {
+    NewChart,
     StudyViewPageStore,
     StudyViewPageTabDescriptions,
-    StudyViewPageTabKeys
+    StudyViewPageTabKey,
+    StudyViewPageTabKeyEnum
 } from 'pages/studyView/StudyViewPageStore';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {ClinicalDataTab} from "./tabs/ClinicalDataTab";
@@ -26,7 +28,9 @@ import AddChartButton from "./addChartButton/AddChartButton";
 import {CSSTransition} from "react-transition-group";
 import {sleep} from "../../shared/lib/TimeUtils";
 import {remoteData} from "../../shared/api/remoteData";
-import {If, Else, Then} from 'react-if';
+import {Else, If, Then} from 'react-if';
+import DefaultTooltip from "../../shared/components/defaultTooltip/DefaultTooltip";
+import CustomCaseSelection from "./addChartButton/customCaseSelection/CustomCaseSelection";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -80,8 +84,10 @@ export class StudyResultsSummary extends React.Component<{ store:StudyViewPageSt
 @observer
 export default class StudyViewPage extends React.Component<IStudyViewPageProps, {}> {
     private store: StudyViewPageStore;
-    private enableAddChartInTabs = [StudyViewPageTabKeys.SUMMARY, StudyViewPageTabKeys.CLINICAL_DATA];
+    private enableAddChartInTabs = [StudyViewPageTabKeyEnum.SUMMARY, StudyViewPageTabKeyEnum.CLINICAL_DATA];
     private queryReaction:IReactionDisposer;
+    @observable showCustomSelectTooltip = false;
+    private inCustomSelectTooltip = false;
 
     constructor(props: IStudyViewPageProps) {
         super();
@@ -95,6 +101,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     return;
                 }
 
+                this.store.updateCurrentTab(props.routing.location.query.tab);
                 this.store.updateStoreFromURL(query);
             },
             {fireImmediately: true}
@@ -126,10 +133,25 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         }
     });
 
+    @computed
+    get addChartButtonText() {
+        if (this.store.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
+            return '+ Add Chart';
+        } else if (this.store.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
+            return '+ Add Column'
+        } else {
+            return '';
+        }
+    }
+
     content() {
 
         return (
-            <div className="studyView">
+            <div className="studyView" onClick={this.showCustomSelectTooltip ? ()=>{
+                if(!this.inCustomSelectTooltip) {
+                    this.showCustomSelectTooltip = false;
+                }
+            }: undefined}>
                 {this.store.unknownQueriedIds.isComplete &&
                 this.store.unknownQueriedIds.result.length > 0 && (
                     <Alert bsStyle="danger">
@@ -155,13 +177,13 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                          className="mainTabs"
                                          unmountOnHide={false}>
 
-                                    <MSKTab key={0} id={StudyViewPageTabKeys.SUMMARY} linkText={StudyViewPageTabDescriptions.SUMMARY}>
+                                    <MSKTab key={0} id={StudyViewPageTabKeyEnum.SUMMARY} linkText={StudyViewPageTabDescriptions.SUMMARY}>
                                         <StudySummaryTab store={this.store}></StudySummaryTab>
                                     </MSKTab>
-                                    <MSKTab key={1} id={StudyViewPageTabKeys.CLINICAL_DATA} linkText={StudyViewPageTabDescriptions.CLINICAL_DATA}>
+                                    <MSKTab key={1} id={StudyViewPageTabKeyEnum.CLINICAL_DATA} linkText={StudyViewPageTabDescriptions.CLINICAL_DATA}>
                                         <ClinicalDataTab store={this.store}/>
                                     </MSKTab>
-                                    <MSKTab key={2} id={StudyViewPageTabKeys.HEATMAPS} linkText={StudyViewPageTabDescriptions.HEATMAPS}
+                                    <MSKTab key={2} id={StudyViewPageTabKeyEnum.HEATMAPS} linkText={StudyViewPageTabDescriptions.HEATMAPS}
                                             hide={this.store.MDACCHeatmapStudyMeta.result.length === 0}>
                                         <IFrameLoader height={700}
                                                       url={`//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this.store.MDACCHeatmapStudyMeta.result[0]}`}/>
@@ -191,14 +213,51 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                             }
                                         }
                                     </Observer>
+                                    {(this.enableAddChartInTabs.includes(this.store.currentTab))
+                                    && (
+                                        <div style={{display: 'flex'}}>
+                                            <DefaultTooltip
+                                                visible={this.showCustomSelectTooltip}
+                                                placement={"bottomLeft"}
+                                                onVisibleChange={()=>{
 
-                                    {(this.props.routing.location.query.tab === undefined || this.enableAddChartInTabs.includes(this.props.routing.location.query.tab)) &&
-                                    <AddChartButton
-                                        store={this.store}
-                                        currentTab={this.props.routing.location.query.tab ? this.props.routing.location.query.tab : ''}
-                                        addChartOverlayClassName='studyViewAddChartOverlay'
-                                        disableAddGenomicButton={this.props.routing.location.query.tab === StudyViewPageTabKeys.CLINICAL_DATA}
-                                    />}
+                                                }}
+                                                destroyTooltipOnHide={true}
+                                                overlay={() => (
+                                                    <div style={{width: '300px'}}
+                                                         onMouseEnter={()=>this.inCustomSelectTooltip=true}
+                                                         onMouseLeave={()=>this.inCustomSelectTooltip=false}
+                                                    >
+                                                        <CustomCaseSelection
+                                                            allSamples={this.store.samples.result}
+                                                            selectedSamples={this.store.selectedSamples.result}
+                                                            submitButtonText={"Select"}
+                                                            disableGrouping={true}
+                                                            queriedStudies={this.store.queriedPhysicalStudyIds.result}
+                                                            onSubmit={(chart: NewChart) => {
+                                                                this.showCustomSelectTooltip = false;
+                                                                this.store.updateCustomSelect(chart);
+                                                            }}
+                                                        />
+                                                    </div>
+                                                )}
+                                            >
+                                                <button className='btn btn-primary btn-xs'
+                                                        onClick={() => {
+                                                            this.showCustomSelectTooltip = true;
+                                                        }}
+                                                        style={{marginLeft: '10px'}}>Custom Selection
+                                                </button>
+                                            </DefaultTooltip>
+                                            <AddChartButton
+                                                buttonText={this.addChartButtonText}
+                                                store={this.store}
+                                                currentTab={this.store.currentTab}
+                                                addChartOverlayClassName='studyViewAddChartOverlay'
+                                                disableCustomTab={this.store.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA}
+                                            />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
