@@ -59,7 +59,7 @@ import * as _ from "lodash";
 import {stringListToSet} from "../../shared/lib/StringUtils";
 import {toSampleUuid} from "../../shared/lib/UuidUtils";
 import MutationDataCache from "../../shared/cache/MutationDataCache";
-import accessors, {SimplifiedMutationType} from "../../shared/lib/oql/accessors";
+import AccessorsForOqlFilter, {SimplifiedMutationType} from "../../shared/lib/oql/AccessorsForOqlFilter";
 import {AugmentedData, CacheData} from "../../shared/lib/LazyMobXCache";
 import {IAlterationData} from "./cancerSummary/CancerSummaryContent";
 import {PatientSurvival} from "../../shared/model/PatientSurvival";
@@ -853,7 +853,7 @@ export class ResultsViewPageStore {
             this.defaultOQLQuery
         ],
         invoke: () => {
-            const acc = new accessors(this.selectedMolecularProfiles.result!);
+            const acc = new AccessorsForOqlFilter(this.selectedMolecularProfiles.result!);
             const alterations: ExtendedAlteration[] = [];
             const entrezGeneIdToGene = this.entrezGeneIdToGene.result!;
 
@@ -882,7 +882,7 @@ export class ResultsViewPageStore {
             if (this.rvQuery.oqlQuery.trim() != "") {
                 const data = [...(this.putativeDriverAnnotatedMutations.result!), ...(this.annotatedMolecularData.result!)];
                 return Promise.resolve(
-                        filterCBioPortalWebServiceData(this.rvQuery.oqlQuery, data, (new accessors(this.selectedMolecularProfiles.result!)), this.defaultOQLQuery.result!)
+                        filterCBioPortalWebServiceData(this.rvQuery.oqlQuery, data, (new AccessorsForOqlFilter(this.selectedMolecularProfiles.result!)), this.defaultOQLQuery.result!)
                 );
             } else {
                 return Promise.resolve([]);
@@ -900,7 +900,7 @@ export class ResultsViewPageStore {
         invoke: ()=>{
             const data = [...(this.putativeDriverAnnotatedMutations.result!), ...(this.annotatedMolecularData.result!)];
             return Promise.resolve(filterCBioPortalWebServiceDataByOQLLine(this.rvQuery.oqlQuery, data,
-                (new accessors(this.selectedMolecularProfiles.result!)), this.defaultOQLQuery.result!));
+                (new AccessorsForOqlFilter(this.selectedMolecularProfiles.result!)), this.defaultOQLQuery.result!));
         }
     });
 
@@ -949,7 +949,7 @@ export class ResultsViewPageStore {
         ],
         invoke: () => {
             const data = [...(this.putativeDriverAnnotatedMutations.result!), ...(this.annotatedMolecularData.result!)];
-            const accessorsInstance = new accessors(this.selectedMolecularProfiles.result!);
+            const accessorsInstance = new AccessorsForOqlFilter(this.selectedMolecularProfiles.result!);
             const defaultOQLQuery = this.defaultOQLQuery.result!;
             const samples = this.samples.result!;
             const patients = this.patients.result!;
@@ -1005,7 +1005,7 @@ export class ResultsViewPageStore {
                 const filteredAlterationsByOQLLine:OQLLineFilterOutput<AnnotatedExtendedAlteration>[] = filterCBioPortalWebServiceDataByOQLLine(
                     this.rvQuery.oqlQuery,
                     [...(this.putativeDriverAnnotatedMutations.result!), ...(this.annotatedMolecularData.result!)],
-                    (new accessors(this.selectedMolecularProfiles.result!)),
+                    (new AccessorsForOqlFilter(this.selectedMolecularProfiles.result!)),
                     this.defaultOQLQuery.result!
                 );
 
