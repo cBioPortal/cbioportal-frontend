@@ -80,7 +80,7 @@ export function getSimplifiedMutationType(type: string):SimplifiedMutationType {
     return ret;
 };
 
-export default class accessors {
+export default class AccessorsForOqlFilter {
     private molecularProfileIdToMolecularProfile:{[molecularProfileId:string]:MolecularProfile};
 
     constructor(
