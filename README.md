@@ -1,9 +1,9 @@
 # cbioportal-frontend
 [![Join the chat at https://gitter.im/cBioPortal/public-chat](https://badges.gitter.im/cBioPortal/public-chat.svg)](https://gitter.im/cBioPortal/public-chat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ## Live demo
-Master: http://cbioportal-frontend.herokuapp.com/#/patient?studyId=prad_fhcrc&caseId=00-090
+Master: http://cbioportal-frontend.herokuapp.com/patient?studyId=prad_fhcrc&caseId=00-090
 
-Rc: http://cbioportal-frontend-rc.herokuapp.com/#/patient?studyId=prad_fhcrc&caseId=00-090
+Rc: http://cbioportal-frontend-rc.herokuapp.com/patient?studyId=prad_fhcrc&caseId=00-090
 
 ## Test status & Code Quality
 | Branch | master | rc |
@@ -49,7 +49,7 @@ npm run start
 
 Example pages:
  - http://localhost:3000/
- - http://localhost:3000/#/patient?studyId=lgg_ucsf_2014&caseId=P04
+ - http://localhost:3000/patient?studyId=lgg_ucsf_2014&caseId=P04
 
 To run unit/integration tests (need to have API URL defined in `.env`)
 ```
