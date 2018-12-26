@@ -62,7 +62,8 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
         name: 'Name',
         render: (option: ChartOption) => {
             return (
-                <div className={styles.option}>
+                <div className={styles.option}
+                     data-test={`add-chart-option-${option.label.toLowerCase().replace(/\s/g,'-')}`}>
                     <LabeledCheckbox
                         checked={option.selected}
                         disabled={option.disabled}
@@ -134,7 +135,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
 
     render() {
         return (
-            <div style={{display: 'flex', flexDirection: 'column'}}>
+            <div style={{display: 'flex', flexDirection: 'column'}} data-test='add-by-type'>
                 <AddChartTableComponent
                     width={380}
                     height={this.tableHeight}
