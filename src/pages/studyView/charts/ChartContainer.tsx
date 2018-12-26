@@ -437,6 +437,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     public render() {
         return (
             <div className={classnames(styles.chart, { [styles.highlight]: this.highlightChart})}
+                 data-test={`chart-container-${this.props.chartMeta.uniqueKey}`}
                  onMouseEnter={this.handlers.onMouseEnterChart}
                  onMouseLeave={this.handlers.onMouseLeaveChart}>
                 <ChartHeader

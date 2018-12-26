@@ -339,7 +339,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
                 }
 
                 {!this.store.loadingInitialDataForSummaryTab &&
-                <div>
+                <div data-test="summary-tab-content">
                     <div className={styles.studyViewFlexContainer}>
                         {this.store.defaultVisibleAttributes.isComplete && (
                             <ReactGridLayout className="layout"

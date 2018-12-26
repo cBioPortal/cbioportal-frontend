@@ -250,6 +250,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                 </button>
                                             </DefaultTooltip>
                                             <AddChartButton
+                                                data-test='add-charts-button'
                                                 buttonText={this.addChartButtonText}
                                                 store={this.store}
                                                 currentTab={this.store.currentTab}
