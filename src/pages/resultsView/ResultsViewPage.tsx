@@ -312,14 +312,12 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
             {
                 id:ResultsViewTab.CN_SEGMENTS,
-                hide:()=>{
-                    if (!this.resultsViewPageStore.studies.isComplete || !this.resultsViewPageStore.genes.isComplete) {
-                        return true;
-                    } else {
-                        const tooManyStudies = this.resultsViewPageStore.studies.result!.length > 1;
-                        const noData = !doesQueryHaveCNSegmentData(this.resultsViewPageStore.samples.result);
-                        return tooManyStudies || noData;
-                    }
+                hide:() => {
+                    return (
+                        !this.resultsViewPageStore.studies.isComplete ||
+                        !this.resultsViewPageStore.genes.isComplete ||
+                        !doesQueryHaveCNSegmentData(this.resultsViewPageStore.samples.result)
+                    );
                 },
                 getTab: () => {
                     return <MSKTab key={6} id={ResultsViewTab.CN_SEGMENTS}
