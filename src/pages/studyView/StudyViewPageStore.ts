@@ -1174,6 +1174,7 @@ export class StudyViewPageStore {
             data.forEach(item => {
                 const uniqueKey = getClinicalAttributeUniqueKeyByDataTypeAttrId(item.clinicalDataType, item.attributeId);
                 this.unfilteredClinicalDataCountCache[uniqueKey] = item;
+                this.showAsPieChart(uniqueKey, item.counts.length);
                 this.newlyAddedCharts.remove(uniqueKey);
             });
         }
@@ -2005,6 +2006,7 @@ export class StudyViewPageStore {
             this.chartsType.set(attr.uniqueKey, ChartTypeEnum.TABLE);
         } else {
             this.chartsDimension.set(attr.uniqueKey, STUDY_VIEW_CONFIG.layout.dimensions[newChartType]);
+            this.chartsType.set(attr.uniqueKey, newChartType);
         }
     }
 
