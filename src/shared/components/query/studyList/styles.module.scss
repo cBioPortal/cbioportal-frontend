@@ -178,7 +178,7 @@ li.Study {
 
   .StudyName {
     color: #444;
-    max-width: 390px;
+    max-width: 400px;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
@@ -189,19 +189,25 @@ li.Study {
     color: rgb(198, 203, 209);
   }
 
-  @media (min-width: 1450px) {
+  @media (min-width: 1300px) {
     .StudyName {
-      max-width:500px;
+      max-width:460px;
+    }
+  }
+
+  @media (min-width: 1400px) {
+    .StudyName {
+      max-width:600px;
+    }
+  }
+
+  @media (min-width: 1500px) {
+    .StudyName {
+      max-width:700px;
     }
   }
 
   @media (min-width: 1600px) {
-    .StudyName {
-      max-width:650px;
-    }
-  }
-
-  @media (min-width: 1800px) {
     .StudyName {
       max-width:800px;
     }

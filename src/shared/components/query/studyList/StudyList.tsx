@@ -177,34 +177,40 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
 			: null;
 
 		return (
-			<li key={arrayIndex} 
-			    className={liClassName} 
-			    data-test={this.store.isVirtualStudy(study.studyId) ? 'VirtualStudySelect' : 'StudySelect'}>
-                <Observer>
-                {() => {
-                    const classes = classNames({ [styles.StudyName]:true, 'overlappingStudy':isOverlap ,   [styles.DeletedStudy]: this.store.isDeletedVirtualStudy(study.studyId)});
-                    return(
-                        <CancerTreeCheckbox view={this.view} node={study}>
-                            <span className={classes}>
-                                {study.name}
-                                {overlapWarning}
-                            </span>
-                       </CancerTreeCheckbox>
-                    )
-                }}
-                </Observer>
+			<DefaultTooltip
+			mouseEnterDelay={0.5}
+			placement="top"
+			overlay={<div>{study.name}</div>}
+		    >
+				<li key={arrayIndex} 
+					className={liClassName} 
+					data-test={this.store.isVirtualStudy(study.studyId) ? 'VirtualStudySelect' : 'StudySelect'}>
+					<Observer>
+					{() => {
+						const classes = classNames({ [styles.StudyName]:true, 'overlappingStudy':isOverlap ,   [styles.DeletedStudy]: this.store.isDeletedVirtualStudy(study.studyId)});
+						return(
+							<CancerTreeCheckbox view={this.view} node={study}>
+								<span className={classes}>                          
+									{study.name}
+									{overlapWarning}
+								</span>
+							</CancerTreeCheckbox>
+						)
+					}}
+					</Observer>
 
-                <Observer>
-                    {() => {
-                        return(
-                            <div className={styles.StudyMeta}>
-                                {!this.store.isDeletedVirtualStudy(study.studyId) && this.renderSamples(study)}
-                                {this.renderStudyLinks(study)}
-                            </div>
-                        );
-                    }}
-                </Observer>
-			</li>
+					<Observer>
+						{() => {
+							return(
+								<div className={styles.StudyMeta}>
+									{!this.store.isDeletedVirtualStudy(study.studyId) && this.renderSamples(study)}
+									{this.renderStudyLinks(study)}
+								</div>
+							);
+						}}
+					</Observer>
+				</li>
+			</DefaultTooltip>
 		);
 	}
 
