@@ -163,13 +163,24 @@ export default class DiscreteCNAColumnFormatter {
         );
     }
 
-    public static getSortValue(data:Mutation[], molecularProfileIdToMolecularProfile: {[molecularProfileId:string]:MolecularProfile}, cache:DiscreteCNACache) {
-        return DiscreteCNAColumnFormatter.getTdValue(DiscreteCNAColumnFormatter.getData(data, molecularProfileIdToMolecularProfile, cache));
+    public static getSortValue(data:Mutation[], molecularProfileIdToMolecularProfile: {[molecularProfileId:string]:MolecularProfile}, cache:DiscreteCNACache, sampleIdToClinicalDataMap: {[key: string]:ClinicalData[]}|undefined) {
+        const facetsCNAData = DiscreteCNAColumnFormatter.getFacetsCNAData(data, sampleIdToClinicalDataMap);
+        if (facetsCNAData!= "NA") {
+            return facetsCNAData;
+        }
+        const altValue = DiscreteCNAColumnFormatter.getTdValue(DiscreteCNAColumnFormatter.getData(data, molecularProfileIdToMolecularProfile, cache));
+        if (altValue) {
+            return DiscreteCNAColumnFormatter.altToFilterString[altValue];
+        }
+        return null;
     }
 
-    public static filter(data:Mutation[], molecularProfileIdToMolecularProfile: {[molecularProfileId:string]:MolecularProfile}, cache:DiscreteCNACache, filterString:string):boolean {
+    public static filter(data:Mutation[], molecularProfileIdToMolecularProfile: {[molecularProfileId:string]:MolecularProfile}, cache:DiscreteCNACache, sampleIdToClinicalDataMap: {[key: string]:ClinicalData[]}|undefined, filterString:string):boolean {
         const cnaData = DiscreteCNAColumnFormatter.getData(data, molecularProfileIdToMolecularProfile, cache);
-        if (cnaData && cnaData.data) {
+        const facetsCNAData = DiscreteCNAColumnFormatter.getFacetsCNAData(data, sampleIdToClinicalDataMap);
+        if (facetsCNAData !== "NA") {
+            return facetsCNAData.toLowerCase().indexOf(filterString.toLowerCase()) > -1; 
+        } else if (cnaData && cnaData.data) {
             return (!!DiscreteCNAColumnFormatter.altToFilterString[cnaData.data.alteration])
                 && (DiscreteCNAColumnFormatter.altToFilterString[cnaData.data.alteration]
                     .indexOf(filterString.toLowerCase()) > -1);
