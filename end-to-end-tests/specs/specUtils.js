@@ -86,7 +86,40 @@ function waitForNetworkQuiet(){
     });
 }
 
+function toStudyViewSummaryTab() {
+    var summaryTab = "#studyViewTabs a.tabAnchor_summary";
+    var summaryContent = "[data-test='summary-tab-content']";
+    if (!browser.isVisible(summaryContent)) {
+        browser.waitForVisible(summaryTab, 10000);
+        browser.click(summaryTab);
+        browser.waitForVisible(summaryContent, 10000);
+    }
+}
 
+function toStudyViewClinicalDataTab() {
+    var clinicalDataTab = "#studyViewTabs a.tabAnchor_clinicalData";
+    var clinicalDataContent = "[data-test='clinical-data-tab-content']";
+    if (!browser.isVisible(clinicalDataContent)) {
+        browser.waitForVisible(clinicalDataTab, 10000);
+        browser.click(clinicalDataTab);
+        browser.waitForVisible(clinicalDataContent, 10000);
+    }
+}
+
+function waitForStudyViewSelectedInfo() {
+    browser.waitForVisible("[data-test='selected-info']", 5000);
+    // pause to wait the animation finished
+    browser.pause(2000);
+}
+
+function getTextFromElement(element) {
+    return browser.element(element).getText().trim();
+}
+
+
+function getNumberOfStudyViewCharts() {
+    return browser.elements('div.react-grid-item').value.length;
+}
 
 module.exports = {
     waitForOncoprint: waitForOncoprint,
@@ -96,6 +129,11 @@ module.exports = {
     waitForNumberOfStudyCheckboxes: waitForNumberOfStudyCheckboxes,
     waitForNetworkQuiet:waitForNetworkQuiet,
     getTextInOncoprintLegend: getTextInOncoprintLegend,
+    toStudyViewSummaryTab: toStudyViewSummaryTab,
+    toStudyViewClinicalDataTab: toStudyViewClinicalDataTab,
+    waitForStudyViewSelectedInfo: waitForStudyViewSelectedInfo,
+    getTextFromElement: getTextFromElement,
+    getNumberOfStudyViewCharts: getNumberOfStudyViewCharts,
     setOncoprintMutationsMenuOpen: setOncoprintMutationsMenuOpen,
     getNthOncoprintTrackOptionsElements: getNthOncoprintTrackOptionsElements
 };
