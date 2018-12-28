@@ -1463,7 +1463,7 @@ export class StudyViewPageStore {
 
             this.filteredVirtualStudies.result.forEach(virtualStudy => {
                 virtualStudy.data.studies.forEach(study => {
-                    if (!studies[study.id]) {
+                    if (!studies[study.id] && physicalStudiesSet[study.id]) {
                         studies[study.id] = physicalStudiesSet[study.id];
                     }
                 })
