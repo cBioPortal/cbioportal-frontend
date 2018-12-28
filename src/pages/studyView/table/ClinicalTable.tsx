@@ -8,6 +8,7 @@ import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
 import FixedHeaderTable from "./FixedHeaderTable";
 import styles from "./tables.module.scss";
 import {
+    correctColumnWidth,
     correctMargin, getClinicalAttributeOverlay,
     getFixedHeaderNumberCellMargin, getFixedHeaderTableMaxLengthStringPixel,
     getFrequencyStr
@@ -67,7 +68,7 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
     get columnsWidth() {
         // last two columns width are 80, 60
         return {
-            [ColumnKey.CATEGORY]: this.props.width! - 140,
+            [ColumnKey.CATEGORY]: correctColumnWidth(this.props.width! - 140),
             [ColumnKey.NUMBER]: 80,
             [ColumnKey.FREQ]: 60
         };
