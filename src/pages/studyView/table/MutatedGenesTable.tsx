@@ -14,6 +14,7 @@ import {action, computed, IReactionDisposer, observable, reaction} from "mobx";
 import autobind from 'autobind-decorator';
 import {
     correctMargin,
+    correctColumnWidth,
     getFixedHeaderNumberCellMargin,
     getFixedHeaderTableMaxLengthStringPixel,
     getFrequencyStr,
@@ -86,10 +87,10 @@ export class MutatedGenesTable extends React.Component<IMutatedGenesTablePros, {
     @computed
     get columnsWidth() {
         return {
-            [ColumnKey.GENE]: this.props.width * 0.35,
-            [ColumnKey.NUMBER_MUTATIONS]: this.props.width * 0.25,
-            [ColumnKey.NUMBER]: this.props.width * 0.25,
-            [ColumnKey.FREQ]: this.props.width * 0.15
+            [ColumnKey.GENE]: correctColumnWidth(this.props.width * 0.35),
+            [ColumnKey.NUMBER_MUTATIONS]: correctColumnWidth(this.props.width * 0.25),
+            [ColumnKey.NUMBER]: correctColumnWidth(this.props.width * 0.25),
+            [ColumnKey.FREQ]: correctColumnWidth(this.props.width * 0.15)
         };
     }
 

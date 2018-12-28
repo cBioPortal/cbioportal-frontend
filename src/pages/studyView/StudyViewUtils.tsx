@@ -789,7 +789,7 @@ export function getChartMetaDataType(uniqueKey: string): ChartMetaDataType {
 
 // 10px is reserved by ReactVisualized library as margin right
 export function getFixedHeaderNumberCellMargin(columnWidth: number, theLongestString:string) {
-    return (columnWidth - 10 - getFixedHeaderTableMaxLengthStringPixel(theLongestString)) / 2
+    return Math.floor((columnWidth - 10 - getFixedHeaderTableMaxLengthStringPixel(theLongestString)) / 2);
 }
 
 export function getFixedHeaderTableMaxLengthStringPixel(text:string) {
@@ -797,11 +797,15 @@ export function getFixedHeaderTableMaxLengthStringPixel(text:string) {
     // For fixed header table used in study view only
     const FRONT_SIZE = '13px';
     const FRONT_FAMILY = 'Helvetica Neue';
-    return getTextWidth(text, FRONT_FAMILY, FRONT_SIZE)
+    return Math.floor(getTextWidth(text, FRONT_FAMILY, FRONT_SIZE));
 }
 
 export function correctMargin(margin: number) {
     return margin > 0 ? margin : 0;
+}
+
+export function correctColumnWidth(columnWidth: number) {
+    return Math.ceil(columnWidth);
 }
 
 export function getFrequencyStr(value: number) {
