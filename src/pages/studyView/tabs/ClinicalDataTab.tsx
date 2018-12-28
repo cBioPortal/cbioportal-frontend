@@ -23,12 +23,22 @@ class ClinicalDataTabTableComponent extends LazyMobXTable<{ [id: string]: string
 @observer
 export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> {
 
-    getDefaultColumnConfig(key: string) {
+    getDefaultColumnConfig(key: string, isNumber?: boolean) {
         return {
             name: '',
             render: (data: { [id: string]: string }) => <span>{data[key]}</span>,
             download: (data: { [id: string]: string }) => data[key] || '',
-            sortBy: (data: { [id: string]: string }) => data[key],
+            sortBy: (data: { [id: string]: any }) => {
+                if (data[key]) {
+                    if (isNumber) {
+                        return parseFloat(data[key]);
+                    }
+                    else {
+                        return data[key];
+                    }
+                }
+                return null;
+            },
             filter: (data: { [id: string]: string }, filterString: string, filterStringUpper: string) => (data[key] || '').toUpperCase().includes(filterStringUpper)
         };
     }
@@ -57,7 +67,7 @@ export class ClinicalDataTab extends React.Component<IClinicalDataTabTable, {}> 
                 (acc: Column<{ [id: string]: string }>[], chartMeta: ChartMeta, index: number) => {
                     if (chartMeta.clinicalAttribute !== undefined) {
                         acc.push({
-                            ...this.getDefaultColumnConfig(getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute)),
+                            ...this.getDefaultColumnConfig(getClinicalAttributeUniqueKey(chartMeta.clinicalAttribute), chartMeta.clinicalAttribute.datatype === "NUMBER"),
                             tooltip: getClinicalAttributeOverlay(chartMeta.clinicalAttribute.displayName, chartMeta.description ? chartMeta.description : ''),
                             name: chartMeta.clinicalAttribute.displayName
                         });
