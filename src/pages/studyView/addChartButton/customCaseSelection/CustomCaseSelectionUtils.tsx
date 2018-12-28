@@ -218,7 +218,7 @@ export function getGroups(lines: InputLine[], singleStudyId: string, caseType: C
 
         const caseId = line.studyId === undefined ? `${singleStudyId}:${line.caseId}` : `${line.studyId}:${line.caseId}`;
         const maps = isPatientId ? patientMap[caseId] : [sampleMap[caseId]];
-        const matches = maps === undefined ? [] : parseCase(singleStudyId, isPatientId, maps);
+        const matches = maps === undefined ? [] : parseCase(isPatientId, maps);
         acc[groupName].cases.push(...matches);
         return acc;
     }, {} as { [key: string]: CustomGroup }));
@@ -253,10 +253,10 @@ export function parseContent(content: string, needToValidate: boolean = false, s
     }
 }
 
-export function parseCase(studyId: string, isPatientId: boolean, mappedSamples: Sample[]): CustomChartIdentifier[] {
+export function parseCase(isPatientId: boolean, mappedSamples: Sample[]): CustomChartIdentifier[] {
     return mappedSamples.map(sample => {
         return {
-            studyId: studyId,
+            studyId: sample.studyId,
             patientAttribute: isPatientId,
             sampleId: sample.sampleId,
             patientId: sample.patientId
