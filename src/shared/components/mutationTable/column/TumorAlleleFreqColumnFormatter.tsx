@@ -42,6 +42,16 @@ export default class TumorAlleleFreqColumnFormatter
         }
     }
 
+    public static getTextValue(mutations:Mutation[]) : string {
+        const frequency = TumorAlleleFreqColumnFormatter.getSortValue(mutations);
+
+        if (frequency) {
+            return frequency.toFixed(2);
+        }
+
+        return "";
+    }
+
     public static getSortValue(mutations:Mutation[])
     {
         const mutation = mutations[0];
