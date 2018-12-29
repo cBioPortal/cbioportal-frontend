@@ -215,24 +215,28 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
             <If condition={this.props.showAddRemoveAllButtons}>
                 <div className={"btn-group"} role={"group"}>
                     {this.props.addAll && (
-                        <button className="btn btn-default btn-xs" onClick={this.onAddAll}>
+                        <button className="btn btn-default btn-xs" onClick={this.onAddAll} data-test="fixed-header-table-add-all">
                         {`Select all${this.props.showSelectableNumber ? ` (${this._store.dataStore.sortedFilteredData.length})` : ''}`}
                         </button>
                     )}
                     {this.props.removeAll && (
-                        <button className="btn btn-default btn-xs" onClick={this.onRemoveAll}>Deselect all</button>
+                        <button className="btn btn-default btn-xs"
+                                data-test="fixed-header-table-remove-all"
+                                onClick={this.onRemoveAll}>Deselect all</button>
                     )}
                 </div>
             </If>
 
             <If condition={this.props.showSelectSamples}>
                 <button className={classnames("btn btn-primary btn-xs", styles.controlsBtn)}
+                        data-test="fixed-header-table-select-sample"
                         onClick={this.afterSelectingRows}>Select Sample
                 </button>
             </If>
             {this.props.showControlsAtTop &&
             <input placeholder={"Search..."} type="text" onInput={this.onFilterTextChange()}
                    ref={this.setInputRef}
+                   data-test="fixed-header-table-search-input"
                    className={classnames('form-control', styles.tableSearchInput)}/>}
         </div>
     }
