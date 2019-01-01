@@ -154,7 +154,7 @@ export default class ProteinChangeColumnFormatter
                 text={text}
                 tooltip={<span>{text}</span>}
                 className={styles.proteinChange}
-                maxLength={20}
+                maxLength={40}
             />
         );
 
