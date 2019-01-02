@@ -1,4 +1,4 @@
-import {MutationAnnotationSettings} from "../../../resultsView/ResultsViewPageStore";
+import {DriverAnnotationSettings} from "../../../resultsView/ResultsViewPageStore";
 import {action, computed, observable} from "mobx";
 import AppConfig from "appConfig";
 import {
@@ -10,7 +10,7 @@ import {
     getOncoprintData,
     getSampleGeneticTrackData,
     getSampleIds,
-    initMutationAnnotationSettings,
+    initDriverAnnotationSettings,
     isAltered,
     OncoprinterInputLine,
     parseInput
@@ -23,7 +23,7 @@ import _ from "lodash";
 import {countMutations, mutationCountByPositionKey} from "../../../resultsView/mutationCountHelpers";
 import {Mutation, MutationCountByPosition} from "../../../../shared/api/generated/CBioPortalAPI";
 
-export type OncoprinterMutationAnnotationSettings = Pick<MutationAnnotationSettings, "ignoreUnknown" | "hotspots" | "cbioportalCount" | "cbioportalCountThreshold" | "oncoKb" | "driversAnnotated">;
+export type OncoprinterDriverAnnotationSettings = Pick<DriverAnnotationSettings, "ignoreUnknown" | "hotspots" | "cbioportalCount" | "cbioportalCountThreshold" | "oncoKb" | "driversAnnotated">;
 
 /* Leaving commented only for reference, this will be replaced by unified input strategy
 function genomeNexusKey(l:OncoprinterInputLineType3_Incomplete){
@@ -41,7 +41,7 @@ export default class OncoprinterStore {
 
     @observable.ref _inputSampleIdOrder:string | undefined = undefined;
     @observable.ref _geneOrder:string | undefined = undefined;
-    @observable mutationAnnotationSettings:OncoprinterMutationAnnotationSettings = initMutationAnnotationSettings(this);
+    @observable driverAnnotationSettings:OncoprinterDriverAnnotationSettings = initDriverAnnotationSettings(this);
     @observable.ref _dataInput:string|undefined = undefined;
     @observable public showUnalteredColumns:boolean = true;
 
@@ -279,16 +279,16 @@ export default class OncoprinterStore {
         const promisesMap:any = {};
         const params:any = {};
         // always
-        params.useHotspots = this.mutationAnnotationSettings.hotspots;
+        params.useHotspots = this.driverAnnotationSettings.hotspots;
         promisesMap.oncoKbCna = this.oncoKbCnaData;
 
-        if (this.mutationAnnotationSettings.driversAnnotated) {
-            if (this.mutationAnnotationSettings.oncoKb) {
+        if (this.driverAnnotationSettings.driversAnnotated) {
+            if (this.driverAnnotationSettings.oncoKb) {
                 promisesMap.oncoKb = this.oncoKbData;
             }
-            if (this.mutationAnnotationSettings.cbioportalCount) {
+            if (this.driverAnnotationSettings.cbioportalCount) {
                 promisesMap.cbioportalCount = this.cbioportalCountData;
-                params.cbioportalCountThreshold = this.mutationAnnotationSettings.cbioportalCountThreshold;
+                params.cbioportalCountThreshold = this.driverAnnotationSettings.cbioportalCountThreshold;
             }
         }
 
@@ -317,7 +317,7 @@ export default class OncoprinterStore {
             this.nonAnnotatedGeneticTrackData.result!,
             this.annotationData.promisesMap,
             this.annotationData.params,
-            this.mutationAnnotationSettings.ignoreUnknown
+            this.driverAnnotationSettings.ignoreUnknown
         )
     });
 
