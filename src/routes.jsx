@@ -100,8 +100,9 @@ export const makeRoutes = (routing) => {
                 <Route path="/index.do" onEnter={handleIndexDO} component={getBlankPage()} />
                 <Route path="/study.do" onEnter={handleStudyDO} component={getBlankPage()} />
 
-                 <Redirect from={"/mutation_mapper.jsp"} to={"/mutation_mapper"}/>
+                <Redirect from={"/mutation_mapper.jsp"} to={"/mutation_mapper"}/>
                 <Redirect from={"/data_sets.jsp"} to={"/datasets"}/>
+                <Redirect from={"/oncoprinter.jsp"} to={"/oncoprinter"}/>
 
                 <Route path="*" onEnter={()=>{$(document).scrollTop(0)}} component={()=><PageNotFound/>}/>
 
