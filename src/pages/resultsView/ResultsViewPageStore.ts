@@ -2633,11 +2633,10 @@ export class ResultsViewPageStore {
 
     readonly mutationEnrichmentProfiles = remoteData<MolecularProfile[]>({
         await: () => [
-            this.molecularProfilesWithData,
-            this.molecularProfileIdToProfiledSampleCount
+            this.molecularProfilesInStudies,
         ],
         invoke: async () => {
-            return _.filter(this.molecularProfilesWithData.result, (profile: MolecularProfile) =>
+            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) =>
                 profile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED);
         },
     });
@@ -2664,11 +2663,10 @@ export class ResultsViewPageStore {
 
     readonly copyNumberEnrichmentProfiles = remoteData<MolecularProfile[]>({
         await: () => [
-            this.molecularProfilesWithData,
-            this.molecularProfileIdToProfiledSampleCount
+            this.molecularProfilesInStudies,
         ],
         invoke: async () => {
-            return _.filter(this.molecularProfilesWithData.result, (profile: MolecularProfile) =>
+            return _.filter(this.molecularProfilesInStudies.result, (profile: MolecularProfile) =>
                 profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && profile.datatype === "DISCRETE");
         },
     });
@@ -2718,9 +2716,9 @@ export class ResultsViewPageStore {
     }
 
     readonly mRNAEnrichmentProfiles = remoteData<MolecularProfile[]>({
-        await:()=>[this.molecularProfilesWithData],
+        await:()=>[this.molecularProfilesInStudies],
         invoke:()=>{
-            const mrnaProfiles = this.molecularProfilesWithData.result!.filter(p=>{
+            const mrnaProfiles = this.molecularProfilesInStudies.result!.filter(p=>{
                 return p.molecularAlterationType === AlterationTypeConstants.MRNA_EXPRESSION
             });
             return Promise.resolve(filterAndSortProfiles(mrnaProfiles));
@@ -2748,9 +2746,9 @@ export class ResultsViewPageStore {
     });
 
     readonly proteinEnrichmentProfiles = remoteData<MolecularProfile[]>({
-        await:()=>[this.molecularProfilesWithData],
+        await:()=>[this.molecularProfilesInStudies],
         invoke:()=>{
-            const protProfiles = this.molecularProfilesWithData.result!.filter(p=>{
+            const protProfiles = this.molecularProfilesInStudies.result!.filter(p=>{
                 return p.molecularAlterationType === AlterationTypeConstants.PROTEIN_LEVEL;
             });
             return Promise.resolve(filterAndSortProfiles(protProfiles));
