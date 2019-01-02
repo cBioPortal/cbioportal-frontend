@@ -135,7 +135,7 @@ export function doesQueryContainOQL(oql_query) {
 
 export function doesQueryContainMutationOQL(oql_query) {
     /* In: oql_query, a string, an OQL query (which could just be genes with no specified alterations)
-     Out: boolean, true iff the query has explicit mutation OQL (e.g. `BRCA1: MISSENSE` as opposed to just `BRCA1` or `BRCA1: MUT`)
+     Out: boolean, true iff the query has explicit mutation OQL (e.g. `BRCA1: MISSENSE` or `BRCA: _GERMLINE` as opposed to just `BRCA1` or `BRCA1: MUT`)
      */
 
     const parsedQuery = parseOQLQuery(oql_query);
@@ -144,7 +144,7 @@ export function doesQueryContainMutationOQL(oql_query) {
         if (singleGeneQuery.alterations !== false) {
             for (const alteration of singleGeneQuery.alterations) {
                 if (alteration.alteration_type === "mut" &&
-                        alteration.constr_rel !== undefined) {
+                    (alteration.constr_rel !== undefined || (alteration.modifiers.length > 0))) {
                     // nontrivial mutation specification
                     ret = true;
                     break;
@@ -158,29 +158,38 @@ export function doesQueryContainMutationOQL(oql_query) {
     return ret;
 }
 
-var parsedOQLAlterationToSourceOQL = function(alteration) {
-    if (alteration.alteration_type === "cna") {
-        if (alteration.constr_rel === "=") {
-            return alteration.constr_val;
-        } else {
-            return ["CNA",alteration.constr_rel,alteration.constr_val].join("");
-        }
-    } else if (alteration.alteration_type === "mut") {
-        if (alteration.constr_rel) {
-            if (alteration.constr_type === "position") {
-                return ["MUT",alteration.constr_rel,alteration.info.amino_acid,alteration.constr_val].join("");
+export function parsedOQLAlterationToSourceOQL(alteration) {
+    switch (alteration.alteration_type) {
+        case "cna":
+            var ret;
+            if (alteration.constr_rel === "=") {
+                ret = alteration.constr_val;
             } else {
-                return ["MUT",alteration.constr_rel,alteration.constr_val].join("");
+                ret = ["CNA",alteration.constr_rel,alteration.constr_val].join("");
             }
-        } else {
-            return "MUT";
-        }
-    } else if (alteration.alteration_type === "exp") {
-        return "EXP" + alteration.constr_rel + alteration.constr_val;
-    } else if (alteration.alteration_type === "prot") {
-        return "PROT" + alteration.constr_rel + alteration.constr_val;
-    } else if (alteration.alteration_type === "fusion") {
-        return "FUSION";
+            ret += alteration.modifiers.map(function(modifier) { return "_"+modifier; }).join("");
+            return ret;
+        case "mut":
+            var ret;
+            if (alteration.constr_rel) {
+                if (alteration.constr_type === "position") {
+                    ret = ["MUT",alteration.constr_rel,alteration.info.amino_acid,alteration.constr_val].join("");
+                } else {
+                    ret = ["MUT",alteration.constr_rel,alteration.constr_val].join("");
+                }
+            } else {
+                ret = "MUT";
+            }
+            ret += alteration.modifiers.map(function(modifier) { return "_"+modifier; }).join("");
+            return ret;
+        case "exp":
+            return "EXP" + alteration.constr_rel + alteration.constr_val;
+        case "prot":
+            return "PROT" + alteration.constr_rel + alteration.constr_val;
+        case "fusion":
+            return "FUSION" + alteration.modifiers.map(function(modifier) { return "_"+modifier; }).join("");
+        case "any":
+            return alteration.modifiers.join("_");
     }
 };
 export function unparseOQLQueryLine(parsed_oql_query_line) {
@@ -196,6 +205,7 @@ export function unparseOQLQueryLine(parsed_oql_query_line) {
 };
 
 /* For the methods isDatumWantedByOQL, ..., the accessors argument is as follows:
+ * null always means the accessor does not apply to the given element. for example, `cna` applied to a mutation should give null
  * accessors = {
  *	'gene': function(d) {
  *	    // returns lower case gene symbol
@@ -212,6 +222,10 @@ export function unparseOQLQueryLine(parsed_oql_query_line) {
  *	    // returns a 2-element array of integers, the start position to the end position
  *	    // or null
  *	},
+ *  'mut_status': function(d) {
+ *      // returns "germline" or "somatic"
+ *      // or null
+ *  },
  *	'mut_amino_acid_change': function(d) {
  *	    // returns a string, the amino acid change,
  *	    // or null
@@ -226,7 +240,10 @@ export function unparseOQLQueryLine(parsed_oql_query_line) {
  *	},
  *	'fusion': function(d) {
  *	    // returns true, false, or null
- *	}
+ *	},
+ *  'is_driver': function(d) {
+ *      // returns true, false, or null
+ *  },
  * }
  */
 var isDatumWantedByOQL = function (parsed_oql_query, datum, accessors) {
@@ -300,14 +317,51 @@ var isDatumWantedByOQLAlterationCommand = function(alt_cmd, datum, accessors) {
      *	0 if the datum is not addressed by this command,
      *	-1 if the datum is addressed by this command and rejected
      */
-    if (alt_cmd.alteration_type === 'cna') {
-        return isDatumWantedByOQLCNACommand(alt_cmd, datum, accessors);
-    } else if (alt_cmd.alteration_type === 'mut') {
-        return isDatumWantedByOQLMUTCommand(alt_cmd, datum, accessors);
-    } else if (alt_cmd.alteration_type === 'exp' || alt_cmd.alteration_type === 'prot') {
-        return isDatumWantedByOQLEXPOrPROTCommand(alt_cmd, datum, accessors);
-    } else if (alt_cmd.alteration_type === 'fusion') {
-        return isDatumWantedByFUSIONCommand(alt_cmd, datum, accessors);
+    switch (alt_cmd.alteration_type) {
+        case "cna":
+            return isDatumWantedByOQLCNACommand(alt_cmd, datum, accessors);
+        case "mut":
+            return isDatumWantedByOQLMUTCommand(alt_cmd, datum, accessors);
+        case "exp":
+        case "prot":
+            return isDatumWantedByOQLEXPOrPROTCommand(alt_cmd, datum, accessors);
+        case "fusion":
+            return isDatumWantedByFUSIONCommand(alt_cmd, datum, accessors);
+        case "any":
+            return isDatumWantedByAnyTypeWithModifiersCommand(alt_cmd, datum, accessors);
+    }
+    return 0;
+};
+
+var isDatumWantedByAnyTypeWithModifiersCommand = function(alt_cmd, datum, accessors) {
+    // if any modifier is false, its not wanted (-1)
+    // else if any modifier is true, its wanted (1)
+    // else its not addressed (0)
+    var isWantedBySome = false;
+    var isUnwantedBySome = false;
+
+    for (var i=0; i<alt_cmd.modifiers.length; i++) {
+        var modifier = alt_cmd.modifiers[i];
+        var datumWanted = null;
+        switch (modifier) {
+            case "DRIVER":
+            default:
+                datumWanted = isDatumWantedByOQLAlterationModifier(modifier, datum, accessors);
+        }
+        if (datumWanted === true) {
+            isWantedBySome = true;
+        } else if (datumWanted === false) {
+            isUnwantedBySome = true;
+            break;
+        }
+    };
+
+    if (isUnwantedBySome) {
+        return -1;
+    } else if (isWantedBySome) {
+        return 1;
+    } else {
+        return 0;
     }
 };
 
@@ -323,7 +377,15 @@ var isDatumWantedByFUSIONCommand = function(alt_cmd, datum, accessors) {
     } else {
         datum.alterationType = 'FUSION';
         datum.alterationSubType = "";
-        return 1;
+        var match = true;
+        // now filter by modifiers with AND logic
+        for (var i=0; i<alt_cmd.modifiers.length; i++) {
+            const datumWanted = isDatumWantedByOQLAlterationModifier(alt_cmd.modifiers[i], datum, accessors);
+            if (datumWanted !== null) {
+                match = match && datumWanted;
+            }
+        }
+        return 2 * (+match) - 1; // map 0,1 to -1,1
     }
 };
 
@@ -339,24 +401,32 @@ var isDatumWantedByOQLCNACommand = function(alt_cmd, datum, accessors) {
         datum.alterationSubType = d_cna;
         datum.alterationType = 'COPY_NUMBER_ALTERATION';
         // Otherwise, return -1 if it doesnt match, 1 if it matches
-        var match;
+        var match = true;
         if (alt_cmd.constr_rel === "=") {
-            match = +(d_cna === alt_cmd.constr_val.toLowerCase());
-        } else {
+            match = (d_cna === alt_cmd.constr_val.toLowerCase());
+        } else if (alt_cmd.constr_rel) {
             var integer_copy_number = {"amp":2, "gain":1, "hetloss":-1, "homdel":-2};
             var d_int_cna = integer_copy_number[d_cna];
             var alt_int_cna = integer_copy_number[alt_cmd.constr_val.toLowerCase()];
             if (alt_cmd.constr_rel === ">") {
-                match = +(d_int_cna > alt_int_cna);
+                match = (d_int_cna > alt_int_cna);
             } else if (alt_cmd.constr_rel === ">=") {
-                match = +(d_int_cna >= alt_int_cna);
+                match = (d_int_cna >= alt_int_cna);
             } else if (alt_cmd.constr_rel === "<") {
-                match = +(d_int_cna < alt_int_cna);
+                match = (d_int_cna < alt_int_cna);
             } else if (alt_cmd.constr_rel === "<=") {
-                match = +(d_int_cna <= alt_int_cna);
+                match = (d_int_cna <= alt_int_cna);
             }
         }
-        return 2 * match - 1; // map 0,1 to -1,1
+
+        // now filter by modifiers with AND logic
+        for (var i=0; i<alt_cmd.modifiers.length; i++) {
+            const datumWanted = isDatumWantedByOQLAlterationModifier(alt_cmd.modifiers[i], datum, accessors);
+            if (datumWanted !== null) {
+                match = match && datumWanted;
+            }
+        }
+        return 2 * (+match) - 1; // map 0,1 to -1,1
     }
 };
 var isDatumWantedByOQLMUTCommand = function(alt_cmd, datum, accessors) {
@@ -373,9 +443,10 @@ var isDatumWantedByOQLMUTCommand = function(alt_cmd, datum, accessors) {
         datum.alterationType = 'MUTATION_EXTENDED';
         datum.alterationSubType = d_mut_type;
 
+        var matches = false;
         // If no constraint relation ('=' or '!='), then every mutation matches
         if (!alt_cmd.constr_rel) {
-            return 1;
+            matches = true;
         }
         // Decide based on what type of mutation specification
         if (alt_cmd.constr_type === 'class') {
@@ -383,13 +454,12 @@ var isDatumWantedByOQLMUTCommand = function(alt_cmd, datum, accessors) {
             var target_type = alt_cmd.constr_val.toLowerCase();
             // It matches if the type of mutation matches, or if
             //  the target is truncating and the mutation is anything but missense or inframe
-            var matches = (d_mut_type === target_type) ||
+            matches = (d_mut_type === target_type) ||
                 (target_type === 'trunc' && d_mut_type !== 'missense' && d_mut_type !== 'inframe');
             if (alt_cmd.constr_rel === '!=') {
                 // If '!=', then we want 1 if it DOESNT match
                 matches = !matches;
             }
-            return 2*(+matches) - 1;
         } else if (alt_cmd.constr_type === 'position') {
             // Matching on position
             var d_mut_range = accessors.mut_position(datum);
@@ -398,11 +468,10 @@ var isDatumWantedByOQLMUTCommand = function(alt_cmd, datum, accessors) {
                 return -1;
             }
             var target_position = alt_cmd.constr_val;
-            var matches = (target_position >= d_mut_range[0] && target_position <= d_mut_range[1]);
+            matches = (target_position >= d_mut_range[0] && target_position <= d_mut_range[1]);
             if (alt_cmd.constr_rel === '!=') {
                 matches = !matches;
             }
-            return 2*(+matches) - 1;
         } else if (alt_cmd.constr_type === 'name') {
             // Matching on amino acid change code
             var d_mut_name = accessors.mut_amino_acid_change(datum).toLowerCase();
@@ -411,15 +480,44 @@ var isDatumWantedByOQLMUTCommand = function(alt_cmd, datum, accessors) {
                 return -1;
             }
             var target_name = alt_cmd.constr_val.toLowerCase();
-            var matches = (target_name === d_mut_name);
+            matches = (target_name === d_mut_name);
             if (alt_cmd.constr_rel === '!=') {
                 matches = !matches;
             }
-            return 2*(+matches) - 1;
         }
+
+        // now filter by modifiers with AND logic
+        for (var i=0; i<alt_cmd.modifiers.length; i++) {
+            const datumWanted = isDatumWantedByOQLMutationModifier(alt_cmd.modifiers[i], datum, accessors);
+            if (datumWanted !== null) {
+                matches = matches && datumWanted;
+            }
+        }
+
+        return 2*(+matches) - 1; // return 1 if true, -1 if false
     }
 
 };
+
+var isDatumWantedByOQLMutationModifier = function(modifier, datum, accessors) {
+    switch (modifier) {
+        case "GERMLINE":
+        case "SOMATIC":
+            return accessors.mut_status(datum) === modifier.toLowerCase();
+        default:
+            return isDatumWantedByOQLAlterationModifier(modifier, datum, accessors);
+    }
+};
+
+var isDatumWantedByOQLAlterationModifier = function(modifier, datum, accessors) {
+    switch (modifier) {
+        case "DRIVER":
+            return accessors.is_driver(datum);
+        default:
+            return false;
+    }
+};
+
 var isDatumWantedByOQLEXPOrPROTCommand = function(alt_cmd, datum, accessors) {
     /*  Helper method for isDatumWantedByOQLAlterationCommand
      *  In/Out: See isDatumWantedByOQLAlterationCommand

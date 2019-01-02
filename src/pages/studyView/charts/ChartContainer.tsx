@@ -3,13 +3,11 @@ import styles from "./styles.module.scss";
 import {observer} from "mobx-react";
 import {action, computed, observable} from "mobx";
 import _ from "lodash";
-import {StudyViewComponentLoader} from "./StudyViewComponentLoader";
 import {ChartControls, ChartHeader} from "pages/studyView/chartHeader/ChartHeader";
 import {
     AnalysisGroup,
     ChartMeta,
     ChartType,
-    ChartTypeEnum,
     ClinicalDataCountWithColor,
     StudyViewPageStore
 } from "pages/studyView/StudyViewPageStore";
@@ -22,19 +20,27 @@ import MobxPromise from "mobxpromise";
 import SurvivalChart, {LegendLocation} from "../../resultsView/survival/SurvivalChart";
 import {MutatedGenesTable} from "../table/MutatedGenesTable";
 import {CNAGenesTable} from "../table/CNAGenesTable";
-import StudyViewScatterPlot from "./scatterPlot/StudyViewScatterPlot";
-import {bind} from "bind-decorator";
+import autobind from 'autobind-decorator';
 import BarChart from "./barChart/BarChart";
 import {CopyNumberGeneFilterElement} from "../../../shared/api/generated/CBioPortalAPIInternal";
-import {getTableHeightByDimension, getTableWidthByDimension, makeMutationCountVsCnaTooltip} from "../StudyViewUtils";
+import {
+    getHeightByDimension,
+    getTableHeightByDimension,
+    getWidthByDimension,
+    mutationCountVsCnaTooltip,
+    MutationCountVsCnaYBinsMin
+} from "../StudyViewUtils";
 import {ClinicalAttribute} from "../../../shared/api/generated/CBioPortalAPI";
 import {makeSurvivalChartData} from "./survival/StudyViewSurvivalUtils";
+import StudyViewDensityScatterPlot from "./scatterPlot/StudyViewDensityScatterPlot";
+import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
+import LoadingIndicator from "../../../shared/components/loadingIndicator/LoadingIndicator";
 
 export interface AbstractChart {
     toSVGDOMNode: () => Element;
 }
 
-export type ChartDownloadType = 'TSV' | 'SVG' | 'PDF';
+export type ChartDownloadType = 'TSV' | 'SVG' | 'PDF' | 'PNG';
 
 export interface IChartContainerDownloadProps {
     type: ChartDownloadType;
@@ -58,8 +64,7 @@ export interface IChartContainerProps {
     showLogScaleToggle?:boolean;
     selectedGenes?:any;
     onGeneSelect?:any;
-    selectedSamplesMap?: any;
-    selectedSamples?: any;
+    isNewlyAdded: (uniqueKey: string) => boolean;
 
     setAnalysisGroupsSettings: (attribute:ClinicalAttribute, grp:ReadonlyArray<AnalysisGroup>)=>void;
     analysisGroupsSettings:StudyViewPageStore["analysisGroupsSettings"];
@@ -71,6 +76,7 @@ export interface IChartContainerProps {
 
 @observer
 export class ChartContainer extends React.Component<IChartContainerProps, {}> {
+    private chartHeaderHeight = 15;
 
     private handlers: any;
     private plot: AbstractChart;
@@ -79,6 +85,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     @observable placement: 'left' | 'right' = 'right';
     @observable chartType: ChartType;
 
+    @observable newlyAdded = false;
     @observable naPatientsHiddenInSurvival = true; // only relevant for survival charts - whether cases with NA clinical value are shown
 
     constructor(props: IChartContainerProps) {
@@ -120,6 +127,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }),
             defaultDownload: {
                 SVG: () => Promise.resolve((new XMLSerializer()).serializeToString(this.toSVGDOMNode())),
+                PNG: () => Promise.resolve(this.toSVGDOMNode()),
                 PDF: () => svgToPdfPromise(this.toSVGDOMNode())
             },
             onChangeChartType: (newChartType: ChartType) => {
@@ -145,26 +153,6 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
     }
 
     @computed
-    get chartWidth() {
-        let chartWidth = styles.chartWidthTwo;
-        if (this.chartType === ChartTypeEnum.PIE_CHART) {
-            chartWidth = styles.chartWidthOne;
-        }
-        return chartWidth;
-    }
-
-    @computed
-    get chartHeight() {
-        let chartHeight = styles.chartHeightTwo;
-        if (this.chartType === ChartTypeEnum.PIE_CHART ||
-            this.chartType === ChartTypeEnum.BAR_CHART)
-        {
-            chartHeight = styles.chartHeightOne;
-        }
-        return chartHeight;
-    }
-
-    @computed
     get hideLabel() {
         return this.chartType === ChartTypeEnum.TABLE;
     }
@@ -185,9 +173,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 break;
             }
             case ChartTypeEnum.TABLE: {
-                if (!_.isEqual(this.props.chartMeta.chartType, ChartTypeEnum.TABLE)) {
-                    controls = {showPieIcon: true}
-                }
+                controls = {showPieIcon: true}
                 break;
             }
         }
@@ -200,7 +186,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         } as ChartControls;
     }
 
-    @bind
+    @autobind
     @action
     changeChartType(chartType: ChartType) {
         this.chartType = chartType;
@@ -215,7 +201,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             !!this.props.chartMeta.clinicalAttribute;
     }
 
-    @bind
+    @autobind
     @action
     setAnalysisGroups() {
         if (this.analysisGroupsPossible) {
@@ -223,7 +209,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         }
     }
 
-    @bind
+    @autobind
     @action
     toggleSurvivalHideNAPatients() {
         this.naPatientsHiddenInSurvival = !this.naPatientsHiddenInSurvival;
@@ -249,24 +235,39 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         }
     };
 
+    // Scatter plot has a weird height setting.
+    getScatterPlotHeight() {
+        return STUDY_VIEW_CONFIG.layout.grid.h * 2 - this.chartHeaderHeight + 33;
+    }
+
+    @computed
+    get borderWidth() {
+        return this.highlightChart ? 2 : 1;
+    }
+
     @computed
     get chart() {
         switch (this.chartType) {
             case ChartTypeEnum.PIE_CHART: {
-                return (<PieChart
+                return ()=>(<PieChart
+                    width={getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)}
+                    height={getHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
                     ref={this.handlers.ref}
                     onUserSelection={this.handlers.onValueSelection}
                     filters={this.props.filters}
                     data={this.props.promise.result}
-                    active={this.mouseInChart}
                     placement={this.placement}
                     compareCohorts={this.handlers.compareCohorts}
                     label={this.props.title}
+                    labelDescription={this.props.chartMeta.description}
+                    patientAttribute={this.props.chartMeta.patientAttribute}
                 />);
             }
             case ChartTypeEnum.BAR_CHART: {
-                return (
+                return ()=>(
                     <BarChart
+                        width={getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)}
+                        height={getHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
                         ref={this.handlers.ref}
                         onUserSelection={this.handlers.onDataBinSelection}
                         filters={this.props.filters}
@@ -275,22 +276,25 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 );
             }
             case ChartTypeEnum.TABLE: {
-                return (<ClinicalTable
+                return ()=>(<ClinicalTable
                     data={this.props.promise.result}
-                    width={getTableWidthByDimension(this.props.chartMeta.dimension)}
-                    height={getTableHeightByDimension(this.props.chartMeta.dimension)}
+                    width={getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)}
+                    height={getTableHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
                     filters={this.props.filters}
                     compareCohorts={this.handlers.compareCohorts}
                     onUserSelection={this.handlers.onValueSelection}
                     label={this.props.title}
+                    labelDescription={this.props.chartMeta.description}
+                    patientAttribute={this.props.chartMeta.patientAttribute}
+                    showAddRemoveAllButtons={this.mouseInChart}
                 />);
             }
             case ChartTypeEnum.MUTATED_GENES_TABLE: {
-                return (
+                return ()=>(
                     <MutatedGenesTable
                         promise={this.props.promise}
-                        width={getTableWidthByDimension(this.props.chartMeta.dimension)}
-                        height={getTableHeightByDimension(this.props.chartMeta.dimension)}
+                        width={getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)}
+                        height={getTableHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
                         numOfSelectedSamples={100}
                         filters={this.props.filters}
                         onUserSelection={this.handlers.updateGeneFilters}
@@ -300,11 +304,11 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 );
             }
             case ChartTypeEnum.CNA_GENES_TABLE: {
-                return (
+                return ()=>(
                     <CNAGenesTable
                         promise={this.props.promise}
-                        width={getTableWidthByDimension(this.props.chartMeta.dimension)}
-                        height={getTableHeightByDimension(this.props.chartMeta.dimension)}
+                        width={getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)}
+                        height={getTableHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}
                         numOfSelectedSamples={100}
                         filters={this.props.filters}
                         onUserSelection={this.handlers.updateCNAGeneFilters}
@@ -315,13 +319,15 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             }
             case ChartTypeEnum.SURVIVAL: {
                 if (this.survivalChartData) {
-                    return (
+                    const data = this.survivalChartData;
+                    return ()=>(
                         <SurvivalChart ref={this.handlers.ref}
-                                       patientSurvivals={this.survivalChartData.patientSurvivals}
-                                       patientToAnalysisGroup={this.survivalChartData.patientToAnalysisGroup}
-                                       analysisGroups={this.survivalChartData.analysisGroups}
+                                       patientSurvivals={data.patientSurvivals}
+                                       patientToAnalysisGroup={data.patientToAnalysisGroup}
+                                       analysisGroups={data.analysisGroups}
                                        analysisClinicalAttribute={this.props.analysisGroupsSettings.clinicalAttribute}
                                        naPatientsHiddenInSurvival={this.naPatientsHiddenInSurvival}
+                                       showNaPatientsHiddenToggle={this.props.patientKeysWithNAInSelectedClinicalData!.result!.length > 0}
                                        toggleSurvivalHideNAPatients={this.toggleSurvivalHideNAPatients}
                                        legendLocation={LegendLocation.TOOLTIP}
                                        title={this.props.title}
@@ -334,13 +340,15 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                                        xLabelWithEventTooltip="Time of death"
                                        xLabelWithoutEventTooltip="Time of last observation"
                                        showDownloadButtons={false}
+                                       disableZoom={true}
                                        showTable={false}
                                        styleOpts={{
-                                           width: 400,
-                                           height: 380,
-                                           legend: {
-                                               x: 190,
-                                               y: 12
+                                           width: getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth),
+                                           height: getHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight),
+                                           pValue: {
+                                               x:getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)-10,
+                                               y:30,
+                                               textAnchor:"end"
                                            },
                                            axis: {
                                                y: {
@@ -358,24 +366,30 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                 }
             }
             case ChartTypeEnum.SCATTER: {
-                // sampleToAnalysisGroup is complete because of loadingPromises and StudyViewComponentLoader
-                return (
-                    <StudyViewScatterPlot
-                        ref={this.handlers.ref}
-                        width={400}
-                        height={380}
-                        onSelection={this.props.onValueSelection}
-                        data={this.props.promise.result}
-                        isLoading={this.props.selectedSamples.isPending}
+                return ()=>(
+                    <div style={{overflow:"hidden", height:getHeightByDimension(this.props.chartMeta.dimension, this.chartHeaderHeight)}}>
+                        {/* have to do all this weird positioning to decrease gap btwn chart and title, bc I cant do it from within Victory */}
+                        {/* overflow: "hidden" because otherwise the large SVG (I have to make it larger to make the plot large enough to
+                            decrease the gap) will cover the header controls and make them unclickable */}
+                        <div style={{marginTop:-33}}>
+                            <StudyViewDensityScatterPlot
+                                ref={this.handlers.ref}
+                                width={getWidthByDimension(this.props.chartMeta.dimension, this.borderWidth)}
+                                height={this.getScatterPlotHeight()}
+                                yBinsMin={MutationCountVsCnaYBinsMin}
+                                onSelection={this.props.onValueSelection}
+                                selectionBounds={(this.props.filters && this.props.filters.length > 0) ? this.props.filters[0] : undefined}
+                                data={this.props.promise.result.bins}
+                                xBinSize={this.props.promise.result.xBinSize}
+                                yBinSize={this.props.promise.result.yBinSize}
+                                isLoading={this.props.promise.isPending}
 
-                        sampleToAnalysisGroup={this.props.sampleToAnalysisGroup!.result!}
-                        analysisGroups={this.props.analysisGroupsSettings.groups}
-                        analysisClinicalAttribute={this.props.analysisGroupsSettings.clinicalAttribute}
-
-                        axisLabelX="Fraction of copy number altered genome"
-                        axisLabelY="# of mutations"
-                        tooltip={this.mutationCountVsCnaTooltip}
-                    />
+                                axisLabelX="Fraction of copy number altered genome"
+                                axisLabelY="# of mutations"
+                                tooltip={mutationCountVsCnaTooltip}
+                            />
+                        </div>
+                    </div>
                 );
             }
             default:
@@ -383,17 +397,8 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
         }
     }
 
-    @computed get mutationCountVsCnaTooltip() {
-        return makeMutationCountVsCnaTooltip(this.props.sampleToAnalysisGroup!.result, this.props.analysisGroupsSettings.clinicalAttribute);
-    }
-
     @computed get loadingPromises() {
         const ret = [this.props.promise];
-        switch (this.chartType) {
-            case ChartTypeEnum.SCATTER:
-                ret.push(this.props.sampleToAnalysisGroup!);
-                break;
-        }
         return ret;
     }
 
@@ -403,12 +408,45 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
             (this.props.analysisGroupsSettings.clinicalAttribute.clinicalAttributeId === this.props.chartMeta.clinicalAttribute.clinicalAttributeId);
     }
 
+    @computed get downloadTypes() {
+        return _.reduce(this.props.download || [], (acc, next) => {
+            //when the chart type is table only show TSV in download buttons
+            if (!(this.chartType === ChartTypeEnum.TABLE && _.includes(['SVG', 'PDF'], next.type))) {
+                acc.push({
+                    type: next.type,
+                    initDownload: next.initDownload ? next.initDownload : this.handlers.defaultDownload[next.type]
+                });
+            }
+            return acc;
+        }, [] as IChartContainerDownloadProps[]);
+    }
+
+    @computed
+    get highlightChart() {
+        return this.newlyAdded || this.isAnalysisTarget;
+    }
+
+    componentDidMount() {
+        if (this.props.isNewlyAdded(this.props.chartMeta.uniqueKey)) {
+            this.newlyAdded = true;
+            setTimeout(() => this.newlyAdded = false, STUDY_VIEW_CONFIG.thresholds.chartHighlight);
+        }
+    }
+
+    componentWillReceiveProps(nextProps: Readonly<IChartContainerProps>, nextContext: any): void {
+        if (nextProps.chartMeta.chartType !== this.chartType) {
+            this.chartType = nextProps.chartMeta.chartType;
+        }
+    }
+
     public render() {
         return (
-            <div className={classnames(styles.chart, { [styles.analysisTarget]:this.isAnalysisTarget })}
+            <div className={classnames(styles.chart, { [styles.highlight]: this.highlightChart})}
+                 data-test={`chart-container-${this.props.chartMeta.uniqueKey}`}
                  onMouseEnter={this.handlers.onMouseEnterChart}
                  onMouseLeave={this.handlers.onMouseLeaveChart}>
                 <ChartHeader
+                    height={this.chartHeaderHeight}
                     chartMeta={this.props.chartMeta}
                     title={this.props.title}
                     active={this.mouseInChart}
@@ -418,21 +456,25 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     hideLabel={this.hideLabel}
                     chartControls={this.chartControls}
                     changeChartType={this.changeChartType}
-                    download={this.generateHeaderDownloadProps(this.props.download)}
+                    download={this.downloadTypes}
                     setAnalysisGroups={this.setAnalysisGroups}
                 />
-                <StudyViewComponentLoader promises={this.loadingPromises}>
-                    {this.chart}
-                </StudyViewComponentLoader>
+                <div style={{display: 'flex', flexGrow: 1, margin: 'auto', alignItems: 'center'}}>
+                    {(this.props.promise.isPending) && (
+                        <LoadingIndicator
+                            isLoading={true}
+                            className={styles.chartLoader}
+                        />
+                    )}
+                    {this.props.promise.isError && (<div>Error when loading data.</div>)}
+
+                    {(!this.props.chartMeta.renderWhenDataChange || this.props.promise.isComplete) &&
+                    <div style={{visibility: this.props.promise.isPending ? 'hidden' : 'visible', display: 'flex'}}>
+                        {this.chart && this.chart()}
+                    </div>
+                    }
+                </div>
             </div>
         );
-    }
-
-    private generateHeaderDownloadProps(download?: IChartContainerDownloadProps[]): IChartContainerDownloadProps[] {
-        return download && download.length > 0 ? download.map(props => ({
-                type: props.type,
-                initDownload: props.initDownload ? props.initDownload : this.handlers.defaultDownload[props.type]
-            })
-        ) : [];
     }
 }

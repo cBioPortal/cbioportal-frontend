@@ -1,44 +1,40 @@
 import * as React from "react";
-import {observer} from "mobx-react";
-import {
-    action,
-    autorun,
-    computed, IObservableObject, IObservableValue, IReactionDisposer, observable, ObservableMap,
-    reaction
-} from "mobx";
+import {Observer, observer} from "mobx-react";
+import {action, computed, IObservableObject, IReactionDisposer, observable, ObservableMap, reaction} from "mobx";
 import {remoteData} from "../../api/remoteData";
 import Oncoprint, {GENETIC_TRACK_GROUP_INDEX} from "./Oncoprint";
 import OncoprintControls, {
     IOncoprintControlsHandlers,
     IOncoprintControlsState
 } from "shared/components/oncoprint/controls/OncoprintControls";
-import {AlterationTypeConstants, ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
-import {ClinicalAttribute, Gene, MolecularProfile, Mutation, Sample} from "../../api/generated/CBioPortalAPI";
+import {ResultsViewPageStore} from "../../../pages/resultsView/ResultsViewPageStore";
+import {ClinicalAttribute, Gene, MolecularProfile, Sample} from "../../api/generated/CBioPortalAPI";
 import {
-    percentAltered, makeGeneticTracksMobxPromise,
-    makeGenesetHeatmapExpansionsMobxPromise, makeGenesetHeatmapTracksMobxPromise,
-    makeHeatmapTracksMobxPromise, makeClinicalTracksMobxPromise
+    getAlteredUids,
+    getUnalteredUids,
+    makeClinicalTracksMobxPromise,
+    makeGenesetHeatmapExpansionsMobxPromise,
+    makeGenesetHeatmapTracksMobxPromise,
+    makeGeneticTracksMobxPromise,
+    makeHeatmapTracksMobxPromise
 } from "./OncoprintUtils";
 import _ from "lodash";
 import onMobxPromise from "shared/lib/onMobxPromise";
 import AppConfig from "appConfig";
-import LoadingIndicator, {GlobalLoader} from "shared/components/loadingIndicator/LoadingIndicator";
+import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import OncoprintJS, {TrackId} from "oncoprintjs";
 import fileDownload from 'react-file-download';
 import svgToPdfDownload from "shared/lib/svgToPdfDownload";
-import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
-import {Button} from "react-bootstrap";
 import tabularDownload from "./tabularDownload";
-import * as URL from "url";
 import classNames from 'classnames';
 import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
-import naturalSort from "javascript-natural-sort";
-import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
-import Spec = Mocha.reporters.Spec;
+import {clinicalAttributeIsLocallyComputed, SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
 import OqlStatusBanner from "../oqlStatusBanner/OqlStatusBanner";
-import {getAnnotatingProgressMessage, makeProfiledInClinicalAttributes} from "./ResultsViewOncoprintUtils";
+import {getAnnotatingProgressMessage} from "./ResultsViewOncoprintUtils";
 import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
-import {getMobxPromiseGroupStatus} from "../../lib/getMobxPromiseGroupStatus";
+import autobind from "autobind-decorator";
+import getBrowserWindow from "../../lib/getBrowserWindow";
+import MobxPromise from "mobxpromise";
 
 interface IResultsViewOncoprintProps {
     divId: string;
@@ -66,9 +62,9 @@ export interface IGenesetExpansionRecord {
     correlationValue: number;
 }
 
-const SAMPLE_MODE_URL_PARAM = "show_samples";
-const CLINICAL_TRACKS_URL_PARAM = "clinicallist";
-const HEATMAP_TRACKS_URL_PARAM = "heatmap_track_groups";
+export const SAMPLE_MODE_URL_PARAM = "show_samples";
+export const CLINICAL_TRACKS_URL_PARAM = "clinicallist";
+export const HEATMAP_TRACKS_URL_PARAM = "heatmap_track_groups";
 
 const CLINICAL_TRACK_KEY_PREFIX = "CLINICALTRACK_";
 
@@ -86,6 +82,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @observable columnMode:"sample"|"patient" = "patient";
     @observable sortMode:SortMode = {type:"data"};
 
+    @observable distinguishGermlineMutations:boolean = true;
+    @observable hideGermlineMutations:boolean = false;
     @observable distinguishMutationType:boolean = true;
     @observable sortByMutationType:boolean = true;
     @observable sortByDrivers:boolean = true;
@@ -94,6 +92,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     @observable showWhitespaceBetweenColumns:boolean = true;
     @observable showClinicalTrackLegends:boolean = true;
     @observable _onlyShowClinicalLegendForAlteredCases = false;
+    @observable showOqlInLabels = false;
 
     @computed get onlyShowClinicalLegendForAlteredCases() {
         return this.showClinicalTrackLegends && this._onlyShowClinicalLegendForAlteredCases;
@@ -119,26 +118,31 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     public molecularProfileIdToHeatmapTracks =
         observable.map<HeatmapTrackGroupRecord>();
 
-    private controlsHandlers:IOncoprintControlsHandlers;
+    public controlsHandlers:IOncoprintControlsHandlers;
     private controlsState:IOncoprintControlsState & IObservableObject;
 
-    private oncoprint:OncoprintJS<any>;
+    @observable.ref private oncoprint:OncoprintJS<any>;
 
-    private putativeDriverSettingsReaction:IReactionDisposer;
     private urlParamsReaction:IReactionDisposer;
 
     constructor(props:IResultsViewOncoprintProps) {
         super(props);
 
+        this.showOqlInLabels = props.store.queryContainsOql;
         (window as any).resultsViewOncoprint = this;
 
-        this.initFromUrlParams(URL.parse(window.location.href, true).query);
+        this.initFromUrlParams(getBrowserWindow().globalStores.routing.location.query);
 
         onMobxPromise(props.store.studyIds, (studyIds:string[])=>{
             if (studyIds.length > 1) {
                 this.selectedClinicalAttributeIds.set(SpecialAttribute.StudyOfOrigin, true);
             }
         });
+        onMobxPromise([props.store.samples, props.store.patients], (samples:any[], patients:any[])=>{
+            if (samples.length !== patients.length) {
+                this.selectedClinicalAttributeIds.set(SpecialAttribute.NumSamplesPerPatient, true);
+            }
+        })
 
         onMobxPromise(props.store.clinicalAttributes_profiledIn, (result:any[])=>{
             for (const attr of result) {
@@ -178,23 +182,19 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 this.clinicalTracksUrlParam
             ],
             ()=>{
-                const parsedURL = URL.parse(window.location.href, true);
-                const query = Object.assign({}, parsedURL.query);
-                //this.props.routing.updateRoute({
-                query[SAMPLE_MODE_URL_PARAM] = (this.columnMode === "sample") + "";
+                const newParams = Object.assign({}, getBrowserWindow().globalStores.routing.location.query);
+                newParams[SAMPLE_MODE_URL_PARAM] = (this.columnMode === "sample") + "";
                 if (!this.clinicalTracksUrlParam) {
-                    delete query[CLINICAL_TRACKS_URL_PARAM];
+                    delete newParams[CLINICAL_TRACKS_URL_PARAM];
                 } else {
-                    query[CLINICAL_TRACKS_URL_PARAM] = this.clinicalTracksUrlParam;
+                    newParams[CLINICAL_TRACKS_URL_PARAM] = this.clinicalTracksUrlParam;
                 }
                 if (!this.heatmapTrackGroupsUrlParam) {
-                    delete query[HEATMAP_TRACKS_URL_PARAM];
+                    delete newParams[HEATMAP_TRACKS_URL_PARAM];
                 } else {
-                    query[HEATMAP_TRACKS_URL_PARAM] = this.heatmapTrackGroupsUrlParam;
+                    newParams[HEATMAP_TRACKS_URL_PARAM] = this.heatmapTrackGroupsUrlParam;
                 }
-                //});
-                const newParsedURL = Object.assign(parsedURL, { query, search:null });
-                window.history.replaceState({}, '', URL.format(newParsedURL));
+                getBrowserWindow().globalStores.routing.updateRoute(newParams, undefined, true, true);
             }
         );
 
@@ -219,6 +219,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             get onlyShowClinicalLegendForAlteredCases() {
                 return self.onlyShowClinicalLegendForAlteredCases;
             },
+            get showOqlInLabels() {
+                return self.showOqlInLabels;
+            },
             get showMinimap() {
                 return self.showMinimap;
             },
@@ -236,6 +239,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             },
             get distinguishDrivers() {
                 return self.distinguishDrivers;
+            },
+            get distinguishGermlineMutations() {
+                return self.distinguishGermlineMutations;
             },
             get annotateDriversOncoKb() {
                 return self.props.store.mutationAnnotationSettings.oncoKb;
@@ -263,6 +269,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             },
             get hidePutativePassengers() {
                 return self.props.store.mutationAnnotationSettings.ignoreUnknown;
+            },
+            get hideGermlineMutations() {
+                return self.hideGermlineMutations;
             },
             get annotateCBioPortalInputValue() {
                 return self.props.store.mutationAnnotationSettings.cbioportalCountThreshold + "";
@@ -344,13 +353,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     return self.horzZoom;
                 }
             },
-            get sampleCount() {
-                if (self.props.store.samples.isComplete) {
-                    return self.props.store.samples.result.length;
-                } else {
-                    return 1;
-                }
-            }
         });
     }
 
@@ -367,7 +369,6 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     componentWillUnmount() {
-        if (this.putativeDriverSettingsReaction) this.putativeDriverSettingsReaction();
         this.urlParamsReaction();
     }
 
@@ -395,6 +396,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             onSelectShowWhitespaceBetweenColumns:(show:boolean)=>{this.showWhitespaceBetweenColumns = show;},
             onSelectShowClinicalTrackLegends:(show:boolean)=>{this.showClinicalTrackLegends = show; },
             onSelectOnlyShowClinicalLegendForAlteredCases:(show:boolean)=>{this._onlyShowClinicalLegendForAlteredCases = show; },
+            onSelectShowOqlInLabels:(show:boolean)=>{this.showOqlInLabels = show;},
             onSelectShowMinimap:(show:boolean)=>{this.showMinimap = show;},
             onSelectDistinguishMutationType:(s:boolean)=>{this.distinguishMutationType = s;},
             onSelectDistinguishDrivers:action((s:boolean)=>{
@@ -423,6 +425,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                     });
                 }
             }),
+            onSelectDistinguishGermlineMutations:(s:boolean)=>{this.distinguishGermlineMutations = s; },
             onSelectAnnotateOncoKb:action((s:boolean)=>{
                 this.props.store.mutationAnnotationSettings.oncoKb = s;
             }),
@@ -451,6 +454,9 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             }),
             onSelectHidePutativePassengers:(s:boolean)=>{
                 this.props.store.mutationAnnotationSettings.ignoreUnknown = s;
+            },
+            onSelectHideGermlineMutations:(s:boolean)=>{
+                this.hideGermlineMutations = s;
             },
             onSelectSortByMutationType:(s:boolean)=>{this.sortByMutationType = s;},
             onClickSortAlphabetical:()=>{
@@ -518,8 +524,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 const keyToCase = (this.columnMode === "sample" ? sampleKeyToSample : patientKeyToPatient);
                                 const caseIds = this.oncoprint.getIdOrder().map(
                                     this.columnMode === "sample" ?
-                                        (id=>(sampleKeyToSample[id].sampleId)) :
-                                        (id=>(patientKeyToPatient[id].patientId))
+                                        ((id:string)=>(sampleKeyToSample[id].sampleId)) :
+                                        ((id:string)=>(patientKeyToPatient[id].patientId))
                                 );
                                 for (const caseId of caseIds) {
                                     file += `${caseId}\n`;
@@ -650,23 +656,11 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
         this.oncoprint.onHorzZoom(z=>(this.horzZoom = z));
         this.horzZoom = this.oncoprint.getHorzZoom();
-        onMobxPromise([this.props.store.alteredSampleKeys, this.props.store.alteredPatientKeys],
-            (sampleUIDs:string[], patientUIDs:string[])=>{
-                this.oncoprint.setHorzZoomToFit(
-                    this.columnMode === "sample" ? sampleUIDs: patientUIDs
-                );
+        onMobxPromise(this.alteredKeys,
+            (alteredUids:string[])=>{
+                this.oncoprint.setHorzZoomToFit(alteredUids);
             });
 
-    }
-
-    @computed get horzZoomToFitIds() {
-        if (this.columnMode === "sample" && this.props.store.alteredSampleKeys.isComplete) {
-            return this.props.store.alteredSampleKeys.result;
-        } else if (this.columnMode === "patient" && this.props.store.alteredPatientKeys.isComplete) {
-            return this.props.store.alteredPatientKeys.result;
-        } else {
-            return [];
-        }
     }
 
     private setColumnMode(type:"sample"|"patient") {
@@ -675,22 +669,19 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
-    readonly unalteredKeys = remoteData({
-        await: ()=>[
-            this.props.store.unalteredSampleKeys,
-            this.props.store.unalteredPatientKeys,
-        ],
-        invoke:async()=>{
-            if (this.columnMode === "sample") {
-               return this.props.store.unalteredSampleKeys.result!;
-            } else {
-               return this.props.store.unalteredPatientKeys.result!;
-            }
-        },
+    readonly alteredKeys = remoteData({
+        await:()=>[this.geneticTracks],
+        invoke:async()=>getAlteredUids(this.geneticTracks.result!),
         default: []
     });
 
-    private onMinimapClose() {
+    private readonly unalteredKeys = remoteData({
+        await:()=>[this.geneticTracks],
+        invoke:async()=>getUnalteredUids(this.geneticTracks.result!)
+    });
+
+
+    @action private onMinimapClose() {
         this.showMinimap = false;
     }
 
@@ -718,7 +709,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     private onDeleteClinicalTrack(clinicalTrackKey:string) {
-        this.selectedClinicalAttributeIds.delete(this.clinicalTrackKeyToAttributeId(clinicalTrackKey));
+        // ignore tracks being deleted due to rendering process reasons
+        if (!this.isHidden) {
+            this.selectedClinicalAttributeIds.delete(this.clinicalTrackKeyToAttributeId(clinicalTrackKey));
+        }
     }
 
     private onTrackSortDirectionChange(trackId:TrackId, dir:number) {
@@ -826,19 +820,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         };
     }
 
-    readonly caseSetName = remoteData({
-        await:()=>[
-            this.props.store.sampleLists
-        ],
-        invoke:()=>{
-            if (this.props.store.sampleLists.result!.length === 1) {
-                return Promise.resolve(this.props.store.sampleLists.result![0].name);
-            } else {
-                return Promise.resolve(undefined);
-            }
-        }
-    });
-
+    /* commenting this out because I predict it could make a comeback
     @computed get headerColumnModeButton() {
         if (!this.props.store.samples.isComplete ||
             !this.props.store.patients.isComplete ||
@@ -872,48 +854,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 </Button>
             </DefaultTooltip>
         );
-    }
-
-    @computed get caseSetInfo() {
-        let caseSetText = null;
-
-        if (this.props.store.patients.isComplete &&
-            this.props.store.samples.isComplete &&
-            this.caseSetName.isComplete)
-        {
-            const caseSetName = this.caseSetName.result || "User-defined Patient List";
-            const patientCount = this.props.store.patients.result.length;
-            const sampleCount = this.props.store.samples.result.length;
-
-            caseSetText = <span>Case Set: {caseSetName} ({patientCount} patients / {sampleCount} samples)</span>;
-        }
-
-        return (
-            <div>
-                {caseSetText}
-                {this.headerColumnModeButton}
-            </div>
-        );
-    }
-
-    @computed get alterationInfo() {
-        const alteredIdsPromise = (this.columnMode === "sample" ? this.props.store.alteredSampleKeys : this.props.store.alteredPatientKeys);
-        const sequencedIdsPromise = (this.columnMode === "sample" ? this.props.store.sequencedSampleKeys: this.props.store.sequencedPatientKeys);
-        const allIdsPromise = (this.columnMode === "sample" ? this.props.store.samples : this.props.store.patients);
-        if (allIdsPromise.isComplete && alteredIdsPromise.isComplete && sequencedIdsPromise.isComplete) {
-            return (
-                <span style={{marginTop:"15px", marginBottom:"15px", display: "block"}}>
-                    {`Altered in ${alteredIdsPromise.result.length} `+
-                    `(${percentAltered(alteredIdsPromise.result.length, sequencedIdsPromise.result.length)}) `+
-                    `of ${sequencedIdsPromise.result.length} sequenced `+
-                    `${this.columnMode === "sample" ? "samples" : "cases/patients"} `+
-                    `(${allIdsPromise.result.length} total)`}
-                </span>
-            )
-        } else {
-            return null;
-        }
-    }
+    }*/
 
     @computed get isLoading() {
         return this.clinicalTracks.isPending
@@ -948,12 +889,54 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
-    @computed get progressItems():IProgressIndicatorItem[] {
-        const ret = [];
+    @autobind
+    private getControls() {
+        if (this.oncoprint && !this.oncoprint.webgl_unavailable)  {
+            return (<FadeInteraction showByDefault={true} show={true}>
+                <OncoprintControls
+                    handlers={this.controlsHandlers}
+                    state={this.controlsState}
+                    store={this.props.store}
+                />
+            </FadeInteraction>);
+        } else {
+            return <span/>;
+        }
+    }
+
+    @autobind
+    private getProgressItems(elapsedSecs:number):IProgressIndicatorItem[] {
+        const ret:IProgressIndicatorItem[] = [];
+
+        let queryingLabel:string;
+        if (this.props.store.genes.isComplete && this.props.store.samples.isComplete) {
+            const numGenes = this.props.store.genes.result!.length;
+            const numSamples = this.props.store.samples.result!.length;
+            queryingLabel = `Querying ${numGenes} genes in ${numSamples} samples`;
+        } else {
+            queryingLabel = "Querying ... genes in ... samples";
+        }
+
+        let waitingLabel:string = "";
+        if (elapsedSecs > 2) {
+            waitingLabel = " - this can take several seconds";
+        }
 
         ret.push({
-            label: "Loading genomic data",
-            promises: [this.props.store.molecularData, this.props.store.mutations]
+            label: `${queryingLabel}${waitingLabel}`,
+            promises: [], // empty promises means insta-complete
+            hideIcon: true, // dont show any icon, this is just a message
+            style:{ fontWeight:"bold" }
+        });
+
+        const areNonLocalClinicalAttributesSelected =
+            _.some(this.selectedClinicalAttributeIds.keys(),
+                    clinicalAttributeId=>!clinicalAttributeIsLocallyComputed({clinicalAttributeId})
+            );
+
+        ret.push({
+            label: `Loading genomic ${areNonLocalClinicalAttributesSelected ? "and clinical " : ""}data`,
+            promises: [this.props.store.molecularData, this.props.store.mutations, ...(areNonLocalClinicalAttributesSelected ? [this.clinicalTracks] : [])]
         });
 
         const usingOncokb = this.props.store.mutationAnnotationSettings.oncoKb;
@@ -972,10 +955,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     public render() {
         return (
-            <div className="posRelative">
+            <div>
 
                 <LoadingIndicator isLoading={this.isHidden} size={"big"} center={true} className="oncoprintLoadingIndicator">
-                    <ProgressIndicator items={this.progressItems} show={this.isHidden} sequential={true}/>
+                    <div style={{marginTop:20}}>
+                        <ProgressIndicator getItems={this.getProgressItems} show={this.isHidden} sequential={true}/>
+                    </div>
                 </LoadingIndicator>
 
                 <div className={"tabMessageContainer"}>
@@ -986,21 +971,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                      onMouseEnter={this.onMouseEnter}
                      onMouseLeave={this.onMouseLeave}
                 >
+                    <Observer>
+                        {this.getControls}
+                    </Observer>
 
-                    {this.caseSetInfo}
-
-                    {(this.oncoprint && !this.oncoprint.webgl_unavailable) &&
-                    (<FadeInteraction showByDefault={true} show={this.mouseInsideBounds}>
-                        <OncoprintControls
-                            store={this.props.store}
-                            handlers={this.controlsHandlers}
-                            state={this.controlsState}
-                        />
-                    </FadeInteraction>)}
-
-                    <div style={{position:"relative"}} >
+                    <div style={{position:"relative", marginTop:15}} >
                         <div>
-                            {this.alterationInfo}
                             <Oncoprint
                                 oncoprintRef={this.oncoprintRef}
                                 clinicalTracks={this.clinicalTracks.result}
@@ -1015,10 +991,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                                 hiddenIds={!this.showUnalteredColumns ? this.unalteredKeys.result : undefined}
                                 molecularProfileIdToMolecularProfile={this.props.store.molecularProfileIdToMolecularProfile.result}
                                 alterationTypesInQuery={this.alterationTypesInQuery}
+                                showSublabels={this.showOqlInLabels}
 
-                                horzZoomToFitIds={this.horzZoomToFitIds}
+                                horzZoomToFitIds={this.alteredKeys.result}
                                 distinguishMutationType={this.distinguishMutationType}
                                 distinguishDrivers={this.distinguishDrivers}
+                                distinguishGermlineMutations={this.distinguishGermlineMutations}
                                 sortConfig={this.sortConfig}
                                 showClinicalTrackLegends={this.showClinicalTrackLegends}
                                 showWhitespaceBetweenColumns={this.showWhitespaceBetweenColumns}

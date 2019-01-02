@@ -14,6 +14,7 @@ import 'react-rangeslider/lib/index.css';
 import { CancerSummaryChart } from "./CancerSummaryChart";
 import autobind from "autobind-decorator";
 import DownloadControls from "shared/components/downloadControls/DownloadControls"
+import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWidthBox";
 
 export const OrderedAlterationLabelMap: Record<keyof IAlterationCountMap, string> = {
     multiple: "Multiple Alterations",
@@ -451,6 +452,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
 
     public render() {
         return (
+            <WindowWidthBox offset={60}>
             <If condition={this.hasAlterations}>
                 <Then>
                     <div data-test="cancerTypesSummaryDiv">
@@ -501,7 +503,7 @@ export class CancerSummaryContent extends React.Component<ICancerSummaryContentP
                     <div className="alert alert-info">There are no alterations in this gene.</div>
                 </Else>
             </If>
-
+            </WindowWidthBox>
         );
     }
 }

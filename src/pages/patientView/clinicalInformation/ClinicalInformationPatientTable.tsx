@@ -4,6 +4,7 @@ import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
 
 import styles from './style/patientTable.module.scss';
 import {SHOW_ALL_PAGE_SIZE} from "../../../shared/components/paginationControls/PaginationControls";
+import {sortByClinicalAttributePriorityThenName} from "../../../shared/lib/SortUtils";
 
 export interface IClinicalInformationPatientTableProps {
     data: ClinicalData[];
@@ -37,7 +38,7 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
 
     public render() {
 
-        const tableData = this.props.data && this.props.data.map((el: ClinicalData) => ({
+        const tableData = this.props.data && this.props.data.sort((a, b) => sortByClinicalAttributePriorityThenName(a.clinicalAttribute, b.clinicalAttribute)).map((el: ClinicalData) => ({
             attribute: el.clinicalAttribute.displayName || '',
             value: el.value
         }));
@@ -64,8 +65,6 @@ export default class ClinicalInformationPatientTable extends React.Component<ICl
                   showColumnVisibility={false}
                   className={styles.patientTable}
                   initialItemsPerPage={SHOW_ALL_PAGE_SIZE}
-                  initialSortColumn="Attribute"
-                  initialSortDirection="asc"
                   showFilter={(this.props.showFilter === false) ? false : true }
                   showCopyDownload={(this.props.showCopyDownload === false) ? false : true }
             />

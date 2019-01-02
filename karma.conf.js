@@ -73,7 +73,7 @@ module.exports = function (config) {
             //'karma-phantomjs-launcher',
             'karma-chrome-launcher',
             'karma-sourcemap-loader',
-            'karma-coverage',
+            //'karma-coverage',
             'karma-junit-reporter'
         ],
 

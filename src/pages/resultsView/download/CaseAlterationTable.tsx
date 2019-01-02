@@ -18,6 +18,12 @@ export interface IOqlData {
     cna: ISubAlteration[];
     mrnaExp: ISubAlteration[];
     proteinLevel: ISubAlteration[];
+    isMutationNotProfiled: boolean;
+    isFusionNotProfiled: boolean;
+    isCnaNotProfiled: boolean;
+    isMrnaExpNotProfiled: boolean;
+    isProteinLevelNotProfiled: boolean;
+    alterationTypes: string[];
 }
 
 export interface ICaseAlteration {
@@ -31,73 +37,116 @@ export interface ICaseAlteration {
 export interface ICaseAlterationTableProps {
     caseAlterationData: ICaseAlteration[];
     oqls: OQLLineFilterOutput<AnnotatedExtendedAlteration>[];
+    alterationTypes: string[];
 }
 
-export function generateOqlValue(data: IOqlData): string
+export function generateOqlValue(data: IOqlData, alterationType: string): string
 {
-    const oqlValue: string[] = [];
-
     // helper functions to map the display value for different alteration types
     const stringMapper = (alterationData: (string|ISubAlteration)[]) => alterationData;
     const subAlterationMapper = (alterationData: (string|ISubAlteration)[]) =>
-        alterationData.map((alteration: ISubAlteration) => alteration.type);
+        alterationData.map((alteration: ISubAlteration) => alteration.type);        
+    let generator;
+    let pseudoOqlSummary: string = "";
 
-    // generator labels and data extraction functions for different alteration types
-    const generators = [
-        {
-            label: "MUT",
-            getAlterationData: (oqlData: IOqlData) => oqlData.mutation,
-            getValues: stringMapper
-        },
-        {
-            label: "FUSION",
-            getAlterationData: (oqlData: IOqlData) => oqlData.fusion,
-            getValues: stringMapper
-        },
-        {
-            label: "CNA",
-            getAlterationData: (oqlData: IOqlData) => oqlData.cna,
-            getValues: subAlterationMapper
-        },
-        {
-            label: "EXP",
-            getAlterationData: (oqlData: IOqlData) => oqlData.mrnaExp,
-            getValues: subAlterationMapper
-        },
-        {
-            label: "PROT",
-            getAlterationData: (oqlData: IOqlData) => oqlData.proteinLevel,
-            getValues: subAlterationMapper
-        }
-    ];
+    if (data.alterationTypes.length === 0 || !data.alterationTypes.includes(alterationType)) {
+        pseudoOqlSummary = "no alteration";
+    }
+    switch (alterationType) {
+        case "MUT":
+            generator = {
+                label: "MUT",
+                getAlterationData: (oqlData: IOqlData) => oqlData.mutation,
+                isNotProfiled: (oqlData: IOqlData) => oqlData.isMutationNotProfiled,
+                getValues: stringMapper
+            }
+            break;
+        case "FUSION":
+            generator = {
+                label: "FUSION",
+                getAlterationData: (oqlData: IOqlData) => oqlData.fusion,
+                isNotProfiled: (oqlData: IOqlData) => oqlData.isFusionNotProfiled,
+                getValues: stringMapper
+            }
+            break;
+        case "CNA":
+            generator = {
+                label: "CNA",
+                getAlterationData: (oqlData: IOqlData) => oqlData.cna,
+                isNotProfiled: (oqlData: IOqlData) => oqlData.isCnaNotProfiled,
+                getValues: subAlterationMapper
+            }
+            break;
+        case "EXP":
+            generator = {
+                label: "EXP",
+                getAlterationData: (oqlData: IOqlData) => oqlData.mrnaExp,
+                isNotProfiled: (oqlData: IOqlData) => oqlData.isMrnaExpNotProfiled,
+                getValues: subAlterationMapper
+            }
+            break;
+        case "PROT":
+            generator = {
+                label: "PROT",
+                getAlterationData: (oqlData: IOqlData) => oqlData.proteinLevel,
+                isNotProfiled: (oqlData: IOqlData) => oqlData.isProteinLevelNotProfiled,
+                getValues: subAlterationMapper
+            }
+            break;
+        default:
+    }
 
-    // for each alteration type, transform alteration data into a comma separated string
-    generators.forEach((generator) => {
+    if (generator) {
         const alterationData = generator.getAlterationData(data);
-
         if (alterationData.length > 0) {
-            oqlValue.push(`${generator.label}: ${generator.getValues(alterationData).join(",")};`);
+            pseudoOqlSummary = generator.getValues(alterationData).join(",");
         }
-    });
+        if (generator.isNotProfiled(data)) {
+            pseudoOqlSummary = "not profiled";
+        }
+    }
 
     // finally, generate a single line summary with all alteration data combined.
-    return oqlValue.join(" ");
+    return pseudoOqlSummary;
 }
 
-export function generateOqlDisplayValue(oqlData: {[oqlLine: string]: IOqlData}, oqlLine: string)
+export function generatePseudoOqlSummary(oqlData: {[oqlLine: string]: IOqlData}, oqlLine: string, alterationType: string)
 {
-    let oqlValue = "";
+    let pseudoOqlSummary = "";
 
     if (!_.isEmpty(oqlData))
     {
         const datum = oqlData[oqlLine];
 
         if (datum) {
-            oqlValue = datum.sequenced ? generateOqlValue(oqlData[oqlLine]) : "N/P";
+            pseudoOqlSummary = generateOqlValue(oqlData[oqlLine], alterationType);
         }
     }
 
-    return oqlValue;
+    return pseudoOqlSummary;
+}
+
+export function computeAlterationTypes(alterationData: ICaseAlteration[]): string[]
+{
+    const types = _.chain(alterationData)
+        .map((alteration) => _.values(alteration.oqlData))
+        .flatten()
+        .map((oqlDataValue) => oqlDataValue.alterationTypes)
+        .flatten()
+        .uniq()
+        .value();
+    return types;
+}
+
+export function getDisplayStyle(value: string): object {
+    switch(value) {
+        case "no alteration":
+            return {whiteSpace: "nowrap" , color: "orange"};
+        case "not profiled":
+            return {whiteSpace: "nowrap" , color: "indianred"};
+        default:
+            return {whiteSpace: "nowrap"};
+    }
 }
 
 class CaseAlterationTableComponent extends LazyMobXTable<ICaseAlteration> {}
@@ -143,18 +192,29 @@ export default class CaseAlterationTable extends React.Component<ICaseAlteration
             }
         ];
 
+        const typeSet : {[x: string]: boolean} = {};
         this.props.oqls.forEach(oql => {
-            columns.push({
-                name: oql.gene,
-                tooltip: <span>{oql.oql_line}</span>,
-                headerDownload: (name: string) => oql.oql_line,
-                render: (data: ICaseAlteration) =>
-                    <span style={{whiteSpace: "nowrap"}}>{generateOqlDisplayValue(data.oqlData, oql.oql_line)}</span>,
-                download: (data: ICaseAlteration) => generateOqlDisplayValue(data.oqlData, oql.oql_line),
-                sortBy: (data: ICaseAlteration) => generateOqlDisplayValue(data.oqlData, oql.oql_line),
-                filter: (data: ICaseAlteration, filterString: string, filterStringUpper: string) =>
-                    generateOqlDisplayValue(data.oqlData, oql.oql_line).toUpperCase().includes(filterStringUpper)
-            });
+            const alterationTypes = this.props.alterationTypes;
+            if (!(oql.gene in typeSet)){
+                typeSet[oql.gene] = true;
+                alterationTypes.forEach(alterationType => {
+                    columns.push({
+                        name: `${oql.gene} ${alterationType}`,
+                        tooltip: <span>{oql.oql_line}</span>,
+                        headerDownload: (name: string) => oql.oql_line,
+                        render: (data: ICaseAlteration) => {
+                            const oqlDisplayValue = generatePseudoOqlSummary(data.oqlData, oql.oql_line, alterationType); 
+                            const style = getDisplayStyle(oqlDisplayValue);
+    
+                            return <span style={style}>{oqlDisplayValue}</span>;
+                        },
+                        download: (data: ICaseAlteration) => generatePseudoOqlSummary(data.oqlData, oql.oql_line, alterationType),
+                        sortBy: (data: ICaseAlteration) => generatePseudoOqlSummary(data.oqlData, oql.oql_line, alterationType),
+                        filter: (data: ICaseAlteration, filterString: string, filterStringUpper: string) =>
+                            generatePseudoOqlSummary(data.oqlData, oql.oql_line, alterationType).toUpperCase().includes(filterStringUpper)
+                    });
+                });
+            }
         });
 
 

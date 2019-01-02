@@ -1,27 +1,43 @@
 import _ from "lodash";
-import { SingleGeneQuery } from "shared/lib/oql/oql-parser";
-import { unparseOQLQueryLine } from "shared/lib/oql/oqlfilter";
+import {SingleGeneQuery} from "shared/lib/oql/oql-parser";
+import {unparseOQLQueryLine} from "shared/lib/oql/oqlfilter";
 import {
-    StudyViewFilter, DataBin, ClinicalDataIntervalFilterValue, ClinicalDataCount, SampleIdentifier
+    ClinicalDataCount,
+    ClinicalDataIntervalFilterValue,
+    DataBin,
+    SampleIdentifier,
+    StudyViewFilter
 } from "shared/api/generated/CBioPortalAPIInternal";
-import { Sample, Gene, ClinicalAttribute, CancerStudy } from "shared/api/generated/CBioPortalAPI";
+import {CancerStudy, ClinicalAttribute, Gene, Sample} from "shared/api/generated/CBioPortalAPI";
 import * as React from "react";
-import {getSampleViewUrl, getStudySummaryUrl, buildCBioPortalPageUrl} from "../../shared/api/urls";
+import {buildCBioPortalPageUrl} from "../../shared/api/urls";
 import {IStudyViewScatterPlotData} from "./charts/scatterPlot/StudyViewScatterPlot";
-import { BarDatum} from "./charts/barChart/BarChart";
+import {BarDatum} from "./charts/barChart/BarChart";
 import {
-    ClinicalDataTypeConstants,
-    StudyWithSamples,
-    StudyViewFilterWithSampleIdentifierFilters,
     AnalysisGroup,
-    DEFAULT_LAYOUT_PROPS
+    ClinicalDataTypeEnum,
+    StudyViewFilterWithSampleIdentifierFilters,
+    StudyWithSamples,
 } from "pages/studyView/StudyViewPageStore";
-import {ChartDimension, ChartMeta, ChartType, ChartTypeEnum, ClinicalDataType} from "./StudyViewPageStore";
+import {
+    ChartMeta,
+    ChartMetaDataType,
+    ChartMetaDataTypeEnum,
+    ChartType,
+    ClinicalDataCountSet,
+    ClinicalDataCountWithColor,
+    ClinicalDataType,
+    UniqueKey
+} from "./StudyViewPageStore";
 import {Layout} from 'react-grid-layout';
 import internalClient from "shared/api/cbioportalInternalClientInstance";
-import { VirtualStudy } from "shared/model/VirtualStudy";
+import {VirtualStudy} from "shared/model/VirtualStudy";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
+import {ChartDimension, ChartTypeEnum, Position, STUDY_VIEW_CONFIG} from "./StudyViewConfig";
+import {IStudyViewDensityScatterPlotDatum} from "./charts/scatterPlot/StudyViewDensityScatterPlot";
+import MobxPromise from 'mobxpromise';
+import {adjustedLongestLabelLength} from "../../shared/lib/VictoryChartUtils";
+import {getTextWidth} from "../../shared/lib/wrapText";
 
 export const COLORS = [
     STUDY_VIEW_CONFIG.colors.theme.primary, STUDY_VIEW_CONFIG.colors.theme.secondary,
@@ -83,6 +99,8 @@ export const COLORS = [
 export const NA_DATA = "NA";
 export const EXPONENTIAL_FRACTION_DIGITS = 3;
 
+export const MutationCountVsCnaYBinsMin = 52; // calibrated so that the dots are right up against each other. needs to correspond with the width and height of the chart
+
 
 const OPERATOR_MAP: {[op:string]: string} = {
     "<=": "≤",
@@ -91,9 +109,11 @@ const OPERATOR_MAP: {[op:string]: string} = {
     ">": ">"
 };
 
-export type LayoutMatrixItem = {
-    notFull: boolean,
-    matrix: string[]
+export function getClinicalAttributeOverlay(displayName: string, description: string): JSX.Element {
+    return <div style={{maxWidth: '500px'}}>
+        <b>{displayName}</b><br/>
+        {description}
+    </div>;
 }
 
 export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: string): string {
@@ -108,7 +128,33 @@ export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: st
     return updatedQueries.map(query=>unparseOQLQueryLine(query)).join('\n');
 
 }
-export function makeMutationCountVsCnaTooltip(sampleToAnalysisGroup?:{[sampleKey:string]:string}, analysisClinicalAttribute?:ClinicalAttribute) {
+
+function getBinStatsForTooltip(d:IStudyViewDensityScatterPlotDatum) {
+    let mutRange = "";
+    let fgaRange = "";
+    if (d.maxX.toFixed(2) !== d.minX.toFixed(2)) {
+        fgaRange = `${d.minX.toFixed(2)}-${d.maxX.toFixed(2)}`;
+    } else {
+        fgaRange = d.minX.toFixed(2);
+    }
+    if (d.maxY !== d.minY) {
+        mutRange = `${d.minY.toLocaleString()}-${d.maxY.toLocaleString()}`;
+    } else {
+        mutRange = d.minY.toLocaleString();
+    }
+    return {mutRange, fgaRange};
+}
+export function mutationCountVsCnaTooltip(d:IStudyViewDensityScatterPlotDatum) {
+    const binStats = getBinStatsForTooltip(d);
+    return (
+        <div>
+            <div>Number of Samples: <b>{d.count.toLocaleString()}</b></div>
+            <div>Mutation Count: <b>{binStats.mutRange}</b></div>
+            <div>Fraction Genome Altered: <b>{binStats.fgaRange}</b></div>
+        </div>
+    );
+}
+/*export function makeMutationCountVsCnaTooltip(sampleToAnalysisGroup?:{[sampleKey:string]:string}, analysisClinicalAttribute?:ClinicalAttribute) {
     return (d: { data: Pick<IStudyViewScatterPlotData, "x" | "y" | "studyId" | "sampleId" | "patientId" | "uniqueSampleKey">[] })=>{
         const rows = [];
         const MAX_SAMPLES = 3;
@@ -137,7 +183,7 @@ export function makeMutationCountVsCnaTooltip(sampleToAnalysisGroup?:{[sampleKey
                 <tr key="see all" style={borderStyle}>
                     <td style={{padding: 5}}>
                         <a target="_blank" href={getSampleViewUrl(d.data[0].studyId, d.data[0].sampleId, d.data)}>View
-                            all {d.data.length} patients included in this dot.</a>
+                            all {d.data.length} patients in this region.</a>
                     </td>
                 </tr>
             );
@@ -150,7 +196,7 @@ export function makeMutationCountVsCnaTooltip(sampleToAnalysisGroup?:{[sampleKey
             </div>
         );
     };
-}
+}*/
 
 export function generateScatterPlotDownloadData(data: IStudyViewScatterPlotData[],
                                                 sampleToAnalysisGroup?: {[sampleKey:string]:string},
@@ -216,7 +262,7 @@ export function isPreSelectedClinicalAttr(attr: string): boolean {
 }
 
 export function getClinicalDataType(patientAttribute: boolean): ClinicalDataType {
-    return patientAttribute ? ClinicalDataTypeConstants.PATIENT : ClinicalDataTypeConstants.SAMPLE;
+    return patientAttribute ? ClinicalDataTypeEnum.PATIENT : ClinicalDataTypeEnum.SAMPLE;
 }
 
 export function getClinicalAttributeUniqueKey(attribute: ClinicalAttribute): string {
@@ -224,7 +270,7 @@ export function getClinicalAttributeUniqueKey(attribute: ClinicalAttribute): str
     return getClinicalAttributeUniqueKeyByDataTypeAttrId(clinicalDataType, attribute.clinicalAttributeId);
 }
 
-export function getClinicalAttributeUniqueKeyByDataTypeAttrId(dataType: 'SAMPLE'|'PATIENT', attrId: string): string {
+export function getClinicalAttributeUniqueKeyByDataTypeAttrId(dataType: ClinicalDataType , attrId: string): string {
     return dataType + '_' + attrId;
 }
 
@@ -299,14 +345,22 @@ export function getVirtualStudyDescription(
     return descriptionLines.join('\n');
 }
 
-export function isFiltered(filter: StudyViewFilterWithSampleIdentifierFilters) {
-    return !(_.isEmpty(filter) || (
-        _.isEmpty(filter.clinicalDataEqualityFilters) &&
-        _.isEmpty(filter.clinicalDataIntervalFilters) &&
-        _.isEmpty(filter.cnaGenes) &&
-        _.isEmpty(filter.mutatedGenes) &&
-        _.isEmpty(filter.sampleIdentifiersSet)
-    ));
+export function isFiltered(filter: Partial<StudyViewFilterWithSampleIdentifierFilters>) {
+    const flag = !(_.isEmpty(filter) || (
+            _.isEmpty(filter.clinicalDataEqualityFilters) &&
+            _.isEmpty(filter.clinicalDataIntervalFilters) &&
+            _.isEmpty(filter.cnaGenes) &&
+            _.isEmpty(filter.mutatedGenes) &&
+            !filter.withMutationData &&
+            !filter.withCNAData &&
+            !filter.mutationCountVsCNASelection)
+    );
+
+    if (filter.sampleIdentifiersSet) {
+        return flag || !_.isEmpty(filter.sampleIdentifiersSet)
+    } else {
+        return flag;
+    }
 }
 
 export function makePatientToClinicalAnalysisGroup(
@@ -411,15 +465,17 @@ export function calcIntervalBinValues(intervalBins: DataBin[]) {
     return values;
 }
 
+export function needAdditionShiftForLogScaleBarChart(numericalBins: DataBin[]):boolean {
+    return isLogScaleByDataBins(numericalBins) &&
+        numericalBins[0].start !== undefined &&
+        numericalBins[0].start !== 0 &&
+        !isIntegerPowerOfTen(numericalBins[0].start);
+}
+
 export function generateNumericalData(numericalBins: DataBin[]): BarDatum[] {
     // by default shift all x values by 1 -- we do not want to show a value right on the origin (zero)
     // additional possible shift for log scale
-    const xShift = (
-        isLogScaleByDataBins(numericalBins) &&
-        numericalBins[0].start !== undefined &&
-        numericalBins[0].start !== 0 &&
-        !isIntegerPowerOfTen(numericalBins[0].start)
-    ) ? 2 : 1;
+    const xShift = needAdditionShiftForLogScaleBarChart(numericalBins) ? 2 : 1;
 
     return numericalBins.map((dataBin: DataBin, index: number) => {
         let x;
@@ -504,7 +560,7 @@ export function isLogScaleByDataBins(data?: DataBin[]) {
 
 export function isScientificSmallValue(value: number) {
     // value should be between -0.001 and 0.001 (except 0) to be considered as scientific small number
-    return value !== 0 && -0.001 < value && value < 0.001;
+    return value !== 0 && -0.001 <= value && value <= 0.001;
 }
 
 export function formatNumericalTickValues(numericalBins: DataBin[]) {
@@ -547,7 +603,8 @@ export function formatNumericalTickValues(numericalBins: DataBin[]) {
     if (isLogScale) {
         formatted = formatLogScaleValues(values);
     }
-    else if (intervalBins.length > 0 && isScientificSmallValue(intervalBins[intervalBins.length - 1].end))
+    else if (intervalBins.length > 0 &&
+        isScientificSmallValue(intervalBins[Math.floor(intervalBins.length / 2)].end))
     {
         // scientific notation
         formatted = values.map(value => value.toExponential(0));
@@ -568,8 +625,10 @@ export function formatNumericalTickValues(numericalBins: DataBin[]) {
     return formatted;
 }
 
-export function formatLinearScaleValues(values: number[]) {
-    return values.map(value => toFixedDigit(value));
+export function formatLinearScaleValues(values: number[])
+{
+    return values.map(value => isScientificSmallValue(value) ?
+        value.toExponential(0) : toFixedDigit(value));
 }
 
 export function formatLogScaleValues(values: number[]) {
@@ -663,10 +722,10 @@ export function intervalFiltersDisplayValue(values: ClinicalDataIntervalFilterVa
             displayValues.push(`${formatValue(start)}`);
         }
         else if (numericals[0].start === numericals[0].end) {
-            displayValues.push(`${formatValue(start)} ≤ ~ ≤ ${formatValue(end)}`);
+            displayValues.push(`${formatValue(start)} ≤ x ≤ ${formatValue(end)}`);
         }
         else {
-            displayValues.push(`${formatValue(start)} < ~ ≤ ${formatValue(end)}`);
+            displayValues.push(`${formatValue(start)} < x ≤ ${formatValue(end)}`);
         }
     }
 
@@ -685,11 +744,8 @@ export function formatValue(value: number|undefined) {
         if (isScientificSmallValue(value)) {
             formatted = value.toExponential(0);
         }
-        else if (value < 1 && value > -1 && value !== 0) {
-            formatted = toFixedDigit(value);
-        }
         else {
-            formatted = `${value}`;
+            formatted = toFixedDigit(value);
         }
     }
 
@@ -709,12 +765,43 @@ export function toFixedDigit(value: number, fractionDigits: number = 2)
         return `${value}`;
     }
 
-    const absLogValue = Math.abs(Math.log10(absValue % 1));
+    let digits = fractionDigits;
 
-    const numberOfLeadingDecimalZeroes = Number.isInteger(absLogValue) ?
-        Math.floor(absLogValue) - 1 : Math.floor(absLogValue);
+    // for small numbers we need to know the exact number of leading decimal zeroes
+    if (value < 1 && value > -1) {
+        const absLogValue = Math.abs(Math.log10(absValue % 1));
+        const numberOfLeadingDecimalZeroes = Number.isInteger(absLogValue) ?
+            Math.floor(absLogValue) - 1 : Math.floor(absLogValue);
 
-    return `${Number(value.toFixed(numberOfLeadingDecimalZeroes + fractionDigits))}`;
+        digits += numberOfLeadingDecimalZeroes;
+    }
+
+    return `${Number(value.toFixed(digits))}`;
+}
+
+export function getChartMetaDataType(uniqueKey: string): ChartMetaDataType {
+    const GENOMIC_DATA_TYPES = [
+        UniqueKey.MUTATION_COUNT_CNA_FRACTION, UniqueKey.CNA_GENES_TABLE, UniqueKey.MUTATED_GENES_TABLE,
+        UniqueKey.MUTATION_COUNT, UniqueKey.FRACTION_GENOME_ALTERED
+    ];
+    return _.includes(GENOMIC_DATA_TYPES, uniqueKey) ? ChartMetaDataTypeEnum.GENOMIC : ChartMetaDataTypeEnum.CLINICAL;
+}
+
+// 10px is reserved by ReactVisualized library as margin right
+export function getFixedHeaderNumberCellMargin(columnWidth: number, theLongestString:string) {
+    return (columnWidth - 10 - getFixedHeaderTableMaxLengthStringPixel(theLongestString)) / 2
+}
+
+export function getFixedHeaderTableMaxLengthStringPixel(text:string) {
+    // This is a very specified function to calculate the text length
+    // For fixed header table used in study view only
+    const FRONT_SIZE = '13px';
+    const FRONT_FAMILY = 'Helvetica Neue';
+    return getTextWidth(text, FRONT_FAMILY, FRONT_SIZE)
+}
+
+export function correctMargin(margin: number) {
+    return margin > 0 ? margin : 0;
 }
 
 export function getFrequencyStr(value: number) {
@@ -723,8 +810,10 @@ export function getFrequencyStr(value: number) {
         return 'NA';
     } else if (value === 0) {
         str = '0';
+    } else if (value < 100 && value >= 99.9) {
+        str = `99.9`;
     } else if (value >= 0.1) {
-        str = (Math.floor(value * 10) / 10).toString();
+        str = value.toFixed(1).toString();
     } else {
         str = '<0.1';
     }
@@ -736,9 +825,13 @@ export function formatFrequency(value: number) {
         return -1;
     } else if (value === 0) {
         return 0;
+    } else if (value < 100 && value >= 99.9) {
+         return 99.9;
     } else if (value >= 0.1) {
-        value = Math.floor(value * 10) / 10;
+        value = Math.round(value * 10) / 10;
     } else {
+        // This is a default value for anything that lower than 0.1 since we only keep one digit.
+        // This equals to <0.1 ain the getFrequencyStr function
         value = 0.05;
     }
     return value;
@@ -790,138 +883,129 @@ export function getDefaultChartTypeByClinicalAttribute(clinicalAttribute: Clinic
  * @param {[id: string]: ChartDimension} chartsDimension
  * @returns {ReactGridLayout.Layout[]}
  */
-export function calculateLayout(visibleAttributes: ChartMeta[], cols: number): Layout[] {
-    let sizes:{[id:string]:ChartDimension} = {};
-    let matrixGroup = _.reduce(visibleAttributes.sort((a, b) => b.priority - a.priority), function (acc, next) {
-        acc = getLayoutMatrix(acc, next.uniqueKey, next.dimension!);
-        sizes[next.uniqueKey] = next.dimension!;
-        return acc;
-    }, [] as LayoutMatrixItem[]);
-    let layout: Layout[] = [];
-    let x = 0;
-    let y = 0;
-    let plottedCharts: { [id: string]: number } = {};
-    _.forEach(matrixGroup, (group: LayoutMatrixItem, index) => {
-        let _x = x - 1;
-        let _y = y;
-        _.forEach(group.matrix, (uniqueId, _index: number) => {
-            ++_x;
-            if (_index === 2) {
-                _x = x;
-                _y++;
+
+
+export function findSpot(matrix: string[][], chartDimension: ChartDimension): Position {
+    if (matrix.length === 0) {
+        return {
+            x: 0,
+            y: 0
+        };
+    }
+    let found: Position | undefined = undefined;
+    _.each(matrix, (row: string[], rowIndex: number) => {
+        _.each(row, (item: string, columnIndex: number) => {
+            if (!item && !isOccupied(matrix, {x: columnIndex, y: rowIndex}, chartDimension)) {
+                found = {x: columnIndex, y: rowIndex};
+                return false;
             }
-            if (!uniqueId) {
-                return;
-            }
-            if (plottedCharts.hasOwnProperty(uniqueId)) {
-                return;
-            }
-            plottedCharts[uniqueId] = 1;
-            const _size = sizes[uniqueId];
-            layout.push({
-                i: uniqueId,
-                x: _x,
-                y: _y,
-                w: _size!.w,
-                h: _size!.h,
-                isResizable: false
-            });
         });
-        x = x + 2;
-        if (x + 2 > cols) {
-            x = 0;
-            y = y + 2;
+        if (found) {
+            return false;
+        }
+    });
+
+    if (!found) {
+        return {
+            x: 0,
+            y: matrix.length
+        }
+    } else {
+        return found;
+    }
+}
+
+export function isOccupied(matrix: string[][], position: Position, chartDimension: ChartDimension) {
+    let occupied = false;
+    if (matrix.length === 0) {
+        return false;
+    }
+
+    // For chart higher than 1 grid, or wider than 1 grid, we only plot them on the odd index
+    if (chartDimension.w > 1 && position.x % 2 !== 0) {
+        occupied = true;
+    }
+    if (chartDimension.h > 1 && position.y % 2 !== 0) {
+        occupied = true;
+    }
+    if (!occupied) {
+        const xMax = position.x + chartDimension.w;
+        const yMax = position.y + chartDimension.h;
+        for (let i = position.y; i < yMax; i++) {
+            if (i >= matrix.length) {
+                break;
+            }
+            for (let j = position.x; j < xMax; j++) {
+                if (j >= matrix[0].length || matrix[i][j]) {
+                    occupied = true;
+                    break;
+                }
+            }
+            if (occupied) {
+                break;
+            }
+        }
+    }
+    return occupied;
+}
+
+export function calculateLayout(visibleAttributes: ChartMeta[], cols: number): Layout[] {
+    let layout: Layout[] = [];
+    let matrix = [new Array(cols).fill('')] as string[][];
+
+    _.forEach(visibleAttributes.sort((a, b) => b.priority - a.priority), (chart: ChartMeta) => {
+        const position = findSpot(matrix, chart.dimension);
+        while ((position.y + chart.dimension.h) >= matrix.length) {
+            matrix.push(new Array(cols).fill(''));
+        }
+        layout.push({
+            i: chart.uniqueKey,
+            x: position.x,
+            y: position.y,
+            w: chart.dimension.w,
+            h: chart.dimension.h,
+            isResizable: false
+        });
+        const xMax = position.x + chart.dimension.w;
+        const yMax = position.y + chart.dimension.h;
+        for (let i = position.y; i < yMax; i++) {
+            for (let j = position.x; j < xMax; j++) {
+                matrix[i][j] = chart.uniqueKey;
+            }
         }
     });
     return layout;
-}
-/**
- * Group chart into 4*4 matrix based on description from here
- * https://github.com/cBioPortal/cbioportal/blob/master/docs/Study-View.md
- *
- * @param {LayoutMatrixItem[]} layoutMatrix
- * @param {string} key The unique key to identify the chart
- * @param {ChartDimension} chartDimension
- * @returns {LayoutMatrixItem[]}
- */
-export function getLayoutMatrix(layoutMatrix: LayoutMatrixItem[], key: string, chartDimension: ChartDimension): LayoutMatrixItem[] {
-    let neighborIndex: number;
-    let foundSpace = false;
-    const chartSize = chartDimension.w * chartDimension.h;
-    _.some(layoutMatrix, function (layoutItem) {
-        if (foundSpace) {
-            return true;
-        }
-        if (layoutItem.notFull) {
-            let _matrix = layoutItem.matrix;
-            _.some(_matrix, function (item, _matrixIndex) {
-                if (chartSize === 2) {
-                    let _validIndex = false;
-                    if (chartDimension.h === 2) {
-                        neighborIndex = _matrixIndex + 2;
-                        if (_matrixIndex < 2) {
-                            _validIndex = true;
-                        }
-                    } else {
-                        neighborIndex = _matrixIndex + 1;
-                        if (_matrixIndex % 2 === 0) {
-                            _validIndex = true;
-                        }
-                    }
-                    if (neighborIndex < _matrix.length && _validIndex) {
-                        if (item === '' && _matrix[neighborIndex] === '') {
-                            // Found a place for chart
-                            _matrix[_matrixIndex] = _matrix[neighborIndex] = key;
-                            foundSpace = true;
-                            layoutItem.notFull = _.includes(_matrix, '');
-                            return true;
-                        }
-                    }
-                } else if (chartSize === 1) {
-                    if (item === '') {
-                        // Found a place for chart
-                        _matrix[_matrixIndex] = key;
-                        foundSpace = true;
-                        if (_matrixIndex === _matrix.length - 1) {
-                            layoutItem.notFull = false;
-                        }
-                        return true;
-                    }
-                } else if (chartSize === 4) {
-                    if (item === '' && _matrix[0] === '' && _matrix[1] === '' && _matrix[2] === '' && _matrix[3] === '') {
-                        // Found a place for chart
-                        _matrix = _.fill(Array(4), key);
-                        layoutItem.notFull = false;
-                        foundSpace = true;
-                        return true;
-                    }
-                }
-            });
-            layoutItem.matrix = _matrix;
-        }
-    });
-    if (!foundSpace) {
-        layoutMatrix.push({
-            notFull: true,
-            matrix: _.fill(Array(4), '')
-        });
-        layoutMatrix = getLayoutMatrix(layoutMatrix, key, chartDimension);
-    }
-    return layoutMatrix;
 }
 
 export function getDefaultPriorityByUniqueKey(uniqueKey: string): number {
     return STUDY_VIEW_CONFIG.priority[uniqueKey] === undefined ? 1 : STUDY_VIEW_CONFIG.priority[uniqueKey];
 }
 
+export function getPriorityByClinicalAttribute(clinicalAttribute: ClinicalAttribute): number {
+    // If the priority is the default which means the priority has not been manually modified, then we should check
+    // the whether there are priorities predefined
+    const priorityFromDB = Number(clinicalAttribute.priority);
+    if (priorityFromDB === STUDY_VIEW_CONFIG.defaultPriority) {
+        const uniqueKey = getClinicalAttributeUniqueKey(clinicalAttribute);
+        return STUDY_VIEW_CONFIG.priority[uniqueKey] === undefined ? STUDY_VIEW_CONFIG.defaultPriority : STUDY_VIEW_CONFIG.priority[uniqueKey];
+    } else {
+        return priorityFromDB
+    }
+}
+
 // Grid includes 10px margin
-export function getTableWidthByDimension(chartDimension: ChartDimension) {
-    return DEFAULT_LAYOUT_PROPS.grid.w * chartDimension.w - 10;
+export function getWidthByDimension(chartDimension: ChartDimension, borderWidth: number) {
+    return STUDY_VIEW_CONFIG.layout.grid.w * chartDimension.w + (chartDimension.w - 1) * STUDY_VIEW_CONFIG.layout.gridMargin.x - borderWidth * 2;
 }
 
 // Grid includes 15px header and 35px tool section
-export function getTableHeightByDimension(chartDimension: ChartDimension) {
-    return DEFAULT_LAYOUT_PROPS.grid.h * chartDimension.h - 50;
+export function getHeightByDimension(chartDimension: ChartDimension, chartHeight: number) {
+    return STUDY_VIEW_CONFIG.layout.grid.h * chartDimension.h + (chartDimension.h - 1) * STUDY_VIEW_CONFIG.layout.gridMargin.y - chartHeight;
+}
+
+// 30px tool section
+export function getTableHeightByDimension(chartDimension: ChartDimension, chartHeight: number) {
+    return getHeightByDimension(chartDimension, chartHeight) - 30;
 }
 
 export function getQValue(qvalue: number):string {
@@ -952,6 +1036,17 @@ export function pickClinicalAttrFixedColors(data: ClinicalDataCount[]): {[attrib
     }, {});
 }
 
+export function getClinicalDataCountWithColorByClinicalDataCount(counts:ClinicalDataCount[]):ClinicalDataCountWithColor[] {
+    counts.sort(clinicalDataCountComparator);
+    const colors = pickClinicalDataColors(counts);
+    return counts.map(slice =>{
+        return {
+            ...slice,
+            color: colors[slice.value]
+        };
+    });
+}
+
 export function pickClinicalAttrColorsByIndex(data: ClinicalDataCount[],
                                               availableColors: string[]): {[attribute: string]: string}
 {
@@ -964,6 +1059,28 @@ export function pickClinicalAttrColorsByIndex(data: ClinicalDataCount[],
         }
         return acc;
     }, {});
+}
+
+export function calculateClinicalDataCountFrequency(data: ClinicalDataCountSet, numOfSelectedSamples: number): ClinicalDataCountSet {
+    return _.reduce(data, (acc, next, key) => {
+        acc[key] = next * 100 / numOfSelectedSamples;
+        return acc;
+    }, {} as { [attrId: string]: number });
+}
+
+
+export function getOptionsByChartMetaDataType(type: ChartMetaDataType, allCharts: { [id: string]: ChartMeta }, selectedAttrs: string[]) {
+    return _.filter(allCharts, chartMeta => chartMeta.dataType === type)
+        .map(chartMeta => {
+            return {
+                label: chartMeta.displayName,
+                key: chartMeta.uniqueKey,
+                chartType: chartMeta.chartType,
+                disabled: false,
+                selected: selectedAttrs.includes(chartMeta.uniqueKey),
+                freq: 100
+            }
+        });
 }
 
 export function pickClinicalDataColors(data: ClinicalDataCount[],
@@ -1040,6 +1157,19 @@ export function getSamplesByExcludingFiltersOnChart(
     return internalClient.fetchFilteredSamplesUsingPOST({
         studyViewFilter: updatedFilter
     });
+}
+
+export function getRequestedAwaitPromisesForClinicalData(isDefaultVisibleAttribute:boolean, isInitialFilterState: boolean, chartsAreFiltered: boolean, chartIsFiltered: boolean, unfilteredPromise: MobxPromise<any>, newlyAddedUnfilteredPromise: MobxPromise<any>, initialVisibleAttributesPromise: MobxPromise<any>): MobxPromise<any>[] {
+    if (isInitialFilterState && isDefaultVisibleAttribute) {
+        return [initialVisibleAttributesPromise];
+    } else if (!chartsAreFiltered) {
+        return [newlyAddedUnfilteredPromise];
+    } else if (chartIsFiltered) {
+        // It will get a new Promise assigned in the invoke function
+        return [];
+    } else {
+        return [unfilteredPromise];
+    }
 }
 
 export async function getHugoSymbolByEntrezGeneId(entrezGeneId: number): Promise<string> {

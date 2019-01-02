@@ -104,7 +104,7 @@ describe('GeneSelectionBox', () => {
 
         assert.equal(
             wrapper.find('#geneBoxValidationStatus').text(),
-            "Cannot validate gene symbols because of invalid OQL. Please click 'Submit' to see location of error.");
+            "Cannot validate gene symbols because of invalid OQL. ");
     });
 
     it('textarea value - default view', () => {

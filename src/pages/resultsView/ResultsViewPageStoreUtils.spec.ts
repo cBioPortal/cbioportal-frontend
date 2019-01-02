@@ -11,8 +11,10 @@ import {
     filterSubQueryData,
     getOncoKbOncogenic,
     initializeCustomDriverAnnotationSettings,
-    fetchQueriedStudies, isRNASeqProfile, isPanCanStudy, isTCGAProvStudy, isTCGAPubStudy, buildResultsViewPageTitle
+    fetchQueriedStudies, isRNASeqProfile, isPanCanStudy, isTCGAProvStudy, isTCGAPubStudy, buildResultsViewPageTitle,
+    getSampleAlteredMap, getSingleGeneResultKey, getMultipleGeneResultKey
 } from "./ResultsViewPageStoreUtils";
+import {IQueriedMergedTrackCaseData, AnnotatedExtendedAlteration} from "./ResultsViewPageStore";
 import {
     OQLLineFilterOutput, MergedTrackLineFilterOutput
 } from "../../shared/lib/oql/oqlfilter";
@@ -1136,21 +1138,15 @@ describe("ResultsViewPageStoreUtils", ()=>{
             } as CancerStudy
         };
 
-        let virtualStudies: { [id: string]: VirtualStudy } = {
-            'virtual_study_1': $.extend({},virtualStudy,{"id": "virtual_study_1"}) as VirtualStudy,
-            'virtual_study_2': $.extend({},virtualStudy,{"id": "virtual_study_2"}) as VirtualStudy
-        };
+        let virtualStudies: VirtualStudy[] = [
+            $.extend({},virtualStudy,{"id": "virtual_study_1"}) as VirtualStudy,
+            $.extend({},virtualStudy,{"id": "virtual_study_2"}) as VirtualStudy
+        ];
 
         before(()=>{
-            sinon.stub(sessionServiceClient, "getVirtualStudy").callsFake(function fakeFn(id:string) {
+            sinon.stub(sessionServiceClient, "getUserVirtualStudies").callsFake(function fakeFn(id:string) {
                 return new Promise((resolve, reject) => {
-                    let obj = virtualStudies[id]
-                    if(_.isUndefined(obj)){
-                        reject()
-                    }
-                    else{
-                        resolve(obj);
-                    }
+                    resolve(virtualStudies);
                 });
             });
             //
@@ -1202,10 +1198,10 @@ describe("ResultsViewPageStoreUtils", ()=>{
 
         //this case is not possible because id in these scenarios are first identified in QueryBuilder.java and
         //returned to query selector page
-        it("when virtual study query having private study or unknow virtual study id", (done)=>{
-            fetchQueriedStudies({},['shared_study1']).catch((error)=>{
-                done();
-            });
+        it("when virtual study query having private study or unknow virtual study id", async ()=>{
+            let test = await fetchQueriedStudies({},['shared_study1']);
+            // assume no studies returned
+            assert.equal(test.length, 0);
         });
 
 
@@ -1256,4 +1252,566 @@ describe("ResultsViewPageStoreUtils", ()=>{
 
     });
 
+});
+
+
+describe('getSampleAlteredMap', () => {
+
+    const arg0 = [
+        {
+            "cases": {
+                "samples": {
+                },
+                "patients": {
+                }
+            },
+            "oql": {
+                "label": "RAS",
+                "list": [
+                    {
+                        "gene": "KRAS",
+                        "parsed_oql_line": {
+                            "gene": "KRAS",
+                            "alterations": [
+                                {
+                                    "alteration_type": "mut",
+                                    "info": {}
+                                },
+                                {
+                                    "alteration_type": "fusion"
+                                }
+                            ]
+                        },
+                        "oql_line": "KRAS: MUT FUSION;",
+                        "data": [
+                            {
+                                "uniqueSampleKey": "QjA4NTpjaG9sX251c18yMDEy",
+                            },
+                            {
+                                "uniqueSampleKey": "UjEwNDpjaG9sX251c18yMDEy",
+                            },
+                            {
+                                "uniqueSampleKey": "VzAxMjpjaG9sX251c18yMDEy",
+                            }
+                        ]
+                    },
+                    {
+                        "gene": "NRAS",
+                        "parsed_oql_line": {
+                            "gene": "NRAS",
+                            "alterations": [
+                                {
+                                    "alteration_type": "mut",
+                                    "info": {}
+                                },
+                                {
+                                    "alteration_type": "fusion"
+                                }
+                            ]
+                        },
+                        "oql_line": "NRAS: MUT FUSION;",
+                        "data": []
+                    }
+                ]
+            },
+            "mergedTrackOqlList": [
+                {
+                    "cases": {
+                        "samples": {
+                        },
+                        "patients": {
+                        }
+                    },
+                    "oql": {
+                        "gene": "KRAS",
+                        "parsed_oql_line": {
+                            "gene": "KRAS",
+                            "alterations": [
+                                {
+                                    "alteration_type": "mut",
+                                    "info": {}
+                                },
+                                {
+                                    "alteration_type": "fusion"
+                                }
+                            ]
+                        },
+                        "oql_line": "KRAS: MUT FUSION;",
+                        "data": [
+                            {
+                                "uniqueSampleKey": "QjA4NTpjaG9sX251c18yMDEy",
+                            },
+                            {
+                                "uniqueSampleKey": "UjEwNDpjaG9sX251c18yMDEy",
+                            },
+                            {
+                                "uniqueSampleKey": "VzAxMjpjaG9sX251c18yMDEy",
+                            }
+                        ]
+                    }
+                },
+                {
+                    "cases": {
+                        "samples": {
+                        },
+                        "patients": {
+                        }
+                    },
+                    "oql": {
+                        "gene": "NRAS",
+                        "parsed_oql_line": {
+                            "gene": "NRAS",
+                            "alterations": [
+                                {
+                                    "alteration_type": "mut",
+                                    "info": {}
+                                },
+                                {
+                                    "alteration_type": "fusion"
+                                }
+                            ]
+                        },
+                        "oql_line": "NRAS: MUT FUSION;",
+                        "data": []
+                    }
+                }
+            ]
+        },
+        {
+            "cases": {
+                "samples": {
+                },
+                "patients": {
+                }
+            },
+            "oql": {
+                "list": [
+                    {
+                        "gene": "SMAD4",
+                        "parsed_oql_line": {
+                            "gene": "SMAD4",
+                            "alterations": [
+                                {
+                                    "alteration_type": "mut",
+                                    "info": {}
+                                },
+                                {
+                                    "alteration_type": "fusion"
+                                }
+                            ]
+                        },
+                        "oql_line": "SMAD4: MUT FUSION;",
+                        "data": [
+                            {
+                                "uniqueSampleKey": "QjA5OTpjaG9sX251c18yMDEy",
+                            },
+                            {
+                                "uniqueSampleKey": "UjEwNDpjaG9sX251c18yMDEy",
+                            },
+                            {
+                                "uniqueSampleKey": "VTA0NDpjaG9sX251c18yMDEy",
+                            },
+                            {
+                                "uniqueSampleKey": "VzAxMjpjaG9sX251c18yMDEy",
+                            }
+                        ]
+                    },
+                    {
+                        "gene": "RAN",
+                        "parsed_oql_line": {
+                            "gene": "RAN",
+                            "alterations": [
+                                {
+                                    "alteration_type": "mut",
+                                    "info": {}
+                                },
+                                {
+                                    "alteration_type": "fusion"
+                                }
+                            ]
+                        },
+                        "oql_line": "RAN: MUT FUSION;",
+                        "data": []
+                    }
+                ]
+            },
+            "mergedTrackOqlList": [
+                {
+                    "cases": {
+                        "samples": {
+                        },
+                        "patients": {
+                        }
+                    },
+                    "oql": {
+                        "gene": "SMAD4",
+                        "parsed_oql_line": {
+                            "gene": "SMAD4",
+                            "alterations": [
+                                {
+                                    "alteration_type": "mut",
+                                    "info": {}
+                                },
+                                {
+                                    "alteration_type": "fusion"
+                                }
+                            ]
+                        },
+                        "oql_line": "SMAD4: MUT FUSION;",
+                        "data": [
+                            {
+                                "uniqueSampleKey": "QjA5OTpjaG9sX251c18yMDEy",
+                            },
+                            {
+                                "uniqueSampleKey": "UjEwNDpjaG9sX251c18yMDEy",
+                            },
+                            {
+                                "uniqueSampleKey": "VTA0NDpjaG9sX251c18yMDEy",
+                            },
+                            {
+                                "uniqueSampleKey": "VzAxMjpjaG9sX251c18yMDEy",
+                            }
+                        ]
+                    }
+                },
+                {
+                    "cases": {
+                        "samples": {
+                        },
+                        "patients": {
+                        }
+                    },
+                    "oql": {
+                        "gene": "RAN",
+                        "parsed_oql_line": {
+                            "gene": "RAN",
+                            "alterations": [
+                                {
+                                    "alteration_type": "mut",
+                                    "info": {}
+                                },
+                                {
+                                    "alteration_type": "fusion"
+                                }
+                            ]
+                        },
+                        "oql_line": "RAN: MUT FUSION;",
+                        "data": []
+                    }
+                }
+            ]
+        },
+        {
+            "cases": {
+                "samples": {
+                },
+                "patients": {
+                }
+            },
+            "oql": {
+                "gene": "SMAD4",
+                "parsed_oql_line": {
+                    "gene": "SMAD4",
+                    "alterations": [
+                        {
+                            "alteration_type": "mut",
+                            "info": {}
+                        }
+                    ]
+                },
+                "oql_line": "SMAD4: MUT;",
+                "data": [
+                    {
+                        "uniqueSampleKey": "QjA5OTpjaG9sX251c18yMDEy",
+                    },
+                    {
+                        "uniqueSampleKey": "UjEwNDpjaG9sX251c18yMDEy",
+                    },
+                    {
+                        "uniqueSampleKey": "VTA0NDpjaG9sX251c18yMDEy",
+                    },
+                    {
+                        "uniqueSampleKey": "VzAxMjpjaG9sX251c18yMDEy",
+                    }
+                ]
+            }
+        },
+        {
+            "cases": {
+                "samples": {
+                }
+            },
+            "oql": {
+                "gene": "KRAS",
+                "parsed_oql_line": {
+                    "gene": "KRAS",
+                    "alterations": [
+                        {
+                            "alteration_type": "mut",
+                            "info": {}
+                        },
+                        {
+                            "alteration_type": "fusion"
+                        }
+                    ]
+                },
+                "oql_line": "KRAS: MUT FUSION;",
+                "data": [
+                    {
+                        "uniqueSampleKey": "QjA4NTpjaG9sX251c18yMDEy",
+                    },
+                    {
+                        "uniqueSampleKey": "UjEwNDpjaG9sX251c18yMDEy",
+                    },
+                    {
+                        "uniqueSampleKey": "VzAxMjpjaG9sX251c18yMDEy",
+                    }
+                ]
+            }
+        }
+    ] as IQueriedMergedTrackCaseData[];
+
+    var arg1 = [
+        {
+            "uniqueSampleKey": "QjA4NTpjaG9sX251c18yMDEy",
+            "uniquePatientKey": "QjA4NTpjaG9sX251c18yMDEy",
+            "sampleType": "Primary Solid Tumor",
+            "sequenced": true,
+            "copyNumberSegmentPresent": false,
+            "sampleId": "B085",
+            "patientId": "B085",
+            "studyId": "chol_nus_2012"
+        },
+        {
+            "uniqueSampleKey": "QjA5OTpjaG9sX251c18yMDEy",
+            "uniquePatientKey": "QjA5OTpjaG9sX251c18yMDEy",
+            "sampleType": "Primary Solid Tumor",
+            "sequenced": true,
+            "copyNumberSegmentPresent": false,
+            "sampleId": "B099",
+            "patientId": "B099",
+            "studyId": "chol_nus_2012"
+        },
+        {
+            "uniqueSampleKey": "UjEwNDpjaG9sX251c18yMDEy",
+            "uniquePatientKey": "UjEwNDpjaG9sX251c18yMDEy",
+            "sampleType": "Primary Solid Tumor",
+            "sequenced": true,
+            "copyNumberSegmentPresent": false,
+            "sampleId": "R104",
+            "patientId": "R104",
+            "studyId": "chol_nus_2012"
+        },
+        {
+            "uniqueSampleKey": "VDAyNjpjaG9sX251c18yMDEy",
+            "uniquePatientKey": "VDAyNjpjaG9sX251c18yMDEy",
+            "sampleType": "Primary Solid Tumor",
+            "sequenced": true,
+            "copyNumberSegmentPresent": false,
+            "sampleId": "T026",
+            "patientId": "T026",
+            "studyId": "chol_nus_2012"
+        },
+        {
+            "uniqueSampleKey": "VTA0NDpjaG9sX251c18yMDEy",
+            "uniquePatientKey": "VTA0NDpjaG9sX251c18yMDEy",
+            "sampleType": "Primary Solid Tumor",
+            "sequenced": true,
+            "copyNumberSegmentPresent": false,
+            "sampleId": "U044",
+            "patientId": "U044",
+            "studyId": "chol_nus_2012"
+        },
+        {
+            "uniqueSampleKey": "VzAxMjpjaG9sX251c18yMDEy",
+            "uniquePatientKey": "VzAxMjpjaG9sX251c18yMDEy",
+            "sampleType": "Primary Solid Tumor",
+            "sequenced": true,
+            "copyNumberSegmentPresent": false,
+            "sampleId": "W012",
+            "patientId": "W012",
+            "studyId": "chol_nus_2012"
+        },
+        {
+            "uniqueSampleKey": "VzAzOTpjaG9sX251c18yMDEy",
+            "uniquePatientKey": "VzAzOTpjaG9sX251c18yMDEy",
+            "sampleType": "Primary Solid Tumor",
+            "sequenced": true,
+            "copyNumberSegmentPresent": false,
+            "sampleId": "W039",
+            "patientId": "W039",
+            "studyId": "chol_nus_2012"
+        },
+        {
+            "uniqueSampleKey": "VzA0MDpjaG9sX251c18yMDEy",
+            "uniquePatientKey": "VzA0MDpjaG9sX251c18yMDEy",
+            "sampleType": "Primary Solid Tumor",
+            "sequenced": true,
+            "copyNumberSegmentPresent": false,
+            "sampleId": "W040",
+            "patientId": "W040",
+            "studyId": "chol_nus_2012"
+        }
+    ] as Sample[];
+
+    const arg2 = "[\"RAS\" KRAS NRAS]\n[SMAD4 RAN]\nSMAD4: MUT\nKRAS";
+
+    it('handles different type of gene tracks correctly', () => {
+        
+        const ret = getSampleAlteredMap(arg0, arg1, arg2);
+        const expectedResult = {
+            "RAS": [
+                true,
+                false,
+                true,
+                false,
+                false,
+                true,
+                false,
+                false
+            ],
+            "SMAD4 / RAN": [
+                false,
+                true,
+                true,
+                false,
+                true,
+                true,
+                false,
+                false
+            ],
+            "SMAD4: MUT": [
+                false,
+                true,
+                true,
+                false,
+                true,
+                true,
+                false,
+                false
+            ],
+            "KRAS": [
+                true,
+                false,
+                true,
+                false,
+                false,
+                true,
+                false,
+                false
+            ]
+        };
+        assert.deepEqual(ret["KRAS"], expectedResult["KRAS"], "single gene track");
+        assert.deepEqual(ret["SMAD4: MUT"], expectedResult["SMAD4: MUT"], "single gene track(with alteration)");
+        assert.deepEqual(ret["SMAD4 / RAN"], expectedResult["SMAD4 / RAN"], "merged gene track");
+        assert.deepEqual(ret["RAS"], expectedResult["RAS"], "merged gene track(with group name)");
+
+    });
+});
+
+describe('getSingleGeneResultKey', () => {
+    it('handles gene with alteration', () => {
+
+        let arg0 = 2;
+        let arg1 = "[\"RAS\" KRAS NRAS]\n[SMAD4 RAN]\nSMAD4: MUT\nKRAS";
+        let arg2 = {
+            "gene": "SMAD4",
+            "parsed_oql_line": {
+                "gene": "SMAD4",
+                "alterations": []
+            },
+            "oql_line": "SMAD4: MUT;",
+            "data": []
+        } as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
+        const ret = getSingleGeneResultKey(arg0, arg1, arg2);
+        const expectedResult = "SMAD4: MUT"
+
+        assert.equal(ret, expectedResult, "get single gene result key(with alteration)");
+
+    });
+
+    it('handles gene without mutation', () => {
+
+        let arg0 = 3;
+        let arg1 = "[\"RAS\" KRAS NRAS]\n[SMAD4 RAN]\nSMAD4: MUT\nKRAS";
+        let arg2 = {
+            "gene": "KRAS",
+            "parsed_oql_line": {
+                "gene": "KRAS",
+                "alterations": []
+            },
+            "oql_line": "KRAS: MUT FUSION;",
+            "data": []
+        } as OQLLineFilterOutput<AnnotatedExtendedAlteration>;
+        const ret = getSingleGeneResultKey(arg0, arg1, arg2);
+        const expectedResult = "KRAS"
+        
+        assert.equal(ret, expectedResult, "get single gene result key(without alteration)");
+
+    });
+});
+
+describe('getMultipleGeneResultKey', () => {
+    it('handles gene group with name', () => {
+
+        let arg0 = {
+            "label": "RAS",
+            "list": [
+                {
+                    "gene": "KRAS",
+                    "parsed_oql_line": {
+                        "gene": "KRAS",
+                        "alterations": []
+                    },
+                    "oql_line": "KRAS: MUT FUSION;",
+                    "data": []
+                },
+                {
+                    "gene": "NRAS",
+                    "parsed_oql_line": {
+                        "gene": "NRAS",
+                        "alterations": []
+                    },
+                    "oql_line": "NRAS: MUT FUSION;",
+                    "data": []
+                }
+            ]
+        } as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>;
+        const ret = getMultipleGeneResultKey(arg0);
+        const expectedResult = "RAS"
+        
+        assert.equal(ret, expectedResult, "get gene group result key(with name)");
+
+    });
+
+    it('handles gene group without name', () => {
+
+        let arg0 = {
+            "list": [
+                {
+                    "gene": "SMAD4",
+                    "parsed_oql_line": {
+                        "gene": "SMAD4",
+                        "alterations": []
+                    },
+                    "oql_line": "SMAD4: MUT FUSION;",
+                    "data": []
+                },
+                {
+                    "gene": "RAN",
+                    "parsed_oql_line": {
+                        "gene": "RAN",
+                        "alterations": []
+                    },
+                    "oql_line": "RAN: MUT FUSION;",
+                    "data": []
+                }
+            ]
+        } as MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>;
+        const ret = getMultipleGeneResultKey(arg0);
+        const expectedResult = "SMAD4 / RAN"
+        
+        assert.equal(ret, expectedResult, "get gene group result key(without name)");
+
+    });
 });

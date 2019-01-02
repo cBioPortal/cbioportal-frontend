@@ -10,7 +10,7 @@ import {
     Gistic, GisticToGene, default as CBioPortalAPIInternal, MutSig
 } from "shared/api/generated/CBioPortalAPIInternal";
 import {computed, observable, action} from "mobx";
-import {remoteData, addErrorHandler} from "../../../shared/api/remoteData";
+import {remoteData} from "../../../shared/api/remoteData";
 import {IGisticData} from "shared/model/Gistic";
 import {labelMobxPromises, cached} from "mobxpromise";
 import MrnaExprRankCache from 'shared/cache/MrnaExprRankCache';
@@ -18,8 +18,7 @@ import request from 'superagent';
 import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import {
     getDarwinUrl,
-    getMDAndersonHeatmapPatientUrl,
-    getMDAndersonHeatMapMetaUrl, getDigitalSlideArchiveMetaUrl
+    getDigitalSlideArchiveMetaUrl
 } from "../../../shared/api/urls";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import PubMedCache from "shared/cache/PubMedCache";
@@ -49,7 +48,6 @@ import {stringListToSet} from "../../../shared/lib/StringUtils";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 import { VariantAnnotation } from 'shared/api/generated/GenomeNexusAPI';
 import { fetchVariantAnnotationsIndexedByGenomicLocation } from 'shared/lib/MutationAnnotator';
-import {getHeatmapMeta} from "../../../shared/lib/MDACCUtils";
 
 type PageMode = 'patient' | 'sample';
 
@@ -110,10 +108,6 @@ export class PatientViewPageStore {
         labelMobxPromises(this);
 
         this.internalClient = internalClient;
-
-        addErrorHandler((error) => {
-            this.ajaxErrors.push(error);
-        });
 
     }
 
@@ -315,17 +309,6 @@ export class PatientViewPageStore {
             // fail silently
         }
     });
-
-    readonly MDAndersonHeatMapAvailable = remoteData({
-        await: () => [this.derivedPatientId],
-        invoke: async() => {
-            const fileContent: string[] = await getHeatmapMeta(getMDAndersonHeatMapMetaUrl(this.patientId));
-            return fileContent.length > 0;
-        },
-        onError: () => {
-            // fail silently
-        }
-    }, false);
 
 
     readonly clinicalDataForSamples = remoteData({

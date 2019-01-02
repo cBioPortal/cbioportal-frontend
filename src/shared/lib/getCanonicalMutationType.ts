@@ -110,7 +110,7 @@ export function getProteinImpactTypeFromCanonical(mutationType:CanonicalMutation
     }
 }
 export default function getCanonicalMutationType(mutationType:string):CanonicalMutationType {
-    return canonicalType[mutationType.toLowerCase()];
+    return canonicalType[mutationType.toLowerCase()] || "other";
 }
 
 export const CanonicalMutationTypeList: CanonicalMutationType[] = _.chain(canonicalType).values().uniq().value();

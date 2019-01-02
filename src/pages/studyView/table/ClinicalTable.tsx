@@ -1,13 +1,20 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import {computed, toJS} from "mobx";
-import {bind} from "bind-decorator";
+import {action, computed, observable, toJS, reaction, IReactionDisposer} from "mobx";
+import autobind from 'autobind-decorator';
 import _ from "lodash";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import {ChartMeta, ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
 import FixedHeaderTable from "./FixedHeaderTable";
 import styles from "./tables.module.scss";
-import {getFrequencyStr} from "../StudyViewUtils";
+import {
+    correctMargin, getClinicalAttributeOverlay,
+    getFixedHeaderNumberCellMargin, getFixedHeaderTableMaxLengthStringPixel,
+    getFrequencyStr
+} from "../StudyViewUtils";
+import {SortDirection} from "../../../shared/components/lazyMobXTable/LazyMobXTable";
+import EllipsisTextTooltip from "../../../shared/components/ellipsisTextTooltip/EllipsisTextTooltip";
+import {DEFAULT_SORTING_COLUMN} from "../StudyViewConfig";
 
 export interface IClinicalTableProps {
     data: ClinicalDataCountWithColor[];
@@ -16,33 +23,91 @@ export interface IClinicalTableProps {
     onUserSelection: (values: string[]) => void;
     compareCohorts: (selectedValues: string[]) => void;
     label?: string,
+    labelDescription?: string,
+    patientAttribute: boolean,
     width?: number,
-    height?: number
+    height?: number,
+    showAddRemoveAllButtons?: boolean
 }
 
 class ClinicalTableComponent extends FixedHeaderTable<ClinicalDataCountWithColor> {
 
 }
 
+enum ColumnKey {
+    CATEGORY = 'Category',
+    NUMBER = '#',
+    FREQ = 'Freq'
+}
+
 @observer
 export default class ClinicalTable extends React.Component<IClinicalTableProps, {}> {
+    private updateCellReaction:IReactionDisposer;
+    @observable private sortBy: string = DEFAULT_SORTING_COLUMN;
+    @observable private sortDirection: SortDirection;
+    @observable private cellMargin: { [key: string]: number } = {
+        [ColumnKey.CATEGORY]: 0,
+        [ColumnKey.NUMBER]: 0,
+        [ColumnKey.FREQ]: 0,
+    };
 
     constructor(props: IClinicalTableProps) {
         super(props);
+
+        this.updateCellReaction = reaction(() => this.columnsWidth, () => {
+            this.updateCellMargin();
+        }, {fireImmediately: true});
     }
 
     static readonly defaultProps = {
-        width: 300
+        width: 300,
+        showAddRemoveAllButtons: false
     };
 
     @computed
-    get columnWidth() {
+    get columnsWidth() {
         // last two columns width are 80, 60
-        return [this.props.width! - 140, 80, 60]
+        return {
+            [ColumnKey.CATEGORY]: this.props.width! - 140,
+            [ColumnKey.NUMBER]: 80,
+            [ColumnKey.FREQ]: 60
+        };
+    }
+
+    getFrequencyByCount(count:number) {
+        return (count / this.totalCount) * 100;
+    }
+
+    @autobind
+    @action
+    updateCellMargin() {
+        if (this.props.data.length > 0) {
+            this.cellMargin[ColumnKey.NUMBER] = correctMargin(
+                (this.columnsWidth[ColumnKey.NUMBER] - 10 - (
+                        getFixedHeaderTableMaxLengthStringPixel(
+                            _.max(this.props.data.map(item => item.count))!.toLocaleString()
+                        ) + 20)
+                ) / 2);
+            this.cellMargin[ColumnKey.FREQ] = correctMargin(
+                getFixedHeaderNumberCellMargin(
+                    this.columnsWidth[ColumnKey.FREQ],
+                    getFrequencyStr(
+                        this.getFrequencyByCount(
+                            _.max(this.props.data.map(item => this.getFrequencyByCount(item.count)))!
+                        )
+                    )
+                )
+            );
+        }
+    }
+
+    @computed
+    get firstColumnName() {
+        return this.props.label ? this.props.label : ColumnKey.CATEGORY;
     }
 
     private _columns = [{
-        name: this.props.label ? this.props.label : 'Category',
+        name: this.firstColumnName,
         render: (data: ClinicalDataCountWithColor) => {
             return (
                 <div
@@ -56,40 +121,72 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
                             <rect x="0" y="0" width="12" height="12" fill={data.color}/>
                         </g>
                     </svg>
-                    <span className={styles.ellipsisText} title={data.value}>{data.value}</span>
+                    <EllipsisTextTooltip text={data.value}></EllipsisTextTooltip>
                 </div>
             )
         },
-        filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => (d.value.toUpperCase().indexOf(filterStringUpper) > -1),
+        headerRender: () => {
+            return <div className={styles.ellipsisText}>{this.firstColumnName}</div>
+        },
+        tooltip: getClinicalAttributeOverlay(this.firstColumnName, this.props.labelDescription ? this.props.labelDescription : ''),
+        filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => (d.value.toUpperCase().includes(filterStringUpper)),
         sortBy: (d: ClinicalDataCountWithColor) => d.value,
         defaultSortDirection: 'asc' as 'asc',
-        width: this.columnWidth[0]
+        width: this.columnsWidth[ColumnKey.CATEGORY]
     }, {
-        name: '#',
+        name: ColumnKey.NUMBER,
+        headerRender: () => {
+            return <div style={{marginLeft: this.cellMargin[ColumnKey.NUMBER]}}>#</div>
+        },
         render: (data: ClinicalDataCountWithColor) =>
             <LabeledCheckbox
                 checked={_.includes(this.props.filters, data.value)}
-                onChange={event => this.onUserSelection(data.value)}>
-                {data.count}
+                onChange={event => this.onUserSelection(data.value)}
+                labelProps={{
+                    style: {
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        marginLeft: this.cellMargin[ColumnKey.NUMBER],
+                        marginRight: this.cellMargin[ColumnKey.NUMBER]
+                    }
+                }}
+                inputProps={{
+                    className: styles.autoMarginCheckbox
+                }}
+            >
+                {data.count.toLocaleString()}
             </LabeledCheckbox>,
-        filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => (d.count.toString().indexOf(f) > -1),
+        tooltip: (
+            <span>Number of {this.props.patientAttribute ? 'patients' : 'samples'}</span>),
+        filter: (d: ClinicalDataCountWithColor, f: string) => (d.count.toString().includes(f)),
         sortBy: (d: ClinicalDataCountWithColor) => d.count,
         defaultSortDirection: 'desc' as 'desc',
-        width: this.columnWidth[1]
+        width: this.columnsWidth[ColumnKey.NUMBER]
     }, {
-        name: 'Freq',
+        name: ColumnKey.FREQ,
+        headerRender: () => {
+            return <div style={{marginLeft: this.cellMargin[ColumnKey.FREQ]}}>Freq</div>
+        },
         render: (data: ClinicalDataCountWithColor) =>
-            <span>{getFrequencyStr((data.count / this.totalCount) * 100)}</span>,
-        filter: (d: ClinicalDataCountWithColor, f: string, filterStringUpper: string) => {
-            let freq = getFrequencyStr((d.count / this.totalCount) * 100);
-            return (freq.indexOf(filterStringUpper) > -1)
+            <span
+                style={{
+                    flexDirection: 'row-reverse',
+                    display: 'flex',
+                    marginRight: this.cellMargin[ColumnKey.FREQ]
+                }}
+            >{getFrequencyStr(this.getFrequencyByCount(data.count))}</span>,
+        tooltip: (
+            <span>Percentage of {this.props.patientAttribute ? 'patients' : 'samples'}</span>),
+        filter: (d: ClinicalDataCountWithColor, f: string) => {
+            let freq = getFrequencyStr(this.getFrequencyByCount(d.count));
+            return (freq.includes(f))
         },
         sortBy: (d: ClinicalDataCountWithColor) => d.count,//sort freq column using count
         defaultSortDirection: 'desc' as 'desc',
-        width: this.columnWidth[2]
+        width: this.columnsWidth[ColumnKey.FREQ]
     }];
 
-    @bind
+    @autobind
     private onUserSelection(filter: string) {
         let filters = toJS(this.props.filters)
         if (_.includes(filters, filter)) {
@@ -100,14 +197,14 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
         this.props.onUserSelection(filters);
     }
 
-    @bind
+    @autobind
     private tooltipLabelMouseEnter(value: string): void {
         if (this.props.highlightedRow) {
             this.props.highlightedRow(value);
         }
     }
 
-    @bind
+    @autobind
     private tooltipLabelMouseLeave(): void {
         if (this.props.highlightedRow) {
             this.props.highlightedRow(undefined);
@@ -119,9 +216,35 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
         return _.sumBy(this.props.data, obj => obj.count);
     }
 
-    @bind
+    @autobind
     private compareCohorts() {
         this.props.compareCohorts(this.props.filters);
+    }
+
+    @autobind
+    addAll(selectedRows: ClinicalDataCountWithColor[]) {
+        this.props.onUserSelection(selectedRows.map(row => row.value));
+    }
+
+    @autobind
+    removeAll(deselectedRows: ClinicalDataCountWithColor[]) {
+        const deselectRows = deselectedRows.map(row => row.value);
+        this.props.onUserSelection(this.props.filters.filter(filter => !deselectRows.includes(filter)));
+    }
+
+    @autobind
+    @action
+    afterSorting(sortBy: string, sortDirection: SortDirection) {
+        this.sortBy = sortBy;
+        this.sortDirection = sortDirection;
+    }
+
+    componentWillReceiveProps() {
+        this.updateCellMargin();
+    }
+
+    componentWillUnmount(): void {
+        this.updateCellReaction();
     }
 
     render() {
@@ -131,7 +254,12 @@ export default class ClinicalTable extends React.Component<IClinicalTableProps, 
                 height={this.props.height}
                 data={this.props.data || []}
                 columns={this._columns}
-                sortBy='#'
+                addAll={this.addAll}
+                removeAll={this.removeAll}
+                showAddRemoveAllButtons={this.props.showAddRemoveAllButtons}
+                sortBy={this.sortBy}
+                sortDirection={this.sortDirection}
+                afterSorting={this.afterSorting}
                 showCohortComparison={this.props.filters.length > 0}
                 afterSelectingRows={this.compareCohorts}
             />

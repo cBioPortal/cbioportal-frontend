@@ -1,23 +1,22 @@
-import * as React from 'react';
-import * as _ from 'lodash';
-import $ from 'jquery';
-import {observer, inject, Observer} from "mobx-react";
-import {reaction, computed, observable, runInAction} from "mobx";
+import * as React from "react";
+import * as _ from "lodash";
+import $ from "jquery";
+import {inject, observer} from "mobx-react";
+import {computed, reaction, runInAction} from "mobx";
 import {ResultsViewPageStore, SamplesSpecificationElement} from "./ResultsViewPageStore";
 import CancerSummaryContainer from "pages/resultsView/cancerSummary/CancerSummaryContainer";
 import Mutations from "./mutation/Mutations";
 import MutualExclusivityTab from "./mutualExclusivity/MutualExclusivityTab";
 import SurvivalTab from "./survival/SurvivalTab";
 import DownloadTab from "./download/DownloadTab";
-import AppConfig from 'appConfig';
+import AppConfig from "appConfig";
 import CNSegments from "./cnSegments/CNSegments";
-import './styles.scss';
-import {genes, parseOQLQuery} from "shared/lib/oql/oqlfilter.js";
+import "./styles.scss";
 import Network from "./network/Network";
 import ResultsViewOncoprint from "shared/components/oncoprint/ResultsViewOncoprint";
 import QuerySummary from "./querySummary/QuerySummary";
 import ExpressionWrapper from "./expression/ExpressionWrapper";
-import EnrichmentsTab from 'pages/resultsView/enrichments/EnrichmentsTab';
+import EnrichmentsTab from "pages/resultsView/enrichments/EnrichmentsTab";
 import PlotsTab from "./plots/PlotsTab";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
@@ -26,17 +25,14 @@ import {ITabConfiguration} from "../../shared/model/ITabConfiguration";
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 import CoExpressionTab from "./coExpression/CoExpressionTab";
 import Helmet from "react-helmet";
-import {createQueryStore} from "../home/HomePage";
-import {ServerConfigHelpers} from "../../config/config";
 import {showCustomTab} from "../../shared/lib/customTabs";
-import {
-    getTabId, parseConfigDisabledTabs, ResultsViewTab,
-    updateStoreFromQuery
-} from "./ResultsViewPageHelpers";
+import {getTabId, parseConfigDisabledTabs, ResultsViewTab} from "./ResultsViewPageHelpers";
 import {buildResultsViewPageTitle, doesQueryHaveCNSegmentData} from "./ResultsViewPageStoreUtils";
-import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
 import {AppStore} from "../../AppStore";
 import {bind} from "bind-decorator";
+import {updateResultsViewQuery} from "./ResultsViewQuery";
+import {trackQuery} from "../../shared/lib/tracking";
+import {onMobxPromise} from "../../shared/lib/onMobxPromise";
 
 function initStore() {
 
@@ -121,7 +117,17 @@ function initStore() {
                             throw("INVALID QUERY");
                         }
 
-                        updateStoreFromQuery(resultsViewPageStore, query, samplesSpecification, cancerStudyIds, oql, cancerStudyIds);
+                        const changes = updateResultsViewQuery(resultsViewPageStore.rvQuery, query, samplesSpecification, cancerStudyIds, oql);
+                        if (changes.cohortIdsList) {
+                            resultsViewPageStore.initMutationAnnotationSettings();
+                        }
+
+                        onMobxPromise(resultsViewPageStore.studyIds, ()=>{
+                            try {
+                                trackQuery(resultsViewPageStore.studyIds.result!, oql, resultsViewPageStore.hugoGeneSymbols, resultsViewPageStore.virtualStudies.result!.length > 0);
+                            } catch {};
+                        });
+
                         lastQuery = query;
                     }
                     if (pathnameChanged) {
@@ -157,8 +163,7 @@ export interface IResultsViewPageProps {
     params: any; // from react router
 }
 
-@inject('routing')
-@inject('appStore')
+@inject('appStore','routing')
 @observer
 export default class ResultsViewPage extends React.Component<IResultsViewPageProps, {}> {
 
@@ -172,13 +177,13 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         getBrowserWindow().resultsViewPageStore = this.resultsViewPageStore;
     }
 
-    private handleTabChange(id: string) {
-        this.props.routing.updateRoute({},`results/${id}`);
+    private handleTabChange(id: string, replace?:boolean) {
+        this.props.routing.updateRoute({},`results/${id}`, false, replace);
     }
 
     @autobind
-    private customTabMountCallback(div:HTMLDivElement,tab:any){
-        showCustomTab(div, tab, this.props.routing.location, this.resultsViewPageStore);
+    private customTabCallback(div:HTMLDivElement,tab:any, isUnmount = false){
+        showCustomTab(div, tab, this.props.routing.location, this.resultsViewPageStore, isUnmount);
     }
 
     componentWillUnmount(){
@@ -339,9 +344,9 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                         {
                             (store.studies.isComplete && store.sampleLists.isComplete && store.samples.isComplete) &&
                             (<Network genes={store.genes.result!}
-                                      profileIds={store.selectedMolecularProfileIds}
+                                      profileIds={store.rvQuery.selectedMolecularProfileIds}
                                       cancerStudyId={store.studies.result[0].studyId}
-                                      zScoreThreshold={store.zScoreThreshold}
+                                      zScoreThreshold={store.rvQuery.zScoreThreshold}
                                       caseSetId={(store.sampleLists.result!.length > 0) ? store.sampleLists.result![0].sampleListId : "-1"}
                                       sampleIds={store.samples.result.map((sample)=>sample.sampleId)}
                                       caseIdsKey={""}
@@ -404,7 +409,10 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
             const customResultsTabs = AppConfig.serverConfig.custom_tabs.filter((tab: any) => tab.location === "RESULTS_PAGE").map((tab: any, i: number) => {
                 return (<MSKTab key={100 + i} id={'customTab' + i} unmountOnHide={(tab.unmountOnHide === true)}
                                 onTabDidMount={(div) => {
-                                    this.customTabMountCallback(div, tab)
+                                    this.customTabCallback(div, tab);
+                                }}
+                                onTabUnmount={(div) => {
+                                    this.customTabCallback(div, tab, true);
                                 }}
                                 linkText={tab.title}
                     />
@@ -417,7 +425,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
 
     }
 
-    @bind
+    @autobind
     public evaluateTabInclusion(tab:ITabConfiguration){
         const excludedTabs = AppConfig.serverConfig.disabled_tabs || "";
         const isExcludedInList = parseConfigDisabledTabs(excludedTabs).includes(tab.id);
@@ -428,15 +436,16 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         return isRoutedTo || (!isExcludedInList && !isExcluded);
     }
 
-    // if it's undefined, MSKTabs will default to first
-    public currentTab(tabId:string|undefined):string | undefined {
+    public currentTab(tabId:string|undefined):string {
         // if we have no tab defined (query submission, no tab click)
         // we need to evaluate which should be the default tab
+        // this can only be determined by know the count of physical studies in the query
+        // (for virtual studies we need to fetch data determine constituent physical studies)
         if (tabId === undefined) {
             if (this.resultsViewPageStore.studies.result!.length > 1 && this.resultsViewPageStore.hugoGeneSymbols.length === 1) {
                 return ResultsViewTab.CANCER_TYPES_SUMMARY; // cancer type study
             } else {
-                return undefined; // this will resolve to first tab
+                return ResultsViewTab.ONCOPRINT; // this will resolve to first tab
             }
         } else {
             return tabId;
@@ -444,6 +453,8 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     }
 
     @computed get pageContent(){
+
+        // if studies are complete but we don't have a tab id in route, we need to derive default
         return (<div>
             {
                 (this.resultsViewPageStore.studies.isComplete) && (
@@ -452,35 +463,40 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                     </Helmet>
                 )
             }
+            {(this.resultsViewPageStore.studies.isComplete) && (
+                    <div>
+                        <div style={{margin:"0 20px 10px 20px"}}>
+                            <QuerySummary routingStore={this.props.routing} store={this.resultsViewPageStore}/>
+                        </div>
 
-            <div>
-                <div style={{margin:"0 20px 10px 20px"}}>
-                    <QuerySummary routingStore={this.props.routing} store={this.resultsViewPageStore}/>
-                </div>
-
-                {
-                    (this.resultsViewPageStore.studies.isComplete) && (
-                        <MSKTabs key={this.resultsViewPageStore.queryHash} activeTabId={this.currentTab(this.resultsViewPageStore.tabId)} unmountOnHide={false}
+                        <MSKTabs key={this.resultsViewPageStore.rvQuery.hash} activeTabId={this.currentTab(this.resultsViewPageStore.tabId)} unmountOnHide={false}
                                  onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
                             {
                                 this.tabs
                             }
                         </MSKTabs>
-                    )
-                }
-            </div>
+
+                    </div>
+                )
+            }
         </div>)
     }
 
     public render() {
-        return (
-            <PageLayout noMargin={true}>
-                {
-                    this.pageContent
-                }
-            </PageLayout>
-        )
-
+        if (this.resultsViewPageStore.studies.isComplete && !this.resultsViewPageStore.tabId) {
+            setTimeout(()=>{
+                this.handleTabChange(this.currentTab(this.resultsViewPageStore.tabId), true);
+            });
+            return null;
+        } else {
+            return (
+                <PageLayout noMargin={true} hideFooter={true} className={"subhead-dark"}>
+                    {
+                        this.pageContent
+                    }
+                </PageLayout>
+            )
+        }
     }
 
 

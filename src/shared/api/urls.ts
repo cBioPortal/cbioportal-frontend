@@ -64,11 +64,9 @@ export function getStudySummaryUrl(studyIds:string | ReadonlyArray<string>) {
     const params = getStudySummaryUrlParams(studyIds);
     return buildCBioPortalPageUrl(params.pathname, params.query);
 }
-export function openStudySummaryFormSubmit(studyIds: string | ReadonlyArray<string>) {
+export function redirectToStudyView(studyIds: string | ReadonlyArray<string>) {
     const params = getStudySummaryUrlParams(studyIds);
-    const method:"get"|"post" = params.query.id.length > 1800 ? "post" : "get";
-    //(window as any).routingStore.updateRoute(params.query,"newstudy");
-    formSubmit(params.pathname, params.query, "_blank", method);
+    (window as any).routingStore.updateRoute(params.query,"study", true);
 }
 export function getSampleViewUrl(studyId:string, sampleId:string, navIds?:{patientId:string, studyId:string}[]) {
     let hash:any = undefined;
@@ -104,22 +102,7 @@ export function getOncoQueryDocUrl() {
     return buildCBioPortalPageUrl("/oql");
 }
 
-export function getOncoKbApiUrl() {
-    let url = AppConfig.serverConfig.oncokb_public_api_url;
-
-    if (typeof url === 'string') {
-        // we need to support legacy configuration values
-        url = url.replace(/^http[s]?:\/\//,''); // get rid of protocol
-        url = url.replace(/\/$/,""); // get rid of trailing slashes
-
-        return buildCBioPortalAPIUrl(`proxy/${url}`)
-    } else {
-        return undefined;
-    }
-
-}
-export function getGenomeNexusApiUrl() {
-    let url = AppConfig.serverConfig.genomenexus_url;
+export function getProxyUrlIfNecessary(url:any) {
     if (typeof url === 'string') {
         // use url if https, otherwise use proxy
         if (url.startsWith('https://')) {
@@ -129,11 +112,21 @@ export function getGenomeNexusApiUrl() {
             url = url.replace(/^http[s]?:\/\//,''); // get rid of protocol
             url = url.replace(/\/$/,""); // get rid of trailing slashes
             url = url.replace(/^\/+/,""); // get rid of leading slashes
+
             return buildCBioPortalAPIUrl(`proxy/${url}`)
         }
     } else {
         return undefined;
     }
+}
+
+export function getOncoKbApiUrl() {
+    let url = AppConfig.serverConfig.oncokb_public_api_url;
+    return getProxyUrlIfNecessary(url);
+}
+export function getGenomeNexusApiUrl() {
+    let url = AppConfig.serverConfig.genomenexus_url;
+    return getProxyUrlIfNecessary(url);
 }
 
 export function getVirtualStudyServiceUrl() {
@@ -198,6 +191,10 @@ export function getMDAndersonHeatMapMetaUrl(patientId:string){
 }
 
 export function getMDAndersonHeatmapStudyMetaUrl(studyId:string){
+    return AppConfig.serverConfig.mdacc_heatmap_study_meta_url + studyId;
+}
+
+export function getMDAndersonHeatmapStudyUrl(studyId:string){
     return AppConfig.serverConfig.mdacc_heatmap_study_url + studyId;
 }
 

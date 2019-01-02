@@ -1,13 +1,17 @@
-.title {
-  color: #000;
-}
-
-.content {
-  padding: 0 5px;
-  color: $study-view-primary-color;
+.main {
+  display: flex;
+  margin: 0 5px 0 0;
   font-weight:bold;
 }
 
+.title {
+
+}
+
+.content {
+  white-space: nowrap;
+}
+
 .title, .content {
-  font-size: 16px;
+
 }
