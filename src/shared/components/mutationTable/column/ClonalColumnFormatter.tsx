@@ -70,11 +70,10 @@ export default class ClonalColumnFormatter {
         }
         return (
                 <div>
-                        <table>
-                                <tr><td>Sample</td><td><strong>{sampleId}</strong></td></tr>
-                                <tr><td>Clonal</td><td><span style={{color: `${clonalColor}`, fontWeight: "bold"}}>{clonalValue}</span></td></tr>
-                                <tr><td style={{paddingRight:5}}>CCF</td><td><strong>{ccfMCopies}</strong></td></tr>
-                        </table>
+                    <table>
+                        <tr><td style={{paddingRight:5}}>Clonal</td><td><span style={{color: `${clonalColor}`, fontWeight: "bold"}}>{clonalValue}</span></td></tr>
+                        <tr><td style={{paddingRight:5}}>CCF</td><td><strong>{ccfMCopies}</strong></td></tr>
+                    </table>
                 </div>
         );
     }
@@ -119,19 +118,7 @@ export default class ClonalColumnFormatter {
     }
 
     public static renderFunction(data:Mutation[], sampleIds:string[]) {
-        // use text for all purposes (display, sort, filter)
         return ClonalColumnFormatter.getDisplayValue(data,sampleIds);
-        /*
-        const text:string = ClonalColumnFormatter.getDisplayValue(data, sampleIds);
-        if (text === "yes") {
-            return (<svg>
-                        <circle cx={10} cy={10} r={5} fill="green" />
-                    </svg>);
-        } else {
-            let content = <span>{text}</span>;
-            return content;
-        }
-        */
     }
 
     public static getClonalDownload(mutations:Mutation[]): string|string[]
