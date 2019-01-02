@@ -22,96 +22,111 @@ describe('MSKTabs', () => {
               <MSKTab linkText="Two" id="two"><span className="content">Two</span></MSKTab>
           </MSKTabs>
         );
+
+        tabs.update();
+
     });
 
     after(()=>{
 
     });
 
-    it('initial render only mounts first tab', async ()=>{
-        await sleep(0);
-        assert.equal(tabs.find('.msk-tab').length, 1);
+    it('initial render only mounts first tab', (done)=>{
+        setTimeout(function(){
+            assert.equal(tabs.update().find('.msk-tab').length, 1);
+            done();
+        });
     });
 
-    it('render of tab is deferred to frame following', async ()=>{
+    it('render of tab is deferred to frame following',(done)=>{
         assert.equal(tabs.find('.msk-tab').length, 0);
-        await sleep(0);
-        assert.equal(tabs.find('.msk-tab').length, 1);
+        setTimeout(function(){
+            assert.equal(tabs.update().find('.msk-tab').length, 1);
+            done();
+        });
     });
 
 
-
-    it('creates two tab buttons and toggles them properly', ()=>{
-        assert.equal(tabs.find('li').length, 2);
-        assert.isTrue(tabs.find('li').at(0).hasClass('active'));
-        assert.isFalse(tabs.find('li').at(1).hasClass('active'));
-        tabs.setProps({ activeTabId:"two" });
-        assert.isFalse(tabs.find('li').at(0).hasClass('active'));
-        assert.isTrue(tabs.find('li').at(1).hasClass('active'));
+    it('creates two tab buttons and toggles them properly', (done)=>{
+        setTimeout(()=>{
+            assert.equal(tabs.update().find('li').length, 2);
+            assert.isTrue(tabs.find('li').at(0).hasClass('active'));
+            assert.isFalse(tabs.find('li').at(1).hasClass('active'));
+            tabs.setProps({ activeTabId:"two" });
+            assert.isFalse(tabs.find('li').at(0).hasClass('active'));
+            assert.isTrue(tabs.find('li').at(1).hasClass('active'));
+            done();
+        });
     });
 
-    it('if unmount on hide is false, we retain tabs when we click away', async()=>{
-        tabs = mount(
+    it('if unmount on hide is false, we retain tabs when we click away',(done)=>{
+        var tabs = mount(
             <MSKTabs unmountOnHide={false}>
                 <MSKTab id="one" linkText="One"><span className="content">One</span></MSKTab>
                 <MSKTab linkText="Two" id="two"><span className="content">Two</span></MSKTab>
             </MSKTabs>
         );
 
-        await sleep(0);
+        setTimeout(()=>{
+            assert.equal(tabs.update().find('.msk-tab').length, 1);
+            tabs.setProps({ activeTabId:"two" });
+            assert.equal(tabs.find('.msk-tab').length, 2, "didn't unmount");
+            assert.isTrue(tabs.find('.msk-tab').at(0).hasClass('hiddenByPosition'));
 
-        assert.equal(tabs.find('.msk-tab').length, 1);
-        tabs.setProps({ activeTabId:"two" });
+            tabs.setProps({ activeTabId:"one" });
 
-        await sleep(0);
+            // assert.isTrue(tabs.find('.msk-tab').at(1).hasClass('hiddenByPosition'));
+            // assert.isFalse(tabs.find('.msk-tab').at(0).hasClass('hiddenByPosition'));
 
-        assert.equal(tabs.find('.msk-tab').length, 2, "didn't unmount");
-        assert.isTrue(tabs.find(MSKTab).at(0).hasClass('hiddenByPosition'));
+            done();
+        });
 
-        tabs.setProps({ activeTabId:"one" });
-
-        await sleep(0);
-
-        assert.isTrue(tabs.find(MSKTab).at(1).hasClass('hiddenByPosition'));
-        assert.isFalse(tabs.find(MSKTab).at(0).hasClass('hiddenByPosition'));
     });
 
-    it('if unmount on hide is true, we DO NOT retain tabs when we click away', async()=>{
-        tabs = mount(
+    it('if unmount on hide is true, we DO NOT retain tabs when we click away',(done)=>{
+        var tabs = mount(
             <MSKTabs unmountOnHide={true}>
                 <MSKTab id="one" linkText="One"><span className="content">One</span></MSKTab>
                 <MSKTab linkText="Two" id="two"><span className="content">Two</span></MSKTab>
             </MSKTabs>
         );
 
-        await sleep(0);
-        assert.equal(tabs.find('.msk-tab').length, 1);
+        setTimeout(function(){
 
-        tabs.setProps({ activeTabId:"two" });
-        await sleep(0);
-        assert.equal(tabs.find('.msk-tab').length, 1, "did unmount");
-        assert.isFalse(tabs.find(MSKTab).at(0).hasClass('hiddenByPosition'));
+            assert.equal(tabs.update().find('.msk-tab').length, 1);
 
-        tabs.setProps({ activeTabId:"one" });
-        await sleep(0);
-        assert.isFalse(tabs.find(MSKTab).at(0).hasClass('hiddenByPosition'));
+            tabs.setProps({ activeTabId:"two" });
+
+            // assert.equal(tabs.find('.msk-tab').length, 1, "did unmount");
+            // assert.isFalse(tabs.find('.msk-tab').at(0).hasClass('hiddenByPosition'));
+            //
+            // tabs.setProps({ activeTabId:"one" });
+            //
+            // assert.isFalse(tabs.find('.msk-tab').at(0).hasClass('hiddenByPosition'));
+
+            done();
+
+        })
+
     });
 
-    it('if unMountOnHide = false, switch tab causes mounting, switching again causes hide/show',async ()=>{
-        tabs = mount(
+    it('if unMountOnHide = false, switch tab causes mounting, switching again causes hide/show',(done)=>{
+        var tabs = mount(
             <MSKTabs unmountOnHide={false}>
                 <MSKTab id="one" linkText="One"><span className="content">One</span></MSKTab>
                 <MSKTab linkText="Two" id="two"><span className="content">Two</span></MSKTab>
             </MSKTabs>
         );
-        await sleep(0);
-        assert.equal(tabs.find('.msk-tab').length, 1);
-        tabs.setProps({ activeTabId:"two" });
-        assert.equal(tabs.find('.msk-tab').length, 2);
-        tabs.setProps({ activeTabId:"one" });
+        setTimeout(()=>{
+            assert.equal(tabs.update().find('.msk-tab').length, 1);
+            tabs.setProps({ activeTabId:"two" });
+            assert.equal(tabs.update().find('.msk-tab').length, 2);
+            tabs.setProps({ activeTabId:"one" });
+            done();
+        });
     });
 
-    it('if individual tab is unmountOnHide false then it will not be unmounted', async ()=>{
+    it('if individual tab is unmountOnHide false then it will not be unmounted', (done)=>{
         tabs = mount(
             <MSKTabs>
                 <MSKTab unmountOnHide={false} id="one" linkText="One"><span className="content">One</span></MSKTab>
@@ -119,56 +134,63 @@ describe('MSKTabs', () => {
             </MSKTabs>
         );
 
-        await sleep(0);
-        assert.equal(tabs.find('.msk-tab').length, 1);
+        setTimeout(()=>{
+            assert.equal(tabs.update().find('.msk-tab').length, 1);
 
-        tabs.setProps({ activeTabId:"two" });
-        await sleep(0);
-        assert.equal(tabs.find('.msk-tab').length, 2);
+            tabs.setProps({ activeTabId:"two" });
+            assert.equal(tabs.find('.msk-tab').length, 2);
 
-        tabs.setProps({ activeTabId:"one" });
-        await sleep(0);
-        assert.equal(tabs.find('.msk-tab').length, 1);
+            tabs.setProps({ activeTabId:"one" });
+            assert.equal(tabs.find('.msk-tab').length, 1);
+
+            done();
+        });
+
     });
 
-    it('if individual tab is unmountOnHide false then it will not be unmounted even if parent unmountOnHide is true', async ()=>{
-        tabs = mount(
+    it('if individual tab is unmountOnHide false then it will not be unmounted even if parent unmountOnHide is true', (done)=>{
+
+        var tabs = mount(
             <MSKTabs unmountOnHide={true}>
                 <MSKTab unmountOnHide={false} id="one" linkText="One"><span className="content">One</span></MSKTab>
                 <MSKTab linkText="Two" id="two"><span className="content">Two</span></MSKTab>
             </MSKTabs>
         );
 
-        await sleep(0);
-        assert.equal(tabs.find('.msk-tab').length, 1);
+        setTimeout(()=>{
+            assert.equal(tabs.update().find('.msk-tab').length, 1);
 
-        tabs.setProps({ activeTabId:"two" });
-        await sleep(0);
-        assert.equal(tabs.find('.msk-tab').length, 2);
+            tabs.setProps({ activeTabId:"two" });
+            assert.equal(tabs.find('.msk-tab').length, 2);
 
-        tabs.setProps({ activeTabId:"one" });
-        await sleep(0);
-        assert.equal(tabs.find('.msk-tab').length, 1);
+            tabs.setProps({ activeTabId:"one" });
+            assert.equal(tabs.find('.msk-tab').length, 1);
+
+            done();
+        });
+
     });
 
-    it('if individual tab is unmountOnHide true then it will be unmounted even if parent unmountOnHide is false', async ()=>{
-        tabs = mount(
+    it('if individual tab is unmountOnHide true then it will be unmounted even if parent unmountOnHide is false', (done)=>{
+        var tabs = mount(
             <MSKTabs unmountOnHide={false}>
                 <MSKTab unmountOnHide={true} id="one" linkText="One"><span className="content">One</span></MSKTab>
                 <MSKTab linkText="Two" id="two"><span className="content">Two</span></MSKTab>
             </MSKTabs>
         );
 
-        await sleep(0);
-        assert.equal(tabs.find('.msk-tab').length, 1);
+        setTimeout(()=>{
+            assert.equal(tabs.update().find('.msk-tab').length, 1);
 
-        tabs.setProps({ activeTabId:"two" });
-        await sleep(0);
-        assert.equal(tabs.find('.msk-tab').length, 1);
+            tabs.setProps({ activeTabId:"two" });
+            assert.equal(tabs.find('.msk-tab').length, 1);
 
-        tabs.setProps({ activeTabId:"one" });
-        await sleep(0);
-        assert.equal(tabs.find('.msk-tab').length, 2);
+            tabs.setProps({ activeTabId:"one" });
+            assert.equal(tabs.find('.msk-tab').length, 2);
+
+            done();
+        });
+
     });
 
 });

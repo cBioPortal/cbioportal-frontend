@@ -47,13 +47,13 @@ describe('ProteinChangeColumnFormatter', () => {
     it('renders protein change display value', () => {
         assert.isTrue(germlineComponent.find(`.${styles.proteinChange}`).exists(),
             'Germline mutation should have the protein change value');
-        assert.isTrue(germlineComponent.find(`.${styles.proteinChange}`).text().indexOf("Q616K") > -1,
+        assert.isTrue(germlineComponent.find(`.${styles.proteinChange}`).first().text().indexOf("Q616K") > -1,
             'Protein change value for germline mutation is correct');
         assert.isTrue(somaticComponent.find(`.${styles.proteinChange}`).exists(),
             'Somatic mutation should have the protein change value');
-        assert.isTrue(somaticComponent.find(`.${styles.proteinChange}`).text().indexOf("Q616L") > -1,
+        assert.isTrue(somaticComponent.find(`.${styles.proteinChange}`).first().text().indexOf("Q616L") > -1,
             'Protein change value for somatic mutation is correct');
-        assert.isTrue(longProteinChangeComponent.find(`.${styles.proteinChange}`).text().indexOf("this_is_a_protein_change_with_more_than_20_chars") === -1,
+        assert.isTrue(longProteinChangeComponent.find(`.${styles.proteinChange}`).first().text().indexOf("this_is_a_protein_change_with_more_than_20_chars") === -1,
             'Long protein change values should be truncated');
     });
 
