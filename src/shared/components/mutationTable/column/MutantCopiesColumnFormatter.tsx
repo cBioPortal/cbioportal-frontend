@@ -15,15 +15,13 @@ interface IMutationTypeFormat {
 /**
  * @author Avery Wang
  */
-export default class MutantCopiesColumnFormatter
-{
+export default class MutantCopiesColumnFormatter {
     /* Determines the display value by using the impact field.
      *
      * @param data  column formatter data
      * @returns {string}    mutation assessor text value
      */
-    public static getDisplayValue(data:Mutation[], sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined, sampleIds:string[]):{[key: string]: string}
-    {
+    public static getDisplayValue(data:Mutation[], sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined, sampleIds:string[]):{[key: string]: string} {
         const sampleToValue:{[key: string]: string} = {};
         for (const mutation of data) {
             const value:string = MutantCopiesColumnFormatter.getMutantCopiesOverTotalCopies(mutation, sampleIdToClinicalDataMap);
@@ -43,16 +41,14 @@ export default class MutantCopiesColumnFormatter
         return displayValuesAsString.join("; ");
     }
 
-    public static invalidTotalCopyNumber(value:number):boolean
-    { 
+    public static invalidTotalCopyNumber(value:number):boolean {
         if (value === -1 || value === null) {
             return true;
         }
         return false;
     }
 
-    public static getVariantAlleleFraction(mutation:Mutation):number
-    {
+    public static getVariantAlleleFraction(mutation:Mutation):number {
         let variantAlleleFraction = 0;
         if (mutation.tumorRefCount !== null && mutation.tumorAltCount !== null) {
             variantAlleleFraction = mutation.tumorAltCount/(mutation.tumorRefCount + mutation.tumorAltCount);
@@ -60,8 +56,7 @@ export default class MutantCopiesColumnFormatter
         return variantAlleleFraction;
     }
 
-    public static getMutantCopies(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined):number
-    {
+    public static getMutantCopies(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined):number {
         const sampleId:string = mutation.sampleId;
         const variantAlleleFraction:number = MutantCopiesColumnFormatter.getVariantAlleleFraction(mutation);
         const totalCopyNumber = mutation.totalCopyNumber;
@@ -78,9 +73,8 @@ export default class MutantCopiesColumnFormatter
         const mutantCopies:number = Math.min(totalCopyNumber, Math.round((variantAlleleFraction/purity)*totalCopyNumber))
         return mutantCopies;
     }
- 
-    public static getMutantCopiesOverTotalCopies(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined):string
-    {
+
+    public static getMutantCopiesOverTotalCopies(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined):string {
         let textValue:string = "";
         const totalCopyNumber:number = mutation.totalCopyNumber;
         const mutantCopies:number = MutantCopiesColumnFormatter.getMutantCopies(mutation, sampleIdToClinicalDataMap)
@@ -94,23 +88,22 @@ export default class MutantCopiesColumnFormatter
 
     /**
      * Returns map of sample id to tooltip text value.
-     * @param data 
-     * @param sampleIdToClinicalDataMap 
-     * @param sampleIdsWithValues 
+     * @param data
+     * @param sampleIdToClinicalDataMap
+     * @param sampleIdsWithValues
      */
-    public static getMutantCopiesToolTip(data:Mutation[], sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined, sampleIdsWithValues:string[]):{[key: string]: string}
-    {
+    public static getMutantCopiesToolTip(data:Mutation[], sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined, sampleIdsWithValues:string[]):{[key: string]: string} {
         const sampleToToolTip:{[key: string]: string} = {};
         for (const mutation of data) {
             sampleToToolTip[mutation.sampleId] = MutantCopiesColumnFormatter.constructToolTipString(mutation, sampleIdToClinicalDataMap);
         }
         return sampleToToolTip;
     }
-    
+
     /**
      * Constructs tooltip string value.
-     * @param mutation 
-     * @param sampleIdToClinicalDataMap 
+     * @param mutation
+     * @param sampleIdToClinicalDataMap
      */
     public static constructToolTipString(mutation:Mutation, sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined):string {
         let textValue:string = "";
@@ -124,13 +117,11 @@ export default class MutantCopiesColumnFormatter
         return textValue;
     }
 
-    public static renderFunction(data:Mutation[], sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined, sampleIds:string[])
-    {
+    public static renderFunction(data:Mutation[], sampleIdToClinicalDataMap:{[sampleId:string]:ClinicalData[]}|undefined, sampleIds:string[]) {
         // get display text values map (sampleid -> value), list of sample ids with values in 'displayValuesBySample', and calculate tooltip by sample
         const displayValuesBySample:{[key: string]: string} = MutantCopiesColumnFormatter.getDisplayValue(data, sampleIdToClinicalDataMap, sampleIds);
         const sampleIdsWithValues = sampleIds.filter(sampleId => displayValuesBySample[sampleId]);
         const toolTipBySample:{[key: string]: string} = MutantCopiesColumnFormatter.getMutantCopiesToolTip(data, sampleIdToClinicalDataMap, sampleIdsWithValues);
-        
         if (!sampleIdsWithValues) {
             return (<span></span>);
         } else {
@@ -145,9 +136,8 @@ export default class MutantCopiesColumnFormatter
             return (
              <span style={{display:'inline-block', minWidth:100}}>
                  <ul style={{marginBottom:0}} className="list-inline list-unstyled">{ content }</ul>
-             </span> 
+             </span>
             );
        }
-
     }
 }

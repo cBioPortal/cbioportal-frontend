@@ -88,6 +88,7 @@ export interface IMutationTableProps {
     columnVisibility?: {[columnId: string]: boolean};
     columnVisibilityProps?: IColumnVisibilityControlsProps;
     sampleIdToClinicalDataMap?: {[key:string]: ClinicalData[]};
+    sampleIdToIconComponentMap?: {[key:string]: JSX.Element | undefined};
 }
 
 export enum MutationTableColumnType {

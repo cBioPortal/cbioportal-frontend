@@ -9,7 +9,8 @@ import {Mutation, ClinicalData} from "shared/api/generated/CBioPortalAPI";
 import AlleleCountColumnFormatter from "shared/components/mutationTable/column/AlleleCountColumnFormatter";
 import MutantCopiesColumnFormatter from "shared/components/mutationTable/column/MutantCopiesColumnFormatter";
 import CancerCellFractionColumnFormatter from "shared/components/mutationTable/column/CancerCellFractionColumnFormatter";
-import ClonalColumnFormatter from "shared/components/mutationTable/column/ClonalColumnFormatter";
+//import ClonalColumnFormatter from "shared/components/mutationTable/column/ClonalColumnFormatter";
+import FACETSClonalColumnFormatter from "./column/FACETSClonalColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import FACETSColumnFormatter from "./column/FACETSColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
@@ -107,14 +108,14 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.CLONAL] = {
             name: "Clonal",
             tooltip: (<span>FACETS Clonal</span>),
-            render:(d:Mutation[])=>ClonalColumnFormatter.renderFunction(d, this.getSamples()),
+            render:(d:Mutation[])=>FACETSClonalColumnFormatter.renderFunction(d, this.getSamples(), this.props.sampleManager),
             sortBy:(d:Mutation[])=>d.map(m=>m.ccfMCopiesUpper),
-            download:(d:Mutation[])=>ClonalColumnFormatter.getClonalDownload(d)
+            download:(d:Mutation[])=>FACETSClonalColumnFormatter.getClonalDownload(d)
         };
 
         this._columns[MutationTableColumnType.MUTANT_COPIES] = {
             name: "Mutant Copies",
-             tooltip: (<span>FACETS Best Guess for Mutant Copies / Total Copies</span>),
+            tooltip: (<span>FACETS Best Guess for Mutant Copies / Total Copies</span>),
             render:(d:Mutation[])=>MutantCopiesColumnFormatter.renderFunction(d, this.props.sampleIdToClinicalDataMap, this.getSamples()),
             sortBy:(d:Mutation[])=>MutantCopiesColumnFormatter.getDisplayValueAsString(d, this.props.sampleIdToClinicalDataMap, this.getSamples())        
         };

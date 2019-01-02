@@ -26,12 +26,12 @@ export default class ClonalColumnFormatter {
     public static getDisplayValue(data:Mutation[], sampleIds:string[]) {
         let values:string[] = [];
         const sampleToValue:{[key: string]: any} = {};
-        const sampleToCCFMCopiesUpper:{[key: string]: number} = {};
+        const sampleToCCF:{[key: string]: number} = {};
         for (const mutation of data) {
             sampleToValue[mutation.sampleId] = ClonalColumnFormatter.getClonalValue([mutation]);
         }
         for (const mutation of data) {
-            sampleToCCFMCopiesUpper[mutation.sampleId] = mutation.ccfMCopiesUpper;
+            sampleToCCF[mutation.sampleId] = mutation.ccfMCopies;
         }
         // exclude samples with invalid count value (undefined || emtpy || lte 0)
         const samplesWithValue = sampleIds.filter(sampleId =>
@@ -42,13 +42,13 @@ export default class ClonalColumnFormatter {
         if (!samplesWithValue) {
             return (<span></span>);
         } else if (samplesWithValue.length === 1) {
-             tdValue = <li><DefaultTooltip overlay={ClonalColumnFormatter.getTooltip(`${samplesWithValue[0]}`, `${sampleToValue[samplesWithValue[0]]}`, `${sampleToCCFMCopiesUpper[samplesWithValue[0]]}`)} placement="left" arrowContent={<div className="rc-tooltip-arrow-inner"/>}>{ClonalColumnFormatter.getClonalCircle(sampleToValue[samplesWithValue[0]])}</DefaultTooltip></li>;
+             tdValue = <li><DefaultTooltip overlay={ClonalColumnFormatter.getTooltip(`${samplesWithValue[0]}`, `${sampleToValue[samplesWithValue[0]]}`, `${sampleToCCF[samplesWithValue[0]]}`)} placement="left" arrowContent={<div className="rc-tooltip-arrow-inner"/>}>{ClonalColumnFormatter.getClonalCircle(sampleToValue[samplesWithValue[0]])}</DefaultTooltip></li>;
         }
         // multiple value: add sample id and value pairs
         else {
              tdValue = samplesWithValue.map((sampleId:string) => {
                 return (
-                    <li><DefaultTooltip overlay={ClonalColumnFormatter.getTooltip(`${sampleId}`, `${sampleToValue[sampleId]}`, `${sampleToCCFMCopiesUpper[sampleId]}`)} placement="left" arrowContent={<div className="rc-tooltip-arrow-inner"/>}>{ClonalColumnFormatter.getClonalCircle(`${sampleToValue[sampleId]}`)}</DefaultTooltip></li>
+                    <li><DefaultTooltip overlay={ClonalColumnFormatter.getTooltip(`${sampleId}`, `${sampleToValue[sampleId]}`, `${sampleToCCF[sampleId]}`)} placement="left" arrowContent={<div className="rc-tooltip-arrow-inner"/>}>{ClonalColumnFormatter.getClonalCircle(`${sampleToValue[sampleId]}`)}</DefaultTooltip></li>
                 );
             });
         }
@@ -59,7 +59,7 @@ export default class ClonalColumnFormatter {
                );
     }
 
-    public static getTooltip(sampleId:string, clonalValue:string, ccfMCopiesUpperValue:string) {
+    public static getTooltip(sampleId:string, clonalValue:string, ccfMCopies:string) {
         let clonalColor = "";
         if (clonalValue === "yes") {
             clonalColor = "limegreen";
@@ -73,7 +73,7 @@ export default class ClonalColumnFormatter {
                         <table>
                                 <tr><td>Sample</td><td><strong>{sampleId}</strong></td></tr>
                                 <tr><td>Clonal</td><td><span style={{color: `${clonalColor}`, fontWeight: "bold"}}>{clonalValue}</span></td></tr>
-                                <tr><td style={{paddingRight:5}}>CCF Upper</td><td><strong>{ccfMCopiesUpperValue}</strong></td></tr>
+                                <tr><td style={{paddingRight:5}}>CCF</td><td><strong>{ccfMCopies}</strong></td></tr>
                         </table>
                 </div>
         );
