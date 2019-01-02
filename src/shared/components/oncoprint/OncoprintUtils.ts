@@ -451,7 +451,7 @@ export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
         await:()=>[
             oncoprint.props.store.samples,
             oncoprint.props.store.patients,
-            oncoprint.props.store.putativeDriverFilteredCaseAggregatedDataByUnflattenedOQLLine,
+            oncoprint.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine,
             oncoprint.props.store.coverageInformation,
             oncoprint.props.store.sequencedSampleKeysByGene,
             oncoprint.props.store.sequencedPatientKeysByGene,
@@ -469,7 +469,7 @@ export function makeGeneticTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
                 selectedMolecularProfiles: oncoprint.props.store.selectedMolecularProfiles.result!,
                 expansionIndexMap: oncoprint.expansionsByGeneticTrackKey
             });
-            return oncoprint.props.store.putativeDriverFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.map(
+            return oncoprint.props.store.oqlFilteredCaseAggregatedDataByUnflattenedOQLLine.result!.map(
                 (alterationData, trackIndex) => trackFunction(
                     alterationData, trackIndex, undefined
                 )
