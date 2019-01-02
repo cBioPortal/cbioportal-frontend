@@ -1,19 +1,23 @@
 import * as React from "react";
 import styles from "./styles.module.scss";
 import {If} from 'react-if';
-import {ChartMeta, ChartType, ChartTypeEnum} from "pages/studyView/StudyViewPageStore";
+import {ChartMeta, ChartType} from "pages/studyView/StudyViewPageStore";
 import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
-import {bind} from "bind-decorator";
+import autobind from 'autobind-decorator';
 import classnames from 'classnames';
 import fileDownload from 'react-file-download';
 import {action, computed, observable} from "mobx";
 import {observer} from "mobx-react";
 import {IChartContainerDownloadProps} from "../charts/ChartContainer";
+import {saveSvgAsPng} from "save-svg-as-png";
+import {ChartTypeEnum} from "../StudyViewConfig";
+import {getClinicalAttributeOverlay} from "../StudyViewUtils";
 
 export interface IChartHeaderProps {
     chartMeta: ChartMeta;
     title: string;
+    height: number;
     active           : boolean;
     resetChart       : () => void;
     deleteChart      : () => void;
@@ -44,7 +48,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
     @observable downloadPending = {
         TSV: false,
         SVG: false,
-        PDF: false
+        PDF: false,
+        PNG: false
     };
 
     @computed
@@ -63,8 +68,13 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             onClick={() => {
                                 this.downloadPending[props.type] = true;
                                 props.initDownload!().then(data => {
-                                    if (data && data.length > 0) {
-                                        fileDownload(data, `${this.fileName}.${props.type.substring(0, 3).toLowerCase()}`);
+                                    if (data) {
+                                        const fileName = `${this.fileName}.${props.type.substring(0, 3).toLowerCase()}`;
+                                        if (props.type === "PNG") {
+                                            saveSvgAsPng(data, fileName, {backgroundColor:"#ffffff"});
+                                        } else if ((props.type === "PDF" || typeof data === "string") && data.length > 0) {
+                                            fileDownload(data, fileName);
+                                        }
                                     }
                                     this.downloadPending[props.type] = false;
                                 }).catch(() => {
@@ -91,6 +101,10 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                     destroyTooltipOnHide={true}
                     onVisibleChange={this.onTooltipVisibleChange as any}
                     trigger={["click"]}
+                    getTooltipContainer={(...args:any[])=>{
+                        // this weirdness is necessary to fix broken type
+                        return args[0].parentNode;
+                    }}
                 >
                     <i className={classnames("fa", "fa-download", styles.item, styles.clickable)}
                        aria-hidden="true"></i>
@@ -99,7 +113,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
         );
     }
 
-    @bind
+    @autobind
     @action
     onTooltipVisibleChange(visible: boolean) {
         this.downloadMenuActive = visible;
@@ -110,14 +124,9 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
     }
 
     public render() {
-        const overlay = () => {
-            return <div style={{maxWidth: '250px'}}>
-                <b>{this.props.chartMeta.displayName}</b><br/>
-                {this.props.chartMeta.description}
-            </div>
-        };
         return (
-            <div className={styles.header}>
+            <div className={styles.header}
+                 style={{height: `${this.props.height}px`, lineHeight: `${this.props.height}px`}}>
                 <div className={styles.name}>
                     {!this.props.hideLabel && <span>{this.props.title}</span>}
                 </div>
@@ -150,7 +159,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                         <If condition={!!this.props.chartMeta.description}>
                             <DefaultTooltip
                                 placement="top"
-                                overlay={overlay}
+                                overlay={getClinicalAttributeOverlay(this.props.chartMeta.displayName, this.props.chartMeta.description)}
                                 destroyTooltipOnHide={true}
                             >
                                 <i className={classnames("fa", "fa-info-circle", styles.item)} aria-hidden="true"></i>
@@ -195,7 +204,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             overlay={<span>Move chart</span>}
                         >
                             <i className={classnames("fa", "fa-arrows", styles.item, styles.clickable)}
-                               aria-hidden="true"></i>
+                               aria-hidden="true"
+                               style={{cursor: 'move'}}/>
                         </DefaultTooltip>
                         <DefaultTooltip
                             placement="top"

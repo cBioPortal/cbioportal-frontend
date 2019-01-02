@@ -73,7 +73,11 @@ if (getBrowserWindow().navigator.webdriver) {
 window.FRONTEND_VERSION = VERSION;
 window.FRONTEND_COMMIT = COMMIT;
 
-
+// this is special function allowing MSKCC CIS to hide login UI in
+// portal header
+window.postLoadForMskCIS = function(){
+    AppConfig.hide_login = true;
+}
 
 // make sure lodash doesn't overwrite (or set) global underscore
 _.noConflict();

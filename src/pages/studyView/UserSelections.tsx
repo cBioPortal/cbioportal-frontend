@@ -1,36 +1,33 @@
 import * as React from 'react';
 import * as _ from 'lodash';
 import {observer} from "mobx-react";
-import {computed, observable, action} from 'mobx';
+import {computed} from 'mobx';
 import styles from "./styles.module.scss";
-import {
-    ClinicalDataIntervalFilterValue,
-    CopyNumberGeneFilterElement
-} from 'shared/api/generated/CBioPortalAPIInternal';
-import {ChartMeta, UniqueKey, StudyViewFilterWithSampleIdentifierFilters} from 'pages/studyView/StudyViewPageStore';
-import {
-    getCNAColorByAlteration, getHugoSymbolByEntrezGeneId,
-    intervalFiltersDisplayValue,
-    isFiltered
-} from 'pages/studyView/StudyViewUtils';
+import {ClinicalDataIntervalFilterValue, CopyNumberGeneFilterElement} from 'shared/api/generated/CBioPortalAPIInternal';
+import {ChartMeta, StudyViewFilterWithSampleIdentifierFilters, UniqueKey} from 'pages/studyView/StudyViewPageStore';
+import {getCNAColorByAlteration, intervalFiltersDisplayValue} from 'pages/studyView/StudyViewUtils';
 import {PillTag} from "../../shared/components/PillTag/PillTag";
 import {GroupLogic} from "./filters/groupLogic/GroupLogic";
-import {Gene} from "../../shared/api/generated/CBioPortalAPI";
 import classnames from 'classnames';
-import MobxPromise from 'mobxpromise';
-import {remoteData} from "../../shared/api/remoteData";
-import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 import {STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 
 export interface IUserSelectionsProps {
     filter: StudyViewFilterWithSampleIdentifierFilters;
+    customChartsFilter: {[key:string]:string[]};
+    getSelectedGene: (entrezGeneId: number) => string|undefined;
+    numberOfSelectedSamplesInCustomSelection: number;
     attributesMetaSet: { [id: string]: ChartMeta };
     updateClinicalDataEqualityFilter: (chartMeta: ChartMeta, value: string[]) => void;
     updateClinicalDataIntervalFilter: (chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) => void;
+    updateCustomChartFilter: (chartMeta: ChartMeta, values: string[]) => void;
     clearGeneFilter: () => void;
     clearCNAGeneFilter: () => void;
     removeGeneFilter: (entrezGeneId: number) => void;
     removeCNAGeneFilter: (filter: CopyNumberGeneFilterElement) => void;
+    resetMutationCountVsCNAFilter: () => void;
+    removeWithMutationDataFilter: () => void;
+    removeWithCNADataFilter: () => void;
+    removeCustomSelectionFilter: () => void,
     clearChartSampleIdentifierFilter: (chartMeta: ChartMeta) => void;
     clearAllFilters: () => void
 }
@@ -38,57 +35,36 @@ export interface IUserSelectionsProps {
 
 @observer
 export default class UserSelections extends React.Component<IUserSelectionsProps, {}> {
-    @observable hugoSymbolsMap = observable.map<string>();
-    @observable promiseGroup = observable.map<MobxPromise<void>>()
-
-    private getPromiseGroupId(entrezGeneIds:number[]) {
-        return entrezGeneIds.sort().join(',');
-    }
-
-    @action updateGroupPromise() {
-        if(this.props.filter.mutatedGenes !== undefined || this.props.filter.cnaGenes !== undefined){
-            let genes:number[][] = [];
-
-            if(!_.isEmpty(this.props.filter.mutatedGenes)) {
-                genes = genes.concat(this.props.filter.mutatedGenes.map(group => group.entrezGeneIds));
-            }
-
-            if(!_.isEmpty(this.props.filter.cnaGenes)) {
-                genes = genes.concat(this.props.filter.cnaGenes.map(group => group.alterations.map(alteration => alteration.entrezGeneId)));
-            }
-
-            _.each(genes, group => {
-                let id = this.getPromiseGroupId(group);
-                if(!this.promiseGroup.has(id)) {
-                    this.promiseGroup.set(id, remoteData({
-                        invoke: async () => {
-                            if (this.props.filter.mutatedGenes !== undefined) {
-                                await Promise.all(_.filter(group, item => !this.hugoSymbolsMap.has(item.toString()))
-                                    .map(entrezGeneId => getHugoSymbolByEntrezGeneId(entrezGeneId)
-                                        .then(gene => this.hugoSymbolsMap.set(entrezGeneId.toString(), gene))));
-                            }
-                        }
-                    }))
-                }
-            })
-        }
-    }
-
-    componentWillReceiveProps() {
-        this.updateGroupPromise();
-    }
 
     constructor(props: IUserSelectionsProps) {
         super(props);
     }
 
-    @computed get showFilters() {
-        return isFiltered(this.props.filter)
+    @computed
+    get showFilters() {
+        //return isFiltered(this.props.filter)
+        return this.allComponents.length > 0;
     }
 
     @computed
     get allComponents() {
         let components = [] as JSX.Element[];
+
+        // Show the filter for the custom selection
+        if (this.props.numberOfSelectedSamplesInCustomSelection > 0) {
+            components.push(<div className={styles.parentGroupLogic}>
+                <GroupLogic
+                    components={[
+                        <span className={styles.filterClinicalAttrName}>Custom Selection</span>,
+                        <PillTag
+                            content={`${this.props.numberOfSelectedSamplesInCustomSelection} sample${this.props.numberOfSelectedSamplesInCustomSelection > 1 ? 's' : ''}`}
+                            backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
+                            onDelete={() => this.props.removeCustomSelectionFilter()}
+                        />
+                    ]}
+                    operation={':'}
+                    group={false}/></div>);
+        }
 
         // Pie chart filters
         _.reduce((this.props.filter.clinicalDataEqualityFilters || []), (acc, clinicalDataEqualityFilter) => {
@@ -135,30 +111,50 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
             return acc;
         }, components);
 
+        // All custom charts
+        if(!_.isEmpty(this.props.customChartsFilter)) {
+            _.reduce((this.props.customChartsFilter), (acc, content:string[], key:string) => {
+                const chartMeta = this.props.attributesMetaSet[key];
+                if (chartMeta) {
+                    acc.push(
+                        <div className={styles.parentGroupLogic}>
+                            <GroupLogic
+                                components={[
+                                    <span className={styles.filterClinicalAttrName}>{chartMeta.displayName}</span>,
+                                    <GroupLogic components={content.map(label => {
+                                        return <PillTag
+                                            content={label}
+                                            backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
+                                            onDelete={() => this.props.updateCustomChartFilter(chartMeta, _.remove(content, value => value !== label))}
+                                        />
+                                    })} operation={'or'} group={false}/>
+                                ]}
+                                operation={':'}
+                                group={false}/>
+                        </div>
+                    );
+                }
+                return acc;
+            }, components);
+        }
+
         // Mutated Genes table
         let chartMeta = this.props.attributesMetaSet[UniqueKey.MUTATED_GENES_TABLE];
         if (chartMeta && !_.isEmpty(this.props.filter.mutatedGenes)) {
             components.push(<div className={styles.parentGroupLogic}><GroupLogic
                 components={this.props.filter.mutatedGenes.map(filter => {
-                    let promise = this.promiseGroup.get(this.getPromiseGroupId(filter.entrezGeneIds));
-                    if(promise === undefined){
-                        return <span></span>;
-                    }else if(promise.isPending) {
-                        return <LoadingIndicator isLoading={true}/>
-                    }else {
-                        return <GroupLogic
-                            components={filter.entrezGeneIds.map((entrezGene, index) => {
-                                const hugoSymbol = this.hugoSymbolsMap.get(entrezGene.toString());
-                                return <PillTag
-                                    content={hugoSymbol === undefined ? `Entrez Gene ID: ${entrezGene}` : hugoSymbol}
-                                    backgroundColor={STUDY_VIEW_CONFIG.colors.mutatedGene}
-                                    onDelete={() => this.props.removeGeneFilter(entrezGene)}
-                                />
-                            })}
-                            operation="or"
-                            group={filter.entrezGeneIds.length > 1}
-                        />
-                    }
+                    return <GroupLogic
+                        components={filter.entrezGeneIds.map(entrezGene => {
+                            const hugoGeneSymbol = this.props.getSelectedGene(entrezGene);
+                            return <PillTag
+                                content={hugoGeneSymbol === undefined ? `Entrez Gene ID: ${entrezGene}` : hugoGeneSymbol}
+                                backgroundColor={STUDY_VIEW_CONFIG.colors.mutatedGene}
+                                onDelete={() => this.props.removeGeneFilter(entrezGene)}
+                            />
+                        })}
+                        operation="or"
+                        group={filter.entrezGeneIds.length > 1}
+                    />
                 })} operation={"and"} group={false}/></div>);
         }
 
@@ -167,43 +163,60 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
         if (chartMeta && !_.isEmpty(this.props.filter.cnaGenes)) {
             components.push(<div className={styles.parentGroupLogic}><GroupLogic
                 components={this.props.filter.cnaGenes.map(filter => {
-                    let promise = this.promiseGroup.get(this.getPromiseGroupId(filter.alterations.map(alteration => alteration.entrezGeneId)));
-                    if(promise === undefined){
-                        return <span></span>;
-                    }else if(promise.isPending) {
-                        return <LoadingIndicator isLoading={true}/>
-                    }else {
-                        return <GroupLogic
-                            components={filter.alterations.map((filter, index) => {
-                                const hugoSymbol = this.hugoSymbolsMap.get(filter.entrezGeneId.toString());
-                                let tagColor = getCNAColorByAlteration(filter.alteration);
-                                tagColor = tagColor === undefined ? STUDY_VIEW_CONFIG.colors.na : tagColor;
-                                return <PillTag
-                                    content={hugoSymbol === undefined ? `Entrez Gene ID: ${filter.entrezGeneId}` : hugoSymbol}
-                                    backgroundColor={tagColor}
-                                    onDelete={() => this.props.removeCNAGeneFilter(filter)}
-                                />
-                            })}
-                            operation="or"
-                            group={filter.alterations.length > 1}
-                        />
-                    }
+                    return <GroupLogic
+                        components={filter.alterations.map(filter => {
+                            const hugoGeneSymbol = this.props.getSelectedGene(filter.entrezGeneId);
+                            let tagColor = getCNAColorByAlteration(filter.alteration);
+                            tagColor = tagColor === undefined ? STUDY_VIEW_CONFIG.colors.na : tagColor;
+                            return <PillTag
+                                content={hugoGeneSymbol === undefined ? `Entrez Gene ID: ${filter.entrezGeneId}` : hugoGeneSymbol}
+                                backgroundColor={tagColor}
+                                onDelete={() => this.props.removeCNAGeneFilter(filter)}
+                            />
+                        })}
+                        operation="or"
+                        group={filter.alterations.length > 1}
+                    />
                 })} operation={"and"} group={false}/></div>);
         }
 
-        // Select IDs by Case Selector, Scatter Plot
-        _.reduce((this.props.filter.sampleIdentifiersSet || []), (acc, sampleIdentifiers, chartUniqKey) => {
-            const chartMeta = this.props.attributesMetaSet[chartUniqKey];
-            if (chartMeta) {
-                let customChartName = chartMeta.uniqueKey === UniqueKey.SELECT_CASES_BY_IDS ? 'IDs' : chartMeta.displayName;
-                acc.push(<div className={styles.parentGroupLogic}><PillTag
-                    content={`Selected ${sampleIdentifiers.length} samples by ${customChartName}`}
+        // Mutation count vs FGA
+        if (this.props.filter.mutationCountVsCNASelection) {
+            const region = this.props.filter.mutationCountVsCNASelection;
+            components.push(
+                <div className={styles.parentGroupLogic}><GroupLogic
+                    components={[
+                        <span className={styles.filterClinicalAttrName}>Mutation Count vs FGA</span>,
+                        <PillTag
+                            content={`${Math.floor(region.yStart)} ≤ Mutation Count < ${Math.ceil(region.yEnd)} and ${region.xStart.toFixed(2)} ≤ FGA < ${region.xEnd.toFixed(2)}`}
+                            backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
+                            onDelete={this.props.resetMutationCountVsCNAFilter}
+                        />
+                    ]}
+                    operation={':'}
+                    group={false}/></div>
+            );
+        }
+
+        if (this.props.filter.withMutationData) {
+            components.push(
+                <div className={styles.parentGroupLogic}><PillTag
+                    content={`Samples with mutation data`}
                     backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterTitle}
-                    onDelete={() => this.props.clearChartSampleIdentifierFilter(chartMeta)}
-                /></div>);
-            }
-            return acc;
-        }, components);
+                    onDelete={this.props.removeWithMutationDataFilter}
+                /></div>
+            );
+        }
+
+        if (this.props.filter.withCNAData) {
+            components.push(
+                <div className={styles.parentGroupLogic}><PillTag
+                    content={`Samples with CNA data`}
+                    backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterTitle}
+                    onDelete={this.props.removeWithCNADataFilter}
+                /></div>
+            );
+        }
         return components;
     }
 

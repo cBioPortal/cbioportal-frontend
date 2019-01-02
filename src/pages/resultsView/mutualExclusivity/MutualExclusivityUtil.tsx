@@ -61,11 +61,11 @@ export function getMutuallyExclusiveCounts(data: MutualExclusivity[],
     const exclusiveLength = exclusiveData.length;
     const significantLength = significantData.length;
     if (exclusiveLength === 0) {
-        exclusiveCount = <span><b>no</b> gene pair</span>;
+        exclusiveCount = <span><b>no</b> track pair</span>;
     } else if (exclusiveLength === 1) {
-        exclusiveCount = <span><b>1</b> gene pair</span>;
+        exclusiveCount = <span><b>1</b> track pair</span>;
     } else {
-        exclusiveCount = <span><b>{exclusiveLength}</b> gene pairs</span>;
+        exclusiveCount = <span><b>{exclusiveLength}</b> track pairs</span>;
     }
 
     if (exclusiveLength > 0) {
@@ -77,6 +77,13 @@ export function getMutuallyExclusiveCounts(data: MutualExclusivity[],
     }
 
     return [exclusiveCount, significantCount];
+}
+
+export function getTrackPairsCountText(data: MutualExclusivity[], trackCount: number): JSX.Element {
+
+    const trackPairsCount = _.size(data);
+    const pairText = trackPairsCount > 1 ? "pairs" : "pair";
+    return <p>The analysis tested <b>{trackPairsCount}</b> {pairText} between the <b>{trackCount}</b> tracks in the OncoPrint.</p>;
 }
 
 export function getCountsText(data: MutualExclusivity[]): JSX.Element {
@@ -96,13 +103,13 @@ export function getData(isSampleAlteredMap: Dictionary<boolean[]>): MutualExclus
 
     combinations.forEach(combination => {
 
-        const geneA = combination[0];
-        const geneB = combination[1];
-        const counts = countOccurences(isSampleAlteredMap[geneA], isSampleAlteredMap[geneB]);
+        const trackA = combination[0];
+        const trackB = combination[1];
+        const counts = countOccurences(isSampleAlteredMap[trackA], isSampleAlteredMap[trackB]);
         const pValue = calculatePValue(counts[0], counts[1], counts[2], counts[3]);
         const logOddsRatio = calculateLogOddsRatio(counts[0], counts[1], counts[2], counts[3]);
         const association = calculateAssociation(logOddsRatio);
-        data.push({ geneA, geneB, neitherCount: counts[0], bNotACount: counts[1], aNotBCount: counts[2], 
+        data.push({ trackA, trackB, neitherCount: counts[0], bNotACount: counts[1], aNotBCount: counts[2], 
             bothCount: counts[3], logOddsRatio, pValue, 
             adjustedPValue: calculateAdjustedPValue(pValue, combinations.length), association });
     });
