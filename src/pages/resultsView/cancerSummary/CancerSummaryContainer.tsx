@@ -85,7 +85,7 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
         const labelTransformer = (this.groupAlterationsBy === 'studyId') ? this.mapStudyIdToShortName : undefined;
 
         const alterationCountsForCancerTypesByGene =
-            getAlterationCountsForCancerTypesByGene(this.props.store.alterationsByGeneBySampleKey.result!,
+            getAlterationCountsForCancerTypesByGene(this.props.store.oqlFilteredAlterationsByGeneBySampleKey.result!,
                 this.props.store.samplesExtendedWithClinicalData.result!, this.groupAlterationsBy);
 
         const geneTabs = _.map(this.props.store.genes.result!, (gene:Gene) => {
@@ -114,7 +114,7 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
         // only add combined gene tab if there's more than one gene
         if (geneTabs.length > 1) {
             const groupedAlterationDataForAllGenes = getAlterationCountsForCancerTypesForAllGenes(
-                this.props.store.alterationsByGeneBySampleKey.result!,
+                this.props.store.oqlFilteredAlterationsByGeneBySampleKey.result!,
                 this.props.store.samplesExtendedWithClinicalData.result!,
                 this.groupAlterationsBy);
             geneTabs.unshift(<MSKTab key="all" id="allGenes" linkText="All Queried Genes">
@@ -135,7 +135,7 @@ export default class CancerSummaryContainer extends React.Component<ICancerSumma
 
         const status = getMobxPromiseGroupStatus(
             this.props.store.samplesExtendedWithClinicalData,
-            this.props.store.alterationsByGeneBySampleKey,
+            this.props.store.oqlFilteredAlterationsByGeneBySampleKey,
             this.props.store.studies
         );
 

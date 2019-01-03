@@ -23,12 +23,6 @@ interface IContainerProps {
 @observer
 export default class Container extends React.Component<IContainerProps, {}> {
 
-    static contextTypes = {
-        router: React.PropTypes.object
-    };
-
-    context: { router: any };
-
     private get routingStore(){
         return getBrowserWindow().routingStore;
     }
