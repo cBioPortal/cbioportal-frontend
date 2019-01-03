@@ -245,6 +245,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
 
     componentWillUnmount(): void {
         this.queryReaction();
+        this.store.destroy();
     }
 
     render() {
