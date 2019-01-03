@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import {remoteData} from "../../shared/api/remoteData";
 import internalClient from "shared/api/cbioportalInternalClientInstance";
 import defaultClient from "shared/api/cbioportalClientInstance";
-import {action, computed, observable, ObservableMap, reaction, toJS} from "mobx";
+import {action, computed, observable, ObservableMap, reaction, toJS, IReactionDisposer} from "mobx";
 import {
     ClinicalDataBinCountFilter,
     ClinicalDataBinFilter,
@@ -245,14 +245,15 @@ export type StatusMessage = {
 };
 
 export class StudyViewPageStore {
+    private reactionDisposers:IReactionDisposer[] = [];
 
     constructor() {
-        reaction(()=>this.filters, ()=>this.clearAnalysisGroupsSettings()); // whenever any data filters change, reset survival analysis settings
-        reaction(()=>this.loadingInitialDataForSummaryTab, ()=>{
-            if(!this.loadingInitialDataForSummaryTab){
+        this.reactionDisposers.push(reaction(() => this.filters, () => this.clearAnalysisGroupsSettings())); // whenever any data filters change, reset survival analysis settings
+        this.reactionDisposers.push(reaction(() => this.loadingInitialDataForSummaryTab, () => {
+            if (!this.loadingInitialDataForSummaryTab) {
                 this.updateChartStats();
             }
-        });
+        }));
 
         // Include special charts into custom charts list
        SPECIAL_CHARTS.forEach(chartMeta => {
@@ -276,6 +277,13 @@ export class StudyViewPageStore {
                }
            }
        });
+    }
+
+    // make sure the reactions are disposed when the component which initialized store will unmount
+    destroy() {
+        for (const disposer of this.reactionDisposers) {
+            disposer();
+        }
     }
 
     @observable private initialFiltersQuery: Partial<StudyViewFilter> = {};
@@ -1972,12 +1980,18 @@ export class StudyViewPageStore {
         this.initializeChartStatsByClinicalAttributes();
 
         if (!_.isEmpty(this.mutationProfiles.result)) {
-            this.changeChartVisibility(UniqueKey.MUTATED_GENES_TABLE, true);
+            const mutatedGeneMeta = _.find(this.chartMetaSet, chartMeta => chartMeta.uniqueKey === UniqueKey.MUTATED_GENES_TABLE);
+            if (mutatedGeneMeta && mutatedGeneMeta.priority !== 0) {
+                this.changeChartVisibility(UniqueKey.MUTATED_GENES_TABLE, true);
+            }
             this.chartsType.set(UniqueKey.MUTATED_GENES_TABLE, ChartTypeEnum.MUTATED_GENES_TABLE);
             this.chartsDimension[UniqueKey.MUTATED_GENES_TABLE] = STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.MUTATED_GENES_TABLE];
         }
         if (!_.isEmpty(this.cnaProfiles.result)) {
-            this.changeChartVisibility(UniqueKey.CNA_GENES_TABLE, true);
+            const cnaGeneMeta = _.find(this.chartMetaSet, chartMeta => chartMeta.uniqueKey === UniqueKey.CNA_GENES_TABLE);
+            if (cnaGeneMeta && cnaGeneMeta.priority !== 0) {
+                this.changeChartVisibility(UniqueKey.CNA_GENES_TABLE, true);
+            }
             this.chartsType.set(UniqueKey.CNA_GENES_TABLE, ChartTypeEnum.CNA_GENES_TABLE);
             this.chartsDimension[UniqueKey.CNA_GENES_TABLE] = STUDY_VIEW_CONFIG.layout.dimensions[ChartTypeEnum.CNA_GENES_TABLE];
         }
