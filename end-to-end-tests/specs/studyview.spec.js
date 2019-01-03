@@ -203,8 +203,10 @@ describe('crc_msk_2018 study tests', () => {
     before(() => {
         const url = `${CBIOPORTAL_URL}/study?id=crc_msk_2018`;
         goToUrlAndSetLocalStorage(url);
+        waitForNetworkQuiet();
     });
     it('the MSI score should use the custom bins, then the MSI score column should be added in the clinical data tab', () => {
+        browser.waitForVisible(ADD_CHART_BUTTON, 10000);
         browser.click(ADD_CHART_BUTTON);
 
         // Wait after the frequency is calculated.
@@ -236,16 +238,11 @@ describe('study view lgg_tcga study tests', () => {
         const url = `${CBIOPORTAL_URL}/study?id=lgg_tcga`;
         goToUrlAndSetLocalStorage(url);
         toStudyViewSummaryTab();
-        // Wait after the frequency is calculated.
         waitForNetworkQuiet();
     });
     describe('bar chart', () => {
         const barChart = "[data-test='chart-container-SAMPLE_DAYS_TO_COLLECTION']";
         it('the log scale should be used for Sample Collection', () => {
-
-            // Wait after the frequency is calculated.
-            waitForNetworkQuiet();
-
             browser.waitForVisible(barChart, 10000);
             browser.moveToObject(barChart);
             browser.waitForVisible(barChart + ' .controls');
@@ -260,9 +257,6 @@ describe('study view lgg_tcga study tests', () => {
     describe('pie chart', () => {
         describe('chart controls',()=>{
             it('the table icon should be available', () => {
-                // Wait after the frequency is calculated.
-                waitForNetworkQuiet();
-
                 browser.waitForVisible(pieChart, 10000);
                 browser.moveToObject(pieChart);
 
@@ -386,9 +380,9 @@ describe('check the filters are working properly', ()=>{
     before(() => {
         const url = 'http://www.cbioportal.org/study?id=laml_tcga&filters={%22clinicalDataEqualityFilters%22:[{%22attributeId%22:%22SEX%22,%22clinicalDataType%22:%22PATIENT%22,%22values%22:[%22Female%22]}],%22clinicalDataIntervalFilters%22:[{%22attributeId%22:%22AGE%22,%22clinicalDataType%22:%22PATIENT%22,%22values%22:[{%22start%22:25,%22end%22:30},{%22start%22:30,%22end%22:35},{%22start%22:35,%22end%22:40},{%22start%22:40,%22end%22:45},{%22start%22:45,%22end%22:50},{%22start%22:50,%22end%22:55},{%22start%22:55,%22end%22:60},{%22start%22:60,%22end%22:65},{%22start%22:65,%22end%22:70},{%22start%22:70,%22end%22:75},{%22start%22:75,%22end%22:80}]}],%22mutatedGenes%22:[{%22entrezGeneIds%22:[2322,4869]}],%22cnaGenes%22:[{%22alterations%22:[{%22alteration%22:-2,%22entrezGeneId%22:60412},{%22alteration%22:2,%22entrezGeneId%22:84435}]}]}';
         goToUrlAndSetLocalStorage(url);
+        waitForNetworkQuiet();
     });
     it('filter study from url', ()=>{
-        waitForNetworkQuiet();
         const res = browser.checkElement('#mainColumn');
         assertScreenShotMatch(res);
     });
