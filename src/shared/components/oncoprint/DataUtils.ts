@@ -16,7 +16,7 @@ import {
     IGeneHeatmapTrackDatum,
 } from "./Oncoprint";
 import {isSample, isSampleList} from "../../lib/CBioPortalAPIUtils";
-import {getSimplifiedMutationType, SimplifiedMutationType} from "../../lib/oql/accessors";
+import {getSimplifiedMutationType, SimplifiedMutationType} from "../../lib/oql/AccessorsForOqlFilter";
 import _ from "lodash";
 import {MutationSpectrum} from "../../api/generated/CBioPortalAPIInternal";
 import {OncoprintClinicalAttribute} from "./ResultsViewOncoprint";
