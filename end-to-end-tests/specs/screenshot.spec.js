@@ -287,8 +287,10 @@ describe("enrichments tab screenshot tests", function() {
     });
     it('enrichments tab coadread_tcga_pub mRNA profile', function(){
         browser.waitForVisible('div[data-test="MutationEnrichmentsTab"]',10000);
+        browser.waitForVisible('a=mRNA', 10000);
         browser.click('a=mRNA');
         browser.waitForVisible('div[data-test="MRNAEnrichmentsTab"]',20000);
+        browser.waitForVisible('b=MERTK', 10000);
         browser.click('b=MERTK');
         browser.waitForVisible('div[data-test="MiniBoxPlot"]', 20000);
         var res = browser.checkElement('[data-test="enrichmentsTabDiv"]', { hide:['.qtip'] } );
