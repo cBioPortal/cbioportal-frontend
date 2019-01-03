@@ -13,9 +13,10 @@ import {
 } from "shared/lib/OncoKbUtils";
 import {observable} from "mobx";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
+import OncokbPubMedCache from "shared/cache/PubMedCache";
+import {errorIcon, loaderIcon} from "./StatusHelpers";
 import OncoKbTooltip from "./OncoKbTooltip";
 import OncoKbFeedback from "./OncoKbFeedback";
-import OncokbPubMedCache from "shared/cache/PubMedCache";
 
 export interface IOncoKbProps {
     status: "pending" | "error" | "complete";
@@ -94,10 +95,10 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
         );
 
         if (this.props.status === "error") {
-            oncoKbContent = this.errorIcon();
+            oncoKbContent = errorIcon("Error fetching OncoKB data");
         }
         else if (this.props.status === "pending") {
-            oncoKbContent = this.loaderIcon();
+            oncoKbContent = loaderIcon("pull-left");
         }
         else
         {
@@ -143,29 +144,6 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
         }
 
         return oncoKbContent;
-    }
-
-    public loaderIcon()
-    {
-        return (
-            <Circle size={18} scaleEnd={0.5} scaleStart={0.2} color="#aaa" className="pull-left"/>
-        );
-    }
-
-    public errorIcon()
-    {
-        return (
-            <DefaultTooltip
-                overlay={<span>Error fetching OncoKB data</span>}
-                placement="right"
-                trigger={['hover', 'focus']}
-                destroyTooltipOnHide={true}
-            >
-                <span className={`${annotationStyles["annotation-item-error"]}`}>
-                    <i className="fa fa-exclamation-triangle text-danger" />
-                </span>
-            </DefaultTooltip>
-        );
     }
 
     private tooltipContent(): JSX.Element

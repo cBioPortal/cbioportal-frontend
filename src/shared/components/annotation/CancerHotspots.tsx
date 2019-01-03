@@ -1,6 +1,8 @@
 import * as React from 'react';
 import {Circle} from "better-react-spinkit";
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import {loaderIcon} from "./StatusHelpers";
+
 import annotationStyles from "./styles/annotation.module.scss";
 import hotspotStyles from "./styles/cancerHotspots.module.scss";
 
@@ -124,13 +126,6 @@ export default class CancerHotspots extends React.Component<ICancerHotspotsProps
         this.state = {};
     }
 
-    public loaderIcon()
-    {
-        return (
-            <Circle size={18} scaleEnd={0.5} scaleStart={0.2} color="#aaa" className="pull-left"/>
-        );
-    }
-
     public render()
     {
         const {isHotspot, is3dHotspot} = this.props;
@@ -140,7 +135,7 @@ export default class CancerHotspots extends React.Component<ICancerHotspotsProps
         );
 
         if (this.props.status === "pending") {
-            hotspotContent = this.loaderIcon();
+            hotspotContent = loaderIcon("pull-left");
         }
         else if (isHotspot || is3dHotspot)
         {
