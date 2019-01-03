@@ -1,4 +1,3 @@
-import accessors, {getSimplifiedMutationType} from "shared/lib/oql/accessors";
 import {assert} from "chai";
 import {
     Gene, NumericGeneMolecularData, GenePanelData, MolecularProfile, Mutation, Patient,
@@ -26,6 +25,7 @@ import sinon from 'sinon';
 import sessionServiceClient from "shared/api//sessionServiceInstance";
 import { VirtualStudy, VirtualStudyData } from "shared/model/VirtualStudy";
 import client from "shared/api/cbioportalClientInstance";
+import AccessorsForOqlFilter, {getSimplifiedMutationType} from "../../shared/lib/oql/AccessorsForOqlFilter";
 
 describe("ResultsViewPageStoreUtils", ()=>{
     describe("computeCustomDriverAnnotationReport", ()=>{
@@ -106,7 +106,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
     });
 
     describe("filterSubQueryData", () => {
-        // I believe these metadata to be all `new accessors()` needs
+        // I believe these metadata to be all `new AccessorsForOqlFilter()` needs
         // tslint:disable-next-line no-object-literal-type-assertion
         const makeBasicExpressionProfile = () => ({
             "molecularAlterationType": "MRNA_EXPRESSION",
@@ -142,7 +142,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
 
         it("returns undefined when queried for a non-merged track", () => {
             // given
-            const accessorsInstance = new accessors([makeBasicExpressionProfile()]);
+            const accessorsInstance = new AccessorsForOqlFilter([makeBasicExpressionProfile()]);
             const dataArray: NumericGeneMolecularData[] = makeMinimalExpressionData([{
                 entrezGeneId: 1000,
                 uniqueSampleKey: 'SAMPLE1',
@@ -173,7 +173,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
 
         it("returns a two-element array with no alterations if queried for a two-gene merged track that matches none", () => {
             // given
-            const accessorsInstance = new accessors([makeBasicExpressionProfile()]);
+            const accessorsInstance = new AccessorsForOqlFilter([makeBasicExpressionProfile()]);
             const dataArray: NumericGeneMolecularData[] = makeMinimalExpressionData([
                 {entrezGeneId: 1000, uniqueSampleKey: 'SAMPLE1', value: 1.5},
                 {entrezGeneId: 1001, uniqueSampleKey: 'SAMPLE1', value: 1.5},
@@ -218,7 +218,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
 
         it("lists alterations that match genes in a merged track", () => {
             // given
-            const accessorsInstance = new accessors([makeBasicExpressionProfile()]);
+            const accessorsInstance = new AccessorsForOqlFilter([makeBasicExpressionProfile()]);
             const dataArray: NumericGeneMolecularData[] = makeMinimalExpressionData([
                 {entrezGeneId: 1000, uniqueSampleKey: 'SAMPLE1', value: 0},
                 {entrezGeneId: 1000, uniqueSampleKey: 'SAMPLE2', value: 0},

@@ -9,7 +9,7 @@ import {observable, computed} from "mobx";
 import AppConfig from 'appConfig';
 import "./mutations.scss";
 import {filterCBioPortalWebServiceData} from '../../../shared/lib/oql/oqlfilter';
-import accessors from '../../../shared/lib/oql/accessors';
+import AccessorsForOqlFilter from '../../../shared/lib/oql/AccessorsForOqlFilter';
 import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import autobind from "autobind-decorator";
