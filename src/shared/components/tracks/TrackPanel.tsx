@@ -4,16 +4,10 @@ import {observer} from "mobx-react";
 import {computed} from "mobx";
 import HotspotTrack, {hotspotTooltip} from "./HotspotTrack";
 import OncoKbTrack from "./OncoKbTrack";
-import {Hotspot} from "shared/api/generated/GenomeNexusAPI";
-import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import {IndicatorQueryResp} from "shared/api/generated/OncoKbAPI";
-import MutationMapperStore from "../mutationMapper/MutationMapperStore";
-import {groupMutationsByProteinStartPos} from "shared/lib/MutationUtils";
-import {defaultHotspotFilter, groupHotspotsByMutations} from "shared/lib/CancerHotspotsUtils";
-import {defaultOncoKbIndicatorFilter, groupOncoKbIndicatorDataByMutations} from "shared/lib/OncoKbUtils";
 import {TrackItemSpec} from "./TrackCircle";
 import OncoKbTrackTooltip from "./OncoKbTrackTooltip";
-import {IOncoKbData} from "../../model/OncoKB";
+import {TrackNames, TrackVisibility} from "./TrackSelector";
+import MutationMapperStore from "../mutationMapper/MutationMapperStore";
 
 type TrackPanelProps = {
     store: MutationMapperStore;
@@ -21,26 +15,14 @@ type TrackPanelProps = {
     proteinLength?: number;
     geneXOffset?: number;
     maxHeight: number;
+    trackVisibility?: TrackVisibility;
 };
 
 @observer
-export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
-
-    private handlers:any;
-
+export default class TrackPanel extends React.Component<TrackPanelProps, {}>
+{
     constructor(props: TrackPanelProps) {
         super(props);
-
-        this.handlers = {
-            tracksDivRef: () => {
-
-            },
-            onScroll: () => {
-                // if (this.mainDiv && this.isExpanded) {
-                //     this._scrollY = this.mainDiv.scrollTop;
-                // }
-            },
-        };
     }
 
     @computed get proteinLength() {
@@ -48,44 +30,15 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
         return Math.max(proteinLength, 1);
     }
 
-    @computed get mutationsByPosition(): {[pos: number]: Mutation[]} {
-        return groupMutationsByProteinStartPos(this.props.store.dataStore.sortedFilteredData);
-    }
-
-    @computed get filteredHotspotsByProteinPosStart(): {[pos: number]: Hotspot[]}
-    {
-        if (this.props.store.indexedHotspotData.result)
-        {
-            return groupHotspotsByMutations(
-                this.mutationsByPosition, this.props.store.indexedHotspotData.result, defaultHotspotFilter);
-        }
-        else {
-            return {};
-        }
-    }
-
-    @computed get filteredOncoKbDataByProteinPosStart(): {[pos: number]: IndicatorQueryResp[]}
-    {
-        if (this.props.store.oncoKbData.result &&
-            !(this.props.store.oncoKbData.result instanceof Error))
-        {
-            return groupOncoKbIndicatorDataByMutations(
-                this.mutationsByPosition, this.props.store.oncoKbData.result, defaultOncoKbIndicatorFilter);
-        }
-        else {
-            return {};
-        }
-    }
-
     @computed get hotspotSpecs(): TrackItemSpec[] {
-        if(!_.isEmpty(this.filteredHotspotsByProteinPosStart)) {
-            return _.keys(this.filteredHotspotsByProteinPosStart).map(position => ({
+        if(!_.isEmpty(this.props.store.filteredHotspotsByProteinPosStart)) {
+            return _.keys(this.props.store.filteredHotspotsByProteinPosStart).map(position => ({
                 codon: Number(position),
                 color: "#FF9900",
                 tooltip: hotspotTooltip(
-                    this.mutationsByPosition[Number(position)],
+                    this.props.store.filteredMutationsByPosition[Number(position)],
                     this.props.store.indexedHotspotData.result || {},
-                    this.filteredHotspotsByProteinPosStart[Number(position)])
+                    this.props.store.filteredHotspotsByProteinPosStart[Number(position)])
             }));
         }
         else {
@@ -94,14 +47,14 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
     }
 
     @computed get oncoKbSpecs(): TrackItemSpec[] {
-        if(!_.isEmpty(this.filteredOncoKbDataByProteinPosStart)) {
-            return _.keys(this.filteredOncoKbDataByProteinPosStart).map(position => ({
+        if(!_.isEmpty(this.props.store.filteredOncoKbDataByProteinPosStart)) {
+            return _.keys(this.props.store.filteredOncoKbDataByProteinPosStart).map(position => ({
                 codon: Number(position),
                 color: "#1C75CD",
                 tooltip: (
                     <OncoKbTrackTooltip
-                        mutations={this.mutationsByPosition[Number(position)]}
-                        indicatorData={this.filteredOncoKbDataByProteinPosStart[Number(position)]}
+                        mutations={this.props.store.filteredMutationsByPosition[Number(position)]}
+                        indicatorData={this.props.store.filteredOncoKbDataByProteinPosStart[Number(position)]}
                         oncoKbData={
                             this.props.store.oncoKbData.result instanceof Error ?
                                 undefined : this.props.store.oncoKbData.result
@@ -119,16 +72,14 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
     public render() {
         return (
             <div
-                ref={this.handlers.tracksDivRef}
                 style={{
                     overflowY: "hidden",
                     maxHeight: this.props.maxHeight,
                     position: "relative"
                 }}
-                onScroll={this.handlers.onScroll}
             >
                 {
-                    !_.isEmpty(this.filteredHotspotsByProteinPosStart) &&
+                    (!this.props.trackVisibility || this.props.trackVisibility[TrackNames.CancerHotspots] === 'visible') &&
                     <HotspotTrack
                         dataStore={this.props.store.dataStore}
                         hotspotIndex={this.props.store.indexedHotspotData.result || {}}
@@ -139,7 +90,7 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}> {
                     />
                 }
                 {
-                    !_.isEmpty(this.filteredOncoKbDataByProteinPosStart) &&
+                    (!this.props.trackVisibility || this.props.trackVisibility[TrackNames.OncoKB] === 'visible') &&
                     <OncoKbTrack
                         dataStore={this.props.store.dataStore}
                         oncoKbData={
