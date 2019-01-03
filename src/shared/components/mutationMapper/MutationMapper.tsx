@@ -20,13 +20,13 @@ import {DEFAULT_PROTEIN_IMPACT_TYPE_COLORS} from "shared/lib/MutationUtils";
 import LollipopMutationPlot from "shared/components/lollipopMutationPlot/LollipopMutationPlot";
 import ProteinImpactTypePanel from "shared/components/mutationTypePanel/ProteinImpactTypePanel";
 import ProteinChainPanel from "shared/components/proteinChainPanel/ProteinChainPanel";
-
+import TrackPanel from "../tracks/TrackPanel";
+import {TrackDataStatus, TrackNames, TrackVisibility} from "../tracks/TrackSelector";
 import MutationMapperStore from "./MutationMapperStore";
 import { EnsemblTranscript } from 'shared/api/generated/GenomeNexusAPI';
 import Mutations from 'pages/resultsView/mutation/Mutations';
 import {IServerConfig} from "../../../config/IAppConfig";
 import WindowStore from "../window/WindowStore";
-import TrackPanel from "../tracks/TrackPanel";
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
@@ -44,8 +44,12 @@ export interface IMutationMapperProps {
 @observer
 export default class MutationMapper<P extends IMutationMapperProps> extends React.Component<P, {}>
 {
-    @observable protected is3dPanelOpen = false;
     @observable protected lollipopPlotGeneX = 0;
+    @observable protected trackVisibility: TrackVisibility = {
+        [TrackNames.OncoKB]: 'hidden',
+        [TrackNames.CancerHotspots]: 'hidden',
+        [TrackNames.PDB]: 'hidden'
+    };
     //@observable protected geneWidth = 665;
 
     protected handlers:any;
@@ -53,9 +57,6 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
     constructor(props: P) {
         super(props);
 
-        this.open3dPanel = this.open3dPanel.bind(this);
-        this.close3dPanel = this.close3dPanel.bind(this);
-        this.toggle3dPanel = this.toggle3dPanel.bind(this);
         this.handlers = {
             resetDataStore:()=>{
                 this.props.store.dataStore.resetFilterAndSelection();
@@ -64,8 +65,39 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
         };
     }
 
+    @computed get trackDataStatus(): TrackDataStatus
+    {
+        let oncoKbDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this.props.store.oncoKbData.status;
+
+        if (oncoKbDataStatus === 'complete' && _.isEmpty(this.props.store.oncoKbDataByProteinPosStart)) {
+            oncoKbDataStatus = 'empty';
+        }
+
+        let hotspotDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this.props.store.indexedHotspotData.status;
+
+        if (hotspotDataStatus === 'complete' && _.isEmpty(this.props.store.hotspotsByProteinPosStart)) {
+            hotspotDataStatus = 'empty';
+        }
+
+        let alignmentDataStatus: 'pending' | 'error' | 'complete' | 'empty' = this.props.store.alignmentData.status;
+
+        if (alignmentDataStatus === 'complete' && this.props.store.pdbChainDataStore.allData.length === 0) {
+            alignmentDataStatus = 'empty';
+        }
+
+        return {
+            [TrackNames.OncoKB]: oncoKbDataStatus,
+            [TrackNames.CancerHotspots]: hotspotDataStatus,
+            [TrackNames.PDB]: alignmentDataStatus
+        };
+    }
+
     @computed get geneWidth(){
-        return WindowStore.size.width * .7;
+        return WindowStore.size.width * 0.7 - this.lollipopPlotGeneX;
+    }
+
+    @computed get is3dPanelOpen() {
+        return this.trackVisibility[TrackNames.PDB] === 'visible';
     }
 
     @computed get geneSummary():JSX.Element {
@@ -303,6 +335,9 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                 store={this.props.store}
                 onXAxisOffset={this.handlers.onXAxisOffset}
                 geneWidth={this.geneWidth}
+                trackVisibility={this.trackVisibility}
+                trackDataStatus={this.trackDataStatus}
+                onTrackVisibilityChange={this.onTrackVisibilityChange}
                 {...DEFAULT_PROTEIN_IMPACT_TYPE_COLORS}
             />
         );
@@ -330,6 +365,7 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
         return (
             <TrackPanel
                 store={this.props.store}
+                trackVisibility={this.trackVisibility}
                 geneWidth={this.geneWidth}
                 proteinLength={transcript && transcript.proteinLength}
                 geneXOffset={this.lollipopPlotGeneX}
@@ -352,9 +388,6 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
 
     protected view3dButton(): JSX.Element|null
     {
-        const canonicalTranscriptId = this.props.store.canonicalTranscript.result &&
-            this.props.store.canonicalTranscript.result.transcriptId;
-
         return (
             <button
                 className="btn btn-default btn-sm"
@@ -451,6 +484,21 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
         );
     }
 
+    @action
+    protected open3dPanel() {
+        this.trackVisibility[TrackNames.PDB] = 'visible';
+        this.props.store.pdbChainDataStore.selectFirstChain();
+    }
+
+    @autobind
+    @action
+    protected close3dPanel() {
+        this.trackVisibility[TrackNames.PDB] = 'hidden';
+        this.props.store.pdbChainDataStore.selectUid();
+    }
+
+    @autobind
+    @action
     protected toggle3dPanel() {
         if (this.is3dPanelOpen) {
             this.close3dPanel();
@@ -459,13 +507,23 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
         }
     }
 
-    protected open3dPanel() {
-        this.is3dPanelOpen = true;
-        this.props.store.pdbChainDataStore.selectFirstChain();
-    }
+    @autobind
+    @action
+    protected onTrackVisibilityChange(selectedTrackNames: string[])
+    {
+        // 3D panel is toggled to open
+        if (this.trackVisibility[TrackNames.PDB] === 'hidden' && selectedTrackNames.includes(TrackNames.PDB)) {
+            this.open3dPanel();
+        }
+        // 3D panel is toggled to close
+        else if (this.trackVisibility[TrackNames.PDB] === 'visible' && !selectedTrackNames.includes(TrackNames.PDB)) {
+            this.close3dPanel();
+        }
 
-    protected close3dPanel() {
-        this.is3dPanelOpen = false;
-        this.props.store.pdbChainDataStore.selectUid();
+        // clear visibility
+        Object.keys(this.trackVisibility).forEach(trackName => this.trackVisibility[trackName] = 'hidden');
+
+        // reset visibility values for the visible ones
+        selectedTrackNames.forEach(trackName => this.trackVisibility[trackName] = 'visible');
     }
 }
