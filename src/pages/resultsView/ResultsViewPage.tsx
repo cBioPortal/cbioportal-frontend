@@ -469,12 +469,16 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                             <QuerySummary routingStore={this.props.routing} store={this.resultsViewPageStore}/>
                         </div>
 
-                        <MSKTabs key={this.resultsViewPageStore.rvQuery.hash} activeTabId={this.currentTab(this.resultsViewPageStore.tabId)} unmountOnHide={false}
-                                 onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
-                            {
-                                this.tabs
-                            }
-                        </MSKTabs>
+                        {
+                            (!this.resultsViewPageStore.genesInvalid) && (
+                                <MSKTabs key={this.resultsViewPageStore.rvQuery.hash} activeTabId={this.currentTab(this.resultsViewPageStore.tabId)} unmountOnHide={false}
+                                         onTabClick={(id: string) => this.handleTabChange(id)} className="mainTabs">
+                                    {
+                                        this.tabs
+                                    }
+                                </MSKTabs>
+                            )
+                        }
 
                     </div>
                 )
