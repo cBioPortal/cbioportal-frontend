@@ -2,6 +2,7 @@
 // Heavily dependent on OQL PEGjs specification
 import * as _ from 'lodash';
 import oql_parser from './oql-parser';
+import {annotateAlterationTypes} from "./annotateAlterationTypes";
 
 function isDatatypeStatement(line) {
     return line.gene !== undefined && line.gene.toUpperCase() === 'DATATYPES';
@@ -148,6 +149,12 @@ export function doesQueryContainMutationOQL(oql_query) {
                     // nontrivial mutation specification
                     ret = true;
                     break;
+                } else if (alteration.alteration_type === "any") {
+                    // any DRIVER specification, which includes mutation
+                    if (alteration.modifiers.indexOf("DRIVER") > -1) {
+                        ret = true;
+                        break;
+                    }
                 }
             }
             if (ret) {
@@ -204,9 +211,9 @@ export function unparseOQLQueryLine(parsed_oql_query_line) {
     return ret;
 };
 
-/* For the methods isDatumWantedByOQL, ..., the accessors argument is as follows:
+/* For the methods isDatumWantedByOQL, ..., the AccessorsForOqlFilter argument is as follows:
  * null always means the accessor does not apply to the given element. for example, `cna` applied to a mutation should give null
- * accessors = {
+ * AccessorsForOqlFilter = {
  *	'gene': function(d) {
  *	    // returns lower case gene symbol
  *	},
@@ -249,10 +256,9 @@ export function unparseOQLQueryLine(parsed_oql_query_line) {
 var isDatumWantedByOQL = function (parsed_oql_query, datum, accessors) {
     /*  In: - parsed_oql_query, the result of parseOQLQuery above
      *	- datum, a datum
-     *	- accessors, an object as described above with methods that apply to datum
+     *	- AccessorsForOqlFilter, an object as described above with methods that apply to datum
      *  Out: Boolean, whether datum is wanted by this OQL query
      */
-    datum.alterationSubType = null;
     var gene = accessors.gene(datum).toUpperCase();
     // if the datum doesn't have a gene associated with it, it's unwanted.
     if (!gene) {
@@ -273,7 +279,7 @@ var isDatumWantedByOQLLine = function(query_line, datum, datum_gene, accessors) 
      *  In: - query_line, one element of a parseOQLQuery output array
      *	- datum, see isDatumWantedByOQL
      *	- datum_gene, the lower case gene in datum - passed instead of reaccessed as an optimization
-     *	- accessors, see isDatumWantedByOQL
+     *	- AccessorsForOqlFilter, see isDatumWantedByOQL
      */
     var line_gene = query_line.gene.toUpperCase();
     // If the line doesn't have the same gene, the datum is not wanted by this line
@@ -312,7 +318,7 @@ var isDatumWantedByOQLAlterationCommand = function(alt_cmd, datum, accessors) {
     /*  Helper method for isDatumWantedByOQLLine
      *  In: - alt_cmd, a parsed oql alteration
      *	- datum, see isDatumWantedByOQL
-     *	- accessors, see isDatumWantedByOQL
+     *	- AccessorsForOqlFilter, see isDatumWantedByOQL
      *  Out: 1 if the datum is addressed by this command and wanted,
      *	0 if the datum is not addressed by this command,
      *	-1 if the datum is addressed by this command and rejected
@@ -375,8 +381,6 @@ var isDatumWantedByFUSIONCommand = function(alt_cmd, datum, accessors) {
         // If no fusion data, it's not addressed
         return 0;
     } else {
-        datum.alterationType = 'FUSION';
-        datum.alterationSubType = "";
         var match = true;
         // now filter by modifiers with AND logic
         for (var i=0; i<alt_cmd.modifiers.length; i++) {
@@ -398,8 +402,6 @@ var isDatumWantedByOQLCNACommand = function(alt_cmd, datum, accessors) {
         // If no cna data on the datum, it's not addressed
         return 0;
     } else {
-        datum.alterationSubType = d_cna;
-        datum.alterationType = 'COPY_NUMBER_ALTERATION';
         // Otherwise, return -1 if it doesnt match, 1 if it matches
         var match = true;
         if (alt_cmd.constr_rel === "=") {
@@ -440,8 +442,6 @@ var isDatumWantedByOQLMUTCommand = function(alt_cmd, datum, accessors) {
     } else {
 
         d_mut_type = d_mut_type.toLowerCase();
-        datum.alterationType = 'MUTATION_EXTENDED';
-        datum.alterationSubType = d_mut_type;
 
         var matches = false;
         // If no constraint relation ('=' or '!='), then every mutation matches
@@ -542,8 +542,6 @@ var isDatumWantedByOQLEXPOrPROTCommand = function(alt_cmd, datum, accessors) {
             match = -1;
         }
 
-        datum.alterationType = ((alt_cmd.alteration_type === 'prot') ? 'PROTEIN_LEVEL' :'MRNA_EXPRESSION');
-
         if (match > 0) {
             datum.alterationSubType = (direction && (direction > 0)) ? 'up' : 'down';
         }
@@ -555,7 +553,7 @@ var isDatumWantedByOQLEXPOrPROTCommand = function(alt_cmd, datum, accessors) {
 function filterData(oql_query, data, _accessors, opt_default_oql = '', opt_by_oql_line) {
     /* In:	- oql_query, a string
      *	- data, a list of data
-     *	- accessors, accessors as defined above,
+     *	- AccessorsForOqlFilter, AccessorsForOqlFilter as defined above,
      *	- opt_default_oql, an optional argument, string, default oql to insert to empty oql lines
      *	- opt_by_oql_line, optional argument, boolean or string, see Out for description
      *  Out: the given data, filtered by the given oql query.
@@ -583,11 +581,12 @@ function filterData(oql_query, data, _accessors, opt_default_oql = '', opt_by_oq
     // default every non-given accessor function to null
     var accessors = _accessors;
     // for (var i = 0; i < required_accessors.length; i++) {
-    //     accessors[required_accessors[i]] = _accessors[required_accessors[i]] || null_fn;
+    //     AccessorsForOqlFilter[required_accessors[i]] = _accessors[required_accessors[i]] || null_fn;
     // }
 
     for (var i=0; i<data.length; i++) {
         data[i].molecularProfileAlterationType = accessors.molecularAlterationType(data[i].molecularProfileId);
+        annotateAlterationTypes(data[i], accessors);
     }
 
     function applyToGeneLines(geneLineFunction) {
@@ -690,7 +689,7 @@ export function filterCBioPortalWebServiceDataByUnflattenedOQLLine(oql_query, da
 //         "1": "gain",
 //         "2": "amp"
 //     };
-//     var accessors = {
+//     var AccessorsForOqlFilter = {
 //         'gene': function(d) { return d.hugo_gene_symbol; },
 //         'cna': function(d) {
 //             if (d.genetic_alteration_type === 'COPY_NUMBER_ALTERATION') {
@@ -754,7 +753,7 @@ export function filterCBioPortalWebServiceDataByUnflattenedOQLLine(oql_query, da
 //             }
 //         }
 //     };
-//     return filterData(oql_query, data, accessors, opt_default_oql, opt_by_oql_line, opt_mark_oql_regulation_direction);
+//     return filterData(oql_query, data, AccessorsForOqlFilter, opt_default_oql, opt_by_oql_line, opt_mark_oql_regulation_direction);
 // }
 
 

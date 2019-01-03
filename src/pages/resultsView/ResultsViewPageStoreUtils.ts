@@ -3,7 +3,7 @@ import {
     Mutation, Patient, Sample, CancerStudy
 } from "../../shared/api/generated/CBioPortalAPI";
 import {action} from "mobx";
-import accessors, {getSimplifiedMutationType} from "../../shared/lib/oql/accessors";
+import AccessorsForOqlFilter, {getSimplifiedMutationType} from "../../shared/lib/oql/AccessorsForOqlFilter";
 import {
     OQLLineFilterOutput,
     UnflattenedOQLLineFilterOutput,
@@ -288,7 +288,7 @@ export function filterSubQueryData(
     queryStructure: UnflattenedOQLLineFilterOutput<object>,
     defaultOQLQuery: string,
     data: (AnnotatedMutation | NumericGeneMolecularData)[],
-    accessorsInstance: accessors,
+    accessorsInstance: AccessorsForOqlFilter,
     samples: {uniqueSampleKey: string}[],
     patients: {uniquePatientKey: string}[]
 ): IQueriedCaseData<object>[] | undefined {
