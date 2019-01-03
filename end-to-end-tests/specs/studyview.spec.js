@@ -216,8 +216,11 @@ describe('crc_msk_2018 study tests', () => {
         browser.setValue("[data-test='fixed-header-table-search-input']", 'msi');
         browser.waitForVisible(msiScoreRow);
 
+        browser.waitForVisible(msiScoreRow + ' input', 10000);
         browser.click(msiScoreRow + ' input');
         // Close the tooltip
+
+        browser.waitForVisible(ADD_CHART_BUTTON, 10000);
         browser.click(ADD_CHART_BUTTON);
 
         browser.waitForVisible("[data-test='chart-container-SAMPLE_MSI_SCORE']", 10000);
