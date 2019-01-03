@@ -8,11 +8,10 @@ Number = "-" number: Number { return "-"+number;}
         / "." decimal_part:NaturalNumber { return "."+decimal_part;}
         / whole_part:NaturalNumber {return whole_part;}
 String = word:[-_.@/a-zA-Z0-9*]+ { return word.join("") }
-ProteinChangeCode = word:[-./a-zA-Z0-9*]+ { return word.join("") } // make sure we exclude underscore here, or else mutation modifiers like _GERMLINE will not be recognized for custom protein change codes
+MutationProteinChangeCodeChar = char:[-_./a-zA-Z0-9*] { return char; }
 AminoAcid = letter:[GPAVLIMCFYWHKRQNEDST] { return letter; }
 // any character, except " :
 StringExceptQuotes = stringExceptQuotes:[^"]+ { return stringExceptQuotes.join("") }
-ProteinChangeCodeAfterPosition = word:[-.@/a-zA-Z0-9*]+ { return word.join("") } // exclude underscore or else it will bleed into modifiers
 
 sp = space:[ \t\r]+
 msp = space:[ \t\r]*
@@ -152,9 +151,16 @@ Mutation
 	/ "SPLICE"i { return {"type":"class", "value":"SPLICE", "info":{}}; }
 	/ "TRUNC"i { return {"type":"class", "value":"TRUNC", "info":{}}; }
     / "PROMOTER"i { return {"type":"class", "value":"PROMOTER", "info":{}}; }
-    / letter:AminoAcid position:NaturalNumber string:ProteinChangeCodeAfterPosition { return {"type":"name" , "value":(letter+position+string), "info":{}};}
+    / letter:AminoAcid position:NaturalNumber string:MutationProteinChangeCode { return {"type":"name" , "value":(letter+position+string), "info":{}};}
     / letter:AminoAcid position:NaturalNumber { return {"type":"position", "value":parseInt(position), "info":{"amino_acid":letter.toUpperCase()}}; }
-	/ mutation_name:ProteinChangeCode { return {"type":"name", "value":mutation_name, "info":{"unrecognized":true}}; }
+	/ mutation_name:MutationProteinChangeCode { return {"type":"name", "value":mutation_name, "info":{"unrecognized":true}}; }
+
+MutationProteinChangeCode // the purpose of this is to disambiguate modifiers from parts of protein change codes, since both can look like this "_SOMETHING"
+    = !TrailingMutationModifier firstChar:MutationProteinChangeCodeChar !TrailingMutationModifier rest:MutationProteinChangeCode { return firstChar + rest; } // dont start with "_MUTATIONMODIFIER" and dont look like "x_MUTATIONMODIFIER"
+    / !TrailingMutationModifier lastChar:MutationProteinChangeCodeChar { return lastChar; } // dont start with "_MUTATIONMODIFIER"
+
+TrailingMutationModifier
+    = "_" mod:MutationModifier { return mod; }
 
 MutationModifier
     = "GERMLINE"i { return "GERMLINE";}

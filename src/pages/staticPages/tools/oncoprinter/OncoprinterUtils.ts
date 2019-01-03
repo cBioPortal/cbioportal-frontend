@@ -5,7 +5,7 @@ import _ from "lodash";
 import {GeneticTrackDatum, GeneticTrackDatum_Data,} from "../../../../shared/components/oncoprint/Oncoprint";
 import {percentAltered} from "../../../../shared/components/oncoprint/OncoprintUtils";
 import {AlterationTypeConstants} from "../../../resultsView/ResultsViewPageStore";
-import {cna_profile_data_to_string} from "../../../../shared/lib/oql/accessors";
+import {cna_profile_data_to_string} from "../../../../shared/lib/oql/AccessorsForOqlFilter";
 import {fillGeneticTrackDatum, OncoprintMutationType} from "../../../../shared/components/oncoprint/DataUtils";
 import {Gene, Mutation, NumericGeneMolecularData} from "../../../../shared/api/generated/CBioPortalAPI";
 import {getProteinPositionFromProteinChange} from "../../../../shared/lib/ProteinChangeUtils";
@@ -71,7 +71,7 @@ export function isType3NoGene(inputLine:OncoprinterInputLine):inputLine is Oncop
     return inputLine.hasOwnProperty("chromosome");
 }*/
 
-export function initMutationAnnotationSettings(store:OncoprinterStore) {
+export function initDriverAnnotationSettings(store:OncoprinterStore) {
     return observable({
         cbioportalCount: false,
         cbioportalCountThreshold: 0,

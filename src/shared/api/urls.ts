@@ -1,8 +1,6 @@
 import {default as URL, QueryParams} from "url";
 import AppConfig from "appConfig";
-import formSubmit from "shared/lib/formSubmit";
 import getBrowserWindow from "../lib/getBrowserWindow";
-import App from "../../appShell/App/App";
 import * as _ from 'lodash';
 
 export function trimTrailingSlash(str:string){
