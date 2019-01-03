@@ -69,12 +69,12 @@ describe('TableHeaderControls', () => {
             showPagination: true,
             showCopyAndDownload: true,
             showSearch:true
-        }).update();
+        });
 
-        assert.equal( wrapper.find(ColumnVisibilityControls).length,  1 );
-        assert.equal( wrapper.find(PaginationControls).length, 1 );
-        assert.equal( wrapper.find(`.${copyClassName}`).length, 1 );
-        assert.equal( wrapper.find(`.${searchClassName}`).length, 1 );
+        assert.equal( wrapper.find(ColumnVisibilityControls).length,  1, "ColumnVisibilityControls rendered once" );
+        assert.equal( wrapper.find(PaginationControls).length, 1 , "pagination controls rendered once");
+        assert.equal( wrapper.find(`div.${copyClassName}`).length, 1, "copy button rendered once");
+        assert.equal( wrapper.find(`.${searchClassName}`).length, 1, "search rendered once");
 
 
 

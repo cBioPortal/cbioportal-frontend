@@ -244,7 +244,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.distinguishGermlineMutations;
             },
             get annotateDriversOncoKb() {
-                return self.props.store.mutationAnnotationSettings.oncoKb;
+                return self.props.store.driverAnnotationSettings.oncoKb;
             },
             get annotateDriversOncoKbDisabled() {
                 return !AppConfig.serverConfig.show_oncokb;
@@ -253,7 +253,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.props.store.didOncoKbFailInOncoprint;
             },
             get annotateDriversHotspots() {
-                return self.props.store.mutationAnnotationSettings.hotspots;
+                return self.props.store.driverAnnotationSettings.hotspots;
             },
             get annotateDriversHotspotsDisabled() {
                 return !AppConfig.serverConfig.show_hotspot;
@@ -262,22 +262,22 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 return self.props.store.didHotspotFailInOncoprint;
             },
             get annotateDriversCBioPortal() {
-                return self.props.store.mutationAnnotationSettings.cbioportalCount;
+                return self.props.store.driverAnnotationSettings.cbioportalCount;
             },
             get annotateDriversCOSMIC() {
-                return self.props.store.mutationAnnotationSettings.cosmicCount;
+                return self.props.store.driverAnnotationSettings.cosmicCount;
             },
             get hidePutativePassengers() {
-                return self.props.store.mutationAnnotationSettings.ignoreUnknown;
+                return self.props.store.driverAnnotationSettings.ignoreUnknown;
             },
             get hideGermlineMutations() {
                 return self.hideGermlineMutations;
             },
             get annotateCBioPortalInputValue() {
-                return self.props.store.mutationAnnotationSettings.cbioportalCountThreshold + "";
+                return self.props.store.driverAnnotationSettings.cbioportalCountThreshold + "";
             },
             get annotateCOSMICInputValue() {
-                return self.props.store.mutationAnnotationSettings.cosmicCountThreshold + "";
+                return self.props.store.driverAnnotationSettings.cosmicCountThreshold + "";
             },
             get sortMode() {
                 return self.sortMode;
@@ -338,10 +338,10 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
                 }
             },
             get annotateCustomDriverBinary() {
-                return self.props.store.mutationAnnotationSettings.driverFilter;
+                return self.props.store.driverAnnotationSettings.driverFilter;
             },
             get selectedCustomDriverAnnotationTiers() {
-                return self.props.store.mutationAnnotationSettings.driverTiers;
+                return self.props.store.driverAnnotationSettings.driverTiers;
             },
             get columnMode() {
                 return self.columnMode;
@@ -357,7 +357,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     @computed get distinguishDrivers() {
-        return this.props.store.mutationAnnotationSettings.driversAnnotated;
+        return this.props.store.driverAnnotationSettings.driversAnnotated;
     }
 
     onMouseEnter(){
@@ -401,59 +401,59 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             onSelectDistinguishMutationType:(s:boolean)=>{this.distinguishMutationType = s;},
             onSelectDistinguishDrivers:action((s:boolean)=>{
                 if (!s) {
-                    this.props.store.mutationAnnotationSettings.oncoKb = false;
-                    this.props.store.mutationAnnotationSettings.hotspots = false;
-                    this.props.store.mutationAnnotationSettings.cbioportalCount = false;
-                    this.props.store.mutationAnnotationSettings.cosmicCount = false;
-                    this.props.store.mutationAnnotationSettings.driverFilter = false;
-                    this.props.store.mutationAnnotationSettings.driverTiers.forEach((value, key)=>{
-                        this.props.store.mutationAnnotationSettings.driverTiers.set(key, false);
+                    this.props.store.driverAnnotationSettings.oncoKb = false;
+                    this.props.store.driverAnnotationSettings.hotspots = false;
+                    this.props.store.driverAnnotationSettings.cbioportalCount = false;
+                    this.props.store.driverAnnotationSettings.cosmicCount = false;
+                    this.props.store.driverAnnotationSettings.driverFilter = false;
+                    this.props.store.driverAnnotationSettings.driverTiers.forEach((value, key)=>{
+                        this.props.store.driverAnnotationSettings.driverTiers.set(key, false);
                     });
-                    this.props.store.mutationAnnotationSettings.ignoreUnknown = false;
+                    this.props.store.driverAnnotationSettings.ignoreUnknown = false;
                 } else {
                     if (!this.controlsState.annotateDriversOncoKbDisabled && !this.controlsState.annotateDriversOncoKbError)
-                        this.props.store.mutationAnnotationSettings.oncoKb = true;
+                        this.props.store.driverAnnotationSettings.oncoKb = true;
 
                     if (!this.controlsState.annotateDriversHotspotsDisabled && !this.controlsState.annotateDriversHotspotsError)
-                        this.props.store.mutationAnnotationSettings.hotspots = true;
+                        this.props.store.driverAnnotationSettings.hotspots = true;
 
-                    this.props.store.mutationAnnotationSettings.cbioportalCount = true;
-                    this.props.store.mutationAnnotationSettings.cosmicCount = true;
-                    this.props.store.mutationAnnotationSettings.driverFilter = true;
-                    this.props.store.mutationAnnotationSettings.driverTiers.forEach((value, key)=>{
-                        this.props.store.mutationAnnotationSettings.driverTiers.set(key, true);
+                    this.props.store.driverAnnotationSettings.cbioportalCount = true;
+                    this.props.store.driverAnnotationSettings.cosmicCount = true;
+                    this.props.store.driverAnnotationSettings.driverFilter = true;
+                    this.props.store.driverAnnotationSettings.driverTiers.forEach((value, key)=>{
+                        this.props.store.driverAnnotationSettings.driverTiers.set(key, true);
                     });
                 }
             }),
             onSelectDistinguishGermlineMutations:(s:boolean)=>{this.distinguishGermlineMutations = s; },
             onSelectAnnotateOncoKb:action((s:boolean)=>{
-                this.props.store.mutationAnnotationSettings.oncoKb = s;
+                this.props.store.driverAnnotationSettings.oncoKb = s;
             }),
             onSelectAnnotateHotspots:action((s:boolean)=>{
-                this.props.store.mutationAnnotationSettings.hotspots = s;
+                this.props.store.driverAnnotationSettings.hotspots = s;
             }),
             onSelectAnnotateCBioPortal:action((s:boolean)=>{
-                this.props.store.mutationAnnotationSettings.cbioportalCount = s;
+                this.props.store.driverAnnotationSettings.cbioportalCount = s;
             }),
             onSelectAnnotateCOSMIC:action((s:boolean)=>{
-                this.props.store.mutationAnnotationSettings.cosmicCount = s;
+                this.props.store.driverAnnotationSettings.cosmicCount = s;
             }),
             onChangeAnnotateCBioPortalInputValue:action((s:string)=>{
-                this.props.store.mutationAnnotationSettings.cbioportalCountThreshold = parseInt(s, 10);
+                this.props.store.driverAnnotationSettings.cbioportalCountThreshold = parseInt(s, 10);
                 this.controlsHandlers.onSelectAnnotateCBioPortal && this.controlsHandlers.onSelectAnnotateCBioPortal(true);
             }),
             onChangeAnnotateCOSMICInputValue:action((s:string)=>{
-                this.props.store.mutationAnnotationSettings.cosmicCountThreshold = parseInt(s, 10);
+                this.props.store.driverAnnotationSettings.cosmicCountThreshold = parseInt(s, 10);
                 this.controlsHandlers.onSelectAnnotateCOSMIC && this.controlsHandlers.onSelectAnnotateCOSMIC(true);
             }),
             onSelectCustomDriverAnnotationBinary:action((s:boolean)=>{
-                this.props.store.mutationAnnotationSettings.driverFilter = s;
+                this.props.store.driverAnnotationSettings.driverFilter = s;
             }),
             onSelectCustomDriverAnnotationTier:action((value:string, checked:boolean)=>{
-                this.props.store.mutationAnnotationSettings.driverTiers.set(value, checked);
+                this.props.store.driverAnnotationSettings.driverTiers.set(value, checked);
             }),
             onSelectHidePutativePassengers:(s:boolean)=>{
-                this.props.store.mutationAnnotationSettings.ignoreUnknown = s;
+                this.props.store.driverAnnotationSettings.ignoreUnknown = s;
             },
             onSelectHideGermlineMutations:(s:boolean)=>{
                 this.hideGermlineMutations = s;
@@ -939,8 +939,8 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             promises: [this.props.store.molecularData, this.props.store.mutations, ...(areNonLocalClinicalAttributesSelected ? [this.clinicalTracks] : [])]
         });
 
-        const usingOncokb = this.props.store.mutationAnnotationSettings.oncoKb;
-        const usingHotspot = this.props.store.mutationAnnotationSettings.hotspots;
+        const usingOncokb = this.props.store.driverAnnotationSettings.oncoKb;
+        const usingHotspot = this.props.store.driverAnnotationSettings.hotspots;
         ret.push({
             label: getAnnotatingProgressMessage(usingOncokb, usingHotspot),
             promises:[this.props.store.annotatedMolecularData, this.props.store.putativeDriverAnnotatedMutations]
