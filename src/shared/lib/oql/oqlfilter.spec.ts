@@ -8,7 +8,7 @@ import {
     doesQueryContainMutationOQL, doesQueryContainOQL
 } from './oqlfilter';
 import {NumericGeneMolecularData, MolecularProfile, Mutation} from '../../api/generated/CBioPortalAPI';
-import accessors from './accessors';
+import AccessorsForOqlFilter from './AccessorsForOqlFilter';
 import * as _ from 'lodash';
 import {assert} from 'chai';
 import sinon from 'sinon';
@@ -31,7 +31,7 @@ const THREE_GENE_TWO_SAMPLE_CNA_DATA = [
     {__id: 8, oncoKbOncogenic: "predicted Oncogenic", "sampleId": "TCGA-02-0003-01", "entrezGeneId": 5728, "value": -1, "molecularProfileId": "gbm_tcga_gistic", "uniqueSampleKey": "VENHQS0wMi0wMDAzLTAxOmdibV90Y2dh", "uniquePatientKey": "VENHQS0wMi0wMDAzOmdibV90Y2dh", "patientId": "TCGA-02-0003", "studyId": "gbm_tcga", "gene": {"entrezGeneId": 5728, "hugoGeneSymbol": "PTEN", "type": "protein-coding", "cytoband": "10q23.31", "length": 11581}},
     {__id: 9, oncoKbOncogenic: "Likely Oncogenic", "sampleId": "TCGA-02-0003-01", "entrezGeneId": 7157, "value": 0, "molecularProfileId": "gbm_tcga_gistic", "uniqueSampleKey": "VENHQS0wMi0wMDAzLTAxOmdibV90Y2dh", "uniquePatientKey": "VENHQS0wMi0wMDAzOmdibV90Y2dh", "patientId": "TCGA-02-0003", "studyId": "gbm_tcga", "gene": {"entrezGeneId": 7157, "hugoGeneSymbol": "TP53", "type": "protein-coding", "cytoband": "17p13.1", "length": 4576}}
 ] as any as AnnotatedNumericGeneMolecularData[];
-// I believe these metadata to be all `new accessors()` needs
+// I believe these metadata to be all `new AccessorsForOqlFilter()` needs
 const DATA_PROFILE = {
     "molecularAlterationType": "COPY_NUMBER_ALTERATION",
     "datatype": "DISCRETE",
@@ -104,6 +104,7 @@ describe("doesQueryContainOQL", ()=>{
         assert.equal(doesQueryContainOQL("TP53 BRCA1 BRCA2:HOMDEL"), true);
         assert.equal(doesQueryContainOQL("TP53 BRCA1 BRCA2:EXP>0"), true);
         assert.equal(doesQueryContainOQL("TP53 BRCA1 BRCA2:FUSION"), true);
+        assert.equal(doesQueryContainOQL("TP53 BRCA1 BRCA2:DRIVER"), true);
     });
 });
 
@@ -117,6 +118,7 @@ describe("doesQueryContainMutationOQL", ()=>{
         assert.equal(doesQueryContainMutationOQL("TP53: GERMLINE"), true);
         assert.equal(doesQueryContainMutationOQL("TP53: proteinchange"), true);
         assert.equal(doesQueryContainMutationOQL("TP53: proteinchange_GERMLINE"), true);
+        assert.equal(doesQueryContainMutationOQL("TP53: DRIVER"), true);
     });
 });
 
@@ -153,7 +155,7 @@ describe("unparseOQLQueryLine", ()=>{
 
 describe('filterCBioPortalWebServiceData', ()=>{
     it('filters properly using the GERMLINE and SOMATIC mutation modifiers', ()=>{
-        const accessorsInstance = new accessors([MUTATION_PROFILE]);
+        const accessorsInstance = new AccessorsForOqlFilter([MUTATION_PROFILE]);
         let filteredData = filterCBioPortalWebServiceData(
             "BRCA1:GERMLINE",
             MUTATION_DATA,
@@ -205,7 +207,7 @@ describe('filterCBioPortalWebServiceData', ()=>{
         assert.deepEqual((filteredData as any).map((x:any)=>x.__id), [0,3]);
     });
     it("filters properly using the DRIVER modifier", ()=>{
-        const accessorsInstance = new accessors([MUTATION_PROFILE, DATA_PROFILE], true);
+        const accessorsInstance = new AccessorsForOqlFilter([MUTATION_PROFILE, DATA_PROFILE]);
         let filteredData = filterCBioPortalWebServiceData(
             "BRCA1:DRIVER",
             [...MUTATION_DATA, ...THREE_GENE_TWO_SAMPLE_CNA_DATA] as any[],
@@ -273,10 +275,10 @@ describe('filterCBioPortalWebServiceData', ()=>{
 
 describe('filterCBioPortalWebServiceDataByUnflattenedOQLLine', () => {
     it('returns a single .data object for a single-gene query', () => {
-        // given CNA data for 3 genes in 2 samples and an accessors instance
+        // given CNA data for 3 genes in 2 samples and an AccessorsForOqlFilter instance
         // aware of their profile
         const dataArray: NumericGeneMolecularData[] = THREE_GENE_TWO_SAMPLE_CNA_DATA;
-        const accessorsInstance: accessors = new accessors([DATA_PROFILE]);
+        const accessorsInstance: AccessorsForOqlFilter = new AccessorsForOqlFilter([DATA_PROFILE]);
         // when calling the function with an OQL query asking data for 1 gene
         const filteredData = filterCBioPortalWebServiceDataByUnflattenedOQLLine(
             'BRCA1',
@@ -290,10 +292,10 @@ describe('filterCBioPortalWebServiceDataByUnflattenedOQLLine', () => {
     });
 
     it('returns a .list with single .data object for a single-gene merged query', () => {
-        // given CNA data for 3 genes in 2 samples and an accessors instance
+        // given CNA data for 3 genes in 2 samples and an AccessorsForOqlFilter instance
         // aware of their profile
         const dataArray: NumericGeneMolecularData[] = THREE_GENE_TWO_SAMPLE_CNA_DATA;
-        const accessorsInstance: accessors = new accessors([DATA_PROFILE]);
+        const accessorsInstance: AccessorsForOqlFilter = new AccessorsForOqlFilter([DATA_PROFILE]);
         // when calling the function with an OQL query asking data for a
         // 1-gene list
         const filteredData = filterCBioPortalWebServiceDataByUnflattenedOQLLine(
@@ -310,10 +312,10 @@ describe('filterCBioPortalWebServiceDataByUnflattenedOQLLine', () => {
     });
 
     it('returns a .list with two .data objects for a two-gene merged query', () => {
-        // given CNA data for 3 genes in 2 samples and an accessors instance
+        // given CNA data for 3 genes in 2 samples and an AccessorsForOqlFilter instance
         // aware of their profile
         const dataArray: NumericGeneMolecularData[] = THREE_GENE_TWO_SAMPLE_CNA_DATA;
-        const accessorsInstance: accessors = new accessors([DATA_PROFILE]);
+        const accessorsInstance: AccessorsForOqlFilter = new AccessorsForOqlFilter([DATA_PROFILE]);
         // when calling the function with an OQL query asking data for a
         // 2-gene list
         const filteredData = filterCBioPortalWebServiceDataByUnflattenedOQLLine(
@@ -332,10 +334,10 @@ describe('filterCBioPortalWebServiceDataByUnflattenedOQLLine', () => {
     });
 
     it('returns both a two-element .list and a .data if a merged-gene line precedes a single-gene one', () => {
-        // given CNA data for 3 genes in 2 samples and an accessors instance
+        // given CNA data for 3 genes in 2 samples and an AccessorsForOqlFilter instance
         // aware of their profile
         const dataArray: NumericGeneMolecularData[] = THREE_GENE_TWO_SAMPLE_CNA_DATA;
-        const accessorsInstance: accessors = new accessors([DATA_PROFILE]);
+        const accessorsInstance: AccessorsForOqlFilter = new AccessorsForOqlFilter([DATA_PROFILE]);
         // when calling the function with an OQL query asking data for 1 gene
         const filteredData = filterCBioPortalWebServiceDataByUnflattenedOQLLine(
             '[BRCA1 PTEN] TP53',
@@ -351,10 +353,10 @@ describe('filterCBioPortalWebServiceDataByUnflattenedOQLLine', () => {
     });
 
     it('returns both a .data and a two-element .list if a single-gene line precedes a merged-gene one', () => {
-        // given CNA data for 3 genes in 2 samples and an accessors instance
+        // given CNA data for 3 genes in 2 samples and an AccessorsForOqlFilter instance
         // aware of their profile
         const dataArray: NumericGeneMolecularData[] = THREE_GENE_TWO_SAMPLE_CNA_DATA;
-        const accessorsInstance: accessors = new accessors([DATA_PROFILE]);
+        const accessorsInstance: AccessorsForOqlFilter = new AccessorsForOqlFilter([DATA_PROFILE]);
         // when calling the function with an OQL query asking data for 1 gene
         const filteredData = filterCBioPortalWebServiceDataByUnflattenedOQLLine(
             'PTEN [BRCA1 TP53]',

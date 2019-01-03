@@ -1,5 +1,5 @@
 import {Mutation} from "../../shared/api/generated/CBioPortalAPI";
-import {getSimplifiedMutationType} from "../../shared/lib/oql/accessors";
+import {getSimplifiedMutationType} from "../../shared/lib/oql/AccessorsForOqlFilter";
 
 export function countMutations(mutations: Pick<Mutation, "entrezGeneId"|"proteinPosStart"|"proteinPosEnd">[]){
     const mutationPositionIdentifiers:any = {};
