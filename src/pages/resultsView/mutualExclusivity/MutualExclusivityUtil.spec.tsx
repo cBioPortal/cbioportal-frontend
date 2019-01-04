@@ -70,7 +70,7 @@ const exampleData = [
         "aNotBCount": 4,
         "bNotACount": 3,
         "bothCount": 1,
-        "logOddsRatio": -1.791759469228055,
+        "logOddsRatio": -2.584962500721156,
         "pValue": 0.2619047619047609,
         "qValue": 0.2619047619047609,
         "association": "Mutual exclusivity"
@@ -82,7 +82,7 @@ const exampleData = [
         "aNotBCount": 2,
         "bNotACount": 1,
         "bothCount": 3,
-        "logOddsRatio": 1.791759469228055,
+        "logOddsRatio": 2.584962500721156,
         "pValue": 0.2619047619047609,
         "qValue": 0.2619047619047609,
         "association": "Co-occurrence"
@@ -146,12 +146,12 @@ describe("MutualExclusivityUtil", () => {
     }); */
 
     describe("#calculateLogOddsRatio()", () => {
-        it("returns -0.9650808960435872 for 4, 3, 7, 2", () => {
-            assert.equal(calculateLogOddsRatio(4, 3, 7, 2), -0.9650808960435872);
+        it("returns -1.3923174227787605 for 4, 3, 7, 2", () => {
+            assert.equal(calculateLogOddsRatio(4, 3, 7, 2), -1.3923174227787605);
         });
 
-        it("returns 1.466337068793427 for 13, 7, 3, 7", () => {
-            assert.equal(calculateLogOddsRatio(13, 7, 3, 7), 1.466337068793427);
+        it("returns 2.1154772174199357 for 13, 7, 3, 7", () => {
+            assert.equal(calculateLogOddsRatio(13, 7, 3, 7), 2.1154772174199357);
         });
 
         it("returns Infinity for 5, 0 ,1, 0", () => {
