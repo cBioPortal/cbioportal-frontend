@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { getCumulativePValue } from "../../../shared/lib/FisherExactTestCalculator";
 import { MutualExclusivity } from "../../../shared/model/MutualExclusivity";
+import {calculateQValues} from "../../../shared/lib/calculation/BenjaminiHochbergFDRCalculator";
 import Combinatorics from 'js-combinatorics';
 import Dictionary = _.Dictionary;
 import * as _ from 'lodash';
@@ -56,7 +57,7 @@ export function getMutuallyExclusiveCounts(data: MutualExclusivity[],
     let significantCount = null;
 
     const exclusiveData = data.filter(mutualExclusivity => exclusive(mutualExclusivity.logOddsRatio));
-    const significantData = exclusiveData.filter(mutualExclusivity => mutualExclusivity.adjustedPValue < 0.05);
+    const significantData = exclusiveData.filter(mutualExclusivity => mutualExclusivity.qValue < 0.05);
 
     const exclusiveLength = exclusiveData.length;
     const significantLength = significantData.length;
@@ -111,9 +112,16 @@ export function getData(isSampleAlteredMap: Dictionary<boolean[]>): MutualExclus
         const association = calculateAssociation(logOddsRatio);
         data.push({ trackA, trackB, neitherCount: counts[0], bNotACount: counts[1], aNotBCount: counts[2], 
             bothCount: counts[3], logOddsRatio, pValue, 
-            adjustedPValue: calculateAdjustedPValue(pValue, combinations.length), association });
+            qValue: 0, association });
     });
-    return _.sortBy(data, ["pValue"]);
+    
+    data = _.sortBy(data, ["pValue"]);
+    const qValues = calculateQValues(_.map(data, mutexData => mutexData.pValue));
+    data.forEach((mutexData, index) => {
+        mutexData.qValue = qValues[index];
+    });
+
+    return data;
 }
 
 export function getFilteredData(data: MutualExclusivity[], mutualExclusivityFilter: boolean, coOccurenceFilter: boolean,
@@ -128,7 +136,7 @@ export function getFilteredData(data: MutualExclusivity[], mutualExclusivityFilt
             result = result || mutualExclusivity.logOddsRatio > 0;
         }
         if (significantPairsFilter) {
-            result = result && mutualExclusivity.adjustedPValue < 0.05;
+            result = result && mutualExclusivity.qValue < 0.05;
         }
         return result;
     });
@@ -138,7 +146,7 @@ export function formatPValue(pValue: number): string {
     return pValue < 0.001 ? "<0.001" : pValue.toFixed(3);
 }
 
-export function formatPValueWithStyle(pValue: number): JSX.Element {
+export function formatQValueWithStyle(pValue: number): JSX.Element {
 
     let formattedPValue = <span>{formatPValue(pValue)}</span>;
     if (pValue < 0.05) {
