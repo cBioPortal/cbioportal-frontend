@@ -214,6 +214,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                     <button
                         disabled={this.addChartButtonDisabled}
                         className="btn btn-primary btn-sm"
+                        data-test='CustomCaseSetSubmitButton'
                         onClick={this.onAddChart}>
                         {this.props.submitButtonText}
                     </button>
