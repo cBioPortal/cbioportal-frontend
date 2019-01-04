@@ -3,7 +3,7 @@ import React from 'react';
 import * as _ from 'lodash';
 import {
     calculateAssociation, countOccurences, calculatePValue, calculateLogOddsRatio, getMutuallyExclusiveCounts,
-    getTrackPairsCountText, getData, getFilteredData, formatPValue, formatPValueWithStyle, formatLogOddsRatio, calculateAdjustedPValue
+    getTrackPairsCountText, getData, getFilteredData, formatPValue, formatQValueWithStyle, formatLogOddsRatio, calculateAdjustedPValue
 } from "./MutualExclusivityUtil";
 import { MutualExclusivity } from "../../../shared/model/MutualExclusivity";
 import expect from 'expect';
@@ -24,7 +24,7 @@ const exampleData = [
         "bothCount": 0,
         "logOddsRatio": -Infinity,
         "pValue": 0.003968253968253951,
-        "adjustedPValue": 0.023809523809523704,
+        "qValue": 0.023809523809523704,
         "association": "Mutual exclusivity"
     },
     {
@@ -36,7 +36,7 @@ const exampleData = [
         "bothCount": 3,
         "logOddsRatio": Infinity,
         "pValue": 0.03333333333333314,
-        "adjustedPValue": 0.19999999999999885,
+        "qValue": 0.09999999999999942,
         "association": "Co-occurrence"
     },
     {
@@ -48,7 +48,7 @@ const exampleData = [
         "bothCount": 0,
         "logOddsRatio": -Infinity,
         "pValue": 0.08333333333333293,
-        "adjustedPValue": 0.49999999999999756,
+        "qValue": 0.12499999999999939,
         "association": "Mutual exclusivity"
     },
     {
@@ -60,7 +60,7 @@ const exampleData = [
         "bothCount": 3,
         "logOddsRatio": Infinity,
         "pValue": 0.08333333333333293,
-        "adjustedPValue": 0.49999999999999756,
+        "qValue": 0.12499999999999939,
         "association": "Co-occurrence"
     },
     {
@@ -72,7 +72,7 @@ const exampleData = [
         "bothCount": 1,
         "logOddsRatio": -1.791759469228055,
         "pValue": 0.2619047619047609,
-        "adjustedPValue": 1,
+        "qValue": 0.2619047619047609,
         "association": "Mutual exclusivity"
     },
     {
@@ -84,7 +84,7 @@ const exampleData = [
         "bothCount": 3,
         "logOddsRatio": 1.791759469228055,
         "pValue": 0.2619047619047609,
-        "adjustedPValue": 1,
+        "qValue": 0.2619047619047609,
         "association": "Co-occurrence"
     }
 ];
@@ -135,7 +135,7 @@ describe("MutualExclusivityUtil", () => {
         });
     });
 
-    describe("#calculateAdjustedPValue()", () => {
+/*     describe("#calculateAdjustedPValue()", () => {
         it("returns 1 if bigger than 1", () => {
             assert.equal(calculateAdjustedPValue(0.345, 4), 1);
         });
@@ -143,7 +143,7 @@ describe("MutualExclusivityUtil", () => {
         it("returns the value if smaller than 1", () => {
             assert.equal(calculateAdjustedPValue(0.001, 3), 0.003);
         });
-    });
+    }); */
 
     describe("#calculateLogOddsRatio()", () => {
         it("returns -0.9650808960435872 for 4, 3, 7, 2", () => {
@@ -178,7 +178,7 @@ describe("MutualExclusivityUtil", () => {
                     "bothCount": 0,
                     "logOddsRatio": Infinity,
                     "pValue": 0.003968253968253968,
-                    "adjustedPValue": 0.003968253968253968,
+                    "qValue": 0.003968253968253968,
                     "association": "Co-occurrence"
                 }
             ];
@@ -200,7 +200,7 @@ describe("MutualExclusivityUtil", () => {
                         "bothCount": 0,
                         "logOddsRatio": -2.1,
                         "pValue": 0.06,
-                        "adjustedPValue": 0.06,
+                        "qValue": 0.06,
                         "association": "Mutual exclusivity"
                     }
                 ];
@@ -222,7 +222,7 @@ describe("MutualExclusivityUtil", () => {
                         "bothCount": 0,
                         "logOddsRatio": -2.1,
                         "pValue": 0.04,
-                        "adjustedPValue": 0.04,
+                        "qValue": 0.04,
                         "association": "Mutual exclusivity"
                     }
                 ];
@@ -244,7 +244,7 @@ describe("MutualExclusivityUtil", () => {
                         "bothCount": 0,
                         "logOddsRatio": -6.51,
                         "pValue": 0.02,
-                        "adjustedPValue": 0.04,
+                        "qValue": 0.04,
                         "association": "Mutual exclusivity"
                     },
                     {
@@ -256,7 +256,7 @@ describe("MutualExclusivityUtil", () => {
                         "bothCount": 0,
                         "logOddsRatio": -2.1,
                         "pValue": 0.001,
-                        "adjustedPValue": 0.002,
+                        "qValue": 0.002,
                         "association": "Mutual exclusivity"
                     }
                 ];
@@ -296,7 +296,7 @@ describe("MutualExclusivityUtil", () => {
                         "bothCount": 0,
                         "logOddsRatio": -Infinity,
                         "pValue": 0.003968253968253951,
-                        "adjustedPValue": 0.023809523809523704,
+                        "qValue": 0.023809523809523704,
                         "association": "Mutual exclusivity"
                     }
                 ]
@@ -324,11 +324,11 @@ describe("MutualExclusivityUtil", () => {
 
     describe("#formatPValueWithStyle()", () => {
         it("returns <span>0.050</span> for 0.05", () => {
-            expect(formatPValueWithStyle(0.05)).toEqualJSX(<span>0.050</span>);
+            expect(formatQValueWithStyle(0.05)).toEqualJSX(<span>0.050</span>);
         });
 
         it("returns <b><span>0.042</span></b> for 0.042", () => {
-            expect(formatPValueWithStyle(0.042)).toEqualJSX(<b><span>0.042</span></b>);
+            expect(formatQValueWithStyle(0.042)).toEqualJSX(<b><span>0.042</span></b>);
         });
     });
 
@@ -367,7 +367,7 @@ describe("MutualExclusivityUtil", () => {
                     "bothCount": 3,
                     "logOddsRatio": 1.791759469228055,
                     "pValue": 0.23809523809523808,
-                    "adjustedPValue": 0.47619047619047616,
+                    "qValue": 0.47619047619047616,
                     "association": "Co-occurrence"
                 },
                 {
@@ -379,7 +379,7 @@ describe("MutualExclusivityUtil", () => {
                     "bothCount": 3,
                     "logOddsRatio": Infinity,
                     "pValue": 0.003968253968253951,
-                    "adjustedPValue": 0.023809523809523704,
+                    "qValue": 0.023809523809523704,
                     "association": "Co-occurrence"
                 }
             ];
