@@ -223,9 +223,10 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
     render() {
         if (this.showFilters) {
             return (
-                <div className={styles.userSelections}>
+                <div className={classnames(styles.userSelections, 'userSelections')}>
                     {this.allComponents}
                     <button
+                        data-test="clear-all-filters"
                         className={classnames('btn btn-default btn-sm', styles.summaryHeaderBtn, styles.summaryClearAllBtn)}
                         onClick={this.props.clearAllFilters}>Clear All Filters
                     </button>

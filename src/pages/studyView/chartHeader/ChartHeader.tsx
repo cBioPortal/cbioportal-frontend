@@ -125,14 +125,14 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
 
     public render() {
         return (
-            <div className={styles.header}
+            <div className={classnames(styles.header, 'chartHeader')}
                  style={{height: `${this.props.height}px`, lineHeight: `${this.props.height}px`}}>
                 <div className={styles.name}>
-                    {!this.props.hideLabel && <span>{this.props.title}</span>}
+                    {!this.props.hideLabel && <span className='chartTitle'>{this.props.title}</span>}
                 </div>
                 <If condition={this.active}>
-                    <div className={styles.controls}>
-                        <div role="group" className="btn-group">
+                    <div className={classnames(styles.controls, 'controls')}>
+                        <div role="group" className="btn-group logScaleCheckbox">
                             <If condition={this.props.chartControls && !!this.props.chartControls.showLogScaleToggle}>
                                 <LabeledCheckbox
                                     checked={this.props.chartControls && this.props.chartControls.logScaleChecked}
@@ -191,7 +191,7 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                 overlay={<span>Survival Analysis</span>}
                             >
                                 <img src="images/survival_icon.svg"
-                                     className={classnames(styles.survivalIcon, styles.item, styles.clickable)}
+                                     className={classnames(styles.survivalIcon, styles.item, styles.clickable, 'survivalIcon')}
                                      style={{verticalAlign: "initial"}} alt="Survival Analysis"
                                      onClick={this.props.setAnalysisGroups}/>
                             </DefaultTooltip>
