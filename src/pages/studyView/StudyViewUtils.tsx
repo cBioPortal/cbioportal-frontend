@@ -961,11 +961,26 @@ export function isOccupied(matrix: string[][], position: Position, chartDimensio
     return occupied;
 }
 
-export function calculateLayout(visibleAttributes: ChartMeta[], cols: number): Layout[] {
+export function calculateLayout(visibleAttributes: ChartMeta[], cols: number, currentGridLayout?: Layout[], currentFocusedChartByUser?: ChartMeta): Layout[] {
     let layout: Layout[] = [];
     let matrix = [new Array(cols).fill('')] as string[][];
+    let sortedVisibleAttributesByPriority = _.orderBy(visibleAttributes, ['priority'], ['desc']);
 
-    _.forEach(visibleAttributes.sort((a, b) => b.priority - a.priority), (chart: ChartMeta) => {
+    // look if we need to put the chart to a fixed position and add the position to the matrix
+    if (currentGridLayout && currentGridLayout.length > 0 && currentFocusedChartByUser) {
+        const currentChartLayout = currentGridLayout.find((layout) => layout.i === currentFocusedChartByUser.uniqueKey)!;
+        if (currentChartLayout) {
+            const newChartLayout = calculateNewLayoutForFocusedChart(currentChartLayout, currentFocusedChartByUser, cols);
+            layout.push(newChartLayout);
+            matrix = generateMatrixByLayout(newChartLayout, cols);
+            _.remove(sortedVisibleAttributesByPriority, (chart: ChartMeta) => chart.uniqueKey === currentFocusedChartByUser.uniqueKey);
+        }
+        else {
+            throw(new Error("cannot find matching unique key in the grid layout"));
+        }
+    }
+
+    _.forEach(sortedVisibleAttributesByPriority, (chart: ChartMeta) => {
         const position = findSpot(matrix, chart.dimension);
         while ((position.y + chart.dimension.h) >= matrix.length) {
             matrix.push(new Array(cols).fill(''));
@@ -987,6 +1002,67 @@ export function calculateLayout(visibleAttributes: ChartMeta[], cols: number): L
         }
     });
     return layout;
+}
+
+export function calculateNewLayoutForFocusedChart(previousLayout: Layout, currentFocusedChartByUser: ChartMeta, cols: number): Layout {
+    const initialX = previousLayout.x;
+    const initialY = previousLayout.y;
+    const dimensionWidth = currentFocusedChartByUser.dimension.w;
+    let x = initialX;
+    let y = initialY;
+
+    if (isFocusedChartShrunk({w: previousLayout.w, h: previousLayout.h}, currentFocusedChartByUser.dimension)) {
+        x = initialX + previousLayout.w - dimensionWidth;
+    }
+    else if (initialX + dimensionWidth >= cols && initialX - dimensionWidth >= 0) {
+        x = cols - dimensionWidth;
+    }
+
+    return {
+        i: currentFocusedChartByUser.uniqueKey,
+        x,
+        y,
+        w: currentFocusedChartByUser.dimension.w,
+        h: currentFocusedChartByUser.dimension.h,
+        isResizable: false
+    };
+}
+
+export function generateMatrixByLayout(layout: Layout, cols: number) : string[][] {
+    let matrix = [new Array(cols).fill('')] as string[][];
+    const xMax = layout.x + layout.w;
+    const yMax = layout.y + layout.h;
+    while (yMax >= matrix.length) {
+        matrix.push(new Array(cols).fill(''));
+    }
+    for (let i = layout.y; i < yMax; i++) {
+        for (let j = layout.x; j < xMax; j++) {
+            matrix[i][j] = layout.i!;
+        }
+    }
+    return matrix;
+}
+
+export function isFocusedChartShrunk(oldDimension: ChartDimension, newDimension: ChartDimension): boolean {
+    return (oldDimension.w + oldDimension.h) > (newDimension.w + newDimension.h);
+}
+
+export function getPositionXByUniqueKey(layouts: Layout[], uniqueKey: string): number | undefined {
+    const findLayoutResult = _.find(layouts, (layout) => {
+        if (layout.i === uniqueKey) {
+            return layout;
+        }
+    });
+    return findLayoutResult ? findLayoutResult.x : undefined;
+}
+
+export function getPositionYByUniqueKey(layouts: Layout[], uniqueKey: string): number | undefined {
+    const findLayoutResult = _.find(layouts, (layout) => {
+        if (layout.i === uniqueKey) {
+            return layout;
+        }
+    });
+    return findLayoutResult ? findLayoutResult.y : undefined;
 }
 
 export function getDefaultPriorityByUniqueKey(uniqueKey: string): number {
