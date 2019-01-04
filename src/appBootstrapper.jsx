@@ -58,14 +58,14 @@ if (browser) {
     });
 }
 
-if (localStorage.e2etest) {
+// e2e test specific stuff
+if (getBrowserWindow().navigator.webdriver) {
+
     $(document).ready(()=>{
         $("body").addClass("e2etest");
         window.e2etest = true;
     });
-}
 
-if (getBrowserWindow().navigator.webdriver) {
     setNetworkListener();
 }
 
