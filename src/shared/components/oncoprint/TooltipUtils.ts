@@ -81,6 +81,9 @@ export function makeClinicalTrackTooltip(track:ClinicalTrackSpec, link_id?:boole
                 ret += track.label+': <b>' + displayVal + '</b><br>';
             }
         }
+        if (d.na && track.na_tooltip_value) {
+            ret += `${track.label}: <b>${track.na_tooltip_value}</b><br/>`;
+        }
         ret += '<span>'+(d.sample ? "Sample" : "Patient")+": ";
         ret += (link_id ? (d.sample? sampleViewAnchorTag(d.study_id, d.sample) : patientViewAnchorTag(d.study_id, d.patient))
             : (d.sample ? d.sample : d.patient));
@@ -162,7 +165,6 @@ export function makeGeneticTrackTooltip_getCoverageInformation(
 }
 
 export function makeGeneticTrackTooltip(
-    link_id?:boolean,
     getMolecularProfileMap?:()=>{[molecularProfileId:string]:MolecularProfile}|undefined,
     alterationTypesInQuery?:string[],
 ) {
@@ -236,9 +238,9 @@ export function makeGeneticTrackTooltip(
                     (datum.alterationSubType === "fusion" ? fusions : mutations).push(tooltip_datum);
                     break;
                 case "COPY_NUMBER_ALTERATION":
-                    if (disp_cna.hasOwnProperty((datum as AnnotatedNumericGeneMolecularData).value)) {
+                    if (disp_cna.hasOwnProperty(datum.value as AnnotatedNumericGeneMolecularData["value"])) {
                         const tooltip_datum:any = {
-                            cna: disp_cna[(datum as AnnotatedNumericGeneMolecularData).value],
+                            cna: disp_cna[datum.value as AnnotatedNumericGeneMolecularData["value"]],
                             hugo_gene_symbol: hugoGeneSymbol
                         };
                         const oncokb_oncogenic = datum.oncoKbOncogenic;
@@ -355,9 +357,9 @@ export function makeGeneticTrackTooltip(
 
         let caseIdElt;
         if (d.sample) {
-            caseIdElt = link_id ? sampleViewAnchorTag(d.study_id, d.sample) : d.sample;
+            caseIdElt = (d.study_id.length > 0) ? sampleViewAnchorTag(d.study_id, d.sample) : d.sample;
         } else if (d.patient) {
-            caseIdElt = link_id ? patientViewAnchorTag(d.study_id, d.patient) : d.patient;
+            caseIdElt = (d.study_id.length > 0) ? patientViewAnchorTag(d.study_id, d.patient) : d.patient;
         } else {
             caseIdElt = "";
         }

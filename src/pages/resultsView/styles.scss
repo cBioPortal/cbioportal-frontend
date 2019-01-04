@@ -5,6 +5,37 @@
   }
 }
 
+.oncoprintjs__scroll_div {
+  // force scrollbar visible, to indicate when theres more oncoprint offscreen to scroll to
+  // source: https://gist.github.com/devinrhode2/2573411#gistcomment-2243001
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+    background-color: rgba(0,0,0,0);
+    -webkit-border-radius: 100px;
+  }
+
+  &::-webkit-scrollbar:hover {
+    //background-color: rgba(0, 0, 0, 0.09);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.21);
+    -webkit-border-radius: 100px;
+    width: 8px;
+    height: 8px;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.30);
+  }
+
+  &::-webkit-scrollbar-thumb:active {
+    background: rgba(0, 0, 0, 0.42);
+    -webkit-border-radius: 100px;
+  }
+}
+
 .oncoprintContainer {
   border: none !important;
   padding: 0 !important;
@@ -28,7 +59,12 @@
       box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
       border-radius:$cornerBorderRadius;
       li {
-        border-width: 0 !important;
+        &.oncoprintjs__track_options__separator {
+          border-top: 1px solid #dddddd !important;
+        }
+        &:not(.oncoprintjs__track_options__separator){
+          border-width: 0 !important;
+        }
         padding: 2px 5px;
         &:hover {
           background: #fff !important;

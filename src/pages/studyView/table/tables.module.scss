@@ -1,6 +1,5 @@
 
 .studyViewTablesTable {
-  padding: 0 1px;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
@@ -9,16 +8,13 @@
 // The current portal is wrapped a class .cbioportal-frontend to overwrite the legacy styles
 // May need to come back to clean up the important statements after in SPA
 .tableSearchInput {
-  width: 200px !important;
-  height: 30px !important;
+  width: 150px !important;
+  height: 25px !important;
 }
 
 .labelContent {
   overflow: hidden;
   white-space: nowrap;
-  text-overflow: ellipsis;
-  display: inline-block;
-  flex-shrink: 0;
   display: flex;
   align-items: center;
 }
@@ -27,15 +23,21 @@
   flex-shrink: 0;
 }
 
-.bottomTools {
+.controls {
   display: flex;
   justify-content: space-between;
-  padding: 1px 5px 2px 5px;
+  align-items: center;
   flex-grow: 1;
+  font-size: 13px !important;
+  padding: 0 5px;
+}
+
+.controlsBtn {
+  padding: 2px 5px;
 }
 
 .geneSymbol:hover {
-  border: 2px solid $study-view-primary-color;
+  border: 2px solid $brand-primary;
   cursor: pointer;
 }
 
@@ -50,17 +52,19 @@
   text-overflow: ellipsis;
 }
 
-.shortenTextWithOneIcon {
-  width: calc(100% - 10px);
-}
 
 .headerColumn {
   text-transform: none;
-  font-size: 12px;
+  font-size: 13px;
+  line-height: 15px;
 }
 
 .headerRow {
   border-bottom: 1px solid #d1d1d1;
+}
+
+.row {
+  font-size: 13px;
 }
 
 .oddRow {
@@ -77,7 +81,8 @@
 
 .gistic, .mutSig {
   height: 10px;
-  margin: 0 1px;
+  margin-left: 2px;
+  vertical-align:inherit !important;
 }
 
 .amp {
@@ -94,8 +99,14 @@
 
 .displayFlex {
   display: flex;
+  align-items: center;
 }
 
-.noFlexShrink {
-  flex-shrink: 0;
+.headerSortingIcon {
+  margin-left: 5px;
+}
+
+.autoMarginCheckbox {
+  margin-top: auto !important;
+  margin-bottom: auto !important;
 }

@@ -37,7 +37,7 @@ export default class GeneSymbolValidator extends React.Component<IGeneSymbolVali
 					<span className={styles.errorMessage}>
 						{`Cannot validate gene symbols because of invalid OQL. ${
 							this.props.geneQueryErrorDisplayStatus === DisplayStatus.UNFOCUSED
-							? "Please click 'Submit' to see location of error."
+							? ""
 							: this.props.oql.error.message
 						}`}
 					</span>

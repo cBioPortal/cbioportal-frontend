@@ -16,7 +16,18 @@ import {OncoprintClinicalAttribute} from "../components/oncoprint/ResultsViewOnc
 export enum SpecialAttribute {
     MutationSpectrum = "NO_CONTEXT_MUTATION_SIGNATURE",
     StudyOfOrigin = "CANCER_STUDY",
-    ProfiledInPrefix = "PROFILED_IN"
+    ProfiledInPrefix = "PROFILED_IN",
+    NumSamplesPerPatient = "NUM_SAMPLES_PER_PATIENT"
+}
+
+const locallyComputedSpecialAttributes = [SpecialAttribute.StudyOfOrigin, SpecialAttribute.NumSamplesPerPatient];
+
+export function clinicalAttributeIsPROFILEDIN(attribute:{clinicalAttributeId:string|SpecialAttribute}) {
+    return attribute.clinicalAttributeId.startsWith(SpecialAttribute.ProfiledInPrefix);
+}
+
+export function clinicalAttributeIsLocallyComputed(attribute:{clinicalAttributeId:string|SpecialAttribute}) {
+    return clinicalAttributeIsPROFILEDIN(attribute) || (locallyComputedSpecialAttributes.indexOf(attribute.clinicalAttributeId as any) > -1);
 }
 
 type OncoprintClinicalData = ClinicalData[]|MutationSpectrum[];
@@ -90,6 +101,21 @@ async function fetch(
                 uniqueSampleKey: sample.uniqueSampleKey,
                 value: studyIdToStudy[sample.studyId].name
             } as ClinicalData));
+            break;
+        case SpecialAttribute.NumSamplesPerPatient:
+            const patientToSamples = _.groupBy(samples, "uniquePatientKey");
+            const patientKeyToPatient = _.keyBy(patients, "uniquePatientKey");
+            ret = _.map(patientToSamples, (samples, patientKey)=>{
+                const patient = patientKeyToPatient[patientKey];
+                return {
+                    clinicalAttribute: attribute,
+                    clinicalAttributeId: attribute.clinicalAttributeId,
+                    patientId: patient.patientId,
+                    uniquePatientKey: patientKey,
+                    studyId: patient.studyId,
+                    value: samples.length
+                } as any as ClinicalData;
+            });
             break;
         default:
             if (attribute.clinicalAttributeId.indexOf(SpecialAttribute.ProfiledInPrefix) === 0) {

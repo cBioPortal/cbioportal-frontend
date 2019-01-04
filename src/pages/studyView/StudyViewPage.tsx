@@ -1,232 +1,290 @@
 import * as React from 'react';
-import {inject, observer} from "mobx-react";
-import styles from "./styles.module.scss";
-import { MSKTab, MSKTabs } from "../../shared/components/MSKTabs/MSKTabs";
-import { reaction, observable, computed } from 'mobx';
-import { StudyViewPageStore } from 'pages/studyView/StudyViewPageStore';
-import {CancerStudy} from 'shared/api/generated/CBioPortalAPI';
+import * as _ from 'lodash';
+import {inject, Observer, observer} from "mobx-react";
+import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
+import {computed, IReactionDisposer, reaction, observable} from 'mobx';
+import {
+    NewChart,
+    StudyViewPageStore,
+    StudyViewPageTabDescriptions,
+    StudyViewPageTabKey,
+    StudyViewPageTabKeyEnum
+} from 'pages/studyView/StudyViewPageStore';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {ClinicalDataTab} from "./tabs/ClinicalDataTab";
-import setWindowVariable from "../../shared/lib/setWindowVariable";
-import * as _ from 'lodash';
-import ErrorBox from 'shared/components/errorBox/ErrorBox';
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
-import {stringListToSet} from "../../shared/lib/StringUtils";
-import classnames from 'classnames';
-import {buildCBioPortalPageUrl} from 'shared/api/urls';
-import MobxPromise from 'mobxpromise';
-import { StudySummaryRecord } from 'pages/studyView/virtualStudy/VirtualStudy';
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
-import { StudySummaryTab } from 'pages/studyView/tabs/SummaryTab';
-import {StudyViewFilter} from "../../shared/api/generated/CBioPortalAPIInternal";
+import {StudySummaryTab} from 'pages/studyView/tabs/SummaryTab';
+import StudyPageHeader from "./studyPageHeader/StudyPageHeader";
+import "./styles.scss";
+import styles from './styles.module.scss';
+import SelectedInfo from "./SelectedInfo/SelectedInfo";
+import LabeledCheckbox from "../../shared/components/labeledCheckbox/LabeledCheckbox";
+import {Alert} from 'react-bootstrap';
+import AddChartButton from "./addChartButton/AddChartButton";
+import {CSSTransition} from "react-transition-group";
+import {sleep} from "../../shared/lib/TimeUtils";
+import {remoteData} from "../../shared/api/remoteData";
+import {Else, If, Then} from 'react-if';
+import DefaultTooltip from "../../shared/components/defaultTooltip/DefaultTooltip";
+import CustomCaseSelection from "./addChartButton/customCaseSelection/CustomCaseSelection";
 import { GroupComparison } from 'pages/studyView/tabs/GroupComparison';
-import {bind} from 'bind-decorator';
+import autobind from "autobind-decorator";
 
 export interface IStudyViewPageProps {
     routing: any;
 }
 
+export class StudyResultsSummary extends React.Component<{ store:StudyViewPageStore },{}> {
+
+    render(){
+        return (
+            <div className={"studyFilterResult"}>
+                <SelectedInfo selectedSamplesCount={this.props.store.selectedSamples.result.length} selectedPatientsCount={this.props.store.selectedPatients.length}/>
+
+                {this.props.store.mutationProfiles.result.length > 0 && (
+                    <div>
+                        <LabeledCheckbox
+                            inputProps={{className: styles.selectedInfoCheckbox}}
+                            checked={!!this.props.store.filters.withMutationData}
+                            onChange={this.props.store.toggleWithMutationDataFilter}
+                        >
+                            <LoadingIndicator
+                                isLoading={this.props.store.molecularProfileSampleCounts.isPending}/>
+                            {this.props.store.molecularProfileSampleCounts.isComplete && (
+                                `${this.props.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples.toLocaleString()} w/ mutation data`)}
+                        </LabeledCheckbox>
+                    </div>
+                )}
+                {this.props.store.cnaProfiles.result.length > 0 && (
+                    <div>
+                        <LabeledCheckbox
+                            inputProps={{className: styles.selectedInfoCheckbox}}
+                            checked={!!this.props.store.filters.withCNAData}
+                            onChange={this.props.store.toggleWithCNADataFilter}
+                        >
+                            <LoadingIndicator
+                                isLoading={this.props.store.molecularProfileSampleCounts.isPending}/>
+                            {this.props.store.molecularProfileSampleCounts.isComplete && (
+                                `${this.props.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples.toLocaleString()} w/ CNA data`)}
+                        </LabeledCheckbox>
+                    </div>
+                )}
+
+            </div>
+        )
+    }
+
+}
+
+
+
 @inject('routing')
 @observer
 export default class StudyViewPage extends React.Component<IStudyViewPageProps, {}> {
     private store: StudyViewPageStore;
+    private enableAddChartInTabs = [StudyViewPageTabKeyEnum.SUMMARY, StudyViewPageTabKeyEnum.CLINICAL_DATA];
+    private queryReaction:IReactionDisposer;
+    @observable showCustomSelectTooltip = false;
+    private inCustomSelectTooltip = false;
+
     constructor(props: IStudyViewPageProps) {
         super();
         this.store = new StudyViewPageStore();
-        //setWindowVariable("studyViewPageStore", this.store);
-        
-        reaction(
+
+        this.queryReaction = reaction(
             () => props.routing.location.query,
             query => {
-                if (!getBrowserWindow().globalStores.routing.location.pathname.includes("/newstudy")) {
+
+                if (!getBrowserWindow().globalStores.routing.location.pathname.includes("/study")) {
                     return;
                 }
 
+                this.store.updateCurrentTab(props.routing.location.query.tab);
                 this.store.updateStoreFromURL(query);
             },
-            { fireImmediately: true }
+            {fireImmediately: true}
         );
-
     }
 
-    @bind
+    @autobind
     private handleTabChange(id: string) {
-        this.props.routing.updateRoute({ tab: id });
+        this.props.routing.updateRoute({tab: id});
     }
 
-    content(){
+    private chartDataPromises = remoteData({
+        await:()=>{
+           return [
+               ..._.values(this.store.clinicalDataBinPromises),
+               ..._.values(this.store.clinicalDataCountPromises),
+               ..._.values(this.store.customChartsPromises),
+               this.store.mutationProfiles,
+               this.store.cnaProfiles,
+               this.store.selectedSamples,
+               this.store.molecularProfileSampleCounts,
 
-        if (
-            this.store.queriedSampleIdentifiers.isComplete &&
-            this.store.invalidSampleIds.isComplete &&
-            this.store.unknownQueriedIds.isComplete &&
-            this.store.displayedStudies.isComplete &&
-            _.isEmpty(this.store.unknownQueriedIds.result)
-        ) {
-            return (
-                <div className="studyView">
-                    <LoadingIndicator size={"big"}
-                                      isLoading={(this.store.queriedSampleIdentifiers.isPending ||this.store.invalidSampleIds.isPending)}
-                                      center={true}/>
-                    <StudySummary
-                        studies={this.store.displayedStudies.result}
-                        originStudies={this.store.originStudies}
-                        showOriginStudiesInSummaryDescription={this.store.showOriginStudiesInSummaryDescription}
-                    />
-
-                    <MSKTabs id="studyViewTabs" activeTabId={this.props.routing.location.query.tab}
-                        onTabClick={(id: string) => this.handleTabChange(id)}
-                        className="mainTabs">
-
-                        <MSKTab key={0} id="summary" linkText="Summary">
-                            <StudySummaryTab store={this.store} handleTabChange={this.handleTabChange}></StudySummaryTab>
-                        </MSKTab>
-                        <MSKTab key={1} id={"clinicalData"} linkText={"Clinical Data"}>
-                            <ClinicalDataTab store={this.store} />
-                        </MSKTab>
-                        <MSKTab key={2} id={"heatmaps"} linkText={"Heatmaps"}
-                                hide={this.store.MDACCHeatmapStudyMeta.result.length === 0}>
-                            <IFrameLoader height={700}
-                                          url={`//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this.store.MDACCHeatmapStudyMeta.result[0]}`}/>
-                        </MSKTab>
-                        <MSKTab key={1} id={"groupComparison"} linkText={"Group Comparison"}>
-                            <GroupComparison
-                                groups={this.store.groups}
-                                survivalPlotData={this.store.survivalPlotData}
-                                clinicalAttributes={this.store.clinicalAttributes.result}
-                            />
-                        </MSKTab>
-                    </MSKTabs>
-                </div>
-            )
-        } else {
-            <LoadingIndicator isLoading={this.store.filteredVirtualStudies.isPending} size={"big"} center={true}/>
-            if (this.store.filteredVirtualStudies.isComplete &&
-                this.store.unknownQueriedIds.isComplete &&
-                !_.isEmpty(this.store.unknownQueriedIds.result)) {
-                return (
-                    <div style={{ margin: "0px auto", maxWidth: "50%", fontSize: "16px" }}>
-                        <ErrorBox error={Error(`Unknown/Unauthorized studies ${this.store.unknownQueriedIds.result.join(', ')}`)} />
-                    </div>
-                )
-            } else {
-                return <LoadingIndicator isLoading={true} size={"big"} center={true}/>
-            }
+            ]
+        },
+        invoke: async ()=>{
+            // this gives time for charts to render
+            // product requirement that the summary data show after charts have rendered
+            // to call attention to the summary results
+            return await sleep(10);
         }
+    });
 
+    @computed
+    get addChartButtonText() {
+        if (this.store.currentTab === StudyViewPageTabKeyEnum.SUMMARY) {
+            return '+ Add Chart';
+        } else if (this.store.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
+            return '+ Add Column'
+        } else {
+            return '';
+        }
+    }
+
+    content() {
+
+        return (
+            <div className="studyView" onClick={this.showCustomSelectTooltip ? ()=>{
+                if(!this.inCustomSelectTooltip) {
+                    this.showCustomSelectTooltip = false;
+                }
+            }: undefined}>
+                {this.store.unknownQueriedIds.isComplete &&
+                this.store.unknownQueriedIds.result.length > 0 && (
+                    <Alert bsStyle="danger">
+                        <span>Unknown/Unauthorized studies {this.store.unknownQueriedIds.result.join(', ')}</span>
+                    </Alert>
+                )}
+                <LoadingIndicator size={"big"}
+                                  isLoading={(this.store.queriedSampleIdentifiers.isPending || this.store.invalidSampleIds.isPending)}
+                                  center={true}/>
+                {
+                    this.store.queriedSampleIdentifiers.isComplete &&
+                    this.store.invalidSampleIds.isComplete &&
+                    this.store.unknownQueriedIds.isComplete &&
+                    this.store.displayedStudies.isComplete && (
+                        <div>
+                            <StudyPageHeader
+                                store={this.store}
+                            />
+
+                            <div className={styles.mainTabs}>
+                                <MSKTabs id="studyViewTabs" activeTabId={this.props.routing.location.query.tab}
+                                         onTabClick={(id: string) => this.handleTabChange(id)}
+                                         className="mainTabs"
+                                         unmountOnHide={false}>
+
+                                    <MSKTab key={0} id={StudyViewPageTabKeyEnum.SUMMARY} linkText={StudyViewPageTabDescriptions.SUMMARY}>
+                                        <StudySummaryTab store={this.store} handleTabChange={this.handleTabChange}></StudySummaryTab>
+                                    </MSKTab>
+                                    <MSKTab key={1} id={StudyViewPageTabKeyEnum.CLINICAL_DATA} linkText={StudyViewPageTabDescriptions.CLINICAL_DATA}>
+                                        <ClinicalDataTab store={this.store}/>
+                                    </MSKTab>
+                                    <MSKTab key={2} id={StudyViewPageTabKeyEnum.HEATMAPS} linkText={StudyViewPageTabDescriptions.HEATMAPS}
+                                            hide={this.store.MDACCHeatmapStudyMeta.result.length === 0}>
+                                        <IFrameLoader height={700}
+                                                      url={`//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this.store.MDACCHeatmapStudyMeta.result[0]}`}/>
+                                    </MSKTab>
+                                    <MSKTab key={1} id={"groupComparison"} linkText={"Group Comparison"}>
+                                        <GroupComparison
+                                            groups={this.store.groups}
+                                            survivalPlotData={this.store.survivalPlotData}
+                                            clinicalAttributes={this.store.clinicalAttributes.result}
+                                        />
+                                    </MSKTab>
+                                </MSKTabs>
+
+
+                                <div className={styles.absolutePanel}>
+                                    <Observer>
+                                        {
+                                            () => {
+                                                return (
+                                                    <div className={styles.selectedInfo}>
+                                                        <If condition={this.chartDataPromises.isComplete}>
+                                                            <Then>
+                                                                <CSSTransition classNames="studyFilterResult" in={true}
+                                                                               appear timeout={{enter: 200}}>
+                                                                    {() => <StudyResultsSummary store={this.store}/>
+                                                                    }
+                                                                </CSSTransition>
+                                                            </Then>
+                                                            <Else>
+                                                                <LoadingIndicator isLoading={true} size={"small"} className={styles.selectedInfoLoadingIndicator}/>
+                                                            </Else>
+                                                        </If>
+                                                    </div>)
+                                            }
+                                        }
+                                    </Observer>
+                                    {(this.enableAddChartInTabs.includes(this.store.currentTab))
+                                    && (
+                                        <div style={{display: 'flex'}}>
+                                            <DefaultTooltip
+                                                visible={this.showCustomSelectTooltip}
+                                                placement={"bottomLeft"}
+                                                onVisibleChange={()=>{
+
+                                                }}
+                                                destroyTooltipOnHide={true}
+                                                overlay={() => (
+                                                    <div style={{width: '300px'}}
+                                                         onMouseEnter={()=>this.inCustomSelectTooltip=true}
+                                                         onMouseLeave={()=>this.inCustomSelectTooltip=false}
+                                                    >
+                                                        <CustomCaseSelection
+                                                            allSamples={this.store.samples.result}
+                                                            selectedSamples={this.store.selectedSamples.result}
+                                                            submitButtonText={"Select"}
+                                                            disableGrouping={true}
+                                                            queriedStudies={this.store.queriedPhysicalStudyIds.result}
+                                                            onSubmit={(chart: NewChart) => {
+                                                                this.showCustomSelectTooltip = false;
+                                                                this.store.updateCustomSelect(chart);
+                                                            }}
+                                                        />
+                                                    </div>
+                                                )}
+                                            >
+                                                <button className='btn btn-primary btn-xs'
+                                                        onClick={() => {
+                                                            this.showCustomSelectTooltip = true;
+                                                        }}
+                                                        style={{marginLeft: '10px'}}>Custom Selection
+                                                </button>
+                                            </DefaultTooltip>
+                                            <AddChartButton
+                                                buttonText={this.addChartButtonText}
+                                                store={this.store}
+                                                currentTab={this.store.currentTab}
+                                                addChartOverlayClassName='studyViewAddChartOverlay'
+                                                disableCustomTab={this.store.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+            </div>)
+
+    }
+
+    componentWillUnmount(): void {
+        this.queryReaction();
     }
 
     render() {
-        return <PageLayout noMargin={true}>
+        return <PageLayout noMargin={true} hideFooter={true} className={"subhead-dark"}>
             {
                 this.content()
             }
         </PageLayout>
-    }
-}
-
-interface IStudySummaryProps {
-    studies: CancerStudy[],
-    originStudies: MobxPromise<CancerStudy[]>,
-    showOriginStudiesInSummaryDescription: boolean
-}
-
-@observer
-class StudySummary extends React.Component<IStudySummaryProps, {}> {
-
-    @observable private showMoreDescription = false;
-
-    @computed get name() {
-        return this.props.studies.length === 1 ? this.props.studies[0].name : 'Combined Study';
-    }
-
-    @computed
-    get descriptionFirstLine() {
-        if (this.props.studies.length === 1) {
-            let elems = [<span
-                dangerouslySetInnerHTML={{__html: this.props.studies[0].description.split(/\n+/g)[0]}}/>];
-            if (this.props.studies[0].pmid) {
-                elems.push(<a target="_blank" href={`http://www.ncbi.nlm.nih.gov/pubmed/${this.props.studies[0].pmid}`} style={{marginLeft: '5px'}}>PubMed</a>);
-            }
-            return <div>{elems}</div>
-        } else {
-            return <span>{`This combined study contains samples from ${this.props.studies.length} studies`}</span>;
-        }
-    }
-
-    @computed get hasMoreDescription() {
-        return this.props.showOriginStudiesInSummaryDescription ||
-            this.props.studies.length > 1 ||
-            this.props.studies[0].description.split(/\n/g).length > 1;
-    }
-
-    @computed get descriptionRemainingLines() {
-        if (this.props.studies.length === 1) {
-            const lines = this.props.studies[0].description.split(/\n/g);
-            if (lines.length > 1) {
-                //slice fist line as its already shown
-                return [<span style={{ whiteSpace: 'pre' }} dangerouslySetInnerHTML={{ __html: lines.slice(1).join('\n') }} />]
-            }
-        } else {
-            return _.map(this.props.studies, study => {
-                return (
-                    <span>
-                        <a
-                            href={buildCBioPortalPageUrl({ pathname: 'newstudy', query: { id: study.studyId } })}
-                            target="_blank">
-                            {study.name}
-                        </a>
-                    </span>
-                )
-            })
-        }
-        return [];
-    }
-
-    render() {
-        return (
-            <div className={classnames("topBanner", styles.summary)}>
-                <h3>{this.name}</h3>
-                <div className={styles.description}>
-                    <div>
-                        {this.descriptionFirstLine}
-                        {this.hasMoreDescription && <i
-                            className={`fa fa-${this.showMoreDescription ? 'minus' : 'plus'}-circle`}
-                            onClick={() => this.showMoreDescription = !this.showMoreDescription}
-                            style={{ marginLeft: '5px', cursor: 'pointer' }}
-                        />}
-                    </div>
-
-                    {this.showMoreDescription &&
-                        <div>
-                            <p style={{ display: 'inline-grid', width: '100%' }}>{this.descriptionRemainingLines}</p>
-                            {
-                                this.props.showOriginStudiesInSummaryDescription &&
-                                (<div>
-                                    {
-                                        this.props.originStudies.isComplete &&
-                                        this.props.originStudies.result!.length > 0 &&
-                                        (<div>
-                                            <span style={{ fontWeight: 'bold', marginBottom: '5px', display: 'block' }}>
-                                                This virtual study was derived from:
-                                            </span>
-                                            {this.props.originStudies.result!.map(study => <StudySummaryRecord {...study} />)}
-                                        </div>)
-                                    }
-                                    <LoadingIndicator
-                                        isLoading={this.props.originStudies.isPending}
-                                        center={true}
-                                        size={"big"}
-                                    />
-                                </div>)
-                            }
-                        </div>
-                    }
-                </div>
-            </div>
-        )
     }
 }

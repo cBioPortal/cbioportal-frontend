@@ -7,6 +7,10 @@ import sessionServiceClient from "../../shared/api/sessionServiceInstance";
 import {CancerStudy} from "../../shared/api/generated/CBioPortalAPI";
 import {VirtualStudy} from "../../shared/model/VirtualStudy";
 import hashString from "../../shared/lib/hashString";
+import {
+    CLINICAL_TRACKS_URL_PARAM, HEATMAP_TRACKS_URL_PARAM,
+    SAMPLE_MODE_URL_PARAM
+} from "../../shared/components/oncoprint/ResultsViewOncoprint";
 
 export enum ResultsViewTab {
     ONCOPRINT="oncoprint",
@@ -56,89 +60,19 @@ export function parseConfigDisabledTabs(configDisabledTabsParam:string){
     });
 }
 
-export function updateStoreFromQuery(resultsViewPageStore:ResultsViewPageStore, query:any,
-                                     samplesSpecification:SamplesSpecificationElement[], cancerStudyIds:string[], oql:string, cohortIdsList:string[]){
-
-        if (!resultsViewPageStore._samplesSpecification || !_.isEqual(resultsViewPageStore._samplesSpecification.slice(), samplesSpecification)) {
-            resultsViewPageStore._samplesSpecification = samplesSpecification;
-        }
-
-        // set the study Ids
-        if (resultsViewPageStore._selectedStudyIds !== cancerStudyIds) {
-            resultsViewPageStore._selectedStudyIds = cancerStudyIds;
-        }
-
-        // sometimes the submitted case_set_id is not actually a case_set_id but
-        // a category of case set ids (e.g. selected studies > 1 and case category selected)
-        // in that case, note that on the query
-        if (query.case_set_id && ["w_mut","w_cna","w_mut_cna"].includes(query.case_set_id)) {
-            if (resultsViewPageStore.sampleListCategory !== query.case_set_id) {
-                resultsViewPageStore.sampleListCategory = query.case_set_id;
-            }
-        } else {
-            resultsViewPageStore.sampleListCategory = undefined;
-        }
-
-        if (query.data_priority !== undefined && parseInt(query.data_priority,10) !== resultsViewPageStore._profileFilter) {
-            resultsViewPageStore._profileFilter = parseInt(query.data_priority,10);
-        }
-
-        // note that this could be zero length if we have multiple studies
-        // in that case we derive default selected profiles
-        const profiles = getMolecularProfiles(query);
-        if (!resultsViewPageStore.selectedMolecularProfileIds || !_.isEqual(resultsViewPageStore.selectedMolecularProfileIds.slice(), profiles)) {
-            resultsViewPageStore.selectedMolecularProfileIds = profiles;
-        }
-
-        if (!_.isEqual(query.RPPA_SCORE_THRESHOLD, resultsViewPageStore.rppaScoreThreshold)) {
-            resultsViewPageStore.rppaScoreThreshold = parseFloat(query.RPPA_SCORE_THRESHOLD);
-        }
-
-        if (!_.isEqual(query.Z_SCORE_THRESHOLD, resultsViewPageStore.zScoreThreshold)) {
-            resultsViewPageStore.zScoreThreshold = parseFloat(query.Z_SCORE_THRESHOLD);
-        }
-
-        if (query.geneset_list) {
-            // we have to trim because for some reason we get a single space from submission
-            const parsedGeneSetList = query.geneset_list.trim().length ? (query.geneset_list.trim().split(/\s+/)) : [];
-            if (!_.isEqual(parsedGeneSetList, resultsViewPageStore.genesetIds)) {
-                resultsViewPageStore.genesetIds = parsedGeneSetList;
-            }
-        }
-
-        // cohortIdsList will contain virtual study ids (physicalstudies will contain the phsyical studies which comprise the virtual studies)
-        // although resultsViewStore does
-        if (!resultsViewPageStore.cohortIdsList || !_.isEqual(_.sortBy(resultsViewPageStore.cohortIdsList), _.sortBy(cancerStudyIds))) {
-            resultsViewPageStore.cohortIdsList = cancerStudyIds;
-            resultsViewPageStore.initMutationAnnotationSettings();
-        }
-
-        if (resultsViewPageStore.oqlQuery !== oql) {
-            resultsViewPageStore.oqlQuery = oql;
-        }
-
-        const queryHash = hashString(JSON.stringify(query)).toString();
-        if (resultsViewPageStore.queryHash !== queryHash ) {
-            resultsViewPageStore.queryHash = queryHash;
-        }
-}
-
 export function getVirtualStudies(cancerStudyIds:string[]):Promise<VirtualStudy[]>{
 
     const prom = new Promise<VirtualStudy[]>((resolve, reject)=>{
-        client.getAllStudiesUsingGET({projection:"SUMMARY"}).then((allStudies)=>{
-            //console.log(cancerStudyIds);
-            //console.log(allStudies);
-            const virtualStudyIds = _.differenceWith(cancerStudyIds, allStudies,(id:string, study:CancerStudy)=>id==study.studyId);
-
-            if (virtualStudyIds.length > 0) {
-                Promise.all(virtualStudyIds.map(id =>  sessionServiceClient.getVirtualStudy(id)))
-                    .then((virtualStudies)=>{
-                         resolve(virtualStudies);
-                    })
-            } else {
-                resolve([]);
-            }
+        Promise.all([
+            sessionServiceClient.getUserVirtualStudies(),
+            client.getAllStudiesUsingGET({projection:"SUMMARY"})
+        ]).then(([userVirtualStudies, allCancerStudies])=>{
+            // return virtual studies from given cancer study ids
+            const missingFromCancerStudies = _.differenceWith(cancerStudyIds, allCancerStudies,(id:string, study:CancerStudy)=>id==study.studyId);
+            const virtualStudies = userVirtualStudies.filter(
+                (virtualStudy: VirtualStudy) => (missingFromCancerStudies.includes(virtualStudy.id))
+            );
+            resolve(virtualStudies);
         });
     });
     return prom;

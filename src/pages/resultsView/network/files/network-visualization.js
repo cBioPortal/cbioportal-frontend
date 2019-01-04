@@ -2911,7 +2911,7 @@ NetworkVis.prototype._keyPressListener = function(event)
 
             // update weight slider position if input is valid
 
-            if (isNaN(input))
+            if (isNaN(input) || !$.isNumeric(input))
             {
                 // not a numeric value, update with defaults
                 input = this.ALTERATION_PERCENT;

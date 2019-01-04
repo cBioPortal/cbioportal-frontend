@@ -139,7 +139,7 @@ export default class ExtendedRouterStore extends RouterStore {
         return _.some(tests,(test)=>test.test(path));
     }
 
-    @action updateRoute(newParams: QueryParams, path:string | undefined = undefined, clear = false) {
+    @action updateRoute(newParams: QueryParams, path:string | undefined = undefined, clear = false, replace = false) {
         // default to current path
         path = (path !== undefined) ? path : this.location.pathname;
 
@@ -166,7 +166,7 @@ export default class ExtendedRouterStore extends RouterStore {
         if (!ServerConfigHelpers.sessionServiceIsEnabled() || !this.sessionEnabledForPath(path) || JSON.stringify(newQuery).length < this.urlLengthThresholdForSession){
             // if there happens to be session, kill it because we're going URL, baby
             delete this._session;
-            this.push( URL.format({pathname: path, query: newQuery, hash:this.location.hash}) );
+            this[replace ? "replace" : "push"]( URL.format({pathname: path, query: newQuery, hash:this.location.hash}) );
         } else {
             // we are using session: do we need to make a new session?
 
@@ -180,7 +180,7 @@ export default class ExtendedRouterStore extends RouterStore {
                 // add session version
                 this._session = pendingSession;
 
-                this.push( URL.format({pathname: path, query: { session_id:'pending'}, hash:this.location.hash}) );
+                this[replace ? "replace" : "push"]( URL.format({pathname: path, query: { session_id:'pending'}, hash:this.location.hash}) );
                 this.saveRemoteSession(pendingSession.query).then((sessionResponse)=>{
                     this._session!.id = sessionResponse.id;
                     // we use replace because we don't want the pending state ("?session_id=pending") in the history
@@ -193,7 +193,7 @@ export default class ExtendedRouterStore extends RouterStore {
                     this.replace( URL.format({pathname: this.location.pathname, query: {session_id:sessionResponse.id}, hash:this.location.hash}) );
                 });
             } else { // we already have a session but we only need to update path or hash
-                this.push( URL.format({pathname: path, query: {session_id:this._session.id}, hash:this.location.hash}) );
+                this[replace ? "replace" : "push"]( URL.format({pathname: path, query: {session_id:this._session.id}, hash:this.location.hash}) );
             }
         }
 

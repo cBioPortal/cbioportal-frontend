@@ -25,6 +25,7 @@ import MutationMapperStore from "./MutationMapperStore";
 import { EnsemblTranscript } from 'shared/api/generated/GenomeNexusAPI';
 import Mutations from 'pages/resultsView/mutation/Mutations';
 import {IServerConfig} from "../../../config/IAppConfig";
+import WindowStore from "../window/WindowStore";
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
@@ -44,12 +45,15 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
 {
     @observable protected is3dPanelOpen = false;
     @observable protected lollipopPlotGeneX = 0;
-    @observable protected geneWidth = 665;
+    //@observable protected geneWidth = 665;
 
     protected handlers:any;
 
     constructor(props: P) {
         super(props);
+
+
+
 
         this.open3dPanel = this.open3dPanel.bind(this);
         this.close3dPanel = this.close3dPanel.bind(this);
@@ -60,6 +64,10 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
             },
             onXAxisOffset:action((offset:number)=>{this.lollipopPlotGeneX = offset;})
         };
+    }
+
+    @computed get geneWidth(){
+        return WindowStore.size.width * .7;
     }
 
     @computed get geneSummary():JSX.Element {

@@ -5,32 +5,15 @@ import UnsupportedBrowserModal from "shared/components/unsupportedBrowserModal/U
 import '../../globalStyles/prefixed-global.scss';
 import PortalHeader from "./PortalHeader";
 import PortalFooter from "./PortalFooter";
-import {remoteData} from "../../shared/api/remoteData";
-import request from 'superagent';
 import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 import {observer} from "mobx-react";
-import client from "../../shared/api/cbioportalClientInstance";
-import internalClient from "../../shared/api/cbioportalInternalClientInstance";
-import {
-    getCbioPortalApiUrl,
-    getConfigurationServiceApiUrl, getG2SApiUrl,
-    getGenomeNexusApiUrl,
-    getOncoKbApiUrl
-} from "../../shared/api/urls";
-import civicClient from "../../shared/api/civicClientInstance";
-import genomeNexusClient from '../../shared/api/genomeNexusClientInstance';
-import internalGenomeNexusClient from '../../shared/api/genomeNexusInternalClientInstance';
-import oncoKBClient from '../../shared/api/oncokbClientInstance';
-import genome2StructureClient from '../../shared/api/g2sClientInstance';
-import {getSessionKey} from "../../shared/lib/ExtendedRouterStore";
+
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 import AppConfig from "appConfig";
 import Helmet from "react-helmet";
-import {setServerConfig, updateConfig} from "../../config/config";
-import {embedGoogleAnalytics} from "../../shared/lib/tracking";
 import {computed} from "mobx";
-import { If, Else } from 'react-if';
-import {AppStore} from "../../AppStore";
+import { If, Else, Then } from 'react-if';
+import ErrorScreen from "./ErrorScreen";
 
 interface IContainerProps {
     location: Location;
@@ -82,13 +65,21 @@ export default class Container extends React.Component<IContainerProps, {}> {
                             <PortalHeader appStore={this.appStore}/>
                         </div>
                     </div>
+                    <If condition={this.appStore.isErrorCondition}>
+                       <Then>
+                           <div className="contentWrapper">
+                               <ErrorScreen appStore={this.appStore}/>
+                           </div>
+                       </Then>
+                        <Else>
+                            <div className="contentWrapper">
+                                <UnsupportedBrowserModal/>
+                                {(this.isSessionLoaded) && this.props.children}
+                            </div>
+                        </Else>
+                    </If>
 
-                    <div className="contentWrapper">
-                        <UnsupportedBrowserModal/>
-                        {(this.isSessionLoaded) && this.props.children}
-                    </div>
 
-                    <PortalFooter appStore={this.appStore}/>
                 </div>
                 <Else>
                     <LoadingIndicator isLoading={!this.isSessionLoaded} center={true} size={"big"}/>
@@ -97,4 +88,5 @@ export default class Container extends React.Component<IContainerProps, {}> {
         );
     }
 }
-//
+
+

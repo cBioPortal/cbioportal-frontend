@@ -1,5 +1,5 @@
 import * as $ from "jquery";
-import {RuleSetParams} from "oncoprintjs";
+import {IGeneticAlterationRuleSetParams, RuleSetParams} from "oncoprintjs";
 // Feed this in as
 
 // Default grey
@@ -192,24 +192,27 @@ let non_mutation_rule_params = {
 		legend_label: 'Fusion',
 		legend_order: FUSION_LEGEND_ORDER
 	}
-    },
+    }
+};
+
+export const germline_rule_params = {
     // germline
     'disp_germ': {
-        // white stripe in the middle
-        'true': {
-            shapes: [{
-                'type': 'rectangle',
-                'fill': MUT_COLOR_GERMLINE,
-                'x': '0%',
-                'y': '46%',
-                'width': '100%',
-                'height': '8%',
-                'z': 7
-            }],
+    // white stripe in the middle
+    'true': {
+        shapes: [{
+            'type': 'rectangle',
+            'fill': MUT_COLOR_GERMLINE,
+            'x': '0%',
+            'y': '46%',
+            'width': '100%',
+            'height': '8%',
+            'z': 7
+        }],
             legend_label: 'Germline Mutation',
             legend_order: GERMLINE_LEGEND_ORDER
-        }
     }
+}
 };
 
 const base_genetic_rule_set_params = {
@@ -219,7 +222,7 @@ const base_genetic_rule_set_params = {
 	legend_base_color: DEFAULT_GREY
 };
 
-export const genetic_rule_set_same_color_for_all_no_recurrence:RuleSetParams =
+export const genetic_rule_set_same_color_for_all_no_recurrence:IGeneticAlterationRuleSetParams =
 	$.extend({}, base_genetic_rule_set_params, {
 		'rule_params': $.extend({}, non_mutation_rule_params, {
 			'disp_mut': {
@@ -240,7 +243,7 @@ export const genetic_rule_set_same_color_for_all_no_recurrence:RuleSetParams =
 		})
 	});
 
-export const genetic_rule_set_same_color_for_all_recurrence:RuleSetParams =
+export const genetic_rule_set_same_color_for_all_recurrence:IGeneticAlterationRuleSetParams =
 	$.extend({}, base_genetic_rule_set_params, {
 		'rule_params': $.extend({}, non_mutation_rule_params, {
 			'disp_mut': {
@@ -274,7 +277,7 @@ export const genetic_rule_set_same_color_for_all_recurrence:RuleSetParams =
 		})
 	});
 
-export const genetic_rule_set_different_colors_no_recurrence:RuleSetParams =
+export const genetic_rule_set_different_colors_no_recurrence:IGeneticAlterationRuleSetParams =
 	$.extend({}, base_genetic_rule_set_params, {
 			'rule_params': $.extend({}, non_mutation_rule_params, {
 			'disp_mut': {
@@ -347,7 +350,7 @@ export const genetic_rule_set_different_colors_no_recurrence:RuleSetParams =
 		})
 	});
 
-export const genetic_rule_set_different_colors_recurrence:RuleSetParams =
+export const genetic_rule_set_different_colors_recurrence:IGeneticAlterationRuleSetParams =
 	$.extend({}, base_genetic_rule_set_params, {
 			'rule_params': $.extend({}, non_mutation_rule_params, {
 			'disp_mut': {

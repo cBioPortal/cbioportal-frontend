@@ -85,7 +85,7 @@
     "https"
   ],
   "paths": {
-    "/attributes/{attributeId}/clinical-data-bin-counts/fetch": {
+    "/clinical-data-bin-counts/fetch": {
       "post": {
         "tags": [
           "Study View"
@@ -100,25 +100,6 @@
         ],
         "parameters": [
           {
-            "name": "attributeId",
-            "in": "path",
-            "description": "Attribute ID e.g. AGE",
-            "required": true,
-            "type": "string"
-          },
-          {
-            "name": "clinicalDataType",
-            "in": "query",
-            "description": "Type of the clinical data",
-            "required": false,
-            "type": "string",
-            "default": "SAMPLE",
-            "enum": [
-              "SAMPLE",
-              "PATIENT"
-            ]
-          },
-          {
             "name": "dataBinMethod",
             "in": "query",
             "description": "Method for data binning",
@@ -131,20 +112,12 @@
             ]
           },
           {
-            "name": "disableLogScale",
-            "in": "query",
-            "description": "Whether to disable log scaling",
-            "required": false,
-            "type": "boolean",
-            "default": false
-          },
-          {
             "in": "body",
-            "name": "studyViewFilter",
-            "description": "Study view filter",
+            "name": "clinicalDataBinCountFilter",
+            "description": "Clinical data bin count filter",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/StudyViewFilter"
+              "$ref": "#/definitions/ClinicalDataBinCountFilter"
             }
           }
         ],
@@ -192,6 +165,114 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/ClinicalDataCountItem"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clinical-data-density-plot/fetch": {
+      "post": {
+        "tags": [
+          "Study View"
+        ],
+        "summary": "Fetch clinical data density plot bins by study view filter",
+        "operationId": "fetchClinicalDataDensityPlotUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "xAxisAttributeId",
+            "in": "query",
+            "description": "Clinical Attribute ID of the X axis",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "xAxisBinCount",
+            "in": "query",
+            "description": "Number of the bins in X axis",
+            "required": false,
+            "type": "integer",
+            "default": 50,
+            "format": "int32"
+          },
+          {
+            "name": "xAxisStart",
+            "in": "query",
+            "description": "Starting point of the X axis, if different than smallest value",
+            "required": false,
+            "type": "number"
+          },
+          {
+            "name": "xAxisEnd",
+            "in": "query",
+            "description": "Starting point of the X axis, if different than largest value",
+            "required": false,
+            "type": "number"
+          },
+          {
+            "name": "yAxisAttributeId",
+            "in": "query",
+            "description": "Clinical Attribute ID of the Y axis",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "yAxisBinCount",
+            "in": "query",
+            "description": "Number of the bins in Y axis",
+            "required": false,
+            "type": "integer",
+            "default": 50,
+            "format": "int32"
+          },
+          {
+            "name": "yAxisStart",
+            "in": "query",
+            "description": "Starting point of the Y axis, if different than smallest value",
+            "required": false,
+            "type": "number"
+          },
+          {
+            "name": "yAxisEnd",
+            "in": "query",
+            "description": "Starting point of the Y axis, if different than largest value",
+            "required": false,
+            "type": "number"
+          },
+          {
+            "name": "clinicalDataType",
+            "in": "query",
+            "description": "Clinical data type of both attributes",
+            "required": true,
+            "type": "string",
+            "enum": [
+              "SAMPLE",
+              "PATIENT"
+            ]
+          },
+          {
+            "in": "body",
+            "name": "studyViewFilter",
+            "description": "Study view filter",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/StudyViewFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/DensityPlotBin"
               }
             }
           }
@@ -1379,6 +1460,55 @@
       },
       "title": "AlterationEnrichment"
     },
+    "ClinicalDataBinCountFilter": {
+      "type": "object",
+      "properties": {
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClinicalDataBinFilter"
+          }
+        },
+        "studyViewFilter": {
+          "$ref": "#/definitions/StudyViewFilter"
+        }
+      },
+      "title": "ClinicalDataBinCountFilter"
+    },
+    "ClinicalDataBinFilter": {
+      "type": "object",
+      "properties": {
+        "attributeId": {
+          "type": "string"
+        },
+        "clinicalDataType": {
+          "type": "string",
+          "enum": [
+            "SAMPLE",
+            "PATIENT"
+          ]
+        },
+        "customBins": {
+          "type": "array",
+          "items": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "disableLogScale": {
+          "type": "boolean"
+        },
+        "end": {
+          "type": "number",
+          "format": "double"
+        },
+        "start": {
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "title": "ClinicalDataBinFilter"
+    },
     "ClinicalDataCount": {
       "type": "object",
       "properties": {
@@ -1644,6 +1774,13 @@
         "attributeId": {
           "type": "string"
         },
+        "clinicalDataType": {
+          "type": "string",
+          "enum": [
+            "SAMPLE",
+            "PATIENT"
+          ]
+        },
         "count": {
           "type": "integer",
           "format": "int32"
@@ -1661,6 +1798,34 @@
         }
       },
       "title": "DataBin"
+    },
+    "DensityPlotBin": {
+      "type": "object",
+      "properties": {
+        "binX": {
+          "type": "number"
+        },
+        "binY": {
+          "type": "number"
+        },
+        "count": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "maxX": {
+          "type": "number"
+        },
+        "maxY": {
+          "type": "number"
+        },
+        "minX": {
+          "type": "number"
+        },
+        "minY": {
+          "type": "number"
+        }
+      },
+      "title": "DensityPlotBin"
     },
     "EnrichmentFilter": {
       "type": "object",
@@ -2205,6 +2370,24 @@
       },
       "title": "MutationSpectrumFilter"
     },
+    "RectangleBounds": {
+      "type": "object",
+      "properties": {
+        "xEnd": {
+          "type": "number"
+        },
+        "xStart": {
+          "type": "number"
+        },
+        "yEnd": {
+          "type": "number"
+        },
+        "yStart": {
+          "type": "number"
+        }
+      },
+      "title": "RectangleBounds"
+    },
     "Sample": {
       "type": "object",
       "required": [
@@ -2288,6 +2471,9 @@
             "$ref": "#/definitions/MutationGeneFilter"
           }
         },
+        "mutationCountVsCNASelection": {
+          "$ref": "#/definitions/RectangleBounds"
+        },
         "sampleIdentifiers": {
           "type": "array",
           "items": {
@@ -2299,6 +2485,12 @@
           "items": {
             "type": "string"
           }
+        },
+        "withCNAData": {
+          "type": "boolean"
+        },
+        "withMutationData": {
+          "type": "boolean"
         }
       },
       "title": "StudyViewFilter"

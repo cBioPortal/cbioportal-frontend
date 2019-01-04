@@ -31,8 +31,12 @@ export default class EnrichmentsTab extends React.Component<IEnrichmentsTabProps
             return <LoadingIndicator isLoading={true} center={true} size={"big"} />;
         }
 
-        if (this.props.store.alteredSampleKeys.result!.length === 0 || this.props.store.unalteredSampleKeys.result!.length === 0) {
-            return <div className={'alert alert-info'}>No alteration in selected samples, therefore could not perform this calculation.</div>;
+        if (this.props.store.alteredSampleKeys.result!.length === 0) {
+            return <div className={'alert alert-info'}>No queried samples are altered, therefore this calculation cannot be performed.</div>;
+        }
+
+        if (this.props.store.unalteredSampleKeys.result!.length === 0) {
+            return <div className={'alert alert-info'}>All queried samples are altered, therefore this calculation cannot be performed.</div>;
         }
 
         if (this.props.store.mutationEnrichmentProfiles.isPending ||

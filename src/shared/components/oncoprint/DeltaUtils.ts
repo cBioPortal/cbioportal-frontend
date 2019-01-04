@@ -36,6 +36,7 @@ export function transition(
     transitionWhitespaceBetweenColumns(nextProps, prevProps, oncoprint);
     transitionShowMinimap(nextProps, prevProps, oncoprint);
     transitionOnMinimapCloseCallback(nextProps, prevProps, oncoprint);
+    transitionShowSublabels(nextProps, prevProps, oncoprint);
     transitionTracks(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId, getMolecularProfileMap);
     transitionSortConfig(nextProps, prevProps, oncoprint);
     transitionTrackGroupSortPriority(nextProps, prevProps, oncoprint);
@@ -48,6 +49,16 @@ export function transition(
     }
     if (suppressingRendering) {
         doReleaseRendering(nextProps, oncoprint);
+    }
+}
+
+export function transitionShowSublabels(
+    nextProps:IOncoprintProps,
+    prevProps:Partial<IOncoprintProps>,
+    oncoprint: OncoprintJS<any>
+) {
+    if (nextProps.showSublabels !== prevProps.showSublabels) {
+        oncoprint.setShowTrackSublabels(!!nextProps.showSublabels);
     }
 }
 
@@ -116,7 +127,7 @@ function transitionHorzZoomToFit(
     prevProps:Partial<IOncoprintProps>,
     oncoprint:OncoprintJS<any>
 ) {
-    if (nextProps.horzZoomToFitIds !== prevProps.horzZoomToFitIds) {
+    if (!_.isEqual(nextProps.horzZoomToFitIds, prevProps.horzZoomToFitIds)) {
         oncoprint.updateHorzZoomToFitIds(nextProps.horzZoomToFitIds || []);
     }
 }
@@ -216,7 +227,10 @@ function allTracks(props:Partial<IOncoprintProps>) {
     );
 }
 
-function shouldSuppressRenderingForTransition(nextProps: IOncoprintProps, prevProps: Partial<IOncoprintProps>) {
+function shouldSuppressRenderingForTransition(
+    nextProps: IOncoprintProps,
+    prevProps: Partial<IOncoprintProps>,
+) {
     // If cost of rerendering everything less than cost of all the rerenders that would happen in the process
     //  of incrementally changing the oncoprint state.
     return !nextProps.suppressRendering && // dont add suppress if already suppressing
@@ -336,9 +350,9 @@ function hasGeneticTrackRuleSetChanged(
     nextProps:IOncoprintProps,
     prevProps:Partial<IOncoprintProps>,
 ) {
-    return (getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers) !==
-    getGeneticTrackRuleSetParams(prevProps.distinguishMutationType, prevProps.distinguishDrivers));
-    // we can do shallow equality because getGeneticTrackRuleSetParams do not create new objects each time - see impl to understand
+    return ((nextProps.distinguishMutationType !== prevProps.distinguishMutationType) ||
+        (nextProps.distinguishDrivers !== prevProps.distinguishDrivers) ||
+        (nextProps.distinguishGermlineMutations !== prevProps.distinguishGermlineMutations));
 }
 
 function transitionTracks(
@@ -406,6 +420,10 @@ function transitionTracks(
                         getMolecularProfileMap, oncoprint, nextProps, prevProps, trackIdForRuleSetSharing);
         }
     }
+    // Oncce tracks have been added and deleted, transition order
+    transitionGeneticTrackOrder(nextProps, prevProps, oncoprint, getTrackSpecKeyToTrackId);
+
+
 
     // Transition clinical tracks
     const prevClinicalTracks = _.keyBy(prevProps.clinicalTracks || [], track=>track.key);
@@ -448,6 +466,25 @@ function transitionTracks(
             transitionHeatmapTrack(undefined, prevHeatmapTracks[track.key], getTrackSpecKeyToTrackId,
                                    () => undefined, oncoprint, nextProps, {}, trackIdForRuleSetSharing);
         }
+    }
+}
+
+function transitionGeneticTrackOrder(
+    nextProps:IOncoprintProps,
+    prevProps:Partial<IOncoprintProps>,
+    oncoprint:OncoprintJS<any>,
+    getTrackSpecKeyToTrackId:()=>{[key:string]:TrackId}
+) {
+    const nextTracksMap = _.keyBy(nextProps.geneticTracks, "key");
+    const prevTracksMap = _.keyBy(prevProps.geneticTracks || [], "key");
+    const nextOrder = (nextProps.geneticTracksOrder || nextProps.geneticTracks.map(t=>t.key))
+                    .filter(key=>(key in nextTracksMap));
+    const prevOrder = (prevProps.geneticTracksOrder || (prevProps.geneticTracks || []).map(t=>t.key))
+                    .filter(key=>(key in prevTracksMap));
+
+    if (!_.isEqual(nextOrder, prevOrder)) {
+        const trackSpecKeyToTrackId = getTrackSpecKeyToTrackId();
+        oncoprint.setTrackGroupOrder(GENETIC_TRACK_GROUP_INDEX, nextOrder.map(key=>trackSpecKeyToTrackId[key]));
     }
 }
 
@@ -560,16 +597,18 @@ function transitionGeneticTrack(
     } else if (nextSpec && !prevSpec) {
         // Add track
         const geneticTrackParams = {
-            rule_set_params: getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers),
+            rule_set_params: getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers, nextProps.distinguishGermlineMutations),
             label: nextSpec.label,
+            sublabel: nextSpec.sublabel,
             track_label_color: nextSpec.labelColor || undefined,
             target_group: GENETIC_TRACK_GROUP_INDEX,
             sortCmpFn: getGeneticTrackSortComparator(sortByMutationType(nextProps), sortByDrivers(nextProps)),
             description: nextSpec.oql,
             data_id_key: "uid",
             data: nextSpec.data,
-            tooltipFn: makeGeneticTrackTooltip(true, getMolecularProfileMap, nextProps.alterationTypesInQuery),
+            tooltipFn: makeGeneticTrackTooltip(getMolecularProfileMap, nextProps.alterationTypesInQuery),
             track_info: nextSpec.info,
+            $track_info_tooltip_elt: nextSpec.infoTooltip ? $('<div>'+nextSpec.infoTooltip+'</div>') : undefined,
             removeCallback: () => {
                 delete getTrackSpecKeyToTrackId()[nextSpec.key];
                 if (nextSpec.removeCallback) nextSpec.removeCallback();
@@ -596,7 +635,7 @@ function transitionGeneticTrack(
         const nextSortByDrivers = sortByDrivers(nextProps);
         if ((nextSortByMutationType !== sortByMutationType(prevProps)) ||
             (nextSortByDrivers !== sortByDrivers(prevProps))) {
-            oncoprint.setTrackSortComparator(trackId, getGeneticTrackSortComparator(sortByMutationType(nextProps), sortByDrivers(nextProps)));
+            oncoprint.setTrackSortComparator(trackId, getGeneticTrackSortComparator(nextSortByMutationType, nextSortByDrivers));
         }
         if (nextSpec.data !== prevSpec.data) {
             // shallow equality check
@@ -604,11 +643,14 @@ function transitionGeneticTrack(
         }
 
         if (hasGeneticTrackTooltipChanged(nextProps, prevProps)) {
-            oncoprint.setTrackTooltipFn(trackId, makeGeneticTrackTooltip(true, getMolecularProfileMap, nextProps.alterationTypesInQuery));
+            oncoprint.setTrackTooltipFn(trackId, makeGeneticTrackTooltip(getMolecularProfileMap, nextProps.alterationTypesInQuery));
         }
 
         if (nextSpec.info !== prevSpec.info) {
             oncoprint.setTrackInfo(trackId, nextSpec.info);
+        }
+        if (nextSpec.infoTooltip !== prevSpec.infoTooltip) {
+            oncoprint.setTrackInfoTooltip(trackId, nextSpec.infoTooltip ? $('<div>'+nextSpec.infoTooltip+'</div>') : undefined);
         }
 
         // update ruleset if its changed
@@ -618,7 +660,7 @@ function transitionGeneticTrack(
                 oncoprint.shareRuleSet(trackIdForRuleSetSharing.genetic, trackId);
             } else {
                 // otherwise, update ruleset
-                oncoprint.setRuleSet(trackId, getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers));
+                oncoprint.setRuleSet(trackId, getGeneticTrackRuleSetParams(nextProps.distinguishMutationType, nextProps.distinguishDrivers, nextProps.distinguishGermlineMutations));
             }
         }
         // either way, use this one now
@@ -678,7 +720,8 @@ function transitionClinicalTrack(
             sortCmpFn: getClinicalTrackSortComparator(nextSpec),
             init_sort_direction: 0 as 0,
             target_group: CLINICAL_TRACK_GROUP_INDEX,
-            onSortDirectionChange: nextProps.onTrackSortDirectionChange
+            onSortDirectionChange: nextProps.onTrackSortDirectionChange,
+            custom_track_options: nextSpec.custom_options
         };
         trackSpecKeyToTrackId[nextSpec.key] = oncoprint.addTracks([clinicalTrackParams])[0];
     } else if (nextSpec && prevSpec) {
@@ -694,6 +737,10 @@ function transitionClinicalTrack(
         }
         // set tooltip, its cheap
         oncoprint.setTrackTooltipFn(trackId, makeClinicalTrackTooltip(nextSpec, true));
+        // set custom track options if they've shallow changed - its cheap
+        if (prevSpec.custom_options !== nextSpec.custom_options) {
+            oncoprint.setTrackCustomOptions(trackId, nextSpec.custom_options);
+        }
     }
 }
 function transitionGenesetHeatmapTrack(

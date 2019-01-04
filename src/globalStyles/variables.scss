@@ -3,6 +3,8 @@
 /* Colors */
 $mutationColor: blue;
 
+$main-bg: #f5f5f5;
+
 $cream: #F6F4EF;
 $darkCream: #ECE7DB;
 $darkestCream: #DAD1BC;
@@ -21,7 +23,7 @@ $greenSuccess: #11a747;
 .portalWidth{
   padding-left:20px;
   padding-right:20px;
-  min-width:800px;
+  min-width:400px;
 }
 
 $gutterWidth: 20px;
@@ -36,8 +38,6 @@ $cornerBorderRadius: 5px;
 
 $standardMargin:15px;
 
-$study-view-primary-color: #2986E2;
-
 .framedImage {
   margin:20px 0;
   border:1px solid #eee !important;
@@ -47,4 +47,4 @@ $study-view-primary-color: #2986E2;
   box-shadow: 1px 1px 1px 0px rgba(0,0,0,0.21);
 }
 
-
+$study-view-primary-color: #2986E2;

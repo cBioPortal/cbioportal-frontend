@@ -1,27 +1,31 @@
 import * as React from "react";
-import { observer } from "mobx-react";
-import { VictoryPie, VictoryContainer, VictoryLabel, VictoryLegend, Slice } from 'victory';
-import { observable, computed, action, toJS } from "mobx";
+import {observer} from "mobx-react";
+import {Slice, VictoryContainer, VictoryLabel, VictoryLegend, VictoryPie} from 'victory';
+import {action, computed, observable, toJS} from "mobx";
 import _ from "lodash";
 import {getFrequencyStr, toSvgDomNodeWithLegend} from "pages/studyView/StudyViewUtils";
 import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
-import { AbstractChart } from "pages/studyView/charts/ChartContainer";
+import {AbstractChart} from "pages/studyView/charts/ChartContainer";
 import ifndef from "shared/lib/ifndef";
-import { bind } from "bind-decorator";
-import { ClinicalDataCountWithColor } from "pages/studyView/StudyViewPageStore";
-import classnames from 'classnames';
+import autobind from 'autobind-decorator';
+import {ClinicalDataCountWithColor} from "pages/studyView/StudyViewPageStore";
 import ClinicalTable from "pages/studyView/table/ClinicalTable";
-import { If } from 'react-if';
+import {If} from 'react-if';
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
+import DefaultTooltip from "../../../../shared/components/defaultTooltip/DefaultTooltip";
+import {getTextWidth} from "../../../../shared/lib/wrapText";
 
 export interface IPieChartProps {
+    width: number;
+    height: number;
     data: ClinicalDataCountWithColor[];
     filters: string[];
     onUserSelection: (values: string[]) => void;
-    compareCohorts: (selectedValues: string[]) => void;
-    active: boolean;
     placement: 'left' | 'right';
+    patientAttribute: boolean;
     label?: string;
+    labelDescription?: string;
+    compareCohorts: (selectedValues: string[]) => void;
 }
 
 @observer
@@ -33,7 +37,7 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         super(props);
     }
 
-    @bind
+    @autobind
     private onUserSelection(filter: string) {
         let filters = toJS(this.props.filters);
         if (_.includes(filters, filter)) {
@@ -48,31 +52,35 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         const self = this;
         return [{
             target: "data",
-            eventHandlers: {
-                onClick: () => {
-                    return [
-                        {
-                            target: "data",
-                            mutation: (props: any) => {
-                                this.onUserSelection(props.datum.value);
-                            }
-                        }
-                    ];
-                }
-            }
+            eventHandlers: this.pieSliceOnClickEventHandlers
+        }, {
+            target: "labels",
+            eventHandlers: this.pieSliceOnClickEventHandlers
         }];
+    }
+
+    private get pieSliceOnClickEventHandlers() {
+        return {
+            onClick: () => {
+                return [
+                    {
+                        target: "data",
+                        mutation: (props: any) => {
+                            this.onUserSelection(props.datum.value);
+                        }
+                    }
+                ];
+            }
+        }
     }
 
     @observable isTooltipHovered: boolean = false;
     @observable tooltipHighlightedRow: string | undefined = undefined;
 
-    @bind
-    @action private highlightedRow(value: string): void {
+    @autobind
+    @action
+    private highlightedRow(value: string): void {
         this.tooltipHighlightedRow = value;
-    }
-
-    @computed private get showTooltip() {
-        return this.props.active || this.isTooltipHovered
     }
 
     public downloadData() {
@@ -83,20 +91,23 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         return toSvgDomNodeWithLegend(this.svg, ".studyViewPieChartLegend", ".studyViewPieChartGroup", true);
     }
 
-    @computed get totalCount() {
+    @computed
+    get totalCount() {
         return _.sumBy(this.props.data, obj => obj.count)
     }
 
-    @computed get fill() {
+    @computed
+    get fill() {
         return (d: ClinicalDataCountWithColor) => {
             if (!_.isEmpty(this.props.filters) && !_.includes(this.props.filters, d.value)) {
-                return STUDY_VIEW_CONFIG.colors.theme.unselectedPieSlices;
+                return STUDY_VIEW_CONFIG.colors.na;
             }
             return d.color;
         };
     }
 
-    @computed get stroke() {
+    @computed
+    get stroke() {
         return (d: ClinicalDataCountWithColor) => {
             if (!_.isEmpty(this.props.filters) && _.includes(this.props.filters, d.value)) {
                 return "#cccccc";
@@ -105,7 +116,8 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         };
     }
 
-    @computed get strokeWidth() {
+    @computed
+    get strokeWidth() {
         return (d: ClinicalDataCountWithColor) => {
             if (!_.isEmpty(this.props.filters) && _.includes(this.props.filters, d.value)) {
                 return 3;
@@ -114,7 +126,8 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         };
     }
 
-    @computed get fillOpacity() {
+    @computed
+    get fillOpacity() {
         return (d: ClinicalDataCountWithColor) => {
             if (!_.isEmpty(this.props.filters) && !_.includes(this.props.filters, d.value)) {
                 return '0.5';
@@ -123,56 +136,67 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         };
     }
 
-    @bind
-    private tooltipMouseEnter(): void {
-        this.isTooltipHovered = true;
-    }
-
-    @bind
-    private tooltipMouseLeave(): void {
-        this.isTooltipHovered = false;
-    }
-
-    @bind
+    @autobind
     private x(d: ClinicalDataCountWithColor) {
         return d.value;
     }
 
-    @bind
+    @autobind
     private y(d: ClinicalDataCountWithColor) {
         return d.count;
     }
 
-    @bind
+    @autobind
     private label(d: ClinicalDataCountWithColor) {
-        return ((d.count * 360) / this.totalCount) < 20 ? '' : d.count;
+        return d.count / this.totalCount > 0.5 ? d.count.toLocaleString() : (
+            this.maxLength(d.count / this.totalCount, this.pieSliceRadius / 3) <
+            getTextWidth(
+                d.count.toLocaleString(),
+                CBIOPORTAL_VICTORY_THEME.axis.style.tickLabels.fontFamily,
+                `${CBIOPORTAL_VICTORY_THEME.axis.style.tickLabels.fontSize}px`
+            ) ? '' : d.count.toLocaleString());
     }
 
-    @computed get victoryPie() {
+    // We do want to show a bigger pie chart when the height is way smaller than width
+    @computed
+    get chartSize() {
+        return (this.props.width + this.props.height ) / 2;
+    }
+
+    @computed
+    get pieSliceRadius(): number {
+        const chartWidth = this.props.width > this.props.height ? this.props.height : this.props.width;
+        return chartWidth / 2 - STUDY_VIEW_CONFIG.thresholds.piePadding;
+    }
+
+    @computed
+    get victoryPie() {
         return (
             <VictoryPie
                 standalone={false}
                 theme={CBIOPORTAL_VICTORY_THEME}
-                containerComponent={<VictoryContainer responsive={false} />}
-                groupComponent={<g className="studyViewPieChartGroup" />}
-                width={190}
-                height={180}
-                labelRadius={20}
-                padding={30}
+                containerComponent={<VictoryContainer responsive={false}/>}
+                groupComponent={<g className="studyViewPieChartGroup"/>}
+                width={this.props.width}
+                height={this.chartSize}
+                labelRadius={this.pieSliceRadius / 3}
+                radius={this.pieSliceRadius}
                 labels={this.label}
                 data={this.props.data}
-                dataComponent={<CustomSlice />}
-                labelComponent={<VictoryLabel />}
+                dataComponent={<CustomSlice/>}
+                labelComponent={<VictoryLabel/>}
                 events={this.userEvents}
                 style={{
                     data: {
                         fill: ifndef(this.fill, "#cccccc"),
                         stroke: ifndef(this.stroke, "0x000000"),
                         strokeWidth: ifndef(this.strokeWidth, 0),
-                        fillOpacity: ifndef(this.fillOpacity, 1)
+                        fillOpacity: ifndef(this.fillOpacity, 1),
+                        cursor: 'pointer'
                     },
                     labels: {
-                        fill: "white"
+                        fill: "white",
+                        cursor: 'pointer'
                     }
                 }}
                 x={this.x}
@@ -181,7 +205,8 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
         );
     }
 
-    @computed get victoryLegend() {
+    @computed
+    get victoryLegend() {
         const legendData = this.props.data.map(data =>
             ({name: `${data.value}: ${data.count} (${getFrequencyStr(100 * data.count / this.totalCount)})`}));
         const colorScale = this.props.data.map(data => data.color);
@@ -200,54 +225,50 @@ export default class PieChart extends React.Component<IPieChartProps, {}> implem
                 standalone={false}
                 theme={theme}
                 colorScale={colorScale}
-                x={0} y={181}
+                x={0} y={this.props.height + 1}
                 rowGutter={-10}
                 title={this.props.label || "Legend"}
                 centerTitle={true}
-                style={{ title: { fontWeight: "bold" } }}
+                style={{title: {fontWeight: "bold"}}}
                 data={legendData}
-                groupComponent={<g className="studyViewPieChartLegend" />}
+                groupComponent={<g className="studyViewPieChartLegend"/>}
             />
         );
     }
 
+    private maxLength(ratioOfPie: number, radius: number) {
+        return Math.abs(Math.tan(Math.PI * ratioOfPie / 2)) * radius * 2;
+    }
+
     public render() {
-        // 350px => width of tooltip
-        // 195px => width of chart
-        let left = _.isEqual(this.props.placement, 'right') ? '195px' : '-350px'
         return (
-            <div>
-                <If condition={this.showTooltip}>
-                    <div
-                        className={classnames('popover', this.props.placement)}
-                        onMouseLeave={() => this.tooltipMouseLeave()}
-                        onMouseEnter={() => this.tooltipMouseEnter()}
-                        style={{ display: 'block', position: 'absolute', left: left, width: '350px', maxWidth: '350px' }}>
-
-                        <div className="arrow" style={{ top: 20 }}></div>
-                        <div className="popover-content">
-                            <ClinicalTable
-                                width={300}
-                                height={150}
-                                data={this.props.data}
-                                filters={this.props.filters}
-                                highlightedRow={this.highlightedRow}
-                                compareCohorts={this.props.compareCohorts}
-                                onUserSelection={this.props.onUserSelection}
-                            />
-                        </div>
-                    </div>
-                </If>
-
+            <DefaultTooltip
+                placement="right"
+                overlay={(
+                    <ClinicalTable
+                        width={300}
+                        height={150}
+                        data={this.props.data}
+                        labelDescription={this.props.labelDescription}
+                        patientAttribute={this.props.patientAttribute}
+                        showAddRemoveAllButtons={true}
+                        filters={this.props.filters}
+                        highlightedRow={this.highlightedRow}
+                        onUserSelection={this.props.onUserSelection}
+                        compareCohorts={this.props.compareCohorts}
+                    />)}
+                destroyTooltipOnHide={true}
+                trigger={["hover"]}
+            >
                 <svg
-                    width={190}
-                    height={180}
+                    width={this.props.width}
+                    height={this.props.height}
                     ref={(ref: any) => this.svg = ref}
                 >
                     {this.victoryPie}
                     {this.victoryLegend}
                 </svg>
-            </div>
+            </DefaultTooltip>
         );
     }
 
