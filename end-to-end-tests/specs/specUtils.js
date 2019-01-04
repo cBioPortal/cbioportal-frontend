@@ -2,7 +2,8 @@ function waitForOncoprint(timeout) {
     browser.pause(100); // give oncoprint time to disappear
     browser.waitUntil(()=>{
         return !browser.isExisting(".oncoprintLoadingIndicator") // wait for loading indicator to hide, and
-            && browser.isExisting('#oncoprintDiv svg rect');// as a proxy for oncoprint being rendered, wait for an svg rectangle to appear in the legend
+            && browser.isExisting('#oncoprintDiv svg rect')// as a proxy for oncoprint being rendered, wait for an svg rectangle to appear in the legend
+            && (browser.getCssProperty(".oncoprintContainer", "opacity").value === 1); // oncoprint has faded in
     }, timeout);
 }
 
@@ -58,6 +59,21 @@ function waitForNumberOfStudyCheckboxes(expectedNumber, text) {
     }, 2000);
 }
 
+function getNthOncoprintTrackOptionsElements(n) {
+    // n is one-indexed
+
+    const button_selector = "#oncoprintDiv .oncoprintjs__track_options__toggle_btn_img.nth-"+n;
+    const dropdown_selector = "#oncoprintDiv .oncoprintjs__track_options__dropdown.nth-"+n;
+
+    return {
+        button: $(button_selector),
+        button_selector,
+        dropdown: $(dropdown_selector),
+        dropdown_selector
+    };
+}
+
+
 const useExternalFrontend = !process.env.FRONTEND_TEST_DO_NOT_LOAD_EXTERNAL_FRONTEND;
 
 const useLocalDist = process.env.FRONTEND_TEST_USE_LOCAL_DIST;
@@ -80,5 +96,6 @@ module.exports = {
     waitForNumberOfStudyCheckboxes: waitForNumberOfStudyCheckboxes,
     waitForNetworkQuiet:waitForNetworkQuiet,
     getTextInOncoprintLegend: getTextInOncoprintLegend,
-    setOncoprintMutationsMenuOpen: setOncoprintMutationsMenuOpen
+    setOncoprintMutationsMenuOpen: setOncoprintMutationsMenuOpen,
+    getNthOncoprintTrackOptionsElements: getNthOncoprintTrackOptionsElements
 };
