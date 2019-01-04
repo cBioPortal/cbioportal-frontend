@@ -115,11 +115,11 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
         };
 
         this._columns[MutualExclusivityTableColumnType.LOG_ODDS_RATIO] = {
-            name: "Log Odds Ratio",
+            name: "Log2 Odds Ratio",
             render: (d: MutualExclusivity) => <span>{formatLogOddsRatio(d.logOddsRatio)}</span>,
             tooltip: <span style={{ display: 'inline-block', maxWidth: 300 }}>Quantifies how strongly the presence or
                 absence of alterations in A are associated with the presence or absence of alterations in B in
-                the selected samples.</span>,
+                the selected samples. OR = (Neither * Both) / (A Not B * B Not A)</span>,
             sortBy: (d: MutualExclusivity) => d.logOddsRatio,
             download: (d: MutualExclusivity) => formatLogOddsRatio(d.logOddsRatio)
         };
@@ -147,11 +147,11 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
             tooltip: 
                 <table>
                     <tr>
-                        <td>Log ratio > 0</td>
+                        <td>Log2 ratio > 0</td>
                         <td>: Tendency towards co-occurrence</td>
                     </tr>
                     <tr>
-                        <td>Log ratio &lt;= 0</td>
+                        <td>Log2 ratio &lt;= 0</td>
                         <td>: Tendency towards mutual exclusivity</td>
                     </tr>
                     <tr>
