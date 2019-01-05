@@ -532,21 +532,40 @@ describe("plots tab screenshot tests", function() {
         browser.execute(function() { resultsViewPlotsTab.executeSearchCase("kjpoij12     TCGA-B6 asdfas TCGA-A7-A13"); });
         waitForAndCheckPlotsTab();
     });
-    it("plots tab clinical vs clinical table plot", function() {
+    it("plots tab clinical vs clinical stacked bar plot", function() {
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataSourceSelect({ value: "AJCC_TUMOR_PATHOLOGIC_PT" }); });
         waitForAndCheckPlotsTab();
     });
-    it("plots tab copy number vs clinical table plot", function() {
+    it("plots tab clinical vs clinical table plot", function() {
+        browser.click('input[data-test="DiscreteVsDiscreteTable"]');
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab copy number vs clinical stacked bar plot", function() {
+        browser.click('input[data-test="DiscreteVsDiscreteTable"]');
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "COPY_NUMBER_ALTERATION" }); });
         waitForAndCheckPlotsTab();
     });
-    it("plots tab mutations wildtype mode vs clinical table plot", function() {
+    it("plots tab copy number vs clinical table plot", function() {
+        browser.click('input[data-test="DiscreteVsDiscreteTable"]');
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab mutations wildtype mode vs clinical stacked bar plot", function() {
+        browser.click('input[data-test="DiscreteVsDiscreteTable"]');
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisMutationCountBySelect({ value: "MutatedVsWildType" }); });
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisDataTypeSelect({ value: "MUTATION_EXTENDED" }); });
         waitForAndCheckPlotsTab();
     });
-    it("plots tab mutations vs clinical table plot", function() {
+    it("plots tab mutations wildtype mode vs clinical table plot", function() {
+        browser.click('input[data-test="DiscreteVsDiscreteTable"]');
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab mutations vs clinical stacked bar plot", function() {
+        browser.click('input[data-test="DiscreteVsDiscreteTable"]');
         browser.execute(function() { resultsViewPlotsTab.onHorizontalAxisMutationCountBySelect({ value: "MutationType" }); });
+        waitForAndCheckPlotsTab();
+    });
+    it("plots tab mutations vs clinical table plot", function() {
+        browser.click('input[data-test="DiscreteVsDiscreteTable"]');
         waitForAndCheckPlotsTab();
     });
 

@@ -27,7 +27,7 @@ export class PillTag extends React.Component<IPillTagProps, {}> {
         return (<div className={styles.main} style={{background: this.props.backgroundColor, color: this.contentColor}}>
             <span className={styles.content}>{this.props.content}</span>
             <If condition={_.isFunction(this.props.onDelete)}>
-                <span className={styles.delete} onClick={this.props.onDelete}><i className="fa fa-times-circle"></i></span>
+                <span data-test="pill-tag-delete" className={styles.delete} onClick={this.props.onDelete}><i className="fa fa-times-circle"></i></span>
             </If>
         </div>)
     }
