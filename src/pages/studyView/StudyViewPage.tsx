@@ -44,7 +44,7 @@ export class StudyResultsSummary extends React.Component<{ store:StudyViewPageSt
                 <SelectedInfo selectedSamplesCount={this.props.store.selectedSamples.result.length} selectedPatientsCount={this.props.store.selectedPatients.length}/>
 
                 {this.props.store.mutationProfiles.result.length > 0 && (
-                    <div>
+                    <div data-test="with-mutation-data">
                         <LabeledCheckbox
                             inputProps={{className: styles.selectedInfoCheckbox}}
                             checked={!!this.props.store.filters.withMutationData}
@@ -58,7 +58,7 @@ export class StudyResultsSummary extends React.Component<{ store:StudyViewPageSt
                     </div>
                 )}
                 {this.props.store.cnaProfiles.result.length > 0 && (
-                    <div>
+                    <div data-test="with-cna-data">
                         <LabeledCheckbox
                             inputProps={{className: styles.selectedInfoCheckbox}}
                             checked={!!this.props.store.filters.withCNAData}
@@ -243,6 +243,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                 )}
                                             >
                                                 <button className='btn btn-primary btn-xs'
+                                                        data-test='custom-selection-button'
                                                         onClick={() => {
                                                             this.showCustomSelectTooltip = true;
                                                         }}

@@ -5,7 +5,7 @@ import { MutualExclusivity } from "../../../shared/model/MutualExclusivity";
 import { observer } from "mobx-react";
 import { observable } from "mobx";
 import { Badge } from 'react-bootstrap';
-import { formatPValue, formatPValueWithStyle, formatLogOddsRatio } from "./MutualExclusivityUtil";
+import { formatPValue, formatQValueWithStyle, formatLogOddsRatio } from "./MutualExclusivityUtil";
 import styles from "./styles.module.scss";
 
 export interface IMutualExclusivityTableProps {
@@ -23,7 +23,7 @@ export enum MutualExclusivityTableColumnType {
     BOTH,
     LOG_ODDS_RATIO,
     P_VALUE,
-    ADJUSTED_P_VALUE,
+    Q_VALUE,
     ASSOCIATION
 }
 
@@ -53,10 +53,10 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
             MutualExclusivityTableColumnType.BOTH,
             MutualExclusivityTableColumnType.LOG_ODDS_RATIO,
             MutualExclusivityTableColumnType.P_VALUE,
-            MutualExclusivityTableColumnType.ADJUSTED_P_VALUE,
+            MutualExclusivityTableColumnType.Q_VALUE,
             MutualExclusivityTableColumnType.ASSOCIATION
         ],
-        initialSortColumn: "Adjusted p-Value"
+        initialSortColumn: "q-Value"
     };
 
     protected generateColumns() {
@@ -115,11 +115,11 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
         };
 
         this._columns[MutualExclusivityTableColumnType.LOG_ODDS_RATIO] = {
-            name: "Log Odds Ratio",
+            name: "Log2 Odds Ratio",
             render: (d: MutualExclusivity) => <span>{formatLogOddsRatio(d.logOddsRatio)}</span>,
             tooltip: <span style={{ display: 'inline-block', maxWidth: 300 }}>Quantifies how strongly the presence or
                 absence of alterations in A are associated with the presence or absence of alterations in B in
-                the selected samples.</span>,
+                the selected samples. OR = (Neither * Both) / (A Not B * B Not A)</span>,
             sortBy: (d: MutualExclusivity) => d.logOddsRatio,
             download: (d: MutualExclusivity) => formatLogOddsRatio(d.logOddsRatio)
         };
@@ -132,30 +132,30 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
             download: (d: MutualExclusivity) => formatPValue(d.pValue)
         };
 
-        this._columns[MutualExclusivityTableColumnType.ADJUSTED_P_VALUE] = {
-            name: "Adjusted p-Value",
-            render: (d: MutualExclusivity) => formatPValueWithStyle(d.adjustedPValue),
-            tooltip: <span>Bonferroni adjusted p-Value</span>,
-            sortBy: (d: MutualExclusivity) => d.adjustedPValue,
-            download: (d: MutualExclusivity) => formatPValue(d.adjustedPValue)
+        this._columns[MutualExclusivityTableColumnType.Q_VALUE] = {
+            name: "q-Value",
+            render: (d: MutualExclusivity) => formatQValueWithStyle(d.qValue),
+            tooltip: <span>Derived from Benjamini-Hochberg FDR correction procedure</span>,
+            sortBy: (d: MutualExclusivity) => d.qValue,
+            download: (d: MutualExclusivity) => formatPValue(d.qValue)
         };
 
         this._columns[MutualExclusivityTableColumnType.ASSOCIATION] = {
             name: "Tendency",
-            render: (d: MutualExclusivity) => <div className={styles.Tendency}>{d.association}{d.adjustedPValue < 0.05 ?
+            render: (d: MutualExclusivity) => <div className={styles.Tendency}>{d.association}{d.qValue < 0.05 ?
                 <Badge style={{ backgroundColor: '#58ACFA' }}>Significant</Badge> : ""}</div>,
             tooltip: 
                 <table>
                     <tr>
-                        <td>Log ratio > 0</td>
+                        <td>Log2 ratio > 0</td>
                         <td>: Tendency towards co-occurrence</td>
                     </tr>
                     <tr>
-                        <td>Log ratio &lt;= 0</td>
+                        <td>Log2 ratio &lt;= 0</td>
                         <td>: Tendency towards mutual exclusivity</td>
                     </tr>
                     <tr>
-                        <td>Adjusted p-Value &lt; 0.05</td>
+                        <td>q-Value &lt; 0.05</td>
                         <td>: Significant association</td>
                     </tr>
                 </table>,
