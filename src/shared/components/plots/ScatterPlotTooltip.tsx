@@ -12,6 +12,7 @@ export interface IScatterPlotTooltipProps {
     targetHovered?:boolean;
     className?:string;
     placement?:string;
+    arrowOffsetTop?:number;
 }
 
 @observer
@@ -29,8 +30,8 @@ export default class ScatterPlotTooltip extends React.Component<IScatterPlotTool
     }
 
     render() {
-        const arrowOffsetTop = 30; // experimentally determined
-        const arrowOffsetLeft = 24; // experimentally determined
+        const arrowOffsetTop = (this.props.arrowOffsetTop === undefined ? 30 : this.props.arrowOffsetTop);
+        const arrowOffsetLeft = 24;
         const leftPadding = 5;
         const horizontal = !this.props.placement || this.props.placement === "left" || this.props.placement === "right";
         if (this.props.targetHovered || this.isHovered) {

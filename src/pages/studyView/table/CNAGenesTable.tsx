@@ -13,6 +13,7 @@ import LabeledCheckbox from "shared/components/labeledCheckbox/LabeledCheckbox";
 import FixedHeaderTable from "./FixedHeaderTable";
 import autobind from 'autobind-decorator';
 import {
+    correctColumnWidth,
     correctMargin,
     getCNAByAlteration,
     getCNAColorByAlteration,
@@ -90,11 +91,11 @@ export class CNAGenesTable extends React.Component<ICNAGenesTablePros, {}> {
     @computed
     get columnsWidth() {
         return {
-            [ColumnKey.GENE]: this.props.width * 0.25,
-            [ColumnKey.CYTOBAND]: this.props.width * 0.25,
-            [ColumnKey.CNA]: this.props.width * 0.14,
-            [ColumnKey.NUMBER]: this.props.width * 0.18,
-            [ColumnKey.FREQ]: this.props.width * 0.18,
+            [ColumnKey.GENE]: correctColumnWidth(this.props.width * 0.25),
+            [ColumnKey.CYTOBAND]: correctColumnWidth(this.props.width * 0.25),
+            [ColumnKey.CNA]: correctColumnWidth(this.props.width * 0.14),
+            [ColumnKey.NUMBER]: correctColumnWidth(this.props.width * 0.18),
+            [ColumnKey.FREQ]: correctColumnWidth(this.props.width * 0.18),
         };
     }
 

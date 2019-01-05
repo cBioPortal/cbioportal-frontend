@@ -62,7 +62,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
         name: 'Name',
         render: (option: ChartOption) => {
             return (
-                <div className={styles.option}
+                <div className={classnames(styles.option, 'add-chart-option')}
                      data-test={`add-chart-option-${option.label.toLowerCase().replace(/\s/g,'-')}`}>
                     <LabeledCheckbox
                         checked={option.selected}

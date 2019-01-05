@@ -1018,15 +1018,14 @@ export class StudyViewPageStore {
             filters.mutationCountVsCNASelection = this._mutationCountVsCNAFilter;
         }
 
-        let _sampleIdentifiers =_.reduce(this._chartSampleIdentifiersFilterSet.entries(),(acc, next, key)=>{
-            let [chartKey,sampleIdentifiers] = next
-            if(key === 0){
-                acc = sampleIdentifiers
-            } else {
-                acc = _.intersectionWith(acc,sampleIdentifiers, _.isEqual) as SampleIdentifier[];
-            }
-            return acc
-        },[] as SampleIdentifier[]);
+        let _sampleIdentifiers:SampleIdentifier[] =
+            _.chain(this._chartSampleIdentifiersFilterSet.values()) // for some reason its a lot faster with _.chain than just using _.intersectionWith
+                .intersectionWith(
+                ((a:SampleIdentifier, b:SampleIdentifier)=>{
+                            return a.sampleId === b.sampleId &&
+                                a.studyId === b.studyId;
+                        }) as any
+            ).value()[0];
 
         if(_sampleIdentifiers && _sampleIdentifiers.length>0) {
             filters.sampleIdentifiers = _sampleIdentifiers;
