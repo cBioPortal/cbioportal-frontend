@@ -20,7 +20,7 @@ export interface GenesetsJsTreeProps
     gsvaProfile: string;
     sampleListId: string|undefined;
     searchValue: string;
-    onSelect: (map_geneSet_selected:ObservableMap<boolean>) => void;
+    onSelect: (map_geneSet_selected:ObservableMap<string,boolean>) => void;
 }
 
 type JSNode = {
@@ -33,7 +33,7 @@ export default class GenesetsJsTree extends React.Component<GenesetsJsTreeProps,
     tree: Element|null;
     @observable isLoading = true;
     promisedTree: Promise<Element>;
-    private readonly map_geneSets_selected = new ObservableMap<boolean>();
+    private readonly map_geneSets_selected = new ObservableMap<string,boolean>();
 
     constructor(props: GenesetsJsTreeProps)
     {

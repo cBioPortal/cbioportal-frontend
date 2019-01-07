@@ -261,7 +261,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
     describe("initializeCustomDriverAnnotationSettings", ()=>{
         it("initializes selection for empty list of tiers", ()=>{
             let mutationAnnotationSettings = {
-                driverTiers: observable.map<boolean>()
+                driverTiers: observable.map<string, boolean>()
             };
 
             initializeCustomDriverAnnotationSettings(
@@ -277,7 +277,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
         it.skip("initializes selection for given tiers", ()=>{
             // TODO: figure out why doing driverTiers.set in this test is causing crazy problems
             let mutationAnnotationSettings = {
-                driverTiers: observable.map<boolean>()
+                driverTiers: observable.map<string, boolean>()
             };
             let enableCustomTiers = false;
 
@@ -288,7 +288,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
                 false
             );
 
-            assert.deepEqual(mutationAnnotationSettings.driverTiers.toJS(), {"a":false, "b":false, "c":false}, "initialized to false");
+            assert.deepEqual(mutationAnnotationSettings.driverTiers.toJS(), {"a":false, "b":false, "c":false} as any, "initialized to false");
 
             enableCustomTiers = true;
 
@@ -299,14 +299,14 @@ describe("ResultsViewPageStoreUtils", ()=>{
                 false
             );
 
-            assert.deepEqual(mutationAnnotationSettings.driverTiers.toJS(), {"a":true, "b":true, "c":true}, "initialized to true");
+            assert.deepEqual(mutationAnnotationSettings.driverTiers.toJS(), {"a":true, "b":true, "c":true} as any, "initialized to true");
         });
 
         it("sets hotspots and oncoKb if option is set and there are no custom annotations", ()=>{
             let mutationAnnotationSettings = {
                 hotspots: false,
                 oncoKb: false,
-                driverTiers: observable.map<boolean>()
+                driverTiers: observable.map<string, boolean>()
             };
             initializeCustomDriverAnnotationSettings(
                 {hasBinary: false, tiers: []} as any,
@@ -323,7 +323,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
             let mutationAnnotationSettings = {
                 hotspots: false,
                 oncoKb: false,
-                driverTiers: observable.map<boolean>()
+                driverTiers: observable.map<string, boolean>()
             };
             initializeCustomDriverAnnotationSettings(
                 {hasBinary: true, tiers: []} as any,
@@ -346,7 +346,7 @@ describe("ResultsViewPageStoreUtils", ()=>{
             let mutationAnnotationSettings = {
                 hotspots: false,
                 oncoKb: false,
-                driverTiers: observable.map<boolean>()
+                driverTiers: observable.map<string, boolean>()
             };
             initializeCustomDriverAnnotationSettings(
                 {hasBinary: true, tiers: []} as any,

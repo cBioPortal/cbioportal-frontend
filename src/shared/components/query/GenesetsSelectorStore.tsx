@@ -26,7 +26,7 @@ export function getVolcanoPlotMinYValue(genesetsData: Geneset[]): number|undefin
     }
 }
 
-export function getVolcanoPlotData(genesetsData: Geneset[], map_genesets_selected_volcano:ObservableMap<boolean>): {x: number, y: number, fill: string}[]|undefined
+export function getVolcanoPlotData(genesetsData: Geneset[], map_genesets_selected_volcano:ObservableMap<string,boolean>): {x: number, y: number, fill: string}[]|undefined
 {
     if (genesetsData.length > 0) {
         const volcanoPlotData = genesetsData.map(({representativeScore, representativePvalue, name}) => {

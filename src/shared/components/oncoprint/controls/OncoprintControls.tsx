@@ -104,7 +104,7 @@ export interface IOncoprintControlsState {
     customDriverAnnotationBinaryMenuLabel?:string;
     customDriverAnnotationTiersMenuLabel?:string;
     customDriverAnnotationTiers?:string[];
-    selectedCustomDriverAnnotationTiers?:ObservableMap<boolean>;
+    selectedCustomDriverAnnotationTiers?:ObservableMap<string,boolean>;
     annotateCustomDriverBinary?:boolean;
 
     columnMode?:"sample"|"patient";

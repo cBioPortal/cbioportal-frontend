@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import * as React from 'react';
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import * as styles_any from './styles/styles.module.scss';
-import {action, ObservableMap, expr, toJS, computed, observable, autorun} from "mobx";
+import {action, ObservableMap, toJS, computed, observable, autorun} from "mobx";
 import {observer, Observer} from "mobx-react";
 import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
 import {Geneset} from "../../api/generated/CBioPortalAPIInternal";
@@ -33,7 +33,7 @@ export interface GenesetsVolcanoSelectorProps
     data: Geneset[]|undefined;
     plotData: {x: number, y: number, fill: string}[]|undefined;
     maxY: number|undefined;
-    onSelect: (map_genesets_selected:ObservableMap<boolean>) => void;
+    onSelect: (map_genesets_selected:ObservableMap<string,boolean>) => void;
 }
 
 @observer

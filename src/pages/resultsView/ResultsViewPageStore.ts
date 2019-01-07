@@ -320,7 +320,7 @@ export type DriverAnnotationSettings = {
     cosmicCount:boolean;
     cosmicCountThreshold:number;
     driverFilter:boolean;
-    driverTiers:ObservableMap<boolean>;
+    driverTiers:ObservableMap<string, boolean>;
     hotspots:boolean;
     oncoKb:boolean;
     driversAnnotated:boolean;
@@ -347,7 +347,7 @@ export class ResultsViewPageStore {
             cosmicCount: false,
             cosmicCountThreshold: 0,
             driverFilter: false,
-            driverTiers: observable.map<boolean>(),
+            driverTiers: observable.map<string, boolean>(),
 
             _hotspots:false,
             _oncoKb:false,
@@ -475,7 +475,7 @@ export class ResultsViewPageStore {
         this.driverAnnotationSettings.cosmicCount = false;
         this.driverAnnotationSettings.cosmicCountThreshold = 10;
         this.driverAnnotationSettings.driverFilter = !!AppConfig.serverConfig.oncoprint_custom_driver_annotation_default;
-        this.driverAnnotationSettings.driverTiers = observable.map<boolean>();
+        this.driverAnnotationSettings.driverTiers = observable.map<string, boolean>();
 
         this.driverAnnotationSettings.hotspots = !AppConfig.serverConfig.oncoprint_oncokb_hotspots_default;
         (this.driverAnnotationSettings as any)._oncoKb = !AppConfig.serverConfig.oncoprint_oncokb_hotspots_default;

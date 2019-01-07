@@ -9,7 +9,7 @@ export interface GenesetsHierarchySelectorProps
     initialSelection: string[];
     gsvaProfile: string;
     sampleListId: string|undefined;
-    onSelect: (map_geneSet_selected:ObservableMap<boolean>) => void;
+    onSelect: (map_geneSet_selected:ObservableMap<string,boolean>) => void;
 }
 
 @observer

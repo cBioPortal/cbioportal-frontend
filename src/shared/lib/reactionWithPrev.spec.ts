@@ -7,7 +7,7 @@ describe("reactionWithPrev", ()=>{
 
     it("passes through the correct arguments each time", (done)=>{
         let values = [0,3,5,7,7,7,8,10];
-        let argumentIndex = observable(-1);
+        let argumentIndex = observable.box(-1);
         let indexesWhereEffectCalled:{[index:number]:boolean} = {};
 
         let dataFn = ()=>values[argumentIndex.get()];

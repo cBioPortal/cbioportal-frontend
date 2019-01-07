@@ -1,7 +1,7 @@
 /* tslint:disable: indent linebreak-style */
 import * as _ from 'lodash';
 import client from "../../api/cbioportalClientInstance";
-import {ObservableMap, toJS, observable, reaction, action, computed, whyRun, expr, isObservableMap} from "mobx";
+import {ObservableMap, toJS, observable, reaction, action, computed, isObservableMap} from "mobx";
 import {
 	TypeOfCancer as CancerType, MolecularProfile, CancerStudy, SampleList, Gene,
 	Sample, SampleIdentifier, SampleFilter
@@ -238,15 +238,15 @@ export class QueryStore
 
 	@observable searchText:string = '';
 
-	@observable private _allSelectedStudyIds:ObservableMap<boolean> = observable.map<boolean>();
+	@observable private _allSelectedStudyIds:ObservableMap<string, boolean> = observable.map<string, boolean>();
 
 	@computed get allSelectedStudyIds():string[] {
-		return this._allSelectedStudyIds.keys();
+		return Array.from(this._allSelectedStudyIds.keys());
 	}
 
 	@computed get selectableSelectedStudyIds():string[]
 	{
-		let ids:string[] = this._allSelectedStudyIds.keys();
+		let ids:string[] = this.allSelectedStudyIds;
 		const selectableStudies = this.selectableStudiesSet.result;
 		ids = ids.reduce((obj:string[],next)=>{
 			if(selectableStudies[next]){
@@ -282,7 +282,7 @@ export class QueryStore
 
 	//this is to cache a selected ids in the query
 	// used in when visualizing a shared another user virtual study
-	private _defaultSelectedIds:ObservableMap<boolean> = observable.map<boolean>();
+	private _defaultSelectedIds:ObservableMap<string, boolean> = observable.map<string, boolean>();
 
 	@observable dataTypePriority = {mutation: true, cna: true};
 
@@ -474,7 +474,7 @@ export class QueryStore
 			let knownSelectableIdsSet:{[studyId:string]:string[]} = Object.assign({}, physicalStudiesIdsSet, virtualStudiesIdsSet);
 
 			//queried id that are not selectable(this would mostly be shared virtual study)
-			const unknownQueriedIds:string[] = this._defaultSelectedIds.keys().filter(id => !knownSelectableIdsSet[id]);
+			const unknownQueriedIds:string[] = Array.from(this._defaultSelectedIds.keys()).filter(id => !knownSelectableIdsSet[id]);
 
 			let result:{[studyId:string]:string[]} = {}
 			
@@ -540,7 +540,7 @@ export class QueryStore
 			let knownSelectableIds = Object.assign([], Object.keys(physicalStudiesIdsSet), Object.keys(virtualStudiesIdsSet));
 
 			//queried id that are not selectable(this would mostly be shared virtual study)
-			const unknownQueriedIds:string[] = this._defaultSelectedIds.keys().filter(id => !_.includes(knownSelectableIds,id));
+			const unknownQueriedIds:string[] = Array.from(this._defaultSelectedIds.keys()).filter(id => !_.includes(knownSelectableIds,id));
 
 			let result:{[studyId:string]:VirtualStudy} = {}
 
@@ -573,7 +573,7 @@ export class QueryStore
 
 			const physicalStudyIds = _.filter(this.allSelectedStudyIds, studyId => this.physicalStudiesSet.result[studyId]);
 
-			if(this._allSelectedStudyIds.keys().length !== physicalStudyIds.length){
+			if(this.allSelectedStudyIds.length !== physicalStudyIds.length){
 				await Promise.all(_.map(physicalStudyIds, studyId => {
 					return client.getAllSamplesInStudyUsingGET({
 						studyId: studyId
@@ -584,7 +584,7 @@ export class QueryStore
 
 				const _vs = {...this.userVirtualStudiesSet.result, ...this.sharedVirtualStudiesSet.result};
 
-				this._allSelectedStudyIds.keys().forEach(id=>{
+				this.allSelectedStudyIds.forEach(id=>{
 					if(_vs[id]){
 						let virtualStudy = _vs[id];
 						virtualStudy.data.studies.forEach(study => {
@@ -629,7 +629,7 @@ export class QueryStore
 			// set case ids when case_set_id is not CUSTOM_CASE_LIST_ID(-1)
 			if (this.selectedSampleListId !== CUSTOM_CASE_LIST_ID) {
 				const sharedVirtualStudiesSet = this.sharedVirtualStudiesSet.result;
-				let sharedIds: string[] = _.filter(this._allSelectedStudyIds.keys(), id => sharedVirtualStudiesSet[id] !== undefined)
+				let sharedIds: string[] = _.filter(this.allSelectedStudyIds, id => sharedVirtualStudiesSet[id] !== undefined)
 
 				//this block is executed when shared virtual study is queried and case_set_id is not set
 				//in this scenario we override some parameters to correctly show selected cases to user
@@ -666,7 +666,7 @@ export class QueryStore
 		await: ()=>[this.selectableStudiesSet],
 		invoke: async ()=>{
 			const _selectableStudiesSet = this.selectableStudiesSet.result;
-			let ids:string[] = this._allSelectedStudyIds.keys();
+			let ids:string[] = this.allSelectedStudyIds;
 			return ids.filter(id=>!(id in _selectableStudiesSet));
 		},
 		default: []
@@ -1365,7 +1365,7 @@ export class QueryStore
         }
     }
     
-    @observable map_genesets_selected_volcano = new ObservableMap<boolean>();
+    @observable map_genesets_selected_volcano = new ObservableMap<string, boolean>();
     
     @computed get volcanoPlotGraphData(): {x: number, y: number, fill: string}[]|undefined
     {
@@ -1680,9 +1680,9 @@ export class QueryStore
         this.genesetQuery = normalizeQuery(this.genesetQuery.toUpperCase().replace(new RegExp(`\\b${oldGeneset.toUpperCase()}\\b`, 'g'), () => newGeneset.toUpperCase()));
     }
 
-	@action applyGeneSelection(map_geneSymbol_selected:ObservableMap<boolean>)
+	@action applyGeneSelection(map_geneSymbol_selected:ObservableMap<string, boolean>)
 	{
-		let [toAppend, toRemove] = _.partition(map_geneSymbol_selected.keys(), geneSymbol => map_geneSymbol_selected.get(geneSymbol));
+		let [toAppend, toRemove] = _.partition(Array.from(map_geneSymbol_selected.keys()), geneSymbol => map_geneSymbol_selected.get(geneSymbol));
 		toAppend = _.difference(toAppend, this.geneIds);
 		toRemove = _.intersection(toRemove, this.geneIds);
 		for (let geneSymbol of toRemove)
@@ -1690,16 +1690,16 @@ export class QueryStore
 		this.geneQuery = normalizeQuery([this.geneQuery, ...toAppend].join(' '));
 	}
 	
-	@action addToGenesetSelection(map_geneset_selected:ObservableMap<boolean>)
+	@action addToGenesetSelection(map_geneset_selected:ObservableMap<string, boolean>)
     {
-	    let [toAppend, toRemove] = _.partition(map_geneset_selected.keys(), geneSet => map_geneset_selected.get(geneSet));
+	    let [toAppend, toRemove] = _.partition(Array.from(map_geneset_selected.keys()), geneSet => map_geneset_selected.get(geneSet));
 	    const genesetQuery = _.union(toAppend, this.genesetIds).join(' ');
         this.genesetQuery = normalizeQuery(genesetQuery);
     }
 	
-	@action applyGenesetSelection(map_geneset_selected:ObservableMap<boolean>)
+	@action applyGenesetSelection(map_geneset_selected:ObservableMap<string, boolean>)
     {
-        const [toAppend, toRemove] = _.partition(map_geneset_selected.keys(), geneSet => map_geneset_selected.get(geneSet));
+        const [toAppend, toRemove] = _.partition(Array.from(map_geneset_selected.keys()), geneSet => map_geneset_selected.get(geneSet));
         let genesetQuery = this.genesetQuery;
         if (toAppend.length > 0) {
             let genesetList: string[] = [];

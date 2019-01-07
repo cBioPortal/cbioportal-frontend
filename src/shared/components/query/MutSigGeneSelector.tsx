@@ -2,7 +2,7 @@ import * as _ from 'lodash';
 import * as React from 'react';
 import LabeledCheckbox from "../labeledCheckbox/LabeledCheckbox";
 import * as styles_any from './styles/styles.module.scss';
-import {action, ObservableMap, expr, toJS, computed, observable} from "mobx";
+import {action, ObservableMap, toJS, computed, observable} from "mobx";
 import {observer, Observer} from "mobx-react";
 import EnhancedReactTable from "../enhancedReactTable/EnhancedReactTable";
 import {MutSig} from "../../api/generated/CBioPortalAPIInternal";
@@ -24,7 +24,7 @@ export interface MutSigGeneSelectorProps
 {
 	initialSelection: string[];
 	data: MutSig[];
-	onSelect: (map_geneSymbol_selected:ObservableMap<boolean>) => void;
+	onSelect: (map_geneSymbol_selected:ObservableMap<string,boolean>) => void;
 }
 
 @observer
@@ -36,7 +36,7 @@ export default class MutSigGeneSelector extends React.Component<MutSigGeneSelect
 		this.map_geneSymbol_selected.replace(props.initialSelection.map(geneSymbol => [geneSymbol, true]));
 	}
 
-	private readonly map_geneSymbol_selected = observable.map<boolean>();
+	private readonly map_geneSymbol_selected = observable.map<string, boolean>();
 
 	@computed get allGenes()
 	{

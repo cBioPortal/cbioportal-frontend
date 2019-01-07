@@ -337,7 +337,7 @@ interface IGeneticTrackAppState {
     sequencedSampleKeysByGene: any;
     sequencedPatientKeysByGene: any;
     selectedMolecularProfiles: MolecularProfile[];
-    expansionIndexMap: ObservableMap<number[]>;
+    expansionIndexMap: ObservableMap<string,number[]>;
 }
 
 function isAltered(d:GeneticTrackDatum) {
@@ -489,7 +489,7 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
                 oncoprint.alteredKeys,
             ];
             if (oncoprint.props.store.clinicalAttributeIdToClinicalAttribute.isComplete) {
-                const attributes = oncoprint.selectedClinicalAttributeIds.keys().map(attrId=>{
+                const attributes = Array.from(oncoprint.selectedClinicalAttributeIds.keys()).map(attrId=>{
                     return oncoprint.props.store.clinicalAttributeIdToClinicalAttribute.result![attrId];
                 }).filter(x=>!!x);
                 ret = ret.concat(oncoprint.props.store.oncoprintClinicalDataCache.getAll(attributes));
@@ -497,12 +497,13 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
             return ret;
         },
         invoke: async()=>{
-            if (oncoprint.selectedClinicalAttributeIds.keys().length === 0) {
-                return [];
-            }
-            const attributes = oncoprint.selectedClinicalAttributeIds.keys().map(attrId=>{
+            const attributes = Array.from(oncoprint.selectedClinicalAttributeIds.keys()).map(attrId=>{
                 return oncoprint.props.store.clinicalAttributeIdToClinicalAttribute.result![attrId];
             }).filter(x=>!!x);// filter out nonexistent attributes
+
+            if (attributes.length === 0) {
+                return [];
+            }
             return attributes.map((attribute:ClinicalAttribute)=>{
                 const data = oncoprint.props.store.oncoprintClinicalDataCache.get(attribute).result!;
                 let altered_uids = undefined;
@@ -566,11 +567,11 @@ export function makeHeatmapTracksMobxPromise(oncoprint:ResultsViewOncoprint, sam
             const molecularProfileIdToMolecularProfile = oncoprint.props.store.molecularProfileIdToMolecularProfile.result!;
             const molecularProfileIdToHeatmapTracks = oncoprint.molecularProfileIdToHeatmapTracks;
 
-            const neededGenes = _.flatten(molecularProfileIdToHeatmapTracks.values().map(v=>v.genes.keys()));
+            const neededGenes = _.flatten(Array.from(molecularProfileIdToHeatmapTracks.values()).map(v=>Array.from(v.genes.keys())));
             const genes = await oncoprint.props.store.geneCache.getPromise(neededGenes.map(g=>({hugoGeneSymbol:g})), true);
 
-            const cacheQueries = _.flatten(molecularProfileIdToHeatmapTracks.entries().map(entry=>(
-                entry[1].genes.keys().map(g=>({
+            const cacheQueries = _.flatten(Array.from(molecularProfileIdToHeatmapTracks.entries()).map(entry=>(
+                Array.from(entry[1].genes.keys()).map(g=>({
                     molecularProfileId: entry[0],
                     entrezGeneId: oncoprint.props.store.geneCache.get({ hugoGeneSymbol:g })!.data!.entrezGeneId,
                     hugoGeneSymbol: g.toUpperCase()
@@ -642,43 +643,41 @@ export function makeGenesetHeatmapExpansionsMobxPromise(oncoprint:ResultsViewOnc
             // list all the genes in an array of plain, non-observable objects,
             // as observable arrays cannot be safely passed to external libs
             const cacheQueries: ({entrezGeneId: number, molecularProfileId: string})[] =
-                _.flatten(expansionsByGenesetTrack.values().map(mobxArray => mobxArray.slice()))
+                _.flatten(Array.from(expansionsByGenesetTrack.values()))
                 .map(({entrezGeneId, molecularProfileId}) => ({entrezGeneId, molecularProfileId}));
             await dataCache.getPromise(cacheQueries, true);
 
             const tracksByGenesetTrack: {[genesetTrackKey: string]: IGeneHeatmapTrackSpec[]} = {};
-            expansionsByGenesetTrack.entries().forEach(
-                ([gsTrack, genes]) => {
-                    tracksByGenesetTrack[gsTrack] = genes.map(
-                        ({entrezGeneId, hugoGeneSymbol, molecularProfileId, correlationValue}) => {
-                            const data = dataCache.get({entrezGeneId, molecularProfileId})!.data!;
-                            const profile = molecularProfileIdToMolecularProfile[molecularProfileId];
-                            return {
-                                key: `EXPANSIONTRACK_${gsTrack},${hugoGeneSymbol},GROUP${trackGroup}`,
-                                label: '  ' + hugoGeneSymbol,
-                                labelColor: 'grey',
-                                info: correlationValue.toFixed(2),
-                                molecularProfileId: molecularProfileId,
-                                molecularAlterationType: profile.molecularAlterationType,
-                                datatype: profile.datatype,
-                                data: makeHeatmapTrackData<IGeneHeatmapTrackDatum, 'hugo_gene_symbol'>(
-                                    'hugo_gene_symbol',
-                                    hugoGeneSymbol,
-                                    sampleMode ? samples : patients,
-                                    data
-                                ),
-                                trackGroupIndex: trackGroup,
-                                onRemove: makeGenesetHeatmapUnexpandHandler(
-                                    oncoprint, gsTrack, entrezGeneId, trackGroup,
-                                    genesetGeneCache.reset.bind(
-                                        genesetGeneCache, gsTrack
-                                    )
+            for (const [gsTrack,genes] of expansionsByGenesetTrack.entries()) {
+                tracksByGenesetTrack[gsTrack] = genes.map(
+                    ({entrezGeneId, hugoGeneSymbol, molecularProfileId, correlationValue}) => {
+                        const data = dataCache.get({entrezGeneId, molecularProfileId})!.data!;
+                        const profile = molecularProfileIdToMolecularProfile[molecularProfileId];
+                        return {
+                            key: `EXPANSIONTRACK_${gsTrack},${hugoGeneSymbol},GROUP${trackGroup}`,
+                            label: '  ' + hugoGeneSymbol,
+                            labelColor: 'grey',
+                            info: correlationValue.toFixed(2),
+                            molecularProfileId: molecularProfileId,
+                            molecularAlterationType: profile.molecularAlterationType,
+                            datatype: profile.datatype,
+                            data: makeHeatmapTrackData<IGeneHeatmapTrackDatum, 'hugo_gene_symbol'>(
+                                'hugo_gene_symbol',
+                                hugoGeneSymbol,
+                                sampleMode ? samples : patients,
+                                data
+                            ),
+                            trackGroupIndex: trackGroup,
+                            onRemove: makeGenesetHeatmapUnexpandHandler(
+                                oncoprint, gsTrack, entrezGeneId, trackGroup,
+                                genesetGeneCache.reset.bind(
+                                    genesetGeneCache, gsTrack
                                 )
-                            };
-                        }
-                    );
-                }
-            );
+                            )
+                        };
+                    }
+                );
+            }
             return tracksByGenesetTrack;
         },
         default: {}

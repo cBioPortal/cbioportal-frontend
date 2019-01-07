@@ -70,7 +70,7 @@ const CLINICAL_TRACK_KEY_PREFIX = "CLINICALTRACK_";
 
 type HeatmapTrackGroupRecord = {
     trackGroupIndex:number,
-    genes:ObservableMap<boolean>,
+    genes:ObservableMap<string,boolean>,
     molecularProfileId:string
 };
 
@@ -111,12 +111,12 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
     private heatmapGeneInputValueUpdater:IReactionDisposer;
 
-    public selectedClinicalAttributeIds = observable.shallowMap<boolean>();
-    public expansionsByGeneticTrackKey = observable.map<number[]>();
+    public selectedClinicalAttributeIds = observable.map<string,boolean>({}, {deep:false});
+    public expansionsByGeneticTrackKey = observable.map<string,number[]>();
     public expansionsByGenesetHeatmapTrackKey =
-        observable.map<IGenesetExpansionRecord[]>();
+        observable.map<string,IGenesetExpansionRecord[]>();
     public molecularProfileIdToHeatmapTracks =
-        observable.map<HeatmapTrackGroupRecord>();
+        observable.map<string,HeatmapTrackGroupRecord>();
 
     public controlsHandlers:IOncoprintControlsHandlers;
     private controlsState:IOncoprintControlsState & IObservableObject;
@@ -202,7 +202,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
 
         this.controlsState = observable({
             get selectedClinicalAttributeIds() {
-                return self.selectedClinicalAttributeIds.keys();
+                return Array.from(self.selectedClinicalAttributeIds.keys());
             },
             get selectedColumnType() {
                 return self.columnMode;
@@ -609,13 +609,13 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
     }
 
     @computed get clinicalTracksUrlParam() {
-        return this.selectedClinicalAttributeIds.keys().join(",");
+        return Array.from(this.selectedClinicalAttributeIds.keys()).join(",");
     }
 
     @computed get heatmapTrackGroupsUrlParam() {
-        return _.sortBy(this.molecularProfileIdToHeatmapTracks.values(), (x:HeatmapTrackGroupRecord)=>x.trackGroupIndex)
+        return _.sortBy(Array.from(this.molecularProfileIdToHeatmapTracks.values()), (x:HeatmapTrackGroupRecord)=>x.trackGroupIndex)
             .filter((x:HeatmapTrackGroupRecord)=>!!x.genes.size)
-            .map((x:HeatmapTrackGroupRecord)=>`${x.molecularProfileId},${x.genes.keys().join(",")}`)
+            .map((x:HeatmapTrackGroupRecord)=>`${x.molecularProfileId},${Array.from(x.genes.keys()).join(",")}`)
             .join(";");
     }
 
@@ -629,7 +629,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             trackGroup = observable({
                 trackGroupIndex: newTrackGroupIndex,
                 molecularProfileId,
-                genes: observable.shallowMap<boolean>({})
+                genes: observable.map<string, boolean>({}, {deep:false})
             });
         }
         for (const gene of genes) {
@@ -930,7 +930,7 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         });
 
         const areNonLocalClinicalAttributesSelected =
-            _.some(this.selectedClinicalAttributeIds.keys(),
+            _.some(Array.from(this.selectedClinicalAttributeIds.keys()),
                     clinicalAttributeId=>!clinicalAttributeIsLocallyComputed({clinicalAttributeId})
             );
 

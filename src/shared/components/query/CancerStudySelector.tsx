@@ -8,7 +8,6 @@ import classNames from 'classnames';
 import ReactSelect from 'react-select';
 import StudyList from "./studyList/StudyList";
 import {observer, Observer} from "mobx-react";
-import {action, expr} from 'mobx';
 import memoize from "memoize-weak-decorator";
 import {If, Then, Else} from 'react-if';
 import {QueryStore, QueryStoreComponent} from "./QueryStore";
@@ -20,6 +19,7 @@ import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import FontAwesome from "react-fontawesome";
 import AppConfig from "appConfig";
 import {ServerConfigHelpers} from "../../../config/config";
+import {expr} from "mobx-utils";
 
 const styles = styles_any as {
     SelectedStudiesWindow: string,
