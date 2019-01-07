@@ -8,7 +8,7 @@ import {computed} from "mobx";
 
 class Heading extends React.Component<{ level:number },{}>{
     render(){
-        const CustomTag = `h${this.props.level}`;
+        const CustomTag = `h${this.props.level}` as any;
         const firstChild: string = (this.props.children as any[])[0] as string;
         const text:string = (firstChild && typeof firstChild === 'string') ? firstChild : "";
 
