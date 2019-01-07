@@ -126,9 +126,10 @@ export function getExpressionStyle(mutationType: string){
 
 // this function classifies molecular data by corresponding mutation type or
 // non-mutated or non-sequenced status
+
 export function getMolecularDataBuckets(studyData: NumericGeneMolecularData[],
                                  showMutations: boolean,
-                                 mutationsKeyedBySampleId: { [sampleId: string]: Mutation },
+                                 mutationsKeyedBySampleId: { [sampleId: string]: Pick<Mutation, "proteinChange" | "mutationType"> },
                                  coverageInformation:CoverageInformation,
                                         hugoGeneSymbol:string
                                         ):MolecularDataBuckets {
