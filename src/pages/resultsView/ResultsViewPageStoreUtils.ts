@@ -38,11 +38,13 @@ type CustomDriverAnnotationReport = {
     tiers: string[];
 };
 
+type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+
 export type CoverageInformationForCase = {
     byGene:{[hugoGeneSymbol:string]:GenePanelData[]},
-    allGenes:GenePanelData[],
+    allGenes:Omit<GenePanelData, "genePanelId">[],
     notProfiledByGene:{[hugoGeneSymbol:string]:GenePanelData[]}
-    notProfiledAllGenes:GenePanelData[];
+    notProfiledAllGenes:Omit<GenePanelData, "genePanelId">[];
 };
 
 export type CoverageInformation = {
