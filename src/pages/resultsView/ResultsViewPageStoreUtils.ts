@@ -28,6 +28,10 @@ import { VirtualStudy } from "shared/model/VirtualStudy";
 import {
     getVirtualStudies,
 } from "./ResultsViewPageHelpers";
+import MobxPromise, {MobxPromise_await} from "mobxpromise";
+import {AlterationEnrichment} from "../../shared/api/generated/CBioPortalAPIInternal";
+import {remoteData} from "../../shared/api/remoteData";
+import {calculateQValues} from "../../shared/lib/calculation/BenjaminiHochbergFDRCalculator";
 
 type CustomDriverAnnotationReport = {
     hasBinary: boolean,
@@ -435,4 +439,32 @@ export function getSingleGeneResultKey(key: number, oqlQuery: string, notGrouped
 
 export function getMultipleGeneResultKey(groupedOql: MergedTrackLineFilterOutput<AnnotatedExtendedAlteration>){
     return groupedOql.label ? groupedOql.label : _.map(groupedOql.list, (data) => data.gene).join(' / ');
+}
+
+export function makeEnrichmentDataPromise<T extends {pValue:number, qValue?:number}>(params:{
+    await: MobxPromise_await,
+    shouldFetchData:()=>boolean,
+    fetchData:()=>Promise<T[]>
+}):MobxPromise<(T & {qValue:number})[]> {
+    return remoteData({
+        await: params.await,
+        invoke:async()=>{
+            if (params.shouldFetchData()) {
+                const data = await params.fetchData();
+                const sortedByPvalue = _.sortBy(data, c=>c.pValue);
+                const qValues = calculateQValues(sortedByPvalue.map(c=>c.pValue));
+                for (let i=0; i<qValues.length; i++) {
+                    sortedByPvalue[i].qValue = qValues[i];
+                }
+                return sortEnrichmentData(sortedByPvalue);
+            } else {
+                return [];
+            }
+        }
+    });
+}
+
+
+function sortEnrichmentData(data: any[]): any[] {
+    return _.sortBy(data, ["pValue", "hugoGeneSymbol"]);
 }
