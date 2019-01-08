@@ -36,6 +36,7 @@ export default class MutationEnrichmentsTab extends React.Component<IMutationEnr
                     <AlterationEnrichmentContainer data={this.props.store.mutationEnrichmentData.result!}
                         totalAlteredCount={this.props.store.alteredSampleKeys.result!.length}
                         totalUnalteredCount={this.props.store.unalteredSampleKeys.result!.length}
+                        selectedProfile={this.props.store.selectedEnrichmentMutationProfile}
                         headerName={this.props.store.selectedEnrichmentMutationProfile.name}
                         store={this.props.store} alterationType="a mutation"/>
                 </div>
