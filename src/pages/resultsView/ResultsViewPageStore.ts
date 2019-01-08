@@ -135,6 +135,8 @@ import {isRecurrentHotspot} from "../../shared/lib/AnnotationUtils";
 import {makeProfiledInClinicalAttributes} from "../../shared/components/oncoprint/ResultsViewOncoprintUtils";
 import {ResultsViewQuery} from "./ResultsViewQuery";
 import {annotateAlterationTypes} from "../../shared/lib/oql/annotateAlterationTypes";
+import ErrorMessage from "../../shared/components/ErrorMessage";
+import {ErrorMessages} from "../../shared/enums/ErrorEnums";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -2051,11 +2053,28 @@ export class ResultsViewPageStore {
     });
 
     readonly genes = remoteData<Gene[]>({
-        invoke: async () => fetchGenes(this.hugoGeneSymbols),
+        invoke: async () => {
+
+            const genes = await fetchGenes(this.hugoGeneSymbols);
+
+            if (_.isEqual(this.hugoGeneSymbols, genes.map((gene)=>gene.hugoGeneSymbol) )) {
+                return genes;
+            } else {
+                throw(new Error(ErrorMessages.InvalidGenes));
+            }
+        },
         onResult:(genes:Gene[])=>{
             this.geneCache.addData(genes);
+        },
+        onError:(err)=>{
+            // throwing this allows sentry to report it
+            throw(err);
         }
     });
+
+    @computed get genesInvalid(){
+        return this.genes.isError;
+    }
 
     readonly genesets = remoteData<Geneset[]>({
         invoke: () => {
