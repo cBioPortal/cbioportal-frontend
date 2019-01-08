@@ -113,9 +113,9 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
             const coexpressions = this.coExpressionDataPromise.result!;
             const sortedByPvalue = _.sortBy(coexpressions, c=>c.pValue);
             const qValues = calculateQValues(sortedByPvalue.map(c=>c.pValue));
-            for (let i=0; i<qValues.length; i++) {
-                sortedByPvalue[i].qValue = qValues[i];
-            }
+            qValues.forEach((qValue, index)=>{
+                sortedByPvalue[index].qValue = qValue;
+            });
             return Promise.resolve(sortedByPvalue);
         }
     });

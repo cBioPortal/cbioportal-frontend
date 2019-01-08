@@ -42,7 +42,8 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
             this.props.store.hugoGeneSymbols);
     }
 
-    @computed get excludeGenes():string[]|null {
+    @computed get excludedGenesFromTable():string[]|null {
+        // exclude query genes from table if we're looking at a queried profile
         if (this.props.store.selectedMolecularProfiles.isComplete &&
             this.props.store.selectedMolecularProfiles.result
                 .findIndex(x=>x.molecularProfileId === this.props.selectedProfile.molecularProfileId) > -1) {
@@ -54,7 +55,7 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
 
     @computed get filteredData(): AlterationEnrichmentRow[] {
         return getFilteredData(this.data, this.mutualExclusivityFilter, this.coOccurenceFilter,
-            this.significanceFilter, this.selectedGenes, this.excludeGenes);
+            this.significanceFilter, this.selectedGenes, this.excludedGenesFromTable);
     }
 
     @computed get clickedGeneStats(): [number, number, number, number] {
