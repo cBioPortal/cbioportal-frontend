@@ -453,9 +453,9 @@ export function makeEnrichmentDataPromise<T extends {pValue:number, qValue?:numb
                 const data = await params.fetchData();
                 const sortedByPvalue = _.sortBy(data, c=>c.pValue);
                 const qValues = calculateQValues(sortedByPvalue.map(c=>c.pValue));
-                for (let i=0; i<qValues.length; i++) {
-                    sortedByPvalue[i].qValue = qValues[i];
-                }
+                qValues.forEach((qValue, index)=>{
+                    sortedByPvalue[index].qValue = qValue;
+                });
                 return sortEnrichmentData(sortedByPvalue);
             } else {
                 return [];
