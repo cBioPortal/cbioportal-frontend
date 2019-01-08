@@ -7,8 +7,8 @@ import withContext from 'recompose/withContext';
  */
 function createValidator<O>(classDef:new(...args:any[])=>any):React.Validator<O>
 {
-	return function validator<T>(object: T, key: keyof T, componentName: string):Error|null {
-		if (object[key] instanceof classDef)
+	return function validator<T>(object: T, key: string, componentName: string):Error|null {
+		if ((key in object) && object[key as keyof T] instanceof classDef)
 			return null;
 		return new Error(`Expecting ${componentName} to receive {${JSON.stringify(key)}: ${classDef.name}} from context`);
 	};
