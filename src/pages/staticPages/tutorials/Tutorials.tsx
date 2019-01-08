@@ -46,6 +46,13 @@ export default class Tutorials extends React.Component<{}, {}> {
                 src="https://docs.google.com/presentation/d/1rQE5rbFNdmup-rAtySHFxlLp3i4qa8SBA7MiQpMdn1I/embed?start=false&loop=false&delayms=60000"
                 frameBorder="0" width="720" height="434"
                 allowFullScreen={true}></iframe>
+            <hr />
+
+            <h2 id={"oql"}>Tutorial #5: Onco Query Language (OQL)</h2>
+            <iframe
+                src="https://docs.google.com/presentation/d/1U39xgVujtBodwW20qIfcGu4E5n2zzaKkl2KmzzHqj4A/embed?startfalse&loop=false&delayms=60000"
+                frameBorder="0" width="720" height="434"
+                allowFullScreen={true}></iframe>
 
 
         </PageLayout>
