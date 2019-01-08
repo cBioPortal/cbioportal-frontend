@@ -1,6 +1,8 @@
 import * as React from 'react';
 import * as _ from 'lodash';
-import {Dropdown, Checkbox, DropdownToggleProps, DropdownMenuProps} from 'react-bootstrap';
+import {Dropdown, Checkbox} from 'react-bootstrap';
+import {DropdownToggleProps} from "react-bootstrap/lib/DropdownToggle";
+import {DropdownMenuProps} from "react-bootstrap/lib/DropdownMenu";
 
 export interface IColumnVisibilityDef {
     id: string;

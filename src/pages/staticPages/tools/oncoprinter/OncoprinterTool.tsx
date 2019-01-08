@@ -153,8 +153,10 @@ export default class OncoprinterTool extends React.Component<IOncoprinterToolPro
             // get data from file upload
             const fileReader = new FileReader();
             fileReader.onload = ()=>{
-                const data = fileReader.result;
-                this.doSubmit(data);
+                const data = fileReader.result as string | null;
+                if (data) {
+                    this.doSubmit(data);
+                }
             };
             fileReader.readAsText(this.filesInput.files[0]);
         } else {
