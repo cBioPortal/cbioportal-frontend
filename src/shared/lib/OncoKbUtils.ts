@@ -89,7 +89,7 @@ export function generateQueryVariant(entrezGeneId:number,
                                      proteinPosEnd?:number,
                                      alterationType?:string): Query
 {
-    return {
+    let query = {
         id: generateQueryVariantId(entrezGeneId, tumorType, alteration, mutationType),
         hugoSymbol: '',
         tumorType:(tumorType as string), // generated api typings are wrong, it can accept null
@@ -103,6 +103,14 @@ export function generateQueryVariant(entrezGeneId:number,
         hgvs: "",
         svType: "DELETION" // TODO: hack because svType is not optional
     };
+
+    // Use proper parameters for Intragenic variant
+    if(query.alteration.toLowerCase().indexOf("intragenic") !== -1) {
+        query.alterationType = 'structural_variant';
+        query.svType = 'DELETION';
+        query.consequence = '';
+    }
+    return query as Query;
 }
 
 export function generateQueryVariantId(entrezGeneId:number,
