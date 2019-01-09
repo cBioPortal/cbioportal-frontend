@@ -412,10 +412,10 @@ describe("EnrichmentsUtil", () => {
 
     describe("#getFilteredData()", () => {
         it("returns correct filtered data", () => {
-            assert.deepEqual(getFilteredData(exampleExpressionEnrichmentRowData, true, true, false, null), 
+            assert.deepEqual(getFilteredData(exampleExpressionEnrichmentRowData, true, true, false, null, null),
                 exampleExpressionEnrichmentRowData);
 
-            assert.deepEqual(getFilteredData(exampleExpressionEnrichmentRowData, true, false, true, null), [
+            assert.deepEqual(getFilteredData(exampleExpressionEnrichmentRowData, true, false, true, null, null), [
                 {
                     "checked": false,
                     "disabled": false,
@@ -432,7 +432,9 @@ describe("EnrichmentsUtil", () => {
                 }
             ]);
 
-            assert.deepEqual(getFilteredData(exampleExpressionEnrichmentRowData, false, true, false, ["DHRS7B", "PTPN3"]), [
+            assert.deepEqual(getFilteredData(exampleExpressionEnrichmentRowData, true, false, true, null, ["DHRS7B"]), []);
+
+            assert.deepEqual(getFilteredData(exampleExpressionEnrichmentRowData, false, true, false, ["DHRS7B", "PTPN3"], null), [
                 {
                     "checked": false,
                     "disabled": false,
