@@ -2877,6 +2877,28 @@ export class ResultsViewPageStore {
 
     });
 
+    public readonly sampleGroups = remoteData({
+        // not sure how we'll get these from the server, if we'll have to process or fetch more
+        // for now let's just do this for testing purposes, and it won't be hard to switch around
+        await:()=>[this.samples, this.alteredSamples, this.unalteredSamples],
+        invoke:()=>{
+            return Promise.resolve([
+                {
+                    name: "Altered Samples",
+                    sampleIdentifiers: this.alteredSamples.result!.map(s=>({ sampleId: s.sampleId, studyId: s.studyId }))
+                },
+                {
+                    name: "Unaltered Samples",
+                    sampleIdentifiers: this.unalteredSamples.result!.map(s=>({ sampleId: s.sampleId, studyId: s.studyId }))
+                },
+                {
+                    name: "All Samples",
+                    sampleIdentifiers: this.samples.result!.map(s=>({ sampleId: s.sampleId, studyId: s.studyId }))
+                }
+            ]);
+        }
+    });
+
     @memoize sortRnaSeqMolecularDataByStudy(seqData:{[profileId:string]:NumericGeneMolecularData[]}){
         return _.keyBy(seqData,(data:NumericGeneMolecularData[])=>{
            return data[0].studyId;
