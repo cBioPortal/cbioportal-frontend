@@ -390,8 +390,6 @@ export class ResultsViewPageStore {
         this.initDriverAnnotationSettings();
     }
 
-    public queryReactionDisposer:any;
-
     public rvQuery:ResultsViewQuery = new ResultsViewQuery();
 
     @observable tabId: ResultsViewTab|undefined = undefined;
