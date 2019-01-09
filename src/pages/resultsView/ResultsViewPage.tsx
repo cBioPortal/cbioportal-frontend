@@ -33,6 +33,8 @@ import {bind} from "bind-decorator";
 import {updateResultsViewQuery} from "./ResultsViewQuery";
 import {trackQuery} from "../../shared/lib/tracking";
 import {onMobxPromise} from "../../shared/lib/onMobxPromise";
+import GroupComparisonStore from "../groupComparison/GroupComparisonStore";
+import GroupComparisonTab from "../groupComparison/GroupComparisonTab";
 
 function initStore() {
 
@@ -168,11 +170,13 @@ export interface IResultsViewPageProps {
 export default class ResultsViewPage extends React.Component<IResultsViewPageProps, {}> {
 
     private resultsViewPageStore: ResultsViewPageStore;
+    private groupComparisonStore: GroupComparisonStore;
 
     constructor(props: IResultsViewPageProps) {
         super(props);
 
         this.resultsViewPageStore = initStore();
+        this.groupComparisonStore = new GroupComparisonStore(this.resultsViewPageStore);
 
         getBrowserWindow().resultsViewPageStore = this.resultsViewPageStore;
     }
@@ -393,6 +397,15 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
                 getTab: () => {
                     return <MSKTab key={11} id={ResultsViewTab.DOWNLOAD} linkText={'Download'}>
                         <DownloadTab store={store}/>
+                    </MSKTab>
+                }
+            },
+
+            {
+                id:"GROUP_COMPARISON" as any,
+                getTab:()=>{
+                    return <MSKTab key={12} id="GROUP_COMPARISON" linkText="Group Comparison">
+                        <GroupComparisonTab store={this.groupComparisonStore}/>
                     </MSKTab>
                 }
             }
