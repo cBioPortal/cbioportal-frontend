@@ -220,7 +220,7 @@ export function makeGeneticTrackData(
                 hugoGeneSymbol => sampleSequencingInfo.byGene[hugoGeneSymbol] || []
             );
             newDatum.profiled_in = newDatum.profiled_in.concat(sampleSequencingInfo.allGenes).filter(p=>!!_selectedMolecularProfiles[p.molecularProfileId]); // filter out coverage information about non-selected profiles
-            if (!newDatum.profiled_in.length) {
+            if (!newDatum.profiled_in!.length) {
                 newDatum.na = true;
             }
             newDatum.not_profiled_in = _.flatMap(
@@ -253,7 +253,7 @@ export function makeGeneticTrackData(
                 hugoGeneSymbol => patientSequencingInfo.byGene[hugoGeneSymbol] || []
             );
             newDatum.profiled_in = newDatum.profiled_in.concat(patientSequencingInfo.allGenes).filter(p=>!!_selectedMolecularProfiles[p.molecularProfileId]); // filter out coverage information about non-selected profiles
-            if (!newDatum.profiled_in.length) {
+            if (!newDatum.profiled_in!.length) {
                 newDatum.na = true;
             }
             newDatum.not_profiled_in = _.flatMap(

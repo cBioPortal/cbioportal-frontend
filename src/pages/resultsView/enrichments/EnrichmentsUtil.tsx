@@ -96,8 +96,8 @@ export function getExpressionRowData(expressionEnrichments: ExpressionEnrichment
     });
 }
 
-export function getFilteredData(data: any[], negativeLogFilter: boolean, positiveLogFilter: boolean, qValueFilter: boolean, 
-    selectedGenes: string[]|null): any[] {
+export function getFilteredData(data: Pick<ExpressionEnrichmentRow, "logRatio" | "qValue" | "hugoGeneSymbol">[], negativeLogFilter: boolean, positiveLogFilter: boolean, qValueFilter: boolean,
+    selectedGenes: string[]|null, excludeGenes:string[]|null): any[] {
 
     return data.filter(alterationEnrichment => {
         let result = false;
@@ -112,6 +112,9 @@ export function getFilteredData(data: any[], negativeLogFilter: boolean, positiv
         }
         if (selectedGenes) {
             result = result && selectedGenes.includes(alterationEnrichment.hugoGeneSymbol);
+        }
+        if (excludeGenes) {
+            result = result && !excludeGenes.includes(alterationEnrichment.hugoGeneSymbol);
         }
         return result;
     });
