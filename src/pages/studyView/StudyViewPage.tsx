@@ -31,6 +31,7 @@ import {remoteData} from "../../shared/api/remoteData";
 import {Else, If, Then} from 'react-if';
 import DefaultTooltip from "../../shared/components/defaultTooltip/DefaultTooltip";
 import CustomCaseSelection from "./addChartButton/customCaseSelection/CustomCaseSelection";
+import {AppStore} from "../../AppStore";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -112,6 +113,10 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
         );
     }
 
+    private get appStore(){
+        return getBrowserWindow().globalStores.appStore;
+    }
+
     private handleTabChange(id: string) {
         this.props.routing.updateRoute({tab: id});
     }
@@ -172,6 +177,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     this.store.displayedStudies.isComplete && (
                         <div>
                             <StudyPageHeader
+                                userEmail={this.appStore.userName}
                                 store={this.store}
                             />
 
