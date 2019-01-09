@@ -44,7 +44,8 @@ function makeProfiledData(
         if (!coverageInfo) {
             continue;
         }
-        const allCoverage:GenePanelData[] = _.flatten(_.values(coverageInfo.byGene)).concat(coverageInfo.allGenes);
+        const allCoverage:{ molecularProfileId:string }[] =
+            (_.flatten(_.values(coverageInfo.byGene)) as { molecularProfileId:string }[]).concat(coverageInfo.allGenes);
         const coveredMolecularProfiles = _.keyBy(allCoverage, "molecularProfileId");
         const profiled = _.some(molecularProfileIds, molecularProfileId=>(molecularProfileId in coveredMolecularProfiles));
         if (profiled) {

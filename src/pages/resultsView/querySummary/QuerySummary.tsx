@@ -27,20 +27,19 @@ import {getGAInstance} from "../../../shared/lib/tracking";
 @observer
 export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore }, {}> {
 
-    @observable.ref queryStore: QueryStore | undefined;
-
     constructor() {
         super();
     }
 
     @autobind
-    private handleModifyQueryClick() {
-        // this will have no functional impact after initial invocation of this method
-        this.queryStore = (this.queryStore) ? undefined : createQueryStore(getBrowserWindow().routingStore.query);
+    private toggleQueryFormVisibility() {
+        this._queryFormVisible = !this._queryFormVisible;
     }
 
+    @observable _queryFormVisible: boolean = false;
+
     @computed get queryFormVisible(){
-        return !!this.queryStore;
+        return this._queryFormVisible || this.props.store.genesInvalid;
     }
 
     readonly singleStudyUI = MakeMobxView({
@@ -72,7 +71,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
     @autobind
     @action
     closeQueryForm(){
-        this.queryStore = undefined;
+        this.toggleQueryFormVisibility();
         $(document).scrollTop(0);
     }
 
@@ -141,6 +140,16 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
         getGAInstance()('send', 'event', 'resultsView', 'query modified');
     }
 
+    @computed get queryForm(){
+        return <div style={{marginTop:10}}>
+            <QueryAndDownloadTabs onSubmit={this.onSubmit}
+                                  showDownloadTab={false}
+                                  showAlerts={true}
+                                  getQueryStore={()=>createQueryStore(getBrowserWindow().routingStore.query)}
+            />
+        </div>
+    }
+
     render() {
 
         if (!this.cohortAndGeneSummary.isError && !this.alterationSummary.isError) {
@@ -152,7 +161,7 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                     <div className="query-summary">
                         <div className="query-summary__leftItems">
                             <div>
-                                <button id="modifyQueryBtn" onClick={this.handleModifyQueryClick} className={classNames('btn btn-primary' , { disabled:!loadingComplete  })}>
+                                <button id="modifyQueryBtn" onClick={this.toggleQueryFormVisibility} className={classNames('btn btn-primary' , { disabled:!loadingComplete  })}>
                                     {(this.queryFormVisible) ? 'Cancel Modify Query' : 'Modify Query'}
                                 </button>
                             </div>
@@ -178,14 +187,12 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
                     </div>
 
                     {
-                        (this.queryFormVisible) && (
-                            <div style={{marginTop:10}}>
-                                <QueryAndDownloadTabs onSubmit={this.onSubmit} showDownloadTab={false} store={this.queryStore!} />
-                            </div>
-                        )
+                        (this.queryFormVisible) && this.queryForm
                     }
                 </div>
             )
+        } else if (this.props.store.genesInvalid) {
+            return this.queryForm;
         } else {
             return null;
         }
