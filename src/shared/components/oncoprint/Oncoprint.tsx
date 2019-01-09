@@ -65,6 +65,8 @@ export type GeneticTrackDatum_Data =
         "driverFilterAnnotation" | "driverTiersFilter" | "driverTiersFilterAnnotation" | "oncoKbOncogenic" |
         "alterationSubType" | "value" | "mutationType" | "isHotspot" | "entrezGeneId" | "putativeDriver" | "mutationStatus">;
 
+export type GeneticTrackDatum_ProfiledIn = {genePanelId?:string, molecularProfileId:string};
+
 export type GeneticTrackDatum = {
     trackLabel: string;
     sample?:string;
@@ -72,8 +74,8 @@ export type GeneticTrackDatum = {
     study_id:string;
     uid:string;
     data:GeneticTrackDatum_Data[];
-    profiled_in?: GenePanelData[];
-    not_profiled_in?:GenePanelData[];
+    profiled_in?: GeneticTrackDatum_ProfiledIn[];
+    not_profiled_in?:GeneticTrackDatum_ProfiledIn[];
     na?: boolean;
     disp_mut?:string;
     disp_cna?:string;

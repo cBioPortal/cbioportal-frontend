@@ -192,7 +192,7 @@ export function initializeConfiguration() {
             frontendUrl: frontendUrl,
             serverConfig: {
                 genomenexus_url: GENOME_NEXUS_ROOT
-            }
+            } as IServerConfig
         };
         updateConfig(envConfig);
     }

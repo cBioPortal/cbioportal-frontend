@@ -15,12 +15,10 @@ import {MUTCommand, SingleGeneQuery, SyntaxError} from "../../lib/oql/oql-parser
 import {parseOQLQuery} from "../../lib/oql/oqlfilter";
 import memoize from "memoize-weak-decorator";
 import AppConfig from 'appConfig';
-import {gsUploadByGet} from "../../api/gsuploadwindow";
 import {ComponentGetsStoreContext} from "../../lib/ContextUtils";
 import URL from 'url';
 import {buildCBioPortalPageUrl, redirectToStudyView} from "../../api/urls";
 import StudyListLogic from "./StudyListLogic";
-import {QuerySession} from "../../lib/QuerySession";
 import {stringListToIndexSet, stringListToSet} from "../../lib/StringUtils";
 import chunkMapReduce from "shared/lib/chunkMapReduce";
 import {
