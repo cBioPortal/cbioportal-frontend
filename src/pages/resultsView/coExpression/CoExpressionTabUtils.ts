@@ -1,5 +1,9 @@
 import {MolecularProfile} from "../../../shared/api/generated/CBioPortalAPI";
 import {AlterationTypeConstants} from "../ResultsViewPageStore";
+import {CoExpression} from "../../../shared/api/generated/CBioPortalAPIInternal";
+
+export type CoExpressionWithQ = CoExpression & { qValue:number };
+
 export const correlationInformation = "Pearson correlations are computed first. For genes with a correlation greater "+
                                         "than 0.3 or less than -0.3, the Spearman correlations are also computed. By "+
                                         "default, only gene pairs with values > 0.3 or < -0.3 in both measures are shown.";
