@@ -7,7 +7,12 @@ import { ExpressionEnrichment } from 'shared/api/generated/CBioPortalAPIInternal
 import styles from "./styles.module.scss";
 import { Button, FormControl, FormGroup, Form, ControlLabel, Checkbox } from 'react-bootstrap';
 import { MolecularProfile } from 'shared/api/generated/CBioPortalAPI';
-import { getExpressionRowData, getExpressionScatterData, getFilteredData } from 'pages/resultsView/enrichments/EnrichmentsUtil';
+import {
+    ExpressionEnrichmentWithQ,
+    getExpressionRowData,
+    getExpressionScatterData,
+    getFilteredData
+} from 'pages/resultsView/enrichments/EnrichmentsUtil';
 import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
 import AddCheckedGenes from 'pages/resultsView/enrichments/AddCheckedGenes';
 import MiniScatterChart from 'pages/resultsView/enrichments/MiniScatterChart';
@@ -17,7 +22,7 @@ import autobind from 'autobind-decorator';
 import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/EnrichmentsTableDataStore';
 
 export interface IExpressionEnrichmentContainerProps {
-    data: ExpressionEnrichment[];
+    data: ExpressionEnrichmentWithQ[];
     selectedProfile: MolecularProfile;
     store: ResultsViewPageStore;
 }
