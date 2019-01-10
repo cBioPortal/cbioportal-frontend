@@ -133,8 +133,8 @@ export default class CoExpressionTab extends React.Component<ICoExpressionTabPro
                             name="data-set-select"
                             value={this.selectedMolecularProfile.molecularProfileId}
                             onChange={this.onSelectDataSet}
-                            molecularProfiles={this.props.store.coexpressionTabMolecularProfiles.result}
-                            molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount.result}
+                            molecularProfiles={this.props.store.coexpressionTabMolecularProfiles}
+                            molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount}
                             className="coexpression-select-profile"
                         />
                     </div>
