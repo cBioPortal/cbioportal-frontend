@@ -14,16 +14,43 @@ export type MobxView = {
     component:JSX.Element;
 });
 
+type MobxView_await = ()=>({status:"complete"|"error"|"pending"}[]);
+type MobxView_forcePending = ()=>boolean;
+type MobxView_render = ()=>JSX.Element;
+export type MobxViewAlwaysComponent = MobxView & { component:JSX.Element };
+
 export function MakeMobxView(params:{
-    await: ()=>({status:"complete"|"error"|"pending"}[]),
-    render: ()=>JSX.Element,
-    renderError?:()=>JSX.Element,
-    renderPending?:()=>JSX.Element
+    await: MobxView_await,
+    render: MobxView_render,
+    renderError:MobxView_render,
+    renderPending:MobxView_render,
+    forcePending?:MobxView_forcePending
+}):MobxViewAlwaysComponent;
+
+export function MakeMobxView(params:{
+    await: MobxView_await,
+    render: MobxView_render,
+    renderError?:MobxView_render,
+    renderPending?:MobxView_render,
+    forcePending?:MobxView_forcePending
+}):MobxView;
+
+export function MakeMobxView(params:{
+    await: MobxView_await,
+    render: MobxView_render,
+    renderError?:MobxView_render,
+    renderPending?:MobxView_render,
+    forcePending?:MobxView_forcePending
 }):MobxView {
     return observable({
         get status() {
             const awaitElements = params.await();
-            return getMobxPromiseGroupStatus(...awaitElements) as any;
+            const promiseStatus = getMobxPromiseGroupStatus(...awaitElements) as any;
+            if (params.forcePending && params.forcePending() && promiseStatus === "complete") {
+                return "pending";
+            } else {
+                return promiseStatus;
+            }
         },
         get isComplete() {
             return this.status === "complete";
