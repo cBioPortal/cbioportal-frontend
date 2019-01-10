@@ -5,7 +5,7 @@ import {
     calcSegmentTrackHeight,
     generateSegmentFeatures,
     generateSegmentFileContent,
-    SegmentTrackFeatures
+    getModifiedTrackNames
 } from "./IGVUtils";
 
 describe("IGVUtils", () => {
@@ -261,4 +261,97 @@ describe("IGVUtils", () => {
         });
     });
 
+    describe("getModifiedTrackNames", () => {
+        it("returns an empty array for empty input", () => {
+            assert.equal(getModifiedTrackNames([], []).length, 0);
+        });
+
+        it("returns newly added track names", () => {
+            const currentTracks = [
+                {
+                    name: "MUT",
+                    type: "variant",
+                },
+            ];
+
+            const nextTracks = [
+                {
+                    name: "CNA",
+                    type: "seg",
+                    displayMode: "FILL",
+                    features: []
+                },
+                {
+                    name: "MUT",
+                    type: "variant",
+                }
+            ];
+
+            assert.equal(getModifiedTrackNames(currentTracks, nextTracks)[0], "CNA");
+        });
+
+        it("returns an empty array if no track has been changed", () => {
+            const currentTracks = [
+                {
+                    name: "MUT",
+                    type: "variant",
+                },
+                {
+                    name: "CNA",
+                    type: "seg",
+                    displayMode: "FILL",
+                    features: []
+                }
+            ];
+
+            const nextTracks = [
+                {
+                    name: "CNA",
+                    type: "seg",
+                    displayMode: "FILL",
+                    features: []
+                },
+                {
+                    name: "MUT",
+                    type: "variant",
+                }
+            ];
+
+            assert.equal(getModifiedTrackNames(currentTracks, nextTracks).length, 0);
+        });
+
+        it("returns only modified tracks names", () => {
+            const currentTracks = [
+                {
+                    name: "CNA",
+                    type: "seg",
+                    displayMode: "FILL",
+                    features: []
+                },
+                {
+                    name: "MUT",
+                    type: "variant",
+                }
+            ];
+
+            const nextTracks = [
+                {
+                    name: "MUT",
+                    type: "variant",
+                },
+                {
+                    name: "CNA",
+                    type: "seg",
+                    displayMode: "FILL",
+                    features: [{
+                        patient: "p1",
+                        sample: "s1"
+                    }]
+                }
+            ];
+
+            assert.equal(getModifiedTrackNames(currentTracks, nextTracks).length, 1);
+            assert.equal(getModifiedTrackNames(currentTracks, nextTracks)[0], "CNA");
+        });
+    });
 });
