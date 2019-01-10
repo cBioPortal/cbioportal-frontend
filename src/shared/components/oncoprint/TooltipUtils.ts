@@ -12,6 +12,7 @@ import {
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import _ from "lodash";
 import {alterationTypeToProfiledForText} from "./ResultsViewOncoprintUtils";
+import {isNotGermlineMutation} from "../../lib/MutationUtils";
 
 export const TOOLTIP_DIV_CLASS = "oncoprint__tooltip";
 
@@ -187,6 +188,12 @@ export function makeGeneticTrackTooltip(
             if (d.driver_tiers_filter) {
                 ret.append(`<img src="${require("../../../rootImages/driver_tiers.png")}" title="${d.driver_tiers_filter}: ${d.driver_tiers_filter_annotation}" alt="driver tiers filter" style="height:11px; width:11px;margin-left:3px"/>`);
             }
+
+
+            // AT THE END, append germline symbol if necessary
+            if (d.germline) {
+                ret.append(generateGermlineLabel());
+            }
             return ret;
         });
     };
@@ -230,6 +237,9 @@ export function makeGeneticTrackTooltip(
                     tooltip_datum.driver_tiers_filter_annotation = datum.driverTiersFilterAnnotation;
                     if (datum.isHotspot) {
                         tooltip_datum.cancer_hotspots_hotspot = true;
+                    }
+                    if (!isNotGermlineMutation(datum)) {
+                        tooltip_datum.germline = true;
                     }
                     const oncokb_oncogenic = datum.oncoKbOncogenic;
                     if (oncokb_oncogenic) {
@@ -281,9 +291,6 @@ export function makeGeneticTrackTooltip(
                     ret.append(", ");
                 }
                 ret.append(mutations[i]);
-            }
-            if (d.disp_germ) {
-                ret.append(generateGermlineLabel());
             }
             ret.append('<br>');
         }
