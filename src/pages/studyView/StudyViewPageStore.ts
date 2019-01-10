@@ -1155,6 +1155,15 @@ export class StudyViewPageStore {
             });
         },
         onError: (error => {}),
+        onResult: (data=>{
+            data.forEach(item => {
+                const uniqueKey = getClinicalAttributeUniqueKeyByDataTypeAttrId(item.clinicalDataType, item.attributeId);
+                if (this.isNewlyAdded(uniqueKey)) {
+                    this.showAsPieChart(uniqueKey, item.counts.length);
+                    this.newlyAddedCharts.remove(uniqueKey);
+                }
+            });
+        }),
         default: []
     });
 
@@ -1241,7 +1250,7 @@ export class StudyViewPageStore {
                         // the chart specific data instead of using the unfilteredClinicalDataCount which will require
                         // all unfiltered clinical attributes data.
 
-                        if (this._clinicalDataEqualityFilterSet.has(uniqueKey)) {
+                        if (this._clinicalDataEqualityFilterSet.has(uniqueKey) || this.isInitialFilterState) {
                             result = await internalClient.fetchClinicalDataCountsUsingPOST({
                                 clinicalDataCountFilter: {
                                     attributes: [{
