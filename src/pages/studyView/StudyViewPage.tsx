@@ -35,6 +35,7 @@ import {AppStore} from "../../AppStore";
 
 export interface IStudyViewPageProps {
     routing: any;
+    appStore: AppStore;
 }
 
 export class StudyResultsSummary extends React.Component<{ store:StudyViewPageStore },{}> {
@@ -85,7 +86,7 @@ export class StudyResultsSummary extends React.Component<{ store:StudyViewPageSt
 
 
 
-@inject('routing')
+@inject('routing', 'appStore')
 @observer
 export default class StudyViewPage extends React.Component<IStudyViewPageProps, {}> {
     private store: StudyViewPageStore;
@@ -111,10 +112,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             },
             {fireImmediately: true}
         );
-    }
-
-    private get appStore(){
-        return getBrowserWindow().globalStores.appStore;
     }
 
     private handleTabChange(id: string) {
@@ -177,7 +174,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                     this.store.displayedStudies.isComplete && (
                         <div>
                             <StudyPageHeader
-                                userEmail={this.appStore.userName}
+                                userEmail={this.props.appStore.userName}
                                 store={this.store}
                             />
 
