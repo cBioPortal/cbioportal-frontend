@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from "lodash";
 import LazyMobXTable, { Column } from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 import { observer } from "mobx-react";
-import { observable } from "mobx";
+import {computed, observable} from "mobx";
 import { Badge, Checkbox } from 'react-bootstrap';
 import {
     calculateAlterationTendency, formatPercentage
@@ -17,6 +17,8 @@ import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/Enrichm
 
 export interface IAlterationEnrichmentTableProps {
     columns?: AlterationEnrichmentTableColumnType[];
+    alteredGroupName:string;
+    unalteredGroupName:string;
     data: AlterationEnrichmentRow[];
     initialSortColumn?: string;
     alterationType: string;
@@ -44,13 +46,6 @@ export class AlterationEnrichmentTableComponent extends LazyMobXTable<Alteration
 @observer
 export default class AlterationEnrichmentTable extends React.Component<IAlterationEnrichmentTableProps, {}> {
 
-    @observable protected _columns: { [columnEnum: number]: AlterationEnrichmentTableColumn };
-
-    constructor(props: IAlterationEnrichmentTableProps) {
-        super(props);
-        this._columns = this.generateColumns();
-    }
-
     public static defaultProps = {
         columns: [
             AlterationEnrichmentTableColumnType.GENE,
@@ -68,7 +63,6 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
     private checkboxChange(hugoGeneSymbol: string) {
         const row: AlterationEnrichmentRow = _.find(this.props.data, {hugoGeneSymbol})!;
         row.checked = !row.checked;
-        this._columns = this.generateColumns();
         this.props.onCheckGene(hugoGeneSymbol);
     }
 
@@ -78,7 +72,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         this.props.dataStore.setHighlighted(d);
     }
 
-    protected generateColumns():{ [columnEnum: number]: AlterationEnrichmentTableColumn } {
+    @computed get columns():{ [columnEnum: number]: AlterationEnrichmentTableColumn } {
         const columns: { [columnEnum: number]: AlterationEnrichmentTableColumn } = {};
 
         columns[AlterationEnrichmentTableColumnType.GENE] = {
@@ -104,7 +98,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         };
 
         columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_ALTERED] = {
-            name: "Samples with alteration in altered group",
+            name: `Samples with alteration in ${this.props.alteredGroupName}`,
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.alteredCount, d.alteredPercentage)}</span>,
             headerRender: (name: string) => <span style={{ display: 'inline-block', width: 165 }}>{name}</span>,
             tooltip: <span>Number (percentage) of samples that have alterations in the query gene(s) that also 
@@ -114,7 +108,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         };
 
         columns[AlterationEnrichmentTableColumnType.PERCENTAGE_IN_UNALTERED] = {
-            name: "Samples with alteration in unaltered group",
+            name: `Samples with alteration in ${this.props.unalteredGroupName}`,
             render: (d: AlterationEnrichmentRow) => <span>{formatPercentage(d.unalteredCount, d.unalteredPercentage)}</span>,
             headerRender: (name: string) => <span style={{ display: 'inline-block', width: 165 }}>{name}</span>,
             tooltip: <span>Number (percentage) of samples that do not have alterations in the query gene(s) that 
@@ -178,7 +172,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
     }
 
     public render() {
-        const orderedColumns = _.sortBy(this._columns, (c: AlterationEnrichmentTableColumn) => c.order);
+        const orderedColumns = _.sortBy(this.columns, (c: AlterationEnrichmentTableColumn) => c.order);
         return (
             <AlterationEnrichmentTableComponent initialItemsPerPage={20} paginationProps={{ itemsPerPageOptions: [20] }}
                 columns={orderedColumns} data={this.props.data} initialSortColumn={this.props.initialSortColumn} 
