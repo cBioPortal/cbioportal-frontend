@@ -249,7 +249,7 @@ export function somaticMutationRate(hugoGeneSymbol: string, mutations: Mutation[
 }
 
 export function isNotGermlineMutation(
-    m:any
+    m:{ mutationStatus?:string }
 ) {
     return !m.mutationStatus || !(GERMLINE_REGEXP.test(m.mutationStatus));
 }
