@@ -176,7 +176,7 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
         super(props);
 
         this.resultsViewPageStore = initStore();
-        this.groupComparisonStore = new GroupComparisonStore(this.resultsViewPageStore);
+        this.groupComparisonStore = new GroupComparisonStore(this.resultsViewPageStore.sampleGroups); // only for development purposes
 
         getBrowserWindow().resultsViewPageStore = this.resultsViewPageStore;
     }
