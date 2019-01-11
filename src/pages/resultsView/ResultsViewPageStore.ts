@@ -68,7 +68,7 @@ import {
     doesQueryContainOQL,
     filterCBioPortalWebServiceData,
     filterCBioPortalWebServiceDataByOQLLine,
-    filterCBioPortalWebServiceDataByUnflattenedOQLLine,
+    filterCBioPortalWebServiceDataByUnflattenedOQLLine, uniqueGenesInOQLQuery,
     OQLLineFilterOutput,
     parseOQLQuery,
     UnflattenedOQLLineFilterOutput,
@@ -457,7 +457,7 @@ export class ResultsViewPageStore {
 
     @computed get hugoGeneSymbols(){
         if (this.rvQuery.oqlQuery.length > 0) {
-            return parseOQLQuery(this.rvQuery.oqlQuery).map((o: any) => o.gene);
+            return uniqueGenesInOQLQuery(this.rvQuery.oqlQuery);
         } else {
             return [];
         }
@@ -2057,7 +2057,9 @@ export class ResultsViewPageStore {
 
             const genes = await fetchGenes(this.hugoGeneSymbols);
 
-            if (_.isEqual(this.hugoGeneSymbols, genes.map((gene)=>gene.hugoGeneSymbol) )) {
+            // Check that the same genes are in the OQL query as in the API response (order doesnt matter).
+            // This ensures that all the genes in OQL are valid. If not, we throw an error.
+            if (_.isEqual(_.sortBy(this.hugoGeneSymbols), _.sortBy(genes.map((gene)=>gene.hugoGeneSymbol)))) {
                 return genes;
             } else {
                 throw(new Error(ErrorMessages.InvalidGenes));
