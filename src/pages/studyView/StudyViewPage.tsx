@@ -45,30 +45,34 @@ export class StudyResultsSummary extends React.Component<{ store:StudyViewPageSt
 
                 {this.props.store.mutationProfiles.result.length > 0 && (
                     <div data-test="with-mutation-data">
-                        <LabeledCheckbox
-                            inputProps={{className: styles.selectedInfoCheckbox}}
-                            checked={!!this.props.store.filters.withMutationData}
-                            onChange={this.props.store.toggleWithMutationDataFilter}
-                        >
-                            <LoadingIndicator
-                                isLoading={this.props.store.molecularProfileSampleCounts.isPending}/>
-                            {this.props.store.molecularProfileSampleCounts.isComplete && (
-                                `${this.props.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples.toLocaleString()} w/ mutation data`)}
-                        </LabeledCheckbox>
+                        <LoadingIndicator
+                            isLoading={this.props.store.molecularProfileSampleCounts.isPending}/>
+                        {this.props.store.molecularProfileSampleCounts.isComplete && (
+                            <LabeledCheckbox
+                                inputProps={{className: styles.selectedInfoCheckbox}}
+                                checked={!!this.props.store.filters.withMutationData}
+                                onChange={this.props.store.toggleWithMutationDataFilter}
+                                disabled={this.props.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples === undefined}
+                            >
+                                {this.props.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples === undefined ? '0' : this.props.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples.toLocaleString()} w/ mutation data
+                            </LabeledCheckbox>
+                        )}
                     </div>
                 )}
                 {this.props.store.cnaProfiles.result.length > 0 && (
                     <div data-test="with-cna-data">
-                        <LabeledCheckbox
-                            inputProps={{className: styles.selectedInfoCheckbox}}
-                            checked={!!this.props.store.filters.withCNAData}
-                            onChange={this.props.store.toggleWithCNADataFilter}
-                        >
-                            <LoadingIndicator
-                                isLoading={this.props.store.molecularProfileSampleCounts.isPending}/>
-                            {this.props.store.molecularProfileSampleCounts.isComplete && (
-                                `${this.props.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples.toLocaleString()} w/ CNA data`)}
-                        </LabeledCheckbox>
+                        <LoadingIndicator
+                            isLoading={this.props.store.molecularProfileSampleCounts.isPending}/>
+                        {this.props.store.molecularProfileSampleCounts.isComplete && (
+                            <LabeledCheckbox
+                                inputProps={{className: styles.selectedInfoCheckbox}}
+                                checked={!!this.props.store.filters.withCNAData}
+                                onChange={this.props.store.toggleWithCNADataFilter}
+                                disabled={this.props.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples === undefined}
+                            >
+                                {this.props.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples === undefined ? '0' : this.props.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples.toLocaleString()} w/ CNA data
+                            </LabeledCheckbox>
+                        )}
                     </div>
                 )}
 
