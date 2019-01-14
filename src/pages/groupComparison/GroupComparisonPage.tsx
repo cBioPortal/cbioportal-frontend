@@ -6,6 +6,7 @@ import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import ReactSelect from "react-select";
 import 'react-select/dist/react-select.css';
+import Survival from "./Survival";
 
 export enum GroupComparisonTab {
     MUTATIONS, CNA, MRNA, PROTEIN
@@ -63,6 +64,12 @@ export default class GroupComparisonPage extends React.Component<{}, {}> {
                             <MSKTab id={GroupComparisonTab.PROTEIN.toString()} linkText="Protein">
                                 <span>GOES HERE</span>
                             </MSKTab>
+                            {
+                                this.store.showSurvivalTab &&
+                                <MSKTab key={0} id="survival" linkText="Survival">
+                                    <Survival store={this.store}/>
+                                </MSKTab>
+                            }
                         </MSKTabs>
                     </div>
                 </div>
