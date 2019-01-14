@@ -1,25 +1,26 @@
-import {ResultsViewPageStore} from "../resultsView/ResultsViewPageStore";
 import {SampleGroup, TEMP_localStorageGroupsKey} from "./GroupComparisonUtils";
 import {remoteData} from "../../shared/api/remoteData";
-import ListIndexedMap from "../../shared/lib/ListIndexedMap";
 import {
     MolecularProfile,
     MolecularProfileFilter,
-    Sample, SampleFilter,
-    SampleIdentifier
+    SampleFilter,
+    ClinicalDataMultiStudyFilter,
+    ClinicalData
 } from "../../shared/api/generated/CBioPortalAPI";
-import {action, computed, observable} from "mobx";
+import { computed, observable } from "mobx";
 import client from "../../shared/api/cbioportalClientInstance";
 import _ from "lodash";
 import {
     pickCopyNumberEnrichmentProfiles, pickMRNAEnrichmentProfiles,
     pickMutationEnrichmentProfiles, pickProteinEnrichmentProfiles
 } from "../resultsView/enrichments/EnrichmentsUtil";
-import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
-import {AlterationEnrichment} from "../../shared/api/generated/CBioPortalAPIInternal";
 import {makeEnrichmentDataPromise} from "../resultsView/ResultsViewPageStoreUtils";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
 import autobind from "autobind-decorator";
+import { PatientSurvival } from "shared/model/PatientSurvival";
+import request from "superagent";
+import { getPatientSurvivals } from "pages/resultsView/SurvivalStoreHelper";
+import { SURVIVAL_CHART_ATTRIBUTES } from "pages/resultsView/survival/SurvivalChart";
 
 export default class GroupComparisonStore {
 
@@ -141,4 +142,118 @@ export default class GroupComparisonStore {
             }
         }
     });
+
+    public readonly sampleSet = remoteData({
+        await: () => [
+            this.samples
+        ],
+        invoke: () => {
+            return Promise.resolve(_.keyBy(this.samples.result!, sample => sample.studyId + sample.sampleId));
+        }
+    });
+
+    public readonly patientToAnalysisGroups = remoteData({
+        await: () => [
+            this.sampleGroups,
+            this.sampleSet
+        ],
+        invoke: () => {
+            let sampleSet = this.sampleSet.result!
+            let patientToAnalysisGroups = _.reduce(this.sampleGroups.result, (acc, next) => {
+                next.sampleIdentifiers.forEach(sampleIdentifier => {
+                    let sample = sampleSet[sampleIdentifier.studyId + sampleIdentifier.sampleId];
+                    if (sample) {
+                        let groups = acc[sample.uniquePatientKey] || [];
+                        groups.push(next.id);
+                        acc[sample.uniquePatientKey] = groups;
+                    }
+                })
+                return acc;
+            }, {} as { [id: string]: string[] })
+            return Promise.resolve(patientToAnalysisGroups);
+        }
+    });
+
+    readonly survivalClinicalDataExists = remoteData<boolean>({
+        await: () => [
+            this.studyIds,
+            this.samples
+        ],
+        invoke: async () => {
+            const filter: ClinicalDataMultiStudyFilter = {
+                attributeIds: SURVIVAL_CHART_ATTRIBUTES,
+                identifiers: this.samples.result!.map((s: any) => ({ entityId: s.patientId, studyId: s.studyId }))
+            };
+            const count = await client.fetchClinicalDataUsingPOSTWithHttpInfo({
+                clinicalDataType: "PATIENT",
+                clinicalDataMultiStudyFilter: filter,
+                projection: "META"
+            }).then(function (response: request.Response) {
+                return parseInt(response.header["total-count"], 10);
+            });
+            return count > 0;
+        }
+    });
+
+    @computed get showSurvivalTab() {
+        return this.survivalClinicalDataExists.isComplete && this.survivalClinicalDataExists.result;
+    }
+
+    readonly survivalClinicalData = remoteData<ClinicalData[]>({
+        await: () => [
+            this.samples
+        ],
+        invoke: () => {
+            const filter: ClinicalDataMultiStudyFilter = {
+                attributeIds: SURVIVAL_CHART_ATTRIBUTES,
+                identifiers: this.samples.result!.map((s: any) => ({ entityId: s.patientId, studyId: s.studyId }))
+            };
+            return client.fetchClinicalDataUsingPOST({
+                clinicalDataType: 'PATIENT',
+                clinicalDataMultiStudyFilter: filter
+            });
+        }
+    }, []);
+
+    readonly survivalClinicalDataGroupByUniquePatientKey = remoteData<{ [key: string]: ClinicalData[] }>({
+        await: () => [
+            this.survivalClinicalData,
+        ],
+        invoke: async () => {
+            return _.groupBy(this.survivalClinicalData.result, 'uniquePatientKey');
+        }
+    });
+
+    readonly patientKeys = remoteData({
+        await: () => [
+            this.samples
+        ],
+        invoke: () => {
+            return Promise.resolve(
+                _.uniq(this.samples.result!.map(s => s.uniquePatientKey))
+            );
+        }
+    }, []);
+
+    readonly overallPatientSurvivals = remoteData<PatientSurvival[]>({
+        await: () => [
+            this.survivalClinicalDataGroupByUniquePatientKey,
+            this.patientKeys,
+        ],
+        invoke: async () => {
+            return getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result,
+                this.patientKeys.result, 'OS_STATUS', 'OS_MONTHS', s => s === 'DECEASED');
+        }
+    }, []);
+
+    readonly diseaseFreePatientSurvivals = remoteData<PatientSurvival[]>({
+        await: () => [
+            this.survivalClinicalDataGroupByUniquePatientKey,
+            this.patientKeys,
+        ],
+        invoke: async () => {
+            return getPatientSurvivals(this.survivalClinicalDataGroupByUniquePatientKey.result,
+                this.patientKeys.result!, 'DFS_STATUS', 'DFS_MONTHS', s => s === 'Recurred/Progressed' || s === 'Recurred')
+        }
+    }, []);
 }
