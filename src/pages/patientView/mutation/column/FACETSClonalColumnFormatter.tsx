@@ -1,36 +1,19 @@
 import * as React from 'react';
-import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
 import {Mutation} from "shared/api/generated/CBioPortalAPI";
-import styles from "./mutationType.module.scss";
-import getCanonicalMutationType from "shared/lib/getCanonicalMutationType";
+import SampleManager from "../../sampleManager";
 import {floatValueIsNA} from "shared/lib/NumberUtils";
 
-interface IMutationTypeFormat {
-    label?: string;
-    longName?: string;
-    className: string;
-    mainType: string;
-    priority?: number;
-}
+export default class FACETSClonalColumnFormatter {
 
-/**
- * @author Avery Wang
- */
-export default class ClonalColumnFormatter {
-
-    /* Determines the display value by using the impact field.
-     *
-     * @param data  column formatter data
-     * @returns {string}"Clonal" text value
-     */
-    public static getDisplayValue(data:Mutation[], sampleIds:string[]) {
+    public static getDisplayValue(mutations:Mutation[], sampleIds:string[], sampleManager:SampleManager) {
         let values:string[] = [];
         const sampleToValue:{[key: string]: any} = {};
         const sampleToCCF:{[key: string]: number} = {};
-        for (const mutation of data) {
-            sampleToValue[mutation.sampleId] = ClonalColumnFormatter.getClonalValue([mutation]);
+        for (const mutation of mutations) {
+            sampleToValue[mutation.sampleId] = FACETSClonalColumnFormatter.getClonalValue([mutation]);
         }
-        for (const mutation of data) {
+        for (const mutation of mutations) {
             sampleToCCF[mutation.sampleId] = mutation.ccfMCopies;
         }
         // exclude samples with invalid count value (undefined || emtpy || lte 0)
@@ -42,13 +25,13 @@ export default class ClonalColumnFormatter {
         if (!samplesWithValue) {
             return (<span></span>);
         } else if (samplesWithValue.length === 1) {
-             tdValue = <li><DefaultTooltip overlay={ClonalColumnFormatter.getTooltip(`${samplesWithValue[0]}`, `${sampleToValue[samplesWithValue[0]]}`, `${sampleToCCF[samplesWithValue[0]]}`)} placement="left" arrowContent={<div className="rc-tooltip-arrow-inner"/>}>{ClonalColumnFormatter.getClonalCircle(sampleToValue[samplesWithValue[0]])}</DefaultTooltip></li>;
+             tdValue = <li><DefaultTooltip overlay={FACETSClonalColumnFormatter.getTooltip(`${samplesWithValue[0]}`, `${sampleToValue[samplesWithValue[0]]}`, `${sampleToCCF[samplesWithValue[0]]}`, sampleManager)} placement="left" arrowContent={<div className="rc-tooltip-arrow-inner"/>}>{FACETSClonalColumnFormatter.getClonalCircle(sampleToValue[samplesWithValue[0]])}</DefaultTooltip></li>;
         }
         // multiple value: add sample id and value pairs
         else {
              tdValue = samplesWithValue.map((sampleId:string) => {
                 return (
-                    <li><DefaultTooltip overlay={ClonalColumnFormatter.getTooltip(`${sampleId}`, `${sampleToValue[sampleId]}`, `${sampleToCCF[sampleId]}`)} placement="left" arrowContent={<div className="rc-tooltip-arrow-inner"/>}>{ClonalColumnFormatter.getClonalCircle(`${sampleToValue[sampleId]}`)}</DefaultTooltip></li>
+                    <li><DefaultTooltip overlay={FACETSClonalColumnFormatter.getTooltip(`${sampleId}`, `${sampleToValue[sampleId]}`, `${sampleToCCF[sampleId]}`, sampleManager)} placement="left" arrowContent={<div className="rc-tooltip-arrow-inner"/>}>{FACETSClonalColumnFormatter.getClonalCircle(`${sampleToValue[sampleId]}`)}</DefaultTooltip></li>
                 );
             });
         }
@@ -59,7 +42,7 @@ export default class ClonalColumnFormatter {
                );
     }
 
-    public static getTooltip(sampleId:string, clonalValue:string, ccfMCopies:string) {
+    public static getTooltip(sampleId:string, clonalValue:string, ccfMCopies:string, sampleManager:SampleManager) {
         let clonalColor = "";
         if (clonalValue === "yes") {
             clonalColor = "limegreen";
@@ -71,11 +54,12 @@ export default class ClonalColumnFormatter {
         return (
                 <div>
                     <table>
+                        <tr><td style={{paddingRight:10}}>{sampleManager.getComponentForSample(sampleId, 1, "")}</td><td><strong></strong></td></tr>
                         <tr><td style={{paddingRight:5}}>Clonal</td><td><span style={{color: `${clonalColor}`, fontWeight: "bold"}}>{clonalValue}</span></td></tr>
                         <tr><td style={{paddingRight:5}}>CCF</td><td><strong>{ccfMCopies}</strong></td></tr>
                     </table>
                 </div>
-        );
+            );
     }
 
     public static getClonalCircle(clonalValue:string) {
@@ -94,19 +78,19 @@ export default class ClonalColumnFormatter {
         );
     }
 
-    public static getCcfMCopiesUpperValue(data:Mutation[]):number {
-        const ccfMCopiesUpperValue = data[0].ccfMCopiesUpper;
+    public static getCcfMCopiesUpperValue(mutations:Mutation[]):number {
+        const ccfMCopiesUpperValue = mutations[0].ccfMCopiesUpper;
         return ccfMCopiesUpperValue;
     }
 
-    public static getCcfMCopiesValue(data:Mutation[]):number {
-        const ccfMCopiesValue = data[0].ccfMCopies;
+    public static getCcfMCopiesValue(mutations:Mutation[]):number {
+        const ccfMCopiesValue = mutations[0].ccfMCopies;
         return ccfMCopiesValue;
     }
 
-    public static getClonalValue(data:Mutation[]):string {
+    public static getClonalValue(mutations:Mutation[]):string {
         let textValue:string = "";
-        const ccfMCopiesUpperValue = ClonalColumnFormatter.getCcfMCopiesUpperValue(data);
+        const ccfMCopiesUpperValue = FACETSClonalColumnFormatter.getCcfMCopiesUpperValue(mutations);
         if (floatValueIsNA(ccfMCopiesUpperValue)) {
             textValue = "";
         } else if (ccfMCopiesUpperValue === 1) {
@@ -117,20 +101,19 @@ export default class ClonalColumnFormatter {
         return textValue;
     }
 
-    public static renderFunction(data:Mutation[], sampleIds:string[]) {
-        return ClonalColumnFormatter.getDisplayValue(data,sampleIds);
+    public static renderFunction(mutations:Mutation[], sampleIds:string[], sampleManager:SampleManager|null) {
+        if (!sampleManager) {
+            return (<span></span>);
+        }
+        return FACETSClonalColumnFormatter.getDisplayValue(mutations, sampleIds, sampleManager);
     }
 
-    public static getClonalDownload(mutations:Mutation[]): string|string[]
-    {
+    public static getClonalDownload(mutations:Mutation[]): string|string[] {
         let result = [];
         if (mutations) {
             for (let mutation of mutations) {
-                result.push(ClonalColumnFormatter.getClonalValue([mutation]));
+                result.push(FACETSClonalColumnFormatter.getClonalValue([mutation]));
             }
-        }
-        if (result.length == 1) {
-            return result[0];
         }
         return result;
     }

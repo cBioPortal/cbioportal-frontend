@@ -4,12 +4,16 @@ import {observer} from "mobx-react";
 import {
     IMutationTableProps, MutationTableColumnType, default as MutationTable
 } from "shared/components/mutationTable/MutationTable";
+import DiscreteCNACache from "shared/cache/DiscreteCNACache";
 import SampleManager from "../sampleManager";
-import {Mutation, ClinicalData} from "shared/api/generated/CBioPortalAPI";
+import {Mutation, ClinicalData, MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 import AlleleCountColumnFormatter from "shared/components/mutationTable/column/AlleleCountColumnFormatter";
+import DiscreteCNAColumnFormatter from "shared/components/mutationTable/column/DiscreteCNAColumnFormatter";
 import MutantCopiesColumnFormatter from "shared/components/mutationTable/column/MutantCopiesColumnFormatter";
 import CancerCellFractionColumnFormatter from "shared/components/mutationTable/column/CancerCellFractionColumnFormatter";
-import ClonalColumnFormatter from "shared/components/mutationTable/column/ClonalColumnFormatter";
+import FACETSClonalColumnFormatter from "./column/FACETSClonalColumnFormatter";
+import FACETSMutantCopiesColumnFormatter from "./column/FACETSMutantCopiesColumnFormatter";
+import PatientDiscreteCNAColumnFormatter from "./column/PatientDiscreteCNAColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import FACETSColumnFormatter from "./column/FACETSColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
@@ -107,11 +111,30 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.CLONAL] = {
             name: "Clonal",
             tooltip: (<span>FACETS Clonal</span>),
-            render:(d:Mutation[])=>ClonalColumnFormatter.renderFunction(d, this.getSamples()),
+            render:(d:Mutation[])=>FACETSClonalColumnFormatter.renderFunction(d, this.getSamples(), this.props.sampleManager),
             sortBy:(d:Mutation[])=>d.map(m=>m.ccfMCopiesUpper),
-            download:(d:Mutation[])=>ClonalColumnFormatter.getClonalDownload(d)
+            download:(d:Mutation[])=>FACETSClonalColumnFormatter.getClonalDownload(d)
         };
 
+        this._columns[MutationTableColumnType.MUTANT_COPIES] = {
+            name: "Mutant Copies",
+            tooltip: (<span>FACETS Best Guess for Mutant Copies / Total Copies</span>),
+            render:(d:Mutation[])=>FACETSMutantCopiesColumnFormatter.renderFunction(d, this.props.sampleIdToClinicalDataMap, this.getSamples(), this.props.sampleManager),
+            download:(d:Mutation[])=>MutantCopiesColumnFormatter.getMutantCopiesDownload(d, this.props.sampleIdToClinicalDataMap),
+            sortBy:(d:Mutation[])=>MutantCopiesColumnFormatter.getDisplayValueAsString(d, this.props.sampleIdToClinicalDataMap, this.getSamples())        
+        };
+
+        this._columns[MutationTableColumnType.COPY_NUM] = {
+            name: "Copy #",
+            tooltip: (<span>I just want something that works</span>),
+            render:(d:Mutation[])=>PatientDiscreteCNAColumnFormatter.renderFunction(d,
+                        this.props.molecularProfileIdToMolecularProfile as {[molecularProfileId:string]:MolecularProfile},
+                        this.props.discreteCNACache as DiscreteCNACache, this.props.sampleIdToClinicalDataMap, this.getSamples(), this.props.sampleManager),
+            sortBy:(d:Mutation[])=>DiscreteCNAColumnFormatter.getSortValue(d, this.props.molecularProfileIdToMolecularProfile as {[molecularProfileId:string]:MolecularProfile},
+                        this.props.discreteCNACache as DiscreteCNACache, this.props.sampleIdToClinicalDataMap, this.getSamples()),
+            filter:(d:Mutation[], filterString:string)=>DiscreteCNAColumnFormatter.filter(d, this.props.molecularProfileIdToMolecularProfile as {[molecularProfileId:string]:MolecularProfile},
+                        this.props.discreteCNACache as DiscreteCNACache, this.props.sampleIdToClinicalDataMap, this.getSamples(), filterString) 
+        };
         // customization for allele count columns
 
         this._columns[MutationTableColumnType.REF_READS_N].render =
@@ -178,7 +201,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         // hide if multiple samples (same as Copy Number column)
         // included because Mutant copies should only be shown in conjunction with Copy Num
         this._columns[MutationTableColumnType.MUTANT_COPIES].shouldExclude = ()=>{
-            return (!this.hasMutantCopies || this.getSamples().length > 1 || !this.props.discreteCNAMolecularProfileId);
+            return (!this.hasMutantCopies || !this.props.discreteCNAMolecularProfileId);
         };
 
         // only hide tumor column if there is one sample and no uncalled
@@ -188,7 +211,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             return this.getSamples().length < 2 && !this.hasUncalledMutations;
         };
         this._columns[MutationTableColumnType.COPY_NUM].shouldExclude = ()=>{
-            return (!this.props.discreteCNAMolecularProfileId) || (this.getSamples().length > 1);
+            return (!this.props.discreteCNAMolecularProfileId);
         };
     }
 
