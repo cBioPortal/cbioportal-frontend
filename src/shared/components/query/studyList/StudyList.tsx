@@ -12,8 +12,8 @@ import {QueryStoreComponent} from "../QueryStore";
 import DefaultTooltip from "../../defaultTooltip/DefaultTooltip";
 import {FilteredCancerTreeView} from "../StudyListLogic";
 import {CancerTreeNode} from "../CancerStudyTreeData";
-import {Link} from "react-router";
 import {StudyLink} from "../../StudyLink/StudyLink";
+import StudyTagsTooltip from '../../studyTagsTooltip/StudyTagsTooltip';
 
 const styles = {
 	...styles_any as {
@@ -34,7 +34,8 @@ const styles = {
 		icon: string,
 		iconWithTooltip: string,
 		trashIcon: string,
-		summaryIcon: string,
+        summaryIcon: string,
+        infoCircleIcon: string,
 		tooltip: string,
 
 		disabled: string,
@@ -253,10 +254,10 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
                 />
             )
         } else {
-            let links:{icon:string, onClick?:string|(()=>void), tooltip?:string}[] = [
+            const links:{icon:string, onClick?:string|(()=>void), tooltip?:string}[] = [
                 {
                     icon: 'info-circle',
-                    tooltip: this.store.isVirtualStudy(study.studyId) ? study.description.replace(/\r?\n/g, '<br />') : study.description,
+                    tooltip: ''
                 }
             ];
     
@@ -284,7 +285,8 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
                                 className={classNames({
                                     [styles.icon]: true,
                                     [styles.iconWithTooltip]: !!link.tooltip,
-                                    [styles.trashIcon]: (link.icon === "trash")
+                                    [styles.trashIcon]: (link.icon === "trash"),
+                                    [styles.infoCircleIcon]: (link.icon === "info-circle")
                                 })}
                             />
                         );
@@ -321,6 +323,20 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
                                 />
                             );
                         }
+                        if (link.icon === 'info-circle')
+                        {
+                            content = (                                
+                                <StudyTagsTooltip
+                                    key={i}
+                                    studyDescription={this.store.isVirtualStudy(study.studyId) ? study.description.replace(/\r?\n/g, '<br />') : study.description}
+                                    studyId={study.studyId}
+                                    mouseEnterDelay={0}
+                                    placement="top"
+                                    >
+                                <a>{content}</a>
+                                </StudyTagsTooltip>
+                            );
+                        }   
     
                         return content;
                     })}
