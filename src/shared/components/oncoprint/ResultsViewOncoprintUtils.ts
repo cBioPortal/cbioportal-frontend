@@ -43,8 +43,18 @@ export function makeProfiledInClinicalAttributes(
         _.groupBy(selectedMolecularProfiles, "molecularAlterationType");
     const selectedMolecularProfilesMap = _.keyBy(selectedMolecularProfiles, p=>p.molecularProfileId);
 
+    // Start each computation by assuming unprofiled for every queried alteration type.
+    // This is because of the following example: suppose we have a multiple study query, and
+    //  theres a copy number profile for study A, but not for study B, and every sample in
+    //  study A is profiled for copy number. Since the study B samples aren't notated with
+    //  "not profiled for copy number", since that profile isnt in study B, then unless
+    //  we keep track of the fact that there is a queried copy number profile for SOME
+    //  study, then we'll never see that there are unprofiled samples for copy number,
+    //  and thus we should show a "Profiled In Copy Number" track.
+    const initIsUnprofiled = _.mapValues(groupedSelectedMolecularProfiles, p=>true);
+
     const existsUnprofiledCount:{[alterationType:string]:number} = _.reduce(coverageInformation, (map, sampleCoverage)=>{
-        const isUnprofiled:{[alterationType:string]:boolean} = {};
+        const isUnprofiled:{[alterationType:string]:boolean} = _.clone(initIsUnprofiled);
 
         // if a sample is not profiled in all genes, its certainly unprofiled for this profile
         for (const gpData of sampleCoverage.notProfiledAllGenes) {
@@ -68,6 +78,16 @@ export function makeProfiledInClinicalAttributes(
             }
         });
 
+        // if a sample is profiled for all genes, then it is not unprofiled
+        for (const gpData of sampleCoverage.allGenes) {
+            if (gpData.molecularProfileId in selectedMolecularProfilesMap) {
+                // unmark isUnprofiled
+                isUnprofiled[
+                    molecularProfileIdToMolecularProfile[gpData.molecularProfileId].molecularAlterationType
+                ] = false;
+            }
+        };
+
         // if a sample is profiled in some gene, then it is not unprofiled
         _.forEach(sampleCoverage.byGene, geneInfo=>{
             for (const gpData of geneInfo) {
@@ -89,7 +109,7 @@ export function makeProfiledInClinicalAttributes(
         });
         return map;
     }, {} as {[alterationType:string]:number});
-
+    
     // make a clinical attribute for each profile type which not every sample is profiled in
     const existsUnprofiled = Object.keys(existsUnprofiledCount).filter(alterationType=>{
         return existsUnprofiledCount[alterationType] > 0;

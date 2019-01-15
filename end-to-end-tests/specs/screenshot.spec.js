@@ -194,6 +194,12 @@ describe("oncoprint screenshot tests", function() {
         var res = browser.checkElement(".oncoprintContainer");
         assertScreenShotMatch(res);
     });
+    it("profiled in tracks in a combined study", function() {
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/results/oncoprint?session_id=5c38e4c0e4b05228701fb0c9&show_samples=false`);
+        waitForOncoprint(10000);
+        var res = browser.checkElement("#oncoprintDiv");
+        assertScreenShotMatch(res);
+    });
     it("profiled in tracks in multiple study with SOS1", function() {
         var url = `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=msk_impact_2017%2Cbrca_tcga_pub&case_set_id=all&data_priority=0&gene_list=SOS1&geneset_list=%20&tab_index=tab_visualize`;
         goToUrlAndSetLocalStorage(url);
