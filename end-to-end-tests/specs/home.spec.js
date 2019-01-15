@@ -1339,7 +1339,7 @@ describe('case set selection in modify query form', function(){
         // Select all impact studies
         var input = $(".autosuggest input[type=text]");
         input.waitForExist(10000);
-        input.setValue('impact');
+        input.setValue('glioblastoma');
         browser.pause(500);
 
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
@@ -1347,9 +1347,9 @@ describe('case set selection in modify query form', function(){
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="M"]', 10000);
         browser.waitForExist('[data-test="dataTypePrioritySelector"] input[type="checkbox"][data-test="C"]', 10000);
         browser.waitForExist(selectedCaseSet_sel, 10000);
-        browser.waitUntil(()=>{ return browser.getText(selectedCaseSet_sel) === "All (13146)"; }, 5000);
+        browser.waitUntil(()=>{ return browser.getText(selectedCaseSet_sel) === "All (2263)"; }, 5000);
 
-        // Deselect all tcga -provisional studies
+        // Deselect all filtered studies
         browser.click('div[data-test="cancerTypeListContainer"] input[data-test="selectAllStudies"]');
         browser.pause(100);
 
