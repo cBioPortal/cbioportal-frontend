@@ -904,8 +904,27 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         }
     }
 
+    private loadingGeneticDataDuringCurrentLoad = false;
+    private loadingClinicalDataDuringCurrentLoad = false;
     @autobind
     private getProgressItems(elapsedSecs:number):IProgressIndicatorItem[] {
+        if (elapsedSecs === 0) {
+            this.loadingGeneticDataDuringCurrentLoad = false;
+            this.loadingClinicalDataDuringCurrentLoad = false;
+        }
+
+        const areNonLocalClinicalAttributesSelected =
+            _.some(this.selectedClinicalAttributeIds.keys(),
+                clinicalAttributeId=>!clinicalAttributeIsLocallyComputed({clinicalAttributeId})
+            );
+
+        if (this.geneticTracks.isPending) {
+            this.loadingGeneticDataDuringCurrentLoad = true;
+        }
+        if (areNonLocalClinicalAttributesSelected && this.clinicalTracks.isPending) {
+            this.loadingClinicalDataDuringCurrentLoad = true;
+        }
+
         const ret:IProgressIndicatorItem[] = [];
 
         let queryingLabel:string;
@@ -929,13 +948,16 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
             style:{ fontWeight:"bold" }
         });
 
-        const areNonLocalClinicalAttributesSelected =
-            _.some(this.selectedClinicalAttributeIds.keys(),
-                    clinicalAttributeId=>!clinicalAttributeIsLocallyComputed({clinicalAttributeId})
-            );
+        const dataLoadingNames = [];
+        if (this.loadingGeneticDataDuringCurrentLoad) {
+            dataLoadingNames.push("genetic");
+        }
+        if (this.loadingClinicalDataDuringCurrentLoad) {
+            dataLoadingNames.push("clinical");
+        }
 
         ret.push({
-            label: `Loading genomic ${areNonLocalClinicalAttributesSelected ? "and clinical " : ""}data`,
+            label: `Loading ${dataLoadingNames.join(" and ")} data`,
             promises: [this.props.store.molecularData, this.props.store.mutations, ...(areNonLocalClinicalAttributesSelected ? [this.clinicalTracks] : [])]
         });
 
