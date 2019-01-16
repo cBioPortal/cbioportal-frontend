@@ -13,7 +13,7 @@ export interface IEnrichmentsDataSetDropdownProps {
     dataSets: MobxPromise<MolecularProfile[]>;
     onChange: (molecularProfile: MolecularProfile) => void;
     selectedValue: string;
-    molecularProfileIdToProfiledSampleCount:{[molecularProfileId:string]:number};
+    molecularProfileIdToProfiledSampleCount?:MobxPromise<{[molecularProfileId:string]:number}>;
 }
 
 @observer
@@ -30,6 +30,7 @@ export default class EnrichmentsDataSetDropdown extends React.Component<IEnrichm
         if (this.props.dataSets.isComplete && this.props.dataSets.result!.length === 1 &&
             (this.props.dataSets.result![0].molecularAlterationType === "MUTATION_EXTENDED"
                 || this.props.dataSets.result![0].molecularAlterationType === "COPY_NUMBER_ALTERATION")) {
+            // hide if only a single mutation or copy number profile
             return null;
         }
 

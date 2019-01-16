@@ -1,6 +1,6 @@
 import {
     Gene, NumericGeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
-    Mutation, Patient, Sample, CancerStudy
+    Mutation, Patient, Sample, CancerStudy, PatientIdentifier, PatientFilter
 } from "../../shared/api/generated/CBioPortalAPI";
 import {action} from "mobx";
 import AccessorsForOqlFilter, {getSimplifiedMutationType} from "../../shared/lib/oql/AccessorsForOqlFilter";
@@ -444,7 +444,7 @@ export function getMultipleGeneResultKey(groupedOql: MergedTrackLineFilterOutput
 }
 
 export function makeEnrichmentDataPromise<T extends {pValue:number, qValue?:number}>(params:{
-    await: MobxPromise_await,
+    await?: MobxPromise_await,
     shouldFetchData:()=>boolean,
     fetchData:()=>Promise<T[]>
 }):MobxPromise<(T & {qValue:number})[]> {
@@ -469,4 +469,21 @@ export function makeEnrichmentDataPromise<T extends {pValue:number, qValue?:numb
 
 function sortEnrichmentData(data: any[]): any[] {
     return _.sortBy(data, ["pValue", "hugoGeneSymbol"]);
+}
+
+export function fetchPatients(samples:Sample[]) {
+    let patientKeyToPatientIdentifier:{[uniquePatientKey:string]:PatientIdentifier} = {};
+    for (const sample of samples) {
+        patientKeyToPatientIdentifier[sample.uniquePatientKey] = {
+            patientId: sample.patientId,
+            studyId: sample.studyId
+        };
+    }
+    const patientFilter = {
+        uniquePatientKeys: _.uniq(samples.map((sample:Sample)=>sample.uniquePatientKey))
+    } as PatientFilter;
+
+    return client.fetchPatientsUsingPOST({
+        patientFilter
+    });
 }

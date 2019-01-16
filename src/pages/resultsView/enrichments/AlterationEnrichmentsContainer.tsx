@@ -25,14 +25,21 @@ export interface IAlterationEnrichmentContainerProps {
     data: AlterationEnrichmentWithQ[];
     totalAlteredCount: number;
     totalUnalteredCount: number;
+    alteredGroupName?:string;
+    unalteredGroupName?:string;
     headerName: string;
     selectedProfile:MolecularProfile;
-    store: ResultsViewPageStore;
+    store?: ResultsViewPageStore;
     alterationType: string;
 }
 
 @observer
 export default class AlterationEnrichmentContainer extends React.Component<IAlterationEnrichmentContainerProps, {}> {
+
+    static defaultProps:Partial<IAlterationEnrichmentContainerProps> = {
+        alteredGroupName: "altered group",
+        unalteredGroupName: "unaltered group"
+    };
 
     @observable mutualExclusivityFilter: boolean = true;
     @observable coOccurenceFilter: boolean = true;
@@ -44,15 +51,19 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
 
     @computed get data(): AlterationEnrichmentRow[] {
         return getAlterationRowData(this.props.data, this.props.totalAlteredCount, this.props.totalUnalteredCount,
-            this.props.store.hugoGeneSymbols);
+            this.props.store ? this.props.store.hugoGeneSymbols : []);
     }
 
     @computed get excludedGenesFromTable():string[]|null {
-        // exclude query genes from table if we're looking at a queried profile
-        if (this.props.store.selectedMolecularProfiles.isComplete &&
-            this.props.store.selectedMolecularProfiles.result
-                .findIndex(x=>x.molecularProfileId === this.props.selectedProfile.molecularProfileId) > -1) {
-            return this.props.store.hugoGeneSymbols;
+        if (this.props.store) {
+            // exclude query genes from table if we're looking at a queried profile
+            if (this.props.store.selectedMolecularProfiles.isComplete &&
+                this.props.store.selectedMolecularProfiles.result
+                    .findIndex(x=>x.molecularProfileId === this.props.selectedProfile.molecularProfileId) > -1) {
+                return this.props.store.hugoGeneSymbols;
+            } else {
+                return null;
+            }
         } else {
             return null;
         }
@@ -135,17 +146,17 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
         return (
             <div className={styles.Container}>
                 <div className={styles.LeftColumn}>
-                    <MiniScatterChart data={getAlterationScatterData(this.data, this.props.store.hugoGeneSymbols)} 
+                    <MiniScatterChart data={getAlterationScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : [])}
                         xAxisLeftLabel="Mutual exclusivity" xAxisRightLabel="Co-occurrence" xAxisDomain={15} 
                         xAxisTickValues={[-10, 0, 10]}  onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection} 
                         onSelectionCleared={this.onSelectionCleared}/>
-                    <MiniBarChart totalAlteredCount={this.props.totalAlteredCount} totalUnalteredCount={this.props.totalUnalteredCount}
-                        selectedGene={this.clickedGene} selectedGeneStats={this.clickedGene ? this.clickedGeneStats : null} />
+                    {this.props.store && <MiniBarChart totalAlteredCount={this.props.totalAlteredCount} totalUnalteredCount={this.props.totalUnalteredCount}
+                        selectedGene={this.clickedGene} selectedGeneStats={this.clickedGene ? this.clickedGeneStats : null} />}
                 </div>
                 <div className={styles.TableContainer}>
                     <div>
                         <h3>{this.props.headerName}</h3>
-                        <AddCheckedGenes checkedGenes={this.checkedGenes} store={this.props.store} />
+                        {this.props.store && <AddCheckedGenes checkedGenes={this.checkedGenes} store={this.props.store} />}
                     </div>
                     <hr style={{ marginTop: 0, marginBottom: 5, borderWidth: 2 }} />
                     <div className={styles.Checkboxes}>
@@ -163,7 +174,9 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                         </Checkbox>
                     </div>
                     <AlterationEnrichmentTable data={this.filteredData} onCheckGene={this.onCheckGene} 
-                        onGeneNameClick={this.onGeneNameClick} alterationType={this.props.alterationType} dataStore={this.dataStore}/>
+                        onGeneNameClick={this.onGeneNameClick} alterationType={this.props.alterationType} dataStore={this.dataStore}
+                       alteredGroupName={this.props.alteredGroupName!} unalteredGroupName={this.props.unalteredGroupName!}
+                    />
                 </div>
             </div>
         );
