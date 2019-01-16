@@ -33,6 +33,7 @@ import {Else, If, Then} from 'react-if';
 import DefaultTooltip from "../../shared/components/defaultTooltip/DefaultTooltip";
 import CustomCaseSelection from "./addChartButton/customCaseSelection/CustomCaseSelection";
 import {AppStore} from "../../AppStore";
+import {SampleGroup, TEMP_localStorageGroupsKey} from "../groupComparison/GroupComparisonUtils";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -268,6 +269,15 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                 addChartOverlayClassName='studyViewAddChartOverlay'
                                                 disableCustomTab={this.store.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA}
                                             />
+                                            <button className='btn btn-primary btn-xs' style={{marginLeft: '10px'}} onClick={()=>{
+                                                const groups:SampleGroup[] = JSON.parse(localStorage.getItem(TEMP_localStorageGroupsKey) || "[]");
+                                                groups.push({
+                                                    id: Math.random()+"",
+                                                    sampleIdentifiers:this.store.selectedSamples.result!.map(s=>({ sampleId:s.sampleId, studyId:s.studyId }))
+                                                });
+                                                localStorage.setItem(TEMP_localStorageGroupsKey, JSON.stringify(groups));
+                                                alert("Saved group! Check it out in Group Comparison");
+                                            }} disabled={!this.store.selectedSamples.isComplete}>* Save Group</button>
                                         </div>
                                     )}
                                 </div>
