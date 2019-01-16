@@ -28,8 +28,8 @@ export interface ShareUrls {
 @observer
 export class ShareUI extends React.Component<IShareUI, {}> {
 
-    constructor() {
-        super();
+    constructor(props:IShareUI) {
+        super(props);
     }
 
     @observable showBookmarkDialog:boolean = false;

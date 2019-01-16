@@ -14,12 +14,18 @@ import classNames from "classnames";
 import autobind from "autobind-decorator";
 var Clipboard = require('clipboard');
 
+export interface IBookmarkModalProps {
+
+ onHide: () => void;
+ urlPromise:Promise<any>
+
+}
 
 @observer
-export class BookmarkModal extends React.Component<{ onHide: () => void, urlPromise:Promise<any> }, {}> {
+export class BookmarkModal extends React.Component<IBookmarkModalProps, {}> {
 
-    constructor(){
-        super();
+    constructor(props:IBookmarkModalProps){
+        super(props);
     }
 
     @observable

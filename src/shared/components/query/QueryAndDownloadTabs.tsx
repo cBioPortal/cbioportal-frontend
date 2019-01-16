@@ -27,7 +27,7 @@ export default class QueryAndDownloadTabs extends React.Component<IQueryAndDownl
 {
 
 	constructor(props:IQueryAndDownloadTabsProps){
-		super();
+		super(props);
 
 		// the query store models a single use of the query component and therefor a new one should
 		// be made when the component is instantiated and it should be destroyed when the component unmounts

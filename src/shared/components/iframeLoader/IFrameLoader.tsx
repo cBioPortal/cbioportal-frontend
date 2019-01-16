@@ -5,12 +5,14 @@ import {observer} from "mobx-react";
 import {observable} from "mobx";
 import autobind from "autobind-decorator";
 
-@observer
-export default class IFrameLoader extends React.Component<{ url:string; iframeId?:string; height:Number }, {}> {
+export interface IFrameLoaderProps {
+    url:string;
+    iframeId?:string;
+    height:number
+}
 
-    constructor(){
-        super();
-    }
+@observer
+export default class IFrameLoader extends React.Component<IFrameLoaderProps, {}> {
 
     @observable iframeLoaded = false;
 

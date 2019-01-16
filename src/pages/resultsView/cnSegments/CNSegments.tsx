@@ -20,8 +20,8 @@ class CNASegmentIframe extends React.Component<CNSegmentsIframeProps,{}>{
     
     iframeDiv:HTMLDivElement;
 
-    constructor(){
-        super();
+    constructor(props:CNSegmentsIframeProps){
+        super(props);
         this.downloadSegmentData = this.downloadSegmentData.bind(this);
     }
     

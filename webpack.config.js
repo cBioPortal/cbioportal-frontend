@@ -270,7 +270,7 @@ var config = {
 
         ],
 
-        noParse: [/3Dmol-nojquery.js/, /jspdf/],
+        noParse: [/3Dmol-nojquery/, /jspdf/],
 
     },
     devServer: {
@@ -482,6 +482,7 @@ if (isDev || isTest) {
             compress: {
                 warnings: false
             },
+            exclude:/3Dmol/i,
             sourceMap: true,
             comments: false
         })

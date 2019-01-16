@@ -44,7 +44,7 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
     @observable showErrorMessage = true;
 
     constructor(props: IStudySummaryTabProps) {
-        super();
+        super(props);
         this.store = props.store;
 
         this.handlers = {

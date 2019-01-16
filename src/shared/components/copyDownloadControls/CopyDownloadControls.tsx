@@ -47,9 +47,9 @@ export class CopyDownloadControls extends React.Component<IAsyncCopyDownloadCont
         downloadFilename: "data.tsv"
     };
 
-    constructor()
+    constructor(props:IAsyncCopyDownloadControlsProps)
     {
-        super();
+        super(props);
         this.handleDownload = this.handleDownload.bind(this);
         this.handleCopy = this.handleCopy.bind(this);
         this.handleModalClose = this.handleModalClose.bind(this);

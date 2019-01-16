@@ -177,8 +177,8 @@ export default class Oncoprint extends React.Component<IOncoprintProps, {}> {
     private trackSpecKeyToTrackId:{[key:string]:TrackId};
     private lastTransitionProps:IOncoprintProps;
 
-    constructor() {
-        super();
+    constructor(props:IOncoprintProps) {
+        super(props);
 
         this.trackSpecKeyToTrackId = {};
         this.divRefHandler = this.divRefHandler.bind(this);

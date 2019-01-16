@@ -90,7 +90,7 @@ type ExpressionTooltipModel = {
 export default class ExpressionWrapper extends React.Component<ExpressionWrapperProps, {}> {
 
     constructor(props: ExpressionWrapperProps) {
-        super();
+        super(props);
         this.selectedGene = props.genes[0];
         (window as any).box = this;
     }

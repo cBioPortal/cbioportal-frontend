@@ -107,7 +107,7 @@ export default class AddChartByType extends React.Component<IAddChartByTypeProps
 
     @autobind
     getCurrentSelectedRows() {
-        return _.filter(this.options, option => option.selected);
+        return _.filter(this.options, option => option.selected === true);
     }
 
     @autobind

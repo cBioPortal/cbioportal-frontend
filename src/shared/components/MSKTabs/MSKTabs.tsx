@@ -117,8 +117,8 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
         loadingComponent:<LoadingIndicator isLoading={true} center={true} size={"big"}/>
     };
 
-    constructor(){
-        super();
+    constructor(props:IMSKTabsProps){
+        super(props);
 
         this.state = {
             currentPage: 1,

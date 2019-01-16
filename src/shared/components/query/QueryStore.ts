@@ -572,11 +572,11 @@ export class QueryStore
 			const physicalStudyIds = _.filter(this.allSelectedStudyIds, studyId => this.physicalStudiesSet.result[studyId]);
 
 			if(this._allSelectedStudyIds.keys().length !== physicalStudyIds.length){
-				await Promise.all(_.map(physicalStudyIds, studyId => {
+				await Promise.all(_.map(physicalStudyIds, (studyId) => {
 					return client.getAllSamplesInStudyUsingGET({
-						studyId: studyId
+						studyId: (studyId as string)
 					}).then(samples => {
-						studyToSampleSet[studyId] = stringListToSet(samples.map(sample => sample.sampleId));
+						studyToSampleSet[(studyId as string)] = stringListToSet(samples.map(sample => sample.sampleId));
 					})
 				}));
 
@@ -594,7 +594,7 @@ export class QueryStore
 				});
 			} else {
 				physicalStudyIds.forEach(studyId=>{
-					studyToSampleSet[studyId] = {}
+					studyToSampleSet[(studyId as string)] = {}
 				})
 			}
 			return studyToSampleSet;

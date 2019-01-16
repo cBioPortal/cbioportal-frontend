@@ -35,9 +35,9 @@ interface QueryContainerProps
 @observer
 export default class QueryContainer extends React.Component<QueryContainerProps, {}>
 {
-	constructor(){
+	constructor(props:QueryContainerProps){
 
-		super();
+		super(props);
 
 		this.handleSubmit = this.handleSubmit.bind(this);
 	}

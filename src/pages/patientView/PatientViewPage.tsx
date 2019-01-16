@@ -77,7 +77,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
     constructor(props: IPatientViewPageProps) {
 
-        super();
+        super(props);
 
         //TODO: this should be done by a module so that it can be reused on other pages
         const reaction1 = reaction(

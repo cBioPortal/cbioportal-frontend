@@ -52,8 +52,8 @@ export default class StructureViewerPanel extends React.Component<IStructureView
 
     protected _3dMolDiv: HTMLDivElement|undefined;
 
-    constructor() {
-        super();
+    constructor(props:IStructureViewerPanelProps) {
+        super(props);
 
         this.containerRefHandler = this.containerRefHandler.bind(this);
         this.toggleCollapse = this.toggleCollapse.bind(this);

@@ -11,7 +11,7 @@ export interface ICustomDropdownProps extends ButtonProps {
 
 class CustomButton extends React.Component<any,{}> { // cant type this more specifically because of some typing issues w ES6 classes not having component.replaceState
     render() {
-        const {bsRole, title, ...props} = this.props;
+        const {title, ...props} = this.props;
         return (
             <Button className="btn btn-default" {...props}>
                 {title} <span className="caret"/>
@@ -39,8 +39,8 @@ export default class CustomDropdown extends React.Component<ButtonProps, {}> {
     private toggle:()=>void;
     private hide:()=>void;
 
-    constructor() {
-        super();
+    constructor(props:ButtonProps) {
+        super(props);
         this.toggle = ()=>{this.open = !this.open;};
         this.hide = ()=>{this.open = false;};
     }
@@ -50,7 +50,7 @@ export default class CustomDropdown extends React.Component<ButtonProps, {}> {
         return (
             <RootCloseWrapper onRootClose={this.hide}>
                 <Dropdown id={id+""} open={this.open}>
-                    <CustomButton bsStyle="default" bsRole="toggle" title="Custom Toggle" onClick={this.toggle} {...props}/>
+                    <CustomButton bsStyle="default" title="Custom Toggle" onClick={this.toggle} {...(props as any)}/>
                     <CustomMenu bsRole="menu">
                         {children}
                     </CustomMenu>

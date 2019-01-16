@@ -24,11 +24,16 @@ import {getAlterationSummary, getGeneSummary, getPatientSampleSummary} from "./Q
 import {MakeMobxView} from "../../../shared/components/MobxView";
 import {getGAInstance} from "../../../shared/lib/tracking";
 
-@observer
-export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore }, {}> {
+export interface IQuerySummaryProps {
+    routingStore:ExtendedRouterStore;
+    store: ResultsViewPageStore;
+}
 
-    constructor() {
-        super();
+@observer
+export default class QuerySummary extends React.Component<IQuerySummaryProps, {}> {
+
+    constructor(props:any) {
+        super(props);
     }
 
     @autobind

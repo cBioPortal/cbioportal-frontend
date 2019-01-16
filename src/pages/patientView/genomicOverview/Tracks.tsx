@@ -17,8 +17,8 @@ interface TracksPropTypes {
 
 export default class Tracks extends React.Component<TracksPropTypes, {}> {
 
-    constructor(){
-        super();
+    constructor(props:TracksPropTypes){
+        super(props);
     }
 
     componentDidMount() {

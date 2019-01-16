@@ -1269,7 +1269,7 @@ export class StudyViewPageStore {
                     let data = _.find(result, {
                         attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
                         clinicalDataType: dataType
-                    });
+                    }) as ClinicalDataCountItem | undefined;
                     let counts:ClinicalDataCount[] = [];
                     if (data !== undefined) {
                         counts = data.counts;

@@ -66,9 +66,9 @@ export default class TableHeaderControls extends React.Component<ITableHeaderCon
 
     private _copyButton: HTMLElement;
 
-    constructor(){
+    constructor(props:ITableHeaderControlsProps){
 
-        super();
+        super(props);
 
 
         this.handleInput = this.handleInput.bind(this);
