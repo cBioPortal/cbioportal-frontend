@@ -5,3 +5,5 @@ export type SampleGroup = {
     name?:string,
     sampleIdentifiers:SampleIdentifier[]
 };
+
+export const TEMP_localStorageGroupsKey = "__tmp__groupComparisonGroups";
