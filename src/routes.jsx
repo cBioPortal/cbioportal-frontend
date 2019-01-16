@@ -32,6 +32,7 @@ import AboutUs from 'bundle-loader?lazy!babel-loader!./pages/staticPages/aboutus
 import News from 'bundle-loader?lazy!babel-loader!./pages/staticPages/news/News';
 import FAQ from 'bundle-loader?lazy!babel-loader!./pages/staticPages/faq/FAQ';
 import OQL from 'bundle-loader?lazy!babel-loader!./pages/staticPages/oql/OQL';
+import GroupComparisonPage from "bundle-loader?lazy!babel-loader!./pages/groupComparison/GroupComparisonPage";
 
 
 import {getBasePath} from "shared/api/urls";
@@ -94,6 +95,7 @@ export const makeRoutes = (routing) => {
                 <Route path="/faq" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(FAQ)} />
                 <Route path="/oql" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(OQL)} />
                 <Route path="/testimonials" onEnter={()=>{$(document).scrollTop(0)}} component={TestimonialsPage}/>
+                <Route path="/group_comparison" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(GroupComparisonPage)}/>
 
 
                 <Route path="/case.do" onEnter={handleCaseDO} component={getBlankPage()} />
