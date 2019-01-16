@@ -1,5 +1,5 @@
 import {ResultsViewPageStore} from "../resultsView/ResultsViewPageStore";
-import {SampleGroup} from "./GroupComparisonUtils";
+import {SampleGroup, TEMP_localStorageGroupsKey} from "./GroupComparisonUtils";
 import {remoteData} from "../../shared/api/remoteData";
 import ListIndexedMap from "../../shared/lib/ListIndexedMap";
 import {
@@ -19,16 +19,20 @@ import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
 import {AlterationEnrichment} from "../../shared/api/generated/CBioPortalAPIInternal";
 import {makeEnrichmentDataPromise} from "../resultsView/ResultsViewPageStoreUtils";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
+import autobind from "autobind-decorator";
 
 export default class GroupComparisonStore {
-    constructor(
-        private __TEMP_SAMPLEGROUPSPROMISE:any
-    ) {
+
+    @observable currentTabId:string;
+
+    @autobind
+    public setTabId(id:string) {
+        this.currentTabId = id;
     }
 
     readonly sampleGroups = remoteData<SampleGroup[]>({
-        await:()=>[this.__TEMP_SAMPLEGROUPSPROMISE], // only for development purposes, until we get the actual group service going
-        invoke:()=>Promise.resolve(this.__TEMP_SAMPLEGROUPSPROMISE.result)
+        // only for development purposes, until we get the actual group service going
+        invoke:()=>Promise.resolve(JSON.parse(localStorage.getItem(TEMP_localStorageGroupsKey) || "[]"))
     });
 
     @observable private _enrichmentsGroup1:SampleGroup;
@@ -41,8 +45,8 @@ export default class GroupComparisonStore {
             return this._enrichmentsGroup1;
         }
     }
-    set enrichmentsGroup1(id:SampleGroup) {
-        this._enrichmentsGroup1 = id;
+    set enrichmentsGroup1(group:SampleGroup) {
+        this._enrichmentsGroup1 = group;
     }
 
     @computed get enrichmentsGroup2() {
@@ -52,8 +56,8 @@ export default class GroupComparisonStore {
             return this._enrichmentsGroup2;
         }
     }
-    set enrichmentsGroup2(id:SampleGroup) {
-        this._enrichmentsGroup2 = id;
+    set enrichmentsGroup2(group:SampleGroup) {
+        this._enrichmentsGroup2 = group;
     }
 
     readonly samples = remoteData({
