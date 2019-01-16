@@ -12,7 +12,7 @@ describe("Oncoprint TooltipUtils", ()=>{
     describe("makeGeneticTrackTooltip", ()=>{
         let tooltip:(d:any)=>JQuery;
         before(()=>{
-            tooltip = makeGeneticTrackTooltip();
+            tooltip = makeGeneticTrackTooltip(false);
         });
 
         function makeMutation(props:Partial<AnnotatedExtendedAlteration>):AnnotatedExtendedAlteration {
@@ -32,7 +32,7 @@ describe("Oncoprint TooltipUtils", ()=>{
                     })],
                     coverage: []
                 };
-                const tooltipOutput = tooltip(datum);
+                const tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.find("img[title='Putative_Driver: annotation here']").length, 1);
                 assert.equal(tooltipOutput.find("img[alt='driver filter']").length, 1, "should only be one icon");
             });
@@ -52,7 +52,7 @@ describe("Oncoprint TooltipUtils", ()=>{
                     })],
                     coverage: []
                 };
-                const tooltipOutput = tooltip(datum );
+                const tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.find("img[title='Putative_Driver: annotation 1']").length, 1);
                 assert.equal(tooltipOutput.find("img[title='Putative_Driver: annotation 2']").length, 1);
                 assert.equal(tooltipOutput.find("img[title='Putative_Driver: 3 annotation']").length, 1);
@@ -71,7 +71,7 @@ describe("Oncoprint TooltipUtils", ()=>{
                     })],
                     coverage: []
                 };
-                const tooltipOutput = tooltip(datum);
+                const tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.find("img[alt='driver filter']").length, 0);
             });
 
@@ -84,7 +84,7 @@ describe("Oncoprint TooltipUtils", ()=>{
                     })],
                     coverage: []
                 };
-                const tooltipOutput = tooltip(datum);
+                const tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.find("img[title='tier1: tier1 mutation']").length, 1);
                 assert.equal(tooltipOutput.find("img[alt='driver tiers filter']").length, 1, "should only be one icon");
             });
@@ -104,7 +104,7 @@ describe("Oncoprint TooltipUtils", ()=>{
                     })],
                     coverage: []
                 };
-                const tooltipOutput = tooltip(datum);
+                const tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.find("img[title='tier1: tier1 mutation']").length, 1);
                 assert.equal(tooltipOutput.find("img[title='tier2: tier2 mutation']").length, 1);
                 assert.equal(tooltipOutput.find("img[title='tier4: mutation tier4']").length, 1);
@@ -141,7 +141,7 @@ describe("Oncoprint TooltipUtils", ()=>{
                     })],
                     coverage: []
                 };
-                const tooltipOutput = tooltip(datum);
+                const tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.find("img[title='tier1: tier1 mutation']").length, 1);
                 assert.equal(tooltipOutput.find("img[title='tier2: tier2 mutation']").length, 1);
                 assert.equal(tooltipOutput.find("img[title='tier4: mutation tier4']").length, 1);
@@ -164,18 +164,18 @@ describe("Oncoprint TooltipUtils", ()=>{
                     }),makeMutation({}), makeMutation({})],
                     coverage: []
                 };
-                const tooltipOutput = tooltip(datum);
+                const tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.find("img[alt='driver filter']").length, 0, "should be no binary icons");
                 assert.equal(tooltipOutput.find("img[alt='driver tiers filter']").length, 0, "should be no tiers icons");
             });
 
-            it ("should show Germline next to every germline mutation, not next to others", () =>{
+            it("should show Germline next to every germline mutation, not next to others", () =>{
                 const datum = {
                     sample: "sample", study_id: "",
-                    data: [makeMutation({ mutationStatus: "germline"}), makeMutation({mutationStatus:"germline"}), makeMutation({})],
+                    data: [makeMutation({ mutationStatus: "germline", proteinChange:"mutation1"}), makeMutation({mutationStatus:"germline", proteinChange:"mutation2"}), makeMutation({})],
                     coverage:[]
                 };
-                const tooltipOutput = tooltip(datum);
+                const tooltipOutput = tooltip([datum]);
                 assert.equal(tooltipOutput.html().match(/Germline/g)!.length, 2);
             });
         });
@@ -189,7 +189,7 @@ describe("Oncoprint TooltipUtils", ()=>{
                     profiled_in:[],
                     not_profiled_in:[{molecularProfileId:"profile"}]
                 };
-                const tooltipOutput = tooltip(datum);
+                const tooltipOutput = tooltip([datum]);
                 assert.isTrue(tooltipOutput.html().indexOf("Not profiled in selected molecular profiles.") > -1);
             });
             it("should say 'profiled' if 'not_profiled_in' is empty and 'profiled_in' is not", ()=>{
@@ -201,7 +201,7 @@ describe("Oncoprint TooltipUtils", ()=>{
                     profiled_in:[{molecularProfileId:"profile", genePanelId:"panel"}],
                     not_profiled_in:[]
                 };
-                const tooltipOutput = tooltip(datum);
+                const tooltipOutput = tooltip([datum]);
                 assert.isTrue(tooltipOutput.html().indexOf("Profiled in all selected molecular profiles.") > -1);
             });
         });
@@ -217,8 +217,8 @@ describe("Oncoprint TooltipUtils", ()=>{
                 datatype: "string" as "string"
             };
             const tooltip = makeClinicalTrackTooltip(trackSpec, false);
-            const sampleTooltipResult = tooltip({ attr_val_counts: {"a":1}, attr_val:"a", sample:"sampleID" });
-            assert.isTrue(sampleTooltipResult.html().indexOf("<span>Sample: sampleID</span>") > -1 );
+            const sampleTooltipResult = tooltip([{ attr_val_counts: {"a":1}, attr_val:"a", sample:"sampleID" }]);
+            assert.isTrue(sampleTooltipResult.html().indexOf("<span>sampleID</span>") > -1 );
         });
         it("should show the given patient id", ()=>{
             const trackLabel = "label1234";
@@ -230,8 +230,8 @@ describe("Oncoprint TooltipUtils", ()=>{
                 datatype: "string" as "string"
             };
             const tooltip = makeClinicalTrackTooltip(trackSpec, false);
-            const patientTooltipResult = tooltip({ attr_val_counts: {"a":1}, attr_val:"a", patient:"patientID" });
-            assert.isTrue(patientTooltipResult.html().indexOf("<span>Patient: patientID</span>") > -1 );
+            const patientTooltipResult = tooltip([{ attr_val_counts: {"a":1}, attr_val:"a", patient:"patientID" }]);
+            assert.isTrue(patientTooltipResult.html().indexOf("<span>patientID</span>") > -1 );
         });
         it("should show the correct output for a single value", ()=>{
             const trackLabel = "label1234";
@@ -243,8 +243,8 @@ describe("Oncoprint TooltipUtils", ()=>{
                 datatype: "string" as "string"
             };
             const tooltip = makeClinicalTrackTooltip(trackSpec, false);
-            const tooltipResult = tooltip({ attr_val_counts: {"a":1}, attr_val:"a", sample:"sampleID" });
-            assert.isTrue(tooltipResult.html().indexOf("label1234: <b>a</b>") > -1);
+            const tooltipResult = tooltip([{ attr_val_counts: {"a":1}, attr_val:"a", sample:"sampleID" }]);
+            assert.isTrue(tooltipResult.html().indexOf(`label1234: <span style="white-space:nowrap"><b>a</b></span>`) > -1);
         });
         it("should show the correct output for multiple values", ()=>{
             const trackLabel = "label1234";
@@ -256,8 +256,8 @@ describe("Oncoprint TooltipUtils", ()=>{
                 datatype: "string" as "string"
             };
             const tooltip = makeClinicalTrackTooltip(trackSpec, false);
-            const tooltipResult = tooltip({ attr_val_counts: {"a":1, "b":3}, attr_val:"a", sample:"sampleID" });
-            assert.isTrue(tooltipResult.html().indexOf("label1234:<br><b>a</b>: 1<br><b>b</b>: 3") > -1);
+            const tooltipResult = tooltip([{ attr_val_counts: {"a":1, "b":3}, attr_val:"a", sample:"sampleID" }]);
+            assert.isTrue(tooltipResult.html().indexOf(`label1234:<br><span style="white-space:nowrap"><b>a</b>: 1 sample</span><br><span style="white-space:nowrap"><b>b</b>: 3 samples</span>`) > -1);
         });
         it("should show numerical data rounded to 2 decimal digits", ()=>{
             const trackSpec = {
@@ -270,30 +270,30 @@ describe("Oncoprint TooltipUtils", ()=>{
                 numberLogScale:false
             };
             const tooltip = makeClinicalTrackTooltip(trackSpec, false);
-            let tooltipResult = tooltip({ attr_val_counts: {"0.13500013531":1}, attr_val:"0.13500013531", sample:"sampleID" });
+            let tooltipResult = tooltip([{ attr_val_counts: {"0.13500013531":1}, attr_val:"0.13500013531", sample:"sampleID" }]);
             assert.isTrue(tooltipResult.html().indexOf("<b>0.14</b>") > -1, "correct result with no integer part");
-            tooltipResult = tooltip({ attr_val_counts: {"6.100032":1}, attr_val:"6.100032", sample:"sampleID" });
+            tooltipResult = tooltip([{ attr_val_counts: {"6.100032":1}, attr_val:"6.100032", sample:"sampleID" }]);
             assert.isTrue(tooltipResult.html().indexOf("<b>6.10</b>") > -1, "correct result with integer part");
-            tooltipResult = tooltip({ attr_val_counts: {"0":1}, attr_val:"0", sample:"sampleID" });
+            tooltipResult = tooltip([{ attr_val_counts: {"0":1}, attr_val:"0", sample:"sampleID" }]);
             assert.isTrue(tooltipResult.html().indexOf("<b>0</b>") > -1, "correct result for zero")
-            tooltipResult = tooltip({ attr_val_counts: {"-0.13500013531":1}, attr_val:"-0.13500013531", sample:"sampleID" });
+            tooltipResult = tooltip([{ attr_val_counts: {"-0.13500013531":1}, attr_val:"-0.13500013531", sample:"sampleID" }]);
             assert.isTrue(tooltipResult.html().indexOf("<b>-0.14</b>") > -1, "correct result with no integer part, negative");
-            tooltipResult = tooltip({ attr_val_counts: {"-6.100032":1}, attr_val:"-6.100032", sample:"sampleID" });
+            tooltipResult = tooltip([{ attr_val_counts: {"-6.100032":1}, attr_val:"-6.100032", sample:"sampleID" }]);
             assert.isTrue(tooltipResult.html().indexOf("<b>-6.10</b>") > -1, "correct result with integer part, negative");
         });
     });
     describe("makeHeatmapTrackTooltip", ()=>{
         it("should show data rounded to 2 decimal digits", ()=>{
             const tooltip = makeHeatmapTrackTooltip("MRNA_EXPRESSION", false);
-            let tooltipResult = tooltip({ profile_data:0.13500013531, sample:"sampleID" });
+            let tooltipResult = tooltip([{ profile_data:0.13500013531, sample:"sampleID" }]);
             assert.isTrue(tooltipResult.html().indexOf("<b>0.14</b>") > -1, "correct result with no integer part");
-            tooltipResult = tooltip({ profile_data:6.100032, sample:"sampleID" });
+            tooltipResult = tooltip([{ profile_data:6.100032, sample:"sampleID" }]);
             assert.isTrue(tooltipResult.html().indexOf("<b>6.10</b>") > -1, "correct result with integer part");
-            tooltipResult = tooltip({ profile_data: 0, sample:"sampleID" });
+            tooltipResult = tooltip([{ profile_data: 0, sample:"sampleID" }]);
             assert.isTrue(tooltipResult.html().indexOf("<b>0.00</b>") > -1, "correct result for zero")
-            tooltipResult = tooltip({ profile_data:-0.13500013531, sample:"sampleID" });
+            tooltipResult = tooltip([{ profile_data:-0.13500013531, sample:"sampleID" }]);
             assert.isTrue(tooltipResult.html().indexOf("<b>-0.14</b>") > -1, "correct result with no integer part, negative");
-            tooltipResult = tooltip({ profile_data:-6.100032, sample:"sampleID" });
+            tooltipResult = tooltip([{ profile_data:-6.100032, sample:"sampleID" }]);
             assert.isTrue(tooltipResult.html().indexOf("<b>-6.10</b>") > -1, "correct result with integer part, negative");
         });
     });
