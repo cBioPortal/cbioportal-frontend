@@ -61,7 +61,9 @@ export default class StudySummary extends React.Component<IStudySummaryProps, {}
         } else {
             return _.map(this.props.studies, study => {
                 return (
-                    <StudyLink studyId={study.studyId}>{study.name}</StudyLink>
+                    <li>
+                        <StudyLink studyId={study.studyId}>{study.name}</StudyLink>
+                    </li>
                 )
             })
         }
@@ -84,7 +86,7 @@ export default class StudySummary extends React.Component<IStudySummaryProps, {}
 
                     {this.showMoreDescription &&
                     <div>
-                        <p style={{display: 'inline-grid', width: '100%'}}>{this.descriptionRemainingLines}</p>
+                        <ul className={styles.studyLinks}>{this.descriptionRemainingLines}</ul>
                         {
                             this.props.showOriginStudiesInSummaryDescription &&
                             (<div>
