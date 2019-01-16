@@ -4,9 +4,12 @@ import { AlterationEnrichmentRow } from 'shared/model/AlterationEnrichmentRow';
 import { ExpressionEnrichmentRow } from 'shared/model/ExpressionEnrichmentRow';
 import { tsvFormat } from 'd3-dsv';
 import { BoxPlotModel, calculateBoxPlotModel } from 'shared/lib/boxPlotUtils';
-import { NumericGeneMolecularData } from 'shared/api/generated/CBioPortalAPI';
+import {MolecularProfile, NumericGeneMolecularData} from 'shared/api/generated/CBioPortalAPI';
 import seedrandom from 'seedrandom';
 import { roundLogRatio } from 'shared/lib/FormatUtils';
+import * as _ from "lodash";
+import {AlterationTypeConstants} from "../ResultsViewPageStore";
+import {filterAndSortProfiles} from "../coExpression/CoExpressionTabUtils";
 
 const LOG_VALUE = "LOG-VALUE";
 const LOG2_VALUE = "LOG2-VALUE";
@@ -232,4 +235,28 @@ export function getBoxPlotScatterData(molecularData: NumericGeneMolecularData[],
         }
     }
     return scatterData;
+}
+
+export function pickMutationEnrichmentProfiles(profiles:MolecularProfile[]) {
+    return _.filter(profiles, (profile: MolecularProfile) =>
+        profile.molecularAlterationType === AlterationTypeConstants.MUTATION_EXTENDED);
+}
+
+export function pickCopyNumberEnrichmentProfiles(profiles:MolecularProfile[]) {
+    return _.filter(profiles, (profile: MolecularProfile) =>
+        profile.molecularAlterationType === AlterationTypeConstants.COPY_NUMBER_ALTERATION && profile.datatype === "DISCRETE");
+}
+
+export function pickMRNAEnrichmentProfiles(profiles:MolecularProfile[]) {
+    const mrnaProfiles = profiles.filter(p=>{
+        return p.molecularAlterationType === AlterationTypeConstants.MRNA_EXPRESSION
+    });
+    return filterAndSortProfiles(mrnaProfiles);
+}
+
+export function pickProteinEnrichmentProfiles(profiles:MolecularProfile[]) {
+    const protProfiles = profiles.filter(p=>{
+        return p.molecularAlterationType === AlterationTypeConstants.PROTEIN_LEVEL;
+    });
+    return filterAndSortProfiles(protProfiles);
 }
