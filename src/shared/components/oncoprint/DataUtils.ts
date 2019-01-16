@@ -210,6 +210,7 @@ export function makeGeneticTrackData(
         for (const sample of cases) {
             const newDatum:Partial<GeneticTrackDatum> = {};
             newDatum.sample = sample.sampleId;
+            newDatum.patient = sample.patientId;
             newDatum.study_id = sample.studyId;
             newDatum.uid = sample.uniqueSampleKey;
 
