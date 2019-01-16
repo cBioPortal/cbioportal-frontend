@@ -500,7 +500,8 @@ describe("DataUtils", ()=>{
    describe("fillGeneticTrackDatum", ()=>{
        const makeMinimalUnfilledDatum = () => ({
            study_id: 'study1',
-           uid: 'SAMPLE1=='
+           uid: 'SAMPLE1==',
+           patient:"patient1"
        });
        it("fills a datum w no data correctly", ()=>{
            assert.deepEqual(
