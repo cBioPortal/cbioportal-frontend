@@ -399,7 +399,7 @@ describe('study view msk_impact_2017 study tests', () => {
 
 describe('check the filters are working properly', ()=>{
     before(() => {
-        const url = 'http://www.cbioportal.org/study?id=laml_tcga&filters={%22clinicalDataEqualityFilters%22:[{%22attributeId%22:%22SEX%22,%22clinicalDataType%22:%22PATIENT%22,%22values%22:[%22Female%22]}],%22clinicalDataIntervalFilters%22:[{%22attributeId%22:%22AGE%22,%22clinicalDataType%22:%22PATIENT%22,%22values%22:[{%22start%22:25,%22end%22:30},{%22start%22:30,%22end%22:35},{%22start%22:35,%22end%22:40},{%22start%22:40,%22end%22:45},{%22start%22:45,%22end%22:50},{%22start%22:50,%22end%22:55},{%22start%22:55,%22end%22:60},{%22start%22:60,%22end%22:65},{%22start%22:65,%22end%22:70},{%22start%22:70,%22end%22:75},{%22start%22:75,%22end%22:80}]}],%22mutatedGenes%22:[{%22entrezGeneIds%22:[2322,4869]}],%22cnaGenes%22:[{%22alterations%22:[{%22alteration%22:-2,%22entrezGeneId%22:60412},{%22alteration%22:2,%22entrezGeneId%22:84435}]}]}';
+        const url = `${CBIOPORTAL_URL}/study?id=laml_tcga&filters={%22clinicalDataEqualityFilters%22:[{%22attributeId%22:%22SEX%22,%22clinicalDataType%22:%22PATIENT%22,%22values%22:[%22Female%22]}],%22clinicalDataIntervalFilters%22:[{%22attributeId%22:%22AGE%22,%22clinicalDataType%22:%22PATIENT%22,%22values%22:[{%22start%22:25,%22end%22:30},{%22start%22:30,%22end%22:35},{%22start%22:35,%22end%22:40},{%22start%22:40,%22end%22:45},{%22start%22:45,%22end%22:50},{%22start%22:50,%22end%22:55},{%22start%22:55,%22end%22:60},{%22start%22:60,%22end%22:65},{%22start%22:65,%22end%22:70},{%22start%22:70,%22end%22:75},{%22start%22:75,%22end%22:80}]}],%22mutatedGenes%22:[{%22entrezGeneIds%22:[2322,4869]}],%22cnaGenes%22:[{%22alterations%22:[{%22alteration%22:-2,%22entrezGeneId%22:60412},{%22alteration%22:2,%22entrezGeneId%22:84435}]}]}`;
         goToUrlAndSetLocalStorage(url);
         waitForNetworkQuiet();
     });
@@ -437,5 +437,24 @@ describe('check the filters are working properly', ()=>{
         waitForStudyViewSelectedInfo();
         assert(getTextFromElement(SELECTED_PATIENTS) === '200');
         assert(getTextFromElement(SELECTED_SAMPLES) === '200');
+    });
+});
+
+
+describe('check the simple filter(filterAttributeId, filterValues) is working properly', ()=>{
+    it('filter study from url using simple filter', ()=>{
+        const url = `${CBIOPORTAL_URL}/study?id=lgg_tcga&filterAttributeId=ONCOTREE_CODE&filterValues=OAST`;
+        goToUrlAndSetLocalStorage(url);
+        waitForNetworkQuiet();
+        const res = browser.checkElement('#mainColumn');
+        assertScreenShotMatch(res);
+    });
+
+    it('A error message should be shown when the filterAttributeId is not available for the study', ()=>{
+        const url = `${CBIOPORTAL_URL}/study?id=lgg_tcga&filterAttributeId=ONCOTREE_CODE_TEST&filterValues=OAST`;
+        goToUrlAndSetLocalStorage(url);
+        waitForNetworkQuiet();
+        const res = browser.checkElement("[data-test='study-view-header']");
+        assertScreenShotMatch(res);
     });
 });
