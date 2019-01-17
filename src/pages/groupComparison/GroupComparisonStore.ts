@@ -6,7 +6,8 @@ import {
     SampleFilter,
     ClinicalDataMultiStudyFilter,
     ClinicalData,
-    Sample
+    Sample,
+    SampleIdentifier
 } from "../../shared/api/generated/CBioPortalAPI";
 import { computed, observable } from "mobx";
 import client from "../../shared/api/cbioportalClientInstance";
@@ -23,6 +24,7 @@ import request from "superagent";
 import { getPatientSurvivals } from "pages/resultsView/SurvivalStoreHelper";
 import { SURVIVAL_CHART_ATTRIBUTES } from "pages/resultsView/survival/SurvivalChart";
 import { COLORS } from "pages/studyView/StudyViewUtils";
+import {AlterationEnrichment} from "../../shared/api/generated/CBioPortalAPIInternal";
 
 export default class GroupComparisonStore {
 
@@ -126,7 +128,19 @@ export default class GroupComparisonStore {
         this._mutationEnrichmentProfile = profile;
     }
 
-    public mutationEnrichmentData = makeEnrichmentDataPromise({
+    private _copyNumberEnrichmentProfile:MolecularProfile|undefined = undefined;
+    @computed public get copyNumberEnrichmentProfile() {
+        if (!this._copyNumberEnrichmentProfile && this.copyNumberEnrichmentProfiles.isComplete) {
+            return this.copyNumberEnrichmentProfiles.result[0];
+        } else {
+            return this._copyNumberEnrichmentProfile;
+        }
+    }
+    public set copyNumberEnrichmentProfile(profile:MolecularProfile|undefined) {
+        this._copyNumberEnrichmentProfile = profile;
+    }
+
+    public readonly mutationEnrichmentData = makeEnrichmentDataPromise({
         shouldFetchData:()=>!!this.mutationEnrichmentProfile,
         fetchData:()=>{
             // assumes single study for now
@@ -144,6 +158,57 @@ export default class GroupComparisonStore {
             }
         }
     });
+
+    public readonly copyNumberHomdelEnrichmentData = makeEnrichmentDataPromise({
+        shouldFetchData:()=>!!this.copyNumberEnrichmentProfile,// returns an empty array if the selected study doesn't have any CNA profiles
+        fetchData:()=>{
+            // assumes single study for now
+            if (this.enrichmentsGroup1 && this.enrichmentsGroup2) {
+                return this.getCopyNumberEnrichmentData(
+                    this.copyNumberEnrichmentProfile!.molecularProfileId,
+                    this.enrichmentsGroup1.sampleIdentifiers,
+                    this.enrichmentsGroup2.sampleIdentifiers,
+                    "HOMDEL"
+                );
+            } else {
+                return Promise.resolve([]);
+            }
+        }
+    });
+
+    public readonly copyNumberAmpEnrichmentData = makeEnrichmentDataPromise({
+        shouldFetchData:()=>!!this.copyNumberEnrichmentProfile,// returns an empty array if the selected study doesn't have any CNA profiles
+        fetchData:()=>{
+            // assumes single study for now
+            if (this.enrichmentsGroup1 && this.enrichmentsGroup2) {
+                return this.getCopyNumberEnrichmentData(
+                    this.copyNumberEnrichmentProfile!.molecularProfileId,
+                    this.enrichmentsGroup1.sampleIdentifiers,
+                    this.enrichmentsGroup2.sampleIdentifiers,
+                    "AMP"
+                );
+            } else {
+                return Promise.resolve([]);
+            }
+        }
+    });
+
+    private getCopyNumberEnrichmentData(
+        molecularProfileId:string,
+        group1Samples: SampleIdentifier[], group2Samples: SampleIdentifier[],
+        copyNumberEventType: "HOMDEL" | "AMP")
+    : Promise<AlterationEnrichment[]> {
+        return internalClient.fetchCopyNumberEnrichmentsUsingPOST({
+            molecularProfileId,
+            copyNumberEventType: copyNumberEventType,
+            enrichmentType: "SAMPLE",
+            enrichmentFilter: {
+                alteredIds: group1Samples.map(s => s.sampleId),
+                unalteredIds: group2Samples.map(s => s.sampleId),
+            }
+        });
+    }
+
 
     public readonly sampleSet = remoteData({
         await: () => [
