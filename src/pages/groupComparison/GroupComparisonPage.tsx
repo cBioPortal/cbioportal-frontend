@@ -10,6 +10,10 @@ import Survival from "./Survival";
 import Overlap from "./Overlap";
 import CopyNumberEnrichments from "./CopyNumberEnrichments";
 import MRNAEnrichments from "./MRNAEnrichments";
+import ProteinEnrichments from "./ProteinEnrichments";
+import {MakeMobxView} from "../../shared/components/MobxView";
+import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
+import ErrorMessage from "../../shared/components/ErrorMessage";
 
 export enum GroupComparisonTab {
     OVERLAP, MUTATIONS, CNA, MRNA, PROTEIN, SURVIVAL
@@ -23,6 +27,58 @@ export default class GroupComparisonPage extends React.Component<{}, {}> {
         this.store = new GroupComparisonStore();
         (window as any).groupComparisonStore = this.store;
     }
+
+    readonly tabs = MakeMobxView({
+        await:()=>[
+            this.store.mutationEnrichmentProfiles,
+            this.store.copyNumberEnrichmentProfiles,
+            this.store.mRNAEnrichmentProfiles,
+            this.store.proteinEnrichmentProfiles,
+            this.store.survivalClinicalDataExists
+        ],
+        render:()=>{
+            if ((this.store.mutationEnrichmentProfiles.result!.length > 0) ||
+                (this.store.copyNumberEnrichmentProfiles.result!.length > 0) ||
+                (this.store.mRNAEnrichmentProfiles.result!.length > 0) ||
+                (this.store.proteinEnrichmentProfiles.result!.length > 0) ||
+                this.store.showSurvivalTab
+            ) {
+                return <MSKTabs unmountOnHide={false} activeTabId={this.store.currentTabId} onTabClick={this.store.setTabId} className="secondaryTabs">
+                    {this.store.mutationEnrichmentProfiles.result!.length > 0 && (
+                        <MSKTab id={GroupComparisonTab.MUTATIONS.toString()} linkText="Mutations">
+                            <MutationEnrichments store={this.store}/>
+                        </MSKTab>
+                    )}
+                    {this.store.copyNumberEnrichmentProfiles.result!.length > 0 && (
+                        <MSKTab id={GroupComparisonTab.CNA.toString()} linkText="Copy-number">
+                            <CopyNumberEnrichments store={this.store}/>
+                        </MSKTab>
+                    )}
+                    {this.store.mRNAEnrichmentProfiles.result!.length > 0 && (
+                        <MSKTab id={GroupComparisonTab.MRNA.toString()} linkText="mRNA">
+                            <MRNAEnrichments store={this.store}/>
+                        </MSKTab>
+                    )}
+                    {this.store.proteinEnrichmentProfiles.result!.length > 0 && (
+                        <MSKTab id={GroupComparisonTab.PROTEIN.toString()} linkText="Protein">
+                            <ProteinEnrichments store={this.store}/>
+                        </MSKTab>
+                    )}
+                    {
+                        this.store.showSurvivalTab &&
+                        <MSKTab key={0} id={GroupComparisonTab.SURVIVAL.toString()} linkText="Survival">
+                            <Survival store={this.store}/>
+                        </MSKTab>
+                    }
+                </MSKTabs>;
+            } else {
+                return <span>No data.</span>;
+            }
+        },
+        renderPending:()=><LoadingIndicator isLoading={true} big={true}/>,
+        renderError:()=><ErrorMessage/>
+    });
+
     render() {
         return (
             <PageLayout noMargin={true} hideFooter={true} className={"subhead-dark"}>
@@ -54,29 +110,7 @@ export default class GroupComparisonPage extends React.Component<{}, {}> {
                         )}
                     </div>
                     <div>
-                        <MSKTabs unmountOnHide={false} activeTabId={this.store.currentTabId} onTabClick={this.store.setTabId} className="secondaryTabs">
-                            <MSKTab id={GroupComparisonTab.OVERLAP.toString()} linkText="Overlapping">
-                                <Overlap store={this.store}/>
-                            </MSKTab>
-                            <MSKTab id={GroupComparisonTab.MUTATIONS.toString()} linkText="Mutations">
-                                <MutationEnrichments store={this.store}/>
-                            </MSKTab>
-                            <MSKTab id={GroupComparisonTab.CNA.toString()} linkText="Copy-number">
-                                <CopyNumberEnrichments store={this.store}/>
-                            </MSKTab>
-                            <MSKTab id={GroupComparisonTab.MRNA.toString()} linkText="mRNA">
-                                <MRNAEnrichments store={this.store}/>
-                            </MSKTab>
-                            <MSKTab id={GroupComparisonTab.PROTEIN.toString()} linkText="Protein">
-                                <span>GOES HERE</span>
-                            </MSKTab>
-                            {
-                                this.store.showSurvivalTab &&
-                                <MSKTab id={GroupComparisonTab.SURVIVAL.toString()} linkText="Survival">
-                                    <Survival store={this.store}/>
-                                </MSKTab>
-                            }
-                        </MSKTabs>
+                        {this.tabs.component}
                     </div>
                 </div>
             </PageLayout>
