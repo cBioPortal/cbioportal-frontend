@@ -2932,7 +2932,7 @@ export class StudyViewPageStore {
             formOps.data_priority = data_priority;
         }
 
-        if (this.chartsAreFiltered) {
+        if (this.chartsAreFiltered || this.filteredVirtualStudies.result.length > 0) {
             formOps.case_set_id = '-1'
             formOps.case_ids = _.map(this.selectedSamples.result, sample => {
                 return sample.studyId + ":" + sample.sampleId;
