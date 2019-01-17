@@ -37,7 +37,10 @@ export default class GroupComparisonStore {
 
     readonly sampleGroups = remoteData<SampleGroup[]>({
         // only for development purposes, until we get the actual group service going
-        invoke:()=>Promise.resolve(JSON.parse(localStorage.getItem(TEMP_localStorageGroupsKey) || "[]"))
+        invoke:()=>Promise.resolve(
+            JSON.parse(localStorage.getItem(TEMP_localStorageGroupsKey) || "[]")
+                .map((group:SampleGroup, index:number)=>{ group.name = `Group ${index}`; return group; })
+        )
     });
 
     @observable private _enrichmentsGroup1:SampleGroup;
