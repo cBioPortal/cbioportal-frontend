@@ -171,8 +171,8 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
                             Significant only
                         </Checkbox>
                     </div>
-                    <ExpressionEnrichmentTable data={this.filteredData} onCheckGene={this.onCheckGene} onGeneNameClick={this.onGeneNameClick}
-                        dataStore={this.dataStore} alteredGroupName={this.props.alteredGroupName!} unalteredGroupName={this.props.unalteredGroupName!}/>
+                    <ExpressionEnrichmentTable data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
+                       onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined} dataStore={this.dataStore} alteredGroupName={this.props.alteredGroupName!} unalteredGroupName={this.props.unalteredGroupName!}/>
                 </div>
             </div>
         );
