@@ -81,7 +81,7 @@ export default class GroupComparisonPage extends React.Component<{}, {}> {
 
     render() {
         return (
-            <PageLayout noMargin={true} hideFooter={true} className={"subhead-dark"}>
+            <PageLayout>
                 <div style={{display:"flex", flexDirection:"column"}}>
                     <div style={{marginBottom:30}}>
                         { this.store.sampleGroups.isComplete && (
