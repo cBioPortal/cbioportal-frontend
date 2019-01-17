@@ -1,12 +1,7 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import {ResultsViewPageStore} from "../resultsView/ResultsViewPageStore";
 import GroupComparisonStore from "./GroupComparisonStore";
 import {MolecularProfile} from "../../shared/api/generated/CBioPortalAPI";
-import {computed} from "mobx";
-import {remoteData} from "../../shared/api/remoteData";
-import {makeEnrichmentDataPromise} from "../resultsView/ResultsViewPageStoreUtils";
-import internalClient from "../../shared/api/cbioportalInternalClientInstance";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import EnrichmentsDataSetDropdown from "../resultsView/enrichments/EnrichmentsDataSetDropdown";

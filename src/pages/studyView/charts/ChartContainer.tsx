@@ -318,7 +318,7 @@ export class ChartContainer extends React.Component<IChartContainerProps, {}> {
                     return ()=>(
                         <SurvivalChart ref={this.handlers.ref}
                                        patientSurvivals={data.patientSurvivals}
-                                       patientToAnalysisGroup={data.patientToAnalysisGroup}
+                                       patientToAnalysisGroups={data.patientToAnalysisGroups}
                                        analysisGroups={data.analysisGroups}
                                        analysisClinicalAttribute={this.props.analysisGroupsSettings.clinicalAttribute}
                                        naPatientsHiddenInSurvival={this.naPatientsHiddenInSurvival}

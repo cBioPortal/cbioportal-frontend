@@ -146,6 +146,7 @@ import {
     pickMRNAEnrichmentProfiles,
     pickMutationEnrichmentProfiles, pickProteinEnrichmentProfiles
 } from "./enrichments/EnrichmentsUtil";
+import { SURVIVAL_CHART_ATTRIBUTES } from "./survival/SurvivalChart";
 
 type Optional<T> = (
     {isApplicable: true, value: T}
@@ -1688,7 +1689,7 @@ export class ResultsViewPageStore {
         ],
         invoke:async()=>{
             const count =
-                await this.getClinicalDataCount("PATIENT", this.studies.result!, this.patients.result, ["OS_STATUS", "OS_MONTHS", "DFS_STATUS", "DFS_MONTHS"]);
+                await this.getClinicalDataCount("PATIENT", this.studies.result!, this.patients.result, SURVIVAL_CHART_ATTRIBUTES);
             return count > 0;
         }
     });
@@ -1698,7 +1699,7 @@ export class ResultsViewPageStore {
             this.studies,
             this.patients
         ],
-        invoke: () => this.getClinicalData("PATIENT", this.studies.result!, this.patients.result, ["OS_STATUS", "OS_MONTHS", "DFS_STATUS", "DFS_MONTHS"])
+        invoke: () => this.getClinicalData("PATIENT", this.studies.result!, this.patients.result, SURVIVAL_CHART_ATTRIBUTES)
     }, []);
 
     readonly survivalClinicalDataGroupByUniquePatientKey = remoteData<{[key: string]: ClinicalData[]}>({
