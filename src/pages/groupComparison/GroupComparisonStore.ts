@@ -152,6 +152,18 @@ export default class GroupComparisonStore {
         this._mRNAEnrichmentProfile = profile;
     }
 
+    private _proteinEnrichmentProfile:MolecularProfile|undefined = undefined;
+    @computed public get proteinEnrichmentProfile() {
+        if (!this._proteinEnrichmentProfile && this.proteinEnrichmentProfiles.isComplete) {
+            return this.proteinEnrichmentProfiles.result[0];
+        } else {
+            return this._proteinEnrichmentProfile;
+        }
+    }
+    public set proteinEnrichmentProfile(profile:MolecularProfile|undefined) {
+        this._proteinEnrichmentProfile = profile;
+    }
+
     public readonly mutationEnrichmentData = makeEnrichmentDataPromise({
         shouldFetchData:()=>!!this.mutationEnrichmentProfile,
         fetchData:()=>{
@@ -240,6 +252,24 @@ export default class GroupComparisonStore {
         }
     });
 
+    readonly proteinEnrichmentData = makeEnrichmentDataPromise({
+        shouldFetchData:()=>!!this.proteinEnrichmentProfile,// returns an empty array if the selected study doesn't have any mRNA profiles
+        fetchData:()=>{
+            // assumes single study for now
+            if (this.enrichmentsGroup1 && this.enrichmentsGroup2) {
+                return internalClient.fetchExpressionEnrichmentsUsingPOST({
+                    molecularProfileId: this.proteinEnrichmentProfile!.molecularProfileId,
+                    enrichmentType: "SAMPLE",
+                    enrichmentFilter: {
+                        alteredIds: this.enrichmentsGroup1.sampleIdentifiers.map(s=>s.sampleId),
+                        unalteredIds: this.enrichmentsGroup2.sampleIdentifiers.map(s=>s.sampleId),
+                    }
+                });
+            } else {
+                return Promise.resolve([]);
+            }
+        }
+    });
 
     public readonly sampleSet = remoteData({
         await: () => [
