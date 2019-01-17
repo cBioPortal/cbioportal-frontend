@@ -173,8 +173,8 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
                             Significant only
                         </Checkbox>
                     </div>
-                    <AlterationEnrichmentTable data={this.filteredData} onCheckGene={this.onCheckGene} 
-                        onGeneNameClick={this.onGeneNameClick} alterationType={this.props.alterationType} dataStore={this.dataStore}
+                    <AlterationEnrichmentTable data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
+                        onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined} alterationType={this.props.alterationType} dataStore={this.dataStore}
                        alteredGroupName={this.props.alteredGroupName!} unalteredGroupName={this.props.unalteredGroupName!}
                     />
                 </div>
