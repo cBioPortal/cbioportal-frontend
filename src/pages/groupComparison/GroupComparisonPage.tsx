@@ -9,6 +9,7 @@ import 'react-select/dist/react-select.css';
 import Survival from "./Survival";
 import Overlap from "./Overlap";
 import CopyNumberEnrichments from "./CopyNumberEnrichments";
+import MRNAEnrichments from "./MRNAEnrichments";
 
 export enum GroupComparisonTab {
     OVERLAP, MUTATIONS, CNA, MRNA, PROTEIN, SURVIVAL
@@ -64,7 +65,7 @@ export default class GroupComparisonPage extends React.Component<{}, {}> {
                                 <CopyNumberEnrichments store={this.store}/>
                             </MSKTab>
                             <MSKTab id={GroupComparisonTab.MRNA.toString()} linkText="mRNA">
-                                <span>GOES HERE</span>
+                                <MRNAEnrichments store={this.store}/>
                             </MSKTab>
                             <MSKTab id={GroupComparisonTab.PROTEIN.toString()} linkText="Protein">
                                 <span>GOES HERE</span>

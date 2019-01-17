@@ -140,6 +140,18 @@ export default class GroupComparisonStore {
         this._copyNumberEnrichmentProfile = profile;
     }
 
+    private _mRNAEnrichmentProfile:MolecularProfile|undefined = undefined;
+    @computed public get mRNAEnrichmentProfile() {
+        if (!this._mRNAEnrichmentProfile && this.mRNAEnrichmentProfiles.isComplete) {
+            return this.mRNAEnrichmentProfiles.result[0];
+        } else {
+            return this._mRNAEnrichmentProfile;
+        }
+    }
+    public set mRNAEnrichmentProfile(profile:MolecularProfile|undefined) {
+        this._mRNAEnrichmentProfile = profile;
+    }
+
     public readonly mutationEnrichmentData = makeEnrichmentDataPromise({
         shouldFetchData:()=>!!this.mutationEnrichmentProfile,
         fetchData:()=>{
@@ -208,6 +220,25 @@ export default class GroupComparisonStore {
             }
         });
     }
+
+    readonly mRNAEnrichmentData = makeEnrichmentDataPromise({
+        shouldFetchData:()=>!!this.mRNAEnrichmentProfile,// returns an empty array if the selected study doesn't have any mRNA profiles
+        fetchData:()=>{
+            // assumes single study for now
+            if (this.enrichmentsGroup1 && this.enrichmentsGroup2) {
+                return internalClient.fetchExpressionEnrichmentsUsingPOST({
+                    molecularProfileId: this.mRNAEnrichmentProfile!.molecularProfileId,
+                    enrichmentType: "SAMPLE",
+                    enrichmentFilter: {
+                        alteredIds: this.enrichmentsGroup1.sampleIdentifiers.map(s=>s.sampleId),
+                        unalteredIds: this.enrichmentsGroup2.sampleIdentifiers.map(s=>s.sampleId),
+                    }
+                });
+            } else {
+                return Promise.resolve([]);
+            }
+        }
+    });
 
 
     public readonly sampleSet = remoteData({
