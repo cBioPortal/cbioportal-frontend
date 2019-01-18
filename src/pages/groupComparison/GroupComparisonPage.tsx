@@ -90,8 +90,9 @@ export default class GroupComparisonPage extends React.Component<{}, {}> {
                                 <div style={{width:200, marginRight:10}}>
                                     <ReactSelect
                                         options={this.store.sampleGroups.result!.map((g, i)=>({ label: g.name || "Group", value: g.id, group: g }))}
-                                        onChange={(option:any)=>(option && (this.store.enrichmentsGroup1 = option.group))}
-                                        value={this.store.enrichmentsGroup1.id}
+                                        onChange={(option:any)=>(option && (this.store.setEnrichmentsGroup1(option.group)))}
+                                        value={this.store.enrichmentsGroup1.result && this.store.enrichmentsGroup1.result.id}
+                                        placeholder="Loading sample groups.."
                                         clearable={false}
                                         searchable={false}
                                     />
@@ -100,8 +101,9 @@ export default class GroupComparisonPage extends React.Component<{}, {}> {
                                 <div style={{width:200, marginRight:10}}>
                                     <ReactSelect
                                         options={this.store.sampleGroups.result!.map((g, i)=>({ label: `Group ${i}`, value: g.id, group: g }))}
-                                        onChange={(option:any)=>(option && (this.store.enrichmentsGroup2 = option.group))}
-                                        value={this.store.enrichmentsGroup2.id}
+                                        onChange={(option:any)=>(option && (this.store.setEnrichmentsGroup2(option.group)))}
+                                        value={this.store.enrichmentsGroup2.result && this.store.enrichmentsGroup2.result.id}
+                                        placeholder="Loading sample groups.."
                                         clearable={false}
                                         searchable={false}
                                     />

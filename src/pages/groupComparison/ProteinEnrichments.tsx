@@ -17,23 +17,25 @@ export interface IProteinEnrichmentsProps {
 export default class ProteinEnrichments extends React.Component<IProteinEnrichmentsProps, {}> {
     @autobind
     private onChangeProfile(m:MolecularProfile) {
-        this.props.store.proteinEnrichmentProfile = m;
+        this.props.store.setProteinEnrichmentProfile(m);
     }
 
     readonly tabUI = MakeMobxView({
         await:()=>[
             this.props.store.proteinEnrichmentData,
+            this.props.store.proteinEnrichmentProfile,
+            this.props.store.enrichmentsGroup1,
+            this.props.store.enrichmentsGroup2
         ],
-        forcePending:()=>!this.props.store.proteinEnrichmentProfile,
         render:()=>{
             return (
                 <div data-test="GroupComparisonProteinEnrichments">
                     <EnrichmentsDataSetDropdown dataSets={this.props.store.proteinEnrichmentProfiles} onChange={this.onChangeProfile}
-                                                selectedValue={this.props.store.proteinEnrichmentProfile!.molecularProfileId}/>
+                                                selectedValue={this.props.store.proteinEnrichmentProfile.result!.molecularProfileId}/>
                     <ExpressionEnrichmentContainer data={this.props.store.proteinEnrichmentData.result!}
-                                                   alteredGroupName={this.props.store.enrichmentsGroup1!.name}
-                                                   unalteredGroupName={this.props.store.enrichmentsGroup2!.name}
-                                                   selectedProfile={this.props.store.proteinEnrichmentProfile!}/>
+                                                   alteredGroupName={this.props.store.enrichmentsGroup1.result!.name}
+                                                   unalteredGroupName={this.props.store.enrichmentsGroup2.result!.name}
+                                                   selectedProfile={this.props.store.proteinEnrichmentProfile.result!}/>
                 </div>
             );
         },
