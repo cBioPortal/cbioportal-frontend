@@ -50,15 +50,14 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
         return getExpressionRowData(this.props.data, this.props.store ? this.props.store.hugoGeneSymbols : []);
     }
 
-    @computed get excludeGenes():string[]|null {
-        if (this.props.store) {
-            if (this.props.store.selectedMolecularProfiles.isComplete &&
-                this.props.store.selectedMolecularProfiles.result
-                    .findIndex(x=>x.molecularProfileId === this.props.selectedProfile.molecularProfileId) > -1) {
-                return this.props.store.hugoGeneSymbols;
-            } else {
-                return null;
-            }
+    @computed get excludedGenesFromTable():string[]|null {
+        // exclude query genes from table if we're looking at a queried profile
+        if (this.props.store && 
+            this.props.store.selectedMolecularProfiles.isComplete &&
+            this.props.store.selectedMolecularProfiles.result
+                .findIndex(x=>x.molecularProfileId === this.props.selectedProfile.molecularProfileId) > -1) {
+
+            return this.props.store.hugoGeneSymbols;
         } else {
             return null;
         }
@@ -67,7 +66,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
 
     @computed get filteredData(): ExpressionEnrichmentRow[] {
         return getFilteredData(this.data, this.underExpressedFilter, this.overExpressedFilter, this.significanceFilter, 
-            this.selectedGenes, this.excludeGenes);
+            this.selectedGenes, this.excludedGenesFromTable);
     }
 
     @autobind
