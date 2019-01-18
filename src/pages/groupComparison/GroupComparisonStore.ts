@@ -1,11 +1,12 @@
-import {SampleGroup, TEMP_localStorageGroupsKey} from "./GroupComparisonUtils";
+import {SampleGroup, TEMP_localStorageGroupsKey, getCombinations} from "./GroupComparisonUtils";
 import {remoteData} from "../../shared/api/remoteData";
 import {
     MolecularProfile,
     MolecularProfileFilter,
     SampleFilter,
     ClinicalDataMultiStudyFilter,
-    ClinicalData
+    ClinicalData,
+    Sample
 } from "../../shared/api/generated/CBioPortalAPI";
 import { computed, observable } from "mobx";
 import client from "../../shared/api/cbioportalClientInstance";
@@ -173,6 +174,42 @@ export default class GroupComparisonStore {
             return Promise.resolve(patientToAnalysisGroups);
         }
     });
+
+    public readonly sampleGroupsCombinationSets = remoteData({
+        await: () => [
+            this.sampleGroups,
+            this.sampleSet
+        ],
+        invoke: () => {
+            let sampleSet = this.sampleSet.result!
+            let groupsWithSamples = _.map(this.sampleGroups.result, group => {
+                let samples = group.sampleIdentifiers.map(sampleIdentifier => sampleSet[sampleIdentifier.studyId + sampleIdentifier.sampleId]);
+                return {
+                    name: group.name ? group.name : group.id,
+                    cases: _.map(samples, sample => sample.uniqueSampleKey)
+                }
+            })
+            return Promise.resolve(getCombinations(groupsWithSamples));
+        }
+    }, []);
+
+    public readonly patientGroupsCombinationSets = remoteData({
+        await: () => [
+            this.sampleGroups,
+            this.sampleSet
+        ],
+        invoke: () => {
+            let sampleSet = this.sampleSet.result!;
+            let groupsWithPatients = _.map(this.sampleGroups.result, group => {
+                let samples = group.sampleIdentifiers.map(sampleIdentifier => sampleSet[sampleIdentifier.studyId + sampleIdentifier.sampleId]);
+                return {
+                    name: group.name ? group.name : group.id,
+                    cases: _.uniq(_.map(samples, sample => sample.uniquePatientKey))
+                }
+            })
+            return Promise.resolve(getCombinations(groupsWithPatients));
+        }
+    }, []);
 
     readonly survivalClinicalDataExists = remoteData<boolean>({
         await: () => [
