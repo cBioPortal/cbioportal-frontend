@@ -18,23 +18,25 @@ export interface IMRNAEnrichmentsProps {
 export default class MRNAEnrichments extends React.Component<IMRNAEnrichmentsProps, {}> {
     @autobind
     private onChangeProfile(m:MolecularProfile) {
-        this.props.store.mRNAEnrichmentProfile = m;
+        this.props.store.setMRNAEnrichmentProfile(m);
     }
 
     readonly tabUI = MakeMobxView({
         await:()=>[
             this.props.store.mRNAEnrichmentData,
+            this.props.store.mRNAEnrichmentProfile,
+            this.props.store.enrichmentsGroup1,
+            this.props.store.enrichmentsGroup2
         ],
-        forcePending:()=>!this.props.store.mRNAEnrichmentProfile,
         render:()=>{
             return (
                 <div data-test="GroupComparisonMRNAEnrichments">
                     <EnrichmentsDataSetDropdown dataSets={this.props.store.mRNAEnrichmentProfiles} onChange={this.onChangeProfile}
-                                                selectedValue={this.props.store.mRNAEnrichmentProfile!.molecularProfileId}/>
+                                                selectedValue={this.props.store.mRNAEnrichmentProfile.result!.molecularProfileId}/>
                     <ExpressionEnrichmentContainer data={this.props.store.mRNAEnrichmentData.result!}
-                                                   alteredGroupName={this.props.store.enrichmentsGroup1!.name}
-                                                   unalteredGroupName={this.props.store.enrichmentsGroup2!.name}
-                                                   selectedProfile={this.props.store.mRNAEnrichmentProfile!}/>
+                                                   alteredGroupName={this.props.store.enrichmentsGroup1.result!.name}
+                                                   unalteredGroupName={this.props.store.enrichmentsGroup2.result!.name}
+                                                   selectedProfile={this.props.store.mRNAEnrichmentProfile.result!}/>
                 </div>
             );
         },

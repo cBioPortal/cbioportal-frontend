@@ -46,25 +46,31 @@ export default class GroupComparisonStore {
     @observable private _enrichmentsGroup1:SampleGroup;
     @observable private _enrichmentsGroup2:SampleGroup;
 
-    @computed get enrichmentsGroup1() {
-        if (!this._enrichmentsGroup1 && this.sampleGroups.isComplete && this.sampleGroups.result.length > 0) {
-            return this.sampleGroups.result[0];
-        } else {
-            return this._enrichmentsGroup1;
+    readonly enrichmentsGroup1 = remoteData({
+        await:()=>[this.sampleGroups],
+        invoke:()=>{
+            if (!this._enrichmentsGroup1 && this.sampleGroups.result!.length > 0) {
+                return Promise.resolve(this.sampleGroups.result![0]);
+            } else {
+                return Promise.resolve(this._enrichmentsGroup1);
+            }
         }
-    }
-    set enrichmentsGroup1(group:SampleGroup) {
+    });
+    setEnrichmentsGroup1(group:SampleGroup) {
         this._enrichmentsGroup1 = group;
     }
 
-    @computed get enrichmentsGroup2() {
-        if (!this._enrichmentsGroup2 && this.sampleGroups.isComplete && this.sampleGroups.result.length > 1) {
-            return this.sampleGroups.result[1];
-        } else {
-            return this._enrichmentsGroup2;
+    readonly enrichmentsGroup2 = remoteData({
+        await:()=>[this.sampleGroups],
+        invoke:()=>{
+            if (!this._enrichmentsGroup2 && this.sampleGroups.result!.length > 1) {
+                return Promise.resolve(this.sampleGroups.result![1]);
+            } else {
+                return Promise.resolve(this._enrichmentsGroup2);
+            }
         }
-    }
-    set enrichmentsGroup2(group:SampleGroup) {
+    });
+    setEnrichmentsGroup2(group:SampleGroup) {
         this._enrichmentsGroup2 = group;
     }
 
@@ -120,64 +126,77 @@ export default class GroupComparisonStore {
     });
 
     private _mutationEnrichmentProfile:MolecularProfile|undefined = undefined;
-    @computed public get mutationEnrichmentProfile() {
-        if (!this._mutationEnrichmentProfile && this.mutationEnrichmentProfiles.isComplete) {
-            return this.mutationEnrichmentProfiles.result[0];
-        } else {
-            return this._mutationEnrichmentProfile;
+    readonly mutationEnrichmentProfile = remoteData({
+        await:()=>[this.mutationEnrichmentProfiles],
+        invoke:()=>{
+            if (!this._mutationEnrichmentProfile && this.mutationEnrichmentProfiles.result!.length > 0) {
+                return Promise.resolve(this.mutationEnrichmentProfiles.result![0]);
+            } else {
+                return Promise.resolve(this._mutationEnrichmentProfile);
+            }
         }
-    }
-    public set mutationEnrichmentProfile(profile:MolecularProfile|undefined) {
+    });
+    public setMutationEnrichmentProfile(profile:MolecularProfile|undefined) {
         this._mutationEnrichmentProfile = profile;
     }
 
     private _copyNumberEnrichmentProfile:MolecularProfile|undefined = undefined;
-    @computed public get copyNumberEnrichmentProfile() {
-        if (!this._copyNumberEnrichmentProfile && this.copyNumberEnrichmentProfiles.isComplete) {
-            return this.copyNumberEnrichmentProfiles.result[0];
-        } else {
-            return this._copyNumberEnrichmentProfile;
+    readonly copyNumberEnrichmentProfile = remoteData({
+        await:()=>[this.copyNumberEnrichmentProfiles],
+        invoke:()=>{
+            if (!this._copyNumberEnrichmentProfile && this.copyNumberEnrichmentProfiles.result!.length > 0) {
+                return Promise.resolve(this.copyNumberEnrichmentProfiles.result![0]);
+            } else {
+                return Promise.resolve(this._copyNumberEnrichmentProfile);
+            }
         }
-    }
-    public set copyNumberEnrichmentProfile(profile:MolecularProfile|undefined) {
+    });
+    public setCopyNumberEnrichmentProfile(profile:MolecularProfile|undefined) {
         this._copyNumberEnrichmentProfile = profile;
     }
 
     private _mRNAEnrichmentProfile:MolecularProfile|undefined = undefined;
-    @computed public get mRNAEnrichmentProfile() {
-        if (!this._mRNAEnrichmentProfile && this.mRNAEnrichmentProfiles.isComplete) {
-            return this.mRNAEnrichmentProfiles.result[0];
-        } else {
-            return this._mRNAEnrichmentProfile;
+    readonly mRNAEnrichmentProfile = remoteData({
+        await:()=>[this.mRNAEnrichmentProfiles],
+        invoke:()=>{
+            if (!this._mRNAEnrichmentProfile && this.mRNAEnrichmentProfiles.result!.length > 0) {
+                return Promise.resolve(this.mRNAEnrichmentProfiles.result![0]);
+            } else {
+                return Promise.resolve(this._mRNAEnrichmentProfile);
+            }
         }
-    }
-    public set mRNAEnrichmentProfile(profile:MolecularProfile|undefined) {
+    });
+    public setMRNAEnrichmentProfile(profile:MolecularProfile|undefined) {
         this._mRNAEnrichmentProfile = profile;
     }
 
     private _proteinEnrichmentProfile:MolecularProfile|undefined = undefined;
-    @computed public get proteinEnrichmentProfile() {
-        if (!this._proteinEnrichmentProfile && this.proteinEnrichmentProfiles.isComplete) {
-            return this.proteinEnrichmentProfiles.result[0];
-        } else {
-            return this._proteinEnrichmentProfile;
+    readonly proteinEnrichmentProfile = remoteData({
+        await:()=>[this.proteinEnrichmentProfiles],
+        invoke:()=>{
+            if (!this._proteinEnrichmentProfile && this.proteinEnrichmentProfiles.result!.length > 0) {
+                return Promise.resolve(this.proteinEnrichmentProfiles.result![0]);
+            } else {
+                return Promise.resolve(this._proteinEnrichmentProfile);
+            }
         }
-    }
-    public set proteinEnrichmentProfile(profile:MolecularProfile|undefined) {
+    });
+    public setProteinEnrichmentProfile(profile:MolecularProfile|undefined) {
         this._proteinEnrichmentProfile = profile;
     }
 
     public readonly mutationEnrichmentData = makeEnrichmentDataPromise({
+        await:()=>[this.enrichmentsGroup1, this.enrichmentsGroup2,this.mutationEnrichmentProfile],
         shouldFetchData:()=>!!this.mutationEnrichmentProfile,
         fetchData:()=>{
             // assumes single study for now
-            if (this.enrichmentsGroup1 && this.enrichmentsGroup2) {
+            if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.mutationEnrichmentProfile.result) {
                 return internalClient.fetchMutationEnrichmentsUsingPOST({
-                    molecularProfileId: this.mutationEnrichmentProfile!.molecularProfileId,
+                    molecularProfileId: this.mutationEnrichmentProfile.result.molecularProfileId,
                     enrichmentType: "SAMPLE",
                     enrichmentFilter: {
-                        alteredIds: this.enrichmentsGroup1.sampleIdentifiers.map(s=>s.sampleId),
-                        unalteredIds: this.enrichmentsGroup2.sampleIdentifiers.map(s=>s.sampleId),
+                        alteredIds: this.enrichmentsGroup1.result.sampleIdentifiers.map(s=>s.sampleId),
+                        unalteredIds: this.enrichmentsGroup2.result.sampleIdentifiers.map(s=>s.sampleId),
                     }
                 });
             } else {
@@ -187,14 +206,15 @@ export default class GroupComparisonStore {
     });
 
     public readonly copyNumberHomdelEnrichmentData = makeEnrichmentDataPromise({
+        await:()=>[this.enrichmentsGroup1, this.enrichmentsGroup2,this.copyNumberEnrichmentProfile],
         shouldFetchData:()=>!!this.copyNumberEnrichmentProfile,// returns an empty array if the selected study doesn't have any CNA profiles
         fetchData:()=>{
             // assumes single study for now
-            if (this.enrichmentsGroup1 && this.enrichmentsGroup2) {
+            if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.copyNumberEnrichmentProfile.result) {
                 return this.getCopyNumberEnrichmentData(
-                    this.copyNumberEnrichmentProfile!.molecularProfileId,
-                    this.enrichmentsGroup1.sampleIdentifiers,
-                    this.enrichmentsGroup2.sampleIdentifiers,
+                    this.copyNumberEnrichmentProfile.result.molecularProfileId,
+                    this.enrichmentsGroup1.result.sampleIdentifiers,
+                    this.enrichmentsGroup2.result.sampleIdentifiers,
                     "HOMDEL"
                 );
             } else {
@@ -204,14 +224,15 @@ export default class GroupComparisonStore {
     });
 
     public readonly copyNumberAmpEnrichmentData = makeEnrichmentDataPromise({
+        await:()=>[this.enrichmentsGroup1, this.enrichmentsGroup2,this.copyNumberEnrichmentProfile],
         shouldFetchData:()=>!!this.copyNumberEnrichmentProfile,// returns an empty array if the selected study doesn't have any CNA profiles
         fetchData:()=>{
             // assumes single study for now
-            if (this.enrichmentsGroup1 && this.enrichmentsGroup2) {
+            if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.copyNumberEnrichmentProfile.result) {
                 return this.getCopyNumberEnrichmentData(
-                    this.copyNumberEnrichmentProfile!.molecularProfileId,
-                    this.enrichmentsGroup1.sampleIdentifiers,
-                    this.enrichmentsGroup2.sampleIdentifiers,
+                    this.copyNumberEnrichmentProfile.result.molecularProfileId,
+                    this.enrichmentsGroup1.result.sampleIdentifiers,
+                    this.enrichmentsGroup2.result.sampleIdentifiers,
                     "AMP"
                 );
             } else {
@@ -237,16 +258,17 @@ export default class GroupComparisonStore {
     }
 
     readonly mRNAEnrichmentData = makeEnrichmentDataPromise({
+        await:()=>[this.enrichmentsGroup1, this.enrichmentsGroup2,this.mRNAEnrichmentProfile],
         shouldFetchData:()=>!!this.mRNAEnrichmentProfile,// returns an empty array if the selected study doesn't have any mRNA profiles
         fetchData:()=>{
             // assumes single study for now
-            if (this.enrichmentsGroup1 && this.enrichmentsGroup2) {
+            if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.mRNAEnrichmentProfile.result) {
                 return internalClient.fetchExpressionEnrichmentsUsingPOST({
-                    molecularProfileId: this.mRNAEnrichmentProfile!.molecularProfileId,
+                    molecularProfileId: this.mRNAEnrichmentProfile.result.molecularProfileId,
                     enrichmentType: "SAMPLE",
                     enrichmentFilter: {
-                        alteredIds: this.enrichmentsGroup1.sampleIdentifiers.map(s=>s.sampleId),
-                        unalteredIds: this.enrichmentsGroup2.sampleIdentifiers.map(s=>s.sampleId),
+                        alteredIds: this.enrichmentsGroup1.result.sampleIdentifiers.map(s=>s.sampleId),
+                        unalteredIds: this.enrichmentsGroup2.result.sampleIdentifiers.map(s=>s.sampleId),
                     }
                 });
             } else {
@@ -256,16 +278,17 @@ export default class GroupComparisonStore {
     });
 
     readonly proteinEnrichmentData = makeEnrichmentDataPromise({
+        await:()=>[this.enrichmentsGroup1, this.enrichmentsGroup2,this.proteinEnrichmentProfile],
         shouldFetchData:()=>!!this.proteinEnrichmentProfile,// returns an empty array if the selected study doesn't have any mRNA profiles
         fetchData:()=>{
             // assumes single study for now
-            if (this.enrichmentsGroup1 && this.enrichmentsGroup2) {
+            if (this.enrichmentsGroup1.result && this.enrichmentsGroup2.result && this.proteinEnrichmentProfile.result) {            
                 return internalClient.fetchExpressionEnrichmentsUsingPOST({
-                    molecularProfileId: this.proteinEnrichmentProfile!.molecularProfileId,
+                    molecularProfileId: this.proteinEnrichmentProfile.result.molecularProfileId,
                     enrichmentType: "SAMPLE",
                     enrichmentFilter: {
-                        alteredIds: this.enrichmentsGroup1.sampleIdentifiers.map(s=>s.sampleId),
-                        unalteredIds: this.enrichmentsGroup2.sampleIdentifiers.map(s=>s.sampleId),
+                        alteredIds: this.enrichmentsGroup1.result.sampleIdentifiers.map(s=>s.sampleId),
+                        unalteredIds: this.enrichmentsGroup2.result.sampleIdentifiers.map(s=>s.sampleId),
                     }
                 });
             } else {

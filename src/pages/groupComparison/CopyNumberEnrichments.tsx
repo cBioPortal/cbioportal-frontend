@@ -17,36 +17,38 @@ export interface ICopyNumberEnrichmentsProps {
 export default class CopyNumberEnrichments extends React.Component<ICopyNumberEnrichmentsProps, {}> {
     @autobind
     private onChangeProfile(m:MolecularProfile) {
-        this.props.store.copyNumberEnrichmentProfile = m;
+        this.props.store.setCopyNumberEnrichmentProfile(m);
     }
 
     readonly tabUI = MakeMobxView({
         await:()=>[
             this.props.store.copyNumberHomdelEnrichmentData,
-            this.props.store.copyNumberAmpEnrichmentData
+            this.props.store.copyNumberAmpEnrichmentData,
+            this.props.store.copyNumberEnrichmentProfile,
+            this.props.store.enrichmentsGroup1,
+            this.props.store.enrichmentsGroup2
         ],
-        forcePending:()=>!this.props.store.copyNumberEnrichmentProfile,
         render:()=>{
             return (
                 <div data-test="GroupComparisonCopyNumberEnrichments">
                     <EnrichmentsDataSetDropdown dataSets={this.props.store.copyNumberEnrichmentProfiles} onChange={this.onChangeProfile}
-                                                selectedValue={this.props.store.copyNumberEnrichmentProfile!.molecularProfileId}/>
+                                                selectedValue={this.props.store.copyNumberEnrichmentProfile.result!.molecularProfileId}/>
                     <AlterationEnrichmentContainer data={this.props.store.copyNumberHomdelEnrichmentData.result!}
-                                                   totalAlteredCount={this.props.store.enrichmentsGroup1!.sampleIdentifiers.length}
-                                                   totalUnalteredCount={this.props.store.enrichmentsGroup2!.sampleIdentifiers.length}
-                                                   alteredGroupName={this.props.store.enrichmentsGroup1!.name}
-                                                   unalteredGroupName={this.props.store.enrichmentsGroup2!.name}
-                                                   selectedProfile={this.props.store.copyNumberEnrichmentProfile!}
-                                                   headerName={"Deep Deletion - " + this.props.store.copyNumberEnrichmentProfile!.name}
+                                                   totalAlteredCount={this.props.store.enrichmentsGroup1.result!.sampleIdentifiers.length}
+                                                   totalUnalteredCount={this.props.store.enrichmentsGroup2.result!.sampleIdentifiers.length}
+                                                   alteredGroupName={this.props.store.enrichmentsGroup1.result!.name}
+                                                   unalteredGroupName={this.props.store.enrichmentsGroup2.result!.name}
+                                                   selectedProfile={this.props.store.copyNumberEnrichmentProfile.result!}
+                                                   headerName={"Deep Deletion - " + this.props.store.copyNumberEnrichmentProfile.result!.name}
                                                    alterationType="a deep deletion"/>
                     <hr />
                     <AlterationEnrichmentContainer data={this.props.store.copyNumberAmpEnrichmentData.result!}
-                                                   totalAlteredCount={this.props.store.enrichmentsGroup1!.sampleIdentifiers.length}
-                                                   totalUnalteredCount={this.props.store.enrichmentsGroup2!.sampleIdentifiers.length}
-                                                   alteredGroupName={this.props.store.enrichmentsGroup1!.name}
-                                                   unalteredGroupName={this.props.store.enrichmentsGroup2!.name}
-                                                   selectedProfile={this.props.store.copyNumberEnrichmentProfile!}
-                                                   headerName={"Amplification - " + this.props.store.copyNumberEnrichmentProfile!.name}
+                                                   totalAlteredCount={this.props.store.enrichmentsGroup1.result!.sampleIdentifiers.length}
+                                                   totalUnalteredCount={this.props.store.enrichmentsGroup2.result!.sampleIdentifiers.length}
+                                                   alteredGroupName={this.props.store.enrichmentsGroup1.result!.name}
+                                                   unalteredGroupName={this.props.store.enrichmentsGroup2.result!.name}
+                                                   selectedProfile={this.props.store.copyNumberEnrichmentProfile.result!}
+                                                   headerName={"Amplification - " + this.props.store.copyNumberEnrichmentProfile.result!.name}
                                                    alterationType="an amplification"/>
                 </div>
             );
