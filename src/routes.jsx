@@ -3,7 +3,6 @@ import { Route, Redirect, IndexRoute } from 'react-router';
 import { inject } from 'mobx-react';
 import Container from 'appShell/App/Container';
 import {handleIndexDO, handleCaseDO, handleLegacySubmission, restoreRouteAfterRedirect, handleStudyDO} from './shared/lib/redirectHelpers';
-import AppConfig from "appConfig";
 import PageNotFound from './shared/components/pageNotFound/PageNotFound';
 
 /* HOW TO ADD A NEW ROUTE
@@ -37,6 +36,8 @@ import OQL from 'bundle-loader?lazy!babel-loader!./pages/staticPages/oql/OQL';
 import {getBasePath} from "shared/api/urls";
 import $ from "jquery";
 import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
+import getBrowserWindow from "shared/lib/getBrowserWindow";
+import {seekUrlHash} from "shared/lib/seekUrlHash";
 
 // accepts bundle-loader's deferred loader function and defers execution of route's render
 // until chunk is loaded
@@ -60,6 +61,21 @@ var restoreRoute = inject("routing")(restoreRouteAfterRedirect);
 
 let getBlankPage = function(){
     return <div />
+}
+
+/* when route changes, we want to:
+1. in spa, deep links from url (#) don't work because content is loading and thus doesn't exist to link to
+   at time url changes.  seekHash is a somewhat dirty way of solving this issue
+2, when there's no hash, we want to make sure we scroll to top because user considers herself on a "new page"
+ */
+function handleEnter(){
+    const hash = getBrowserWindow().location.hash;
+    // if hash is bigger than 50, probably not a deep link but some kind of data
+    if (hash.length > 0 && hash.length < 50) {
+        seekUrlHash(hash.replace("#",""));
+    } else {
+        $(document).scrollTop(0);
+    }
 }
 
 // we want to preload ResultsViewPage to prevent delay due to lazy loading bundle
@@ -87,10 +103,10 @@ export const makeRoutes = (routing) => {
                 <Route path="/webAPI" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(WebAPIPage)} />
                 <Route path="/rmatlab" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(RMATLAB)} />
                 <Route path="/datasets" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(DatasetPage)} />
-                <Route path="/tutorials" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(Tutorials)} />
+                <Route path="/tutorials" onEnter={handleEnter} getComponent={lazyLoadComponent(Tutorials)} />
                 <Route path="/visualize" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(Visualize)} />
                 <Route path="/about" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(AboutUs)} />
-                <Route path="/news" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(News)} />
+                <Route path="/news" onEnter={handleEnter} getComponent={lazyLoadComponent(News)} />
                 <Route path="/faq" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(FAQ)} />
                 <Route path="/oql" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(OQL)} />
                 <Route path="/testimonials" onEnter={()=>{$(document).scrollTop(0)}} component={TestimonialsPage}/>
