@@ -194,11 +194,23 @@ describe("oncoprint screenshot tests", function() {
         var res = browser.checkElement(".oncoprintContainer");
         assertScreenShotMatch(res);
     });
+    it("profiled in tracks in a combined study", function() {
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/results/oncoprint?session_id=5c38e4c0e4b05228701fb0c9&show_samples=false`);
+        waitForOncoprint(10000);
+        var res = browser.checkElement("#oncoprintDiv");
+        assertScreenShotMatch(res);
+    });
     it("profiled in tracks in multiple study with SOS1", function() {
         var url = `${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=msk_impact_2017%2Cbrca_tcga_pub&case_set_id=all&data_priority=0&gene_list=SOS1&geneset_list=%20&tab_index=tab_visualize`;
         goToUrlAndSetLocalStorage(url);
         waitForOncoprint(20000);
         var res = browser.checkElement(".oncoprintContainer");
+        assertScreenShotMatch(res);
+    });
+    it("multiple tracks with same gene", function() {
+        goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/results/oncoprint?Action=Submit&RPPA_SCORE_THRESHOLD=2.0&Z_SCORE_THRESHOLD=2.0&cancer_study_list=acc_tcga_pan_can_atlas_2018&case_set_id=acc_tcga_pan_can_atlas_2018_cnaseq&data_priority=0&gene_list=EGFR%253AAMP%253BEGFR%253AMUT%253B%2520PTEN%253B%2520EGFR%2520EGFR&geneset_list=%20&genetic_profile_ids_PROFILE_COPY_NUMBER_ALTERATION=acc_tcga_pan_can_atlas_2018_gistic&genetic_profile_ids_PROFILE_MUTATION_EXTENDED=acc_tcga_pan_can_atlas_2018_mutations&tab_index=tab_visualize`);
+        waitForOncoprint(10000);
+        var res = browser.checkElement("#oncoprintDiv");
         assertScreenShotMatch(res);
     });
 });

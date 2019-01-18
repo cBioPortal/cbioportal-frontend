@@ -513,7 +513,7 @@ export function annotateGeneticTrackData(
 }
 
 export function parseInput(input:string):{status:"complete", result:OncoprinterInputLine[], error:undefined}|{status:"error", result:undefined, error:string} {
-    const lines = input.trim().split("\n").map(line=>line.split(/[\t]/));
+    const lines = input.trim().split("\n").map(line=>line.split(/\s+/));
     if (_.isEqual(lines[0], ["Sample", "Gene", "Alteration", "Type"])) {
         lines.shift(); // skip header line
     }
