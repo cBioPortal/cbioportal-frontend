@@ -6,7 +6,7 @@
     "keywords": ["react", "redux", "cancer", "genomics"],
     "buildpacks": [
         {
-          "url": "https://github.com/heroku/heroku-buildpack-nodejs#v91"
+          "url": "https://github.com/heroku/heroku-buildpack-nodejs#v134"
         }
     ],
     "env": {
