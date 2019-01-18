@@ -39,7 +39,7 @@ export default class GroupComparisonStore {
         // only for development purposes, until we get the actual group service going
         invoke:()=>Promise.resolve(
             JSON.parse(localStorage.getItem(TEMP_localStorageGroupsKey) || "[]")
-                .map((group:SampleGroup, index:number)=>{ group.name = `Group ${index}`; return group; })
+                .map((group:SampleGroup, index:number)=>{ group.name = `Group ${index}`; group.legendText = group.name; return group; })
         )
     });
 
