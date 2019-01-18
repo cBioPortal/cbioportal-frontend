@@ -230,7 +230,7 @@ export default class FixedHeaderTable<T> extends React.Component<IFixedHeaderTab
             <If condition={this.props.showSelectSamples}>
                 <button className={classnames("btn btn-primary btn-xs", styles.controlsBtn)}
                         data-test="fixed-header-table-select-sample"
-                        onClick={this.afterSelectingRows}>Select Sample
+                        onClick={this.afterSelectingRows}>Select Samples
                 </button>
             </If>
             {this.props.showControlsAtTop &&
