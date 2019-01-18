@@ -31,6 +31,10 @@ export declare function isMergedTrackFilter<T>(
     oqlFilter: UnflattenedOQLLineFilterOutput<T>
 ): oqlFilter is MergedTrackLineFilterOutput<T>;
 
+export declare function uniqueGenesInOQLQuery(
+    oql_query:string
+):string[];
+
 /* Interprets datatypes statements and flattens out merged track queries. */
 export declare function parseOQLQuery(
     oql_query: string,
