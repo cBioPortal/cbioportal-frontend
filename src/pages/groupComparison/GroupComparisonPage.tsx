@@ -7,9 +7,10 @@ import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import ReactSelect from "react-select";
 import 'react-select/dist/react-select.css';
 import Survival from "./Survival";
+import Overlap from "./Overlap";
 
 export enum GroupComparisonTab {
-    MUTATIONS, CNA, MRNA, PROTEIN
+    OVERLAP, MUTATIONS, CNA, MRNA, PROTEIN, SURVIVAL
 }
 
 @observer
@@ -52,6 +53,9 @@ export default class GroupComparisonPage extends React.Component<{}, {}> {
                     </div>
                     <div>
                         <MSKTabs unmountOnHide={false} activeTabId={this.store.currentTabId} onTabClick={this.store.setTabId} className="secondaryTabs">
+                            <MSKTab id={GroupComparisonTab.OVERLAP.toString()} linkText="Overlapping">
+                                <Overlap store={this.store}/>
+                            </MSKTab>
                             <MSKTab id={GroupComparisonTab.MUTATIONS.toString()} linkText="Mutations">
                                 <MutationEnrichments store={this.store}/>
                             </MSKTab>
@@ -66,7 +70,7 @@ export default class GroupComparisonPage extends React.Component<{}, {}> {
                             </MSKTab>
                             {
                                 this.store.showSurvivalTab &&
-                                <MSKTab key={0} id="survival" linkText="Survival">
+                                <MSKTab id={GroupComparisonTab.SURVIVAL.toString()} linkText="Survival">
                                     <Survival store={this.store}/>
                                 </MSKTab>
                             }
