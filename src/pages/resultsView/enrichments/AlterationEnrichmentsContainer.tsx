@@ -55,15 +55,13 @@ export default class AlterationEnrichmentContainer extends React.Component<IAlte
     }
 
     @computed get excludedGenesFromTable():string[]|null {
-        if (this.props.store) {
-            // exclude query genes from table if we're looking at a queried profile
-            if (this.props.store.selectedMolecularProfiles.isComplete &&
-                this.props.store.selectedMolecularProfiles.result
-                    .findIndex(x=>x.molecularProfileId === this.props.selectedProfile.molecularProfileId) > -1) {
-                return this.props.store.hugoGeneSymbols;
-            } else {
-                return null;
-            }
+        // exclude query genes from table if we're looking at a queried profile
+        if (this.props.store && 
+            this.props.store.selectedMolecularProfiles.isComplete &&
+            this.props.store.selectedMolecularProfiles.result
+                .findIndex(x=>x.molecularProfileId === this.props.selectedProfile.molecularProfileId) > -1) {
+
+            return this.props.store.hugoGeneSymbols;
         } else {
             return null;
         }
