@@ -35,8 +35,14 @@ export default class StudyListLogic
 		// first compute individual node match results
 		let parsedQuery = parse_search_query(this.store.searchText);
 		let map_node_searchResult = new Map<CancerTreeNode, SearchResult>();
-		for (let [node, meta] of this.store.treeData.map_node_meta.entries())
-			map_node_searchResult.set(node, perform_search_single(parsedQuery, meta.searchTerms));
+
+		for (let [node, meta] of this.store.treeData.map_node_meta.entries()){
+			let searchTerms = meta.searchTerms;
+			if (node.hasOwnProperty('studyId')){
+				searchTerms += (node as CancerStudy).studyId ? (node as CancerStudy).studyId : "";
+			}
+			map_node_searchResult.set(node, perform_search_single(parsedQuery, searchTerms)); 
+		}
 
 		let map_node_filter = new Map<CancerTreeNode, boolean>();
 		for (let [node, meta] of this.store.treeData.map_node_meta.entries())
