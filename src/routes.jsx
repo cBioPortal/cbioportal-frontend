@@ -103,6 +103,9 @@ export const makeRoutes = (routing) => {
                 <Redirect from={"/mutation_mapper.jsp"} to={"/mutation_mapper"}/>
                 <Redirect from={"/data_sets.jsp"} to={"/datasets"}/>
                 <Redirect from={"/oncoprinter.jsp"} to={"/oncoprinter"}/>
+                <Redirect from={"/onco_query_lang_desc.jsp"} to={"/oql"}/>
+
+
 
                 <Route path="*" onEnter={()=>{$(document).scrollTop(0)}} component={()=><PageNotFound/>}/>
 

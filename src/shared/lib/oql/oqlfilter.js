@@ -206,8 +206,8 @@ export function unparseOQLQueryLine(parsed_oql_query_line) {
     ret += gene;
     if (alterations.length > 0) {
         ret += ": " + alterations.map(parsedOQLAlterationToSourceOQL).join(" ");
+        ret += ";";
     }
-    ret += ";";
     return ret;
 };
 
