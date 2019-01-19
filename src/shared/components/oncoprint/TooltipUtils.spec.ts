@@ -168,6 +168,16 @@ describe("Oncoprint TooltipUtils", ()=>{
                 assert.equal(tooltipOutput.find("img[alt='driver filter']").length, 0, "should be no binary icons");
                 assert.equal(tooltipOutput.find("img[alt='driver tiers filter']").length, 0, "should be no tiers icons");
             });
+
+            it ("should show Germline next to every germline mutation, not next to others", () =>{
+                const datum = {
+                    sample: "sample", study_id: "",
+                    data: [makeMutation({ mutationStatus: "germline"}), makeMutation({mutationStatus:"germline"}), makeMutation({})],
+                    coverage:[]
+                };
+                const tooltipOutput = tooltip(datum);
+                assert.equal(tooltipOutput.html().match(/Germline/g)!.length, 2);
+            });
         });
         describe("profiled and not profiled", ()=>{
             it("should say 'Not profiled' if 'profiled_in' is empty and 'not_profiled_in' is not", ()=>{
