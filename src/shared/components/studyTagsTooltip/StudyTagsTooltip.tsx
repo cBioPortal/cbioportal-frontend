@@ -24,11 +24,11 @@
 import * as React from 'react';
 import DefaultTooltip from '../defaultTooltip/DefaultTooltip';
 import { observer } from 'mobx-react';
+import { observable, computed } from "mobx";
 import { JsonToTable } from 'react-json-to-table';
 import './StudyTagsTooltip.scss';
 import { remoteData } from '../../api/remoteData';
 import client from "shared/api/cbioportalClientInstance";
-import { MobxPromiseUnionType } from 'mobxpromise';
 import Loader from '../loadingIndicator/LoadingIndicator';
 
 export type StudyTagsTooltipProps = {
@@ -40,10 +40,14 @@ export type StudyTagsTooltipProps = {
     children: any;
 };
 
-@observer
-export default class StudyTagsTooltip extends React.Component<StudyTagsTooltipProps, {}> {
+export type BuildOverlayTooltipProps = {
+    studyDescription: string;
+    studyId: string;
+};
 
-    readonly studyMetadata = remoteData({
+@observer
+default class BuildOverlay extends React.Component<BuildOverlayTooltipProps, {}> {
+    @observable readonly studyMetadata = remoteData({
         invoke: async () => {
             return client.getTagsUsingGET({studyId: this.props.studyId});
         },
@@ -56,31 +60,41 @@ export default class StudyTagsTooltip extends React.Component<StudyTagsTooltipPr
         return {__html: description};
     }
 
-    renderTooltip = (meta: MobxPromiseUnionType<any>) => {
+    render() {
         let overlay:any = '';
-        if (meta.isPending) {
+        if (this.studyMetadata.isPending) {
             overlay = <Loader isLoading={true}/>;
         }
-        if (meta.isComplete) {
-            const resultKeyLength = Object.keys(meta.result).length;
+        else if (this.studyMetadata.isComplete) {
+            const resultKeyLength = Object.keys(this.studyMetadata.result).length;
             const description = <div dangerouslySetInnerHTML={this.addHTMLDescription(this.props.studyDescription)}/>;
-            overlay = resultKeyLength > 0 ? ([description, <br/>, <div className="studyTagsTooltip"> <JsonToTable json={meta.result}/></div>]) : description;
+            overlay = resultKeyLength > 0 ? ([description, <br/>, 
+                <div className="studyTagsTooltip"> <JsonToTable json={this.studyMetadata.result}/></div>]) : description;
         }
-        if (meta.isError) {
+        else if (this.studyMetadata.isError) {
             overlay = 'error';
         }
+        return overlay;
+    }
+}
 
+@observer
+export default class StudyTagsTooltip extends React.Component<StudyTagsTooltipProps, {}> {
+
+    renderTooltip() {
         return (<DefaultTooltip
             key={this.props.key}
             mouseEnterDelay={this.props.mouseEnterDelay}
             placement={this.props.placement}
-            overlay={overlay}
+            overlay={<BuildOverlay
+                        studyDescription={this.props.studyDescription}
+                        studyId={this.props.studyId}
+                    />}
             children={this.props.children}
         />);
     }
 
     render() {
-        const meta = this.studyMetadata;
-        return this.renderTooltip(meta);
+        return this.renderTooltip();
     }
 }

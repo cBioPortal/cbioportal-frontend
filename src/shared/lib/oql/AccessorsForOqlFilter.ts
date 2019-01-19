@@ -5,6 +5,7 @@ import {
     AnnotatedExtendedAlteration,
     AnnotatedMutation, AnnotatedNumericGeneMolecularData
 } from "../../../pages/resultsView/ResultsViewPageStore";
+import {isNotGermlineMutation} from "../MutationUtils";
 
 export const cna_profile_data_to_string: any = {
     "-2": "homdel",
@@ -122,10 +123,10 @@ export default class AccessorsForOqlFilter {
 
     public mut_status(d:Mutation) {
         if (this.molecularAlterationType(d.molecularProfileId) === AlterationTypeConstants.MUTATION_EXTENDED) {
-            if (d.mutationStatus && (d.mutationStatus.toLowerCase() === "germline")) {
-                return "germline";
+            if (isNotGermlineMutation(d)) {
+                return "somatic";
             } else {
-                return "somatic"
+                return "germline";
             }
         } else {
             return null;
