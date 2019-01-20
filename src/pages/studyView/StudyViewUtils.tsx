@@ -125,7 +125,7 @@ export function updateGeneQuery(geneQueries: SingleGeneQuery[], selectedGene: st
             alterations: false
         })
     }
-    return updatedQueries.map(query=>unparseOQLQueryLine(query)).join('\n');
+    return updatedQueries.map(query=>unparseOQLQueryLine(query)).join(' ');
 
 }
 
