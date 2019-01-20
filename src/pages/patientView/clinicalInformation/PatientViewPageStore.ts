@@ -48,6 +48,7 @@ import {stringListToSet} from "../../../shared/lib/StringUtils";
 import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownloadDataFetcher";
 import { VariantAnnotation } from 'shared/api/generated/GenomeNexusAPI';
 import { fetchVariantAnnotationsIndexedByGenomicLocation } from 'shared/lib/MutationAnnotator';
+import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
 
 type PageMode = 'patient' | 'sample';
 
@@ -329,6 +330,41 @@ export class PatientViewPageStore {
         await: () => [this.clinicalDataForSamples],
         invoke: async() => groupBySampleId(this.sampleIds, this.clinicalDataForSamples.result)
     }, []);
+
+    readonly getWholeSlideViewerURL = remoteData({
+        await: () => [this.clinicalDataGroupedBySample],
+        invoke: () => {
+            const clinicalData = this.clinicalDataGroupedBySample.result!;
+            const clinicalAttributeId = "COMP_PATH_WSV_URL";
+            if (clinicalData) {
+                const wholeSlideUrls = _.chain(clinicalData)
+                .map((data) => data.clinicalData)
+                .flatten()
+                .filter((attribute) => {return attribute.clinicalAttributeId === clinicalAttributeId})
+                .map((attribute) => attribute.value)
+                .value();
+                
+                const ids = _.map(wholeSlideUrls, (data) => {
+                    return data!.substring(data!.indexOf('=') + 1, data!.indexOf('@'));
+                });
+
+                const url = ids.length > 1 ? `https://slides-res.mskcc.org/viewer?ids=${ids.join(';')}&annotation=off` : ids.length === 1 ? `https://slides-res.mskcc.org/viewer?ids=${ids.join(';')}&annotation=off&filetree=off` : "";
+                return Promise.resolve(url);
+            }
+            return Promise.resolve("");
+        }
+    });
+
+    readonly isWholeSlideViewerExist = remoteData({
+        await: () => [this.getWholeSlideViewerURL],
+        invoke: async() => {
+            await request.get(this.getWholeSlideViewerURL.result!);
+            return Promise.resolve(true);
+        },
+        onError: () => {
+            return Promise.resolve(false);
+        }
+    });
 
     readonly studyMetaData = remoteData({
         invoke: async() => client.getStudyUsingGET({studyId: this.studyId})
