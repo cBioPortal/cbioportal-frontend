@@ -125,7 +125,7 @@ describe("doesQueryContainMutationOQL", ()=>{
 describe("unparseOQLQueryLine", ()=>{
     it("unparses query with no alterations", ()=>{
         const parsedLine = parseOQLQuery("TP53;")[0];
-        assert.equal(unparseOQLQueryLine(parsedLine), "TP53;");
+        assert.equal(unparseOQLQueryLine(parsedLine), "TP53");
     });
     it("unparses query with MUT keyword", ()=>{
         const parsedLine = parseOQLQuery("TP53: MUT;")[0];
