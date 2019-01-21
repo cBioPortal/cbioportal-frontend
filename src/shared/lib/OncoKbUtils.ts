@@ -75,7 +75,7 @@ export function generateEvidenceQuery(queryVariants:Query[], evidenceTypes?:stri
     return {
         evidenceTypes: evidenceTypes ? evidenceTypes : "GENE_SUMMARY,GENE_BACKGROUND,ONCOGENIC,MUTATION_EFFECT,VUS,MUTATION_SUMMARY,TUMOR_TYPE_SUMMARY,STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_SENSITIVITY,STANDARD_THERAPEUTIC_IMPLICATIONS_FOR_DRUG_RESISTANCE,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_SENSITIVITY,INVESTIGATIONAL_THERAPEUTIC_IMPLICATIONS_DRUG_RESISTANCE",
         highestLevelOnly: false,
-        levels: ['LEVEL_1', 'LEVEL_2A', 'LEVEL_2B', 'LEVEL_3A', 'LEVEL_3B', 'LEVEL_4', 'LEVEL_R1'],
+        levels: ['LEVEL_1', 'LEVEL_2A', 'LEVEL_2B', 'LEVEL_3A', 'LEVEL_3B', 'LEVEL_4', 'LEVEL_R1', 'LEVEL_R2'],
         queries: queryVariants,
         source: "cbioportal"
     };
@@ -89,7 +89,7 @@ export function generateQueryVariant(entrezGeneId:number,
                                      proteinPosEnd?:number,
                                      alterationType?:string): Query
 {
-    return {
+    let query = {
         id: generateQueryVariantId(entrezGeneId, tumorType, alteration, mutationType),
         hugoSymbol: '',
         tumorType:(tumorType as string), // generated api typings are wrong, it can accept null
@@ -103,6 +103,14 @@ export function generateQueryVariant(entrezGeneId:number,
         hgvs: "",
         svType: "DELETION" // TODO: hack because svType is not optional
     };
+
+    // Use proper parameters for Intragenic variant
+    if(query.alteration.toLowerCase().indexOf("intragenic") !== -1) {
+        query.alterationType = 'structural_variant';
+        query.svType = 'DELETION';
+        query.consequence = '';
+    }
+    return query as Query;
 }
 
 export function generateQueryVariantId(entrezGeneId:number,

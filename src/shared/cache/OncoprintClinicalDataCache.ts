@@ -20,8 +20,14 @@ export enum SpecialAttribute {
     NumSamplesPerPatient = "NUM_SAMPLES_PER_PATIENT"
 }
 
+const locallyComputedSpecialAttributes = [SpecialAttribute.StudyOfOrigin, SpecialAttribute.NumSamplesPerPatient];
+
 export function clinicalAttributeIsPROFILEDIN(attribute:{clinicalAttributeId:string|SpecialAttribute}) {
     return attribute.clinicalAttributeId.startsWith(SpecialAttribute.ProfiledInPrefix);
+}
+
+export function clinicalAttributeIsLocallyComputed(attribute:{clinicalAttributeId:string|SpecialAttribute}) {
+    return clinicalAttributeIsPROFILEDIN(attribute) || (locallyComputedSpecialAttributes.indexOf(attribute.clinicalAttributeId as any) > -1);
 }
 
 type OncoprintClinicalData = ClinicalData[]|MutationSpectrum[];
@@ -38,7 +44,8 @@ function makeProfiledData(
         if (!coverageInfo) {
             continue;
         }
-        const allCoverage:GenePanelData[] = _.flatten(_.values(coverageInfo.byGene)).concat(coverageInfo.allGenes);
+        const allCoverage:{ molecularProfileId:string }[] =
+            (_.flatten(_.values(coverageInfo.byGene)) as { molecularProfileId:string }[]).concat(coverageInfo.allGenes);
         const coveredMolecularProfiles = _.keyBy(allCoverage, "molecularProfileId");
         const profiled = _.some(molecularProfileIds, molecularProfileId=>(molecularProfileId in coveredMolecularProfiles));
         if (profiled) {

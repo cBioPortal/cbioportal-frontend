@@ -3,7 +3,7 @@ import * as _ from 'lodash';
 import { observer } from "mobx-react";
 import classnames from 'classnames';
 import styles from "./styles.module.scss";
-import { observable, computed, action, reaction } from 'mobx';
+import { observable, computed, action, reaction, IReactionDisposer } from 'mobx';
 import { Gene } from 'shared/api/generated/CBioPortalAPI';
 import { SingleGeneQuery, SyntaxError } from 'shared/lib/oql/oql-parser';
 import { parseOQLQuery } from 'shared/lib/oql/oqlfilter';
@@ -48,6 +48,7 @@ function isInteger(str: string) {
 
 @observer
 export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxProps, {}> {
+    private geneStatusReaction: IReactionDisposer;
 
     @observable private geneQuery = '';
     @observable private geneQueryErrorDisplayStatus: DisplayStatus = DisplayStatus.UNFOCUSED;
@@ -56,7 +57,7 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
     constructor(props: IGeneSelectionBoxProps) {
         super(props);
         this.geneQuery = this.props.inputGeneQuery || '';
-        reaction(() => this.genes.status, status => {
+        this.geneStatusReaction = reaction(() => this.genes.status, status => {
             this.props.callback && this.props.callback(this.oql, this.genes.result, this.geneQuery, status);
         });
     }
@@ -70,6 +71,10 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
             },
             { fireImmediately: true }
         );
+    }
+
+    componentWillUnmount(): void {
+        this.geneStatusReaction();
     }
 
     @bind
@@ -113,7 +118,7 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
                     error: { start: 0, end: 0, message: `Unexpected ${error}` }
                 };
 
-            let { offset } = error as SyntaxError;
+            let {location:{start:{offset}}} = error as SyntaxError;
             let near, start, end;
             if (offset === this.geneQuery.length)
                 [near, start, end] = ['after', offset - 1, offset];
@@ -222,8 +227,8 @@ export default class GeneSelectionBox extends React.Component<IGeneSelectionBoxP
                     className={classnames(...this.textAreaClasses)}
                     rows={5}
                     cols={80}
-                    placeholder={'Select Genes'}
-                    title="Enter HUGO Gene Symbols or Gene Aliases"
+                    placeholder={'Click gene symbols below or enter here'}
+                    title="Click gene symbols below or enter here"
                     value={this.showValidationBox ? this.geneQuery : this.focusOutValue}
                     onChange={event => this.updateGeneQuery(event.currentTarget.value)}
                     data-test='geneSet'

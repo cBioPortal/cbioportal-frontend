@@ -48,8 +48,8 @@ export default class QueryContainer extends React.Component<QueryContainerProps,
 	}
 
 	handleSubmit(){
-		this.store.submit();
-		if (this.props.onSubmit) {
+		const submitSucceeded = this.store.submit();
+		if (submitSucceeded && this.props.onSubmit) {
 			this.props.onSubmit();
 		}
 	}

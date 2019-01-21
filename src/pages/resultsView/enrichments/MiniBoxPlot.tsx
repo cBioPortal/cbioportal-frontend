@@ -73,7 +73,7 @@ export default class MiniBoxPlot extends React.Component<IMiniBoxPlotProps, {}> 
         
         if (molecularData && molecularData.length > 0 && this.scatterData.length === 0) {
             this.scatterData = getBoxPlotScatterData(molecularData, molecularProfileId, 
-                this.props.store.caseAggregatedData.result!.samples, this.props.store.alteredSampleKeys.result!);
+                this.props.store.oqlFilteredCaseAggregatedData.result!.samples, this.props.store.alteredSampleKeys.result!);
         }
 
         const events = [{

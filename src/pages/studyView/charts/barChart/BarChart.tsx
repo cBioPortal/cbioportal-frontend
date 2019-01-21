@@ -1,24 +1,28 @@
 import * as React from "react";
-import { observer } from "mobx-react";
-import { VictoryChart, VictoryBar, VictoryAxis, VictorySelectionContainer } from 'victory';
-import { computed } from "mobx";
+import {observer} from "mobx-react";
+import {VictoryAxis, VictoryBar, VictoryChart, VictorySelectionContainer} from 'victory';
+import {computed} from "mobx";
 import _ from "lodash";
 import CBIOPORTAL_VICTORY_THEME from "shared/theme/cBioPoralTheme";
 import {ClinicalDataIntervalFilterValue, DataBin} from "shared/api/generated/CBioPortalAPIInternal";
-import { AbstractChart } from "pages/studyView/charts/ChartContainer";
-import { bind } from "bind-decorator";
+import {AbstractChart} from "pages/studyView/charts/ChartContainer";
+import autobind from 'autobind-decorator';
 import BarChartAxisLabel from "./BarChartAxisLabel";
 import {
     filterCategoryBins,
     filterNumericalBins,
     formatNumericalTickValues,
     generateCategoricalData,
-    generateNumericalData
+    generateNumericalData,
+    needAdditionShiftForLogScaleBarChart
 } from "../../StudyViewUtils";
 import {STUDY_VIEW_CONFIG} from "../../StudyViewConfig";
+import {getTextWidth} from "../../../../shared/lib/wrapText";
 
 export interface IBarChartProps {
     data: DataBin[];
+    width: number;
+    height: number;
     filters: ClinicalDataIntervalFilterValue[];
     onUserSelection: (dataBins: DataBin[]) => void;
 }
@@ -37,6 +41,7 @@ function generateTheme() {
 }
 
 const VICTORY_THEME = generateTheme();
+const TILT_ANGLE = 50;
 
 @observer
 export default class BarChart extends React.Component<IBarChartProps, {}> implements AbstractChart {
@@ -47,8 +52,8 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
         super(props);
     }
 
-    @bind
-    private onSelection(bars: {data: BarDatum[]}[], bounds: {x: number, y: number}[], props: any) {
+    @autobind
+    private onSelection(bars: { data: BarDatum[] }[], bounds: { x: number, y: number }[], props: any) {
         const dataBins = _.flatten(bars.map(bar => bar.data.map(barDatum => barDatum.dataBin)));
         this.props.onUserSelection(dataBins);
     }
@@ -64,23 +69,28 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
         return this.svgContainer.firstChild;
     }
 
-    @computed get numericalBins() {
+    @computed
+    get numericalBins() {
         return filterNumericalBins(this.props.data);
     }
 
-    @computed get categoryBins() {
+    @computed
+    get categoryBins() {
         return filterCategoryBins(this.props.data);
     }
 
-    @computed get numericalData(): BarDatum[] {
+    @computed
+    get numericalData(): BarDatum[] {
         return generateNumericalData(this.numericalBins);
     }
 
-    @computed get categoricalData(): BarDatum[] {
+    @computed
+    get categoricalData(): BarDatum[] {
         return generateCategoricalData(this.categoryBins, this.numericalTickFormat.length);
     }
 
-    @computed get numericalTickFormat() {
+    @computed
+    get numericalTickFormat() {
         const formatted = formatNumericalTickValues(this.numericalBins);
 
         // if the value contains ^ we need to return an array of values, instead of a single value
@@ -88,19 +98,22 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
         return formatted.map(value => value.includes("^") ? value.split("^") : value);
     }
 
-    @computed get barData(): BarDatum[] {
+    @computed
+    get barData(): BarDatum[] {
         return [
             ...this.numericalData,
             ...this.categoricalData
         ];
     }
 
-    @computed get categories() {
+    @computed
+    get categories() {
         return this.categoryBins.map(dataBin =>
             dataBin.specialValue === undefined ? `${dataBin.start}` : dataBin.specialValue);
     }
 
-    @computed get tickValues() {
+    @computed
+    get tickValues() {
         const values: number[] = [];
 
         for (let i = 1; i <= this.numericalTickFormat.length + this.categories.length; i++) {
@@ -110,7 +123,8 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
         return values;
     }
 
-    @computed get tickFormat() {
+    @computed
+    get tickFormat() {
         // copy non-numerical categories as is
         return [
             ...this.numericalTickFormat,
@@ -118,10 +132,39 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
         ];
     }
 
+    @computed
+    get tilted() {
+        return this.tickValues.length > STUDY_VIEW_CONFIG.thresholds.escapeTick;
+    }
+
+    @computed
+    get bottomPadding(): number {
+        const MAX_PADDING = 30;
+        const padding = this.tilted ? _.max(this.tickFormat.map((tick: string | string[]) => {
+            let content;
+            if (_.isArray(tick)) {
+                content = tick.join();
+            } else {
+                content = tick;
+            }
+            return getTextWidth(content, VICTORY_THEME.axis.style.tickLabels.fontFamily, `${VICTORY_THEME.axis.style.tickLabels.fontSize}px`);
+        })) * Math.sin(Math.PI * TILT_ANGLE / 180) + 5 : 20;
+        return padding > MAX_PADDING ? MAX_PADDING : padding;
+    }
+
+    @computed
+    get barRatio(): number {
+        // In log scale bar chart, when the first bin is .5 exponential, the bars will be shifted to the right
+        // for one bar. We need to adjust the bar ratio since it's calculated based on the range / # of bars
+        const additionRatio = needAdditionShiftForLogScaleBarChart(this.numericalBins) ? this.barData.length / (this.barData.length + 1) : 1;
+        return additionRatio * STUDY_VIEW_CONFIG.thresholds.barRatio;
+    }
+
     public render() {
 
         return (
             <div>
+                {this.barData.length > 0 &&
                 <VictoryChart
                     containerComponent={
                         <VictorySelectionContainer
@@ -132,34 +175,44 @@ export default class BarChart extends React.Component<IBarChartProps, {}> implem
                     }
                     style={{
                         parent: {
-                            width: 380, height: 180
+                            width: this.props.width, height: this.props.height
                         }
                     }}
-                    height={150}
-                    padding={{left: 40, right: 20, top: 10, bottom: 20}}
+                    height={this.props.height - 10 - this.bottomPadding}
+                    padding={{left: 40, right: 20, top: 10, bottom: this.bottomPadding}}
                     theme={VICTORY_THEME}
                 >
                     <VictoryAxis
                         tickValues={this.tickValues}
                         tickFormat={(t: number) => this.tickFormat[t - 1]}
-                        domain={[0, this.tickValues[this.tickValues.length -1] + 1]}
+                        domain={[0, this.tickValues[this.tickValues.length - 1] + 1]}
                         tickLabelComponent={<BarChartAxisLabel />}
-                        style={{tickLabels: {angle: this.tickValues.length > STUDY_VIEW_CONFIG.thresholds.escapeTick ? 315 : 0}}}
+                        style={
+                            this.tilted ? {
+                                tickLabels: {
+                                    angle: TILT_ANGLE,
+                                    verticalAnchor: "start",
+                                    textAnchor: "start"
+                                }
+                            } : undefined
+                        }
                     />
                     <VictoryAxis
                         dependentAxis={true}
                         tickFormat={(t: number) => Number.isInteger(t) ? t.toFixed(0) : ''}
                     />
                     <VictoryBar
+                        barRatio={this.barRatio}
                         style={{
                             data: {
                                 fill: (d: BarDatum) =>
-                                    this.isDataBinSelected(d.dataBin, this.props.filters) ? STUDY_VIEW_CONFIG.colors.theme.selectedGroup : STUDY_VIEW_CONFIG.colors.theme.unselectedGroup
+                                    (this.isDataBinSelected(d.dataBin, this.props.filters) || this.props.filters.length === 0) ?
+                                        STUDY_VIEW_CONFIG.colors.theme.primary : STUDY_VIEW_CONFIG.colors.na
                             }
                         }}
                         data={this.barData}
                     />
-                </VictoryChart>
+                </VictoryChart>}
             </div>
         );
     }

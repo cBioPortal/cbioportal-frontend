@@ -6,6 +6,7 @@ import {
 import {observable} from "mobx";
 import * as _ from 'lodash';
 import {assert} from 'chai';
+import {IQueriedMergedTrackCaseData} from "../../../pages/resultsView/ResultsViewPageStore";
 
 describe('OncoprintUtils', () => {
     describe('alterationInfoForCaseAggregatedDataByOQLLine', () => {
@@ -118,7 +119,8 @@ describe('OncoprintUtils', () => {
             sequencedSampleKeysByGene: {},
             sequencedPatientKeysByGene: {'BRCA1': [], 'PTEN': [], 'TP53': []},
             selectedMolecularProfiles: [],
-            expansionIndexMap: observable.map<number[]>()
+            expansionIndexMap: observable.map<number[]>(),
+            hideGermlineMutations: false
         });
         const makeMinimal3Patient3GeneCaseData = () => ({
             samples: {},
@@ -265,7 +267,7 @@ describe('OncoprintUtils', () => {
 
         it("includes expansion tracks in the spec if the observable lists them", () => {
             // given
-            const queryData = {
+            const queryData:IQueriedMergedTrackCaseData = {
                 cases: makeMinimal3Patient3GeneCaseData(),
                 oql: {
                     list: [
@@ -273,7 +275,7 @@ describe('OncoprintUtils', () => {
                         {gene: 'MTOR', oql_line: 'MTOR;', parsed_oql_line: {gene: 'MTOR', alterations: []}, data: []},
                     ]
                 },
-                list: [
+                mergedTrackOqlList: [
                     {
                         cases: makeMinimal3Patient3GeneCaseData(),
                         oql: {gene: 'PIK3CA', oql_line: 'PIK3CA;', parsed_oql_line: {gene: 'PIK3CA', alterations: []}, data: []}

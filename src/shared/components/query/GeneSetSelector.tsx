@@ -25,6 +25,7 @@ const styles = styles_any as {
 	empty: string,
 	notEmpty: string,
 	sectionSpinner: string,
+	learnOql: string;
 };
 
 @observer
@@ -78,7 +79,9 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}>
 		return (
 			<FlexRow padded overflow className={styles.GeneSetSelector}>
 				<SectionHeader className="sectionLabel"
-							   secondaryComponent={<a target="_blank" href={getOncoQueryDocUrl()}>Advanced: Onco Query Language (OQL)</a>}
+							   secondaryComponent={
+								   <a target="_blank" className={styles.learnOql} href={getOncoQueryDocUrl()}><strong>Hint:</strong> Learn Onco Query Language (OQL)<br />to write more powerful queries <i className={"fa fa-external-link"} /></a>
+							   }
 							   promises={[this.store.mutSigForSingleStudy, this.store.gisticForSingleStudy, this.store.genes]}
 				>
 					Enter Genes:
@@ -111,8 +114,8 @@ export default class GeneSetSelector extends QueryStoreComponent<{}, {}>
 					className={classNames(styles.geneSet, this.store.geneQuery ? styles.notEmpty : styles.empty)}
 					rows={5}
 					cols={80}
-					placeholder="Enter HUGO Gene Symbols or Gene Aliases"
-					title="Enter HUGO Gene Symbols or Gene Aliases"
+					placeholder="Enter HUGO Gene Symbols, Gene Aliases, or OQL"
+					title="Enter HUGO Gene Symbols, Gene Aliases, or OQL"
 					value={this.store.geneQuery}
 					onChange={event => this.store.geneQuery = event.currentTarget.value}
 					data-test='geneSet'

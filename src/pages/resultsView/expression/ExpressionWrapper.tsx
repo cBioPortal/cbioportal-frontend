@@ -436,7 +436,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
     }
 
     @computed get scatterPlotAppearance() {
-        return makeScatterPlotPointAppearance(this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated);
+        return makeScatterPlotPointAppearance(this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.driverAnnotationSettings.driversAnnotated);
     }
 
     @computed get viewType() {
@@ -502,7 +502,7 @@ export default class ExpressionWrapper extends React.Component<ExpressionWrapper
                         strokeWidth={this.strokeWidth}
                         useLogSpaceTicks={true}
                         legendData={scatterPlotLegendData(
-                            _.flatten(this.boxPlotData.result.map(d=>d.data)), this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.mutationAnnotationSettings.driversAnnotated
+                            _.flatten(this.boxPlotData.result.map(d=>d.data)), this.viewType, this.mutationDataExists, this.cnaDataExists, this.props.store.driverAnnotationSettings.driversAnnotated
                         )}
                         legendLocationWidthThreshold={900}
                         boxCalculationFilter={this.boxCalculationFilter}

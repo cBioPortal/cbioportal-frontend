@@ -3,6 +3,7 @@ import {observer} from 'mobx-react';
 import {PageLayout} from "../../../shared/components/PageLayout/PageLayout";
 import './styles.scss';
 import Helmet from "react-helmet";
+import { Link } from 'react-router';
 
 @observer
 export default class WebAPIPage extends React.Component<{}, {}> {
@@ -37,8 +38,8 @@ export default class WebAPIPage extends React.Component<{}, {}> {
             <p>Please note that the example queries below are accurate, but they are not guaranteed to return data, as
                 our database is constantly being updated.</p>
             <h2 id="the-cgds-r-package">The CGDS R Package</h2>
-            <p>If you are interested in accessing CGDS via R, please check out our <a href="cgds_r.jsp">CGDS-R
-                library</a>.</p>
+            <p>If you are interested in accessing CGDS via R, please check out our <Link to={"/rmatlab"}> CGDS-R
+                library</Link>.</p>
             <h2 id="basic-query-syntax">Basic Query Syntax</h2>
             <p>All web queries are available at: <a href="webservice.do">webservice.do</a>. All calls to the Web
                 interface are constructed by appending URL parameters. Within each call, you must specify:</p>

@@ -5,7 +5,7 @@ import { MutualExclusivity } from "../../../shared/model/MutualExclusivity";
 import { observer } from "mobx-react";
 import { observable } from "mobx";
 import { Badge } from 'react-bootstrap';
-import { formatPValue, formatPValueWithStyle, formatLogOddsRatio } from "./MutualExclusivityUtil";
+import { formatPValue, formatQValueWithStyle, formatLogOddsRatio } from "./MutualExclusivityUtil";
 import styles from "./styles.module.scss";
 
 export interface IMutualExclusivityTableProps {
@@ -15,15 +15,15 @@ export interface IMutualExclusivityTableProps {
 }
 
 export enum MutualExclusivityTableColumnType {
-    GENE_A,
-    GENE_B,
+    TRACK_A,
+    TRACK_B,
     NEITHER,
     A_NOT_B,
     B_NOT_A,
     BOTH,
     LOG_ODDS_RATIO,
     P_VALUE,
-    ADJUSTED_P_VALUE,
+    Q_VALUE,
     ASSOCIATION
 }
 
@@ -45,47 +45,47 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
 
     public static defaultProps = {
         columns: [
-            MutualExclusivityTableColumnType.GENE_A,
-            MutualExclusivityTableColumnType.GENE_B,
+            MutualExclusivityTableColumnType.TRACK_A,
+            MutualExclusivityTableColumnType.TRACK_B,
             MutualExclusivityTableColumnType.NEITHER,
             MutualExclusivityTableColumnType.A_NOT_B,
             MutualExclusivityTableColumnType.B_NOT_A,
             MutualExclusivityTableColumnType.BOTH,
             MutualExclusivityTableColumnType.LOG_ODDS_RATIO,
             MutualExclusivityTableColumnType.P_VALUE,
-            MutualExclusivityTableColumnType.ADJUSTED_P_VALUE,
+            MutualExclusivityTableColumnType.Q_VALUE,
             MutualExclusivityTableColumnType.ASSOCIATION
         ],
-        initialSortColumn: "Adjusted p-Value"
+        initialSortColumn: "q-Value"
     };
 
     protected generateColumns() {
         this._columns = {};
 
-        this._columns[MutualExclusivityTableColumnType.GENE_A] = {
-            name: "Gene A",
-            render: (d: MutualExclusivity) => <span><b>{d.geneA}</b></span>,
-            tooltip: <span>Gene A</span>,
+        this._columns[MutualExclusivityTableColumnType.TRACK_A] = {
+            name: "A",
+            render: (d: MutualExclusivity) => <span><b>{d.trackA}</b></span>,
+            tooltip: <span>A</span>,
             filter: (d: MutualExclusivity, filterString: string, filterStringUpper: string) =>
-                d.geneA.toUpperCase().includes(filterStringUpper),
-            sortBy: (d: MutualExclusivity) => d.geneA,
-            download: (d: MutualExclusivity) => d.geneA
+                d.trackA.toUpperCase().includes(filterStringUpper),
+            sortBy: (d: MutualExclusivity) => d.trackA,
+            download: (d: MutualExclusivity) => d.trackA
         };
 
-        this._columns[MutualExclusivityTableColumnType.GENE_B] = {
-            name: "Gene B",
-            render: (d: MutualExclusivity) => <span><b>{d.geneB}</b></span>,
-            tooltip: <span>Gene B</span>,
+        this._columns[MutualExclusivityTableColumnType.TRACK_B] = {
+            name: "B",
+            render: (d: MutualExclusivity) => <span><b>{d.trackB}</b></span>,
+            tooltip: <span>B</span>,
             filter: (d: MutualExclusivity, filterString: string, filterStringUpper: string) =>
-                d.geneB.toUpperCase().includes(filterStringUpper),
-            sortBy: (d: MutualExclusivity) => d.geneB,
-            download: (d: MutualExclusivity) => d.geneB
+                d.trackB.toUpperCase().includes(filterStringUpper),
+            sortBy: (d: MutualExclusivity) => d.trackB,
+            download: (d: MutualExclusivity) => d.trackB
         };
 
         this._columns[MutualExclusivityTableColumnType.NEITHER] = {
             name: "Neither",
             render: (d: MutualExclusivity) => <span>{d.neitherCount}</span>,
-            tooltip: <span>Number of samples with alterations in neither Gene A nor Gene B</span>,
+            tooltip: <span>Number of samples with alterations in neither A nor B</span>,
             sortBy: (d: MutualExclusivity) => d.neitherCount,
             download: (d: MutualExclusivity) => d.neitherCount.toString()
         };
@@ -93,7 +93,7 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
         this._columns[MutualExclusivityTableColumnType.A_NOT_B] = {
             name: "A Not B",
             render: (d: MutualExclusivity) => <span>{d.aNotBCount}</span>,
-            tooltip: <span>Number of samples with alterations in Gene A but not in Gene B</span>,
+            tooltip: <span>Number of samples with alterations in A but not in B</span>,
             sortBy: (d: MutualExclusivity) => d.aNotBCount,
             download: (d: MutualExclusivity) => d.aNotBCount.toString()
         };
@@ -101,7 +101,7 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
         this._columns[MutualExclusivityTableColumnType.B_NOT_A] = {
             name: "B Not A",
             render: (d: MutualExclusivity) => <span>{d.bNotACount}</span>,
-            tooltip: <span>Number of samples with alterations in Gene B but not in Gene A</span>,
+            tooltip: <span>Number of samples with alterations in B but not in A</span>,
             sortBy: (d: MutualExclusivity) => d.bNotACount,
             download: (d: MutualExclusivity) => d.bNotACount.toString()
         };
@@ -109,17 +109,17 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
         this._columns[MutualExclusivityTableColumnType.BOTH] = {
             name: "Both",
             render: (d: MutualExclusivity) => <span>{d.bothCount}</span>,
-            tooltip: <span>Number of samples with alterations in both Gene A and Gene B</span>,
+            tooltip: <span>Number of samples with alterations in both A and B</span>,
             sortBy: (d: MutualExclusivity) => d.bothCount,
             download: (d: MutualExclusivity) => d.bothCount.toString()
         };
 
         this._columns[MutualExclusivityTableColumnType.LOG_ODDS_RATIO] = {
-            name: "Log Odds Ratio",
+            name: "Log2 Odds Ratio",
             render: (d: MutualExclusivity) => <span>{formatLogOddsRatio(d.logOddsRatio)}</span>,
             tooltip: <span style={{ display: 'inline-block', maxWidth: 300 }}>Quantifies how strongly the presence or
-                absence of alterations in Gene A are associated with the presence or absence of alterations in Gene B in
-                the selected samples.</span>,
+                absence of alterations in A are associated with the presence or absence of alterations in B in
+                the selected samples. OR = (Neither * Both) / (A Not B * B Not A)</span>,
             sortBy: (d: MutualExclusivity) => d.logOddsRatio,
             download: (d: MutualExclusivity) => formatLogOddsRatio(d.logOddsRatio)
         };
@@ -132,30 +132,30 @@ export default class MutualExclusivityTable extends React.Component<IMutualExclu
             download: (d: MutualExclusivity) => formatPValue(d.pValue)
         };
 
-        this._columns[MutualExclusivityTableColumnType.ADJUSTED_P_VALUE] = {
-            name: "Adjusted p-Value",
-            render: (d: MutualExclusivity) => formatPValueWithStyle(d.adjustedPValue),
-            tooltip: <span>Bonferroni adjusted p-Value</span>,
-            sortBy: (d: MutualExclusivity) => d.adjustedPValue,
-            download: (d: MutualExclusivity) => formatPValue(d.adjustedPValue)
+        this._columns[MutualExclusivityTableColumnType.Q_VALUE] = {
+            name: "q-Value",
+            render: (d: MutualExclusivity) => formatQValueWithStyle(d.qValue),
+            tooltip: <span>Derived from Benjamini-Hochberg FDR correction procedure</span>,
+            sortBy: (d: MutualExclusivity) => d.qValue,
+            download: (d: MutualExclusivity) => formatPValue(d.qValue)
         };
 
         this._columns[MutualExclusivityTableColumnType.ASSOCIATION] = {
             name: "Tendency",
-            render: (d: MutualExclusivity) => <div className={styles.Tendency}>{d.association}{d.adjustedPValue < 0.05 ?
+            render: (d: MutualExclusivity) => <div className={styles.Tendency}>{d.association}{d.qValue < 0.05 ?
                 <Badge style={{ backgroundColor: '#58ACFA' }}>Significant</Badge> : ""}</div>,
             tooltip: 
                 <table>
                     <tr>
-                        <td>Log ratio > 0</td>
+                        <td>Log2 ratio > 0</td>
                         <td>: Tendency towards co-occurrence</td>
                     </tr>
                     <tr>
-                        <td>Log ratio &lt;= 0</td>
+                        <td>Log2 ratio &lt;= 0</td>
                         <td>: Tendency towards mutual exclusivity</td>
                     </tr>
                     <tr>
-                        <td>Adjusted p-Value &lt; 0.05</td>
+                        <td>q-Value &lt; 0.05</td>
                         <td>: Significant association</td>
                     </tr>
                 </table>,

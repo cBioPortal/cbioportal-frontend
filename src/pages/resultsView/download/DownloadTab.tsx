@@ -4,6 +4,7 @@ import {computed, observable} from "mobx";
 import {observer} from 'mobx-react';
 import fileDownload from 'react-file-download';
 import {AnnotatedExtendedAlteration, ExtendedAlteration, ResultsViewPageStore} from "../ResultsViewPageStore";
+import {CoverageInformation} from "../ResultsViewPageStoreUtils";
 import {OQLLineFilterOutput} from "shared/lib/oql/oqlfilter";
 import FeatureTitle from "shared/components/featureTitle/FeatureTitle";
 import {SimpleCopyDownloadControls} from "shared/components/copyDownloadControls/SimpleCopyDownloadControls";
@@ -23,6 +24,7 @@ import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWi
 import {remoteData} from "../../../shared/api/remoteData";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import onMobxPromise from "shared/lib/onMobxPromise";
+import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 
 export interface IDownloadTabProps {
     store: ResultsViewPageStore;
@@ -47,11 +49,11 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
 
     readonly geneAlterationData = remoteData<IGeneAlteration[]>({
         await: ()=>[
-            this.props.store.putativeDriverFilteredCaseAggregatedDataByOQLLine,
+            this.props.store.oqlFilteredCaseAggregatedDataByOQLLine,
             this.props.store.sequencedSampleKeysByGene
         ],
         invoke:()=>Promise.resolve(generateGeneAlterationData(
-            this.props.store.putativeDriverFilteredCaseAggregatedDataByOQLLine.result!,
+            this.props.store.oqlFilteredCaseAggregatedDataByOQLLine.result!,
             this.props.store.sequencedSampleKeysByGene.result!
         ))
     });
@@ -64,23 +66,25 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
     readonly caseAlterationData = remoteData<ICaseAlteration[]>({
         await:()=>[
             this.props.store.selectedMolecularProfiles,
-            this.props.store.putativeDriverFilteredCaseAggregatedDataByOQLLine,
+            this.props.store.oqlFilteredCaseAggregatedDataByOQLLine,
             this.props.store.coverageInformation,
             this.props.store.samples,
-            this.geneAlterationDataByGene
+            this.geneAlterationDataByGene,
+            this.props.store.molecularProfileIdToMolecularProfile
         ],
         invoke: ()=>Promise.resolve(generateCaseAlterationData(
             this.props.store.selectedMolecularProfiles.result!,
-            this.props.store.putativeDriverFilteredCaseAggregatedDataByOQLLine.result!,
+            this.props.store.oqlFilteredCaseAggregatedDataByOQLLine.result!,
             this.props.store.coverageInformation.result!,
             this.props.store.samples.result!,
-            this.geneAlterationDataByGene.result!
+            this.geneAlterationDataByGene.result!,
+            this.props.store.molecularProfileIdToMolecularProfile.result!
         ))
     });
 
     readonly mutationData = remoteData<{[key: string]: ExtendedAlteration[]}>({
-        await:()=>[this.props.store.unfilteredCaseAggregatedData],
-        invoke:()=>Promise.resolve(generateMutationData(this.props.store.unfilteredCaseAggregatedData.result!))
+        await:()=>[this.props.store.nonOqlFilteredCaseAggregatedData],
+        invoke:()=>Promise.resolve(generateMutationData(this.props.store.nonOqlFilteredCaseAggregatedData.result!))
     });
 
     readonly mutationDownloadData = remoteData<string[][]>({
@@ -106,8 +110,8 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
     });
 
     readonly mrnaData = remoteData<{[key: string]: ExtendedAlteration[]}>({
-        await:()=>[this.props.store.unfilteredCaseAggregatedData],
-        invoke:()=>Promise.resolve(generateMrnaData(this.props.store.unfilteredCaseAggregatedData.result!))
+        await:()=>[this.props.store.nonOqlFilteredCaseAggregatedData],
+        invoke:()=>Promise.resolve(generateMrnaData(this.props.store.nonOqlFilteredCaseAggregatedData.result!))
     });
 
     readonly mrnaDownloadData = remoteData<string[][]>({
@@ -133,8 +137,8 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
     });
 
     readonly proteinData = remoteData<{[key: string]: ExtendedAlteration[]}>({
-        await:()=>[this.props.store.unfilteredCaseAggregatedData],
-        invoke:()=>Promise.resolve(generateProteinData(this.props.store.unfilteredCaseAggregatedData.result!))
+        await:()=>[this.props.store.nonOqlFilteredCaseAggregatedData],
+        invoke:()=>Promise.resolve(generateProteinData(this.props.store.nonOqlFilteredCaseAggregatedData.result!))
     });
 
     readonly proteinDownloadData = remoteData<string[][]>({
@@ -160,8 +164,8 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
     });
 
     readonly cnaData = remoteData<{[key: string]: ExtendedAlteration[]}>({
-        await:()=>[this.props.store.unfilteredCaseAggregatedData],
-        invoke:()=>Promise.resolve(generateCnaData(this.props.store.unfilteredCaseAggregatedData.result!))
+        await:()=>[this.props.store.nonOqlFilteredCaseAggregatedData],
+        invoke:()=>Promise.resolve(generateCnaData(this.props.store.nonOqlFilteredCaseAggregatedData.result!))
     });
 
     readonly cnaDownloadData = remoteData<string[][]>({
@@ -211,35 +215,35 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
     });
 
     readonly oqls = remoteData<OQLLineFilterOutput<AnnotatedExtendedAlteration>[]>({
-        await:()=>[this.props.store.putativeDriverFilteredCaseAggregatedDataByOQLLine],
-        invoke:()=>Promise.resolve(this.props.store.putativeDriverFilteredCaseAggregatedDataByOQLLine.result!
+        await:()=>[this.props.store.oqlFilteredCaseAggregatedDataByOQLLine],
+        invoke:()=>Promise.resolve(this.props.store.oqlFilteredCaseAggregatedDataByOQLLine.result!
                         .map(data => data.oql))
     });
 
     public render() {
         const loadingGeneAlterationData =
-            this.props.store.putativeDriverFilteredCaseAggregatedDataByOQLLine.status === "pending" ||
+            this.props.store.oqlFilteredCaseAggregatedDataByOQLLine.status === "pending" ||
             this.props.store.sequencedSampleKeysByGene.status === "pending";
 
         const errorGeneAlterationData =
-            this.props.store.putativeDriverFilteredCaseAggregatedDataByOQLLine.status === "error" ||
+            this.props.store.oqlFilteredCaseAggregatedDataByOQLLine.status === "error" ||
             this.props.store.sequencedSampleKeysByGene.status === "error";
 
         const loadingCaseAlterationData =
-            this.props.store.putativeDriverFilteredCaseAggregatedDataByOQLLine.status === "pending" ||
+            this.props.store.oqlFilteredCaseAggregatedDataByOQLLine.status === "pending" ||
             this.props.store.samples.status === "pending" ||
             this.props.store.coverageInformation.status === "pending";
 
         const errorCaseAlterationData =
-            this.props.store.putativeDriverFilteredCaseAggregatedDataByOQLLine.status === "error" ||
+            this.props.store.oqlFilteredCaseAggregatedDataByOQLLine.status === "error" ||
             this.props.store.samples.status === "error" ||
             this.props.store.coverageInformation.status === "error";
 
         const loadingDownloadData = loadingGeneAlterationData ||
-            this.props.store.unfilteredCaseAggregatedData.status === "pending";
+            this.props.store.nonOqlFilteredCaseAggregatedData.status === "pending";
 
         const errorDownloadData = errorCaseAlterationData ||
-            this.props.store.unfilteredCaseAggregatedData.status === "error";
+            this.props.store.nonOqlFilteredCaseAggregatedData.status === "error";
 
         return (
             <WindowWidthBox data-test="downloadTabDiv" offset={60}>
@@ -271,10 +275,11 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
                         isLoading={this.caseAlterationData.isPending || this.oqls.isPending}
                         className="pull-left forceHeaderStyle h4"
                     />
-                    {this.oqls.isComplete && this.caseAlterationData.isComplete && (
+                    {this.oqls.isComplete && this.caseAlterationData.isComplete && this.props.store.alterationsBySelectedMolecularProfiles.isComplete && (
                         <CaseAlterationTable
                             caseAlterationData={this.caseAlterationData.result}
                             oqls={this.oqls.result}
+                            alterationTypes={this.props.store.alterationsBySelectedMolecularProfiles.result}
                         />
                     )}
                 </div>

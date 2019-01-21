@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { getCumulativePValue } from "../../../shared/lib/FisherExactTestCalculator";
 import { MutualExclusivity } from "../../../shared/model/MutualExclusivity";
+import {calculateQValues} from "../../../shared/lib/calculation/BenjaminiHochbergFDRCalculator";
 import Combinatorics from 'js-combinatorics';
 import Dictionary = _.Dictionary;
 import * as _ from 'lodash';
@@ -46,7 +47,7 @@ export function calculateLogOddsRatio(a: number, b: number, c: number, d: number
     if ((a * d) === 0 && (b * c) === 0) {
         return Infinity;
     }
-    return Math.log((a * d) / (b * c));
+    return Math.log2((a * d) / (b * c));
 }
 
 export function getMutuallyExclusiveCounts(data: MutualExclusivity[],
@@ -56,16 +57,16 @@ export function getMutuallyExclusiveCounts(data: MutualExclusivity[],
     let significantCount = null;
 
     const exclusiveData = data.filter(mutualExclusivity => exclusive(mutualExclusivity.logOddsRatio));
-    const significantData = exclusiveData.filter(mutualExclusivity => mutualExclusivity.adjustedPValue < 0.05);
+    const significantData = exclusiveData.filter(mutualExclusivity => mutualExclusivity.qValue < 0.05);
 
     const exclusiveLength = exclusiveData.length;
     const significantLength = significantData.length;
     if (exclusiveLength === 0) {
-        exclusiveCount = <span><b>no</b> gene pair</span>;
+        exclusiveCount = <span><b>no</b> track pair</span>;
     } else if (exclusiveLength === 1) {
-        exclusiveCount = <span><b>1</b> gene pair</span>;
+        exclusiveCount = <span><b>1</b> track pair</span>;
     } else {
-        exclusiveCount = <span><b>{exclusiveLength}</b> gene pairs</span>;
+        exclusiveCount = <span><b>{exclusiveLength}</b> track pairs</span>;
     }
 
     if (exclusiveLength > 0) {
@@ -77,6 +78,13 @@ export function getMutuallyExclusiveCounts(data: MutualExclusivity[],
     }
 
     return [exclusiveCount, significantCount];
+}
+
+export function getTrackPairsCountText(data: MutualExclusivity[], trackCount: number): JSX.Element {
+
+    const trackPairsCount = _.size(data);
+    const pairText = trackPairsCount > 1 ? "pairs" : "pair";
+    return <p>The analysis tested <b>{trackPairsCount}</b> {pairText} between the <b>{trackCount}</b> tracks in the OncoPrint.</p>;
 }
 
 export function getCountsText(data: MutualExclusivity[]): JSX.Element {
@@ -96,17 +104,24 @@ export function getData(isSampleAlteredMap: Dictionary<boolean[]>): MutualExclus
 
     combinations.forEach(combination => {
 
-        const geneA = combination[0];
-        const geneB = combination[1];
-        const counts = countOccurences(isSampleAlteredMap[geneA], isSampleAlteredMap[geneB]);
+        const trackA = combination[0];
+        const trackB = combination[1];
+        const counts = countOccurences(isSampleAlteredMap[trackA], isSampleAlteredMap[trackB]);
         const pValue = calculatePValue(counts[0], counts[1], counts[2], counts[3]);
         const logOddsRatio = calculateLogOddsRatio(counts[0], counts[1], counts[2], counts[3]);
         const association = calculateAssociation(logOddsRatio);
-        data.push({ geneA, geneB, neitherCount: counts[0], bNotACount: counts[1], aNotBCount: counts[2], 
+        data.push({ trackA, trackB, neitherCount: counts[0], bNotACount: counts[1], aNotBCount: counts[2], 
             bothCount: counts[3], logOddsRatio, pValue, 
-            adjustedPValue: calculateAdjustedPValue(pValue, combinations.length), association });
+            qValue: 0, association });
     });
-    return _.sortBy(data, ["pValue"]);
+    
+    data = _.sortBy(data, ["pValue"]);
+    const qValues = calculateQValues(_.map(data, mutexData => mutexData.pValue));
+    data.forEach((mutexData, index) => {
+        mutexData.qValue = qValues[index];
+    });
+
+    return data;
 }
 
 export function getFilteredData(data: MutualExclusivity[], mutualExclusivityFilter: boolean, coOccurenceFilter: boolean,
@@ -121,7 +136,7 @@ export function getFilteredData(data: MutualExclusivity[], mutualExclusivityFilt
             result = result || mutualExclusivity.logOddsRatio > 0;
         }
         if (significantPairsFilter) {
-            result = result && mutualExclusivity.adjustedPValue < 0.05;
+            result = result && mutualExclusivity.qValue < 0.05;
         }
         return result;
     });
@@ -131,7 +146,7 @@ export function formatPValue(pValue: number): string {
     return pValue < 0.001 ? "<0.001" : pValue.toFixed(3);
 }
 
-export function formatPValueWithStyle(pValue: number): JSX.Element {
+export function formatQValueWithStyle(pValue: number): JSX.Element {
 
     let formattedPValue = <span>{formatPValue(pValue)}</span>;
     if (pValue < 0.05) {

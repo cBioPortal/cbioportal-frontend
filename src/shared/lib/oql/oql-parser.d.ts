@@ -5,9 +5,7 @@ export declare class SyntaxError
 	message: string;
 	expected: string;
 	found: string;
-	offset: number;
-	line: number;
-	column: number;
+	location:{ start: {offset:number, line:number, column:number}, end: { offset:number, line:number, column:number }};
 	name: "SyntaxError";
 }
 
@@ -74,7 +72,11 @@ export declare type SingleGeneQuery = {gene:string, alterations:false|Alteration
 //         / cmd:FUSIONCommand { return cmd; }
 // // MUT has to go at the end because it matches an arbitrary string at the end as a type of mutation
 // 	/ cmd:MUTCommand { return cmd; }
-export declare type Alteration = CNACommand | EXPCommand | PROTCommand | FUSIONCommand | MUTCommand<Mutation>;
+export declare type Alteration = AnyTypeWithModifiersCommand | CNACommand | EXPCommand | PROTCommand | FUSIONCommand | MUTCommand<Mutation>;
+
+
+export declare type AnyTypeWithModifiersCommand = { alteration_type: "any", modifiers:AnyModifier[] };
+
 //
 // CNAType
 //         = "AMP"i { return "AMP"; }
@@ -86,7 +88,7 @@ export declare type CNAType = 'AMP' | 'HOMDEL' | 'GAIN' | 'HETLOSS';
 // CNACommand
 // 	= "CNA"i msp op:ComparisonOp msp constrval:CNAType { return {"alteration_type":"cna", "constr_rel":op, "constr_val":constrval}; }
 //         / constrval:CNAType { return {"alteration_type":"cna", "constr_rel":"=", "constr_val":constrval}; }
-export declare type CNACommand = {alteration_type:'cna', constr_rel:ComparisonOp | '=', constr_val:CNAType};
+export declare type CNACommand = {alteration_type:'cna', constr_rel?:ComparisonOp | '=', constr_val?:CNAType, modifiers:CNAModifier[]};
 //
 // MUTCommand
 // 	= "MUT" msp "=" msp mutation:Mutation { return {"alteration_type":"mut", "constr_rel": "=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info}; }
@@ -94,8 +96,8 @@ export declare type CNACommand = {alteration_type:'cna', constr_rel:ComparisonOp
 // 	/ "MUT" { return {"alteration_type":"mut"}; }
 // 	/ mutation:Mutation { return {"alteration_type":"mut", "constr_rel": "=", "constr_type":mutation.type, "constr_val":mutation.value, "info":mutation.info}; }
 export declare type MUTCommand<M extends Mutation> = (
-	{alteration_type:'mut', info:{}} |
-	{alteration_type:'mut', constr_rel:'='|'!=', constr_type:M['type'], constr_val:M['value'], info:M['info']}
+	{alteration_type:'mut', info:{}, modifiers:M['modifiers']} |
+	{alteration_type:'mut', constr_rel:'='|'!=', constr_type:M['type'], constr_val:M['value'], info:M['info'], modifiers:M['modifiers']}
 );
 //
 // EXPCommand
@@ -104,7 +106,7 @@ export declare type EXPCommand = {alteration_type:'exp', constr_rel:ComparisonOp
 //
 // FUSIONCommand
 //         = "FUSION" { return {"alteration_type":"fusion"}; }
-export declare type FUSIONCommand = {alteration_type:'fusion'};
+export declare type FUSIONCommand = {alteration_type:'fusion', modifiers:FusionModifier[]};
 //
 // PROTCommand
 // 	= "PROT" msp op:ComparisonOp msp constrval:Number { return {"alteration_type":"prot", "constr_rel":op, "constr_val":parseFloat(constrval)}; }
@@ -132,8 +134,18 @@ export declare type ComparisonOp = '>=' | '<=' | '>' | '<';
 // 	/ mutation_name:String { return {"type":"name", "value":mutation_name, "info":{}}; }
 export declare type MutationType = 'MISSENSE'|'NONSENSE'|'NONSTART'|'NONSTOP'|'FRAMESHIFT'|'INFRAME'|'SPLICE'|'TRUNC'|'PROMOTER';
 
+export declare type MutationModifier = 'GERMLINE'|'SOMATIC'|DriverModifier;
+
+export declare type CNAModifier = DriverModifier;
+
+export declare type FusionModifier = DriverModifier;
+
+export declare type AnyModifier = DriverModifier;
+
+export declare type DriverModifier = 'DRIVER';
+
 export declare type Mutation = (
-	{type:'class', value:MutationType, info:{}} |
-	{type:'name', value:string, info:{unrecognized?:boolean}} |
-	{type:'position', value:number, info:{amino_acid:AminoAcid}}
+	{type:'class', value:MutationType, info:{}, modifiers:MutationModifier[]} |
+	{type:'name', value:string, info:{unrecognized?:boolean}, modifiers:MutationModifier[]} |
+	{type:'position', value:number, info:{amino_acid:AminoAcid}, modifiers:MutationModifier[]}
 );

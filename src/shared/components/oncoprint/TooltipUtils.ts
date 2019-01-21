@@ -12,6 +12,7 @@ import {
 } from "../../../pages/resultsView/ResultsViewPageStore";
 import _ from "lodash";
 import {alterationTypeToProfiledForText} from "./ResultsViewOncoprintUtils";
+import {isNotGermlineMutation} from "../../lib/MutationUtils";
 
 export const TOOLTIP_DIV_CLASS = "oncoprint__tooltip";
 
@@ -165,7 +166,6 @@ export function makeGeneticTrackTooltip_getCoverageInformation(
 }
 
 export function makeGeneticTrackTooltip(
-    link_id?:boolean,
     getMolecularProfileMap?:()=>{[molecularProfileId:string]:MolecularProfile}|undefined,
     alterationTypesInQuery?:string[],
 ) {
@@ -187,6 +187,12 @@ export function makeGeneticTrackTooltip(
             //If we have data for the class custom driver annotations, append an icon to the tooltip with the annotation information
             if (d.driver_tiers_filter) {
                 ret.append(`<img src="${require("../../../rootImages/driver_tiers.png")}" title="${d.driver_tiers_filter}: ${d.driver_tiers_filter_annotation}" alt="driver tiers filter" style="height:11px; width:11px;margin-left:3px"/>`);
+            }
+
+
+            // AT THE END, append germline symbol if necessary
+            if (d.germline) {
+                ret.append(generateGermlineLabel());
             }
             return ret;
         });
@@ -232,6 +238,9 @@ export function makeGeneticTrackTooltip(
                     if (datum.isHotspot) {
                         tooltip_datum.cancer_hotspots_hotspot = true;
                     }
+                    if (!isNotGermlineMutation(datum)) {
+                        tooltip_datum.germline = true;
+                    }
                     const oncokb_oncogenic = datum.oncoKbOncogenic;
                     if (oncokb_oncogenic) {
                         tooltip_datum.oncokb_oncogenic = oncokb_oncogenic;
@@ -239,9 +248,9 @@ export function makeGeneticTrackTooltip(
                     (datum.alterationSubType === "fusion" ? fusions : mutations).push(tooltip_datum);
                     break;
                 case "COPY_NUMBER_ALTERATION":
-                    if (disp_cna.hasOwnProperty((datum as AnnotatedNumericGeneMolecularData).value)) {
+                    if (disp_cna.hasOwnProperty(datum.value as AnnotatedNumericGeneMolecularData["value"])) {
                         const tooltip_datum:any = {
-                            cna: disp_cna[(datum as AnnotatedNumericGeneMolecularData).value],
+                            cna: disp_cna[datum.value as AnnotatedNumericGeneMolecularData["value"]],
                             hugo_gene_symbol: hugoGeneSymbol
                         };
                         const oncokb_oncogenic = datum.oncoKbOncogenic;
@@ -282,9 +291,6 @@ export function makeGeneticTrackTooltip(
                     ret.append(", ");
                 }
                 ret.append(mutations[i]);
-            }
-            if (d.disp_germ) {
-                ret.append(generateGermlineLabel());
             }
             ret.append('<br>');
         }
@@ -358,9 +364,9 @@ export function makeGeneticTrackTooltip(
 
         let caseIdElt;
         if (d.sample) {
-            caseIdElt = link_id ? sampleViewAnchorTag(d.study_id, d.sample) : d.sample;
+            caseIdElt = (d.study_id.length > 0) ? sampleViewAnchorTag(d.study_id, d.sample) : d.sample;
         } else if (d.patient) {
-            caseIdElt = link_id ? patientViewAnchorTag(d.study_id, d.patient) : d.patient;
+            caseIdElt = (d.study_id.length > 0) ? patientViewAnchorTag(d.study_id, d.patient) : d.patient;
         } else {
             caseIdElt = "";
         }
