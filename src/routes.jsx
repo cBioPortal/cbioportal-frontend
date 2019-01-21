@@ -2,8 +2,7 @@ import React from 'react';
 import { Route, Redirect, IndexRoute } from 'react-router';
 import { inject } from 'mobx-react';
 import Container from 'appShell/App/Container';
-import {handleIndexDO, handleCaseDO, handleLegacySubmission, restoreRouteAfterRedirect} from './shared/lib/redirectHelpers';
-import AppConfig from "appConfig";
+import {handleIndexDO, handleCaseDO, handleLegacySubmission, restoreRouteAfterRedirect, handleStudyDO} from './shared/lib/redirectHelpers';
 import PageNotFound from './shared/components/pageNotFound/PageNotFound';
 
 /* HOW TO ADD A NEW ROUTE
@@ -23,6 +22,7 @@ import DatasetPage from 'bundle-loader?lazy!babel-loader!./pages/staticPages/dat
 import Homepage from 'bundle-loader?lazy!babel-loader!./pages/home/HomePage';
 import StudyViewPage from 'bundle-loader?lazy!babel-loader!./pages/studyView/StudyViewPage';
 import MutationMapperTool from 'bundle-loader?lazy!babel-loader!./pages/staticPages/tools/mutationMapper/MutationMapperTool';
+import OncoprinterTool from 'bundle-loader?lazy!babel-loader!./pages/staticPages/tools/oncoprinter/OncoprinterTool';
 import WebAPIPage from 'bundle-loader?lazy!babel-loader!./pages/staticPages/webAPI/WebAPIPage';
 import RMATLAB from 'bundle-loader?lazy!babel-loader!./pages/staticPages/rmatlab/RMatLAB';
 import Tutorials from 'bundle-loader?lazy!babel-loader!./pages/staticPages/tutorials/Tutorials';
@@ -36,6 +36,8 @@ import OQL from 'bundle-loader?lazy!babel-loader!./pages/staticPages/oql/OQL';
 import {getBasePath} from "shared/api/urls";
 import $ from "jquery";
 import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
+import getBrowserWindow from "shared/lib/getBrowserWindow";
+import {seekUrlHash} from "shared/lib/seekUrlHash";
 
 // accepts bundle-loader's deferred loader function and defers execution of route's render
 // until chunk is loaded
@@ -61,6 +63,21 @@ let getBlankPage = function(){
     return <div />
 }
 
+/* when route changes, we want to:
+1. in spa, deep links from url (#) don't work because content is loading and thus doesn't exist to link to
+   at time url changes.  seekHash is a somewhat dirty way of solving this issue
+2, when there's no hash, we want to make sure we scroll to top because user considers herself on a "new page"
+ */
+function handleEnter(){
+    const hash = getBrowserWindow().location.hash;
+    // if hash is bigger than 50, probably not a deep link but some kind of data
+    if (hash.length > 0 && hash.length < 50) {
+        seekUrlHash(hash.replace("#",""));
+    } else {
+        $(document).scrollTop(0);
+    }
+}
+
 // we want to preload ResultsViewPage to prevent delay due to lazy loading bundle
 // note: because we bundle, and bundles are loaded async, this does NOT affect time to render of default route
 // results will load in background while user plays with query interface
@@ -76,20 +93,20 @@ export const makeRoutes = (routing) => {
 
                 <Route path="/results/legacy_submission" onEnter={handleLegacySubmission} component={getBlankPage()} />
 
-                <Route path="/results(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(ResultsViewPage)} />
+                <Route path="/results(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(ResultsViewPage)} />
                 <Route path="/patient(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(PatientViewPage)}/>
-                <Route path="/newstudy" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(StudyViewPage)} />
-                <Route path="/study" component={getBlankPage()} />
+                <Route path="/study" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(StudyViewPage)} />
 
                 <Route path="/mutation_mapper" getComponent={lazyLoadComponent(MutationMapperTool)} />
+                <Route path="/oncoprinter" getComponent={lazyLoadComponent(OncoprinterTool)} />
 
                 <Route path="/webAPI" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(WebAPIPage)} />
                 <Route path="/rmatlab" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(RMATLAB)} />
                 <Route path="/datasets" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(DatasetPage)} />
-                <Route path="/tutorials" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(Tutorials)} />
+                <Route path="/tutorials" onEnter={handleEnter} getComponent={lazyLoadComponent(Tutorials)} />
                 <Route path="/visualize" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(Visualize)} />
                 <Route path="/about" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(AboutUs)} />
-                <Route path="/news" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(News)} />
+                <Route path="/news" onEnter={handleEnter} getComponent={lazyLoadComponent(News)} />
                 <Route path="/faq" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(FAQ)} />
                 <Route path="/oql" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(OQL)} />
                 <Route path="/testimonials" onEnter={()=>{$(document).scrollTop(0)}} component={TestimonialsPage}/>
@@ -97,9 +114,14 @@ export const makeRoutes = (routing) => {
 
                 <Route path="/case.do" onEnter={handleCaseDO} component={getBlankPage()} />
                 <Route path="/index.do" onEnter={handleIndexDO} component={getBlankPage()} />
+                <Route path="/study.do" onEnter={handleStudyDO} component={getBlankPage()} />
 
-                 <Redirect from={"/mutation_mapper.jsp"} to={"/mutation_mapper"}/>
+                <Redirect from={"/mutation_mapper.jsp"} to={"/mutation_mapper"}/>
                 <Redirect from={"/data_sets.jsp"} to={"/datasets"}/>
+                <Redirect from={"/oncoprinter.jsp"} to={"/oncoprinter"}/>
+                <Redirect from={"/onco_query_lang_desc.jsp"} to={"/oql"}/>
+
+
 
                 <Route path="*" onEnter={()=>{$(document).scrollTop(0)}} component={()=><PageNotFound/>}/>
 

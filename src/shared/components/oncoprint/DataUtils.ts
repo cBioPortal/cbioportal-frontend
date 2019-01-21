@@ -11,12 +11,12 @@ import {
 } from "../../api/generated/CBioPortalAPI";
 import {
     ClinicalTrackDatum,
-    GeneticTrackDatum,
+    GeneticTrackDatum, GeneticTrackDatum_Data,
     IBaseHeatmapTrackDatum,
     IGeneHeatmapTrackDatum,
 } from "./Oncoprint";
 import {isSample, isSampleList} from "../../lib/CBioPortalAPIUtils";
-import {getSimplifiedMutationType, SimplifiedMutationType} from "../../lib/oql/accessors";
+import {getSimplifiedMutationType, SimplifiedMutationType} from "../../lib/oql/AccessorsForOqlFilter";
 import _ from "lodash";
 import {MutationSpectrum} from "../../api/generated/CBioPortalAPIInternal";
 import {OncoprintClinicalAttribute} from "./ResultsViewOncoprint";
@@ -24,6 +24,7 @@ import {CoverageInformation} from "../../../pages/resultsView/ResultsViewPageSto
 import { MUTATION_STATUS_GERMLINE } from "shared/constants";
 import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
 import {stringListToIndexSet} from "../../lib/StringUtils";
+import {isNotGermlineMutation} from "../../lib/MutationUtils";
 
 const cnaDataToString:{[integerCNA:string]:string|undefined} = {
     "-2": "homdel",
@@ -108,7 +109,7 @@ export function fillGeneticTrackDatum(
     // must already have all non-disp* fields except trackLabel and data
     newDatum:Partial<GeneticTrackDatum>,
     trackLabel:string,
-    data:AnnotatedExtendedAlteration[]
+    data:GeneticTrackDatum_Data[]
 ): GeneticTrackDatum {
     newDatum.trackLabel = trackLabel;
     newDatum.data = data;
@@ -125,7 +126,7 @@ export function fillGeneticTrackDatum(
         const molecularAlterationType = event.molecularProfileAlterationType;
         switch (molecularAlterationType) {
             case "COPY_NUMBER_ALTERATION":
-                const cnaEvent = cnaDataToString[(event as NumericGeneMolecularData).value];
+                const cnaEvent = cnaDataToString[event.value as NumericGeneMolecularData["value"]];
                 if (cnaEvent) {
                     // not diploid
                     dispCnaCounts[cnaEvent] = dispCnaCounts[cnaEvent] || 0;
@@ -147,7 +148,7 @@ export function fillGeneticTrackDatum(
                 }
                 break;
             case "MUTATION_EXTENDED":
-                let oncoprintMutationType = getOncoprintMutationType(event as Mutation);
+                let oncoprintMutationType = getOncoprintMutationType(event as Pick<Mutation, "proteinChange"|"mutationType">);
                 if (oncoprintMutationType === "fusion") {
                     dispFusion = true;
                 } else {
@@ -178,7 +179,8 @@ export function makeGeneticTrackData(
     hugoGeneSymbols:string|string[],
     samples:Sample[],
     genePanelInformation:CoverageInformation,
-    selectedMolecularProfiles:MolecularProfile[]
+    selectedMolecularProfiles:MolecularProfile[],
+    hideGermlineMutations?:boolean
 ):GeneticTrackDatum[];
 
 export function makeGeneticTrackData(
@@ -186,7 +188,8 @@ export function makeGeneticTrackData(
     hugoGeneSymbols:string|string[],
     patients:Patient[],
     genePanelInformation:CoverageInformation,
-    selectedMolecularProfiles:MolecularProfile[]
+    selectedMolecularProfiles:MolecularProfile[],
+    hideGermlineMutations?:boolean
 ):GeneticTrackDatum[];
 
 export function makeGeneticTrackData(
@@ -194,7 +197,8 @@ export function makeGeneticTrackData(
     hugoGeneSymbols:string|string[],
     cases:Sample[]|Patient[],
     genePanelInformation:CoverageInformation,
-    selectedMolecularProfiles:MolecularProfile[]
+    selectedMolecularProfiles:MolecularProfile[],
+    hideGermlineMutations?:boolean
 ):GeneticTrackDatum[] {
     if (!cases.length) {
         return [];
@@ -216,7 +220,7 @@ export function makeGeneticTrackData(
                 hugoGeneSymbol => sampleSequencingInfo.byGene[hugoGeneSymbol] || []
             );
             newDatum.profiled_in = newDatum.profiled_in.concat(sampleSequencingInfo.allGenes).filter(p=>!!_selectedMolecularProfiles[p.molecularProfileId]); // filter out coverage information about non-selected profiles
-            if (!newDatum.profiled_in.length) {
+            if (!newDatum.profiled_in!.length) {
                 newDatum.na = true;
             }
             newDatum.not_profiled_in = _.flatMap(
@@ -225,10 +229,14 @@ export function makeGeneticTrackData(
             );
             newDatum.not_profiled_in = newDatum.not_profiled_in.concat(sampleSequencingInfo.notProfiledAllGenes).filter(p=>!!_selectedMolecularProfiles[p.molecularProfileId]); // filter out coverage information about non-selected profiles
 
+            let sampleData = caseAggregatedAlterationData[sample.uniqueSampleKey];
+            if (hideGermlineMutations) {
+                sampleData = sampleData.filter(isNotGermlineMutation);
+            }
             ret.push(fillGeneticTrackDatum(
                 newDatum,
                 geneSymbolArray.join(' / '),
-                caseAggregatedAlterationData[sample.uniqueSampleKey]
+                sampleData
             ));
         }
     } else {
@@ -245,7 +253,7 @@ export function makeGeneticTrackData(
                 hugoGeneSymbol => patientSequencingInfo.byGene[hugoGeneSymbol] || []
             );
             newDatum.profiled_in = newDatum.profiled_in.concat(patientSequencingInfo.allGenes).filter(p=>!!_selectedMolecularProfiles[p.molecularProfileId]); // filter out coverage information about non-selected profiles
-            if (!newDatum.profiled_in.length) {
+            if (!newDatum.profiled_in!.length) {
                 newDatum.na = true;
             }
             newDatum.not_profiled_in = _.flatMap(
@@ -254,10 +262,14 @@ export function makeGeneticTrackData(
             );
             newDatum.not_profiled_in = newDatum.not_profiled_in.concat(patientSequencingInfo.notProfiledAllGenes).filter(p=>!!_selectedMolecularProfiles[p.molecularProfileId]); // filter out coverage information about non-selected profiles
 
+            let patientData = caseAggregatedAlterationData[patient.uniquePatientKey];
+            if (hideGermlineMutations) {
+                patientData = patientData.filter(isNotGermlineMutation);
+            }
             ret.push(fillGeneticTrackDatum(
                 newDatum,
                 geneSymbolArray.join(' / '),
-                caseAggregatedAlterationData[patient.uniquePatientKey]
+                patientData
             ));
         }
     }

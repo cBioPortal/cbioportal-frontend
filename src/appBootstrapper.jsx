@@ -62,14 +62,14 @@ if (browser) {
     });
 }
 
-if (localStorage.e2etest) {
+// e2e test specific stuff
+if (getBrowserWindow().navigator.webdriver) {
+
     $(document).ready(()=>{
         $("body").addClass("e2etest");
         window.e2etest = true;
     });
-}
 
-if (getBrowserWindow().navigator.webdriver) {
     setNetworkListener();
 }
 
@@ -77,7 +77,11 @@ if (getBrowserWindow().navigator.webdriver) {
 window.FRONTEND_VERSION = VERSION;
 window.FRONTEND_COMMIT = COMMIT;
 
-
+// this is special function allowing MSKCC CIS to hide login UI in
+// portal header
+window.postLoadForMskCIS = function(){
+    AppConfig.hide_login = true;
+}
 
 // make sure lodash doesn't overwrite (or set) global underscore
 _.noConflict();

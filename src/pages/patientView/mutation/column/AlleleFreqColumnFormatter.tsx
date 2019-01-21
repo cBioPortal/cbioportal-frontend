@@ -98,10 +98,9 @@ export default class AlleleFreqColumnFormatter {
         }
 
         // as long as we have tooltip lines, show tooltip in either cases (single or multiple)
-        if (tooltipLines.length > 0)
+        if (tooltipLines.length > 0 && freqs.filter((freq) => freq !== undefined).length > 0)
         {
             const overlay = () => <span>{tooltipLines}</span>;
-
             content = (
                 <DefaultTooltip
                     placement="left"
@@ -132,7 +131,7 @@ export default class AlleleFreqColumnFormatter {
             return map;
         }, {} as {[s:string]:Mutation});
         return sampleManager.getSampleIdsInOrder().map(sampleId=>sampleToMutation[sampleId]).map(mutation=>
-            AlleleFreqColumnFormatter.calcFrequency(mutation)
+            AlleleFreqColumnFormatter.calcFrequency(mutation) || null
         );
     }
 

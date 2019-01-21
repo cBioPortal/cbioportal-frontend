@@ -20,6 +20,8 @@ import {CoExpressionCache} from "./CoExpressionTab";
 import {bind} from "bind-decorator";
 import MobxPromiseCache from "../../../shared/lib/MobxPromiseCache";
 import {CoverageInformation} from "../ResultsViewPageStoreUtils";
+import _ from "lodash";
+import {calculateQValues} from "../../../shared/lib/calculation/BenjaminiHochbergFDRCalculator";
 
 export interface ICoExpressionVizProps {
     plotState:{
@@ -43,6 +45,8 @@ export enum TableMode {
 
 export class CoExpressionDataStore extends SimpleGetterLazyMobXTableApplicationDataStore<CoExpression> {
     @observable public tableMode:TableMode;
+
+    private reactionDisposer:IReactionDisposer;
 
     constructor(
         getData:()=>CoExpression[],
@@ -71,7 +75,7 @@ export class CoExpressionDataStore extends SimpleGetterLazyMobXTableApplicationD
             return selected;
         };
 
-        autorun(()=>{
+        this.reactionDisposer = autorun(()=>{
             if (
                 this.sortMetric &&
                 this.sortedFilteredData.length > 0 &&
@@ -80,6 +84,10 @@ export class CoExpressionDataStore extends SimpleGetterLazyMobXTableApplicationD
                 this.setHighlighted(this.sortedFilteredData[0]);
             }
         });
+    }
+
+    public destroy() {
+        this.reactionDisposer();
     }
 }
 
@@ -99,6 +107,19 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
         });
     }
 
+    readonly coExpressionsWithQValues = remoteData<(CoExpression & { qValue:number})[]>({
+        await:()=>[this.coExpressionDataPromise],
+        invoke:()=>{
+            const coexpressions = this.coExpressionDataPromise.result!;
+            const sortedByPvalue = _.sortBy(coexpressions, c=>c.pValue);
+            const qValues = calculateQValues(sortedByPvalue.map(c=>c.pValue));
+            qValues.forEach((qValue, index)=>{
+                sortedByPvalue[index].qValue = qValue;
+            });
+            return Promise.resolve(sortedByPvalue);
+        }
+    });
+
     private dataStore = new CoExpressionDataStore(
         ()=>{
             if (this.props.hidden) {
@@ -109,9 +130,9 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
                 return this.lastCoExpressionData || [];
             }
 
-            if (this.coExpressionDataPromise.isComplete) {
-                this.lastCoExpressionData = this.coExpressionDataPromise.result!;
-                return this.coExpressionDataPromise.result!;
+            if (this.coExpressionsWithQValues.isComplete) {
+                this.lastCoExpressionData = this.coExpressionsWithQValues.result!;
+                return this.coExpressionsWithQValues.result!;
             } else {
                 return [];
             }
@@ -316,13 +337,17 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
         }
     }
 
+    componentWillUnmount(){
+        this.dataStore.destroy();
+    }
+
     render() {
-        // need to short circuit all references to coExpressionDataPromise with `this.props.hidden` so that the promise doesnt
+        // need to short circuit all references to coExpressionsWithQValues with `this.props.hidden` so that the promise doesnt
         //  fetch until its not hidden
         let innerElt = (
             <div
                 style={{
-                    display:(!this.props.hidden && this.coExpressionDataPromise.isComplete) ? "inherit" : "none",
+                    display:(!this.props.hidden && this.coExpressionsWithQValues.isComplete) ? "inherit" : "none",
                 }}
                 data-test="CoExpressionGeneTabContent"
             >
@@ -343,7 +368,7 @@ export default class CoExpressionViz extends React.Component<ICoExpressionVizPro
         return (
             <div style={{display:this.props.hidden ? "none" : "inherit", minHeight:826, position:"relative"}}>
                 {innerElt}
-                <LoadingIndicator isLoading={!this.props.hidden && this.coExpressionDataPromise.isPending} center={true} size={"big"} />
+                <LoadingIndicator isLoading={!this.props.hidden && this.coExpressionsWithQValues.isPending} center={true} size={"big"} />
             </div>
         );
     }

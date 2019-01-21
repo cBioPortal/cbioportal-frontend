@@ -2,7 +2,7 @@ import * as React from "react";
 import * as _ from "lodash";
 import $ from "jquery";
 import GenomicOverview from "./genomicOverview/GenomicOverview";
-import {ClinicalData} from "shared/api/generated/CBioPortalAPI";
+import {CancerStudy, ClinicalData} from "shared/api/generated/CBioPortalAPI";
 import {ClinicalDataBySampleId, RequestStatus} from "../../shared/api/api-types-extended";
 import FeatureTitle from "../../shared/components/featureTitle/FeatureTitle";
 import {Else, If, Then} from "react-if";
@@ -205,8 +205,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         }
 
         if (patientViewPageStore.studyMetaData.isComplete) {
-            let study = patientViewPageStore.studyMetaData.result;
-            studyName = <StudyLink study={study}/>;
+            let study:CancerStudy = patientViewPageStore.studyMetaData.result;
+            studyName = <StudyLink studyId={study.studyId}>{study.name}</StudyLink>;
         }
 
         if (patientViewPageStore.patientViewData.isComplete && patientViewPageStore.studyMetaData.isComplete) {
@@ -504,6 +504,17 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             <IFrameLoader height={700} url={  getDigitalSlideArchiveIFrameUrl(patientViewPageStore.patientId) } />
                         </div>
                     </MSKTab>
+
+                    {(patientViewPageStore.isWholeSlideViewerExist.isComplete) && (
+                    <MSKTab key={6} id="MSKTissueImage" linkText="Tissue Image"
+                            hide={patientViewPageStore.studyId !== "mskimpact" || !patientViewPageStore.isWholeSlideViewerExist.result || !patientViewPageStore.getWholeSlideViewerURL.result}
+                            unmountOnHide = {false}
+                    >
+                        <div style={{position: "relative"}}>
+                            <IFrameLoader height={700} url={ patientViewPageStore.getWholeSlideViewerURL.result! } />
+                        </div>
+                    </MSKTab>
+                    )}
 
                     {/*<MSKTab key={5} id="mutationalSignatures" linkText="Mutational Signature Data" hide={true}>*/}
                         {/*<div className="clearfix">*/}

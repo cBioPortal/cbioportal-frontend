@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import {CoverageInformation} from "../../pages/resultsView/ResultsViewPageStoreUtils";
+import {CoverageInformation, CoverageInformationForCase} from "../../pages/resultsView/ResultsViewPageStoreUtils";
 import {GenePanelData} from "../api/generated/CBioPortalAPI";
 
 export function isSampleProfiled(uniqueSampleKey:string, molecularProfileId:string,

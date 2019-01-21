@@ -120,9 +120,7 @@ export class ServerConfigHelpers {
         try {
             return JSON.parse(json);
         } catch (ex) {
-            throw("Cannot parse query_sets_of_genes json");
-        } finally {
-            return null;
+            return undefined;
         }
     }
 
@@ -194,7 +192,7 @@ export function initializeConfiguration() {
             frontendUrl: frontendUrl,
             serverConfig: {
                 genomenexus_url: GENOME_NEXUS_ROOT
-            }
+            } as IServerConfig
         };
         updateConfig(envConfig);
     }

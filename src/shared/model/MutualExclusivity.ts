@@ -1,12 +1,12 @@
 export interface MutualExclusivity {
-    geneA: string;
-    geneB: string;
+    trackA: string;
+    trackB: string;
     neitherCount: number;
     aNotBCount: number;
     bNotACount: number;
     bothCount: number;
     logOddsRatio: number;
     pValue: number;
-    adjustedPValue: number,
+    qValue: number,
     association: string;
 }
