@@ -43,7 +43,13 @@ export default class GroupComparisonPage extends React.Component<{}, {}> {
                 (this.store.proteinEnrichmentProfiles.result!.length > 0) ||
                 this.store.showSurvivalTab
             ) {
-                return <MSKTabs unmountOnHide={false} activeTabId={this.store.currentTabId} onTabClick={this.store.setTabId} className="secondaryTabs">
+                return <MSKTabs unmountOnHide={false} activeTabId={this.store.currentTabId} onTabClick={this.store.setTabId} className="primaryTabs">
+                    {
+                        this.store.showSurvivalTab &&
+                        <MSKTab key={0} id={GroupComparisonTab.SURVIVAL.toString()} linkText="Survival">
+                            <Survival store={this.store}/>
+                        </MSKTab>
+                    }
                     {this.store.mutationEnrichmentProfiles.result!.length > 0 && (
                         <MSKTab id={GroupComparisonTab.MUTATIONS.toString()} linkText="Mutations">
                             <MutationEnrichments store={this.store}/>
@@ -64,12 +70,6 @@ export default class GroupComparisonPage extends React.Component<{}, {}> {
                             <ProteinEnrichments store={this.store}/>
                         </MSKTab>
                     )}
-                    {
-                        this.store.showSurvivalTab &&
-                        <MSKTab key={0} id={GroupComparisonTab.SURVIVAL.toString()} linkText="Survival">
-                            <Survival store={this.store}/>
-                        </MSKTab>
-                    }
                 </MSKTabs>;
             } else {
                 return <span>No data.</span>;
