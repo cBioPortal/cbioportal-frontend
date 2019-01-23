@@ -8,7 +8,7 @@ export type MobxView = {
 } &
 ({
     status:"pending"|"error";
-    component:JSX.Element|undefined;
+    component:JSX.Element|undefined|null;
 } | {
     status:"complete"
     component:JSX.Element;
@@ -16,7 +16,7 @@ export type MobxView = {
 
 type MobxView_await = ()=>({status:"complete"|"error"|"pending"}[]);
 type MobxView_forcePending = ()=>boolean;
-type MobxView_render = ()=>JSX.Element;
+type MobxView_render = ()=>JSX.Element|undefined|null;
 export type MobxViewAlwaysComponent = MobxView & { component:JSX.Element };
 
 export function MakeMobxView(params:{

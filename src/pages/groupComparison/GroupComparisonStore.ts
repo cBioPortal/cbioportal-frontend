@@ -1,4 +1,5 @@
-import {SampleGroup, TEMP_localStorageGroupsKey, getCombinations} from "./GroupComparisonUtils";
+import { PatientIdentifier } from './../../shared/api/generated/CBioPortalAPI';
+import {SampleGroup, TEMP_localStorageGroupsKey, getPatientIdentifiers, getCombinations} from "./GroupComparisonUtils";
 import {remoteData} from "../../shared/api/remoteData";
 import {
     MolecularProfile,
@@ -9,7 +10,7 @@ import {
     Sample,
     SampleIdentifier
 } from "../../shared/api/generated/CBioPortalAPI";
-import { computed, observable } from "mobx";
+import { computed, observable, action } from "mobx";
 import client from "../../shared/api/cbioportalClientInstance";
 import _ from "lodash";
 import {
@@ -25,15 +26,26 @@ import { getPatientSurvivals } from "pages/resultsView/SurvivalStoreHelper";
 import { SURVIVAL_CHART_ATTRIBUTES } from "pages/resultsView/survival/SurvivalChart";
 import { COLORS } from "pages/studyView/StudyViewUtils";
 import {AlterationEnrichment} from "../../shared/api/generated/CBioPortalAPIInternal";
+import ListIndexedMap from "shared/lib/ListIndexedMap";
+
+const DEFAULT_GROUP_SELECTED = true;
 
 export default class GroupComparisonStore {
 
-    @observable currentTabId:string;
+    @observable currentTabId:string|undefined = undefined;
+    @observable excludeOverlapping:boolean = true;
 
     @autobind
     public setTabId(id:string) {
         this.currentTabId = id;
     }
+
+    @autobind
+    public toggleExcludeOverlapping() {
+        this.excludeOverlapping = !this.excludeOverlapping;
+    }
+
+    private _selectedSampleGroupIds = observable.shallowMap<boolean>();
 
     readonly sampleGroups = remoteData<SampleGroup[]>({
         // only for development purposes, until we get the actual group service going
@@ -43,35 +55,78 @@ export default class GroupComparisonStore {
         )
     });
 
-    @observable private _enrichmentsGroup1:SampleGroup;
-    @observable private _enrichmentsGroup2:SampleGroup;
+    readonly sampleGroupToPatients = remoteData<{[sampleGroupId:string]:PatientIdentifier[]}>({
+        await:()=>[this.sampleGroups, this.sampleSet],
+        invoke:()=>{
+            return Promise.resolve(
+                this.sampleGroups.result!.reduce((map, next)=>{
+                    map[next.id] = getPatientIdentifiers(next.sampleIdentifiers, this.sampleSet.result!);
+                    return map;
+                }, {} as {[sampleGroupId:string]:PatientIdentifier[]})
+            );
+        }
+    })
+
+    readonly overlappingSelectedSamples = remoteData<SampleIdentifier[]>({
+        await:()=>[this.selectedSampleGroups],
+        invoke:()=>{
+            // samples that are in at least two selected groups
+            const sampleUseCount = new ListIndexedMap<number>();
+            for (const group of this.selectedSampleGroups.result!) {
+                for (const sample of group.sampleIdentifiers) {
+                    sampleUseCount.set(
+                        (sampleUseCount.get(sample.studyId, sample.sampleId) || 0) + 1,
+                        sample.studyId, sample.sampleId
+                    );
+                }
+            }
+            const overlapping = [];
+            for (const entry of sampleUseCount.entries()) {
+                if (entry.value > 1) {
+                    overlapping.push({ studyId: entry.key[0], sampleId: entry.key[1] });
+                }
+            }
+            return Promise.resolve(overlapping);
+        }
+    });
+
+    readonly overlappingSelectedPatients = remoteData<PatientIdentifier[]>({
+        await:()=>[this.sampleSet, this.overlappingSelectedSamples],
+        invoke:()=>Promise.resolve(getPatientIdentifiers(this.overlappingSelectedSamples.result!, this.sampleSet.result!))
+    });
+
+    readonly selectedSampleGroups = remoteData<SampleGroup[]>({
+        await:()=>[this.sampleGroups],
+        invoke:()=>Promise.resolve(
+            this.sampleGroups.result!.filter(group=>{
+                if (!this._selectedSampleGroupIds.has(group.id)) {
+                    return DEFAULT_GROUP_SELECTED;
+                } else {
+                    return this._selectedSampleGroupIds.get(group.id);
+                }
+            })
+        )
+    })
 
     readonly enrichmentsGroup1 = remoteData({
-        await:()=>[this.sampleGroups],
-        invoke:()=>{
-            if (!this._enrichmentsGroup1 && this.sampleGroups.result!.length > 0) {
-                return Promise.resolve(this.sampleGroups.result![0]);
-            } else {
-                return Promise.resolve(this._enrichmentsGroup1);
-            }
-        }
+        await:()=>[this.selectedSampleGroups],
+        invoke:()=>Promise.resolve(this.selectedSampleGroups.result![0])
     });
-    setEnrichmentsGroup1(group:SampleGroup) {
-        this._enrichmentsGroup1 = group;
-    }
 
     readonly enrichmentsGroup2 = remoteData({
-        await:()=>[this.sampleGroups],
-        invoke:()=>{
-            if (!this._enrichmentsGroup2 && this.sampleGroups.result!.length > 1) {
-                return Promise.resolve(this.sampleGroups.result![1]);
-            } else {
-                return Promise.resolve(this._enrichmentsGroup2);
-            }
-        }
+        await:()=>[this.selectedSampleGroups],
+        invoke:()=>Promise.resolve(this.selectedSampleGroups.result![1])
     });
-    setEnrichmentsGroup2(group:SampleGroup) {
-        this._enrichmentsGroup2 = group;
+
+    @autobind
+    @action public toggleSampleGroupSelected(groupId:string) {
+        let currentVal;
+        if (!this._selectedSampleGroupIds.has(groupId)) {
+            currentVal = DEFAULT_GROUP_SELECTED;
+        } else {
+            currentVal = this._selectedSampleGroupIds.get(groupId);
+        }
+        this._selectedSampleGroupIds.set(groupId, !currentVal);
     }
 
     readonly samples = remoteData({
@@ -302,7 +357,11 @@ export default class GroupComparisonStore {
             this.samples
         ],
         invoke: () => {
-            return Promise.resolve(_.keyBy(this.samples.result!, sample => sample.studyId + sample.sampleId));
+            const sampleSet = new ListIndexedMap<Sample>();
+            for (const sample of this.samples.result!) {
+                sampleSet.set(sample, sample.studyId, sample.sampleId);
+            }
+            return Promise.resolve(sampleSet);
         }
     });
 
@@ -315,7 +374,7 @@ export default class GroupComparisonStore {
             let sampleSet = this.sampleSet.result!
             let patientToAnalysisGroups = _.reduce(this.sampleGroups.result, (acc, next) => {
                 next.sampleIdentifiers.forEach(sampleIdentifier => {
-                    let sample = sampleSet[sampleIdentifier.studyId + sampleIdentifier.sampleId];
+                    let sample = sampleSet.get(sampleIdentifier.studyId, sampleIdentifier.sampleId);
                     if (sample) {
                         let groups = acc[sample.uniquePatientKey] || [];
                         groups.push(next.id);
@@ -336,10 +395,10 @@ export default class GroupComparisonStore {
         invoke: () => {
             let sampleSet = this.sampleSet.result!
             let groupsWithSamples = _.map(this.sampleGroups.result, group => {
-                let samples = group.sampleIdentifiers.map(sampleIdentifier => sampleSet[sampleIdentifier.studyId + sampleIdentifier.sampleId]);
+                let samples = group.sampleIdentifiers.map(sampleIdentifier => sampleSet.get(sampleIdentifier.studyId, sampleIdentifier.sampleId));
                 return {
                     name: group.name ? group.name : group.id,
-                    cases: _.map(samples, sample => sample.uniqueSampleKey)
+                    cases: _.map(samples, sample => sample!.uniqueSampleKey)
                 }
             })
             return Promise.resolve(getCombinations(groupsWithSamples));
@@ -354,10 +413,10 @@ export default class GroupComparisonStore {
         invoke: () => {
             let sampleSet = this.sampleSet.result!;
             let groupsWithPatients = _.map(this.sampleGroups.result, group => {
-                let samples = group.sampleIdentifiers.map(sampleIdentifier => sampleSet[sampleIdentifier.studyId + sampleIdentifier.sampleId]);
+                let samples = group.sampleIdentifiers.map(sampleIdentifier => sampleSet.get(sampleIdentifier.studyId, sampleIdentifier.sampleId));
                 return {
                     name: group.name ? group.name : group.id,
-                    cases: _.uniq(_.map(samples, sample => sample.uniquePatientKey))
+                    cases: _.uniq(_.map(samples, sample => sample!.uniquePatientKey))
                 }
             })
             return Promise.resolve(getCombinations(groupsWithPatients));

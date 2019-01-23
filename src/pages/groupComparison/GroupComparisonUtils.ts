@@ -1,4 +1,6 @@
-import { SampleIdentifier } from "../../shared/api/generated/CBioPortalAPI";
+import ListIndexedMap from 'shared/lib/ListIndexedMap';
+import { MobxPromise } from 'mobxpromise/dist/src/MobxPromise';
+import {SampleIdentifier, Sample, PatientIdentifier} from "../../shared/api/generated/CBioPortalAPI";
 import _ from "lodash";
 
 export type SampleGroup = {
@@ -74,4 +76,35 @@ export function getVennPlotData(combinationSets: { groups: string[], cases: stri
             sets: set.groups
         }
     }).sort((a, b) => b.count - a.count);
+}
+
+export function caseCountsInParens(
+    samples:MobxPromise<any[]>|any[],
+    patients:MobxPromise<any[]>|any[]
+) {
+    let text = "";
+    if ((Array.isArray(samples) || samples.isComplete) && (Array.isArray(patients) || patients.isComplete)) {
+        const samplesArr = Array.isArray(samples) ? samples : samples.result!;
+        const patientsArr = Array.isArray(patients) ? patients : patients.result!;
+        if (samplesArr.length === patientsArr.length) {
+            text = `(${samplesArr.length})`;
+        } else {
+            text = `(${samplesArr.length} s/${patientsArr.length} p)`;
+        }
+    }
+    return text;
+}
+
+export function getPatientIdentifiers(
+    sampleIdentifiers:SampleIdentifier[],
+    sampleSet:ListIndexedMap<Sample>
+) {
+    const patientSet:{[uniquePatientKey:string]:PatientIdentifier} = {};
+    for (const sampleId of sampleIdentifiers) {
+        const sample = sampleSet.get(sampleId.studyId, sampleId.sampleId);
+        if (sample && !(sample.uniquePatientKey in patientSet)) {
+            patientSet[sample.uniquePatientKey] = { patientId: sample.patientId, studyId: sample.studyId};
+        }
+    }
+    return _.values(patientSet);
 }
