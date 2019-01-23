@@ -330,10 +330,12 @@ export default class StudyList extends QueryStoreComponent<IStudyListProps, {}>
                             placement="top"
                             overlay={
                                 <div className={styles.tooltip}
-                                >View study summary</div>
+                                >View clinical and genomic data of this study</div>
                             }
                         >
-							<StudyLink studyId={study.studyId} className={classNames(styles.summaryIcon, 'ci ci-pie-chart')}/>
+							<span>
+								<StudyLink studyId={study.studyId} className={classNames(styles.summaryIcon, 'ci ci-pie-chart')}/>
+							</span>
 						</DefaultTooltip>
                     )}
                 </span>
