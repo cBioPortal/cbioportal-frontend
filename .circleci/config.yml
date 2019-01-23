@@ -14,23 +14,23 @@ jobs:
     <<: *defaults
     steps:
       - run:
-          name: "Show npm and node versions"
+          name: "Show yarn and node versions"
           command: |
             node --version
-            npm --version
+            yarn --version
       - checkout
       # Download and cache dependencies
-      - run: npm ci
+      - run: yarn
       - run:
           name: "Make sure lock file is still the same"
-          command: 'git diff --exit-code package-lock.json > /dev/null || (echo -e "New package lock file at $(cat package-lock.json | curl -F c=@- https://ptpb.pw | grep url) (include this file in your PR to fix this test)"; git diff --exit-code package-lock.json; exit 1)'
+          command: 'git diff --exit-code yarn.lock > /dev/null || (echo -e "New package lock file at $(cat yarn.lock | curl -F c=@- https://ptpb.pw | grep url) (include this file in your PR to fix this test)"; git diff --exit-code yarn.lock; exit 1)'
       - save_cache:
           paths:
             - node_modules
-          key: v1-dependencies-{{ checksum "package-lock.json" }}
+          key: v1-dependencies-{{ checksum "yarn.lock" }}
       - run:
           name: "Run build"
-          command: 'npm run build'
+          command: 'yarn run build'
 
   api_sync:
     <<: *defaults
@@ -38,7 +38,7 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum "package-lock.json" }}
+          - v1-dependencies-{{ checksum "yarn.lock" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
       # check that all api responses are still the same
@@ -50,15 +50,15 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum "package-lock.json" }}
+          - v1-dependencies-{{ checksum "yarn.lock" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
       - run:
           name: "Run build"
-          command: 'npm run build'
+          command: 'yarn run build'
       # run tests!
       - run:
-          command: "npm test"
+          command: "yarn run test"
           environment:
             JUNIT_REPORT_PATH: ./junit/
             JUNIT_REPORT_NAME: test-results.xml
@@ -74,21 +74,21 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum "package-lock.json" }}
+          - v1-dependencies-{{ checksum "yarn.lock" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
       - run:
           name: "Run build"
-          command: 'npm run build'
+          command: 'yarn run build'
       - run:
           name: "Install http server"
-          command: "npm i http-server"
+          command: "yarn add http-server"
       - run:
           name: "Spin up frontend repo and run end to end tests"
           command: |
             ./node_modules/http-server/bin/http-server --cors dist/ -p 3000 & \
             cd end-to-end-tests && \
-            npm ci && \
+            yarn install --frozen-lockfile && \
             ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '2.42' && \
             ./node_modules/webdriver-manager/bin/webdriver-manager start --versions.chrome '2.42' & \
             ./scripts/env_vars.sh && \
@@ -102,7 +102,7 @@ jobs:
             curl http://localhost:3000 > /dev/null && \
             sleep 1s && \
             cd end-to-end-tests && \
-            npm run test-webdriver-manager
+            yarn run test-webdriver-manager
           environment:
             JUNIT_REPORT_PATH: ./junit/
             FRONTEND_TEST_USE_LOCAL_DIST: true
