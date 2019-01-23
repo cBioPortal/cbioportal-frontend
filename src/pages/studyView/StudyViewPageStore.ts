@@ -3036,20 +3036,26 @@ export class StudyViewPageStore {
                 await: () => [this.selectedSamples],
                 invoke: async () => {
                     const result = _.reduce(this.selectedSamples.result, (acc, sample) => {
-                        const findCase = _.find(this._customChartsSelectedCases.get(uniqueKey), (selectedCase:CustomChartIdentifierWithValue) => selectedCase.sampleId === sample.sampleId);
-                        let value =  'NA';
-                        if(findCase !== undefined) {
-                            value =  findCase.value;
-                        }
-
-                        if (acc[value]) {
-                            acc[value].count = acc[value].count + 1
+                        const matchedCases = _.filter(this._customChartsSelectedCases.get(uniqueKey), (selectedCase: CustomChartIdentifierWithValue) => selectedCase.sampleId === sample.sampleId);
+                        const valDefault = 'NA';
+                        let matchedValues: string[] = [];
+                        if (matchedCases.length >= 1) {
+                            matchedValues = matchedCases.map(item => {
+                                return item.value ? item.value : valDefault;
+                            });
                         } else {
-                            acc[value] = {
-                                value: value,
-                                count: 1
-                            }
+                            matchedValues = [valDefault];
                         }
+                        matchedValues.forEach(value => {
+                            if (acc[value]) {
+                                acc[value].count = acc[value].count + 1
+                            } else {
+                                acc[value] = {
+                                    value: value,
+                                    count: 1
+                                }
+                            }
+                        });
                         return acc;
                     }, {} as { [id: string]: ClinicalDataCount });
 
