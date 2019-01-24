@@ -1,4 +1,4 @@
-import {SampleGroup, TEMP_localStorageGroupsKey, getPatientIdentifiers, getCombinations} from "./GroupComparisonUtils";
+import {SampleGroup, TEMP_localStorageGroupsKey, getPatientIdentifiers, getCombinations, ComparisonGroup} from "./GroupComparisonUtils";
 import {remoteData} from "../../shared/api/remoteData";
 import {
     MolecularProfile,
@@ -42,7 +42,7 @@ export default class GroupComparisonStore {
         this.excludeOverlapping = !this.excludeOverlapping;
     }
 
-    private _selectedSampleGroupIds = observable.shallowMap<boolean>();
+    private _selectedComparisonGroupIds = observable.shallowMap<boolean>();
 
     readonly sampleGroups = remoteData<SampleGroup[]>({
         // only for development purposes, until we get the actual group service going
@@ -52,24 +52,37 @@ export default class GroupComparisonStore {
         )
     });
 
-    readonly sampleGroupToPatients = remoteData<{[sampleGroupId:string]:PatientIdentifier[]}>({
-        await:()=>[this.sampleGroups, this.sampleSet],
-        invoke:()=>{
-            return Promise.resolve(
-                this.sampleGroups.result!.reduce((map, next)=>{
-                    map[next.id] = getPatientIdentifiers(next.sampleIdentifiers, this.sampleSet.result!);
-                    return map;
-                }, {} as {[sampleGroupId:string]:PatientIdentifier[]})
-            );
-        }
+    readonly availableComparisonGroups = remoteData<ComparisonGroup[]>({
+       await:()=>[this.sampleGroups, this.sampleSet],
+       invoke:()=>{
+           const sampleSet = this.sampleSet.result!;
+           return Promise.resolve(this.sampleGroups.result!.map(group=>(
+                Object.assign({ 
+                    patientIdentifiers: getPatientIdentifiers(group.sampleIdentifiers, sampleSet)
+                }, group)
+           )));
+       } 
+    });
+
+    readonly selectedComparisonGroups = remoteData<ComparisonGroup[]>({
+        await:()=>[this.availableComparisonGroups],
+        invoke:()=>Promise.resolve(
+            this.availableComparisonGroups.result!.filter(group=>{
+                if (!this._selectedComparisonGroupIds.has(group.id)) {
+                    return DEFAULT_GROUP_SELECTED;
+                } else {
+                    return this._selectedComparisonGroupIds.get(group.id);
+                }
+            })
+        )
     });
 
     readonly overlappingSelectedSamples = remoteData<SampleIdentifier[]>({
-        await:()=>[this._selectedSampleGroupsWithOverlap],
+        await:()=>[this.selectedComparisonGroups],
         invoke:()=>{
             // samples that are in at least two selected groups
             const sampleUseCount = new ListIndexedMap<number>();
-            for (const group of this._selectedSampleGroupsWithOverlap.result!) {
+            for (const group of this.selectedComparisonGroups.result!) {
                 for (const sample of group.sampleIdentifiers) {
                     sampleUseCount.set(
                         (sampleUseCount.get(sample.studyId, sample.sampleId) || 0) + 1,
@@ -92,62 +105,64 @@ export default class GroupComparisonStore {
         invoke:()=>Promise.resolve(getPatientIdentifiers(this.overlappingSelectedSamples.result!, this.sampleSet.result!))
     });
 
-    readonly _selectedSampleGroupsWithOverlap = remoteData<SampleGroup[]>({
-        await:()=>[this.sampleGroups],
-        invoke:()=>Promise.resolve(
-            this.sampleGroups.result!.filter(group=>{
-                if (!this._selectedSampleGroupIds.has(group.id)) {
-                    return DEFAULT_GROUP_SELECTED;
-                } else {
-                    return this._selectedSampleGroupIds.get(group.id);
-                }
-            })
-        )
+    readonly overlapFilteredAvailableComparisonGroups = remoteData<ComparisonGroup[]>({
+        await:()=>[ 
+            this.availableComparisonGroups,
+            this.overlappingSelectedSamples, 
+            this.overlappingSelectedPatients
+         ],
+         invoke:()=>{
+             if (this.excludeOverlapping) {
+                 // filter out overlapping samples and patients
+                 const overlappingSamples = ListIndexedMap.from(this.overlappingSelectedSamples.result!, s=>[s.studyId, s.sampleId]);
+                 const overlappingPatients = ListIndexedMap.from(this.overlappingSelectedPatients.result!, s=>[s.studyId, s.patientId]);
+                 return Promise.resolve(this.availableComparisonGroups.result!.map(group=>{
+                     const ret:Partial<ComparisonGroup> = Object.assign({}, group);
+                     ret.sampleIdentifiers = group.sampleIdentifiers.filter(s=>!overlappingSamples.has(s.studyId, s.sampleId));
+                     ret.patientIdentifiers = group.patientIdentifiers.filter(p=>!overlappingPatients.has(p.studyId, p.patientId));
+                     ret.hasOverlappingSamples = (ret.sampleIdentifiers.length !== group.sampleIdentifiers.length);
+                     ret.hasOverlappingPatients = (ret.patientIdentifiers.length !== group.patientIdentifiers.length);
+                     return ret as ComparisonGroup;
+                 }));
+             } else {
+                 return Promise.resolve(this.availableComparisonGroups.result!);
+             }
+         } 
     });
 
-    readonly selectedSampleGroups = remoteData<SampleGroup[]>({
+    readonly overlapFilteredSelectedComparisonGroups = remoteData<ComparisonGroup[]>({
         await:()=>[
-           this._selectedSampleGroupsWithOverlap, 
-           this.sampleGroupToPatients,
-           this.overlappingSelectedSamples, 
-           this.overlappingSelectedPatients
+           this.overlapFilteredAvailableComparisonGroups,
+           this.selectedComparisonGroups
         ],
         invoke:()=>{
-            if (this.excludeOverlapping) {
-                // filter out groups that are entirely overlapping
-                const overlappingSamples = ListIndexedMap.from(this.overlappingSelectedSamples.result!, s=>[s.studyId, s.sampleId]);
-                const overlappingPatients = ListIndexedMap.from(this.overlappingSelectedPatients.result!, s=>[s.studyId, s.patientId]);
-                const sampleGroupToPatients = this.sampleGroupToPatients.result!;
-                return Promise.resolve(this._selectedSampleGroupsWithOverlap.result!.filter(group=>{
-                    const nonOverlappingSamples = group.sampleIdentifiers.filter(s=>!overlappingSamples.has(s.studyId, s.sampleId));
-                    const nonOverlappingPatients = sampleGroupToPatients[group.id].filter(p=>!overlappingPatients.has(p.studyId, p.patientId));
-                    return nonOverlappingSamples.length > 0 || nonOverlappingPatients.length > 0;
-                }));
-            } else {
-                return Promise.resolve(this._selectedSampleGroupsWithOverlap.result!);
-            }
-        } 
+            const selected = _.keyBy(this.selectedComparisonGroups.result!, g=>g.id);
+            // filter out groups that are not selected, or are empty
+            return Promise.resolve(this.overlapFilteredAvailableComparisonGroups.result!.filter(group=>(
+                selected[group.id] && (group.sampleIdentifiers.length > 0 || group.patientIdentifiers.length > 0)
+            )));
+        }
     });
 
     readonly enrichmentsGroup1 = remoteData({
-        await:()=>[this.selectedSampleGroups],
-        invoke:()=>Promise.resolve(this.selectedSampleGroups.result![0])
+        await:()=>[this.overlapFilteredSelectedComparisonGroups],
+        invoke:()=>Promise.resolve(this.overlapFilteredSelectedComparisonGroups.result![0])
     });
 
     readonly enrichmentsGroup2 = remoteData({
-        await:()=>[this.selectedSampleGroups],
-        invoke:()=>Promise.resolve(this.selectedSampleGroups.result![1])
+        await:()=>[this.overlapFilteredSelectedComparisonGroups],
+        invoke:()=>Promise.resolve(this.overlapFilteredSelectedComparisonGroups.result![1])
     });
 
     @autobind
-    @action public toggleSampleGroupSelected(groupId:string) {
+    @action public toggleComparisonGroupSelected(groupId:string) {
         let currentVal;
-        if (!this._selectedSampleGroupIds.has(groupId)) {
+        if (!this._selectedComparisonGroupIds.has(groupId)) {
             currentVal = DEFAULT_GROUP_SELECTED;
         } else {
-            currentVal = this._selectedSampleGroupIds.get(groupId);
+            currentVal = this._selectedComparisonGroupIds.get(groupId);
         }
-        this._selectedSampleGroupIds.set(groupId, !currentVal);
+        this._selectedComparisonGroupIds.set(groupId, !currentVal);
     }
 
     readonly samples = remoteData({

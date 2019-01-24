@@ -11,6 +11,12 @@ export type SampleGroup = {
     legendText?: string;
 };
 
+export type ComparisonGroup = SampleGroup & {
+    patientIdentifiers:PatientIdentifier[];
+    hasOverlappingSamples?:boolean;
+    hasOverlappingPatients?:boolean;
+};
+
 export const TEMP_localStorageGroupsKey = "__tmp__groupComparisonGroups";
 
 export function getCombinations(groups: { name: string, cases: string[] }[]) {
