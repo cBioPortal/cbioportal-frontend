@@ -1,6 +1,6 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import { SampleGroup, caseCountsInParens } from "./GroupComparisonUtils";
+import { SampleGroup, caseCountsInParens, ComparisonGroup } from "./GroupComparisonUtils";
 import MobxPromise from "mobxpromise";
 import { ButtonGroup, Button } from "react-bootstrap";
 import { MakeMobxView } from "shared/components/MobxView";
@@ -36,7 +36,7 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                             <button
                                 className={classNames("btn", "noBorderRadius", "noMarginLeft", { "btn-primary":(group.id in selectedGroups), "btn-default":!(group.id in selectedGroups)})}
                                 onClick={()=>this.props.store.toggleComparisonGroupSelected(group.id)}
-                                disabled={group.sampleIdentifiers.length === 0 && group.patientIdentifiers.length === 0}
+                                disabled={!this.props.store.groupSelectionCanBeToggled(group)}
                             >
                                 {`${group.name} ${
                                     caseCountsInParens(group.sampleIdentifiers, group.patientIdentifiers, group.hasOverlappingSamples, group.hasOverlappingPatients)
