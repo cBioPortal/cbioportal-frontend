@@ -1,4 +1,3 @@
-import { PatientIdentifier } from './../../shared/api/generated/CBioPortalAPI';
 import {SampleGroup, TEMP_localStorageGroupsKey, getPatientIdentifiers, getCombinations} from "./GroupComparisonUtils";
 import {remoteData} from "../../shared/api/remoteData";
 import {
@@ -6,9 +5,7 @@ import {
     MolecularProfileFilter,
     SampleFilter,
     ClinicalDataMultiStudyFilter,
-    ClinicalData,
-    Sample,
-    SampleIdentifier
+    ClinicalData, Sample, SampleIdentifier,PatientIdentifier
 } from "../../shared/api/generated/CBioPortalAPI";
 import { computed, observable, action } from "mobx";
 import client from "../../shared/api/cbioportalClientInstance";
@@ -65,14 +62,14 @@ export default class GroupComparisonStore {
                 }, {} as {[sampleGroupId:string]:PatientIdentifier[]})
             );
         }
-    })
+    });
 
     readonly overlappingSelectedSamples = remoteData<SampleIdentifier[]>({
-        await:()=>[this.selectedSampleGroups],
+        await:()=>[this._selectedSampleGroupsWithOverlap],
         invoke:()=>{
             // samples that are in at least two selected groups
             const sampleUseCount = new ListIndexedMap<number>();
-            for (const group of this.selectedSampleGroups.result!) {
+            for (const group of this._selectedSampleGroupsWithOverlap.result!) {
                 for (const sample of group.sampleIdentifiers) {
                     sampleUseCount.set(
                         (sampleUseCount.get(sample.studyId, sample.sampleId) || 0) + 1,
@@ -95,7 +92,7 @@ export default class GroupComparisonStore {
         invoke:()=>Promise.resolve(getPatientIdentifiers(this.overlappingSelectedSamples.result!, this.sampleSet.result!))
     });
 
-    readonly selectedSampleGroups = remoteData<SampleGroup[]>({
+    readonly _selectedSampleGroupsWithOverlap = remoteData<SampleGroup[]>({
         await:()=>[this.sampleGroups],
         invoke:()=>Promise.resolve(
             this.sampleGroups.result!.filter(group=>{
@@ -106,7 +103,31 @@ export default class GroupComparisonStore {
                 }
             })
         )
-    })
+    });
+
+    readonly selectedSampleGroups = remoteData<SampleGroup[]>({
+        await:()=>[
+           this._selectedSampleGroupsWithOverlap, 
+           this.sampleGroupToPatients,
+           this.overlappingSelectedSamples, 
+           this.overlappingSelectedPatients
+        ],
+        invoke:()=>{
+            if (this.excludeOverlapping) {
+                // filter out groups that are entirely overlapping
+                const overlappingSamples = ListIndexedMap.from(this.overlappingSelectedSamples.result!, s=>[s.studyId, s.sampleId]);
+                const overlappingPatients = ListIndexedMap.from(this.overlappingSelectedPatients.result!, s=>[s.studyId, s.patientId]);
+                const sampleGroupToPatients = this.sampleGroupToPatients.result!;
+                return Promise.resolve(this._selectedSampleGroupsWithOverlap.result!.filter(group=>{
+                    const nonOverlappingSamples = group.sampleIdentifiers.filter(s=>!overlappingSamples.has(s.studyId, s.sampleId));
+                    const nonOverlappingPatients = sampleGroupToPatients[group.id].filter(p=>!overlappingPatients.has(p.studyId, p.patientId));
+                    return nonOverlappingSamples.length > 0 || nonOverlappingPatients.length > 0;
+                }));
+            } else {
+                return Promise.resolve(this._selectedSampleGroupsWithOverlap.result!);
+            }
+        } 
+    });
 
     readonly enrichmentsGroup1 = remoteData({
         await:()=>[this.selectedSampleGroups],

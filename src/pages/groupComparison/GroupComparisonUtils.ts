@@ -80,16 +80,18 @@ export function getVennPlotData(combinationSets: { groups: string[], cases: stri
 
 export function caseCountsInParens(
     samples:MobxPromise<any[]>|any[],
-    patients:MobxPromise<any[]>|any[]
+    patients:MobxPromise<any[]>|any[],
+    asteriskForSamples:boolean = false,
+    asteriskForPatients:boolean = false
 ) {
     let text = "";
     if ((Array.isArray(samples) || samples.isComplete) && (Array.isArray(patients) || patients.isComplete)) {
         const samplesArr = Array.isArray(samples) ? samples : samples.result!;
         const patientsArr = Array.isArray(patients) ? patients : patients.result!;
         if (samplesArr.length === patientsArr.length) {
-            text = `(${samplesArr.length})`;
+            text = `(${samplesArr.length}${asteriskForSamples || asteriskForPatients ? "*" : ""})`;
         } else {
-            text = `(${samplesArr.length} s/${patientsArr.length} p)`;
+            text = `(${samplesArr.length}${asteriskForSamples ? "*" : ""} s/${patientsArr.length}${asteriskForPatients ? "*" : ""} p)`;
         }
     }
     return text;
