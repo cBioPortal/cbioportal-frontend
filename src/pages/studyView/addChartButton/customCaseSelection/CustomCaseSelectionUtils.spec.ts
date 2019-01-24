@@ -9,7 +9,7 @@ import {
     InputLine,
     LineTypeEnum,
     ValidationResult,
-    validateLines
+    validateLines, WarningCodeEnum
 } from "./CustomCaseSelectionUtils";
 import {ClinicalDataTypeEnum} from "../../StudyViewPageStore";
 import {Sample} from "../../../../shared/api/generated/CBioPortalAPI";
@@ -196,6 +196,35 @@ describe('CustomCaseSelectionUtils', () => {
             assert.isTrue(result.error.length === 0);
         });
 
+        it('For duplicate cases, give OVERLAP warning when no group name is specified', () => {
+            const lines: InputLine[] = [{
+                line: 's1',
+                caseId: 's1'
+            }, {
+                line: 's1',
+                caseId: 's1'
+            }];
+            const noGroupNameResult: ValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1, true, ['chol_nus_2012']);
+            assert.isTrue(noGroupNameResult.warning.length === 1);
+            assert.isTrue(noGroupNameResult.error.length === 0);
+            assert.equal(noGroupNameResult.warning[0].code, WarningCodeEnum.OVERLAP);
+        });
+
+        it('For duplicate cases, give POTENTIAL_OVERLAP warning when the case is in different group', () => {
+            const lines: InputLine[] = [{
+                line: 's1',
+                caseId: 's1',
+                groupName: 't1'
+            }, {
+                line: 's1',
+                caseId: 's1',
+                groupName: 't2'
+            }];
+            const noGroupNameResult: ValidationResult = validateLines(lines, ClinicalDataTypeEnum.SAMPLE, st1, true, ['chol_nus_2012']);
+            assert.isTrue(noGroupNameResult.warning.length === 1);
+            assert.isTrue(noGroupNameResult.error.length === 0);
+            assert.equal(noGroupNameResult.warning[0].code, WarningCodeEnum.POTENTIAL_OVERLAP);
+        });
 
         it('TOO_MANY_INVALID_CASE_ID should be given when there are too many invalid case ids', () => {
             const lines: InputLine[] = new Array(20).fill('').map((item, index) => {
