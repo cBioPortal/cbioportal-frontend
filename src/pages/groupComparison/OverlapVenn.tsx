@@ -7,6 +7,7 @@ import { VictoryLabel, VictoryLegend } from 'victory';
 import CBIOPORTAL_VICTORY_THEME from 'shared/theme/cBioPoralTheme';
 import _ from "lodash";
 import { computed } from 'mobx';
+import { getVennPlotData } from './GroupComparisonUtils';
 
 export interface IVennProps {
     svgId?: string;
@@ -42,29 +43,11 @@ export default class Venn extends React.Component<IVennProps, {}> {
     }
 
     @computed get sampleSets() {
-        let maxCount = _.max(this.props.sampleGroupsCombinationSets.map(set => set.cases.length))!;
-        return this.props.sampleGroupsCombinationSets.map(set => {
-            return {
-                count: set.cases.length,
-                //this is to make sure all the circle groups are of same size
-                size: set.groups.length === 1 ? maxCount : set.cases.length,
-                label: `${set.cases.length}`,
-                sets: set.groups
-            }
-        }).sort((a, b) => b.count - a.count);
+        return getVennPlotData(this.props.sampleGroupsCombinationSets);
     }
 
     @computed get patientSets() {
-        let maxCount = _.max(this.props.patientGroupsCombinationSets.map(set => set.cases.length))!;
-        return this.props.patientGroupsCombinationSets.map(set => {
-            return {
-                count: set.cases.length,
-                //this is to make sure all the circle groups are of same size
-                size: set.groups.length === 1 ? maxCount : set.cases.length,
-                label: `${set.cases.length}`,
-                sets: set.groups
-            }
-        }).sort((a, b) => b.count - a.count);
+        return getVennPlotData(this.props.patientGroupsCombinationSets);
     }
 
     @autobind
