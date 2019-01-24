@@ -24,8 +24,8 @@
 import * as React from 'react';
 import DefaultTooltip from '../defaultTooltip/DefaultTooltip';
 import { observer } from 'mobx-react';
-import { JsonToTable } from 'react-json-to-table';
-import './StudyTagsTooltip.scss';
+//import { JsonToTable } from 'react-json-to-table';
+//import './StudyTagsTooltip.scss';
 import { remoteData } from '../../api/remoteData';
 import client from "shared/api/cbioportalClientInstance";
 import { MobxPromiseUnionType } from 'mobxpromise';
@@ -64,7 +64,7 @@ export default class StudyTagsTooltip extends React.Component<StudyTagsTooltipPr
         if (meta.isComplete) {
             const resultKeyLength = Object.keys(meta.result).length;
             const description = <div dangerouslySetInnerHTML={this.addHTMLDescription(this.props.studyDescription)}/>;
-            overlay = resultKeyLength > 0 ? ([description, <br/>, <div className="studyTagsTooltip"> <JsonToTable json={meta.result}/></div>]) : description;
+            overlay = description; // resultKeyLength > 0 ? ([description, <br/>, <div className="studyTagsTooltip"> <JsonToTable json={meta.result}/></div>]) : description;
         }
         if (meta.isError) {
             overlay = 'error';

@@ -67,7 +67,6 @@ export default class Container extends React.Component<IContainerProps, {}> {
                        </Then>
                         <Else>
                             <div className="contentWrapper">
-                                <UnsupportedBrowserModal/>
                                 {(this.isSessionLoaded) && this.props.children}
                             </div>
                         </Else>
