@@ -115,7 +115,7 @@ export default class OverlapStackedBar extends React.Component<IOverlapStackedBa
         return (
             <div>
                 <strong>{datum.groupName}</strong>
-                <p>{datum.y} cases</p>
+                <p>{datum.cases.length} cases</p>
             </div>
         )
     }
@@ -174,8 +174,6 @@ export default class OverlapStackedBar extends React.Component<IOverlapStackedBa
 
     @autobind
     private getStackedBar(data: {
-        x: string;
-        y: number;
         cases: string[];
         fill: string;
         groupName: string;
@@ -208,9 +206,11 @@ export default class OverlapStackedBar extends React.Component<IOverlapStackedBa
                             <VictoryBar
                                 data={data}
                                 key={i}
-                                labels={(d: any) => percentageRounder(d.y / total) > 6 ? d.y : ''}
+                                labels={(d: any) => percentageRounder(d.cases.length / total) > 6 ? d.cases.length : ''}
                                 labelComponent={<VictoryLabel dy={30} />}
                                 events={this.mouseEvents}
+                                x={(d:any) => title} //point x to a string instead of number
+                                y={(d:any) => d.cases.length}
                                 style={{
                                     data: {
                                         width: 50,

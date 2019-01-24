@@ -42,22 +42,19 @@ export function getStackedBarData(combinationSets: { groups: string[], cases: st
         if (next.groups.length === 1) {
             let cases = _.difference(next.cases, overlappingCases)
             acc[next.groups[0]] = {
-                x: '',
-                y: cases.length,
-                cases: cases,
-                fill: categoryToColor[next.groups[0]],
+                cases,
+                //assign default color when not found
+                fill: categoryToColor[next.groups[0]] ? categoryToColor[next.groups[0]] : "#CCCCCC",
                 groupName: next.groups[0]
             }
         }
         return acc;
-    }, {} as { [id: string]: { x: string, y: number, cases: string[], fill: string, groupName: string } })
+    }, {} as { [id: string]: { cases: string[], fill: string, groupName: string } })
 
-    let groups = _.values(groupedSet).sort((a, b) => a.y - b.y).map(group => [group])
+    let groups = _.values(groupedSet).sort((a, b) => a.cases.length - b.cases.length).map(group => [group])
 
     if (overlappingCases.length > 0) {
         return [[{
-            x: '',
-            y: overlappingCases.length,
             cases: overlappingCases,
             fill: "#CCCCCC",
             groupName: 'Overlapping Cases'
