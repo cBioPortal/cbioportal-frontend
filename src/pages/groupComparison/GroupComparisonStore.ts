@@ -170,6 +170,22 @@ export default class GroupComparisonStore {
         })
     });
 
+    readonly studies = remoteData({
+        await: ()=>[this.sampleGroups],
+        invoke: () => {
+            const studyIds = _.uniqBy(
+                _.flatten(
+                    this.sampleGroups.result!.map(group=>group.sampleIdentifiers)
+                ),
+                id=>id.studyId
+            ).map(id=>id.studyId);
+            return client.fetchStudiesUsingPOST({
+                studyIds,
+                projection:'DETAILED'
+            })
+        }
+    }, []);
+
     readonly activeStudyIds = remoteData({
         await:()=>[this.activeComparisonGroups],
         invoke:()=>Promise.resolve(
