@@ -9,6 +9,7 @@ import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import GroupComparisonStore from "./GroupComparisonStore";
 import ExpressionEnrichmentContainer from "../resultsView/enrichments/ExpressionEnrichmentsContainer";
+import { ENRICHMENTS_TOO_MANY_GROUPS_MSG, ENRICHMENTS_TOO_MANY_STUDIES_MSG } from "./GroupComparisonUtils";
 
 export interface IMRNAEnrichmentsProps {
     store: GroupComparisonStore
@@ -22,6 +23,31 @@ export default class MRNAEnrichments extends React.Component<IMRNAEnrichmentsPro
     }
 
     readonly tabUI = MakeMobxView({
+        await:()=>{
+            const ret = [this.props.store.activeComparisonGroups, this.props.store.activeStudyIds];
+            if ((this.props.store.activeComparisonGroups.isComplete &&
+                this.props.store.activeComparisonGroups.result.length > 2) ||
+                (this.props.store.activeStudyIds.isComplete && this.props.store.activeStudyIds.result.length > 1)) {
+                // dont bother loading data for and computing enrichments UI if its not valid situation for it
+                return ret;
+            } else {
+                return [this.props.store.activeComparisonGroups, this.enrichmentsUI];
+            }
+        },
+        render:()=>{
+            if (this.props.store.activeComparisonGroups.result!.length > 2) {
+                return <span>{ENRICHMENTS_TOO_MANY_GROUPS_MSG}</span>;
+            } else if (this.props.store.activeStudyIds.result!.length > 1) {
+                return <span>{ENRICHMENTS_TOO_MANY_STUDIES_MSG("mRNA")}</span>;
+            } else {
+                return this.enrichmentsUI.component;
+            }
+        },
+        renderPending:()=><Loader isLoading={true} center={true} size={"big"}/>,
+        renderError:()=><ErrorMessage/>
+    });
+
+    readonly enrichmentsUI = MakeMobxView({
         await:()=>[
             this.props.store.mRNAEnrichmentData,
             this.props.store.mRNAEnrichmentProfile,

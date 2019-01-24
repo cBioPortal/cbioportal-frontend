@@ -25,8 +25,6 @@ import { COLORS } from "pages/studyView/StudyViewUtils";
 import {AlterationEnrichment} from "../../shared/api/generated/CBioPortalAPIInternal";
 import ListIndexedMap from "shared/lib/ListIndexedMap";
 
-const DEFAULT_GROUP_SELECTED = true;
-
 export default class GroupComparisonStore {
 
     @observable currentTabId:string|undefined = undefined;
@@ -67,13 +65,7 @@ export default class GroupComparisonStore {
     readonly selectedComparisonGroups = remoteData<ComparisonGroup[]>({
         await:()=>[this.availableComparisonGroups],
         invoke:()=>Promise.resolve(
-            this.availableComparisonGroups.result!.filter(group=>{
-                if (!this._selectedComparisonGroupIds.has(group.id)) {
-                    return DEFAULT_GROUP_SELECTED;
-                } else {
-                    return this._selectedComparisonGroupIds.get(group.id);
-                }
-            })
+            this.availableComparisonGroups.result!.filter(group=>this.isComparisonGroupSelected(group.id))
         )
     });
 
@@ -130,7 +122,8 @@ export default class GroupComparisonStore {
          } 
     });
 
-    readonly overlapFilteredSelectedComparisonGroups = remoteData<ComparisonGroup[]>({
+    readonly activeComparisonGroups = remoteData<ComparisonGroup[]>({
+        // ** these are the groups that are actually used for analysis! **
         await:()=>[
            this.overlapFilteredAvailableComparisonGroups,
            this.selectedComparisonGroups
@@ -145,24 +138,26 @@ export default class GroupComparisonStore {
     });
 
     readonly enrichmentsGroup1 = remoteData({
-        await:()=>[this.overlapFilteredSelectedComparisonGroups],
-        invoke:()=>Promise.resolve(this.overlapFilteredSelectedComparisonGroups.result![0])
+        await:()=>[this.activeComparisonGroups],
+        invoke:()=>Promise.resolve(this.activeComparisonGroups.result![0])
     });
 
     readonly enrichmentsGroup2 = remoteData({
-        await:()=>[this.overlapFilteredSelectedComparisonGroups],
-        invoke:()=>Promise.resolve(this.overlapFilteredSelectedComparisonGroups.result![1])
+        await:()=>[this.activeComparisonGroups],
+        invoke:()=>Promise.resolve(this.activeComparisonGroups.result![1])
     });
 
     @autobind
     @action public toggleComparisonGroupSelected(groupId:string) {
-        let currentVal;
+        this._selectedComparisonGroupIds.set(groupId, !this.isComparisonGroupSelected(groupId));
+    }
+
+    private isComparisonGroupSelected(groupId:string) {
         if (!this._selectedComparisonGroupIds.has(groupId)) {
-            currentVal = DEFAULT_GROUP_SELECTED;
+            return true; // selected by default, until user toggles and thus adds a value to the map
         } else {
-            currentVal = this._selectedComparisonGroupIds.get(groupId);
+            return this._selectedComparisonGroupIds.get(groupId);
         }
-        this._selectedComparisonGroupIds.set(groupId, !currentVal);
     }
 
     readonly samples = remoteData({
@@ -175,45 +170,45 @@ export default class GroupComparisonStore {
         })
     });
 
-    readonly studyIds = remoteData({
-        await:()=>[this.sampleGroups],
+    readonly activeStudyIds = remoteData({
+        await:()=>[this.activeComparisonGroups],
         invoke:()=>Promise.resolve(
             _.uniqBy(
                 _.flatten(
-                    this.sampleGroups.result!.map(group=>group.sampleIdentifiers)
+                    this.activeComparisonGroups.result!.map(group=>group.sampleIdentifiers)
                 ),
                 id=>id.studyId
             ).map(id=>id.studyId)
         )
     });
 
-    readonly molecularProfilesInStudies = remoteData<MolecularProfile[]>({
-        await:()=>[this.studyIds],
+    readonly molecularProfilesInActiveStudies = remoteData<MolecularProfile[]>({
+        await:()=>[this.activeStudyIds],
         invoke: async () => {
             return client.fetchMolecularProfilesUsingPOST({
-                molecularProfileFilter: { studyIds:this.studyIds.result! } as MolecularProfileFilter
+                molecularProfileFilter: { studyIds:this.activeStudyIds.result! } as MolecularProfileFilter
             })
         }
     }, []);
 
     public readonly mutationEnrichmentProfiles = remoteData({
-        await:()=>[this.molecularProfilesInStudies],
-        invoke:()=>Promise.resolve(pickMutationEnrichmentProfiles(this.molecularProfilesInStudies.result!))
+        await:()=>[this.molecularProfilesInActiveStudies],
+        invoke:()=>Promise.resolve(pickMutationEnrichmentProfiles(this.molecularProfilesInActiveStudies.result!))
     });
 
     public readonly copyNumberEnrichmentProfiles = remoteData({
-        await:()=>[this.molecularProfilesInStudies],
-        invoke:()=>Promise.resolve(pickCopyNumberEnrichmentProfiles(this.molecularProfilesInStudies.result!))
+        await:()=>[this.molecularProfilesInActiveStudies],
+        invoke:()=>Promise.resolve(pickCopyNumberEnrichmentProfiles(this.molecularProfilesInActiveStudies.result!))
     });
 
     public readonly mRNAEnrichmentProfiles = remoteData({
-        await:()=>[this.molecularProfilesInStudies],
-        invoke:()=>Promise.resolve(pickMRNAEnrichmentProfiles(this.molecularProfilesInStudies.result!))
+        await:()=>[this.molecularProfilesInActiveStudies],
+        invoke:()=>Promise.resolve(pickMRNAEnrichmentProfiles(this.molecularProfilesInActiveStudies.result!))
     });
 
     public readonly proteinEnrichmentProfiles = remoteData({
-        await:()=>[this.molecularProfilesInStudies],
-        invoke:()=>Promise.resolve(pickProteinEnrichmentProfiles(this.molecularProfilesInStudies.result!))
+        await:()=>[this.molecularProfilesInActiveStudies],
+        invoke:()=>Promise.resolve(pickProteinEnrichmentProfiles(this.molecularProfilesInActiveStudies.result!))
     });
 
     private _mutationEnrichmentProfile:MolecularProfile|undefined = undefined;
@@ -388,6 +383,28 @@ export default class GroupComparisonStore {
         }
     });
 
+    @computed get mutationsTabGrey() {
+        // grey out if more than two active groups
+        return (this.activeComparisonGroups.isComplete && this.activeComparisonGroups.result.length > 2);
+    }
+
+    @computed get copyNumberTabGrey() {
+        // grey out if more than two active groups
+        return (this.activeComparisonGroups.isComplete && this.activeComparisonGroups.result.length > 2);
+    }
+
+    @computed get mRNATabGrey() {
+        // grey out if
+        return (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) // more than one active study
+            || (this.activeComparisonGroups.isComplete && this.activeComparisonGroups.result.length > 2); // or more than two active groups
+    }
+
+    @computed get proteinTabGrey() {
+        // grey out if
+        return (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) // more than one active study
+            || (this.activeComparisonGroups.isComplete && this.activeComparisonGroups.result.length > 2); // or more than two active groups
+    }
+
     public readonly sampleSet = remoteData({
         await: () => [
             this.samples
@@ -461,7 +478,6 @@ export default class GroupComparisonStore {
 
     readonly survivalClinicalDataExists = remoteData<boolean>({
         await: () => [
-            this.studyIds,
             this.samples
         ],
         invoke: async () => {

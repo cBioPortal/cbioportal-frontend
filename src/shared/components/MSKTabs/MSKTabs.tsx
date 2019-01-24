@@ -20,6 +20,7 @@ export interface IMSKTabProps {
     hide?:boolean;
     datum?:any;
     anchorStyle?:{[k:string]:string|number|boolean};
+    anchorClassName?:string;
     unmountOnHide?:boolean;
     onTabDidMount?:(tab:HTMLDivElement)=>void;
     onTabUnmount?:(tab:HTMLDivElement)=>void;
@@ -317,7 +318,7 @@ export class MSKTabs extends React.Component<IMSKTabsProps, IMSKTabsState> {
                     ref={this.tabRefHandler.bind(this, tab.props.id)}
                     className={activeClass}
                 >
-                    <a className={classnames(`tabAnchor_${tab.props.id}`)} onClick={this.setActiveTab.bind(this,tab.props.id, tab.props.datum)} style={tab.props.anchorStyle}>{tab.props.linkText}</a>
+                    <a className={classnames("tabAnchor", `tabAnchor_${tab.props.id}`, tab.props.anchorClassName)} onClick={this.setActiveTab.bind(this,tab.props.id, tab.props.datum)} style={tab.props.anchorStyle}>{tab.props.linkText}</a>
                 </li>
             );
         });
