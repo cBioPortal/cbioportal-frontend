@@ -142,7 +142,7 @@ export default class GroupComparisonPage extends React.Component<{}, {}> {
                                         checked={this.store.excludeOverlapping}
                                     />
                                     <span style={{marginLeft:7}}>
-                                        {`* Exclude overlapping samples/patients ${caseCountsInParens(this.store.overlappingSelectedSamples, this.store.overlappingSelectedPatients)}`}
+                                        {`* Exclude overlapping samples/patients ${caseCountsInParens(this.store.overlappingSelectedSamples, this.store.overlappingSelectedPatients)} from selected groups.`}
                                     </span> 
                                     <div style={{display:"inline-block", marginLeft:7}}>
                                         <InfoIcon 
