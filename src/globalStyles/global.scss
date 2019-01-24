@@ -115,7 +115,16 @@ th.reactable-header-sort-asc:after {
     }
   }
 
+  &.rc-tooltip-placement-topRight {
+    .rc-tooltip-arrow {
+      right: 5px !important;
+    }
+  }
+
 }
+
+
+
 
 .secondaryTabs {
 
