@@ -28,14 +28,14 @@ Remove old compiled `node_modules` if exists
 rm -rf node_modules
 ```
 
-To install all app and dev dependencies 
+To install all app and dev dependencies
 ```
-npm install
+yarn install --frozen-lockfile
 ```
 
 To build DLLs in common-dist folder (must be done prior to start of dev server)
 ```
-npm run buildDLL:dev
+yarn run buildDLL:dev
 ```
 
 To start dev server with hot reload enabled
@@ -44,7 +44,7 @@ To start dev server with hot reload enabled
 # from
 export BRANCH_ENV=master # or rc if branching from rc
 # export any custom external API URLs by editing env/custom.sh
-npm run start
+yarn run start
 ```
 
 Example pages:
@@ -53,22 +53,22 @@ Example pages:
 
 To run unit/integration tests (need to have API URL defined in `.env`)
 ```
-npm run test
+yarn run test
 ```
 
 To run unit/integration tests in watch mode
 ```
-npm run test:watch
+yarn run test:watch
 ```
 
 To run unit/integration tests in watch mode (where specName is a fragment of the name of the spec file (before .spec.))
 ```
-npm run test:watch -- --grep=#specName#
+yarn run test:watch -- --grep=#specName#
 ```
 
 To run linting
 ```
-npm run lint
+yarn run lint
 ```
 
 ## precommit hook
@@ -88,8 +88,8 @@ endpoint works with the checked in client by changing the API URL in
 # from
 export BRANCH_ENV=master # or rc if branching from rc
 # export any custom external API URLs by editing env/custom.sh
-npm run updateAPI
-npm run test
+yarn run updateAPI
+yarn run test
 ```
 
 ## Check in cBioPortal context
@@ -117,7 +117,7 @@ Change `x` to the number of your pull request.
 
 Install webdriver-manager, which manages standalone Selenium installation:
 ```
-npm install -g webdriver-manager
+yarn install -g webdriver-manager
 ```
 Run updater to get necessary binaries
 ```
@@ -134,7 +134,7 @@ In one terminal run frontend (this will get mounted inside whatever
 # from
 export BRANCH_ENV=master # or rc if branching from rc
 # export any custom external API URLs by editing env/custom.sh
-npm run start
+yarn run start
 ```
 In another terminal run the e2e tests
 ```bash
@@ -143,6 +143,6 @@ In another terminal run the e2e tests
 export BRANCH_ENV=master # or rc if branching from rc
 # export any custom external API URLs in env/custom.sh
 cd end-to-end-tests
-npm install
-npm run test-webdriver-manager
+yarn install
+yarn run test-webdriver-manager
 ```
