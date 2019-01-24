@@ -34,7 +34,7 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
                     }}>
                         {this.props.store.overlapFilteredAvailableComparisonGroups.result!.map(group=>(
                             <button
-                                className={classNames("btn", "noBorderRadius", { "btn-primary":(group.id in selectedGroups), "btn-default":!(group.id in selectedGroups)})}
+                                className={classNames("btn", "noBorderRadius", "noMarginLeft", { "btn-primary":(group.id in selectedGroups), "btn-default":!(group.id in selectedGroups)})}
                                 onClick={()=>this.props.store.toggleComparisonGroupSelected(group.id)}
                                 disabled={group.sampleIdentifiers.length === 0 && group.patientIdentifiers.length === 0}
                             >

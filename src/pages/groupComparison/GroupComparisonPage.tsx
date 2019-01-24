@@ -19,6 +19,7 @@ import { Checkbox, Button } from "react-bootstrap";
 import InfoIcon from "shared/components/InfoIcon";
 import { caseCountsInParens } from "./GroupComparisonUtils";
 import "./styles.scss";
+import { StudyLink } from "shared/components/StudyLink/StudyLink";
 
 export enum GroupComparisonTab {
     OVERLAP, MUTATIONS, CNA, MRNA, PROTEIN, SURVIVAL
@@ -92,10 +93,39 @@ export default class GroupComparisonPage extends React.Component<{}, {}> {
         renderError:()=><ErrorMessage/>
     });
 
+    readonly studyLink = MakeMobxView({
+        await:()=>[this.store.studies],
+        render:()=>{
+            const studies = this.store.studies.result!;
+            let ret = <span/>;
+            switch (studies.length) {
+                case 0:
+                    ret = <span/>;
+                    break;
+                case 1:
+                    ret = <h3><StudyLink studyId={studies[0].studyId}>{studies[0].name}</StudyLink></h3>;
+                    break;
+                default:
+                    ret = (<h4>
+                        <a
+                            href={`study?id=${studies.map(study => study.studyId).join(',')}`}
+                            target="_blank"
+                        >
+                            Multiple studies
+                        </a>
+                    </h4>);
+            }
+            return ret;
+        } 
+    });
+
     render() {
         return (
             <PageLayout>
                 <div style={{display:"flex", flexDirection:"column"}}>
+                    <div>
+                        {this.studyLink.component}
+                    </div>
                     <div style={{marginBottom:30}}>
                         <div style={{display:"flex", flexDirection:"row", alignItems:"center"}}>
                             <span style={{marginRight:10}}>Groups (click to toggle):</span>
