@@ -8,6 +8,7 @@ import {MolecularProfile} from "../../shared/api/generated/CBioPortalAPI";
 import {MakeMobxView} from "../../shared/components/MobxView";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
+import { ENRICHMENTS_TOO_MANY_GROUPS_MSG } from "./GroupComparisonUtils";
 
 export interface ICopyNumberEnrichmentsProps {
     store: GroupComparisonStore
@@ -21,6 +22,27 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
     }
 
     readonly tabUI = MakeMobxView({
+        await:()=>{
+            if (this.props.store.activeComparisonGroups.isComplete &&
+                this.props.store.activeComparisonGroups.result.length > 2) {
+                // dont bother loading data for and computing enrichments UI if its not valid situation for it
+                return [this.props.store.activeComparisonGroups];
+            } else {
+                return [this.props.store.activeComparisonGroups, this.enrichmentsUI];
+            }
+        },
+        render:()=>{
+            if (this.props.store.activeComparisonGroups.result!.length > 2) {
+                return <span>{ENRICHMENTS_TOO_MANY_GROUPS_MSG}</span>;
+            } else {
+                return this.enrichmentsUI.component;
+            }
+        },
+        renderPending:()=><Loader isLoading={true} center={true} size={"big"}/>,
+        renderError:()=><ErrorMessage/>
+    });
+
+    readonly enrichmentsUI = MakeMobxView({
         await:()=>[
             this.props.store.copyNumberHomdelEnrichmentData,
             this.props.store.copyNumberAmpEnrichmentData,
@@ -34,22 +56,22 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
                     <EnrichmentsDataSetDropdown dataSets={this.props.store.copyNumberEnrichmentProfiles} onChange={this.onChangeProfile}
                                                 selectedValue={this.props.store.copyNumberEnrichmentProfile.result!.molecularProfileId}/>
                     <AlterationEnrichmentContainer data={this.props.store.copyNumberHomdelEnrichmentData.result!}
-                                                   totalAlteredCount={this.props.store.enrichmentsGroup1.result!.sampleIdentifiers.length}
-                                                   totalUnalteredCount={this.props.store.enrichmentsGroup2.result!.sampleIdentifiers.length}
-                                                   alteredGroupName={this.props.store.enrichmentsGroup1.result!.name}
-                                                   unalteredGroupName={this.props.store.enrichmentsGroup2.result!.name}
-                                                   selectedProfile={this.props.store.copyNumberEnrichmentProfile.result!}
-                                                   headerName={"Deep Deletion - " + this.props.store.copyNumberEnrichmentProfile.result!.name}
-                                                   alterationType="a deep deletion"/>
+                                                totalAlteredCount={this.props.store.enrichmentsGroup1.result!.sampleIdentifiers.length}
+                                                totalUnalteredCount={this.props.store.enrichmentsGroup2.result!.sampleIdentifiers.length}
+                                                alteredGroupName={this.props.store.enrichmentsGroup1.result!.name}
+                                                unalteredGroupName={this.props.store.enrichmentsGroup2.result!.name}
+                                                selectedProfile={this.props.store.copyNumberEnrichmentProfile.result!}
+                                                headerName={"Deep Deletion - " + this.props.store.copyNumberEnrichmentProfile.result!.name}
+                                                alterationType="a deep deletion"/>
                     <hr />
                     <AlterationEnrichmentContainer data={this.props.store.copyNumberAmpEnrichmentData.result!}
-                                                   totalAlteredCount={this.props.store.enrichmentsGroup1.result!.sampleIdentifiers.length}
-                                                   totalUnalteredCount={this.props.store.enrichmentsGroup2.result!.sampleIdentifiers.length}
-                                                   alteredGroupName={this.props.store.enrichmentsGroup1.result!.name}
-                                                   unalteredGroupName={this.props.store.enrichmentsGroup2.result!.name}
-                                                   selectedProfile={this.props.store.copyNumberEnrichmentProfile.result!}
-                                                   headerName={"Amplification - " + this.props.store.copyNumberEnrichmentProfile.result!.name}
-                                                   alterationType="an amplification"/>
+                                                totalAlteredCount={this.props.store.enrichmentsGroup1.result!.sampleIdentifiers.length}
+                                                totalUnalteredCount={this.props.store.enrichmentsGroup2.result!.sampleIdentifiers.length}
+                                                alteredGroupName={this.props.store.enrichmentsGroup1.result!.name}
+                                                unalteredGroupName={this.props.store.enrichmentsGroup2.result!.name}
+                                                selectedProfile={this.props.store.copyNumberEnrichmentProfile.result!}
+                                                headerName={"Amplification - " + this.props.store.copyNumberEnrichmentProfile.result!.name}
+                                                alterationType="an amplification"/>
                 </div>
             );
         },
