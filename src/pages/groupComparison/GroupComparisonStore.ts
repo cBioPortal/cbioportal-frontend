@@ -152,6 +152,21 @@ export default class GroupComparisonStore {
         this._selectedComparisonGroupIds.set(groupId, !this.isComparisonGroupSelected(groupId));
     }
 
+    public groupSelectionCanBeToggled(group:ComparisonGroup) {
+        if (!this.activeComparisonGroups.isComplete) {
+            // dont allow toggling until we know what the current active groups are
+            return false;
+        } else if (group.sampleIdentifiers.length === 0 && group.patientIdentifiers.length === 0) {
+            // can't be toggled if no cases in it
+            return false;
+        } else {
+            // otherwise, only allow toggling if it wont decrease # active groups below 2
+            const activeGroups = this.activeComparisonGroups.result!;
+            return activeGroups.length > 2 || // if there are more than 2 active groups,
+                    activeGroups.findIndex(g=>g.id === group.id) === -1; // or if this group is not currently active
+        }
+    }
+
     private isComparisonGroupSelected(groupId:string) {
         if (!this._selectedComparisonGroupIds.has(groupId)) {
             return true; // selected by default, until user toggles and thus adds a value to the map
