@@ -18,6 +18,7 @@ import GroupSelector from "./GroupSelector";
 import { Checkbox, Button } from "react-bootstrap";
 import InfoIcon from "shared/components/InfoIcon";
 import { caseCountsInParens } from "./GroupComparisonUtils";
+import "./styles.scss";
 
 export enum GroupComparisonTab {
     OVERLAP, MUTATIONS, CNA, MRNA, PROTEIN, SURVIVAL
@@ -39,7 +40,6 @@ export default class GroupComparisonPage extends React.Component<{}, {}> {
             this.store.mRNAEnrichmentProfiles,
             this.store.proteinEnrichmentProfiles,
             this.store.survivalClinicalDataExists,
-            this.store.studyIds
         ],
         render:()=>{
             if ((this.store.mutationEnrichmentProfiles.result!.length > 0) ||
@@ -48,10 +48,6 @@ export default class GroupComparisonPage extends React.Component<{}, {}> {
                 (this.store.proteinEnrichmentProfiles.result!.length > 0) ||
                 this.store.showSurvivalTab
             ) {
-                let mrnaAndProteinAnchorStyle:any = {};
-                if(this.store.studyIds.result!.length > 1) {
-                    mrnaAndProteinAnchorStyle = {color:"#afafaf"};
-                }
                 return <MSKTabs unmountOnHide={false} activeTabId={this.store.currentTabId} onTabClick={this.store.setTabId} className="primaryTabs">
                     {
                         this.store.showSurvivalTab &&
@@ -60,25 +56,29 @@ export default class GroupComparisonPage extends React.Component<{}, {}> {
                         </MSKTab>
                     }
                     {this.store.mutationEnrichmentProfiles.result!.length > 0 && (
-                        <MSKTab id={GroupComparisonTab.MUTATIONS.toString()} linkText="Mutations">
+                        <MSKTab id={GroupComparisonTab.MUTATIONS.toString()} linkText="Mutations"
+                            anchorClassName={this.store.mutationsTabGrey ? "greyedOut" : ""}
+                        >
                             <MutationEnrichments store={this.store}/>
                         </MSKTab>
                     )}
                     {this.store.copyNumberEnrichmentProfiles.result!.length > 0 && (
-                        <MSKTab id={GroupComparisonTab.CNA.toString()} linkText="Copy-number">
+                        <MSKTab id={GroupComparisonTab.CNA.toString()} linkText="Copy-number"
+                            anchorClassName={this.store.copyNumberTabGrey ? "greyedOut" : ""}
+                        >
                             <CopyNumberEnrichments store={this.store}/>
                         </MSKTab>
                     )}
                     {this.store.mRNAEnrichmentProfiles.result!.length > 0 && (
                         <MSKTab id={GroupComparisonTab.MRNA.toString()} linkText="mRNA"
-                            anchorStyle={mrnaAndProteinAnchorStyle}
+                            anchorClassName={this.store.mRNATabGrey ? "greyedOut" : ""}
                         >
                             <MRNAEnrichments store={this.store}/>
                         </MSKTab>
                     )}
                     {this.store.proteinEnrichmentProfiles.result!.length > 0 && (
                         <MSKTab id={GroupComparisonTab.PROTEIN.toString()} linkText="Protein"
-                            anchorStyle={mrnaAndProteinAnchorStyle}
+                            anchorClassName={this.store.proteinTabGrey ? "greyedOut" : ""}
                         >
                             <ProteinEnrichments store={this.store}/>
                         </MSKTab>

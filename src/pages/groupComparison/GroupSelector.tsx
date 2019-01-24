@@ -21,13 +21,13 @@ export default class GroupSelector extends React.Component<IGroupSelectorProps,{
     readonly tabUI = MakeMobxView({
         await:()=>[
             this.props.store.overlapFilteredAvailableComparisonGroups, 
-            this.props.store.overlapFilteredSelectedComparisonGroups, 
+            this.props.store.activeComparisonGroups, 
         ],
         render:()=>{
             if (this.props.store.availableComparisonGroups.result!.length === 0) {
                 return null;
             } else {
-                const selectedGroups = _.keyBy(this.props.store.overlapFilteredSelectedComparisonGroups.result!, g=>g.id);
+                const selectedGroups = _.keyBy(this.props.store.activeComparisonGroups.result!, g=>g.id);
                 return (
                     <div className="btn-group" style={{
                         maxWidth:400
