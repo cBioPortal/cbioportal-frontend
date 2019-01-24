@@ -8,6 +8,7 @@ import { percentageRounder } from 'pages/resultsView/cancerSummary/CancerSummary
 import autobind from 'autobind-decorator';
 import ScatterPlotTooltip from 'shared/components/plots/ScatterPlotTooltip';
 import Timer = NodeJS.Timer;
+import { getStackedBarData } from './GroupComparisonUtils';
 
 export interface IOverlapStackedBarProps {
     svgId?: string;
@@ -86,72 +87,12 @@ export default class OverlapStackedBar extends React.Component<IOverlapStackedBa
     }
 
     @computed get sampleStackedBarData() {
-        const overlappingGroups = _.filter(this.props.sampleGroupsCombinationSets, (group) => group.groups.length > 1)
-        const overlappingCases = _.uniq(_.flatMap(overlappingGroups, (group) => group.cases))
-
-        let groupedSet = _.reduce(this.props.sampleGroupsCombinationSets, (acc, next) => {
-            if (next.groups.length === 1) {
-                let cases = _.difference(next.cases, overlappingCases)
-                acc[next.groups[0]] = {
-                    x: '',
-                    y: cases.length,
-                    cases: cases,
-                    fill: this.props.categoryToColor[next.groups[0]],
-                    groupName: next.groups[0]
-                }
-            }
-            return acc;
-        }, {} as { [id: string]: { x: string, y: number, cases: string[], fill: string, groupName: string } })
-
-        let groups = _.values(groupedSet).sort((a, b) => a.y - b.y).map(group => [group])
-
-        if (overlappingCases.length > 0) {
-            return [[{
-                x: '',
-                y: overlappingCases.length,
-                cases: overlappingCases,
-                fill: "#CCCCCC",
-                groupName: 'Overlapping Cases'
-            }], ...groups]
-        }
-        return groups
+        return getStackedBarData(this.props.sampleGroupsCombinationSets, this.props.categoryToColor);
     }
 
 
     @computed get patientStackedBarData() {
-        const overlappingCases = _.uniq(_.reduce(this.props.patientGroupsCombinationSets, (acc, next) => {
-            if (next.groups.length > 1) {
-                acc = acc.concat(next.cases)
-            }
-            return acc;
-        }, [] as string[]))
-
-        let groupedSet = _.reduce(this.props.patientGroupsCombinationSets, (acc, next) => {
-            if (next.groups.length === 1) {
-                let cases = _.difference(next.cases, overlappingCases)
-                acc[next.groups[0]] = {
-                    x: '',
-                    y: cases.length,
-                    cases: cases,
-                    fill: this.props.categoryToColor[next.groups[0]],
-                    groupName: next.groups[0]
-                }
-            }
-            return acc;
-        }, {} as { [id: string]: { x: string, y: number, cases: string[], fill: string, groupName: string } })
-
-        let groups = _.values(groupedSet).sort((a, b) => a.y - b.y).map(group => [group])
-
-        if (overlappingCases.length > 0) {
-            return [[{
-                x: '',
-                y: overlappingCases.length,
-                cases: overlappingCases,
-                fill: "#CCCCCC",
-                groupName: 'Overlapping Cases'
-            }], ...groups]
-        }
-        return groups
+        return getStackedBarData(this.props.patientGroupsCombinationSets, this.props.categoryToColor);
     }
 
     @computed get totalSamplesCount() {
