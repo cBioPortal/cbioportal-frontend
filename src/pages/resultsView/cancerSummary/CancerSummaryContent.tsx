@@ -18,10 +18,10 @@ import {WindowWidthBox} from "../../../shared/components/WindowWidthBox/WindowWi
 
 export const OrderedAlterationLabelMap: Record<keyof IAlterationCountMap, string> = {
     multiple: "Multiple Alterations",
-    protExpressionDown: "Protein Downregulation",
-    protExpressionUp: "Protein Upregulation",
-    mrnaExpressionDown: "mRNA Downregulation",
-    mrnaExpressionUp: "mRNA Upregulation",
+    protExpressionDown: "Protein Low",
+    protExpressionUp: "Protein High",
+    mrnaExpressionDown: "mRNA Low",
+    mrnaExpressionUp: "mRNA High",
     hetloss: "Shallow Deletion",
     homdel: "Deep Deletion",
     gain: "Gain",
