@@ -109,4 +109,7 @@ describe("ListIndexedMap", ()=>{
         map.set("test2", "whatsup","yo","bye");
         assert.isTrue(map.has("whatsup","yo","bye"));
     });
+    it("`from` creates a ListIndexedMap from a given list", ()=>{
+        throw "not implemented";
+    });
 });

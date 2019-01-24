@@ -44,6 +44,14 @@ export default class ListIndexedMap<R> {
         return !!this.getEntry(key);
     }
 
+    public static from<T>(objs:T[], key:(t:T)=>string[]):ListIndexedMap<T> {
+        const map = new ListIndexedMap<T>();
+        for (const o of objs) {
+            map.set(o, ...key(o));
+        }
+        return map;
+    }
+
     private getEntry(key:string[]):Entry<R>|undefined {
         return this.getFolder(key).find(entry => _.isEqual(entry.key, key));
     }
@@ -53,6 +61,4 @@ export default class ListIndexedMap<R> {
         this.map[folderKey] = this.map[folderKey] || [];
         return this.map[folderKey];
     }
-
-
 }
