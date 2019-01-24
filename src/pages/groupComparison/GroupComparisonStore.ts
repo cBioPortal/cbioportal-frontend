@@ -22,6 +22,7 @@ import { PatientSurvival } from "shared/model/PatientSurvival";
 import request from "superagent";
 import { getPatientSurvivals } from "pages/resultsView/SurvivalStoreHelper";
 import { SURVIVAL_CHART_ATTRIBUTES } from "pages/resultsView/survival/SurvivalChart";
+import { COLORS } from "pages/studyView/StudyViewUtils";
 
 export default class GroupComparisonStore {
 
@@ -293,4 +294,13 @@ export default class GroupComparisonStore {
                 this.patientKeys.result!, 'DFS_STATUS', 'DFS_MONTHS', s => s === 'Recurred/Progressed' || s === 'Recurred')
         }
     }, []);
+
+    @computed get categoryToColor() {
+        let colorIndex = 0;
+        return _.reduce(this.sampleGroups.result, (acc, next) => {
+            acc[next.name? next.name : next.id] = next.color ? next.color : COLORS[colorIndex++]
+            return acc;
+        }, {} as { [id: string]: string})
+    }
+
 }
