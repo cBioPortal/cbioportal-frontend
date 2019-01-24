@@ -1,14 +1,23 @@
 import * as React from 'react';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
-import { observer } from "mobx-react";
+import { observer, Observer } from "mobx-react";
 import GroupComparisonStore from './GroupComparisonStore';
-import { observable, computed } from 'mobx';
-import Venn from './Venn';
-import { COLORS } from 'pages/studyView/StudyViewUtils';
+import { computed, observable } from 'mobx';
+import Venn from './OverlapVenn';
 import _ from "lodash";
+import OverlapStackedBar from './OverlapStackedBar';
+import autobind from 'autobind-decorator';
+import DownloadControls from 'shared/components/downloadControls/DownloadControls';
 
 export interface IOverlapProps {
     store: GroupComparisonStore
+}
+
+const SVG_ID = "comparison-tab-overlap-svg";
+
+enum PlotType {
+    StackedBar,
+    Venn
 }
 
 @observer
@@ -17,57 +26,80 @@ export default class Overlap extends React.Component<IOverlapProps, {}> {
     constructor(props: IOverlapProps, context: any) {
         super(props, context);
     }
+    @observable plotExists = false;
 
-    @computed get sampleSets() {
-        let colorIndex = 0;
-        if (this.props.store.sampleGroupsCombinationSets.isComplete) {
-            let maxCount = _.max(this.props.store.sampleGroupsCombinationSets.result.map(set => set.cases.length))!;
-            return this.props.store.sampleGroupsCombinationSets.result.map(set => {
-                return {
-                    ...set,
-                    count: set.cases.length,
-                    //TODO: standardize colors across all tabs
-                    color: set.sets.length === 1 ? COLORS[colorIndex++] : undefined,
-                    //this is to make sure all the circle groups are of same size
-                    size: set.sets.length === 1 ? maxCount : set.cases.length
-                }
-            }).sort((a, b) => b.count - a.count);
-        }
-        return [];
+    @computed get isStackedBar() {
+        return this.props.store.sampleGroups.isComplete && this.props.store.sampleGroups.result.length > 3 ? true : false
     }
 
-    @computed get patientSets() {
-        if (this.props.store.patientGroupsCombinationSets.isComplete) {
-            let colorIndex = 0;
-            let maxCount = _.max(this.props.store.sampleGroupsCombinationSets.result.map(set => set.cases.length))!;
-            return this.props.store.patientGroupsCombinationSets.result.map(set => {
-                return {
-                    ...set,
-                    count: set.cases.length,
-                    //TODO: standardize colors across all tabs
-                    color: set.sets.length === 1 ? COLORS[colorIndex++] : undefined,
-                    //this is to make sure all the circle groups are of same size
-                    size: set.sets.length === 1 ? maxCount : set.cases.length
-                }
-            }).sort((a, b) => b.count - a.count);
-        }
-        return [];
+    componentDidUpdate() {
+        this.plotExists = !!this.getSvg();
     }
+
+    @autobind
+    private getSvg() {
+        return document.getElementById(SVG_ID) as SVGElement | null;
+    }
+
+    @computed get plotType() {
+        return this.props.store.sampleGroups.isComplete && this.props.store.sampleGroups.result.length > 3 ? PlotType.StackedBar : PlotType.Venn
+    }
+
+    @computed get plot() {
+        let plotElt: any = null;
+        switch (this.plotType) {
+            case PlotType.StackedBar:
+                plotElt = (
+                    <OverlapStackedBar
+                        svgId={SVG_ID}
+                        sampleGroupsCombinationSets={this.props.store.sampleGroupsCombinationSets.result!}
+                        patientGroupsCombinationSets={this.props.store.patientGroupsCombinationSets.result!}
+                        categoryToColor={this.props.store.categoryToColor}
+                    />)
+                break;
+            case PlotType.Venn:
+                plotElt = (
+                    <Venn
+                        svgId={SVG_ID}
+                        sampleGroupsCombinationSets={this.props.store.sampleGroupsCombinationSets.result!}
+                        patientGroupsCombinationSets={this.props.store.patientGroupsCombinationSets.result!}
+                        categoryToColor={this.props.store.categoryToColor}
+                    />)
+                break;
+            default:
+                return <span>Not implemented yet</span>
+        }
+
+        return (
+            <div>
+                <div data-test="ComparisonTabOverlapDiv" className="borderedChart posRelative">
+                    {this.plotExists && (
+                        <DownloadControls
+                            getSvg={this.getSvg}
+                            filename={'overlap'}
+                            dontFade={true}
+                            style={{ position: 'absolute', right: 10, top: 10 }}
+                            collapse={true}
+                        />
+                    )}
+                    <div style={{ position: "relative", display: "inline-block" }}>
+                        {plotElt}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
 
     public render() {
         if (this.props.store.sampleGroupsCombinationSets.isPending ||
             this.props.store.patientGroupsCombinationSets.isPending) {
             return <LoadingIndicator isLoading={true} size={"big"} center={true} />;
         }
-        return (<div style={{ display: 'flex' }}>
-            <div style={{ alignItems: 'center', display: 'flex', flexDirection: 'column' }}>
-                <span>Sample Overlap</span>
-                <Venn id="sampleVennDiagram" sets={this.sampleSets}></Venn>
+        return (
+            <div className="inlineBlock">
+                {this.plot}
             </div>
-            <div style={{ alignItems: 'center', display: 'flex', flexDirection: 'column' }}>
-                <span>Patient Overlap</span>
-                <Venn id="patientVennDiagram" sets={this.patientSets}></Venn>
-            </div>
-        </div>)
+        )
     }
 }
