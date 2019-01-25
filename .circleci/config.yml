@@ -14,6 +14,11 @@ jobs:
     <<: *defaults
     steps:
       - run:
+          name: "Install yarn at specific version"
+          command:
+            sudo npm install --global yarn@1.13.0
+
+      - run:
           name: "Show yarn and node versions"
           command: |
             node --version
@@ -77,6 +82,10 @@ jobs:
           - v1-dependencies-{{ checksum "yarn.lock" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
+      - run:
+          name: "Install yarn at specific version"
+          command:
+            sudo npm install --global yarn@1.13.0
       - run:
           name: "Run build"
           command: 'yarn run build'
