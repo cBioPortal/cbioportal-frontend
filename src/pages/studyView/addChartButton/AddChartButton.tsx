@@ -274,7 +274,7 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
                                              disableCustomTab={this.props.disableCustomTab}/>}
                 overlayClassName={this.props.addChartOverlayClassName}
             >
-                <button className='btn btn-primary btn-xs' style={{marginLeft: '10px'}} data-test="add-charts-button">{this.props.buttonText}</button>
+                <button className='btn btn-primary btn-sm' style={{marginLeft: '10px'}} data-test="add-charts-button">{this.props.buttonText}</button>
             </DefaultTooltip>
         )
     }
