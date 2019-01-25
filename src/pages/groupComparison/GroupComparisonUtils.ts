@@ -4,17 +4,20 @@ import {SampleIdentifier, Sample, PatientIdentifier} from "../../shared/api/gene
 import _ from "lodash";
 
 export type SampleGroup = {
-    id: string,
-    name?: string,
-    sampleIdentifiers: SampleIdentifier[],
-    color?: string;
-    legendText?: string;
+    // mandatory:
+    id:string, // unique identifier
+    sampleIdentifiers:SampleIdentifier[], // samples in the group
+
+    // optional:
+    name?:string, // display name
+    color?: string; // color for charts
+    legendText?: string; // display text (defaults to name) to put in a legend
 };
 
 export type ComparisonGroup = SampleGroup & {
     patientIdentifiers:PatientIdentifier[];
-    hasOverlappingSamples?:boolean;
-    hasOverlappingPatients?:boolean;
+    hasOverlappingSamples?:boolean; // whether the group has had samples filtered out because they overlapped in the selection
+    hasOverlappingPatients?:boolean; // whether the group has had patients filtered out because they overlapped in the selection
 };
 
 export const TEMP_localStorageGroupsKey = "__tmp__groupComparisonGroups";
