@@ -15,7 +15,7 @@ import {
 } from './config/config';
 
 import './shared/lib/ajaxQuiet';
-import {computed, extendObservable} from 'mobx';
+import {computed, extendObservable, observable} from 'mobx';
 import makeRoutes from './routes';
 import * as _ from 'lodash';
 import $ from 'jquery';
@@ -93,10 +93,15 @@ const syncedHistory = syncHistoryWithStore(history, routingStore);
 const stores = {
     // Key can be whatever you want
     routing: routingStore,
-    appStore:new AppStore()
+    appStore: new AppStore(),
 };
 
+const vars = observable({
+    queryCounter: 0
+});
+
 window.globalStores = stores;
+window.globalVars = vars;
 
 const end = superagent.Request.prototype.end;
 

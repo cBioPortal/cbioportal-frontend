@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from 'lodash';
 import {If, Then, Else} from 'react-if';
 import {observer, inject, Observer } from "mobx-react";
-import { observable } from 'mobx';
+import { observable, action } from 'mobx';
 import Chart from 'chart.js';
 import AppConfig from 'appConfig';
 import 'react-select/dist/react-select.css';
@@ -25,7 +25,7 @@ import autobind from "autobind-decorator";
 
 const win = (window as any);
 
-export interface IResultsViewPageProps {
+export interface IHomePageProps {
     routing: any;
 }
 
@@ -35,15 +35,16 @@ export function createQueryStore(currentQuery?:any) {
 
     const queryStore = new QueryStore(currentQuery);
 
-    queryStore.singlePageAppSubmitRoutine = function(query:CancerStudyQueryUrlParams) {
+    queryStore.singlePageAppSubmitRoutine = action(function(query:CancerStudyQueryUrlParams) {
 
         // normalize this
         query.cancer_study_list = query.cancer_study_list || query.cancer_study_id;
         delete query.cancer_study_id;
 
         win.routingStore.updateRoute(query, "results", true);
+        win.globalVars.queryCounter += 1;
 
-    };
+    });
 
     return queryStore;
 
@@ -51,13 +52,13 @@ export function createQueryStore(currentQuery?:any) {
 
 @inject('routing')
 @observer
-export default class HomePage extends React.Component<IResultsViewPageProps, {}> {
+export default class HomePage extends React.Component<IHomePageProps, {}> {
 
     @observable showQuerySelector = true;
 
     queryStore:QueryStore;
 
-    constructor(props: IResultsViewPageProps) {
+    constructor(props: IHomePageProps) {
         super(props);
     }
 

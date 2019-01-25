@@ -2,7 +2,7 @@ import * as React from "react";
 import * as _ from "lodash";
 import $ from "jquery";
 import {inject, observer} from "mobx-react";
-import {computed, reaction, runInAction} from "mobx";
+import {computed, reaction, runInAction, autorun, IReactionDisposer, action} from "mobx";
 import {ResultsViewPageStore, SamplesSpecificationElement} from "./ResultsViewPageStore";
 import CancerSummaryContainer from "pages/resultsView/cancerSummary/CancerSummaryContainer";
 import Mutations from "./mutation/Mutations";
@@ -38,116 +38,66 @@ function initStore() {
 
     const resultsViewPageStore = new ResultsViewPageStore();
 
-    resultsViewPageStore.tabId = getTabId(getBrowserWindow().globalStores.routing.location.pathname);
+    runInAction(()=>{
+        // set query
+        // normalize cancer_study_list this handles legacy sessions/urls where queries with single study had different param name
+        const query = getBrowserWindow().globalStores.routing.query;
+        const cancer_study_list = query.cancer_study_list || query.cancer_study_id;
 
-    let lastQuery:any;
-    let lastPathname:string;
+        const cancerStudyIds: string[] = cancer_study_list.split(",");
 
-    const queryReactionDisposer = reaction(
-        () => {
-            return [getBrowserWindow().globalStores.routing.query, getBrowserWindow().globalStores.routing.location.pathname];
-        },
-        (x:any) => {
+        const oql = decodeURIComponent(query.gene_list);
 
-            const query = x[0];
-            const pathname = x[1];
+        let samplesSpecification: SamplesSpecificationElement[];
 
-            // escape from this if queryies are deeply equal
-            // TODO: see if we can figure out why query is getting changed and
-            // if there's any way to do shallow equality check to avoid this expensive operation
-            const queryChanged = !_.isEqual(lastQuery, query);
-            const pathnameChanged = (pathname !== lastPathname);
-            if (!queryChanged && !pathnameChanged) {
-                return;
-            } else {
-
-                if (!getBrowserWindow().globalStores.routing.location.pathname.includes("/results")) {
-                   return;
+        if (query.case_ids && query.case_ids.length > 0) {
+            const case_ids = query.case_ids.split("+");
+            samplesSpecification = case_ids.map((item:string)=>{
+                const split = item.split(":");
+                return {
+                    studyId:split[0],
+                    sampleId:split[1]
                 }
-                runInAction(()=>{
-                    // set query and pathname separately according to which changed, to avoid unnecessary
-                    //  recomputation by updating the query if only the pathname changed
-                    if (queryChanged) {
-                        // update query
-                        // normalize cancer_study_list this handles legacy sessions/urls where queries with single study had different param name
-                        const cancer_study_list = query.cancer_study_list || query.cancer_study_id;
-
-                        const cancerStudyIds: string[] = cancer_study_list.split(",");
-
-                        const oql = decodeURIComponent(query.gene_list);
-
-                        let samplesSpecification: SamplesSpecificationElement[];
-
-                        if (query.case_ids && query.case_ids.length > 0) {
-                            const case_ids = query.case_ids.split("+");
-                            samplesSpecification = case_ids.map((item:string)=>{
-                                const split = item.split(":");
-                                return {
-                                   studyId:split[0],
-                                   sampleId:split[1]
-                                }
-                            });
-                        } else if (query.sample_list_ids) {
-                            samplesSpecification = query.sample_list_ids.split(",").map((studyListPair:string)=>{
-                                const pair = studyListPair.split(":");
-                                return {
-                                    studyId:pair[0],
-                                    sampleListId:pair[1],
-                                    sampleId: undefined
-                                }
-                            });
-                        } else if (query.case_set_id !== "all") {
-                                // by definition if there is a case_set_id, there is only one study
-                                samplesSpecification = cancerStudyIds.map((studyId:string)=>{
-                                    return {
-                                        studyId: studyId,
-                                        sampleListId: query.case_set_id,
-                                        sampleId: undefined
-                                    };
-                                });
-                        } else if (query.case_set_id === "all") { // case_set_id IS equal to all
-                            samplesSpecification = cancerStudyIds.map((studyId:string)=>{
-                                return {
-                                    studyId,
-                                    sampleListId:`${studyId}_all`,
-                                    sampleId:undefined
-                                }
-                            });
-                        } else {
-                            throw("INVALID QUERY");
-                        }
-
-                        const changes = updateResultsViewQuery(resultsViewPageStore.rvQuery, query, samplesSpecification, cancerStudyIds, oql);
-                        if (changes.cohortIdsList) {
-                            resultsViewPageStore.initDriverAnnotationSettings();
-                        }
-
-                        onMobxPromise(resultsViewPageStore.studyIds, ()=>{
-                            try {
-                                trackQuery(resultsViewPageStore.studyIds.result!, oql, resultsViewPageStore.hugoGeneSymbols, resultsViewPageStore.virtualStudies.result!.length > 0);
-                            } catch {};
-                        });
-
-                        lastQuery = query;
-                    }
-                    if (pathnameChanged) {
-                        // need to set tab like this instead of with injected via params.tab because we need to set the tab
-                        //  at the same time as we set the query parameters, otherwise we get race conditions where the tab
-                        //  we're on at the time we update the query doesnt get unmounted because we change the query, causing
-                        //  MSKTabs unmounting, THEN change the tab.
-                        const tabId = getTabId(pathname);
-                        if (resultsViewPageStore.tabId !== tabId) {
-                            resultsViewPageStore.tabId = tabId;
-                        }
-                        lastPathname = pathname;
-                    }
+            });
+        } else if (query.sample_list_ids) {
+            samplesSpecification = query.sample_list_ids.split(",").map((studyListPair:string)=>{
+                const pair = studyListPair.split(":");
+                return {
+                    studyId:pair[0],
+                    sampleListId:pair[1],
+                    sampleId: undefined
+                }
+            });
+        } else if (query.case_set_id !== "all") {
+                // by definition if there is a case_set_id, there is only one study
+                samplesSpecification = cancerStudyIds.map((studyId:string)=>{
+                    return {
+                        studyId: studyId,
+                        sampleListId: query.case_set_id,
+                        sampleId: undefined
+                    };
                 });
-            }
-        },
-        {fireImmediately: true}
-    );
+        } else if (query.case_set_id === "all") { // case_set_id IS equal to all
+            samplesSpecification = cancerStudyIds.map((studyId:string)=>{
+                return {
+                    studyId,
+                    sampleListId:`${studyId}_all`,
+                    sampleId:undefined
+                }
+            });
+        } else {
+            throw("INVALID QUERY");
+        }
 
-    resultsViewPageStore.queryReactionDisposer = queryReactionDisposer;
+        updateResultsViewQuery(resultsViewPageStore.rvQuery, query, samplesSpecification, cancerStudyIds, oql);
+        resultsViewPageStore.initDriverAnnotationSettings();
+
+        onMobxPromise(resultsViewPageStore.studyIds, ()=>{
+            try {
+                trackQuery(resultsViewPageStore.studyIds.result!, oql, resultsViewPageStore.hugoGeneSymbols, resultsViewPageStore.virtualStudies.result!.length > 0);
+            } catch {};
+        }); 
+    });
 
     return resultsViewPageStore;
 }
@@ -168,13 +118,53 @@ export interface IResultsViewPageProps {
 export default class ResultsViewPage extends React.Component<IResultsViewPageProps, {}> {
 
     private resultsViewPageStore: ResultsViewPageStore;
+    private refreshStoreReaction: IReactionDisposer;
+    private changeTabReaction: IReactionDisposer;
+
+    private lastQuery:any;
+    private lastQueryCount:number;
 
     constructor(props: IResultsViewPageProps) {
         super(props);
 
-        this.resultsViewPageStore = initStore();
+        this.refreshStoreReaction = reaction(
+            ()=>[(window as any).globalVars.queryCounter, getBrowserWindow().globalStores.routing.query],
+            x=>{
+                if (x[0] !== this.lastQueryCount ||
+                    !_.isEqual(x[1], this.lastQuery)) {
+                    // refresh store if query count incremented or query has changed
+                    this.initStore();
+                }
+                this.lastQueryCount = x[0];
+                this.lastQuery = x[1];
+            }
+        );
 
+        this.initStore(); // do this immediately, dont mess w any async business
+
+        this.changeTabReaction = reaction(
+            ()=>getBrowserWindow().globalStores.routing.location.pathname,
+            this.updateTabFromPathname
+        , {fireImmediately:true});
+    }
+
+    @autobind
+    @action
+    private initStore() {
+        this.resultsViewPageStore = initStore();
         getBrowserWindow().resultsViewPageStore = this.resultsViewPageStore;
+        // need to set tab at the same time as we set the query parameters, otherwise we get race conditions where the tab
+        //  we're on at the time we update the query doesnt get unmounted because we change the query, causing
+        //  MSKTabs unmounting, THEN change the tab. This also means we can't set tab using injected route params.
+        this.updateTabFromPathname(getBrowserWindow().globalStores.routing.location.pathname);
+    }
+
+    @autobind
+    private updateTabFromPathname(pathname:string) {
+        const tabId = getTabId(pathname);
+        if (this.resultsViewPageStore.tabId !== tabId) {
+            this.resultsViewPageStore.tabId = tabId;
+        }
     }
 
     private handleTabChange(id: string, replace?:boolean) {
@@ -187,7 +177,8 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     }
 
     componentWillUnmount(){
-        this.resultsViewPageStore.queryReactionDisposer();
+        this.refreshStoreReaction();
+        this.changeTabReaction();
     }
 
     @computed
@@ -489,7 +480,11 @@ export default class ResultsViewPage extends React.Component<IResultsViewPagePro
     public render() {
         if (this.resultsViewPageStore.studies.isComplete && !this.resultsViewPageStore.tabId) {
             setTimeout(()=>{
-                this.handleTabChange(this.currentTab(this.resultsViewPageStore.tabId), true);
+                if (getBrowserWindow().globalStores.routing.location.pathname.includes("/results")) {
+                    // block this from taking effect at the edge case of a final render before
+                    //  the component is unmounted and the page is changed
+                    this.handleTabChange(this.currentTab(this.resultsViewPageStore.tabId), true);
+                }
             });
             return null;
         } else {

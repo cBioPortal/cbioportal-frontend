@@ -54,8 +54,6 @@ export function updateResultsViewQuery(
     cancerStudyIds:string[],
     oql:string
 ) {
-    const trackedChanges:{[key in keyof ResultsViewQuery]?:boolean} = {}; // not comprehensive - only maintained as needed
-
     if (!rvQuery.samplesSpecification || !_.isEqual(rvQuery.samplesSpecification.slice(), samplesSpecification)) {
         rvQuery.samplesSpecification = samplesSpecification;
     }
@@ -107,12 +105,9 @@ export function updateResultsViewQuery(
     // although resultsViewStore does
     if (!rvQuery.cohortIdsList || !_.isEqual(_.sortBy(rvQuery.cohortIdsList), _.sortBy(cancerStudyIds))) {
         rvQuery.cohortIdsList = cancerStudyIds;
-        trackedChanges.cohortIdsList = true;
     }
 
     if (rvQuery.oqlQuery !== oql) {
         rvQuery.oqlQuery = oql;
     }
-
-    return trackedChanges;
 }
