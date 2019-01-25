@@ -23,6 +23,7 @@ import {remoteData} from "../../../shared/api/remoteData";
 import {getAlterationSummary, getGeneSummary, getPatientSampleSummary} from "./QuerySummaryUtils";
 import {MakeMobxView} from "../../../shared/components/MobxView";
 import {getGAInstance} from "../../../shared/lib/tracking";
+import {buildCBioPortalPageUrl} from "../../../shared/api/urls";
 
 @observer
 export default class QuerySummary extends React.Component<{ routingStore:ExtendedRouterStore, store: ResultsViewPageStore }, {}> {
@@ -79,14 +80,14 @@ export default class QuerySummary extends React.Component<{ routingStore:Extende
         await:()=>[this.props.store.samples, this.props.store.patients, this.props.store.queriedStudies],
         render:()=>(
             <div>
-                <h4>
+                <h3>
                     <a
-                        href={`study?id=${this.props.store.queriedStudies.result.map(study => study.studyId).join(',')}`}
+                        href={buildCBioPortalPageUrl(`study`, { id:this.props.store.queriedStudies.result.map(study => study.studyId).join(',')})}
                         target="_blank"
                     >
                         Combined Study ({this.props.store.samples.result.length} samples)
                     </a>
-                </h4>
+                </h3>
                 <span>
                     Querying {getPatientSampleSummary(this.props.store.samples.result, this.props.store.patients.result)} in {this.props.store.queriedStudies.result.length} studies
                     &nbsp;-&nbsp;
