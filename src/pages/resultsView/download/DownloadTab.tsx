@@ -206,9 +206,22 @@ export default class DownloadTab extends React.Component<IDownloadTabProps, {}>
 
     readonly sampleMatrix = remoteData<string[][]>({
         await:()=>[this.caseAlterationData],
-        invoke:()=>Promise.resolve(this.caseAlterationData.result!
-            .map(caseAlteration =>
-                [`${caseAlteration.studyId}:${caseAlteration.sampleId}`, caseAlteration.altered ? "1" : "0"]))
+        invoke:()=>{
+            let result : string[][] = [];
+            _.map(this.caseAlterationData.result!, (caseAlteration) => {
+                // if writing the first line, add titles
+                if (_.isEmpty(result)) {
+                    const titleMap = _.keys(caseAlteration.oqlDataByGene);
+                    result.push(['studyID:sampleId', 'Altered', ...titleMap]);
+                }
+                // get altered infomation by gene
+                const genesAlteredData = _.map(caseAlteration.oqlDataByGene, (oqlData) => {
+                    return _.isEmpty(oqlData.alterationTypes) ? "0" : "1";
+                });
+                result.push([`${caseAlteration.studyId}:${caseAlteration.sampleId}`, caseAlteration.altered ? "1" : "0", ...genesAlteredData]);
+            })
+            return Promise.resolve(result);
+        }
     });
 
     readonly sampleMatrixText = remoteData<string>({
