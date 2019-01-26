@@ -12,6 +12,7 @@ type Code =
     'MULTI_NAME'
     | 'NO_GROUP_NAME'
     | 'OVERLAP'
+    | 'POTENTIAL_OVERLAP'
     | 'INVALID'
     | 'INVALID_CASE_ID'
     | 'TOO_MANY_INVALID_CASE_ID'
@@ -32,6 +33,8 @@ export enum ErrorCodeEnum {
 };
 
 export enum WarningCodeEnum {
+    OVERLAP = 'OVERLAP',
+    POTENTIAL_OVERLAP = 'POTENTIAL_OVERLAP',
     NO_CHART_NAME = 'NO_CHART_NAME',
     NO_GROUP_NAME = 'NO_GROUP_NAME',
 };
@@ -94,9 +97,14 @@ export function getLines(content: string): InputLine[] {
     }, [] as InputLine[])
 }
 
+function getUniqueCaseId(studyId: string, caseId: string) {
+    return `${studyId}:${caseId}`;
+}
+
 export function validateLines(lines: InputLine[], caseType: ClinicalDataType, allSamples: Sample[], isSingleStudy: boolean, selectedStudies: string[]): ValidationResult {
     let errorMessages: ValidationMessage[] = [];
     let warningMessages: ValidationMessage[] = [];
+    const groupNameDefault='_TEST_';
 
     const TOO_MANY = 10;
 
@@ -119,7 +127,7 @@ export function validateLines(lines: InputLine[], caseType: ClinicalDataType, al
                     message: new Error(`No study specified for ${caseType} id: ${line.caseId}, and more than one study selected for query.`)
                 });
             } else {
-                _case = `${selectedStudies[0]}:${line.caseId}`;
+                _case = getUniqueCaseId(selectedStudies[0], line.caseId);
                 if (validPair[_case] === undefined) {
                     errorMessages.push({
                         code: ErrorCodeEnum.INVALID_CASE_ID,
@@ -163,10 +171,33 @@ export function validateLines(lines: InputLine[], caseType: ClinicalDataType, al
         return acc;
     }, [] as string[]);
     if (dups.length > 0) {
-        errorMessages.push({
-            code: ErrorCodeEnum.OVERLAP,
-            message: new Error(`There are duplicate cases. Such as ${dups.slice(0, 3).join(', ')}`)
-        });
+        // when dups exist, we need to figure out the damage
+        const groupDistribution = _.reduce(lines, (acc, line) => {
+            let groupName = line.groupName ? line.groupName : groupNameDefault;
+            if (acc[groupName] === undefined) {
+                acc[groupName] = [];
+            }
+            acc[groupName].push(getUniqueCaseId(line.studyId ? line.studyId : '', line.caseId));
+            return acc;
+        }, {} as { [groupName: string]: string[] });
+
+        const dupCount = _.reduce(groupDistribution, (acc, group) => {
+            acc += group.length - _.uniq(group).length;
+            return acc;
+        }, 0);
+
+        // when the dupCount is not the same as dups length, means that the case is in different groups, that should be ok.
+        if (_.keys(groupDistribution).length === 1 || dupCount === dups.length) {
+            warningMessages.push({
+                code: WarningCodeEnum.OVERLAP,
+                message: new Error(`${dups.length} duplicate case${dups.length === 1 ? '' : 's'} will be removed.`)
+            });
+        } else if (dupCount !== dups.length) {
+            warningMessages.push({
+                code: WarningCodeEnum.POTENTIAL_OVERLAP,
+                message: new Error(`${dups.join(', ')} exist${(dups.length - dupCount) > 1 ? '' : 's'} in different groups.`)
+            });
+        }
     }
 
     if (invalidCases.length >= TOO_MANY) {
@@ -207,7 +238,7 @@ export function getGroups(lines: InputLine[], singleStudyId: string, caseType: C
         patientMap[patientKey].push(sample);
     });
 
-    return _.values(_.reduce(lines, (acc, line) => {
+    let groups = _.values(_.reduce(lines, (acc, line) => {
         const groupName = line.groupName || (hasGroupName ? DEFAULT_GROUP_NAME_WITH_USER_INPUT : DEFAULT_GROUP_NAME_WITHOUT_USER_INPUT);
         if (acc[groupName] == undefined) {
             acc[groupName] = {
@@ -222,6 +253,11 @@ export function getGroups(lines: InputLine[], singleStudyId: string, caseType: C
         acc[groupName].cases.push(...matches);
         return acc;
     }, {} as { [key: string]: CustomGroup }));
+
+    return groups.map(group=>{
+        group.cases = _.uniqBy(group.cases, item => `${item.studyId}:${item.sampleId}`);
+        return group;
+    });
 }
 
 export function parseContent(content: string, needToValidate: boolean = false, selectedStudies: string[], caseType: ClinicalDataType, allSamples: Sample[], isSingleStudy: boolean): ParseResult {
@@ -239,7 +275,6 @@ export function parseContent(content: string, needToValidate: boolean = false, s
     }
 
     const hasGroupName = _.find(lines, (line => line.groupName !== undefined && line.groupName !== '')) !== undefined;
-
     if (validationResult.error.length > 0) {
         return {
             groups: [],
