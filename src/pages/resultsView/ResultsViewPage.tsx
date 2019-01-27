@@ -26,7 +26,7 @@ import getBrowserWindow from "../../shared/lib/getBrowserWindow";
 import CoExpressionTab from "./coExpression/CoExpressionTab";
 import Helmet from "react-helmet";
 import {showCustomTab} from "../../shared/lib/customTabs";
-import {getTabId, parseConfigDisabledTabs, ResultsViewTab} from "./ResultsViewPageHelpers";
+import {getTabId, parseConfigDisabledTabs, parseSamplesSpecifications, ResultsViewTab} from "./ResultsViewPageHelpers";
 import {buildResultsViewPageTitle, doesQueryHaveCNSegmentData} from "./ResultsViewPageStoreUtils";
 import {AppStore} from "../../AppStore";
 import {bind} from "bind-decorator";
@@ -76,46 +76,7 @@ function initStore() {
 
                         const oql = decodeURIComponent(query.gene_list);
 
-                        let samplesSpecification: SamplesSpecificationElement[];
-
-                        if (query.case_ids && query.case_ids.length > 0) {
-                            const case_ids = query.case_ids.split("+");
-                            samplesSpecification = case_ids.map((item:string)=>{
-                                const split = item.split(":");
-                                return {
-                                   studyId:split[0],
-                                   sampleId:split[1]
-                                }
-                            });
-                        } else if (query.sample_list_ids) {
-                            samplesSpecification = query.sample_list_ids.split(",").map((studyListPair:string)=>{
-                                const pair = studyListPair.split(":");
-                                return {
-                                    studyId:pair[0],
-                                    sampleListId:pair[1],
-                                    sampleId: undefined
-                                }
-                            });
-                        } else if (query.case_set_id !== "all") {
-                                // by definition if there is a case_set_id, there is only one study
-                                samplesSpecification = cancerStudyIds.map((studyId:string)=>{
-                                    return {
-                                        studyId: studyId,
-                                        sampleListId: query.case_set_id,
-                                        sampleId: undefined
-                                    };
-                                });
-                        } else if (query.case_set_id === "all") { // case_set_id IS equal to all
-                            samplesSpecification = cancerStudyIds.map((studyId:string)=>{
-                                return {
-                                    studyId,
-                                    sampleListId:`${studyId}_all`,
-                                    sampleId:undefined
-                                }
-                            });
-                        } else {
-                            throw("INVALID QUERY");
-                        }
+                        let samplesSpecification = parseSamplesSpecifications(query, cancerStudyIds);
 
                         const changes = updateResultsViewQuery(resultsViewPageStore.rvQuery, query, samplesSpecification, cancerStudyIds, oql);
                         if (changes.cohortIdsList) {
