@@ -14,6 +14,12 @@ import {saveSvgAsPng} from "save-svg-as-png";
 import {ChartTypeEnum} from "../StudyViewConfig";
 import {getClinicalAttributeOverlay} from "../StudyViewUtils";
 
+// there's some incompatiblity with rc-tooltip and study view layout
+// these adjustments force tooltips to open top right because tooltips
+// were breaking at far right of page
+const tooltipPosition = "topRight";
+const tooltipAlign = { offset:[5,-6] };
+
 export interface IChartHeaderProps {
     chartMeta: ChartMeta;
     title: string;
@@ -93,7 +99,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
 
         return (
             <DefaultTooltip
-                placement="top"
+                placement={tooltipPosition}
+                align={tooltipAlign}
                 overlay={<span>Download</span>}>
                 <DefaultTooltip
                     placement="bottom"
@@ -148,7 +155,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                         </div>
                         <If condition={this.props.chartControls && !!this.props.chartControls.showResetIcon}>
                             <DefaultTooltip
-                                placement="top"
+                                placement={tooltipPosition}
+                                align={tooltipAlign}
                                 overlay={<span>Reset filters in chart</span>}
                                 destroyTooltipOnHide={true}
                             >
@@ -158,7 +166,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                         </If>
                         <If condition={!!this.props.chartMeta.description}>
                             <DefaultTooltip
-                                placement="top"
+                                placement={tooltipPosition}
+                                align={tooltipAlign}
                                 overlay={getClinicalAttributeOverlay(this.props.chartMeta.displayName, this.props.chartMeta.description)}
                                 destroyTooltipOnHide={true}
                             >
@@ -167,7 +176,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                         </If>
                         <If condition={this.props.chartControls && !!this.props.chartControls.showTableIcon}>
                             <DefaultTooltip
-                                placement="top"
+                                placement={tooltipPosition}
+                                align={tooltipAlign}
                                 overlay={<span>Convert pie chart to table</span>}
                             >
                                 <i className={classnames("fa", "fa-table", styles.item, styles.clickable)}
@@ -177,7 +187,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                         </If>
                         <If condition={this.props.chartControls && !!this.props.chartControls.showPieIcon}>
                             <DefaultTooltip
-                                placement="top"
+                                placement={tooltipPosition}
+                                align={tooltipAlign}
                                 overlay={<span>Convert table to pie chart</span>}
                             >
                                 <i className={classnames("fa", "fa-pie-chart", styles.item, styles.clickable)}
@@ -187,7 +198,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                         </If>
                         <If condition={this.props.chartControls && !!this.props.chartControls.showAnalysisGroupsIcon}>
                             <DefaultTooltip
-                                placement="top"
+                                placement={tooltipPosition}
+                                align={tooltipAlign}
                                 overlay={<span>Survival Analysis</span>}
                             >
                                 <img src="images/survival_icon.svg"
@@ -200,7 +212,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                             {this.downloadControls()}
                         </If>
                         <DefaultTooltip
-                            placement="top"
+                            placement={tooltipPosition}
+                            align={tooltipAlign}
                             overlay={<span>Move chart</span>}
                         >
                             <i className={classnames("fa", "fa-arrows", styles.item, styles.clickable)}
@@ -208,7 +221,8 @@ export class ChartHeader extends React.Component<IChartHeaderProps, {}> {
                                style={{cursor: 'move'}}/>
                         </DefaultTooltip>
                         <DefaultTooltip
-                            placement="top"
+                            placement={tooltipPosition}
+                            align={tooltipAlign}
                             overlay={<span>Delete chart</span>}
                         >
                             <i className={classnames("fa", "fa-times", styles.item, styles.clickable)}
