@@ -33,7 +33,8 @@ import "./patient.scss";
 import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
 import {
     getDigitalSlideArchiveIFrameUrl,
-    getSampleViewUrl
+    getSampleViewUrl,
+    getWholeSlideViewerUrl
 } from "../../shared/api/urls";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
 import Helmet from "react-helmet";
@@ -43,6 +44,9 @@ import {showCustomTab} from "../../shared/lib/customTabs";
 import {StudyLink} from "../../shared/components/StudyLink/StudyLink";
 import WindowStore from "shared/components/window/WindowStore";
 import {QueryParams} from "url";
+import {AppStore} from "../../AppStore";
+import request from 'superagent';
+import {remoteData} from "../../shared/api/remoteData";
 
 const patientViewPageStore = new PatientViewPageStore();
 
@@ -53,6 +57,7 @@ win.patientViewPageStore = patientViewPageStore;
 export interface IPatientViewPageProps {
     params: any; // react route
     routing: any;
+    appStore: AppStore;
     samples?: ClinicalDataBySampleId[];
     loadClinicalInformationTableData?: () => Promise<any>;
     patient?: {
@@ -68,7 +73,7 @@ export interface PatientViewUrlParams extends QueryParams{
     sampleId?:string;
 }
 
-@inject('routing')
+@inject('routing', 'appStore')
 @observer
 export default class PatientViewPage extends React.Component<IPatientViewPageProps, {}> {
 
@@ -192,6 +197,25 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
     private customTabMountCallback(div:HTMLDivElement,tab:any){
         showCustomTab(div, tab, this.props.routing.location, patientViewPageStore);
     }
+
+    private wholeSlideViewerUrl = remoteData<string | undefined>({
+        await: () => [patientViewPageStore.getWholeSlideViewerIds],
+        invoke: async() => {
+            if (!_.isEmpty(patientViewPageStore.getWholeSlideViewerIds.result)) {
+                const url = getWholeSlideViewerUrl(patientViewPageStore.getWholeSlideViewerIds.result!, this.props.appStore.userName!);
+                //if request succeeds then we return the url because we know request works.
+                try {
+                    await request.get(url);
+                    return url;
+                }
+                //but if request fails, we will return undefined.
+                catch (er){
+                    return undefined;
+                }
+            }
+            return undefined;
+        }
+    });
 
     public render() {
 
@@ -505,13 +529,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                         </div>
                     </MSKTab>
 
-                    {(patientViewPageStore.isWholeSlideViewerExist.isComplete) && (
+                    {(patientViewPageStore.studyId === "mskimpact" && this.wholeSlideViewerUrl.result) && (
                     <MSKTab key={6} id="MSKTissueImage" linkText="Tissue Image"
-                            hide={patientViewPageStore.studyId !== "mskimpact" || !patientViewPageStore.isWholeSlideViewerExist.result || !patientViewPageStore.getWholeSlideViewerURL.result}
                             unmountOnHide = {false}
                     >
                         <div style={{position: "relative"}}>
-                            <IFrameLoader height={700} url={ patientViewPageStore.getWholeSlideViewerURL.result! } />
+                            <IFrameLoader height={700} url={ this.wholeSlideViewerUrl.result! } />
                         </div>
                     </MSKTab>
                     )}
