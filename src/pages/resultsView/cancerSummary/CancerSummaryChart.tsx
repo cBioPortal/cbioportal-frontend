@@ -21,7 +21,7 @@ interface CancerSummaryChartProps {
     hideGenomicAlterations?:boolean;
 };
 
-function percentageRounder(num:number){
+export function percentageRounder(num:number){
     return _.round(num * 100, 2)
 }
 
