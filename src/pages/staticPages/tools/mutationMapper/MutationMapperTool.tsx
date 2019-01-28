@@ -169,6 +169,8 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
                         <span> <a onClick={this.handleLoadExampleGenomicCoordinates} data-test="GenomicChangesExampleButton">Genomic Changes</a></span>,
                         <span> <a onClick={this.handleLoadExampleGeneAndProteinChange} data-test="ProteinChangesExampleButton">Protein Changes</a></span>,
                         <span> <a onClick={this.handleLoadExamplePartiallyAnnotated} data-test="GenomicAndProteinChangesExampleButton">Genomic and Protein Changes</a></span>)
+                        <br /><br />
+                        The annotations are based on genome build GRCh37 (hg19).
                     </p>
 
                     {this.dataFormatToggler()}
@@ -253,8 +255,10 @@ export default class MutationMapperTool extends React.Component<IMutationMapperT
                     select a file with mutation data for upload.<br />
                 </p>
                 <p>
-                    Mutation files should be tab delimited, and should at least have
-                    the genomic location headers in the first line for a successful annotation:
+                    Mutation files should be tab delimited, and should at
+                    least have the genomic location headers in the first line
+                    for a successful annotation. Note that all variants have
+                    to be reported for genome build GRCh37 (hg19).
                 </p>
                 <ul>
                     <li>Chromosome</li>
