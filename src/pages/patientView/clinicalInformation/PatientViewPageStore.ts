@@ -331,7 +331,7 @@ export class PatientViewPageStore {
         invoke: async() => groupBySampleId(this.sampleIds, this.clinicalDataForSamples.result)
     }, []);
 
-    readonly getWholeSlideViewerURL = remoteData({
+    readonly getWholeSlideViewerIds = remoteData({
         await: () => [this.clinicalDataGroupedBySample],
         invoke: () => {
             const clinicalData = this.clinicalDataGroupedBySample.result!;
@@ -348,21 +348,9 @@ export class PatientViewPageStore {
                     return data!.substring(data!.indexOf('=') + 1, data!.indexOf('@'));
                 });
 
-                const url = ids.length > 1 ? `https://slides-res.mskcc.org/viewer?ids=${ids.join(';')}&annotation=off` : ids.length === 1 ? `https://slides-res.mskcc.org/viewer?ids=${ids.join(';')}&annotation=off&filetree=off` : "";
-                return Promise.resolve(url);
+                return Promise.resolve(ids);
             }
-            return Promise.resolve("");
-        }
-    });
-
-    readonly isWholeSlideViewerExist = remoteData({
-        await: () => [this.getWholeSlideViewerURL],
-        invoke: async() => {
-            await request.get(this.getWholeSlideViewerURL.result!);
-            return Promise.resolve(true);
-        },
-        onError: () => {
-            return Promise.resolve(false);
+            return Promise.resolve([]);
         }
     });
 
