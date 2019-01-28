@@ -127,3 +127,51 @@ export function populateSampleSpecificationsFromVirtualStudies(samplesSpecificat
     return samplesSpecification;
 
 }
+
+//testIt
+export function parseSamplesSpecifications(query:any, cancerStudyIds:string[]): SamplesSpecificationElement[]{
+
+    let samplesSpecification: SamplesSpecificationElement[];
+
+    if (query.case_ids && query.case_ids.length > 0) {
+        const case_ids = query.case_ids.split(/\+|\s+/);
+        samplesSpecification = case_ids.map((item:string)=>{
+            const split = item.split(":");
+            return {
+                studyId:split[0],
+                sampleId:split[1]
+            }
+        });
+    } else if (query.sample_list_ids) {
+        samplesSpecification = query.sample_list_ids.split(",").map((studyListPair:string)=>{
+            const pair = studyListPair.split(":");
+            return {
+                studyId:pair[0],
+                sampleListId:pair[1],
+                sampleId: undefined
+            }
+        });
+    } else if (query.case_set_id !== "all") {
+        // by definition if there is a case_set_id, there is only one study
+        samplesSpecification = cancerStudyIds.map((studyId:string)=>{
+            return {
+                studyId: studyId,
+                sampleListId: query.case_set_id,
+                sampleId: undefined
+            };
+        });
+    } else if (query.case_set_id === "all") { // case_set_id IS equal to all
+        samplesSpecification = cancerStudyIds.map((studyId:string)=>{
+            return {
+                studyId,
+                sampleListId:`${studyId}_all`,
+                sampleId:undefined
+            }
+        });
+    } else {
+        throw("INVALID QUERY");
+    }
+
+    return samplesSpecification;
+
+}
