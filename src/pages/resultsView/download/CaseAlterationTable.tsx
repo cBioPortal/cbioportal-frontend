@@ -4,6 +4,9 @@ import * as _ from 'lodash';
 import {default as LazyMobXTable, Column} from "shared/components/lazyMobXTable/LazyMobXTable";
 import {OQLLineFilterOutput} from "shared/lib/oql/oqlfilter";
 import {AnnotatedExtendedAlteration} from "../ResultsViewPageStore";
+import {StudyLink} from "shared/components/StudyLink/StudyLink";
+import {getPatientViewUrl, getSampleViewUrl} from "shared/api/urls";
+import styles from "./styles.module.scss"
 
 export interface ISubAlteration {
     type: string;
@@ -32,6 +35,7 @@ export interface ICaseAlteration {
     patientId: string;
     altered: boolean;
     oqlData: {[oqlLine: string]: IOqlData};
+    oqlDataByGene: {[gene: string]: IOqlData};
 }
 
 export interface ICaseAlterationTableProps {
@@ -111,7 +115,7 @@ export function generateOqlValue(data: IOqlData, alterationType: string): string
 }
 
 export function generatePseudoOqlSummary(oqlData: {[oqlLine: string]: IOqlData}, oqlLine: string, alterationType: string)
-{
+{  
     let pseudoOqlSummary = "";
 
     if (!_.isEmpty(oqlData))
@@ -138,15 +142,19 @@ export function computeAlterationTypes(alterationData: ICaseAlteration[]): strin
     return types;
 }
 
-export function getDisplayStyle(value: string): object {
+export function getDisplayClassName(value: string): any {
     switch(value) {
         case "no alteration":
-            return {whiteSpace: "nowrap" , color: "orange"};
+            return styles.noAlterationSpan;
         case "not profiled":
-            return {whiteSpace: "nowrap" , color: "indianred"};
+            return styles.notProfiledSpan;
         default:
-            return {whiteSpace: "nowrap"};
+            return styles.alterationSpan;
     }
+}
+
+export function getPseudoOqlSummaryByAlterationTypes(oqlData: {[oqlLine: string]: IOqlData}, oqlLine: string, alterationTypes: string[]) {
+    return _.map(alterationTypes, type => generatePseudoOqlSummary(oqlData, oqlLine, type)).filter((summary) => summary !== "no alteration" && summary !== "not profiled").join(",");
 }
 
 class CaseAlterationTableComponent extends LazyMobXTable<ICaseAlteration> {}
@@ -158,7 +166,7 @@ export default class CaseAlterationTable extends React.Component<ICaseAlteration
         const columns: Column<ICaseAlteration>[] = [
             {
                 name: 'Study ID',
-                render: (data: ICaseAlteration) => <span style={{whiteSpace: "nowrap"}}>{data.studyId}</span>,
+                render: (data: ICaseAlteration) => <span style={{whiteSpace: "nowrap"}}><StudyLink studyId={data.studyId}>{data.studyId}</StudyLink></span>,
                 download: (data: ICaseAlteration) => data.studyId,
                 sortBy: (data: ICaseAlteration) => data.studyId,
                 filter: (data: ICaseAlteration, filterString: string, filterStringUpper: string) => {
@@ -167,7 +175,7 @@ export default class CaseAlterationTable extends React.Component<ICaseAlteration
             },
             {
                 name: 'Sample ID',
-                render: (data: ICaseAlteration) => <span style={{whiteSpace: "nowrap"}}>{data.sampleId}</span>,
+                render: (data: ICaseAlteration) => <span style={{whiteSpace: "nowrap"}}><a href={getSampleViewUrl(data.studyId, data.sampleId)} target='_blank'>{data.sampleId}</a></span>,
                 download: (data: ICaseAlteration) => `${data.sampleId}`,
                 sortBy: (data: ICaseAlteration) => data.sampleId,
                 filter: (data: ICaseAlteration, filterString: string, filterStringUpper: string) => {
@@ -176,7 +184,7 @@ export default class CaseAlterationTable extends React.Component<ICaseAlteration
             },
             {
                 name: 'Patient ID',
-                render: (data: ICaseAlteration) => <span style={{whiteSpace: "nowrap"}}>{data.patientId}</span>,
+                render: (data: ICaseAlteration) => <span style={{whiteSpace: "nowrap"}}><a href={getPatientViewUrl(data.studyId, data.patientId)} target='_blank'>{data.patientId}</a></span>,
                 download: (data: ICaseAlteration) => `${data.patientId}`,
                 sortBy: (data: ICaseAlteration) => data.patientId,
                 filter: (data: ICaseAlteration, filterString: string, filterStringUpper: string) => {
@@ -192,29 +200,51 @@ export default class CaseAlterationTable extends React.Component<ICaseAlteration
             }
         ];
 
-        const typeSet : {[x: string]: boolean} = {};
+        const geneSet : {[x: string]: OQLLineFilterOutput<AnnotatedExtendedAlteration>} = {};
         this.props.oqls.forEach(oql => {
-            const alterationTypes = this.props.alterationTypes;
-            if (!(oql.gene in typeSet)){
-                typeSet[oql.gene] = true;
-                alterationTypes.forEach(alterationType => {
-                    columns.push({
-                        name: `${oql.gene} ${alterationType}`,
-                        tooltip: <span>{oql.oql_line}</span>,
-                        headerDownload: (name: string) => oql.oql_line,
-                        render: (data: ICaseAlteration) => {
-                            const oqlDisplayValue = generatePseudoOqlSummary(data.oqlData, oql.oql_line, alterationType); 
-                            const style = getDisplayStyle(oqlDisplayValue);
-    
-                            return <span style={style}>{oqlDisplayValue}</span>;
-                        },
-                        download: (data: ICaseAlteration) => generatePseudoOqlSummary(data.oqlData, oql.oql_line, alterationType),
-                        sortBy: (data: ICaseAlteration) => generatePseudoOqlSummary(data.oqlData, oql.oql_line, alterationType),
-                        filter: (data: ICaseAlteration, filterString: string, filterStringUpper: string) =>
-                            generatePseudoOqlSummary(data.oqlData, oql.oql_line, alterationType).toUpperCase().includes(filterStringUpper)
-                    });
-                });
+            if (oql.gene in geneSet) {
+                geneSet[oql.gene].oql_line += oql.oql_line;
             }
+            else {
+                geneSet[oql.gene] = oql;
+            }
+        });
+        
+        _.forEach(geneSet, (oql) => {
+            const alterationTypes = this.props.alterationTypes;
+            //add column for each gene
+            columns.push({
+                name: `${oql.gene}`,
+                tooltip: <span>{oql.oql_line}</span>,
+                headerDownload: (name: string) => `${oql.gene}`,
+                render: (data: ICaseAlteration) => {
+                    const oqlDisplayValue = getPseudoOqlSummaryByAlterationTypes(data.oqlDataByGene, oql.gene, alterationTypes); 
+
+                    return <span className={getDisplayClassName(oqlDisplayValue)}>{oqlDisplayValue}</span>;
+                },
+                download: (data: ICaseAlteration) => getPseudoOqlSummaryByAlterationTypes(data.oqlDataByGene, oql.gene, alterationTypes),
+                sortBy: (data: ICaseAlteration) => getPseudoOqlSummaryByAlterationTypes(data.oqlDataByGene, oql.gene, alterationTypes),
+                filter: (data: ICaseAlteration, filterString: string, filterStringUpper: string) =>
+                    getPseudoOqlSummaryByAlterationTypes(data.oqlDataByGene, oql.gene, alterationTypes).toUpperCase().includes(filterStringUpper),
+                visible: false
+            });
+            //add column for each gene alteration combination
+            alterationTypes.forEach(alterationType => {
+                columns.push({
+                    name: `${oql.gene} ${alterationType}`,
+                    tooltip: <span>{oql.oql_line}</span>,
+                    headerDownload: (name: string) => `${oql.gene} ${alterationType}`,
+                    render: (data: ICaseAlteration) => {
+                        const oqlDisplayValue = generatePseudoOqlSummary(data.oqlDataByGene, oql.gene, alterationType); 
+
+                        return <span className={getDisplayClassName(oqlDisplayValue)}>{oqlDisplayValue}</span>;
+                    },
+                    download: (data: ICaseAlteration) => generatePseudoOqlSummary(data.oqlDataByGene, oql.gene, alterationType),
+                    sortBy: (data: ICaseAlteration) => generatePseudoOqlSummary(data.oqlDataByGene, oql.gene, alterationType),
+                    filter: (data: ICaseAlteration, filterString: string, filterStringUpper: string) =>
+                        generatePseudoOqlSummary(data.oqlDataByGene, oql.gene, alterationType).toUpperCase().includes(filterStringUpper)
+                });
+            });
         });
 
 
