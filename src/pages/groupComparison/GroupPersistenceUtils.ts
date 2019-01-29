@@ -1,0 +1,63 @@
+import {SampleGroup, TEMP_localStorageGroupsKey} from "./GroupComparisonUtils";
+import {SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
+import hashString from "../../shared/lib/hashString";
+import {observable} from "mobx";
+import _ from "lodash";
+
+// TODO: use web service
+
+// keep and update a local observable copy so that users can react to changes
+const observableGroupsCopy = observable.shallowBox<SampleGroup[]>([]);
+
+// hold onto recently deleted groups for "undo" purpose
+let recentlyDeletedGroups:SampleGroup[] = [];
+
+function updateObservableGroupsCopy() {
+    // update local observable version for users to react to
+    observableGroupsCopy.set(JSON.parse(localStorage.getItem(TEMP_localStorageGroupsKey) || "[]"));
+}
+
+// initial update
+updateObservableGroupsCopy();
+
+function updateLocalStorageGroups(groups:SampleGroup[]) {
+    localStorage.setItem(TEMP_localStorageGroupsKey, JSON.stringify(groups));
+}
+
+export function getLocalStorageGroups() {
+    return observableGroupsCopy.get().slice();
+}
+
+export type SampleGroupWithoutId = Pick<SampleGroup, Exclude<keyof SampleGroup, "id">>;
+
+export function addGroupToLocalStorage(
+    newGroup:SampleGroupWithoutId
+) {
+    const groups:SampleGroup[] = getLocalStorageGroups();
+    groups.push(Object.assign({id:createGroupId(newGroup)}, newGroup));
+    updateLocalStorageGroups(groups);
+    updateObservableGroupsCopy();
+}
+
+export function deleteGroups(
+    groupIds:string[]
+) {
+    const idsToDelete = _.keyBy(groupIds);
+    const groups = getLocalStorageGroups();
+    const filteredGroups = groups.filter(group=>!(group.id in idsToDelete));
+    recentlyDeletedGroups = groups.filter(group=>(group.id in idsToDelete));
+    updateLocalStorageGroups(filteredGroups);
+    updateObservableGroupsCopy();
+}
+
+export function restoreRecentlyDeletedGroups() {
+    while (recentlyDeletedGroups.length > 0) {
+        addGroupToLocalStorage(recentlyDeletedGroups.shift()!);
+    }
+}
+
+function createGroupId(
+    group:SampleGroupWithoutId
+) {
+    return hashString(`${group.name}:${JSON.stringify(group.sampleIdentifiers)}:${Math.random()}`).toString();
+}
