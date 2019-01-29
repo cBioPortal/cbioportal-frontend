@@ -25,6 +25,12 @@ button:active, button:focus, div:focus, div:active {
   color:$text-color !important;
 }
 
+.btn.noBorderRadius {
+  -webkit-border-radius: 0 !important;
+  -moz-border-radius: 0 !important;
+  border-radius: 0 !important;
+}
+
 a {
   cursor:pointer;
   text-decoration:none !important;

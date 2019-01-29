@@ -24,11 +24,18 @@ import { EnrichmentsTableDataStore } from 'pages/resultsView/enrichments/Enrichm
 export interface IExpressionEnrichmentContainerProps {
     data: ExpressionEnrichmentWithQ[];
     selectedProfile: MolecularProfile;
-    store: ResultsViewPageStore;
+    alteredGroupName?:string;
+    unalteredGroupName?:string;
+    store?: ResultsViewPageStore;
 }
 
 @observer
 export default class ExpressionEnrichmentContainer extends React.Component<IExpressionEnrichmentContainerProps, {}> {
+
+    static defaultProps:Partial<IExpressionEnrichmentContainerProps> = {
+        alteredGroupName: "altered group",
+        unalteredGroupName: "unaltered group"
+    };
 
     @observable overExpressedFilter: boolean = true;
     @observable underExpressedFilter: boolean = true;
@@ -40,13 +47,16 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
     @observable.ref highlightedRow:ExpressionEnrichmentRow|undefined;
 
     @computed get data(): ExpressionEnrichmentRow[] {
-        return getExpressionRowData(this.props.data, this.props.store.hugoGeneSymbols);
+        return getExpressionRowData(this.props.data, this.props.store ? this.props.store.hugoGeneSymbols : []);
     }
 
-    @computed get excludeGenes():string[]|null {
-        if (this.props.store.selectedMolecularProfiles.isComplete &&
+    @computed get excludedGenesFromTable():string[]|null {
+        // exclude query genes from table if we're looking at a queried profile
+        if (this.props.store && 
+            this.props.store.selectedMolecularProfiles.isComplete &&
             this.props.store.selectedMolecularProfiles.result
                 .findIndex(x=>x.molecularProfileId === this.props.selectedProfile.molecularProfileId) > -1) {
+
             return this.props.store.hugoGeneSymbols;
         } else {
             return null;
@@ -56,7 +66,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
 
     @computed get filteredData(): ExpressionEnrichmentRow[] {
         return getFilteredData(this.data, this.underExpressedFilter, this.overExpressedFilter, this.significanceFilter, 
-            this.selectedGenes, this.excludeGenes);
+            this.selectedGenes, this.excludedGenesFromTable);
     }
 
     @autobind
@@ -119,7 +129,7 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
             return <div className={'alert alert-info'}>No data/result available</div>;
         }
 
-        const data: any[] = getExpressionScatterData(this.data, this.props.store.hugoGeneSymbols);
+        const data: any[] = getExpressionScatterData(this.data, this.props.store ? this.props.store.hugoGeneSymbols : []);
         const maxData:any = _.maxBy(data, (d) => {
             return Math.ceil(Math.abs(d.x));
         });
@@ -136,14 +146,14 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
                         xAxisLeftLabel="Under-expressed" xAxisRightLabel="Over-expressed" xAxisDomain={Math.ceil(Math.abs(maxData.x))} 
                         xAxisTickValues={null} onGeneNameClick={this.onGeneNameClick} onSelection={this.onSelection} 
                         onSelectionCleared={this.onSelectionCleared}/>
-                    <MiniBoxPlot selectedGeneHugo={this.clickedGeneHugo} selectedGeneEntrez={this.clickedGeneEntrez} 
-                        selectedProfile={this.props.selectedProfile} queryGenes={this.props.store.hugoGeneSymbols} 
-                        selectedGeneQValue={selectedGeneQValue} store={this.props.store}/>
+                    { this.props.store && <MiniBoxPlot selectedGeneHugo={this.clickedGeneHugo} selectedGeneEntrez={this.clickedGeneEntrez}
+                        selectedProfile={this.props.selectedProfile} queryGenes={this.props.store.hugoGeneSymbols}
+                        selectedGeneQValue={selectedGeneQValue} store={this.props.store}/>}
                 </div>
                 <div className={styles.TableContainer}>
                     <div>
                         <h3>{this.props.selectedProfile.name}</h3>
-                        <AddCheckedGenes checkedGenes={this.checkedGenes} store={this.props.store} />
+                        { this.props.store && <AddCheckedGenes checkedGenes={this.checkedGenes} store={this.props.store} />}
                     </div>
                     <hr style={{ marginTop: 0, marginBottom: 5, borderWidth: 2 }} />
                     <div className={styles.Checkboxes}>
@@ -160,8 +170,8 @@ export default class ExpressionEnrichmentContainer extends React.Component<IExpr
                             Significant only
                         </Checkbox>
                     </div>
-                    <ExpressionEnrichmentTable data={this.filteredData} onCheckGene={this.onCheckGene} onGeneNameClick={this.onGeneNameClick}
-                        dataStore={this.dataStore}/>
+                    <ExpressionEnrichmentTable data={this.filteredData} onCheckGene={this.props.store ? this.onCheckGene : undefined}
+                       onGeneNameClick={this.props.store ? this.onGeneNameClick : undefined} dataStore={this.dataStore} alteredGroupName={this.props.alteredGroupName!} unalteredGroupName={this.props.unalteredGroupName!}/>
                 </div>
             </div>
         );
