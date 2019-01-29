@@ -1397,7 +1397,8 @@ export default class PlotsTab extends React.Component<IPlotsTabProps,{}> {
                                     categoryToColor={STUDY_VIEW_CONFIG.colors.reservedValue}
                                     horzCategoryOrder={(this.horzAxisDataPromise.result! as IStringAxisData).categoryOrder}
                                     vertCategoryOrder={(this.vertAxisDataPromise.result! as IStringAxisData).categoryOrder}
-                                    barWidth={50}
+                                    barWidth={20}
+                                    domainPadding={20}
                                     chartBase={PLOT_SIDELENGTH}
                                     axisLabelX={this.horzLabel.result!}
                                     axisLabelY={this.vertLabel.result!}
