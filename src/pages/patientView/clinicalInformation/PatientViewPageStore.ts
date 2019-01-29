@@ -231,6 +231,11 @@ export class PatientViewPageStore {
         invoke: async()=>([await client.getStudyUsingGET({studyId: this.studyId})])
     }, []);
 
+    readonly studyIdToStudy = remoteData({
+        await: ()=>[this.studies],
+        invoke:()=>Promise.resolve(_.keyBy(this.studies.result, x=>x.studyId))
+    }, {});
+
     @computed get studyToCancerType() {
         return makeStudyToCancerTypeMap(this.studies.result);
     }
