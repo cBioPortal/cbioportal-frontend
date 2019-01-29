@@ -7,3 +7,19 @@
     vertical-align:middle !important;
   }
 }
+
+.noAlterationSpan {
+    white-space: nowrap;
+    color: gray;
+}
+
+.notProfiledSpan {
+    white-space: nowrap;
+    color: gray;
+    text-decoration: line-through;
+}
+
+.alterationSpan {
+    white-space: nowrap;
+    font-weight: bold;
+}

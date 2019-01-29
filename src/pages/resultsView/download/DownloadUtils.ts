@@ -144,7 +144,7 @@ export function updateOqlData(datum: GeneticTrackDatum,
     oql.isCnaNotProfiled = isCnaNotProfiled;
     oql.isMrnaExpNotProfiled = isMrnaExpNotProfiled;
     oql.isProteinLevelNotProfiled = isProteinLevelNotProfiled;
-    
+
     return oql;
 }
 
@@ -361,7 +361,8 @@ export function generateCaseAlterationData(
                     sampleId,
                     patientId: sampleIndex[datum.uid] ? sampleIndex[datum.uid].patientId : "",
                     altered: false,
-                    oqlData: {}
+                    oqlData: {},
+                    oqlDataByGene: {}
                 };
 
                 // update altered: a single alteration in any track means altered
@@ -369,8 +370,18 @@ export function generateCaseAlterationData(
 
                 // for each track (for each oql line/gene) the oql data is different
                 // that's why we need a map here
-                caseAlterationData[key].oqlData[data.oql.oql_line] = generateOqlData(datum, geneAlterationDataByGene, molecularProfileIdToMolecularProfile);
+                const generatedOqlData = generateOqlData(datum, geneAlterationDataByGene, molecularProfileIdToMolecularProfile);
+                //generate and update oqlData in caseAlterationData
+                caseAlterationData[key].oqlData[data.oql.oql_line] = generatedOqlData
                 updateOqlData(datum, caseAlterationData[key].oqlData[data.oql.oql_line], molecularProfileIdToMolecularProfile);
+                //generate and update oqlDataByGene in caseAlterationData
+                if (caseAlterationData[key].oqlDataByGene[data.oql.gene] !== undefined) {
+                    caseAlterationData[key].oqlDataByGene[data.oql.gene] = _.merge(generatedOqlData, caseAlterationData[key].oqlDataByGene[data.oql.gene]);
+                }
+                else {
+                    caseAlterationData[key].oqlDataByGene[data.oql.gene] = generatedOqlData;
+                }
+                updateOqlData(datum, caseAlterationData[key].oqlDataByGene[data.oql.gene], molecularProfileIdToMolecularProfile);
             });
         });
     }
