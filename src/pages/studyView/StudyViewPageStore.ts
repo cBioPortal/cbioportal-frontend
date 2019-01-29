@@ -87,6 +87,7 @@ import {getHeatmapMeta} from "../../shared/lib/MDACCUtils";
 import {ChartDimension, ChartTypeEnum, STUDY_VIEW_CONFIG, StudyViewLayout} from "./StudyViewConfig";
 import {getMDAndersonHeatmapStudyMetaUrl} from "../../shared/api/urls";
 import onMobxPromise from "../../shared/lib/onMobxPromise";
+import {SampleGroup} from "../groupComparison/GroupComparisonUtils";
 
 export enum ClinicalDataTypeEnum {
     SAMPLE = 'SAMPLE',
@@ -103,6 +104,7 @@ export enum UniqueKey {
     MUTATED_GENES_TABLE = 'MUTATED_GENES_TABLE',
     CNA_GENES_TABLE = 'CNA_GENES_TABLE',
     CUSTOM_SELECT = 'CUSTOM_SELECT',
+    SELECTED_COMPARISON_GROUPS = 'SELECTED_COMPARISON_GROUPS',
     MUTATION_COUNT_CNA_FRACTION = 'MUTATION_COUNT_CNA_FRACTION',
     DISEASE_FREE_SURVIVAL = 'DFS_SURVIVAL',
     OVERALL_SURVIVAL = 'OS_SURVIVAL',
@@ -275,6 +277,21 @@ export class StudyViewPageStore {
            }
        });
     }
+
+    private _selectedComparisonGroups = observable.shallowMap<boolean>();
+
+    @action public toggleComparisonGroupSelected(groupId:string) {
+        this._selectedComparisonGroups.set(groupId, !this.isComparisonGroupSelected(groupId));
+    }
+
+    public isComparisonGroupSelected(groupId:string) {
+        return !!this._selectedComparisonGroups.get(groupId);
+    }
+
+    @action public removeComparisonGroupSelectionEntry(groupId:string) {
+        this._selectedComparisonGroups.delete(groupId);
+    }
+
 
     @observable private initialFiltersQuery: Partial<StudyViewFilter> = {};
 
@@ -460,6 +477,9 @@ export class StudyViewPageStore {
     public customChartFilterSet =  observable.map<string[]>();
 
     @observable numberOfSelectedSamplesInCustomSelection: number = 0;
+    @computed get numberOfSelectedSamplesInComparisonGroupSelection() {
+        return this.getChartSampleIdentifiersFilter(UniqueKey.SELECTED_COMPARISON_GROUPS).length;
+    }
 
     @observable private _customCharts = observable.shallowMap<ChartMeta>();
     @observable private _customChartsSelectedCases = observable.shallowMap<CustomChartIdentifierWithValue[]>();
@@ -932,6 +952,12 @@ export class StudyViewPageStore {
             }
         }
         this.changeChartVisibility(chartMeta.uniqueKey, visible);
+    }
+
+    @autobind
+    @action
+    removeComparisonGroupSelectionFilter() {
+        this._chartSampleIdentifiersFilterSet.delete(UniqueKey.SELECTED_COMPARISON_GROUPS);
     }
 
     @autobind
