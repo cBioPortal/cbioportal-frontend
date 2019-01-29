@@ -228,8 +228,7 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
     }
 
     @computed get categoryAxisDomainPadding() {
-        // padding needs to be at least half a box width plus a bit
-        return Math.max(this.barWidth/2 + 30, this.domainPadding);
+        return this.domainPadding;
     }
 
     @computed get countAxisDomainPadding() {
@@ -286,7 +285,7 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
     }
 
     @computed get barSeparation() {
-        return 0.5*this.barWidth;
+        return 0.2*this.barWidth;
     }
 
     @computed get barWidth() {
@@ -464,7 +463,7 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
         return barSpecs.map(spec=>(
             <VictoryBar
                 horizontal={this.props.horizontalBars}
-                style={{ data: { fill: spec.fill } }}
+                style={{ data: { fill: spec.fill, width:this.barWidth } }}
                 data={ spec.data }
                 events={this.mouseEvents}
             />
