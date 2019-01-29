@@ -412,11 +412,12 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                         )
                                     }
 
-                                    <LoadingIndicator isLoading={patientViewPageStore.mutationData.isPending || patientViewPageStore.uncalledMutationData.isPending || patientViewPageStore.oncoKbAnnotatedGenes.isPending} />
+                                    <LoadingIndicator isLoading={patientViewPageStore.mutationData.isPending || patientViewPageStore.uncalledMutationData.isPending || patientViewPageStore.oncoKbAnnotatedGenes.isPending || patientViewPageStore.studyIdToStudy.isPending} />
 
                                     {
-                                        (patientViewPageStore.oncoKbAnnotatedGenes.isComplete && patientViewPageStore.mutationData.isComplete && patientViewPageStore.uncalledMutationData.isComplete && !!sampleManager) && (
+                                        (patientViewPageStore.oncoKbAnnotatedGenes.isComplete && patientViewPageStore.mutationData.isComplete && patientViewPageStore.uncalledMutationData.isComplete && !!sampleManager && patientViewPageStore.studyIdToStudy.isComplete) && (
                                             <PatientViewMutationTable
+                                                studyIdToStudy={patientViewPageStore.studyIdToStudy.result}
                                                 sampleManager={sampleManager}
                                                 sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
                                                 uniqueSampleKeyToTumorType={patientViewPageStore.uniqueSampleKeyToTumorType}
@@ -456,31 +457,36 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
                                     <hr />
 
-                                    <LoadingIndicator isLoading={(this.cnaTableStatus === 'loading')} />
+                                    <LoadingIndicator isLoading={(this.cnaTableStatus === 'loading' || patientViewPageStore.studyIdToStudy.isPending)} />
 
-                                    <CopyNumberTableWrapper
-                                        sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
-                                        sampleManager={sampleManager}
-                                        cnaOncoKbData={patientViewPageStore.cnaOncoKbData}
-                                        cnaCivicGenes={patientViewPageStore.cnaCivicGenes}
-                                        cnaCivicVariants={patientViewPageStore.cnaCivicVariants}
-                                        oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
-                                        oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
-                                        enableOncoKb={AppConfig.serverConfig.show_oncokb}
-                                        enableCivic={AppConfig.serverConfig.show_civic}
-                                        userEmailAddress={AppConfig.serverConfig.user_email_address}
-                                        pubMedCache={patientViewPageStore.pubMedCache}
-                                        data={patientViewPageStore.mergedDiscreteCNAData}
-                                        copyNumberCountCache={patientViewPageStore.copyNumberCountCache}
-                                        mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
-                                        gisticData={patientViewPageStore.gisticData.result}
-                                        mrnaExprRankMolecularProfileId={patientViewPageStore.mrnaRankMolecularProfileId.result || undefined}
-                                        status={this.cnaTableStatus}
-                                        columnVisibility={this.cnaTableColumnVisibility}
-                                        columnVisibilityProps={{
-                                            onColumnToggled: this.onCnaTableColumnVisibilityToggled
-                                        }}
-                                    />
+                                    {
+                                        (patientViewPageStore.studyIdToStudy.isComplete) && (
+                                            <CopyNumberTableWrapper
+                                            studyIdToStudy={patientViewPageStore.studyIdToStudy.result}
+                                            sampleIds={sampleManager ? sampleManager.getSampleIdsInOrder() : []}
+                                            sampleManager={sampleManager}
+                                            cnaOncoKbData={patientViewPageStore.cnaOncoKbData}
+                                            cnaCivicGenes={patientViewPageStore.cnaCivicGenes}
+                                            cnaCivicVariants={patientViewPageStore.cnaCivicVariants}
+                                            oncoKbEvidenceCache={patientViewPageStore.oncoKbEvidenceCache}
+                                            oncoKbAnnotatedGenes={patientViewPageStore.oncoKbAnnotatedGenes.result}
+                                            enableOncoKb={AppConfig.serverConfig.show_oncokb}
+                                            enableCivic={AppConfig.serverConfig.show_civic}
+                                            userEmailAddress={AppConfig.serverConfig.user_email_address}
+                                            pubMedCache={patientViewPageStore.pubMedCache}
+                                            data={patientViewPageStore.mergedDiscreteCNAData}
+                                            copyNumberCountCache={patientViewPageStore.copyNumberCountCache}
+                                            mrnaExprRankCache={patientViewPageStore.mrnaExprRankCache}
+                                            gisticData={patientViewPageStore.gisticData.result}
+                                            mrnaExprRankMolecularProfileId={patientViewPageStore.mrnaRankMolecularProfileId.result || undefined}
+                                            status={this.cnaTableStatus}
+                                            columnVisibility={this.cnaTableColumnVisibility}
+                                            columnVisibilityProps={{
+                                                onColumnToggled: this.onCnaTableColumnVisibilityToggled
+                                            }}
+                                        />
+                                        )
+                                    }
                                 </MSKTab>
 
                         {(patientViewPageStore.pageMode === 'patient') && (

@@ -452,7 +452,8 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 enableOncoKb: this.props.enableOncoKb as boolean,
                 enableMyCancerGenome: this.props.enableMyCancerGenome as boolean,
                 enableHotspot: this.props.enableHotspot as boolean,
-                userEmailAddress: this.props.userEmailAddress
+                userEmailAddress: this.props.userEmailAddress,
+                studyIdToStudy: this.props.studyIdToStudy
             })),
             download:(d:Mutation[])=>{
                 return AnnotationColumnFormatter.download(d,
