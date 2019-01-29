@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as _ from "lodash";
 import LazyMobXTable, { Column } from "../../../shared/components/lazyMobXTable/LazyMobXTable";
 import { observer } from "mobx-react";
-import { observable } from "mobx";
+import {computed, observable} from "mobx";
 import { Badge, Checkbox } from 'react-bootstrap';
 import { calculateExpressionTendency } from "./EnrichmentsUtil";
 import { formatLogOddsRatio, formatSignificanceValueWithStyle } from "shared/lib/FormatUtils";
@@ -18,8 +18,10 @@ export interface IExpressionEnrichmentTableProps {
     data: ExpressionEnrichmentRow[];
     initialSortColumn?: string;
     dataStore: EnrichmentsTableDataStore;
-    onCheckGene: (hugoGeneSymbol: string) => void;
-    onGeneNameClick: (hugoGeneSymbol: string, entrezGeneId: number) => void;
+    onCheckGene?: (hugoGeneSymbol: string) => void;
+    onGeneNameClick?: (hugoGeneSymbol: string, entrezGeneId: number) => void;
+    alteredGroupName:string;
+    unalteredGroupName:string;
 }
 
 export enum ExpressionEnrichmentTableColumnType {
@@ -43,13 +45,6 @@ export class ExpressionEnrichmentTableComponent extends LazyMobXTable<Expression
 @observer
 export default class ExpressionEnrichmentTable extends React.Component<IExpressionEnrichmentTableProps, {}> {
 
-    @observable protected _columns: { [columnEnum: number]: ExpressionEnrichmentTableColumn };
-
-    constructor(props: IExpressionEnrichmentTableProps) {
-        super(props);
-        this._columns = this.generateColumns();
-    }
-
     public static defaultProps = {
         columns: [
             ExpressionEnrichmentTableColumnType.GENE,
@@ -69,24 +64,24 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
     private checkboxChange(hugoGeneSymbol: string) {
         const row: ExpressionEnrichmentRow = _.find(this.props.data, {hugoGeneSymbol})!;
         row.checked = !row.checked;
-        this._columns = this.generateColumns();
-        this.props.onCheckGene(hugoGeneSymbol);
+        this.props.onCheckGene!(hugoGeneSymbol);
     }
 
     @autobind
     private onRowClick(d: ExpressionEnrichmentRow) {
-        this.props.onGeneNameClick(d.hugoGeneSymbol, d.entrezGeneId);
+        this.props.onGeneNameClick!(d.hugoGeneSymbol, d.entrezGeneId);
         this.props.dataStore.setHighlighted(d);
     }
 
-    protected generateColumns(): { [columnEnum: number]: ExpressionEnrichmentTableColumn } {
+    @computed get columns(): { [columnEnum: number]: ExpressionEnrichmentTableColumn } {
         const columns: { [columnEnum: number]: ExpressionEnrichmentTableColumn } = {};
 
         columns[ExpressionEnrichmentTableColumnType.GENE] = {
             name: "Gene",
-            render: (d: ExpressionEnrichmentRow) => <div style={{ display: 'flex' }}><Checkbox checked={d.checked} 
+            render: (d: ExpressionEnrichmentRow) => <div style={{ display: 'flex' }}>
+                {this.props.onCheckGene && (<Checkbox checked={d.checked}
                 disabled={d.disabled} key={d.hugoGeneSymbol} className={styles.Checkbox} 
-                onChange={() => this.checkboxChange(d.hugoGeneSymbol)} title={d.disabled ? "This is one of the query genes" : ""} />
+                onChange={() => this.checkboxChange(d.hugoGeneSymbol)} title={d.disabled ? "This is one of the query genes" : ""} />)}
                 <span className={styles.GeneName}>
                 <b>{d.hugoGeneSymbol}</b></span></div>,
             tooltip: <span>Gene</span>,
@@ -106,7 +101,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         };
 
         columns[ExpressionEnrichmentTableColumnType.MEAN_IN_ALTERED] = {
-            name: "μ in altered group",
+            name: `μ in ${this.props.alteredGroupName}`,
             render: (d: ExpressionEnrichmentRow) => <span>{d.meanExpressionInAlteredGroup.toFixed(2)}</span>,
             tooltip: <span>Mean expression of the listed gene in samples that have alterations in the query gene(s).</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.meanExpressionInAlteredGroup,
@@ -114,7 +109,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         };
 
         columns[ExpressionEnrichmentTableColumnType.MEAN_IN_UNALTERED] = {
-            name: "μ in unaltered group",
+            name: `μ in ${this.props.unalteredGroupName}`,
             render: (d: ExpressionEnrichmentRow) => <span>{d.meanExpressionInUnalteredGroup.toFixed(2)}</span>,
             tooltip: <span>Mean expression of the listed gene in samples that do not have alterations in the query gene(s).</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.meanExpressionInUnalteredGroup,
@@ -122,7 +117,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         };
 
         columns[ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_IN_ALTERED] = {
-            name: "σ in altered group",
+            name: `σ in ${this.props.alteredGroupName}`,
             render: (d: ExpressionEnrichmentRow) => <span>{d.standardDeviationInAlteredGroup.toFixed(2)}</span>,
             tooltip: <span>Standard deviation of expression of the listed gene in samples that have alterations in the query gene(s).</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.standardDeviationInAlteredGroup,
@@ -130,7 +125,7 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
         };
 
         columns[ExpressionEnrichmentTableColumnType.STANDARD_DEVIATION_IN_UNALTERED] = {
-            name: "σ in unaltered group",
+            name: `σ in ${this.props.unalteredGroupName}`,
             render: (d: ExpressionEnrichmentRow) => <span>{d.standardDeviationInUnalteredGroup.toFixed(2)}</span>,
             tooltip: <span>Standard deviation of expression of the listed gene in samples that do not have alterations in the query gene(s).</span>,
             sortBy: (d: ExpressionEnrichmentRow) => d.standardDeviationInUnalteredGroup,
@@ -171,11 +166,11 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
                 <table>
                     <tr>
                         <td>Log ratio > 0</td>
-                        <td>: Over-expressed in altered group</td>
+                        <td>: Over-expressed in {this.props.alteredGroupName}</td>
                     </tr>
                     <tr>
                         <td>Log ratio &lt;= 0</td>
-                        <td>: Under-expressed in altered group</td>
+                        <td>: Under-expressed in {this.props.alteredGroupName}</td>
                     </tr>
                     <tr>
                         <td>q-Value &lt; 0.05</td>
@@ -192,11 +187,11 @@ export default class ExpressionEnrichmentTable extends React.Component<IExpressi
     }
 
     public render() {
-        const orderedColumns = _.sortBy(this._columns, (c: ExpressionEnrichmentTableColumn) => c.order);
+        const orderedColumns = _.sortBy(this.columns, (c: ExpressionEnrichmentTableColumn) => c.order);
         return (
             <ExpressionEnrichmentTableComponent initialItemsPerPage={20} paginationProps={{ itemsPerPageOptions: [20] }}
-                columns={orderedColumns} data={this.props.data} initialSortColumn={this.props.initialSortColumn} 
-                onRowClick={this.onRowClick} dataStore={this.props.dataStore}/>
+                columns={orderedColumns} data={this.props.data} initialSortColumn={this.props.initialSortColumn}
+                onRowClick={this.props.onGeneNameClick ? this.onRowClick : undefined} dataStore={this.props.dataStore}/>
         );
     }
 }

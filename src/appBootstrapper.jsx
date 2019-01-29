@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'mobx-react';
-import { hashHistory, browserHistory, createMemoryHistory, Router, useRouterHistory } from 'react-router';
+import { Router, useRouterHistory } from 'react-router';
 import { createHistory } from 'history'
-import { RouterStore, syncHistoryWithStore  } from 'mobx-react-router';
+import { syncHistoryWithStore  } from 'mobx-react-router';
 import ExtendedRoutingStore from './shared/lib/ExtendedRouterStore';
 import {
     fetchServerConfig,
@@ -15,25 +15,17 @@ import {
 } from './config/config';
 
 import './shared/lib/ajaxQuiet';
-import {computed, extendObservable} from 'mobx';
 import makeRoutes from './routes';
 import * as _ from 'lodash';
 import $ from 'jquery';
-import URL from 'url';
 import * as superagent from 'superagent';
 import { getHost } from './shared/api/urls';
-import { validateParametersPatientView } from './shared/lib/validateParameters';
 import AppConfig from "appConfig";
 import browser from 'bowser';
 import { setNetworkListener } from './shared/lib/ajaxQuiet';
 import {initializeTracking} from "shared/lib/tracking";
-import {CancerStudyQueryUrlParams} from "shared/components/query/QueryStore";
-import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
-import {molecularProfileParams} from "shared/components/query/QueryStoreUtils";
-import ExtendedRouterStore from "shared/lib/ExtendedRouterStore";
 import superagentCache from 'superagent-cache';
 import getBrowserWindow from "shared/lib/getBrowserWindow";
-import {getConfigurationServiceApiUrl} from "shared/api/urls";
 import {AppStore} from "./AppStore";
 
 superagentCache(superagent);
