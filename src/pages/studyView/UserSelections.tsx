@@ -16,6 +16,7 @@ export interface IUserSelectionsProps {
     customChartsFilter: {[key:string]:string[]};
     getSelectedGene: (entrezGeneId: number) => string|undefined;
     numberOfSelectedSamplesInCustomSelection: number;
+    numberOfSelectedSamplesInComparisonGroupSelection:number;
     attributesMetaSet: { [id: string]: ChartMeta };
     updateClinicalDataEqualityFilter: (chartMeta: ChartMeta, value: string[]) => void;
     updateClinicalDataIntervalFilter: (chartMeta: ChartMeta, values: ClinicalDataIntervalFilterValue[]) => void;
@@ -28,6 +29,7 @@ export interface IUserSelectionsProps {
     removeWithMutationDataFilter: () => void;
     removeWithCNADataFilter: () => void;
     removeCustomSelectionFilter: () => void,
+    removeComparisonGroupSelectionFilter: ()=>void,
     clearChartSampleIdentifierFilter: (chartMeta: ChartMeta) => void;
     clearAllFilters: () => void
 }
@@ -60,6 +62,22 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
                             content={`${this.props.numberOfSelectedSamplesInCustomSelection} sample${this.props.numberOfSelectedSamplesInCustomSelection > 1 ? 's' : ''}`}
                             backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
                             onDelete={() => this.props.removeCustomSelectionFilter()}
+                        />
+                    ]}
+                    operation={':'}
+                    group={false}/></div>);
+        }
+
+        // Show the filter for the comparison group selection
+        if (this.props.numberOfSelectedSamplesInComparisonGroupSelection > 0) {
+            components.push(<div className={styles.parentGroupLogic}>
+                <GroupLogic
+                    components={[
+                        <span className={styles.filterClinicalAttrName}>Comparison Group Selection</span>,
+                        <PillTag
+                            content={`${this.props.numberOfSelectedSamplesInComparisonGroupSelection} sample${this.props.numberOfSelectedSamplesInComparisonGroupSelection> 1 ? 's' : ''}`}
+                            backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterContent}
+                            onDelete={() => this.props.removeComparisonGroupSelectionFilter()}
                         />
                     ]}
                     operation={':'}

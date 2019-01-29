@@ -2,6 +2,7 @@ import {default as URL, QueryParams} from "url";
 import AppConfig from "appConfig";
 import getBrowserWindow from "../lib/getBrowserWindow";
 import * as _ from 'lodash';
+import {GroupComparisonURLQuery} from "../../pages/groupComparison/GroupComparisonStore";
 
 export function trimTrailingSlash(str:string){
    return str.replace(/\/$/g,"");
@@ -80,6 +81,11 @@ export function getPatientViewUrl(studyId:string, caseId:string, navIds?:{patien
     }
     return buildCBioPortalPageUrl('patient', { studyId, caseId }, hash);
 }
+
+export function getComparisonUrl(params:Partial<GroupComparisonURLQuery>){
+    return buildCBioPortalPageUrl('comparison', params)
+}
+
 export function getPubMedUrl(pmid:string) {
     return _.template(AppConfig.serverConfig.pubmed_url!)({ pmid });
 }
