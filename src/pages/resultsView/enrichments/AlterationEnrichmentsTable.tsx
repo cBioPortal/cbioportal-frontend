@@ -23,8 +23,8 @@ export interface IAlterationEnrichmentTableProps {
     initialSortColumn?: string;
     alterationType: string;
     dataStore: EnrichmentsTableDataStore;
-    onCheckGene: (hugoGeneSymbol: string) => void;
-    onGeneNameClick: (hugoGeneSymbol: string) => void;
+    onCheckGene?: (hugoGeneSymbol: string) => void;
+    onGeneNameClick?: (hugoGeneSymbol: string) => void;
 }
 
 export enum AlterationEnrichmentTableColumnType {
@@ -63,12 +63,12 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
     private checkboxChange(hugoGeneSymbol: string) {
         const row: AlterationEnrichmentRow = _.find(this.props.data, {hugoGeneSymbol})!;
         row.checked = !row.checked;
-        this.props.onCheckGene(hugoGeneSymbol);
+        this.props.onCheckGene!(hugoGeneSymbol);
     }
 
     @autobind
     private onRowClick(d: AlterationEnrichmentRow) {
-        this.props.onGeneNameClick(d.hugoGeneSymbol);
+        this.props.onGeneNameClick!(d.hugoGeneSymbol);
         this.props.dataStore.setHighlighted(d);
     }
 
@@ -77,9 +77,11 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
 
         columns[AlterationEnrichmentTableColumnType.GENE] = {
             name: "Gene",
-            render: (d: AlterationEnrichmentRow) => <div style={{ display: 'flex' }}><Checkbox checked={d.checked} 
-                disabled={d.disabled} key={d.hugoGeneSymbol} className={styles.Checkbox} 
-                onChange={() => this.checkboxChange(d.hugoGeneSymbol)} title={d.disabled ? "This is one of the query genes" : ""} />
+            render: (d: AlterationEnrichmentRow) => <div style={{ display: 'flex' }}>
+                {this.props.onCheckGene && (<Checkbox checked={d.checked}
+                    disabled={d.disabled} key={d.hugoGeneSymbol} className={styles.Checkbox}
+                    onChange={() => this.checkboxChange(d.hugoGeneSymbol)} title={d.disabled ? "This is one of the query genes" : ""} />
+                )}
                 <span className={styles.GeneName}><b>{d.hugoGeneSymbol}</b></span></div>,
             tooltip: <span>Gene</span>,
             filter: (d: AlterationEnrichmentRow, filterString: string, filterStringUpper: string) =>
@@ -176,7 +178,7 @@ export default class AlterationEnrichmentTable extends React.Component<IAlterati
         return (
             <AlterationEnrichmentTableComponent initialItemsPerPage={20} paginationProps={{ itemsPerPageOptions: [20] }}
                 columns={orderedColumns} data={this.props.data} initialSortColumn={this.props.initialSortColumn} 
-                onRowClick={this.onRowClick} dataStore={this.props.dataStore}/>
+                onRowClick={this.props.onGeneNameClick ? this.onRowClick : undefined} dataStore={this.props.dataStore}/>
         );
     }
 }

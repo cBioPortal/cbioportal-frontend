@@ -111,7 +111,7 @@ export const makeRoutes = (routing) => {
                 <Route path="/faq" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(FAQ)} />
                 <Route path="/oql" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(OQL)} />
                 <Route path="/testimonials" onEnter={()=>{$(document).scrollTop(0)}} component={TestimonialsPage}/>
-                <Route path="/group_comparison" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(GroupComparisonPage)}/>
+                <Route path="/comparison" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(GroupComparisonPage)}/>
 
 
                 <Route path="/case.do" onEnter={handleCaseDO} component={getBlankPage()} />
