@@ -253,6 +253,7 @@ export default class GroupComparisonStore {
             }
         }
     });
+    @action
     public setMutationEnrichmentProfile(profile:MolecularProfile|undefined) {
         this._mutationEnrichmentProfile = profile;
     }
@@ -268,6 +269,7 @@ export default class GroupComparisonStore {
             }
         }
     });
+    @action
     public setCopyNumberEnrichmentProfile(profile:MolecularProfile|undefined) {
         this._copyNumberEnrichmentProfile = profile;
     }
@@ -283,6 +285,7 @@ export default class GroupComparisonStore {
             }
         }
     });
+    @action
     public setMRNAEnrichmentProfile(profile:MolecularProfile|undefined) {
         this._mRNAEnrichmentProfile = profile;
     }
@@ -298,6 +301,7 @@ export default class GroupComparisonStore {
             }
         }
     });
+    @action
     public setProteinEnrichmentProfile(profile:MolecularProfile|undefined) {
         this._proteinEnrichmentProfile = profile;
     }
