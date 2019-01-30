@@ -136,7 +136,7 @@ describe('GroupComparisonUtils', () => {
             ]),
                 [{ count: 2, size: 2, label: '2', sets: ['1'] },
                 { count: 1, size: 1, label: '1', sets: ['1', '2'] },
-                { count: 1, size: 2, label: '1', sets: ['2'] }]
+                { count: 1, size: 1, label: '1', sets: ['2'] }]
             );
         });
     });
