@@ -282,6 +282,10 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                 visible={this.showGroupsTooltip}
                                                 placement="bottomLeft"
                                                 destroyTooltipOnHide={true}
+                                                onPopupAlign={(tooltipEl: any)=>{
+                                                    const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
+                                                    arrowEl.style.right = '10px';
+                                                }}
                                                 overlay={()=>(
                                                     <div style={{width: 300}}
                                                          onMouseEnter={()=>this.inGroupsTooltip=true}

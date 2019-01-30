@@ -127,7 +127,8 @@ export function ENRICHMENTS_TOO_MANY_STUDIES_MSG(enrichmentsType:string) {
 }
 
 export function getDefaultGroupName(filters:any) {
-    return "default group name here";
+    // TODO: generate describe name from filters
+    return "<DESCRIPTIVE GENERATED NAME FROM FILTERS>";
 }
 
 export function getTabId(pathname:string) {
