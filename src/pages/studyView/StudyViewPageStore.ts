@@ -88,6 +88,7 @@ import {ChartDimension, ChartTypeEnum, STUDY_VIEW_CONFIG, StudyViewLayout} from 
 import {getMDAndersonHeatmapStudyMetaUrl} from "../../shared/api/urls";
 import onMobxPromise from "../../shared/lib/onMobxPromise";
 import {SampleGroup} from "../groupComparison/GroupComparisonUtils";
+import {getLocalStorageGroups} from "../groupComparison/GroupPersistenceUtils";
 
 export enum ClinicalDataTypeEnum {
     SAMPLE = 'SAMPLE',
@@ -292,6 +293,19 @@ export class StudyViewPageStore {
         this._selectedComparisonGroups.delete(groupId);
     }
 
+    @computed get comparisonGroups() {
+        const allGroups = getLocalStorageGroups();
+        // filter out groups that arent from these studies
+        const relevantStudyIds = _.keyBy(this.studyIds);
+        return allGroups.filter(group=>{
+            const studyIdsInGroup = _.uniq(group.sampleIdentifiers.map(id=>id.studyId));
+            return _.every(studyIdsInGroup, studyId=>(studyId in relevantStudyIds));
+        });
+    }
+
+    @computed get selectedComparisonGroups() {
+        return this.comparisonGroups.filter(group=>this.isComparisonGroupSelected(group.id));
+    }
 
     @observable private initialFiltersQuery: Partial<StudyViewFilter> = {};
 
