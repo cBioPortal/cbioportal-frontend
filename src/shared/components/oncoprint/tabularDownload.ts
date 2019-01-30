@@ -55,12 +55,12 @@ export default function tabularDownload(
         };
     }
     const mrnaMap:any = {
-        'up': 'mRNA Upregulation',
-        'down': 'mRNA Downregulation'
+        'up': 'mRNA High',
+        'down': 'mRNA Low'
     };
     const proteinMap:any = {
-        'down': 'Protein Downregulation',
-        'up': 'Protein Upregulation'
+        'down': 'Protein Low',
+        'up': 'Protein High'
     };
     const fusionMap:any = {
         'true': 'Fusion'
