@@ -76,6 +76,9 @@ export default class Venn extends React.Component<IVennProps, {}> {
             .style("fill-opacity", .8)
             .style("fill", function (d: any) { return self.getColor(d.sets); });
 
+        vennDiagramDiv.selectAll(".venn-intersection text")
+            .style("font-size", '10px');
+
         vennDiagramDiv.selectAll("text")
             .style("fill", "black")
 

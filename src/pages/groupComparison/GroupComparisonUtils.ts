@@ -28,7 +28,7 @@ export function getCombinations(groups: { name: string, cases: string[] }[]) {
     let f = function (res: { groups: string[], cases: string[] }, groups: { name: string, cases: string[] }[]) {
         for (let i = 0; i < groups.length; i++) {
             let currentSet = groups[i];
-            let commonCases = res.cases.length === 0 ? currentSet.cases : _.intersection(res.cases, currentSet.cases)
+            let commonCases = res.groups.length === 0 ? currentSet.cases : _.intersection(res.cases, currentSet.cases)
             let newSet = {
                 groups: [...res.groups, currentSet.name],
                 cases: commonCases
@@ -79,8 +79,7 @@ export function getVennPlotData(combinationSets: { groups: string[], cases: stri
     return combinationSets.map(set => {
         return {
             count: set.cases.length,
-            //this is to make sure all the circle groups are of same size
-            size: set.groups.length === 1 ? maxCount : set.cases.length,
+            size:set.cases.length,
             label: `${set.cases.length}`,
             sets: set.groups
         }
