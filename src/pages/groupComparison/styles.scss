@@ -5,3 +5,29 @@
 .btn-group > .btn.noMarginLeft {
     margin-left:0px !important;
 }
+
+.comparison-group-manager {
+    .group-checkboxes {
+        position:absolute;
+        top:30px;
+        height:130px;
+        width:100%;
+        overflow:auto;
+        padding:3px;
+
+        div.checkbox {
+            margin-bottom:6px;
+        }
+        div.checkbox:first-child {
+            margin-top:0px;
+        }
+        div.checkbox:last-child {
+            margin-bottom:0px;
+        }
+    }
+
+    input.form-control {
+        font-size:12px;
+        height:26px;
+    }
+}
