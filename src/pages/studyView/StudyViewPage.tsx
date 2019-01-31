@@ -8,7 +8,7 @@ import {
     StudyViewPageStore,
     StudyViewPageTabDescriptions,
     StudyViewPageTabKey,
-    StudyViewPageTabKeyEnum
+    StudyViewPageTabKeyEnum, StudyViewURLQuery
 } from 'pages/studyView/StudyViewPageStore';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {ClinicalDataTab} from "./tabs/ClinicalDataTab";
@@ -94,6 +94,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     private queryReaction:IReactionDisposer;
     @observable showCustomSelectTooltip = false;
     private inCustomSelectTooltip = false;
+    private studyViewQueryFilter:StudyViewURLQuery;
 
     constructor(props: IStudyViewPageProps) {
         super();
@@ -108,7 +109,12 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 }
 
                 this.store.updateCurrentTab(props.routing.location.query.tab);
-                this.store.updateStoreFromURL(query);
+                const newStudyViewFilter:StudyViewURLQuery = _.pick(props.routing.location.query, ['id', 'studyId', 'cancer_study_id', 'filters', 'filterAttributeId', 'filterValues']);
+
+                if (!_.isEqual(newStudyViewFilter, this.studyViewQueryFilter)) {
+                    this.store.updateStoreFromURL(newStudyViewFilter);
+                    this.studyViewQueryFilter = newStudyViewFilter;
+                }
             },
             {fireImmediately: true}
         );
@@ -157,13 +163,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 if(!this.inCustomSelectTooltip) {
                     this.showCustomSelectTooltip = false;
                 }
-            }: undefined}>
-                {this.store.unknownQueriedIds.isComplete &&
-                this.store.unknownQueriedIds.result.length > 0 && (
-                    <Alert bsStyle="danger">
-                        <span>Unknown/Unauthorized studies {this.store.unknownQueriedIds.result.join(', ')}</span>
-                    </Alert>
-                )}
+            } : undefined}>
                 <LoadingIndicator size={"big"}
                                   isLoading={(this.store.queriedSampleIdentifiers.isPending || this.store.invalidSampleIds.isPending)}
                                   center={true}/>
