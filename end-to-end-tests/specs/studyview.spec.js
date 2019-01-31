@@ -20,6 +20,7 @@ const ADD_CHART_GENOMIC_TAB = ".addChartTabs a.tabAnchor_Genomic";
 const ADD_CHART_CUSTOM_GROUPS_TAB = ".addChartTabs a[class='tabAnchor_Custom Groups']";
 const ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON = "[data-test='CustomCaseSetSubmitButton']";
 const ADD_CHART_CUSTOM_GROUPS_TEXTAREA = "[data-test='CustomCaseSetInput']";
+const STUDY_SUMMARY_RAW_DATA_DOWNLOAD="[data-test='studySummaryRawDataDownloadIcon']";
 
 describe('study laml_tcga tests', () => {
     before(() => {
@@ -38,6 +39,10 @@ describe('study laml_tcga tests', () => {
         waitForNetworkQuiet();
         const res = browser.checkElement('#mainColumn');
         assertScreenShotMatch(res);
+    });
+
+    it('study should have the raw data available', () =>{
+       assert(browser.isExisting(STUDY_SUMMARY_RAW_DATA_DOWNLOAD));
     });
 
     it('with mutation data only check box should work', () => {
@@ -363,6 +368,19 @@ describe('study view lgg_tcga study tests', () => {
                 assert(!browser.isExisting(pieChart + ' .controls .survivalIcon'));
             });
         })
+    });
+});
+
+describe('multi studies', () => {
+    before(() => {
+        const url = `${CBIOPORTAL_URL}/study?id=acc_tcga,lgg_tcga`;
+        goToUrlAndSetLocalStorage(url);
+        waitForNetworkQuiet();
+    });
+
+
+    it('multi studies view should not have the raw data available', () =>{
+        assert(!browser.isExisting(STUDY_SUMMARY_RAW_DATA_DOWNLOAD));
     });
 });
 
