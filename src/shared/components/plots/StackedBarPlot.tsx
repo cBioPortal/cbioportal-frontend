@@ -3,7 +3,7 @@ import {Observer, observer} from "mobx-react";
 import {IStringAxisData} from "../../../pages/resultsView/plots/PlotsTabUtils";
 import {computed, observable} from "mobx";
 import {bind} from "bind-decorator";
-import CBIOPORTAL_VICTORY_THEME, {axisTickLabelStyles} from "../../theme/cBioPoralTheme";
+import CBIOPORTAL_VICTORY_THEME, {axisTickLabelStyles, baseLabelStyles} from "../../theme/cBioPoralTheme";
 import {getTextWidth} from "../../lib/wrapText";
 import autobind from "autobind-decorator";
 import _ from "lodash";
@@ -123,11 +123,16 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
     }
 
     @computed get chartWidth() {
+        let specifiedWidth:number;
         if (this.props.horizontalBars) {
-            return this.props.chartBase;
+            specifiedWidth = this.props.chartBase;
         } else {
-            return this.chartExtent;
+            specifiedWidth = this.chartExtent;
         }
+        return Math.max(
+            specifiedWidth,
+            getTextWidth(this.props.axisLabelX || "", baseLabelStyles.fontFamily, baseLabelStyles.fontSize+"px")
+        ); // make sure theres enough room for the x-axis label
     }
 
     @computed get chartHeight() {
