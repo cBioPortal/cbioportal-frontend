@@ -199,9 +199,9 @@ describe('study laml_tcga tests', () => {
     })
 });
 
-describe('crc_msk_2018 study tests', () => {
+describe('crc_msk_2017 study tests', () => {
     before(() => {
-        const url = `${CBIOPORTAL_URL}/study?id=crc_msk_2018`;
+        const url = `${CBIOPORTAL_URL}/study?id=crc_msk_2017`;
         goToUrlAndSetLocalStorage(url);
         waitForNetworkQuiet();
     });
