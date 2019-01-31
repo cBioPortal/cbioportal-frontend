@@ -1455,3 +1455,42 @@ export function getMutationProfileDuplicateSamplesReport(
         numSamples, numSurplusPoints
     };
 }
+
+export function makeClinicalAttributeOptions(
+    attributes:Pick<ClinicalAttribute, "datatype"|"clinicalAttributeId"|"displayName"|"priority">[]
+) {
+    {
+
+        // filter out anything but NUMBER or STRING
+        const validDataTypes = ["number", "string"];
+        const validClinicalAttributes = attributes.filter(
+            attribute=>(validDataTypes.indexOf(attribute.datatype.toLowerCase()) > -1)
+        );
+
+        // sort
+        let options = _.sortBy<{value:string, label:string, priority:number}>(validClinicalAttributes.map(attribute=>(
+            {
+                value: attribute.clinicalAttributeId,
+                label: attribute.displayName,
+                priority: parseFloat(attribute.priority || "-1")
+            }
+        )), [(o: any)=>-o.priority, (o: any)=>o.label]);
+
+        // to load more quickly, only filter and annotate with data availability once its ready
+        // TODO: temporarily disabled because cant figure out a way right now to make this work nicely
+        /*if (this.props.store.clinicalAttributeIdToAvailableSampleCount.isComplete) {
+            const sampleCounts = this.props.store.clinicalAttributeIdToAvailableSampleCount.result!;
+            _clinicalAttributes = _clinicalAttributes.filter(option=>{
+                const count = sampleCounts[option.value];
+                if (!count) {
+                    return false;
+                } else {
+                    option.label = `${option.label} (${count} samples)`;
+                    return true;
+                }
+            });
+        }*/
+
+        return options;
+    }
+}
