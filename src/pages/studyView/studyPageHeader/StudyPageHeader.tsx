@@ -20,6 +20,7 @@ export default class StudyPageHeader extends React.Component<IStudyPageHeaderPro
             <div style={{display: 'flex', flexDirection:'column',margin: '0 20px 5px 20px'}}>
                 <div style={{display: 'flex', marginBottom:10}}>
                 <StudySummary
+                    hasRawDataForDownload={this.props.store.hasRawDataForDownload.result}
                     studies={this.props.store.displayedStudies.result}
                     originStudies={this.props.store.originStudies}
                     showOriginStudiesInSummaryDescription={this.props.store.showOriginStudiesInSummaryDescription}
