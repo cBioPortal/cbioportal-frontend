@@ -129,6 +129,7 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
         } else {
             specifiedWidth = this.chartExtent;
         }
+
         return Math.max(
             specifiedWidth,
             getTextWidth(this.props.axisLabelX || "", baseLabelStyles.fontFamily, baseLabelStyles.fontSize+"px")
@@ -380,7 +381,7 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
     @computed get rightPadding() {
         if (this.legendData.length > 0 && this.legendLocation === "right") {
             // make room for legend
-            return Math.max(RIGHT_GUTTER, RIGHT_PADDING_FOR_LONG_LABELS);
+            return this.biggestLegendLabelWidth + 20;
         } else {
             return RIGHT_PADDING_FOR_LONG_LABELS;
         }
@@ -400,6 +401,12 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
         }
 
         return paddingForLabels + paddingForLegend;
+    }
+
+    @computed get biggestLegendLabelWidth() {
+        return Math.max(
+            ...this.data.map(x=>getTextWidth(x.minorCategory, baseLabelStyles.fontFamily, baseLabelStyles.fontSize+"px"))
+        );
     }
 
     @computed get biggestCategoryLabelSize() {
