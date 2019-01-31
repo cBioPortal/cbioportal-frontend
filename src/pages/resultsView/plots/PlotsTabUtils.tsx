@@ -32,6 +32,7 @@ import {isSampleProfiled} from "../../../shared/lib/isSampleProfiled";
 import GenesetMolecularDataCache from "../../../shared/cache/GenesetMolecularDataCache";
 import {GenesetMolecularData} from "../../../shared/api/generated/CBioPortalAPIInternal";
 import {MUTATION_COUNT} from "../../studyView/StudyViewPageStore";
+import ClinicalDataCache from "../../../shared/cache/ClinicalDataCache";
 
 export const CLIN_ATTR_DATA_TYPE = "clinical_attribute";
 export const GENESET_DATA_TYPE = "GENESET_SCORE";
@@ -385,7 +386,7 @@ function scatterPlotCnaLegendData(
 
 function makeAxisDataPromise_Clinical(
     attribute:ClinicalAttribute,
-    clinicalDataCache:MobxPromiseCache<ClinicalAttribute, ClinicalData[]>,
+    clinicalDataCache:ClinicalDataCache,
     patientKeyToSamples:MobxPromise<{[uniquePatientKey:string]:Sample[]}>,
     studyToMutationMolecularProfile: MobxPromise<{[studyId: string]: MolecularProfile}>
 ):MobxPromise<IAxisData> {
@@ -394,7 +395,7 @@ function makeAxisDataPromise_Clinical(
         await:()=>[promise, patientKeyToSamples],
         invoke:()=>{
             const _patientKeyToSamples = patientKeyToSamples.result!;
-            const data:ClinicalData[] = promise.result!;
+            const data:ClinicalData[] = promise.result! as ClinicalData[]; // we know it won't be MutationSpectrum
             const axisData:IAxisData = { data:[], datatype:attribute.datatype.toLowerCase() };
             const shouldParseFloat = attribute.datatype.toLowerCase() === "number";
             const axisData_Data = axisData.data;
@@ -607,7 +608,7 @@ export function makeAxisDataPromise(
     molecularProfileIdToMolecularProfile:MobxPromise<{[molecularProfileId:string]:MolecularProfile}>,
     patientKeyToSamples:MobxPromise<{[uniquePatientKey:string]:Sample[]}>,
     entrezGeneIdToGene:MobxPromise<{[entrezGeneId:number]:Gene}>,
-    clinicalDataCache:MobxPromiseCache<ClinicalAttribute, ClinicalData[]>,
+    clinicalDataCache:ClinicalDataCache,
     mutationCache:MobxPromiseCache<{entrezGeneId:number}, Mutation[]>,
     numericGeneMolecularDataCache:MobxPromiseCache<{entrezGeneId:number, molecularProfileId:string}, NumericGeneMolecularData[]>,
     studyToMutationMolecularProfile: MobxPromise<{[studyId: string]: MolecularProfile}>,
@@ -618,6 +619,8 @@ export function makeAxisDataPromise(
 
     let ret:MobxPromise<IAxisData> = remoteData(()=>new Promise<IAxisData>(()=>0)); // always isPending
     switch (selection.dataType) {
+        case undefined:
+            break;
         case CLIN_ATTR_DATA_TYPE:
             if (selection.dataSourceId !== undefined && clinicalAttributeIdToClinicalAttribute.isComplete) {
                 const attribute = clinicalAttributeIdToClinicalAttribute.result![selection.dataSourceId];

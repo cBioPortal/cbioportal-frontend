@@ -28,7 +28,7 @@ import svgToPdfDownload from "shared/lib/svgToPdfDownload";
 import tabularDownload from "./tabularDownload";
 import classNames from 'classnames';
 import FadeInteraction from "shared/components/fadeInteraction/FadeInteraction";
-import {clinicalAttributeIsLocallyComputed, SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
+import {clinicalAttributeIsLocallyComputed, SpecialAttribute} from "../../cache/ClinicalDataCache";
 import OqlStatusBanner from "../oqlStatusBanner/OqlStatusBanner";
 import {getAnnotatingProgressMessage} from "./ResultsViewOncoprintUtils";
 import ProgressIndicator, {IProgressIndicatorItem} from "../progressIndicator/ProgressIndicator";
@@ -42,13 +42,6 @@ interface IResultsViewOncoprintProps {
     routing:any;
     addOnBecomeVisibleListener?:(callback:()=>void)=>void;
 }
-
-export type OncoprintClinicalAttribute =
-    Pick<ClinicalAttribute, "datatype"|"description"|"displayName"|"patientAttribute"> &
-    {
-        clinicalAttributeId: string|SpecialAttribute;
-        molecularProfileIds?:string[];
-    };
 
 export type SortMode = (
     {type:"data"|"alphabetical"|"caseList", clusteredHeatmapProfile?:undefined} |

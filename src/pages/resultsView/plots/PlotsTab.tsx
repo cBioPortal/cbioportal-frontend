@@ -63,7 +63,7 @@ import setWindowVariable from "../../../shared/lib/setWindowVariable";
 import autobind from "autobind-decorator";
 import fileDownload from 'react-file-download';
 import onMobxPromise from "../../../shared/lib/onMobxPromise";
-import {SpecialAttribute} from "../../../shared/cache/OncoprintClinicalDataCache";
+import {SpecialAttribute} from "../../../shared/cache/ClinicalDataCache";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import ScrollBar from "../../../shared/components/Scrollbar/ScrollBar";
 import {scatterPlotSize} from "../../../shared/components/plots/PlotUtils";
