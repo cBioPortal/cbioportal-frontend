@@ -1253,3 +1253,7 @@ export function submitToPage(url:string, params: { [id: string]: string }, targe
         }
     }
 }
+
+export function getClinicalEqualityFilterValuesByString(filterValues: string):string[] {
+    return filterValues.split(/(?<!\\),/).map(val=>val.trim().replace('\\,',','));
+}
