@@ -82,8 +82,9 @@ import {VirtualStudy} from 'shared/model/VirtualStudy';
 import windowStore from 'shared/components/window/WindowStore';
 import {getHeatmapMeta} from "../../shared/lib/MDACCUtils";
 import {ChartDimension, ChartTypeEnum, STUDY_VIEW_CONFIG, StudyViewLayout} from "./StudyViewConfig";
-import {getMDAndersonHeatmapStudyMetaUrl} from "../../shared/api/urls";
+import {getMDAndersonHeatmapStudyMetaUrl, getStudyDownloadListUrl} from "../../shared/api/urls";
 import onMobxPromise from "../../shared/lib/onMobxPromise";
+import request from 'superagent';
 
 export enum ClinicalDataTypeEnum {
     SAMPLE = 'SAMPLE',
@@ -625,6 +626,19 @@ export class StudyViewPageStore {
                 }, {} as {[patientKey:string]:string}));
             }
         }
+    });
+
+    readonly hasRawDataForDownload = remoteData<boolean>({
+        invoke: async () => {
+            if (this.studyIds.length === 1) {
+                const response = await request(getStudyDownloadListUrl());
+                return response.body.includes(this.studyIds[0]);
+            } else {
+                return false;
+            }
+        },
+        onError: () => false,
+        default: false
     });
 
     readonly clinicalAnalysisGroupsData = remoteData({
@@ -1684,7 +1698,7 @@ export class StudyViewPageStore {
             [UniqueKey.DISEASE_FREE_SURVIVAL, UniqueKey.OVERALL_SURVIVAL] as string[];
         let ret = false;
         for (const chartMeta of this.visibleAttributes) {
-            if (analysisGroupsCharts.indexOf(chartMeta.uniqueKey) > -1) {
+            if (analysisGroupsCharts.includes(chartMeta.uniqueKey)) {
                 ret = true;
                 break;
             }
@@ -2550,10 +2564,10 @@ export class StudyViewPageStore {
             return this.survivalPlots.map(obj => {
                 obj.alteredGroup = getPatientSurvivals(
                     this.survivalData.result,
-                    this.selectedPatientKeys.result!, obj.associatedAttrs[0], obj.associatedAttrs[1], s => obj.filter.indexOf(s) !== -1);
+                    this.selectedPatientKeys.result!, obj.associatedAttrs[0], obj.associatedAttrs[1], s => obj.filter.includes(s));
                 obj.unalteredGroup = getPatientSurvivals(
                     this.survivalData.result,
-                    this.unSelectedPatientKeys.result!, obj.associatedAttrs[0], obj.associatedAttrs[1], s => obj.filter.indexOf(s) !== -1);
+                    this.unSelectedPatientKeys.result!, obj.associatedAttrs[0], obj.associatedAttrs[1], s => obj.filter.includes(s));
                 return obj
             });
         },
