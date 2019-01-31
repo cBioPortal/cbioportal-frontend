@@ -50,8 +50,8 @@ const helpSection = (
                     </li>
                     <li>Protein expression - please use one of the two events below:
                         <ul>
-                            <li><code>UP</code>: Protein Upregulation</li>
-                            <li><code>DOWN</code>: Protein Downregulation</li>
+                            <li><code>HIGH</code>: Protein High</li>
+                            <li><code>LOW</code>: Protein Low</li>
                         </ul>
                     </li>
                 </ul>
