@@ -121,6 +121,10 @@ function getNumberOfStudyViewCharts() {
     return browser.elements('div.react-grid-item').value.length;
 }
 
+function setInputText(selector, text){
+    browser.setValue(selector, '\uE003'.repeat(browser.getValue(selector).length) + text);
+}
+
 module.exports = {
     waitForOncoprint: waitForOncoprint,
     goToUrlAndSetLocalStorage: goToUrlAndSetLocalStorage,
@@ -135,5 +139,6 @@ module.exports = {
     getTextFromElement: getTextFromElement,
     getNumberOfStudyViewCharts: getNumberOfStudyViewCharts,
     setOncoprintMutationsMenuOpen: setOncoprintMutationsMenuOpen,
-    getNthOncoprintTrackOptionsElements: getNthOncoprintTrackOptionsElements
+    getNthOncoprintTrackOptionsElements: getNthOncoprintTrackOptionsElements,
+    setInputText: setInputText,
 };
