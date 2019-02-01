@@ -126,9 +126,9 @@ th.reactable-header-sort-asc:after {
 
 
 
-.secondaryTabs {
+.secondaryNavigation {
 
-  .nav-tabs {
+  > div, > ul {
     border-bottom:none !important;
     box-shadow:0px 1px 2px 0px rgba(0,0,0,0.08);
     margin-top:-19px;
