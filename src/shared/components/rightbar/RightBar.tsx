@@ -7,7 +7,6 @@ import Testimonials from "../testimonials/Testimonials";
 import {ThreeBounce} from 'better-react-spinkit';
 import AppConfig from "appConfig";
 import {QueryStore} from "shared/components/query/QueryStore";
-import { Timeline } from 'react-twitter-widgets';
 import { Link } from 'react-router';
 import getBrowserWindow from "../../lib/getBrowserWindow";
 import ExtendedRouterStore from "../../lib/ExtendedRouterStore";
@@ -69,6 +68,7 @@ export default class RightBar extends React.Component<IRightBarProps, IRightBarS
                 </div>
             );
         } else {
+            let Timeline = require('react-twitter-widgets').Timeline;
             return (
                 <div className="rightBarSection" style={{paddingBottom:20}}>
                     <h3 style={{borderBottom:0}}>
