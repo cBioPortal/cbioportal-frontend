@@ -13,6 +13,7 @@ import {tickFormatNumeral} from "./TickUtils";
 import {makeUniqueColorGetter} from "./PlotUtils";
 import {stringListToIndexSet} from "../../lib/StringUtils";
 import ScatterPlotTooltip from "./ScatterPlotTooltip";
+import { makePlotData, makeBarSpecs, sortDataByCategory } from "./StackedBarPlotUtils";
 
 export interface IStackedBarPlotProps {
     svgId?:string;
@@ -28,6 +29,11 @@ export interface IStackedBarPlotProps {
     axisLabelX?: string;
     axisLabelY?: string;
     legendLocationWidthThreshold?: number;
+}
+
+export interface IStackedBarPlotData {
+    minorCategory:string, 
+    counts:{majorCategory:string, count:number}[]
 }
 
 const RIGHT_GUTTER = 120; // room for legend
@@ -156,7 +162,9 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
     }
 
     @computed get legendData() {
-        return this.data.map(obj=>({
+        return sortDataByCategory(
+            this.data, d=>d.minorCategory, this.minorCategoryOrder
+        ).map(obj=>({
             name: obj.minorCategory,
             symbol:{
                 type: "square",
@@ -184,105 +192,8 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
         }
     }
 
-    @computed get data():{ minorCategory:string, counts:{majorCategory:string, count:number}[], total:number}[] {
-        let majorCategoryData:IStringAxisData["data"];
-        let minorCategoryData:IStringAxisData["data"];
-        let majorCategoryOrder:string[] | undefined;
-        let minorCategoryOrder:string[] | undefined;
-        if (this.props.horizontalBars) {
-            majorCategoryData = this.props.vertData;
-            minorCategoryData = this.props.horzData;
-
-            majorCategoryOrder = this.props.vertCategoryOrder;
-            minorCategoryOrder = this.props.horzCategoryOrder;
-        } else {
-            majorCategoryData = this.props.horzData;
-            minorCategoryData = this.props.vertData;
-
-            majorCategoryOrder = this.props.horzCategoryOrder;
-            minorCategoryOrder = this.props.vertCategoryOrder;
-        }
-        const sampleToMinorCategories:{[sampleKey:string]:string[]} = _.chain(minorCategoryData)
-            .keyBy("uniqueSampleKey")
-            .mapValues(d=>([] as any).concat(d.value))
-            .value();
-
-        const usedMajorCategories:any = {};
-        const usedMinorCategories:any = {};
-        const categoryToCounts:{[minor:string]:{[major:string]:number}} = {};
-        for (const d of majorCategoryData) {
-            const minorCategories = sampleToMinorCategories[d.uniqueSampleKey];
-            if (!minorCategories) {
-                continue;
-            }
-            const majorCategories = ([] as any).concat(d.value);
-            for (const cat of minorCategories) {
-                categoryToCounts[cat] = categoryToCounts[cat] || {};
-                usedMinorCategories[cat] = true;
-                for (const countCat of majorCategories) {
-                    usedMajorCategories[countCat] = true;
-                    categoryToCounts[cat][countCat] = categoryToCounts[cat][countCat] || 0;
-                    categoryToCounts[cat][countCat] += 1;
-                }
-            }
-        }
-        // ensure entries for all used minor categories - we need 0 entries for those major/minor combos we didnt see
-        _.forEach(usedMajorCategories, (z, major)=>{
-            _.forEach(categoryToCounts, majorCounts=>{
-                majorCounts[major] = majorCounts[major] || 0;
-            });
-        });
-
-        /* uncomment this section to ensure entries for categories specified in props
-        // first minor (this matters to make sure everythings covered, bc of the nesting order of categoryToCounts)
-        if (minorCategoryOrder) {
-            for (const cat of minorCategoryOrder) {
-                categoryToCounts[cat] = categoryToCounts[cat] || {};
-            }
-        }
-        // then major
-        if (majorCategoryOrder) {
-            for (const cat of majorCategoryOrder) {
-                _.forEach(categoryToCounts, majorCounts=>{
-                    majorCounts[cat] = majorCounts[cat] || 0;
-                });
-            }
-        }*/
-
-        // turn counts into data
-        // sort if category order is specified
-        const majorCategoryIndex = majorCategoryOrder ? stringListToIndexSet(majorCategoryOrder) : undefined;
-        const minorCategoryIndex = minorCategoryOrder ? stringListToIndexSet(minorCategoryOrder) : undefined;
-        let data = _.map(categoryToCounts, (countsMap:{[majorCategory:string]:number}, minorCategory:string)=>{
-            let counts = _.map(countsMap, (count, majorCategory)=>({
-                majorCategory, count
-            }));
-            if (majorCategoryIndex) {
-                // sort
-                counts = _.sortBy(counts, obj=>{
-                    if (obj.majorCategory in majorCategoryIndex) {
-                        return majorCategoryIndex[obj.majorCategory];
-                    } else {
-                        return Number.POSITIVE_INFINITY;
-                    }
-                });
-            }
-            const total = _.sumBy(counts, "count");
-            return {
-                minorCategory,
-                counts, total
-            };
-        });
-        if (minorCategoryIndex) {
-            data = _.sortBy(data, obj=>{
-                if (obj.minorCategory in minorCategoryIndex) {
-                    return minorCategoryIndex[obj.minorCategory];
-                } else {
-                    return Number.POSITIVE_INFINITY;
-                }
-            });
-        }
-        return data;
+    @computed get data():IStackedBarPlotData[] {
+        return makePlotData(this.props.horzData, this.props.vertData, !!this.props.horizontalBars);
     }
 
     @computed get maxMajorCount() {
@@ -317,8 +228,7 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
     }
 
     @computed get categoryAxisDomainPadding() {
-        // padding needs to be at least half a box width plus a bit
-        return Math.max(this.barWidth/2 + 30, this.domainPadding);
+        return this.domainPadding;
     }
 
     @computed get countAxisDomainPadding() {
@@ -358,11 +268,12 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
 
     @computed get chartExtent() {
         const miscPadding = 100; // specifying chart width in victory doesnt translate directly to the actual graph size
-        const numBars = this.data.length;
-        return this.categoryCoord(numBars - 1) + 2*this.categoryAxisDomainPadding + miscPadding;
-        //return 2*this.domainPadding + numBoxes*this.barWidth + (numBoxes-1)*this.barSeparation;
-        //const ret = Math.max(computedExtent, this.props.chartBase);
-        //return ret;
+        if (this.data.length > 0) {
+            const numBars = this.data[0].counts.length;
+            return this.categoryCoord(numBars - 1) + 2*this.categoryAxisDomainPadding + miscPadding;
+        } else {
+            return miscPadding;
+        }
     }
 
     @computed get svgWidth() {
@@ -374,7 +285,7 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
     }
 
     @computed get barSeparation() {
-        return 0.5*this.barWidth;
+        return 0.2*this.barWidth;
     }
 
     @computed get barWidth() {
@@ -383,7 +294,9 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
 
     @computed get labels() {
         if (this.data.length > 0) {
-            return this.data[0].counts.map(x=>x.majorCategory);
+            return sortDataByCategory(
+                this.data[0].counts.map(c=>c.majorCategory), x=>x, this.majorCategoryOrder
+            );
         } else {
             return [];
         }
@@ -496,7 +409,36 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
             return maxSize*Math.abs(Math.sin((Math.PI/180) * CATEGORY_LABEL_HORZ_ANGLE));
         }
     }
+
+    @computed get minorCategoryOrder() {
+        let order;
+        if (this.props.horizontalBars) {
+            order = this.props.horzCategoryOrder;
+        } else {
+            order = this.props.vertCategoryOrder;
+        }
+        if (order) {
+            return stringListToIndexSet(order);
+        } else {
+            return undefined;
+        }
+    }
+
+    @computed get majorCategoryOrder() {
+        let order;
+        if (this.props.horizontalBars) {
+            order = this.props.vertCategoryOrder;
+        } else {
+            order = this.props.horzCategoryOrder;
+        }
+        if (order) {
+            return stringListToIndexSet(order);
+        } else {
+            return undefined;
+        }
+    }
     
+    @autobind
     private categoryCoord(index:number) {
         return index * (this.barWidth + this.barSeparation); // half box + separation + half box
     }
@@ -510,29 +452,29 @@ export default class StackedBarPlot extends React.Component<IStackedBarPlotProps
     }
 
     private get bars() {
-        // one bar element for each minor category
-        let data = this.data;
-        // for vertical bars, reverse order, to put first on top
-        if (!this.props.horizontalBars) {
-            data = _.reverse(data);
-        }
-        return data.map(({ minorCategory, counts })=>{
-            const fill = this.getColor(minorCategory);
-            return (
-                <VictoryBar
-                    horizontal={this.props.horizontalBars}
-                    style={{ data: { fill } }}
-                    data={ counts.map((obj, index)=>({ x:this.categoryCoord(index), y: obj.count, category:minorCategory, count:obj.count }))}
-                    events={this.mouseEvents}
-                />
-            );
-        });
+        const barSpecs = makeBarSpecs(
+            this.data,
+            this.minorCategoryOrder,
+            this.majorCategoryOrder,
+            this.getColor,
+            this.categoryCoord,
+            !!this.props.horizontalBars
+        )
+        return barSpecs.map(spec=>(
+            <VictoryBar
+                horizontal={this.props.horizontalBars}
+                style={{ data: { fill: spec.fill, width:this.barWidth } }}
+                data={ spec.data }
+                events={this.mouseEvents}
+            />
+        ));
     }
 
     private tooltip(datum:any) {
         return (
             <div>
-                <strong>{datum.category}</strong>:&nbsp;{datum.count}&nbsp;sample{datum.count === 1 ? "" : "s"}
+                <strong>{datum.majorCategory}</strong><br/>
+                <strong>{datum.minorCategory}</strong>:&nbsp;{datum.count}&nbsp;sample{datum.count === 1 ? "" : "s"}
             </div>
         );
     }
