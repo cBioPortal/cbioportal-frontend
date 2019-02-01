@@ -380,19 +380,22 @@ var LookupRuleSet = (function () {
 })();
 
 var ConditionRuleSet = (function () {
-    function ConditionRuleSet(params) {
+    function ConditionRuleSet(params, omitNArule) {
 	RuleSet.call(this, params);
 	this.rule_id_to_condition = {};
 
-	this.addRule(function (d) {
-	    return d[NA_STRING] === true;
-	},
-		{shapes: makeNAShapes(params.na_z || 1000),
-		    legend_label: params.na_legend_label || NA_LABEL,
-		    exclude_from_legend: false,
-		    legend_config: {'type': 'rule', 'target': {'na': true}},
-			legend_order: Number.POSITIVE_INFINITY
-		});
+        if (!omitNArule) {
+                this.addRule(function (d) {
+                return d[NA_STRING] === true;
+                },
+                {
+                shapes: makeNAShapes(params.na_z || 1000),
+                legend_label: params.na_legend_label || NA_LABEL,
+                exclude_from_legend: false,
+                legend_config: {'type': 'rule', 'target': {'na': true}},
+                legend_order: Number.POSITIVE_INFINITY
+                });
+        }
     }
     ConditionRuleSet.prototype = Object.create(RuleSet.prototype);
 
@@ -424,20 +427,22 @@ var ConditionRuleSet = (function () {
 })();
 
 var CategoricalRuleSet = (function () {
-    function CategoricalRuleSet(params) {
+    function CategoricalRuleSet(params, omitNArule) {
 	/* params
 	 * - category_key
 	 * - categoryToColor
 	 */
 	LookupRuleSet.call(this, params);
 
-	this.addRule(NA_STRING, true, {
-	    shapes: makeNAShapes(params.na_z || 1000),
-	    legend_label: params.na_legend_label || NA_LABEL,
-	    exclude_from_legend: false,
-	    legend_config: {'type': 'rule', 'target': {'na': true}},
-		legend_order: Number.POSITIVE_INFINITY
-	});
+        if (!omitNArule) {
+                this.addRule(NA_STRING, true, {
+                shapes: makeNAShapes(params.na_z || 1000),
+                legend_label: params.na_legend_label || NA_LABEL,
+                exclude_from_legend: false,
+                legend_config: {'type': 'rule', 'target': {'na': true}},
+                        legend_order: Number.POSITIVE_INFINITY
+                });
+        }
 
 	this.category_key = params.category_key;
 	this.category_to_color = cloneShallow(ifndef(params.category_to_color, {}));
@@ -606,6 +611,7 @@ var GradientRuleSet = (function () {
     function GradientRuleSet(params) {
 	/* params
 	 * - colors || colormap_name
+         * - value_stop_points
 	 * - null_color
 	 */
 	LinearInterpRuleSet.call(this, params);
@@ -935,11 +941,65 @@ var Rule = (function () {
     return Rule;
 })();
 
+var GradientCategoricalRuleSet = (function() {
+
+        function GradientCategoricalRuleSet(params) {
+	        RuleSet.call(this, params);
+	        this.prototype = Object.create(RuleSet.prototype);
+                // For the GradientCategoricalRuleSet a datum must always have a 
+                // value and may have a category attribute. A datum is 'NA'
+                // when not meeting the requirements for the GradientRuleSet.
+                // To achieve correct evaluation, the CategoricalRuleSet is 
+                // asked not to contribute an `NA` rule (via `true` flag).
+                this.gradientRuleSet = new GradientRuleSet(params);
+                this.categoricalRuleSet = new CategoricalRuleSet(params, true);
+        }
+
+        // inherit methods from RuleSet
+        GradientCategoricalRuleSet.prototype = Object.create(RuleSet.prototype);
+
+        // RuleSet API
+	GradientCategoricalRuleSet.prototype.apply = function(data, cell_width, cell_height, out_active_rules, data_id_key, important_ids) {
+
+		var shapes = [];
+		// check the type of datum (categorical or continuous) and delegate
+                // fetching of shapes to the appropriate RuleSet class
+		for (var i = 0; i < data.length; i++) {
+			var datum = data[i];
+			if ( this.isCategorical(datum) ) {
+				shapes.push( this.categoricalRuleSet.apply([datum], cell_width, cell_height, out_active_rules, data_id_key, important_ids)[0] );
+			} else {
+				shapes.push( this.gradientRuleSet.apply([datum], cell_width, cell_height, out_active_rules, data_id_key, important_ids)[0] );
+			}
+		}
+		return shapes;
+	}
+
+	// RuleSet API
+	GradientCategoricalRuleSet.prototype.getRulesWithId = function(datum) {
+		var categoricalRules = this.categoricalRuleSet.getRulesWithId(datum);
+		var gradientRules = this.gradientRuleSet.getRulesWithId(datum);
+		var rules = categoricalRules.concat(gradientRules);
+		return rules;
+	}
+
+	// helper function
+	GradientCategoricalRuleSet.prototype.isCategorical = function(datum) {
+                // A categorical value is recognized by presence of a category attribute.
+                // Note: a categorical datum still requires a continuous value (used for clustering).
+		return datum[this.categoricalRuleSet.category_key] !== undefined;
+	}
+
+        return GradientCategoricalRuleSet;
+})();
+
 module.exports = function (params) {
     if (params.type === 'categorical') {
 	return new CategoricalRuleSet(params);
     } else if (params.type === 'gradient') {
 	return new GradientRuleSet(params);
+    } else if (params.type === 'gradient+categorical') {
+	return new GradientCategoricalRuleSet(params);
     } else if (params.type === 'bar') {
 	return new BarRuleSet(params);
     } else if (params.type === 'stacked_bar') {

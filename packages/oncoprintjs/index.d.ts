@@ -35,6 +35,7 @@ declare module "oncoprintjs"
                                 IGradientRuleSetParams |
                                 IBarRuleSetParams |
                                 IStackedBarRuleSetParams |
+                                IGradientAndCategoricalRuleSetParams |
                                 IGeneticAlterationRuleSetParams;
 
     interface IGeneralRuleSetParams {
@@ -55,13 +56,33 @@ declare module "oncoprintjs"
     export interface IGradientRuleSetParams extends IGeneralRuleSetParams {
         type: "gradient"
         // either `colormap_name` or `colors` needs to be present
-        colors?: string[]|number[][]; // hex, rgb, rgba | [r,g,b,a][]
+        colors?: [number, number, number, number][]; // [r,g,b,a][]
         colormap_name?: string; // name of a colormap found in src/js/heatmapcolors.js
+        value_stop_points: number[];
         null_color?: string;
 
         log_scale?:boolean;
         value_key: string;
         value_range: [number, number];
+    }
+
+    // TODO: it would be more elegant to create multiple inheritance (if possible) since
+    // IGradientAndCategoricalRuleSetParams is a IGradientRuleSetParams and 
+    // ICategoricalRuleSetParams with a different `type` field.
+    export interface IGradientAndCategoricalRuleSetParams extends IGeneralRuleSetParams {
+        type: "gradient+categorical";
+        // either `colormap_name` or `colors` needs to be present
+        colors?: [number, number, number, number][]; // [r,g,b,a][]
+        colormap_name?: string; // name of a colormap found in src/js/heatmapcolors.js
+        value_stop_points: number[];
+        null_color?: string;
+
+        log_scale?:boolean;
+        value_key: string;
+        value_range: [number, number];
+
+        category_key: string; // key into data which gives category
+        category_to_color?: {[category:string]:string};
     }
 
     export interface IBarRuleSetParams extends IGeneralRuleSetParams {
