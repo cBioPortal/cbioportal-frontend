@@ -98,8 +98,11 @@ export function groupMutationsByProteinStartPos(mutationData: Mutation[][]): {[p
     for (const mutations of mutationData) {
         for (const mutation of mutations) {
             const codon = mutation.proteinPosStart;
-            map[codon] = map[codon] || [];
-            map[codon].push(mutation);
+
+            if (codon !== undefined && codon !== null) {
+                map[codon] = map[codon] || [];
+                map[codon].push(mutation);
+            }
         }
     }
 
