@@ -1,8 +1,9 @@
 import * as _ from 'lodash';
 import {
-    Citations, Evidence, EvidenceQueries, EvidenceQueryRes, IndicatorQueryResp,
-    Query
+    Citations, Evidence, EvidenceQueries, EvidenceQueryRes, IndicatorQueryResp, Query
 } from "shared/api/generated/OncoKbAPI";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
+import {IOncoKbData} from "shared/model/OncoKB";
 
 /**
  * @author Selcuk Onur Sumer
@@ -263,6 +264,57 @@ export function initEvidence()
             resistance: []
         }
     };
+}
+
+export function getIndicatorData(mutation: Mutation, oncoKbData: IOncoKbData): IndicatorQueryResp|undefined
+{
+    if (oncoKbData.uniqueSampleKeyToTumorType === null || oncoKbData.indicatorMap === null) {
+        return undefined;
+    }
+
+    const id = generateQueryVariantId(mutation.gene.entrezGeneId,
+        oncoKbData.uniqueSampleKeyToTumorType[mutation.uniqueSampleKey],
+        mutation.proteinChange,
+        mutation.mutationType);
+
+    return oncoKbData.indicatorMap[id];
+}
+
+export function getEvidenceQuery(mutation: Mutation, oncoKbData: IOncoKbData): Query|undefined
+{
+    // return null in case sampleToTumorMap is null
+    return oncoKbData.uniqueSampleKeyToTumorType ? generateQueryVariant(mutation.gene.entrezGeneId,
+        oncoKbData.uniqueSampleKeyToTumorType[mutation.uniqueSampleKey],
+        mutation.proteinChange,
+        mutation.mutationType,
+        mutation.proteinPosStart,
+        mutation.proteinPosEnd
+    ) : undefined;
+}
+
+export function groupOncoKbIndicatorDataByMutations(mutationsByPosition: {[pos: number]: Mutation[]},
+                                                    oncoKbData: IOncoKbData,
+                                                    filter?: (indicator: IndicatorQueryResp) => boolean): {[pos: number]: IndicatorQueryResp[]}
+{
+    const indicatorMap: {[pos: number]: IndicatorQueryResp[]} = {};
+
+    _.keys(mutationsByPosition).forEach(key => {
+        const position = Number(key);
+        const indicators: IndicatorQueryResp[] = mutationsByPosition[position]
+            .map(mutation => getIndicatorData(mutation, oncoKbData))
+            .filter(indicator =>
+                indicator !== undefined && (!filter || filter(indicator))) as IndicatorQueryResp[];
+
+        if (position > 0 && indicators.length > 0) {
+            indicatorMap[position] = indicators;
+        }
+    });
+
+    return indicatorMap;
+}
+
+export function defaultOncoKbIndicatorFilter(indicator: IndicatorQueryResp) {
+    return indicator.oncogenic.toLowerCase().trim().includes("oncogenic");
 }
 
 export function processEvidence(evidences:EvidenceQueryRes[]) {
