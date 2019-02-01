@@ -769,7 +769,7 @@ export default class LazyMobXTable<T> extends React.Component<LazyMobXTableProps
                 { this.props.showFilter ? (
                     <div className={`pull-right form-group has-feedback input-group-sm tableFilter`} style={{ display:'inline-block', marginLeft: 5}}>
                         <input ref={this.handlers.filterInputRef} placeholder={this.props.filterPlaceholder || ""} type="text" onInput={this.handlers.onFilterTextChange} className="form-control tableSearchInput" style={{ width:200 }}  />
-                        <span className="fa fa-search form-control-feedback" aria-hidden="true"></span>
+                        <span className="fa fa-search form-control-feedback" aria-hidden="true" style={{zIndex: 0}} />
                     </div>
                 ) : ""}
                 {this.props.showColumnVisibility ? (
