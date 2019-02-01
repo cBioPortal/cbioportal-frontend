@@ -12,8 +12,8 @@ const waitForStudyViewSelectedInfo = require('./specUtils').waitForStudyViewSele
 
 const CBIOPORTAL_URL = process.env.CBIOPORTAL_URL.replace(/\/$/, "");
 const CUSTOM_SELECTION_BUTTON = "[data-test='custom-selection-button']";
-const SELECTED_SAMPLES = "span[data-test='selected-samples']";
-const SELECTED_PATIENTS = "span[data-test='selected-patients']";
+const SELECTED_SAMPLES = "strong[data-test='selected-samples']";
+const SELECTED_PATIENTS = "strong[data-test='selected-patients']";
 const ADD_CHART_BUTTON = "[data-test='add-charts-button']";
 const ADD_CHART_CLINICAL_TAB = ".addChartTabs a.tabAnchor_Clinical";
 const ADD_CHART_GENOMIC_TAB = ".addChartTabs a.tabAnchor_Genomic";
@@ -50,8 +50,8 @@ describe('study laml_tcga tests', () => {
         waitForStudyViewSelectedInfo();
         browser.click("[data-test='with-mutation-data'] input");
         waitForStudyViewSelectedInfo();
-        assert(getTextFromElement(SELECTED_PATIENTS) === '197');
-        assert(getTextFromElement(SELECTED_SAMPLES) === '197');
+        assert.equal(getTextFromElement(SELECTED_PATIENTS), '197');
+        assert.equal(getTextFromElement(SELECTED_SAMPLES), '197');
         browser.waitForVisible("[data-test='clear-all-filters']");
         browser.click("[data-test='clear-all-filters']");
     });
