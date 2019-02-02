@@ -112,7 +112,7 @@ let non_mutation_rule_params = {
     },
     // mRNA regulation
     'disp_mrna': {
-	// Light red outline for upregulation
+	// Light red outline for High
 	'up': {
 	    shapes: [{
 		    'type': 'rectangle',
@@ -125,7 +125,7 @@ let non_mutation_rule_params = {
 		    'height': '100%',
 		    'z': 3,
 		}],
-	    legend_label: 'mRNA Upregulation',
+	    legend_label: 'mRNA High',
 		legend_order: MRNA_UP_LEGEND_ORDER
 	},
 	// Light blue outline for downregulation
@@ -141,7 +141,7 @@ let non_mutation_rule_params = {
 		    'height': '100%',
 		    'z': 3,
 		}],
-	    legend_label: 'mRNA Downregulation',
+	    legend_label: 'mRNA Low',
 		legend_order: MRNA_DOWN_LEGEND_ORDER
 	},
     },
@@ -158,7 +158,7 @@ let non_mutation_rule_params = {
 			'height':"20%",
 			'z': 4,
 		}],
-	    legend_label: 'Protein Upregulation',
+	    legend_label: 'Protein High',
 		legend_order: PROT_UP_LEGEND_ORDER
 	},
 	// small down arrow for upregulated
@@ -172,7 +172,7 @@ let non_mutation_rule_params = {
 			'height':"20%",
 			'z': 4,
 		}],
-	    legend_label: 'Protein Downregulation',
+	    legend_label: 'Protein Low',
 		legend_order: PROT_DOWN_LEGEND_ORDER
 	}
     },
