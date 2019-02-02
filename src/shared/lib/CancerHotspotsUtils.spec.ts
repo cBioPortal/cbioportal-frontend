@@ -1,7 +1,17 @@
-import {IHotspotIndex} from "shared/model/CancerHotspots";
 import { assert } from 'chai';
-import {indexHotspots, isHotspot, filterMutationsOnNonHotspotGenes} from "./CancerHotspotsUtils";
-import {Mutation} from "../api/generated/CBioPortalAPI";
+
+import {IHotspotIndex} from "shared/model/CancerHotspots";
+import {Mutation} from "shared/api/generated/CBioPortalAPI";
+import {
+    indexHotspots,
+    isHotspot,
+    filterMutationsOnNonHotspotGenes,
+    filterRecurrentHotspotsByMutations,
+    filter3dHotspotsByMutations,
+    filterHotspotsByMutations,
+    groupHotspotsByMutations,
+    defaultHotspotFilter
+} from "./CancerHotspotsUtils";
 
 describe('CancerHotspotsUtils', () => {
 
@@ -110,26 +120,78 @@ describe('CancerHotspotsUtils', () => {
         hotspotIndex = indexHotspots(hotspots);
     });
 
-    it('properly creates hotspot index', () => {
-        assert.equal(hotspotIndex["17,66,66,A,T"].hotspots.length, 1,
-            "Only one TP53 single-residue hotspot mutation should be indexed.");
+    describe('indexHotspots', () => {
+        it('properly creates hotspot index', () => {
+            assert.equal(hotspotIndex["17,66,66,A,T"].hotspots.length, 1,
+                "Only one TP53 single-residue hotspot mutation should be indexed.");
 
-        assert.equal(hotspotIndex["3,666,668,G,CAT"].hotspots.length, 1,
-            "Only one PIK3CA in-frame indel hotspot mutation should be indexed.");
+            assert.equal(hotspotIndex["3,666,668,G,CAT"].hotspots.length, 1,
+                "Only one PIK3CA in-frame indel hotspot mutation should be indexed.");
 
-        assert.equal(hotspotIndex["4,111,111,T,C"].hotspots.length, 1,
-            "Only one SMURF1 3d hotspot mutation should be indexed.");
+            assert.equal(hotspotIndex["4,111,111,T,C"].hotspots.length, 1,
+                "Only one SMURF1 3d hotspot mutation should be indexed.");
+        });
     });
 
-    it('filters mutations on non hotspot genes', () => {
-        const mutations = [{gene:{hugoGeneSymbol:"TP53"}},{gene:{hugoGeneSymbol:"CLEC9A"}}] as Mutation[];
-        assert.isTrue(filterMutationsOnNonHotspotGenes(mutations).length === 1);
+    describe('filterMutationsOnNonHotspotGenes', () => {
+        it('filters mutations on non hotspot genes', () => {
+            const mutations = [{gene: {hugoGeneSymbol: "TP53"}}, {gene: {hugoGeneSymbol: "CLEC9A"}}] as Mutation[];
+            assert.isTrue(filterMutationsOnNonHotspotGenes(mutations).length === 1);
+        });
     });
 
-    it("isHotspot works correctly", ()=>{
-        assert.isFalse(isHotspot({gene:{chromosome:"1"}, startPosition:2, endPosition:2, referenceAllele:"A", variantAllele:"T"} as Mutation, hotspotIndex));
-        assert.isTrue(isHotspot({gene:{chromosome:"4"}, startPosition:111, endPosition:111, referenceAllele:"T", variantAllele:"C"} as Mutation, hotspotIndex));
-        assert.isFalse(isHotspot({gene:{chromosome:"asdkfjpaosid"}, startPosition:-1, endPosition:-1, referenceAllele:"A", variantAllele:"T"} as Mutation, hotspotIndex));
+    describe("isHotspot", () => {
+        it("isHotspot works correctly", ()=>{
+            assert.isFalse(isHotspot({gene:{chromosome:"1"}, startPosition:2, endPosition:2, referenceAllele:"A", variantAllele:"T"} as Mutation, hotspotIndex));
+            assert.isTrue(isHotspot({gene:{chromosome:"4"}, startPosition:111, endPosition:111, referenceAllele:"T", variantAllele:"C"} as Mutation, hotspotIndex));
+            assert.isFalse(isHotspot({gene:{chromosome:"asdkfjpaosid"}, startPosition:-1, endPosition:-1, referenceAllele:"A", variantAllele:"T"} as Mutation, hotspotIndex));
+        });
+    });
+
+    describe("filterHotspots", () => {
+        const mutations = [
+            {gene:{chromosome:"17"}, startPosition:66, endPosition:66, referenceAllele:"A", variantAllele:"T"},
+            {gene:{chromosome:"3"}, startPosition:666, endPosition:668, referenceAllele:"G", variantAllele:"CAT"},
+            {gene:{chromosome:"4"}, startPosition:111, endPosition:111, referenceAllele:"T", variantAllele:"C"},
+            {gene:{chromosome:"1"}, startPosition:2, endPosition:2, referenceAllele:"A", variantAllele:"T"},
+            {gene:{chromosome:"NA"}, startPosition:-1, endPosition:-1, referenceAllele:"A", variantAllele:"T"},
+        ] as Mutation[];
+
+        it("filters hotspots correctly with the default hotspot filter", () => {
+            const filtered = filterHotspotsByMutations(mutations, hotspotIndex, defaultHotspotFilter);
+            assert.equal(filtered.length, 3, "3 mutations should be identified as hotspot");
+        });
+
+        it("filters recurrent hotspots correctly", () => {
+            const filtered = filterRecurrentHotspotsByMutations(mutations, hotspotIndex);
+            assert.equal(filtered.length, 2, "2 mutations should be identified as recurrent hotspot");
+        });
+
+        it("filters 3D hotspots correctly", () => {
+            const filtered = filter3dHotspotsByMutations(mutations, hotspotIndex);
+            assert.equal(filtered.length, 1, "only 1 mutation should be identified as 3D hotspot");
+        });
+    });
+
+    describe("groupHotspots", () => {
+        const mutationsByPosition = {
+            [1]: [{gene:{chromosome:"17"}, startPosition:66, endPosition:66, referenceAllele:"A", variantAllele:"T"}] as Mutation[],
+            [2]: [{gene:{chromosome:"3"}, startPosition:666, endPosition:668, referenceAllele:"G", variantAllele:"CAT"},
+                {gene:{chromosome:"4"}, startPosition:111, endPosition:111, referenceAllele:"T", variantAllele:"C"},
+                {gene:{chromosome:"NA"}, startPosition:-1, endPosition:-1, referenceAllele:"A", variantAllele:"T"}] as Mutation[],
+            [4]: [{gene:{chromosome:"1"}, startPosition:2, endPosition:2, referenceAllele:"A", variantAllele:"T"}] as Mutation[],
+        };
+
+        it("groups hotspots by mutations grouped by protein position", () => {
+            const grouped = groupHotspotsByMutations(mutationsByPosition, hotspotIndex, defaultHotspotFilter);
+
+            assert.equal(grouped[1].length, 1,
+                "all mutations at position 1 should be filtered as hotspot");
+            assert.equal(grouped[2].length, 2,
+                "2 out of 3 mutations at position 2 should be filtered as hotspot");
+            assert.isUndefined(grouped[4],
+                "there should NOT be any hotspot mutations at position 4");
+        });
     });
 
     after(() => {

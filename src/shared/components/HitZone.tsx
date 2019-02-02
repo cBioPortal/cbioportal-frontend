@@ -14,6 +14,46 @@ type HitZoneProps = {
     onMouseLeave?:()=>void;
 };
 
+export type HitZoneConfig = {
+    hitRect: {x:number, y:number, width:number, height:number};
+    content?: JSX.Element;
+    tooltipPlacement?: string;
+    cursor?: string;
+    onMouseOver?: () => void;
+    onClick?: () => void;
+    onMouseOut?: () => void;
+};
+
+export function defaultHitzoneConfig(): HitZoneConfig
+{
+    return {
+        hitRect: {
+            x:0, y:0, width:0, height:0
+        },
+        content:(<span/>),
+        tooltipPlacement: "top",
+        cursor: "pointer",
+        onMouseOver:()=>0,
+        onClick:()=>0,
+        onMouseOut:()=>0
+    };
+}
+
+export function initHitZoneFromConfig(config: HitZoneConfig) {
+    return (
+        <HitZone
+            y={config.hitRect.y}
+            x={config.hitRect.x}
+            width={config.hitRect.width}
+            height={config.hitRect.height}
+            onMouseOver={config.onMouseOver}
+            onClick={config.onClick}
+            onMouseOut={config.onMouseOut}
+            cursor={config.cursor}
+        />
+    );
+}
+
 //@observer
 export class HitZone extends React.Component<HitZoneProps, {}> {
     private handlers:any;

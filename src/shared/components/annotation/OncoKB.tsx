@@ -1,5 +1,4 @@
 import * as React from "react";
-import {Modal} from "react-bootstrap";
 import {observer} from "mobx-react";
 import {Circle} from "better-react-spinkit";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
@@ -14,10 +13,10 @@ import {
 } from "shared/lib/OncoKbUtils";
 import {observable} from "mobx";
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
-import OncoKbTooltip from "./OncoKbTooltip";
 import OncokbPubMedCache from "shared/cache/PubMedCache";
-import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
-import AppConfig from "appConfig";
+import {errorIcon, loaderIcon} from "./StatusHelpers";
+import OncoKbTooltip from "./OncoKbTooltip";
+import OncoKbFeedback from "./OncoKbFeedback";
 
 export interface IOncoKbProps {
     status: "pending" | "error" | "complete";
@@ -96,10 +95,10 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
         );
 
         if (this.props.status === "error") {
-            oncoKbContent = this.errorIcon();
+            oncoKbContent = errorIcon("Error fetching OncoKB data");
         }
         else if (this.props.status === "pending") {
-            oncoKbContent = this.loaderIcon();
+            oncoKbContent = loaderIcon("pull-left");
         }
         else
         {
@@ -118,7 +117,13 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
                 oncoKbContent = (
                     <span>
                         {oncoKbContent}
-                        {this.feedbackModal(this.props.hugoGeneSymbol, this.props.evidenceQuery && this.props.evidenceQuery.alteration)}
+                        <OncoKbFeedback
+                            userEmailAddress={this.props.userEmailAddress}
+                            hugoSymbol={this.props.hugoGeneSymbol}
+                            alteration={this.props.evidenceQuery ? this.props.evidenceQuery.alteration : undefined}
+                            showFeedback={this.showFeedback}
+                            handleFeedbackClose={this.handleFeedbackClose}
+                        />
                     </span>
                 );
             }
@@ -139,56 +144,6 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
         }
 
         return oncoKbContent;
-    }
-
-    public loaderIcon()
-    {
-        return (
-            <Circle size={18} scaleEnd={0.5} scaleStart={0.2} color="#aaa" className="pull-left"/>
-        );
-    }
-
-    public errorIcon()
-    {
-        return (
-            <DefaultTooltip
-                overlay={<span>Error fetching OncoKB data</span>}
-                placement="right"
-                trigger={['hover', 'focus']}
-                destroyTooltipOnHide={true}
-            >
-                <span className={`${annotationStyles["annotation-item-error"]}`}>
-                    <i className="fa fa-exclamation-triangle text-danger" />
-                </span>
-            </DefaultTooltip>
-        );
-    }
-
-    public feedbackModal(hugoSymbol?:string, alteration?:string)
-    {
-        const url = "https://docs.google.com/forms/d/1lt6TtecxHrhIE06gAKVF_JW4zKFoowNFzxn6PJv4g7A/viewform";
-        const geneParam = `entry.1744186665=${hugoSymbol || ''}`;
-        const alterationParam = `entry.1671960263=${alteration || ''}`;
-        const userParam = `entry.1381123986=${this.props.userEmailAddress || ''}`;
-        const uriParam = `entry.1083850662=${encodeURIComponent(window.location.href)}`;
-
-        return (
-            <Modal show={this.showFeedback} onHide={this.handleFeedbackClose}>
-                <Modal.Header closeButton>
-                    <Modal.Title>OncoKB Annotation Feedback</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <iframe
-                        src={`${url}?${geneParam}&${alterationParam}&entry.118699694&entry.1568641202&${userParam}&${uriParam}&embedded=true`}
-                        style={{width:550, height:500, border:"none", marginLeft:"10px"}}
-                        marginHeight={0}
-                        marginWidth={0}
-                    >
-                        <TableCellStatusIndicator status={TableCellStatus.LOADING} />
-                    </iframe>
-                </Modal.Body>
-            </Modal>
-        );
     }
 
     private tooltipContent(): JSX.Element
