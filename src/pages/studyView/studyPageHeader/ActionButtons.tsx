@@ -1,0 +1,125 @@
+import * as React from 'react';
+import * as _ from 'lodash';
+import {observer} from "mobx-react";
+import {action, computed, observable} from 'mobx';
+import styles from "../styles.module.scss";
+import autobind from "autobind-decorator";
+import {getPatientViewUrl} from 'shared/api/urls';
+import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
+import VirtualStudy from 'pages/studyView/virtualStudy/VirtualStudy';
+import fileDownload from 'react-file-download';
+import {Else, If, Then} from 'react-if';
+import {StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
+import classNames from "classnames";
+import {AppStore} from "../../../AppStore";
+
+export interface ActionButtonsProps {
+    store: StudyViewPageStore;
+    appStore: AppStore;
+}
+
+@observer
+export default class ActionButtons extends React.Component<ActionButtonsProps, {}> {
+
+    @observable downloadingData = false;
+    @observable showDownloadErrorMessage = false;
+
+    @autobind
+    private initiateDownload() {
+        this.downloadingData = true;
+        this.showDownloadErrorMessage = false;
+        this.props.store.getDownloadDataPromise().then(text => {
+            this.downloadingData = false;
+            fileDownload(text, this.props.store.clinicalDataDownloadFilename);
+        }).catch(() => {
+            this.downloadingData = false;
+            this.showDownloadErrorMessage = true;
+        });
+    }
+
+    @autobind
+    private openCases() {
+        if (!_.isEmpty(this.props.store.selectedPatients)) {
+            const firstPatient = this.props.store.selectedPatients[0];
+
+            let navCaseIds = _.map(this.props.store.selectedPatients, patient => {
+                return {patientId: patient.patientId, studyId: patient.studyId}
+            });
+
+            window.open(getPatientViewUrl(firstPatient.studyId, firstPatient.patientId, navCaseIds));
+        }
+    }
+
+    @computed
+    get virtualStudyButtonTooltip() {
+        return ((!this.props.appStore.isLoggedIn) ? '' : 'Save/') + 'Share Virtual Study';
+    }
+
+    @computed
+    get downloadButtonTooltip() {
+        if (this.showDownloadErrorMessage) {
+            return "An error occurred while downloading the data. Please try again.";
+        }
+        return 'Download clinical data for the selected cases';
+    }
+
+
+    render() {
+        return (
+            <div className={classNames(styles.actionButtons, "btn-group")}>
+
+                <DefaultTooltip
+                    trigger={["hover"]}
+                    placement={"top"}
+                    overlay={<span>View selected cases</span>}
+                >
+                    <button className="btn btn-default btn-sm" onClick={this.openCases}>
+                        <i className="fa fa-user-circle-o"></i>
+                    </button>
+                </DefaultTooltip>
+
+                <DefaultTooltip
+                    trigger={['click']}
+                    destroyTooltipOnHide={true}
+                    overlay={
+                        <VirtualStudy
+                            user={this.props.appStore.userName}
+                            studyWithSamples={this.props.store.studyWithSamples.result}
+                            selectedSamples={this.props.store.selectedSamples.result}
+                            filter={this.props.store.userSelections}
+                            attributesMetaSet={this.props.store.chartMetaSet}
+                        />
+                    }
+                    placement="bottom"
+                >
+                    <DefaultTooltip
+                        placement={"top"}
+                        trigger={['hover']}
+                        overlay={<span>{this.virtualStudyButtonTooltip}</span>}
+                    >
+                        <button className="btn btn-default btn-sm">
+                            <i className="fa fa-bookmark"></i>
+                        </button>
+                    </DefaultTooltip>
+                </DefaultTooltip>
+
+                <DefaultTooltip
+                    trigger={["hover"]}
+                    placement={"top"}
+                    overlay={<span>{this.downloadButtonTooltip}</span>}
+                >
+                    <button className="btn btn-default btn-sm" onClick={this.initiateDownload}>
+                            <If condition={this.downloadingData}>
+                                <Then>
+                                    <i className="fa fa-spinner fa-spin"></i>
+                                </Then>
+                                <Else>
+                                    <i className="fa fa-download"></i>
+                                </Else>
+                            </If>
+                    </button>
+                </DefaultTooltip>
+            </div>
+        )
+    }
+}
