@@ -8,7 +8,7 @@ import {
     StudyViewPageStore,
     StudyViewPageTabDescriptions,
     StudyViewPageTabKey,
-    StudyViewPageTabKeyEnum
+    StudyViewPageTabKeyEnum, StudyViewURLQuery
 } from 'pages/studyView/StudyViewPageStore';
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import {ClinicalDataTab} from "./tabs/ClinicalDataTab";
@@ -32,52 +32,24 @@ import {Else, If, Then} from 'react-if';
 import DefaultTooltip from "../../shared/components/defaultTooltip/DefaultTooltip";
 import CustomCaseSelection from "./addChartButton/customCaseSelection/CustomCaseSelection";
 import {AppStore} from "../../AppStore";
+import ActionButtons from "./studyPageHeader/ActionButtons";
 
 export interface IStudyViewPageProps {
     routing: any;
     appStore: AppStore;
 }
 
-export class StudyResultsSummary extends React.Component<{ store:StudyViewPageStore },{}> {
+export class StudyResultsSummary extends React.Component<{ store:StudyViewPageStore, appStore:AppStore },{}> {
 
     render(){
         return (
-            <div className={"studyFilterResult"}>
-                <SelectedInfo selectedSamplesCount={this.props.store.selectedSamples.result.length} selectedPatientsCount={this.props.store.selectedPatients.length}/>
-
-                {this.props.store.mutationProfiles.result.length > 0 && (
-                    <div data-test="with-mutation-data">
-                        <LoadingIndicator
-                            isLoading={this.props.store.molecularProfileSampleCounts.isPending}/>
-                        {this.props.store.molecularProfileSampleCounts.isComplete && (
-                            <LabeledCheckbox
-                                inputProps={{className: styles.selectedInfoCheckbox}}
-                                checked={!!this.props.store.filters.withMutationData}
-                                onChange={this.props.store.toggleWithMutationDataFilter}
-                                disabled={this.props.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples === undefined}
-                            >
-                                {this.props.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples === undefined ? '0' : this.props.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples.toLocaleString()} w/ mutation data
-                            </LabeledCheckbox>
-                        )}
-                    </div>
-                )}
-                {this.props.store.cnaProfiles.result.length > 0 && (
-                    <div data-test="with-cna-data">
-                        <LoadingIndicator
-                            isLoading={this.props.store.molecularProfileSampleCounts.isPending}/>
-                        {this.props.store.molecularProfileSampleCounts.isComplete && (
-                            <LabeledCheckbox
-                                inputProps={{className: styles.selectedInfoCheckbox}}
-                                checked={!!this.props.store.filters.withCNAData}
-                                onChange={this.props.store.toggleWithCNADataFilter}
-                                disabled={this.props.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples === undefined}
-                            >
-                                {this.props.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples === undefined ? '0' : this.props.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples.toLocaleString()} w/ CNA data
-                            </LabeledCheckbox>
-                        )}
-                    </div>
-                )}
-
+            <div className={styles.studyFilterResult}>
+                 <div className={styles.selectedInfo} data-test="selected-info">
+                     <strong>Selected:&nbsp;</strong>
+                     <strong data-test="selected-patients">{this.props.store.selectedPatients.length.toLocaleString()}</strong>&nbsp;<strong>patients</strong>&nbsp;|&nbsp;
+                     <strong data-test="selected-samples">{this.props.store.selectedSamples.result.length.toLocaleString()}</strong>&nbsp;<strong>samples</strong>
+                </div>
+                <ActionButtons store={this.props.store} appStore={this.props.appStore}/>
             </div>
         )
     }
@@ -94,6 +66,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     private queryReaction:IReactionDisposer;
     @observable showCustomSelectTooltip = false;
     private inCustomSelectTooltip = false;
+    private studyViewQueryFilter:StudyViewURLQuery;
 
     constructor(props: IStudyViewPageProps) {
         super();
@@ -108,7 +81,12 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 }
 
                 this.store.updateCurrentTab(props.routing.location.query.tab);
-                this.store.updateStoreFromURL(query);
+                const newStudyViewFilter:StudyViewURLQuery = _.pick(props.routing.location.query, ['id', 'studyId', 'cancer_study_id', 'filters', 'filterAttributeId', 'filterValues']);
+
+                if (!_.isEqual(newStudyViewFilter, this.studyViewQueryFilter)) {
+                    this.store.updateStoreFromURL(newStudyViewFilter);
+                    this.studyViewQueryFilter = newStudyViewFilter;
+                }
             },
             {fireImmediately: true}
         );
@@ -157,13 +135,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                 if(!this.inCustomSelectTooltip) {
                     this.showCustomSelectTooltip = false;
                 }
-            }: undefined}>
-                {this.store.unknownQueriedIds.isComplete &&
-                this.store.unknownQueriedIds.result.length > 0 && (
-                    <Alert bsStyle="danger">
-                        <span>Unknown/Unauthorized studies {this.store.unknownQueriedIds.result.join(', ')}</span>
-                    </Alert>
-                )}
+            } : undefined}>
                 <LoadingIndicator size={"big"}
                                   isLoading={(this.store.queriedSampleIdentifiers.isPending || this.store.invalidSampleIds.isPending)}
                                   center={true}/>
@@ -203,12 +175,11 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                         {
                                             () => {
                                                 return (
-                                                    <div className={styles.selectedInfo}>
                                                         <If condition={this.chartDataPromises.isComplete}>
                                                             <Then>
                                                                 <CSSTransition classNames="studyFilterResult" in={true}
                                                                                appear timeout={{enter: 200}}>
-                                                                    {() => <StudyResultsSummary store={this.store}/>
+                                                                    {() => <StudyResultsSummary store={this.store} appStore={this.props.appStore}/>
                                                                     }
                                                                 </CSSTransition>
                                                             </Then>
@@ -216,13 +187,14 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                                 <LoadingIndicator isLoading={true} size={"small"} className={styles.selectedInfoLoadingIndicator}/>
                                                             </Else>
                                                         </If>
-                                                    </div>)
+                                                )
                                             }
                                         }
                                     </Observer>
                                     {(this.enableAddChartInTabs.includes(this.store.currentTab))
                                     && (
                                         <div style={{display: 'flex'}}>
+
                                             <DefaultTooltip
                                                 visible={this.showCustomSelectTooltip}
                                                 placement={"bottomLeft"}
@@ -249,7 +221,7 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                     </div>
                                                 )}
                                             >
-                                                <button className='btn btn-primary btn-xs'
+                                                <button className='btn btn-primary btn-sm'
                                                         data-test='custom-selection-button'
                                                         onClick={() => {
                                                             this.showCustomSelectTooltip = true;

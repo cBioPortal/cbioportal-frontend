@@ -23,10 +23,11 @@ import ReactGridLayout from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import {observer} from 'mobx-react';
-import UserSelections from "../UserSelections";
+import classNames from 'classnames';
 import {ChartTypeEnum, STUDY_VIEW_CONFIG} from "../StudyViewConfig";
 import ProgressIndicator, {IProgressIndicatorItem} from "../../../shared/components/progressIndicator/ProgressIndicator";
 import autobind from 'autobind-decorator';
+import LabeledCheckbox from "../../../shared/components/labeledCheckbox/LabeledCheckbox";
 
 export interface IStudySummaryTabProps {
     store: StudyViewPageStore
@@ -317,6 +318,47 @@ export class StudySummaryTab extends React.Component<IStudySummaryTabProps, {}> 
     render() {
         return (
             <div>
+
+                <div className="secondaryNavigation">
+                    <div className={styles.quickFilters}>
+                        <strong>Quick Filters:</strong>
+
+                        <LoadingIndicator
+                            isLoading={this.props.store.molecularProfileSampleCounts.isPending || this.props.store.molecularProfileSampleCounts.isPending}/>
+
+                        {this.props.store.mutationProfiles.result.length > 0 && (
+                            <div data-test="with-mutation-data">
+                                {this.props.store.molecularProfileSampleCounts.isComplete && (
+                                    <LabeledCheckbox
+                                        inputProps={{className: styles.selectedInfoCheckbox}}
+                                        checked={!!this.props.store.filters.withMutationData}
+                                        onChange={this.props.store.toggleWithMutationDataFilter}
+                                        disabled={this.props.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples === undefined}
+                                    >
+                                        {this.props.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples === undefined ? '0' : this.props.store.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples.toLocaleString()} w/ mutation data
+                                    </LabeledCheckbox>
+                                )}
+                            </div>
+                        )}
+
+                        {this.props.store.cnaProfiles.result.length > 0 && (
+                            <div data-test="with-cna-data">
+                                {this.props.store.molecularProfileSampleCounts.isComplete && (
+                                    <LabeledCheckbox
+                                        inputProps={{className: styles.selectedInfoCheckbox}}
+                                        checked={!!this.props.store.filters.withCNAData}
+                                        onChange={this.props.store.toggleWithCNADataFilter}
+                                        disabled={this.props.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples === undefined}
+                                    >
+                                        {this.props.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples === undefined ? '0' : this.props.store.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples.toLocaleString()} w/ CNA data
+                                    </LabeledCheckbox>
+                                )}
+                            </div>
+                        )}
+
+                    </div>
+                </div>
+
                 <LoadingIndicator isLoading={this.store.loadingInitialDataForSummaryTab} size={"big"} center={true}>
                     <ProgressIndicator getItems={this.getProgressItems} show={this.store.loadingInitialDataForSummaryTab} sequential={false}/>
                 </LoadingIndicator>
