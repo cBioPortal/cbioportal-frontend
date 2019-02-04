@@ -16,7 +16,7 @@ import ErrorMessage from "../../shared/components/ErrorMessage";
 import GroupSelector from "./GroupSelector";
 import InfoIcon from "shared/components/InfoIcon";
 import {caseCountsInParens, getTabId} from "./GroupComparisonUtils";
-import "./styles.scss";
+import "./styles.module.scss";
 import {StudyLink} from "shared/components/StudyLink/StudyLink";
 import {IReactionDisposer, reaction} from "mobx";
 import autobind from "autobind-decorator";

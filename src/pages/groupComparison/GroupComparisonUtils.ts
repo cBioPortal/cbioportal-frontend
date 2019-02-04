@@ -4,6 +4,7 @@ import {SampleIdentifier, Sample, PatientIdentifier} from "../../shared/api/gene
 import _ from "lodash";
 import {ResultsViewTab} from "../resultsView/ResultsViewPageHelpers";
 import {GroupComparisonTab} from "./GroupComparisonPage";
+import {StudyViewFilter} from "../../shared/api/generated/CBioPortalAPIInternal";
 
 export type SampleGroup = {
     // mandatory:
@@ -126,7 +127,7 @@ export function ENRICHMENTS_TOO_MANY_STUDIES_MSG(enrichmentsType:string) {
     return `Selected comparison groups span more than one study, so we can't show ${enrichmentsType} enrichments. Please deselect groups from the top of the page, or try a different set of groups.`;
 }
 
-export function getDefaultGroupName(filters:any) {
+export function getDefaultGroupName(filters:StudyViewFilter) {
     // TODO: generate describe name from filters
     return "<DESCRIPTIVE GENERATED NAME FROM FILTERS>";
 }
