@@ -2,7 +2,7 @@ import * as React from "react";
 import {observer} from "mobx-react";
 import {StudyViewPageStore, UniqueKey} from "../studyView/StudyViewPageStore";
 import {
-    addGroupToLocalStorage,
+    addGroupToLocalStorage, addSamplesToGroup,
     deleteGroups,
     getLocalStorageGroups,
     restoreRecentlyDeletedGroups
@@ -15,6 +15,7 @@ import _ from "lodash";
 import {SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
 import {getComparisonUrl} from "../../shared/api/urls";
 import "./styles.scss";
+import ReactSelect from "react-select";
 
 export interface IComparisonGroupManagerProps {
     store:StudyViewPageStore;
@@ -33,6 +34,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
             return this._inputGroupName;
         }
     }
+    @observable addSamplesTargetGroupId:string = "";
 
     @autobind
     private onChangeGroupNameFilter(e:SyntheticEvent<HTMLInputElement>) {
@@ -58,6 +60,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
     private cancelAddGroup() {
         this.addGroupPanelOpen = false;
         this._inputGroupName = undefined;
+        this.addSamplesTargetGroupId = "";
     }
 
     private get header() {
@@ -182,10 +185,10 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                     onClick={this.cancelAddGroup}
                 >Cancel</button>,
                 <div style={{position:"absolute", top:39, width:"100%"}}>
-                    <h6>Choose a name:</h6>
+                    <h6>Create new group:</h6>
                     <input
                         className="form-control"
-                        style={{position:"absolute", top:17, width:216}}
+                        style={{position:"absolute", top:17, width:245, height:36}}
                         type="text"
                         placeholder="Group name.."
                         value={this.inputGroupName}
@@ -193,9 +196,8 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                     />
                     <button
                         className="btn btn-xs btn-primary"
-                        style={{position:"absolute", top:18, right:0, paddingTop:2, paddingBottom:2}}
+                        style={{position:"absolute", top:23, right:0, paddingTop:2, paddingBottom:2}}
                         onClick={()=>{
-                            // temp way to get name
                             const defaultGroupName = getDefaultGroupName(this.props.store.filters);
                             addGroupToLocalStorage({
                                 sampleIdentifiers:this.props.store.selectedSamples.result.map(s=>({ sampleId: s.sampleId, studyId: s.studyId})), // samples in the group
@@ -204,9 +206,41 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                             this.addGroupPanelOpen = false;
                         }}
                         disabled={this.inputGroupName.length === 0}
-                    >Save Group</button>
+                    >Create</button>
                 </div>
             ];
+            if (this.props.store.comparisonGroups.length > 0) {
+                contents.push(
+                    <div style={{position:"absolute", top:108, width:"100%"}}>
+                        <h6>Or add to an existing group:</h6>
+                        <div style={{position:"absolute", top:17, width:245}}>
+                            <ReactSelect
+                                name="select existing group"
+                                placeholder="Select or search.."
+                                onChange={(option:any|null)=>{ if (option) { this.addSamplesTargetGroupId = option.value; }}}
+                                options={this.props.store.comparisonGroups.map(group=>({
+                                    label: group.name,
+                                    value: group.id
+                                }))}
+                                clearable={false}
+                                searchable={true}
+                                value={this.addSamplesTargetGroupId}
+                            />
+                        </div>
+                        <button
+                            className="btn btn-xs btn-primary"
+                            style={{position:"absolute", top:23, right:0, paddingTop:2, paddingBottom:2, width:47.56 /* make it the same as the Create button */}}
+                            onClick={()=>{
+                                addSamplesToGroup(
+                                    this.addSamplesTargetGroupId,
+                                    this.props.store.selectedSamples.result.map(s=>({ sampleId: s.sampleId, studyId: s.studyId}))
+                                ); // samples in the group
+                            }}
+                            disabled={!this.addSamplesTargetGroupId}
+                        >Add</button>
+                    </div>
+                );
+            }
         } else {
             contents = (
                 <button
@@ -231,9 +265,19 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         );
     }
 
+    @computed get height() {
+        if (!this.addGroupPanelOpen) {
+            return 240;
+        } else if (this.props.store.comparisonGroups.length === 0) {
+            return 301;
+        } else {
+            return 370;
+        }
+    }
+
     render() {
         return (
-            <div className="comparison-group-manager" style={{width: 300, height:this.addGroupPanelOpen ? 291 : 240 , display:"flex", flexDirection:"column", position:"relative"}}
+            <div className="comparison-group-manager" style={{width: 300, height:this.height, display:"flex", flexDirection:"column", position:"relative"}}
             >
                 {this.header}
                 {this.groupCheckboxes}
