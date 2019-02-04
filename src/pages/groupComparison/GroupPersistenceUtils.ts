@@ -3,6 +3,7 @@ import {SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
 import hashString from "../../shared/lib/hashString";
 import {observable} from "mobx";
 import _ from "lodash";
+import ListIndexedMap from "../../shared/lib/ListIndexedMap";
 
 // TODO: use web service
 
@@ -20,7 +21,10 @@ function updateObservableGroupsCopy() {
 // initial update
 updateObservableGroupsCopy();
 
-function updateLocalStorageGroups(groups:SampleGroup[]) {
+function updateLocalStorageGroups(groups?:SampleGroup[]) {
+    if (!groups) {
+        groups = observableGroupsCopy.get();
+    }
     localStorage.setItem(TEMP_localStorageGroupsKey, JSON.stringify(groups));
 }
 
@@ -54,6 +58,34 @@ export function restoreRecentlyDeletedGroups() {
     while (recentlyDeletedGroups.length > 0) {
         addGroupToLocalStorage(recentlyDeletedGroups.shift()!);
     }
+}
+
+export function addSamplesToGroup(
+    groupId:string,
+    newSamples:SampleIdentifier[]
+) {
+    const group = getGroupById(groupId);
+    if (group) {
+        const existingSampleIdentifiers = ListIndexedMap.from(group.sampleIdentifiers, id=>[id.studyId, id.sampleId]);
+        for (const id of newSamples) {
+            if (!existingSampleIdentifiers.has(id.studyId, id.sampleId)) {
+                group.sampleIdentifiers.push(id);
+                existingSampleIdentifiers.set(id, id.studyId, id.sampleId);
+            }
+        }
+        updateLocalStorageGroups();
+        updateObservableGroupsCopy();
+        return true;
+    } else {
+        return false;
+    }
+}
+
+function getGroupById(
+    groupId:string
+):SampleGroup|undefined {
+    const allGroups = getLocalStorageGroups();
+    return allGroups.find(group=>(group.id === groupId));
 }
 
 function createGroupId(
