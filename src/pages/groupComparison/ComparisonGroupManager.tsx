@@ -7,14 +7,14 @@ import {
     getLocalStorageGroups,
     restoreRecentlyDeletedGroups
 } from "./GroupPersistenceUtils";
-import {computed, observable} from "mobx";
+import {action, computed, observable} from "mobx";
 import autobind from "autobind-decorator";
 import {SyntheticEvent} from "react";
 import {getDefaultGroupName} from "./GroupComparisonUtils";
 import _ from "lodash";
 import {SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
 import {getComparisonUrl} from "../../shared/api/urls";
-import "./styles.scss";
+import styles from "./styles.module.scss";
 import ReactSelect from "react-select";
 
 export interface IComparisonGroupManagerProps {
@@ -26,22 +26,20 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
     @observable groupNameFilter:string = "";
     @observable recentlyDeleted = false;
     @observable addGroupPanelOpen = false;
-    @observable _inputGroupName:string|undefined = undefined;
+    @observable _inputGroupName:string = "";
     @computed get inputGroupName() {
-        if (this._inputGroupName === undefined) {
-            return getDefaultGroupName(this.props.store.filters);
-        } else {
-            return this._inputGroupName;
-        }
+        return this._inputGroupName;
     }
     @observable addSamplesTargetGroupId:string = "";
 
     @autobind
+    @action
     private onChangeGroupNameFilter(e:SyntheticEvent<HTMLInputElement>) {
         this.groupNameFilter = (e.target as HTMLInputElement).value;
     }
 
     @autobind
+    @action
     private onChangeInputGroupName(e:SyntheticEvent<HTMLInputElement>) {
         this._inputGroupName = (e.target as HTMLInputElement).value;
     }
@@ -52,14 +50,16 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
     }
 
     @autobind
+    @action
     private showAddGroupPanel() {
         this.addGroupPanelOpen = true;
     }
 
     @autobind
+    @action
     private cancelAddGroup() {
         this.addGroupPanelOpen = false;
-        this._inputGroupName = undefined;
+        this._inputGroupName = "";
         this.addSamplesTargetGroupId = "";
     }
 
@@ -82,7 +82,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
     }
     private get groupCheckboxes() {
         return (
-            <div className="group-checkboxes">
+            <div className={styles.groupCheckboxes}>
                 {this.filteredGroups.length > 0 && (
                     this.filteredGroups.map(group=>(
                         <div className="checkbox"><label>
@@ -190,7 +190,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                         className="form-control"
                         style={{position:"absolute", top:17, width:245, height:36}}
                         type="text"
-                        placeholder="Group name.."
+                        placeholder="Enter a name for your new group.."
                         value={this.inputGroupName}
                         onChange={this.onChangeInputGroupName}
                     />
@@ -198,12 +198,11 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                         className="btn btn-xs btn-primary"
                         style={{position:"absolute", top:23, right:0, paddingTop:2, paddingBottom:2}}
                         onClick={()=>{
-                            const defaultGroupName = getDefaultGroupName(this.props.store.filters);
                             addGroupToLocalStorage({
                                 sampleIdentifiers:this.props.store.selectedSamples.result.map(s=>({ sampleId: s.sampleId, studyId: s.studyId})), // samples in the group
                                 name:this.inputGroupName
                             });
-                            this.addGroupPanelOpen = false;
+                            this.cancelAddGroup();
                         }}
                         disabled={this.inputGroupName.length === 0}
                     >Create</button>
@@ -277,7 +276,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
 
     render() {
         return (
-            <div className="comparison-group-manager" style={{width: 300, height:this.height, display:"flex", flexDirection:"column", position:"relative"}}
+            <div className={styles.comparisonGroupManager} style={{width: 300, height:this.height, display:"flex", flexDirection:"column", position:"relative"}}
             >
                 {this.header}
                 {this.groupCheckboxes}

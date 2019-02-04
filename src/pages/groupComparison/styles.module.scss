@@ -1,13 +1,13 @@
-.msk-tabs .tabAnchor.greyedOut {
+:global(.msk-tabs .tabAnchor.greyedOut) {
     color: #afafaf;
 }
 
-.btn-group > .btn.noMarginLeft {
+:global(.btn-group) > :global(.btn.noMarginLeft) {
     margin-left:0px !important;
 }
 
-.comparison-group-manager {
-    .group-checkboxes {
+.comparisonGroupManager {
+    .groupCheckboxes {
         position:absolute;
         top:30px;
         height:130px;
@@ -15,18 +15,18 @@
         overflow:auto;
         padding:3px;
 
-        div.checkbox {
+        :global(div.checkbox) {
             margin-bottom:6px;
         }
-        div.checkbox:first-child {
+        :global(div.checkbox):first-child {
             margin-top:0px;
         }
-        div.checkbox:last-child {
+        :global(div.checkbox):last-child {
             margin-bottom:0px;
         }
     }
 
-    input.form-control {
+    :global(input.form-control) {
         font-size:12px;
         height:26px;
     }
