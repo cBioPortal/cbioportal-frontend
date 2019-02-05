@@ -1,11 +1,10 @@
 import * as React from 'react';
 import {observer} from "mobx-react";
-import styles from "./styles.module.scss";
-import {StudyViewPageStore, UniqueKey} from 'pages/studyView/StudyViewPageStore';
+import {StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
 import RightPanel from "./rightPanel/RightPanel";
 import StudySummary from "./studySummary/StudySummary";
-import {ServerConfigHelpers} from "../../../config/config";
 import UserSelections from "../UserSelections";
+import * as _ from 'lodash';
 
 
 export interface IStudyPageHeaderProps {
@@ -17,9 +16,16 @@ export interface IStudyPageHeaderProps {
 export default class StudyPageHeader extends React.Component<IStudyPageHeaderProps, {}> {
     render() {
         return (
-            <div style={{display: 'flex', flexDirection:'column',margin: '0 20px 5px 20px'}}>
+            <div style={{display: 'flex', flexDirection:'column',margin: '0 20px 5px 20px'}} data-test="study-view-header">
+                {_.keys(this.props.store.pageStatusMessages).length > 0 && (
+                    <div>
+                        {_.values(this.props.store.pageStatusMessages).map(statusMessage => <div
+                            className={`alert alert-${statusMessage.status}`}>{statusMessage.message}</div>)}
+                    </div>
+                )}
                 <div style={{display: 'flex', marginBottom:10}}>
                 <StudySummary
+                    hasRawDataForDownload={this.props.store.hasRawDataForDownload.result}
                     studies={this.props.store.displayedStudies.result}
                     originStudies={this.props.store.originStudies}
                     showOriginStudiesInSummaryDescription={this.props.store.showOriginStudiesInSummaryDescription}
