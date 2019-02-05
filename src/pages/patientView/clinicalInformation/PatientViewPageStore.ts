@@ -335,18 +335,14 @@ export class PatientViewPageStore {
         await: () => [this.clinicalDataGroupedBySample],
         invoke: () => {
             const clinicalData = this.clinicalDataGroupedBySample.result!;
-            const clinicalAttributeId = "COMP_PATH_WSV_URL";
+            const clinicalAttributeId = "MSK_SLIDE_ID";
             if (clinicalData) {
-                const wholeSlideUrls = _.chain(clinicalData)
+                const ids = _.chain(clinicalData)
                 .map((data) => data.clinicalData)
                 .flatten()
                 .filter((attribute) => {return attribute.clinicalAttributeId === clinicalAttributeId})
                 .map((attribute) => attribute.value)
                 .value();
-                
-                const ids = _.map(wholeSlideUrls, (data) => {
-                    return data!.substring(data!.indexOf('=') + 1, data!.indexOf('@'));
-                });
 
                 return Promise.resolve(ids);
             }
