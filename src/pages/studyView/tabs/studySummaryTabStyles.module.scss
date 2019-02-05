@@ -4,3 +4,19 @@
     flex-wrap: wrap;
     width: 100%;
 }
+
+.quickFilters {
+    display:flex;
+    padding:5px 10px;
+    justify-content:center;
+    margin-bottom: 10px;
+
+    > * {
+        margin-left:10px;
+    }
+
+    input {
+        position:relative;
+        top:3px;
+    }
+}
