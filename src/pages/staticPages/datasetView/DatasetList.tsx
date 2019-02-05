@@ -4,7 +4,9 @@ import {CancerStudy} from 'shared/api/generated/CBioPortalAPI';
 import {ThreeBounce} from 'better-react-spinkit';
 import request from 'superagent';
 import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
-import {getStudyDownloadListUrl, getStudySummaryUrl} from "../../../shared/api/urls";
+import {getStudyDownloadListUrl} from "../../../shared/api/urls";
+import {StudyLink} from "../../../shared/components/StudyLink/StudyLink";
+import {StudyDataDownloadLink} from "../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink";
 
 
 interface IDataTableRow {
@@ -51,14 +53,7 @@ class CancerStudyCell extends React.Component<ICancerStudyCellProps,{}> {
 
     render() {
         return (
-            <span>
-                <a
-                    href={getStudySummaryUrl(this.props.studyId)}
-                    target='_blank'
-                >
-                    {this.props.name}
-                </a>
-            </span>
+            <StudyLink studyId={this.props.studyId}>{this.props.name}</StudyLink>
         );
 
     }
@@ -132,24 +127,26 @@ export default class DataSetsPageTable extends React.Component <IDataSetsTablePr
                                     type: 'name',
                                     render:(data:IDataTableRow)=> <CancerStudyCell studyId={data.studyId} name={data.name}/>,
                                     filter:(data:any, filterString:string, filterStringUpper:string) => {
-                                        return data.name.toUpperCase().indexOf(filterStringUpper) > -1;
+                                        return data.name.toUpperCase().includes(filterStringUpper);
                                      }
 
                                 },
-                                {name:'', sortBy:false, togglable:false, download: false, type:'download', render:(data:IDataTableRow)=> {
-                                    const download = this.state.downloadable.indexOf(data.studyId) > -1;
-                                    return (
-                                        <a className="dataset-table-download-link" style={download ? {display:'block'} : {display:'none'}}
-                                           href={'http://download.cbioportal.org/' + data.studyId + '.tar.gz'} download>
-                                            <i className='fa fa-download'/>
-                                        </a>
-                                    );
-                                }},
                                 {
-                                    name:'Reference',
+                                    name: '', sortBy: false, togglable: false, download: false, type: 'download',
+                                    render: (data: IDataTableRow) => {
+                                        const studyIsDownloadable = this.state.downloadable.includes(data.studyId);
+                                        if (studyIsDownloadable) {
+                                            return <StudyDataDownloadLink studyId={data.studyId}/>;
+                                        } else {
+                                            return null;
+                                        }
+                                    }
+                                },
+                                {
+                                    name: 'Reference',
                                     type: 'citation', render:(data:IDataTableRow)=><ReferenceCell pmid={data.pmid} citation={data.citation}/>,
                                      filter:(data:any, filterString:string, filterStringUpper:string) => {
-                                        return data.citation.toUpperCase().indexOf(filterStringUpper) > -1;
+                                        return data.citation.toUpperCase().includes(filterStringUpper);
                                      }
 
                                 },
