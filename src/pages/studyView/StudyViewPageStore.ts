@@ -51,7 +51,7 @@ import {
     getClinicalAttributeUniqueKeyByDataTypeAttrId,
     getClinicalDataCountWithColorByClinicalDataCount,
     getClinicalDataIntervalFilterValues,
-    getClinicalDataType,
+    getClinicalDataType, getClinicalEqualityFilterValuesByString,
     getCNAByAlteration,
     getDefaultPriorityByUniqueKey,
     getFilteredSampleIdentifiers,
@@ -442,7 +442,7 @@ export class StudyViewPageStore {
                     filters.clinicalDataEqualityFilters = [{
                         'attributeId': matchedAttr.clinicalAttributeId,
                         'clinicalDataType': matchedAttr.patientAttribute ? ClinicalDataTypeEnum.PATIENT : ClinicalDataTypeEnum.SAMPLE,
-                        'values': query.filterValues!.split(',')
+                        'values': getClinicalEqualityFilterValuesByString(query.filterValues)
                     } as ClinicalDataEqualityFilter];
                 }
                 this.updateStoreByFilters(filters);
