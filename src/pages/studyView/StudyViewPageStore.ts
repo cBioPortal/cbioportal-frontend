@@ -2467,7 +2467,7 @@ export class StudyViewPageStore {
                 clinicalDataType: chartMeta.clinicalAttribute.patientAttribute ? 'PATIENT' : 'SAMPLE',
                 clinicalDataMultiStudyFilter: {
                     attributeIds: [chartMeta.clinicalAttribute.clinicalAttributeId],
-                    identifiers: this.samples.result.map(sample => ({
+                    identifiers: this.selectedSamples.result.map(sample => ({
                         entityId: chartMeta.clinicalAttribute!.patientAttribute ? sample.patientId : sample.sampleId,
                         studyId: sample.studyId
                     }))
