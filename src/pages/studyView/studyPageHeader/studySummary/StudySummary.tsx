@@ -1,18 +1,22 @@
 import * as React from 'react';
 import {CancerStudy} from "../../../../shared/api/generated/CBioPortalAPI";
-import {computed, observable} from 'mobx';
+import {computed, observable, action} from 'mobx';
 import {observer} from "mobx-react"
 import classnames from "classnames";
 import * as _ from 'lodash';
 import styles from "../styles.module.scss";
 import {StudySummaryRecord} from "../../virtualStudy/VirtualStudy";
 import LoadingIndicator from "../../../../shared/components/loadingIndicator/LoadingIndicator";
-import {buildCBioPortalPageUrl} from "../../../../shared/api/urls";
+import {buildCBioPortalPageUrl, getStudyDownloadListUrl} from "../../../../shared/api/urls";
 import MobxPromise from 'mobxpromise';
 import {StudyLink} from "../../../../shared/components/StudyLink/StudyLink";
+import {StudyDataDownloadLink} from "../../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink";
+import request from 'superagent';
+import DefaultTooltip from "../../../../shared/components/defaultTooltip/DefaultTooltip";
 
 interface IStudySummaryProps {
     studies: CancerStudy[],
+    hasRawDataForDownload: boolean,
     originStudies: MobxPromise<CancerStudy[]>,
     showOriginStudiesInSummaryDescription: boolean
 }
@@ -73,7 +77,21 @@ export default class StudySummary extends React.Component<IStudySummaryProps, {}
     render() {
         return (
             <div className={classnames(styles.summary)}>
-                <h3 style={{marginBottom:3}}>{this.name}</h3>
+                <h3 style={{marginBottom:3, display: 'flex', alignItems: 'baseline'}}>
+                    {this.name}
+                    {this.props.hasRawDataForDownload &&
+                    (
+                        <DefaultTooltip
+                            trigger={["hover"]}
+                            placement={"top"}
+                            overlay={<span>Download all clinical and genomic data of this study</span>}
+                        >
+                            <span data-test="studySummaryRawDataDownloadIcon" style={{marginLeft: '10px', fontSize: '14px'}}>
+                                    <StudyDataDownloadLink studyId={this.props.studies[0].studyId}/>
+                            </span>
+                        </DefaultTooltip>
+                    )}
+                </h3>
                 <div className={styles.description}>
                     <div>
                         {this.descriptionFirstLine}
