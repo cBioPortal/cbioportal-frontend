@@ -21,7 +21,7 @@ import * as _ from 'lodash';
 import $ from 'jquery';
 import URL from 'url';
 import * as superagent from 'superagent';
-import { getHost } from './shared/api/urls';
+import { buildCBioPortalPageUrl } from './shared/api/urls';
 import { validateParametersPatientView } from './shared/lib/validateParameters';
 import AppConfig from "appConfig";
 import browser from 'bowser';
@@ -111,7 +111,13 @@ superagent.Request.prototype.end = function (callback) {
         if (response && response.statusCode === 401) {
             var storageKey = `redirect${Math.floor(Math.random() * 1000000000000)}`
             localStorage.setItem(storageKey, window.location.hash);
-            const loginUrl = `//${getHost()}/?spring-security-redirect=${encodeURIComponent(window.location.pathname)}${encodeURIComponent(window.location.search)}${encodeURIComponent('#/restore?key=' + storageKey)}`;
+
+            const loginUrl = buildCBioPortalPageUrl({
+               query: {
+                   "spring-security-redirect":`${window.location.pathname}${window.location.search}${'#/restore?key=' + storageKey}`
+               }
+            });
+
             redirecting = true;
             window.location.href = loginUrl;
         } else {
