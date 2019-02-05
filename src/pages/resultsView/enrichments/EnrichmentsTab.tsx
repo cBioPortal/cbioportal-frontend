@@ -51,7 +51,7 @@ export default class EnrichmentsTab extends React.Component<IEnrichmentsTabProps
                 <div className={"tabMessageContainer"}>
                     <OqlStatusBanner className="enrichments-oql-status-banner" store={this.props.store} tabReflectsOql={true}/>
                 </div>
-                <MSKTabs activeTabId={this.currentTabId} onTabClick={this.handleTabChange} className="secondaryTabs">
+                <MSKTabs activeTabId={this.currentTabId} onTabClick={this.handleTabChange} className="secondaryNavigation">
                     {(this.props.store.mutationEnrichmentProfiles.result!.length > 0) && <MSKTab id="mutations" linkText="Mutations">
                         <MutationEnrichmentsTab store={this.props.store}/>
                     </MSKTab>}
