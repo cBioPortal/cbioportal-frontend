@@ -2,6 +2,7 @@ var Oncoprint = require("../../dist/oncoprint.bundle.js");
 var BucketSort = require("../js/bucketsort.js");
 var binarySearch = require("../js/binarysearch.js");
 var assert = require("chai").assert;
+var doesCellIntersectPixel = require("../js/utils.js").doesCellIntersectPixel;
 
 describe("test", function() {
     it("should have oncoprint object", function() {
@@ -426,5 +427,24 @@ describe("bucketSort", function() {
                 }
             );
         });
+    });
+});
+
+describe("doesCellIntersectPixel", function() {
+    it("returns false in case of no intersection on the left", function() {
+        assert.isFalse(doesCellIntersectPixel([0,1], 2));
+    });
+    it("returns true in case of half intersection from the left", function() {
+        assert.isTrue(doesCellIntersectPixel([0,2.5], 2));
+    });
+    it("returns true in case of inclusion inside pixel", function() {
+        assert.isTrue(doesCellIntersectPixel([2,2.5], 2));
+    });
+    it("returns true in case of half intersection from the right", function() {
+        assert.isTrue(doesCellIntersectPixel([2.5,6], 2));
+    });
+    it("returns false in case of no intersection on the right", function() {
+        assert.isFalse(doesCellIntersectPixel([3,4], 2));
+        assert.isFalse(doesCellIntersectPixel([4,6], 2));
     });
 });

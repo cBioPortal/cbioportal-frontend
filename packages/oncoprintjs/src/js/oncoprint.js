@@ -159,7 +159,7 @@ var Oncoprint = (function () {
 		(function () {
 		    var highlight_timeout = null;
 		    var highlight_track = null;
-		    return function (track_id, column_id) {
+		    return function (track_id) {
 			if (track_id === null) {
 			    highlight_track = null;
 			    self.highlightTrack(null);

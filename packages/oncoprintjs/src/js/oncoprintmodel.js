@@ -5,6 +5,7 @@ var CachedProperty = require('./CachedProperty.js');
 var clustering = require('./clustering.js');
 var $ = require('jquery');
 var BucketSort = require("./bucketsort.js");
+var doesCellIntersectPixel = require("./utils.js").doesCellIntersectPixel;
 
 function ifndef(x, val) {
     return (typeof x === "undefined" ? val : x);
@@ -954,15 +955,15 @@ var OncoprintModel = (function () {
 	}
     };
 
-    OncoprintModel.prototype.getOverlappingCell = function(x,y) {
+    OncoprintModel.prototype.getOverlappingCells = function(x,y) {
 	// First, see if it's in a column
 	var id_order = this.getIdOrder();
 	var zoomed_column_left = this.getZoomedColumnLeft();
+	// this gets the nearest lower index
 	var nearest_id_index = binarysearch(id_order, x, function(id) { return zoomed_column_left[id];}, true);
 	if (nearest_id_index === -1) {
 	    return null;
 	}
-	var id = id_order[nearest_id_index];
 	
 	// Next, see if it's in a track
 	var tracks = this.getTracks();
@@ -974,14 +975,29 @@ var OncoprintModel = (function () {
 	    return null;
 	}
 	var nearest_track = tracks[nearest_track_index];
-	
-	// Finally, see if it's inside a cell
-	var hitzone_right = zoomed_column_left[id] + this.getCellWidth();
-	if (!this.getTrackHasColumnSpacing(nearest_track)) {
-	    hitzone_right += this.getCellPadding();
+	if (y >= cell_tops[nearest_track] + this.getCellHeight(nearest_track)) {
+		// we know y is past the top of the track (>= cell_tops[nearest_track]), so this checks if y is past the bottom of the track
+		return null;
 	}
-	if (x <= hitzone_right && y < cell_tops[nearest_track] + this.getCellHeight(nearest_track)) {  
-	    return {'id': id, 'track': nearest_track, 'top': cell_tops[nearest_track], 'left': zoomed_column_left[id]};
+
+	// At this point, we know y is inside a track
+	
+	// Finally, return all ids within 1 px of x to the right
+	var ids = [];
+	var hitzone_width = this.getCellWidth();
+	if (!this.getTrackHasColumnSpacing(nearest_track)) {
+		hitzone_width += this.getCellPadding();
+	}
+	for (var i=nearest_id_index; i<id_order.length; i++) {
+		// if hitzone of cell touches the pixel [x,x+1), then include it
+		if (doesCellIntersectPixel([zoomed_column_left[id_order[i]], zoomed_column_left[id_order[i]] + hitzone_width], x)) {
+			ids.push(id_order[i]);
+		} else if (zoomed_column_left[id_order[i]] > x+1) {
+			break;
+		}
+	}
+	if (ids.length > 0) {
+		return {'ids': ids, 'track': nearest_track, 'top': cell_tops[nearest_track], 'left': zoomed_column_left[ids[0]]};
 	}
 	return null;
     };

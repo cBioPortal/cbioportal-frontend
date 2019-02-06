@@ -137,7 +137,6 @@ var OncoprintWebGLCellView = (function () {
 	    var drag_diff_minimum = 10;
 	    var drag_start_x;
 	    var drag_end_x;
-	    var prev_overlapping_cell = null;
 	    
 	    var dragIsValid = function(drag_start_x, drag_end_x) {
 		return Math.abs(drag_start_x - drag_end_x) >= drag_diff_minimum;
@@ -179,35 +178,36 @@ var OncoprintWebGLCellView = (function () {
 		var mouseX = evt.pageX - offset.left;
 		var mouseY = evt.pageY - offset.top;
 		if (!dragging) {
-		    var overlapping_cell = model.getOverlappingCell(mouseX + self.scroll_x, mouseY + self.scroll_y);
-		    var overlapping_datum = (overlapping_cell === null ? null : model.getTrackDatum(overlapping_cell.track, overlapping_cell.id));
+		    var overlapping_cells = model.getOverlappingCells(mouseX + self.scroll_x, mouseY + self.scroll_y);
+		    var overlapping_data = (overlapping_cells === null ? null : overlapping_cells.ids.map(function(id) {
+		    	return model.getTrackDatum(overlapping_cells.track, id);
+			}));
 		    var cell_width = model.getCellWidth();
 		    var cell_padding = model.getCellPadding();
-		    if (overlapping_datum !== null) {
-			cell_over_callback(overlapping_cell.track, overlapping_cell.id);
-			var left = model.getZoomedColumnLeft(overlapping_cell.id) - self.scroll_x;
-			overlayStrokeRect(self, left, model.getCellTops(overlapping_cell.track) - self.scroll_y, model.getCellWidth() + (model.getTrackHasColumnSpacing(overlapping_cell.track) ? 0 : cell_padding), model.getCellHeight(overlapping_cell.track), "rgba(0,0,0,1)");
+		    if (overlapping_data !== null) {
+			cell_over_callback(overlapping_cells.track);
+			var left = model.getZoomedColumnLeft(overlapping_cells.ids[0]) - self.scroll_x;
+			overlayStrokeRect(self, left, model.getCellTops(overlapping_cells.track) - self.scroll_y, model.getCellWidth() + (model.getTrackHasColumnSpacing(overlapping_cells.track) ? 0 : cell_padding), model.getCellHeight(overlapping_cells.track), "rgba(0,0,0,1)");
 			var tracks = model.getTracks();
 			for (var i=0; i<tracks.length; i++) {
-			    if (model.getTrackDatum(tracks[i], overlapping_cell.id) !== null) {
+			    if (model.getTrackDatum(tracks[i], overlapping_cells.ids[0]) !== null) {
 				overlayStrokeRect(self, left, model.getCellTops(tracks[i]) - self.scroll_y, model.getCellWidth() + (model.getTrackHasColumnSpacing(tracks[i]) ? 0 : cell_padding), model.getCellHeight(tracks[i]), "rgba(0,0,0,0.5)");
 			    }
 			}
-			tooltip.show(250, model.getZoomedColumnLeft(overlapping_cell.id) + model.getCellWidth() / 2 + offset.left - self.scroll_x, model.getCellTops(overlapping_cell.track) + offset.top - self.scroll_y, model.getTrackTooltipFn(overlapping_cell.track)(overlapping_datum));
-			prev_overlapping_cell = overlapping_cell;
+			tooltip.show(250, model.getZoomedColumnLeft(overlapping_cells.ids[0]) + model.getCellWidth() / 2 + offset.left - self.scroll_x, model.getCellTops(overlapping_cells.track) + offset.top - self.scroll_y, model.getTrackTooltipFn(overlapping_cells.track)(overlapping_data));
 		    } else {
 			tooltip.hideIfNotAlreadyGoingTo(150);
-			overlapping_cell = null;
+			overlapping_cells = null;
 		    }
 		} else {
-		    overlapping_cell = null;
+		    overlapping_cells = null;
 		    drag_end_x = mouseX;
 		    var left = Math.min(mouseX, drag_start_x);
 		    var right = Math.max(mouseX, drag_start_x);
 		    var drag_rect_fill = dragIsValid(drag_start_x, drag_end_x) ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.2)';
 		    overlayFillRect(self, left, 0, right-left, model.getCellViewHeight(), drag_rect_fill);
 		}
-		if (overlapping_cell === null) {
+		if (overlapping_cells === null) {
 		    cell_over_callback(null);
 		}
 	    });
