@@ -19,7 +19,7 @@ declare module "oncoprintjs"
     export type TrackSortDirection = 0|1|-1;
     export type TrackSortComparator<D> = (d1:D, d2:D)=>number;//returns (0|1|2|-1|-2); for comparison-based sort, where 2 and -2 mean force to end or beginning (resp) no matter what direction sorted in
     export type TrackSortVector<D> = (d:D)=>(number|string)[]; // maps data to vector used for bucket sort - types of elements in each position must be same, i.e. Kth element must always be a number, or always be a string
-    export type TrackTooltipFn<D> = (cell_datum:D)=>HTMLElement|string|any;
+    export type TrackTooltipFn<D> = (cell_data:D[])=>HTMLElement|string|any;
     export type TrackSortSpecification<D> = TrackSortComparator<D> | TrackSortVector<D> | {
         mandatory:TrackSortComparator<D>; // specifies the mandatory order for the track
         preferred:TrackSortComparator<D>; // specifies the preferred order for the track (can be overridden by mandatory order of higher track)
