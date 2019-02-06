@@ -53,7 +53,7 @@ import {
     getClinicalAttributeUniqueKeyByDataTypeAttrId,
     getClinicalDataCountWithColorByClinicalDataCount,
     getClinicalDataIntervalFilterValues,
-    getClinicalDataType,
+    getClinicalDataType, getClinicalEqualityFilterValuesByString,
     getCNAByAlteration,
     getDefaultPriorityByUniqueKey,
     getFilteredSampleIdentifiers,
@@ -448,7 +448,7 @@ export class StudyViewPageStore {
                     filters.clinicalDataEqualityFilters = [{
                         'attributeId': matchedAttr.clinicalAttributeId,
                         'clinicalDataType': matchedAttr.patientAttribute ? ClinicalDataTypeEnum.PATIENT : ClinicalDataTypeEnum.SAMPLE,
-                        'values': query.filterValues!.split(',')
+                        'values': getClinicalEqualityFilterValuesByString(query.filterValues)
                     } as ClinicalDataEqualityFilter];
                 }
                 this.updateStoreByFilters(filters);
@@ -2481,7 +2481,7 @@ export class StudyViewPageStore {
                 clinicalDataType: chartMeta.clinicalAttribute.patientAttribute ? 'PATIENT' : 'SAMPLE',
                 clinicalDataMultiStudyFilter: {
                     attributeIds: [chartMeta.clinicalAttribute.clinicalAttributeId],
-                    identifiers: this.samples.result.map(sample => ({
+                    identifiers: this.selectedSamples.result.map(sample => ({
                         entityId: chartMeta.clinicalAttribute!.patientAttribute ? sample.patientId : sample.sampleId,
                         studyId: sample.studyId
                     }))
