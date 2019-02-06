@@ -56,24 +56,32 @@ export default class CNSegments extends React.Component<{ store: StudyViewPageSt
         ];
     }
 
+    @computed get hasNoSegmentData()
+    {
+        return this.activePromise.isComplete && (!this.activePromise.result || this.activePromise.result.length === 0);
+    }
+
     public render() {
         return (
             <div>
                 <LoadingIndicator isLoading={this.isHidden} size={"big"} center={true}>
                     <ProgressIndicator getItems={() => this.progressItems} show={this.isHidden} sequential={true}/>
                 </LoadingIndicator>
-                <div style={{marginBottom: 15}}>
+                <div style={{marginBottom: 15, marginLeft: 15}}>
                     <span>
-                        <b>Whole Genome</b> Copy Number Segments for the selected
-                        <b> {this.props.store.selectedSamples.result && this.props.store.selectedSamples.result.length} </b>
-                        sample(s).
+                        {this.hasNoSegmentData ? "No segmented" : "Segmented"} copy-number data for the selected {
+                            this.props.store.selectedSamples.result && this.props.store.selectedSamples.result.length
+                        } sample(s).
                     </span>
-                    <CNSegmentsDownloader
-                        promise={this.activePromise}
-                        filename={this.filename}
-                    />
+                    {
+                        !this.hasNoSegmentData &&
+                        <CNSegmentsDownloader
+                            promise={this.activePromise}
+                            filename={this.filename}
+                        />
+                    }
                 </div>
-                <div style={this.isHidden ? {opacity: 0} : undefined}>
+                <div style={this.isHidden || this.hasNoSegmentData ? {opacity: 0} : undefined}>
                     <IntegrativeGenomicsViewer
                         tracks={[
                             {
