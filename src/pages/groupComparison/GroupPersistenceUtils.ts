@@ -1,4 +1,4 @@
-import {SampleGroup, TEMP_localStorageGroupsKey} from "./GroupComparisonUtils";
+import {ComparisonSampleGroup, TEMP_localStorageGroupsKey} from "./GroupComparisonUtils";
 import {SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
 import hashString from "../../shared/lib/hashString";
 import {observable} from "mobx";
@@ -8,10 +8,10 @@ import ListIndexedMap from "../../shared/lib/ListIndexedMap";
 // TODO: use web service
 
 // keep and update a local observable copy so that users can react to changes
-const observableGroupsCopy = observable.shallowBox<SampleGroup[]>([]);
+const observableGroupsCopy = observable.shallowBox<ComparisonSampleGroup[]>([]);
 
 // hold onto recently deleted groups for "undo" purpose
-let recentlyDeletedGroups:SampleGroup[] = [];
+let recentlyDeletedGroups:ComparisonSampleGroup[] = [];
 
 function updateObservableGroupsCopy() {
     // update local observable version for users to react to
@@ -21,7 +21,7 @@ function updateObservableGroupsCopy() {
 // initial update
 updateObservableGroupsCopy();
 
-function updateLocalStorageGroups(groups?:SampleGroup[]) {
+function updateLocalStorageGroups(groups?:ComparisonSampleGroup[]) {
     if (!groups) {
         groups = observableGroupsCopy.get();
     }
@@ -32,12 +32,12 @@ export function getLocalStorageGroups() {
     return observableGroupsCopy.get().slice();
 }
 
-export type SampleGroupWithoutId = Pick<SampleGroup, Exclude<keyof SampleGroup, "id">>;
+export type SampleGroupWithoutId = Pick<ComparisonSampleGroup, Exclude<keyof ComparisonSampleGroup, "id">>;
 
 export function addGroupToLocalStorage(
     newGroup:SampleGroupWithoutId
 ) {
-    const groups:SampleGroup[] = getLocalStorageGroups();
+    const groups:ComparisonSampleGroup[] = getLocalStorageGroups();
     groups.push(Object.assign({id:createGroupId(newGroup)}, newGroup));
     updateLocalStorageGroups(groups);
     updateObservableGroupsCopy();
@@ -83,7 +83,7 @@ export function addSamplesToGroup(
 
 function getGroupById(
     groupId:string
-):SampleGroup|undefined {
+):ComparisonSampleGroup|undefined {
     const allGroups = getLocalStorageGroups();
     return allGroups.find(group=>(group.id === groupId));
 }

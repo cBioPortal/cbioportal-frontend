@@ -10,12 +10,13 @@ import {
 import {action, computed, observable} from "mobx";
 import autobind from "autobind-decorator";
 import {SyntheticEvent} from "react";
-import {getDefaultGroupName} from "./GroupComparisonUtils";
+import {ComparisonGroup, getDefaultGroupName, ComparisonSampleGroup} from "./GroupComparisonUtils";
 import _ from "lodash";
 import {SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
 import {getComparisonUrl} from "../../shared/api/urls";
 import styles from "./styles.module.scss";
 import ReactSelect from "react-select";
+import LazyMemo from "../../shared/lib/LazyMemo";
 
 export interface IComparisonGroupManagerProps {
     store:StudyViewPageStore;
@@ -31,6 +32,16 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         return this._inputGroupName;
     }
     @observable addSamplesTargetGroupId:string = "";
+
+    private groupCheckboxOnClick = new LazyMemo(
+        (group:ComparisonSampleGroup)=>group.id,
+        (group:ComparisonSampleGroup)=>{
+            return ()=>{
+                this.recentlyDeleted = false;
+                this.props.store.toggleComparisonGroupSelected(group.id);
+            };
+        }
+    );
 
     @autobind
     @action
@@ -80,20 +91,18 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
             </div>
         );
     }
+
     private get groupCheckboxes() {
         return (
             <div className={styles.groupCheckboxes}>
                 {this.filteredGroups.length > 0 && (
                     this.filteredGroups.map(group=>(
-                        <div className="checkbox"><label>
+                        <div key={group.id} className="checkbox"><label>
                             <input
                                 type="checkbox"
                                 value={group.id}
                                 checked={this.props.store.isComparisonGroupSelected(group.id)}
-                                onClick={()=>{
-                                    this.recentlyDeleted = false;
-                                    this.props.store.toggleComparisonGroupSelected(group.id);
-                                }}
+                                onClick={this.groupCheckboxOnClick.get(group)}
                             />{group.name} ({group.sampleIdentifiers.length})
                         </label></div>
                     ))

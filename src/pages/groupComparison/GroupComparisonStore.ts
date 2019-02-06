@@ -1,4 +1,4 @@
-import {SampleGroup, TEMP_localStorageGroupsKey, getPatientIdentifiers, getCombinations, ComparisonGroup} from "./GroupComparisonUtils";
+import {ComparisonSampleGroup, TEMP_localStorageGroupsKey, getPatientIdentifiers, getCombinations, ComparisonGroup} from "./GroupComparisonUtils";
 import {remoteData} from "../../shared/api/remoteData";
 import {
     MolecularProfile,
@@ -55,7 +55,7 @@ export default class GroupComparisonStore {
 
     private _selectedComparisonGroupIds = observable.shallowMap<boolean>();
 
-    readonly remoteSampleGroups = remoteData<SampleGroup[]>({
+    readonly remoteSampleGroups = remoteData<ComparisonSampleGroup[]>({
         invoke:()=>{
             // TODO
             return Promise.resolve([]);
@@ -67,7 +67,7 @@ export default class GroupComparisonStore {
         return this.localGroupIds.map(id=>groupsMap[id]);
     }
 
-    readonly sampleGroups = remoteData<SampleGroup[]>({
+    readonly sampleGroups = remoteData<ComparisonSampleGroup[]>({
         await:()=>[this.remoteSampleGroups],
         invoke:()=>{
             return Promise.resolve(this.localSampleGroups.concat(this.remoteSampleGroups.result!));
