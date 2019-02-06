@@ -321,7 +321,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
         }
 
         return (
-            <PageLayout noMargin={true}>
+            <PageLayout noMargin={true} hideFooter={true}>
                 {
                     (patientViewPageStore.patientViewData.isComplete) && (
                         <Helmet>
@@ -517,15 +517,15 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                             hide={!this.shouldShowPathologyReport(patientViewPageStore)}
                     >
                         <div>
-                            <PathologyReport iframeStyle={{position:"absolute", top:0}} pdfs={patientViewPageStore.pathologyReport.result} />
+                            <PathologyReport iframeHeight={WindowStore.size.height - 220} pdfs={patientViewPageStore.pathologyReport.result} />
                         </div>
                     </MSKTab>
 
                     <MSKTab key={5} id="tissueImage" linkText="Tissue Image"
                             hide={this.hideTissueImageTab()}
                     >
-                        <div style={{position: "relative"}}>
-                            <IFrameLoader height={700} url={  getDigitalSlideArchiveIFrameUrl(patientViewPageStore.patientId) } />
+                        <div>
+                            <IFrameLoader height={WindowStore.size.height - 220} url={  getDigitalSlideArchiveIFrameUrl(patientViewPageStore.patientId) } />
                         </div>
                     </MSKTab>
 
@@ -533,8 +533,8 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     <MSKTab key={6} id="MSKTissueImage" linkText="Tissue Image"
                             unmountOnHide = {false}
                     >
-                        <div style={{position: "relative"}}>
-                            <IFrameLoader height={700} url={ this.wholeSlideViewerUrl.result! } />
+                        <div>
+                            <IFrameLoader height={WindowStore.size.height - 220} url={ this.wholeSlideViewerUrl.result! } />
                         </div>
                     </MSKTab>
                     )}
