@@ -87,7 +87,7 @@ import {getHeatmapMeta} from "../../shared/lib/MDACCUtils";
 import {ChartDimension, ChartTypeEnum, STUDY_VIEW_CONFIG, StudyViewLayout} from "./StudyViewConfig";
 import {getMDAndersonHeatmapStudyMetaUrl} from "../../shared/api/urls";
 import onMobxPromise from "../../shared/lib/onMobxPromise";
-import {SampleGroup} from "../groupComparison/GroupComparisonUtils";
+import {ComparisonSampleGroup} from "../groupComparison/GroupComparisonUtils";
 import {getLocalStorageGroups} from "../groupComparison/GroupPersistenceUtils";
 
 export enum ClinicalDataTypeEnum {
