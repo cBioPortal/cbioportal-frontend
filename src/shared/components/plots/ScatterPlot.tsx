@@ -354,7 +354,7 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
             const labelX = 0.7;
             const xPoints = [this.plotDomain.x[0], this.plotDomain.x[0]*(1-labelX) + this.plotDomain.x[1]*labelX, this.plotDomain.x[1]];
             const data:any[] = xPoints.map(x=>({ x, y:y(x), label:""}));
-            data[1].label = [this.regressionLineComputations.string, `R^2 = ${this.regressionLineComputations.r2}`];
+            data[1].label = [this.regressionLineComputations.string, `R² = ${this.regressionLineComputations.r2}`];
             return [
                 <VictoryLine
                     style={{
