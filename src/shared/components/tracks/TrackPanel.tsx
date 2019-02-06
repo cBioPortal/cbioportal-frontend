@@ -50,7 +50,7 @@ export default class TrackPanel extends React.Component<TrackPanelProps, {}>
         if(!_.isEmpty(this.props.store.filteredOncoKbDataByProteinPosStart)) {
             return _.keys(this.props.store.filteredOncoKbDataByProteinPosStart).map(position => ({
                 codon: Number(position),
-                color: "#1C75CD",
+                color: "#007FFF",
                 tooltip: (
                     <OncoKbTrackTooltip
                         mutations={this.props.store.filteredMutationsByPosition[Number(position)]}

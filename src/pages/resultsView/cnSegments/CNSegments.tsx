@@ -101,7 +101,7 @@ export default class CNSegments extends React.Component<{ store: ResultsViewPage
                 promises: this.indicatorPromises
             },
             {
-                label: "Rendering tracks.."
+                label: "Rendering"
             }
         ];
     }
