@@ -6,7 +6,7 @@ import {ResultsViewTab} from "../resultsView/ResultsViewPageHelpers";
 import {GroupComparisonTab} from "./GroupComparisonPage";
 import {StudyViewFilter} from "../../shared/api/generated/CBioPortalAPIInternal";
 
-export type SampleGroup = {
+export type ComparisonSampleGroup = {
     // mandatory:
     id:string, // unique identifier
     sampleIdentifiers:SampleIdentifier[], // samples in the group
@@ -17,7 +17,7 @@ export type SampleGroup = {
     legendText?: string; // display text (defaults to name) to put in a legend
 };
 
-export type ComparisonGroup = SampleGroup & {
+export type ComparisonGroup = ComparisonSampleGroup & {
     patientIdentifiers:PatientIdentifier[];
     hasOverlappingSamples?:boolean; // whether the group has had samples filtered out because they overlapped in the selection
     hasOverlappingPatients?:boolean; // whether the group has had patients filtered out because they overlapped in the selection
