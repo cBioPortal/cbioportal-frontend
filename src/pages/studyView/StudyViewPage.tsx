@@ -33,7 +33,7 @@ import {Else, If, Then} from 'react-if';
 import DefaultTooltip from "../../shared/components/defaultTooltip/DefaultTooltip";
 import CustomCaseSelection from "./addChartButton/customCaseSelection/CustomCaseSelection";
 import {AppStore} from "../../AppStore";
-import {SampleGroup, TEMP_localStorageGroupsKey} from "../groupComparison/GroupComparisonUtils";
+import {ComparisonSampleGroup, TEMP_localStorageGroupsKey} from "../groupComparison/GroupComparisonUtils";
 import {addGroupToLocalStorage, getLocalStorageGroups} from "../groupComparison/GroupPersistenceUtils";
 import {SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
 import ComparisonGroupManager from "../groupComparison/ComparisonGroupManager";

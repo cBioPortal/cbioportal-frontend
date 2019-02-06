@@ -1,6 +1,6 @@
 import * as React from "react";
 import {observer} from "mobx-react";
-import { SampleGroup, caseCountsInParens, ComparisonGroup } from "./GroupComparisonUtils";
+import { ComparisonSampleGroup, caseCountsInParens, ComparisonGroup } from "./GroupComparisonUtils";
 import MobxPromise from "mobxpromise";
 import { ButtonGroup, Button } from "react-bootstrap";
 import { MakeMobxView } from "shared/components/MobxView";
