@@ -40,7 +40,7 @@ import {
     Patient,
     Sample
 } from "../../api/generated/CBioPortalAPI";
-import {clinicalAttributeIsPROFILEDIN, SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
+import {clinicalAttributeIsPROFILEDIN, SpecialAttribute} from "../../cache/ClinicalDataCache";
 import {STUDY_VIEW_CONFIG} from "../../../pages/studyView/StudyViewConfig";
 
 interface IGenesetExpansionMap {
@@ -492,7 +492,7 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
                 const attributes = oncoprint.selectedClinicalAttributeIds.keys().map(attrId=>{
                     return oncoprint.props.store.clinicalAttributeIdToClinicalAttribute.result![attrId];
                 }).filter(x=>!!x);
-                ret = ret.concat(oncoprint.props.store.oncoprintClinicalDataCache.getAll(attributes));
+                ret = ret.concat(oncoprint.props.store.clinicalDataCache.getAll(attributes));
             }
             return ret;
         },
@@ -504,7 +504,7 @@ export function makeClinicalTracksMobxPromise(oncoprint:ResultsViewOncoprint, sa
                 return oncoprint.props.store.clinicalAttributeIdToClinicalAttribute.result![attrId];
             }).filter(x=>!!x);// filter out nonexistent attributes
             return attributes.map((attribute:ClinicalAttribute)=>{
-                const data = oncoprint.props.store.oncoprintClinicalDataCache.get(attribute).result!;
+                const data = oncoprint.props.store.clinicalDataCache.get(attribute).result!;
                 let altered_uids = undefined;
                 if (oncoprint.onlyShowClinicalLegendForAlteredCases) {
                     altered_uids = oncoprint.alteredKeys.result!;
