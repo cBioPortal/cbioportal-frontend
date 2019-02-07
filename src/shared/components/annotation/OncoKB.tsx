@@ -12,7 +12,8 @@ import {
     calcSensitivityLevelScore,
     calcResistanceLevelScore
 } from "shared/lib/OncoKbUtils";
-import {observable} from "mobx";
+import {observable, computed} from "mobx";
+import autobind from 'autobind-decorator';
 import OncoKbEvidenceCache from "shared/cache/OncoKbEvidenceCache";
 import OncoKbTooltip from "./OncoKbTooltip";
 import OncokbPubMedCache from "shared/cache/PubMedCache";
@@ -43,6 +44,8 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
 {
     @observable showFeedback:boolean = false;
     @observable tooltipDataLoadComplete:boolean = false;
+    @observable mainTooltipIsVisible:boolean = false;
+    @observable childTooltipIsVisible:boolean = false;
 
     public static get ONCOGENIC_ICON_STYLE()
     {
@@ -82,11 +85,6 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
     constructor(props: IOncoKbProps)
     {
         super(props);
-
-        this.handleFeedbackOpen = this.handleFeedbackOpen.bind(this);
-        this.handleFeedbackClose = this.handleFeedbackClose.bind(this);
-        this.handleLoadComplete = this.handleLoadComplete.bind(this);
-        this.tooltipContent = this.tooltipContent.bind(this);
     }
 
     public render()
@@ -126,9 +124,11 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
             {
                 oncoKbContent = (
                     <DefaultTooltip
+                        onVisibleChange={this.oncoKbContentTooltipOnVisibleChange as any}
                         overlay={this.tooltipContent}
                         placement="right"
-                        trigger={['hover', 'focus']}
+                        trigger={['hover', 'focus', 'click']}
+                        visible={this.showTooltip}
                         onPopupAlign={hideArrow}
                         destroyTooltipOnHide={true}
                     >
@@ -191,10 +191,12 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
         );
     }
 
+    @autobind
     private tooltipContent(): JSX.Element
     {
         return (
             <OncoKbTooltip
+                onChildTooltipVisibleChange={this.onChildTooltipVisibleChange}
                 geneNotExist={this.props.geneNotExist}
                 indicator={this.props.indicator || undefined}
                 evidenceCache={this.props.evidenceCache}
@@ -208,6 +210,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
 
     // purpose of this callback is to trigger re-instantiation
     // of the tooltip upon full load of the tooltip data
+    @autobind
     private handleLoadComplete(): void {
         // update only once to avoid unnecessary re-rendering
         if (!this.tooltipDataLoadComplete) {
@@ -215,12 +218,32 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
         }
     }
 
+    @autobind
     private handleFeedbackOpen(): void {
         this.showFeedback = true;
     }
 
+    @autobind
     private handleFeedbackClose(): void {
         this.showFeedback = false;
+    }
+
+    @computed
+    get showTooltip() {
+        return this.childTooltipIsVisible || this.mainTooltipIsVisible;
+    }
+
+    @autobind
+    onChildTooltipVisibleChange(visible:boolean) {
+        this.childTooltipIsVisible = visible;
+
+        // When the child tooltip is not hidden, we need to make sure the parent tooltip still showing up
+        this.mainTooltipIsVisible = true;
+    }
+
+    @autobind
+    private oncoKbContentTooltipOnVisibleChange(visible:boolean){;
+        this.mainTooltipIsVisible = visible;
     }
 
     public oncogenicImageClassNames(indicator?:IndicatorQueryResp):string
