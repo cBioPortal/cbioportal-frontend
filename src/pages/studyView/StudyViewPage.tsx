@@ -198,9 +198,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                             <DefaultTooltip
                                                 visible={this.showCustomSelectTooltip}
                                                 placement={"bottomLeft"}
-                                                onVisibleChange={()=>{
-
-                                                }}
                                                 destroyTooltipOnHide={true}
                                                 overlay={() => (
                                                     <div style={{width: '300px'}}

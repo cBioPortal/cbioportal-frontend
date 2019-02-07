@@ -139,7 +139,7 @@ export default class DownloadControls extends React.Component<IDownloadControlsP
                 <div style={Object.assign({ zIndex:10 },this.props.style)}>
                     <DefaultTooltip
                         mouseEnterDelay={0}
-                        onVisibleChange={this.onTooltipVisibleChange as any}
+                        onVisibleChange={this.onTooltipVisibleChange}
                         overlay={<div className={classnames("cbioportal-frontend", styles.downloadControls)} style={{display:"flex", flexDirection:"column"}}>{this.buttonSpecs.map(makeMenuItem)}</div>}
                         placement="bottom"
                     >
