@@ -210,5 +210,5 @@ export function getDocsUrl(sourceUrl:string,docsBaseUrl?:string): string {
 }
 
 export function getWholeSlideViewerUrl(ids: string[], userName: string): string {
-    return ids.length > 1 ? `https://slides-res.mskcc.org/cbioportal?ids=${ids.join('.svs;') + '.svs'}&user=${userName}&annotation=off` : ids.length === 1 ? `https://slides-res.mskcc.org/cbioportal?ids=${ids[0] + '.svs'}&user=${userName}&annotation=off&filetree=off` : "";
+    return ids.length > 1 ? `https://slides.mskcc.org/cbioportal?ids=${ids.join('.svs;') + '.svs'}&user=${userName}&annotation=off` : ids.length === 1 ? `https://slides.mskcc.org/cbioportal?ids=${ids[0] + '.svs'}&user=${userName}&annotation=off&filetree=off` : "";
 }
