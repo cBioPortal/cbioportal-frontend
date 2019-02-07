@@ -95,7 +95,8 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
                         cancerType: string,
                         pmidData: ICache<any>,
                         pmids:number[],
-                        abstracts:ArticleAbstract[])
+                        abstracts:ArticleAbstract[],
+                        description:string)
     {
         const levelTooltipContent = () => (
             <div style={{maxWidth: "200px"}}>
@@ -103,13 +104,20 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
             </div>
         );
 
-        const treatmentTooltipContent = (abstracts.length > 0 || pmids.length > 0) ?
+        const treatmentTooltipContent = (abstracts.length > 0 || pmids.length > 0 || description) ?
             () => (
                 <div style={{maxWidth: "400px", maxHeight: "400px", overflowY: "auto"}}>
-                    <ul className="list-group" style={{margin: '0 5px'}}>
-                        {this.abstractList(abstracts)}
-                        {this.pmidList(pmids, pmidData)}
-                    </ul>
+                    <If condition={description}>
+                        <Then>
+                            <span>{this.summaryWithRefs(description, 'tooltip')}</span>;
+                        </Then>
+                        <Else>
+                            <ul className="list-group" style={{margin: '0 5px'}}>
+                                {this.abstractList(abstracts)}
+                                {this.pmidList(pmids, pmidData)}
+                            </ul>
+                        </Else>
+                    </If>
                 </div>
             ) : <span/>;
 
@@ -258,7 +266,9 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
                     treatment.cancerType,
                     pmidData,
                     treatment.pmids,
-                    treatment.abstracts)
+                    treatment.abstracts,
+                    treatment.description
+                )
             );
         });
 
