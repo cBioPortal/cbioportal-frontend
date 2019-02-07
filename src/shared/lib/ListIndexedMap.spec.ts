@@ -122,6 +122,6 @@ describe("ListIndexedMap", ()=>{
         ], o=>[o.id, "yo"]);
         assert.deepEqual(map2.get("obj1", "yo"), { id:"obj1"});
         assert.deepEqual(map2.get("obj2", "yo"), { id:"obj2"});
-        assert.deepEqual(map2.get("obj3", "yo"), { id:"obj3"}
+        assert.deepEqual(map2.get("obj3", "yo"), { id:"obj3"});
     });
 });
