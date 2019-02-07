@@ -140,7 +140,7 @@ import {ResultsViewQuery} from "./ResultsViewQuery";
 import {annotateAlterationTypes} from "../../shared/lib/oql/annotateAlterationTypes";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import {ErrorMessages} from "../../shared/enums/ErrorEnums";
-import {SampleGroup} from "../groupComparison/GroupComparisonUtils";
+import {ComparisonSampleGroup} from "../groupComparison/GroupComparisonUtils";
 import {
     pickCopyNumberEnrichmentProfiles,
     pickMRNAEnrichmentProfiles,
