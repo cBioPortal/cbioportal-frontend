@@ -17,6 +17,7 @@ export interface IOncoKbTooltipProps {
     handleFeedbackOpen?: () => void;
     onLoadComplete?: () => void;
     geneNotExist:boolean;
+    onChildTooltipVisibleChange: (visible: boolean)=>void;
 }
 
 /**
@@ -82,6 +83,7 @@ export default class OncoKbTooltip extends React.Component<IOncoKbTooltipProps, 
             const pmidData: ICache<any> = this.pmidData;
             tooltipContent = (
                 <OncoKbCard
+                    onChildTooltipVisibleChange={this.props.onChildTooltipVisibleChange}
                     geneNotExist={this.props.geneNotExist}
                     title={`${this.props.indicator.query.hugoSymbol} ${this.props.indicator.query.alteration} in ${this.props.indicator.query.tumorType}`}
                     gene={this.props.indicator.geneExist ? this.props.indicator.query.hugoSymbol : ''}
