@@ -545,7 +545,13 @@ export class PatientViewPageStore {
     }, []);
 
     readonly oncoKbAnnotatedGenes = remoteData({
-        invoke:()=>fetchOncoKbAnnotatedGenesSuppressErrors()
+        invoke: () => {
+            if (AppConfig.serverConfig.show_oncokb) {
+                return fetchOncoKbAnnotatedGenesSuppressErrors();
+            } else {
+                return Promise.resolve({});
+            }
+        }
     }, {});
 
     readonly oncoKbData = remoteData<IOncoKbData|Error>({
