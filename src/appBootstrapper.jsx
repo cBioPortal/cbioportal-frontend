@@ -35,10 +35,17 @@ import superagentCache from 'superagent-cache';
 import getBrowserWindow from "shared/lib/getBrowserWindow";
 import {getConfigurationServiceApiUrl} from "shared/api/urls";
 import {AppStore} from "./AppStore";
+import {handleLongUrls} from "shared/lib/handleLongUrls";
 
 superagentCache(superagent);
 
+// this must occur before we initialize tracking
+// it fixes the hash portion of url when cohort patient list is too long
+handleLongUrls();
+
+
 // YOU MUST RUN THESE initialize and then set the public path after
+
 initializeConfiguration();
 // THIS TELLS WEBPACK BUNDLE LOADER WHERE TO LOAD SPLIT BUNDLES
 __webpack_public_path__ = AppConfig.frontendUrl;
