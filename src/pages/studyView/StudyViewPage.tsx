@@ -37,6 +37,7 @@ import {ComparisonSampleGroup, TEMP_localStorageGroupsKey} from "../groupCompari
 import {addGroupToLocalStorage, getLocalStorageGroups} from "../groupComparison/GroupPersistenceUtils";
 import {SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
 import ComparisonGroupManager from "../groupComparison/ComparisonGroupManager";
+import classNames from "classnames";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -100,7 +101,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     @observable showCustomSelectTooltip = false;
     @observable showGroupsTooltip = false;
     private inCustomSelectTooltip = false;
-    private inGroupsTooltip = false;
 
     constructor(props: IStudyViewPageProps) {
         super();
@@ -163,9 +163,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             <div className="studyView" onClick={()=>{
                 if(this.showCustomSelectTooltip && !this.inCustomSelectTooltip) {
                     this.showCustomSelectTooltip = false;
-                }
-                if(this.showGroupsTooltip && !this.inGroupsTooltip) {
-                    this.showGroupsTooltip = false;
                 }
             }}>
                 {this.store.unknownQueriedIds.isComplete &&
@@ -288,8 +285,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                 }}
                                                 overlay={()=>(
                                                     <div style={{width: 300}}
-                                                         onMouseEnter={()=>this.inGroupsTooltip=true}
-                                                         onMouseLeave={()=>this.inGroupsTooltip=false}
                                                     >
                                                         <ComparisonGroupManager
                                                             store={this.store}
@@ -297,14 +292,15 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                     </div>
                                                 )}
                                             >
-                                                <button className='btn btn-primary btn-xs'
+                                                <button className={classNames('btn btn-primary btn-xs', {active:this.showGroupsTooltip})}
                                                         data-test="groups-button"
                                                         onClick={(e)=>{
                                                             e.stopPropagation();
                                                             this.showGroupsTooltip = !this.showGroupsTooltip;
                                                         }}
+                                                        aria-pressed={this.showGroupsTooltip}
                                                         style={{marginLeft: '10px'}}
-                                                >Groups</button>
+                                                >Groups {String.fromCharCode(9662)/*small solid down triangle*/}</button>
                                             </DefaultTooltip>
                                         </div>
                                     )}
