@@ -1,4 +1,4 @@
-import {SampleGroup, TEMP_localStorageGroupsKey, getPatientIdentifiers, getCombinations, ComparisonGroup} from "./GroupComparisonUtils";
+import {ComparisonSampleGroup, TEMP_localStorageGroupsKey, getPatientIdentifiers, getCombinations, ComparisonGroup} from "./GroupComparisonUtils";
 import {remoteData} from "../../shared/api/remoteData";
 import {
     MolecularProfile,
@@ -24,14 +24,27 @@ import { SURVIVAL_CHART_ATTRIBUTES } from "pages/resultsView/survival/SurvivalCh
 import { COLORS } from "pages/studyView/StudyViewUtils";
 import {AlterationEnrichment} from "../../shared/api/generated/CBioPortalAPIInternal";
 import ListIndexedMap from "shared/lib/ListIndexedMap";
+import {getLocalStorageGroups} from "./GroupPersistenceUtils";
+import {GroupComparisonTab} from "./GroupComparisonPage";
+
+export type GroupComparisonURLQuery = {
+    localGroups:string; // comma separated list
+};
 
 export default class GroupComparisonStore {
 
-    @observable currentTabId:string|undefined = undefined;
+    @observable currentTabId:GroupComparisonTab|undefined = undefined;
     @observable excludeOverlapping:boolean = true;
+    @observable localGroupIds:string[] = [];
+
+    public updateStoreFromURL(query:Partial<GroupComparisonURLQuery>) {
+        if (query.localGroups) {
+            this.localGroupIds = query.localGroups.split(",");
+        }
+    }
 
     @autobind
-    public setTabId(id:string) {
+    public setTabId(id:GroupComparisonTab) {
         this.currentTabId = id;
     }
 
@@ -42,12 +55,23 @@ export default class GroupComparisonStore {
 
     private _selectedComparisonGroupIds = observable.shallowMap<boolean>();
 
-    readonly sampleGroups = remoteData<SampleGroup[]>({
-        // only for development purposes, until we get the actual group service going
-        invoke:()=>Promise.resolve(
-            JSON.parse(localStorage.getItem(TEMP_localStorageGroupsKey) || "[]")
-                .map((group:SampleGroup, index:number)=>{ group.name = `Group ${index}`; group.legendText = group.name; return group; })
-        )
+    readonly remoteSampleGroups = remoteData<ComparisonSampleGroup[]>({
+        invoke:()=>{
+            // TODO
+            return Promise.resolve([]);
+        }
+    });
+
+    @computed get localSampleGroups() {
+        const groupsMap = _.keyBy(getLocalStorageGroups(), group=>group.id);
+        return this.localGroupIds.map(id=>groupsMap[id]);
+    }
+
+    readonly sampleGroups = remoteData<ComparisonSampleGroup[]>({
+        await:()=>[this.remoteSampleGroups],
+        invoke:()=>{
+            return Promise.resolve(this.localSampleGroups.concat(this.remoteSampleGroups.result!));
+        }
     });
 
     readonly availableComparisonGroups = remoteData<ComparisonGroup[]>({
