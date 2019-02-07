@@ -1,10 +1,9 @@
 import * as React from "react";
-import {observer} from "mobx-react";
-import GroupComparisonStore from "./GroupComparisonStore";
+import {inject, observer} from "mobx-react";
+import GroupComparisonStore, {GroupComparisonURLQuery} from "./GroupComparisonStore";
 import MutationEnrichments from "./MutationEnrichments";
 import {MSKTab, MSKTabs} from "../../shared/components/MSKTabs/MSKTabs";
 import {PageLayout} from "../../shared/components/PageLayout/PageLayout";
-import ReactSelect from "react-select";
 import 'react-select/dist/react-select.css';
 import Survival from "./Survival";
 import Overlap from "./Overlap";
@@ -15,23 +14,81 @@ import {MakeMobxView} from "../../shared/components/MobxView";
 import LoadingIndicator from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
 import GroupSelector from "./GroupSelector";
-import { Checkbox, Button } from "react-bootstrap";
 import InfoIcon from "shared/components/InfoIcon";
-import { caseCountsInParens } from "./GroupComparisonUtils";
-import "./styles.scss";
-import { StudyLink } from "shared/components/StudyLink/StudyLink";
+import {caseCountsInParens, getTabId} from "./GroupComparisonUtils";
+import "./styles.module.scss";
+import {StudyLink} from "shared/components/StudyLink/StudyLink";
+import {IReactionDisposer, reaction} from "mobx";
+import autobind from "autobind-decorator";
+import {AppStore} from "../../AppStore";
+import _ from "lodash";
 
 export enum GroupComparisonTab {
-    OVERLAP, MUTATIONS, CNA, MRNA, PROTEIN, SURVIVAL
+    OVERLAP = "overlap",
+    MUTATIONS = "mutations",
+    CNA = "cna",
+    MRNA = "mrna",
+    PROTEIN = "protein",
+    SURVIVAL = "survival"
 }
 
+export interface IGroupComparisonPageProps {
+    routing:any;
+    appStore:AppStore;
+}
+
+@inject('routing', 'appStore')
 @observer
-export default class GroupComparisonPage extends React.Component<{}, {}> {
+export default class GroupComparisonPage extends React.Component<IGroupComparisonPageProps, {}> {
     private store:GroupComparisonStore;
-    constructor() {
-        super();
+    private queryReaction:IReactionDisposer;
+    private pathnameReaction:IReactionDisposer;
+    private lastQuery:Partial<GroupComparisonURLQuery>;
+
+    constructor(props:IGroupComparisonPageProps) {
+        super(props);
         this.store = new GroupComparisonStore();
         (window as any).groupComparisonStore = this.store;
+        this.queryReaction = reaction(
+            () => props.routing.location.query,
+            query => {
+
+                if (!props.routing.location.pathname.includes("/comparison") ||
+                    _.isEqual(query, this.lastQuery)) {
+                    return;
+                }
+
+                this.store.updateStoreFromURL(query);
+                this.lastQuery = query;
+            },
+            {fireImmediately: true}
+        );
+
+        this.pathnameReaction = reaction(
+            () => props.routing.location.pathname,
+            pathname => {
+
+                if (!pathname.includes("/comparison")) {
+                    return;
+                }
+
+                const tabId = getTabId(pathname);
+                if (tabId) {
+                    this.store.setTabId(tabId);
+                }
+            },
+            {fireImmediately: true}
+        );
+    }
+
+    @autobind
+    private setTabId(id:string, replace?:boolean) {
+        this.props.routing.updateRoute({},`comparison/${id}`, false, replace);
+    }
+
+    componentWillUnmount() {
+        this.queryReaction && this.queryReaction();
+        this.pathnameReaction && this.pathnameReaction();
     }
 
     readonly tabs = MakeMobxView({
@@ -49,7 +106,7 @@ export default class GroupComparisonPage extends React.Component<{}, {}> {
                 (this.store.proteinEnrichmentProfiles.result!.length > 0) ||
                 this.store.showSurvivalTab
             ) {
-                return <MSKTabs unmountOnHide={false} activeTabId={this.store.currentTabId} onTabClick={this.store.setTabId} className="primaryTabs">
+                return <MSKTabs unmountOnHide={false} activeTabId={this.store.currentTabId} onTabClick={this.setTabId} className="primaryTabs">
                     <MSKTab id={GroupComparisonTab.OVERLAP.toString()} linkText="Overlapping">
                         <Overlap store={this.store}/>
                     </MSKTab>

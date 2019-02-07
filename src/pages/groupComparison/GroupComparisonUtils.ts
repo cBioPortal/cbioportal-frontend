@@ -2,19 +2,22 @@ import ListIndexedMap from 'shared/lib/ListIndexedMap';
 import { MobxPromise } from 'mobxpromise/dist/src/MobxPromise';
 import {SampleIdentifier, Sample, PatientIdentifier} from "../../shared/api/generated/CBioPortalAPI";
 import _ from "lodash";
+import {ResultsViewTab} from "../resultsView/ResultsViewPageHelpers";
+import {GroupComparisonTab} from "./GroupComparisonPage";
+import {StudyViewFilter} from "../../shared/api/generated/CBioPortalAPIInternal";
 
-export type SampleGroup = {
+export type ComparisonSampleGroup = {
     // mandatory:
     id:string, // unique identifier
     sampleIdentifiers:SampleIdentifier[], // samples in the group
+    name:string, // display name
 
     // optional:
-    name?:string, // display name
     color?: string; // color for charts
     legendText?: string; // display text (defaults to name) to put in a legend
 };
 
-export type ComparisonGroup = SampleGroup & {
+export type ComparisonGroup = ComparisonSampleGroup & {
     patientIdentifiers:PatientIdentifier[];
     hasOverlappingSamples?:boolean; // whether the group has had samples filtered out because they overlapped in the selection
     hasOverlappingPatients?:boolean; // whether the group has had patients filtered out because they overlapped in the selection
@@ -122,4 +125,18 @@ export function getPatientIdentifiers(
 export const ENRICHMENTS_TOO_MANY_GROUPS_MSG = "Can't show enrichments for more than two groups - deselect some from the area at the top of the page.";
 export function ENRICHMENTS_TOO_MANY_STUDIES_MSG(enrichmentsType:string) {
     return `Selected comparison groups span more than one study, so we can't show ${enrichmentsType} enrichments. Please deselect groups from the top of the page, or try a different set of groups.`;
+}
+
+export function getDefaultGroupName(filters:StudyViewFilter) {
+    // TODO: generate describe name from filters
+    return "<DESCRIPTIVE GENERATED NAME FROM FILTERS>";
+}
+
+export function getTabId(pathname:string) {
+    const match = pathname.match(/comparison\/([^\/]+)/);
+    if (match) {
+        return match[1] as GroupComparisonTab;
+    } else {
+        return undefined;
+    }
 }
