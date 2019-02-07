@@ -120,7 +120,7 @@ import {
 import {BookmarkLinks} from "../../shared/model/BookmarkLinks";
 import {getBitlyServiceUrl} from "../../shared/api/urls";
 import url from "url";
-import OncoprintClinicalDataCache, {SpecialAttribute} from "../../shared/cache/OncoprintClinicalDataCache";
+import ClinicalDataCache, {SpecialAttribute} from "../../shared/cache/ClinicalDataCache";
 import {getDefaultMolecularProfiles} from "../../shared/lib/getDefaultMolecularProfiles";
 import {getProteinPositionFromProteinChange} from "../../shared/lib/ProteinChangeUtils";
 import {isMutation} from "../../shared/lib/CBioPortalAPIUtils";
@@ -2937,25 +2937,7 @@ export class ResultsViewPageStore {
         })
     );
 
-    public clinicalDataCache = new MobxPromiseCache<ClinicalAttribute, ClinicalData[]>(
-        attr=>({
-            await:()=>[
-                this.samples,
-                this.patients
-            ],
-            invoke:()=>client.fetchClinicalDataUsingPOST({
-                clinicalDataType: attr.patientAttribute ? "PATIENT" : "SAMPLE",
-                clinicalDataMultiStudyFilter: {
-                    attributeIds: [attr.clinicalAttributeId],
-                    identifiers: attr.patientAttribute ?
-                        this.patients.result!.map(p=>({entityId:p.patientId, studyId:p.studyId})) :
-                        this.samples.result!.map(s=>({entityId:s.sampleId, studyId:s.studyId}))
-                }
-            })
-        })
-    );
-
-    public oncoprintClinicalDataCache = new OncoprintClinicalDataCache(
+    public clinicalDataCache = new ClinicalDataCache(
         this.samples,
         this.patients,
         this.studyToMutationMolecularProfile,
