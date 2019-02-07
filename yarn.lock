@@ -258,10 +258,10 @@
   dependencies:
     "@types/react" "*"
 
-"@types/rc-tooltip@3.4.6":
-  version "3.4.6"
-  resolved "https://registry.yarnpkg.com/@types/rc-tooltip/-/rc-tooltip-3.4.6.tgz#97631316d6483a1b00fd2b0d3bf823ee9552d18b"
-  integrity sha1-l2MTFtZIOhsA/SsNO/gj7pVS0Ys=
+"@types/rc-tooltip@3.7.0":
+  version "3.7.0"
+  resolved "https://registry.yarnpkg.com/@types/rc-tooltip/-/rc-tooltip-3.7.0.tgz#6dc9898dc426495baea1b786e5dbde8980bf9737"
+  integrity sha512-MtnEmPWtjYhApSv38Pkgoa22WZRYZJ4VB+DipGOYlUMWcRznq4vPxFbQoZOvTcmlTwqaSIDbCn8PMFwobdEjwQ==
   dependencies:
     "@types/react" "*"
 
@@ -10619,14 +10619,14 @@ rc-slider@^8.3.5:
     shallowequal "^1.0.1"
     warning "^3.0.0"
 
-rc-tooltip@^3.4.2:
-  version "3.4.8"
-  resolved "https://registry.yarnpkg.com/rc-tooltip/-/rc-tooltip-3.4.8.tgz#4a422374f57f3b00f4d04941863850ceddd24c56"
-  integrity sha1-SkIjdPV/OwD00ElBhjhQzt3STFY=
+rc-tooltip@3.7.3:
+  version "3.7.3"
+  resolved "https://registry.yarnpkg.com/rc-tooltip/-/rc-tooltip-3.7.3.tgz#280aec6afcaa44e8dff0480fbaff9e87fc00aecc"
+  integrity sha512-dE2ibukxxkrde7wH9W8ozHKUO4aQnPZ6qBHtrTH9LoO836PjDdiaWO73fgPB05VfJs9FbZdmGPVEbXCeOP99Ww==
   dependencies:
     babel-runtime "6.x"
     prop-types "^15.5.8"
-    rc-trigger "1.x"
+    rc-trigger "^2.2.2"
 
 rc-tooltip@^3.7.0:
   version "3.7.0"
@@ -10636,18 +10636,6 @@ rc-tooltip@^3.7.0:
     babel-runtime "6.x"
     prop-types "^15.5.8"
     rc-trigger "^2.2.2"
-
-rc-trigger@1.x:
-  version "1.11.3"
-  resolved "https://registry.yarnpkg.com/rc-trigger/-/rc-trigger-1.11.3.tgz#47b8b58e0863c2277e367b86f1cfa29eb612db56"
-  integrity sha512-g5Y2TxMB44Ubg2qpj0Qj9NTT+/jWysv2yKPgDe1CqvKbIxiM+3fVkl04u4ppXMNpN3qi6zWqKzugFcfdG6at4A==
-  dependencies:
-    babel-runtime "6.x"
-    create-react-class "15.x"
-    prop-types "15.x"
-    rc-align "2.x"
-    rc-animate "2.x"
-    rc-util "4.x"
 
 rc-trigger@^2.2.2:
   version "2.3.1"
@@ -10661,16 +10649,7 @@ rc-trigger@^2.2.2:
     rc-animate "2.x"
     rc-util "^4.3.0"
 
-rc-util@4.x, rc-util@^4.0.4:
-  version "4.0.4"
-  resolved "https://registry.yarnpkg.com/rc-util/-/rc-util-4.0.4.tgz#99813dd90aee7e29b64939a70ac176ead3f4ff39"
-  integrity sha1-mYE92Qrufim2STmnCsF26tP0/zk=
-  dependencies:
-    add-dom-event-listener "1.x"
-    babel-runtime "6.x"
-    shallowequal "^0.2.2"
-
-rc-util@^4.3.0:
+rc-util@4.3.0, rc-util@^4.3.0:
   version "4.3.0"
   resolved "https://registry.yarnpkg.com/rc-util/-/rc-util-4.3.0.tgz#31c61e747e3e107acfe78049f98b275a8051a398"
   integrity sha512-PUY5w0oFnk1dBKJKhWVy6k1HOxk35d8xmWMeyWuhEG0Sfy/OuvP3aoaYy7Xx5bt55ecV5imjD6MlmAt2aC+ynQ==
@@ -10678,6 +10657,15 @@ rc-util@^4.3.0:
     add-dom-event-listener "1.x"
     babel-runtime "6.x"
     prop-types "^15.5.10"
+    shallowequal "^0.2.2"
+
+rc-util@4.x, rc-util@^4.0.4:
+  version "4.0.4"
+  resolved "https://registry.yarnpkg.com/rc-util/-/rc-util-4.0.4.tgz#99813dd90aee7e29b64939a70ac176ead3f4ff39"
+  integrity sha1-mYE92Qrufim2STmnCsF26tP0/zk=
+  dependencies:
+    add-dom-event-listener "1.x"
+    babel-runtime "6.x"
     shallowequal "^0.2.2"
 
 rc@^1.1.7:
