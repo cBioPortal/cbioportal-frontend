@@ -353,6 +353,34 @@ describe('oncoprint', function() {
         }
 
         it("should sort patients and samples by custom case list order correctly", ()=>{
+
+            function doCustomCaseOrderTest() {
+                // now we're on results page
+                waitForOncoprint(10000);
+                // open sort menu
+                browser.click('#sortDropdown');
+                browser.waitForVisible('[data-test="oncoprintSortDropdownMenu"] input[data-test="caseList"]');
+                browser.click('[data-test="oncoprintSortDropdownMenu"] input[data-test="caseList"]');
+                browser.pause(100); // allow to sort
+
+                assert.equal(
+                    browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
+                    "VENHQS1BQS0zOTcxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1PUi1BNUpDOmFjY190Y2dh,VENHQS1PUi1BNUoyOmFjY190Y2dh,VENHQS1BQS1BMDBROmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1DTS00NzQ4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1PUi1BNUpEOmFjY190Y2dh,VENHQS1PUi1BNUozOmFjY190Y2dh",
+                    "sorted patient order correct"
+                );
+
+                $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
+                $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForVisible(10000);
+                $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
+                waitForOncoprint(10000);
+
+                assert.equal(
+                    browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
+                    "VENHQS1BQS0zOTcxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1PUi1BNUpDLTAxOmFjY190Y2dh,VENHQS1PUi1BNUoyLTAxOmFjY190Y2dh,VENHQS1BQS1BMDBRLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1DTS00NzQ4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1PUi1BNUpELTAxOmFjY190Y2dh,VENHQS1PUi1BNUozLTAxOmFjY190Y2dh",
+                    "sorted sample order correct"
+                );
+            }
+
             goToUrlAndSetLocalStorage(CBIOPORTAL_URL);
 
             // select Colorectal TCGA and Adrenocortical Carcinoma TCGA
@@ -364,10 +392,7 @@ describe('oncoprint', function() {
             checkBox.waitForExist(10000);
             browser.click('[data-test="StudySelect"] input');
 
-            let inputLength = browser.getValue(inputSelector).length
-            for (let i = 0; i < inputLength; i++) { browser.setValue(inputSelector, "\uE003").pause(10); };
-
-            browser.setValue(inputSelector, 'adrenocortical carcinoma tcga provisional');
+            setInputText(inputSelector, 'adrenocortical carcinoma tcga provisional');
             waitForNumberOfStudyCheckboxes(1, "Adrenocortical Carcinoma (TCGA, Provisional)");
 
             var checkBox = $('[data-test="StudySelect"]');
@@ -397,30 +422,19 @@ describe('oncoprint', function() {
             browser.waitForEnabled('[data-test="queryButton"]', 30000);
             browser.click('[data-test="queryButton"]');
 
-            // now we're on results page
-            waitForOncoprint(10000);
-            // open sort menu
-            browser.click('#sortDropdown');
-            browser.waitForVisible('[data-test="oncoprintSortDropdownMenu"] input[data-test="caseList"]');
-            browser.click('[data-test="oncoprintSortDropdownMenu"] input[data-test="caseList"]');
-            browser.pause(100); // allow to sort
+            doCustomCaseOrderTest();
 
-            assert.equal(
-                browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
-                "VENHQS1BQS0zOTcxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1PUi1BNUpDOmFjY190Y2dh,VENHQS1PUi1BNUoyOmFjY190Y2dh,VENHQS1BQS1BMDBROmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1DTS00NzQ4OmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1PUi1BNUpEOmFjY190Y2dh,VENHQS1PUi1BNUozOmFjY190Y2dh",
-                "sorted patient order correct"
-            );
+            // change genes and resubmit
+            browser.click("button#modifyQueryBtn");
+            browser.waitForVisible('textarea[data-test="geneSet"]', 10000);
+            setInputText('textarea[data-test="geneSet"]', "TP53");
+            browser.pause(100); // let things trigger
+            browser.waitForEnabled('button[data-test="queryButton"]', 10000);
+            browser.click('button[data-test="queryButton"]');
+            browser.pause(100); // wait for query to submit
 
-            $('.oncoprintContainer .oncoprint__controls #viewDropdownButton').click(); // open view menu
-            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').waitForVisible(10000);
-            $('.oncoprintContainer .oncoprint__controls input[type="radio"][name="columnType"][value="0"]').click(); // go to sample mode
-            waitForOncoprint(10000);
-
-            assert.equal(
-                browser.execute(function() { return frontendOnc.getIdOrder().join(","); }).value,
-                "VENHQS1BQS0zOTcxLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1PUi1BNUpDLTAxOmFjY190Y2dh,VENHQS1PUi1BNUoyLTAxOmFjY190Y2dh,VENHQS1BQS1BMDBRLTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1DTS00NzQ4LTAxOmNvYWRyZWFkX3RjZ2FfcHVi,VENHQS1PUi1BNUpELTAxOmFjY190Y2dh,VENHQS1PUi1BNUozLTAxOmFjY190Y2dh",
-                "sorted sample order correct"
-            );
+            // run same test again
+            doCustomCaseOrderTest();
         });
 
         it("should sort patients and samples correctly in coadread_tcga_pub", ()=>{

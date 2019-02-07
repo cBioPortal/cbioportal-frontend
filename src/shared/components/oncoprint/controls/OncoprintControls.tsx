@@ -17,7 +17,6 @@ import "./styles.scss";
 import ErrorIcon from "../../ErrorIcon";
 import classNames from "classnames";
 import {SpecialAttribute} from "../../../cache/ClinicalDataCache";
-import autobind from "autobind-decorator";
 import ClinicalAttributeSelector from "../../clinicalAttributeSelector/ClinicalAttributeSelector";
 import {ResultsViewPageStore} from "../../../../pages/resultsView/ResultsViewPageStore";
 import {ExtendedClinicalAttribute} from "../../../../pages/resultsView/ResultsViewPageStoreUtils";
@@ -974,7 +973,6 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         );
     }
 
-    @autobind
     private getSortMenu() {
         if (this.props.oncoprinterMode) {
             return this.getSortMenuOncoprinter();
