@@ -26,7 +26,6 @@ type OncoKbCardPropsBase = {
     biologicalSummary: string;
     treatments: any[];
     pmidData: ICache<any>;
-    onChildTooltipVisibleChange: (visible: boolean)=>void;
     handleFeedbackOpen?: React.EventHandler<any>;
 };
 
@@ -123,7 +122,6 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
                         placement="left"
                         trigger={['hover', 'focus']}
                         destroyTooltipOnHide={true}
-                        onVisibleChange={this.props.onChildTooltipVisibleChange as any}
                     >
                         <i
                             className={`level-icon level-${level}`}
@@ -141,7 +139,6 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
                             placement="right"
                             trigger={['hover', 'focus']}
                             destroyTooltipOnHide={true}
-                            onVisibleChange={this.props.onChildTooltipVisibleChange as any}
                         >
                             <i className="fa fa-book"/>
                         </DefaultTooltip>
@@ -537,7 +534,6 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
                         placement="right"
                         trigger={['hover', 'focus']}
                         destroyTooltipOnHide={true}
-                        onVisibleChange={this.props.onChildTooltipVisibleChange as any}
                     >
                         <i className="fa fa-book" style={{color: "black"}}/>
                     </DefaultTooltip>
