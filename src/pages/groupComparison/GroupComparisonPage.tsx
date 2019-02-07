@@ -16,7 +16,7 @@ import ErrorMessage from "../../shared/components/ErrorMessage";
 import GroupSelector from "./GroupSelector";
 import InfoIcon from "shared/components/InfoIcon";
 import {caseCountsInParens, getTabId} from "./GroupComparisonUtils";
-import "./styles.module.scss";
+import styles from "./styles.module.scss";
 import {StudyLink} from "shared/components/StudyLink/StudyLink";
 import {IReactionDisposer, reaction} from "mobx";
 import autobind from "autobind-decorator";
@@ -106,7 +106,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                 (this.store.proteinEnrichmentProfiles.result!.length > 0) ||
                 this.store.showSurvivalTab
             ) {
-                return <MSKTabs unmountOnHide={false} activeTabId={this.store.currentTabId} onTabClick={this.setTabId} className="primaryTabs">
+                return <MSKTabs unmountOnHide={false} activeTabId={this.store.currentTabId} onTabClick={this.setTabId} className="primaryTabs mainTabs">
                     <MSKTab id={GroupComparisonTab.OVERLAP.toString()} linkText="Overlapping">
                         <Overlap store={this.store}/>
                     </MSKTab>
@@ -181,36 +181,32 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
 
     render() {
         return (
-            <PageLayout>
-                <div style={{display:"flex", flexDirection:"column"}}>
-                    <div>
+            <PageLayout noMargin={true} className={"subhead-dark"}>
+                <div>
+                    <div className={"headBlock"}>
                         {this.studyLink.component}
-                    </div>
-                    <div style={{marginBottom:30}}>
-                        <div style={{display:"flex", flexDirection:"row", alignItems:"center"}}>
-                            <span style={{marginRight:10}}>Groups (click to toggle):</span>
-                            <GroupSelector
-                                store = {this.store}
-                            />
-                            <span style={{marginLeft:10}}>
-                                <button type="button" className="btn" 
-                                    style={{border:"1px solid #dddddd"}}
-                                    onClick={this.store.toggleExcludeOverlapping}
-                                >
-                                    <input
-                                        type="checkbox"
-                                        checked={this.store.excludeOverlapping}
-                                    />
-                                    <span style={{marginLeft:7}}>
-                                        {`* Exclude overlapping samples/patients ${caseCountsInParens(this.store.overlappingSelectedSamples, this.store.overlappingSelectedPatients)} from selected groups.`}
-                                    </span> 
-                                    <div style={{display:"inline-block", marginLeft:7}}>
-                                        <InfoIcon 
-                                            tooltip={<span style={{maxWidth:200}}>Exclude samples from analysis which occur in more than one selected group.</span>}
+                        <div>
+                            <div className={styles.headerControls}>
+                                <GroupSelector
+                                    store = {this.store}
+                                />
+                                <div className={"checkbox"}>
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            onChange={this.store.toggleExcludeOverlapping}
+                                            checked={this.store.excludeOverlapping}
                                         />
-                                    </div>
-                                </button>
-                            </span>
+
+                                        {`Exclude overlapping samples/patients ${caseCountsInParens(this.store.overlappingSelectedSamples, this.store.overlappingSelectedPatients)} from selected groups.`}
+
+                                        {/*<InfoIcon*/}
+                                        {/*tooltip={<span style={{maxWidth:200}}>Exclude samples from analysis which occur in more than one selected group.</span>}*/}
+                                        {/*/>*/}
+
+                                    </label>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div>
