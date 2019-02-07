@@ -9,7 +9,7 @@
 .comparisonGroupManager {
     .groupCheckboxes {
         margin-top:4px;
-        height:130px;
+        max-height:130px;
         width:100%;
         overflow:auto;
         padding:3px;
@@ -23,6 +23,14 @@
         :global(div.checkbox):last-child {
             margin-bottom:0px;
         }
+    }
+
+    .noGroupsMessage {
+        padding:15px;
+        height:103px;
+        display:flex;
+        justify-content:center;
+        align-items:center;
     }
 
     :global(input.form-control) {
