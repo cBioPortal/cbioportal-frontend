@@ -110,12 +110,13 @@ superagent.Request.prototype.end = function (callback) {
         }
         if (response && response.statusCode === 401) {
             var storageKey = `redirect${Math.floor(Math.random() * 1000000000000)}`
-            localStorage.setItem(storageKey, window.location.hash);
+            localStorage.setItem(storageKey, window.location.href);
 
+            // build URL with a reference to storage key so that /restore route can restore it after login
             const loginUrl = buildCBioPortalPageUrl({
-               query: {
-                   "spring-security-redirect":`${window.location.pathname}${window.location.search}${'#/restore?key=' + storageKey}`
-               }
+                query: {
+                    "spring-security-redirect":buildCBioPortalPageUrl({ pathname:"restore", query: { key: storageKey} })
+                }
             });
 
             redirecting = true;
