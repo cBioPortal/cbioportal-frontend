@@ -114,6 +114,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         return (
             <button
                 className="btn btn-sm btn-primary"
+                disabled={this.props.store.selectedComparisonGroups.length === 0}
                 onClick={()=>{
                     this.props.store.clearAllFilters();
                     const ids:SampleIdentifier[] =
