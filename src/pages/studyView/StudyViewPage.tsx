@@ -33,7 +33,10 @@ import {Else, If, Then} from 'react-if';
 import DefaultTooltip from "../../shared/components/defaultTooltip/DefaultTooltip";
 import CustomCaseSelection from "./addChartButton/customCaseSelection/CustomCaseSelection";
 import {AppStore} from "../../AppStore";
-import {SampleGroup, TEMP_localStorageGroupsKey} from "../groupComparison/GroupComparisonUtils";
+import {ComparisonSampleGroup, TEMP_localStorageGroupsKey} from "../groupComparison/GroupComparisonUtils";
+import {addGroupToLocalStorage, getLocalStorageGroups} from "../groupComparison/GroupPersistenceUtils";
+import {SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
+import ComparisonGroupManager from "../groupComparison/ComparisonGroupManager";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -95,7 +98,9 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     private enableAddChartInTabs = [StudyViewPageTabKeyEnum.SUMMARY, StudyViewPageTabKeyEnum.CLINICAL_DATA];
     private queryReaction:IReactionDisposer;
     @observable showCustomSelectTooltip = false;
+    @observable showGroupsTooltip = false;
     private inCustomSelectTooltip = false;
+    private inGroupsTooltip = false;
 
     constructor(props: IStudyViewPageProps) {
         super();
@@ -155,11 +160,14 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     content() {
 
         return (
-            <div className="studyView" onClick={this.showCustomSelectTooltip ? ()=>{
-                if(!this.inCustomSelectTooltip) {
+            <div className="studyView" onClick={()=>{
+                if(this.showCustomSelectTooltip && !this.inCustomSelectTooltip) {
                     this.showCustomSelectTooltip = false;
                 }
-            }: undefined}>
+                if(this.showGroupsTooltip && !this.inGroupsTooltip) {
+                    this.showGroupsTooltip = false;
+                }
+            }}>
                 {this.store.unknownQueriedIds.isComplete &&
                 this.store.unknownQueriedIds.result.length > 0 && (
                     <Alert bsStyle="danger">
@@ -256,7 +264,8 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                             >
                                                 <button className='btn btn-primary btn-xs'
                                                         data-test='custom-selection-button'
-                                                        onClick={() => {
+                                                        onClick={(e)=>{
+                                                            e.stopPropagation();
                                                             this.showCustomSelectTooltip = true;
                                                         }}
                                                         style={{marginLeft: '10px'}}>Custom Selection
@@ -269,15 +278,34 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                                 addChartOverlayClassName='studyViewAddChartOverlay'
                                                 disableCustomTab={this.store.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA}
                                             />
-                                            <button className='btn btn-primary btn-xs' style={{marginLeft: '10px'}} onClick={()=>{
-                                                const groups:SampleGroup[] = JSON.parse(localStorage.getItem(TEMP_localStorageGroupsKey) || "[]");
-                                                groups.push({
-                                                    id: Math.random()+"",
-                                                    sampleIdentifiers:this.store.selectedSamples.result!.map(s=>({ sampleId:s.sampleId, studyId:s.studyId }))
-                                                });
-                                                localStorage.setItem(TEMP_localStorageGroupsKey, JSON.stringify(groups));
-                                                alert("Saved group! Check it out in Group Comparison");
-                                            }} disabled={!this.store.selectedSamples.isComplete}>* Save Group</button>
+                                            <DefaultTooltip
+                                                visible={this.showGroupsTooltip}
+                                                placement="bottomLeft"
+                                                destroyTooltipOnHide={true}
+                                                onPopupAlign={(tooltipEl: any)=>{
+                                                    const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
+                                                    arrowEl.style.right = '10px';
+                                                }}
+                                                overlay={()=>(
+                                                    <div style={{width: 300}}
+                                                         onMouseEnter={()=>this.inGroupsTooltip=true}
+                                                         onMouseLeave={()=>this.inGroupsTooltip=false}
+                                                    >
+                                                        <ComparisonGroupManager
+                                                            store={this.store}
+                                                        />
+                                                    </div>
+                                                )}
+                                            >
+                                                <button className='btn btn-primary btn-xs'
+                                                        data-test="groups-button"
+                                                        onClick={(e)=>{
+                                                            e.stopPropagation();
+                                                            this.showGroupsTooltip = !this.showGroupsTooltip;
+                                                        }}
+                                                        style={{marginLeft: '10px'}}
+                                                >Groups</button>
+                                            </DefaultTooltip>
                                         </div>
                                     )}
                                 </div>

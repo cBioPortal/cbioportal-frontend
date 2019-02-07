@@ -97,6 +97,7 @@ export const makeRoutes = (routing) => {
                 <Route path="/results(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(ResultsViewPage)} />
                 <Route path="/patient(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(PatientViewPage)}/>
                 <Route path="/study" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(StudyViewPage)} />
+                <Route path="/comparison(/:tab)" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(GroupComparisonPage)}/>
 
                 <Route path="/mutation_mapper" getComponent={lazyLoadComponent(MutationMapperTool)} />
                 <Route path="/oncoprinter" getComponent={lazyLoadComponent(OncoprinterTool)} />
@@ -111,7 +112,6 @@ export const makeRoutes = (routing) => {
                 <Route path="/faq" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(FAQ)} />
                 <Route path="/oql" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(OQL)} />
                 <Route path="/testimonials" onEnter={()=>{$(document).scrollTop(0)}} component={TestimonialsPage}/>
-                <Route path="/comparison" onEnter={()=>{$(document).scrollTop(0)}} getComponent={lazyLoadComponent(GroupComparisonPage)}/>
 
 
                 <Route path="/case.do" onEnter={handleCaseDO} component={getBlankPage()} />
