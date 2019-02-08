@@ -117,7 +117,7 @@ export function makeClinicalTrackTooltip(track:ClinicalTrackSpec, link_id?:boole
         if (naCount > 0 && track.na_tooltip_value) {
             ret += `${track.label}: <b>${track.na_tooltip_value}</b> (${naCount} samples)<br/>`;
         }
-        return $('<div>').addClass(TOOLTIP_DIV_CLASS).append(ret).append(getCaseViewElt(dataUnderMouse, !!link_id));
+        return $('<div>').addClass(TOOLTIP_DIV_CLASS).append(getCaseViewElt(dataUnderMouse, !!link_id)).append("<br/>").append(ret);
     };
 }
 export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile["molecularAlterationType"], link_id?:boolean) {
@@ -149,8 +149,8 @@ export function makeHeatmapTrackTooltip(genetic_alteration_type:MolecularProfile
                 profile_data = `${profile_data} (average of ${profileDataCount} values)`;
             }
         }
-        let ret = data_header + '<b>' + profile_data + '</b><br>';
-        return $('<div>').addClass(TOOLTIP_DIV_CLASS).append(ret).append(getCaseViewElt(dataUnderMouse, !!link_id));
+        let ret = data_header + '<b>' + profile_data + '</b><br/>';
+        return $('<div>').addClass(TOOLTIP_DIV_CLASS).append(getCaseViewElt(dataUnderMouse, !!link_id)).append("<br/>").append(ret);
     };
 };
 
@@ -319,6 +319,7 @@ export function makeGeneticTrackTooltip(
     const disp_cna:{[integerCN:string]:string} = {'-2': 'HOMODELETED', '-1': 'HETLOSS', '1': 'GAIN', '2': 'AMPLIFIED'};
     return function (dataUnderMouse:Pick<GeneticTrackDatum, "data"|"profiled_in"|"sample"|"patient"|"study_id"|"na"|"not_profiled_in"|"disp_germ">[]) {
         const ret = $('<div>').addClass(TOOLTIP_DIV_CLASS);
+        ret.append(getCaseViewElt(dataUnderMouse, caseViewLinkout)).append("<br/>");
         let mutations:any[] = [];
         let cna:any[] = [];
         const mrna:{hugo_gene_symbol:string, direction:"UPREGULATED"|"DOWNREGULATED"}[] = [];
@@ -525,8 +526,6 @@ export function makeGeneticTrackTooltip(
                 ret.append("<br>");
             }
         }
-
-        ret.append(getCaseViewElt(dataUnderMouse, caseViewLinkout));
         return ret;
     };
 }
