@@ -213,13 +213,18 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         let contents:any;
         if (this.addGroupPanelOpen) {
             contents = [
-                <button
-                    className="btn btn-sm btn-info"
-                    style={{width:"100%"}}
-                    onClick={this.cancelAddGroup}
-                >Cancel</button>,
+                <div style={{display:"flex", flexDirection:"row", justifyContent:"space-between", width:"100%", marginTop:3}}>
+                    <h5>Add selected samples:</h5>
+                    <button
+                        className="btn btn-sm btn-primary"
+                        style={{
+                            right:0, width:140, marginTop:-4
+                        }}
+                        onClick={this.cancelAddGroup}
+                    >Cancel</button>
+                </div>,
                 <div style={{width:"100%", marginTop:7}}>
-                    <h6 className="allowInlineTopMargin" style={{marginTop:5}}>Create new group:</h6>
+                    <h6 style={{marginTop:5}}>Create new group:</h6>
                     <div style={{display:"flex", flexDirection:"row", justifyContent:"space-between", alignItems:"center", width:"100%"}}>
                         <input
                             className="form-control"
@@ -281,11 +286,11 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         } else {
             contents = (
                 <button
-                    className="btn btn-sm btn-info"
+                    className="btn btn-sm btn-primary"
                     onClick={this.showAddGroupPanel}
                     disabled={!this.props.store.selectedSamples.isComplete}
                     style={{width:"100%"}}
-                >+ Add current selection to group {this.props.store.selectedSamples.isComplete && `(${this.props.store.selectedSamples.result.length})`}
+                >+ Add{this.props.store.selectedSamples.isComplete && ` ${this.props.store.selectedSamples.result.length}`} selected samples to a group
                 </button>
             );
         }
@@ -312,7 +317,7 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
                 {this.noGroupsMessage}
                 {this.groupCheckboxes}
                 {this.actionButtons}
-                <hr style={{width:"100%", borderTopColor:"#eeeeee", marginTop:6, marginBottom:6}}/>
+                <hr style={{width:"100%", borderTopColor:"#cccccc", marginTop:6, marginBottom:6}}/>
                 {this.addGroupPanel}
             </div>
         );
