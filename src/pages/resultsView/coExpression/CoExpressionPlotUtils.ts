@@ -1,5 +1,4 @@
 import _ from "lodash";
-import {CoExpressionPlotData} from "./CoExpressionPlot";
 
 export function getUniquePrecision(value:number, allValues:number[], maxPrecision:number=3) {
     if (!allValues.length)
@@ -16,8 +15,8 @@ export function getUniquePrecision(value:number, allValues:number[], maxPrecisio
     return precision;
 }
 
-export function axisLabel(gene:{hugoGeneSymbol:string, cytoband:string}, logScale:boolean) {
-    return `${gene.hugoGeneSymbol} ${logScale ? "(log2) " : ""}(Cytoband: ${gene.cytoband})`
+export function axisLabel(geneticEntity:{geneticEntityName:string}, logScale:boolean, profileName:string) {
+    return `${profileName}: ${geneticEntity.geneticEntityName} ${logScale ? "(log2) " : ""}`;
 }
 
 export function isNotProfiled(d:{profiledX:boolean, profiledY:boolean}) {
