@@ -3,6 +3,7 @@ import {Circle} from "better-react-spinkit";
 import DefaultTooltip from 'shared/components/defaultTooltip/DefaultTooltip';
 import annotationStyles from "./styles/annotation.module.scss";
 import hotspotStyles from "./styles/cancerHotspots.module.scss";
+import {getNCBIlink} from "../../api/urls";
 
 export interface ICancerHotspotsProps {
     status: "pending" | "error" | "complete";
@@ -68,7 +69,7 @@ export default class CancerHotspots extends React.Component<ICancerHotspotsProps
         const clusteredHotspot = is3dHotspot ? "a 3D clustered hotspot" : "";
 
         const recurrentPublication = isHotspot ? (
-                <a href="http://www.ncbi.nlm.nih.gov/pubmed/26619011" target="_blank">
+                <a href={getNCBIlink(`/pubmed/26619011`)} target="_blank">
                     Chang et al., Nat Biotechnol, 2016
                 </a>
             ) : "";
