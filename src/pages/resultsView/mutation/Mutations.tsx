@@ -3,17 +3,14 @@ import {observer} from "mobx-react";
 import {MSKTabs, MSKTab} from "shared/components/MSKTabs/MSKTabs";
 import {ResultsViewPageStore} from "../ResultsViewPageStore";
 import ResultsViewMutationMapper from "./ResultsViewMutationMapper";
-import ResultsViewMutationMapperStore from "./ResultsViewMutationMapperStore";
-import classnames from "classnames";
-import {observable, computed} from "mobx";
+import MutationMapperUserSelectionStore from "shared/components/mutationMapper/MutationMapperUserSelectionStore";
+import {observable} from "mobx";
 import AppConfig from 'appConfig';
-import "./mutations.scss";
-import {filterCBioPortalWebServiceData} from '../../../shared/lib/oql/oqlfilter';
-import AccessorsForOqlFilter from '../../../shared/lib/oql/AccessorsForOqlFilter';
-import Loader from "../../../shared/components/loadingIndicator/LoadingIndicator";
 import OqlStatusBanner from "../../../shared/components/oqlStatusBanner/OqlStatusBanner";
 import autobind from "autobind-decorator";
 import {AppStore} from "../../../AppStore";
+
+import "./mutations.scss";
 
 export interface IMutationsPageProps {
     routing?: any;
@@ -24,12 +21,15 @@ export interface IMutationsPageProps {
 @observer
 export default class Mutations extends React.Component<IMutationsPageProps, {}>
 {
+    private userSelectionStore: MutationMapperUserSelectionStore;
+
     @observable mutationsGeneTab:string;
 
     constructor(props: IMutationsPageProps) {
         super(props);
         this.handleTabChange.bind(this);
         this.mutationsGeneTab = this.props.store.hugoGeneSymbols![0];
+        this.userSelectionStore = new MutationMapperUserSelectionStore();
     }
 
     @autobind
@@ -89,6 +89,7 @@ export default class Mutations extends React.Component<IMutationsPageProps, {}>
                     <MSKTab key={gene} id={gene} linkText={gene} anchorStyle={anchorStyle}>
                         <ResultsViewMutationMapper
                             store={mutationMapperStore}
+                            trackVisibility={this.userSelectionStore.trackVisibility}
                             discreteCNACache={this.props.store.discreteCNACache}
                             oncoKbEvidenceCache={this.props.store.oncoKbEvidenceCache}
                             pubMedCache={this.props.store.pubMedCache}
