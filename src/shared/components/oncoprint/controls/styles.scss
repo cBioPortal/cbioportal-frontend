@@ -24,7 +24,6 @@
     }
   }
 
-
   .dropdown-menu {
     width:270px;
     padding:12px !important;
@@ -36,6 +35,10 @@
       margin-bottom:0 !important;
     }
   }
+
+  .dropdown-menu.heatmap {
+    width:450px;
+  }  
 
   .oncoprint__controls__heatmap_menu {
     textarea {
@@ -84,7 +87,7 @@
     }
 
     .Select-menu-outer {
-      width: 300px;
+      width: 100%;
     }
   }
 
