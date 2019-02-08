@@ -9,7 +9,7 @@ import internalClient from "../../../shared/api/cbioportalInternalClientInstance
 import {
     Gistic, GisticToGene, default as CBioPortalAPIInternal, MutSig
 } from "shared/api/generated/CBioPortalAPIInternal";
-import {computed, observable, action} from "mobx";
+import {computed, observable, action, runInAction} from "mobx";
 import {remoteData} from "../../../shared/api/remoteData";
 import {IGisticData} from "shared/model/Gistic";
 import {labelMobxPromises, cached} from "mobxpromise";
@@ -49,6 +49,8 @@ import {MutationTableDownloadDataFetcher} from "shared/lib/MutationTableDownload
 import { VariantAnnotation } from 'shared/api/generated/GenomeNexusAPI';
 import { fetchVariantAnnotationsIndexedByGenomicLocation } from 'shared/lib/MutationAnnotator';
 import { ClinicalAttribute } from 'shared/api/generated/CBioPortalAPI';
+import getBrowserWindow from "../../../shared/lib/getBrowserWindow";
+import {getNavCaseIdsCache} from "../../../shared/lib/handleLongUrls";
 
 type PageMode = 'patient' | 'sample';
 
@@ -71,6 +73,12 @@ export type PathologyReportPDF = {
     name: string;
     url: string;
 
+}
+
+export function parseCohortIds(concatenatedIds:string){
+    return concatenatedIds.split(',').map((entityId:string)=>{
+        return entityId.includes(':') ? entityId : this.studyId + ':' + entityId;
+    });
 }
 
 export function handlePathologyReportCheckResponse(patientId: string, resp: any): PathologyReportPDF[] {
@@ -107,9 +115,7 @@ function transformClinicalInformationToStoreShape(patientId: string, studyId: st
 export class PatientViewPageStore {
     constructor() {
         labelMobxPromises(this);
-
         this.internalClient = internalClient;
-
     }
 
     public internalClient: CBioPortalAPIInternal;
@@ -172,7 +178,22 @@ export class PatientViewPageStore {
         invoke: async() => findUncalledMutationMolecularProfileId(this.molecularProfilesInStudy, this.studyId)
     });
 
-    @observable patientIdsInCohort: string[] = [];
+    // this is a string of concatenated ids
+    @observable
+    private _patientIdsInCohort:string[] = [];
+
+    public set patientIdsInCohort(cohortIds:string[]){
+        // cannot put action on setter
+        runInAction(()=>this._patientIdsInCohort = cohortIds);
+    }
+
+    @computed
+    public get patientIdsInCohort(): string[] {
+        let concatenatedIds: string;
+        // check to see if we copied from url hash on app load
+        const memoryCachedIds = getNavCaseIdsCache();
+        return (memoryCachedIds) ? memoryCachedIds : this._patientIdsInCohort;
+    }
 
     @computed get myCancerGenomeData() {
         return fetchMyCancerGenomeData();
