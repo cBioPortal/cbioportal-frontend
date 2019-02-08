@@ -63,7 +63,6 @@ import {toSampleUuid} from "../../shared/lib/UuidUtils";
 import MutationDataCache from "../../shared/cache/MutationDataCache";
 import AccessorsForOqlFilter, {SimplifiedMutationType} from "../../shared/lib/oql/AccessorsForOqlFilter";
 import {AugmentedData, CacheData} from "../../shared/lib/LazyMobXCache";
-import {IAlterationData} from "./cancerSummary/CancerSummaryContent";
 import {PatientSurvival} from "../../shared/model/PatientSurvival";
 import {
     doesQueryContainMutationOQL,
@@ -88,7 +87,9 @@ import {
     AlterationEnrichment,
     CosmicMutation,
     ExpressionEnrichment,
-    Geneset, GenesetDataFilterCriteria
+    Geneset, 
+    GenesetDataFilterCriteria,
+    GenesetMolecularData
 } from "../../shared/api/generated/CBioPortalAPIInternal";
 import internalClient from "../../shared/api/cbioportalInternalClientInstance";
 import {IndicatorQueryResp} from "../../shared/api/generated/OncoKbAPI";
@@ -112,7 +113,6 @@ import {
     isRNASeqProfile,
     getSampleAlteredMap, makeEnrichmentDataPromise, fetchPatients
 } from "./ResultsViewPageStoreUtils";
-import {getAlterationCountsForCancerTypesForAllGenes} from "../../shared/lib/alterationCountHelpers";
 import MobxPromiseCache from "../../shared/lib/MobxPromiseCache";
 import {
     isSampleProfiledInMultiple
@@ -132,7 +132,8 @@ import {
     populateSampleSpecificationsFromVirtualStudies, ResultsViewTab,
     substitutePhysicalStudiesForVirtualStudies
 } from "./ResultsViewPageHelpers";
-import {filterAndSortProfiles} from "./coExpression/CoExpressionTabUtils";
+import {filterAndSortProfiles, getGenesetProfiles,
+    sortRnaSeqProfilesToTop} from "./coExpression/CoExpressionTabUtils";
 import {isRecurrentHotspot} from "../../shared/lib/AnnotationUtils";
 import {generateDownloadFilenamePrefixByStudies} from "shared/lib/FilenameUtils";
 import {makeProfiledInClinicalAttributes} from "../../shared/components/oncoprint/ResultsViewOncoprintUtils";
@@ -184,6 +185,11 @@ export enum SampleListCategoryType {
     "w_mut"="w_mut",
     "w_cna"="w_cna",
     "w_mut_cna"="w_mut_cna"
+}
+
+export enum GeneticEntityType {
+    "GENE"="gene",
+    "GENESET"="geneset"
 }
 
 export const SampleListCategoryTypeToFullId = {
@@ -247,6 +253,14 @@ export interface IQueriedMergedTrackCaseData {
     cases: CaseAggregatedData<AnnotatedExtendedAlteration>;
     oql: UnflattenedOQLLineFilterOutput<AnnotatedExtendedAlteration>;
     mergedTrackOqlList?: IQueriedCaseData<object>[];
+}
+
+export type GeneticEntity = {
+    geneticEntityName: string, // hugo gene symbol for gene, gene set name for geneset
+    geneticEntityType: GeneticEntityType,
+    geneticEntityId: string|number, //entrezGeneId (number) for "gene", genesetId (string) for "geneset"
+    cytoband: string, //will be "" for "geneset"
+    geneticEntityData: Gene|Geneset
 }
 
 export function buildDefaultOQLProfile(profilesTypes: string[], zScoreThreshold: number, rppaScoreThreshold: number) {
@@ -757,7 +771,8 @@ export class ResultsViewPageStore {
 
     readonly coexpressionTabMolecularProfiles = remoteData<MolecularProfile[]>({
         await:()=>[this.molecularProfilesWithData],
-        invoke:()=>Promise.resolve(filterAndSortProfiles(this.molecularProfilesWithData.result!))
+        invoke:()=>Promise.resolve(sortRnaSeqProfilesToTop(filterAndSortProfiles(this.molecularProfilesWithData.result!).
+            concat(getGenesetProfiles(this.molecularProfilesWithData.result!))))
     });
 
     readonly isThereDataForCoExpressionTab = remoteData<boolean>({
@@ -2118,6 +2133,25 @@ export class ResultsViewPageStore {
         }
     });
 
+    readonly geneticEntities = remoteData<GeneticEntity[]>({
+        await: ()=>[
+            this.genes,
+            this.genesets
+        ],
+        invoke: () => {
+            const res: GeneticEntity[] = [];
+            for (const gene of this.genes.result!) {
+                res.push({geneticEntityName: gene.hugoGeneSymbol, geneticEntityType: GeneticEntityType.GENE, 
+                    geneticEntityId: gene.entrezGeneId, cytoband: gene.cytoband, geneticEntityData: gene});
+            }
+            for (const geneset of this.genesets.result!) {
+                res.push({geneticEntityName: geneset.name, geneticEntityType: GeneticEntityType.GENESET, 
+                    geneticEntityId: geneset.genesetId, cytoband: "-", geneticEntityData: geneset});
+            }
+            return Promise.resolve(res);
+        }
+    });
+
     readonly entrezGeneIdToGene = remoteData<{[entrezGeneId:number]:Gene}>({
         await: ()=>[this.genes],
         invoke: ()=>Promise.resolve(_.keyBy(this.genes.result!, gene=>gene.entrezGeneId))
@@ -2871,6 +2905,28 @@ export class ResultsViewPageStore {
             )
         )
     });
+
+    public numericGenesetMolecularDataCache = new MobxPromiseCache<{genesetId:string, molecularProfileId:string}, GenesetMolecularData[]>(
+        q=>({
+            await: ()=>[
+                this.molecularProfileIdToDataQueryFilter
+            ],
+            invoke: ()=>{
+                const dqf = this.molecularProfileIdToDataQueryFilter.result![q.molecularProfileId];
+                if (dqf) {
+                    return internalClient.fetchGeneticDataItemsUsingPOST({
+                        geneticProfileId: q.molecularProfileId,
+                        genesetDataFilterCriteria: {
+                            genesetIds: [q.genesetId],
+                            ...dqf
+                        } as GenesetDataFilterCriteria
+                    });
+                } else {
+                    return Promise.resolve([]);
+                }
+            }
+        })
+    );
 
     readonly genesetCorrelatedGeneCache = remoteData({
         await:() => [
