@@ -432,6 +432,9 @@ describe('oncoprint', function() {
             browser.waitForEnabled('button[data-test="queryButton"]', 10000);
             browser.click('button[data-test="queryButton"]');
             browser.pause(100); // wait for query to submit
+            // go to oncoprint tab
+            browser.waitForExist('a.tabAnchor_oncoprint', 10000);
+            browser.click('a.tabAnchor_oncoprint');
 
             // run same test again
             doCustomCaseOrderTest();
