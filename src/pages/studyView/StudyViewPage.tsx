@@ -37,6 +37,7 @@ import {ComparisonSampleGroup, TEMP_localStorageGroupsKey} from "../groupCompari
 import {addGroupToLocalStorage, getLocalStorageGroups} from "../groupComparison/GroupPersistenceUtils";
 import {SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
 import ComparisonGroupManager from "../groupComparison/ComparisonGroupManager";
+import classNames from "classnames";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -100,7 +101,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
     @observable showCustomSelectTooltip = false;
     @observable showGroupsTooltip = false;
     private inCustomSelectTooltip = false;
-    private inGroupsTooltip = false;
 
     constructor(props: IStudyViewPageProps) {
         super();
@@ -163,9 +163,6 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             <div className="studyView" onClick={()=>{
                 if(this.showCustomSelectTooltip && !this.inCustomSelectTooltip) {
                     this.showCustomSelectTooltip = false;
-                }
-                if(this.showGroupsTooltip && !this.inGroupsTooltip) {
-                    this.showGroupsTooltip = false;
                 }
             }}>
                 {this.store.unknownQueriedIds.isComplete &&
@@ -233,81 +230,81 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                             }
                                         }
                                     </Observer>
-                                    {(this.enableAddChartInTabs.includes(this.store.currentTab))
-                                    && (
-                                        <div style={{display: 'flex'}}>
-                                            <DefaultTooltip
-                                                visible={this.showCustomSelectTooltip}
-                                                placement={"bottomLeft"}
-                                                onVisibleChange={()=>{
+                                    <div id="comparisonGroupManagerContainer" style={{display: 'flex', position:"relative"}}>
+                                        {(this.enableAddChartInTabs.includes(this.store.currentTab))
+                                        && ([
+                                        <DefaultTooltip
+                                            visible={this.showCustomSelectTooltip}
+                                            placement={"bottomLeft"}
+                                            onVisibleChange={()=>{
 
-                                                }}
-                                                destroyTooltipOnHide={true}
-                                                overlay={() => (
-                                                    <div style={{width: '300px'}}
-                                                         onMouseEnter={()=>this.inCustomSelectTooltip=true}
-                                                         onMouseLeave={()=>this.inCustomSelectTooltip=false}
-                                                    >
-                                                        <CustomCaseSelection
-                                                            allSamples={this.store.samples.result}
-                                                            selectedSamples={this.store.selectedSamples.result}
-                                                            submitButtonText={"Select"}
-                                                            disableGrouping={true}
-                                                            queriedStudies={this.store.queriedPhysicalStudyIds.result}
-                                                            onSubmit={(chart: NewChart) => {
-                                                                this.showCustomSelectTooltip = false;
-                                                                this.store.updateCustomSelect(chart);
-                                                            }}
-                                                        />
-                                                    </div>
-                                                )}
-                                            >
-                                                <button className='btn btn-primary btn-xs'
-                                                        data-test='custom-selection-button'
-                                                        onClick={(e)=>{
-                                                            e.stopPropagation();
-                                                            this.showCustomSelectTooltip = true;
+                                            }}
+                                            destroyTooltipOnHide={true}
+                                            overlay={() => (
+                                                <div style={{width: '300px'}}
+                                                     onMouseEnter={()=>this.inCustomSelectTooltip=true}
+                                                     onMouseLeave={()=>this.inCustomSelectTooltip=false}
+                                                >
+                                                    <CustomCaseSelection
+                                                        allSamples={this.store.samples.result}
+                                                        selectedSamples={this.store.selectedSamples.result}
+                                                        submitButtonText={"Select"}
+                                                        disableGrouping={true}
+                                                        queriedStudies={this.store.queriedPhysicalStudyIds.result}
+                                                        onSubmit={(chart: NewChart) => {
+                                                            this.showCustomSelectTooltip = false;
+                                                            this.store.updateCustomSelect(chart);
                                                         }}
-                                                        style={{marginLeft: '10px'}}>Custom Selection
-                                                </button>
-                                            </DefaultTooltip>
-                                            <AddChartButton
-                                                buttonText={this.addChartButtonText}
-                                                store={this.store}
-                                                currentTab={this.store.currentTab}
-                                                addChartOverlayClassName='studyViewAddChartOverlay'
-                                                disableCustomTab={this.store.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA}
-                                            />
-                                            <DefaultTooltip
-                                                visible={this.showGroupsTooltip}
-                                                placement="bottomLeft"
-                                                destroyTooltipOnHide={true}
-                                                onPopupAlign={(tooltipEl: any)=>{
-                                                    const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
-                                                    arrowEl.style.right = '10px';
-                                                }}
-                                                overlay={()=>(
-                                                    <div style={{width: 300}}
-                                                         onMouseEnter={()=>this.inGroupsTooltip=true}
-                                                         onMouseLeave={()=>this.inGroupsTooltip=false}
-                                                    >
-                                                        <ComparisonGroupManager
-                                                            store={this.store}
-                                                        />
-                                                    </div>
-                                                )}
-                                            >
-                                                <button className='btn btn-primary btn-xs'
-                                                        data-test="groups-button"
-                                                        onClick={(e)=>{
-                                                            e.stopPropagation();
-                                                            this.showGroupsTooltip = !this.showGroupsTooltip;
-                                                        }}
-                                                        style={{marginLeft: '10px'}}
-                                                >Groups</button>
-                                            </DefaultTooltip>
-                                        </div>
-                                    )}
+                                                    />
+                                                </div>
+                                            )}
+                                        >
+                                            <button className='btn btn-primary btn-xs'
+                                                    data-test='custom-selection-button'
+                                                    onClick={(e)=>{
+                                                        e.stopPropagation();
+                                                        this.showCustomSelectTooltip = true;
+                                                    }}
+                                                    style={{marginLeft: '10px'}}>Custom Selection
+                                            </button>
+                                        </DefaultTooltip>,
+                                        <AddChartButton
+                                            buttonText={this.addChartButtonText}
+                                            store={this.store}
+                                            currentTab={this.store.currentTab}
+                                            addChartOverlayClassName='studyViewAddChartOverlay'
+                                            disableCustomTab={this.store.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA}
+                                        />
+                                        ])}
+                                        <DefaultTooltip
+                                            visible={this.showGroupsTooltip}
+                                            placement="bottomLeft"
+                                            destroyTooltipOnHide={true}
+                                            onPopupAlign={(tooltipEl: any)=>{
+                                                const arrowEl = tooltipEl.querySelector('.rc-tooltip-arrow');
+                                                arrowEl.style.right = '10px';
+                                            }}
+                                            getTooltipContainer={()=>document.getElementById("comparisonGroupManagerContainer")!}
+                                            overlay={()=>(
+                                                <div style={{width: 300}}
+                                                >
+                                                    <ComparisonGroupManager
+                                                        store={this.store}
+                                                    />
+                                                </div>
+                                            )}
+                                        >
+                                            <button className={classNames('btn btn-primary btn-xs', {active:this.showGroupsTooltip})}
+                                                    data-test="groups-button"
+                                                    onClick={(e)=>{
+                                                        e.stopPropagation();
+                                                        this.showGroupsTooltip = !this.showGroupsTooltip;
+                                                    }}
+                                                    aria-pressed={this.showGroupsTooltip}
+                                                    style={{marginLeft: '10px'}}
+                                            >Groups {String.fromCharCode(9662)/*small solid down triangle*/}</button>
+                                        </DefaultTooltip>
+                                    </div>
                                 </div>
                             </div>
                         </div>

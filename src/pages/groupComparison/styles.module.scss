@@ -9,7 +9,7 @@
 .comparisonGroupManager {
     .groupCheckboxes {
         margin-top:4px;
-        height:130px;
+        max-height:130px;
         width:100%;
         overflow:auto;
         padding:3px;
@@ -25,8 +25,16 @@
         }
     }
 
+    .noGroupsMessage {
+        padding:15px;
+        height:103px;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+    }
+
     :global(input.form-control) {
         font-size:12px;
-        height:26px;
+        height:36px;
     }
 }
