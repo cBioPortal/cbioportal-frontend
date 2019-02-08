@@ -6,7 +6,7 @@ import {observable} from "mobx";
 
 export interface ICustomDropdownProps extends ButtonProps {
     title: string;
-    buttonProps?: ButtonProps;
+    classType?: string;
 }
 
 class CustomButton extends React.Component<any,{}> { // cant type this more specifically because of some typing issues w ES6 classes not having component.replaceState
@@ -22,10 +22,10 @@ class CustomButton extends React.Component<any,{}> { // cant type this more spec
 class CustomMenu extends React.Component<any,{}> {
 
     render() {
-        const { children } = this.props;
+        const { classType, children } = this.props;
 
         return (
-            <div className="dropdown-menu" style={{ padding: '6px' }}>
+            <div className={`dropdown-menu ${classType}`} style={{ padding: '6px' }}>
                 {children}
             </div>
         );
@@ -46,12 +46,12 @@ export default class CustomDropdown extends React.Component<ButtonProps, {}> {
     }
 
     render() {
-        const {children, id, ...props} = this.props;
+        const {children, id, classType, ...props} = this.props;
         return (
             <RootCloseWrapper onRootClose={this.hide}>
                 <Dropdown id={id+""} open={this.open}>
                     <CustomButton bsStyle="default" bsRole="toggle" title="Custom Toggle" onClick={this.toggle} {...props}/>
-                    <CustomMenu bsRole="menu">
+                    <CustomMenu bsRole="menu" classType={classType}>
                         {children}
                     </CustomMenu>
                 </Dropdown>
