@@ -240,9 +240,13 @@ export default class GroupComparisonStore {
     readonly molecularProfilesInActiveStudies = remoteData<MolecularProfile[]>({
         await:()=>[this.activeStudyIds],
         invoke: async () => {
-            return client.fetchMolecularProfilesUsingPOST({
-                molecularProfileFilter: { studyIds:this.activeStudyIds.result! } as MolecularProfileFilter
-            })
+            if (this.activeStudyIds.result!.length > 0) {
+                return client.fetchMolecularProfilesUsingPOST({
+                    molecularProfileFilter: { studyIds:this.activeStudyIds.result! } as MolecularProfileFilter
+                });
+            } else {
+                return Promise.resolve([]);
+            }
         }
     }, []);
 
