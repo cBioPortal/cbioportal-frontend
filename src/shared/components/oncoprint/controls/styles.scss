@@ -34,17 +34,17 @@
     > :last-child {
       margin-bottom:0 !important;
     }
+    &.heatmap {
+      width:450px;
+    }  
   }
-
-  .dropdown-menu.heatmap {
-    width:450px;
-  }  
 
   .oncoprint__controls__heatmap_menu {
     textarea {
       width:100%;
       min-height:50px;
       border:1px solid $borderColor;
+      resize: vertical;
     }
     > *, button {
       margin-bottom:10px !important;
@@ -86,9 +86,6 @@
       height:32px;
     }
 
-    .Select-menu-outer {
-      width: 100%;
-    }
   }
 
   .clinical-track-selector .Select {
