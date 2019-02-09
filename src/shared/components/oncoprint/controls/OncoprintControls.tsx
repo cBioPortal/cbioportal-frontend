@@ -471,7 +471,7 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
             menu = (<span>Error loading heatmap profiles.</span>);
         }
         return (
-            <CustomDropdown bsStyle="default" title="Heatmap" id="heatmapDropdown" classType="heatmap">
+            <CustomDropdown bsStyle="default" title="Heatmap" id="heatmapDropdown" className="heatmap">
                 {menu}
             </CustomDropdown>
         );
