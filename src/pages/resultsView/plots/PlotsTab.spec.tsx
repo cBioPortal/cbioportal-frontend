@@ -4,7 +4,6 @@ describe("PlotsTab", ()=>{
     describe("controls", ()=>{
         describe("gene lock", ()=>{
             it("genes can be freely selected when gene lock is off", ()=>{
-                assert.equal(1,1);
             });
             it("when gene lock is selected, both axes gene selection should be the one from the axis where lock was clicked", ()=>{
             });
