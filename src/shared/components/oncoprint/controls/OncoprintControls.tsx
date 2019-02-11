@@ -6,7 +6,7 @@ import ReactSelect from "react-select";
 import {MobxPromise} from "mobxpromise";
 import {computed, IObservableObject, observable, ObservableMap, reaction} from "mobx";
 import _ from "lodash";
-import {OncoprintClinicalAttribute, SortMode} from "../ResultsViewOncoprint";
+import {SortMode} from "../ResultsViewOncoprint";
 import {MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import DefaultTooltip from "shared/components/defaultTooltip/DefaultTooltip";
@@ -16,10 +16,10 @@ import EditableSpan from "shared/components/editableSpan/EditableSpan";
 import "./styles.scss";
 import ErrorIcon from "../../ErrorIcon";
 import classNames from "classnames";
-import {SpecialAttribute} from "../../../cache/OncoprintClinicalDataCache";
-import autobind from "autobind-decorator";
+import {SpecialAttribute} from "../../../cache/ClinicalDataCache";
 import ClinicalAttributeSelector from "../../clinicalAttributeSelector/ClinicalAttributeSelector";
 import {ResultsViewPageStore} from "../../../../pages/resultsView/ResultsViewPageStore";
+import {ExtendedClinicalAttribute} from "../../../../pages/resultsView/ResultsViewPageStoreUtils";
 
 export interface IOncoprintControlsHandlers {
     onSelectColumnType?:(type:"sample"|"patient")=>void,
@@ -90,7 +90,7 @@ export interface IOncoprintControlsState {
     annotateCOSMICInputValue?:string,
 
     sortMode?:SortMode,
-    clinicalAttributesPromise?:MobxPromise<OncoprintClinicalAttribute[]>,
+    clinicalAttributesPromise?:MobxPromise<ExtendedClinicalAttribute[]>,
     clinicalAttributeSampleCountPromise?:MobxPromise<{[clinicalAttributeId:string]:number}>,
     selectedClinicalAttributeIds?:string[],
     heatmapProfilesPromise?:MobxPromise<MolecularProfile[]>,
@@ -973,7 +973,6 @@ export default class OncoprintControls extends React.Component<IOncoprintControl
         );
     }
 
-    @autobind
     private getSortMenu() {
         if (this.props.oncoprinterMode) {
             return this.getSortMenuOncoprinter();
