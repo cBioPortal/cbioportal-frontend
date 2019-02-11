@@ -1541,6 +1541,8 @@ export class ResultsViewPageStore {
                         () => (this.mutationsByGene[gene.hugoGeneSymbol] || []),
                         () => (this.mutationCountCache),
                         () => (this.genomeNexusCache),
+                        () => (this.discreteCNACache),
+                        this.studyToMolecularProfileDiscrete.result!,
                         this.studyIdToStudy,
                         this.molecularProfileIdToMolecularProfile,
                         this.clinicalDataForSamples,
