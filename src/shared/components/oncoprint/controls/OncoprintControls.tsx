@@ -54,6 +54,10 @@ export interface IOncoprintControlsHandlers {
     onChangeSelectedClinicalTracks?:(attributeIds:(string|SpecialAttribute)[])=>void;
 
     onClickAddGenesToHeatmap?:()=>void;
+<<<<<<< HEAD
+=======
+    onClickAddTreatmentsToHeatmap?:(treatments:string[])=>void;
+>>>>>>> 2915dd2b... Impl. wider heatmap menu
     onClickRemoveHeatmap?:()=>void;
     onClickClusterHeatmap?:()=>void;
     onSelectHeatmapProfile?:(molecularProfileId:string)=>void;

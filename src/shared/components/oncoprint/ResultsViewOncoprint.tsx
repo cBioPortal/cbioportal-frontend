@@ -609,6 +609,13 @@ export default class ResultsViewOncoprint extends React.Component<IResultsViewOn
         );
     }
 
+    @computed get addToHeatmapButtonName():string {
+        if (this.selectedHeatmapProfileAlterationType === AlterationTypeConstants.TREATMENT_RESPONSE) {
+            return "Add Treatments to Heatmap";
+        }
+        return "Add Genes to Heatmap";
+    }
+
     @action private initFromUrlParams(paramsMap:any) {
         if (paramsMap[SAMPLE_MODE_URL_PARAM]) {
             this.columnMode = (paramsMap[SAMPLE_MODE_URL_PARAM] && paramsMap[SAMPLE_MODE_URL_PARAM]==="true") ? "sample" : "patient";
