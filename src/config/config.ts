@@ -171,9 +171,9 @@ export function initializeConfiguration() {
     }
 
     // @ts-ignore: ENV_* are defined in webpack.config.js
-    const APIROOT = `//${trimTrailingSlash(ENV_CBIOPORTAL_URL)}/`;
+    const APIROOT = `${ENV_CBIOPORTAL_URL}/`;
     // @ts-ignore: ENV_* are defined in webpack.config.js
-    const GENOME_NEXUS_ROOT = `//${trimTrailingSlash(ENV_GENOME_NEXUS_URL)}/`;
+    const GENOME_NEXUS_ROOT = `${ENV_GENOME_NEXUS_URL}/`;
 
     // we want to respect frontUrl if it is already set (case where localdist is true)
     // @ts-ignore: ENV_* are defined in webpack.config.js
