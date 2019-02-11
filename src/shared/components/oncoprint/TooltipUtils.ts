@@ -87,14 +87,15 @@ export function makeClinicalTrackTooltip(track:ClinicalTrackSpec, link_id?:boole
                 let sum = 0;
                 let count = 0;
                 for (const attr_val of attr_vals) {
-                    sum += parseFloat(attr_val);
-                    count += 1;
+                    const numSamplesWithVal = attr_val_counts[attr_val];
+                    sum += numSamplesWithVal*parseFloat(attr_val);
+                    count += numSamplesWithVal;
                 }
                 let displayVal = (sum/count).toFixed(2);
                 if (displayVal.substring(displayVal.length-3) === ".00") {
                     displayVal = displayVal.substring(0, displayVal.length-3);
                 }
-                ret += track.label+': <span style="white-space:nowrap"><b>' + displayVal + `</b>${count > 1 ? ` (average of ${count} values)`:""}</span><br>`;
+                ret += track.label+': <span style="white-space:nowrap"><b>' + displayVal + `${count > 1 ? ` (average of ${count} values)`:""}</b></span><br>`;
             } else {
                 if (attr_vals.length > 1) {
                     ret += track.label+':<br>';
@@ -207,6 +208,10 @@ export function getCaseViewElt(
     dataUnderMouse:Pick<GeneticTrackDatum, "sample"|"patient"|"study_id">[],
     caseViewLinkout:boolean
 ) {
+    if (!dataUnderMouse.length) {
+        return "";
+    }
+
     let caseIdElt;
     if (dataUnderMouse[0].sample) {
         if (dataUnderMouse.length > 1) {
@@ -215,7 +220,7 @@ export function getCaseViewElt(
                     `<a href=${
                         getSampleViewUrl(dataUnderMouse[0].study_id, dataUnderMouse[0].sample, dataUnderMouse.map(d=>({studyId:d.study_id, patientId:d.patient})))
                         } target="_blank">View these ${dataUnderMouse.length} samples<a/>` :
-                    `${dataUnderMouse.length} samples`
+                    `<span>${dataUnderMouse.length} samples</span>`
             );
         } else {
             caseIdElt = (caseViewLinkout ? sampleViewAnchorTag(dataUnderMouse[0].study_id, dataUnderMouse[0].sample) : `<span>${dataUnderMouse[0].sample}</span>`);
@@ -227,10 +232,10 @@ export function getCaseViewElt(
                     `<a href=${
                         getPatientViewUrl(dataUnderMouse[0].study_id, dataUnderMouse[0].patient, dataUnderMouse.map(d=>({studyId:d.study_id, patientId:d.patient!})))
                         } target="_blank">View these ${dataUnderMouse.length} patients<a/>` :
-                    `${dataUnderMouse.length} patients`
+                    `<span>${dataUnderMouse.length} patients</span>`
             );
         } else {
-            caseIdElt = (caseViewLinkout ? sampleViewAnchorTag(dataUnderMouse[0].study_id, dataUnderMouse[0].patient) : `<span>${dataUnderMouse[0].patient}</span>`);
+            caseIdElt = (caseViewLinkout ? patientViewAnchorTag(dataUnderMouse[0].study_id, dataUnderMouse[0].patient) : `<span>${dataUnderMouse[0].patient}</span>`);
         }
     } else {
         caseIdElt = "";
@@ -286,7 +291,7 @@ export function makeGeneticTrackTooltip(
             }
             return ret;
         });
-    };
+    }
     function listOfCNAToHTML(data:any[], multipleSamplesUnderMouse:boolean) {
         const countsMap = new ListIndexedMapOfCounts();
         for (const d of data) {
@@ -309,6 +314,25 @@ export function makeGeneticTrackTooltip(
             return ret;
         });
     }
+    function listOfMRNAOrPROTToHTML(data:any[], multipleSamplesUnderMouse:boolean) {
+        const countsMap = new ListIndexedMapOfCounts();
+        for (const d of data) {
+            countsMap.increment(
+                d.hugo_gene_symbol, d.direction
+            );
+        }
+        return countsMap.entries().map((
+            {key:[hugo_gene_symbol, direction],
+                value:count})=>{
+            var ret = $('<span>');
+            ret.append(`<b>${hugo_gene_symbol} ${direction}</b>`);
+            // finally, add the number of samples with this, if multipleSamplesUnderMouse
+            if (multipleSamplesUnderMouse) {
+                ret.append(`&nbsp;(${count})`);
+            }
+            return ret;
+        });
+    }
 
     function generateGermlineLabel() {
         const ret = $('<small style="color: #ff0000">');
@@ -322,8 +346,8 @@ export function makeGeneticTrackTooltip(
         ret.append(getCaseViewElt(dataUnderMouse, caseViewLinkout)).append("<br/>");
         let mutations:any[] = [];
         let cna:any[] = [];
-        const mrna:{hugo_gene_symbol:string, direction:"UPREGULATED"|"DOWNREGULATED"}[] = [];
-        const prot:typeof mrna = [];
+        let mrna:any[] = [];
+        let prot:any[] = [];
         let fusions:any[] = [];
         // collect all data under mouse
         for (const d of dataUnderMouse) {
@@ -412,10 +436,26 @@ export function makeGeneticTrackTooltip(
             ret.append('<br>');
         }
         if (mrna.length > 0) {
-            ret.append(`MRNA: <b>${mrna.map(x=>`${x.hugo_gene_symbol} ${x.direction}`).join(", ")}</b><br>`);
+            ret.append('MRNA: ');
+            mrna = listOfMRNAOrPROTToHTML(mrna, dataUnderMouse.length > 1);
+            for (var i = 0; i < mrna.length; i++) {
+                if (i > 0) {
+                    ret.append(", ");
+                }
+                ret.append(mrna[i]);
+            }
+            ret.append('<br>');
         }
         if (prot.length > 0) {
-            ret.append(`PROT: <b>${prot.map(x=>`${x.hugo_gene_symbol} ${x.direction}`).join(", ")}</b><br>`);
+            ret.append('PROT: ');
+            prot = listOfMRNAOrPROTToHTML(prot, dataUnderMouse.length > 1);
+            for (var i = 0; i < prot.length; i++) {
+                if (i > 0) {
+                    ret.append(", ");
+                }
+                ret.append(prot[i]);
+            }
+            ret.append('<br>');
         }
         // Gene panel coverage
         const molecularProfileMap = getMolecularProfileMap && getMolecularProfileMap();
@@ -436,20 +476,12 @@ export function makeGeneticTrackTooltip(
             }
             if (coverageInformation.dispProfiledIn) {
                 for (const molecularProfileId of coverageInformation.dispProfiledIn) {
-                    profiledMolecularProfileCounts.increment(
-                        molecularProfileMap && (molecularProfileId in molecularProfileMap) ?
-                            molecularProfileMap[molecularProfileId].name :
-                            molecularProfileId
-                    )
+                    profiledMolecularProfileCounts.increment(molecularProfileId);
                 }
             }
             if (coverageInformation.dispNotProfiledIn) {
                 for (const molecularProfileId of coverageInformation.dispNotProfiledIn) {
-                    notProfiledMolecularProfileCounts.increment(
-                        molecularProfileMap && (molecularProfileId in molecularProfileMap) ?
-                            molecularProfileMap[molecularProfileId].name :
-                            molecularProfileId
-                    )
+                    notProfiledMolecularProfileCounts.increment(molecularProfileId);
                 }
             }
             if (coverageInformation.dispAllProfiled) {
@@ -507,13 +539,27 @@ export function makeGeneticTrackTooltip(
         } else {
             if (profiledInEntries.length) {
                 ret.append("Profiled in: "+profiledInEntries.map(
-                e=>`${e.key[0]}${dataUnderMouse.length > 1 ? ` (${e.value})` : ""}`
+                e=>{
+                        const molecularProfileId = e.key[0];
+                        let displayName = molecularProfileId;
+                        if (molecularProfileMap && (molecularProfileId in molecularProfileMap)) {
+                            displayName = molecularProfileMap[molecularProfileId].name;
+                        }
+                        return `${displayName}${dataUnderMouse.length > 1 ? ` (${e.value})` : ""}`;
+                    }
                 ).join(", "));
                 ret.append("<br>");
             }
             if (notProfiledInEntries.length) {
                 ret.append("<span style='color:red; font-weight:bold'>Not profiled in: "+notProfiledInEntries.map(
-                    e=>`${e.key[0]}${dataUnderMouse.length > 1 ? ` (${e.value})` : ""}`
+                    e=>{
+                        const molecularProfileId = e.key[0];
+                        let displayName = molecularProfileId;
+                        if (molecularProfileMap && (molecularProfileId in molecularProfileMap)) {
+                            displayName = molecularProfileMap[molecularProfileId].name;
+                        }
+                        return `${displayName}${dataUnderMouse.length > 1 ? ` (${e.value})` : ""}`;
+                    }
                 ).join(", ")+"</span>");
                 ret.append("<br>");
             }
