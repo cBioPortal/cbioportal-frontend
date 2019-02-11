@@ -30,9 +30,11 @@ function goToUrlAndSetLocalStorage(url) {
     if (!useExternalFrontend) {
         browser.url(url);
     } else {
+        var cleanUrl = url.replace(/^http[s]?:\/\//,''); // remove protocol
         var urlparam = useLocalDist? 'localdist' : 'localdev';
         var prefix = (url.indexOf("?") > 0)? '&' : '?';
-        browser.url(`${url}${prefix}${urlparam}=true`);
+        // always use http
+        browser.url(`http://${cleanUrl}${prefix}${urlparam}=true`);
     }
     browser.setViewportSize({ height: 1600, width: 1000 });
 
