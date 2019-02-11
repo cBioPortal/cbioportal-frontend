@@ -284,7 +284,7 @@ export function fillHeatmapTrackDatum<T extends IBaseHeatmapTrackDatum, K extend
     data?: {value: number}[]
 ) {
     trackDatum[featureKey] = featureId;
-    trackDatum.study = case_.studyId;
+    trackDatum.study_id = case_.studyId;
     if (!data || !data.length) {
         trackDatum.profile_data = null;
         trackDatum.na = true;
