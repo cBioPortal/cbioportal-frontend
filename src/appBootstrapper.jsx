@@ -21,7 +21,7 @@ import * as _ from 'lodash';
 import $ from 'jquery';
 import URL from 'url';
 import * as superagent from 'superagent';
-import { getHost } from './shared/api/urls';
+import { buildCBioPortalPageUrl } from './shared/api/urls';
 import { validateParametersPatientView } from './shared/lib/validateParameters';
 import AppConfig from "appConfig";
 import browser from 'bowser';
@@ -35,10 +35,17 @@ import superagentCache from 'superagent-cache';
 import getBrowserWindow from "shared/lib/getBrowserWindow";
 import {getConfigurationServiceApiUrl} from "shared/api/urls";
 import {AppStore} from "./AppStore";
+import {handleLongUrls} from "shared/lib/handleLongUrls";
 
 superagentCache(superagent);
 
+// this must occur before we initialize tracking
+// it fixes the hash portion of url when cohort patient list is too long
+handleLongUrls();
+
+
 // YOU MUST RUN THESE initialize and then set the public path after
+
 initializeConfiguration();
 // THIS TELLS WEBPACK BUNDLE LOADER WHERE TO LOAD SPLIT BUNDLES
 __webpack_public_path__ = AppConfig.frontendUrl;
@@ -114,8 +121,15 @@ superagent.Request.prototype.end = function (callback) {
         }
         if (response && response.statusCode === 401) {
             var storageKey = `redirect${Math.floor(Math.random() * 1000000000000)}`
-            localStorage.setItem(storageKey, window.location.hash);
-            const loginUrl = `//${getHost()}/?spring-security-redirect=${encodeURIComponent(window.location.pathname)}${encodeURIComponent(window.location.search)}${encodeURIComponent('#/restore?key=' + storageKey)}`;
+            localStorage.setItem(storageKey, window.location.href);
+
+            // build URL with a reference to storage key so that /restore route can restore it after login
+            const loginUrl = buildCBioPortalPageUrl({
+                query: {
+                    "spring-security-redirect":buildCBioPortalPageUrl({ pathname:"restore", query: { key: storageKey} })
+                }
+            });
+
             redirecting = true;
             window.location.href = loginUrl;
         } else {

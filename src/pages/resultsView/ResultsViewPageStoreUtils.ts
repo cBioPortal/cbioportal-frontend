@@ -1,6 +1,6 @@
 import {
     Gene, NumericGeneMolecularData, GenePanel, GenePanelData, MolecularProfile,
-    Mutation, Patient, Sample, CancerStudy
+    Mutation, Patient, Sample, CancerStudy, ClinicalAttribute
 } from "../../shared/api/generated/CBioPortalAPI";
 import {action} from "mobx";
 import AccessorsForOqlFilter, {getSimplifiedMutationType} from "../../shared/lib/oql/AccessorsForOqlFilter";
@@ -32,6 +32,7 @@ import MobxPromise, {MobxPromise_await} from "mobxpromise";
 import {AlterationEnrichment} from "../../shared/api/generated/CBioPortalAPIInternal";
 import {remoteData} from "../../shared/api/remoteData";
 import {calculateQValues} from "../../shared/lib/calculation/BenjaminiHochbergFDRCalculator";
+import {SpecialAttribute} from "../../shared/cache/ClinicalDataCache";
 
 type CustomDriverAnnotationReport = {
     hasBinary: boolean,
@@ -39,6 +40,13 @@ type CustomDriverAnnotationReport = {
 };
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+
+export type ExtendedClinicalAttribute =
+    Pick<ClinicalAttribute, "datatype"|"description"|"displayName"|"patientAttribute"> &
+    {
+        clinicalAttributeId: string|SpecialAttribute;
+        molecularProfileIds?:string[];
+    };
 
 export type CoverageInformationForCase = {
     byGene:{[hugoGeneSymbol:string]:GenePanelData[]},

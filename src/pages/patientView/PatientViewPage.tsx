@@ -12,7 +12,7 @@ import SignificantMutationalSignatures from "./patientHeader/SignificantMutation
 import {PaginationControls} from "../../shared/components/paginationControls/PaginationControls";
 import {IColumnVisibilityDef} from "shared/components/columnVisibilityControls/ColumnVisibilityControls";
 import {toggleColumnVisibility} from "shared/components/lazyMobXTable/ColumnVisibilityResolver";
-import {PatientViewPageStore} from "./clinicalInformation/PatientViewPageStore";
+import {parseCohortIds, PatientViewPageStore} from "./clinicalInformation/PatientViewPageStore";
 import ClinicalInformationPatientTable from "./clinicalInformation/ClinicalInformationPatientTable";
 import ClinicalInformationSamples from "./clinicalInformation/ClinicalInformationSamplesTable";
 import {inject, observer} from "mobx-react";
@@ -84,6 +84,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
 
         super();
 
+
         //TODO: this should be done by a module so that it can be reused on other pages
         const reaction1 = reaction(
             () => [props.routing.location.query, props.routing.location.hash, props.routing.location.pathname],
@@ -113,10 +114,7 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     // if there is a navCaseId list in url
                     const navCaseIdMatch = hash.match(/navCaseIds=([^&]*)/);
                     if (navCaseIdMatch && navCaseIdMatch.length > 1) {
-                        const navCaseIds = navCaseIdMatch[1].split(',');
-                        patientViewPageStore.patientIdsInCohort = navCaseIds.map((entityId:string)=>{
-                            return entityId.includes(':') ? entityId : patientViewPageStore.studyId + ':' + entityId;
-                        });
+                        patientViewPageStore.patientIdsInCohort = parseCohortIds(navCaseIdMatch[1]);
                     }
 
                 } else {

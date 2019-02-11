@@ -12,7 +12,7 @@ import {
     generateCategoricalData,
     generateNumericalData,
     getClinicalDataCountWithColorByClinicalDataCount,
-    getClinicalDataIntervalFilterValues,
+    getClinicalDataIntervalFilterValues, getClinicalEqualityFilterValuesByString,
     getCNAByAlteration,
     getDefaultChartTypeByClinicalAttribute,
     getExponent,
@@ -1830,4 +1830,29 @@ describe('StudyViewUtils', () => {
             assert.equal(getPriorityByClinicalAttribute(attr), 9);
         });
     })
+
+    describe('getClinicalEqualityFilterValuesByString', () => {
+        it('the values should be separated by comma', () => {
+            let result = getClinicalEqualityFilterValuesByString('test1,test2');
+            assert.equal(result.length, 2);
+            assert.equal(result[0], 'test1');
+
+            result = getClinicalEqualityFilterValuesByString('test1;test2');
+            assert.equal(result.length, 1);
+        });
+
+        it('Allow using back slash to escape the comma actually in the content', () => {
+            let result = getClinicalEqualityFilterValuesByString('test1\\,test2');
+            assert.equal(result.length, 1);
+            assert.equal(result[0], 'test1,test2');
+        });
+
+        it('Allow using back slash to escape the comma actually in the content, multiple instances', () => {
+            let result = getClinicalEqualityFilterValuesByString('test1\\,test2,test3, test4\\,test5\\,test6');
+            assert.equal(result.length, 3);
+            assert.equal(result[0], 'test1,test2');
+            assert.equal(result[1], 'test3');
+            assert.equal(result[2], 'test4,test5,test6');
+        });
+    });
 });
