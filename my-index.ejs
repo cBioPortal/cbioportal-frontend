@@ -5,14 +5,7 @@
     <link rel="icon" href="/images/cbioportal_icon.png"/>
     <title>cBioPortal for Cancer Genomics</title>
     <script>
-
-        // don't change http to https on netlify, since it only supports ssl
-        // (creates infinite redirect) everywhere else do use http, cause that's
-        // what we usually want to use
-        if (!window.location.hostname.includes("netlify") && window.location.protocol.includes("https")) {
-            window.location.href = window.location.href.replace(/^https/,"http");
-        }
-
+        
         window.devContext = true;
             // @ts-ignore: ENV_* are defined in webpack.config.js
            // genomeNexusApiUrl : ENV_GENOME_NEXUS_URL,
