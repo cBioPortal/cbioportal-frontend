@@ -47,8 +47,8 @@ export type ClinicalTrackSpec = {
 export interface IBaseHeatmapTrackDatum {
     profile_data: number|null;
     sample?: string;
-    patient?: string;
-    study: string;
+    patient: string;
+    study_id: string;
     uid: string;
     na?:boolean;
 }
