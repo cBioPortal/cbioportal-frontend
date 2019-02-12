@@ -497,12 +497,12 @@ export default class GroupComparisonStore {
 
     public readonly sampleGroupsCombinationSets = remoteData({
         await: () => [
-            this.sampleGroups,
+            this.activeComparisonGroups,
             this.sampleSet
         ],
         invoke: () => {
-            let sampleSet = this.sampleSet.result!
-            let groupsWithSamples = _.map(this.sampleGroups.result, group => {
+            let sampleSet = this.sampleSet.result!;
+            let groupsWithSamples = _.map(this.activeComparisonGroups.result, group => {
                 let samples = group.sampleIdentifiers.map(sampleIdentifier => sampleSet.get(sampleIdentifier.studyId, sampleIdentifier.sampleId));
                 return {
                     name: group.name ? group.name : group.id,
@@ -515,12 +515,12 @@ export default class GroupComparisonStore {
 
     public readonly patientGroupsCombinationSets = remoteData({
         await: () => [
-            this.sampleGroups,
+            this.activeComparisonGroups,
             this.sampleSet
         ],
         invoke: () => {
             let sampleSet = this.sampleSet.result!;
-            let groupsWithPatients = _.map(this.sampleGroups.result, group => {
+            let groupsWithPatients = _.map(this.activeComparisonGroups.result, group => {
                 let samples = group.sampleIdentifiers.map(sampleIdentifier => sampleSet.get(sampleIdentifier.studyId, sampleIdentifier.sampleId));
                 return {
                     name: group.name ? group.name : group.id,
