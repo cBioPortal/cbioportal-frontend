@@ -16,6 +16,10 @@
   },
   "tags": [
     {
+      "name": "Clinical Data Enrichments",
+      "description": " "
+    },
+    {
       "name": "Co-Expressions",
       "description": " "
     },
@@ -273,6 +277,43 @@
               "type": "array",
               "items": {
                 "$ref": "#/definitions/DensityPlotBin"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/clinical-data-enrichments/fetch": {
+      "post": {
+        "tags": [
+          "Clinical Data Enrichments"
+        ],
+        "summary": "Fetch clinical data enrichments for the sample groups",
+        "operationId": "fetchClinicalEnrichmentsUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "groupFilter",
+            "description": "List of altered and unaltered Sample/Patient IDs",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/GroupFilter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ClinicalDataEnrichment"
               }
             }
           }
@@ -1455,6 +1496,39 @@
       },
       "title": "AlterationEnrichment"
     },
+    "ClinicalAttribute": {
+      "type": "object",
+      "required": [
+        "clinicalAttributeId",
+        "displayName",
+        "patientAttribute",
+        "studyId"
+      ],
+      "properties": {
+        "clinicalAttributeId": {
+          "type": "string"
+        },
+        "datatype": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "patientAttribute": {
+          "type": "boolean"
+        },
+        "priority": {
+          "type": "string"
+        },
+        "studyId": {
+          "type": "string"
+        }
+      },
+      "title": "ClinicalAttribute"
+    },
     "ClinicalDataBinCountFilter": {
       "type": "object",
       "properties": {
@@ -1553,6 +1627,30 @@
         }
       },
       "title": "ClinicalDataCountItem"
+    },
+    "ClinicalDataEnrichment": {
+      "type": "object",
+      "required": [
+        "clinicalAttribute",
+        "method",
+        "pValue",
+        "score"
+      ],
+      "properties": {
+        "clinicalAttribute": {
+          "$ref": "#/definitions/ClinicalAttribute"
+        },
+        "method": {
+          "type": "string"
+        },
+        "pValue": {
+          "type": "number"
+        },
+        "score": {
+          "type": "number"
+        }
+      },
+      "title": "ClinicalDataEnrichment"
     },
     "ClinicalDataEqualityFilter": {
       "type": "object",
@@ -2094,6 +2192,33 @@
         }
       },
       "title": "GisticToGene"
+    },
+    "Group": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "sampleIdentifiers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SampleIdentifier"
+          }
+        }
+      },
+      "title": "Group"
+    },
+    "GroupFilter": {
+      "type": "object",
+      "properties": {
+        "groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Group"
+          }
+        }
+      },
+      "title": "GroupFilter"
     },
     "Info": {
       "type": "object",

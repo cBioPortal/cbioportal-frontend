@@ -17,6 +17,22 @@ export type AlterationEnrichment = {
         'unalteredCount': number
 
 };
+export type ClinicalAttribute = {
+    'clinicalAttributeId': string
+
+        'datatype': string
+
+        'description': string
+
+        'displayName': string
+
+        'patientAttribute': boolean
+
+        'priority': string
+
+        'studyId': string
+
+};
 export type ClinicalDataBinCountFilter = {
     'attributes': Array < ClinicalDataBinFilter >
 
@@ -55,6 +71,16 @@ export type ClinicalDataCountItem = {
         'clinicalDataType': "SAMPLE" | "PATIENT"
 
         'counts': Array < ClinicalDataCount >
+
+};
+export type ClinicalDataEnrichment = {
+    'clinicalAttribute': ClinicalAttribute
+
+        'method': string
+
+        'pValue': number
+
+        'score': number
 
 };
 export type ClinicalDataEqualityFilter = {
@@ -293,6 +319,16 @@ export type GisticToGene = {
     'entrezGeneId': number
 
         'hugoGeneSymbol': string
+
+};
+export type Group = {
+    'name': string
+
+        'sampleIdentifiers': Array < SampleIdentifier >
+
+};
+export type GroupFilter = {
+    'groups': Array < Group >
 
 };
 export type Info = {
@@ -919,6 +955,83 @@ export default class CBioPortalAPIInternal {
         }): Promise < Array < DensityPlotBin >
         > {
             return this.fetchClinicalDataDensityPlotUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
+                return response.body;
+            });
+        };
+    fetchClinicalEnrichmentsUsingPOSTURL(parameters: {
+        'groupFilter': GroupFilter,
+        $queryParameters ? : any
+    }): string {
+        let queryParameters: any = {};
+        let path = '/clinical-data-enrichments/fetch';
+
+        if (parameters.$queryParameters) {
+            Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                var parameter = parameters.$queryParameters[parameterName];
+                queryParameters[parameterName] = parameter;
+            });
+        }
+        let keys = Object.keys(queryParameters);
+        return this.domain + path + (keys.length > 0 ? '?' + (keys.map(key => key + '=' + encodeURIComponent(queryParameters[key])).join('&')) : '');
+    };
+
+    /**
+     * Fetch clinical data enrichments for the sample groups
+     * @method
+     * @name CBioPortalAPIInternal#fetchClinicalEnrichmentsUsingPOST
+     * @param {} groupFilter - List of altered and unaltered Sample/Patient IDs
+     */
+    fetchClinicalEnrichmentsUsingPOSTWithHttpInfo(parameters: {
+        'groupFilter': GroupFilter,
+        $queryParameters ? : any,
+        $domain ? : string
+    }): Promise < request.Response > {
+        const domain = parameters.$domain ? parameters.$domain : this.domain;
+        const errorHandlers = this.errorHandlers;
+        const request = this.request;
+        let path = '/clinical-data-enrichments/fetch';
+        let body: any;
+        let queryParameters: any = {};
+        let headers: any = {};
+        let form: any = {};
+        return new Promise(function(resolve, reject) {
+            headers['Accept'] = 'application/json';
+            headers['Content-Type'] = 'application/json';
+
+            if (parameters['groupFilter'] !== undefined) {
+                body = parameters['groupFilter'];
+            }
+
+            if (parameters['groupFilter'] === undefined) {
+                reject(new Error('Missing required  parameter: groupFilter'));
+                return;
+            }
+
+            if (parameters.$queryParameters) {
+                Object.keys(parameters.$queryParameters).forEach(function(parameterName) {
+                    var parameter = parameters.$queryParameters[parameterName];
+                    queryParameters[parameterName] = parameter;
+                });
+            }
+
+            request('POST', domain + path, body, headers, queryParameters, form, reject, resolve, errorHandlers);
+
+        });
+    };
+
+    /**
+     * Fetch clinical data enrichments for the sample groups
+     * @method
+     * @name CBioPortalAPIInternal#fetchClinicalEnrichmentsUsingPOST
+     * @param {} groupFilter - List of altered and unaltered Sample/Patient IDs
+     */
+    fetchClinicalEnrichmentsUsingPOST(parameters: {
+            'groupFilter': GroupFilter,
+            $queryParameters ? : any,
+            $domain ? : string
+        }): Promise < Array < ClinicalDataEnrichment >
+        > {
+            return this.fetchClinicalEnrichmentsUsingPOSTWithHttpInfo(parameters).then(function(response: request.Response) {
                 return response.body;
             });
         };
