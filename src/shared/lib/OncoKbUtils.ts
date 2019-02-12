@@ -50,7 +50,7 @@ const RESISTANCE_LEVEL_SCORE:{[level:string]: number} = {
     'R1': 3,
 };
 
-const LEVELS = {
+export const LEVELS = {
     sensitivity: ['4', '3B', '3A', '2B', '2A', '1', '0'],
     resistance: ['R3', 'R2', 'R1'],
     all: ['4', 'R3', '3B', '3A', 'R2', '2B', '2A', 'R1', '1', '0']
