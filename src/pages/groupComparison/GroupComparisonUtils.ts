@@ -128,8 +128,11 @@ export function ENRICHMENTS_TOO_MANY_STUDIES_MSG(enrichmentsType:string) {
 }
 
 export function getDefaultGroupName(filters:StudyViewFilter) {
-    // TODO: generate describe name from filters
-    return "<DESCRIPTIVE GENERATED NAME FROM FILTERS>";
+    return _.sortBy( // sort clinical data equality filters into a canonical order - lets just do alphabetical by attribute id
+        filters.clinicalDataEqualityFilters,
+        filter=>filter.attributeId
+    ).map(filter=>filter.values.join("+")) // get each attributes selected values, joined by +
+    .join(", "); // comma separate each attributes values
 }
 
 export function getTabId(pathname:string) {
