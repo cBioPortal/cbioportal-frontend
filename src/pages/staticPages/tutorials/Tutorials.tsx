@@ -3,6 +3,7 @@ import {observer} from 'mobx-react';
 import {PageLayout} from "../../../shared/components/PageLayout/PageLayout";
 import './styles.scss';
 import Helmet from "react-helmet";
+import {getNCBIlink} from "../../../shared/api/urls";
 
 @observer
 export default class Tutorials extends React.Component<{}, {}> {
@@ -20,7 +21,7 @@ export default class Tutorials extends React.Component<{}, {}> {
                 Schultz. <br/>
                 <b>Integrative analysis of complex cancer genomics and clinical profiles using the cBioPortal.</b> <br/>
                 <i>Sci. Signal.</i> 6, pl1 (2013).
-                [<a href="http://www.ncbi.nlm.nih.gov/pubmed/23550210">Reprint</a>].</p>
+                [<a href={getNCBIlink('/pubmed/23550210')}>Reprint</a>].</p>
 
             <hr/>
 
