@@ -6,6 +6,7 @@ import {
     getOverlappingSamples,
     getStudyIds,
     isGroupEmpty,
+    ClinicalDataEnrichmentWithQ,
     OverlapFilteredComparisonGroup
 } from "./GroupComparisonUtils";
 import {remoteData} from "../../shared/api/remoteData";
@@ -37,10 +38,20 @@ import request from "superagent";
 import {getPatientSurvivals} from "pages/resultsView/SurvivalStoreHelper";
 import {SURVIVAL_CHART_ATTRIBUTES} from "pages/resultsView/survival/SurvivalChart";
 import {COLORS} from "pages/studyView/StudyViewUtils";
-import {AlterationEnrichment} from "../../shared/api/generated/CBioPortalAPIInternal";
+import {AlterationEnrichment, Group} from "../../shared/api/generated/CBioPortalAPIInternal";
 import ListIndexedMap from "shared/lib/ListIndexedMap";
 import {GroupComparisonTab} from "./GroupComparisonPage";
 import {Session} from "../../shared/api/ComparisonGroupClient";
+import { calculateQValues } from "shared/lib/calculation/BenjaminiHochbergFDRCalculator";
+
+export type GroupComparisonURLQuery = {
+    localGroups:string; // comma separated list
+
+    // OR
+
+    fromChart:string; //"true" or "false"
+    unshareableLocalKey:string;
+};
 
 export default class GroupComparisonStore {
 
@@ -511,6 +522,28 @@ export default class GroupComparisonStore {
         }
     });
 
+    public readonly patientKeyToSamples = remoteData({
+        await: () => [
+            this.samples
+        ],
+        invoke: () => {
+            return Promise.resolve(_.groupBy(this.samples.result!, sample => sample.uniquePatientKey));
+        }
+    });
+
+    public readonly sampleKeyToSample = remoteData({
+        await: () => [
+            this.samples
+        ],
+        invoke: () => {
+            let sampleSet = _.reduce(this.samples.result!, (acc, sample) => {
+                acc[sample.uniqueSampleKey] = sample;
+                return acc;
+            }, {} as { [uniqueSampleKey: string]: Sample });
+            return Promise.resolve(sampleSet);
+        }
+    });
+
     public readonly patientToAnalysisGroups = remoteData({
         await: () => [
             this.unfilteredGroups,
@@ -624,4 +657,44 @@ export default class GroupComparisonStore {
             return Promise.resolve(_.keyBy(this.unfilteredGroups.result!, group=>group.uid));
         }
     });
+
+    public readonly clinicalDataEnrichments = remoteData({
+        await: () => [this.activeGroups],
+        invoke: () => {
+            
+            let groups: Group[] = _.map(this.activeGroups.result, group => {
+                const sampleIdentifiers = [];
+                for (const studySpec of group.studies) {
+                    const studyId = studySpec.id;
+                    for (const sampleId of studySpec.samples) {
+                        sampleIdentifiers.push({
+                            studyId, sampleId
+                        });
+                    }
+                }
+                return {
+                    name: group.name ? group.name : group.uid,
+                    sampleIdentifiers: sampleIdentifiers
+                }
+            });
+            return internalClient.fetchClinicalEnrichmentsUsingPOST({
+                'groupFilter': {
+                    groups: groups
+                }
+            });
+        }
+    }, []);
+
+    readonly clinicalDataEnrichmentsWithQValues = remoteData<ClinicalDataEnrichmentWithQ[]>({
+        await:()=>[this.clinicalDataEnrichments],
+        invoke:()=>{
+            const clinicalDataEnrichments = this.clinicalDataEnrichments.result!;
+            const sortedByPvalue = _.sortBy(clinicalDataEnrichments, c=>c.pValue);
+            const qValues = calculateQValues(sortedByPvalue.map(c=>c.pValue));
+            qValues.forEach((qValue, index)=>{
+                (sortedByPvalue[index] as ClinicalDataEnrichmentWithQ).qValue = qValue;
+            });
+            return Promise.resolve(sortedByPvalue as ClinicalDataEnrichmentWithQ[]);
+        }
+    }, []);
 }
