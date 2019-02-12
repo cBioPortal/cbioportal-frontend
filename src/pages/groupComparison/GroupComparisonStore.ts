@@ -34,7 +34,7 @@ export type GroupComparisonURLQuery = {
 export default class GroupComparisonStore {
 
     @observable currentTabId:GroupComparisonTab|undefined = undefined;
-    @observable excludeOverlapping:boolean = true;
+    @observable excludeOverlapping:boolean = false;
     @observable localGroupIds:string[] = [];
 
     public updateStoreFromURL(query:Partial<GroupComparisonURLQuery>) {
