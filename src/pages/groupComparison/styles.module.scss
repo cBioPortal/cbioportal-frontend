@@ -38,3 +38,24 @@
         height:36px;
     }
 }
+
+.groupButtons {
+    button {
+        margin:2px !important;
+    }
+    display:inline-block;
+    max-width:500px;
+    border:1px solid $borderColor;
+    padding:5px;
+    background-color:#fff;
+    border-radius:$cornerBorderRadius;
+
+}
+
+.headerControls {
+    display:flex;
+    align-items:center;
+    > div {
+      margin-right:30px;
+    }
+}
