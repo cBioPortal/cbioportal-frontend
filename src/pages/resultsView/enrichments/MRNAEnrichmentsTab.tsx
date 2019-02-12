@@ -33,7 +33,7 @@ export default class MRNAEnrichmentsTab extends React.Component<IMRNAEnrichments
                 <div data-test="MRNAEnrichmentsTab">
                     <EnrichmentsDataSetDropdown dataSets={this.props.store.mRNAEnrichmentProfiles} onChange={this.onProfileChange}
                         selectedValue={this.props.store.selectedEnrichmentMRNAProfile.molecularProfileId}
-                        molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount.result!}/>
+                        molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount}/>
                     <ExpressionEnrichmentContainer data={this.props.store.mRNAEnrichmentData.result!}
                         selectedProfile={this.props.store.selectedEnrichmentMRNAProfile} store={this.props.store} />
                 </div>
