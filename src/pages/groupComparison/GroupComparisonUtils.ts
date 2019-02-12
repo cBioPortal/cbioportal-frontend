@@ -3,7 +3,7 @@ import {MobxPromise} from 'mobxpromise/dist/src/MobxPromise';
 import {ClinicalAttribute, PatientIdentifier, Sample, SampleIdentifier} from "../../shared/api/generated/CBioPortalAPI";
 import _ from "lodash";
 import {GroupComparisonTab} from "./GroupComparisonPage";
-import {StudyViewFilter} from "../../shared/api/generated/CBioPortalAPIInternal";
+import {StudyViewFilter, ClinicalDataEnrichment} from "../../shared/api/generated/CBioPortalAPIInternal";
 import {AlterationEnrichmentWithQ} from "../resultsView/enrichments/EnrichmentsUtil";
 import {SessionGroupData} from "../../shared/api/ComparisonGroupClient";
 
@@ -19,7 +19,8 @@ export type ComparisonGroup = Omit<SessionGroupData, "studies"|"color"> & {
 export type OverlapFilteredComparisonGroup = ComparisonGroup & {
     hasOverlappingSamples:boolean; // whether the group has had samples filtered out because they overlapped in the selection
     hasOverlappingPatients:boolean; // whether the group has had patients filtered out because they overlapped in the selection
-};
+}
+export type ClinicalDataEnrichmentWithQ = ClinicalDataEnrichment & { qValue:number };
 
 export type CopyNumberEnrichment = AlterationEnrichmentWithQ & { value:number };
 
