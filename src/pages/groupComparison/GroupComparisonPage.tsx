@@ -93,6 +93,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
 
     readonly tabs = MakeMobxView({
         await:()=>[
+            this.store.activeComparisonGroups,
             this.store.mutationEnrichmentProfiles,
             this.store.copyNumberEnrichmentProfiles,
             this.store.mRNAEnrichmentProfiles,
@@ -100,7 +101,9 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
             this.store.survivalClinicalDataExists,
         ],
         render:()=>{
-            if ((this.store.mutationEnrichmentProfiles.result!.length > 0) ||
+            if (this.store.activeComparisonGroups.result!.length === 0) {
+                return <div style={{display:"flex", justifyContent:"center", alignItems:"center"}}>To get started, select groups from the Active Groups section above.</div>;
+            } else if ((this.store.mutationEnrichmentProfiles.result!.length > 0) ||
                 (this.store.copyNumberEnrichmentProfiles.result!.length > 0) ||
                 (this.store.mRNAEnrichmentProfiles.result!.length > 0) ||
                 (this.store.proteinEnrichmentProfiles.result!.length > 0) ||

@@ -8,7 +8,7 @@ import {MolecularProfile} from "../../shared/api/generated/CBioPortalAPI";
 import {MakeMobxView} from "../../shared/components/MobxView";
 import Loader from "../../shared/components/loadingIndicator/LoadingIndicator";
 import ErrorMessage from "../../shared/components/ErrorMessage";
-import { ENRICHMENTS_TOO_MANY_GROUPS_MSG } from "./GroupComparisonUtils";
+import { ENRICHMENTS_NOT_2_GROUPS_MSG } from "./GroupComparisonUtils";
 
 export interface ICopyNumberEnrichmentsProps {
     store: GroupComparisonStore
@@ -24,7 +24,7 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
     readonly tabUI = MakeMobxView({
         await:()=>{
             if (this.props.store.activeComparisonGroups.isComplete &&
-                this.props.store.activeComparisonGroups.result.length > 2) {
+                this.props.store.activeComparisonGroups.result.length !== 2) {
                 // dont bother loading data for and computing enrichments UI if its not valid situation for it
                 return [this.props.store.activeComparisonGroups];
             } else {
@@ -32,8 +32,8 @@ export default class CopyNumberEnrichments extends React.Component<ICopyNumberEn
             }
         },
         render:()=>{
-            if (this.props.store.activeComparisonGroups.result!.length > 2) {
-                return <span>{ENRICHMENTS_TOO_MANY_GROUPS_MSG}</span>;
+            if (this.props.store.activeComparisonGroups.result!.length !== 2) {
+                return <span>{ENRICHMENTS_NOT_2_GROUPS_MSG}</span>;
             } else {
                 return this.enrichmentsUI.component;
             }
