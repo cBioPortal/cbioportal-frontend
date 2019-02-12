@@ -26,6 +26,7 @@ import { EnsemblTranscript } from 'shared/api/generated/GenomeNexusAPI';
 import Mutations from 'pages/resultsView/mutation/Mutations';
 import {IServerConfig} from "../../../config/IAppConfig";
 import WindowStore from "../window/WindowStore";
+import {getNCBIlink} from "../../api/urls";
 
 export interface IMutationMapperProps {
     store: MutationMapperStore;
@@ -92,7 +93,7 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                     <span data-test="GeneSummaryRefSeq">{'RefSeq: '}
                         {refseqMrnaId? (
                             <a
-                                href={`https://www.ncbi.nlm.nih.gov/nuccore/${refseqMrnaId}`}
+                                href={getNCBIlink(`/nuccore/${refseqMrnaId}`)}
                                 target="_blank"
                             >
                                 {refseqMrnaId}
@@ -126,7 +127,13 @@ export default class MutationMapper<P extends IMutationMapperProps> extends Reac
                     <span data-test="GeneSummaryCCDS">{'CCDS: '}
                         {ccdsId? (
                             <a
-                                href={`http://www.ncbi.nlm.nih.gov/CCDS/CcdsBrowse.cgi?REQUEST=CCDS&DATA=${ccdsId}`}
+                                href={getNCBIlink({
+                                    pathname: '/CCDS/CcdsBrowse.cgi',
+                                    query: {
+                                        'REQUEST': 'CCDS',
+                                        'DATA': ccdsId
+                                    }
+                                })}
                                 target="_blank"
                             >
                                 {ccdsId}

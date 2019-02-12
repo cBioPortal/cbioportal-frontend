@@ -4,7 +4,7 @@ import {CancerStudy} from 'shared/api/generated/CBioPortalAPI';
 import {ThreeBounce} from 'better-react-spinkit';
 import request from 'superagent';
 import LazyMobXTable from "shared/components/lazyMobXTable/LazyMobXTable";
-import {getStudyDownloadListUrl} from "../../../shared/api/urls";
+import {getNCBIlink, getStudyDownloadListUrl} from "../../../shared/api/urls";
 import {StudyLink} from "../../../shared/components/StudyLink/StudyLink";
 import {StudyDataDownloadLink} from "../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink";
 
@@ -65,7 +65,7 @@ class ReferenceCell extends React.Component<IReferenceCellProps ,{}> {
     render() {
         return (
             <a target='_blank'
-               href={`https://www.ncbi.nlm.nih.gov/pubmed/${this.props.pmid}`}> {this.props.citation} </a>
+               href={getNCBIlink(`/pubmed/${this.props.pmid}`)}> {this.props.citation} </a>
         );
 
     }
