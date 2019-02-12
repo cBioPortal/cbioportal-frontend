@@ -527,7 +527,7 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
             );
 
             return (
-                <span>
+                <span key={str}>
                     {parts[0]}
                     <DefaultTooltip
                         overlay={tooltipContent}
@@ -544,7 +544,7 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
         else if (link)
         {
             return (
-                <span>
+                <span key={str}>
                     {parts[0]}
                     {link}
                     {`)`}
