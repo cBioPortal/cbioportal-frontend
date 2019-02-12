@@ -368,9 +368,9 @@ describe('DownloadUtils', () => {
             assert.equal(oqlData.proteinLevel.length, 1,
                 "protein level data exists for the sample with mrna and protein data only");
 
-            assert.deepEqual(oqlData.mrnaExp, [{type: "UP", value: 2.4745}],
+            assert.deepEqual(oqlData.mrnaExp, [{type: "HIGH", value: 2.4745}],
                 "mRNA expression data is correct for the sample with mrna and protein data only");
-            assert.deepEqual(oqlData.proteinLevel, [{type: "UP", value: 2.5406}],
+            assert.deepEqual(oqlData.proteinLevel, [{type: "HIGH", value: 2.5406}],
                 "protein level data is correct for the sample with mrna and protein data only");
         });
 
@@ -657,10 +657,10 @@ describe('DownloadUtils', () => {
             assert.isTrue(caseAlterationData[1].altered,
                 "sample VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ is altered");
             assert.deepEqual(caseAlterationData[1].oqlData["PTEN: AMP HOMDEL MUT FUSION;"].mrnaExp,
-                [{type: 'UP', value: 2.4745}],
+                [{type: 'HIGH', value: 2.4745}],
                 "mRNA data is correct for the sample key VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ");
             assert.deepEqual(caseAlterationData[1].oqlData["PTEN: AMP HOMDEL MUT FUSION;"].proteinLevel,
-                [{type: 'UP', value: 2.5406}],
+                [{type: 'HIGH', value: 2.5406}],
                 "protein data is correct for the sample key VENHQS1FRS1BMjBDLTA2OnNrY21fdGNnYQ");
         });
     });
