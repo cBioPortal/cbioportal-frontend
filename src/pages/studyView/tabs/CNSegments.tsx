@@ -9,15 +9,23 @@ import {calcSegmentTrackHeight, defaultSegmentTrackProps, generateSegmentFeature
 import ProgressIndicator, {IProgressIndicatorItem} from "shared/components/progressIndicator/ProgressIndicator";
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import CNSegmentsDownloader from "shared/components/cnSegments/CNSegmentsDownloader";
+import WindowStore from "shared/components/window/WindowStore";
 
 import {StudyViewPageStore, StudyViewPageTabKeyEnum} from "../StudyViewPageStore";
 
 @observer
 export default class CNSegments extends React.Component<{ store: StudyViewPageStore }, {}> {
     @observable renderingComplete = false;
+    @observable segmentTrackMaxHeight: number|undefined;
+
+    constructor(props: {store: StudyViewPageStore})
+    {
+        super(props);
+        this.segmentTrackMaxHeight = WindowStore.size.height * 0.7;
+    }
 
     @computed get segmentTrackHeight() {
-        return calcSegmentTrackHeight(this.features);
+        return calcSegmentTrackHeight(this.features, this.segmentTrackMaxHeight);
     }
 
     @computed get features() {
