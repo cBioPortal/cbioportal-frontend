@@ -7,11 +7,9 @@ import * as _ from 'lodash';
 import styles from "../styles.module.scss";
 import {StudySummaryRecord} from "../../virtualStudy/VirtualStudy";
 import LoadingIndicator from "../../../../shared/components/loadingIndicator/LoadingIndicator";
-import {buildCBioPortalPageUrl, getStudyDownloadListUrl} from "../../../../shared/api/urls";
+import {getStudySummaryUrl} from "../../../../shared/api/urls";
 import MobxPromise from 'mobxpromise';
-import {StudyLink} from "../../../../shared/components/StudyLink/StudyLink";
 import {StudyDataDownloadLink} from "../../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink";
-import request from 'superagent';
 import DefaultTooltip from "../../../../shared/components/defaultTooltip/DefaultTooltip";
 
 interface IStudySummaryProps {
@@ -66,7 +64,7 @@ export default class StudySummary extends React.Component<IStudySummaryProps, {}
             return _.map(this.props.studies, study => {
                 return (
                     <li>
-                        <StudyLink studyId={study.studyId}>{study.name}</StudyLink>
+                        <a href={getStudySummaryUrl(study.studyId)} target="_blank">{study.name}</a>
                     </li>
                 )
             })

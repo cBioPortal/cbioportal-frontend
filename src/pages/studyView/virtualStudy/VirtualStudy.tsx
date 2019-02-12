@@ -266,7 +266,7 @@ export default class VirtualStudy extends React.Component<IVirtualStudyProps, {}
                                                     </Else>
                                                 </If>}
                                             placement="top"
-                                            onVisibleChange={this.onTooltipVisibleChange as any}
+                                            onVisibleChange={this.onTooltipVisibleChange}
                                         >
                                             <span
                                                 className="btn btn-default"

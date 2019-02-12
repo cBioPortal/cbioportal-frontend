@@ -18,12 +18,15 @@ if (process.env.PATH.indexOf('heroku') === -1) {
     version = JSON.stringify(gitRevisionPlugin.version())
 }
 
-function cleanUrl(url) {
+function cleanAndValidateUrl(url) {
     if (typeof url === 'string') {
         // we need to support legacy configuration values
-        let cleanUrl = url.replace(/^http[s]?:\/\//,''); // get rid of protocol
-        cleanUrl = cleanUrl.replace(/\/$/,""); // get rid of trailing slashes
-        return cleanUrl;
+        console.log(url);
+        if (/^http/.test(url) === false) {
+            throw("URLS MUST START WITH PROTOCOL");
+        }
+        let cleanAndValidateUrl = url.replace(/\/$/,""); // get rid of trailing slashes
+        return cleanAndValidateUrl;
     } else {
         throw `Not a url: ${url}`
     }
@@ -120,8 +123,8 @@ var config = {
             'VERSION': version, 
             'COMMIT': commit,
             'IS_DEV_MODE': isDev,
-            'ENV_CBIOPORTAL_URL': isDev && process.env.CBIOPORTAL_URL? JSON.stringify(cleanUrl(process.env.CBIOPORTAL_URL)) : '"replace_me_env_cbioportal_url"',
-            'ENV_GENOME_NEXUS_URL': isDev && process.env.GENOME_NEXUS_URL? JSON.stringify(cleanUrl(process.env.GENOME_NEXUS_URL)) : '"replace_me_env_genome_nexus_url"',
+            'ENV_CBIOPORTAL_URL': isDev && process.env.CBIOPORTAL_URL? JSON.stringify(cleanAndValidateUrl(process.env.CBIOPORTAL_URL)) : '"replace_me_env_cbioportal_url"',
+            'ENV_GENOME_NEXUS_URL': isDev && process.env.GENOME_NEXUS_URL? JSON.stringify(cleanAndValidateUrl(process.env.GENOME_NEXUS_URL)) : '"replace_me_env_genome_nexus_url"',
         }),
         new HtmlWebpackPlugin({cache: false, template: 'my-index.ejs'}),
         WebpackFailPlugin,
