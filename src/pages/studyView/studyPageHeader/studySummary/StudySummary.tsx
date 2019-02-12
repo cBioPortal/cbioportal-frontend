@@ -11,6 +11,7 @@ import {getStudySummaryUrl, getNCBIlink} from "../../../../shared/api/urls";
 import MobxPromise from 'mobxpromise';
 import {StudyDataDownloadLink} from "../../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink";
 import DefaultTooltip from "../../../../shared/components/defaultTooltip/DefaultTooltip";
+import {serializeEvent} from "../../../../shared/lib/tracking";
 
 interface IStudySummaryProps {
     studies: CancerStudy[],
@@ -84,7 +85,10 @@ export default class StudySummary extends React.Component<IStudySummaryProps, {}
                             placement={"top"}
                             overlay={<span>Download all clinical and genomic data of this study</span>}
                         >
-                            <span data-test="studySummaryRawDataDownloadIcon" style={{marginLeft: '10px', fontSize: '14px'}}>
+                            <span data-test="studySummaryRawDataDownloadIcon"
+                                  data-event={serializeEvent({ category:'studyPage', action:'dataDownload', label:this.props.studies.map((s)=>s.studyId).join(",") })}
+                                  style={{marginLeft: '10px', fontSize: '14px'}}
+                            >
                                     <StudyDataDownloadLink studyId={this.props.studies[0].studyId}/>
                             </span>
                         </DefaultTooltip>

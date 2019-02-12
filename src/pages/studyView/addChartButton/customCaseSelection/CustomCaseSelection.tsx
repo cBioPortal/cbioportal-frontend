@@ -16,6 +16,7 @@ import {
 } from "./CustomCaseSelectionUtils";
 import autobind from 'autobind-decorator';
 import Collapse from "react-collapse";
+import {serializeEvent} from "../../../../shared/lib/tracking";
 
 export interface ICustomCaseSelectionProps {
     allSamples: Sample[];
@@ -215,6 +216,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                         disabled={this.addChartButtonDisabled}
                         className="btn btn-primary btn-sm"
                         data-test='CustomCaseSetSubmitButton'
+                        data-event={serializeEvent({ category:'studyPage', action:'customCaseSetSelection', label:this.props.queriedStudies.join(",")})}
                         onClick={this.onAddChart}>
                         {this.props.submitButtonText}
                     </button>
