@@ -103,7 +103,13 @@ export default class ComparisonGroupManager extends React.Component<IComparisonG
         if (this.props.store.comparisonGroups.length === 0) {
             return (
                 <div className={styles.noGroupsMessage}>
-                    Click the button below to create a group, which can be used to save your current selection, and to perform comparison analyses with other groups.
+                    <span>
+                        { this.addGroupPanelOpen ?
+                            <span>Use the <h6 style={{display:"inline-block", marginBottom:0}}>Add samples</h6> panel</span> :
+                            <span>Click the <span className="btn btn-xs btn-primary" style={{marginLeft:3, marginRight:3, paddingTop:0.5, paddingBottom:0.5}}onClick={this.showAddGroupPanel}>+ Add</span> button</span>
+                        }
+                        <span>&nbsp;below to create a group, which can be used to save your current selection, and to perform comparison analyses with other groups.</span>
+                    </span>
                 </div>
             );
         } else {
