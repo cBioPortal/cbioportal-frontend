@@ -299,6 +299,9 @@ describe("enrichments tab screenshot tests", function() {
     });
     it('enrichments tab coadread_tcga_pub mRNA profile', function(){
         browser.waitForVisible('div[data-test="MutationEnrichmentsTab"]',10000);
+        // wait for mutations to appear, TODO: there is a bug when clicking
+        // immediately on mRNA tab
+        browser.waitForText('.//*[text()[contains(.,"PIK3CA")]]');
         browser.waitForVisible('a=mRNA', 10000);
         browser.click('a=mRNA');
         browser.waitForVisible('div[data-test="MRNAEnrichmentsTab"]',20000);
