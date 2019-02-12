@@ -177,18 +177,10 @@ export default class GroupComparisonStore {
     }
 
     public groupSelectionCanBeToggled(group:ComparisonGroup) {
-        if (!this.activeComparisonGroups.isComplete) {
-            // dont allow toggling until we know what the current active groups are
-            return false;
-        } else if (group.sampleIdentifiers.length === 0 && group.patientIdentifiers.length === 0) {
-            // can't be toggled if no cases in it
-            return false;
-        } else {
-            // otherwise, only allow toggling if it wont decrease # active groups below 2
-            const activeGroups = this.activeComparisonGroups.result!;
-            return activeGroups.length > 2 || // if there are more than 2 active groups,
-                    activeGroups.findIndex(g=>g.id === group.id) === -1; // or if this group is not currently active
-        }
+        return (
+            this.activeComparisonGroups.isComplete && // dont allow toggling until we know what the current active groups are
+            !(group.sampleIdentifiers.length === 0 && group.patientIdentifiers.length === 0) // cant be toggled if no cases in it
+        );
     }
 
     private isComparisonGroupSelected(groupId:string) {
@@ -447,25 +439,25 @@ export default class GroupComparisonStore {
     });
 
     @computed get mutationsTabGrey() {
-        // grey out if more than two active groups
-        return (this.activeComparisonGroups.isComplete && this.activeComparisonGroups.result.length > 2);
+        // grey out unless two active groups
+        return (this.activeComparisonGroups.isComplete && this.activeComparisonGroups.result.length !== 2);
     }
 
     @computed get copyNumberTabGrey() {
-        // grey out if more than two active groups
-        return (this.activeComparisonGroups.isComplete && this.activeComparisonGroups.result.length > 2);
+        // grey out unless two active groups
+        return (this.activeComparisonGroups.isComplete && this.activeComparisonGroups.result.length !== 2);
     }
 
     @computed get mRNATabGrey() {
         // grey out if
         return (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) // more than one active study
-            || (this.activeComparisonGroups.isComplete && this.activeComparisonGroups.result.length > 2); // or more than two active groups
+            || (this.activeComparisonGroups.isComplete && this.activeComparisonGroups.result.length !== 2); // not two active groups
     }
 
     @computed get proteinTabGrey() {
         // grey out if
         return (this.activeStudyIds.isComplete && this.activeStudyIds.result.length > 1) // more than one active study
-            || (this.activeComparisonGroups.isComplete && this.activeComparisonGroups.result.length > 2); // or more than two active groups
+            || (this.activeComparisonGroups.isComplete && this.activeComparisonGroups.result.length !== 2); // not two active groups
     }
 
     public readonly sampleSet = remoteData({
