@@ -50,7 +50,7 @@ exports.config = {
 
         browserName: 'chrome',
         chromeOptions: {
-            args: ['--disable-composited-antialiasing']
+            args: ['--disable-composited-antialiasing','--allow-insecure-localhost']
         }
 
         // chromeOptions: {

@@ -1541,6 +1541,8 @@ export class ResultsViewPageStore {
                         () => (this.mutationsByGene[gene.hugoGeneSymbol] || []),
                         () => (this.mutationCountCache),
                         () => (this.genomeNexusCache),
+                        () => (this.discreteCNACache),
+                        this.studyToMolecularProfileDiscrete.result!,
                         this.studyIdToStudy,
                         this.molecularProfileIdToMolecularProfile,
                         this.clinicalDataForSamples,
@@ -1564,7 +1566,13 @@ export class ResultsViewPageStore {
     }
 
     readonly oncoKbAnnotatedGenes = remoteData({
-        invoke:()=>fetchOncoKbAnnotatedGenesSuppressErrors()
+        invoke: () => {
+            if (AppConfig.serverConfig.show_oncokb) {
+                return fetchOncoKbAnnotatedGenesSuppressErrors();
+            } else {
+                return Promise.resolve({});
+            }
+        }
     }, {});
 
     readonly clinicalDataForSamples = remoteData<ClinicalData[]>({
