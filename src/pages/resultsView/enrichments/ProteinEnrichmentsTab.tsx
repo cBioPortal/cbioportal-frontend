@@ -33,7 +33,7 @@ export default class ProteinEnrichmentsTab extends React.Component<IProteinEnric
                 <div>
                     <EnrichmentsDataSetDropdown dataSets={this.props.store.proteinEnrichmentProfiles} onChange={this.onProfileChange}
                         selectedValue={this.props.store.selectedEnrichmentProteinProfile.molecularProfileId}
-                        molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount.result!}/>
+                        molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount}/>
                     <ExpressionEnrichmentContainer data={this.props.store.proteinEnrichmentData.result!}
                         selectedProfile={this.props.store.selectedEnrichmentProteinProfile} store={this.props.store} />
                 </div>
