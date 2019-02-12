@@ -122,7 +122,7 @@ export function getPatientIdentifiers(
     return _.values(patientSet);
 }
 
-export const ENRICHMENTS_TOO_MANY_GROUPS_MSG = "Can't show enrichments for more than two groups - deselect some from the area at the top of the page.";
+export const ENRICHMENTS_NOT_2_GROUPS_MSG = "We can only show enrichments when two groups are selected. Please select/deselect groups in the 'Active Groups' section so that only two are selected.";
 export function ENRICHMENTS_TOO_MANY_STUDIES_MSG(enrichmentsType:string) {
     return `Selected comparison groups span more than one study, so we can't show ${enrichmentsType} enrichments. Please deselect groups from the top of the page, or try a different set of groups.`;
 }
