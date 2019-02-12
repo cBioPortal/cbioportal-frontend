@@ -196,7 +196,8 @@ describe('study laml_tcga tests', () => {
             it('check', () => {
                 // This is one of the studies have MDACC heatmap enabled
                 goToUrlAndSetLocalStorage(`${CBIOPORTAL_URL}/study?id=brca_tcga_pub`);
-                waitForNetworkQuiet();
+                waitForNetworkQuiet(20000);
+                browser.waitForVisible("#studyViewTabs a.tabAnchor_heatmaps", 10000);
                 browser.click("#studyViewTabs a.tabAnchor_heatmaps");
                 assert(!browser.isExisting(ADD_CHART_BUTTON));
             });
@@ -390,7 +391,7 @@ describe('study view msk_impact_2017 study tests', () => {
         goToUrlAndSetLocalStorage(url);
     });
     it('the study should show proper number of samples/patients', () => {
-        waitForNetworkQuiet();
+        waitForNetworkQuiet(20000);
         waitForStudyViewSelectedInfo();
         assert(getTextFromElement(SELECTED_PATIENTS) === '10,336');
         assert(getTextFromElement(SELECTED_SAMPLES) === '10,945');
