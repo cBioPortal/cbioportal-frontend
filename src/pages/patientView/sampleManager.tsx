@@ -181,6 +181,17 @@ class SampleManager {
     getComponentsForSamples() {
         this.samples.map((sample)=>this.getComponentForSample(sample.id));
     }
+
+    getCfDNASampleIconColor(sampleId:string):string {
+        if (["Liquid_Tumor", "Unknown_Tumor"].includes(
+                this.clinicalDataLegacyCleanAndDerived[sampleId]['SAMPLE_TYPE'] )) {
+            return styles.sampleColorMetastasis;
+        } else if (this.clinicalDataLegacyCleanAndDerived[sampleId]['SAMPLE_TYPE'] === "Pleural_Effusion") {
+            return styles.sampleColorCfdna;
+        } else {
+            return styles.sampleColorFluid;
+        }
+    }
 }
 
 export default SampleManager;

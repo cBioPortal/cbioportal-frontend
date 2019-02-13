@@ -361,12 +361,6 @@ export default class LollipopMutationPlot extends React.Component<ILollipopMutat
             onYMaxInputBlurred:()=>{
                 this.yMaxInputFocused = false;
             },
-            onYMaxInputFocused:()=>{
-                this.yMaxInputFocused = true;
-            },
-            onYMaxInputBlurred:()=>{
-                this.yMaxInputFocused = false;
-            },
             handleToggleLegend: action(()=>{
                 this.legendShown = !this.legendShown;
             }),

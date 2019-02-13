@@ -27,7 +27,7 @@ import {validateParametersPatientView} from "../../shared/lib/validateParameters
 import LoadingIndicator from "shared/components/loadingIndicator/LoadingIndicator";
 import ValidationAlert from "shared/components/ValidationAlert";
 import AppConfig from "appConfig";
-import {getMouseIcon} from "./SVGIcons";
+import {getMouseIcon, getcfDNAIcon} from "./SVGIcons";
 
 import "./patient.scss";
 import IFrameLoader from "../../shared/components/iframeLoader/IFrameLoader";
@@ -246,6 +246,14 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                     sampleManager.clinicalDataLegacyCleanAndDerived[sample.id].DERIVED_NORMALIZED_CASE_TYPE === 'Xenograft'
                 );
 
+                const isCfDNA:boolean = (sampleManager &&
+                    sampleManager.clinicalDataLegacyCleanAndDerived &&
+                    sampleManager.clinicalDataLegacyCleanAndDerived[sample.id] &&
+                    sampleManager.clinicalDataLegacyCleanAndDerived[sample.id].DERIVED_NORMALIZED_CASE_TYPE === 'cfDNA'
+                );
+
+
+
                 return (
                     <div className="patientSample">
                         <span className='clinical-spans'>
@@ -253,8 +261,9 @@ export default class PatientViewPage extends React.Component<IPatientViewPagePro
                                 sampleManager!.getComponentForSample(sample.id, 1, '',
                                     <span style={{display:'inline-flex'}}>
                                         {'\u00A0'}
-                                        {isPDX && getMouseIcon()}
-                                        {isPDX && '\u00A0'}
+                                        {isPDX && getMouseIcon() || (isCfDNA && sampleManager &&
+                                                getcfDNAIcon(sampleManager.getCfDNASampleIconColor(sample.id)))}
+                                        {isPDX && '\u00A0' || (isCfDNA )}
                                         <a
                                             href={getSampleViewUrl(patientViewPageStore.studyMetaData.result!.studyId, sample.id)}
                                             target="_blank"
