@@ -85,6 +85,7 @@ import {ChartDimension, ChartTypeEnum, STUDY_VIEW_CONFIG, StudyViewLayout} from 
 import {getMDAndersonHeatmapStudyMetaUrl, getStudyDownloadListUrl} from "../../shared/api/urls";
 import onMobxPromise from "../../shared/lib/onMobxPromise";
 import request from 'superagent';
+import {trackStudyViewFilterEvent} from "../../shared/lib/tracking";
 
 export enum ClinicalDataTypeEnum {
     SAMPLE = 'SAMPLE',
@@ -586,12 +587,22 @@ export class StudyViewPageStore {
     @action
     toggleWithMutationDataFilter() {
         this._withMutationDataFilter = !this._withMutationDataFilter;
+
+        if (this._withMutationDataFilter) {
+            trackStudyViewFilterEvent("withMutationQuickFilter", this);
+        }
+
     }
 
     @autobind
     @action
     toggleWithCNADataFilter() {
         this._withCNADataFilter = !this._withCNADataFilter;
+
+        if (this._withCNADataFilter) {
+            trackStudyViewFilterEvent("withCNADataQuickFilter", this);
+        }
+
     }
 
     @autobind
@@ -780,6 +791,9 @@ export class StudyViewPageStore {
     @autobind
     @action
     updateClinicalDataEqualityFilters(chartMeta: ChartMeta, values: string[]) {
+
+        trackStudyViewFilterEvent("clinicalDataEquality", this);
+
         if (values.length > 0) {
             let clinicalDataEqualityFilter = {
                 attributeId: chartMeta.clinicalAttribute!.clinicalAttributeId,
@@ -795,6 +809,9 @@ export class StudyViewPageStore {
 
     @action
     updateClinicalDataIntervalFilters(chartMeta: ChartMeta, dataBins: DataBin[]) {
+
+        trackStudyViewFilterEvent("clinicalDataInterval", this);
+
         const values: ClinicalDataIntervalFilterValue[] = getClinicalDataIntervalFilterValues(dataBins);
         this.updateClinicalDataIntervalFiltersByValues(chartMeta, values);
     }
@@ -818,6 +835,9 @@ export class StudyViewPageStore {
     @autobind
     @action
     addGeneFilters(genes: GeneIdentifier[]) {
+
+        trackStudyViewFilterEvent("geneFilter", this);
+
         genes.forEach(gene => this.geneMapCache[gene.entrezGeneId] = gene.hugoGeneSymbol);
         this._mutatedGeneFilter = [...this._mutatedGeneFilter, {entrezGeneIds: genes.map(gene => gene.entrezGeneId)}];
     }
@@ -891,6 +911,9 @@ export class StudyViewPageStore {
     @autobind
     @action
     addCNAGeneFilters(filters: CopyNumberAlterationIdentifier[]) {
+
+        trackStudyViewFilterEvent("cnaGene", this);
+
         filters.forEach(filter => this.geneMapCache[filter.entrezGeneId]  = filter.hugoGeneSymbol);
         this._cnaGeneFilter = [...this._cnaGeneFilter, {
             alterations: filters.map(filter => {
@@ -940,6 +963,9 @@ export class StudyViewPageStore {
     @autobind
     @action
     setMutationCountVsCNAFilter(bounds:RectangleBounds) {
+
+        trackStudyViewFilterEvent("mutationCountVsCNA", this);
+
         this._mutationCountVsCNAFilter = bounds;
     }
 
