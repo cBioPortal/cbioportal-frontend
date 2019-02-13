@@ -4,7 +4,7 @@ import {StudyViewPageStore, UniqueKey} from "../studyView/StudyViewPageStore";
 import {
     addGroupToLocalStorage, addSamplesToGroup,
     deleteGroups,
-    getLocalStorageGroups,
+    getLSGroups,
     restoreRecentlyDeletedGroups
 } from "./GroupPersistenceUtils";
 import {action, computed, observable} from "mobx";

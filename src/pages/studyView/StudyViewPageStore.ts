@@ -91,7 +91,7 @@ import onMobxPromise from "../../shared/lib/onMobxPromise";
 import request from 'superagent';
 import {trackStudyViewFilterEvent} from "../../shared/lib/tracking";
 import {ComparisonSampleGroup} from "../groupComparison/GroupComparisonUtils";
-import {getLocalStorageGroups} from "../groupComparison/GroupPersistenceUtils";
+import {getLSGroups} from "../groupComparison/GroupPersistenceUtils";
 
 export enum ClinicalDataTypeEnum {
     SAMPLE = 'SAMPLE',
@@ -352,7 +352,7 @@ export class StudyViewPageStore {
     }
 
     @computed get comparisonGroups() {
-        const allGroups = getLocalStorageGroups();
+        const allGroups = getLSGroups();
         // filter out groups that arent from these studies
         const relevantStudyIds = _.keyBy(this.studyIds);
         return allGroups.filter(group=>{
