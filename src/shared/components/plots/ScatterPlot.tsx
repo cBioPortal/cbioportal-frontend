@@ -12,6 +12,7 @@ import {tickFormatNumeral} from "./TickUtils";
 import {computeCorrelationPValue, makeScatterPlotSizeFunction, separateScatterDataByAppearance} from "./PlotUtils";
 import {toConditionalPrecision} from "../../lib/NumberUtils";
 import regression from "regression";
+import {getRegressionComputations} from "./ScatterPlotUtils";
 
 export interface IBaseScatterPlotData {
     x:number;
@@ -50,7 +51,7 @@ export interface IScatterPlotProps<D extends IBaseScatterPlotData> {
 
 const DEFAULT_FONT_FAMILY = "Verdana,Arial,sans-serif";
 const CORRELATION_INFO_Y = 100; // experimentally determined
-export const LEGEND_Y = CORRELATION_INFO_Y + 60 /* approximate correlation info height */ + 30 /* top padding*/
+export const LEGEND_Y = CORRELATION_INFO_Y + 90; /* 90 ≈ approximate correlation info height + top padding */
 const RIGHT_PADDING = 120; // room for correlation info and legend
 const NUM_AXIS_TICKS = 8;
 const PLOT_DATA_PADDING_PIXELS = 50;
@@ -340,21 +341,17 @@ export default class ScatterPlot<D extends IBaseScatterPlotData> extends React.C
         );
     }
 
-    @computed get regressionLineComputations() {
-        return regression.linear(this.props.data.map(
-            // perform same transformations on data for this calculation as we do for plot (i.e. log if necessary)
-            d=>([this.x(d), this.y(d)]))
-        );
-    }
-
     private get regressionLine() {
-        if (this.props.showRegressionLine) {
-            const coeffs = this.regressionLineComputations.equation;
-            const y = (x:number)=>(coeffs[0]*x + coeffs[1]);
+        if (this.props.showRegressionLine && this.props.data.length >= 2) {
+            const regressionLineComputations = getRegressionComputations(this.props.data.map(
+                // perform same transformations on data for this calculation as we do for plot (i.e. log if necessary)
+                d=>([this.x(d), this.y(d)] as [number, number])
+            ));
+            const y = (x:number)=>regressionLineComputations.predict(x)[1];
             const labelX = 0.7;
             const xPoints = [this.plotDomain.x[0], this.plotDomain.x[0]*(1-labelX) + this.plotDomain.x[1]*labelX, this.plotDomain.x[1]];
             const data:any[] = xPoints.map(x=>({ x, y:y(x), label:""}));
-            data[1].label = [this.regressionLineComputations.string, `R² = ${this.regressionLineComputations.r2}`];
+            data[1].label = [regressionLineComputations.string, `R² = ${regressionLineComputations.r2}`];
             return [
                 <VictoryLine
                     style={{
