@@ -28,7 +28,7 @@ export default class TrackSelector extends React.Component<ITrackSelectorProps, 
 
     public static defaultProps:Partial<ITrackSelectorProps> = {
         name: "mutationMapperTrackSelector",
-        placeholder: "Add annotation tracks.."
+        placeholder: "Add annotation tracks"
     };
 
     @computed get onChange() {
