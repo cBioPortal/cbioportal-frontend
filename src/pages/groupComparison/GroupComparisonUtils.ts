@@ -23,8 +23,6 @@ export type ComparisonGroup = ComparisonSampleGroup & {
     hasOverlappingPatients?:boolean; // whether the group has had patients filtered out because they overlapped in the selection
 };
 
-export const TEMP_localStorageGroupsKey = "__tmp__groupComparisonGroups";
-
 export function getCombinations(groups: { name: string, cases: string[] }[]) {
     let combinations: { groups: string[], cases: string[] }[] = [];
 
