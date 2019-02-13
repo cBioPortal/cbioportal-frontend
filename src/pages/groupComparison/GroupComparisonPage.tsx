@@ -160,16 +160,16 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
         await:()=>[this.store.studies],
         render:()=>{
             const studies = this.store.studies.result!;
-            let ret = <span/>;
+            let studyHeader = <span/>;
             switch (studies.length) {
                 case 0:
-                    ret = <span/>;
+                    studyHeader = <span/>;
                     break;
                 case 1:
-                    ret = <h3><StudyLink studyId={studies[0].studyId}>{studies[0].name}</StudyLink></h3>;
+                    studyHeader = <h3><StudyLink studyId={studies[0].studyId}>{studies[0].name}</StudyLink></h3>;
                     break;
                 default:
-                    ret = (<h4>
+                    studyHeader = (<h4>
                         <a
                             href={`study?id=${studies.map(study => study.studyId).join(',')}`}
                             target="_blank"
@@ -177,6 +177,12 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                             Multiple studies
                         </a>
                     </h4>);
+            }
+            let ret;
+            if (this.store.fromChartSpec) {
+                ret = <span>{studyHeader}Groups from <span style={{color:"#3487c7"}}>{this.store.fromChartSpec.clinicalAttribute.displayName}</span></span>
+            } else {
+                ret = studyHeader;
             }
             return ret;
         } 

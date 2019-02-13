@@ -1,6 +1,5 @@
 import {
     ComparisonSampleGroup,
-    TEMP_localStorageGroupsKey,
     getPatientIdentifiers,
     getCombinations,
     ComparisonGroup,
@@ -31,11 +30,16 @@ import { SURVIVAL_CHART_ATTRIBUTES } from "pages/resultsView/survival/SurvivalCh
 import { COLORS } from "pages/studyView/StudyViewUtils";
 import {AlterationEnrichment} from "../../shared/api/generated/CBioPortalAPIInternal";
 import ListIndexedMap from "shared/lib/ListIndexedMap";
-import {getLocalStorageGroups} from "./GroupPersistenceUtils";
+import {getLSChartGroupsSpec, getLSGroups} from "./GroupPersistenceUtils";
 import {GroupComparisonTab} from "./GroupComparisonPage";
 
 export type GroupComparisonURLQuery = {
     localGroups:string; // comma separated list
+
+    // OR
+
+    fromChart:string; //"true" or "false"
+    unshareableLocalKey:string;
 };
 
 export default class GroupComparisonStore {
@@ -43,10 +47,16 @@ export default class GroupComparisonStore {
     @observable currentTabId:GroupComparisonTab|undefined = undefined;
     @observable excludeOverlapping:boolean = false;
     @observable localGroupIds:string[] = [];
+    @observable fromChart:boolean = false;
+    @observable unshareableLocalKey:string = "";
 
     public updateStoreFromURL(query:Partial<GroupComparisonURLQuery>) {
         if (query.localGroups) {
             this.localGroupIds = query.localGroups.split(",");
+        }
+        if (query.fromChart !== undefined) {
+            this.fromChart = Boolean(query.fromChart);
+            this.unshareableLocalKey = query.unshareableLocalKey!;
         }
     }
 
@@ -62,16 +72,58 @@ export default class GroupComparisonStore {
 
     private _selectedComparisonGroupIds = observable.shallowMap<boolean>();
 
+    @computed get fromChartSpec() {
+        if (this.fromChart && this.unshareableLocalKey) {
+            return getLSChartGroupsSpec(this.unshareableLocalKey);
+        } else {
+            return null;
+        }
+    }
+
     readonly remoteSampleGroups = remoteData<ComparisonSampleGroup[]>({
-        invoke:()=>{
-            // TODO
-            return Promise.resolve([]);
+        invoke:async()=>{
+            if (this.fromChart) {
+                // fetch chart groups from filters
+                const spec = this.fromChartSpec;
+                if (spec) {
+                    const ret:ComparisonSampleGroup[] = [];
+                    for (const value of spec.values) {
+                        const categoryFilters = Object.assign({}, spec.filters);
+                        categoryFilters.clinicalDataEqualityFilters = categoryFilters.clinicalDataEqualityFilters || [];
+                        categoryFilters.clinicalDataEqualityFilters.push({
+                            attributeId: spec.clinicalAttribute.clinicalAttributeId,
+                            clinicalDataType:spec.clinicalAttribute.patientAttribute ? "PATIENT" : "SAMPLE",
+                            values:[value]
+                        });
+                        const categorySamples = await internalClient.fetchFilteredSamplesUsingPOST({
+                            studyViewFilter:categoryFilters
+                        });
+                        ret.push({
+                            id: value, name: value,
+                            sampleIdentifiers: categorySamples.map(s=>({ studyId: s.studyId, sampleId:s.sampleId}))
+                        });
+                    }
+                    //id:string, // unique identifier
+                    //sampleIdentifiers:SampleIdentifier[], // samples in the group
+                    //name:string, // display name
+                    return ret;
+                } else {
+                    throw new Error("fromChart specified, but no chart filters found in localStorage.");
+                }
+            } else {
+                // TODO: get from session service
+                return [];
+            }
         }
     });
 
     @computed get localSampleGroups() {
-        const groupsMap = _.keyBy(getLocalStorageGroups(), group=>group.id);
-        return this.localGroupIds.map(id=>groupsMap[id]);
+        if (this.fromChart) {
+            return [];
+        } else {
+            const groupsMap = _.keyBy(getLSGroups(), group=>group.id);
+            return this.localGroupIds.map(id=>groupsMap[id]);
+        }
     }
 
     readonly allSampleGroups_Unfiltered = remoteData<ComparisonSampleGroup[]>({
