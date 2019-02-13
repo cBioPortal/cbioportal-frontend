@@ -212,3 +212,12 @@ export function getDocsUrl(sourceUrl:string,docsBaseUrl?:string): string {
 export function getWholeSlideViewerUrl(ids: string[], userName: string): string {
     return ids.length > 1 ? `https://slides.mskcc.org/cbioportal?ids=${ids.join('.svs;') + '.svs'}&user=${userName}&annotation=off` : ids.length === 1 ? `https://slides.mskcc.org/cbioportal?ids=${ids[0] + '.svs'}&user=${userName}&annotation=off&filetree=off` : "";
 }
+
+export function getNCBIlink(pathnameOrParams?: BuildUrlParams | string): string {
+    let params = typeof pathnameOrParams === 'string' ? {pathname: pathnameOrParams} : pathnameOrParams;
+    return URL.format({
+        protocol: 'https',
+        host: 'www.ncbi.nlm.nih.gov',
+        ...params
+    });
+}
