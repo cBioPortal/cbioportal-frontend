@@ -13,6 +13,7 @@ import {Else, If, Then} from 'react-if';
 import {StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
 import classnames from "classnames";
 import shareUIstyles from '../../../resultsView/querySummary/shareUI.module.scss';
+import {serializeEvent} from "../../../../shared/lib/tracking";
 
 export interface IRightPanelProps {
     store: StudyViewPageStore,
@@ -106,6 +107,7 @@ export default class RightPanel extends React.Component<IRightPanelProps, {}> {
                     />
                     <button disabled={this._isQueryButtonDisabled}
                             className={classnames('btn btn-primary btn-sm', styles.submitQuery)}
+                            data-event={serializeEvent({ category:"studyPage", action:"submitQuery", label:this.props.store.queriedPhysicalStudyIds.result })}
                             onClick={() => this.props.store.onSubmitQuery()}>
                         Query
                     </button>
