@@ -7,7 +7,7 @@ import * as _ from 'lodash';
 import styles from "../styles.module.scss";
 import {StudySummaryRecord} from "../../virtualStudy/VirtualStudy";
 import LoadingIndicator from "../../../../shared/components/loadingIndicator/LoadingIndicator";
-import {getStudySummaryUrl} from "../../../../shared/api/urls";
+import {getStudySummaryUrl, getNCBIlink} from "../../../../shared/api/urls";
 import MobxPromise from 'mobxpromise';
 import {StudyDataDownloadLink} from "../../../../shared/components/StudyDataDownloadLink/StudyDataDownloadLink";
 import DefaultTooltip from "../../../../shared/components/defaultTooltip/DefaultTooltip";
@@ -35,7 +35,7 @@ export default class StudySummary extends React.Component<IStudySummaryProps, {}
             let elems = [<span
                 dangerouslySetInnerHTML={{__html: this.props.studies[0].description.split(/\n+/g)[0]}}/>];
             if (this.props.studies[0].pmid) {
-                elems.push(<a target="_blank" href={`http://www.ncbi.nlm.nih.gov/pubmed/${this.props.studies[0].pmid}`}
+                elems.push(<a target="_blank" href={getNCBIlink(`/pubmed/${this.props.studies[0].pmid}`)}
                               style={{marginLeft: '5px'}}>PubMed</a>);
             }
             return <span>{elems}</span>
