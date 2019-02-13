@@ -1,8 +1,9 @@
 $sample-color-primary: black;
 $sample-color-recurrence: orange;
 $sample-color-metastasis: red;
-$sample-color-cfdna: blue;
+$sample-color-cfdna: #e4d96f;
 $sample-color-xenograft: pink;
+$sample-color-fluid: #ffffaa;
 
 /* shared style and JS code variables */
 :export {
@@ -11,6 +12,7 @@ $sample-color-xenograft: pink;
     sampleColorMetastasis: $sample-color-metastasis;
     sampleColorCfdna: $sample-color-cfdna;
     sampleColorXenograft: $sample-color-xenograft;
+    sampleColorFluid: $sample-color-fluid;
 }
 
 /* Do not display clinical attributes on default */
