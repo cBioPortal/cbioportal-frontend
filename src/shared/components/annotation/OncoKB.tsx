@@ -18,6 +18,7 @@ import OncoKbTooltip from "./OncoKbTooltip";
 import OncokbPubMedCache from "shared/cache/PubMedCache";
 import {default as TableCellStatusIndicator, TableCellStatus} from "shared/components/TableCellStatus";
 import AppConfig from "appConfig";
+import {getCurrentURLWithoutHash} from "../../api/urls";
 
 export interface IOncoKbProps {
     status: "pending" | "error" | "complete";
@@ -170,7 +171,7 @@ export default class OncoKB extends React.Component<IOncoKbProps, {}>
         const geneParam = `entry.1744186665=${hugoSymbol || ''}`;
         const alterationParam = `entry.1671960263=${alteration || ''}`;
         const userParam = `entry.1381123986=${this.props.userEmailAddress || ''}`;
-        const uriParam = `entry.1083850662=${encodeURIComponent(window.location.href)}`;
+        const uriParam = `entry.1083850662=${encodeURIComponent(getCurrentURLWithoutHash())}`;
 
         return (
             <Modal show={this.showFeedback} onHide={this.handleFeedbackClose}>
