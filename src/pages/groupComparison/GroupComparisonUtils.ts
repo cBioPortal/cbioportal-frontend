@@ -122,6 +122,28 @@ export function getPatientIdentifiers(
     return _.values(patientSet);
 }
 
+export function getOverlappingSamples(
+    groups:ComparisonGroup[]
+) {
+    // samples that are in at least two selected groups
+    const sampleUseCount = new ListIndexedMap<number>();
+    for (const group of groups) {
+        for (const sample of group.sampleIdentifiers) {
+            sampleUseCount.set(
+                (sampleUseCount.get(sample.studyId, sample.sampleId) || 0) + 1,
+                sample.studyId, sample.sampleId
+            );
+        }
+    }
+    const overlapping = [];
+    for (const entry of sampleUseCount.entries()) {
+        if (entry.value > 1) {
+            overlapping.push({ studyId: entry.key[0], sampleId: entry.key[1] });
+        }
+    }
+    return overlapping;
+}
+
 export function ENRICHMENTS_NOT_2_GROUPS_MSG(tooMany:boolean) {
     return `We can only show enrichments when two groups are selected. Please ${tooMany ? "deselect" : "select"} groups in the 'Active Groups' section so that only two are selected.`;
 }
