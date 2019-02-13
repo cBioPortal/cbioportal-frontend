@@ -59,7 +59,7 @@ export default class CNSegments extends React.Component<{ store: StudyViewPageSt
                 promises: [this.activePromise]
             },
             {
-                label: "Rendering tracks.."
+                label: "Rendering"
             }
         ];
     }
