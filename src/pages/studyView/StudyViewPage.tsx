@@ -34,6 +34,8 @@ import DefaultTooltip from "../../shared/components/defaultTooltip/DefaultToolti
 import CustomCaseSelection from "./addChartButton/customCaseSelection/CustomCaseSelection";
 import {AppStore} from "../../AppStore";
 import ActionButtons from "./studyPageHeader/ActionButtons";
+import onMobxPromise from "../../shared/lib/onMobxPromise";
+import {GACustomFieldsEnum, trackEvent} from "../../shared/lib/tracking";
 
 export interface IStudyViewPageProps {
     routing: any;
@@ -91,6 +93,16 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
             },
             {fireImmediately: true}
         );
+
+        onMobxPromise(this.store.queriedPhysicalStudyIds, (strArr:string[])=>{
+            trackEvent(
+                {   category:"studyPage", action:"studyPageLoad",
+                    label: strArr.join(",") + ",",
+                    fieldsObject:{ [GACustomFieldsEnum.VirtualStudy]: (this.store.filteredVirtualStudies.result!.length > 0).toString()  }
+                }
+            );
+        });
+
     }
 
     private handleTabChange(id: string) {
