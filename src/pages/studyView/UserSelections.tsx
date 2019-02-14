@@ -198,25 +198,6 @@ export default class UserSelections extends React.Component<IUserSelectionsProps
             );
         }
 
-        if (this.props.filter.withMutationData) {
-            components.push(
-                <div className={styles.parentGroupLogic}><PillTag
-                    content={`Samples with mutation data`}
-                    backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterTitle}
-                    onDelete={this.props.removeWithMutationDataFilter}
-                /></div>
-            );
-        }
-
-        if (this.props.filter.withCNAData) {
-            components.push(
-                <div className={styles.parentGroupLogic}><PillTag
-                    content={`Samples with CNA data`}
-                    backgroundColor={STUDY_VIEW_CONFIG.colors.theme.clinicalFilterTitle}
-                    onDelete={this.props.removeWithCNADataFilter}
-                /></div>
-            );
-        }
         return components;
     }
 
