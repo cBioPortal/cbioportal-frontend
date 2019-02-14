@@ -92,7 +92,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
         this.validContent = newContent;
         this.validateContent = true;
     }
-
+    
     @autobind
     @action
     onChartNameChange(event: any) {
@@ -158,30 +158,28 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                 </ButtonGroup>
 
 
-                {!this.props.disableGrouping && (
-                    <span>
-                        <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                            <span
-                                className={styles.fillIds}
-                                onClick={this.onClick}>
-                                Use currently selected samples/patients
-                            </span>
+                <span>
+                    <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                        <span
+                            className={styles.fillIds}
+                            onClick={this.onClick}>
+                            Use currently selected samples/patients
+                        </span>
 
-                            <div className="collapsible-header" onClick={this.handleDataFormatToggle}>
-                                <a>Data Format</a>
-                                <span style={{paddingLeft: 4, cursor: 'pointer'}}>
-                                {this.dataFormatCollapsed ?
-                                    <i className="fa fa-chevron-down"/> :
-                                    <i className="fa fa-chevron-up"/>
-                                }
-                            </span>
-                            </div>
+                        <div className="collapsible-header" onClick={this.handleDataFormatToggle}>
+                            <a>Data Format</a>
+                            <span style={{paddingLeft: 4, cursor: 'pointer'}}>
+                            {this.dataFormatCollapsed ?
+                                <i className="fa fa-chevron-down"/> :
+                                <i className="fa fa-chevron-up"/>
+                            }
+                        </span>
                         </div>
-                        <Collapse isOpened={!this.dataFormatCollapsed}>
-                            <div style={{marginTop: '5px'}}>{this.dataFormatContent}</div>
-                        </Collapse>
-                    </span>
-                )}
+                    </div>
+                    <Collapse isOpened={!this.dataFormatCollapsed}>
+                        <div style={{marginTop: '5px'}}>{this.dataFormatContent}</div>
+                    </Collapse>
+                </span>
 
                 <textarea
                     value={this.content}
@@ -204,6 +202,7 @@ export default class CustomCaseSelection extends React.Component<ICustomCaseSele
                                          error={message.message}/>
                     })
                 }
+
                 <div className={styles.operations}>
                     {!this.props.disableGrouping && (
                         <input placeholder={"Chart name (optional)"}
