@@ -68,7 +68,8 @@ import {
     MutationCountVsCnaYBinsMin,
     NA_DATA,
     showOriginStudiesInSummaryDescription,
-    submitToPage
+    submitToPage,
+    getClinicalDataCountWithColorByCategoryCounts
 } from './StudyViewUtils';
 import MobxPromise from 'mobxpromise';
 import {SingleGeneQuery} from 'shared/lib/oql/oql-parser';
@@ -108,6 +109,8 @@ export enum UniqueKey {
     CANCER_STUDIES = 'CANCER_STUDIES',
     MUTATION_COUNT = "SAMPLE_MUTATION_COUNT",
     FRACTION_GENOME_ALTERED = "SAMPLE_FRACTION_GENOME_ALTERED",
+    WITH_MUTATION_DATA = "WITH_MUTATION_DATA",
+    WITH_CNA_DATA = "WITH_CNA_DATA"
 }
 
 export enum StudyViewPageTabKeyEnum {
@@ -193,6 +196,33 @@ export const SPECIAL_CHARTS: ChartMeta[] = [{
     },
     renderWhenDataChange: false,
     priority: 70
+},
+{
+    uniqueKey: UniqueKey.WITH_MUTATION_DATA,
+    displayName: 'With Mutation Data',
+    description: 'With Mutation Data',
+    chartType: ChartTypeEnum.PIE_CHART,
+    dataType: ChartMetaDataTypeEnum.GENOMIC,
+    patientAttribute:false,
+    dimension: {
+        w: 1,
+        h: 1
+    },
+    priority: 0,
+    renderWhenDataChange: false
+},{
+    uniqueKey: UniqueKey.WITH_CNA_DATA,
+    displayName: 'With CNA Data',
+    description: 'With CNA Data',
+    chartType: ChartTypeEnum.PIE_CHART,
+    dataType: ChartMetaDataTypeEnum.GENOMIC,
+    patientAttribute:false,
+    dimension: {
+        w: 1,
+        h: 1
+    },
+    priority: 0,
+    renderWhenDataChange: false
 }];
 
 export type CustomGroup = {
@@ -244,6 +274,12 @@ export type StatusMessage = {
     status: 'success' | 'warning' | 'danger' | 'info',
     message: string
 };
+
+export enum Datalabel {
+    YES = 'YES',
+    NO = 'NO',
+    NA = "NA"
+}
 
 export class StudyViewPageStore {
     private reactionDisposers:IReactionDisposer[] = [];
@@ -301,8 +337,8 @@ export class StudyViewPageStore {
     @observable.ref private _cnaGeneFilter: CopyNumberGeneFilter[] = [];
     @observable private _mutationCountVsCNAFilter:RectangleBounds|undefined;
 
-    @observable private _withMutationDataFilter:boolean = false;
-    @observable private _withCNADataFilter:boolean = false;
+    @observable private _withMutationDataFilter: boolean | undefined;
+    @observable private _withCNADataFilter: boolean | undefined;
 
     // TODO: make it computed
     // Currently the study view store does not have the full control of the promise.
@@ -566,8 +602,8 @@ export class StudyViewPageStore {
         this.resetMutationCountVsCNAFilter();
         this._chartSampleIdentifiersFilterSet.clear();
         this.customChartFilterSet.clear();
-        this._withMutationDataFilter = false;
-        this._withCNADataFilter = false;
+        this._withMutationDataFilter = undefined;
+        this._withCNADataFilter = undefined;
         this.numberOfSelectedSamplesInCustomSelection = 0;
     }
 
@@ -586,35 +622,43 @@ export class StudyViewPageStore {
     @autobind
     @action
     toggleWithMutationDataFilter() {
-        this._withMutationDataFilter = !this._withMutationDataFilter;
-
-        if (this._withMutationDataFilter) {
+        let isSelected = !this._withMutationDataFilter;
+        this._withMutationDataFilter = isSelected;
+        if (isSelected) {
             trackStudyViewFilterEvent("withMutationQuickFilter", this);
+            this.customChartFilterSet.set(UniqueKey.WITH_MUTATION_DATA, [Datalabel.YES]);
+            this._chartSampleIdentifiersFilterSet.set(UniqueKey.WITH_MUTATION_DATA, []);
+        } else {
+            this._chartSampleIdentifiersFilterSet.delete(UniqueKey.WITH_MUTATION_DATA);
+            this.customChartFilterSet.delete(UniqueKey.WITH_MUTATION_DATA);
         }
-
     }
 
     @autobind
     @action
     toggleWithCNADataFilter() {
-        this._withCNADataFilter = !this._withCNADataFilter;
-
-        if (this._withCNADataFilter) {
+        let isSelected = !this._withCNADataFilter;
+        this._withCNADataFilter = isSelected;
+        if (isSelected) {
             trackStudyViewFilterEvent("withCNADataQuickFilter", this);
+            this.customChartFilterSet.set(UniqueKey.WITH_CNA_DATA, [Datalabel.YES]);
+            this._chartSampleIdentifiersFilterSet.set(UniqueKey.WITH_CNA_DATA, []);
+        } else {
+            this._chartSampleIdentifiersFilterSet.delete(UniqueKey.WITH_CNA_DATA);
+            this.customChartFilterSet.delete(UniqueKey.WITH_CNA_DATA);
         }
-
     }
 
     @autobind
     @action
     removeWithMutationDataFilter() {
-        this._withMutationDataFilter = false;
+        this._withMutationDataFilter = undefined;
     }
 
     @autobind
     @action
     removeWithCNADataFilter() {
-        this._withCNADataFilter = false;
+        this._withCNADataFilter = undefined;
     }
 
     @computed
@@ -1014,9 +1058,16 @@ export class StudyViewPageStore {
                 case ChartTypeEnum.SURVIVAL:
                     break;
                 default:
+                    if(chartMeta.uniqueKey === UniqueKey.WITH_MUTATION_DATA) {
+                        this._withMutationDataFilter = undefined;
+                    }
+                    if(chartMeta.uniqueKey === UniqueKey.WITH_CNA_DATA) {
+                        this._withCNADataFilter = undefined;
+                    }
                     this._clinicalDataEqualityFilterSet.delete(chartMeta.uniqueKey);
                     this._clinicalDataIntervalFilterSet.delete(chartMeta.uniqueKey);
                     this.clearChartSampleIdentifierFilter(chartMeta);
+
                     break;
             }
         }
@@ -1132,12 +1183,18 @@ export class StudyViewPageStore {
             }
         }
 
-        if(this._withMutationDataFilter) {
-            filters.withMutationData = true;
+        if(this._withMutationDataFilter !== undefined) {
+            let customChartFilterSet = this.customChartFilterSet.get(UniqueKey.WITH_MUTATION_DATA)
+            if(customChartFilterSet !== undefined && customChartFilterSet.length === 1) {
+                filters.withMutationData = this._withMutationDataFilter;
+            }
+            
         }
-
-        if(this._withCNADataFilter) {
-            filters.withCNAData = true;
+        if(this._withCNADataFilter !== undefined) {
+            let customChartFilterSet = this.customChartFilterSet.get(UniqueKey.WITH_CNA_DATA)
+            if(customChartFilterSet !== undefined && customChartFilterSet.length === 1) {
+                filters.withCNAData = this._withCNADataFilter;
+            }
         }
 
         return filters as StudyViewFilter;
@@ -2948,10 +3005,12 @@ export class StudyViewPageStore {
 
                 if (UniqueKey.MUTATED_GENES_TABLE in this.chartMetaSet) {
                     ret[UniqueKey.MUTATED_GENES_TABLE] = this.molecularProfileSampleCounts.result ? this.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples : 0;
+                    ret[UniqueKey.WITH_MUTATION_DATA] = this.molecularProfileSampleCounts.result ? this.molecularProfileSampleCounts.result.numberOfMutationProfiledSamples : 0;
                 }
 
                 if (UniqueKey.CNA_GENES_TABLE in this.chartMetaSet) {
                     ret[UniqueKey.CNA_GENES_TABLE] = this.molecularProfileSampleCounts.result ? this.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples : 0;
+                    ret[UniqueKey.WITH_CNA_DATA] = this.molecularProfileSampleCounts.result ? this.molecularProfileSampleCounts.result.numberOfCNAProfiledSamples : 0;
                 }
 
                 if (UniqueKey.MUTATION_COUNT_CNA_FRACTION in this.chartMetaSet) {
@@ -3088,10 +3147,35 @@ export class StudyViewPageStore {
     setCustomChartFilters(chartMeta: ChartMeta, values: string[]) {
         if (values.length > 0) {
             let filteredSampleIdentifiers: SampleIdentifier[] = [];
-            let valuesSet = _.keyBy(values);
             switch (chartMeta.uniqueKey) {
                 case UniqueKey.CANCER_STUDIES: {
                     filteredSampleIdentifiers = filteredSampleIdentifiers.concat(getFilteredSampleIdentifiers(this.samples.result.filter(sample => values.includes(sample.studyId))));
+                    break;
+                }
+                case UniqueKey.WITH_MUTATION_DATA: {
+                    switch (values.length) {
+                        case 1: {
+                            this._withMutationDataFilter = values[0] === Datalabel.YES ? true : false;
+                            break;
+                        }
+                        case 2: {
+                            this._withMutationDataFilter = undefined;
+                            break;
+                        }
+                    }
+                    break;
+                }
+                case UniqueKey.WITH_CNA_DATA: {
+                    switch (values.length) {
+                        case 1: {
+                            this._withCNADataFilter = values[0] === Datalabel.YES ? true : false;
+                            break;
+                        }
+                        case 2: {
+                            this._withCNADataFilter = undefined;
+                            break;
+                        }
+                    }
                     break;
                 }
                 default:
@@ -3109,6 +3193,12 @@ export class StudyViewPageStore {
             this._chartSampleIdentifiersFilterSet.set(chartMeta.uniqueKey, filteredSampleIdentifiers);
         }
         else {
+            if(UniqueKey.WITH_MUTATION_DATA === chartMeta.uniqueKey) {
+                this._withMutationDataFilter = undefined;
+            }
+            if(UniqueKey.WITH_CNA_DATA === chartMeta.uniqueKey) {
+                this._withCNADataFilter = undefined;
+            }
             this._chartSampleIdentifiersFilterSet.delete(chartMeta.uniqueKey)
             this.customChartFilterSet.delete(chartMeta.uniqueKey)
         }
@@ -3160,40 +3250,79 @@ export class StudyViewPageStore {
 
     public getCustomChartDataCount(chartMeta: ChartMeta) {
         let uniqueKey: string = chartMeta.uniqueKey;
-        if (!this.customChartsPromises.hasOwnProperty(uniqueKey)) {
-            this.customChartsPromises[uniqueKey] = remoteData<ClinicalDataCountWithColor[]>({
-                await: () => [this.selectedSamples],
-                invoke: async () => {
-                    const result = _.reduce(this.selectedSamples.result, (acc, sample) => {
-                        const matchedCases = _.filter(this._customChartsSelectedCases.get(uniqueKey), (selectedCase: CustomChartIdentifierWithValue) => selectedCase.sampleId === sample.sampleId);
-                        const valDefault = 'NA';
-                        let matchedValues: string[] = [];
-                        if (matchedCases.length >= 1) {
-                            matchedValues = matchedCases.map(item => {
-                                return item.value ? item.value : valDefault;
-                            });
-                        } else {
-                            matchedValues = [valDefault];
-                        }
-                        matchedValues.forEach(value => {
-                            if (acc[value]) {
-                                acc[value].count = acc[value].count + 1
-                            } else {
-                                acc[value] = {
-                                    value: value,
-                                    count: 1
-                                }
-                            }
-                        });
-                        return acc;
-                    }, {} as { [id: string]: ClinicalDataCount });
 
-                    return getClinicalDataCountWithColorByClinicalDataCount(_.values(result));
-                },
-                default: []
-            });
+        if (!this.customChartsPromises.hasOwnProperty(uniqueKey)) {
+            switch (uniqueKey) {
+                case UniqueKey.WITH_MUTATION_DATA:
+                    this.customChartsPromises[uniqueKey] = this.withMutationDataChartCounts;
+                    break;
+                case UniqueKey.WITH_CNA_DATA:
+                    this.customChartsPromises[uniqueKey] = this.withCNADataChartCounts;
+                    break;
+                default:
+                    this.customChartsPromises[uniqueKey] = remoteData<ClinicalDataCountWithColor[]>({
+                        await: () => {
+                            return _.includes([UniqueKey.WITH_MUTATION_DATA, UniqueKey.WITH_CNA_DATA], uniqueKey) ? [this.molecularProfileSampleCounts, this.selectedSamples] : [this.selectedSamples];
+                        },
+                        invoke: () => {
+                            let dataCountSet: { [id: string]: ClinicalDataCount } = {};
+                            dataCountSet = _.reduce(this.selectedSamples.result, (acc, sample) => {
+                                const matchedCases = _.filter(this._customChartsSelectedCases.get(uniqueKey), (selectedCase: CustomChartIdentifierWithValue) => selectedCase.sampleId === sample.sampleId);
+                                const valDefault = Datalabel.NA;
+                                let matchedValues: string[] = [];
+                                if (matchedCases.length >= 1) {
+                                    matchedValues = matchedCases.map(item => {
+                                        return item.value ? item.value : valDefault;
+                                    });
+                                } else {
+                                    matchedValues = [valDefault];
+                                }
+                                matchedValues.forEach(value => {
+                                    if (acc[value]) {
+                                        acc[value].count = acc[value].count + 1
+                                    } else {
+                                        acc[value] = {
+                                            value: value,
+                                            count: 1
+                                        }
+                                    }
+                                });
+                                return acc;
+                            }, dataCountSet);
+                            return Promise.resolve(getClinicalDataCountWithColorByClinicalDataCount(_.values(dataCountSet)));
+                        },
+                        default: []
+                    });
+                    break;
+            }
         }
         return this.customChartsPromises[uniqueKey];
     }
+
+    private withMutationDataChartCounts = remoteData<ClinicalDataCountWithColor[]>({
+        invoke: async () => {
+            let molecularProfileSampleCounts = await internalClient.fetchMolecularProfileSampleCountsUsingPOST({
+                studyViewFilter: Object.assign({}, this.filters, { withMutationData: undefined })
+            });
+            return Promise.resolve(
+                getClinicalDataCountWithColorByCategoryCounts(
+                    molecularProfileSampleCounts.numberOfMutationProfiledSamples,
+                    molecularProfileSampleCounts.numberOfMutationUnprofiledSamples));
+        },
+        default: []
+    })
+
+    private withCNADataChartCounts = remoteData<ClinicalDataCountWithColor[]>({
+        invoke: async () => {
+            let molecularProfileSampleCounts = await internalClient.fetchMolecularProfileSampleCountsUsingPOST({
+                studyViewFilter: Object.assign({}, this.filters, { withCNAData: undefined })
+            });
+            return Promise.resolve(
+                getClinicalDataCountWithColorByCategoryCounts(
+                    molecularProfileSampleCounts.numberOfCNAProfiledSamples,
+                    molecularProfileSampleCounts.numberOfCNAUnprofiledSamples));
+        },
+        default: []
+    });
 
 }
