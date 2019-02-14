@@ -183,6 +183,34 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
     });
 
     render() {
+        let excludeOverlappingCheckbox:JSX.Element | null;
+
+        if (this.store.overlappingSelectedSamples.isComplete && this.store.overlappingSelectedPatients.isComplete &&
+            this.store.overlappingSelectedSamples.result.length === 0 &&
+            this.store.overlappingSelectedPatients.result.length === 0) {
+
+            excludeOverlappingCheckbox = null;
+        } else {
+            excludeOverlappingCheckbox = (
+                <div className={"checkbox"}>
+                    <label>
+                        <input
+                            type="checkbox"
+                            onChange={this.store.toggleExcludeOverlapping}
+                            checked={this.store.excludeOverlapping}
+                        />
+
+                        {`Exclude overlapping samples/patients ${caseCountsInParens(this.store.overlappingSelectedSamples, this.store.overlappingSelectedPatients)} from selected groups.`}
+
+                        {/*<InfoIcon*/}
+                        {/*tooltip={<span style={{maxWidth:200}}>Exclude samples from analysis which occur in more than one selected group.</span>}*/}
+                        {/*/>*/}
+
+                    </label>
+                </div>
+            );
+        }
+
         return (
             <PageLayout noMargin={true} className={"subhead-dark"}>
                 <div>
@@ -193,22 +221,7 @@ export default class GroupComparisonPage extends React.Component<IGroupCompariso
                                 <GroupSelector
                                     store = {this.store}
                                 />
-                                <div className={"checkbox"}>
-                                    <label>
-                                        <input
-                                            type="checkbox"
-                                            onChange={this.store.toggleExcludeOverlapping}
-                                            checked={this.store.excludeOverlapping}
-                                        />
-
-                                        {`Exclude overlapping samples/patients ${caseCountsInParens(this.store.overlappingSelectedSamples, this.store.overlappingSelectedPatients)} from selected groups.`}
-
-                                        {/*<InfoIcon*/}
-                                        {/*tooltip={<span style={{maxWidth:200}}>Exclude samples from analysis which occur in more than one selected group.</span>}*/}
-                                        {/*/>*/}
-
-                                    </label>
-                                </div>
+                                {excludeOverlappingCheckbox}
                             </div>
                         </div>
                     </div>
