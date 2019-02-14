@@ -1284,7 +1284,7 @@ describe("DataUtils", ()=>{
            );
            assert.deepEqual(
                partialTrackDatum,
-               {geneset_id:"MY_FAVORITE_GENE_SET-3", study:"study", profile_data:7}
+               {geneset_id:"MY_FAVORITE_GENE_SET-3", study_id:"study", profile_data:7}
            );
        });
    });
