@@ -18,6 +18,7 @@ import {
     ClinicalDataTypeEnum,
     StudyViewFilterWithSampleIdentifierFilters,
     StudyWithSamples,
+    Datalabel
 } from "pages/studyView/StudyViewPageStore";
 import {
     ChartMeta,
@@ -36,7 +37,6 @@ import defaultClient from "shared/api/cbioportalClientInstance";
 import {ChartDimension, ChartTypeEnum, Position, STUDY_VIEW_CONFIG} from "./StudyViewConfig";
 import {IStudyViewDensityScatterPlotDatum} from "./charts/scatterPlot/StudyViewDensityScatterPlot";
 import MobxPromise from 'mobxpromise';
-import {adjustedLongestLabelLength} from "../../shared/lib/VictoryChartUtils";
 import {getTextWidth} from "../../shared/lib/wrapText";
 
 export const COLORS = [
@@ -351,8 +351,8 @@ export function isFiltered(filter: Partial<StudyViewFilterWithSampleIdentifierFi
             _.isEmpty(filter.clinicalDataIntervalFilters) &&
             _.isEmpty(filter.cnaGenes) &&
             _.isEmpty(filter.mutatedGenes) &&
-            !filter.withMutationData &&
-            !filter.withCNAData &&
+            filter.withMutationData === undefined &&
+            filter.withCNAData === undefined &&
             !filter.mutationCountVsCNASelection)
     );
 
@@ -782,7 +782,7 @@ export function toFixedDigit(value: number, fractionDigits: number = 2)
 export function getChartMetaDataType(uniqueKey: string): ChartMetaDataType {
     const GENOMIC_DATA_TYPES = [
         UniqueKey.MUTATION_COUNT_CNA_FRACTION, UniqueKey.CNA_GENES_TABLE, UniqueKey.MUTATED_GENES_TABLE,
-        UniqueKey.MUTATION_COUNT, UniqueKey.FRACTION_GENOME_ALTERED
+        UniqueKey.MUTATION_COUNT, UniqueKey.FRACTION_GENOME_ALTERED, UniqueKey.WITH_MUTATION_DATA, UniqueKey.WITH_CNA_DATA
     ];
     return _.includes(GENOMIC_DATA_TYPES, uniqueKey) ? ChartMetaDataTypeEnum.GENOMIC : ChartMetaDataTypeEnum.CLINICAL;
 }
@@ -1256,4 +1256,22 @@ export function submitToPage(url:string, params: { [id: string]: string }, targe
 
 export function getClinicalEqualityFilterValuesByString(filterValues: string):string[] {
     return filterValues.replace(/\\,/g,'$@$').split(",").map(val=>val.trim().replace(/\$@\$/g,','));
+}
+
+export function getClinicalDataCountWithColorByCategoryCounts(yesCount:number, noCount: number):ClinicalDataCountWithColor[] {
+
+    let dataCountSet: { [id: string]: ClinicalDataCount } = {};
+    if (yesCount > 0) {
+        dataCountSet[Datalabel.YES] = {
+            'count': yesCount,
+            'value': Datalabel.YES
+        }
+    }
+    if (noCount > 0) {
+        dataCountSet[Datalabel.NO] = {
+            'count': noCount,
+            'value': Datalabel.NO
+        }
+    }
+    return getClinicalDataCountWithColorByClinicalDataCount(_.values(dataCountSet));
 }

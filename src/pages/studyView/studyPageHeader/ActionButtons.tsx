@@ -12,6 +12,7 @@ import {Else, If, Then} from 'react-if';
 import {StudyViewPageStore} from 'pages/studyView/StudyViewPageStore';
 import classNames from "classnames";
 import {AppStore} from "../../../AppStore";
+import {serializeEvent} from "../../../shared/lib/tracking";
 
 export interface ActionButtonsProps {
     store: StudyViewPageStore;
@@ -73,7 +74,10 @@ export default class ActionButtons extends React.Component<ActionButtonsProps, {
                     placement={"top"}
                     overlay={<span>View selected cases</span>}
                 >
-                    <button className="btn btn-default btn-sm" onClick={this.openCases}>
+                    <button className="btn btn-default btn-sm"
+                            onClick={this.openCases}
+                            data-event={serializeEvent({category:"studyPage", action:"viewPatientCohort", label:this.props.store.queriedPhysicalStudyIds.result})}
+                    >
                         <i className="fa fa-user-circle-o"></i>
                     </button>
                 </DefaultTooltip>
@@ -97,7 +101,9 @@ export default class ActionButtons extends React.Component<ActionButtonsProps, {
                         trigger={['hover']}
                         overlay={<span>{this.virtualStudyButtonTooltip}</span>}
                     >
-                        <button className="btn btn-default btn-sm">
+                        <button
+                            className="btn btn-default btn-sm"
+                        >
                             <i className="fa fa-bookmark"></i>
                         </button>
                     </DefaultTooltip>
@@ -108,7 +114,9 @@ export default class ActionButtons extends React.Component<ActionButtonsProps, {
                     placement={"top"}
                     overlay={<span>{this.downloadButtonTooltip}</span>}
                 >
-                    <button className="btn btn-default btn-sm" onClick={this.initiateDownload}>
+                    <button className="btn btn-default btn-sm" onClick={this.initiateDownload}
+                            data-event={serializeEvent({category:"studyPage", action:"dataDownload", label:this.props.store.queriedPhysicalStudyIds.result})}
+                    >
                             <If condition={this.downloadingData}>
                                 <Then>
                                     <i className="fa fa-spinner fa-spin"></i>

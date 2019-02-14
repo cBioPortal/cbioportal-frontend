@@ -20,6 +20,7 @@ import {MSKTab, MSKTabs} from "../../../shared/components/MSKTabs/MSKTabs";
 import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import {ChartTypeEnum, ChartTypeNameEnum} from "../StudyViewConfig";
 import InfoBanner from "../infoBanner/InfoBanner";
+import {GAEvent, serializeEvent, trackEvent} from "../../../shared/lib/tracking";
 
 export interface IAddChartTabsProps {
     store: StudyViewPageStore,
@@ -196,6 +197,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                 } else if (this.props.currentTab === StudyViewPageTabKeyEnum.CLINICAL_DATA) {
                     additionType = ' column';
                 }
+
+                trackEvent({ category:"studyPage", action:"removeChart", label:key });
+
                 this.infoMessage = `${option.label}${additionType} was removed`;
 
             } else {
@@ -208,6 +212,9 @@ class AddChartTabs extends React.Component<IAddChartTabsProps, {}> {
                     additionType = ` to table and as ${ChartTypeNameEnum[option.chartType]} in Summary tab`;
                 }
                 this.infoMessage = `${option.label} added${additionType}`;
+
+                trackEvent({ category:"studyPage", action:"addChart", label:key });
+
             }
         }
     }
@@ -274,7 +281,10 @@ export default class AddChartButton extends React.Component<IAddChartButtonProps
                                              disableCustomTab={this.props.disableCustomTab}/>}
                 overlayClassName={this.props.addChartOverlayClassName}
             >
-                <button className='btn btn-primary btn-sm' style={{marginLeft: '10px'}} data-test="add-charts-button">{this.props.buttonText}</button>
+                <button className='btn btn-primary btn-sm'
+                        style={{marginLeft: '10px'}}
+                        data-event={serializeEvent({ category:"studyPage", action:"addChartMenuOpen", label:this.props.store.studyIds.join(",")})}
+                        data-test="add-charts-button">{this.props.buttonText}</button>
             </DefaultTooltip>
         )
     }

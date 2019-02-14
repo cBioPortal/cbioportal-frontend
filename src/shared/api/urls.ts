@@ -39,6 +39,15 @@ export function buildCBioPortalPageUrl(pathnameOrParams:string | BuildUrlParams,
     });
 }
 
+export function getCurrentURLWithoutHash() {
+    return URL.format({
+        protocol: window.location.protocol,
+        host: window.location.host,
+        pathname: window.location.pathname,
+        search: window.location.search
+    });
+}
+
 // this gives us the root of the instance (.e.g. //www.bioportal.org/beta)
 export function buildCBioLink(path:string){
     return '//' + AppConfig.baseUrl + '/' + path;
