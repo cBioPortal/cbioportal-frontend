@@ -172,13 +172,13 @@ describe('study laml_tcga tests', () => {
                 const beforeClick = getNumberOfStudyViewCharts();
                 browser.click(ADD_CHART_CUSTOM_GROUPS_ADD_CHART_BUTTON);
 
-                browser.waitForVisible("[data-test='chart-container-CUSTOM_FILTERS_1']");
+                browser.waitForVisible("[data-test='chart-container-CUSTOM_FILTERS_3']");
 
                 // it should not impact any other charts
                 assert(beforeClick + 1 === getNumberOfStudyViewCharts());
 
                 // make sure the title is reflected
-                assert(getTextFromElement("[data-test='chart-container-CUSTOM_FILTERS_1'] .chartTitle") === 'Custom Chart 1');
+                assert(getTextFromElement("[data-test='chart-container-CUSTOM_FILTERS_3'] .chartTitle") === 'Custom Chart 1');
 
                 // make sure the chart is filtered
                 const res = browser.checkElement(".userSelections");
