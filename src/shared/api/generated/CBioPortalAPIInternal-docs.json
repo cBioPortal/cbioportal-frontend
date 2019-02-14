@@ -2143,6 +2143,10 @@
           "type": "integer",
           "format": "int32"
         },
+        "numberOfCNSegmentSamples": {
+          "type": "integer",
+          "format": "int32"
+        },
         "numberOfMutationProfiledSamples": {
           "type": "integer",
           "format": "int32"
