@@ -2925,6 +2925,15 @@ export class StudyViewPageStore {
         }
     });
 
+    readonly initialMolecularProfileSampleCounts = remoteData<MolecularProfileSampleCount>({
+        onError: (error => {}),
+        invoke: async () => {
+            return internalClient.fetchMolecularProfileSampleCountsUsingPOST({
+                studyViewFilter: this.initialFilters
+            });
+        }
+    });
+
     readonly clinicalAttributesCounts = remoteData({
         await: () => [this.selectedSamples],
         onError: (error => {}),

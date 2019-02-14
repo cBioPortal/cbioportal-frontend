@@ -180,7 +180,15 @@ export default class StudyViewPage extends React.Component<IStudyViewPageProps, 
                                         <IFrameLoader height={700}
                                                       url={`//bioinformatics.mdanderson.org/TCGA/NGCHMPortal/?${this.store.MDACCHeatmapStudyMeta.result[0]}`}/>
                                     </MSKTab>
-                                    <MSKTab key={3} id={StudyViewPageTabKeyEnum.CN_SEGMENTS} linkText={StudyViewPageTabDescriptions.CN_SEGMENTS}>
+                                    <MSKTab
+                                        key={3}
+                                        id={StudyViewPageTabKeyEnum.CN_SEGMENTS}
+                                        linkText={StudyViewPageTabDescriptions.CN_SEGMENTS}
+                                        hide={
+                                            !this.store.initialMolecularProfileSampleCounts.result ||
+                                            !(this.store.initialMolecularProfileSampleCounts.result.numberOfCNSegmentSamples > 0)
+                                        }
+                                    >
                                        <CNSegments store={this.store} />
                                     </MSKTab>
                                 </MSKTabs>
