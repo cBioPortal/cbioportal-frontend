@@ -90,13 +90,17 @@ jobs:
           name: "Run build"
           command: 'yarn run build'
       - run:
-          name: "Install http server"
-          command: "yarn add http-server"
-      - run:
-          name: "Spin up frontend over ssl and run end to end tests"
+          name: "Spin up frontend over ssl if necessary and run end to end tests"
           command: |
-            openssl req -newkey rsa:2048 -new -nodes -x509 -days 1 -keyout key.pem -out cert.pem -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=localhost" && \
-            ./node_modules/http-server/bin/http-server -S -C cert.pem --cors dist/ -p 3000 & \
+            eval "$(./scripts/env_vars.sh)" && ( \
+                (echo $CBIOPORTAL_URL | grep -q https) \
+                && ( \
+                    openssl \
+                        req -newkey rsa:2048 -new -nodes -x509 -days 1 -keyout key.pem -out cert.pem \
+                        -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=localhost" && \
+                    ./node_modules/http-server/bin/http-server -S -C cert.pem --cors dist/ -p 3000 \
+                ) || ./node_modules/http-server/bin/http-server --cors dist/ -p 3000 \
+            ) & \
             cd end-to-end-tests && \
             yarn install --frozen-lockfile && \
             ./node_modules/webdriver-manager/bin/webdriver-manager update --versions.chrome '2.42' && \
@@ -109,7 +113,7 @@ jobs:
             sleep 5s && \
             curl $CBIOPORTAL_URL > /dev/null && \
             sleep 20s && \
-            curl --insecure https://localhost:3000 > /dev/null && \
+            (curl --insecure https://localhost:3000 || curl http://localhost:3000) > /dev/null && \
             sleep 1s && \
             cd end-to-end-tests && \
             yarn run test-webdriver-manager
