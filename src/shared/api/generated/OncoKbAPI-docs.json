@@ -6,12 +6,12 @@
     "title": "OncoKB APIs",
     "contact": {
       "name": "OncoKB",
-      "url": "http://www.oncokb.org",
+      "url": "https://oncokb.org",
       "email": "team@oncokb.org"
     },
     "license": {
       "name": "Usage Terms",
-      "url": "http://oncokb.org/#/terms"
+      "url": "https://oncokb.org/terms"
     }
   },
   "tags": [
