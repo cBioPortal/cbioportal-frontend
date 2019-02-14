@@ -3,7 +3,15 @@ import AppConfig from "appConfig";
 import getBrowserWindow from "./getBrowserWindow";
 import * as _ from 'lodash';
 import {log} from "./consoleLog";
+import {ResultsViewPageStore} from "../../pages/resultsView/ResultsViewPageStore";
+import {StudyViewPageStore} from "../../pages/studyView/StudyViewPageStore";
 
+export type GAEvent = {
+  category:"studyPage"|"resultsView";
+  action:string;
+  label?:string|string[];
+  fieldsObject?:{ [key:string]:string|number; }
+};
 
 export function initializeTracking(){
 
@@ -11,6 +19,38 @@ export function initializeTracking(){
         embedGoogleAnalytics(AppConfig.serverConfig.google_analytics_profile_id!);
     }
 
+    $("body").on("click","[data-event]",(el)=>{
+        try {
+            const event:GAEvent = JSON.parse(($(el.currentTarget).attr("data-event"))) as GAEvent;
+            trackEvent(event);
+        } catch (ex) {
+
+        }
+    });
+
+}
+
+export function trackEvent(event:GAEvent){
+    getGAInstance()('send','event', event.category, event.action, event.label, event.fieldsObject);
+}
+
+export function serializeEvent(gaEvent:GAEvent){
+
+    // when we send arrays of values as single event properties to google analytics
+    // we want to send them as comma delimitted strings WITH trailing commas to allow us to filter in analytics
+    // without risk of catching substring matches (e.g. tcga_brca, tcga_brca_2018)
+    // this is annoying to do on one off basis, so this is a little helper transform
+    const arraysToString = _.mapValues(gaEvent, (val)=>{
+        if (_.isArray(val)) {
+            return val.join(",") + "," // add trailing comma
+        } else {
+            return val;
+        }
+    });
+
+    try {
+        return JSON.stringify(arraysToString);
+    } catch (ex) {}
 }
 
 export function embedGoogleAnalytics(ga_code:string){
@@ -48,12 +88,13 @@ export function getGAInstance(): UniversalAnalytics.ga {
 
 let queryCount = 0;
 
-enum GACustomFieldsEnum {
+export enum GACustomFieldsEnum {
   QueryCount = "metric1",
   OQL = "dimension1",
   StudyCount = "metric2",
   Genes = "dimension2",
-  VirtualStudy = "dimension3"
+  VirtualStudy = "dimension3",
+  StudyId = "dimension4"
 };
 
 
@@ -69,5 +110,15 @@ export function trackQuery(cancerStudyIds:string[], oql:string, geneSymbols:stri
         [GACustomFieldsEnum.StudyCount]:cancerStudyIds.length,
         [GACustomFieldsEnum.Genes]:geneSymbols.join(",")+",",
         [GACustomFieldsEnum.VirtualStudy]: isVirtualStudy.toString()
+    });
+}
+
+
+export function trackStudyViewFilterEvent(label:string, store:StudyViewPageStore){
+    trackEvent({
+        category: "studyPage", action: "addFilter", label: label,
+        fieldsObject: {
+            [GACustomFieldsEnum.StudyId]: store.queriedPhysicalStudyIds.result.join(",") + ","
+        }
     });
 }
