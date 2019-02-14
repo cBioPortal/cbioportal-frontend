@@ -34,7 +34,8 @@ import {
     pickClinicalDataColors,
     showOriginStudiesInSummaryDescription,
     toFixedDigit,
-    updateGeneQuery
+    updateGeneQuery,
+    getClinicalDataCountWithColorByCategoryCounts
 } from 'pages/studyView/StudyViewUtils';
 import {
     ClinicalDataIntervalFilterValue,
@@ -1853,6 +1854,25 @@ describe('StudyViewUtils', () => {
             assert.equal(result[0], 'test1,test2');
             assert.equal(result[1], 'test3');
             assert.equal(result[2], 'test4,test5,test6');
+        });
+    });
+
+    describe('getClinicalDataCountWithColorByCategoryCounts', () => {
+        it('When both counts are zero', () => {
+            assert.deepEqual([], getClinicalDataCountWithColorByCategoryCounts(0, 0))
+        });
+        it('When only yesCount is > 0', () => {
+            assert.deepEqual([{ count: 10, value: "YES", color: "#109618" }], getClinicalDataCountWithColorByCategoryCounts(10, 0))
+        });
+        it('When only noCount is > 0', () => {
+            assert.deepEqual([{ count: 10, value: "NO", color: "#DC3912" }], getClinicalDataCountWithColorByCategoryCounts(0, 10))
+        });
+        it('When both counts are > 0', () => {
+            assert.deepEqual(
+                [
+                    { count: 10, value: "YES", color: "#109618" },
+                    { count: 10, value: "NO", color: "#DC3912" }
+                ], getClinicalDataCountWithColorByCategoryCounts(10, 10))
         });
     });
 });
