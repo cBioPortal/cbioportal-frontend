@@ -35,7 +35,7 @@ export default class CopyNumberEnrichmentsTab extends React.Component<ICopyNumbe
                     <div>
                         <EnrichmentsDataSetDropdown dataSets={this.props.store.copyNumberEnrichmentProfiles} onChange={this.onProfileChange}
                                                     selectedValue={this.props.store.selectedEnrichmentCopyNumberProfile.molecularProfileId}
-                                                    molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount.result!}/>
+                                                    molecularProfileIdToProfiledSampleCount={this.props.store.molecularProfileIdToProfiledSampleCount}/>
                         <AlterationEnrichmentContainer data={this.props.store.copyNumberHomdelEnrichmentData.result!}
                                                        totalAlteredCount={this.props.store.alteredSampleKeys.result!.length}
                                                        totalUnalteredCount={this.props.store.unalteredSampleKeys.result!.length}

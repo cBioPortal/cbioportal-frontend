@@ -11,6 +11,7 @@ import {observer} from "mobx-react";
 import "./styles/oncoKbCard.scss";
 import "./styles/oncoKbCard.custom.scss";
 import {ArticleAbstract, Citations} from "../../api/generated/OncoKbAPI";
+import {getNCBIlink} from "../../api/urls";
 
 type OncoKbCardPropsBase = {
     title: string;
@@ -191,7 +192,7 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
     {
         return (
             <li key={pmid} className="list-group-item" style={{width: "100%"}}>
-                <a href={`http://www.ncbi.nlm.nih.gov/pubmed/${pmid}`} target="_blank">
+                <a href={getNCBIlink(`/pubmed/${pmid}`)} target="_blank">
                     <b>{title}</b>
                 </a>
                 <br/>
@@ -311,7 +312,7 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
                                                     {
                                                         this.insertLink(this.props.variantSummary, {
                                                             keyword: 'Chang et al. 2016',
-                                                            link: 'https://www.ncbi.nlm.nih.gov/pubmed/26619011'
+                                                            link: getNCBIlink('/pubmed/26619011')
                                                         })
                                                     }
                                                 </p>
@@ -491,25 +492,22 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
             return str;
         }
 
-        let baseUrl:string|undefined;
         let prefix:string|undefined;
 
         if (str.toLowerCase().indexOf("pmid") >= 0) {
-            baseUrl = "http://www.ncbi.nlm.nih.gov/pubmed/";
             prefix = "PMID: ";
         }
         else if (str.toLowerCase().indexOf("nct") >= 0) {
-            baseUrl = "http://www.ncbi.nlm.nih.gov/pubmed/";
             prefix = "NCT";
         }
 
         let link:JSX.Element|undefined;
 
-        if (baseUrl && prefix) {
+        if (prefix) {
             link = (
                 <a
                     target="_blank"
-                    href={`${baseUrl}${ids.join(",")}`}
+                    href={getNCBIlink(`/pubmed/${ids.join(",")}`)}
                 >
                     {`${prefix}${ids.join(",")}`}
                 </a>
@@ -527,7 +525,7 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
             );
 
             return (
-                <span>
+                <span key={str}>
                     {parts[0]}
                     <DefaultTooltip
                         overlay={tooltipContent}
@@ -544,7 +542,7 @@ export default class OncoKbCard extends React.Component<OncoKbCardProps>
         else if (link)
         {
             return (
-                <span>
+                <span key={str}>
                     {parts[0]}
                     {link}
                     {`)`}

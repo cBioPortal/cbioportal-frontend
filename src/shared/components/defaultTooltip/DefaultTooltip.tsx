@@ -1,10 +1,10 @@
 import * as React from 'react';
-import Tooltip from 'rc-tooltip';
+import Tooltip, {RCTooltip} from 'rc-tooltip';
 import 'rc-tooltip/assets/bootstrap_white.css';
 import $ from "jquery";
 import "./styles.scss";
 
-export type DefaultTooltipProps = Tooltip.Props & { disabled?:boolean, getTooltipContainer?:()=>Element };
+export type DefaultTooltipProps = RCTooltip.Props & { disabled?:boolean, getTooltipContainer?:()=>Element };
 export default class DefaultTooltip extends React.Component<DefaultTooltipProps, {}> {
     static readonly defaultProps = {
         mouseEnterDelay: 0.5,
@@ -15,7 +15,7 @@ export default class DefaultTooltip extends React.Component<DefaultTooltipProps,
 
     render() {
         let {disabled, visible, ...restProps} = this.props;
-        let tooltipProps:Tooltip.Props = restProps;
+        let tooltipProps:RCTooltip.Props = restProps;
         if (disabled) {
             visible = false;
         }

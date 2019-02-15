@@ -326,6 +326,8 @@ export type MolecularProfileSampleCount = {
 
         'numberOfCNAUnprofiledSamples': number
 
+        'numberOfCNSegmentSamples': number
+
         'numberOfMutationProfiledSamples': number
 
         'numberOfMutationUnprofiledSamples': number
