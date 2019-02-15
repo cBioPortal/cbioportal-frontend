@@ -1,24 +1,20 @@
 import * as React from "react";
-import {CoExpression} from "../../../shared/api/generated/CBioPortalAPIInternal";
+import {CoExpression, Geneset} from "../../../shared/api/generated/CBioPortalAPIInternal";
+import {Gene} from "../../../shared/api/generated/CBioPortalAPI";
 import {correlationColor, correlationSortBy} from "./CoExpressionTableUtils";
 import LazyMobXTable from "../../../shared/components/lazyMobXTable/LazyMobXTable";
-import {ILazyMobXTableApplicationDataStore} from "../../../shared/lib/ILazyMobXTableApplicationDataStore";
 import {CoExpressionDataStore, TableMode} from "./CoExpressionViz";
 import Select from "react-select";
 import {observer} from "mobx-react";
-import {observable} from "mobx"
 import {CoExpressionWithQ, tableSearchInformation} from "./CoExpressionTabUtils";
-import DefaultTooltip from "../../../shared/components/defaultTooltip/DefaultTooltip";
 import InfoIcon from "../../../shared/components/InfoIcon";
 import {bind} from "bind-decorator";
 import { cytobandFilter } from "pages/resultsView/ResultsViewTableUtils";
-import {PotentialViewType} from "../plots/PlotsTab";
-import {PLOT_SIDELENGTH} from "../plots/PlotsTabUtils";
 import { toConditionalPrecision } from "shared/lib/NumberUtils";
 import { formatSignificanceValueWithStyle } from "shared/lib/FormatUtils";
 
-export interface ICoExpressionTableProps {
-    referenceGene:{hugoGeneSymbol:string, cytoband:string};
+export interface ICoExpressionTableGenesProps {
+    referenceGeneticEntity:Gene|Geneset;
     dataStore:CoExpressionDataStore;
     tableMode:TableMode;
     onSelectTableMode:(t:TableMode)=>void;
@@ -31,10 +27,10 @@ const Q_VALUE_COLUMN_NAME = "q-Value";
 const COLUMNS = [
     {
         name: "Correlated Gene",
-        render: (d:CoExpression)=>(<span style={{fontWeight:"bold"}}>{d.hugoGeneSymbol}</span>),
-        filter:(d:CoExpression, f:string, filterStringUpper:string)=>(d.hugoGeneSymbol.indexOf(filterStringUpper) > -1),
-        download:(d:CoExpression)=>d.hugoGeneSymbol,
-        sortBy:(d:CoExpression)=>d.hugoGeneSymbol,
+        render: (d:CoExpression)=>(<span style={{fontWeight:"bold"}}>{d.geneticEntityName}</span>),
+        filter:(d:CoExpression, f:string, filterStringUpper:string)=>(d.geneticEntityName.indexOf(filterStringUpper) > -1),
+        download:(d:CoExpression)=>d.geneticEntityName,
+        sortBy:(d:CoExpression)=>d.geneticEntityName,
         width:"30%"
     },
     {
@@ -72,7 +68,7 @@ function makeNumberColumn(name:string, key:keyof CoExpressionWithQ, colorByValue
 }
 
 @observer
-export default class CoExpressionTable extends React.Component<ICoExpressionTableProps, {}> {
+export default class CoExpressionTableGenes extends React.Component<ICoExpressionTableGenesProps, {}> {
 
     @bind
     private onRowClick(d:CoExpressionWithQ) {
