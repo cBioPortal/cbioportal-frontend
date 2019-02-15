@@ -9,11 +9,12 @@ import SampleManager from "../sampleManager";
 import {Mutation, ClinicalData, MolecularProfile} from "shared/api/generated/CBioPortalAPI";
 import AlleleCountColumnFormatter from "shared/components/mutationTable/column/AlleleCountColumnFormatter";
 import DiscreteCNAColumnFormatter from "shared/components/mutationTable/column/DiscreteCNAColumnFormatter";
+import FACETSCNAColumnFormatter from "shared/components/mutationTable/column/FACETSCNAColumnFormatter";
 import MutantCopiesColumnFormatter from "shared/components/mutationTable/column/MutantCopiesColumnFormatter";
 import CancerCellFractionColumnFormatter from "shared/components/mutationTable/column/CancerCellFractionColumnFormatter";
 import FACETSClonalColumnFormatter from "./column/FACETSClonalColumnFormatter";
 import FACETSMutantCopiesColumnFormatter from "./column/FACETSMutantCopiesColumnFormatter";
-import PatientDiscreteCNAColumnFormatter from "./column/PatientDiscreteCNAColumnFormatter";
+import PatientFACETSCNAColumnFormatter from "./column/PatientFACETSCNAColumnFormatter";
 import AlleleFreqColumnFormatter from "./column/AlleleFreqColumnFormatter";
 import FACETSColumnFormatter from "./column/FACETSColumnFormatter";
 import TumorColumnFormatter from "./column/TumorColumnFormatter";
@@ -42,6 +43,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             MutationTableColumnType.COHORT,
             MutationTableColumnType.MRNA_EXPR,
             MutationTableColumnType.COPY_NUM,
+            MutationTableColumnType.FACETS_COPY_NUM,
             MutationTableColumnType.ANNOTATION,
             MutationTableColumnType.REF_READS_N,
             MutationTableColumnType.VAR_READS_N,
@@ -124,16 +126,10 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             sortBy:(d:Mutation[])=>MutantCopiesColumnFormatter.getDisplayValueAsString(d, this.props.sampleIdToClinicalDataMap, this.getSamples())        
         };
 
-        this._columns[MutationTableColumnType.COPY_NUM] = {
-            name: "Copy #",
-            tooltip: (<span>I just want something that works</span>),
-            render:(d:Mutation[])=>PatientDiscreteCNAColumnFormatter.renderFunction(d,
-                        this.props.molecularProfileIdToMolecularProfile as {[molecularProfileId:string]:MolecularProfile},
-                        this.props.discreteCNACache as DiscreteCNACache, this.props.sampleIdToClinicalDataMap, this.getSamples(), this.props.sampleManager),
-            sortBy:(d:Mutation[])=>DiscreteCNAColumnFormatter.getSortValue(d, this.props.molecularProfileIdToMolecularProfile as {[molecularProfileId:string]:MolecularProfile},
-                        this.props.discreteCNACache as DiscreteCNACache, this.props.sampleIdToClinicalDataMap, this.getSamples()),
-            filter:(d:Mutation[], filterString:string)=>DiscreteCNAColumnFormatter.filter(d, this.props.molecularProfileIdToMolecularProfile as {[molecularProfileId:string]:MolecularProfile},
-                        this.props.discreteCNACache as DiscreteCNACache, this.props.sampleIdToClinicalDataMap, this.getSamples(), filterString) 
+        this._columns[MutationTableColumnType.FACETS_COPY_NUM] = {
+            name: "FACETS Copy #",
+            render:(d:Mutation[])=>PatientFACETSCNAColumnFormatter.renderFunction(d,this.props.sampleIdToClinicalDataMap, this.getSamples(), this.props.sampleManager),
+            sortBy:(d:Mutation[])=>FACETSCNAColumnFormatter.getSortValue(d, this.props.sampleIdToClinicalDataMap, this.getSamples())
         };
         // customization for allele count columns
 
@@ -179,8 +175,9 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
         this._columns[MutationTableColumnType.VAR_READS].order = 140;
         this._columns[MutationTableColumnType.REF_READS].order = 150;
         this._columns[MutationTableColumnType.VAR_READS_N].order = 170;
-        this._columns[MutationTableColumnType.REF_READS_N].order = 180;
-        this._columns[MutationTableColumnType.COPY_NUM].order = 181;
+        this._columns[MutationTableColumnType.REF_READS_N].order = 175;
+        this._columns[MutationTableColumnType.COPY_NUM].order = 180;
+        this._columns[MutationTableColumnType.FACETS_COPY_NUM].order = 181;
         this._columns[MutationTableColumnType.MRNA_EXPR].order = 182;
         this._columns[MutationTableColumnType.COHORT].order = 183;
         this._columns[MutationTableColumnType.COSMIC].order = 184;
@@ -211,7 +208,7 @@ export default class PatientViewMutationTable extends MutationTable<IPatientView
             return this.getSamples().length < 2 && !this.hasUncalledMutations;
         };
         this._columns[MutationTableColumnType.COPY_NUM].shouldExclude = ()=>{
-            return (!this.props.discreteCNAMolecularProfileId);
+            return (!this.props.discreteCNAMolecularProfileId) || (this.getSamples().length > 1);
         };
     }
 

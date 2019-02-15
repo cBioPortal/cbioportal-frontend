@@ -10,6 +10,7 @@ import NormalAlleleFreqColumnFormatter from "./column/NormalAlleleFreqColumnForm
 import MrnaExprColumnFormatter from "./column/MrnaExprColumnFormatter";
 import CohortColumnFormatter from "./column/CohortColumnFormatter";
 import DiscreteCNAColumnFormatter from "./column/DiscreteCNAColumnFormatter";
+import FACETSCNAColumnFormatter from "./column/FACETSCNAColumnFormatter";
 import AlleleCountColumnFormatter from "./column/AlleleCountColumnFormatter";
 import GeneColumnFormatter from "./column/GeneColumnFormatter";
 import ChromosomeColumnFormatter from "./column/ChromosomeColumnFormatter";
@@ -115,6 +116,7 @@ export enum MutationTableColumnType {
     ANNOTATION,
     COSMIC,
     COPY_NUM,
+    FACETS_COPY_NUM,
     MRNA_EXPR,
     COHORT,
     REF_READS_N,
@@ -255,19 +257,18 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 if (this.props.discreteCNACache && this.props.molecularProfileIdToMolecularProfile) {
                     return DiscreteCNAColumnFormatter.renderFunction(d,
                         this.props.molecularProfileIdToMolecularProfile as {[molecularProfileId:string]:MolecularProfile},
-                        this.props.discreteCNACache as DiscreteCNACache, this.props.sampleIdToClinicalDataMap, [d[0].sampleId]);
+                        this.props.discreteCNACache as DiscreteCNACache);
                 } else {
                     return (<span></span>);
                 }
             },
-            sortBy: (d:Mutation[]):string|null=>{
+            sortBy: (d:Mutation[]):number|null=>{
                 if (this.props.discreteCNACache && this.props.molecularProfileIdToMolecularProfile) {
                     return DiscreteCNAColumnFormatter.getSortValue(d,
                         this.props.molecularProfileIdToMolecularProfile as {[molecularProfileId:string]:MolecularProfile},
-                        this.props.discreteCNACache as DiscreteCNACache,
-                        this.props.sampleIdToClinicalDataMap, [d[0].sampleId]);
+                        this.props.discreteCNACache as DiscreteCNACache);
                 } else {
-                    return "";
+                    return 0;
                 }
             },
             filter:(d:Mutation[], filterString:string)=>{
@@ -275,14 +276,26 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                     return DiscreteCNAColumnFormatter.filter(d,
                         this.props.molecularProfileIdToMolecularProfile as {[molecularProfileId:string]:MolecularProfile},
                         this.props.discreteCNACache as DiscreteCNACache,
-                        this.props.sampleIdToClinicalDataMap,
-                        [d[0].sampleId],
                         filterString);
                 } else {
                     return false;
                 }
             },
             visible: DiscreteCNAColumnFormatter.isVisible(this.props.discreteCNACache as DiscreteCNACache)
+        };
+
+        this._columns[MutationTableColumnType.FACETS_COPY_NUM] = {
+            name: "FACETS Copy #",
+            render:(d:Mutation[])=>{
+                return FACETSCNAColumnFormatter.renderFunction(d, this.props.sampleIdToClinicalDataMap, [d[0].sampleId]);
+            },
+            sortBy: (d:Mutation[]):string|null=>{
+                if (this.props.discreteCNACache && this.props.molecularProfileIdToMolecularProfile) {
+                    return FACETSCNAColumnFormatter.getSortValue(d, this.props.sampleIdToClinicalDataMap, [d[0].sampleId]);
+                } else {
+                    return "";
+                }
+            }
         };
 
         this._columns[MutationTableColumnType.REF_READS_N] = {
