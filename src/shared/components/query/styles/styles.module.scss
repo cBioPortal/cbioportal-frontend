@@ -664,3 +664,11 @@ div.submitRow {
   display:inline-block;
   margin-top:25px;
 }
+
+.quickSelect {
+  display:flex;
+  align-items:center;
+  button {
+    margin-left:10px;
+  }
+}
