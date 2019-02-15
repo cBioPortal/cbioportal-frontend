@@ -1,6 +1,10 @@
 import * as React from 'react';
 import ProteinChangeColumnFormatter from "shared/components/mutationTable/column/ProteinChangeColumnFormatter";
 import {Column, default as LazyMobXTable} from "shared/components/lazyMobXTable/LazyMobXTable";
+import OncoKbCard from "../annotation/OncoKbCard";
+import TruncatedText from "../TruncatedText";
+
+import styles from "../annotation/styles/oncoKb.module.scss";
 
 export interface IOncoKbSummaryTableProps
 {
@@ -14,8 +18,9 @@ export interface IOncoKbSummaryTableProps
 export type OncoKbSummary = {
     count: number;
     proteinChange: string;
-    clinicalImplication: string;
-    biologicalEffect: string;
+    clinicalImplication: string[];
+    biologicalEffect: string[];
+    level: {level: string, tumorTypes: string[]}[];
 };
 
 // LazyMobXTable is a generic component which requires data type argument
@@ -41,14 +46,40 @@ export default class OncoKbSummaryTable extends React.Component<IOncoKbSummaryTa
             {
                 name: "Implication",
                 order: 3.00,
-                render: (d: OncoKbSummary) => (<span>{d.clinicalImplication}</span>),
-                sortBy: (d: OncoKbSummary) => d.clinicalImplication
+                render: (d: OncoKbSummary) => (<span>{d.clinicalImplication.join(", ")}</span>),
+                sortBy: (d: OncoKbSummary) => d.clinicalImplication.join(", ")
             },
             {
                 name: "Effect",
                 order: 4.00,
-                render: (d: OncoKbSummary) => (<span>{d.biologicalEffect}</span>),
-                sortBy: (d: OncoKbSummary) => d.biologicalEffect
+                render: (d: OncoKbSummary) => (<span>{d.biologicalEffect.join(", ")}</span>),
+                sortBy: (d: OncoKbSummary) => d.biologicalEffect.join(", ")
+            },
+            {
+                name: "Level",
+                order: 5.00,
+                render: (d: OncoKbSummary) => (
+                    <span>
+                        {
+                            d.level.map(level => {
+                                return (
+                                    <div>
+                                        <i
+                                            className={`${styles["level-icon"]} ${styles[`level-${level.level}`]}`}
+                                            style={{...OncoKbCard.LEVEL_ICON_STYLE, verticalAlign: "bottom"}}
+                                        />
+                                        <span> : </span>
+                                        <TruncatedText
+                                            text={level.tumorTypes.join(", ")}
+                                            tooltip={<div style={{maxWidth: 300}}>{level.tumorTypes.join(", ")}</div>}
+                                            maxLength={30}
+                                        />
+                                    </div>
+                                );
+                            })
+                        }
+                    </span>
+                )
             }
         ],
         initialSortColumn: "Occurrence",

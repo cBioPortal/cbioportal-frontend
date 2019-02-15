@@ -17,9 +17,8 @@ import {
     Patient,
     Sample
 } from "../../api/generated/CBioPortalAPI";
-import {OncoprintClinicalAttribute} from "./ResultsViewOncoprint";
 import {MutationSpectrum} from "../../api/generated/CBioPortalAPIInternal";
-import {SpecialAttribute} from "../../cache/OncoprintClinicalDataCache";
+import {SpecialAttribute} from "../../cache/ClinicalDataCache";
 
 /* Type assertions are used throughout this file to force functions to accept
 /* mocked parameters known to be sufficient. */
