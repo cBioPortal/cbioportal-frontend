@@ -205,6 +205,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             name: "Allele Freq (T)",
             render: TumorAlleleFreqColumnFormatter.renderFunction,
             headerRender: (name: string) => <span style={{display:'inline-block', maxWidth:55}}>{name}</span>,
+            download: TumorAlleleFreqColumnFormatter.getTextValue,
             sortBy: TumorAlleleFreqColumnFormatter.getSortValue,
             tooltip:(<span>Variant allele frequency in the tumor sample</span>),
             visible: true
@@ -214,6 +215,7 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             name: "Allele Freq (N)",
             render: NormalAlleleFreqColumnFormatter.renderFunction,
             headerRender: (name: string) => <span style={{display:'inline-block', maxWidth:55}}>{name}</span>,
+            download: NormalAlleleFreqColumnFormatter.getTextValue,
             sortBy: NormalAlleleFreqColumnFormatter.getSortValue,
             tooltip:(<span>Variant allele frequency in the normal sample</span>),
             visible: false
@@ -261,6 +263,15 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                         this.props.discreteCNACache as DiscreteCNACache);
                 } else {
                     return 0;
+                }
+            },
+            download: (d:Mutation[]):string=>{
+                if (this.props.discreteCNACache && this.props.molecularProfileIdToMolecularProfile) {
+                    return DiscreteCNAColumnFormatter.getTextValue(d,
+                        this.props.molecularProfileIdToMolecularProfile as {[molecularProfileId:string]:MolecularProfile},
+                        this.props.discreteCNACache as DiscreteCNACache);
+                } else {
+                    return "";
                 }
             },
             filter:(d:Mutation[], filterString:string)=>{
@@ -452,7 +463,8 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
                 enableOncoKb: this.props.enableOncoKb as boolean,
                 enableMyCancerGenome: this.props.enableMyCancerGenome as boolean,
                 enableHotspot: this.props.enableHotspot as boolean,
-                userEmailAddress: this.props.userEmailAddress
+                userEmailAddress: this.props.userEmailAddress,
+                studyIdToStudy: this.props.studyIdToStudy
             })),
             download:(d:Mutation[])=>{
                 return AnnotationColumnFormatter.download(d,

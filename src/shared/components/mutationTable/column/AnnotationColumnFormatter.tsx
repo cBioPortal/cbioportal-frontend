@@ -10,9 +10,9 @@ import Civic from "shared/components/annotation/Civic";
 import {IOncoKbData, IOncoKbDataWrapper} from "shared/model/OncoKB";
 import {IMyCancerGenomeData, IMyCancerGenome} from "shared/model/MyCancerGenome";
 import {IHotspotDataWrapper} from "shared/model/CancerHotspots";
-import {Mutation} from "shared/api/generated/CBioPortalAPI";
+import {CancerStudy, Mutation} from "shared/api/generated/CBioPortalAPI";
 import {IndicatorQueryResp, Query} from "shared/api/generated/OncoKbAPI";
-import {getEvidenceQuery, getIndicatorData} from "shared/lib/OncoKbUtils";
+import {getEvidenceQuery, getIndicatorData, generateQueryVariantId} from "shared/lib/OncoKbUtils";
 import {is3dHotspot, isRecurrentHotspot} from "shared/lib/AnnotationUtils";
 import {ICivicVariant, ICivicGene, ICivicEntry, ICivicVariantData, ICivicGeneData, ICivicGeneDataWrapper, ICivicVariantDataWrapper} from "shared/model/Civic.ts";
 import {buildCivicEntry} from "shared/lib/CivicUtils";
@@ -31,6 +31,7 @@ export interface IAnnotationColumnProps {
     userEmailAddress?:string;
     civicGenes?: ICivicGeneDataWrapper;
     civicVariants?: ICivicVariantDataWrapper;
+    studyIdToStudy?: {[studyId:string]:CancerStudy};
 }
 
 export interface IAnnotation {
@@ -73,7 +74,8 @@ export default class AnnotationColumnFormatter
                           myCancerGenomeData?:IMyCancerGenomeData,
                           oncoKbData?:IOncoKbDataWrapper,
                           civicGenes?:ICivicGeneDataWrapper,
-                          civicVariants?:ICivicVariantDataWrapper)
+                          civicVariants?:ICivicVariantDataWrapper,
+                          studyIdToStudy?: {[studyId:string]:CancerStudy})
     {
         let value: Partial<IAnnotation>;
 
@@ -118,7 +120,7 @@ export default class AnnotationColumnFormatter
                     !(oncoKbData.result instanceof Error) &&
                     oncoKbData.status === "complete")
                 {
-                    oncoKbIndicator = AnnotationColumnFormatter.getIndicatorData(mutation, oncoKbData.result);
+                    oncoKbIndicator = AnnotationColumnFormatter.getIndicatorData(mutation, oncoKbData.result, studyIdToStudy);
                 }
 
                 value = {
@@ -171,9 +173,27 @@ export default class AnnotationColumnFormatter
         return "pending";
     }
 
-    public static getIndicatorData(mutation:Mutation, oncoKbData:IOncoKbData): IndicatorQueryResp|undefined
+    public static getIndicatorData(mutation:Mutation, oncoKbData:IOncoKbData, studyIdToStudy?: {[studyId:string]:CancerStudy}): IndicatorQueryResp|undefined
     {
-        return getIndicatorData(mutation, oncoKbData);
+        if (oncoKbData.uniqueSampleKeyToTumorType === null || oncoKbData.indicatorMap === null) {
+            return undefined;
+        }
+        
+        const id = generateQueryVariantId(
+            mutation.gene.entrezGeneId,
+            oncoKbData.uniqueSampleKeyToTumorType[mutation.uniqueSampleKey],
+            mutation.proteinChange,
+            mutation.mutationType
+        );
+
+        const indicator = oncoKbData.indicatorMap[id];
+        if (indicator.query.tumorType === null && studyIdToStudy) {
+            const studyMetaData = studyIdToStudy[mutation.studyId];
+            if (studyMetaData.cancerTypeId !== "mixed") {           
+                indicator.query.tumorType = studyMetaData.cancerType.name;
+            }
+        }
+        return indicator;
     }
 
     public static getEvidenceQuery(mutation:Mutation, oncoKbData:IOncoKbData): Query|undefined
@@ -262,7 +282,8 @@ export default class AnnotationColumnFormatter
             columnProps.myCancerGenomeData,
             columnProps.oncoKbData,
             columnProps.civicGenes,
-            columnProps.civicVariants);
+            columnProps.civicVariants,
+            columnProps.studyIdToStudy);
 
         let evidenceQuery:Query|undefined;
 
@@ -272,7 +293,7 @@ export default class AnnotationColumnFormatter
         {
             evidenceQuery = this.getEvidenceQuery(data[0], columnProps.oncoKbData.result);
         }
-
+        
         return AnnotationColumnFormatter.mainContent(annotation,
             columnProps,
             columnProps.oncoKbEvidenceCache,

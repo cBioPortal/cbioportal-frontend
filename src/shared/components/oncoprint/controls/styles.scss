@@ -90,6 +90,14 @@
 
   .clinical-track-selector .Select {
 
+    .Select-placeholder {
+      color: #000;
+    }
+
+    .Select-arrow {
+      border-color: #000 transparent transparent;
+    }
+
     .Select-menu-outer {
       max-height: 400px;
     }
@@ -107,4 +115,7 @@
     }
   }
 
+  .clinical-track-selector .is-open .Select-control .Select-arrow {
+    border-color: transparent transparent #000;
+  }
 }

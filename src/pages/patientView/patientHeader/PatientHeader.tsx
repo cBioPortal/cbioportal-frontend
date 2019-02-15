@@ -35,7 +35,7 @@ export default class PatientHeader extends React.Component<IPatientHeaderProps, 
         if (darwinUrl !== undefined && darwinUrl !== null && darwinUrl !== '') {
             // add link to darwin
             let darwinImgSrc = require("./images/darwin_logo.png");
-            return (<a target='_blank' href={darwinUrl}><img style={{paddingLeft:'5px'}} src={darwinImgSrc} /></a>);
+            return (<a target='_blank' href={darwinUrl}><img style={{paddingLeft:'5px', height:'21px', width:'29px'}} src={darwinImgSrc} /></a>);
         } else {
             return null;
         }
