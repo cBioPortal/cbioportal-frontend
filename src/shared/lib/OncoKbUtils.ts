@@ -50,7 +50,7 @@ const RESISTANCE_LEVEL_SCORE:{[level:string]: number} = {
     'R1': 3,
 };
 
-const LEVELS = {
+export const LEVELS = {
     sensitivity: ['4', '3B', '3A', '2B', '2A', '1', '0'],
     resistance: ['R3', 'R2', 'R1'],
     all: ['4', 'R3', '3B', '3A', 'R2', '2B', '2A', 'R1', '1', '0']
@@ -255,14 +255,7 @@ export function initEvidence()
         oncogenicRefs: [],
         mutationEffect: {},
         mutationEffectRefs: [],
-        summary: '',
-        drugs: {
-            sensitivity: {
-                current: [],
-                inOtherTumor: []
-            },
-            resistance: []
-        }
+        summary: ''
     };
 }
 
@@ -323,7 +316,6 @@ export function processEvidence(evidences:EvidenceQueryRes[]) {
         evidences.forEach(function(record) {
             var id = record.query.id;
             let datum:any = initEvidence(); // TODO define an extended evidence model?
-            var hasHigherLevelEvidence = false;
             var sensitivityTreatments:any = [];
             var resistanceTreatments:any = [];
 
@@ -373,10 +365,6 @@ export function processEvidence(evidences:EvidenceQueryRes[]) {
                         } else {
                             resistanceTreatments.push(_treatment);
                         }
-
-                        if (_treatment.level === 'LEVEL_1' || _treatment.level === 'LEVEL_2A') {
-                            hasHigherLevelEvidence = true;
-                        }
                     }
                 }
             });
@@ -385,28 +373,8 @@ export function processEvidence(evidences:EvidenceQueryRes[]) {
                 datum.mutationEffect = datum.alteration[0];
             }
 
-            if (hasHigherLevelEvidence) {
-                sensitivityTreatments.forEach(function(treatment:any, index:number) {
-                    if (treatment.level !== 'LEVEL_2B') {
-                        datum.treatments.sensitivity.push(treatment);
-                    }
-                });
-            } else {
-                datum.treatments.sensitivity = sensitivityTreatments;
-            }
+            datum.treatments.sensitivity = sensitivityTreatments;
             datum.treatments.resistance = resistanceTreatments;
-            datum.treatments.sensitivity.forEach(function(treatment:any, index:number) {
-                if (treatment.level === 'LEVEL_2B') {
-                    datum.drugs.sensitivity.inOtherTumor.push(treatment);
-                } else if (treatment.level === 'LEVEL_2A' || treatment.level === 'LEVEL_1') {
-                    datum.drugs.sensitivity.current.push(treatment);
-                }
-            });
-            datum.treatments.resistance.forEach(function(treatment:any, index:number) {
-                if (treatment.level === 'LEVEL_R1') {
-                    datum.drugs.resistance.push(treatment);
-                }
-            });
             // id.split('*ONCOKB*').forEach(function(_id) {
             //     result[_id] = datum;
             // })

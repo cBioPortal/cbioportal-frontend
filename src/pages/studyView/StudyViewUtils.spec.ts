@@ -12,7 +12,7 @@ import {
     generateCategoricalData,
     generateNumericalData,
     getClinicalDataCountWithColorByClinicalDataCount,
-    getClinicalDataIntervalFilterValues,
+    getClinicalDataIntervalFilterValues, getClinicalEqualityFilterValuesByString,
     getCNAByAlteration,
     getDefaultChartTypeByClinicalAttribute,
     getExponent,
@@ -34,7 +34,8 @@ import {
     pickClinicalDataColors,
     showOriginStudiesInSummaryDescription,
     toFixedDigit,
-    updateGeneQuery
+    updateGeneQuery,
+    getClinicalDataCountWithColorByCategoryCounts
 } from 'pages/studyView/StudyViewUtils';
 import {
     ClinicalDataIntervalFilterValue,
@@ -1830,4 +1831,48 @@ describe('StudyViewUtils', () => {
             assert.equal(getPriorityByClinicalAttribute(attr), 9);
         });
     })
+
+    describe('getClinicalEqualityFilterValuesByString', () => {
+        it('the values should be separated by comma', () => {
+            let result = getClinicalEqualityFilterValuesByString('test1,test2');
+            assert.equal(result.length, 2);
+            assert.equal(result[0], 'test1');
+
+            result = getClinicalEqualityFilterValuesByString('test1;test2');
+            assert.equal(result.length, 1);
+        });
+
+        it('Allow using back slash to escape the comma actually in the content', () => {
+            let result = getClinicalEqualityFilterValuesByString('test1\\,test2');
+            assert.equal(result.length, 1);
+            assert.equal(result[0], 'test1,test2');
+        });
+
+        it('Allow using back slash to escape the comma actually in the content, multiple instances', () => {
+            let result = getClinicalEqualityFilterValuesByString('test1\\,test2,test3, test4\\,test5\\,test6');
+            assert.equal(result.length, 3);
+            assert.equal(result[0], 'test1,test2');
+            assert.equal(result[1], 'test3');
+            assert.equal(result[2], 'test4,test5,test6');
+        });
+    });
+
+    describe('getClinicalDataCountWithColorByCategoryCounts', () => {
+        it('When both counts are zero', () => {
+            assert.deepEqual([], getClinicalDataCountWithColorByCategoryCounts(0, 0))
+        });
+        it('When only yesCount is > 0', () => {
+            assert.deepEqual([{ count: 10, value: "YES", color: "#109618" }], getClinicalDataCountWithColorByCategoryCounts(10, 0))
+        });
+        it('When only noCount is > 0', () => {
+            assert.deepEqual([{ count: 10, value: "NO", color: "#DC3912" }], getClinicalDataCountWithColorByCategoryCounts(0, 10))
+        });
+        it('When both counts are > 0', () => {
+            assert.deepEqual(
+                [
+                    { count: 10, value: "YES", color: "#109618" },
+                    { count: 10, value: "NO", color: "#DC3912" }
+                ], getClinicalDataCountWithColorByCategoryCounts(10, 10))
+        });
+    });
 });

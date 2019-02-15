@@ -1,10 +1,8 @@
-.selectedInfo {
-}
 
 .absolutePanel {
     position: absolute;
-    top: 8px;
-    right:20px;
+    top: 5px;
+    right:18px;
     z-index: 2;
     display: flex;
 }
@@ -12,6 +10,12 @@
 .selectedInfoLoadingIndicator {
     padding: 5px;
     width: 200px;
+}
+
+.selectedInfo {
+    display:flex;
+    align-items:center;
+    margin-right:10px;
 }
 
 .selectedInfoCheckbox {
@@ -82,3 +86,23 @@
     }
 }
 
+.actionButtons {
+    display:flex;
+    button {
+        margin-left:10px;
+    }
+}
+
+.studyFilterResult {
+    transition: all 500ms;
+    transform: scale(0); /* Standard syntax */
+    display:flex;
+    z-index:2;
+    > div {
+        white-space: nowrap;
+        &:nth-child(n+2) {
+            margin-left:5px;
+        }
+    }
+
+}
