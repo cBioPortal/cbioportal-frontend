@@ -602,7 +602,7 @@ export class QueryStore {
         default: {}
     })
 
-    private readonly selectableStudiesSet = remoteData<{ [studyId: string]: string[] }>({
+    public readonly selectableStudiesSet = remoteData<{ [studyId: string]: string[] }>({
         await: () => [this.physicalStudiesSet, this.selectedStudyToSampleSet],
         invoke: async () => {
 
