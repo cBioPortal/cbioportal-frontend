@@ -53,7 +53,7 @@ export function resolveMissingMutationTypes(mutations: Partial<Mutation>[])
 }
 
 export async function fetchVariantAnnotationsByMutation(mutations: Mutation[],
-                                                        fields:string[] = ["annotation_summary"],
+                                                        fields:string[] = ["annotation_summary","my_variant_info"],
                                                         isoformOverrideSource: string = "uniprot",
                                                         client: GenomeNexusAPI = genomeNexusClient)
 {

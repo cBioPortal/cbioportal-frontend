@@ -44,6 +44,7 @@ import {IPaginationControlsProps} from "../paginationControls/PaginationControls
 import {IColumnVisibilityControlsProps} from "../columnVisibilityControls/ColumnVisibilityControls";
 import MobxPromise from "mobxpromise";
 import { VariantAnnotation } from "shared/api/generated/GenomeNexusAPI";
+import RsidColumnFormatter from "./column/RsidColumnFormatter";
 
 export interface IMutationTableProps {
     studyIdToStudy?: {[studyId:string]:CancerStudy};
@@ -116,7 +117,8 @@ export enum MutationTableColumnType {
     REF_READS,
     VAR_READS,
     CANCER_TYPE,
-    NUM_MUTATIONS
+    NUM_MUTATIONS,
+    RSID
 }
 
 type MutationTableColumn = Column<Mutation[]>&{order?:number, shouldExclude?:()=>boolean};
@@ -503,6 +505,17 @@ export default class MutationTable<P extends IMutationTableProps> extends React.
             sortBy: (d:Mutation[]) => MutationCountColumnFormatter.sortBy(d, this.props.mutationCountCache),
             download: (d:Mutation[]) => MutationCountColumnFormatter.download(d, this.props.mutationCountCache),
             tooltip:(<span>Total number of nonsynonymous mutations in the sample</span>),
+            align: "right"
+        };
+    
+        this._columns[MutationTableColumnType.RSID] = {
+            name: "Rsid",
+            render: (d:Mutation[]) => (this.props.genomeNexusCache
+                ? RsidColumnFormatter.renderFunction(d, this.props.genomeNexusCache)
+                : <span></span>),
+            download: (d:Mutation[]) => RsidColumnFormatter.download(d, this.props.genomeNexusCache as GenomeNexusCache),
+            sortBy: (d:Mutation[]) => RsidColumnFormatter.getSortValue(d, this.props.genomeNexusCache as GenomeNexusCache),
+            visible: false,
             align: "right"
         };
     }
