@@ -8,7 +8,7 @@ import classNames from 'classnames';
 import ReactSelect from 'react-select';
 import StudyList from "./studyList/StudyList";
 import {observer, Observer} from "mobx-react";
-import {action, expr} from 'mobx';
+import {action, expr, runInAction} from 'mobx';
 import memoize from "memoize-weak-decorator";
 import {If, Then, Else} from 'react-if';
 import {QueryStore, QueryStoreComponent} from "./QueryStore";
@@ -20,6 +20,9 @@ import DefaultTooltip from "../defaultTooltip/DefaultTooltip";
 import FontAwesome from "react-fontawesome";
 import AppConfig from "appConfig";
 import {ServerConfigHelpers} from "../../../config/config";
+import autobind from "autobind-decorator";
+import getBrowserWindow from "../../lib/getBrowserWindow";
+import {PAN_CAN_SIGNATURE} from "./StudyListLogic";
 
 const styles = styles_any as {
     SelectedStudiesWindow: string,
@@ -52,6 +55,8 @@ const styles = styles_any as {
     summaryButtonClass: string,
     summaryButtonIconClass: string,
     summaryButtonTextClass: string,
+
+    quickSelect: string,
 };
 
 export interface ICancerStudySelectorProps {
@@ -129,6 +134,13 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
     });
 
     private autosuggest: React.Component<any, any>;
+
+    @autobind
+    @action
+    selectTCGAPanAtlas(){
+        this.logic.mainView.selectAllMatchingStudies(PAN_CAN_SIGNATURE);
+    }
+
 
     render() {
 
@@ -330,18 +342,27 @@ export default class CancerStudySelector extends React.Component<ICancerStudySel
 
                         <div className="checkbox" style={{marginLeft: 19}}>
                             <If condition={shownStudies.length > 0}>
-                                <label>
-                                    <input type="checkbox"
-                                           data-test="selectAllStudies"
-                                           style={{top: -2}}
-                                           onClick={this.handlers.onCheckAllFiltered}
-                                           checked={shownAndSelectedStudies.length === shownStudies.length}
-                                    />
-                                    <strong>{(shownAndSelectedStudies.length === shownStudies.length) ?
-                                        `Deselect all listed studies ${(shownStudies.length < this.store.cancerStudies.result.length) ? "matching filter" : ""} (${shownStudies.length})` :
-                                        `Select all listed studies ${(shownStudies.length < this.store.cancerStudies.result.length) ? "matching filter" : ""}  (${shownStudies.length})`}
-                                    </strong>
-                                </label>
+                                <If condition={this.logic.mainView.showQuickSelect}>
+                                    <div className={styles.quickSelect}>
+                                        Quick select: <button onClick={this.selectTCGAPanAtlas} data-test="selectPanCan" className={"btn btn-default btn-xs"}>TCGA Pancancer Atlas studies</button>
+                                    </div>
+                                    <Else>
+
+                                            <label>
+                                                <input type="checkbox"
+                                                       data-test="selectAllStudies"
+                                                       style={{top: -2}}
+                                                       onClick={this.handlers.onCheckAllFiltered}
+                                                       checked={shownAndSelectedStudies.length === shownStudies.length}
+                                                />
+                                                <strong>{(shownAndSelectedStudies.length === shownStudies.length) ?
+                                                    `Deselect all listed studies ${(shownStudies.length < this.store.cancerStudies.result.length) ? "matching filter" : ""} (${shownStudies.length})` :
+                                                    `Select all listed studies ${(shownStudies.length < this.store.cancerStudies.result.length) ? "matching filter" : ""}  (${shownStudies.length})`}
+                                                </strong>
+                                            </label>
+
+                                    </Else>
+                                </If>
                             </If>
                             <If condition={this.store.cancerStudies.isComplete && this.store.cancerTypes.isComplete && shownStudies.length === 0}>
                                 <p>There are no studies matching your filter.</p>
